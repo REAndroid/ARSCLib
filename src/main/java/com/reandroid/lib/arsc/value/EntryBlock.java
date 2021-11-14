@@ -288,6 +288,17 @@ public class EntryBlock extends Block {
         return result;
     }
 
+    private void updatePackage(){
+        TypeBlock typeBlock=getTypeBlock();
+        if(typeBlock==null){
+            return;
+        }
+        PackageBlock packageBlock=typeBlock.getPackageBlock();
+        if(packageBlock==null){
+            return;
+        }
+        packageBlock.onEntryAdded(this);
+    }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
         setNull(false);
@@ -297,6 +308,7 @@ public class EntryBlock extends Block {
         mSpecReference.readBytes(reader);
         createResValue();
         mResValue.readBytes(reader);
+        updatePackage();
     }
     public String toString(){
         StringBuilder builder=new StringBuilder();

@@ -6,11 +6,14 @@ import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockContainer;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.SpecBlock;
+import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
+import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResConfig;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SpecTypePair extends BlockContainer<Block> {
@@ -54,6 +57,20 @@ public class SpecTypePair extends BlockContainer<Block> {
             parent=parent.getParent();
         }
         return null;
+    }
+    public List<EntryBlock> listEntries(int entryId){
+        List<EntryBlock> results=new ArrayList<>();
+        for(TypeBlock typeBlock:listTypeBlocks()){
+            EntryBlock entryBlock=typeBlock.getEntryBlock(entryId);
+            if(entryBlock==null||entryBlock.isNull()){
+                continue;
+            }
+            results.add(entryBlock);
+        }
+        return results;
+    }
+    public List<TypeBlock> listTypeBlocks(){
+        return mTypeBlockArray.listItems();
     }
 
     @Override

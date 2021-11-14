@@ -3,11 +3,17 @@ package com.reandroid.lib.arsc.chunk;
 import com.reandroid.lib.arsc.array.SpecTypePairArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.PackageLastBlocks;
+import com.reandroid.lib.arsc.container.SpecTypePair;
+import com.reandroid.lib.arsc.group.EntryGroup;
+import com.reandroid.lib.arsc.group.ItemGroup;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.PackageName;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
 import com.reandroid.lib.arsc.pool.TypeStringPool;
+import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.LibraryInfo;
+
+import java.util.*;
 
 
 public class PackageBlock extends BaseChunk {
@@ -28,6 +34,8 @@ public class PackageBlock extends BaseChunk {
 
     private final PackageLastBlocks mPackageLastBlocks;
 
+    private final Map<Integer, EntryGroup> mEntriesGroup;
+
     public PackageBlock() {
         super(ChunkType.PACKAGE, 3);
         this.mPackageId=new IntegerItem();
@@ -44,6 +52,8 @@ public class PackageBlock extends BaseChunk {
         this.mSpecTypePairArray=new SpecTypePairArray();
         this.mLibraryBlock=new LibraryBlock();
         this.mPackageLastBlocks=new PackageLastBlocks(mSpecTypePairArray, mLibraryBlock);
+
+        this.mEntriesGroup=new HashMap<>();
 
         addToHeader(mPackageId);
         addToHeader(mPackageName);
@@ -83,11 +93,56 @@ public class PackageBlock extends BaseChunk {
         }
         return null;
     }
+    public int getPackageId(){
+        return mPackageId.get();
+    }
+    public int setPackageId(){
+        return mPackageId.get();
+    }
+    public String getPackageName(){
+        return mPackageName.get();
+    }
+    public void setPackageName(String name){
+        mPackageName.set(name);
+    }
+    public void setTypeStrings(int i){
+        mTypeStrings.set(i);
+    }
+    public int getLastPublicType(){
+        return mLastPublicType.get();
+    }
+    public void setLastPublicType(int i){
+        mLastPublicType.set(i);
+    }
+    public int getKeyStrings(){
+        return mKeyStrings.get();
+    }
+    public void setKeyStrings(int i){
+        mKeyStrings.set(i);
+    }
+    public int getLastPublicKey(){
+        return mLastPublicKey.get();
+    }
+    public void setLastPublicKey(int i){
+        mLastPublicKey.set(i);
+    }
+    public int getTypeIdOffset(){
+        return mTypeIdOffset.get();
+    }
+    public void setTypeIdOffset(int i){
+        mTypeIdOffset.set(i);
+    }
     public TypeStringPool getTypeStringPool(){
         return mTypeStringPool;
     }
     public SpecStringPool getSpecStringPool(){
         return mSpecStringPool;
+    }
+    public SpecTypePairArray getSpecTypePairArray(){
+        return mSpecTypePairArray;
+    }
+    public List<LibraryInfo> listLibraryInfo(){
+        return mLibraryBlock.listLibraryInfo();
     }
 
     public void addLibrary(LibraryBlock libraryBlock){
@@ -105,10 +160,50 @@ public class PackageBlock extends BaseChunk {
     public void addLibraryInfo(LibraryInfo info){
         mLibraryBlock.addLibraryInfo(info);
     }
+    public Set<Integer> listResourceIds(){
+        return mEntriesGroup.keySet();
+    }
+    public Collection<EntryGroup> listEntryGroup(){
+        return mEntriesGroup.values();
+    }
+    public EntryGroup getEntryGroup(int resId){
+        return mEntriesGroup.get(resId);
+    }
+    private void updateEntryGroup(EntryBlock entryBlock){
+        int resId=entryBlock.getResourceId();
+        EntryGroup group=mEntriesGroup.get(resId);
+        if(group==null){
+            group=new EntryGroup(resId);
+            mEntriesGroup.put(resId, group);
+        }
+        group.add(entryBlock);
+    }
+    public List<EntryBlock> listEntries(byte typeId, int entryId){
+        List<EntryBlock> results=new ArrayList<>();
+        for(SpecTypePair pair:listSpecTypePair(typeId)){
+            results.addAll(pair.listEntries(entryId));
+        }
+        return results;
+    }
+    public List<SpecTypePair> listSpecTypePair(byte typeId){
+        List<SpecTypePair> results=new ArrayList<>();
+        for(SpecTypePair pair:listAllSpecTypePair()){
+            if(typeId==pair.getTypeId()){
+                results.add(pair);
+            }
+        }
+        return results;
+    }
+    public List<SpecTypePair> listAllSpecTypePair(){
+        return getSpecTypePairArray().listItems();
+    }
 
     private void refreshKeyStrings(){
         int pos=countUpTo(mSpecStringPool);
         mKeyStrings.set(pos);
+    }
+    public void onEntryAdded(EntryBlock entryBlock){
+        updateEntryGroup(entryBlock);
     }
     @Override
     public void onChunkLoaded() {

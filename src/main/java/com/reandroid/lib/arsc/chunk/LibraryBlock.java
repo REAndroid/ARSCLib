@@ -4,6 +4,8 @@ import com.reandroid.lib.arsc.array.LibraryInfoArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.value.LibraryInfo;
 
+import java.util.List;
+
 public class LibraryBlock extends BaseChunk {
     private final IntegerItem mLibCount;
     private final LibraryInfoArray mLibraryInfoArray;
@@ -36,6 +38,9 @@ public class LibraryBlock extends BaseChunk {
         }
         mLibraryInfoArray.add(info);
         mLibCount.set(mLibraryInfoArray.childesCount());
+    }
+    public List<LibraryInfo> listLibraryInfo(){
+        return mLibraryInfoArray.listItems();
     }
     @Override
     public boolean isNull(){

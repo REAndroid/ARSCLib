@@ -5,6 +5,7 @@ import com.reandroid.lib.arsc.array.StringArray;
 import com.reandroid.lib.arsc.array.StyleArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.chunk.BaseChunk;
+import com.reandroid.lib.arsc.group.StringGroup;
 import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
@@ -87,8 +88,7 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
         if(group!=null){
             return group;
         }
-        T[] items=mArrayStrings.newInstance(0);
-        group=new StringGroup<>(mArrayStrings, str, items);
+        group=new StringGroup<>(mArrayStrings, str);
         mUniqueMap.put(str, group);
         return group;
     }

@@ -1,41 +1,67 @@
-package com.reandroid.lib.arsc.pool;
+package com.reandroid.lib.arsc.group;
 
+import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockArrayCreator;
-import com.reandroid.lib.arsc.item.StringItem;
 
-import java.lang.reflect.Array;
+import java.util.AbstractList;
+import java.util.List;
 
-public class StringGroup<T extends StringItem> {
+public class ItemGroup<T extends Block> {
     private final BlockArrayCreator<T> mBlockArrayCreator;
     private final String name;
     private T[] items;
     private final int hashCode;
-    StringGroup(BlockArrayCreator<T> blockArrayCreator, String name, T[] items){
+    public ItemGroup(BlockArrayCreator<T> blockArrayCreator, String name){
         this.mBlockArrayCreator=blockArrayCreator;
         this.name=name;
-        this.items=items;
+        this.items=blockArrayCreator.newInstance(0);
         this.hashCode=(getClass().getName()+"-"+name).hashCode();
     }
-    public boolean contains(T strItem){
-        if(strItem==null){
+    public List<T> listItems(){
+        return new AbstractList<T>() {
+            @Override
+            public T get(int i) {
+                return ItemGroup.this.get(i);
+            }
+
+            @Override
+            public int size() {
+                return ItemGroup.this.size();
+            }
+        };
+    }
+    public T get(int i){
+        if(i<0||i>= size()){
+            return null;
+        }
+        return items[i];
+    }
+    public int size(){
+        if(items==null){
+            return 0;
+        }
+        return items.length;
+    }
+    public boolean contains(T block){
+        if(block==null){
             return false;
         }
         int len=items.length;
         for(int i=0;i<len;i++){
-            if(strItem==items[i]){
+            if(block==items[i]){
                 return true;
             }
         }
         return false;
     }
-    public void remove(T strItem){
-        if(strItem==null){
+    public void remove(T block){
+        if(block==null){
             return;
         }
         boolean found=false;
         int len=items.length;
         for(int i=0;i<len;i++){
-            if(strItem==items[i]){
+            if(block==items[i]){
                 items[i]=null;
                 found=true;
             }
@@ -44,14 +70,14 @@ public class StringGroup<T extends StringItem> {
             trimToSize();
         }
     }
-    public void add(T strItem){
-        if(strItem==null){
+    public void add(T block){
+        if(block==null){
             return;
         }
         int index=items.length;
         T[] update=createNew(index+1);
         System.arraycopy(items, 0, update, 0, index);
-        update[index]=strItem;
+        update[index]=block;
         items=update;
     }
     public T[] getItems(){
@@ -94,7 +120,7 @@ public class StringGroup<T extends StringItem> {
     public boolean equals(Object obj){
         if(obj instanceof StringGroup){
             StringGroup other=(StringGroup)obj;
-            return name.equals(other.name);
+            return hashCode==other.hashCode();
         }
         return false;
     }
