@@ -1,0 +1,29 @@
+
+apply plugin: 'java-library'
+
+group 'com.reandroid.lib.arsc'
+version '1.0.0'
+
+java {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+}
+
+if (JavaVersion.current().isJava8Compatible()) {
+    allprojects {
+        tasks.compileJava {
+            //options.addStringOption('-Xlint:unchecked', '-quiet')
+        }
+    }
+}
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+}
+
+processResources.inputs.property('version', version)
+processResources.expand('version': version)
+
