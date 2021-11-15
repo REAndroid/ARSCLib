@@ -5,15 +5,14 @@ import com.reandroid.lib.arsc.base.BlockCounter;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
-import com.reandroid.lib.arsc.item.IntegerItem;
-import com.reandroid.lib.arsc.item.ShortItem;
-import com.reandroid.lib.arsc.item.SpecString;
-import com.reandroid.lib.arsc.item.TypeString;
+import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
 
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EntryBlock extends Block {
     private ShortItem mHeaderSize;
@@ -25,11 +24,34 @@ public class EntryBlock extends Block {
         super();
     }
 
+    public List<ReferenceItem> getTableStringReferences(){
+        if(isNull()){
+            return null;
+        }
+        List<ReferenceItem> results=null;
+        BaseResValue resValue=getResValue();
+        if(resValue instanceof ResValueInt){
+            ResValueInt resValueInt=(ResValueInt)resValue;
+            ReferenceItem ref=resValueInt.getTableStringReference();
+            if(ref!=null){
+                results=new ArrayList<>();
+                results.add(ref);
+            }
+        }else if(resValue instanceof ResValueBag){
+            ResValueBag resValueBag=(ResValueBag)resValue;
+            results=resValueBag.getTableStringReferences();
+        }
+        return results;
+    }
+
     public short getFlags(){
         return mFlags.get();
     }
     public void setFlags(short sh){
         mFlags.set(sh);
+    }
+    public IntegerItem getSpecReferenceBlock(){
+        return mSpecReference;
     }
     public int getSpecReference(){
         return mSpecReference.get();
@@ -44,6 +66,20 @@ public class EntryBlock extends Block {
         if(resValue==mResValue){
             return;
         }
+        setResValueInternal(resValue);
+        if(resValue==null){
+            setNull(true);
+        }else {
+            setNull(false);
+            boolean is_complex=(resValue instanceof ResValueBag);
+            setFlagComplex(is_complex);
+            updatePackage();
+        }
+    }
+    private void setResValueInternal(BaseResValue resValue){
+        if(resValue==mResValue){
+            return;
+        }
         if(resValue!=null){
             resValue.setIndex(3);
             resValue.setParent(this);
@@ -51,6 +87,9 @@ public class EntryBlock extends Block {
         if(mResValue!=null){
             mResValue.setIndex(-1);
             mResValue.setParent(null);
+        }
+        if(resValue!=null){
+            setNull(false);
         }
         mResValue=resValue;
     }
@@ -62,7 +101,6 @@ public class EntryBlock extends Block {
             setFlags(FLAG_INT);
         }
         refreshHeaderSize();
-        refreshResValue();
     }
 
     public ResConfig getResConfig(){
@@ -217,7 +255,7 @@ public class EntryBlock extends Block {
         }else {
             resValue=new ResValueInt();
         }
-        setResValue(resValue);
+        setResValueInternal(resValue);
     }
 
     private boolean isFlagsComplex(){

@@ -1,8 +1,6 @@
 package com.reandroid.lib.arsc.base;
 
-import java.util.AbstractList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 
 public abstract class BlockArray<T extends Block> extends BlockContainer<T> implements BlockArrayCreator<T>  {
@@ -10,11 +8,16 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
     public BlockArray(){
         elementData= newInstance(0);
     }
-    public List<T> listItems(){
-        return new AbstractList<T>() {
+
+    public Collection<T> listItems(){
+        return new AbstractCollection<T>() {
             @Override
-            public T get(int i) {
-                return BlockArray.this.get(i);
+            public Iterator<T> iterator(){
+                return BlockArray.this.iterator();
+            }
+            @Override
+            public boolean contains(Object o){
+                return BlockArray.this.contains(o);
             }
             @Override
             public int size() {
@@ -95,6 +98,12 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
             trimNullBlocks();
         }
     }
+    public void setItem(int index, T item){
+        ensureSize(index+1);
+        elementData[index]=item;
+        item.setIndex(index);
+        item.setParent(this);
+    }
     public void add(T block){
         if(block==null){
             return;
@@ -123,7 +132,41 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         }
         return elementData[i];
     }
-    public boolean contains(T block){
+    public int indexOf(Object block){
+        T[] items=elementData;
+        if(items==null){
+            return -1;
+        }
+        int len=items.length;
+        for(int i=0;i<len;i++){
+            if(block==items[i]){
+                return i;
+            }
+        }
+        return -1;
+    }
+    public int lastIndexOf(Object block){
+        T[] items=elementData;
+        if(items==null){
+            return -1;
+        }
+        int len=items.length;
+        int result=-1;
+        for(int i=0;i<len;i++){
+            if(block==items[i]){
+                result=-1;
+            }
+        }
+        return result;
+    }
+
+    public Iterator<T> iterator() {
+        return iterator(false);
+    }
+    public Iterator<T> iterator(boolean skipNullBlock) {
+        return new BlockIterator(skipNullBlock);
+    }
+    public boolean contains(Object block){
         T[] items=elementData;
         if(block==null || items==null){
             return false;
@@ -216,5 +259,47 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
     @Override
     public String toString(){
         return "count="+ childesCount();
+    }
+
+    private class BlockIterator implements Iterator<T> {
+        private int mCursor;
+        private int mMaxSize;
+        private final boolean mSkipNullBlock;
+        BlockIterator(boolean skipNullBlock){
+            mSkipNullBlock=skipNullBlock;
+            mCursor=0;
+            mMaxSize=BlockArray.this.childesCount();
+        }
+        @Override
+        public boolean hasNext() {
+            checkCursor();
+            return !isFinished();
+        }
+        @Override
+        public T next() {
+            if(!isFinished()){
+                T item=BlockArray.this.get(mCursor);
+                mCursor++;
+                checkCursor();
+                return item;
+            }
+            return null;
+        }
+        private boolean isFinished(){
+            return mCursor>=mMaxSize;
+        }
+        private void checkCursor(){
+            if(!mSkipNullBlock || isFinished()){
+                return;
+            }
+            T item=BlockArray.this.get(mCursor);
+            while (item==null||item.isNull()){
+                mCursor++;
+                item=BlockArray.this.get(mCursor);
+                if(mCursor>=mMaxSize){
+                    break;
+                }
+            }
+        }
     }
 }

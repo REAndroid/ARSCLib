@@ -7,6 +7,7 @@ import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResConfig;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class TypeBlock extends BaseTypeBlock {
@@ -27,6 +28,12 @@ public class TypeBlock extends BaseTypeBlock {
         addChild(mEntryOffsets);
         addChild(mEntryArray);
     }
+    public EntryBlock getOrCreateEntry(short entryId){
+        return getEntryBlockArray().getOrCreate(entryId);
+    }
+    public EntryBlock getEntry(short entryId){
+        return getEntryBlockArray().getEntry(entryId);
+    }
     public ResConfig getResConfig(){
         return mResConfig;
     }
@@ -36,15 +43,12 @@ public class TypeBlock extends BaseTypeBlock {
     public List<EntryBlock> listEntries(){
         return listEntries(false);
     }
-    public List<EntryBlock> listEntries(boolean includeNull){
+    public List<EntryBlock> listEntries(boolean skipNullBlock){
         List<EntryBlock> results=new ArrayList<>();
-        for(EntryBlock entryBlock:mEntryArray.listItems()){
-            if(!includeNull){
-                if(entryBlock.isNull()){
-                    continue;
-                }
-            }
-            results.add(entryBlock);
+        Iterator<EntryBlock> itr = mEntryArray.iterator(skipNullBlock);
+        while (itr.hasNext()){
+            EntryBlock block=itr.next();
+            results.add(block);
         }
         return results;
     }

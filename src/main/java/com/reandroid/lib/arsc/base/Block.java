@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public abstract class Block {
-    private int mIndex;
+    private int mIndex=-1;
     private Block mParent;
     private boolean mNull;
     private BlockLoad mBlockLoad;
@@ -52,7 +52,17 @@ public abstract class Block {
         return mIndex;
     }
     public final void setIndex(int index){
+        int old=mIndex;
+        if(index==old){
+            return;
+        }
         mIndex=index;
+        if(old!=-1 && index!=-1){
+            onIndexChanged(old, index);
+        }
+    }
+    public void onIndexChanged(int oldIndex, int newIndex){
+
     }
     public final void setParent(Block parent){
         if(parent==this){

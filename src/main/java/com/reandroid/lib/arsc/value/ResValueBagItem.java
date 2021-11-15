@@ -1,6 +1,6 @@
 package com.reandroid.lib.arsc.value;
 
-public class ResValueBagItem extends BaseResValue {
+public class ResValueBagItem extends BaseResValueItem{
 
     public ResValueBagItem() {
         super(BYTES_COUNT);
@@ -8,19 +8,19 @@ public class ResValueBagItem extends BaseResValue {
     }
 
     @Override
-    void setHeaderSize(short size) {
+    public void setHeaderSize(short size) {
         setShort(OFFSET_SIZE, size);
     }
     @Override
-    short getHeaderSize() {
+    public short getHeaderSize() {
         return getShort(OFFSET_SIZE);
     }
     @Override
-    void setReserved(byte reserved) {
+    public void setReserved(byte reserved) {
         setByte(OFFSET_RESERVED, reserved);
     }
     @Override
-    byte getReserved() {
+    public byte getReserved() {
         return getByte(OFFSET_RESERVED);
     }
 
@@ -30,6 +30,14 @@ public class ResValueBagItem extends BaseResValue {
     }
     public int getId(){
         return getInt(OFFSET_ID);
+    }
+    @Override
+    public void setType(ValueType valueType){
+        byte type=0;
+        if(valueType!=null){
+            type=valueType.getByte();
+        }
+        setType(type);
     }
     @Override
     public void setType(byte type){

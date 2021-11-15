@@ -11,6 +11,7 @@ import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,6 +65,25 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
         mUniqueMap=new HashMap<>();
 
     }
+
+    public void addReference(ReferenceItem ref){
+        if(ref==null){
+            return;
+        }
+        T item=get(ref.get());
+        if(item!=null){
+            item.addReference(ref);
+        }
+    }
+    public void addReferences(Collection<ReferenceItem> referenceList){
+        if(referenceList==null){
+            return;
+        }
+        for(ReferenceItem ref:referenceList){
+            addReference(ref);
+        }
+    }
+
     public boolean contains(String str){
         return mUniqueMap.containsKey(str);
     }

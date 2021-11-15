@@ -2,15 +2,17 @@ package com.reandroid.lib.arsc.value;
 
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.item.BlockItem;
+import com.reandroid.lib.arsc.item.IntegerItem;
+import com.reandroid.lib.arsc.item.ReferenceItem;
 
-public abstract class BaseResValue extends BlockItem {
+import java.util.List;
+
+public abstract class BaseResValue extends BlockItem  {
     BaseResValue(int bytesLength){
         super(bytesLength);
     }
 
-    public ValueType getValueType(){
-        return ValueType.valueOf(getType());
-    }
+
     public EntryBlock getEntryBlock(){
         Block parent=getParent();
         while(parent!=null){
@@ -22,24 +24,7 @@ public abstract class BaseResValue extends BlockItem {
         return null;
     }
 
-    public void setType(ValueType valueType){
-        byte type=0;
-        if(valueType!=null){
-            type=valueType.getByte();
-        }
-        setType(type);
-    }
 
-    abstract void setHeaderSize(short size);
-    abstract short getHeaderSize();
-
-    abstract void setReserved(byte reserved);
-    abstract byte getReserved();
-
-    public abstract void setType(byte type);
-    public abstract byte getType();
-    public abstract int getData();
-    public abstract void setData(int data);
 
     @Override
     public void onBytesChanged() {

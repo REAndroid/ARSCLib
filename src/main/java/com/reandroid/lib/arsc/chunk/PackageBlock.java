@@ -8,7 +8,10 @@ import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.group.ItemGroup;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.PackageName;
+import com.reandroid.lib.arsc.item.ReferenceItem;
+import com.reandroid.lib.arsc.item.SpecString;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
+import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.arsc.pool.TypeStringPool;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.LibraryInfo;
@@ -141,7 +144,7 @@ public class PackageBlock extends BaseChunk {
     public SpecTypePairArray getSpecTypePairArray(){
         return mSpecTypePairArray;
     }
-    public List<LibraryInfo> listLibraryInfo(){
+    public Collection<LibraryInfo> listLibraryInfo(){
         return mLibraryBlock.listLibraryInfo();
     }
 
@@ -163,11 +166,45 @@ public class PackageBlock extends BaseChunk {
     public Set<Integer> listResourceIds(){
         return mEntriesGroup.keySet();
     }
+    public EntryBlock getOrCreateEntry(byte typeId, short entryId, String qualifiers){
+        return getSpecTypePairArray().getOrCreateEntry(typeId, entryId, qualifiers);
+    }
+    public EntryBlock getEntry(byte typeId, short entryId, String qualifiers){
+        return getSpecTypePairArray().getEntry(typeId, entryId, qualifiers);
+    }
+    public TypeBlock getOrCreateTypeBlock(byte typeId, String qualifiers){
+        return getSpecTypePairArray().getOrCreateTypeBlock(typeId, qualifiers);
+    }
+    public TypeBlock getTypeBlock(byte typeId, String qualifiers){
+        return getSpecTypePairArray().getTypeBlock(typeId, qualifiers);
+    }
     public Collection<EntryGroup> listEntryGroup(){
         return mEntriesGroup.values();
     }
     public EntryGroup getEntryGroup(int resId){
         return mEntriesGroup.get(resId);
+    }
+    public void updateEntry(EntryBlock entryBlock){
+        if(entryBlock==null||entryBlock.isNull()){
+            return;
+        }
+        updateEntryGroup(entryBlock);
+        updateEntrySpecReference(entryBlock);
+        updateEntryTableReferences(entryBlock);
+    }
+    private void updateEntryTableReferences(EntryBlock entryBlock){
+        TableBlock tableBlock=getTableBlock();
+        if(tableBlock==null){
+            return;
+        }
+        List<ReferenceItem> tableReferences=entryBlock.getTableStringReferences();
+        TableStringPool tableStringPool=tableBlock.getTableStringPool();
+        tableStringPool.addReferences(tableReferences);
+    }
+    private void updateEntrySpecReference(EntryBlock entryBlock){
+        ReferenceItem specRef=entryBlock.getSpecReferenceBlock();
+        SpecStringPool specStringPool=getSpecStringPool();
+        specStringPool.addReference(specRef);
     }
     private void updateEntryGroup(EntryBlock entryBlock){
         int resId=entryBlock.getResourceId();
@@ -178,6 +215,7 @@ public class PackageBlock extends BaseChunk {
         }
         group.add(entryBlock);
     }
+
     public List<EntryBlock> listEntries(byte typeId, int entryId){
         List<EntryBlock> results=new ArrayList<>();
         for(SpecTypePair pair:listSpecTypePair(typeId)){
@@ -194,7 +232,7 @@ public class PackageBlock extends BaseChunk {
         }
         return results;
     }
-    public List<SpecTypePair> listAllSpecTypePair(){
+    public Collection<SpecTypePair> listAllSpecTypePair(){
         return getSpecTypePairArray().listItems();
     }
 
@@ -203,7 +241,7 @@ public class PackageBlock extends BaseChunk {
         mKeyStrings.set(pos);
     }
     public void onEntryAdded(EntryBlock entryBlock){
-        updateEntryGroup(entryBlock);
+        updateEntry(entryBlock);
     }
     @Override
     public void onChunkLoaded() {

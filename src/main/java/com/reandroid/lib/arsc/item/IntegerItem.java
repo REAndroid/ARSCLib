@@ -1,7 +1,7 @@
 package com.reandroid.lib.arsc.item;
 
 
-public class IntegerItem extends BlockItem {
+public class IntegerItem extends BlockItem implements ReferenceItem{
     private int mCache;
     public IntegerItem(){
         super(4);
@@ -10,6 +10,7 @@ public class IntegerItem extends BlockItem {
         this();
         set(val);
     }
+    @Override
     public void set(int val){
         if(val==mCache){
             return;
@@ -21,6 +22,7 @@ public class IntegerItem extends BlockItem {
         bts[1]= (byte) (val >>> 8 & 0xff);
         bts[0]= (byte) (val & 0xff);
     }
+    @Override
     public int get(){
         return mCache;
     }

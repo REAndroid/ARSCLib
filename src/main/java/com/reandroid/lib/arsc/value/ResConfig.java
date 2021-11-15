@@ -106,7 +106,7 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
         return new Block[len];
     }
 
-    public void parseName(String name){
+    public void parseQualifiers(String name){
         ResConfigHelper.parseQualifiers(this, name);
         mQualifiers=null;
     }
@@ -488,6 +488,21 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
         }
     }
 
+    public boolean isEqualQualifiers(String qualifiers){
+        if(qualifiers==null){
+            qualifiers="";
+        }
+        qualifiers=ResConfigHelper.sortQualifiers(qualifiers);
+        return getQualifiers().equals(qualifiers);
+    }
+    @Override
+    public boolean equals(Object o){
+        if(o instanceof ResConfig){
+            ResConfig config=(ResConfig)o;
+            return getQualifiers().equals(config.getQualifiers());
+        }
+        return false;
+    }
     @Override
     public String toString(){
         String q=getQualifiers();

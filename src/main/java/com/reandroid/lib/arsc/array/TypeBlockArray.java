@@ -7,6 +7,7 @@ import com.reandroid.lib.arsc.chunk.SpecBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
+import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResConfig;
 
 import java.io.IOException;
@@ -17,6 +18,58 @@ public class TypeBlockArray extends BlockArray<TypeBlock> {
     private byte mTypeId;
     public TypeBlockArray(){
         super();
+    }
+    public EntryBlock getOrCreateEntry(short entryId, String qualifiers){
+        TypeBlock typeBlock=getOrCreate(qualifiers);
+        return typeBlock.getOrCreateEntry(entryId);
+    }
+    public EntryBlock getEntry(short entryId, String qualifiers){
+        TypeBlock typeBlock=getTypeBlock(qualifiers);
+        if(typeBlock==null){
+            return null;
+        }
+        return typeBlock.getEntry(entryId);
+    }
+    public TypeBlock getOrCreate(String qualifiers){
+        TypeBlock typeBlock=getTypeBlock(qualifiers);
+        if(typeBlock!=null){
+            return typeBlock;
+        }
+        typeBlock=createNext();
+        ResConfig config=typeBlock.getResConfig();
+        config.parseQualifiers(qualifiers);
+        return typeBlock;
+    }
+    public TypeBlock getTypeBlock(String qualifiers){
+        TypeBlock[] items=getChildes();
+        if(items==null){
+            return null;
+        }
+        int max=items.length;
+        for(int i=0;i<max;i++){
+            TypeBlock block=items[i];
+            if(block.getResConfig().isEqualQualifiers(qualifiers)){
+                return block;
+            }
+        }
+        return null;
+    }
+    public TypeBlock getTypeBlock(ResConfig config){
+        if(config==null){
+            return null;
+        }
+        TypeBlock[] items=getChildes();
+        if(items==null){
+            return null;
+        }
+        int max=items.length;
+        for(int i=0;i<max;i++){
+            TypeBlock block=items[i];
+            if(config.equals(block.getResConfig())){
+                return block;
+            }
+        }
+        return null;
     }
     public void setTypeId(byte id){
         this.mTypeId=id;

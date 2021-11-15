@@ -9,9 +9,20 @@ public class EntryBlockArray extends OffsetBlockArray<EntryBlock> {
     public EntryBlockArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart){
         super(offsets, itemCount, itemStart);
     }
-
-
-
+    public void setEntry(short entryId, EntryBlock entryBlock){
+        setItem(entryId, entryBlock);
+    }
+    public EntryBlock getOrCreate(short entryId){
+        EntryBlock entryBlock=get(entryId);
+        if(entryBlock!=null){
+            return entryBlock;
+        }
+        ensureSize(entryId+1);
+        return get(entryId);
+    }
+    public EntryBlock getEntry(short entryId){
+        return get(entryId);
+    }
     @Override
     public EntryBlock newInstance() {
         return new EntryBlock();

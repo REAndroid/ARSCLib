@@ -11,13 +11,46 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class StringItem extends BlockItem {
     private String mCache;
     private boolean mUtf8;
+    private final List<ReferenceItem> mReferencedList;
     public StringItem(boolean utf8) {
         super(0);
         this.mUtf8=utf8;
+        this.mReferencedList=new ArrayList<>();
+    }
+    public void removeReference(IntegerItem ref){
+        mReferencedList.remove(ref);
+    }
+    public List<ReferenceItem> getReferencedList(){
+        return mReferencedList;
+    }
+    public void addReference(ReferenceItem ref){
+        if(ref!=null){
+            mReferencedList.add(ref);
+        }
+    }
+    public void addReference(Collection<ReferenceItem> refList){
+        if(refList==null){
+            return;
+        }
+        for(ReferenceItem ref:refList){
+            addReference(ref);
+        }
+    }
+    private void reUpdateReferences(int newIndex){
+        for(ReferenceItem ref:mReferencedList){
+            ref.set(newIndex);
+        }
+    }
+    @Override
+    public void onIndexChanged(int oldIndex, int newIndex){
+        reUpdateReferences(newIndex);
     }
     public String getHtml(){
         String str=get();

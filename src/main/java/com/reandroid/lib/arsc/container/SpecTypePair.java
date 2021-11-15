@@ -14,6 +14,8 @@ import com.reandroid.lib.arsc.value.ResConfig;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 public class SpecTypePair extends BlockContainer<Block> {
@@ -31,6 +33,18 @@ public class SpecTypePair extends BlockContainer<Block> {
     }
     public SpecTypePair(){
         this(new SpecBlock(), new TypeBlockArray());
+    }
+    public EntryBlock getOrCreateEntry(short entryId, String qualifiers){
+        return getTypeBlockArray().getOrCreateEntry(entryId, qualifiers);
+    }
+    public EntryBlock getEntry(short entryId, String qualifiers){
+        return getTypeBlockArray().getEntry(entryId, qualifiers);
+    }
+    public TypeBlock getOrCreateTypeBlock(String qualifiers){
+        return getTypeBlockArray().getOrCreate(qualifiers);
+    }
+    public TypeBlock getTypeBlock(String qualifiers){
+        return getTypeBlockArray().getTypeBlock(qualifiers);
     }
     public List<ResConfig> listResConfig(){
         return mTypeBlockArray.listResConfig();
@@ -60,7 +74,9 @@ public class SpecTypePair extends BlockContainer<Block> {
     }
     public List<EntryBlock> listEntries(int entryId){
         List<EntryBlock> results=new ArrayList<>();
-        for(TypeBlock typeBlock:listTypeBlocks()){
+        Iterator<TypeBlock> itr = mTypeBlockArray.iterator(true);
+        while (itr.hasNext()){
+            TypeBlock typeBlock=itr.next();
             EntryBlock entryBlock=typeBlock.getEntryBlock(entryId);
             if(entryBlock==null||entryBlock.isNull()){
                 continue;
@@ -69,7 +85,7 @@ public class SpecTypePair extends BlockContainer<Block> {
         }
         return results;
     }
-    public List<TypeBlock> listTypeBlocks(){
+    public Collection<TypeBlock> listTypeBlocks(){
         return mTypeBlockArray.listItems();
     }
 

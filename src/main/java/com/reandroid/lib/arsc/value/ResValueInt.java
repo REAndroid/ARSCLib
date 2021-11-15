@@ -1,29 +1,30 @@
 package com.reandroid.lib.arsc.value;
 
 import com.reandroid.lib.arsc.io.BlockReader;
+import com.reandroid.lib.arsc.item.ReferenceItem;
 
 
 import java.io.IOException;
 
-public class ResValueInt extends BaseResValue {
+public class ResValueInt extends BaseResValueItem  {
     public ResValueInt() {
         super(BYTES_COUNT);
         setHeaderSize(BYTES_SIZE);
     }
     @Override
-    void setHeaderSize(short size) {
+    public void setHeaderSize(short size) {
         setShort(OFFSET_SIZE, size);
     }
     @Override
-    short getHeaderSize() {
+    public short getHeaderSize() {
         return getShort(OFFSET_SIZE);
     }
     @Override
-    void setReserved(byte reserved) {
+    public void setReserved(byte reserved) {
         setByte(OFFSET_RESERVED, reserved);
     }
     @Override
-    byte getReserved() {
+    public byte getReserved() {
         return getByte(OFFSET_RESERVED);
     }
     @Override

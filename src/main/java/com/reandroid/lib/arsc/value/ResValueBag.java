@@ -5,9 +5,11 @@ import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockCounter;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
+import com.reandroid.lib.arsc.item.ReferenceItem;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ResValueBag extends BaseResValue {
@@ -27,6 +29,20 @@ public class ResValueBag extends BaseResValue {
         mCount.setIndex(1);
         mResValueBagItemArray.setParent(this);
         mResValueBagItemArray.setIndex(2);
+    }
+    public List<ReferenceItem> getTableStringReferences(){
+        List<ReferenceItem> results=null;
+        for(ResValueBagItem bagItem:getResValueBagItemArray().listItems()){
+            ReferenceItem ref=bagItem.getTableStringReference();
+            if(ref==null){
+                continue;
+            }
+            if(results==null){
+                results=new ArrayList<>();
+            }
+            results.add(ref);
+        }
+        return results;
     }
     public ResValueBagItemArray getResValueBagItemArray(){
         return mResValueBagItemArray;
@@ -121,45 +137,6 @@ public class ResValueBag extends BaseResValue {
         return builder.toString();
     }
 
-
-    // NOT Applicable
-    @Override
-    void setHeaderSize(short size) {
-    }
-    // NOT Applicable
-    @Override
-    short getHeaderSize() {
-        return HEADER_COMPLEX;
-    }
-    // NOT Applicable
-    @Override
-    void setReserved(byte reserved) {
-    }
-    // NOT Applicable
-    @Override
-    byte getReserved() {
-        return 0;
-    }
-    // NOT Applicable
-    @Override
-    public void setType(byte type) {
-    }
-
-    // NOT Applicable
-    @Override
-    public byte getType() {
-        return 0;
-    }
-
-    // NOT Applicable
-    @Override
-    public int getData() {
-        return 0;
-    }
-
-    // NOT Applicable
-    @Override
-    public void setData(int data) { }
 
     private final static short HEADER_COMPLEX=0x0010;
 }
