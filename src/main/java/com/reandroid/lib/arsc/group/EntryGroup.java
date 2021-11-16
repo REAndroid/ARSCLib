@@ -8,6 +8,8 @@ import com.reandroid.lib.arsc.item.TypeString;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
 import com.reandroid.lib.arsc.value.EntryBlock;
 
+import java.util.Iterator;
+
 public class EntryGroup extends ItemGroup<EntryBlock> {
     private final int resourceId;
     public EntryGroup(int resId) {
@@ -17,43 +19,55 @@ public class EntryGroup extends ItemGroup<EntryBlock> {
     public int getResourceId(){
         return resourceId;
     }
-    public void renameSpec(String name){
+    public boolean renameSpec(String name){
         EntryBlock[] items=getItems();
-        if(items==null){
-            return;
+        if(items==null || name==null){
+            return false;
         }
         SpecStringPool specStringPool=getSpecStringPool();
         if(specStringPool==null){
-            return;
+            return false;
+        }
+        String oldName=getSpecName();
+        if(name.equals(oldName)){
+            return false;
         }
         SpecString specString=specStringPool.getOrCreate(name);
-        renameSpec(specString.getIndex());
+        return renameSpec(specString.getIndex());
     }
-    public void renameSpec(int specReference){
+    public boolean renameSpec(int specReference){
         EntryBlock[] items=getItems();
         if(items==null){
-            return;
+            return false;
         }
+        boolean renameOk=false;
         for(EntryBlock block:items){
             if(block==null||block.isNull()){
                 continue;
             }
+            if(block.getSpecReference()==specReference){
+                continue;
+            }
             block.setSpecReference(specReference);
+            renameOk=true;
         }
+        return renameOk;
     }
     public TypeString getTypeString(){
-        EntryBlock entryBlock=get(0);
-        if(entryBlock==null){
-            return null;
+        Iterator<EntryBlock> itr=iterator(true);
+        while (itr.hasNext()){
+            EntryBlock entryBlock=itr.next();
+            return entryBlock.getTypeString();
         }
-        return entryBlock.getTypeString();
+        return null;
     }
     public SpecString getSpecString(){
-        EntryBlock entryBlock=get(0);
-        if(entryBlock==null){
-            return null;
+        Iterator<EntryBlock> itr=iterator(true);
+        while (itr.hasNext()){
+            EntryBlock entryBlock=itr.next();
+            return entryBlock.getSpecString();
         }
-        return entryBlock.getSpecString();
+        return null;
     }
     public String getTypeName(){
         TypeString typeString=getTypeString();

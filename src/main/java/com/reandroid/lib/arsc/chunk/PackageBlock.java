@@ -189,7 +189,6 @@ public class PackageBlock extends BaseChunk {
             return;
         }
         updateEntryGroup(entryBlock);
-        updateEntrySpecReference(entryBlock);
         updateEntryTableReferences(entryBlock);
     }
     private void updateEntryTableReferences(EntryBlock entryBlock){
@@ -200,11 +199,6 @@ public class PackageBlock extends BaseChunk {
         List<ReferenceItem> tableReferences=entryBlock.getTableStringReferences();
         TableStringPool tableStringPool=tableBlock.getTableStringPool();
         tableStringPool.addReferences(tableReferences);
-    }
-    private void updateEntrySpecReference(EntryBlock entryBlock){
-        ReferenceItem specRef=entryBlock.getSpecReferenceBlock();
-        SpecStringPool specStringPool=getSpecStringPool();
-        specStringPool.addReference(specRef);
     }
     private void updateEntryGroup(EntryBlock entryBlock){
         int resId=entryBlock.getResourceId();

@@ -4,6 +4,7 @@ import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockArrayCreator;
 
 import java.util.AbstractList;
+import java.util.Iterator;
 import java.util.List;
 
 public class ItemGroup<T extends Block> {
@@ -16,6 +17,12 @@ public class ItemGroup<T extends Block> {
         this.name=name;
         this.items=blockArrayCreator.newInstance(0);
         this.hashCode=(getClass().getName()+"-"+name).hashCode();
+    }
+    public Iterator<T> iterator(){
+        return iterator(false);
+    }
+    public Iterator<T> iterator(boolean skipNullBlock){
+        return new GroupIterator(skipNullBlock);
     }
     public List<T> listItems(){
         return new AbstractList<T>() {
@@ -127,5 +134,48 @@ public class ItemGroup<T extends Block> {
     @Override
     public String toString(){
         return items.length+"{"+name+"}";
+    }
+
+
+    private class GroupIterator implements Iterator<T> {
+        private int mCursor;
+        private int mMaxSize;
+        private final boolean mSkipNullBlock;
+        GroupIterator(boolean skipNullBlock){
+            mSkipNullBlock=skipNullBlock;
+            mCursor=0;
+            mMaxSize=ItemGroup.this.size();
+        }
+        @Override
+        public boolean hasNext() {
+            checkCursor();
+            return !isFinished();
+        }
+        @Override
+        public T next() {
+            if(!isFinished()){
+                T item=ItemGroup.this.get(mCursor);
+                mCursor++;
+                checkCursor();
+                return item;
+            }
+            return null;
+        }
+        private boolean isFinished(){
+            return mCursor>=mMaxSize;
+        }
+        private void checkCursor(){
+            if(!mSkipNullBlock || isFinished()){
+                return;
+            }
+            T item=ItemGroup.this.get(mCursor);
+            while (item==null||item.isNull()){
+                mCursor++;
+                item=ItemGroup.this.get(mCursor);
+                if(mCursor>=mMaxSize){
+                    break;
+                }
+            }
+        }
     }
 }

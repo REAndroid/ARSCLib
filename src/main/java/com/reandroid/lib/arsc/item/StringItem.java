@@ -24,8 +24,14 @@ public class StringItem extends BlockItem {
         this.mUtf8=utf8;
         this.mReferencedList=new ArrayList<>();
     }
-    public void removeReference(IntegerItem ref){
-        mReferencedList.remove(ref);
+    public boolean removeReference(ReferenceItem ref){
+        return mReferencedList.remove(ref);
+    }
+    public boolean removeAllReference(Collection<ReferenceItem> referenceItems){
+        return mReferencedList.removeAll(referenceItems);
+    }
+    public void removeAllReference(){
+        mReferencedList.clear();
     }
     public List<ReferenceItem> getReferencedList(){
         return mReferencedList;

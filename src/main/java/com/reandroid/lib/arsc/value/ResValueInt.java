@@ -29,7 +29,15 @@ public class ResValueInt extends BaseResValueItem  {
     }
     @Override
     public void setType(byte type){
+        byte old=getType();
+        if(type==old){
+            return;
+        }
+        removeTableReference();
         setByte(OFFSET_TYPE, type);
+        if(type==ValueType.STRING.getByte()){
+            addTableReference(getTableStringReference());
+        }
     }
     @Override
     public byte getType(){
@@ -41,7 +49,15 @@ public class ResValueInt extends BaseResValueItem  {
     }
     @Override
     public void setData(int data){
+        int old=getData();
+        if(data==old){
+            return;
+        }
+        removeTableReference();
         setInt(OFFSET_DATA, data);
+        if(getValueType()==ValueType.STRING){
+            addTableReference(getTableStringReference());
+        }
     }
 
 

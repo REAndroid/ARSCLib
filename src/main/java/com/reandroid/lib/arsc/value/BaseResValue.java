@@ -1,9 +1,13 @@
 package com.reandroid.lib.arsc.value;
 
 import com.reandroid.lib.arsc.base.Block;
+import com.reandroid.lib.arsc.chunk.PackageBlock;
+import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.item.BlockItem;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.ReferenceItem;
+import com.reandroid.lib.arsc.pool.SpecStringPool;
+import com.reandroid.lib.arsc.pool.TableStringPool;
 
 import java.util.List;
 
@@ -22,6 +26,35 @@ public abstract class BaseResValue extends BlockItem  {
             parent=parent.getParent();
         }
         return null;
+    }
+
+    boolean removeSpecReference(ReferenceItem ref){
+        EntryBlock entryBlock=getEntryBlock();
+        if(entryBlock==null){
+            return false;
+        }
+        return entryBlock.removeSpecReference(ref);
+    }
+    boolean removeTableReference(ReferenceItem ref){
+        EntryBlock entryBlock=getEntryBlock();
+        if(entryBlock==null){
+            return false;
+        }
+        return entryBlock.removeTableReference(ref);
+    }
+    void addSpecReference(ReferenceItem ref){
+        EntryBlock entryBlock=getEntryBlock();
+        if(entryBlock==null){
+            return;
+        }
+        entryBlock.addSpecReference(ref);
+    }
+    void addTableReference(ReferenceItem ref){
+        EntryBlock entryBlock=getEntryBlock();
+        if(entryBlock==null){
+            return;
+        }
+        entryBlock.addTableReference(ref);
     }
 
 

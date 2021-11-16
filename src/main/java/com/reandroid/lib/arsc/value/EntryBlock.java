@@ -3,10 +3,12 @@ package com.reandroid.lib.arsc.value;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockCounter;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
+import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
+import com.reandroid.lib.arsc.pool.TableStringPool;
 
 
 import java.io.IOException;
@@ -43,6 +45,59 @@ public class EntryBlock extends Block {
         }
         return results;
     }
+    boolean removeSpecReference(ReferenceItem ref){
+        if(ref==null){
+            return false;
+        }
+        PackageBlock packageBlock=getPackageBlock();
+        if(packageBlock==null){
+            return false;
+        }
+        SpecStringPool specStringPool=packageBlock.getSpecStringPool();
+        return specStringPool.removeReference(ref);
+    }
+    boolean removeTableReference(ReferenceItem ref){
+        if(ref==null){
+            return false;
+        }
+        PackageBlock packageBlock=getPackageBlock();
+        if(packageBlock==null){
+            return false;
+        }
+        TableBlock tableBlock=packageBlock.getTableBlock();
+        if(tableBlock==null){
+            return false;
+        }
+        TableStringPool tableStringPool=tableBlock.getTableStringPool();
+        return tableStringPool.removeReference(ref);
+    }
+
+    void addSpecReference(ReferenceItem ref){
+        if(ref==null){
+            return;
+        }
+        PackageBlock packageBlock=getPackageBlock();
+        if(packageBlock==null){
+            return;
+        }
+        SpecStringPool specStringPool=packageBlock.getSpecStringPool();
+        specStringPool.addReference(ref);
+    }
+    void addTableReference(ReferenceItem ref){
+        if(ref==null){
+            return;
+        }
+        PackageBlock packageBlock=getPackageBlock();
+        if(packageBlock==null){
+            return;
+        }
+        TableBlock tableBlock=packageBlock.getTableBlock();
+        if(tableBlock==null){
+            return;
+        }
+        TableStringPool tableStringPool=tableBlock.getTableStringPool();
+        tableStringPool.addReference(ref);
+    }
 
     public short getFlags(){
         return mFlags.get();
@@ -57,7 +112,12 @@ public class EntryBlock extends Block {
         return mSpecReference.get();
     }
     public void setSpecReference(int ref){
+        int old=mSpecReference.get();
+        if(ref==old){
+            return;
+        }
         mSpecReference.set(ref);
+        updateSpecRef(old, ref);
     }
     public BaseResValue getResValue(){
         return mResValue;
@@ -74,6 +134,7 @@ public class EntryBlock extends Block {
             boolean is_complex=(resValue instanceof ResValueBag);
             setFlagComplex(is_complex);
             updatePackage();
+            updateSpecRef();
         }
     }
     private void setResValueInternal(BaseResValue resValue){
@@ -111,11 +172,7 @@ public class EntryBlock extends Block {
         return null;
     }
     public SpecString getSpecString(){
-        TypeBlock typeBlock=getTypeBlock();
-        if(typeBlock==null){
-            return null;
-        }
-        PackageBlock packageBlock=typeBlock.getPackageBlock();
+        PackageBlock packageBlock=getPackageBlock();
         if(packageBlock==null){
             return null;
         }
@@ -172,6 +229,13 @@ public class EntryBlock extends Block {
         int typeId=typeBlock.getTypeId();
         int entryId=getIndex();
         return ((pkgId << 24) | (typeId << 16) | entryId);
+    }
+    public PackageBlock getPackageBlock(){
+        TypeBlock typeBlock=getTypeBlock();
+        if(typeBlock!=null){
+            return typeBlock.getPackageBlock();
+        }
+        return null;
     }
     public TypeBlock getTypeBlock(){
         Block parent=getParent();
@@ -326,6 +390,28 @@ public class EntryBlock extends Block {
         return result;
     }
 
+    private void updateSpecRef(){
+        updateSpecRef(-1, getSpecReference());
+    }
+    private void updateSpecRef(int oldRef, int newNef){
+        TypeBlock typeBlock=getTypeBlock();
+        if(typeBlock==null){
+            return;
+        }
+        PackageBlock packageBlock=typeBlock.getPackageBlock();
+        if(packageBlock==null){
+            return;
+        }
+        SpecStringPool specStringPool=packageBlock.getSpecStringPool();
+        SpecString specString=specStringPool.get(oldRef);
+        if(specString!=null){
+            specString.removeReference(getSpecReferenceBlock());
+        }
+        SpecString specStringNew=specStringPool.get(newNef);
+        if(specStringNew!=null){
+            specStringNew.addReference(getSpecReferenceBlock());
+        }
+    }
     private void updatePackage(){
         TypeBlock typeBlock=getTypeBlock();
         if(typeBlock==null){
@@ -347,6 +433,7 @@ public class EntryBlock extends Block {
         createResValue();
         mResValue.readBytes(reader);
         updatePackage();
+        updateSpecRef();
     }
     public String toString(){
         StringBuilder builder=new StringBuilder();

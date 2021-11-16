@@ -66,6 +66,16 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
 
     }
 
+    public boolean removeReference(ReferenceItem ref){
+        if(ref==null){
+            return false;
+        }
+        T item=get(ref.get());
+        if(item!=null){
+            return item.removeReference(ref);
+        }
+        return false;
+    }
     public void addReference(ReferenceItem ref){
         if(ref==null){
             return;

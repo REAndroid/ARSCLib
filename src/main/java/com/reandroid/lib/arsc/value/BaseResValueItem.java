@@ -17,6 +17,18 @@ public abstract class BaseResValueItem extends BaseResValue implements ResValueI
         }
         return mReferenceItem;
     }
+    boolean removeTableReference(){
+        ReferenceItem ref=mReferenceItem;
+        if(ref==null){
+            return false;
+        }
+        EntryBlock entryBlock=getEntryBlock();
+        if(entryBlock==null){
+            return false;
+        }
+        mReferenceItem=null;
+        return entryBlock.removeTableReference(ref);
+    }
     private ReferenceItem createReferenceItem(){
         return new ReferenceItem() {
             @Override

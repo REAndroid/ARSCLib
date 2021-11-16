@@ -1,5 +1,7 @@
 package com.reandroid.lib.arsc.value;
 
+import com.reandroid.lib.arsc.item.ReferenceItem;
+
 public class ResValueBagItem extends BaseResValueItem{
 
     public ResValueBagItem() {
@@ -41,7 +43,16 @@ public class ResValueBagItem extends BaseResValueItem{
     }
     @Override
     public void setType(byte type){
+        byte old=getType();
+        if(type==old){
+            return;
+        }
+        removeTableReference();
         setByte(OFFSET_TYPE, type);
+        if(type==ValueType.STRING.getByte()){
+            ReferenceItem ref=getTableStringReference();
+            removeTableReference(ref);
+        }
     }
     @Override
     public byte getType(){
@@ -53,7 +64,17 @@ public class ResValueBagItem extends BaseResValueItem{
     }
     @Override
     public void setData(int data){
+        int old=getData();
+        if(data==old){
+            return;
+        }
+        if(getValueType()==ValueType.STRING){
+            removeTableReference();
+        }
         setInt(OFFSET_DATA, data);
+        if(getValueType()==ValueType.STRING){
+            addTableReference(getTableStringReference());
+        }
     }
 
     @Override
