@@ -11,9 +11,7 @@ import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 public abstract class BaseStringPool<T extends StringItem> extends BaseChunk implements BlockLoad {
@@ -65,7 +63,26 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
         mUniqueMap=new HashMap<>();
 
     }
-
+    public List<T> removeUnusedStrings(){
+        return getStringsArray().removeUnusedStrings();
+    }
+    public List<T> listUnusedStrings(){
+        return getStringsArray().listUnusedStrings();
+    }
+    public StyleArray getStyleArray(){
+        return mArrayStyles;
+    }
+    public StringArray<T> getStringsArray(){
+        return mArrayStrings;
+    }
+    public void removeReferences(Collection<ReferenceItem> referenceList){
+        if(referenceList==null){
+            return;
+        }
+        for(ReferenceItem ref:referenceList){
+            removeReference(ref);
+        }
+    }
     public boolean removeReference(ReferenceItem ref){
         if(ref==null){
             return false;
@@ -207,7 +224,8 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
     abstract StringArray<T> newInstance(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8);
     @Override
     protected void onChunkRefreshed() {
-
+        mArrayStrings.refreshCountAndStart();
+        mArrayStyles.refreshCountAndStart();
     }
     @Override
     public void onChunkLoaded() {

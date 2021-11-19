@@ -50,7 +50,8 @@ public class StringItem extends BlockItem {
         }
     }
     private void reUpdateReferences(int newIndex){
-        for(ReferenceItem ref:mReferencedList){
+        List<ReferenceItem> referenceItems=new ArrayList<>(mReferencedList);
+        for(ReferenceItem ref:referenceItems){
             ref.set(newIndex);
         }
     }
@@ -103,6 +104,9 @@ public class StringItem extends BlockItem {
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
+        if(reader.available()<4){
+            return;
+        }
         int len=calculateReadLength(reader);
         setBytesLength(len, false);
         byte[] bts=getBytesInternal();
@@ -110,6 +114,9 @@ public class StringItem extends BlockItem {
         onBytesChanged();
     }
     int calculateReadLength(BlockReader reader) throws IOException {
+        if(reader.available()<4){
+            return reader.available();
+        }
         byte[] bts=new byte[4];
         reader.readFully(bts);
         reader.offset(-4);
@@ -156,12 +163,12 @@ public class StringItem extends BlockItem {
             CharBuffer charBuffer=charsetDecoder.decode(buf);
             return charBuffer.toString();
         } catch (CharacterCodingException ex) {
-            return new String(allStringBytes, offLen[0], offLen[1]);
+            return new String(allStringBytes, offLen[0], offLen[1], StandardCharsets.UTF_16LE);
         }
     }
 
 
-    StyleItem getStyle(){
+    public StyleItem getStyle(){
         BaseStringPool stringPool=getStringPool();
         if(stringPool==null){
             return null;

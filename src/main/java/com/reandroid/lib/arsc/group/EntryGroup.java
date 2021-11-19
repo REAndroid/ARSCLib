@@ -53,18 +53,37 @@ public class EntryGroup extends ItemGroup<EntryBlock> {
         }
         return renameOk;
     }
-    public TypeString getTypeString(){
+    public EntryBlock pickOne(){
+        EntryBlock defEntryBlock=getDefault();
+        if(defEntryBlock!=null){
+            return defEntryBlock;
+        }
+        Iterator<EntryBlock> itr=iterator(true);
+        while (itr.hasNext()){
+            return itr.next();
+        }
+        return null;
+    }
+    public EntryBlock getDefault(){
         Iterator<EntryBlock> itr=iterator(true);
         while (itr.hasNext()){
             EntryBlock entryBlock=itr.next();
+            if(entryBlock.isDefault()){
+                return entryBlock;
+            }
+        }
+        return null;
+    }
+    public TypeString getTypeString(){
+        EntryBlock entryBlock=pickOne();
+        if(entryBlock!=null){
             return entryBlock.getTypeString();
         }
         return null;
     }
     public SpecString getSpecString(){
-        Iterator<EntryBlock> itr=iterator(true);
-        while (itr.hasNext()){
-            EntryBlock entryBlock=itr.next();
+        EntryBlock entryBlock=pickOne();
+        if(entryBlock!=null){
             return entryBlock.getSpecString();
         }
         return null;
@@ -98,6 +117,14 @@ public class EntryGroup extends ItemGroup<EntryBlock> {
         }
         return packageBlock.getSpecStringPool();
     }
+    @Override
+    public String toString(){
+        EntryBlock entryBlock=pickOne();
+        if(entryBlock==null){
+            return super.toString();
+        }
+        return super.toString()+"{"+entryBlock.toString()+"}";
+    }
     private static BlockArrayCreator<EntryBlock> create(){
         return new BlockArrayCreator<EntryBlock>(){
             @Override
@@ -111,4 +138,5 @@ public class EntryGroup extends ItemGroup<EntryBlock> {
             }
         };
     }
+
 }

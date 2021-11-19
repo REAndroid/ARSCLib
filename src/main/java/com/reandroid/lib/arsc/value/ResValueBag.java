@@ -9,8 +9,7 @@ import com.reandroid.lib.arsc.item.ReferenceItem;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ResValueBag extends BaseResValue {
 
@@ -29,6 +28,9 @@ public class ResValueBag extends BaseResValue {
         mCount.setIndex(1);
         mResValueBagItemArray.setParent(this);
         mResValueBagItemArray.setIndex(2);
+    }
+    public ResValueBagItem[] getBagItems(){
+        return getResValueBagItemArray().getChildes();
     }
     public List<ReferenceItem> getTableStringReferences(){
         List<ReferenceItem> results=null;

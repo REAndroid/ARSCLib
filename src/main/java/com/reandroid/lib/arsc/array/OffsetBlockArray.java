@@ -32,6 +32,14 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         this.mEnd4Block.fill(b);
     }
     @Override
+    public void clearChildes(){
+        super.clearChildes();
+        mOffsets.clear();
+        mItemStart.set(0);
+        mItemCount.set(0);
+        mEnd4Block.clear();
+    }
+    @Override
     public int countBytes(){
         int result=super.countBytes();
         int endCount=mEnd4Block.countBytes();
@@ -58,7 +66,8 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
     }
     @Override
     protected void onRefreshed() {
-        mOffsets.setSize(childesCount());
+        int count=childesCount();
+        mOffsets.setSize(count);
         T[] childes=getChildes();
         int sum=0;
         if(childes!=null){
@@ -69,6 +78,10 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
                 if(item==null || item.isNull()){
                     offset=-1;
                 }else {
+                    // slow but accurate
+                    //offset=countUpTo(item);
+
+                    // fast but fails for duplicate items
                     offset=sum;
                     sum+=item.countBytes();
                 }
@@ -79,10 +92,20 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         refreshStart();
         refreshEnd4Block();
     }
+    public void refreshCountAndStart(){
+        refreshCount();
+        refreshStart();
+    }
     private void refreshCount(){
         mItemCount.set(childesCount());
     }
     private void refreshStart(){
+        int count=childesCount();
+        if(count==0){
+            mItemStart.set(0);
+            mEnd4Block.clear();
+            return;
+        }
         Block parent=getParent();
         if(parent==null){
             return;

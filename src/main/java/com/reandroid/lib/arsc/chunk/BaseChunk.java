@@ -32,7 +32,6 @@ public abstract class BaseChunk extends ExpandableBlockContainer {
     public void onChunkLoaded(){
 
     }
-
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         HeaderBlock headerBlock=reader.readHeaderBlock();

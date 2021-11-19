@@ -28,7 +28,7 @@ public class PackageName extends StringItem {
         return decodeUtf16Bytes(getBytesInternal());
     }
     @Override
-    StyleItem getStyle(){
+    public StyleItem getStyle(){
         return null;
     }
     @Override

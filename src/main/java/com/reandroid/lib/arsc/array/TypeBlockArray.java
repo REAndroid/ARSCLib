@@ -12,6 +12,7 @@ import com.reandroid.lib.arsc.value.ResConfig;
 
 import java.io.IOException;
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TypeBlockArray extends BlockArray<TypeBlock> {
@@ -19,9 +20,30 @@ public class TypeBlockArray extends BlockArray<TypeBlock> {
     public TypeBlockArray(){
         super();
     }
+    public void removeEmptyBlocks(){
+        List<TypeBlock> allTypes=new ArrayList<>(listItems());
+        boolean foundEmpty=false;
+        for(TypeBlock typeBlock:allTypes){
+            if(typeBlock.isEmpty()){
+                super.remove(typeBlock, false);
+                foundEmpty=true;
+            }
+        }
+        if(foundEmpty){
+            trimNullBlocks();
+        }
+    }
     public EntryBlock getOrCreateEntry(short entryId, String qualifiers){
         TypeBlock typeBlock=getOrCreate(qualifiers);
         return typeBlock.getOrCreateEntry(entryId);
+    }
+    public boolean isEmpty(){
+        for(TypeBlock typeBlock:listItems()){
+            if(typeBlock!=null && !typeBlock.isEmpty()){
+                return false;
+            }
+        }
+        return true;
     }
     public EntryBlock getEntry(short entryId, String qualifiers){
         TypeBlock typeBlock=getTypeBlock(qualifiers);
@@ -140,6 +162,14 @@ public class TypeBlockArray extends BlockArray<TypeBlock> {
             parent=parent.getParent();
         }
         return null;
+    }
+    @Override
+    protected boolean remove(TypeBlock block, boolean trim){
+        if(block==null){
+            return false;
+        }
+        block.cleanEntries();
+        return super.remove(block, trim);
     }
     @Override
     public TypeBlock newInstance() {

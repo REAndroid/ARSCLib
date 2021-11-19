@@ -5,7 +5,7 @@ public class SpecString extends StringItem {
         super(utf8);
     }
     @Override
-    StyleItem getStyle(){
+    public StyleItem getStyle(){
         return null;
     }
 }

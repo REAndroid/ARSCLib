@@ -5,6 +5,8 @@ import com.reandroid.lib.arsc.array.ResXmlAttributeArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.ShortItem;
 
+import java.util.Collection;
+
 
 public class ResXmlStartElement extends BaseXmlChunk {
     private final ShortItem mAttributeStart;
@@ -36,6 +38,12 @@ public class ResXmlStartElement extends BaseXmlChunk {
             return name;
         }
         return prefix+":"+name;
+    }
+    public Collection<ResXmlAttribute> listResXmlAttributes(){
+        return getResXmlAttributeArray().listItems();
+    }
+    public ResXmlAttributeArray getResXmlAttributeArray(){
+        return mAttributeArray;
     }
     public String getPrefix(){
         int uriRef=getNamespaceReference();
@@ -78,14 +86,14 @@ public class ResXmlStartElement extends BaseXmlChunk {
             return super.toString();
         }
         StringBuilder builder=new StringBuilder();
-        builder.append("TAG: line=").append(getLineNumber()).append(" <").append(txt).append(">");
+        builder.append(txt);
         ResXmlAttribute[] allAttr=mAttributeArray.getChildes();
         if(allAttr!=null){
             for(int i=0;i<allAttr.length;i++){
                 if(i>10){
                     break;
                 }
-                builder.append(", ");
+                builder.append(" ");
                 builder.append(allAttr[i].toString());
             }
         }

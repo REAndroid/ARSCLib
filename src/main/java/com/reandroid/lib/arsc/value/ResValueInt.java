@@ -1,5 +1,6 @@
 package com.reandroid.lib.arsc.value;
 
+import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.ReferenceItem;
 
@@ -76,10 +77,19 @@ public class ResValueInt extends BaseResValueItem  {
         }else {
             builder.append("Unknown");
         }
+        String data=null;
+        if(vt==ValueType.STRING){
+            data=getString(getData());
+        }else{
+            data= ValueDecoder.decode(vt, getData());
+        }
+        if(data==null){
+            data=String.format("0x%08x", getData());
+        }
         builder.append('(');
         builder.append(String.format("0x%02x", getType()));
         builder.append("), data=");
-        builder.append(String.format("0x%08x", getData()));
+        builder.append(data);
         return builder.toString();
     }
 

@@ -9,7 +9,7 @@ public class TypeString extends StringItem {
         return (byte) (getIndex()+1);
     }
     @Override
-    StyleItem getStyle(){
+    public StyleItem getStyle(){
         return null;
     }
 }

@@ -34,6 +34,15 @@ public class SpecTypePair extends BlockContainer<Block> {
     public SpecTypePair(){
         this(new SpecBlock(), new TypeBlockArray());
     }
+    public void removeEmptyTypeBlocks(){
+        getTypeBlockArray().removeEmptyBlocks();
+    }
+    public boolean isEmpty(){
+        return getTypeBlockArray().isEmpty();
+    }
+    public int countTypeBlocks(){
+        return getTypeBlockArray().childesCount();
+    }
     public EntryBlock getOrCreateEntry(short entryId, String qualifiers){
         return getTypeBlockArray().getOrCreateEntry(entryId, qualifiers);
     }
@@ -49,6 +58,7 @@ public class SpecTypePair extends BlockContainer<Block> {
     public List<ResConfig> listResConfig(){
         return mTypeBlockArray.listResConfig();
     }
+
     public byte getTypeId(){
         return mSpecBlock.getTypeId();
     }

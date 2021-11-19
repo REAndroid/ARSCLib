@@ -49,7 +49,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         }
         changeSize(diff);
     }
-    public final void clearChildes(){
+    public void clearChildes(){
         T[] allChildes=elementData;
         if(allChildes==null || allChildes.length==0){
             return;
@@ -118,6 +118,9 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         block.setIndex(index);
         block.setParent(this);
     }
+    public final int countNonNull(){
+        return countNonNull(true);
+    }
     public final int childesCount(){
         return elementData.length;
     }
@@ -179,7 +182,16 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         }
         return false;
     }
+    public void remove(Collection<T> blockList){
+        for(T block:blockList){
+            remove(block, false);
+        }
+        trimNullBlocks();
+    }
     public boolean remove(T block){
+        return remove(block, true);
+    }
+    protected boolean remove(T block, boolean trim){
         T[] items=elementData;
         if(block==null||items==null){
             return false;
@@ -192,17 +204,17 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
                 found=true;
             }
         }
-        if(found){
+        if(found && trim){
             trimNullBlocks();
         }
         return found;
     }
-    private void trimNullBlocks(){
+    protected void trimNullBlocks(){
         T[] items=elementData;
         if(items==null){
             return;
         }
-        int count=countNonNull();
+        int count=countNonNull(false);
         int len=items.length;
         if(count==len){
             return;
@@ -219,7 +231,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         }
         elementData=update;
     }
-    private int countNonNull(){
+    private int countNonNull(boolean is_null_check){
         T[] items=elementData;
         if(items==null){
             return 0;
@@ -227,6 +239,9 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         int result=0;
         for(T block:items){
             if(block!=null){
+                if(is_null_check && block.isNull()){
+                    continue;
+                }
                 result++;
             }
         }

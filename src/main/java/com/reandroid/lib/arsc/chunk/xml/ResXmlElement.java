@@ -11,6 +11,8 @@ import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class ResXmlElement extends FixedBlockContainer {
@@ -35,6 +37,20 @@ public class ResXmlElement extends FixedBlockContainer {
         addChild(3, mResXmlTextContainer);
         addChild(4, mEndElementContainer);
         addChild(5, mEndNamespaceList);
+    }
+    public String getTagName(){
+        ResXmlStartElement startElement=getStartElement();
+        if(startElement!=null){
+            return startElement.getTagName();
+        }
+        return null;
+    }
+    public Collection<ResXmlAttribute> listResXmlAttributes(){
+        ResXmlStartElement startElement=getStartElement();
+        if(startElement!=null){
+            return startElement.listResXmlAttributes();
+        }
+        return new ArrayList<>();
     }
     public ResXmlStringPool getStringPool(){
         Block parent=getParent();
@@ -286,5 +302,26 @@ public class ResXmlElement extends FixedBlockContainer {
             throw new IOException("Unbalanced element: hasStart="
                     +hasStartElement()+", hasEnd="+hasEndElement());
         }
+    }
+    @Override
+    public String toString(){
+        ResXmlStartElement start = getStartElement();
+        if(start!=null){
+            ResXmlText text=getResXmlText();
+            StringBuilder builder=new StringBuilder();
+            builder.append("<");
+            builder.append(start.toString());
+            if(text!=null){
+                builder.append(">");
+                builder.append(text.toString());
+                builder.append("</");
+                builder.append(start.getTagName());
+                builder.append(">");
+            }else {
+                builder.append("/>");
+            }
+            return builder.toString();
+        }
+        return "NULL";
     }
 }

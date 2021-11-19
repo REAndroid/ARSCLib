@@ -69,6 +69,9 @@ public class ResXmlAttribute extends FixedBlockContainer {
         mRawValue.set(val);
     }
 
+    public ResXmlString getNameString(){
+        return getResXmlString(getNameReference());
+    }
     public ValueType getValueType(){
         return ValueType.valueOf(getValueTypeByte());
     }
@@ -104,7 +107,7 @@ public class ResXmlAttribute extends FixedBlockContainer {
         return getResourceId(getNameReference());
     }
     private int getResourceId(int ref){
-        if(ref<=0){
+        if(ref<0){
             return 0;
         }
         ResXmlIDMap xmlIDMap=getResXmlIDMap();
@@ -171,9 +174,9 @@ public class ResXmlAttribute extends FixedBlockContainer {
             }
             String valStr=getValueString();
             if(valStr!=null){
-                return getIndex()+" {"+fullName+"=\""+valStr+"\""+"}";
+                return fullName+"=\""+valStr+"\"";
             }
-            return getIndex()+" {"+fullName+"}"+"["+getValueType()+"]=\""+getRawValue()+"\"";
+            return fullName+"["+getValueType()+"]=\""+getRawValue()+"\"";
         }
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());

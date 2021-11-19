@@ -4,22 +4,23 @@ import com.reandroid.lib.arsc.array.SpecTypePairArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.PackageLastBlocks;
 import com.reandroid.lib.arsc.container.SpecTypePair;
+import com.reandroid.lib.arsc.decoder.ResourceNameProvider;
 import com.reandroid.lib.arsc.group.EntryGroup;
-import com.reandroid.lib.arsc.group.ItemGroup;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.PackageName;
 import com.reandroid.lib.arsc.item.ReferenceItem;
-import com.reandroid.lib.arsc.item.SpecString;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
 import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.arsc.pool.TypeStringPool;
+import com.reandroid.lib.arsc.value.BaseResValue;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.LibraryInfo;
+import com.reandroid.lib.arsc.value.ResValueBag;
 
 import java.util.*;
 
 
-public class PackageBlock extends BaseChunk {
+public class PackageBlock extends BaseChunk implements ResourceNameProvider {
     private final IntegerItem mPackageId;
     private final PackageName mPackageName;
 
@@ -71,6 +72,12 @@ public class PackageBlock extends BaseChunk {
 
         addChild(mPackageLastBlocks);
 
+    }
+    public void removeEmpty(){
+        getSpecTypePairArray().removeEmptyPairs();
+    }
+    public boolean isEmpty(){
+        return getSpecTypePairArray().isEmpty();
     }
     public int getId(){
         return mPackageId.get();
@@ -178,11 +185,14 @@ public class PackageBlock extends BaseChunk {
     public TypeBlock getTypeBlock(byte typeId, String qualifiers){
         return getSpecTypePairArray().getTypeBlock(typeId, qualifiers);
     }
+    public Map<Integer, EntryGroup> getEntriesGroupMap(){
+        return mEntriesGroup;
+    }
     public Collection<EntryGroup> listEntryGroup(){
-        return mEntriesGroup.values();
+        return getEntriesGroupMap().values();
     }
     public EntryGroup getEntryGroup(int resId){
-        return mEntriesGroup.get(resId);
+        return getEntriesGroupMap().get(resId);
     }
     public void updateEntry(EntryBlock entryBlock){
         if(entryBlock==null||entryBlock.isNull()){
@@ -190,6 +200,20 @@ public class PackageBlock extends BaseChunk {
         }
         updateEntryGroup(entryBlock);
         updateEntryTableReferences(entryBlock);
+    }
+    public void removeEntryGroup(EntryBlock entryBlock){
+        if(entryBlock==null){
+            return;
+        }
+        int id=entryBlock.getResourceId();
+        EntryGroup group=getEntriesGroupMap().get(id);
+        if(group==null){
+            return;
+        }
+        group.remove(entryBlock);
+        if(group.size()==0){
+            getEntriesGroupMap().remove(id);
+        }
     }
     private void updateEntryTableReferences(EntryBlock entryBlock){
         TableBlock tableBlock=getTableBlock();
@@ -202,10 +226,10 @@ public class PackageBlock extends BaseChunk {
     }
     private void updateEntryGroup(EntryBlock entryBlock){
         int resId=entryBlock.getResourceId();
-        EntryGroup group=mEntriesGroup.get(resId);
+        EntryGroup group=getEntriesGroupMap().get(resId);
         if(group==null){
             group=new EntryGroup(resId);
-            mEntriesGroup.put(resId, group);
+            getEntriesGroupMap().put(resId, group);
         }
         group.add(entryBlock);
     }
@@ -244,6 +268,67 @@ public class PackageBlock extends BaseChunk {
     @Override
     protected void onChunkRefreshed() {
         refreshKeyStrings();
+    }
+
+    @Override
+    public String getResourceFullName(int resId, boolean includePackageName) {
+        EntryGroup entryGroup=getEntryGroup(resId);
+        if(entryGroup==null){
+            return null;
+        }
+        String type=entryGroup.getTypeName();
+        if(type==null){
+            return null;
+        }
+        String spec=entryGroup.getSpecName();
+        if(spec==null){
+            return null;
+        }
+        StringBuilder builder=new StringBuilder();
+        builder.append('@');
+        if(includePackageName){
+            builder.append(getPackageName());
+            builder.append(':');
+        }
+        builder.append(type);
+        builder.append('/');
+        builder.append(spec);
+        return builder.toString();
+    }
+
+    @Override
+    public String getResourceName(int resId, boolean includePackageName) {
+        EntryGroup entryGroup=getEntryGroup(resId);
+        if(entryGroup==null){
+            return null;
+        }
+        String spec=entryGroup.getSpecName();
+        if(spec==null){
+            return null;
+        }
+        StringBuilder builder=new StringBuilder();
+        if(includePackageName){
+            builder.append(getPackageName());
+            builder.append(':');
+        }
+        builder.append(spec);
+        return builder.toString();
+    }
+    @Override
+    public ResValueBag getAttributeBag(int resId){
+        EntryGroup entryGroup=getEntryGroup(resId);
+        if(entryGroup==null){
+            return null;
+        }
+        EntryBlock entryBlock=entryGroup.pickOne();
+        if(entryBlock==null){
+            return null;
+        }
+        BaseResValue resValue=entryBlock.getResValue();
+        if(resValue instanceof ResValueBag){
+            return (ResValueBag)resValue;
+        }
+        return null;
     }
 
     @Override

@@ -5,13 +5,39 @@ import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.value.EntryBlock;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class SpecTypePairArray extends BlockArray<SpecTypePair> {
     public SpecTypePairArray(){
         super();
     }
 
+    public void removeEmptyPairs(){
+        List<SpecTypePair> allPairs=new ArrayList<>(listItems());
+        boolean foundEmpty=false;
+        for(SpecTypePair typePair:allPairs){
+            typePair.removeEmptyTypeBlocks();
+            if(typePair.isEmpty()){
+                super.remove(typePair, false);
+                foundEmpty=true;
+            }
+        }
+        if(foundEmpty){
+            trimNullBlocks();
+        }
+    }
+    public boolean isEmpty(){
+        Iterator<SpecTypePair> iterator=iterator(true);
+        while (iterator.hasNext()){
+            SpecTypePair pair=iterator.next();
+            if(!pair.isEmpty()){
+                return false;
+            }
+        }
+        return true;
+    }
     public EntryBlock getOrCreateEntry(byte typeId, short entryId, String qualifiers){
         TypeBlock typeBlock=getOrCreateTypeBlock(typeId, qualifiers);
         return typeBlock.getOrCreateEntry(entryId);

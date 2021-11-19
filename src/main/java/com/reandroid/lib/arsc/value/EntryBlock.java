@@ -26,6 +26,13 @@ public class EntryBlock extends Block {
         super();
     }
 
+    public boolean isDefault(){
+        TypeBlock typeBlock=getTypeBlock();
+        if(typeBlock!=null){
+            return typeBlock.isDefault();
+        }
+        return false;
+    }
     public List<ReferenceItem> getTableStringReferences(){
         if(isNull()){
             return null;
@@ -97,6 +104,30 @@ public class EntryBlock extends Block {
         }
         TableStringPool tableStringPool=tableBlock.getTableStringPool();
         tableStringPool.addReference(ref);
+    }
+    private void removeTableReferences(){
+        PackageBlock packageBlock=getPackageBlock();
+        if(packageBlock==null){
+            return;
+        }
+        TableBlock tableBlock=packageBlock.getTableBlock();
+        if(tableBlock==null){
+            return;
+        }
+        TableStringPool tableStringPool=tableBlock.getTableStringPool();
+        tableStringPool.removeReferences(getTableStringReferences());
+    }
+    private void removeSpecReferences(){
+        PackageBlock packageBlock=getPackageBlock();
+        if(packageBlock==null){
+            return;
+        }
+        SpecStringPool specStringPool=packageBlock.getSpecStringPool();
+        specStringPool.removeReference(getSpecReferenceBlock());
+    }
+    private void removeAllReferences(){
+        removeTableReferences();
+        removeSpecReferences();
     }
 
     public short getFlags(){
@@ -271,6 +302,7 @@ public class EntryBlock extends Block {
         if(!mUnLocked){
             return;
         }
+        removeAllReferences();
         mUnLocked =false;
         mHeaderSize.setParent(null);
         mFlags.setParent(null);
@@ -455,6 +487,13 @@ public class EntryBlock extends Block {
             builder.append('(');
             builder.append(name);
             builder.append(')');
+        }
+        BaseResValue baseResValue=getResValue();
+        if(baseResValue instanceof ResValueInt){
+            ResValueInt resValueInt=(ResValueInt)baseResValue;
+            builder.append(" '");
+            builder.append(resValueInt.toString());
+            builder.append(" '");
         }
         return builder.toString();
     }

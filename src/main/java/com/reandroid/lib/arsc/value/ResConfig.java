@@ -425,7 +425,7 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
 
     public String getQualifiers(){
         if(mQualifiers==null){
-            mQualifiers= ResConfigHelper.toQualifier(this);
+            mQualifiers = ResConfigHelper.toQualifier(this).trim();
         }
         return mQualifiers;
     }
@@ -503,13 +503,16 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
         }
         return false;
     }
+    public boolean isDefault(){
+        return getQualifiers().length()==0;
+    }
     @Override
     public String toString(){
         String q=getQualifiers();
-        if(q.trim().length()==0){
-            return "[DEFAULT]";
+        if(q.length()==0){
+            q="DEFAULT";
         }
-        return q;
+        return "["+q+"]";
     }
 
 

@@ -1,6 +1,8 @@
 package com.reandroid.lib.arsc.array;
 
+import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockArray;
+import com.reandroid.lib.arsc.chunk.xml.ResXmlStartElement;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.chunk.xml.ResXmlAttribute;
@@ -17,6 +19,19 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute> {
         this.mAttributeStart=attributeStart;
         this.mAttributeCount=attributeCount;
     }
+    private void refreshCount(){
+        short count= (short) childesCount();
+        mAttributeCount.set(count);
+    }
+    private void refreshStart(){
+        Block parent=getParent();
+        if(parent==null){
+            return;
+        }
+        int start = parent.countUpTo(this);
+        start=start-mHeaderBlock.countBytes();
+        mAttributeStart.set((short) start);
+    }
     @Override
     public ResXmlAttribute newInstance() {
         return new ResXmlAttribute();
@@ -27,7 +42,8 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute> {
     }
     @Override
     protected void onRefreshed() {
-
+        refreshCount();
+        refreshStart();
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {

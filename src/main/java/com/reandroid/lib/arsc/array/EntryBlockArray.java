@@ -4,10 +4,15 @@ import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.value.EntryBlock;
 
+import java.util.Iterator;
+
 
 public class EntryBlockArray extends OffsetBlockArray<EntryBlock> {
     public EntryBlockArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart){
         super(offsets, itemCount, itemStart);
+    }
+    public boolean isEmpty(){
+        return !iterator(true).hasNext();
     }
     public void setEntry(short entryId, EntryBlock entryBlock){
         setItem(entryId, entryBlock);
