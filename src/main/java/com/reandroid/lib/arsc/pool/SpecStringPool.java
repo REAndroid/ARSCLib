@@ -15,4 +15,7 @@ public class SpecStringPool extends BaseStringPool<SpecString> {
     StringArray<SpecString> newInstance(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         return new SpecStringArray(offsets, itemCount, itemStart, is_utf8);
     }
+    @Override
+    public void recreateStyles(){
+    }
 }

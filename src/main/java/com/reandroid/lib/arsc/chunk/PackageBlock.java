@@ -4,7 +4,6 @@ import com.reandroid.lib.arsc.array.SpecTypePairArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.PackageLastBlocks;
 import com.reandroid.lib.arsc.container.SpecTypePair;
-import com.reandroid.lib.arsc.decoder.ResourceNameProvider;
 import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.PackageName;
@@ -12,15 +11,13 @@ import com.reandroid.lib.arsc.item.ReferenceItem;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
 import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.arsc.pool.TypeStringPool;
-import com.reandroid.lib.arsc.value.BaseResValue;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.LibraryInfo;
-import com.reandroid.lib.arsc.value.ResValueBag;
 
 import java.util.*;
 
 
-public class PackageBlock extends BaseChunk implements ResourceNameProvider {
+public class PackageBlock extends BaseChunk  {
     private final IntegerItem mPackageId;
     private final PackageName mPackageName;
 
@@ -268,67 +265,6 @@ public class PackageBlock extends BaseChunk implements ResourceNameProvider {
     @Override
     protected void onChunkRefreshed() {
         refreshKeyStrings();
-    }
-
-    @Override
-    public String getResourceFullName(int resId, boolean includePackageName) {
-        EntryGroup entryGroup=getEntryGroup(resId);
-        if(entryGroup==null){
-            return null;
-        }
-        String type=entryGroup.getTypeName();
-        if(type==null){
-            return null;
-        }
-        String spec=entryGroup.getSpecName();
-        if(spec==null){
-            return null;
-        }
-        StringBuilder builder=new StringBuilder();
-        builder.append('@');
-        if(includePackageName){
-            builder.append(getPackageName());
-            builder.append(':');
-        }
-        builder.append(type);
-        builder.append('/');
-        builder.append(spec);
-        return builder.toString();
-    }
-
-    @Override
-    public String getResourceName(int resId, boolean includePackageName) {
-        EntryGroup entryGroup=getEntryGroup(resId);
-        if(entryGroup==null){
-            return null;
-        }
-        String spec=entryGroup.getSpecName();
-        if(spec==null){
-            return null;
-        }
-        StringBuilder builder=new StringBuilder();
-        if(includePackageName){
-            builder.append(getPackageName());
-            builder.append(':');
-        }
-        builder.append(spec);
-        return builder.toString();
-    }
-    @Override
-    public ResValueBag getAttributeBag(int resId){
-        EntryGroup entryGroup=getEntryGroup(resId);
-        if(entryGroup==null){
-            return null;
-        }
-        EntryBlock entryBlock=entryGroup.pickOne();
-        if(entryBlock==null){
-            return null;
-        }
-        BaseResValue resValue=entryBlock.getResValue();
-        if(resValue instanceof ResValueBag){
-            return (ResValueBag)resValue;
-        }
-        return null;
     }
 
     @Override

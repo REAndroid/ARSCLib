@@ -57,6 +57,15 @@ public class BaseXmlChunk extends BaseChunk {
     public int getStringReference(){
         return mStringReference.get();
     }
+    public ResXmlString setString(String str){
+        ResXmlStringPool pool = getStringPool();
+        if(pool==null){
+            return null;
+        }
+        ResXmlString xmlString = pool.getOrCreate(str);
+        setStringReference(xmlString.getIndex());
+        return xmlString;
+    }
 
 
     public ResXmlStringPool getStringPool(){
@@ -82,6 +91,13 @@ public class BaseXmlChunk extends BaseChunk {
         }
         return null;
     }
+    ResXmlString getOrCreateResXmlString(String str){
+        ResXmlStringPool stringPool=getStringPool();
+        if(stringPool!=null){
+            return stringPool.getOrCreate(str);
+        }
+        return null;
+    }
     String getString(int ref){
         ResXmlString xmlString=getResXmlString(ref);
         if(xmlString!=null){
@@ -96,6 +112,7 @@ public class BaseXmlChunk extends BaseChunk {
     public String getUri(){
         return getString(getNamespaceReference());
     }
+
     public ResXmlElement getParentResXmlElement(){
         Block parent=getParent();
         while (parent!=null){

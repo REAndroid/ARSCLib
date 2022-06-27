@@ -9,6 +9,7 @@ import com.reandroid.lib.arsc.group.StringGroup;
 import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
+import com.reandroid.lib.arsc.pool.builder.StyleBuilder;
 
 import java.io.IOException;
 import java.util.*;
@@ -62,6 +63,16 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
 
         mUniqueMap=new HashMap<>();
 
+    }
+    public void recreateStyles(){
+        StyleArray styleArray = getStyleArray();
+        //styleArray.clearChildes();
+        StringArray<T> stringArray=getStringsArray();
+        for(T stringItem:stringArray.listItems()){
+            if(StyleBuilder.hasStyle(stringItem)){
+                StyleBuilder.buildStyle(stringItem);
+            }
+        }
     }
     public List<T> removeUnusedStrings(){
         return getStringsArray().removeUnusedStrings();

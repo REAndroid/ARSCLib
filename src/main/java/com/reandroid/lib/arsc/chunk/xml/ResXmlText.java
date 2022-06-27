@@ -3,6 +3,7 @@ package com.reandroid.lib.arsc.chunk.xml;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.ResXmlString;
+import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 
 public class ResXmlText extends BaseXmlChunk {
     private final IntegerItem mReserved;
@@ -23,6 +24,15 @@ public class ResXmlText extends BaseXmlChunk {
     }
     public void setTextReference(int ref){
         setNamespaceReference(ref);
+    }
+    public void setText(String text){
+        ResXmlStringPool stringPool=getStringPool();
+        if(stringPool==null){
+            return;
+        }
+        ResXmlString resXmlString = stringPool.getOrCreate(text);
+        int ref=resXmlString.getIndex();
+        setTextReference(ref);
     }
     @Override
     public String toString(){

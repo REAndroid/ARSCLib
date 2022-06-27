@@ -7,6 +7,7 @@ import com.reandroid.lib.arsc.container.FixedBlockContainer;
 import com.reandroid.lib.arsc.container.SingleBlockContainer;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
+import com.reandroid.lib.arsc.item.ResXmlString;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 
 
@@ -38,10 +39,67 @@ public class ResXmlElement extends FixedBlockContainer {
         addChild(4, mEndElementContainer);
         addChild(5, mEndNamespaceList);
     }
+    public List<ResXmlElement> searchElementsByTagName(String name){
+        List<ResXmlElement> results=new ArrayList<>();
+        if(name==null){
+            return results;
+        }
+        for(ResXmlElement child:listElements()){
+            if(name.equals(child.getTag())||name.equals(child.getTagName())){
+                results.add(child);
+            }
+        }
+        return results;
+    }
+    public ResXmlAttribute searchAttributeByName(String name){
+        ResXmlStartElement startElement=getStartElement();
+        if(startElement!=null){
+            return startElement.searchAttributeByName(name);
+        }
+        return null;
+    }
+    public void setTag(String tag){
+        ResXmlStringPool pool = getStringPool();
+        if(pool==null){
+            return;
+        }
+        ensureStartEndElement();
+        ResXmlStartElement start=getStartElement();
+        String prefix=null;
+        String name=tag;
+        int i=tag.lastIndexOf(':');
+        if(i>=0){
+            prefix=tag.substring(0,i);
+            i++;
+            name=tag.substring(i);
+        }
+        start.setName(name);
+    }
     public String getTagName(){
         ResXmlStartElement startElement=getStartElement();
         if(startElement!=null){
             return startElement.getTagName();
+        }
+        return null;
+    }
+    public String getTag(){
+        ResXmlStartElement startElement=getStartElement();
+        if(startElement!=null){
+            return startElement.getName();
+        }
+        return null;
+    }
+    public String getTagUri(){
+        ResXmlStartElement startElement=getStartElement();
+        if(startElement!=null){
+            return startElement.getUri();
+        }
+        return null;
+    }
+    public String getTagPrefix(){
+        ResXmlStartElement startElement=getStartElement();
+        if(startElement!=null){
+            return startElement.getPrefix();
         }
         return null;
     }
@@ -182,6 +240,22 @@ public class ResXmlElement extends FixedBlockContainer {
         start.setResXmlEndElement(end);
         end.setResXmlStartElement(start);
     }
+    private void ensureStartEndElement(){
+        ResXmlStartElement start=getStartElement();
+        ResXmlEndElement end=getEndElement();
+        if(start!=null && end!=null){
+            return;
+        }
+        if(start==null){
+            start=new ResXmlStartElement();
+            setStartElement(start);
+        }
+        if(end==null){
+            end=new ResXmlEndElement();
+            setEndElement(end);
+        }
+        linkStartEndElement();
+    }
     private void linkStartEndNameSpaces(){
         if(!isNamespaceBalanced()){
             return;
@@ -227,8 +301,8 @@ public class ResXmlElement extends FixedBlockContainer {
                 unBalancedFinish(reader);
             }else {
                 readBytes(reader);
+                return;
             }
-            return;
         }
         linkStartEnd();
         onFinishedRead(reader, headerBlock);
@@ -245,7 +319,14 @@ public class ResXmlElement extends FixedBlockContainer {
 
     }
     private void onFinishedUnexpected(BlockReader reader) throws IOException{
-        throw new IOException("Unexpected finish reading: "+reader.toString());
+        StringBuilder builder=new StringBuilder();
+        builder.append("Unexpected finish reading: reader=").append(reader.toString());
+        HeaderBlock header = reader.readHeaderBlock();
+        if(header!=null){
+            builder.append(", next header=");
+            builder.append(header.toString());
+        }
+        throw new IOException(builder.toString());
     }
     private void onStartElement(BlockReader reader) throws IOException{
         if(hasStartElement()){
@@ -298,9 +379,25 @@ public class ResXmlElement extends FixedBlockContainer {
             throw new IOException("Unbalanced namespace: start="
                     +mStartNamespaceList.size()+", end="+mEndNamespaceList.size());
         }
+
         if(!isElementBalanced()){
-            throw new IOException("Unbalanced element: hasStart="
-                    +hasStartElement()+", hasEnd="+hasEndElement());
+            // Should not happen unless corrupted file, auto corrected above
+            StringBuilder builder=new StringBuilder();
+            builder.append("Unbalanced element: start=");
+            ResXmlStartElement startElement=getStartElement();
+            if(startElement!=null){
+                builder.append(startElement);
+            }else {
+                builder.append("null");
+            }
+            builder.append(", end=");
+            ResXmlEndElement endElement=getEndElement();
+            if(endElement!=null){
+                builder.append(endElement);
+            }else {
+                builder.append("null");
+            }
+            throw new IOException(builder.toString());
         }
     }
     @Override
@@ -323,5 +420,14 @@ public class ResXmlElement extends FixedBlockContainer {
             return builder.toString();
         }
         return "NULL";
+    }
+    static ResXmlElement newResXmlElement(String tag){
+        ResXmlElement resXmlElement=new ResXmlElement();
+        ResXmlStartElement startElement=new ResXmlStartElement();
+        resXmlElement.setStartElement(startElement);
+        ResXmlEndElement endElement=new ResXmlEndElement();
+        resXmlElement.setEndElement(endElement);
+        resXmlElement.setTag(tag);
+        return resXmlElement;
     }
 }

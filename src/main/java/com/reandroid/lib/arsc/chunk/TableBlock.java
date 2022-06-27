@@ -1,14 +1,16 @@
 package com.reandroid.lib.arsc.chunk;
 
 import com.reandroid.lib.arsc.array.PackageArray;
-import com.reandroid.lib.arsc.decoder.ResourceNameProvider;
+import com.reandroid.lib.arsc.chunk.xml.ResXmlBlock;
+import com.reandroid.lib.arsc.header.HeaderBlock;
+import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.pool.TableStringPool;
-import com.reandroid.lib.arsc.value.ResValueBag;
 
+import java.io.*;
 import java.util.Collection;
 
-public class TableBlock extends BaseChunk implements ResourceNameProvider {
+public class TableBlock extends BaseChunk  {
     private final IntegerItem mPackageCount;
     private final TableStringPool mTableStringPool;
     private final PackageArray mPackageArray;
@@ -42,43 +44,34 @@ public class TableBlock extends BaseChunk implements ResourceNameProvider {
     protected void onChunkRefreshed() {
         refreshPackageCount();
     }
-    @Override
-    public String getResourceFullName(int resId, boolean includePackageName) {
-        byte pkgId= (byte) ((resId>>24)&0xFF);
-        if(pkgId==0){
-            return null;
-        }
-        PackageBlock packageBlock=getPackageBlockById(pkgId);
-        if(packageBlock!=null){
-            return packageBlock.getResourceFullName(resId, includePackageName);
-        }
-        return null;
-    }
 
     @Override
-    public String getResourceName(int resId, boolean includePackageName) {
-        byte pkgId= (byte) ((resId>>24)&0xFF);
-        if(pkgId==0){
-            return null;
-        }
-        PackageBlock packageBlock=getPackageBlockById(pkgId);
-        if(packageBlock!=null){
-            return packageBlock.getResourceName(resId, includePackageName);
-        }
-        return null;
+    public int onWriteBytes(OutputStream stream) throws IOException{
+        int result=super.onWriteBytes(stream);
+        stream.flush();
+        stream.close();
+        return result;
     }
-    @Override
-    public ResValueBag getAttributeBag(int resId){
-        byte pkgId= (byte) ((resId>>24)&0xFF);
-        if(pkgId==0){
-            return null;
-        }
-        PackageBlock packageBlock=getPackageBlockById(pkgId);
-        if(packageBlock!=null){
-            return packageBlock.getAttributeBag(resId);
-        }
-        return null;
+    public void readBytes(File file) throws IOException{
+        BlockReader reader=new BlockReader(file);
+        super.readBytes(reader);
     }
+    public void readBytes(InputStream inputStream) throws IOException{
+        BlockReader reader=new BlockReader(inputStream);
+        super.readBytes(reader);
+    }
+    public final int writeBytes(File file) throws IOException{
+        if(isNull()){
+            throw new IOException("Can NOT save null block");
+        }
+        File dir=file.getParentFile();
+        if(dir!=null && !dir.exists()){
+            dir.mkdirs();
+        }
+        OutputStream outputStream=new FileOutputStream(file);
+        return super.writeBytes(outputStream);
+    }
+
     @Override
     public String toString(){
         StringBuilder builder=new StringBuilder();
@@ -87,6 +80,45 @@ public class TableBlock extends BaseChunk implements ResourceNameProvider {
         int pkgCount=mPackageArray.childesCount();
         builder.append(pkgCount);
         return builder.toString();
+    }
+
+
+    public static boolean isResTableBlock(File file){
+        if(file==null){
+            return false;
+        }
+        try {
+            InputStream inputStream=new FileInputStream(file);
+            return isResTableBlock(inputStream);
+        } catch (FileNotFoundException ignored) {
+            return false;
+        }
+    }
+    public static boolean isResTableBlock(InputStream inputStream){
+        try {
+            HeaderBlock headerBlock= BlockReader.readHeaderBlock(inputStream);
+            return isResTableBlock(headerBlock);
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+    public static boolean isResTableBlock(BlockReader blockReader){
+        if(blockReader==null){
+            return false;
+        }
+        try {
+            HeaderBlock headerBlock = blockReader.readHeaderBlock();
+            return isResTableBlock(headerBlock);
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+    public static boolean isResTableBlock(HeaderBlock headerBlock){
+        if(headerBlock==null){
+            return false;
+        }
+        ChunkType chunkType=headerBlock.getChunkType();
+        return chunkType==ChunkType.TABLE;
     }
 
 }

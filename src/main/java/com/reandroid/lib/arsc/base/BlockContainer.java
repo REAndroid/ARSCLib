@@ -9,6 +9,18 @@ public abstract class BlockContainer<T extends Block> extends Block{
     public BlockContainer(){
         super();
     }
+
+    protected final BlockContainer getTopContainer(){
+        Block parent=this;
+        BlockContainer result=this;
+        while (parent!=null){
+            if(parent instanceof BlockContainer){
+                result=(BlockContainer)parent;
+            }
+            parent=parent.getParent();
+        }
+        return result;
+    }
     protected abstract void onRefreshed();
     public final void refresh(){
         if(isNull()){

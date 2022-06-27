@@ -3,6 +3,7 @@ package com.reandroid.lib.arsc.chunk.xml;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.array.ResXmlAttributeArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
+import com.reandroid.lib.arsc.item.ResXmlString;
 import com.reandroid.lib.arsc.item.ShortItem;
 
 import java.util.Collection;
@@ -31,6 +32,17 @@ public class ResXmlStartElement extends BaseXmlChunk {
         addChild(mClassAttribute);
         addChild(mAttributeArray);
     }
+    public ResXmlAttribute searchAttributeByName(String name){
+        if(name==null){
+            return null;
+        }
+        for(ResXmlAttribute attribute:listResXmlAttributes()){
+            if(name.equals(attribute.getFullName()) || name.equals(attribute.getName())){
+                return attribute;
+            }
+        }
+        return null;
+    }
     public String getTagName(){
         String prefix=getPrefix();
         String name=getName();
@@ -38,6 +50,9 @@ public class ResXmlStartElement extends BaseXmlChunk {
             return name;
         }
         return prefix+":"+name;
+    }
+    public void setName(String name){
+        setString(name);
     }
     public Collection<ResXmlAttribute> listResXmlAttributes(){
         return getResXmlAttributeArray().listItems();

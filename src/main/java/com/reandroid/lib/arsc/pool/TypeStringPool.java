@@ -17,4 +17,7 @@ public class TypeStringPool extends BaseStringPool<TypeString> {
     StringArray<TypeString> newInstance(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         return new TypeStringArray(offsets, itemCount, itemStart, is_utf8);
     }
+    @Override
+    public void recreateStyles(){
+    }
 }

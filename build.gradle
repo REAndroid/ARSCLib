@@ -2,7 +2,7 @@
 apply plugin: 'java-library'
 
 group 'com.reandroid.lib.arsc'
-version '1.0.0'
+version '1.0.1'
 
 java {
     sourceCompatibility JavaVersion.VERSION_1_8
@@ -18,12 +18,12 @@ if (JavaVersion.current().isJava8Compatible()) {
 }
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
-dependencies {
-
+processResources {
+    filesMatching('lib.properties') {
+        expand('version': version)
+    }
 }
-
-processResources.inputs.property('version', version)
-processResources.expand('version': version)
 

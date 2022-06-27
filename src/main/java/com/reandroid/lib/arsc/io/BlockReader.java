@@ -324,4 +324,15 @@ public class BlockReader extends InputStream {
         System.arraycopy(arr2, 0, result, arr1.length, len);
         return result;
     }
+    public static HeaderBlock readHeaderBlock(File file) throws IOException{
+        InputStream inputStream=new FileInputStream(file);
+        return readHeaderBlock(inputStream);
+    }
+    public static HeaderBlock readHeaderBlock(InputStream inputStream) throws IOException{
+        byte[] buffer=new byte[8];
+        inputStream.read(buffer);
+        inputStream.close();
+        BlockReader reader=new BlockReader(buffer);
+        return reader.readHeaderBlock();
+    }
 }

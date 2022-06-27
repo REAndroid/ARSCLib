@@ -7,22 +7,38 @@
 
     public static void example() throws IOException {
         File inFile=new File("resources.arsc");
-        BlockReader blockReader=new BlockReader(inFile);
         
         TableBlock tableBlock=new TableBlock();
-        tableBlock.readBytes(blockReader);
+        tableBlock.readBytes(inFile);
 
-        // edit tableBlock as desired
+        //edit tableBlock as desired, for example to change the package:
+        PackageBlock packageBlock=tableBlock.getPackageArray().get(0);
+        packageBlock.setPackageName("com.new.package.name");
         
+        //refresh to recalculate offsets
         tableBlock.refresh();
+        
+        //save the edited table
+        File outFile=new File("resources_out.arsc");        
+        tableBlock.writeBytes(outFile);        
+    }
 
-        File outFile=new File("resources_out.arsc");
-        OutputStream outputStream=new FileOutputStream(outFile, false);
+    public static void exampleManifest() throws IOException {
+        File inFile=new File("AndroidManifest.xml");
+
+        AndroidManifestBlock manifestBlock=new AndroidManifestBlock();
+        manifestBlock.readBytes(file);
+
+        //edit AndroidManifest as desired, for example to change the package:
         
-        tableBlock.writeBytes(outputStream);
-        
-        outputStream.flush();
-        outputStream.close();
+        manifestBlock.setPackageName("com.new.package.name");
+
+        //refresh to recalculate offsets
+        manifestBlock.refresh();
+
+        //save the edited table
+        File outFile=new File("AndroidManifest_out.xml");
+        manifestBlock.writeBytes(outFile);
     }
     
 ```

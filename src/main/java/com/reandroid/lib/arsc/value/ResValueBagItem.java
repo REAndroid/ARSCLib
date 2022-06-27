@@ -1,6 +1,8 @@
 package com.reandroid.lib.arsc.value;
 
+import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.item.ReferenceItem;
+import com.reandroid.lib.arsc.pool.SpecStringPool;
 
 public class ResValueBagItem extends BaseResValueItem{
 
@@ -68,13 +70,53 @@ public class ResValueBagItem extends BaseResValueItem{
         if(data==old){
             return;
         }
+        beforeDataValueChanged();
+        setInt(OFFSET_DATA, data);
+        afterDataValueChanged();
+    }
+    private void beforeDataValueChanged(){
         if(getValueType()==ValueType.STRING){
             removeTableReference();
         }
-        setInt(OFFSET_DATA, data);
+    }
+    private void afterDataValueChanged(){
         if(getValueType()==ValueType.STRING){
             addTableReference(getTableStringReference());
         }
+    }
+    public short getIdHigh(){
+        return getShort(OFFSET_ID+2);
+    }
+    public short getIdLow(){
+        return getShort(OFFSET_ID);
+    }
+    public void setIdHigh(short val){
+        setShort(OFFSET_ID+2, val);
+    }
+    public void setIdLow(short val){
+        setShort(OFFSET_ID, val);
+    }
+    public short getDataHigh(){
+        return getShort(OFFSET_DATA+2);
+    }
+    public short getDataLow(){
+        return getShort(OFFSET_DATA);
+    }
+    public void setDataHigh(short val){
+        if(val==getDataHigh()){
+            return;
+        }
+        beforeDataValueChanged();
+        setShort(OFFSET_DATA+2, val);
+        afterDataValueChanged();
+    }
+    public void setDataLow(short val){
+        if(val==getDataLow()){
+            return;
+        }
+        beforeDataValueChanged();
+        setShort(OFFSET_DATA+2, val);
+        afterDataValueChanged();
     }
 
     @Override

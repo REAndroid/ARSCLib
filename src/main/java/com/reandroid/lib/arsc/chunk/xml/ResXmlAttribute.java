@@ -17,10 +17,10 @@ public class ResXmlAttribute extends FixedBlockContainer {
     private final IntegerItem mRawValue;
     public ResXmlAttribute() {
         super(7);
-        mNamespaceReference =new IntegerItem();
+        mNamespaceReference =new IntegerItem(-1);
         mNameReference =new IntegerItem();
         mValueStringReference =new IntegerItem();
-        mNameType=new ShortItem();
+        mNameType=new ShortItem((short) 0x0008);
         mReserved =new ByteItem();
         mValueTypeByte=new ByteItem();
         mRawValue=new IntegerItem();
@@ -75,6 +75,11 @@ public class ResXmlAttribute extends FixedBlockContainer {
     public ValueType getValueType(){
         return ValueType.valueOf(getValueTypeByte());
     }
+    public void setValueType(ValueType valueType){
+        if(valueType!=null){
+            setValueTypeByte(valueType.getByte());
+        }
+    }
     public String getFullName(){
         String name=getName();
         if(name==null){
@@ -100,11 +105,85 @@ public class ResXmlAttribute extends FixedBlockContainer {
         }
         return startNamespace.getPrefix();
     }
+    public ResXmlStartNamespace getStartNamespace(){
+        ResXmlElement xmlElement=getParentResXmlElement();
+        if(xmlElement==null){
+            return null;
+        }
+        return xmlElement.getStartNamespaceByUriRef(getNamespaceReference());
+    }
     public String getValueString(){
         return getString(getValueStringReference());
     }
+    ResXmlString setValueString(String str){
+        ResXmlString resXmlString=getOrCreateResXmlString(str);
+        if(resXmlString==null){
+            return null;
+        }
+        int ref=resXmlString.getIndex();
+        setValueStringReference(ref);
+        if(getValueType()==ValueType.STRING){
+            setRawValue(ref);
+        }
+        return resXmlString;
+    }
     public int getNameResourceID(){
         return getResourceId(getNameReference());
+    }
+    public boolean setName(String name, int resourceId){
+        ResXmlStringPool stringPool=getStringPool();
+        if(stringPool==null){
+            return false;
+        }
+        String old=getName();
+        if(resourceId==0){
+            if(name.equals(old)){
+                return false;
+            }
+            ResXmlString resXmlString=stringPool.getOrCreate(name);
+            setNameReference(resXmlString.getIndex());
+            return true;
+        }
+        ResXmlIDMap xmlIDMap=getResXmlIDMap();
+        if(xmlIDMap==null){
+            return false;
+        }
+        int oldId=getNameResourceID();
+        if(oldId==resourceId){
+            if(name.equals(old)){
+                return false;
+            }
+        }
+        ResXmlID resXmlID=xmlIDMap.getByResId(resourceId);
+        if(resXmlID!=null){
+            int ref=resXmlID.getIndex();
+            ResXmlString idName=stringPool.get(ref);
+            if(idName != null){
+                if(name.equals(idName.getHtml())){
+                    setNameReference(ref);
+                }else {
+                    idName.set(name);
+                }
+                return true;
+            }
+        }
+        int stringsCount=stringPool.countStrings();
+        int idCount=xmlIDMap.getResXmlIDArray().childesCount();
+        if(idCount>stringsCount){
+            xmlIDMap.addResourceId(idCount, resourceId);;
+            stringPool.getStringsArray().ensureSize(idCount+1);
+            ResXmlString resXmlString=stringPool.get(idCount);
+            resXmlString.set(name);
+            setNameReference(idCount);
+            return true;
+        }
+        xmlIDMap.addResourceId(stringsCount, resourceId);
+        stringPool.getStringsArray().ensureSize(stringsCount+1);
+        ResXmlString resXmlString=stringPool.get(stringsCount);
+        resXmlString.set(name);
+        setNameReference(stringsCount);
+        return true;
+
     }
     private int getResourceId(int ref){
         if(ref<0){
@@ -139,6 +218,13 @@ public class ResXmlAttribute extends FixedBlockContainer {
         }
         return null;
     }
+    private ResXmlString getOrCreateResXmlString(String str){
+        ResXmlStringPool stringPool=getStringPool();
+        if(stringPool!=null){
+            return stringPool.getOrCreate(str);
+        }
+        return null;
+    }
     private ResXmlStringPool getStringPool(){
         ResXmlElement xmlElement=getParentResXmlElement();
         if(xmlElement!=null){
@@ -153,7 +239,7 @@ public class ResXmlAttribute extends FixedBlockContainer {
         }
         return null;
     }
-    private ResXmlElement getParentResXmlElement(){
+    public ResXmlElement getParentResXmlElement(){
         Block parent=getParent();
         while (parent!=null){
             if(parent instanceof ResXmlElement){
