@@ -315,7 +315,6 @@ public class BlockReader extends InputStream {
         while((len=in.read(buff))>0){
             result=add(result, buff, len);
         }
-        in.close();
         return result;
     }
     private static byte[] add(byte[] arr1, byte[] arr2, int len){

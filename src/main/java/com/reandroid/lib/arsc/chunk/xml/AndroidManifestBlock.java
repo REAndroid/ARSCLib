@@ -163,4 +163,5 @@ public class AndroidManifestBlock extends ResXmlBlock{
     private static final String ATTR_versionName="versionName";
 
     private static final String ATTR_android_name="name";
+    public static final String FILE_NAME="AndroidManifest.xml";
 }

@@ -2,18 +2,23 @@ package com.reandroid.lib.arsc.chunk;
 
 import com.reandroid.lib.arsc.array.PackageArray;
 import com.reandroid.lib.arsc.chunk.xml.ResXmlBlock;
+import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.pool.TableStringPool;
+import com.reandroid.lib.common.Frameworks;
 
 import java.io.*;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TableBlock extends BaseChunk  {
     private final IntegerItem mPackageCount;
     private final TableStringPool mTableStringPool;
     private final PackageArray mPackageArray;
+    private final Set<TableBlock> mFrameWorks=new HashSet<>();
     public TableBlock() {
         super(ChunkType.TABLE, 2);
         this.mPackageCount=new IntegerItem();
@@ -81,18 +86,60 @@ public class TableBlock extends BaseChunk  {
         builder.append(pkgCount);
         return builder.toString();
     }
-
+    public EntryGroup search(int resourceId){
+        if(resourceId==0){
+            return null;
+        }
+        int pkgId=resourceId>>24;
+        pkgId=pkgId&0xff;
+        PackageBlock packageBlock=getPackageBlockById((byte) pkgId);
+        if(packageBlock!=null){
+            EntryGroup entryGroup=packageBlock.getEntryGroup(resourceId);
+            if(entryGroup!=null){
+                return entryGroup;
+            }
+        }
+        for(TableBlock tableBlock:getFrameWorks()){
+            EntryGroup entryGroup= tableBlock.search(resourceId);
+            if(entryGroup!=null){
+                return entryGroup;
+            }
+        }
+        return null;
+    }
+    public Set<TableBlock> getFrameWorks(){
+        return mFrameWorks;
+    }
+    public void addFramework(TableBlock tableBlock){
+        if(tableBlock==null||tableBlock==this){
+            return;
+        }
+        for(TableBlock frm:tableBlock.getFrameWorks()){
+            if(frm==this){
+                return;
+            }
+        }
+        mFrameWorks.add(tableBlock);
+    }
+    public static TableBlock loadWithAndroidFramework(InputStream inputStream) throws IOException{
+        TableBlock tableBlock=new TableBlock();
+        tableBlock.readBytes(inputStream);
+        tableBlock.addFramework(Frameworks.getAndroid());
+        return tableBlock;
+    }
 
     public static boolean isResTableBlock(File file){
         if(file==null){
             return false;
         }
+        boolean result=false;
         try {
             InputStream inputStream=new FileInputStream(file);
-            return isResTableBlock(inputStream);
-        } catch (FileNotFoundException ignored) {
-            return false;
+            result=isResTableBlock(inputStream);
+            inputStream.close();
+        } catch (IOException ignored) {
         }
+        return result;
     }
     public static boolean isResTableBlock(InputStream inputStream){
         try {
@@ -120,5 +167,6 @@ public class TableBlock extends BaseChunk  {
         ChunkType chunkType=headerBlock.getChunkType();
         return chunkType==ChunkType.TABLE;
     }
+    public static final String FILE_NAME="resources.arsc";
 
 }

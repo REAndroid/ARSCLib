@@ -5,6 +5,7 @@ import com.reandroid.lib.arsc.base.BlockCounter;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
+import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
@@ -202,6 +203,27 @@ public class EntryBlock extends Block {
         }
         return null;
     }
+    public String getName(){
+        SpecString specString=getSpecString();
+        if(specString==null){
+            return null;
+        }
+        return specString.get();
+    }
+    public String getTypeName(){
+        TypeString typeString=getTypeString();
+        if(typeString==null){
+            return null;
+        }
+        return typeString.get();
+    }
+    public String getPackageName(){
+        PackageBlock packageBlock=getPackageBlock();
+        if(packageBlock==null){
+            return null;
+        }
+        return packageBlock.getPackageName();
+    }
     public SpecString getSpecString(){
         PackageBlock packageBlock=getPackageBlock();
         if(packageBlock==null){
@@ -217,35 +239,60 @@ public class EntryBlock extends Block {
         }
         return null;
     }
+    public String buildResourceName(int resourceId, char prefix, boolean includeType){
+        if(resourceId==0){
+            return null;
+        }
+        EntryBlock entryBlock=searchEntry(resourceId);
+        return buildResourceName(entryBlock, prefix, includeType);
+    }
+    private EntryBlock searchEntry(int resourceId){
+        if(resourceId==getResourceId()){
+            return this;
+        }
+        PackageBlock packageBlock=getPackageBlock();
+        if(packageBlock==null){
+            return null;
+        }
+        TableBlock tableBlock= packageBlock.getTableBlock();
+        if(tableBlock==null){
+            return null;
+        }
+        EntryGroup entryGroup = tableBlock.search(resourceId);
+        if(entryGroup!=null){
+            return entryGroup.pickOne();
+        }
+        return null;
+    }
+    public String buildResourceName(EntryBlock entryBlock, char prefix, boolean includeType){
+        if(entryBlock==null){
+            return null;
+        }
+        String pkgName=entryBlock.getPackageName();
+        if(getResourceId()==entryBlock.getResourceId()){
+            pkgName=null;
+        }else if(pkgName!=null){
+            if(pkgName.equals(this.getPackageName())){
+                pkgName=null;
+            }
+        }
+        String type=null;
+        if(includeType){
+            type=entryBlock.getTypeName();
+        }
+        String name=entryBlock.getName();
+        return buildResourceName(prefix, pkgName, type, name);
+    }
     public String getResourceName(){
-        return getResourceName("@", null);
+        return buildResourceName('@',null, getTypeName(), getName());
     }
-    public String getResourceName(String prefix){
-        return getResourceName(prefix, null);
+    public String getResourceName(char prefix){
+        return getResourceName(prefix, false, true);
     }
-    public String getResourceName(String prefix, String appName){
-        if(isNull()){
-            return null;
-        }
-        TypeString type=getTypeString();
-        if(type==null){
-            return null;
-        }
-        SpecString spec=getSpecString();
-        if(spec==null){
-            return null;
-        }
-        StringBuilder builder=new StringBuilder();
-        if(prefix!=null){
-            builder.append(prefix);
-        }
-        if(appName!=null){
-            builder.append(appName);
-        }
-        builder.append(type.get());
-        builder.append('/');
-        builder.append(spec.get());
-        return builder.toString();
+    public String getResourceName(char prefix, boolean includePackage, boolean includeType){
+        String pkg=includePackage?getPackageName():null;
+        String type=includeType?getTypeName():null;
+        return buildResourceName(prefix,pkg, type, getName());
     }
     public int getResourceId(){
         TypeBlock typeBlock=getTypeBlock();
@@ -495,6 +542,25 @@ public class EntryBlock extends Block {
             builder.append(resValueInt.toString());
             builder.append(" '");
         }
+        return builder.toString();
+    }
+    public static String buildResourceName(char prefix, String packageName, String type, String name){
+        if(name==null){
+            return null;
+        }
+        StringBuilder builder=new StringBuilder();
+        if(prefix!=0){
+            builder.append(prefix);
+        }
+        if(packageName!=null){
+            builder.append(packageName);
+            builder.append(':');
+        }
+        if(type!=null){
+            builder.append(type);
+            builder.append('/');
+        }
+        builder.append(name);
         return builder.toString();
     }
 

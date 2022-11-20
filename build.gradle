@@ -21,6 +21,10 @@ repositories {
     mavenLocal()
 }
 
+dependencies {
+    compile(files("$rootProject.projectDir/libs/ArchiveUtil.jar"))
+}
+
 processResources {
     filesMatching('lib.properties') {
         expand('version': version)

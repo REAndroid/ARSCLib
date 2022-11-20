@@ -45,7 +45,6 @@ public class ValueDecoder {
         return attributeBag.decodeAttributeValue(store, rawValue);
     }
 
-
     public static String decodeEntryValue(EntryStore store, PackageBlock currentPackage, ValueType valueType, int data){
         if(store==null || currentPackage==null){
             return null;

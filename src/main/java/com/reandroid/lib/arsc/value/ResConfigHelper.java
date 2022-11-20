@@ -139,6 +139,24 @@ public class ResConfigHelper {
         char[] chs=country.toCharArray();
         resConfig.setRegion(chs);
     }
+    public static String decodeLocale(ResConfig resConfig){
+        char[] region=resConfig.getRegion();
+        char[] language=resConfig.getLanguage();
+        StringBuilder builder=new StringBuilder();
+        if(language[0]!=0){
+            builder.append(language[0]).append(language[1]);
+        }
+        if(region[0]!=0){
+            if(language[0]!=0){
+                builder.append('-');
+            }
+            builder.append(region[0]).append(region[1]);
+        }
+        if(builder.length()==0){
+            return null;
+        }
+        return builder.toString();
+    }
     private static String decodeLanguageAndCountry(ResConfig resConfig) {
         StringBuilder builder = new StringBuilder();
         char[] localeVariant=resConfig.getLocaleVariant();
@@ -993,81 +1011,81 @@ public class ResConfigHelper {
     private static final Pattern PATTERN_SCREEN_SIZE=Pattern.compile("^-?(?<A>[0-9]+)x(?<B>[0-9]+)$");
 
 
-    private final static short MASK_LAYOUTDIR = 0xc0;
-    private final static short SCREENLAYOUT_LAYOUTDIR_ANY = 0x00;
-    private final static short SCREENLAYOUT_LAYOUTDIR_LTR = 0x40;
-    private final static short SCREENLAYOUT_LAYOUTDIR_RTL = 0x80;
-    private final static short SCREENLAYOUT_LAYOUTDIR_SHIFT = 0x06;
+    public final static short MASK_LAYOUTDIR = 0xc0;
+    public final static short SCREENLAYOUT_LAYOUTDIR_ANY = 0x00;
+    public final static short SCREENLAYOUT_LAYOUTDIR_LTR = 0x40;
+    public final static short SCREENLAYOUT_LAYOUTDIR_RTL = 0x80;
+    public final static short SCREENLAYOUT_LAYOUTDIR_SHIFT = 0x06;
 
 
-    private final static byte MASK_SCREENSIZE = 0x0f;
-    private final static byte SCREENSIZE_ANY = 0x00;
-    private final static byte SCREENSIZE_SMALL = 0x01;
-    private final static byte SCREENSIZE_NORMAL = 0x02;
-    private final static byte SCREENSIZE_LARGE = 0x03;
-    private final static byte SCREENSIZE_XLARGE = 0x04;
+    public final static byte MASK_SCREENSIZE = 0x0f;
+    public final static byte SCREENSIZE_ANY = 0x00;
+    public final static byte SCREENSIZE_SMALL = 0x01;
+    public final static byte SCREENSIZE_NORMAL = 0x02;
+    public final static byte SCREENSIZE_LARGE = 0x03;
+    public final static byte SCREENSIZE_XLARGE = 0x04;
 
-    private final static byte MASK_SCREENLONG = 0x30;
-    private final static byte SCREENLONG_ANY = 0x00;
-    private final static byte SCREENLONG_NO = 0x10;
-    private final static byte SCREENLONG_YES = 0x20;
-
-
-    private final static short MASK_SCREENROUND = 0x03;
-    private final static short SCREENLAYOUT_ROUND_ANY = 0;
-    private final static short SCREENLAYOUT_ROUND_NO = 0x1;
-    private final static short SCREENLAYOUT_ROUND_YES = 0x2;
+    public final static byte MASK_SCREENLONG = 0x30;
+    public final static byte SCREENLONG_ANY = 0x00;
+    public final static byte SCREENLONG_NO = 0x10;
+    public final static byte SCREENLONG_YES = 0x20;
 
 
-    private final static byte ORIENTATION_ANY = 0;
-    private final static byte ORIENTATION_PORT = 1;
-    private final static byte ORIENTATION_LAND = 2;
-    private final static byte ORIENTATION_SQUARE = 3;
-
-    private final static byte MASK_UI_MODE_TYPE = 0x0f;
-    private final static byte UI_MODE_TYPE_ANY = 0x00;
-    private final static byte UI_MODE_TYPE_NORMAL = 0x01;
-    private final static byte UI_MODE_TYPE_DESK = 0x02;
-    private final static byte UI_MODE_TYPE_CAR = 0x03;
-    private final static byte UI_MODE_TYPE_TELEVISION = 0x04;
-    private final static byte UI_MODE_TYPE_APPLIANCE = 0x05;
-    private final static byte UI_MODE_TYPE_WATCH = 0x06;
-    private final static byte UI_MODE_TYPE_VR_HEADSET = 0x07;
+    public final static short MASK_SCREENROUND = 0x03;
+    public final static short SCREENLAYOUT_ROUND_ANY = 0;
+    public final static short SCREENLAYOUT_ROUND_NO = 0x1;
+    public final static short SCREENLAYOUT_ROUND_YES = 0x2;
 
 
-    private final static byte MASK_UI_MODE_NIGHT = 0x30;
-    private final static byte UI_MODE_NIGHT_ANY = 0x00;
-    private final static byte UI_MODE_NIGHT_NO = 0x10;
-    private final static byte UI_MODE_NIGHT_YES = 0x20;
+    public final static byte ORIENTATION_ANY = 0;
+    public final static byte ORIENTATION_PORT = 1;
+    public final static byte ORIENTATION_LAND = 2;
+    public final static byte ORIENTATION_SQUARE = 3;
+
+    public final static byte MASK_UI_MODE_TYPE = 0x0f;
+    public final static byte UI_MODE_TYPE_ANY = 0x00;
+    public final static byte UI_MODE_TYPE_NORMAL = 0x01;
+    public final static byte UI_MODE_TYPE_DESK = 0x02;
+    public final static byte UI_MODE_TYPE_CAR = 0x03;
+    public final static byte UI_MODE_TYPE_TELEVISION = 0x04;
+    public final static byte UI_MODE_TYPE_APPLIANCE = 0x05;
+    public final static byte UI_MODE_TYPE_WATCH = 0x06;
+    public final static byte UI_MODE_TYPE_VR_HEADSET = 0x07;
 
 
-    private final static byte UI_MODE_TYPE_GODZILLAUI = 0x0b;
-    private final static byte UI_MODE_TYPE_SMALLUI = 0x0c;
-    private final static byte UI_MODE_TYPE_MEDIUMUI = 0x0d;
-    private final static byte UI_MODE_TYPE_LARGEUI = 0x0e;
-    private final static byte UI_MODE_TYPE_HUGEUI = 0x0f;
+    public final static byte MASK_UI_MODE_NIGHT = 0x30;
+    public final static byte UI_MODE_NIGHT_ANY = 0x00;
+    public final static byte UI_MODE_NIGHT_NO = 0x10;
+    public final static byte UI_MODE_NIGHT_YES = 0x20;
 
 
-    private final static byte TOUCHSCREEN_ANY = 0;
-    private final static byte TOUCHSCREEN_NOTOUCH = 1;
-    private final static byte TOUCHSCREEN_STYLUS = 2;
-    private final static byte TOUCHSCREEN_FINGER = 3;
+    public final static byte UI_MODE_TYPE_GODZILLAUI = 0x0b;
+    public final static byte UI_MODE_TYPE_SMALLUI = 0x0c;
+    public final static byte UI_MODE_TYPE_MEDIUMUI = 0x0d;
+    public final static byte UI_MODE_TYPE_LARGEUI = 0x0e;
+    public final static byte UI_MODE_TYPE_HUGEUI = 0x0f;
 
-    private final static byte MASK_KEYSHIDDEN = 0x3;
-    private final static byte KEYSHIDDEN_ANY = 0x0;
-    private final static byte KEYSHIDDEN_NO = 0x1;
-    private final static byte KEYSHIDDEN_YES = 0x2;
-    private final static byte KEYSHIDDEN_SOFT = 0x3;
+
+    public final static byte TOUCHSCREEN_ANY = 0;
+    public final static byte TOUCHSCREEN_NOTOUCH = 1;
+    public final static byte TOUCHSCREEN_STYLUS = 2;
+    public final static byte TOUCHSCREEN_FINGER = 3;
+
+    public final static byte MASK_KEYSHIDDEN = 0x3;
+    public final static byte KEYSHIDDEN_ANY = 0x0;
+    public final static byte KEYSHIDDEN_NO = 0x1;
+    public final static byte KEYSHIDDEN_YES = 0x2;
+    public final static byte KEYSHIDDEN_SOFT = 0x3;
 
     private final static byte KEYBOARD_ANY = 0;
     private final static byte KEYBOARD_NOKEYS = 1;
     private final static byte KEYBOARD_QWERTY = 2;
     private final static byte KEYBOARD_12KEY = 3;
 
-    private final static byte MASK_NAVHIDDEN = 0xc;
-    private final static byte NAVHIDDEN_ANY = 0x0;
-    private final static byte NAVHIDDEN_NO = 0x4;
-    private final static byte NAVHIDDEN_YES = 0x8;
+    public final static byte MASK_NAVHIDDEN = 0xc;
+    public final static byte NAVHIDDEN_ANY = 0x0;
+    public final static byte NAVHIDDEN_NO = 0x4;
+    public final static byte NAVHIDDEN_YES = 0x8;
 
 
     private final static byte NAVIGATION_ANY = 0;

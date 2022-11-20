@@ -1,14 +1,24 @@
 package com.reandroid.lib.arsc.value;
 
-import com.reandroid.lib.arsc.chunk.PackageBlock;
+import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.item.ReferenceItem;
-import com.reandroid.lib.arsc.pool.SpecStringPool;
 
 public class ResValueBagItem extends BaseResValueItem{
 
     public ResValueBagItem() {
         super(BYTES_COUNT);
         setHeaderSize(BYTES_SIZE);
+    }
+
+    public ResValueBag getParentBag(){
+        Block parent=getParent();
+        while(parent!=null){
+            if(parent instanceof ResValueBag){
+                return (ResValueBag) parent;
+            }
+            parent=parent.getParent();
+        }
+        return null;
     }
 
     @Override
@@ -28,13 +38,13 @@ public class ResValueBagItem extends BaseResValueItem{
         return getByte(OFFSET_RESERVED);
     }
 
-
     public void setId(int id){
         setInt(OFFSET_ID, id);
     }
     public int getId(){
         return getInt(OFFSET_ID);
     }
+
     @Override
     public void setType(ValueType valueType){
         byte type=0;

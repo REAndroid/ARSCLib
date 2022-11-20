@@ -495,6 +495,9 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
         qualifiers=ResConfigHelper.sortQualifiers(qualifiers);
         return getQualifiers().equals(qualifiers);
     }
+    public String getLocale(){
+        return ResConfigHelper.decodeLocale(this);
+    }
     @Override
     public boolean equals(Object o){
         if(o instanceof ResConfig){
