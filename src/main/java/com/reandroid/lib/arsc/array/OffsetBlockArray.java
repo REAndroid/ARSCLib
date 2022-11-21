@@ -3,6 +3,7 @@ package com.reandroid.lib.arsc.array;
 
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockArray;
+import com.reandroid.lib.arsc.base.BlockCounter;
 import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.ByteArray;
@@ -44,6 +45,14 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         int result=super.countBytes();
         int endCount=mEnd4Block.countBytes();
         return result+endCount;
+    }
+    @Override
+    public void onCountUpTo(BlockCounter counter){
+        super.onCountUpTo(counter);
+        if(counter.FOUND){
+            return;
+        }
+        mEnd4Block.onCountUpTo(counter);
     }
     @Override
     public byte[] getBytes(){

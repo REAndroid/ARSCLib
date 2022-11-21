@@ -36,6 +36,7 @@ public class PluralsBag {
         }
         return typeString.get();
     }
+
     @Override
     public String toString() {
         StringBuilder builder=new StringBuilder();

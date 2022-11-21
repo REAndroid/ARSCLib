@@ -13,4 +13,11 @@ public class BlockCounter {
         }
         COUNT+=val;
     }
+    @Override
+    public String toString(){
+        if(FOUND){
+            return "FOUND="+COUNT;
+        }
+        return String.valueOf(COUNT);
+    }
 }
