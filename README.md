@@ -28,15 +28,24 @@
 
         AndroidManifestBlock manifestBlock=new AndroidManifestBlock();
         manifestBlock.readBytes(file);
+        
+        List<String> permissionNames = manifestBlock.getUsesPermissions();
+        for(String perm:permissionNames){
+            System.out.println(perm);
+        }
 
         //edit AndroidManifest as desired, for example to change the package:
         
         manifestBlock.setPackageName("com.new.package.name");
+        
+        // add some permission
+        
+        manifestBlock.addUsesPermission("android.permission.WRITE_EXTERNAL_STORAGE");
 
         //refresh to recalculate offsets
         manifestBlock.refresh();
 
-        //save the edited table
+        //save the edited xml
         File outFile=new File("AndroidManifest_out.xml");
         manifestBlock.writeBytes(outFile);
     }

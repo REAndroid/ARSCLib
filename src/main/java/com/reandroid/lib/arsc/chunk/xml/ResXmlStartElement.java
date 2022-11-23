@@ -1,5 +1,6 @@
 package com.reandroid.lib.arsc.chunk.xml;
 
+import com.reandroid.lib.arsc.base.BlockContainer;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.array.ResXmlAttributeArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
@@ -38,6 +39,17 @@ public class ResXmlStartElement extends BaseXmlChunk {
         }
         for(ResXmlAttribute attribute:listResXmlAttributes()){
             if(name.equals(attribute.getFullName()) || name.equals(attribute.getName())){
+                return attribute;
+            }
+        }
+        return null;
+    }
+    public ResXmlAttribute searchAttributeById(int resourceId){
+        if(resourceId==0){
+            return null;
+        }
+        for(ResXmlAttribute attribute:listResXmlAttributes()){
+            if(resourceId==attribute.getNameResourceID()){
                 return attribute;
             }
         }

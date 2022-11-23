@@ -105,6 +105,13 @@ public class BaseXmlChunk extends BaseChunk {
         }
         return null;
     }
+    ResXmlString getOrCreateString(String str){
+        ResXmlStringPool stringPool=getStringPool();
+        if(stringPool==null){
+            return null;
+        }
+        return stringPool.getOrCreate(str);
+    }
 
     public String getName(){
         return getString(getStringReference());

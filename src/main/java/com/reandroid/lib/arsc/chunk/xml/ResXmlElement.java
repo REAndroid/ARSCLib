@@ -39,6 +39,54 @@ public class ResXmlElement extends FixedBlockContainer {
         addChild(4, mEndElementContainer);
         addChild(5, mEndNamespaceList);
     }
+    @Override
+    protected void refreshChildes(){
+        List<ResXmlElement> elementList = listElements();
+        for (ResXmlElement element:elementList){
+            element.refresh();
+        }
+        super.refreshChildes();
+    }
+    public ResXmlElement createChildElement(String tag){
+        ResXmlElement resXmlElement=new ResXmlElement();
+        ResXmlStartElement startElement=new ResXmlStartElement();
+        resXmlElement.setStartElement(startElement);
+        ResXmlEndElement endElement=new ResXmlEndElement();
+        resXmlElement.setEndElement(endElement);
+        addElement(resXmlElement);
+        resXmlElement.setTag(tag);
+        int lineNo=getStartElement().getLineNumber()+1;
+        startElement.setLineNumber(lineNo);
+        endElement.setLineNumber(lineNo);
+        endElement.setStringReference(startElement.getStringReference());
+        return resXmlElement;
+    }
+    public ResXmlAttribute createAndroidAttribute(String name, int resourceId){
+        ResXmlAttribute attribute=createAttribute(name, resourceId);
+        ResXmlStartNamespace ns = getOrCreateNamespace(NS_ANDROID_URI, NS_ANDROID_PREFIX);
+        attribute.setNamespaceReference(ns.getUriReference());
+        return attribute;
+    }
+    public ResXmlAttribute createAttribute(String name, int resourceId){
+        ResXmlAttribute attribute=new ResXmlAttribute();
+        addAttribute(attribute);
+        attribute.setName(name, resourceId);
+        return attribute;
+    }
+    public void addAttribute(ResXmlAttribute attribute){
+        getStartElement().getResXmlAttributeArray().add(attribute);
+    }
+    public ResXmlElement getElementByTagName(String name){
+        if(name==null){
+            return null;
+        }
+        for(ResXmlElement child:listElements()){
+            if(name.equals(child.getTag())||name.equals(child.getTagName())){
+                return child;
+            }
+        }
+        return null;
+    }
     public List<ResXmlElement> searchElementsByTagName(String name){
         List<ResXmlElement> results=new ArrayList<>();
         if(name==null){
@@ -55,6 +103,13 @@ public class ResXmlElement extends FixedBlockContainer {
         ResXmlStartElement startElement=getStartElement();
         if(startElement!=null){
             return startElement.searchAttributeByName(name);
+        }
+        return null;
+    }
+    public ResXmlAttribute searchAttributeById(int resourceId){
+        ResXmlStartElement startElement=getStartElement();
+        if(startElement!=null){
+            return startElement.searchAttributeById(resourceId);
         }
         return null;
     }
@@ -171,6 +226,41 @@ public class ResXmlElement extends FixedBlockContainer {
         ResXmlElement xmlElement=getParentResXmlElement();
         if(xmlElement!=null){
             return xmlElement.getStartNamespaceByUriRef(uriRef);
+        }
+        return null;
+    }
+    public ResXmlStartNamespace getOrCreateNamespace(String uri, String prefix){
+        ResXmlStartNamespace namespace=getStartNamespaceByUri(uri);
+        if(namespace!=null){
+            return namespace;
+        }
+        ResXmlStartElement startElement = getStartElement();
+        ResXmlString uriString = startElement.getOrCreateString(uri);
+        ResXmlString prefixString = startElement.getOrCreateString(prefix);
+        namespace=new ResXmlStartNamespace();
+        addStartNamespace(namespace);
+        namespace.setUriReference(uriString.getIndex());
+        namespace.setPrefixReference(prefixString.getIndex());
+        ResXmlEndNamespace endNamespace=new ResXmlEndNamespace();
+        addEndNamespace(endNamespace);
+        endNamespace.setUriReference(uriString.getIndex());
+        endNamespace.setPrefixReference(prefixString.getIndex());
+        namespace.setResXmlEndNamespace(endNamespace);
+        endNamespace.setResXmlStartNamespace(namespace);
+        return namespace;
+    }
+    public ResXmlStartNamespace getStartNamespaceByUri(String uri){
+        if(uri==null){
+            return null;
+        }
+        for(ResXmlStartNamespace ns:mStartNamespaceList.getChildes()){
+            if(uri.equals(ns.getUri())){
+                return ns;
+            }
+        }
+        ResXmlElement xmlElement=getParentResXmlElement();
+        if(xmlElement!=null){
+            return xmlElement.getStartNamespaceByUri(uri);
         }
         return null;
     }
@@ -430,4 +520,7 @@ public class ResXmlElement extends FixedBlockContainer {
         resXmlElement.setTag(tag);
         return resXmlElement;
     }
+
+    public static final String NS_ANDROID_URI = "http://schemas.android.com/apk/res/android";
+    public static final String NS_ANDROID_PREFIX = "android";
 }
