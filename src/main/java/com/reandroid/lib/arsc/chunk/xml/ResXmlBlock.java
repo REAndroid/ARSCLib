@@ -108,13 +108,6 @@ public class ResXmlBlock extends BaseChunk {
     protected void onChunkRefreshed() {
 
     }
-    @Override
-    public int onWriteBytes(OutputStream stream) throws IOException{
-        int result=super.onWriteBytes(stream);
-        stream.flush();
-        stream.close();
-        return result;
-    }
     public void readBytes(File file) throws IOException{
         BlockReader reader=new BlockReader(file);
         super.readBytes(reader);
@@ -132,7 +125,9 @@ public class ResXmlBlock extends BaseChunk {
             dir.mkdirs();
         }
         OutputStream outputStream=new FileOutputStream(file);
-        return super.writeBytes(outputStream);
+        int length = super.writeBytes(outputStream);
+        outputStream.close();
+        return length;
     }
 
     public static boolean isResXmlBlock(File file){

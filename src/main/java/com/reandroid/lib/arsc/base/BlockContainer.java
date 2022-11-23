@@ -21,11 +21,15 @@ public abstract class BlockContainer<T extends Block> extends Block{
         }
         return result;
     }
+    protected void onPreRefreshRefresh(){
+
+    }
     protected abstract void onRefreshed();
     public final void refresh(){
         if(isNull()){
             return;
         }
+        onPreRefreshRefresh();
         refreshChildes();
         onRefreshed();
     }
@@ -36,7 +40,7 @@ public abstract class BlockContainer<T extends Block> extends Block{
             for(int i=0;i<max;i++){
                 T item=childes[i];
                 if(item instanceof BlockContainer){
-                    BlockContainer container=(BlockContainer)item;
+                    BlockContainer<?> container=(BlockContainer<?>)item;
                     container.refresh();
                 }
             }

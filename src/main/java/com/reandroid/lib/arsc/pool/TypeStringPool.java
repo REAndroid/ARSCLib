@@ -2,6 +2,7 @@ package com.reandroid.lib.arsc.pool;
 
 import com.reandroid.lib.arsc.array.StringArray;
 import com.reandroid.lib.arsc.array.TypeStringArray;
+import com.reandroid.lib.arsc.group.StringGroup;
 import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.TypeString;
@@ -12,6 +13,12 @@ public class TypeStringPool extends BaseStringPool<TypeString> {
     }
     public TypeString getById(int id){
         return super.get(id-1);
+    }
+    public TypeString getOrCreate(int typeId, String typeName){
+        getStringsArray().ensureSize(typeId);
+        TypeString typeString=getById(typeId);
+        typeString.set(typeName);
+        return typeString;
     }
     @Override
     StringArray<TypeString> newInstance(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {

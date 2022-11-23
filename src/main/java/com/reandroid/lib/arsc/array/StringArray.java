@@ -9,6 +9,7 @@ import java.util.List;
 
 public abstract class StringArray<T extends StringItem> extends OffsetBlockArray<T>{
     private boolean mUtf8;
+
     public StringArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         super(offsets, itemCount, itemStart);
         this.mUtf8=is_utf8;

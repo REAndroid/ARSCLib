@@ -157,7 +157,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         int result=-1;
         for(int i=0;i<len;i++){
             if(block==items[i]){
-                result=-1;
+                result=i;
             }
         }
         return result;

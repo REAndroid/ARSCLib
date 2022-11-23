@@ -2,8 +2,6 @@ package com.reandroid.lib.arsc.value;
 
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.io.BlockReader;
-import com.reandroid.lib.arsc.item.ReferenceItem;
-
 
 import java.io.IOException;
 

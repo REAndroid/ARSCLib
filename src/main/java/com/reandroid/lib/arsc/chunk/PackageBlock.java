@@ -8,6 +8,7 @@ import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.PackageName;
 import com.reandroid.lib.arsc.item.ReferenceItem;
+import com.reandroid.lib.arsc.item.TypeString;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
 import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.arsc.pool.TypeStringPool;

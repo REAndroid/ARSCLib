@@ -9,6 +9,7 @@ import com.reandroid.lib.arsc.chunk.SpecBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
+import com.reandroid.lib.arsc.item.TypeString;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResConfig;
 
@@ -128,5 +129,15 @@ public class SpecTypePair extends BlockContainer<Block> {
     private void readUnexpectedNonSpecBlock(BlockReader reader, HeaderBlock headerBlock) throws IOException{
         throw new IOException("Unexpected block: "+headerBlock.toString()+", Should be: "+ChunkType.SPEC);
     }
-
+    public int getHighestEntryCount(){
+        int specEntryCount=getSpecBlock().getEntryCount();
+        int typeEntryCount=getTypeBlockArray().getHighestEntryCount();
+        if(specEntryCount>typeEntryCount){
+            return specEntryCount;
+        }
+        return typeEntryCount;
+    }
+    public TypeString getTypeString(){
+        return getTypeBlockArray().getTypeString();
+    }
 }

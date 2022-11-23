@@ -5,9 +5,7 @@ import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.value.EntryBlock;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class SpecTypePairArray extends BlockArray<SpecTypePair> {
     public SpecTypePairArray(){
@@ -113,5 +111,33 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair> {
     @Override
     protected void onRefreshed() {
 
+    }
+    @Override
+    protected void onPreRefreshRefresh(){
+        validateEntryCounts();
+    }
+    // For android API < 26, it is required to have equal entry count on all SpecTypePair
+    private void validateEntryCounts(){
+        Map<Byte, Integer> entryCountMap=mapHighestEntryCount();
+        for(Map.Entry<Byte, Integer> entry:entryCountMap.entrySet()){
+            byte id=entry.getKey();
+            int count=entry.getValue();
+            SpecTypePair pair=getPair(id);
+            pair.getSpecBlock().setEntryCount(count);
+            pair.getTypeBlockArray().setEntryCount(count);
+        }
+    }
+    private Map<Byte, Integer> mapHighestEntryCount(){
+        Map<Byte, Integer> results=new HashMap<>();
+        SpecTypePair[] childes=getChildes();
+        for (SpecTypePair pair:childes){
+            int count=pair.getHighestEntryCount();
+            byte id=pair.getTypeId();
+            Integer exist=results.get(id);
+            if(exist==null || count>exist){
+                results.put(id, count);
+            }
+        }
+        return results;
     }
 }

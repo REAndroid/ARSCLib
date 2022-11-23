@@ -7,6 +7,7 @@ import com.reandroid.lib.arsc.chunk.SpecBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
+import com.reandroid.lib.arsc.item.TypeString;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResConfig;
 
@@ -206,5 +207,29 @@ public class TypeBlockArray extends BlockArray<TypeBlock> {
         TypeBlock typeBlock=createNext();
         typeBlock.readBytes(reader);
         return reader.getPosition()>pos;
+    }
+    public int getHighestEntryCount(){
+        int result=0;
+        for(TypeBlock typeBlock:getChildes()){
+            int count=typeBlock.getEntryCount();
+            if(count>result){
+                result=count;
+            }
+        }
+        return result;
+    }
+    public void setEntryCount(int count){
+        for(TypeBlock typeBlock:getChildes()){
+            typeBlock.setEntryCount(count);
+        }
+    }
+    public TypeString getTypeString(){
+        for(TypeBlock typeBlock:getChildes()){
+            TypeString typeString=typeBlock.getTypeString();
+            if(typeString!=null){
+                return typeString;
+            }
+        }
+        return null;
     }
 }

@@ -17,7 +17,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EntryBlock extends Block {
+public class EntryBlock extends Block{
     private ShortItem mHeaderSize;
     private ShortItem mFlags;
     private IntegerItem mSpecReference;
@@ -189,9 +189,13 @@ public class EntryBlock extends Block {
 
     public void setFlagComplex(boolean is_complex){
         if(is_complex){
-            setFlags(FLAG_COMPLEX);
+            if(!isFlagsComplex()){
+                setFlags(FLAG_COMPLEX);
+            }
         }else {
-            setFlags(FLAG_INT);
+            if(isFlagsComplex()){
+                setFlags(FLAG_INT);
+            }
         }
         refreshHeaderSize();
     }
@@ -437,7 +441,14 @@ public class EntryBlock extends Block {
         if(isNull()){
             return 0;
         }
-        return 8+mResValue.countBytes();
+        /*
+           mHeaderSize -> 2 bytes
+                mFlags -> 2 bytes
+        mSpecReference -> 4 bytes
+                          -------
+                  Total = 8 bytes, thus this value is always fixed no need to re-count
+        */
+        return 8 + mResValue.countBytes();
     }
     @Override
     public void onCountUpTo(BlockCounter counter) {
@@ -514,6 +525,7 @@ public class EntryBlock extends Block {
         updatePackage();
         updateSpecRef();
     }
+    @Override
     public String toString(){
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
@@ -566,9 +578,10 @@ public class EntryBlock extends Block {
 
     private final static short FLAG_COMPLEX_MASK = 0x0001;
 
-    private final static short FLAG_COMPLEX = 0x0003;
-    private final static short FLAG_INT = 0x0002;
+    private final static short FLAG_COMPLEX = 0x0001;
+    private final static short FLAG_INT = 0x0000;
 
     private final static short HEADER_COMPLEX=0x0010;
     private final static short HEADER_INT=0x0008;
+
 }

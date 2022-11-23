@@ -1,21 +1,13 @@
 package com.reandroid.lib.arsc.value;
 
 import com.reandroid.lib.arsc.base.Block;
-import com.reandroid.lib.arsc.chunk.PackageBlock;
-import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.item.BlockItem;
-import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.ReferenceItem;
-import com.reandroid.lib.arsc.pool.SpecStringPool;
-import com.reandroid.lib.arsc.pool.TableStringPool;
-
-import java.util.List;
 
 public abstract class BaseResValue extends BlockItem  {
     BaseResValue(int bytesLength){
         super(bytesLength);
     }
-
 
     public EntryBlock getEntryBlock(){
         Block parent=getParent();
@@ -27,7 +19,6 @@ public abstract class BaseResValue extends BlockItem  {
         }
         return null;
     }
-
     boolean removeSpecReference(ReferenceItem ref){
         EntryBlock entryBlock=getEntryBlock();
         if(entryBlock==null){
@@ -56,15 +47,10 @@ public abstract class BaseResValue extends BlockItem  {
         }
         entryBlock.addTableReference(ref);
     }
-
-
-
     @Override
     public void onBytesChanged() {
 
     }
-
-
     int getInt(int offset){
         byte[] bts = getBytesInternal();
         return bts[offset] & 0xff |
@@ -83,7 +69,6 @@ public abstract class BaseResValue extends BlockItem  {
         bts[offset]= (byte) (val & 0xff);
         onBytesChanged();
     }
-
     void setShort(int offset, short val){
         if(val==getShort(offset)){
             return;
