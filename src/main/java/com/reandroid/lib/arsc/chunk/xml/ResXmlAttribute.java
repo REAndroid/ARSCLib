@@ -7,7 +7,7 @@ import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 import com.reandroid.lib.arsc.value.ValueType;
 
-public class ResXmlAttribute extends FixedBlockContainer {
+public class ResXmlAttribute extends FixedBlockContainer implements Comparable<ResXmlAttribute>{
     private final IntegerItem mNamespaceReference;
     private final IntegerItem mNameReference;
     private final IntegerItem mValueStringReference;
@@ -248,6 +248,100 @@ public class ResXmlAttribute extends FixedBlockContainer {
             parent=parent.getParent();
         }
         return null;
+    }
+    public String getValueAsString(){
+        int ref=getRawValue();
+        ResXmlString xmlString=getResXmlString(ref);
+        if(xmlString==null){
+            return null;
+        }
+        return xmlString.getHtml();
+    }
+    public boolean getValueAsBoolean(){
+        int ref=getRawValue();
+        return ref!=0;
+    }
+    public void setValueAsString(String str){
+        setValueType(ValueType.STRING);
+        ResXmlString xmlString=getOrCreateResXmlString(str);
+        if(xmlString==null){
+            throw new IllegalStateException("ResXmlString is null, attribute must be added to parent element first");
+        }
+        int ref=xmlString.getIndex();
+        setRawValue(ref);
+        setValueStringReference(ref);
+    }
+    public void setValueAsBoolean(boolean val){
+        setValueType(ValueType.INT_BOOLEAN);
+        int ref=val?0xffff:0;
+        setRawValue(ref);
+        setValueStringReference(-1);
+    }
+    public void setValueAsInteger(int val){
+        setValueType(ValueType.FIRST_INT);
+        setRawValue(val);
+        setValueStringReference(-1);
+    }
+    public void setValueAsHex(int val){
+        setValueType(ValueType.INT_HEX);
+        setRawValue(val);
+        setValueStringReference(-1);
+    }
+    public void setValueAsFraction(float fraction){
+        int val=Float.floatToIntBits(fraction);
+        setValueAsFraction(val);
+    }
+    public void setValueAsFraction(int val){
+        setValueType(ValueType.FRACTION);
+        setRawValue(val);
+        setValueStringReference(-1);
+    }
+    public void setValueAsResourceId(int resId){
+        setValueType(ValueType.REFERENCE);
+        setRawValue(resId);
+        setValueStringReference(-1);
+    }
+    public void setValueAsAttributeId(int attrId){
+        setValueType(ValueType.ATTRIBUTE);
+        setRawValue(attrId);
+        setValueStringReference(-1);
+    }
+    public void setValueAsColorRGB4(int val){
+        setValueType(ValueType.INT_COLOR_RGB4);
+        setRawValue(val);
+        setValueStringReference(-1);
+    }
+    public void setValueAsColorRGB8(int val){
+        setValueType(ValueType.INT_COLOR_RGB8);
+        setRawValue(val);
+        setValueStringReference(-1);
+    }
+    public void setValueAsColorARGB4(int val){
+        setValueType(ValueType.INT_COLOR_ARGB4);
+        setRawValue(val);
+        setValueStringReference(-1);
+    }
+    public void setValueAsColorARGB8(int val){
+        setValueType(ValueType.INT_COLOR_ARGB8);
+        setRawValue(val);
+        setValueStringReference(-1);
+    }
+
+    private String getCompareName(){
+        int id=getNameResourceID();
+        StringBuilder builder=new StringBuilder();
+        if(id!=0){
+            builder.append("0 ");
+            builder.append(String.format("%08x", id));
+        }else {
+            builder.append("1 ");
+            builder.append(getName());
+        }
+        return builder.toString();
+    }
+    @Override
+    public int compareTo(ResXmlAttribute other) {
+        return getCompareName().compareTo(other.getCompareName());
     }
 
     @Override

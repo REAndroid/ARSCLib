@@ -1,10 +1,8 @@
 package com.reandroid.lib.arsc.chunk.xml;
 
-import com.reandroid.lib.arsc.base.BlockContainer;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.array.ResXmlAttributeArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
-import com.reandroid.lib.arsc.item.ResXmlString;
 import com.reandroid.lib.arsc.item.ShortItem;
 
 import java.util.Collection;
@@ -65,6 +63,10 @@ public class ResXmlStartElement extends BaseXmlChunk {
     }
     public void setName(String name){
         setString(name);
+        ResXmlEndElement endElement = getResXmlEndElement();
+        if(endElement!=null){
+            endElement.setString(name);
+        }
     }
     public Collection<ResXmlAttribute> listResXmlAttributes(){
         return getResXmlAttributeArray().listItems();

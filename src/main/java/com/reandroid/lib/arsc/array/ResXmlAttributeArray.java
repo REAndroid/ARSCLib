@@ -9,8 +9,12 @@ import com.reandroid.lib.arsc.chunk.xml.ResXmlAttribute;
 import com.reandroid.lib.arsc.item.ShortItem;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 
-public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute> {
+public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute> implements Comparator<ResXmlAttribute> {
     private final HeaderBlock mHeaderBlock;
     private final ShortItem mAttributeStart;
     private final ShortItem mAttributeCount;
@@ -18,6 +22,16 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute> {
         this.mHeaderBlock=headerBlock;
         this.mAttributeStart=attributeStart;
         this.mAttributeCount=attributeCount;
+    }
+    public void sortAttributes(){
+        Collection<ResXmlAttribute> items = listItems();
+        if(items.size()<2){
+            return;
+        }
+        List<ResXmlAttribute> elementList = new ArrayList<>(items);
+        elementList.sort(this);
+        clearChildes();
+        addAll(elementList.toArray(new ResXmlAttribute[0]));
     }
     private void refreshCount(){
         short count= (short) childesCount();
@@ -51,5 +65,9 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute> {
         reader.seek(start);
         setChildesCount(mAttributeCount.get());
         super.onReadBytes(reader);
+    }
+    @Override
+    public int compare(ResXmlAttribute attr1, ResXmlAttribute attr2) {
+        return attr1.compareTo(attr2);
     }
 }

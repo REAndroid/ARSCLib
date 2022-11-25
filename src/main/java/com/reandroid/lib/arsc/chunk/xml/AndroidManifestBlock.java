@@ -30,18 +30,39 @@ public class AndroidManifestBlock extends ResXmlBlock{
         }
         return results;
     }
+    public ResXmlElement getUsesPermission(String permissionName){
+        ResXmlElement manifestElement=getManifestElement();
+        if(manifestElement==null){
+            return null;
+        }
+        List<ResXmlElement> permissionList = manifestElement.searchElementsByTagName(TAG_uses_permission);
+        for(ResXmlElement permission:permissionList){
+            ResXmlAttribute nameAttr = permission.searchAttributeById(ID_name);
+            if(nameAttr==null){
+                continue;
+            }
+            String val=nameAttr.getValueString();
+            if(val==null){
+                continue;
+            }
+            if(val.equals(permissionName)){
+                return permission;
+            }
+        }
+        return null;
+    }
     public ResXmlElement addUsesPermission(String permissionName){
         ResXmlElement manifestElement=getManifestElement();
         if(manifestElement==null){
             return null;
         }
-        manifestElement.getStartElement().getOrCreateString(TAG_uses_permission);
+        ResXmlElement exist=getUsesPermission(permissionName);
+        if(exist!=null){
+            return exist;
+        }
         ResXmlElement result=manifestElement.createChildElement(TAG_uses_permission);
         ResXmlAttribute attr = result.createAndroidAttribute(NAME_name, ID_name);
-        ResXmlString strPermission = result.getStartElement().getOrCreateString(permissionName);
-        attr.setRawValue(strPermission.getIndex());
-        attr.setValueType(ValueType.STRING);
-        attr.setValueStringReference(strPermission.getIndex());
+        attr.setValueAsString(permissionName);
         return result;
     }
     public String getPackageName(){
@@ -54,13 +75,13 @@ public class AndroidManifestBlock extends ResXmlBlock{
         return getManifestAttributeInt(NAME_compileSdkVersion);
     }
     public boolean setCompileSdkVersion(int val){
-        return setManifestAttributeInt(NAME_compileSdkVersion, val);
+        return setManifestAttributeInt(ID_compileSdkVersion, val);
     }
     public String getCompileSdkVersionCodename(){
         return getManifestAttributeString(NAME_compileSdkVersionCodename);
     }
     public boolean setCompileSdkVersionCodename(String val){
-        return setManifestAttributeString(NAME_compileSdkVersionCodename, val);
+        return setManifestAttributeString(ID_compileSdkVersionCodename, val);
     }
     public Integer getVersionCode(){
         return getManifestAttributeInt(NAME_versionCode);
@@ -91,6 +112,19 @@ public class AndroidManifestBlock extends ResXmlBlock{
         }
         return resXmlString.getHtml();
     }
+    private boolean setManifestAttributeString(int resId, String value){
+        ResXmlElement manifestElement=getManifestElement();
+        if(manifestElement==null){
+            return false;
+        }
+        ResXmlAttribute attribute= manifestElement.searchAttributeById(resId);
+        if(attribute==null){
+            return false;
+        }
+        attribute.setValueType(ValueType.STRING);
+        ResXmlString resXmlString=attribute.setValueString(value);
+        return resXmlString!=null;
+    }
     private boolean setManifestAttributeString(String name, String value){
         ResXmlElement manifestElement=getManifestElement();
         if(manifestElement==null){
@@ -103,6 +137,20 @@ public class AndroidManifestBlock extends ResXmlBlock{
         attribute.setValueType(ValueType.STRING);
         ResXmlString resXmlString=attribute.setValueString(value);
         return resXmlString!=null;
+    }
+    private boolean setManifestAttributeInt(int resId, int value){
+        ResXmlElement manifestElement=getManifestElement();
+        if(manifestElement==null){
+            return false;
+        }
+        ResXmlAttribute attribute= manifestElement.searchAttributeById(resId);
+        if(attribute==null){
+            return false;
+        }
+        attribute.setValueType(ValueType.INT_DEC);
+        attribute.setValueString(String.valueOf(value));
+        attribute.setRawValue(value);
+        return true;
     }
     private boolean setManifestAttributeInt(String name, int value){
         ResXmlElement manifestElement=getManifestElement();

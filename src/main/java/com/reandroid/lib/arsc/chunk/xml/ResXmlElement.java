@@ -40,25 +40,30 @@ public class ResXmlElement extends FixedBlockContainer {
         addChild(5, mEndNamespaceList);
     }
     @Override
-    protected void refreshChildes(){
-        List<ResXmlElement> elementList = listElements();
-        for (ResXmlElement element:elementList){
-            element.refresh();
+    protected void onPreRefreshRefresh(){
+        ResXmlStartElement start = getStartElement();
+        if(start==null){
+            return;
         }
-        super.refreshChildes();
+        start.getResXmlAttributeArray().sortAttributes();
     }
     public ResXmlElement createChildElement(String tag){
         ResXmlElement resXmlElement=new ResXmlElement();
         ResXmlStartElement startElement=new ResXmlStartElement();
         resXmlElement.setStartElement(startElement);
+
         ResXmlEndElement endElement=new ResXmlEndElement();
+        startElement.setResXmlEndElement(endElement);
+
         resXmlElement.setEndElement(endElement);
+        endElement.setResXmlStartElement(startElement);
+
         addElement(resXmlElement);
+
         resXmlElement.setTag(tag);
         int lineNo=getStartElement().getLineNumber()+1;
         startElement.setLineNumber(lineNo);
         endElement.setLineNumber(lineNo);
-        endElement.setStringReference(startElement.getStringReference());
         return resXmlElement;
     }
     public ResXmlAttribute createAndroidAttribute(String name, int resourceId){
@@ -230,24 +235,21 @@ public class ResXmlElement extends FixedBlockContainer {
         return null;
     }
     public ResXmlStartNamespace getOrCreateNamespace(String uri, String prefix){
-        ResXmlStartNamespace namespace=getStartNamespaceByUri(uri);
-        if(namespace!=null){
-            return namespace;
+        ResXmlStartNamespace exist=getStartNamespaceByUri(uri);
+        if(exist!=null){
+            return exist;
         }
-        ResXmlStartElement startElement = getStartElement();
-        ResXmlString uriString = startElement.getOrCreateString(uri);
-        ResXmlString prefixString = startElement.getOrCreateString(prefix);
-        namespace=new ResXmlStartNamespace();
-        addStartNamespace(namespace);
-        namespace.setUriReference(uriString.getIndex());
-        namespace.setPrefixReference(prefixString.getIndex());
+        ResXmlStartNamespace startNamespace=new ResXmlStartNamespace();
         ResXmlEndNamespace endNamespace=new ResXmlEndNamespace();
+        startNamespace.setEnd(endNamespace);
+
+        addStartNamespace(startNamespace);
         addEndNamespace(endNamespace);
-        endNamespace.setUriReference(uriString.getIndex());
-        endNamespace.setPrefixReference(prefixString.getIndex());
-        namespace.setResXmlEndNamespace(endNamespace);
-        endNamespace.setResXmlStartNamespace(namespace);
-        return namespace;
+
+        startNamespace.setUri(uri);
+        startNamespace.setPrefix(prefix);
+
+        return startNamespace;
     }
     public ResXmlStartNamespace getStartNamespaceByUri(String uri){
         if(uri==null){
@@ -354,8 +356,7 @@ public class ResXmlElement extends FixedBlockContainer {
         for(int i=0;i<max;i++){
             ResXmlStartNamespace start=mStartNamespaceList.get(i);
             ResXmlEndNamespace end=mEndNamespaceList.get(max-i-1);
-            start.setResXmlEndNamespace(end);
-            end.setResXmlStartNamespace(start);
+            start.setEnd(end);
         }
     }
 

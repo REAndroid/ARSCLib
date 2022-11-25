@@ -30,16 +30,16 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
     private final ShortItem  screenHeight;
     private final ShortItem sdkVersion;
     private final ShortItem minorVersion;
-    private final ByteItem screenLayout;
-    private final ByteItem uiMode;
-    private final ShortItem smallestScreenWidthDp;
-    private final ShortItem screenWidthDp;
-    private final ShortItem screenHeightDp;
+    private final ByteArray screenLayout;
+    private final ByteArray uiMode;
+    private final ByteArray smallestScreenWidthDp;
+    private final ByteArray screenWidthDp;
+    private final ByteArray screenHeightDp;
     private final ByteArray localeScript;
     private final ByteArray localeVariant;
-    private final ByteItem screenLayout2;
-    private final ByteItem colorMode;
-    private final ShortItem reservedPadding;
+    private final ByteArray screenLayout2;
+    private final ByteArray colorMode;
+    private final ByteArray reservedPadding;
     private final ByteArray skipSizeGreater56;
     private final ByteArray exceedingSize;
     private final ByteArray remainingSize;
@@ -52,35 +52,36 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
     public ResConfig(){
         super();
 
-        this.configSize = new IntegerItem(64);
-        this.mcc = new ShortItem();
-        this.mnc = new ShortItem();
-        this.languageIn0 = new ByteItem();
-        this.languageIn1 = new ByteItem();
-        this.countryIn0 = new ByteItem();
-        this.countryIn1 = new ByteItem();
-        this.orientation = new ByteItem();
-        this.touchscreen = new ByteItem();
-        this.density = new ShortItem();
-        this.keyboard = new ByteItem();
-        this.navigation = new ByteItem();
-        this.inputFlags = new ByteItem();
-        this.inputPad0 = new ByteItem();
-        this.screenWidth = new ShortItem();
-        this.screenHeight = new ShortItem();
-        this.sdkVersion = new ShortItem();
-        this.minorVersion = new ShortItem();
-        this.screenLayout = new ByteItem();
-        this.uiMode = new ByteItem();
-        this.smallestScreenWidthDp = new ShortItem();
-        this.screenWidthDp = new ShortItem();
-        this.screenHeightDp = new ShortItem();
+        this.configSize = new IntegerItem(64);//4
+        this.mcc = new ShortItem();//6
+        this.mnc = new ShortItem();//8
+        this.languageIn0 = new ByteItem();//9
+        this.languageIn1 = new ByteItem();//10
+        this.countryIn0 = new ByteItem();//11
+        this.countryIn1 = new ByteItem();//12
+        this.orientation = new ByteItem();//13
+        this.touchscreen = new ByteItem();//14
+        this.density = new ShortItem();//16
+        this.keyboard = new ByteItem();//17
+        this.navigation = new ByteItem();//18
+        this.inputFlags = new ByteItem();//19
+        this.inputPad0 = new ByteItem();//20
+        this.screenWidth = new ShortItem();//22
+        this.screenHeight = new ShortItem();//24
+        this.sdkVersion = new ShortItem();//26
+        this.minorVersion = new ShortItem();//28
+        //28
+        this.screenLayout = new ByteArray();//29
+        this.uiMode = new ByteArray();//30
+        this.smallestScreenWidthDp = new ByteArray();//32
+        this.screenWidthDp = new ByteArray();//34
+        this.screenHeightDp = new ByteArray();//36
         // size sum=44;
         this.localeScript = new ByteArray(4);
         this.localeVariant = new ByteArray(8);
-        this.screenLayout2 = new ByteItem();
-        this.colorMode = new ByteItem();
-        this.reservedPadding = new ShortItem();
+        this.screenLayout2 = new ByteArray();
+        this.colorMode = new ByteArray();
+        this.reservedPadding = new ByteArray();
         this.skipSizeGreater56 = new ByteArray(4);
         this.exceedingSize = new ByteArray(8);
         this.remainingSize = new ByteArray();
@@ -164,16 +165,16 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
         screenHeight.set((short) 0);
         sdkVersion.set((short) 0);
         minorVersion.set((short) 0);
-        screenLayout.set((byte)0);
-        uiMode.set((byte)0);
-        smallestScreenWidthDp.set((byte)0);
-        screenWidthDp.set((byte)0);
-        screenHeightDp.set((byte)0);
+        screenLayout.setSize(0);
+        uiMode.setSize((byte)0);
+        smallestScreenWidthDp.setSize((byte)0);
+        screenWidthDp.setSize((byte)0);
+        screenHeightDp.setSize((byte)0);
         localeScript.clear();
         localeVariant.clear();
-        screenLayout2.set((byte)0);
-        colorMode.set((byte)0);
-        reservedPadding.set((short) 0);
+        screenLayout2.setSize(0);
+        colorMode.setSize(0);
+        reservedPadding.setSize( 0);
         skipSizeGreater56.clear();
         exceedingSize.clear();
         remainingSize.clear();
@@ -344,34 +345,64 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
         return this.minorVersion.get();
     }
     public void setScreenLayout(byte b){
-        this.screenLayout.set(b);
+        if(screenLayout.size()==0){
+            return;
+        }
+        this.screenLayout.put(0,b);
     }
     public byte getScreenLayout(){
-        return this.screenLayout.get();
+        if(screenLayout.size()==0){
+            return 0;
+        }
+        return this.screenLayout.get(0);
     }
     public void setUiMode(byte b){
-        this.uiMode.set(b);
+        if(uiMode.size()==0){
+            return;
+        }
+        this.uiMode.put(0, b);
     }
     public byte getUiMode(){
-        return this.uiMode.get();
+        if(uiMode.size()==0){
+            return 0;
+        }
+        return this.uiMode.get(0);
     }
     public void setSmallestScreenWidthDp(short sh){
-        this.smallestScreenWidthDp.set(sh);
+        if(smallestScreenWidthDp.size()==0){
+            return;
+        }
+        this.smallestScreenWidthDp.setShort(sh);
     }
     public short getSmallestScreenWidthDp(){
-        return this.smallestScreenWidthDp.get();
+        if(this.smallestScreenWidthDp.size()==0){
+            return 0;
+        }
+        return smallestScreenWidthDp.getShort();
     }
     public void setScreenWidthDp(short sh){
-        this.screenWidthDp.set(sh);
+        if(screenWidthDp.size()==0){
+            return;
+        }
+        this.screenWidthDp.setShort(sh);
     }
     public short getScreenWidthDp(){
-        return this.screenWidthDp.get();
+        if(screenWidthDp.size()==0){
+            return 0;
+        }
+        return screenWidthDp.getShort();
     }
     public void setScreenHeightDp(short sh){
-        this.screenHeightDp.set(sh);
+        if(screenHeightDp.size()==0){
+            return;
+        }
+        this.screenHeightDp.setShort(sh);
     }
     public short getScreenHeightDp(){
-        return this.screenHeightDp.get();
+        if(screenHeightDp.size()==0){
+            return 0;
+        }
+        return this.screenHeightDp.getShort();
     }
     public void setLocaleScript(byte[] bts){
         this.localeScript.set(bts);
@@ -395,22 +426,40 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
         return toCharArray(localeVariant.toArray());
     }
     public void setScreenLayout2(byte b){
-        this.screenLayout2.set(b);
+        if(screenLayout2.size()==0){
+            return;
+        }
+       this.screenLayout2.put(0,b);
     }
     public byte getScreenLayout2(){
-        return this.screenLayout2.get();
+        if(screenLayout2.size()==0){
+            return 0;
+        }
+        return this.screenLayout2.get(0);
     }
     public void setColorMode(byte b){
-        this.colorMode.set(b);
+        if(colorMode.size()==0){
+            return;
+        }
+        this.colorMode.put(0,b);
     }
     public byte getColorMode(){
-        return this.colorMode.get();
+        if(colorMode.size()==0){
+            return 0;
+        }
+        return this.colorMode.get(0);
     }
     public void setReservedPadding(short sh){
-        this.reservedPadding.set(sh);
+        if(reservedPadding.size()==0){
+            return;
+        }
+        this.reservedPadding.setShort(sh);
     }
     public short getReservedPadding(){
-        return this.reservedPadding.get();
+        if(reservedPadding.size()==0){
+            return 0;
+        }
+        return this.reservedPadding.get(0);
     }
 
     private void valuesChanged(int val, int old){
@@ -443,7 +492,19 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
         }
         mIsUpdatingSize=true;
         mCurrentSize=sz;
+        localeScript.setSize(0);
+        skipSizeGreater56.setSize(0);
+        localeVariant.setSize(0);
+        exceedingSize.setSize(0);
+        if(sz==28){
+            mIsUpdatingSize=false;
+            return;
+        }
         localeScript.setSize(4);
+        if(sz==32){
+            mIsUpdatingSize=false;
+            return;
+        }
         if(sz<=48){
             localeVariant.setSize(4);
             exceedingSize.setSize(0);
@@ -481,13 +542,9 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
         if(sender==configSize){
-            if(configSize.get()!=64){
-                configSize.get();
-            }
             setConfigSize(configSize.get());
         }
     }
-
     public boolean isEqualQualifiers(String qualifiers){
         if(qualifiers==null){
             qualifiers="";

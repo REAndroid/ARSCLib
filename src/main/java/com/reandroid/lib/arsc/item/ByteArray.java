@@ -28,6 +28,29 @@ public class ByteArray extends BlockItem {
     public final void set(byte[] values){
         super.setBytesInternal(values);
     }
+    public final void setInt(short val){
+        byte[] bts = getBytesInternal();
+        bts[3]= (byte) (val >>> 24 & 0xff);
+        bts[2]= (byte) (val >>> 16 & 0xff);
+        bts[1]= (byte) (val >>> 8 & 0xff);
+        bts[0]= (byte) (val & 0xff);
+    }
+    public final void setShort(short val){
+        byte[] bts = getBytesInternal();
+        bts[1]= (byte) (val >>> 8 & 0xff);
+        bts[0]= (byte) (val & 0xff);
+    }
+    public final short getShort(){
+        byte[] bts = getBytesInternal();
+        return (short) (bts[0] & 0xff | (bts[1] & 0xff) << 8);
+    }
+    public final int getInt(){
+        byte[] bts = getBytesInternal();
+        return bts[0] & 0xff |
+                (bts[1] & 0xff) << 8 |
+                (bts[2] & 0xff) << 16 |
+                (bts[3] & 0xff) << 24;
+    }
     public final List<Byte> toList(){
         List<Byte> results=new AbstractList<Byte>() {
             @Override
@@ -87,5 +110,9 @@ public class ByteArray extends BlockItem {
     @Override
     public void onBytesChanged() {
 
+    }
+    @Override
+    public String toString(){
+        return "size="+size();
     }
 }
