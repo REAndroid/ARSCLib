@@ -1,220 +1,91 @@
 package com.reandroid.lib.arsc.value;
 
 import com.reandroid.lib.arsc.base.Block;
-import com.reandroid.lib.arsc.base.BlockArray;
+import com.reandroid.lib.arsc.container.FixedBlockContainer;
 import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.ByteArray;
-import com.reandroid.lib.arsc.item.ByteItem;
 import com.reandroid.lib.arsc.item.IntegerItem;
-import com.reandroid.lib.arsc.item.ShortItem;
 
 import java.io.IOException;
 
-public class ResConfig extends BlockArray<Block> implements BlockLoad {
+public class ResConfig extends FixedBlockContainer implements BlockLoad {
+
     private final IntegerItem configSize;
-    private final ShortItem mcc;
-    private final ShortItem mnc;
-    private final ByteItem languageIn0;
-    private final ByteItem languageIn1;
-    private final ByteItem countryIn0;
-    private final ByteItem countryIn1;
-    private final ByteItem orientation;
-    private final ByteItem touchscreen;
-    private final ShortItem density;
-    private final ByteItem keyboard;
-    private final ByteItem navigation;
-    private final ByteItem inputFlags;
-    private final ByteItem inputPad0;
-    private final ShortItem screenWidth;
-    private final ShortItem  screenHeight;
-    private final ShortItem sdkVersion;
-    private final ShortItem minorVersion;
-    private final ByteArray screenLayout;
-    private final ByteArray uiMode;
-    private final ByteArray smallestScreenWidthDp;
-    private final ByteArray screenWidthDp;
-    private final ByteArray screenHeightDp;
-    private final ByteArray localeScript;
-    private final ByteArray localeVariant;
-    private final ByteArray screenLayout2;
-    private final ByteArray colorMode;
-    private final ByteArray reservedPadding;
-    private final ByteArray skipSizeGreater56;
-    private final ByteArray exceedingSize;
-    private final ByteArray remainingSize;
-    private int mCurrentSize;
-    private boolean mIsUpdatingSize;
+    private final ByteArray mValuesContainer;
 
     private String mQualifiers;
 
-
     public ResConfig(){
-        super();
-
-        this.configSize = new IntegerItem(64);//4
-        this.mcc = new ShortItem();//6
-        this.mnc = new ShortItem();//8
-        this.languageIn0 = new ByteItem();//9
-        this.languageIn1 = new ByteItem();//10
-        this.countryIn0 = new ByteItem();//11
-        this.countryIn1 = new ByteItem();//12
-        this.orientation = new ByteItem();//13
-        this.touchscreen = new ByteItem();//14
-        this.density = new ShortItem();//16
-        this.keyboard = new ByteItem();//17
-        this.navigation = new ByteItem();//18
-        this.inputFlags = new ByteItem();//19
-        this.inputPad0 = new ByteItem();//20
-        this.screenWidth = new ShortItem();//22
-        this.screenHeight = new ShortItem();//24
-        this.sdkVersion = new ShortItem();//26
-        this.minorVersion = new ShortItem();//28
-        //28
-        this.screenLayout = new ByteArray();//29
-        this.uiMode = new ByteArray();//30
-        this.smallestScreenWidthDp = new ByteArray();//32
-        this.screenWidthDp = new ByteArray();//34
-        this.screenHeightDp = new ByteArray();//36
-        // size sum=44;
-        this.localeScript = new ByteArray(4);
-        this.localeVariant = new ByteArray(8);
-        this.screenLayout2 = new ByteArray();
-        this.colorMode = new ByteArray();
-        this.reservedPadding = new ByteArray();
-        this.skipSizeGreater56 = new ByteArray(4);
-        this.exceedingSize = new ByteArray(8);
-        this.remainingSize = new ByteArray();
-
-        configSize.setBlockLoad(this);
-        initChildes();
-        mCurrentSize=64;
-        setConfigSize(mCurrentSize);
+        super(2);
+        this.configSize = new IntegerItem(SIZE_64);
+        this.mValuesContainer = new ByteArray(SIZE_64);
+        addChild(0, configSize);
+        addChild(1, mValuesContainer);
+        this.configSize.setBlockLoad(this);
+        this.mValuesContainer.setBlockLoad(this);
     }
-
     @Override
-    protected void onRefreshed() {
-
+    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
+        if(sender==configSize){
+            setConfigSize(configSize.get());
+        }else if(sender==mValuesContainer){
+            valuesChanged();
+        }
     }
-
     @Override
-    public Block newInstance() {
-        return null;
+    protected void onPreRefreshRefresh(){
+        int count=countBytes();
+        configSize.set(count);
     }
-
     @Override
-    public Block[] newInstance(int len) {
-        return new Block[len];
+    protected void onRefreshed() { 
+        valuesChanged();
     }
-
     public void parseQualifiers(String name){
         ResConfigHelper.parseQualifiers(this, name);
         mQualifiers=null;
     }
-
-
-    private void initChildes(){
-        add(configSize);
-        add(mcc);
-        add(mnc);
-        add(languageIn0);
-        add(languageIn1);
-        add(countryIn0);
-        add(countryIn1);
-        add(orientation);
-        add(touchscreen);
-        add(density);
-        add(keyboard);
-        add(navigation);
-        add(inputFlags);
-        add(inputPad0);
-        add(screenWidth);
-        add(screenHeight);
-        add(sdkVersion);
-        add(minorVersion);
-        add(screenLayout);
-        add(uiMode);
-        add(smallestScreenWidthDp);
-        add(screenWidthDp);
-        add(screenHeightDp);
-        add(localeScript);
-        add(localeVariant);
-        add(screenLayout2);
-        add(colorMode);
-        add(reservedPadding);
-        add(skipSizeGreater56);
-        add(exceedingSize);
-        add(remainingSize);
-    }
-    private void resetToDefault(){
-        configSize.set(0);
-        mcc.set((short) 0);
-        mnc.set((short) 0);
-        languageIn0.set((byte)0);
-        languageIn1.set((byte)0);
-        countryIn0.set((byte)0);
-        countryIn1.set((byte)0);
-        orientation.set((byte)0);
-        touchscreen.set((byte)0);
-        density.set((short) 0);
-        keyboard.set((byte)0);
-        navigation.set((byte)0);
-        inputFlags.set((byte)0);
-        inputPad0.set((byte)0);
-        screenWidth.set((short) 0);
-        screenHeight.set((short) 0);
-        sdkVersion.set((short) 0);
-        minorVersion.set((short) 0);
-        screenLayout.setSize(0);
-        uiMode.setSize((byte)0);
-        smallestScreenWidthDp.setSize((byte)0);
-        screenWidthDp.setSize((byte)0);
-        screenHeightDp.setSize((byte)0);
-        localeScript.clear();
-        localeVariant.clear();
-        screenLayout2.setSize(0);
-        colorMode.setSize(0);
-        reservedPadding.setSize( 0);
-        skipSizeGreater56.clear();
-        exceedingSize.clear();
-        remainingSize.clear();
-        mCurrentSize=0;
-        setConfigSize(DEFAULT_CONFIG_SIZE);
-    }
-    public void setConfigSize(int i){
-        this.configSize.set(i);
-        updateConfigSize(i);
+    public void setConfigSize(int size){
+        if(size != SIZE_28
+                && size != SIZE_32
+                && size != SIZE_36
+                && size != SIZE_48
+                && size != SIZE_56
+                && size != SIZE_64){
+            throw new IllegalArgumentException("Invalid config size = " + size);
+        }
+        this.configSize.set(size);
+        size=size-4;
+        mValuesContainer.setSize(size);
+        valuesChanged();
     }
     public int getConfigSize(){
         return this.configSize.get();
     }
     public void setMcc(short sh){
-        this.mcc.set(sh);
+        mValuesContainer.putShort(OFFSET_mcc, sh);
     }
     public short getMcc(){
-        return this.mcc.get();
+        return mValuesContainer.getShort(OFFSET_mcc);
     }
     public void setMnc(short sh){
-        this.mnc.set(sh);
+        mValuesContainer.putShort(OFFSET_mnc, sh);
     }
     public short getMnc(){
-        return this.mnc.get();
+        return mValuesContainer.getShort(OFFSET_mnc);
     }
     public void setLanguageIn0(byte b){
-        byte old=languageIn0.get();
-        this.languageIn0.set(b);
-        valuesChanged(b, old);
+        mValuesContainer.put(OFFSET_languageIn0, b);
     }
     public byte getLanguageIn0(){
-        return this.languageIn0.get();
+        return mValuesContainer.get(OFFSET_languageIn0);
     }
     public void setLanguageIn1(byte b){
-        byte old=languageIn1.get();
-        this.languageIn1.set(b);
-        valuesChanged(b, old);
+        mValuesContainer.put(OFFSET_languageIn1, b);
     }
     public byte getLanguageIn1(){
-        return this.languageIn1.get();
+        return mValuesContainer.get(OFFSET_languageIn1);
     }
     public char[] getLanguage(){
         byte b0=getLanguageIn0();
@@ -232,20 +103,16 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
         setLanguageIn1(bts[1]);
     }
     public void setCountryIn0(byte b){
-        byte old=countryIn0.get();
-        this.countryIn0.set(b);
-        valuesChanged(b, old);
+        mValuesContainer.put(OFFSET_countryIn0, b);
     }
     public byte getCountryIn0(){
-        return this.countryIn0.get();
+        return mValuesContainer.get(OFFSET_countryIn0);
     }
     public void setCountryIn1(byte b){
-        byte old=countryIn1.get();
-        this.countryIn1.set(b);
-        valuesChanged(b, old);
+        mValuesContainer.put(OFFSET_countryIn1, b);
     }
     public byte getCountryIn1(){
-        return this.countryIn1.get();
+        return mValuesContainer.get(OFFSET_countryIn1);
     }
     public char[] getRegion(){
         byte b0=getCountryIn0();
@@ -263,203 +130,221 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
         setCountryIn1(bts[1]);
     }
     public void setOrientation(byte b){
-        byte old=orientation.get();
-        this.orientation.set(b);
-        valuesChanged(b, old);
+        mValuesContainer.put(OFFSET_orientation, b);
     }
     public byte getOrientation(){
-        return this.orientation.get();
+        return mValuesContainer.get(OFFSET_orientation);
     }
     public void setTouchscreen(byte b){
-        byte old=touchscreen.get();
-        this.touchscreen.set(b);
-        valuesChanged(b, old);
+        mValuesContainer.put(OFFSET_touchscreen, b);
     }
     public byte getTouchscreen(){
-        return this.touchscreen.get();
+        return mValuesContainer.get(OFFSET_touchscreen);
     }
     public void setDensity(short sh){
-        short old=density.get();
-        this.density.set(sh);
-        valuesChanged(sh, old);
+        mValuesContainer.putShort(OFFSET_density, sh);
     }
     public short getDensity(){
-        return this.density.get();
+        return mValuesContainer.getShort(OFFSET_density);
     }
     public void setKeyboard(byte b){
-        this.keyboard.set(b);
+        mValuesContainer.put(OFFSET_keyboard, b);
     }
     public byte getKeyboard(){
-        return this.keyboard.get();
+        return mValuesContainer.get(OFFSET_keyboard);
     }
     public void setNavigation(byte b){
-        this.navigation.set(b);
+        mValuesContainer.put(OFFSET_navigation, b);
     }
     public byte getNavigation(){
-        return this.navigation.get();
+        return mValuesContainer.get(OFFSET_navigation);
     }
     public void setInputFlags(byte b){
-        this.inputFlags.set(b);
+        mValuesContainer.put(OFFSET_inputFlags, b);
     }
     public byte getInputFlags(){
-        return this.inputFlags.get();
+        return mValuesContainer.get(OFFSET_inputFlags);
     }
     public void setInputPad0(byte b){
-        this.inputPad0.set(b);
+        mValuesContainer.put(OFFSET_inputPad0, b);
     }
-    public byte getInputPad0(){
-        return this.inputPad0.get();
+    public byte setInputPad0(){
+        return mValuesContainer.get(OFFSET_inputPad0);
+    }
+    public void setScreenWidth(short sh){
+        mValuesContainer.putShort(OFFSET_screenWidth, sh);
+    }
+    public short getScreenWidth(){
+        return mValuesContainer.getShort(OFFSET_screenWidth);
+    }
+    public void setScreenHeight(short sh){
+        mValuesContainer.putShort(OFFSET_screenHeight, sh);
+    }
+    public short getScreenHeight(){
+        return mValuesContainer.getShort(OFFSET_screenHeight);
     }
     public void setScreenSize(short w, short h){
         this.setScreenWidth(w);
         this.setScreenHeight(h);
     }
-    public void setScreenWidth(short sh){
-        short old=screenWidth.get();
-        this.screenWidth.set(sh);
-        valuesChanged(sh, old);
-    }
-    public short getScreenWidth(){
-        return this.screenWidth.get();
-    }
-    public void setScreenHeight(short sh){
-        short old=screenHeight.get();
-        this.screenHeight.set(sh);
-        valuesChanged(sh, old);
-    }
-    public short getScreenHeight(){
-        return this.screenHeight.get();
-    }
     public void setSdkVersion(short sh){
-        short old=sdkVersion.get();
-        this.sdkVersion.set(sh);
-        valuesChanged(sh, old);
+        mValuesContainer.putShort(OFFSET_sdkVersion, sh);
     }
     public short getSdkVersion(){
-        return this.sdkVersion.get();
+        return mValuesContainer.getShort(OFFSET_sdkVersion);
     }
     public void setMinorVersion(short sh){
-        this.minorVersion.set(sh);
+        mValuesContainer.putShort(OFFSET_minorVersion, sh);
     }
     public short getMinorVersion(){
-        return this.minorVersion.get();
+        return mValuesContainer.getShort(OFFSET_minorVersion);
     }
     public void setScreenLayout(byte b){
-        if(screenLayout.size()==0){
-            return;
+        if(getConfigSize()<SIZE_32){
+            if(b==0){
+                return;
+            }
+            throw new IllegalArgumentException("Can not set screenLayout for config size="+getConfigSize());
         }
-        this.screenLayout.put(0,b);
+        mValuesContainer.put(OFFSET_screenLayout, b);
     }
     public byte getScreenLayout(){
-        if(screenLayout.size()==0){
+        if(getConfigSize()<SIZE_32){
             return 0;
         }
-        return this.screenLayout.get(0);
+        return mValuesContainer.get(OFFSET_screenLayout);
     }
     public void setUiMode(byte b){
-        if(uiMode.size()==0){
-            return;
+        if(getConfigSize()<SIZE_32){
+            if(b==0){
+                return;
+            }
+            throw new IllegalArgumentException("Can not set uiMode for config size="+getConfigSize());
         }
-        this.uiMode.put(0, b);
+        mValuesContainer.put(OFFSET_uiMode, b);
     }
     public byte getUiMode(){
-        if(uiMode.size()==0){
+        if(getConfigSize()<SIZE_32){
             return 0;
         }
-        return this.uiMode.get(0);
+        return mValuesContainer.get(OFFSET_uiMode);
     }
     public void setSmallestScreenWidthDp(short sh){
-        if(smallestScreenWidthDp.size()==0){
-            return;
+        if(getConfigSize()<SIZE_32){
+            if(sh==0){
+                return;
+            }
+            throw new IllegalArgumentException("Can not set smallestScreenWidthDp for config size="+getConfigSize());
         }
-        this.smallestScreenWidthDp.setShort(sh);
+        mValuesContainer.putShort(OFFSET_smallestScreenWidthDp, sh);
     }
     public short getSmallestScreenWidthDp(){
-        if(this.smallestScreenWidthDp.size()==0){
+        if(getConfigSize()<SIZE_32){
             return 0;
         }
-        return smallestScreenWidthDp.getShort();
+        return mValuesContainer.getShort(OFFSET_smallestScreenWidthDp);
     }
     public void setScreenWidthDp(short sh){
-        if(screenWidthDp.size()==0){
-            return;
+        if(getConfigSize()<SIZE_36){
+            if(sh==0){
+                return;
+            }
+            throw new IllegalArgumentException("Can not set screenWidthDp for config size="+getConfigSize());
         }
-        this.screenWidthDp.setShort(sh);
+        mValuesContainer.putShort(OFFSET_screenWidthDp, sh);
     }
     public short getScreenWidthDp(){
-        if(screenWidthDp.size()==0){
+        if(getConfigSize()<SIZE_36){
             return 0;
         }
-        return screenWidthDp.getShort();
+        return mValuesContainer.getShort(OFFSET_screenWidthDp);
     }
     public void setScreenHeightDp(short sh){
-        if(screenHeightDp.size()==0){
-            return;
+        if(getConfigSize()<SIZE_36){
+            if(sh==0){
+                return;
+            }
+            throw new IllegalArgumentException("Can not set screenHeightDp for config size="+getConfigSize());
         }
-        this.screenHeightDp.setShort(sh);
+        mValuesContainer.putShort(OFFSET_screenHeightDp, sh);
     }
     public short getScreenHeightDp(){
-        if(screenHeightDp.size()==0){
+        if(getConfigSize()<SIZE_36){
             return 0;
         }
-        return this.screenHeightDp.getShort();
+        return mValuesContainer.getShort(OFFSET_screenHeightDp);
     }
     public void setLocaleScript(byte[] bts){
-        this.localeScript.set(bts);
+        if(getConfigSize()<SIZE_48){
+            if(isNull(bts)){
+                return;
+            }
+            throw new IllegalArgumentException("Can not set localeScript for config size="+getConfigSize());
+        }
+        bts = ensureArrayLength(bts, LEN_localeScript);
+        mValuesContainer.putByteArray(OFFSET_localeScript, bts);
     }
     public void setLocaleScript(char[] chs){
-        byte[] bts=toByteArray(chs, localeScript.size());
-        this.localeScript.set(bts);
+        byte[] bts=toByteArray(chs, LEN_localeScript);
+        setLocaleScript(bts);
     }
     public char[] getLocaleScript(){
-        byte[] bts=localeScript.toArray();
+        if(getConfigSize()<SIZE_48){
+            return null;
+        }
+        byte[] bts = mValuesContainer.getByteArray(OFFSET_localeScript, LEN_localeScript);
         return toCharArray(bts);
     }
     public void setLocaleVariant(byte[] bts){
-        this.localeVariant.set(bts);
+        if(getConfigSize()<SIZE_48){
+            if(isNull(bts)){
+                return;
+            }
+            throw new IllegalArgumentException("Can not set localeVariant for config size="+getConfigSize());
+        }
+        bts = ensureArrayLength(bts, LEN_localeVariant);
+        mValuesContainer.putByteArray(OFFSET_localeVariant, bts);
     }
     public void setLocaleVariant(char[] chs){
-        byte[] bts=toByteArray(chs, localeVariant.size());
-        this.localeVariant.set(bts);
+        byte[] bts=toByteArray(chs, LEN_localeVariant);
+        setLocaleVariant(bts);
     }
     public char[] getLocaleVariant(){
-        return toCharArray(localeVariant.toArray());
+        if(getConfigSize()<SIZE_48){
+            return null;
+        }
+        byte[] bts = mValuesContainer.getByteArray(OFFSET_localeVariant, LEN_localeVariant);
+        return toCharArray(bts);
     }
     public void setScreenLayout2(byte b){
-        if(screenLayout2.size()==0){
-            return;
+        if(getConfigSize()<SIZE_56){
+            if(b==0){
+                return;
+            }
+            throw new IllegalArgumentException("Can not set screenLayout2 for config size="+getConfigSize());
         }
-       this.screenLayout2.put(0,b);
+        mValuesContainer.put(OFFSET_screenLayout2, b);
     }
     public byte getScreenLayout2(){
-        if(screenLayout2.size()==0){
+        if(getConfigSize()<SIZE_56){
             return 0;
         }
-        return this.screenLayout2.get(0);
+        return mValuesContainer.get(OFFSET_screenLayout2);
     }
     public void setColorMode(byte b){
-        if(colorMode.size()==0){
-            return;
+        if(getConfigSize()<SIZE_56){
+            if(b==0){
+                return;
+            }
+            throw new IllegalArgumentException("Can not set colorMode for config size="+getConfigSize());
         }
-        this.colorMode.put(0,b);
+        mValuesContainer.put(OFFSET_colorMode, b);
     }
     public byte getColorMode(){
-        if(colorMode.size()==0){
+        if(getConfigSize()<SIZE_56){
             return 0;
         }
-        return this.colorMode.get(0);
-    }
-    public void setReservedPadding(short sh){
-        if(reservedPadding.size()==0){
-            return;
-        }
-        this.reservedPadding.setShort(sh);
-    }
-    public short getReservedPadding(){
-        if(reservedPadding.size()==0){
-            return 0;
-        }
-        return this.reservedPadding.get(0);
+        return mValuesContainer.get(OFFSET_colorMode);
     }
 
     private void valuesChanged(int val, int old){
@@ -471,80 +356,13 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
     private void valuesChanged(){
         mQualifiers=null;
     }
-
     public String getQualifiers(){
         if(mQualifiers==null){
             mQualifiers = ResConfigHelper.toQualifier(this).trim();
         }
         return mQualifiers;
     }
-    @Override
-    public int countBytes(){
-        if(mIsUpdatingSize){
-            return super.countBytes();
-        }
-        return mCurrentSize;
-    }
 
-    private void updateConfigSize(int sz){
-        if(sz==mCurrentSize){
-            return;
-        }
-        mIsUpdatingSize=true;
-        mCurrentSize=sz;
-        localeScript.setSize(0);
-        skipSizeGreater56.setSize(0);
-        localeVariant.setSize(0);
-        exceedingSize.setSize(0);
-        if(sz==28){
-            mIsUpdatingSize=false;
-            return;
-        }
-        localeScript.setSize(4);
-        if(sz==32){
-            mIsUpdatingSize=false;
-            return;
-        }
-        if(sz<=48){
-            localeVariant.setSize(4);
-            exceedingSize.setSize(0);
-            remainingSize.setSize(0);
-            skipSizeGreater56.setSize(0);
-            mIsUpdatingSize=false;
-            return;
-        }
-        if(sz==KNOWN_CONFIG_BYTES){
-            localeVariant.setSize(8);
-            skipSizeGreater56.setSize(4);
-            exceedingSize.setSize(0);
-            remainingSize.setSize(0);
-            mIsUpdatingSize=false;
-            return;
-        }
-        if(sz<KNOWN_CONFIG_BYTES){
-            int i=sz-KNOWN_CONFIG_BYTES;
-            localeVariant.setSize(i);
-            skipSizeGreater56.setSize(0);
-            exceedingSize.setSize(0);
-            remainingSize.setSize(0);
-            mIsUpdatingSize=false;
-            return;
-        }
-        int ex=sz-KNOWN_CONFIG_BYTES;
-        localeVariant.setSize(8);
-        skipSizeGreater56.setSize(4);
-        exceedingSize.setSize(ex);
-        int rem=sz-64;
-        remainingSize.setSize(rem);
-        mIsUpdatingSize=false;
-    }
-
-    @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender==configSize){
-            setConfigSize(configSize.get());
-        }
-    }
     public boolean isEqualQualifiers(String qualifiers){
         if(qualifiers==null){
             qualifiers="";
@@ -555,6 +373,9 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
     public String getLocale(){
         return ResConfigHelper.decodeLocale(this);
     }
+    public boolean isDefault(){
+        return getQualifiers().length()==0;
+    }
     @Override
     public boolean equals(Object o){
         if(o instanceof ResConfig){
@@ -562,9 +383,6 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
             return getQualifiers().equals(config.getQualifiers());
         }
         return false;
-    }
-    public boolean isDefault(){
-        return getQualifiers().length()==0;
     }
     @Override
     public String toString(){
@@ -675,11 +493,64 @@ public class ResConfig extends BlockArray<Block> implements BlockLoad {
         }
         return true;
     }
+    private static byte[] ensureArrayLength(byte[] bts, int length){
+        if(bts == null || length == 0){
+            return new byte[length];
+        }
+        if(bts.length==length){
+            return bts;
+        }
+        byte[] result = new byte[length];
+        int max=result.length;
+        if(bts.length<max){
+            max=bts.length;
+        }
+        System.arraycopy(bts, 0, result, 0, max);
+        return result;
+    }
 
+    private static final int SIZE_28 = 28;
+    private static final int SIZE_32 = 32;
+    private static final int SIZE_36 = 36;
+    private static final int SIZE_48 = 48;
+    private static final int SIZE_56 = 56;
+    private static final int SIZE_64 = 64;
 
-    private static final int KNOWN_CONFIG_BYTES = 56;
+    private static final int OFFSET_mcc = 0;
+    private static final int OFFSET_mnc = 2;
+    private static final int OFFSET_languageIn0 = 4;
+    private static final int OFFSET_languageIn1 = 5;
+    private static final int OFFSET_countryIn0 = 6;
+    private static final int OFFSET_countryIn1 = 7;
+    private static final int OFFSET_orientation = 8;
+    private static final int OFFSET_touchscreen = 9;
+    private static final int OFFSET_density = 10;
+    private static final int OFFSET_keyboard = 12;
+    private static final int OFFSET_navigation = 13;
+    private static final int OFFSET_inputFlags = 14;
+    private static final int OFFSET_inputPad0 = 15;
+    private static final int OFFSET_screenWidth = 16;
+    private static final int OFFSET_screenHeight = 18;
+    private static final int OFFSET_sdkVersion = 20;
+    private static final int OFFSET_minorVersion = 22;
+    //SIZE=28
+    private static final int OFFSET_screenLayout = 24;
+    private static final int OFFSET_uiMode = 25;
+    private static final int OFFSET_smallestScreenWidthDp = 26;
+    //SIZE=32
+    private static final int OFFSET_screenWidthDp = 28;
+    private static final int OFFSET_screenHeightDp = 30;
+    //SIZE=36
+    private static final int OFFSET_localeScript = 32;
+    private static final int OFFSET_localeVariant = 36;
+    //SIZE=48
+    private static final int OFFSET_screenLayout2 = 44;
+    private static final int OFFSET_colorMode = 45;
+    private static final int OFFSET_reservedPadding = 46;
+    //SIZE=52
+    private static final int OFFSET_endBlock = 52;
 
-    private static final int DEFAULT_CONFIG_SIZE = 64;
-
+    private static final int LEN_localeScript = 4;
+    private static final int LEN_localeVariant = 8;
 
 }

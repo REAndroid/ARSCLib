@@ -21,49 +21,10 @@ public class ByteArray extends BlockItem {
         int len=values.length;
         setBytesLength(old+len, false);
         byte[] bts = getBytesInternal();
-        for(int i=0;i<len;i++){
-            bts[old+i]=values[i];
-        }
+        System.arraycopy(values, 0, bts, old, len);
     }
     public final void set(byte[] values){
         super.setBytesInternal(values);
-    }
-    public final void setInt(short val){
-        byte[] bts = getBytesInternal();
-        bts[3]= (byte) (val >>> 24 & 0xff);
-        bts[2]= (byte) (val >>> 16 & 0xff);
-        bts[1]= (byte) (val >>> 8 & 0xff);
-        bts[0]= (byte) (val & 0xff);
-    }
-    public final void setShort(short val){
-        byte[] bts = getBytesInternal();
-        bts[1]= (byte) (val >>> 8 & 0xff);
-        bts[0]= (byte) (val & 0xff);
-    }
-    public final short getShort(){
-        byte[] bts = getBytesInternal();
-        return (short) (bts[0] & 0xff | (bts[1] & 0xff) << 8);
-    }
-    public final int getInt(){
-        byte[] bts = getBytesInternal();
-        return bts[0] & 0xff |
-                (bts[1] & 0xff) << 8 |
-                (bts[2] & 0xff) << 16 |
-                (bts[3] & 0xff) << 24;
-    }
-    public final List<Byte> toList(){
-        List<Byte> results=new AbstractList<Byte>() {
-            @Override
-            public Byte get(int i) {
-                return ByteArray.this.get(i);
-            }
-
-            @Override
-            public int size() {
-                return ByteArray.this.size();
-            }
-        };
-        return results;
     }
     public final byte[] toArray(){
         return getBytes();
@@ -88,28 +49,94 @@ public class ByteArray extends BlockItem {
         }
         setBytesLength(s);
     }
+    public final int size(){
+        return getBytesLength();
+    }
     public Byte get(int index){
         if(index<0 || index>=size()){
             return null;
         }
         return getBytesInternal()[index];
     }
-    public final int size(){
-        return getBytesLength();
-    }
-    final void add(byte value){
-        int len=getBytesLength();
-        len=len + 1;
-        setBytesLength(len, false);
-        put(len, value);
-    }
     public final void put(int index, byte value){
         byte[] bts = getBytesInternal();
         bts[index]=value;
     }
+    public final void putShort(int offset, short val){
+        byte[] bts = getBytesInternal();
+        bts[offset+1]= (byte) (val >>> 8 & 0xff);
+        bts[offset]= (byte) (val & 0xff);
+    }
+    public final short getShort(int offset){
+        byte[] bts = getBytesInternal();
+        return (short) (bts[offset] & 0xff | (bts[offset+1] & 0xff) << 8);
+    }
+    public final void putInteger(int offset, int val){
+        byte[] bts = getBytesInternal();
+        bts[offset+3]= (byte) (val >>> 24 & 0xff);
+        bts[offset+2]= (byte) (val >>> 16 & 0xff);
+        bts[offset+1]= (byte) (val >>> 8 & 0xff);
+        bts[offset]= (byte) (val & 0xff);
+    }
+    public final int getInteger(int offset){
+        byte[] bts = getBytesInternal();
+        return bts[offset] & 0xff |
+                (bts[offset+1] & 0xff) << 8 |
+                (bts[offset+2] & 0xff) << 16 |
+                (bts[offset+3] & 0xff) << 24;
+    }
+    public final void putByteArray(int offset, byte[] val){
+        byte[] bts = getBytesInternal();
+        System.arraycopy(val, 0, bts, offset, val.length);
+    }
+    public final byte[] getByteArray(int offset, int length){
+        byte[] bts = getBytesInternal();
+        byte[] result = new byte[length];
+        if (result.length >= 0) {
+            System.arraycopy(bts, offset, result, 0, result.length);
+        }
+        return result;
+    }
+
+    public final List<Byte> toByteList(){
+        return new AbstractList<Byte>() {
+            @Override
+            public Byte get(int i) {
+                return ByteArray.this.get(i);
+            }
+            @Override
+            public int size() {
+                return ByteArray.this.size();
+            }
+        };
+    }
+    public final List<Short> toShortList(){
+        return new AbstractList<Short>() {
+            @Override
+            public Short get(int i) {
+                return ByteArray.this.getShort(i);
+            }
+            @Override
+            public int size() {
+                return ByteArray.this.size()/2;
+            }
+        };
+    }
+    public final List<Integer> toIntegerList(){
+        return new AbstractList<Integer>() {
+            @Override
+            public Integer get(int i) {
+                return ByteArray.this.getInteger(i);
+            }
+            @Override
+            public int size() {
+                return ByteArray.this.size()/4;
+            }
+        };
+    }
+
     @Override
     public void onBytesChanged() {
-
     }
     @Override
     public String toString(){

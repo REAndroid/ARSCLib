@@ -1,6 +1,7 @@
 package com.reandroid.lib.arsc.base;
 
 import com.reandroid.lib.arsc.container.BlockList;
+import com.reandroid.lib.arsc.container.FixedBlockContainer;
 import com.reandroid.lib.arsc.io.BlockReader;
 
 import java.io.IOException;
@@ -43,8 +44,7 @@ public abstract class BlockContainer<T extends Block> extends Block{
                 if(item instanceof BlockContainer){
                     BlockContainer<?> container=(BlockContainer<?>)item;
                     container.refresh();
-                }
-                if(item instanceof BlockList){
+                }else if(item instanceof BlockList){
                     BlockList<?> blockList=(BlockList<?>)item;
                     blockList.refresh();
                 }

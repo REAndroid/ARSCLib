@@ -108,6 +108,11 @@ public class TypeBlock extends BaseTypeBlock {
         getEntryBlockArray().refreshCountAndStart();
     }
     @Override
+    protected void onPreRefreshRefresh(){
+        mResConfig.refresh();
+        super.onPreRefreshRefresh();
+    }
+    @Override
     public String toString(){
         StringBuilder builder=new StringBuilder();
         builder.append(getResConfig().toString());

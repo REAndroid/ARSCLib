@@ -47,8 +47,7 @@ public class BlockList<T extends Block> extends Block {
             if(item instanceof BlockContainer){
                 BlockContainer<?> container=(BlockContainer<?>)item;
                 container.refresh();
-            }
-            if(item instanceof BlockList){
+            }else if(item instanceof BlockList){
                 BlockList<?> blockList=(BlockList<?>)item;
                 blockList.refresh();
             }
