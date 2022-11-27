@@ -21,7 +21,7 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
     public ResConfig(){
         super(2);
         this.configSize = new IntegerItem(SIZE_64);
-        this.mValuesContainer = new ByteArray(SIZE_64);
+        this.mValuesContainer = new ByteArray(SIZE_64 - 4);
         addChild(0, configSize);
         addChild(1, mValuesContainer);
         this.configSize.setBlockLoad(this);
