@@ -142,4 +142,47 @@ public class ByteArray extends BlockItem {
     public String toString(){
         return "size="+size();
     }
+
+    public static byte[] trimTrailZeros(byte[] bts){
+        if(bts==null){
+            return new byte[0];
+        }
+        int len=0;
+        for(int i=0;i<bts.length;i++){
+            if(bts[i]!=0){
+                len=i+1;
+            }
+        }
+        byte[] result=new byte[len];
+        if(result.length>0){
+            System.arraycopy(bts, 0, result, 0, result.length);
+        }
+        return result;
+    }
+    public static boolean equals(byte[] bts1, byte[] bts2){
+        if(bts1==bts2){
+            return true;
+        }
+        if(bts1==null || bts1.length==0){
+            return bts2==null || bts2.length==0;
+        }
+        if(bts2==null || bts2.length==0){
+            return false;
+        }
+        if(bts1.length!=bts2.length){
+            return false;
+        }
+        for(int i=0;i<bts1.length;i++){
+            if(bts1[i]!=bts2[i]){
+                return false;
+            }
+        }
+        return true;
+    }
+    public static boolean equalsIgnoreTrailZero(byte[] bts1, byte[] bts2){
+        if(bts1==bts2){
+            return true;
+        }
+        return equals(trimTrailZeros(bts1), trimTrailZeros(bts2));
+    }
 }

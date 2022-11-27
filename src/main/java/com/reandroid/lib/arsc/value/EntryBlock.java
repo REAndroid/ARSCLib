@@ -27,6 +27,90 @@ public class EntryBlock extends Block{
         super();
     }
 
+    public ResValueInt setValueAsBoolean(boolean val){
+        ResValueInt resValueInt;
+        BaseResValue res = getResValue();
+        if(res instanceof ResValueInt){
+            resValueInt=(ResValueInt) res;
+        }else {
+            resValueInt=new ResValueInt();
+            setResValue(resValueInt);
+        }
+        resValueInt.setType(ValueType.INT_BOOLEAN);
+        resValueInt.setData(val?0xffffffff:0);
+        return resValueInt;
+    }
+    public ResValueInt setValueAsInteger(int val){
+        ResValueInt resValueInt;
+        BaseResValue res = getResValue();
+        if(res instanceof ResValueInt){
+            resValueInt=(ResValueInt) res;
+        }else {
+            resValueInt=new ResValueInt();
+            setResValue(resValueInt);
+        }
+        resValueInt.setType(ValueType.INT_DEC);
+        resValueInt.setData(val);
+        return resValueInt;
+    }
+    public ResValueInt setValueAsReference(int resId){
+        ResValueInt resValueInt;
+        BaseResValue res = getResValue();
+        if(res instanceof ResValueInt){
+            resValueInt=(ResValueInt) res;
+        }else {
+            resValueInt=new ResValueInt();
+            setResValue(resValueInt);
+        }
+        resValueInt.setType(ValueType.REFERENCE);
+        resValueInt.setData(resId);
+        return resValueInt;
+    }
+    public ResValueInt setValueAsString(String str){
+        TableStringPool stringPool=getTableStringPool();
+        if(stringPool==null){
+            throw new IllegalArgumentException("TableStringPool = null, EntryBlock not added to parent TableBlock");
+        }
+        TableString tableString = stringPool.getOrCreate(str);
+        ResValueInt resValueInt;
+        BaseResValue res = getResValue();
+        if(res instanceof ResValueInt){
+            resValueInt=(ResValueInt) res;
+        }else {
+            resValueInt=new ResValueInt();
+            setResValue(resValueInt);
+        }
+        resValueInt.setType(ValueType.STRING);
+        resValueInt.setData(tableString.getIndex());
+        return resValueInt;
+    }
+    public String getValueAsString(){
+        TableStringPool stringPool=getTableStringPool();
+        if(stringPool==null){
+            return null;
+        }
+        BaseResValue res = getResValue();
+        if(!(res instanceof ResValueInt)){
+            return null;
+        }
+        ResValueInt resValueInt=(ResValueInt)res;
+        TableString tableString= stringPool.get(resValueInt.getData());
+        if(tableString==null){
+            return null;
+        }
+        return tableString.getHtml();
+    }
+    private TableStringPool getTableStringPool(){
+        PackageBlock pkg=getPackageBlock();
+        if(pkg==null){
+            return null;
+        }
+        TableBlock table = pkg.getTableBlock();
+        if(table==null){
+            return null;
+        }
+        return table.getTableStringPool();
+    }
     public boolean isDefault(){
         TypeBlock typeBlock=getTypeBlock();
         if(typeBlock!=null){
@@ -329,8 +413,6 @@ public class EntryBlock extends Block{
         }
         return null;
     }
-
-
     private void unlockEntry(){
         if(mUnLocked){
             return;
@@ -375,16 +457,6 @@ public class EntryBlock extends Block{
             mResValue=null;
         }
     }
-    private void refreshResValue(){
-        if(mResValue==null){
-            return;
-        }
-        if(isFlagsComplex()==(mResValue instanceof ResValueBag)){
-            return;
-        }
-        removeResValue();
-        createResValue();
-    }
     private void refreshHeaderSize(){
         if(isFlagsComplex()){
             mHeaderSize.set(HEADER_COMPLEX);
@@ -404,11 +476,9 @@ public class EntryBlock extends Block{
         }
         setResValueInternal(resValue);
     }
-
     private boolean isFlagsComplex(){
         return ((mFlags.get() & FLAG_COMPLEX_MASK) != 0);
     }
-
     @Override
     public void setNull(boolean is_null){
         if(is_null){

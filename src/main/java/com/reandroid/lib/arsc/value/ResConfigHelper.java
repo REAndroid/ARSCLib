@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 public class ResConfigHelper {
     public static ResConfig fromQualifiers(String qualifiers){
         ResConfig result=new ResConfig();
-        result.setConfigSize(64);
+        result.setConfigSize(ResConfig.SIZE_64);
         parseQualifiers(result, qualifiers);
         return result;
     }
@@ -52,15 +52,13 @@ public class ResConfigHelper {
         if(isNull(split)){
             return qualifiers;
         }
-        int len=split.length;
-        Set<String> qSet=new HashSet<>();
-        for(int i=0; i<len;i++){
+        List<String> qList=new ArrayList<>();
+        for(int i=0;i<split.length;i++){
             String q=split[i];
-            if(q!=null){
-                qSet.add(q);
+            if(q!=null && !qList.contains(q)){
+                qList.add(q);
             }
         }
-        List<String> qList=new ArrayList<>(qSet);
         Comparator<String> cmp=new Comparator<String>() {
             @Override
             public int compare(String s1, String s2) {
