@@ -9,6 +9,9 @@ import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.ResXmlString;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 
 import java.io.IOException;
@@ -16,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ResXmlElement extends FixedBlockContainer {
+public class ResXmlElement extends FixedBlockContainer implements JsonItem<JSONObject> {
     private final BlockList<ResXmlStartNamespace> mStartNamespaceList;
     private final SingleBlockContainer<ResXmlStartElement> mStartElementContainer;
     private final BlockList<ResXmlElement> mBody;
@@ -492,6 +495,55 @@ public class ResXmlElement extends FixedBlockContainer {
         }
     }
     @Override
+    public JSONObject toJson() {
+        JSONObject jsonObject=new JSONObject();
+        ResXmlStartElement start = getStartElement();
+        jsonObject.put(NAME_line, start.getLineNumber());
+        int i=0;
+        JSONArray nsList=new JSONArray();
+        for(ResXmlStartNamespace namespace:getStartNamespaceList()){
+            JSONObject ns=new JSONObject();
+            ns.put(NAME_namespace_uri, namespace.getUri());
+            ns.put(NAME_namespace_prefix, namespace.getPrefix());
+            nsList.put(i, ns);
+            i++;
+        }
+        if(i>0){
+            jsonObject.put(NAME_namespaces, nsList);
+        }
+        jsonObject.put(NAME_name, start.getName());
+        String uri=start.getUri();
+        if(uri!=null){
+            jsonObject.put(NAME_namespace_uri, uri);
+            jsonObject.put(NAME_namespace_prefix, start.getPrefix());
+        }
+        JSONArray attrArray=start.getResXmlAttributeArray().toJson();
+        jsonObject.put(NAME_attributes, attrArray);
+        i=0;
+        JSONArray childes=new JSONArray();
+        for(ResXmlElement element:listElements()){
+            childes.put(i, element.toJson());
+            i++;
+        }
+        if(i>0){
+            jsonObject.put(NAME_childes, childes);
+        }
+        return jsonObject;
+    }
+    @Override
+    public void fromJson(JSONObject json) {
+        ResXmlStartElement start = getStartElement();
+        start.setLineNumber(json.getInt(NAME_line));
+        String uri= json.optString(NAME_namespace_uri);
+        String prefix= json.optString(NAME_namespace_prefix);
+        if(uri!=null && prefix!=null){
+            ResXmlStartNamespace ns = getOrCreateNamespace(uri, prefix);
+            start.setNamespaceReference(ns.getUriReference());
+        }
+        JSONArray attributes = json.getJSONArray(NAME_attributes);
+        start.getResXmlAttributeArray().fromJson(attributes);
+    }
+    @Override
     public String toString(){
         ResXmlStartElement start = getStartElement();
         if(start!=null){
@@ -524,4 +576,12 @@ public class ResXmlElement extends FixedBlockContainer {
 
     public static final String NS_ANDROID_URI = "http://schemas.android.com/apk/res/android";
     public static final String NS_ANDROID_PREFIX = "android";
+
+    private static final String NAME_name = "name";
+    private static final String NAME_namespaces = "namespaces";
+    private static final String NAME_namespace_uri = "namespace_uri";
+    private static final String NAME_namespace_prefix = "namespace_name";
+    private static final String NAME_line = "line";
+    private static final String NAME_attributes = "attributes";
+    private static final String NAME_childes = "childes";
 }

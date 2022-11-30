@@ -2,12 +2,30 @@ package com.reandroid.lib.arsc.value;
 
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.item.ReferenceItem;
+import com.reandroid.lib.arsc.item.TableString;
+import org.json.JSONObject;
 
 public class ResValueBagItem extends BaseResValueItem{
 
     public ResValueBagItem() {
         super(BYTES_COUNT);
         setHeaderSize(BYTES_SIZE);
+    }
+    public String getValueAsString(){
+        return getTableString(getData()).getHtml();
+    }
+    public void setValueAsString(String str){
+        setType(ValueType.STRING);
+        TableString tableString=getTableStringPool().getOrCreate(str);
+        setData(tableString.getIndex());
+    }
+    public boolean getValueAsBoolean(){
+        return getData()!=0;
+    }
+    public void setValueAsBoolean(boolean val){
+        setType(ValueType.INT_BOOLEAN);
+        int data=val?0xffffffff:0;
+        setData(data);
     }
 
     public ResValueBag getParentBag(){
@@ -127,6 +145,37 @@ public class ResValueBagItem extends BaseResValueItem{
         beforeDataValueChanged();
         setShort(OFFSET_DATA+2, val);
         afterDataValueChanged();
+    }
+    @Override
+    public JSONObject toJson() {
+        if(isNull()){
+            return null;
+        }
+        JSONObject jsonObject=new JSONObject();
+        ValueType valueType=getValueType();
+        jsonObject.put(NAME_value_type, valueType.name());
+        jsonObject.put(NAME_id, getId());
+        if(valueType==ValueType.STRING){
+            jsonObject.put(NAME_data, getValueAsString());
+        }else if(valueType==ValueType.INT_BOOLEAN){
+            jsonObject.put(NAME_data, getValueAsBoolean());
+        }else {
+            jsonObject.put(NAME_data, getData());
+        }
+        return jsonObject;
+    }
+    @Override
+    public void fromJson(JSONObject json) {
+        ValueType valueType=ValueType.fromName(json.getString(NAME_value_type));
+        setType(valueType);
+        setId(json.getInt(NAME_id));
+        if(valueType==ValueType.STRING){
+            setValueAsString(json.getString(NAME_data));
+        }else if(valueType==ValueType.INT_BOOLEAN){
+            setValueAsBoolean(json.getBoolean(NAME_data));
+        }else {
+            setData(json.getInt(NAME_data));
+        }
     }
 
     @Override

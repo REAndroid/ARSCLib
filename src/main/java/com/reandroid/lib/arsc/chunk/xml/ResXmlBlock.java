@@ -6,10 +6,13 @@ import com.reandroid.lib.arsc.container.SingleBlockContainer;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.*;
 
-public class ResXmlBlock extends BaseChunk {
+public class ResXmlBlock extends BaseChunk implements JsonItem<JSONObject> {
     private final ResXmlStringPool mResXmlStringPool;
     private final ResXmlIDMap mResXmlIDMap;
     private ResXmlElement mResXmlElement;
@@ -129,6 +132,26 @@ public class ResXmlBlock extends BaseChunk {
         outputStream.close();
         return length;
     }
+    @Override
+    public JSONObject toJson() {
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put(NAME_element, getResXmlElement().toJson());
+        JSONArray pool =getStringPool().toJson();
+        if(pool!=null){
+            jsonObject.put(NAME_styled_strings, getResXmlElement().toJson());
+        }
+        JSONArray idArray = getResXmlIDMap().getResXmlIDArray().toJson();
+        if(idArray!=null){
+            jsonObject.put("resource_ids", idArray);
+        }
+        return jsonObject;
+    }
+
+    @Override
+    public void fromJson(JSONObject json) {
+        // TODO
+        throw new IllegalArgumentException("Not implemented yet");
+    }
 
     public static boolean isResXmlBlock(File file){
         if(file==null){
@@ -167,4 +190,6 @@ public class ResXmlBlock extends BaseChunk {
         ChunkType chunkType=headerBlock.getChunkType();
         return chunkType==ChunkType.XML;
     }
+    private static final String NAME_element ="element";
+    private static final String NAME_styled_strings="styled_strings";
 }

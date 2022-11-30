@@ -18,18 +18,14 @@ public class LibraryBlock extends BaseChunk {
         addToHeader(mLibCount);
         addChild(mLibraryInfoArray);
     }
-    public LibraryInfo[] getAllInfo(){
-        return mLibraryInfoArray.getChildes();
+    public LibraryInfoArray getLibraryInfoArray(){
+        return mLibraryInfoArray;
     }
     public void addLibraryInfo(LibraryBlock libraryBlock){
         if(libraryBlock==null){
             return;
         }
-        LibraryInfo[] allInfo=libraryBlock.getAllInfo();
-        if (allInfo==null){
-            return;
-        }
-        for(LibraryInfo info:allInfo){
+        for(LibraryInfo info:libraryBlock.getLibraryInfoArray().listItems()){
             addLibraryInfo(info);
         }
     }
@@ -37,11 +33,11 @@ public class LibraryBlock extends BaseChunk {
         if(info==null){
             return;
         }
-        mLibraryInfoArray.add(info);
+        getLibraryInfoArray().add(info);
         mLibCount.set(mLibraryInfoArray.childesCount());
     }
     public Collection<LibraryInfo> listLibraryInfo(){
-        return mLibraryInfoArray.listItems();
+        return getLibraryInfoArray().listItems();
     }
     @Override
     public boolean isNull(){

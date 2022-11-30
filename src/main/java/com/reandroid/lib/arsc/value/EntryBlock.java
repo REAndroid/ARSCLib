@@ -10,6 +10,8 @@ import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
 import com.reandroid.lib.arsc.pool.TableStringPool;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONObject;
 
 
 import java.io.IOException;
@@ -17,7 +19,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EntryBlock extends Block{
+public class EntryBlock extends Block implements JsonItem<JSONObject> {
     private ShortItem mHeaderSize;
     private ShortItem mFlags;
     private IntegerItem mSpecReference;
@@ -84,7 +86,18 @@ public class EntryBlock extends Block{
         resValueInt.setData(tableString.getIndex());
         return resValueInt;
     }
+    public boolean getValueAsBoolean(){
+        int data = ((ResValueInt)getResValue()).getData();
+        return data!=0;
+    }
     public String getValueAsString(){
+        TableString tableString= getValueAsTableString();
+        if(tableString==null){
+            return null;
+        }
+        return tableString.getHtml();
+    }
+    public TableString getValueAsTableString(){
         TableStringPool stringPool=getTableStringPool();
         if(stringPool==null){
             return null;
@@ -98,7 +111,7 @@ public class EntryBlock extends Block{
         if(tableString==null){
             return null;
         }
-        return tableString.getHtml();
+        return tableString;
     }
     private TableStringPool getTableStringPool(){
         PackageBlock pkg=getPackageBlock();
@@ -298,6 +311,11 @@ public class EntryBlock extends Block{
         }
         return specString.get();
     }
+    private void setName(String name){
+        PackageBlock packageBlock=getPackageBlock();
+        EntryGroup entryGroup = packageBlock.getEntryGroup(getResourceId());
+        entryGroup.renameSpec(name);
+    }
     public String getTypeName(){
         TypeString typeString=getTypeString();
         if(typeString==null){
@@ -479,6 +497,12 @@ public class EntryBlock extends Block{
     private boolean isFlagsComplex(){
         return ((mFlags.get() & FLAG_COMPLEX_MASK) != 0);
     }
+    public boolean isArray(){
+        return ((mFlags.get() & FLAG_COMPLEX_MASK) != 0);
+    }
+    public void setIsArray(boolean is_array){
+        setFlagComplex(is_array);
+    }
     @Override
     public void setNull(boolean is_null){
         if(is_null){
@@ -596,6 +620,35 @@ public class EntryBlock extends Block{
         updateSpecRef();
     }
     @Override
+    public JSONObject toJson() {
+        if(isNull()){
+            return null;
+        }
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put(NAME_name, getSpecString().get());
+        jsonObject.put(NAME_is_array, isArray());
+        jsonObject.put(NAME_value, getResValue().toJson());
+        return jsonObject;
+    }
+
+    @Override
+    public void fromJson(JSONObject json) {
+        if(json==null){
+            setNull(true);
+            return;
+        }
+        setName(json.getString(NAME_name));
+        setNull(false);
+        BaseResValue baseResValue;
+        if(json.getBoolean(NAME_is_array)){
+            baseResValue=new ResValueInt();
+        }else {
+            baseResValue=new ResValueBag();
+        }
+        setResValue(baseResValue);
+        baseResValue.fromJson(json.getJSONObject(NAME_value));
+    }
+    @Override
     public String toString(){
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
@@ -653,5 +706,9 @@ public class EntryBlock extends Block{
 
     private final static short HEADER_COMPLEX=0x0010;
     private final static short HEADER_INT=0x0008;
+
+    private static final String NAME_name="name";
+    private static final String NAME_is_array="is_array";
+    private static final String NAME_value="value";
 
 }

@@ -6,8 +6,11 @@ import com.reandroid.lib.arsc.container.FixedBlockContainer;
 import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 import com.reandroid.lib.arsc.value.ValueType;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONObject;
 
-public class ResXmlAttribute extends FixedBlockContainer implements Comparable<ResXmlAttribute>{
+public class ResXmlAttribute extends FixedBlockContainer
+        implements Comparable<ResXmlAttribute>, JsonItem<JSONObject> {
     private final IntegerItem mNamespaceReference;
     private final IntegerItem mNameReference;
     private final IntegerItem mValueStringReference;
@@ -104,6 +107,17 @@ public class ResXmlAttribute extends FixedBlockContainer implements Comparable<R
             return null;
         }
         return startNamespace.getPrefix();
+    }
+    public String getNamespace(){
+        ResXmlElement xmlElement=getParentResXmlElement();
+        if(xmlElement==null){
+            return null;
+        }
+        ResXmlStartNamespace startNamespace=xmlElement.getStartNamespaceByUriRef(getNamespaceReference());
+        if(startNamespace==null){
+            return null;
+        }
+        return startNamespace.getUri();
     }
     public ResXmlStartNamespace getStartNamespace(){
         ResXmlElement xmlElement=getParentResXmlElement();
@@ -345,6 +359,43 @@ public class ResXmlAttribute extends FixedBlockContainer implements Comparable<R
     }
 
     @Override
+    public JSONObject toJson() {
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put(NAME_name, getName());
+        jsonObject.put(NAME_id, getNameResourceID());
+        jsonObject.put(NAME_namespace_uri, getNamespace());
+        jsonObject.put(NAME_namespace_prefix, getNamePrefix());
+        ValueType valueType=getValueType();
+        jsonObject.put(NAME_value_type, valueType.name());
+        if(valueType==ValueType.STRING){
+            jsonObject.put(NAME_data, getValueAsString());
+        }else if(valueType==ValueType.INT_BOOLEAN){
+            jsonObject.put(NAME_data, getValueAsBoolean());
+        }else {
+            jsonObject.put(NAME_data, getRawValue());
+        }
+        return jsonObject;
+    }
+    @Override
+    public void fromJson(JSONObject json) {
+        String name = json.getString(NAME_name);
+        int id = json.optInt(NAME_id);
+        setName(name, id);
+        String uri= json.optString(NAME_namespace_uri);
+        String prefix= json.optString(NAME_namespace_prefix);
+        ResXmlStartNamespace ns = getParentResXmlElement().getOrCreateNamespace(uri, prefix);
+        setNamespaceReference(ns.getUriReference());
+        ValueType valueType=ValueType.fromName(json.getString(NAME_value_type));
+        if(valueType==ValueType.STRING){
+            setValueAsString(json.getString(NAME_data));
+        }else if(valueType==ValueType.INT_BOOLEAN){
+            setValueAsBoolean(json.getBoolean(NAME_data));
+        }else {
+            setValueType(valueType);
+            setRawValue(json.getInt(NAME_data));
+        }
+    }
+    @Override
     public String toString(){
         String fullName=getFullName();
         if(fullName!=null ){
@@ -372,4 +423,10 @@ public class ResXmlAttribute extends FixedBlockContainer implements Comparable<R
         builder.append("}");
         return builder.toString();
     }
+    private static final String NAME_id="id";
+    private static final String NAME_value_type="value_type";
+    private static final String NAME_name="name";
+    private static final String NAME_namespace_uri ="namespace_uri";
+    private static final String NAME_namespace_prefix ="namespace_name";
+    private static final String NAME_data="data";
 }

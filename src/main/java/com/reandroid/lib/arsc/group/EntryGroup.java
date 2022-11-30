@@ -28,12 +28,27 @@ public class EntryGroup extends ItemGroup<EntryBlock> {
         if(specStringPool==null){
             return false;
         }
-        String oldName=getSpecName();
-        if(name.equals(oldName)){
-            return false;
+        if(isAllSameSpec()){
+            String oldName=getSpecName();
+            if(name.equals(oldName)){
+                return false;
+            }
         }
         SpecString specString=specStringPool.getOrCreate(name);
         return renameSpec(specString.getIndex());
+    }
+    private boolean isAllSameSpec(){
+        EntryBlock first=null;
+        for(EntryBlock entryBlock:listItems()){
+            if(first==null){
+                first=entryBlock;
+                continue;
+            }
+            if(first.getSpecReference()!=entryBlock.getSpecReference()){
+                return false;
+            }
+        }
+        return true;
     }
     public boolean renameSpec(int specReference){
         EntryBlock[] items=getItems();

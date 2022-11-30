@@ -12,6 +12,8 @@ import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.TypeString;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResConfig;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,7 +21,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-public class SpecTypePair extends BlockContainer<Block> {
+public class SpecTypePair extends BlockContainer<Block> implements JsonItem<JSONObject> {
     private final Block[] mChildes;
     private final SpecBlock mSpecBlock;
     private final TypeBlockArray mTypeBlockArray;
@@ -139,5 +141,18 @@ public class SpecTypePair extends BlockContainer<Block> {
     }
     public TypeString getTypeString(){
         return getTypeBlockArray().getTypeString();
+    }
+
+    @Override
+    public JSONObject toJson() {
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put("id", getSpecBlock().getTypeId());
+        jsonObject.put("types", getTypeBlockArray().toJson());
+        return jsonObject;
+    }
+    @Override
+    public void fromJson(JSONObject json) {
+        getSpecBlock().setTypeId((byte) json.getInt("id"));
+        getTypeBlockArray().fromJson(json.getJSONArray("types"));
     }
 }

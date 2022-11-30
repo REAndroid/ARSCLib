@@ -74,6 +74,19 @@ public class ResXmlStartElement extends BaseXmlChunk {
     public ResXmlAttributeArray getResXmlAttributeArray(){
         return mAttributeArray;
     }
+
+    public String getUri(){
+        int uriRef=getNamespaceReference();
+        if(uriRef<0){
+            return null;
+        }
+        ResXmlElement parentElement=getParentResXmlElement();
+        ResXmlStartNamespace startNamespace=parentElement.getStartNamespaceByUriRef(uriRef);
+        if(startNamespace!=null){
+            return startNamespace.getUri();
+        }
+        return null;
+    }
     public String getPrefix(){
         int uriRef=getNamespaceReference();
         if(uriRef<0){

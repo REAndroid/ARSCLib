@@ -11,6 +11,7 @@ public class ResConfigHelper {
         ResConfig result=new ResConfig();
         result.setConfigSize(ResConfig.SIZE_64);
         parseQualifiers(result, qualifiers);
+        result.refresh();
         return result;
     }
     static String toQualifier(ResConfig resConfig){
@@ -137,9 +138,29 @@ public class ResConfigHelper {
         char[] chs=country.toCharArray();
         resConfig.setRegion(chs);
     }
+    public static String decodeLanguage(char[] language){
+        StringBuilder builder=new StringBuilder();
+        if(language[0]!=0){
+            builder.append(language[0]).append(language[1]);
+        }
+        if(builder.length()==0){
+            return null;
+        }
+        return builder.toString();
+    }
+    public static String decodeRegion(char[] region){
+        StringBuilder builder=new StringBuilder();
+        if(region[0]!=0){
+            builder.append(region[0]).append(region[1]);
+        }
+        if(builder.length()==0){
+            return null;
+        }
+        return builder.toString();
+    }
     public static String decodeLocale(ResConfig resConfig){
-        char[] region=resConfig.getRegion();
-        char[] language=resConfig.getLanguage();
+        char[] region=resConfig.getRegionChars();
+        char[] language=resConfig.getLanguageChars();
         StringBuilder builder=new StringBuilder();
         if(language[0]!=0){
             builder.append(language[0]).append(language[1]);
@@ -159,8 +180,8 @@ public class ResConfigHelper {
         StringBuilder builder = new StringBuilder();
         char[] localeVariant=resConfig.getLocaleVariant();
         char[] localeScript=resConfig.getLocaleScript();
-        char[] region=resConfig.getRegion();
-        char[] language=resConfig.getLanguage();
+        char[] region=resConfig.getRegionChars();
+        char[] language=resConfig.getLanguageChars();
         if (localeVariant == null && localeScript == null && (region[0] != '\00' || language[0] != '\00') &&
                 region.length != 3) {
             builder.append("-").append(language);
@@ -217,7 +238,7 @@ public class ResConfigHelper {
     }
     private static String decodeNavigation(ResConfig resConfig){
         StringBuilder ret=new StringBuilder();
-        switch (resConfig.getNavigation()) {
+        switch (resConfig.getNavigationByte()) {
             case NAVIGATION_NONAV:
                 ret.append("-nonav");
                 break;
@@ -265,9 +286,45 @@ public class ResConfigHelper {
         }
         resConfig.setInputFlags((byte)inputFlags);
     }
+    public static byte encodeInputFlags(String inputFlags){
+        if(inputFlags==null){
+            return 0;
+        }
+        String[] split=inputFlags.split("-");
+        int result=0;
+        for(int i=0;i<split.length;i++){
+            String s=split[i];
+            if(s==null){
+                continue;
+            }
+            int val;
+            switch (s) {
+                case "keysexposed":
+                    val = (KEYSHIDDEN_NO);
+                    break;
+                case "keyshidden":
+                    val = (KEYSHIDDEN_YES);
+                    break;
+                case "keyssoft":
+                    val = (KEYSHIDDEN_SOFT);
+                    break;
+                case "navexposed":
+                    val = (NAVHIDDEN_NO);
+                    break;
+                case "navhidden":
+                    val = (NAVHIDDEN_YES);
+                    break;
+                default:
+                    continue;
+            }
+            result=(result | val);
+            split[i]=null;
+        }
+        return (byte)result;
+    }
     private static String decodeInputFlags(ResConfig resConfig){
         StringBuilder ret=new StringBuilder();
-        int inputFlags=resConfig.getInputFlags();
+        int inputFlags=resConfig.getInputFlagsValue();
         switch (inputFlags & MASK_KEYSHIDDEN) {
             case KEYSHIDDEN_NO:
                 ret.append("-keysexposed");
@@ -288,6 +345,32 @@ public class ResConfigHelper {
                 break;
         }
         return ret.toString();
+    }
+    public static String decodeInputFlags(byte inputFlags){
+        StringBuilder builder=new StringBuilder();
+        switch (inputFlags & MASK_KEYSHIDDEN) {
+            case KEYSHIDDEN_NO:
+                builder.append("-keysexposed");
+                break;
+            case KEYSHIDDEN_YES:
+                builder.append("-keyshidden");
+                break;
+            case KEYSHIDDEN_SOFT:
+                builder.append("-keyssoft");
+                break;
+        }
+        switch (inputFlags & MASK_NAVHIDDEN) {
+            case NAVHIDDEN_NO:
+                builder.append("-navexposed");
+                break;
+            case NAVHIDDEN_YES:
+                builder.append("-navhidden");
+                break;
+        }
+        if(builder.length()==0){
+            return null;
+        }
+        return builder.toString();
     }
     private static void encodeKeyboard(ResConfig resConfig, String[] split){
         byte keyboard=0;
@@ -316,7 +399,7 @@ public class ResConfigHelper {
     }
     private static String decodeKeyboard(ResConfig resConfig){
         StringBuilder ret=new StringBuilder();
-        switch (resConfig.getKeyboard()) {
+        switch (resConfig.getKeyboardByte()) {
             case KEYBOARD_NOKEYS:
                 ret.append("-nokeys");
                 break;
@@ -328,6 +411,39 @@ public class ResConfigHelper {
                 break;
         }
         return ret.toString();
+    }
+    public static short encodeDensity(String densityName){
+        short density=0;
+        if(densityName==null){
+            return density;
+        }
+        Matcher matcher=PATTERN_DENSITY.matcher(densityName);
+        if(!matcher.find()){
+            return density;
+        }
+        String d=matcher.group("A");
+        if("l".equals(d)){
+            density = DENSITY_LOW;
+        }else if("m".equals(d)){
+            density = DENSITY_MEDIUM;
+        }else if("h".equals(d)){
+            density = DENSITY_HIGH;
+        }else if("tv".equals(d)){
+            density = DENSITY_TV;
+        }else if("xh".equals(d)){
+            density = DENSITY_XHIGH;
+        }else if("xxh".equals(d)){
+            density = DENSITY_XXHIGH;
+        }else if("xxxh".equals(d)){
+            density = DENSITY_XXXHIGH;
+        }else if("any".equals(d)){
+            density = DENSITY_ANY;
+        }else if("no".equals(d)){
+            density = DENSITY_NONE;
+        }else if(isDecimal(d)){
+            density = (short) Integer.parseInt(d);
+        }
+        return density;
     }
     private static void encodeDensity(ResConfig resConfig, String[] split){
         int density=0;
@@ -371,7 +487,7 @@ public class ResConfigHelper {
     }
     private static String decodeDensity(ResConfig resConfig){
         StringBuilder ret=new StringBuilder();
-        int density=resConfig.getDensity();
+        int density=resConfig.getDensityValue();
         switch (density) {
             case DENSITY_DEFAULT:
                 break;
@@ -407,6 +523,32 @@ public class ResConfigHelper {
         }
         return ret.toString();
     }
+    public static String decodeDensity(short density){
+        switch (density) {
+            case DENSITY_DEFAULT:
+                return null;
+            case DENSITY_LOW:
+                return "ldpi";
+            case DENSITY_MEDIUM:
+                return "mdpi";
+            case DENSITY_HIGH:
+                return "hdpi";
+            case DENSITY_TV:
+                return "tvdpi";
+            case DENSITY_XHIGH:
+                return "xhdpi";
+            case DENSITY_XXHIGH:
+                return "xxhdpi";
+            case DENSITY_XXXHIGH:
+                return "xxxhdpi";
+            case DENSITY_ANY:
+                return "anydpi";
+            case DENSITY_NONE:
+                return "nodpi";
+            default:
+                return density+"dpi";
+        }
+    }
     private static void encodeTouchscreen(ResConfig resConfig, String[] split){
         byte touchscreen=0;
         for(int i=0;i<split.length;i++){
@@ -434,7 +576,7 @@ public class ResConfigHelper {
     }
     private static String decodeTouchscreen(ResConfig resConfig){
         StringBuilder ret=new StringBuilder();
-        byte touchscreen=resConfig.getTouchscreen();
+        byte touchscreen=resConfig.getTouchscreenByte();
         switch (touchscreen) {
             case TOUCHSCREEN_NOTOUCH:
                 ret.append("-notouch");
@@ -514,9 +656,129 @@ public class ResConfigHelper {
         }
         resConfig.setUiMode((byte)uiMode);
     }
+    public static byte encodeUiMode(String uiMode){
+        if(uiMode==null){
+            return 0;
+        }
+        String[] split=uiMode.split("-");
+        int result=0;
+        for(int i=0;i<split.length;i++){
+            String s=split[i];
+            if(s==null){
+                continue;
+            }
+            int val;
+            switch (s) {
+                case "car":
+                    val = (UI_MODE_TYPE_CAR);
+                    break;
+                case "desk":
+                    val = (UI_MODE_TYPE_DESK);
+                    break;
+                case "television":
+                    val = (UI_MODE_TYPE_TELEVISION);
+                    break;
+                case "smallui":
+                    val = (UI_MODE_TYPE_SMALLUI);
+                    break;
+                case "mediumui":
+                    val = (UI_MODE_TYPE_MEDIUMUI);
+                    break;
+                case "largeui":
+                    val = (UI_MODE_TYPE_LARGEUI);
+                    break;
+                case "godzillaui":
+                    val = (UI_MODE_TYPE_GODZILLAUI);
+                    break;
+                case "hugeui":
+                    val = (UI_MODE_TYPE_HUGEUI);
+                    break;
+                case "appliance":
+                    val = (UI_MODE_TYPE_APPLIANCE);
+                    break;
+                case "watch":
+                    val = (UI_MODE_TYPE_WATCH);
+                    break;
+                case "vrheadset":
+                    val = (UI_MODE_TYPE_VR_HEADSET);
+                    break;
+                default:
+                    continue;
+            }
+            result=(result | val);
+            split[i]=null;
+        }
+        for(int i=0;i<split.length;i++){
+            String s=split[i];
+            if(s==null){
+                continue;
+            }
+            int val;
+            if("night".equals(s)){
+                val = (UI_MODE_NIGHT_YES);
+            }else if("notnight".equals(s)){
+                val = (UI_MODE_NIGHT_NO);
+            }else {
+                continue;
+            }
+            result=(result | val);
+            split[i]=null;
+        }
+        return (byte)result;
+    }
+    public static String decodeUiMode(byte uiMode){
+        StringBuilder ret=new StringBuilder();
+        switch (uiMode & MASK_UI_MODE_TYPE) {
+            case UI_MODE_TYPE_CAR:
+                ret.append("-car");
+                break;
+            case UI_MODE_TYPE_DESK:
+                ret.append("-desk");
+                break;
+            case UI_MODE_TYPE_TELEVISION:
+                ret.append("-television");
+                break;
+            case UI_MODE_TYPE_SMALLUI:
+                ret.append("-smallui");
+                break;
+            case UI_MODE_TYPE_MEDIUMUI:
+                ret.append("-mediumui");
+                break;
+            case UI_MODE_TYPE_LARGEUI:
+                ret.append("-largeui");
+                break;
+            case UI_MODE_TYPE_GODZILLAUI:
+                ret.append("-godzillaui");
+                break;
+            case UI_MODE_TYPE_HUGEUI:
+                ret.append("-hugeui");
+                break;
+            case UI_MODE_TYPE_APPLIANCE:
+                ret.append("-appliance");
+                break;
+            case UI_MODE_TYPE_WATCH:
+                ret.append("-watch");
+                break;
+            case UI_MODE_TYPE_VR_HEADSET:
+                ret.append("-vrheadset");
+                break;
+        }
+        switch (uiMode & MASK_UI_MODE_NIGHT) {
+            case UI_MODE_NIGHT_YES:
+                ret.append("-night");
+                break;
+            case UI_MODE_NIGHT_NO:
+                ret.append("-notnight");
+                break;
+        }
+        if(ret.length()==0){
+            return null;
+        }
+        return ret.toString();
+    }
     private static String decodeUiMode(ResConfig resConfig){
         StringBuilder ret=new StringBuilder();
-        byte uiMode=resConfig.getUiMode();
+        byte uiMode=resConfig.getUiModeValue();
         switch (uiMode & MASK_UI_MODE_TYPE) {
             case UI_MODE_TYPE_CAR:
                 ret.append("-car");
@@ -583,7 +845,7 @@ public class ResConfigHelper {
     }
     private static String decodeOrientation(ResConfig resConfig){
         StringBuilder ret=new StringBuilder();
-        byte orientation=resConfig.getOrientation();
+        byte orientation=resConfig.getOrientationByte();
         switch (orientation) {
             case ORIENTATION_PORT:
                 ret.append("-port");
@@ -596,6 +858,17 @@ public class ResConfigHelper {
                 break;
         }
         return ret.toString();
+    }
+    public static String decodeOrientation(byte orientation){
+        switch (orientation) {
+            case ORIENTATION_PORT:
+                return "port";
+            case ORIENTATION_LAND:
+                return "land";
+            case ORIENTATION_SQUARE:
+                return "square";
+        }
+        return null;
     }
     private static void encodeScreenLayout(ResConfig resConfig, String[] split){
         int screenLayout=0;
@@ -638,9 +911,54 @@ public class ResConfigHelper {
         }
         resConfig.setScreenLayout((byte) screenLayout);
     }
+    public static byte encodeScreenLayout(String screenLayout){
+        if(screenLayout==null){
+            return 0;
+        }
+        String[] split=screenLayout.split("-");
+        int result=0;
+        for(int i=0;i<split.length;i++){
+            String s=split[i];
+            if(s==null){
+                continue;
+            }
+            int val;
+            switch (s) {
+                case "ldrtl":
+                    val = (SCREENLAYOUT_LAYOUTDIR_RTL);
+                    break;
+                case "ldltr":
+                    val = (SCREENLAYOUT_LAYOUTDIR_LTR);
+                    break;
+                case "small":
+                    val = (SCREENSIZE_SMALL);
+                    break;
+                case "normal":
+                    val = (SCREENSIZE_NORMAL);
+                    break;
+                case "large":
+                    val = (SCREENSIZE_LARGE);
+                    break;
+                case "xlarge":
+                    val = (SCREENSIZE_XLARGE);
+                    break;
+                case "long":
+                    val = (SCREENLONG_YES);
+                    break;
+                case "notlong":
+                    val = (SCREENLONG_NO);
+                    break;
+                default:
+                    continue;
+            }
+            result = (result | val);
+            split[i]=null;
+        }
+        return (byte) result;
+    }
     private static String decodeScreenLayout(ResConfig resConfig){
         StringBuilder ret=new StringBuilder();
-        byte screenLayout=resConfig.getScreenLayout();
+        byte screenLayout=resConfig.getScreenLayoutValue();
         switch (screenLayout & MASK_LAYOUTDIR) {
             case SCREENLAYOUT_LAYOUTDIR_RTL:
                 ret.append("-ldrtl");
@@ -669,6 +987,42 @@ public class ResConfigHelper {
             case SCREENLONG_NO:
                 ret.append("-notlong");
                 break;
+        }
+        return ret.toString();
+    }
+    public static String decodeScreenLayout(byte screenLayout){
+        StringBuilder ret=new StringBuilder();
+        switch (screenLayout & MASK_LAYOUTDIR) {
+            case SCREENLAYOUT_LAYOUTDIR_RTL:
+                ret.append("-ldrtl");
+                break;
+            case SCREENLAYOUT_LAYOUTDIR_LTR:
+                ret.append("-ldltr");
+        }
+        switch (screenLayout & MASK_SCREENSIZE) {
+            case SCREENSIZE_SMALL:
+                ret.append("-small");
+                break;
+            case SCREENSIZE_NORMAL:
+                ret.append("-normal");
+                break;
+            case SCREENSIZE_LARGE:
+                ret.append("-large");
+                break;
+            case SCREENSIZE_XLARGE:
+                ret.append("-xlarge");
+                break;
+        }
+        switch (screenLayout & MASK_SCREENLONG) {
+            case SCREENLONG_YES:
+                ret.append("-long");
+                break;
+            case SCREENLONG_NO:
+                ret.append("-notlong");
+                break;
+        }
+        if(ret.length()==0){
+            return null;
         }
         return ret.toString();
     }

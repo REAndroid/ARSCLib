@@ -6,12 +6,13 @@ import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.ByteArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Objects;
 
-public class ResConfig extends FixedBlockContainer implements BlockLoad {
+public class ResConfig extends FixedBlockContainer implements BlockLoad, JsonItem<JSONObject> {
 
     private final IntegerItem configSize;
     private final ByteArray mValuesContainer;
@@ -156,7 +157,17 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
         }
         return mValuesContainer.get(OFFSET_languageIn1);
     }
-    public char[] getLanguage(){
+    public String getLanguage(){
+        return ResConfigHelper.decodeLanguage(getLanguageChars());
+    }
+    public void setLanguage(String language){
+        char[] chs=new char[2];
+        if(language!=null){
+            chs=language.toCharArray();
+        }
+        setLanguage(chs);
+    }
+    public char[] getLanguageChars(){
         byte b0=getLanguageIn0();
         byte b1=getLanguageIn1();
         return unpackLanguageOrRegion(b0, b1, 'a');
@@ -201,7 +212,10 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
         }
         return mValuesContainer.get(OFFSET_countryIn1);
     }
-    public char[] getRegion(){
+    public String getRegion(){
+        return ResConfigHelper.decodeRegion(getRegionChars());
+    }
+    public char[] getRegionChars(){
         byte b0=getCountryIn0();
         byte b1=getCountryIn1();
         return unpackLanguageOrRegion(b0, b1, '0');
@@ -225,11 +239,17 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
         }
         mValuesContainer.put(OFFSET_orientation, b);
     }
-    public byte getOrientation(){
+    public byte getOrientationByte(){
         if(getConfigSize()<SIZE_16){
             return 0;
         }
         return mValuesContainer.get(OFFSET_orientation);
+    }
+    public Orientation getOrientation(){
+        return Orientation.fromValue(getOrientationByte());
+    }
+    public void setOrientation(Orientation orientation){
+        setOrientation(orientation.getByteValue());
     }
     public void setTouchscreen(byte b){
         if(getConfigSize()<SIZE_16){
@@ -240,11 +260,17 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
         }
         mValuesContainer.put(OFFSET_touchscreen, b);
     }
-    public byte getTouchscreen(){
+    public byte getTouchscreenByte(){
         if(getConfigSize()<SIZE_16){
             return 0;
         }
         return mValuesContainer.get(OFFSET_touchscreen);
+    }
+    public Touchscreen getTouchscreen(){
+        return Touchscreen.fromValue(getTouchscreenByte());
+    }
+    public void setTouchscreen(Touchscreen touchscreen){
+        setTouchscreen(touchscreen.getByteValue());
     }
     public void setDensity(short sh){
         if(getConfigSize()<SIZE_16){
@@ -255,11 +281,17 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
         }
         mValuesContainer.putShort(OFFSET_density, sh);
     }
-    public short getDensity(){
+    public short getDensityValue(){
         if(getConfigSize()<SIZE_16){
             return 0;
         }
         return mValuesContainer.getShort(OFFSET_density);
+    }
+    public String getDensity(){
+        return ResConfigHelper.decodeDensity(getDensityValue());
+    }
+    public void setDensity(String density){
+        setDensity(ResConfigHelper.encodeDensity(density));
     }
     public void setKeyboard(byte b){
         if(getConfigSize()<SIZE_28){
@@ -270,11 +302,17 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
         }
         mValuesContainer.put(OFFSET_keyboard, b);
     }
-    public byte getKeyboard(){
+    public byte getKeyboardByte(){
         if(getConfigSize()<SIZE_28){
             return 0;
         }
         return mValuesContainer.get(OFFSET_keyboard);
+    }
+    public Keyboard getKeyboard(){
+        return Keyboard.fromValue(getKeyboardByte());
+    }
+    public void setKeyboard(Keyboard keyboard){
+        setKeyboard(keyboard.getByteValue());
     }
     public void setNavigation(byte b){
         if(getConfigSize()<SIZE_28){
@@ -285,11 +323,17 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
         }
         mValuesContainer.put(OFFSET_navigation, b);
     }
-    public byte getNavigation(){
+    public byte getNavigationByte(){
         if(getConfigSize()<SIZE_28){
             return 0;
         }
         return mValuesContainer.get(OFFSET_navigation);
+    }
+    public Navigation getNavigation(){
+        return Navigation.fromValue(getNavigationByte());
+    }
+    public void setNavigation(Navigation navigation){
+        setNavigation(navigation.getByteValue());
     }
     public void setInputFlags(byte b){
         if(getConfigSize()<SIZE_28){
@@ -300,11 +344,17 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
         }
         mValuesContainer.put(OFFSET_inputFlags, b);
     }
-    public byte getInputFlags(){
+    public byte getInputFlagsValue(){
         if(getConfigSize()<SIZE_28){
             return 0;
         }
         return mValuesContainer.get(OFFSET_inputFlags);
+    }
+    public String getInputFlags(){
+        return ResConfigHelper.decodeInputFlags(getInputFlagsValue());
+    }
+    public void setInputFlags(String inputFlags){
+        setInputFlags(ResConfigHelper.encodeInputFlags(inputFlags));
     }
     public void setInputPad0(byte b){
         if(getConfigSize()<SIZE_28){
@@ -394,11 +444,17 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
         }
         mValuesContainer.put(OFFSET_screenLayout, b);
     }
-    public byte getScreenLayout(){
+    public byte getScreenLayoutValue(){
         if(getConfigSize()<SIZE_32){
             return 0;
         }
         return mValuesContainer.get(OFFSET_screenLayout);
+    }
+    public String getScreenLayout(){
+        return ResConfigHelper.decodeScreenLayout(getScreenLayoutValue());
+    }
+    public void setScreenLayout(String screenLayout){
+        setScreenLayout(ResConfigHelper.encodeScreenLayout(screenLayout));
     }
     public void setUiMode(byte b){
         if(getConfigSize()<SIZE_32){
@@ -409,11 +465,17 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
         }
         mValuesContainer.put(OFFSET_uiMode, b);
     }
-    public byte getUiMode(){
+    public byte getUiModeValue(){
         if(getConfigSize()<SIZE_32){
             return 0;
         }
         return mValuesContainer.get(OFFSET_uiMode);
+    }
+    public String getUiMode(){
+        return ResConfigHelper.decodeUiMode(getUiModeValue());
+    }
+    public void setUiMode(String uiMode){
+        setUiMode(ResConfigHelper.encodeUiMode(uiMode));
     }
     public void setSmallestScreenWidthDp(short sh){
         if(getConfigSize()<SIZE_32){
@@ -562,6 +624,119 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
         return isNull(mValuesContainer.getBytes());
     }
     @Override
+    public JSONObject toJson() {
+        JSONObject jsonObject=new JSONObject();
+        if(isDefault()){
+            return jsonObject;
+        }
+        int val=getMcc();
+        if(val!=0){
+            jsonObject.put(NAME_mcc, val);
+        }
+        val=getMnc();
+        if(val!=0){
+            jsonObject.put(NAME_mnc, val);
+        }
+        String str=getLanguage();
+        if(str!=null){
+            jsonObject.put(NAME_language, str);
+        }
+        str=getRegion();
+        if(str!=null){
+            jsonObject.put(NAME_region, str);
+        }
+        Orientation orientation=getOrientation();
+        if(orientation!=Orientation.ANY){
+            jsonObject.put(NAME_orientation, orientation.toString());
+        }
+        Touchscreen touchscreen=getTouchscreen();
+        if(touchscreen!=Touchscreen.NONE){
+            jsonObject.put(NAME_touchscreen, touchscreen.toString());
+        }
+        str = getDensity();
+        if(str!=null){
+            jsonObject.put(NAME_density, str);
+        }
+        Keyboard keyboard = getKeyboard();
+        if(keyboard!=Keyboard.NONE){
+            jsonObject.put(NAME_keyboard, keyboard.toString());
+        }
+        Navigation navigation = getNavigation();
+        if(navigation!=Navigation.NONE){
+            jsonObject.put(NAME_navigation, navigation.toString());
+        }
+        str = getInputFlags();
+        if(str!=null){
+            jsonObject.put(NAME_inputFlags, str);
+        }
+        val = getScreenWidth();
+        if(val!=0){
+            jsonObject.put(NAME_screenWidth, val);
+        }
+        val = getScreenHeight();
+        if(val!=0){
+            jsonObject.put(NAME_screenHeight, val);
+        }
+        val = getSdkVersion();
+        if(val!=0){
+            jsonObject.put(NAME_sdkVersion, val);
+        }
+        val = getMinorVersion();
+        if(val!=0){
+            jsonObject.put(NAME_minorVersion, val);
+        }
+        str = getScreenLayout();
+        if(str!=null){
+            jsonObject.put(NAME_screenLayout, str);
+        }
+        str = getUiMode();
+        if(str!=null){
+            jsonObject.put(NAME_uiMode, str);
+        }
+        val = getSmallestScreenWidthDp();
+        if(val!=0){
+            jsonObject.put(NAME_smallestScreenWidthDp, val);
+        }
+        val = getScreenWidthDp();
+        if(val!=0){
+            jsonObject.put(NAME_screenWidthDp, val);
+        }
+        val = getScreenHeightDp();
+        if(val!=0){
+            jsonObject.put(NAME_screenHeightDp, val);
+        }
+        return jsonObject;
+    }
+    @Override
+    public void fromJson(JSONObject json) {
+        if(json.isEmpty()){
+            mValuesContainer.fill((byte) 0);
+            return;
+        }
+        trimToSize(SIZE_64);
+
+        setMcc((short) json.optInt(NAME_mcc));
+        setMnc((short) json.optInt(NAME_mnc));
+        setLanguage(json.optString(NAME_language));
+        setOrientation(Orientation.fromName(json.optString(NAME_orientation)));
+        setTouchscreen(Touchscreen.fromName(json.optString(NAME_touchscreen)));
+        setDensity(json.optString(NAME_density));
+        setKeyboard(Keyboard.fromName(json.optString(NAME_keyboard)));
+        setNavigation(Navigation.fromName(json.optString(NAME_navigation)));
+        setInputFlags(json.optString(NAME_inputFlags));
+        setScreenWidth((short) json.optInt(NAME_screenWidth));
+        setScreenHeight((short) json.optInt(NAME_screenHeight));
+        setSdkVersion((short) json.optInt(NAME_sdkVersion));
+        setMinorVersion((short) json.optInt(NAME_minorVersion));
+        setScreenLayout(json.optString(NAME_screenLayout));
+        setUiMode(json.optString(NAME_uiMode));
+        setSmallestScreenWidthDp((short) json.optInt(NAME_smallestScreenWidthDp));
+        setScreenWidthDp((short) json.optInt(NAME_screenWidthDp));
+        setScreenHeightDp((short) json.optInt(NAME_screenHeightDp));
+
+        trimToSize(SIZE_48);
+    }
+    @Override
     public int hashCode(){
         byte[] bts = ByteArray.trimTrailZeros(mValuesContainer.getBytes());
         return Arrays.hashCode(bts);
@@ -706,6 +881,161 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
         System.arraycopy(bts, 0, result, 0, max);
         return result;
     }
+    public enum Orientation{
+        ANY((byte) 0),
+        PORT((byte) 0x1),
+        LAND((byte) 0x2),
+        SQUARE((byte) 0x3);
+        private final byte mByteValue;
+        Orientation(byte b) {
+            this.mByteValue=b;
+        }
+        public byte getByteValue() {
+            return mByteValue;
+        }
+        @Override
+        public String toString(){
+            return name().toLowerCase();
+        }
+        public static Orientation fromValue(byte b){
+            for(Orientation orientation:values()){
+                if(b==orientation.getByteValue()){
+                    return orientation;
+                }
+            }
+            return ANY;
+        }
+        public static Orientation fromName(String name){
+            if(name==null){
+                return ANY;
+            }
+            name=name.trim().toUpperCase();
+            for(Orientation orientation:values()){
+                if(name.equals(orientation.name())){
+                    return orientation;
+                }
+            }
+            return ANY;
+        }
+    }
+    public enum Touchscreen{
+        NONE((byte) 0x0),
+        NOTOUCH((byte) 0x1),
+        STYLUS((byte) 0x2),
+        FINGER((byte) 0x3);
+        private final byte mByteValue;
+        Touchscreen(byte b) {
+            this.mByteValue=b;
+        }
+        public byte getByteValue() {
+            return mByteValue;
+        }
+        @Override
+        public String toString(){
+            return name().toLowerCase();
+        }
+        public static Touchscreen fromValue(byte b){
+            for(Touchscreen touchscreen:values()){
+                if(b==touchscreen.getByteValue()){
+                    return touchscreen;
+                }
+            }
+            return NONE;
+        }
+        public static Touchscreen fromName(String name){
+            if(name==null){
+                return NONE;
+            }
+            name=name.trim().toUpperCase();
+            for(Touchscreen touchscreen:values()){
+                if(name.equals(touchscreen.name())){
+                    return touchscreen;
+                }
+            }
+            return NONE;
+        }
+    }
+    public enum Keyboard{
+        NONE((byte) 0x0),
+        NOKEYS((byte) 0x1),
+        QWERTY((byte) 0x2),
+        KEY12((byte) 0x3);
+        private final byte mByteValue;
+        Keyboard(byte b) {
+            this.mByteValue=b;
+        }
+        public byte getByteValue() {
+            return mByteValue;
+        }
+        @Override
+        public String toString(){
+            if(this==KEY12){
+                return "12key";
+            }
+            return name().toLowerCase();
+        }
+        public static Keyboard fromValue(byte b){
+            for(Keyboard keyboard:values()){
+                if(b==keyboard.getByteValue()){
+                    return keyboard;
+                }
+            }
+            return NOKEYS;
+        }
+        public static Keyboard fromName(String name){
+            if(name==null){
+                return NOKEYS;
+            }
+            name=name.trim().toUpperCase();
+            if(name.equals("12KEY")){
+                return KEY12;
+            }
+            for(Keyboard keyboard:values()){
+                if(name.equals(keyboard.name())){
+                    return keyboard;
+                }
+            }
+            return NOKEYS;
+        }
+    }
+    public enum Navigation{
+        NONE((byte) 0),
+        NONAV((byte) 0x1),
+        DPAD((byte) 0x2),
+        TRACKBALL((byte) 0x3),
+        WHEEL((byte) 0x4);
+        private final byte mByteValue;
+        Navigation(byte b) {
+            this.mByteValue=b;
+        }
+        public byte getByteValue() {
+            return mByteValue;
+        }
+        @Override
+        public String toString(){
+            return name().toLowerCase();
+        }
+        public static Navigation fromValue(byte b){
+            for(Navigation navigation:values()){
+                if(b==navigation.getByteValue()){
+                    return navigation;
+                }
+            }
+            return NONE;
+        }
+        public static Navigation fromName(String name){
+            if(name==null){
+                return NONE;
+            }
+            name=name.trim().toUpperCase();
+            for(Navigation navigation:values()){
+                if(name.equals(navigation.name())){
+                    return navigation;
+                }
+            }
+            return NONE;
+        }
+    }
 
     public static final int SIZE_16 = 16;
     public static final int SIZE_28 = 28;
@@ -752,5 +1082,35 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad {
 
     private static final int LEN_localeScript = 4;
     private static final int LEN_localeVariant = 8;
+
+    private static final String NAME_mcc = "mcc";
+    private static final String NAME_mnc = "mnc";
+    private static final String NAME_language = "language";
+    private static final String NAME_region = "region";
+    private static final String NAME_orientation = "orientation";
+    private static final String NAME_touchscreen = "touchscreen";
+    private static final String NAME_density = "density";
+    //SIZE=16
+    private static final String NAME_keyboard = "keyboard";
+    private static final String NAME_navigation = "navigation";
+    private static final String NAME_inputFlags = "inputFlags";
+    private static final String NAME_inputPad0 = "inputPad0";
+    private static final String NAME_screenWidth = "screenWidth";
+    private static final String NAME_screenHeight = "screenHeight";
+    private static final String NAME_sdkVersion = "sdkVersion";
+    private static final String NAME_minorVersion = "minorVersion";
+    //SIZE=28
+    private static final String NAME_screenLayout = "screenLayout";
+    private static final String NAME_uiMode = "uiMode";
+    private static final String NAME_smallestScreenWidthDp = "smallestScreenWidthDp";
+    //SIZE=32 = "";
+    private static final String NAME_screenWidthDp = "screenWidthDp";
+    private static final String NAME_screenHeightDp = "screenHeightDp";
+    //SIZE=36
+    private static final String NAME_localeScript = "localeScript";
+    private static final String NAME_localeVariant = "localeVariant";
+    private static final String NAME_screenLayout2 = "screenLayout2";
+    private static final String NAME_colorMode = "colorMode";
+
 
 }

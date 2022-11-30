@@ -10,13 +10,16 @@ import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.TypeString;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResConfig;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TypeBlockArray extends BlockArray<TypeBlock> {
+public class TypeBlockArray extends BlockArray<TypeBlock> implements JsonItem<JSONArray> {
     private byte mTypeId;
     public TypeBlockArray(){
         super();
@@ -231,5 +234,30 @@ public class TypeBlockArray extends BlockArray<TypeBlock> {
             }
         }
         return null;
+    }
+    @Override
+    public JSONArray toJson() {
+        JSONArray jsonArray=new JSONArray();
+        int i=0;
+        for(TypeBlock typeBlock:listItems()){
+            JSONObject jsonObject= typeBlock.toJson();
+            if(jsonObject==null){
+                continue;
+            }
+            jsonArray.put(i, jsonObject);
+            i++;
+        }
+        return jsonArray;
+    }
+    @Override
+    public void fromJson(JSONArray json) {
+        int length= json.length();
+        clearChildes();
+        ensureSize(length);
+        for (int i=0;i<length;i++){
+            JSONObject jsonObject=json.getJSONObject(i);
+            TypeBlock typeBlock=get(i);
+            typeBlock.fromJson(jsonObject);
+        }
     }
 }

@@ -4,16 +4,19 @@ import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.model.StyleSpanInfo;
 import com.reandroid.lib.arsc.pool.BaseStringPool;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StyleItem extends IntegerArray{
-    private List<int[]> mStyleList;
+public class StyleItem extends IntegerArray implements JsonItem<JSONObject> {
+    private List<StyleSpanInfo> mSpanInfoList;
     public StyleItem() {
         super();
-        mStyleList=createStyleList();
     }
     private void setEndValue(int negOne){
         super.put(size()-1, negOne);
@@ -22,54 +25,67 @@ public class StyleItem extends IntegerArray{
         return super.get(size()-1);
     }
     final Integer getStringRef(int index){
-        int i=index*STYLE_PIECE_COUNT+STRING_REF;
+        int i=index * INTEGERS_COUNT + INDEX_STRING_REF;
         return super.get(i);
     }
     final void setStringRef(int index, int val){
-        int i=index*STYLE_PIECE_COUNT+STRING_REF;
+        int i=index * INTEGERS_COUNT + INDEX_STRING_REF;
         super.put(i, val);
     }
     final Integer getFirstChar(int index){
-        int i=index*STYLE_PIECE_COUNT+CHAR_FIRST;
+        int i=index * INTEGERS_COUNT + INDEX_CHAR_FIRST;
         return super.get(i);
     }
     final void setFirstChar(int index, int val){
-        int i=index*STYLE_PIECE_COUNT+CHAR_FIRST;
+        int i=index * INTEGERS_COUNT + INDEX_CHAR_FIRST;
         super.put(i, val);
     }
     final Integer getLastChar(int index){
-        int i=index*STYLE_PIECE_COUNT+CHAR_LAST;
+        int i=index * INTEGERS_COUNT + INDEX_CHAR_LAST;
         return super.get(i);
     }
     final void setLastChar(int index, int val){
-        int i=index*STYLE_PIECE_COUNT+CHAR_LAST;
+        int i=index * INTEGERS_COUNT + INDEX_CHAR_LAST;
         super.put(i, val);
     }
+    public void addStylePiece(String tag, int firstChar, int lastChar){
+        BaseStringPool<?> stringPool = getStringPool();
+        if(stringPool==null){
+            throw new IllegalArgumentException("Null string pool, must be added to parent StyleArray first");
+        }
+        StringItem stringItem=stringPool.getOrCreate(tag);
+        addStylePiece(stringItem.getIndex(), firstChar, lastChar);
+    }
+    public void addStylePiece(int refString, int firstChar, int lastChar){
+        int index=getStylePieceCount();
+        setStylePieceCount(index+1);
+        setStylePiece(index, refString, firstChar, lastChar);
+    }
     final void setStylePiece(int index, int refString, int firstChar, int lastChar){
-        int i=index*STYLE_PIECE_COUNT;
-        super.put(i+STRING_REF, refString);
-        super.put(i+CHAR_FIRST, firstChar);
-        super.put(i+CHAR_LAST, lastChar);
+        int i=index * INTEGERS_COUNT;
+        super.put(i+ INDEX_STRING_REF, refString);
+        super.put(i+ INDEX_CHAR_FIRST, firstChar);
+        super.put(i+ INDEX_CHAR_LAST, lastChar);
     }
     final int[] getStylePiece(int index){
         if(index<0||index>= getStylePieceCount()){
             return null;
         }
-        int[] result=new int[STYLE_PIECE_COUNT];
-        int i=index*STYLE_PIECE_COUNT;
-        result[STRING_REF]=super.get(i);
-        result[CHAR_FIRST]=super.get(i+CHAR_FIRST);
-        result[CHAR_LAST]=super.get(i+CHAR_LAST);
+        int[] result=new int[INTEGERS_COUNT];
+        int i=index * INTEGERS_COUNT;
+        result[INDEX_STRING_REF]=super.get(i);
+        result[INDEX_CHAR_FIRST]=super.get(i+ INDEX_CHAR_FIRST);
+        result[INDEX_CHAR_LAST]=super.get(i+ INDEX_CHAR_LAST);
         return result;
     }
     final void setStylePiece(int index, int[] three){
-        if(three==null || three.length<STYLE_PIECE_COUNT){
+        if(three==null || three.length< INTEGERS_COUNT){
             return;
         }
-        int i=index*STYLE_PIECE_COUNT;
-        super.put(i+STRING_REF, three[STRING_REF]);
-        super.put(i+CHAR_FIRST, three[CHAR_FIRST]);
-        super.put(i+CHAR_LAST, three[CHAR_LAST]);
+        int i = index * INTEGERS_COUNT;
+        super.put(i + INDEX_STRING_REF, three[INDEX_STRING_REF]);
+        super.put(i + INDEX_CHAR_FIRST, three[INDEX_CHAR_FIRST]);
+        super.put(i + INDEX_CHAR_LAST, three[INDEX_CHAR_LAST]);
     }
     final void ensureStylePieceCount(int count){
         if(count<0){
@@ -84,23 +100,23 @@ public class StyleItem extends IntegerArray{
         if(sz<0){
             sz=0;
         }
-        return sz/STYLE_PIECE_COUNT;
+        return sz/ INTEGERS_COUNT;
     }
     final void setStylePieceCount(int count){
         if(count<0){
             count=0;
         }
-        int cur= getStylePieceCount();
+        int cur = getStylePieceCount();
         if(count==cur){
             return;
         }
-        int max=count*STYLE_PIECE_COUNT+1;
+        int max=count * INTEGERS_COUNT + 1;
         if(size()==0 || count==0){
             super.setSize(max);
             setEndValue(END_VALUE);
             return;
         }
-        List<int[]> copy=new ArrayList<>(mStyleList);
+        List<int[]> copy=new ArrayList<>(getIntSpanInfoList());
         Integer end= getEndValue();
         if(end==null){
             end=END_VALUE;
@@ -117,42 +133,54 @@ public class StyleItem extends IntegerArray{
         }
         setEndValue(end);
     }
-    final List<int[]> getStyleList(){
-        return mStyleList;
+    private List<int[]> getIntSpanInfoList(){
+        return new AbstractList<int[]>() {
+            @Override
+            public int[] get(int i) {
+                return StyleItem.this.getStylePiece(i);
+            }
+            @Override
+            public int size() {
+                return StyleItem.this.getStylePieceCount();
+            }
+        };
     }
-    private List<int[]> createStyleList(){
-        List<int[]> results=new ArrayList<>();
-        int max=getStylePieceCount();
-        for(int i=0;i<max;i++){
-            results.add(getStylePiece(i));
+    final List<StyleSpanInfo> getSpanInfoList(){
+        if(mSpanInfoList!=null){
+            return mSpanInfoList;
         }
-        return results;
+        mSpanInfoList = new AbstractList<StyleSpanInfo>() {
+            @Override
+            public StyleSpanInfo get(int i) {
+                int ref=getStringRef(i);
+                return new StyleSpanInfo(
+                        getStringFromPool(ref),
+                        getFirstChar(i),
+                        getLastChar(i));
+            }
+            @Override
+            public int size() {
+                return getStylePieceCount();
+            }
+        };
+        return mSpanInfoList;
     }
-    final List<StyleSpanInfo> getSpanInfo(){
-        BaseStringPool stringPool= getStringPool();
+    private String getStringFromPool(int ref){
+        BaseStringPool<?> stringPool = getStringPool();
         if(stringPool==null){
             return null;
         }
-        List<int[]> allPiece=getStyleList();
-        List<StyleSpanInfo> results=new ArrayList<>();
-        for(int[] piece:allPiece){
-            StringItem stringItem=stringPool.get(piece[STRING_REF]);
-            if(stringItem==null){
-                return null;
-            }
-            StyleSpanInfo info=new StyleSpanInfo(stringItem.get(), piece[CHAR_FIRST], piece[CHAR_LAST]);
-            results.add(info);
-        }
-        if(results.size()==0){
+        StringItem stringItem = stringPool.get(ref);
+        if(stringItem==null){
             return null;
         }
-        return results;
+        return stringItem.get();
     }
-    private BaseStringPool getStringPool(){
+    private BaseStringPool<?> getStringPool(){
         Block parent=getParent();
         while (parent!=null){
             if(parent instanceof BaseStringPool){
-                return (BaseStringPool)parent;
+                return (BaseStringPool<?>)parent;
             }
             parent=parent.getParent();
         }
@@ -163,8 +191,8 @@ public class StyleItem extends IntegerArray{
         if(str==null){
             return null;
         }
-        List<StyleSpanInfo> allInfo=getSpanInfo();
-        if(allInfo==null){
+        List<StyleSpanInfo> spanInfoList = getSpanInfoList();
+        if(spanInfoList.size()==0){
             return str;
         }
         StringBuilder builder=new StringBuilder();
@@ -173,9 +201,9 @@ public class StyleItem extends IntegerArray{
         for(int i=0;i<max;i++){
             char ch=allChars[i];
             boolean lastAppend=false;
-            for(StyleSpanInfo info:allInfo){
-                boolean isLast=(info.LAST==i);
-                if(info.FIRST==i || isLast){
+            for(StyleSpanInfo info:spanInfoList){
+                boolean isLast=(info.getLast()==i);
+                if(info.getFirst()==i || isLast){
                     if(isLast && !lastAppend){
                         builder.append(ch);
                         lastAppend=true;
@@ -195,7 +223,6 @@ public class StyleItem extends IntegerArray{
     }
     @Override
     public void onBytesChanged() {
-        mStyleList=createStyleList();
     }
     @Override
     public void setNull(boolean is_null){
@@ -216,11 +243,57 @@ public class StyleItem extends IntegerArray{
         reader.readFully(bts);
         onBytesChanged();
     }
-    private static final int STRING_REF=0;
-    private static final int CHAR_FIRST=1;
-    private static final int CHAR_LAST=2;
+    public void addSpanInfo(String tag, int first, int last){
+        int index=getStylePieceCount();
+        setStylePieceCount(index+1);
+        BaseStringPool<?> stringPool = getStringPool();
+        if(stringPool==null){
+            throw new IllegalArgumentException("Null string pool, must be added to parent StyleArray first");
+        }
+        StringItem stringItem=stringPool.getOrCreate(tag);
+        setStylePiece(index, stringItem.getIndex(), first, last);
+    }
+    @Override
+    public JSONObject toJson() {
+        if(isNull()){
+            return null;
+        }
+        JSONObject jsonObject=new JSONObject();
+        JSONArray jsonArray=new JSONArray();
+        int i=0;
+        for(StyleSpanInfo spanInfo:getSpanInfoList()){
+            JSONObject jsonObjectSpan=spanInfo.toJson();
+            jsonArray.put(i, jsonObjectSpan);
+            i++;
+        }
+        jsonObject.put(NAME_spans, jsonArray);
+        return jsonObject;
+    }
+    @Override
+    public void fromJson(JSONObject json) {
+        setNull(true);
+        if(json==null){
+            return;
+        }
+        JSONArray jsonArray= json.getJSONArray(NAME_spans);
+        int length = jsonArray.length();
+        for(int i=0;i<length;i++){
+            JSONObject jsonObject=jsonArray.getJSONObject(i);
+            StyleSpanInfo spanInfo=new StyleSpanInfo(null, 0, 0);
+            spanInfo.fromJson(jsonObject);
+            addSpanInfo(spanInfo.getTag(), spanInfo.getFirst(), spanInfo.getLast());
+        }
+    }
+    @Override
+    public String toString(){
+        return "Spans count = "+getSpanInfoList().size();
+    }
+    private static final int INDEX_STRING_REF = 0;
+    private static final int INDEX_CHAR_FIRST = 1;
+    private static final int INDEX_CHAR_LAST = 2;
 
-    private static final int STYLE_PIECE_COUNT=3;
+    private static final int INTEGERS_COUNT = 3;
 
     private static final int END_VALUE=0xFFFFFFFF;
+    private static final String NAME_spans="spans";
 }

@@ -5,14 +5,17 @@ import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
+import com.reandroid.lib.arsc.item.TypeString;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResConfig;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class TypeBlock extends BaseTypeBlock {
+public class TypeBlock extends BaseTypeBlock implements JsonItem<JSONObject> {
     private final IntegerItem mEntriesStart;
     private final ResConfig mResConfig;
     private final IntegerArray mEntryOffsets;
@@ -111,6 +114,28 @@ public class TypeBlock extends BaseTypeBlock {
     protected void onPreRefreshRefresh(){
         mResConfig.refresh();
         super.onPreRefreshRefresh();
+    }
+    @Override
+    public JSONObject toJson() {
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put("id", getTypeId());
+        TypeString typeString=getTypeString();
+        if(typeString!=null){
+            jsonObject.put("name", typeString.get());
+        }
+        jsonObject.put("config", getResConfig().toJson());
+        jsonObject.put("entries", getEntryBlockArray().toJson());
+        return jsonObject;
+    }
+    @Override
+    public void fromJson(JSONObject json) {
+        setTypeId((byte) json.getInt("id"));
+        String name= json.optString("name");
+        if(name!=null){
+            setTypeName(name);
+        }
+        getEntryBlockArray().fromJson(json.getJSONArray("entries"));
+        getResConfig().fromJson(json.getJSONObject("config"));
     }
     @Override
     public String toString(){

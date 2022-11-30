@@ -3,11 +3,14 @@ package com.reandroid.lib.arsc.array;
 import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.StringItem;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class StringArray<T extends StringItem> extends OffsetBlockArray<T>{
+public abstract class StringArray<T extends StringItem> extends OffsetBlockArray<T> implements JsonItem<JSONArray> {
     private boolean mUtf8;
 
     public StringArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
@@ -49,6 +52,49 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     @Override
     protected void refreshChildes(){
         // Not required
+    }
+    @Override
+    public JSONArray toJson() {
+        return toJson(true);
+    }
+    public JSONArray toJson(boolean styledOnly) {
+        if(childesCount()==0){
+            return null;
+        }
+        JSONArray jsonArray=new JSONArray();
+        int i=0;
+        for(T item:listItems()){
+            if(item.isNull()){
+                continue;
+            }
+            if(styledOnly && !item.hasStyle()){
+                continue;
+            }
+            JSONObject jsonObject= item.toJson();
+            if(jsonObject==null){
+                continue;
+            }
+            jsonArray.put(i, jsonObject);
+            i++;
+        }
+        if(i==0){
+            return null;
+        }
+        return jsonArray;
+    }
+    @Override
+    public void fromJson(JSONArray json) {
+        clearChildes();
+        if(json==null){
+            return;
+        }
+        int length = json.length();
+        ensureSize(length);
+        for(int i=0; i<length;i++){
+            T item=get(i);
+            JSONObject jsonObject = json.getJSONObject(i);
+            item.fromJson(jsonObject);
+        }
     }
 
 }

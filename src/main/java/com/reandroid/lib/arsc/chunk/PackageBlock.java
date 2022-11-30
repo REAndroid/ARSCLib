@@ -1,5 +1,6 @@
 package com.reandroid.lib.arsc.chunk;
 
+import com.reandroid.lib.arsc.array.LibraryInfoArray;
 import com.reandroid.lib.arsc.array.SpecTypePairArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.PackageLastBlocks;
@@ -14,11 +15,13 @@ import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.arsc.pool.TypeStringPool;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.LibraryInfo;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONObject;
 
 import java.util.*;
 
 
-public class PackageBlock extends BaseChunk  {
+public class PackageBlock extends BaseChunk  implements JsonItem<JSONObject> {
     private final IntegerItem mPackageId;
     private final PackageName mPackageName;
 
@@ -157,11 +160,7 @@ public class PackageBlock extends BaseChunk  {
         if(libraryBlock==null){
             return;
         }
-        LibraryInfo[] allInfo=libraryBlock.getAllInfo();
-        if (allInfo==null){
-            return;
-        }
-        for(LibraryInfo info:allInfo){
+        for(LibraryInfo info:libraryBlock.getLibraryInfoArray().listItems()){
             addLibraryInfo(info);
         }
     }
@@ -269,6 +268,26 @@ public class PackageBlock extends BaseChunk  {
     }
 
     @Override
+    public JSONObject toJson() {
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put(NAME_id, getId());
+        jsonObject.put(NAME_name, getName());
+        jsonObject.put(NAME_specs, getSpecTypePairArray().toJson());
+        LibraryInfoArray libraryInfoArray = mLibraryBlock.getLibraryInfoArray();
+        if(libraryInfoArray.childesCount()>0){
+            jsonObject.put(NAME_libraries,libraryInfoArray.toJson());
+        }
+        return jsonObject;
+    }
+    @Override
+    public void fromJson(JSONObject json) {
+        setId(json.getInt(NAME_id));
+        setName(json.getString(NAME_name));
+        getSpecTypePairArray().fromJson(json.getJSONArray(NAME_specs));
+        LibraryInfoArray libraryInfoArray = mLibraryBlock.getLibraryInfoArray();
+        libraryInfoArray.fromJson(json.optJSONArray(NAME_libraries));
+    }
+    @Override
     public String toString(){
         StringBuilder builder=new StringBuilder();
         builder.append(super.toString());
@@ -283,4 +302,9 @@ public class PackageBlock extends BaseChunk  {
         }
         return builder.toString();
     }
+
+    private static final String NAME_id="id";
+    private static final String NAME_name="name";
+    private static final String NAME_specs="specs";
+    private static final String NAME_libraries="libraries";
 }

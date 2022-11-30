@@ -4,12 +4,15 @@ import com.reandroid.lib.arsc.base.BlockArray;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.ResXmlID;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ResXmlIDArray extends BlockArray<ResXmlID> {
+public class ResXmlIDArray extends BlockArray<ResXmlID> implements JsonItem<JSONArray> {
     private final HeaderBlock mHeaderBlock;
     private final Map<Integer, ResXmlID> mResIdMap;
     private boolean mUpdated;
@@ -85,5 +88,24 @@ public class ResXmlIDArray extends BlockArray<ResXmlID> {
         int count=mHeaderBlock.getChunkSize()-mHeaderBlock.getHeaderSize();
         count=count/4;
         return count;
+    }
+    @Override
+    public JSONArray toJson() {
+        if(childesCount()==0){
+            return null;
+        }
+        JSONArray jsonArray=new JSONArray();
+        int i=0;
+        for(ResXmlID xmlID:listItems()){
+            JSONObject jsonObject=xmlID.toJson();
+            jsonArray.put(i,jsonObject);
+            i++;
+        }
+        return jsonArray;
+    }
+    @Override
+    public void fromJson(JSONArray json) {
+        //TODO
+        throw new IllegalArgumentException("Not implemented yet");
     }
 }

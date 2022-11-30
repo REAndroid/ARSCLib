@@ -5,10 +5,12 @@ import com.reandroid.lib.arsc.item.ByteArray;
 import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.StyleItem;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONArray;
 
 import java.io.IOException;
 
-public class StyleArray extends OffsetBlockArray<StyleItem> {
+public class StyleArray extends OffsetBlockArray<StyleItem> implements JsonItem<JSONArray> {
     public StyleArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart) {
         super(offsets, itemCount, itemStart);
         setEndBytes(END_BYTE);
@@ -50,6 +52,22 @@ public class StyleArray extends OffsetBlockArray<StyleItem> {
     @Override
     public StyleItem[] newInstance(int len) {
         return new StyleItem[len];
+    }
+
+    @Override
+    public JSONArray toJson() {
+        if(childesCount()==0){
+            return null;
+        }
+        int i=0;
+        for(StyleItem styleItem:listItems()){
+
+        }
+        return null;
+    }
+    @Override
+    public void fromJson(JSONArray json) {
+
     }
     private static final byte END_BYTE= (byte) 0xFF;
 }

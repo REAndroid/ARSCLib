@@ -3,6 +3,8 @@ package com.reandroid.lib.arsc.item;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.pool.BaseStringPool;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONObject;
 
 
 import java.io.IOException;
@@ -15,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class StringItem extends BlockItem {
+public class StringItem extends BlockItem implements JsonItem<JSONObject> {
     private String mCache;
     private boolean mUtf8;
     private final List<ReferenceItem> mReferencedList;
@@ -166,25 +168,52 @@ public class StringItem extends BlockItem {
             return new String(allStringBytes, offLen[0], offLen[1], StandardCharsets.UTF_16LE);
         }
     }
-
-
+    public boolean hasStyle(){
+        StyleItem styleItem=getStyle();
+        if(styleItem==null){
+            return false;
+        }
+        return !styleItem.isNull();
+    }
     public StyleItem getStyle(){
-        BaseStringPool stringPool=getStringPool();
+        BaseStringPool<?> stringPool=getStringPool();
         if(stringPool==null){
             return null;
         }
         int index=getIndex();
         return stringPool.getStyle(index);
     }
-    private BaseStringPool getStringPool(){
+    private BaseStringPool<?> getStringPool(){
         Block parent=getParent();
         while (parent!=null){
             if(parent instanceof BaseStringPool){
-                return (BaseStringPool)parent;
+                return (BaseStringPool<?>)parent;
             }
             parent=parent.getParent();
         }
         return null;
+    }
+    @Override
+    public JSONObject toJson() {
+        if(isNull()){
+            return null;
+        }
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put(NAME_string, get());
+        StyleItem styleItem=getStyle();
+        if(styleItem!=null){
+            JSONObject styleJson=styleItem.toJson();
+            if(styleJson!=null){
+                jsonObject.put(NAME_style, styleJson);
+            }
+        }
+        return jsonObject;
+    }
+    @Override
+    public void fromJson(JSONObject json) {
+        String str = json.getString(NAME_string);
+        set(str);
+        throw new IllegalArgumentException("Not implemented");
     }
     @Override
     public String toString(){
@@ -332,4 +361,7 @@ public class StringItem extends BlockItem {
 
     private final CharsetDecoder UTF16LE_DECODER = StandardCharsets.UTF_16LE.newDecoder();
     private final CharsetDecoder UTF8_DECODER = StandardCharsets.UTF_8.newDecoder();
+
+    private static final String NAME_string="string";
+    private static final String NAME_style="style";
 }

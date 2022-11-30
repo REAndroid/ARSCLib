@@ -3,8 +3,10 @@ package com.reandroid.lib.arsc.value;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.item.BlockItem;
 import com.reandroid.lib.arsc.item.ReferenceItem;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONObject;
 
-public abstract class BaseResValue extends BlockItem  {
+public abstract class BaseResValue extends BlockItem implements JsonItem<JSONObject> {
     BaseResValue(int bytesLength){
         super(bytesLength);
     }
@@ -95,4 +97,10 @@ public abstract class BaseResValue extends BlockItem  {
     byte getByte(int offset){
         return getBytesInternal()[offset];
     }
+
+    static final String NAME_data = "data";
+    static final String NAME_value_type="value_type";
+    static final String NAME_id="id";
+    static final String NAME_parent="parent";
+    static final String NAME_items="items";
 }

@@ -8,13 +8,16 @@ import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.common.Frameworks;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class TableBlock extends BaseChunk  {
+public class TableBlock extends BaseChunk implements JsonItem<JSONObject> {
     private final IntegerItem mPackageCount;
     private final TableStringPool mTableStringPool;
     private final PackageArray mPackageArray;
@@ -116,10 +119,33 @@ public class TableBlock extends BaseChunk  {
         }
         mFrameWorks.add(tableBlock);
     }
+    @Override
+    public JSONObject toJson() {
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put(NAME_packages, getPackageArray().toJson());
+        JSONArray jsonArray = getTableStringPool().toJson();
+        if(jsonArray!=null){
+            jsonObject.put(NAME_styled_strings, jsonArray);
+        }
+        return jsonObject;
+    }
+    @Override
+    public void fromJson(JSONObject json) {
+        JSONArray jsonArray= json.optJSONArray(NAME_styled_strings);
+        if(jsonArray!=null){
+            getTableStringPool().fromJson(jsonArray);
+        }
+        getPackageArray().fromJson(json.getJSONArray(NAME_packages));
+        refresh();
+    }
     public static TableBlock loadWithAndroidFramework(InputStream inputStream) throws IOException{
+        TableBlock tableBlock=load(inputStream);
+        tableBlock.addFramework(Frameworks.getAndroid());
+        return tableBlock;
+    }
+    public static TableBlock load(InputStream inputStream) throws IOException{
         TableBlock tableBlock=new TableBlock();
         tableBlock.readBytes(inputStream);
-        tableBlock.addFramework(Frameworks.getAndroid());
         return tableBlock;
     }
 
@@ -164,4 +190,6 @@ public class TableBlock extends BaseChunk  {
     }
     public static final String FILE_NAME="resources.arsc";
 
+    private static final String NAME_packages="packages";
+    private static final String NAME_styled_strings="styled_strings";
 }

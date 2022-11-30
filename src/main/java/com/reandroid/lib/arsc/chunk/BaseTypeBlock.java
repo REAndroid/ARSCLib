@@ -33,6 +33,15 @@ abstract class BaseTypeBlock extends BaseChunk {
     public void setTypeId(byte id){
         mTypeId.set(id);
     }
+    public void setTypeName(String name){
+        TypeStringPool typeStringPool=getTypeStringPool();
+        byte id=getTypeId();
+        TypeString typeString=typeStringPool.getById(id);
+        if(typeString==null){
+            typeString=typeStringPool.getOrCreate(id, name);
+        }
+        typeString.set(name);
+    }
     public void setEntryCount(int count){
         if(count == mEntryCount.get()){
             return;

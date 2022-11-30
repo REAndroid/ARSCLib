@@ -46,7 +46,7 @@ public abstract class BaseResValueItem extends BaseResValue implements ResValueI
             return null;
         }
         if(mReferenceItem==null){
-            mReferenceItem=createReferenceItem();
+            mReferenceItem=new ResValueReference(this);
         }
         return mReferenceItem;
     }
@@ -61,23 +61,6 @@ public abstract class BaseResValueItem extends BaseResValue implements ResValueI
         }
         mReferenceItem=null;
         return entryBlock.removeTableReference(ref);
-    }
-    private ReferenceItem createReferenceItem(){
-        return new ReferenceItem() {
-            @Override
-            public void set(int val) {
-                if(getValueType()==ValueType.STRING){
-                    BaseResValueItem.this.setData(val);
-                }
-            }
-            @Override
-            public int get() {
-                if(getValueType()==ValueType.STRING){
-                    return BaseResValueItem.this.getData();
-                }
-                return -1;
-            }
-        };
     }
 
     public ValueType getValueType(){

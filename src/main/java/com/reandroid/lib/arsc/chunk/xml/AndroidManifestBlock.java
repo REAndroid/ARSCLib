@@ -4,6 +4,10 @@ import com.reandroid.lib.arsc.item.ResXmlString;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 import com.reandroid.lib.arsc.value.ValueType;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -218,6 +222,14 @@ public class AndroidManifestBlock extends ResXmlBlock{
         builder.append("]");
         builder.append("}");
         return builder.toString();
+    }
+    public static AndroidManifestBlock load(File file) throws IOException {
+        return load(new FileInputStream(file));
+    }
+    public static AndroidManifestBlock load(InputStream inputStream) throws IOException {
+        AndroidManifestBlock manifestBlock=new AndroidManifestBlock();
+        manifestBlock.readBytes(inputStream);
+        return manifestBlock;
     }
     public static final String TAG_manifest ="manifest";
     public static final String TAG_uses_permission="uses-permission";

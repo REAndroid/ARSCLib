@@ -7,10 +7,12 @@ import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONObject;
 
 import java.io.IOException;
 
-public class SpecBlock extends BaseTypeBlock implements BlockLoad {
+public class SpecBlock extends BaseTypeBlock implements BlockLoad , JsonItem<JSONObject> {
     private final IntegerArray mOffsets;
     public SpecBlock() {
         super(ChunkType.SPEC, 1);
@@ -50,5 +52,17 @@ public class SpecBlock extends BaseTypeBlock implements BlockLoad {
             builder.append(typeBlockArray.childesCount());
         }
         return builder.toString();
+    }
+
+    @Override
+    public JSONObject toJson() {
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put("id", getTypeId());
+        return jsonObject;
+    }
+
+    @Override
+    public void fromJson(JSONObject json) {
+        setTypeId((byte) json.getInt("id"));
     }
 }

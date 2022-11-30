@@ -6,6 +6,8 @@ import com.reandroid.lib.arsc.base.BlockCounter;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.ReferenceItem;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -127,9 +129,28 @@ public class ResValueBag extends BaseResValue {
         mResValueBagItemArray.setChildesCount(mCount.get());
         mResValueBagItemArray.readBytes(reader);
     }
+    @Override
+    public JSONObject toJson() {
+        if(isNull()){
+            return null;
+        }
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put(NAME_parent, getParentId());
+        jsonObject.put(NAME_items, getResValueBagItemArray().toJson());
+        return jsonObject;
+    }
+    @Override
+    public void fromJson(JSONObject json) {
+        setParentId(json.getInt(NAME_parent));
+        getResValueBagItemArray().fromJson(json.getJSONArray(NAME_items));
+        refreshCount();
+    }
 
     @Override
     public String toString(){
+        if(getParent()!=null){
+            return toJson().toString(4);
+        }
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(": parent=");
@@ -139,6 +160,4 @@ public class ResValueBag extends BaseResValue {
         return builder.toString();
     }
 
-
-    private final static short HEADER_COMPLEX=0x0010;
 }

@@ -7,6 +7,9 @@ import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.chunk.xml.ResXmlAttribute;
 import com.reandroid.lib.arsc.item.ShortItem;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,7 +17,8 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
-public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute> implements Comparator<ResXmlAttribute> {
+public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
+        implements Comparator<ResXmlAttribute>, JsonItem<JSONArray> {
     private final HeaderBlock mHeaderBlock;
     private final ShortItem mAttributeStart;
     private final ShortItem mAttributeCount;
@@ -69,5 +73,28 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute> implements
     @Override
     public int compare(ResXmlAttribute attr1, ResXmlAttribute attr2) {
         return attr1.compareTo(attr2);
+    }
+
+    @Override
+    public JSONArray toJson() {
+        JSONArray jsonArray=new JSONArray();
+        int i=0;
+        for(ResXmlAttribute attr:listItems()){
+            JSONObject jsonObject = attr.toJson();
+            jsonArray.put(i, jsonObject);
+            i++;
+        }
+        return jsonArray;
+    }
+    @Override
+    public void fromJson(JSONArray json) {
+        clearChildes();
+        int length= json.length();
+        ensureSize(length);
+        for(int i=0;i<length;i++){
+            ResXmlAttribute attribute=get(i);
+            JSONObject jsonObject= json.getJSONObject(i);
+            attribute.fromJson(jsonObject);
+        }
     }
 }

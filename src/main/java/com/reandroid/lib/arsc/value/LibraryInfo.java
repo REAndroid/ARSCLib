@@ -5,11 +5,13 @@ import com.reandroid.lib.arsc.base.BlockCounter;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.PackageName;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class LibraryInfo extends Block {
+public class LibraryInfo extends Block implements JsonItem<JSONObject> {
     private final IntegerItem mPackageId;
     private final PackageName mPackageName;
 
@@ -74,6 +76,18 @@ public class LibraryInfo extends Block {
         mPackageName.readBytes(reader);
     }
 
+    @Override
+    public JSONObject toJson() {
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put("id", getPackageId());
+        jsonObject.put("name", getPackageName());
+        return jsonObject;
+    }
+    @Override
+    public void fromJson(JSONObject json) {
+        setPackageId(json.getInt("id"));
+        setPackageName(json.getString("name"));
+    }
     @Override
     public String toString(){
         StringBuilder builder=new StringBuilder();

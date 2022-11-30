@@ -10,12 +10,14 @@ import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.builder.StyleBuilder;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONArray;
 
 import java.io.IOException;
 import java.util.*;
 
 
-public abstract class BaseStringPool<T extends StringItem> extends BaseChunk implements BlockLoad {
+public abstract class BaseStringPool<T extends StringItem> extends BaseChunk implements BlockLoad, JsonItem<JSONArray> {
     private final IntegerItem mCountStrings;
     private final IntegerItem mCountStyles;
     private final ShortItem mFlagUtf8;
@@ -63,6 +65,10 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
 
         mUniqueMap=new HashMap<>();
 
+    }
+    // call this after modifying string values
+    public void refreshUniqueIdMap(){
+        reUpdateUniqueMap();
     }
     public void recreateStyles(){
         StyleArray styleArray = getStyleArray();
@@ -248,6 +254,16 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
         if(sender== mFlagUtf8){
             mArrayStrings.setUtf8(isUtf8Flag());
         }
+    }
+    @Override
+    public JSONArray toJson() {
+        return getStringsArray().toJson();
+    }
+    @Override
+    public void fromJson(JSONArray json) {
+        getStringsArray().fromJson(json);
+        refreshUniqueIdMap();
+        refresh();
     }
     private static final short UTF8_FLAG_VALUE=0x0100;
 

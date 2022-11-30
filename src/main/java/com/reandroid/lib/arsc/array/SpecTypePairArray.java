@@ -4,10 +4,13 @@ import com.reandroid.lib.arsc.base.BlockArray;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.value.EntryBlock;
+import com.reandroid.lib.json.JsonItem;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.*;
 
-public class SpecTypePairArray extends BlockArray<SpecTypePair> {
+public class SpecTypePairArray extends BlockArray<SpecTypePair> implements JsonItem<JSONArray> {
     public SpecTypePairArray(){
         super();
     }
@@ -139,5 +142,30 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair> {
             }
         }
         return results;
+    }
+    @Override
+    public JSONArray toJson() {
+        JSONArray jsonArray=new JSONArray();
+        int i=0;
+        for(SpecTypePair specTypePair:listItems()){
+            JSONObject jsonObject= specTypePair.toJson();
+            if(jsonObject==null){
+                continue;
+            }
+            jsonArray.put(i, jsonObject);
+            i++;
+        }
+        return jsonArray;
+    }
+    @Override
+    public void fromJson(JSONArray json) {
+        int length= json.length();
+        clearChildes();
+        ensureSize(length);
+        for (int i=0;i<length;i++){
+            JSONObject jsonObject=json.getJSONObject(i);
+            SpecTypePair specTypePair=get(i);
+            specTypePair.fromJson(jsonObject);
+        }
     }
 }
