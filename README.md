@@ -18,6 +18,10 @@
         //refresh to recalculate offsets
         tableBlock.refresh();
         
+        //convert to json object
+        JSONObject jsonObject=tableBlock.toJson();
+        System.out.println(jsonObject.toString(4));
+        
         //save the edited table
         File outFile=new File("resources_out.arsc");        
         tableBlock.writeBytes(outFile);        
