@@ -3,8 +3,8 @@ package com.reandroid.lib.arsc.item;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.pool.BaseStringPool;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONObject;
 
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class StringItem extends BlockItem implements JsonItem<JSONObject> {
+public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
     private String mCache;
     private boolean mUtf8;
     private final List<ReferenceItem> mReferencedList;

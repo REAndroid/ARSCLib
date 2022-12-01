@@ -6,13 +6,13 @@ import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.ByteArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Arrays;
 
-public class ResConfig extends FixedBlockContainer implements BlockLoad, JsonItem<JSONObject> {
+public class ResConfig extends FixedBlockContainer implements BlockLoad, JSONConvert<JSONObject> {
 
     private final IntegerItem configSize;
     private final ByteArray mValuesContainer;

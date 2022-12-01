@@ -12,4 +12,5 @@ public class ApkUtil {
         }
         return path;
     }
+    public static final String JSON_FILE_EXTENSION=".a.json";
 }

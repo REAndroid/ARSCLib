@@ -3,7 +3,6 @@ package com.reandroid.lib.arsc.array;
 import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.TableString;
-import org.json.JSONArray;
 
 public class TableStringArray extends StringArray<TableString> {
     public TableStringArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {

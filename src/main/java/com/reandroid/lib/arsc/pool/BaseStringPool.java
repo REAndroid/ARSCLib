@@ -10,14 +10,14 @@ import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.builder.StyleBuilder;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONArray;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONArray;
 
 import java.io.IOException;
 import java.util.*;
 
 
-public abstract class BaseStringPool<T extends StringItem> extends BaseChunk implements BlockLoad, JsonItem<JSONArray> {
+public abstract class BaseStringPool<T extends StringItem> extends BaseChunk implements BlockLoad, JSONConvert<JSONArray>, Comparator<String> {
     private final IntegerItem mCountStrings;
     private final IntegerItem mCountStyles;
     private final ShortItem mFlagUtf8;
@@ -65,6 +65,19 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
 
         mUniqueMap=new HashMap<>();
 
+    }
+    public void addAllStrings(Collection<String> stringList){
+        List<String> sortedList=new ArrayList<>(stringList);
+        sortedList.sort(this);
+        addAllStrings(sortedList);
+    }
+    public void addAllStrings(List<String> sortedStringList){
+        // call refreshUniqueIdMap() just in case elements modified somewhere
+        refreshUniqueIdMap();
+
+        for(String str:sortedStringList){
+            getOrCreate(str);
+        }
     }
     // call this after modifying string values
     public void refreshUniqueIdMap(){
@@ -264,6 +277,10 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
         getStringsArray().fromJson(json);
         refreshUniqueIdMap();
         refresh();
+    }
+    @Override
+    public int compare(String s1, String s2) {
+        return s1.compareTo(s2);
     }
     private static final short UTF8_FLAG_VALUE=0x0100;
 

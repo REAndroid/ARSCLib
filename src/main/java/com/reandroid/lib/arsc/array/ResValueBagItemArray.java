@@ -2,10 +2,10 @@ package com.reandroid.lib.arsc.array;
 
 import com.reandroid.lib.arsc.base.BlockArray;
 import com.reandroid.lib.arsc.value.ResValueBagItem;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONArray;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONArray;
 
-public class ResValueBagItemArray extends BlockArray<ResValueBagItem> implements JsonItem<JSONArray> {
+public class ResValueBagItemArray extends BlockArray<ResValueBagItem> implements JSONConvert<JSONArray> {
     public ResValueBagItemArray(){
         super();
     }

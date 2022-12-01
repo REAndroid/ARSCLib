@@ -2,14 +2,13 @@ package com.reandroid.lib.arsc.array;
 
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockArray;
-import com.reandroid.lib.arsc.chunk.xml.ResXmlStartElement;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.chunk.xml.ResXmlAttribute;
 import com.reandroid.lib.arsc.item.ShortItem;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONArray;
+import com.reandroid.lib.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,7 +17,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
-        implements Comparator<ResXmlAttribute>, JsonItem<JSONArray> {
+        implements Comparator<ResXmlAttribute>, JSONConvert<JSONArray> {
     private final HeaderBlock mHeaderBlock;
     private final ShortItem mAttributeStart;
     private final ShortItem mAttributeCount;

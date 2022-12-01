@@ -3,10 +3,10 @@ package com.reandroid.lib.arsc.value;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.item.BlockItem;
 import com.reandroid.lib.arsc.item.ReferenceItem;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONObject;
 
-public abstract class BaseResValue extends BlockItem implements JsonItem<JSONObject> {
+public abstract class BaseResValue extends BlockItem implements JSONConvert<JSONObject> {
     BaseResValue(int bytesLength){
         super(bytesLength);
     }

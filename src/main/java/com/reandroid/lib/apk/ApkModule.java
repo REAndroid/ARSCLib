@@ -12,6 +12,7 @@ import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.arsc.value.EntryBlock;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -162,6 +163,46 @@ public class ApkModule {
     }
     public void setLoadDefaultFramework(boolean loadDefaultFramework) {
         this.loadDefaultFramework = loadDefaultFramework;
+    }
+    public void convertToJson(File outDir) throws IOException {
+        Set<String> convertedFiles=new HashSet<>();
+        if(hasAndroidManifestBlock()){
+            AndroidManifestBlock manifestBlock=getAndroidManifestBlock();
+            String fileName=AndroidManifestBlock.FILE_NAME+ApkUtil.JSON_FILE_EXTENSION;
+            File file=new File(outDir, fileName);
+            manifestBlock.toJson().write(file);
+            convertedFiles.add(AndroidManifestBlock.FILE_NAME);
+        }
+        if(hasTableBlock()){
+            TableBlock tableBlock=getTableBlock();
+            String fileName=TableBlock.FILE_NAME+ApkUtil.JSON_FILE_EXTENSION;
+            File file=new File(outDir, fileName);
+            tableBlock.toJson().write(file);
+            convertedFiles.add(TableBlock.FILE_NAME);
+        }
+        List<ResFile> resFileList=listResFiles();
+        for(ResFile resFile:resFileList){
+            boolean convertOk=resFile.dumpToJson(outDir);
+            if(convertOk){
+                convertedFiles.add(resFile.getFilePath());
+            }
+        }
+        List<InputSource> allSources = getApkArchive().listInputSources();
+        for(InputSource inputSource:allSources){
+            String path=inputSource.getAlias();
+            if(convertedFiles.contains(path)){
+                continue;
+            }
+            path=path.replace('/', File.separatorChar);
+            File file=new File(outDir, path);
+            File dir=file.getParentFile();
+            if(dir!=null && !dir.exists()){
+                dir.mkdirs();
+            }
+            FileOutputStream outputStream=new FileOutputStream(file);
+            inputSource.write(outputStream);
+            outputStream.close();
+        }
     }
     public static ApkModule loadApkFile(File apkFile) throws IOException {
         APKArchive archive=APKArchive.loadZippedApk(apkFile);

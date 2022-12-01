@@ -2,7 +2,7 @@ package com.reandroid.lib.arsc.value;
 
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.item.TableString;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONObject;
 
 public class ResValueInt extends BaseResValueItem  {
     public ResValueInt() {

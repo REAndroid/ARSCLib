@@ -4,9 +4,7 @@ import com.reandroid.lib.arsc.array.StringArray;
 import com.reandroid.lib.arsc.array.TableStringArray;
 import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
-import com.reandroid.lib.arsc.item.ReferenceItem;
 import com.reandroid.lib.arsc.item.TableString;
-import org.json.JSONArray;
 
 public class TableStringPool extends BaseStringPool<TableString> {
     public TableStringPool(boolean is_utf8) {

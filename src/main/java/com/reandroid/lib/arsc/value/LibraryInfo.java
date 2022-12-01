@@ -5,13 +5,13 @@ import com.reandroid.lib.arsc.base.BlockCounter;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.PackageName;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONObject;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class LibraryInfo extends Block implements JsonItem<JSONObject> {
+public class LibraryInfo extends Block implements JSONConvert<JSONObject> {
     private final IntegerItem mPackageId;
     private final PackageName mPackageName;
 

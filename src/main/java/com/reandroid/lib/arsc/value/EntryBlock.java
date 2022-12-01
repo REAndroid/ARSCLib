@@ -10,8 +10,8 @@ import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
 import com.reandroid.lib.arsc.pool.TableStringPool;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONObject;
 
 
 import java.io.IOException;
@@ -19,7 +19,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EntryBlock extends Block implements JsonItem<JSONObject> {
+public class EntryBlock extends Block implements JSONConvert<JSONObject> {
     private ShortItem mHeaderSize;
     private ShortItem mFlags;
     private IntegerItem mSpecReference;
@@ -630,7 +630,6 @@ public class EntryBlock extends Block implements JsonItem<JSONObject> {
         jsonObject.put(NAME_value, getResValue().toJson());
         return jsonObject;
     }
-
     @Override
     public void fromJson(JSONObject json) {
         if(json==null){

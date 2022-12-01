@@ -23,7 +23,6 @@ repositories {
 
 dependencies {
     compile(files("$rootProject.projectDir/libs/ArchiveUtil.jar"))
-    compile(files("$rootProject.projectDir/libs/json.jar"))
 }
 
 processResources {

@@ -3,14 +3,14 @@ package com.reandroid.lib.arsc.item;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.chunk.xml.ResXmlBlock;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ResXmlID extends IntegerItem implements JsonItem<JSONObject> {
+public class ResXmlID extends IntegerItem {
     private final List<ReferenceItem> mReferencedList;
     public ResXmlID(int resId){
         super(resId);
@@ -53,7 +53,17 @@ public class ResXmlID extends IntegerItem implements JsonItem<JSONObject> {
     public void onIndexChanged(int oldIndex, int newIndex){
         reUpdateReferences(newIndex);
     }
-
+    public String getName(){
+        ResXmlStringPool stringPool=getXmlStringPool();
+        if(stringPool==null){
+            return null;
+        }
+        ResXmlString xmlString = stringPool.get(getIndex());
+        if(xmlString==null){
+            return null;
+        }
+        return xmlString.getHtml();
+    }
     private ResXmlStringPool getXmlStringPool(){
         Block parent=this;
         while (parent!=null){
@@ -63,18 +73,6 @@ public class ResXmlID extends IntegerItem implements JsonItem<JSONObject> {
             parent=parent.getParent();
         }
         return null;
-    }
-    @Override
-    public JSONObject toJson() {
-        JSONObject jsonObject=new JSONObject();
-        jsonObject.put("id", get());
-        jsonObject.put("name", getXmlStringPool().get(getIndex()).getHtml());
-        return jsonObject;
-    }
-    @Override
-    public void fromJson(JSONObject json) {
-        //TODO
-        throw new IllegalArgumentException("Not implemented yet");
     }
     @Override
     public String toString(){

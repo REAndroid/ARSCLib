@@ -3,14 +3,15 @@ package com.reandroid.lib.arsc.chunk.xml;
 import com.reandroid.lib.arsc.array.ResXmlIDArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.FixedBlockContainer;
+import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 import com.reandroid.lib.arsc.value.ValueType;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONObject;
 
 public class ResXmlAttribute extends FixedBlockContainer
-        implements Comparable<ResXmlAttribute>, JsonItem<JSONObject> {
+        implements Comparable<ResXmlAttribute>, JSONConvert<JSONObject> {
     private final IntegerItem mNamespaceReference;
     private final IntegerItem mNameReference;
     private final IntegerItem mValueStringReference;
@@ -364,7 +365,6 @@ public class ResXmlAttribute extends FixedBlockContainer
         jsonObject.put(NAME_name, getName());
         jsonObject.put(NAME_id, getNameResourceID());
         jsonObject.put(NAME_namespace_uri, getNamespace());
-        jsonObject.put(NAME_namespace_prefix, getNamePrefix());
         ValueType valueType=getValueType();
         jsonObject.put(NAME_value_type, valueType.name());
         if(valueType==ValueType.STRING){
@@ -379,12 +379,13 @@ public class ResXmlAttribute extends FixedBlockContainer
     @Override
     public void fromJson(JSONObject json) {
         String name = json.getString(NAME_name);
-        int id = json.optInt(NAME_id);
+        int id =  json.optInt(NAME_id, 0);
         setName(name, id);
-        String uri= json.optString(NAME_namespace_uri);
-        String prefix= json.optString(NAME_namespace_prefix);
-        ResXmlStartNamespace ns = getParentResXmlElement().getOrCreateNamespace(uri, prefix);
-        setNamespaceReference(ns.getUriReference());
+        String uri= json.optString(NAME_namespace_uri, null);
+        if(uri!=null){
+            ResXmlStartNamespace ns = getParentResXmlElement().getStartNamespaceByUri(uri);
+            setNamespaceReference(ns.getUriReference());
+        }
         ValueType valueType=ValueType.fromName(json.getString(NAME_value_type));
         if(valueType==ValueType.STRING){
             setValueAsString(json.getString(NAME_data));
@@ -403,11 +404,19 @@ public class ResXmlAttribute extends FixedBlockContainer
             if(id>0){
                 fullName=fullName+"(@"+String.format("0x%08x",id)+")";
             }
-            String valStr=getValueString();
+            String valStr;
+            ValueType valueType=getValueType();
+            if(valueType==ValueType.STRING){
+                valStr=getValueAsString();
+            }else if (valueType==ValueType.INT_BOOLEAN){
+                valStr=String.valueOf(getValueAsBoolean());
+            }else {
+                valStr="["+valueType+"] "+getRawValue();
+            }
             if(valStr!=null){
                 return fullName+"=\""+valStr+"\"";
             }
-            return fullName+"["+getValueType()+"]=\""+getRawValue()+"\"";
+            return fullName+"["+valueType+"]=\""+getRawValue()+"\"";
         }
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
@@ -423,10 +432,9 @@ public class ResXmlAttribute extends FixedBlockContainer
         builder.append("}");
         return builder.toString();
     }
-    private static final String NAME_id="id";
-    private static final String NAME_value_type="value_type";
-    private static final String NAME_name="name";
-    private static final String NAME_namespace_uri ="namespace_uri";
-    private static final String NAME_namespace_prefix ="namespace_name";
-    private static final String NAME_data="data";
+    static final String NAME_id="id";
+    static final String NAME_value_type="value_type";
+    static final String NAME_name="name";
+    static final String NAME_namespace_uri ="namespace_uri";
+    static final String NAME_data="data";
 }

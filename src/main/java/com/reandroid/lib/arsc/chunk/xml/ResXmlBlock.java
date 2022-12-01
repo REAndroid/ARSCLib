@@ -6,13 +6,18 @@ import com.reandroid.lib.arsc.container.SingleBlockContainer;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.reandroid.lib.arsc.value.ValueType;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONArray;
+import com.reandroid.lib.json.JSONObject;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-public class ResXmlBlock extends BaseChunk implements JsonItem<JSONObject> {
+public class ResXmlBlock extends BaseChunk implements JSONConvert<JSONObject> {
     private final ResXmlStringPool mResXmlStringPool;
     private final ResXmlIDMap mResXmlIDMap;
     private ResXmlElement mResXmlElement;
@@ -135,22 +140,106 @@ public class ResXmlBlock extends BaseChunk implements JsonItem<JSONObject> {
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
-        jsonObject.put(NAME_element, getResXmlElement().toJson());
-        JSONArray pool =getStringPool().toJson();
+        jsonObject.put(ResXmlBlock.NAME_element, getResXmlElement().toJson());
+        JSONArray pool = getStringPool().toJson();
         if(pool!=null){
-            jsonObject.put(NAME_styled_strings, getResXmlElement().toJson());
-        }
-        JSONArray idArray = getResXmlIDMap().getResXmlIDArray().toJson();
-        if(idArray!=null){
-            jsonObject.put("resource_ids", idArray);
+            jsonObject.put(ResXmlBlock.NAME_styled_strings, getResXmlElement().toJson());
         }
         return jsonObject;
     }
 
     @Override
     public void fromJson(JSONObject json) {
-        // TODO
-        throw new IllegalArgumentException("Not implemented yet");
+        onFromJson(json);
+        ResXmlElement xmlElement=getResXmlElement();
+        xmlElement.fromJson(json.optJSONObject(ResXmlBlock.NAME_element));
+        refresh();
+    }
+    private void onFromJson(JSONObject json){
+        List<JSONObject> attributeList=recursiveAttributes(json.optJSONObject(ResXmlBlock.NAME_element));
+        buildResourceIds(attributeList);
+        Set<String> allStrings=recursiveStrings(json.optJSONObject(ResXmlBlock.NAME_element));
+        ResXmlStringPool stringPool = getStringPool();
+        stringPool.addAllStrings(allStrings);
+        stringPool.refresh();
+    }
+    private void buildResourceIds(List<JSONObject> attributeList){
+        ResIdBuilder builder=new ResIdBuilder();
+        for(JSONObject attribute:attributeList){
+            int id=attribute.getInt(ResXmlAttribute.NAME_id);
+            if(id==0){
+                continue;
+            }
+            String name=attribute.getString(ResXmlAttribute.NAME_name);
+            builder.add(id, name);
+        }
+        builder.buildTo(getResXmlIDMap());
+    }
+    private List<JSONObject> recursiveAttributes(JSONObject elementJson){
+        List<JSONObject> results = new ArrayList<>();
+        if(elementJson==null){
+            return results;
+        }
+        JSONArray attributes = elementJson.optJSONArray(ResXmlElement.NAME_attributes);
+        if(attributes != null){
+            int length = attributes.length();
+            for(int i=0; i<length; i++){
+                JSONObject attr=attributes.optJSONObject(i);
+                if(attr!=null){
+                    results.add(attr);
+                }
+            }
+        }
+        JSONArray childElements = elementJson.optJSONArray(ResXmlElement.NAME_childes);
+        if(childElements!=null){
+            int length=childElements.length();
+            for(int i=0;i<length;i++){
+                JSONObject child=childElements.getJSONObject(i);
+                results.addAll(recursiveAttributes(child));
+            }
+        }
+        return results;
+    }
+    private Set<String> recursiveStrings(JSONObject elementJson){
+        Set<String> results = new HashSet<>();
+        if(elementJson==null){
+            return results;
+        }
+        results.add(elementJson.optString(ResXmlElement.NAME_namespace_uri));
+        results.add(elementJson.optString(ResXmlElement.NAME_name));
+        JSONArray namespaces=elementJson.optJSONArray(ResXmlElement.NAME_namespaces);
+        if(namespaces != null){
+            int length = namespaces.length();
+            for(int i=0; i<length; i++){
+                JSONObject nsObject=namespaces.getJSONObject(i);
+                results.add(nsObject.getString(ResXmlElement.NAME_namespace_uri));
+                results.add(nsObject.getString(ResXmlElement.NAME_namespace_prefix));
+            }
+        }
+        JSONArray attributes = elementJson.optJSONArray(ResXmlElement.NAME_attributes);
+        if(attributes != null){
+            int length = attributes.length();
+            for(int i=0; i<length; i++){
+                JSONObject attr=attributes.optJSONObject(i);
+                if(attr==null){
+                    continue;
+                }
+                results.add(attr.getString(ResXmlAttribute.NAME_name));
+                ValueType valueType=ValueType.fromName(attr.getString(ResXmlAttribute.NAME_value_type));
+                if(valueType==ValueType.STRING){
+                    results.add(attr.getString(ResXmlAttribute.NAME_data));
+                }
+            }
+        }
+        JSONArray childElements = elementJson.optJSONArray(ResXmlElement.NAME_childes);
+        if(childElements!=null){
+            int length=childElements.length();
+            for(int i=0;i<length;i++){
+                JSONObject child=childElements.getJSONObject(i);
+                results.addAll(recursiveStrings(child));
+            }
+        }
+        return results;
     }
 
     public static boolean isResXmlBlock(File file){

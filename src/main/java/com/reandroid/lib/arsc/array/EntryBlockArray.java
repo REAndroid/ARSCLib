@@ -3,12 +3,12 @@ package com.reandroid.lib.arsc.array;
 import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.value.EntryBlock;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONArray;
+import com.reandroid.lib.json.JSONObject;
 
 
-public class EntryBlockArray extends OffsetBlockArray<EntryBlock> implements JsonItem<JSONArray> {
+public class EntryBlockArray extends OffsetBlockArray<EntryBlock> implements JSONConvert<JSONArray> {
     public EntryBlockArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart){
         super(offsets, itemCount, itemStart);
     }

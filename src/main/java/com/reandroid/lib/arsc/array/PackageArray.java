@@ -3,18 +3,17 @@ package com.reandroid.lib.arsc.array;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockArray;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
-import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONArray;
+import com.reandroid.lib.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class PackageArray extends BlockArray<PackageBlock> implements BlockLoad, JsonItem<JSONArray> {
+public class PackageArray extends BlockArray<PackageBlock> implements BlockLoad, JSONConvert<JSONArray> {
     private final IntegerItem mPackageCount;
     public PackageArray(IntegerItem packageCount){
         this.mPackageCount=packageCount;

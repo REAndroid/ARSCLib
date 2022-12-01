@@ -1,23 +1,22 @@
 package com.reandroid.lib.arsc.chunk;
 
 import com.reandroid.lib.arsc.array.PackageArray;
-import com.reandroid.lib.arsc.chunk.xml.ResXmlBlock;
 import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.common.Frameworks;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONArray;
+import com.reandroid.lib.json.JSONObject;
 
 import java.io.*;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class TableBlock extends BaseChunk implements JsonItem<JSONObject> {
+public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
     private final IntegerItem mPackageCount;
     private final TableStringPool mTableStringPool;
     private final PackageArray mPackageArray;

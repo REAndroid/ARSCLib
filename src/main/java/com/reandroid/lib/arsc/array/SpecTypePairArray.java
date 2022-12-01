@@ -4,13 +4,13 @@ import com.reandroid.lib.arsc.base.BlockArray;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.value.EntryBlock;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONArray;
+import com.reandroid.lib.json.JSONObject;
 
 import java.util.*;
 
-public class SpecTypePairArray extends BlockArray<SpecTypePair> implements JsonItem<JSONArray> {
+public class SpecTypePairArray extends BlockArray<SpecTypePair> implements JSONConvert<JSONArray> {
     public SpecTypePairArray(){
         super();
     }

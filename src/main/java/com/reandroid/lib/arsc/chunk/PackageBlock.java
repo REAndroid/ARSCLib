@@ -9,19 +9,18 @@ import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.PackageName;
 import com.reandroid.lib.arsc.item.ReferenceItem;
-import com.reandroid.lib.arsc.item.TypeString;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
 import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.arsc.pool.TypeStringPool;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.LibraryInfo;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONObject;
 
 import java.util.*;
 
 
-public class PackageBlock extends BaseChunk  implements JsonItem<JSONObject> {
+public class PackageBlock extends BaseChunk  implements JSONConvert<JSONObject> {
     private final IntegerItem mPackageId;
     private final PackageName mPackageName;
 

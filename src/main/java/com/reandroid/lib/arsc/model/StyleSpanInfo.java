@@ -1,9 +1,9 @@
 package com.reandroid.lib.arsc.model;
 
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONObject;
 
-public class StyleSpanInfo implements JsonItem<JSONObject> {
+public class StyleSpanInfo implements JSONConvert<JSONObject> {
     private String mTag;
     private int mFirst;
     private int mLast;

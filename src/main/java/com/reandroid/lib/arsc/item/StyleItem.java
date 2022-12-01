@@ -4,16 +4,16 @@ import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.model.StyleSpanInfo;
 import com.reandroid.lib.arsc.pool.BaseStringPool;
-import com.reandroid.lib.json.JsonItem;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONConvert;
+import com.reandroid.lib.json.JSONArray;
+import com.reandroid.lib.json.JSONObject;
 
 import java.io.IOException;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StyleItem extends IntegerArray implements JsonItem<JSONObject> {
+public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
     private List<StyleSpanInfo> mSpanInfoList;
     public StyleItem() {
         super();

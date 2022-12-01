@@ -3,7 +3,7 @@ package com.reandroid.lib.arsc.value;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.item.ReferenceItem;
 import com.reandroid.lib.arsc.item.TableString;
-import org.json.JSONObject;
+import com.reandroid.lib.json.JSONObject;
 
 public class ResValueBagItem extends BaseResValueItem{
 

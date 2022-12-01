@@ -1,10 +1,12 @@
 package com.reandroid.lib.arsc.chunk.xml;
 
+import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.array.ResXmlIDArray;
 import com.reandroid.lib.arsc.chunk.BaseChunk;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.ResXmlID;
+import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -39,8 +41,14 @@ public class ResXmlIDMap extends BaseChunk {
     protected void onChunkRefreshed() {
 
     }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    ResXmlStringPool getXmlStringPool(){
+        Block parent=this;
+        while (parent!=null){
+            if(parent instanceof ResXmlBlock){
+                return ((ResXmlBlock)parent).getStringPool();
+            }
+            parent=parent.getParent();
+        }
+        return null;
     }
 }
