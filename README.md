@@ -53,5 +53,11 @@
         File outFile=new File("AndroidManifest_out.xml");
         manifestBlock.writeBytes(outFile);
     }
+    public static void convertToJson() throws IOException{
+        File inFile=new File("test.apk");
+        File outDir=new File("test_out");
+        ApkModule apkModule=ApkModule.loadApkFile(inFile);
+        apkModule.convertToJson(outDir);
+    }
     
 ```
