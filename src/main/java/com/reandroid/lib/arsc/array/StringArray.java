@@ -7,6 +7,7 @@ import com.reandroid.lib.json.JSONConvert;
 import com.reandroid.lib.json.JSONArray;
 import com.reandroid.lib.json.JSONObject;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,22 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         super(offsets, itemCount, itemStart);
         this.mUtf8=is_utf8;
         setEndBytes((byte)0x00);
+    }
+    public List<String> toStringList(){
+        return new AbstractList<String>() {
+            @Override
+            public String get(int i) {
+                T item=StringArray.this.get(i);
+                if(item==null){
+                    return null;
+                }
+                return item.getHtml();
+            }
+            @Override
+            public int size() {
+                return childesCount();
+            }
+        };
     }
     public List<T> removeUnusedStrings(){
         List<T> allUnused=listUnusedStrings();
@@ -53,6 +70,7 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     protected void refreshChildes(){
         // Not required
     }
+    // Only styled strings
     @Override
     public JSONArray toJson() {
         return toJson(true);
@@ -74,6 +92,9 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
             if(jsonObject==null){
                 continue;
             }
+            if(i>750){
+                i=i+0;
+            }
             jsonArray.put(i, jsonObject);
             i++;
         }
@@ -82,19 +103,9 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         }
         return jsonArray;
     }
+    // Only styled strings
     @Override
     public void fromJson(JSONArray json) {
-        clearChildes();
-        if(json==null){
-            return;
-        }
-        int length = json.length();
-        ensureSize(length);
-        for(int i=0; i<length;i++){
-            T item=get(i);
-            JSONObject jsonObject = json.getJSONObject(i);
-            item.fromJson(jsonObject);
-        }
+        throw new IllegalArgumentException(getClass().getSimpleName()+".fromJson() NOT implemented");
     }
-
 }

@@ -40,7 +40,7 @@ public class BaseXmlChunk extends BaseChunk {
         return mLineNumber.get();
     }
     public void setCommentReference(int val){
-        mLineNumber.set(val);
+        mCommentReference.set(val);
     }
     public int getCommentReference(){
         return mCommentReference.get();
@@ -119,6 +119,21 @@ public class BaseXmlChunk extends BaseChunk {
     public String getUri(){
         return getString(getNamespaceReference());
     }
+    public String getComment(){
+        return getString(getCommentReference());
+    }
+    public void setComment(String comment){
+        if(comment==null||comment.length()==0){
+            setCommentReference(-1);
+        }else {
+            String old=getComment();
+            if(comment.equals(old)){
+                return;
+            }
+            ResXmlString xmlString = getOrCreateResXmlString(comment);
+            setCommentReference(xmlString.getIndex());
+        }
+    }
 
     public ResXmlElement getParentResXmlElement(){
         Block parent=getParent();
@@ -137,6 +152,14 @@ public class BaseXmlChunk extends BaseChunk {
     @Override
     protected void onChunkRefreshed() {
 
+    }
+    @Override
+    public void onChunkLoaded(){
+        super.onChunkLoaded();
+        if(mCommentReference.get()!=-1){
+            String junk=getString(mCommentReference.get());
+            System.out.println(junk);
+        }
     }
     @Override
     public String toString(){

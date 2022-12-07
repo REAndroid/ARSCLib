@@ -9,9 +9,10 @@ import com.reandroid.lib.arsc.group.StringGroup;
 import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
-import com.reandroid.lib.arsc.pool.builder.StyleBuilder;
+import com.reandroid.lib.arsc.model.StyleSpanInfo;
 import com.reandroid.lib.json.JSONConvert;
 import com.reandroid.lib.json.JSONArray;
+import com.reandroid.lib.json.JSONObject;
 
 import java.io.IOException;
 import java.util.*;
@@ -66,31 +67,60 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
         mUniqueMap=new HashMap<>();
 
     }
-    public void addAllStrings(Collection<String> stringList){
+    public List<String> toStringList(){
+        return getStringsArray().toStringList();
+    }
+    public void addStrings(Collection<String> stringList){
+        if(stringList==null || stringList.size()==0){
+            return;
+        }
+        Set<String> uniqueSet;
+        if(stringList instanceof HashSet){
+            uniqueSet=(HashSet<String>)stringList;
+        }else {
+            uniqueSet=new HashSet<>(stringList);
+        }
+        refreshUniqueIdMap();
+        Set<String> keySet=mUniqueMap.keySet();
+        for(String key:keySet){
+            uniqueSet.remove(key);
+        }
         List<String> sortedList=new ArrayList<>(stringList);
         sortedList.sort(this);
-        addAllStrings(sortedList);
+        insertStrings(sortedList);
     }
-    public void addAllStrings(List<String> sortedStringList){
-        // call refreshUniqueIdMap() just in case elements modified somewhere
-        refreshUniqueIdMap();
-
-        for(String str:sortedStringList){
-            getOrCreate(str);
+    private void insertStrings(List<String> stringList){
+        StringArray<T> stringsArray = getStringsArray();
+        int initialSize=stringsArray.childesCount();
+        stringsArray.ensureSize(initialSize + stringList.size());
+        int size=stringsArray.childesCount();
+        int j=0;
+        for (int i=initialSize;i<size;i++){
+            T item=stringsArray.get(i);
+            item.set(stringList.get(j));
+            j++;
         }
+        refreshUniqueIdMap();
     }
     // call this after modifying string values
     public void refreshUniqueIdMap(){
-        reUpdateUniqueMap();
-    }
-    public void recreateStyles(){
-        StyleArray styleArray = getStyleArray();
-        //styleArray.clearChildes();
-        StringArray<T> stringArray=getStringsArray();
-        for(T stringItem:stringArray.listItems()){
-            if(StyleBuilder.hasStyle(stringItem)){
-                StyleBuilder.buildStyle(stringItem);
+        mUniqueMap.clear();
+        T[] allChildes=getStrings();
+        if(allChildes==null){
+            return;
+        }
+        int max=allChildes.length;
+        for(int i=0;i<max;i++){
+            T item=allChildes[i];
+            if(item==null){
+                continue;
             }
+            String str=item.getHtml();
+            if(str==null){
+                continue;
+            }
+            StringGroup<T> group= getOrCreateGroup(str);
+            group.add(item);
         }
     }
     public List<T> removeUnusedStrings(){
@@ -175,30 +205,6 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
         mCountStrings.set(mArrayStrings.childesCount());
         return item;
     }
-    private void reUpdateUniqueMap(){
-        mUniqueMap.clear();
-        T[] allChildes=getStrings();
-        if(allChildes==null){
-            return;
-        }
-        int max=allChildes.length;
-        for(int i=0;i<max;i++){
-            T item=allChildes[i];
-            if(item==null){
-                continue;
-            }
-            String str=item.get();
-            if(str==null){
-                continue;
-            }
-            updateUniqueMap(item);
-        }
-    }
-    private void updateUniqueMap(T item){
-        String str=item.get();
-        StringGroup<T> group= getOrCreateGroup(str);
-        group.add(item);
-    }
     public final StyleItem getStyle(int index){
         return mArrayStyles.get(index);
     }
@@ -259,7 +265,7 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
     }
     @Override
     public void onChunkLoaded() {
-        reUpdateUniqueMap();
+        refreshUniqueIdMap();
     }
 
     @Override
@@ -272,15 +278,120 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
     public JSONArray toJson() {
         return getStringsArray().toJson();
     }
+    //Only for styled strings
     @Override
     public void fromJson(JSONArray json) {
-        getStringsArray().fromJson(json);
-        refreshUniqueIdMap();
+        if(json==null){
+            return;
+        }
+        loadStyledStrings(json);
         refresh();
+    }
+    public void loadStyledStrings(JSONArray jsonArray) {
+        //Styled strings should be at first rows of string pool thus we clear all before adding
+        getStringsArray().clearChildes();
+        getStyleArray().clearChildes();
+
+        List<StyledString> styledStringList = StyledString.fromJson(jsonArray);
+        loadText(styledStringList);
+        Map<String, Integer> tagIndexMap = loadStyleTags(styledStringList);
+        loadStyles(styledStringList, tagIndexMap);
+        refreshUniqueIdMap();
+    }
+    private void loadText(List<StyledString> styledStringList) {
+        StringArray<T> stringsArray = getStringsArray();
+        int size=styledStringList.size();
+        stringsArray.ensureSize(size);
+        for(int i=0;i<size;i++){
+            StyledString styledString=styledStringList.get(i);
+            T item=stringsArray.get(i);
+            item.set(styledString.text);
+        }
+    }
+    private Map<String, Integer> loadStyleTags(List<StyledString> styledStringList) {
+        Map<String, Integer> indexMap=new HashMap<>();
+        List<String> tagList=new ArrayList<>(getStyleTags(styledStringList));
+        tagList.sort(this);
+        StringArray<T> stringsArray = getStringsArray();
+        int tagsSize = tagList.size();
+        int initialSize = stringsArray.childesCount();
+        stringsArray.ensureSize(initialSize + tagsSize);
+        for(int i=0;i<tagsSize;i++){
+            String tag = tagList.get(i);
+            T item = stringsArray.get(initialSize + i);
+            item.set(tag);
+            indexMap.put(tag, item.getIndex());
+        }
+        return indexMap;
+    }
+    private void loadStyles(List<StyledString> styledStringList, Map<String, Integer> tagIndexMap){
+        StyleArray styleArray = getStyleArray();
+        int size=styledStringList.size();
+        styleArray.ensureSize(size);
+        for(int i=0;i<size;i++){
+            StyledString ss = styledStringList.get(i);
+            StyleItem styleItem = styleArray.get(i);
+            for(StyleSpanInfo spanInfo:ss.spanInfoList){
+                int tagIndex=tagIndexMap.get(spanInfo.getTag());
+                styleItem.addStylePiece(tagIndex, spanInfo.getFirst(), spanInfo.getLast());
+            }
+        }
+    }
+    private static Set<String> getStyleTags(List<StyledString> styledStringList){
+        Set<String> results=new HashSet<>();
+        for(StyledString ss:styledStringList){
+            for(StyleSpanInfo spanInfo:ss.spanInfoList){
+                results.add(spanInfo.getTag());
+            }
+        }
+        return results;
     }
     @Override
     public int compare(String s1, String s2) {
         return s1.compareTo(s2);
+    }
+
+    private static class StyledString{
+        final String text;
+        final List<StyleSpanInfo> spanInfoList;
+        StyledString(String text, List<StyleSpanInfo> spanInfoList){
+            this.text=text;
+            this.spanInfoList=spanInfoList;
+        }
+        @Override
+        public String toString(){
+            return text;
+        }
+        static List<StyledString> fromJson(JSONArray jsonArray){
+            int length = jsonArray.length();
+            List<StyledString> results=new ArrayList<>();
+            for(int i=0;i<length;i++){
+                if(!jsonArray.getJSONObject(i).has(StringItem.NAME_style)){
+                    System.out.println("Dont have style at i="+i);
+                }
+                StyledString styledString=fromJson(jsonArray.getJSONObject(i));
+                results.add(styledString);
+            }
+            return results;
+        }
+        static StyledString fromJson(JSONObject jsonObject){
+            String text= jsonObject.getString(StringItem.NAME_string);
+            JSONObject style=jsonObject.getJSONObject(StringItem.NAME_style);
+            JSONArray spansArray=style.getJSONArray(StyleItem.NAME_spans);
+            List<StyleSpanInfo> spanInfoList = toSpanInfoList(spansArray);
+            return new StyledString(text, spanInfoList);
+        }
+        private static List<StyleSpanInfo> toSpanInfoList(JSONArray jsonArray){
+            int length = jsonArray.length();
+            List<StyleSpanInfo> results=new ArrayList<>(length);
+            for(int i=0;i<length;i++){
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                StyleSpanInfo spanInfo=new StyleSpanInfo(null, 0,0);
+                spanInfo.fromJson(jsonObject);
+                results.add(spanInfo);
+            }
+            return results;
+        }
     }
     private static final short UTF8_FLAG_VALUE=0x0100;
 

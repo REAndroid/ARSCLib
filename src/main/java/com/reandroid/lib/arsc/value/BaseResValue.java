@@ -53,6 +53,9 @@ public abstract class BaseResValue extends BlockItem implements JSONConvert<JSON
     public void onBytesChanged() {
 
     }
+    void onDataLoaded() {
+
+    }
     int getInt(int offset){
         byte[] bts = getBytesInternal();
         return bts[offset] & 0xff |

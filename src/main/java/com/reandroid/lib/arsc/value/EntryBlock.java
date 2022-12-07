@@ -21,14 +21,14 @@ import java.util.List;
 
 public class EntryBlock extends Block implements JSONConvert<JSONObject> {
     private ShortItem mHeaderSize;
-    private ShortItem mFlags;
+    private ByteItem mFlagEntryType;
+    private ByteItem mByteFlagsB;
     private IntegerItem mSpecReference;
     private BaseResValue mResValue;
     private boolean mUnLocked;
     public EntryBlock() {
         super();
     }
-
     public ResValueInt setValueAsBoolean(boolean val){
         ResValueInt resValueInt;
         BaseResValue res = getResValue();
@@ -227,12 +227,11 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         removeTableReferences();
         removeSpecReferences();
     }
-
-    public short getFlags(){
-        return mFlags.get();
+    private void setEntryTypeFlag(byte b){
+        mFlagEntryType.set(b);
     }
-    public void setFlags(short sh){
-        mFlags.set(sh);
+    private void setByteFlagsB(byte b){
+        mByteFlagsB.set(b);
     }
     public IntegerItem getSpecReferenceBlock(){
         return mSpecReference;
@@ -260,8 +259,8 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
             setNull(true);
         }else {
             setNull(false);
-            boolean is_complex=(resValue instanceof ResValueBag);
-            setFlagComplex(is_complex);
+            boolean is_bag=(resValue instanceof ResValueBag);
+            setEntryTypeBag(is_bag);
             updatePackage();
             updateSpecRef();
         }
@@ -271,7 +270,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
             return;
         }
         if(resValue!=null){
-            resValue.setIndex(3);
+            resValue.setIndex(4);
             resValue.setParent(this);
         }
         if(mResValue!=null){
@@ -284,14 +283,14 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         mResValue=resValue;
     }
 
-    public void setFlagComplex(boolean is_complex){
+    public void setEntryTypeBag(boolean is_complex){
         if(is_complex){
-            if(!isFlagsComplex()){
-                setFlags(FLAG_COMPLEX);
+            if(!isEntryTypeBag()){
+                setEntryTypeFlag(FLAG_VALUE_BAG);
             }
         }else {
-            if(isFlagsComplex()){
-                setFlags(FLAG_INT);
+            if(isEntryTypeBag()){
+                setEntryTypeFlag(FLAG_VALUE_INT);
             }
         }
         refreshHeaderSize();
@@ -314,7 +313,13 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
     private void setName(String name){
         PackageBlock packageBlock=getPackageBlock();
         EntryGroup entryGroup = packageBlock.getEntryGroup(getResourceId());
-        entryGroup.renameSpec(name);
+        if(entryGroup!=null){
+            entryGroup.renameSpec(name);
+            return;
+        }
+        SpecStringPool specStringPool= packageBlock.getSpecStringPool();
+        SpecString specString=specStringPool.getOrCreate(name);
+        setSpecReference(specString.getIndex());
     }
     public String getTypeName(){
         TypeString typeString=getTypeString();
@@ -437,15 +442,18 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         }
         mUnLocked =true;
         this.mHeaderSize =new ShortItem();
-        this.mFlags =new ShortItem();
+        this.mFlagEntryType =new ByteItem();
+        this.mByteFlagsB=new ByteItem();
         this.mSpecReference = new IntegerItem();
 
         mHeaderSize.setIndex(0);
-        mFlags.setIndex(1);
-        mSpecReference.setIndex(2);
+        mFlagEntryType.setIndex(1);
+        mByteFlagsB.setIndex(2);
+        mSpecReference.setIndex(3);
 
         mHeaderSize.setParent(this);
-        mFlags.setParent(this);
+        mFlagEntryType.setParent(this);
+        mByteFlagsB.setParent(this);
         mSpecReference.setParent(this);
 
     }
@@ -456,16 +464,19 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         removeAllReferences();
         mUnLocked =false;
         mHeaderSize.setParent(null);
-        mFlags.setParent(null);
+        mFlagEntryType.setParent(null);
+        mByteFlagsB.setParent(null);
         mSpecReference.setParent(null);
 
         mHeaderSize.setIndex(-1);
-        mFlags.setIndex(-1);
+        mFlagEntryType.setIndex(-1);
+        mByteFlagsB.setIndex(-1);
         mSpecReference.setIndex(-1);
         removeResValue();
 
         this.mHeaderSize =null;
-        this.mFlags =null;
+        this.mFlagEntryType =null;
+        this.mByteFlagsB =null;
         this.mSpecReference =null;
     }
     private void removeResValue(){
@@ -476,7 +487,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         }
     }
     private void refreshHeaderSize(){
-        if(isFlagsComplex()){
+        if(isEntryTypeBag()){
             mHeaderSize.set(HEADER_COMPLEX);
         }else {
             mHeaderSize.set(HEADER_INT);
@@ -487,21 +498,15 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
             return;
         }
         BaseResValue resValue;
-        if(isFlagsComplex()){
+        if(isEntryTypeBag()){
             resValue=new ResValueBag();
         }else {
             resValue=new ResValueInt();
         }
         setResValueInternal(resValue);
     }
-    private boolean isFlagsComplex(){
-        return ((mFlags.get() & FLAG_COMPLEX_MASK) != 0);
-    }
-    public boolean isArray(){
-        return ((mFlags.get() & FLAG_COMPLEX_MASK) != 0);
-    }
-    public void setIsArray(boolean is_array){
-        setFlagComplex(is_array);
+    private boolean isEntryTypeBag(){
+        return ((mFlagEntryType.get() & FLAG_BAG_ENTRY) != 0);
     }
     @Override
     public void setNull(boolean is_null){
@@ -525,7 +530,8 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
             return null;
         }
         byte[] results=mHeaderSize.getBytes();
-        results=addBytes(results, mFlags.getBytes());
+        results=addBytes(results, mFlagEntryType.getBytes());
+        results=addBytes(results, mByteFlagsB.getBytes());
         results=addBytes(results, mSpecReference.getBytes());
         results=addBytes(results, mResValue.getBytes());
         return results;
@@ -558,7 +564,8 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         }
         counter.addCount(countBytes());
         mHeaderSize.onCountUpTo(counter);
-        mFlags.onCountUpTo(counter);
+        mFlagEntryType.onCountUpTo(counter);
+        mByteFlagsB.onCountUpTo(counter);
         mSpecReference.onCountUpTo(counter);
         mResValue.onCountUpTo(counter);
     }
@@ -568,7 +575,8 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
             return 0;
         }
         int result=mHeaderSize.writeBytes(stream);
-        result+=mFlags.writeBytes(stream);
+        result+= mFlagEntryType.writeBytes(stream);
+        result+=mByteFlagsB.writeBytes(stream);
         result+= mSpecReference.writeBytes(stream);
         result+=mResValue.writeBytes(stream);
         return result;
@@ -612,12 +620,14 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         setNull(false);
         removeResValue();
         mHeaderSize.readBytes(reader);
-        mFlags.readBytes(reader);
+        mFlagEntryType.readBytes(reader);
+        mByteFlagsB.readBytes(reader);
         mSpecReference.readBytes(reader);
         createResValue();
         mResValue.readBytes(reader);
         updatePackage();
         updateSpecRef();
+        mResValue.onDataLoaded();
     }
     @Override
     public JSONObject toJson() {
@@ -626,7 +636,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         }
         JSONObject jsonObject=new JSONObject();
         jsonObject.put(NAME_name, getSpecString().get());
-        jsonObject.put(NAME_is_array, isArray());
+        jsonObject.put(NAME_is_array, isEntryTypeBag());
         jsonObject.put(NAME_value, getResValue().toJson());
         return jsonObject;
     }
@@ -636,16 +646,16 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
             setNull(true);
             return;
         }
-        setName(json.getString(NAME_name));
-        setNull(false);
         BaseResValue baseResValue;
         if(json.getBoolean(NAME_is_array)){
-            baseResValue=new ResValueInt();
-        }else {
             baseResValue=new ResValueBag();
+        }else {
+            baseResValue=new ResValueInt();
         }
         setResValue(baseResValue);
+        setName(json.getString(NAME_name));
         baseResValue.fromJson(json.getJSONObject(NAME_value));
+        mResValue.onDataLoaded();
     }
     @Override
     public String toString(){
@@ -698,10 +708,10 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         return builder.toString();
     }
 
-    private final static short FLAG_COMPLEX_MASK = 0x0001;
+    private final static byte FLAG_BAG_ENTRY = 0x01;
 
-    private final static short FLAG_COMPLEX = 0x0001;
-    private final static short FLAG_INT = 0x0000;
+    private final static byte FLAG_VALUE_BAG = 0x0001;
+    private final static byte FLAG_VALUE_INT = 0x00;
 
     private final static short HEADER_COMPLEX=0x0010;
     private final static short HEADER_INT=0x0008;

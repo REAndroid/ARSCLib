@@ -4,6 +4,7 @@ import com.reandroid.lib.arsc.base.BlockArray;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.value.EntryBlock;
+import com.reandroid.lib.arsc.value.ResConfig;
 import com.reandroid.lib.json.JSONConvert;
 import com.reandroid.lib.json.JSONArray;
 import com.reandroid.lib.json.JSONObject;
@@ -60,6 +61,10 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair> implements JSONC
             return null;
         }
         return pair.getTypeBlock(qualifiers);
+    }
+    public TypeBlock getOrCreate(byte typeId, ResConfig resConfig){
+        SpecTypePair pair=getOrCreate(typeId);
+        return pair.getTypeBlockArray().getOrCreate(resConfig);
     }
     public SpecTypePair getOrCreate(byte typeId){
         SpecTypePair pair=getPair(typeId);
@@ -142,6 +147,52 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair> implements JSONC
             }
         }
         return results;
+    }
+    public byte getSmallestTypeId(){
+        SpecTypePair[] childes=getChildes();
+        if(childes==null){
+            return 0;
+        }
+        int result=0;
+        boolean firstFound=false;
+        for (int i=0;i<childes.length;i++){
+            SpecTypePair pair=childes[i];
+            if(pair==null){
+                continue;
+            }
+            int id=pair.getTypeId();
+            if(!firstFound){
+                result=id;
+            }
+            firstFound=true;
+            if(id<result){
+                result=id;
+            }
+        }
+        return (byte) result;
+    }
+    public byte getHighestTypeId(){
+        SpecTypePair[] childes=getChildes();
+        if(childes==null){
+            return 0;
+        }
+        int result=0;
+        boolean firstFound=false;
+        for (int i=0;i<childes.length;i++){
+            SpecTypePair pair=childes[i];
+            if(pair==null){
+                continue;
+            }
+            int id=pair.getTypeId();
+            if(!firstFound){
+                result=id;
+            }
+            firstFound=true;
+            if(id<result){
+                result=id;
+            }
+        }
+        return (byte) result;
     }
     @Override
     public JSONArray toJson() {

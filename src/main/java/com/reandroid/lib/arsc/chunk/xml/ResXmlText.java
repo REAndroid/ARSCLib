@@ -11,6 +11,7 @@ public class ResXmlText extends BaseXmlChunk {
         super(ChunkType.XML_CDATA, 1);
         this.mReserved=new IntegerItem();
         addChild(mReserved);
+        setStringReference(0);
     }
     public String getText(){
         ResXmlString xmlString=getResXmlString(getTextReference());
@@ -38,7 +39,7 @@ public class ResXmlText extends BaseXmlChunk {
     public String toString(){
         String txt=getText();
         if(txt!=null){
-            return "TEXT: line="+getLineNumber()+" >"+txt+"<";
+            return txt;
         }
         return super.toString();
     }

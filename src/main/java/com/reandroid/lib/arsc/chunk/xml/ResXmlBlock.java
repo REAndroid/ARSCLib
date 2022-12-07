@@ -160,7 +160,7 @@ public class ResXmlBlock extends BaseChunk implements JSONConvert<JSONObject> {
         buildResourceIds(attributeList);
         Set<String> allStrings=recursiveStrings(json.optJSONObject(ResXmlBlock.NAME_element));
         ResXmlStringPool stringPool = getStringPool();
-        stringPool.addAllStrings(allStrings);
+        stringPool.addStrings(allStrings);
         stringPool.refresh();
     }
     private void buildResourceIds(List<JSONObject> attributeList){

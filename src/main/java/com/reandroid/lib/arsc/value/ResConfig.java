@@ -28,6 +28,13 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad, JSONCon
         this.configSize.setBlockLoad(this);
         this.mValuesContainer.setBlockLoad(this);
     }
+    public void copyFrom(ResConfig resConfig){
+        if(resConfig==this||resConfig==null){
+            return;
+        }
+        setConfigSize(resConfig.getConfigSize());
+        mValuesContainer.putByteArray(0, resConfig.mValuesContainer.toArray());
+    }
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
         if(sender==configSize){
@@ -980,11 +987,11 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad, JSONCon
                     return keyboard;
                 }
             }
-            return NOKEYS;
+            return NONE;
         }
         public static Keyboard fromName(String name){
             if(name==null){
-                return NOKEYS;
+                return NONE;
             }
             name=name.trim().toUpperCase();
             if(name.equals("12KEY")){
@@ -995,7 +1002,7 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad, JSONCon
                     return keyboard;
                 }
             }
-            return NOKEYS;
+            return NONE;
         }
     }
     public enum Navigation{

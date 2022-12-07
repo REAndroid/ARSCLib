@@ -153,6 +153,9 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
             @Override
             public StyleSpanInfo get(int i) {
                 int ref=getStringRef(i);
+                if(ref<=0){
+                    return null;
+                }
                 return new StyleSpanInfo(
                         getStringFromPool(ref),
                         getFirstChar(i),
@@ -192,7 +195,7 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
             return null;
         }
         List<StyleSpanInfo> spanInfoList = getSpanInfoList();
-        if(spanInfoList.size()==0){
+        if(isEmpty(spanInfoList)){
             return str;
         }
         StringBuilder builder=new StringBuilder();
@@ -202,6 +205,9 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
             char ch=allChars[i];
             boolean lastAppend=false;
             for(StyleSpanInfo info:spanInfoList){
+                if(info==null){
+                    continue;
+                }
                 boolean isLast=(info.getLast()==i);
                 if(info.getFirst()==i || isLast){
                     if(isLast && !lastAppend){
@@ -220,6 +226,17 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
             }
         }
         return builder.toString();
+    }
+    private boolean isEmpty(List<StyleSpanInfo> spanInfoList){
+        if(spanInfoList.size()==0){
+            return true;
+        }
+        for(StyleSpanInfo spanInfo:spanInfoList){
+            if(spanInfo!=null){
+                return false;
+            }
+        }
+        return true;
     }
     @Override
     public void onBytesChanged() {
@@ -262,9 +279,15 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         JSONArray jsonArray=new JSONArray();
         int i=0;
         for(StyleSpanInfo spanInfo:getSpanInfoList()){
+            if(spanInfo==null){
+                continue;
+            }
             JSONObject jsonObjectSpan=spanInfo.toJson();
             jsonArray.put(i, jsonObjectSpan);
             i++;
+        }
+        if(i==0){
+            return null;
         }
         jsonObject.put(NAME_spans, jsonArray);
         return jsonObject;
@@ -295,5 +318,5 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
     private static final int INTEGERS_COUNT = 3;
 
     private static final int END_VALUE=0xFFFFFFFF;
-    private static final String NAME_spans="spans";
+    public static final String NAME_spans="spans";
 }

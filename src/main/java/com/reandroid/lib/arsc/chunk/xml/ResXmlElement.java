@@ -316,6 +316,20 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
     public void setResXmlText(ResXmlText xmlText){
         mResXmlTextContainer.setItem(xmlText);
     }
+    public void setResXmlText(String text){
+        if(text==null){
+            mResXmlTextContainer.setItem(null);
+        }else {
+            ResXmlText xmlText=mResXmlTextContainer.getItem();
+            if(xmlText==null){
+                xmlText=new ResXmlText();
+                mResXmlTextContainer.setItem(xmlText);
+                ResXmlStartElement start = getStartElement();
+                xmlText.setLineNumber(start.getLineNumber());
+            }
+            xmlText.setText(text);
+        }
+    }
 
     private boolean isBalanced(){
         return isElementBalanced() && isNamespaceBalanced();
@@ -523,6 +537,17 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
             jsonObject.put(NAME_namespaces, nsList);
         }
         jsonObject.put(NAME_name, start.getName());
+        String comment=start.getComment();
+        if(comment!=null){
+            jsonObject.put(NAME_comment, comment);
+        }
+        ResXmlText xmlText=getResXmlText();
+        if(xmlText!=null){
+            String text=xmlText.getText();
+            if(text!=null){
+                jsonObject.put(NAME_text, text);
+            }
+        }
         String uri=start.getUri();
         if(uri!=null){
             jsonObject.put(NAME_namespace_uri, uri);
@@ -560,6 +585,11 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
             }
         }
         setTag(json.getString(NAME_name));
+        start.setComment(json.optString(NAME_comment, null));
+        String text= json.optString(NAME_text, null);
+        if(text!=null){
+            setResXmlText(text);
+        }
         String uri = json.optString(NAME_namespace_uri, null);
         if(uri!=null){
             ResXmlStartNamespace ns = getStartNamespaceByUri(uri);
@@ -618,6 +648,8 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
     public static final String NS_ANDROID_PREFIX = "android";
 
     static final String NAME_name = "name";
+    static final String NAME_comment = "comment";
+    static final String NAME_text = "text";
     static final String NAME_namespaces = "namespaces";
     static final String NAME_namespace_uri = "namespace_uri";
     static final String NAME_namespace_prefix = "namespace_prefix";

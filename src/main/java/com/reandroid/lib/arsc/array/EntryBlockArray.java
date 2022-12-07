@@ -76,7 +76,7 @@ public class EntryBlockArray extends OffsetBlockArray<EntryBlock> implements JSO
     }
     @Override
     public String toString(){
-        return toJson().toString(4);
+        return getClass().getSimpleName()+": size="+childesCount();
     }
     private static final String NAME_id="id";
 }

@@ -1,10 +1,7 @@
 package com.reandroid.lib.json;
 
-import java.io.Closeable;
+import java.io.*;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -211,6 +208,14 @@ public class JSONObject extends JSONItem{
         this.map = new HashMap<String, Object>(initialCapacity);
     }
 
+
+    public JSONObject(InputStream inputStream) throws JSONException {
+        this(new JSONTokener(inputStream));
+        try {
+            inputStream.close();
+        } catch (IOException ignored) {
+        }
+    }
     public JSONObject accumulate(String key, Object value) throws JSONException {
         testValidity(value);
         Object object = this.opt(key);

@@ -130,10 +130,6 @@ public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
     }
     @Override
     public void fromJson(JSONObject json) {
-        JSONArray jsonArray= json.optJSONArray(NAME_styled_strings);
-        if(jsonArray!=null){
-            getTableStringPool().fromJson(jsonArray);
-        }
         getPackageArray().fromJson(json.getJSONArray(NAME_packages));
         refresh();
     }
@@ -190,5 +186,5 @@ public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
     public static final String FILE_NAME="resources.arsc";
 
     private static final String NAME_packages="packages";
-    private static final String NAME_styled_strings="styled_strings";
+    public static final String NAME_styled_strings="styled_strings";
 }

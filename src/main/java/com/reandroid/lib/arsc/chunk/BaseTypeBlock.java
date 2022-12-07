@@ -62,6 +62,13 @@ abstract class BaseTypeBlock extends BaseChunk {
         }
         return null;
     }
+    public String getTypeName(){
+        TypeString typeString=getTypeString();
+        if(typeString==null){
+            return null;
+        }
+        return typeString.get();
+    }
     public TypeString getTypeString(){
         if(mTypeString!=null){
             if(mTypeString.getId()==getTypeId()){

@@ -183,8 +183,23 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         return false;
     }
     public void remove(Collection<T> blockList){
+        T[] items=elementData;
+        if(items==null || items.length==0){
+            return;
+        }
+        int len=items.length;
         for(T block:blockList){
-            remove(block, false);
+            if(block==null){
+                continue;
+            }
+            int i=block.getIndex();
+            if(i<0 || i>=len){
+                continue;
+            }
+            if(items[i]!=block){
+                continue;
+            }
+            items[i]=null;
         }
         trimNullBlocks();
     }

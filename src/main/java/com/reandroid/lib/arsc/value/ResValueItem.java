@@ -13,4 +13,5 @@ public interface ResValueItem {
 
     int getData();
     void setData(int data);
+    void onSetReference(int data);
 }

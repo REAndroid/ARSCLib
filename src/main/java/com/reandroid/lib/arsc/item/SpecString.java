@@ -6,6 +6,7 @@ public class SpecString extends StringItem {
     }
     @Override
     public StyleItem getStyle(){
+        // Spec (resource name) don't have style unless to obfuscate/confuse other decompilers
         return null;
     }
 }

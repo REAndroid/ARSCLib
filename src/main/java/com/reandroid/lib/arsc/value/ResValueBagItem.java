@@ -102,14 +102,23 @@ public class ResValueBagItem extends BaseResValueItem{
         setInt(OFFSET_DATA, data);
         afterDataValueChanged();
     }
+    @Override
+    public void onSetReference(int data){
+        setInt(OFFSET_DATA, data);
+    }
     private void beforeDataValueChanged(){
         if(getValueType()==ValueType.STRING){
             removeTableReference();
         }
     }
     private void afterDataValueChanged(){
+        refreshTableReference();
+    }
+    void refreshTableReference(){
         if(getValueType()==ValueType.STRING){
             addTableReference(getTableStringReference());
+        }else {
+            removeTableReference();
         }
     }
     public short getIdHigh(){
@@ -195,6 +204,14 @@ public class ResValueBagItem extends BaseResValueItem{
         builder.append(String.format("0x%08x", getId()));
         builder.append(", data=");
         builder.append(String.format("0x%08x", getData()));
+        if(vt==ValueType.STRING){
+            TableString ts=getTableString(getData());
+            if(ts==null){
+                builder.append(" Null table string");
+            }else {
+                builder.append(" \"").append(ts.getHtml()).append("\"");
+            }
+        }
         return builder.toString();
     }
     private static final int OFFSET_ID=0;

@@ -10,6 +10,7 @@ public class TypeString extends StringItem {
     }
     @Override
     public StyleItem getStyle(){
+        // Type don't have style unless to obfuscate/confuse other decompilers
         return null;
     }
 }

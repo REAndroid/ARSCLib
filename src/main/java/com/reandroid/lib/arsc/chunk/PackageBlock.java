@@ -4,8 +4,11 @@ import com.reandroid.lib.arsc.array.LibraryInfoArray;
 import com.reandroid.lib.arsc.array.SpecTypePairArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.PackageLastBlocks;
+import com.reandroid.lib.arsc.container.SingleBlockContainer;
 import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.group.EntryGroup;
+import com.reandroid.lib.arsc.io.BlockLoad;
+import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.PackageName;
 import com.reandroid.lib.arsc.item.ReferenceItem;
@@ -17,17 +20,19 @@ import com.reandroid.lib.arsc.value.LibraryInfo;
 import com.reandroid.lib.json.JSONConvert;
 import com.reandroid.lib.json.JSONObject;
 
+import java.io.IOException;
 import java.util.*;
 
 
-public class PackageBlock extends BaseChunk  implements JSONConvert<JSONObject> {
+public class PackageBlock extends BaseChunk implements BlockLoad, JSONConvert<JSONObject> {
     private final IntegerItem mPackageId;
     private final PackageName mPackageName;
 
-    private final IntegerItem mTypeStrings;
-    private final IntegerItem mLastPublicType;
-    private final IntegerItem mKeyStrings;
-    private final IntegerItem mLastPublicKey;
+    private final IntegerItem mTypeStringPoolOffset;
+    private final IntegerItem mTypeStringPoolCount;
+    private final IntegerItem mSpecStringPoolOffset;
+    private final IntegerItem mSpecStringPoolCount;
+    private final SingleBlockContainer<IntegerItem> mTypeIdOffsetContainer;
     private final IntegerItem mTypeIdOffset;
 
     private final TypeStringPool mTypeStringPool;
@@ -44,13 +49,18 @@ public class PackageBlock extends BaseChunk  implements JSONConvert<JSONObject> 
         super(ChunkType.PACKAGE, 3);
         this.mPackageId=new IntegerItem();
         this.mPackageName=new PackageName();
-        this.mTypeStrings=new IntegerItem();
-        this.mLastPublicType=new IntegerItem();
-        this.mKeyStrings=new IntegerItem();
-        this.mLastPublicKey=new IntegerItem();
-        this.mTypeIdOffset=new IntegerItem();
 
-        this.mTypeStringPool=new TypeStringPool(false);
+        this.mTypeStringPoolOffset = new IntegerItem();
+        this.mTypeStringPoolCount = new IntegerItem();
+        this.mSpecStringPoolOffset = new IntegerItem();
+        this.mSpecStringPoolCount = new IntegerItem();
+
+        this.mTypeIdOffsetContainer = new SingleBlockContainer<>();
+        this.mTypeIdOffset = new IntegerItem();
+        this.mTypeIdOffsetContainer.setItem(mTypeIdOffset);
+
+
+        this.mTypeStringPool=new TypeStringPool(false, mTypeIdOffset);
         this.mSpecStringPool=new SpecStringPool(true);
 
         this.mSpecTypePairArray=new SpecTypePairArray();
@@ -59,19 +69,31 @@ public class PackageBlock extends BaseChunk  implements JSONConvert<JSONObject> 
 
         this.mEntriesGroup=new HashMap<>();
 
+        mPackageId.setBlockLoad(this);
+
         addToHeader(mPackageId);
         addToHeader(mPackageName);
-        addToHeader(mTypeStrings);
-        addToHeader(mLastPublicType);
-        addToHeader(mKeyStrings);
-        addToHeader(mLastPublicKey);
-        addToHeader(mTypeIdOffset);
+        addToHeader(mTypeStringPoolOffset);
+        addToHeader(mTypeStringPoolCount);
+        addToHeader(mSpecStringPoolOffset);
+        addToHeader(mSpecStringPoolCount);
+        addToHeader(mTypeIdOffsetContainer);
 
         addChild(mTypeStringPool);
         addChild(mSpecStringPool);
 
         addChild(mPackageLastBlocks);
 
+    }
+    @Override
+    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
+        if(sender==mPackageId){
+            int headerSize=getHeaderBlock().getHeaderSize();
+            if(headerSize!=288){
+                mTypeIdOffset.set(0);
+                mTypeIdOffsetContainer.setItem(null);
+            }
+        }
     }
     public void removeEmpty(){
         getSpecTypePairArray().removeEmptyPairs();
@@ -115,33 +137,7 @@ public class PackageBlock extends BaseChunk  implements JSONConvert<JSONObject> 
     public void setPackageName(String name){
         mPackageName.set(name);
     }
-    public void setTypeStrings(int i){
-        mTypeStrings.set(i);
-    }
-    public int getLastPublicType(){
-        return mLastPublicType.get();
-    }
-    public void setLastPublicType(int i){
-        mLastPublicType.set(i);
-    }
-    public int getKeyStrings(){
-        return mKeyStrings.get();
-    }
-    public void setKeyStrings(int i){
-        mKeyStrings.set(i);
-    }
-    public int getLastPublicKey(){
-        return mLastPublicKey.get();
-    }
-    public void setLastPublicKey(int i){
-        mLastPublicKey.set(i);
-    }
-    public int getTypeIdOffset(){
-        return mTypeIdOffset.get();
-    }
-    public void setTypeIdOffset(int i){
-        mTypeIdOffset.set(i);
-    }
+
     public TypeStringPool getTypeStringPool(){
         return mTypeStringPool;
     }
@@ -250,9 +246,26 @@ public class PackageBlock extends BaseChunk  implements JSONConvert<JSONObject> 
         return getSpecTypePairArray().listItems();
     }
 
-    private void refreshKeyStrings(){
+    private void refreshTypeStringPoolOffset(){
+        int pos=countUpTo(mTypeStringPool);
+        mTypeStringPoolOffset.set(pos);
+    }
+    private void refreshTypeStringPoolCount(){
+        mTypeStringPoolCount.set(mTypeStringPool.countStrings());
+    }
+    private void refreshSpecStringPoolOffset(){
         int pos=countUpTo(mSpecStringPool);
-        mKeyStrings.set(pos);
+        mSpecStringPoolOffset.set(pos);
+    }
+    private void refreshSpecStringCount(){
+        mSpecStringPoolCount.set(mSpecStringPool.countStrings());
+    }
+    private void refreshTypeIdOffset(){
+        int smallestId=getSpecTypePairArray().getSmallestTypeId();
+        if(smallestId>0){
+            smallestId=smallestId-1;
+        }
+        mTypeIdOffset.set(smallestId);
     }
     public void onEntryAdded(EntryBlock entryBlock){
         updateEntry(entryBlock);
@@ -263,14 +276,18 @@ public class PackageBlock extends BaseChunk  implements JSONConvert<JSONObject> 
 
     @Override
     protected void onChunkRefreshed() {
-        refreshKeyStrings();
+        refreshTypeStringPoolOffset();
+        refreshTypeStringPoolCount();
+        refreshSpecStringPoolOffset();
+        refreshSpecStringCount();
+        refreshTypeIdOffset();
     }
 
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
-        jsonObject.put(NAME_id, getId());
-        jsonObject.put(NAME_name, getName());
+        jsonObject.put(NAME_package_id, getId());
+        jsonObject.put(NAME_package_name, getName());
         jsonObject.put(NAME_specs, getSpecTypePairArray().toJson());
         LibraryInfoArray libraryInfoArray = mLibraryBlock.getLibraryInfoArray();
         if(libraryInfoArray.childesCount()>0){
@@ -280,8 +297,8 @@ public class PackageBlock extends BaseChunk  implements JSONConvert<JSONObject> 
     }
     @Override
     public void fromJson(JSONObject json) {
-        setId(json.getInt(NAME_id));
-        setName(json.getString(NAME_name));
+        setId(json.getInt(NAME_package_id));
+        setName(json.getString(NAME_package_name));
         getSpecTypePairArray().fromJson(json.getJSONArray(NAME_specs));
         LibraryInfoArray libraryInfoArray = mLibraryBlock.getLibraryInfoArray();
         libraryInfoArray.fromJson(json.optJSONArray(NAME_libraries));
@@ -302,8 +319,9 @@ public class PackageBlock extends BaseChunk  implements JSONConvert<JSONObject> 
         return builder.toString();
     }
 
-    private static final String NAME_id="id";
-    private static final String NAME_name="name";
+    public static final String NAME_package_id = "package_id";
+    public static final String NAME_package_name = "package_name";
+    public static final String JSON_FILE_NAME = "package.json";
     private static final String NAME_specs="specs";
     private static final String NAME_libraries="libraries";
 }

@@ -26,6 +26,16 @@ public class ResValueInt extends BaseResValueItem  {
         return getData()!=0;
     }
     @Override
+    void onDataLoaded() {
+        if(getValueType()==ValueType.STRING){
+            if(!hasTableReference()){
+                addTableReference(getTableStringReference());
+            }
+        }else {
+            removeTableReference();
+        }
+    }
+    @Override
     public void setHeaderSize(short size) {
         setShort(OFFSET_SIZE, size);
     }
@@ -72,6 +82,10 @@ public class ResValueInt extends BaseResValueItem  {
         if(getValueType()==ValueType.STRING){
             addTableReference(getTableStringReference());
         }
+    }
+    @Override
+    public void onSetReference(int data){
+        setInt(OFFSET_DATA, data);
     }
     @Override
     public JSONObject toJson() {

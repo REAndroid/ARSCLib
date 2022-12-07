@@ -56,6 +56,18 @@ public class TypeBlockArray extends BlockArray<TypeBlock> implements JSONConvert
         }
         return typeBlock.getEntry(entryId);
     }
+    public TypeBlock getOrCreate(ResConfig resConfig){
+        TypeBlock typeBlock=getTypeBlock(resConfig);
+        if(typeBlock!=null){
+            return typeBlock;
+        }
+        byte id=getTypeId();
+        typeBlock=createNext();
+        typeBlock.setTypeId(id);
+        ResConfig config=typeBlock.getResConfig();
+        config.copyFrom(resConfig);
+        return typeBlock;
+    }
     public TypeBlock getOrCreate(String qualifiers){
         TypeBlock typeBlock=getTypeBlock(qualifiers);
         if(typeBlock!=null){

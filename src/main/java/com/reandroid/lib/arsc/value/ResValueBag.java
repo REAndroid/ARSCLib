@@ -129,6 +129,12 @@ public class ResValueBag extends BaseResValue {
         mResValueBagItemArray.readBytes(reader);
     }
     @Override
+    void onDataLoaded() {
+        for(ResValueBagItem item: mResValueBagItemArray.listItems()){
+            item.refreshTableReference();
+        }
+    }
+    @Override
     public JSONObject toJson() {
         if(isNull()){
             return null;
@@ -147,9 +153,6 @@ public class ResValueBag extends BaseResValue {
 
     @Override
     public String toString(){
-        if(getParent()!=null){
-            return toJson().toString(4);
-        }
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(": parent=");

@@ -1,6 +1,7 @@
 package com.reandroid.lib.json;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Array;
@@ -111,6 +112,16 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
                     "JSONArray initial capacity cannot be negative.");
     	}
     	this.myArrayList = new ArrayList<Object>(initialCapacity);
+    }
+    public JSONArray(InputStream inputStream) throws JSONException {
+        this(new JSONTokener(inputStream));
+        try {
+            inputStream.close();
+        } catch (IOException ignored) {
+        }
+    }
+    public ArrayList<Object> getArrayList(){
+        return myArrayList;
     }
 
     @Override

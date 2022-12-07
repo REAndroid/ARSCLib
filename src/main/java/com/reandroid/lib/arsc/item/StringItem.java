@@ -173,7 +173,7 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         if(styleItem==null){
             return false;
         }
-        return !styleItem.isNull();
+        return styleItem.getSpanInfoList().size()>0;
     }
     public StyleItem getStyle(){
         BaseStringPool<?> stringPool=getStringPool();
@@ -362,6 +362,6 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
     private final CharsetDecoder UTF16LE_DECODER = StandardCharsets.UTF_16LE.newDecoder();
     private final CharsetDecoder UTF8_DECODER = StandardCharsets.UTF_8.newDecoder();
 
-    private static final String NAME_string="string";
-    private static final String NAME_style="style";
+    public static final String NAME_string="string";
+    public static final String NAME_style="style";
 }

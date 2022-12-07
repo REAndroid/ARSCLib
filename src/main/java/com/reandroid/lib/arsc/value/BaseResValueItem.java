@@ -50,6 +50,9 @@ public abstract class BaseResValueItem extends BaseResValue implements ResValueI
         }
         return mReferenceItem;
     }
+    boolean hasTableReference(){
+        return mReferenceItem!=null;
+    }
     boolean removeTableReference(){
         ReferenceItem ref=mReferenceItem;
         if(ref==null){

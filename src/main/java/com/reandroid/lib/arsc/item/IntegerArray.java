@@ -89,13 +89,6 @@ public class IntegerArray extends BlockItem {
     public final int size(){
         return getBytesLength()/4;
     }
-    final void add(int value){
-        int len=getBytesLength();
-        len=len + 4;
-        setBytesLength(len, false);
-        int pos=size()-1;
-        put(pos, value);
-    }
     public final void put(int index, int value){
         int i=index*4;
         byte[] bts = getBytesInternal();
@@ -104,7 +97,6 @@ public class IntegerArray extends BlockItem {
         bts[i+1]= (byte) (value >>> 8 & 0xff);
         bts[i]= (byte) (value & 0xff);
     }
-
     @Override
     public void onBytesChanged() {
 

@@ -78,7 +78,7 @@ public class StyleSpanInfo implements JSONConvert<JSONObject> {
         return mTag +" ("+ mFirst +", "+ mLast +")";
     }
 
-    private static final String NAME_tag="tag";
-    private static final String NAME_first="first";
-    private static final String NAME_last="last";
+    public static final String NAME_tag="tag";
+    public static final String NAME_first="first";
+    public static final String NAME_last="last";
 }
