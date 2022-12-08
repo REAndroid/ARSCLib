@@ -235,9 +235,6 @@ public class ResourceIds {
                         continue;
                     }
                     EntryGroup entryGroup=entry.getValue();
-                    if(entryGroup.getResourceId()==2131427339){
-                        String junk="";
-                    }
                     type.applyTo(entryGroup);
                 }
             }
