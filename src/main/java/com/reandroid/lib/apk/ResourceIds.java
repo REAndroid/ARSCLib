@@ -7,10 +7,9 @@ import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.json.JSONArray;
 import com.reandroid.lib.json.JSONObject;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,6 +21,12 @@ public class ResourceIds {
     public ResourceIds(){
         this(new Table());
     }
+    public void applyTo(TableBlock tableBlock){
+        mTable.applyTo(tableBlock);
+    }
+    public void fromJson(JSONObject jsonObject){
+        mTable.fromJson(jsonObject);
+    }
     public JSONObject toJson(){
         return mTable.toJson();
     }
@@ -30,7 +35,7 @@ public class ResourceIds {
             loadPackageBlock(packageBlock);
         }
     }
-    public void loadPackageBlock(PackageBlock packageBlock){
+    private void loadPackageBlock(PackageBlock packageBlock){
         Collection<EntryGroup> entryGroupList = packageBlock.listEntryGroup();
         String name= packageBlock.getName();
         for(EntryGroup entryGroup:entryGroupList){
@@ -47,10 +52,38 @@ public class ResourceIds {
         }
     }
 
-    public static class Table{
+    public void writeXml(File file) throws IOException {
+        mTable.writeXml(file);
+    }
+    public void writeXml(OutputStream outputStream) throws IOException {
+        mTable.writeXml(outputStream);
+    }
+    public void writeXml(Writer writer) throws IOException {
+        mTable.writeXml(writer);
+    }
+    public void fromXml(File file) throws IOException {
+        mTable.fromXml(file);
+    }
+    public void fromXml(InputStream inputStream) throws IOException {
+        mTable.fromXml(inputStream);
+    }
+    public void fromXml(Reader reader) throws IOException {
+        mTable.fromXml(reader);
+    }
+
+    public static class Table implements Comparator<Table.Package>{
         public final Map<Byte, Package> packageMap;
         public Table(){
             this.packageMap = new HashMap<>();
+        }
+        public void applyTo(TableBlock tableBlock){
+            for(PackageBlock packageBlock : tableBlock.listPackages()){
+                Package pkg=getPackage((byte) packageBlock.getId());
+                if(pkg!=null){
+                    pkg.applyTo(packageBlock);
+                }
+            }
+            tableBlock.refresh();
         }
         public void add(Package pkg){
             Package exist=this.packageMap.get(pkg.id);
@@ -99,6 +132,25 @@ public class ResourceIds {
             }
             return pkg.getEntry(typeId, entryId);
         }
+        public List<Package> listPackages(){
+            List<Package> results=new ArrayList<>(packageMap.values());
+            results.sort(this);
+            return results;
+        }
+        public List<Package.Type.Entry> listEntries(){
+            List<Package.Type.Entry> results=new ArrayList<>(countEntries());
+            for(Package pkg:packageMap.values()){
+                results.addAll(pkg.listEntries());
+            }
+            return results;
+        }
+        int countEntries(){
+            int result=0;
+            for(Package pkg:packageMap.values()){
+                result+=pkg.countEntries();
+            }
+            return result;
+        }
         public JSONObject toJson(){
             JSONObject jsonObject=new JSONObject();
             JSONArray jsonArray=new JSONArray();
@@ -108,24 +160,86 @@ public class ResourceIds {
             jsonObject.put("packages", jsonArray);
             return jsonObject;
         }
-        public static Table fromJson(JSONObject jsonObject){
-            Table table=new Table();
+        public void fromJson(JSONObject jsonObject){
             JSONArray jsonArray= jsonObject.optJSONArray("packages");
             if(jsonArray!=null){
                 int length= jsonArray.length();
                 for(int i=0;i<length;i++){
-                    table.add(Package.fromJson(jsonArray.getJSONObject(i)));
+                    this.add(Package.fromJson(jsonArray.getJSONObject(i)));
                 }
             }
-            return table;
         }
-        public static class Package {
+        public void writeXml(File file) throws IOException {
+            File dir=file.getParentFile();
+            if(dir!=null && !dir.exists()){
+                dir.mkdirs();
+            }
+            FileOutputStream outputStream=new FileOutputStream(file);
+            writeXml(outputStream);
+        }
+        public void writeXml(OutputStream outputStream) throws IOException {
+            OutputStreamWriter writer=new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
+            writeXml(writer);
+            outputStream.close();
+        }
+        public void writeXml(Writer writer) throws IOException {
+            writer.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+            writer.write("\n<resources>");
+            for(Package pkg:listPackages()){
+                pkg.writeXml(writer);
+            }
+            writer.write("\n</resources>");
+            writer.flush();
+        }
+        public void fromXml(File file) throws IOException {
+            FileInputStream inputStream=new FileInputStream(file);
+            fromXml(inputStream);
+        }
+        public void fromXml(InputStream inputStream) throws IOException {
+            InputStreamReader reader=new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+            fromXml(reader);
+            inputStream.close();
+        }
+        public void fromXml(Reader reader) throws IOException {
+            BufferedReader bufferedReader;
+            if(reader instanceof BufferedReader){
+                bufferedReader=(BufferedReader) reader;
+            }else {
+                bufferedReader=new BufferedReader(reader);
+            }
+            String line;
+            while ((line=bufferedReader.readLine())!=null){
+                add(Package.Type.Entry.fromXml(line));
+            }
+            bufferedReader.close();
+        }
+        @Override
+        public int compare(Package pkg1, Package pkg2) {
+            return pkg1.compareTo(pkg2);
+        }
+
+        public static class Package implements Comparable<Package>, Comparator<Package.Type>{
             public final byte id;
             public String name;
             public final Map<Byte, Type> typeMap;
             public Package(byte id){
                 this.id = id;
                 this.typeMap = new HashMap<>();
+            }
+            public void applyTo(PackageBlock packageBlock){
+                Map<Integer, EntryGroup> map = packageBlock.getEntriesGroupMap();
+                for(Map.Entry<Integer, EntryGroup> entry:map.entrySet()){
+                    byte typeId=Table.toTypeId(entry.getKey());
+                    Type type=typeMap.get(typeId);
+                    if(type==null){
+                        continue;
+                    }
+                    EntryGroup entryGroup=entry.getValue();
+                    if(entryGroup.getResourceId()==2131427339){
+                        String junk="";
+                    }
+                    type.applyTo(entryGroup);
+                }
             }
             public void merge(Package pkg){
                 if(pkg==this||pkg==null){
@@ -194,6 +308,45 @@ public class ResourceIds {
                 return jsonObject;
             }
             @Override
+            public int compareTo(Package pkg) {
+                return Integer.compare(id, pkg.id);
+            }
+            @Override
+            public int compare(Type t1, Type t2) {
+                return t1.compareTo(t2);
+            }
+            public void writeXml(Writer writer) throws IOException {
+                writer.write("\n");
+                if(this.name!=null){
+                    writer.write("     <!-- packageName=\"");
+                    writer.write(this.name);
+                    writer.write("\" -->");
+                }
+                for(Type type:listTypes()){
+                    type.writeXml(writer);
+                }
+            }
+            public List<Package.Type.Entry> listEntries(){
+                List<Package.Type.Entry> results=new ArrayList<>(countEntries());
+                for(Package.Type type:typeMap.values()){
+                    results.addAll(type.listEntries());
+                }
+                return results;
+            }
+            public List<Type> listTypes(){
+                List<Type> results=new ArrayList<>(typeMap.values());
+                results.sort(this);
+                return results;
+            }
+            int countEntries(){
+                int results=0;
+                for(Type type:typeMap.values()){
+                    results+=type.countEntries();
+                }
+                return results;
+            }
+
+            @Override
             public boolean equals(Object o) {
                 if (this == o) return true;
                 if (o == null || getClass() != o.getClass()) return false;
@@ -221,7 +374,7 @@ public class ResourceIds {
                 return pkg;
             }
 
-            public static class Type{
+            public static class Type implements Comparable<Type>, Comparator<Type.Entry>{
                 public final byte id;
                 public String name;
                 public Package mPackage;
@@ -229,6 +382,15 @@ public class ResourceIds {
                 public Type(byte id){
                     this.id = id;
                     this.entryMap = new HashMap<>();
+                }
+                public void applyTo(EntryGroup entryGroup){
+                    Entry entry=entryMap.get(entryGroup.getEntryId());
+                    if(entry!=null){
+                        entry.applyTo(entryGroup);
+                    }
+                }
+                public byte getId(){
+                    return id;
                 }
                 public byte getPackageId(){
                     if(mPackage!=null){
@@ -296,6 +458,28 @@ public class ResourceIds {
                     jsonObject.put("entries", jsonArray);
                     return jsonObject;
                 }
+                public void writeXml(Writer writer) throws IOException {
+                    for(Entry entry:listEntries()){
+                        writer.write("\n     ");
+                        entry.writeXml(writer);
+                    }
+                }
+                public List<Entry> listEntries(){
+                    List<Entry> results=new ArrayList<>(entryMap.values());
+                    results.sort(this);
+                    return results;
+                }
+                int countEntries(){
+                    return entryMap.size();
+                }
+                @Override
+                public int compareTo(Type type) {
+                    return Integer.compare(id, type.id);
+                }
+                @Override
+                public int compare(Entry entry1, Entry entry2) {
+                    return entry1.compareTo(entry2);
+                }
                 @Override
                 public boolean equals(Object o) {
                     if (this == o) return true;
@@ -345,6 +529,9 @@ public class ResourceIds {
                     public Entry(int resourceId, String name){
                         this(resourceId, null, name);
                     }
+                    public void applyTo(EntryGroup entryGroup){
+                        entryGroup.renameSpec(this.name);
+                    }
                     public String getTypeName(){
                         if(this.type!=null){
                             return this.type.name;
@@ -379,7 +566,7 @@ public class ResourceIds {
                     }
                     @Override
                     public int compareTo(Entry entry) {
-                        return Integer.compare(getResourceId(), entry.getResourceId());
+                        return Integer.compare(getEntryId(), entry.getEntryId());
                     }
                     @Override
                     public boolean equals(Object o) {
@@ -399,22 +586,36 @@ public class ResourceIds {
                         return jsonObject;
                     }
                     public String toXml(){
-                        StringBuilder builder=new StringBuilder();
-                        builder.append("<public");
-                        builder.append(" id=\"").append(getHexId()).append("\"");
+                        StringWriter writer=new StringWriter();
+                        try {
+                            writeXml(writer);
+                            writer.flush();
+                            writer.close();
+                        } catch (IOException ignored) {
+                        }
+                        return writer.toString();
+                    }
+                    public void writeXml(Writer writer) throws IOException {
+                        writer.write("<public");
+                        writer.write(" id=\"");
+                        writer.write(getHexId());
+                        writer.write("\"");
                         String tn=getTypeName();
                         if(tn !=null){
-                            builder.append(" type=\"").append(tn).append("\"");
+                            writer.append(" type=\"");
+                            writer.append(tn);
+                            writer.append("\"");
                         }
                         if(name!=null){
-                            builder.append(" name=\"").append(name).append("\"");
+                            writer.write(" name=\"");
+                            writer.append(name);
+                            writer.append("\"");
                         }
-                        builder.append("/>");
-                        return builder.toString();
+                        writer.append("/>");
                     }
                     @Override
                     public String toString(){
-                        return toJson().toString();
+                        return toXml();
                     }
                     public static Entry fromEntryGroup(EntryGroup entryGroup){
                         return new Entry(entryGroup.getResourceId(),
@@ -465,6 +666,25 @@ public class ResourceIds {
                 }
             }
 
+        }
+        private static short toEntryId(int resourceId){
+            int i=resourceId&0xffff;
+            return (short) i;
+        }
+        static byte toTypeId(int resourceId){
+            int i=resourceId>>16;
+            i=i&0xff;
+            return (byte) i;
+        }
+        static byte toPackageId(int resourceId){
+            int i=resourceId>>24;
+            i=i&0xff;
+            return (byte) i;
+        }
+        static int toResourceId(byte pkgId, byte typeId, short entryId){
+            return (pkgId & 0xff)<<24
+                    | (typeId & 0xff)<<16
+                    | (entryId & 0xffff);
         }
     }
 

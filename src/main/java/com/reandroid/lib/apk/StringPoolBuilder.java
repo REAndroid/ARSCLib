@@ -5,6 +5,7 @@ import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
 import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.json.JSONArray;
+import com.reandroid.lib.json.JSONException;
 import com.reandroid.lib.json.JSONObject;
 
 import java.io.File;
@@ -34,7 +35,7 @@ public class StringPoolBuilder {
         stringPool.refresh();
     }
     private void applySpecString(SpecStringPool stringPool){
-        byte pkgId= (byte) stringPool.getPackageBlock().getPackageId();
+        byte pkgId= (byte) stringPool.getPackageBlock().getId();
         stringPool.addStrings(getSpecString(pkgId));
         stringPool.refresh();
     }
@@ -54,9 +55,13 @@ public class StringPoolBuilder {
         }
     }
     public void scanFile(File jsonFile) throws IOException {
-        FileInputStream inputStream=new FileInputStream(jsonFile);
-        JSONObject jsonObject=new JSONObject(inputStream);
-        build(jsonObject);
+        try{
+            FileInputStream inputStream=new FileInputStream(jsonFile);
+            JSONObject jsonObject=new JSONObject(inputStream);
+            build(jsonObject);
+        }catch (JSONException ex){
+            throw new IOException(jsonFile+": "+ex.getMessage());
+        }
     }
     public void build(JSONObject jsonObject){
         scan(jsonObject);

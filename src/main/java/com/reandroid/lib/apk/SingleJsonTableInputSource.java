@@ -3,6 +3,7 @@ package com.reandroid.lib.apk;
 import com.reandroid.archive.FileInputSource;
 import com.reandroid.archive.InputSource;
 import com.reandroid.lib.arsc.chunk.TableBlock;
+import com.reandroid.lib.json.JSONException;
 import com.reandroid.lib.json.JSONObject;
 
 import java.io.*;
@@ -28,17 +29,21 @@ public class SingleJsonTableInputSource extends InputSource {
         TableBlock tableBlock = getTableBlock();
         return tableBlock.countBytes();
     }
-    private TableBlock getTableBlock() throws IOException{
+    public TableBlock getTableBlock() throws IOException{
         if(mCache!=null){
             return mCache;
         }
         TableBlock tableBlock=newInstance();
         InputStream inputStream=inputSource.openStream();
-        JSONObject jsonObject=new JSONObject(inputStream);
-        StringPoolBuilder poolBuilder=new StringPoolBuilder();
-        poolBuilder.build(jsonObject);
-        poolBuilder.apply(tableBlock);
-        tableBlock.fromJson(jsonObject);
+        try{
+            StringPoolBuilder poolBuilder=new StringPoolBuilder();
+            JSONObject jsonObject=new JSONObject(inputStream);
+            poolBuilder.build(jsonObject);
+            poolBuilder.apply(tableBlock);
+            tableBlock.fromJson(jsonObject);
+        }catch (JSONException ex){
+            throw new IOException(inputSource.getAlias()+": "+ex.getMessage());
+        }
         mCache=tableBlock;
         return tableBlock;
     }

@@ -26,7 +26,7 @@ public class SplitJsonTableInputSource extends InputSource {
         TableBlock tableBlock = getTableBlock();
         return tableBlock.countBytes();
     }
-    private TableBlock getTableBlock() throws IOException {
+    public TableBlock getTableBlock() throws IOException {
         if(mCache!=null){
             return mCache;
         }

@@ -4,6 +4,7 @@ import com.reandroid.archive.FileInputSource;
 import com.reandroid.archive.InputSource;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.chunk.xml.ResXmlBlock;
+import com.reandroid.lib.json.JSONException;
 import com.reandroid.lib.json.JSONObject;
 
 import java.io.*;
@@ -31,9 +32,12 @@ public class JsonXmlInputSource extends InputSource {
     private ResXmlBlock getResXmlBlock() throws IOException{
         ResXmlBlock resXmlBlock=newInstance();
         InputStream inputStream=inputSource.openStream();
-        JSONObject jsonObject=new JSONObject(inputStream);
-        resXmlBlock.fromJson(jsonObject);
-        inputStream.close();
+        try{
+            JSONObject jsonObject=new JSONObject(inputStream);
+            resXmlBlock.fromJson(jsonObject);
+        }catch (JSONException ex){
+            throw new IOException(inputSource.getAlias()+": "+ex.getMessage());
+        }
         return resXmlBlock;
     }
     ResXmlBlock newInstance(){

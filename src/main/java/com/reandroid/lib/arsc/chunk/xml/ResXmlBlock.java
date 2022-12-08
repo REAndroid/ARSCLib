@@ -39,13 +39,12 @@ public class ResXmlBlock extends BaseChunk implements JSONConvert<JSONObject> {
         if(headerBlock==null){
             return;
         }
-        BlockReader chunkReader=reader.create(reader.getPosition(), headerBlock.getChunkSize());
         ChunkType chunkType=headerBlock.getChunkType();
-        if(chunkType==ChunkType.XML){
-            getHeaderBlock().readBytes(chunkReader);
-        }else {
-            throw new IOException("Not ResXmlBlock: "+reader+", Header="+headerBlock);
+        if(chunkType!=ChunkType.XML){
+            throw new IOException("Not ResXmlBlock: "+headerBlock);
         }
+        BlockReader chunkReader=reader.create(reader.getPosition(), headerBlock.getChunkSize());
+        getHeaderBlock().readBytes(chunkReader);
         while (chunkReader.isAvailable()){
             boolean readOk=readNext(chunkReader);
             if(!readOk){

@@ -160,13 +160,19 @@ public class ApkModule {
             throw new IOException("Entry not found: "+TableBlock.FILE_NAME);
         }
         TableBlock tableBlock;
-        InputStream inputStream = inputSource.openStream();
-        if(loadDefaultFramework){
-            tableBlock=TableBlock.loadWithAndroidFramework(inputStream);
+        if(inputSource instanceof SplitJsonTableInputSource){
+            tableBlock=((SplitJsonTableInputSource)inputSource).getTableBlock();
+        }else if(inputSource instanceof SingleJsonTableInputSource){
+            tableBlock=((SingleJsonTableInputSource)inputSource).getTableBlock();
         }else {
-            tableBlock=TableBlock.load(inputStream);
+            InputStream inputStream = inputSource.openStream();
+            if(loadDefaultFramework){
+                tableBlock=TableBlock.loadWithAndroidFramework(inputStream);
+            }else {
+                tableBlock=TableBlock.load(inputStream);
+            }
+            inputStream.close();
         }
-        inputStream.close();
         mTableBlock=tableBlock;
         BlockInputSource<TableBlock> blockInputSource=new BlockInputSource<>(inputSource.getName(),tableBlock);
         blockInputSource.setMethod(inputSource.getMethod());

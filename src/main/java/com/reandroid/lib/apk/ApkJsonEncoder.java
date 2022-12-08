@@ -22,7 +22,24 @@ public class ApkJsonEncoder {
         scanRootDirs(moduleDir);
         ApkModule module=new ApkModule(moduleName, apkArchive);
         loadUncompressed(module, moduleDir);
+        applyResourceId(module, moduleDir);
         return module;
+    }
+    private void applyResourceId(ApkModule apkModule, File moduleDir) {
+        if(!apkModule.hasTableBlock()){
+            return;
+        }
+        File pubXml=toResourceIdsXml(moduleDir);
+        if(!pubXml.isFile()){
+            return;
+        }
+        ResourceIds resourceIds=new ResourceIds();
+        try {
+            resourceIds.fromXml(pubXml);
+            resourceIds.applyTo(apkModule.getTableBlock());
+        } catch (IOException exception) {
+            throw new IllegalArgumentException(exception.getMessage());
+        }
     }
     private void loadUncompressed(ApkModule module, File moduleDir){
         File jsonFile=toUncompressedJsonFile(moduleDir);
@@ -93,6 +110,10 @@ public class ApkJsonEncoder {
     }
     private File toJsonManifestFile(File dir){
         String name = AndroidManifestBlock.FILE_NAME + ApkUtil.JSON_FILE_EXTENSION;
+        return new File(dir, name);
+    }
+    private File toResourceIdsXml(File dir){
+        String name = "public.xml";
         return new File(dir, name);
     }
     private File toUncompressedJsonFile(File dir){

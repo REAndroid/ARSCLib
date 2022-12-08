@@ -37,6 +37,9 @@ public class EntryGroup extends ItemGroup<EntryBlock> {
         SpecString specString=specStringPool.getOrCreate(name);
         return renameSpec(specString.getIndex());
     }
+    public short getEntryId(){
+        return (short) (getResourceId() & 0xffff);
+    }
     private boolean isAllSameSpec(){
         EntryBlock first=null;
         for(EntryBlock entryBlock:listItems()){

@@ -125,12 +125,6 @@ public class PackageBlock extends BaseChunk implements BlockLoad, JSONConvert<JS
         }
         return null;
     }
-    public int getPackageId(){
-        return mPackageId.get();
-    }
-    public int setPackageId(){
-        return mPackageId.get();
-    }
     public String getPackageName(){
         return mPackageName.get();
     }

@@ -35,6 +35,10 @@ public abstract class BaseChunk extends ExpandableBlockContainer {
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         HeaderBlock headerBlock=reader.readHeaderBlock();
+        ChunkType chunkType = headerBlock.getChunkType();
+        if(chunkType==null || chunkType==ChunkType.NULL){
+            throw new IOException("Invalid chunk: "+headerBlock);
+        }
         BlockReader chunkReader=reader.create(reader.getPosition(), headerBlock.getChunkSize());
         super.onReadBytes(chunkReader);
         reader.offset(headerBlock.getChunkSize());

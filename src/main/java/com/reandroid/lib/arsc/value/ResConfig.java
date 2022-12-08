@@ -237,6 +237,13 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad, JSONCon
         setCountryIn0(bts[0]);
         setCountryIn1(bts[1]);
     }
+    public void setRegion(String region){
+        char[] chs=new char[2];
+        if(region!=null){
+            chs=region.toCharArray();
+        }
+        setRegion(chs);
+    }
     public void setOrientation(byte b){
         if(getConfigSize()<SIZE_16){
             if(b==0){
@@ -725,6 +732,7 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad, JSONCon
         setMcc((short) json.optInt(NAME_mcc));
         setMnc((short) json.optInt(NAME_mnc));
         setLanguage(json.optString(NAME_language));
+        setRegion(json.optString(NAME_region));
         setOrientation(Orientation.fromName(json.optString(NAME_orientation)));
         setTouchscreen(Touchscreen.fromName(json.optString(NAME_touchscreen)));
         setDensity(json.optString(NAME_density));
@@ -742,6 +750,7 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad, JSONCon
         setScreenHeightDp((short) json.optInt(NAME_screenHeightDp));
 
         trimToSize(SIZE_48);
+        valuesChanged();
     }
     @Override
     public int hashCode(){

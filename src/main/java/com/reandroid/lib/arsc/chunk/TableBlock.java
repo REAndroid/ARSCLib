@@ -51,6 +51,11 @@ public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
     protected void onChunkRefreshed() {
         refreshPackageCount();
     }
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+        reader.close();
+    }
 
     public void readBytes(File file) throws IOException{
         BlockReader reader=new BlockReader(file);

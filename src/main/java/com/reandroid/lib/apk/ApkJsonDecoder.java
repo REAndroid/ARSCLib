@@ -30,6 +30,7 @@ public class ApkJsonDecoder {
         writeManifest(dir);
         writeTable(dir);
         writeResourceIds(dir);
+        //writePublicXml(dir);
         writeResources(dir);
         writeRootFiles(dir);
         return new File(dir, apkModule.getModuleName());
@@ -117,6 +118,16 @@ public class ApkJsonDecoder {
         File file=toResourceIds(dir);
         jsonObject.write(file);
     }
+    private void writePublicXml(File dir) throws IOException {
+        if(!apkModule.hasTableBlock()){
+            return;
+        }
+        TableBlock tableBlock = apkModule.getTableBlock();
+        ResourceIds resourceIds=new ResourceIds();
+        resourceIds.loadTableBlock(tableBlock);
+        File file=toResourceIdsXml(dir);
+        resourceIds.writeXml(file);
+    }
     private void writeManifest(File dir) throws IOException {
         if(!apkModule.hasAndroidManifestBlock()){
             return;
@@ -144,6 +155,11 @@ public class ApkJsonDecoder {
     private File toResourceIds(File dir){
         File file=new File(dir, apkModule.getModuleName());
         String name = ResourceIds.JSON_FILE_NAME;
+        return new File(file, name);
+    }
+    private File toResourceIdsXml(File dir){
+        File file=new File(dir, apkModule.getModuleName());
+        String name = "public.xml";
         return new File(file, name);
     }
     private File toUncompressedJsonFile(File dir){
