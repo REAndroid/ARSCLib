@@ -38,7 +38,8 @@ public class ApkJsonDecoder {
     private void writeUncompressed(File dir) throws IOException {
         File file=toUncompressedJsonFile(dir);
         UncompressedFiles uncompressedFiles=new UncompressedFiles();
-        uncompressedFiles.add(apkModule.getApkArchive());
+        uncompressedFiles.addCommonExtensions();
+        uncompressedFiles.addPath(apkModule.getApkArchive());
         uncompressedFiles.toJson().write(file);
     }
     private void writeResources(File dir) throws IOException {

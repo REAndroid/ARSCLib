@@ -29,7 +29,19 @@ public class ApkModule {
         this.moduleName=moduleName;
         this.apkArchive=apkArchive;
         this.mUncompressedFiles=new UncompressedFiles();
-        this.mUncompressedFiles.add(apkArchive);
+        this.mUncompressedFiles.addPath(apkArchive);
+    }
+    public boolean isBaseModule(){
+        if(!hasAndroidManifestBlock()){
+            return false;
+        }
+        AndroidManifestBlock manifestBlock;
+        try {
+            manifestBlock=getAndroidManifestBlock();
+        } catch (IOException ignored) {
+            return false;
+        }
+        return manifestBlock.getMainActivity()!=null;
     }
     public String getModuleName(){
         return moduleName;
@@ -38,7 +50,19 @@ public class ApkModule {
         ZipArchive archive=new ZipArchive();
         archive.addAll(getApkArchive().listInputSources());
         UncompressedFiles uf=getUncompressedFiles();
+        uf.setResRawDir("res/raw/");
         uf.apply(archive);
+        int i=1;
+        for(InputSource inputSource:archive.listInputSources()){
+            if(inputSource.getSort()==0){
+                inputSource.setSort(i);
+                i++;
+            }
+        }
+        InputSource manifest=archive.getInputSource(AndroidManifestBlock.FILE_NAME);
+        if(manifest!=null){
+            manifest.setSort(0);
+        }
         ZipSerializer serializer=new ZipSerializer(archive.listInputSources(), false);
         serializer.writeZip(file);
     }

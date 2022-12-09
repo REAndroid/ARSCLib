@@ -36,34 +36,37 @@ public class ResXmlAttribute extends FixedBlockContainer
         addChild(5, mValueTypeByte);
         addChild(6, mRawValue);
     }
-    public int getNamespaceReference(){
+    public String getUri(){
+        return getString(getNamespaceReference());
+    }
+    int getNamespaceReference(){
         return mNamespaceReference.get();
     }
-    public void setNamespaceReference(int ref){
+    void setNamespaceReference(int ref){
         mNamespaceReference.set(ref);
     }
-    public int getNameReference(){
+    int getNameReference(){
         return mNameReference.get();
     }
-    public void setNameReference(int ref){
+    void setNameReference(int ref){
         mNameReference.set(ref);
     }
-    public int getValueStringReference(){
+    int getValueStringReference(){
         return mValueStringReference.get();
     }
-    public void setValueStringReference(int ref){
+    void setValueStringReference(int ref){
         mValueStringReference.set(ref);
     }
-    public short getNameType(){
+    short getNameType(){
         return mNameType.get();
     }
-    public void setNameType(short s){
+    void setNameType(short s){
         mNameType.set(s);
     }
-    public byte getValueTypeByte(){
+    byte getValueTypeByte(){
         return mValueTypeByte.get();
     }
-    public void setValueTypeByte(byte b){
+    void setValueTypeByte(byte b){
         mValueTypeByte.set(b);
     }
     public int getRawValue(){
@@ -109,18 +112,7 @@ public class ResXmlAttribute extends FixedBlockContainer
         }
         return startNamespace.getPrefix();
     }
-    public String getNamespace(){
-        ResXmlElement xmlElement=getParentResXmlElement();
-        if(xmlElement==null){
-            return null;
-        }
-        ResXmlStartNamespace startNamespace=xmlElement.getStartNamespaceByUriRef(getNamespaceReference());
-        if(startNamespace==null){
-            return null;
-        }
-        return startNamespace.getUri();
-    }
-    public ResXmlStartNamespace getStartNamespace(){
+    ResXmlStartNamespace getStartNamespace(){
         ResXmlElement xmlElement=getParentResXmlElement();
         if(xmlElement==null){
             return null;
@@ -364,7 +356,7 @@ public class ResXmlAttribute extends FixedBlockContainer
         JSONObject jsonObject=new JSONObject();
         jsonObject.put(NAME_name, getName());
         jsonObject.put(NAME_id, getNameResourceID());
-        jsonObject.put(NAME_namespace_uri, getNamespace());
+        jsonObject.put(NAME_namespace_uri, getUri());
         ValueType valueType=getValueType();
         jsonObject.put(NAME_value_type, valueType.name());
         if(valueType==ValueType.STRING){
@@ -432,9 +424,9 @@ public class ResXmlAttribute extends FixedBlockContainer
         builder.append("}");
         return builder.toString();
     }
-    static final String NAME_id="id";
-    static final String NAME_value_type="value_type";
-    static final String NAME_name="name";
-    static final String NAME_namespace_uri ="namespace_uri";
-    static final String NAME_data="data";
+    static final String NAME_id = "id";
+    public static final String NAME_value_type = "value_type";
+    static final String NAME_name = "name";
+    public static final String NAME_namespace_uri = "namespace_uri";
+    public static final String NAME_data= "data";
 }

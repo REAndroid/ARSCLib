@@ -112,4 +112,7 @@ public class ApkUtil {
     public static final String PACKAGE_JSON_FILE="package.json";
     public static final String SPLIT_JSON_DIRECTORY="resources";
     public static final String DEF_MODULE_NAME="base";
+    public static final String NAME_value_type="value_type";
+    public static final String NAME_data="data";
+    public static final String NAME_is_array="is_array";
 }

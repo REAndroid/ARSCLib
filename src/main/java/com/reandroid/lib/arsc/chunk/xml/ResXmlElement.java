@@ -90,18 +90,6 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
         }
         return null;
     }
-    public List<ResXmlElement> searchElementsByTagName(String name){
-        List<ResXmlElement> results=new ArrayList<>();
-        if(name==null){
-            return results;
-        }
-        for(ResXmlElement child:listElements()){
-            if(name.equals(child.getTag())||name.equals(child.getTagName())){
-                results.add(child);
-            }
-        }
-        return results;
-    }
     public ResXmlAttribute searchAttributeByName(String name){
         ResXmlStartElement startElement=getStartElement();
         if(startElement!=null){
@@ -109,10 +97,10 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
         }
         return null;
     }
-    public ResXmlAttribute searchAttributeById(int resourceId){
+    public ResXmlAttribute searchAttributeByResourceId(int resourceId){
         ResXmlStartElement startElement=getStartElement();
         if(startElement!=null){
-            return startElement.searchAttributeById(resourceId);
+            return startElement.searchAttributeByResourceId(resourceId);
         }
         return null;
     }
@@ -206,6 +194,18 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
     }
     public List<ResXmlElement> listElements(){
         return mBody.getChildes();
+    }
+    public List<ResXmlElement> listElements(String name){
+        List<ResXmlElement> results=new ArrayList<>();
+        if(name==null){
+            return results;
+        }
+        for(ResXmlElement element:listElements()){
+            if(name.equals(element.getTag())||name.equals(element.getTagName())){
+                results.add(element);
+            }
+        }
+        return results;
     }
     public ResXmlElement getParentResXmlElement(){
         Block parent=getParent();

@@ -15,15 +15,40 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public AndroidManifestBlock(){
         super();
     }
+    public ResXmlElement getMainActivity(){
+        for(ResXmlElement activity:listActivities()){
+            for(ResXmlElement intentFilter:activity.listElements(TAG_intent_filter)){
+                ResXmlAttribute attribute = intentFilter.searchAttributeByResourceId(ID_name);
+                if(VALUE_android_intent_action_MAIN.equals(attribute.getValueAsString())){
+                    return activity;
+                }
+            }
+        }
+        return null;
+    }
+    public List<ResXmlElement> listActivities(){
+        return listActivities(true);
+    }
+    public List<ResXmlElement> listActivities(boolean includeActivityAlias){
+        ResXmlElement application=getApplicationElement();
+        if(application==null){
+            return new ArrayList<>();
+        }
+        List<ResXmlElement> results = application.listElements(TAG_activity);
+        if(includeActivityAlias){
+            results.addAll(application.listElements(TAG_activity_alias));
+        }
+        return results;
+    }
     public List<String> getUsesPermissions(){
         List<String> results=new ArrayList<>();
         ResXmlElement manifestElement=getManifestElement();
         if(manifestElement==null){
             return results;
         }
-        List<ResXmlElement> permissionList = manifestElement.searchElementsByTagName(TAG_uses_permission);
+        List<ResXmlElement> permissionList = manifestElement.listElements(TAG_uses_permission);
         for(ResXmlElement permission:permissionList){
-            ResXmlAttribute nameAttr = permission.searchAttributeById(ID_name);
+            ResXmlAttribute nameAttr = permission.searchAttributeByResourceId(ID_name);
             if(nameAttr==null){
                 continue;
             }
@@ -39,9 +64,9 @@ public class AndroidManifestBlock extends ResXmlBlock{
         if(manifestElement==null){
             return null;
         }
-        List<ResXmlElement> permissionList = manifestElement.searchElementsByTagName(TAG_uses_permission);
+        List<ResXmlElement> permissionList = manifestElement.listElements(TAG_uses_permission);
         for(ResXmlElement permission:permissionList){
-            ResXmlAttribute nameAttr = permission.searchAttributeById(ID_name);
+            ResXmlAttribute nameAttr = permission.searchAttributeByResourceId(ID_name);
             if(nameAttr==null){
                 continue;
             }
@@ -121,7 +146,7 @@ public class AndroidManifestBlock extends ResXmlBlock{
         if(manifestElement==null){
             return false;
         }
-        ResXmlAttribute attribute= manifestElement.searchAttributeById(resId);
+        ResXmlAttribute attribute= manifestElement.searchAttributeByResourceId(resId);
         if(attribute==null){
             return false;
         }
@@ -147,7 +172,7 @@ public class AndroidManifestBlock extends ResXmlBlock{
         if(manifestElement==null){
             return false;
         }
-        ResXmlAttribute attribute= manifestElement.searchAttributeById(resId);
+        ResXmlAttribute attribute= manifestElement.searchAttributeByResourceId(resId);
         if(attribute==null){
             return false;
         }
@@ -181,14 +206,14 @@ public class AndroidManifestBlock extends ResXmlBlock{
         }
         return attribute.getRawValue();
     }
-    private ResXmlElement getApplicationElement(){
+    public ResXmlElement getApplicationElement(){
         ResXmlElement manifestElement=getManifestElement();
         if(manifestElement==null){
             return null;
         }
         return manifestElement.getElementByTagName(TAG_application);
     }
-    private ResXmlElement getManifestElement(){
+    public ResXmlElement getManifestElement(){
         ResXmlElement manifestElement=getResXmlElement();
         if(manifestElement==null){
             return null;
@@ -231,19 +256,34 @@ public class AndroidManifestBlock extends ResXmlBlock{
         manifestBlock.readBytes(inputStream);
         return manifestBlock;
     }
-    public static final String TAG_manifest ="manifest";
-    public static final String TAG_uses_permission="uses-permission";
-    public static final String TAG_application ="application";
+    public static final String TAG_action = "action";
+    public static final String TAG_activity = "activity";
+    public static final String TAG_activity_alias = "activity-alias";
+    public static final String TAG_application = "application";
+    public static final String TAG_category = "category";
+    public static final String TAG_data = "data";
+    public static final String TAG_intent_filter = "intent-filter";
+    public static final String TAG_manifest = "manifest";
+    public static final String TAG_meta_data = "meta-data";
+    public static final String TAG_package = "package";
+    public static final String TAG_permission = "permission";
+    public static final String TAG_provider = "provider";
+    public static final String TAG_receiver = "receiver";
+    public static final String TAG_service = "service";
+    public static final String TAG_uses_feature = "uses-feature";
+    public static final String TAG_uses_library = "uses-library";
+    public static final String TAG_uses_permission = "uses-permission";
+    public static final String TAG_uses_sdk = "uses-sdk";
 
-    public static final String NAME_compileSdkVersion ="compileSdkVersion";
-    public static final String NAME_compileSdkVersionCodename ="compileSdkVersionCodename";
+    public static final String NAME_compileSdkVersion = "compileSdkVersion";
+    public static final String NAME_compileSdkVersionCodename = "compileSdkVersionCodename";
     public static final String NAME_installLocation="installLocation";
-    public static final String NAME_PACKAGE ="package";
-    public static final String NAME_platformBuildVersionCode="platformBuildVersionCode";
-    public static final String NAME_platformBuildVersionName ="platformBuildVersionName";
-    public static final String NAME_versionCode ="versionCode";
-    public static final String NAME_versionName ="versionName";
-    public static final String NAME_name ="name";
+    public static final String NAME_PACKAGE = "package";
+    public static final String NAME_platformBuildVersionCode = "platformBuildVersionCode";
+    public static final String NAME_platformBuildVersionName = "platformBuildVersionName";
+    public static final String NAME_versionCode = "versionCode";
+    public static final String NAME_versionName = "versionName";
+    public static final String NAME_name = "name";
 
     public static final int ID_name = 0x01010003;
     public static final int ID_compileSdkVersion = 0x01010572;
@@ -252,6 +292,8 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public static final int ID_host = 0x01010028;
     public static final int ID_configChanges = 0x0101001f;
     public static final int ID_screenOrientation = 0x0101001e;
+
+    public static final String VALUE_android_intent_action_MAIN = "android.intent.action.MAIN";
 
     public static final String FILE_NAME="AndroidManifest.xml";
 }
