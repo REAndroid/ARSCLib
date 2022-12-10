@@ -26,6 +26,12 @@ public class SplitJsonTableInputSource extends InputSource {
         TableBlock tableBlock = getTableBlock();
         return tableBlock.countBytes();
     }
+    @Override
+    public long getCrc() throws IOException {
+        CrcOutputStream outputStream=new CrcOutputStream();
+        this.write(outputStream);
+        return outputStream.getCrcValue();
+    }
     public TableBlock getTableBlock() throws IOException {
         if(mCache!=null){
             return mCache;

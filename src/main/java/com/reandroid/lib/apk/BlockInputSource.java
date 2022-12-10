@@ -27,6 +27,13 @@ public class BlockInputSource<T extends BaseChunk> extends ByteInputSource{
         return block.countBytes();
     }
     @Override
+    public long getCrc() throws IOException{
+        Block block = getBlock();
+        CrcOutputStream outputStream=new CrcOutputStream();
+        block.writeBytes(outputStream);
+        return outputStream.getCrcValue();
+    }
+    @Override
     public long write(OutputStream outputStream) throws IOException {
         return getBlock().writeBytes(outputStream);
     }

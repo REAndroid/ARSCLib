@@ -1,9 +1,6 @@
 package com.reandroid.lib.apk;
 
-import com.reandroid.archive.APKArchive;
-import com.reandroid.archive.InputSource;
-import com.reandroid.archive.ZipArchive;
-import com.reandroid.archive.ZipSerializer;
+import com.reandroid.archive.*;
 import com.reandroid.lib.arsc.array.PackageArray;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.TableBlock;
@@ -47,10 +44,12 @@ public class ApkModule {
         return moduleName;
     }
     public void writeApk(File file) throws IOException {
+        writeApk(file, null);
+    }
+    public void writeApk(File file, WriteProgress progress) throws IOException {
         ZipArchive archive=new ZipArchive();
         archive.addAll(getApkArchive().listInputSources());
         UncompressedFiles uf=getUncompressedFiles();
-        uf.setResRawDir("res/raw/");
         uf.apply(archive);
         int i=1;
         for(InputSource inputSource:archive.listInputSources()){
@@ -64,6 +63,7 @@ public class ApkModule {
             manifest.setSort(0);
         }
         ZipSerializer serializer=new ZipSerializer(archive.listInputSources(), false);
+        serializer.setWriteProgress(progress);
         serializer.writeZip(file);
     }
     public UncompressedFiles getUncompressedFiles(){
