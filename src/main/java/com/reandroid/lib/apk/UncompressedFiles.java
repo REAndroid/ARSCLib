@@ -70,6 +70,10 @@ public class UncompressedFiles implements JSONConvert<JSONObject> {
         return mExtensionList.contains(extension.substring(1));
     }
     public boolean containsPath(String path){
+        path=sanitizePath(path);
+        if(path==null){
+            return false;
+        }
         return mPathList.contains(path);
     }
     public void addPath(ZipArchive zipArchive){
@@ -84,14 +88,30 @@ public class UncompressedFiles implements JSONConvert<JSONObject> {
         addPath(inputSource.getAlias());
     }
     public void addPath(String path){
-        if(path==null || path.length()==0){
+        path=sanitizePath(path);
+        if(path==null){
             return;
         }
-        path=path.replace(File.separatorChar, '/').trim();
-        while (path.startsWith("/")){
-            path=path.substring(1);
-        }
         mPathList.add(path);
+    }
+    public void removePath(String path){
+        path=sanitizePath(path);
+        if(path==null){
+            return;
+        }
+        mPathList.remove(path);
+    }
+    public void replacePath(String path, String rep){
+        path=sanitizePath(path);
+        rep=sanitizePath(rep);
+        if(path==null||rep==null){
+            return;
+        }
+        if(!mPathList.contains(path)){
+            return;
+        }
+        mPathList.remove(path);
+        mPathList.add(rep);
     }
     public void addCommonExtensions(){
         for(String ext:COMMON_EXTENSIONS){
@@ -145,6 +165,19 @@ public class UncompressedFiles implements JSONConvert<JSONObject> {
         }
         JSONObject jsonObject=new JSONObject(new FileInputStream(jsonFile));
         fromJson(jsonObject);
+    }
+    private static String sanitizePath(String path){
+        if(path==null || path.length()==0){
+            return null;
+        }
+        path=path.replace(File.separatorChar, '/').trim();
+        while (path.startsWith("/")){
+            path=path.substring(1);
+        }
+        if(path.length()==0){
+            return null;
+        }
+        return path;
     }
     public static final String JSON_FILE = "uncompressed-files.json";
     public static final String NAME_paths = "paths";

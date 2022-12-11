@@ -243,7 +243,7 @@ public class ResourceIds {
                     return;
                 }
                 if(pkg.id!=this.id){
-                    throw new IllegalArgumentException("Different package id: "+this.id+"!="+pkg.id);
+                    throw new DuplicateException("Different package id: "+this.id+"!="+pkg.id);
                 }
                 if(pkg.name!=null){
                     this.name = pkg.name;
@@ -277,7 +277,7 @@ public class ResourceIds {
                     return;
                 }
                 if(entry.getPackageId()!=this.id){
-                    throw new IllegalArgumentException("Different package id: "+entry);
+                    throw new DuplicateException("Different package id: "+entry);
                 }
                 byte typeId=entry.getTypeId();
                 Type type=typeMap.get(typeId);
@@ -400,7 +400,7 @@ public class ResourceIds {
                         return;
                     }
                     if(this.id!= type.id){
-                        throw new IllegalArgumentException("Different type ids: "+id+"!="+type.id);
+                        throw new DuplicateException("Different type ids: "+id+"!="+type.id);
                     }
                     if(type.name!=null){
                         this.name=type.name;
@@ -427,7 +427,7 @@ public class ResourceIds {
                         return;
                     }
                     if(entry.getTypeId()!=this.id){
-                        throw new IllegalArgumentException("Different type id: "+entry);
+                        throw new DuplicateException("Different type id: "+entry);
                     }
                     short key=entry.getEntryId();
                     Entry exist=entryMap.get(key);
@@ -435,7 +435,7 @@ public class ResourceIds {
                         if(Objects.equals(exist.name, entry.name)){
                             return;
                         }
-                        throw new IllegalArgumentException("Duplicate entry exist: "+exist+", entry: "+entry);
+                        throw new DuplicateException("Duplicate entry exist: "+exist+", entry: "+entry);
                     }
                     if(name == null){
                         this.name = entry.typeName;
@@ -652,10 +652,10 @@ public class ResourceIds {
                             matcher= pattern.matcher(element);
                         }
                         if(id==0){
-                            throw new IllegalArgumentException("Missing id: "+xmlElement);
+                            throw new DuplicateException("Missing id: "+xmlElement);
                         }
                         if(name==null){
-                            throw new IllegalArgumentException("Missing name: "+xmlElement);
+                            throw new DuplicateException("Missing name: "+xmlElement);
                         }
                         return new Entry(id, type, name);
                     }
@@ -682,6 +682,17 @@ public class ResourceIds {
             return (pkgId & 0xff)<<24
                     | (typeId & 0xff)<<16
                     | (entryId & 0xffff);
+        }
+    }
+    public static class DuplicateException extends IllegalArgumentException{
+        public DuplicateException(String message){
+            super(message);
+        }
+        public DuplicateException(String message, final Throwable cause) {
+            super(message, cause);
+        }
+        public DuplicateException(Throwable cause) {
+            super(cause.getMessage(), cause);
         }
     }
 

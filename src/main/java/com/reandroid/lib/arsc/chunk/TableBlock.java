@@ -143,6 +143,9 @@ public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
         tableBlock.addFramework(Frameworks.getAndroid());
         return tableBlock;
     }
+    public static TableBlock load(File file) throws IOException{
+        return load(new FileInputStream(file));
+    }
     public static TableBlock load(InputStream inputStream) throws IOException{
         TableBlock tableBlock=new TableBlock();
         tableBlock.readBytes(inputStream);

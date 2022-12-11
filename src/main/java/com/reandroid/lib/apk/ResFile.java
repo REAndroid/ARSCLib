@@ -1,6 +1,7 @@
 package com.reandroid.lib.apk;
 
 import com.reandroid.archive.InputSource;
+import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.chunk.xml.ResXmlBlock;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.json.JSONObject;
@@ -17,6 +18,51 @@ public class ResFile {
     public ResFile(InputSource inputSource, List<EntryBlock> entryBlockList){
         this.inputSource=inputSource;
         this.entryBlockList=entryBlockList;
+    }
+    public String validateTypeDirectoryName(){
+        EntryBlock entryBlock=pickOne();
+        if(entryBlock==null){
+            return null;
+        }
+        String path=getFilePath();
+        String root="";
+        int i=path.indexOf('/');
+        if(i>0){
+            i++;
+            root=path.substring(0, i);
+            path=path.substring(i);
+        }
+        String name=path;
+        i=path.lastIndexOf('/');
+        if(i>0){
+            i++;
+            name=path.substring(i);
+        }
+        TypeBlock typeBlock=entryBlock.getTypeBlock();
+        String typeName=typeBlock.getTypeName()+typeBlock.getResConfig().getQualifiers();
+        return root+typeName+"/"+name;
+    }
+    private EntryBlock pickOne(){
+        List<EntryBlock> entryList = entryBlockList;
+        if(entryList.size()==0){
+            return null;
+        }
+        for(EntryBlock entryBlock:entryList){
+            if(!entryBlock.isNull() && entryBlock.isDefault()){
+                return entryBlock;
+            }
+        }
+        for(EntryBlock entryBlock:entryList){
+            if(!entryBlock.isNull()){
+                return entryBlock;
+            }
+        }
+        for(EntryBlock entryBlock:entryList){
+            if(entryBlock.isDefault()){
+                return entryBlock;
+            }
+        }
+        return entryList.get(0);
     }
     public String getFilePath(){
         return getInputSource().getAlias();

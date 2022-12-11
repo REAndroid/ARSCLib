@@ -333,7 +333,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         if(packageBlock==null){
             return null;
         }
-        return packageBlock.getPackageName();
+        return packageBlock.getName();
     }
     public SpecString getSpecString(){
         PackageBlock packageBlock=getPackageBlock();

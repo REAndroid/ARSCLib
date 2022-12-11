@@ -31,6 +31,14 @@ public class ResXmlStartElement extends BaseXmlChunk {
         addChild(mClassAttribute);
         addChild(mAttributeArray);
     }
+    public ResXmlAttribute getAttribute(int resourceId){
+        for(ResXmlAttribute attribute:listResXmlAttributes()){
+            if(resourceId==attribute.getNameResourceID()){
+                return attribute;
+            }
+        }
+        return null;
+    }
     public ResXmlAttribute getAttribute(String uri, String name){
         if(name==null){
             return null;

@@ -3,6 +3,7 @@ package com.reandroid.lib.arsc.io;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 
 import java.io.*;
+import java.util.zip.ZipInputStream;
 
 
 public class BlockReader extends InputStream {
@@ -317,6 +318,9 @@ public class BlockReader extends InputStream {
         while((len=in.read(buff))>0){
             result=add(result, buff, len);
         }
+        if(!(in instanceof ZipInputStream)){
+            in.close();
+        }
         return result;
     }
     private static byte[] add(byte[] arr1, byte[] arr2, int len){
@@ -331,7 +335,7 @@ public class BlockReader extends InputStream {
     }
     public static HeaderBlock readHeaderBlock(InputStream inputStream) throws IOException{
         byte[] buffer=new byte[8];
-        inputStream.read(buffer);
+        inputStream.read(buffer, 0, 8);
         inputStream.close();
         BlockReader reader=new BlockReader(buffer);
         return reader.readHeaderBlock();

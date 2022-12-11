@@ -113,8 +113,6 @@ public class PackageBlock extends BaseChunk implements BlockLoad, JSONConvert<JS
     public void setName(String name){
         mPackageName.set(name);
     }
-
-
     public TableBlock getTableBlock(){
         Block parent=getParent();
         while(parent!=null){
@@ -125,13 +123,6 @@ public class PackageBlock extends BaseChunk implements BlockLoad, JSONConvert<JS
         }
         return null;
     }
-    public String getPackageName(){
-        return mPackageName.get();
-    }
-    public void setPackageName(String name){
-        mPackageName.set(name);
-    }
-
     public TypeStringPool getTypeStringPool(){
         return mTypeStringPool;
     }

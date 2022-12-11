@@ -248,6 +248,16 @@ public class AndroidManifestBlock extends ResXmlBlock{
         builder.append("}");
         return builder.toString();
     }
+    public static boolean isAndroidManifestBlock(ResXmlBlock xmlBlock){
+        if(xmlBlock==null){
+            return false;
+        }
+        ResXmlElement root = xmlBlock.getResXmlElement();
+        if(root==null){
+            return false;
+        }
+        return TAG_manifest.equals(root.getTag());
+    }
     public static AndroidManifestBlock load(File file) throws IOException {
         return load(new FileInputStream(file));
     }

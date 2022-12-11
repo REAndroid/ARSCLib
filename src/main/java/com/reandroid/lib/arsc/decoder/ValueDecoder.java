@@ -25,8 +25,8 @@ public class ValueDecoder {
         }
         String prefix=null;
         if(currentPackage!=null){
-            String name=currentPackage.getPackageName();
-            String other=entryBlock.getPackageBlock().getPackageName();
+            String name=currentPackage.getName();
+            String other=entryBlock.getPackageBlock().getName();
             if(!name.equals(other)){
                 prefix=other+":";
             }
@@ -67,7 +67,7 @@ public class ValueDecoder {
             is_attribute=true;
         }
         if(is_reference || is_attribute){
-            String ref=buildReferenceValue(store, valueType, currentPackage.getPackageName(), data);
+            String ref=buildReferenceValue(store, valueType, currentPackage.getName(), data);
             if(ref!=null){
                 return ref;
             }
@@ -286,7 +286,7 @@ public class ValueDecoder {
             return null;
         }
         for(PackageBlock packageBlock:allPkg){
-            String name=packageBlock.getPackageName();
+            String name=packageBlock.getName();
             if(name!=null){
                 return name;
             }
@@ -307,7 +307,7 @@ public class ValueDecoder {
         if(packageBlock==null){
             return null;
         }
-        return packageBlock.getPackageName();
+        return packageBlock.getName();
     }
     private static EntryGroup searchEntryGroup(EntryStore store, EntryBlock entryBlock, int resourceId){
         EntryGroup entryGroup=searchEntryGroup(entryBlock, resourceId);

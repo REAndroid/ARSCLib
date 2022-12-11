@@ -27,7 +27,7 @@ public class TableBlockJson {
         File infoFile=new File(pkgDir, PackageBlock.JSON_FILE_NAME);
         JSONObject jsonObject=new JSONObject();
         jsonObject.put(PackageBlock.NAME_package_id, packageBlock.getId());
-        jsonObject.put(PackageBlock.NAME_package_name, packageBlock.getPackageName());
+        jsonObject.put(PackageBlock.NAME_package_name, packageBlock.getName());
         jsonObject.write(infoFile);
         for(SpecTypePair specTypePair: packageBlock.listAllSpecTypePair()){
             for(TypeBlock typeBlock:specTypePair.getTypeBlockArray().listItems()){
@@ -52,7 +52,7 @@ public class TableBlockJson {
     private String getDirName(PackageBlock packageBlock){
         StringBuilder builder=new StringBuilder();
         builder.append(String.format("0x%02x", packageBlock.getId()));
-        String name= packageBlock.getPackageName();
+        String name= packageBlock.getName();
         if(name!=null){
             builder.append('-');
             builder.append(name);

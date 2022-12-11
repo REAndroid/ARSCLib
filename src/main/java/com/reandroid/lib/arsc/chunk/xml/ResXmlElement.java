@@ -149,7 +149,7 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
         }
         return null;
     }
-    public Collection<ResXmlAttribute> listResXmlAttributes(){
+    public Collection<ResXmlAttribute> listAttributes(){
         ResXmlStartElement startElement=getStartElement();
         if(startElement!=null){
             return startElement.listResXmlAttributes();

@@ -273,7 +273,7 @@ public class FrameworkTable extends TableBlock {
         for(PackageBlock packageBlock:allPkg){
             builder.append("\n    ");
             builder.append(String.format("0x%02x", packageBlock.getId()));
-            builder.append(":").append(packageBlock.getPackageName());
+            builder.append(":").append(packageBlock.getName());
         }
         return builder.toString();
     }

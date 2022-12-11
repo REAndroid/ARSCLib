@@ -23,7 +23,7 @@ public class ResXmlAttribute extends FixedBlockContainer
         super(7);
         mNamespaceReference =new IntegerItem(-1);
         mNameReference =new IntegerItem();
-        mValueStringReference =new IntegerItem();
+        mValueStringReference =new IntegerItem(-1);
         mNameType=new ShortItem((short) 0x0008);
         mReserved =new ByteItem();
         mValueTypeByte=new ByteItem();
@@ -42,7 +42,7 @@ public class ResXmlAttribute extends FixedBlockContainer
     int getNamespaceReference(){
         return mNamespaceReference.get();
     }
-    void setNamespaceReference(int ref){
+    public void setNamespaceReference(int ref){
         mNamespaceReference.set(ref);
     }
     int getNameReference(){
@@ -112,7 +112,7 @@ public class ResXmlAttribute extends FixedBlockContainer
         }
         return startNamespace.getPrefix();
     }
-    ResXmlStartNamespace getStartNamespace(){
+    public ResXmlStartNamespace getStartNamespace(){
         ResXmlElement xmlElement=getParentResXmlElement();
         if(xmlElement==null){
             return null;
@@ -131,6 +131,7 @@ public class ResXmlAttribute extends FixedBlockContainer
         setValueStringReference(ref);
         if(getValueType()==ValueType.STRING){
             setRawValue(ref);
+            setValueStringReference(ref);
         }
         return resXmlString;
     }
@@ -280,7 +281,7 @@ public class ResXmlAttribute extends FixedBlockContainer
     }
     public void setValueAsBoolean(boolean val){
         setValueType(ValueType.INT_BOOLEAN);
-        int ref=val?0xffff:0;
+        int ref=val?0xffffffff:0;
         setRawValue(ref);
         setValueStringReference(-1);
     }

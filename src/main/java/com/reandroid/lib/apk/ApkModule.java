@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.zip.ZipEntry;
 
 public class ApkModule {
     private final String moduleName;
@@ -22,6 +23,7 @@ public class ApkModule {
     private TableBlock mTableBlock;
     private AndroidManifestBlock mManifestBlock;
     private final UncompressedFiles mUncompressedFiles;
+    private APKLogger apkLogger;
     ApkModule(String moduleName, APKArchive apkArchive){
         this.moduleName=moduleName;
         this.apkArchive=apkArchive;
@@ -72,6 +74,34 @@ public class ApkModule {
     public void removeDir(String dirName){
         getApkArchive().removeDir(dirName);
     }
+    public void validateResourcesDir() throws IOException {
+        List<ResFile> resFileList = listResFiles();
+        Set<String> existPaths=new HashSet<>();
+        List<InputSource> sourceList = getApkArchive().listInputSources();
+        for(InputSource inputSource:sourceList){
+            existPaths.add(inputSource.getAlias());
+        }
+        for(ResFile resFile:resFileList){
+            String path=resFile.getFilePath();
+            String pathNew=resFile.validateTypeDirectoryName();
+            if(pathNew==null || pathNew.equals(path)){
+                continue;
+            }
+            if(existPaths.contains(pathNew)){
+                continue;
+            }
+            existPaths.remove(path);
+            existPaths.add(pathNew);
+            resFile.setFilePath(pathNew);
+            if(resFile.getInputSource().getMethod() == ZipEntry.STORED){
+                getUncompressedFiles().replacePath(path, pathNew);
+            }
+            logVerbose("Dir validated: '"+path+"' -> '"+pathNew+"'");
+        }
+        TableStringPool stringPool= getTableBlock().getTableStringPool();
+        stringPool.refreshUniqueIdMap();
+        getTableBlock().refresh();
+    }
     public void setResourcesRootDir(String dirName) throws IOException {
         List<ResFile> resFileList = listResFiles();
         Set<String> existPaths=new HashSet<>();
@@ -88,9 +118,14 @@ public class ApkModule {
             existPaths.remove(path);
             existPaths.add(pathNew);
             resFile.setFilePath(pathNew);
+            if(resFile.getInputSource().getMethod() == ZipEntry.STORED){
+                getUncompressedFiles().replacePath(path, pathNew);
+            }
+            logVerbose("Root changed: '"+path+"' -> '"+pathNew+"'");
         }
         TableStringPool stringPool= getTableBlock().getTableStringPool();
         stringPool.refreshUniqueIdMap();
+        getTableBlock().refresh();
     }
     public List<ResFile> listResFiles() throws IOException {
         List<ResFile> results=new ArrayList<>();
@@ -123,7 +158,7 @@ public class ApkModule {
         if(pkg==null){
             return null;
         }
-        return pkg.getPackageName();
+        return pkg.getName();
     }
     public void setPackageName(String name) throws IOException {
         String old=getPackageName();
@@ -137,13 +172,13 @@ public class ApkModule {
         PackageArray pkgArray = tableBlock.getPackageArray();
         for(PackageBlock pkg:pkgArray.listItems()){
             if(pkgArray.childesCount()==1){
-                pkg.setPackageName(name);
+                pkg.setName(name);
                 continue;
             }
-            String pkgName=pkg.getPackageName();
+            String pkgName=pkg.getName();
             if(pkgName.startsWith(old)){
                 pkgName=pkgName.replace(old, name);
-                pkg.setPackageName(pkgName);
+                pkg.setName(pkgName);
             }
         }
     }
@@ -211,6 +246,24 @@ public class ApkModule {
         this.loadDefaultFramework = loadDefaultFramework;
     }
 
+    public void setAPKLogger(APKLogger logger) {
+        this.apkLogger = logger;
+    }
+    private void logMessage(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logMessage(msg);
+        }
+    }
+    private void logError(String msg, Throwable tr) {
+        if(apkLogger!=null){
+            apkLogger.logError(msg, tr);
+        }
+    }
+    private void logVerbose(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logVerbose(msg);
+        }
+    }
     public static ApkModule loadApkFile(File apkFile) throws IOException {
         return loadApkFile(apkFile, ApkUtil.DEF_MODULE_NAME);
     }
