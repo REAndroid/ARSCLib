@@ -41,14 +41,6 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
         addChild(4, mEndElementContainer);
         addChild(5, mEndNamespaceList);
     }
-    @Override
-    protected void onPreRefreshRefresh(){
-        ResXmlStartElement start = getStartElement();
-        if(start==null){
-            return;
-        }
-        start.getResXmlAttributeArray().sortAttributes();
-    }
     public ResXmlElement createChildElement(){
         return createChildElement(null);
     }
@@ -612,6 +604,7 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
                 child.fromJson(childObject);
             }
         }
+        start.calculatePositions();
     }
     @Override
     public String toString(){

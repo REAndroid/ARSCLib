@@ -2,9 +2,11 @@ package com.reandroid.lib.arsc.chunk.xml;
 
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.array.ResXmlAttributeArray;
-import com.reandroid.lib.arsc.item.IntegerItem;
+import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.ShortItem;
+import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 
+import java.io.IOException;
 import java.util.Collection;
 
 
@@ -12,8 +14,9 @@ public class ResXmlStartElement extends BaseXmlChunk {
     private final ShortItem mAttributeStart;
     private final ShortItem mAttributeUnitSize;
     private final ShortItem mAttributeCount;
-    private final ShortItem mIdAttribute;
-    private final IntegerItem mClassAttribute;
+    private final ShortItem mIdAttributePosition;
+    private final ShortItem mClassAttributePosition;
+    private final ShortItem mStyleAttributePosition;
     private final ResXmlAttributeArray mAttributeArray;
     private ResXmlEndElement mResXmlEndElement;
     public ResXmlStartElement() {
@@ -21,19 +24,91 @@ public class ResXmlStartElement extends BaseXmlChunk {
         mAttributeStart=new ShortItem(ATTRIBUTES_DEFAULT_START);
         mAttributeUnitSize =new ShortItem(ATTRIBUTES_UNIT_SIZE);
         mAttributeCount=new ShortItem();
-        mIdAttribute=new ShortItem();
-        mClassAttribute=new IntegerItem();
+        mIdAttributePosition =new ShortItem();
+        mClassAttributePosition=new ShortItem();
+        mStyleAttributePosition=new ShortItem();
         mAttributeArray=new ResXmlAttributeArray(getHeaderBlock(), mAttributeStart, mAttributeCount);
         addChild(mAttributeStart);
         addChild(mAttributeUnitSize);
         addChild(mAttributeCount);
-        addChild(mIdAttribute);
-        addChild(mClassAttribute);
+        addChild(mIdAttributePosition);
+        addChild(mClassAttributePosition);
+        addChild(mStyleAttributePosition);
         addChild(mAttributeArray);
+    }
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+        if(mClassAttributePosition.get()==0 && mStyleAttributePosition.get()==0){
+            return;
+        }
+        ResXmlStringPool stringPool=getStringPool();
+        int c=(mClassAttributePosition.get() & 0xffff)-1;
+        int style = (mStyleAttributePosition.get() >>> 16) - 1;
+        int z=c+style;
+        stringPool.childesCount();
+    }
+    @Override
+    protected void onPreRefreshRefresh(){
+        sortAttributes();
+    }
+    private void sortAttributes(){
+        ResXmlAttributeArray array = getResXmlAttributeArray();
+
+        ResXmlAttribute idAttribute=array.get(mIdAttributePosition.get()-1);
+        ResXmlAttribute classAttribute=array.get(mClassAttributePosition.get()-1);
+        ResXmlAttribute styleAttribute=array.get(mStyleAttributePosition.get()-1);
+
+        array.sortAttributes();
+        if(idAttribute!=null){
+            mIdAttributePosition.set((short) (idAttribute.getIndex()+1));
+        }
+        if(classAttribute!=null){
+            mClassAttributePosition.set((short) (classAttribute.getIndex()+1));
+            // In case obfuscation
+            if(!"class".equals(classAttribute.getName())){
+                classAttribute.setName("class", 0);
+            }
+        }
+        if(styleAttribute!=null){
+            mStyleAttributePosition.set((short) (styleAttribute.getIndex()+1));
+            // In case obfuscation
+            if(!"style".equals(styleAttribute.getName())){
+                styleAttribute.setName("style", 0);
+            }
+        }
+    }
+    void calculatePositions(){
+
+        int android_id=0x010100d0;
+        ResXmlAttribute idAttribute=getAttribute(android_id);
+        ResXmlAttribute classAttribute=getNoIdAttribute("class");
+        ResXmlAttribute styleAttribute=getNoIdAttribute("style");
+
+        if(idAttribute!=null){
+            mIdAttributePosition.set((short) (idAttribute.getIndex()+1));
+        }
+        if(classAttribute!=null){
+            mClassAttributePosition.set((short) (classAttribute.getIndex()+1));
+        }
+        if(styleAttribute!=null){
+            mStyleAttributePosition.set((short) (styleAttribute.getIndex()+1));
+        }
     }
     public ResXmlAttribute getAttribute(int resourceId){
         for(ResXmlAttribute attribute:listResXmlAttributes()){
             if(resourceId==attribute.getNameResourceID()){
+                return attribute;
+            }
+        }
+        return null;
+    }
+    private ResXmlAttribute getNoIdAttribute(String name){
+        for(ResXmlAttribute attribute:listResXmlAttributes()){
+            if(attribute.getNameResourceID()!=0){
+                continue;
+            }
+            if(name.equals(attribute.getName())){
                 return attribute;
             }
         }
