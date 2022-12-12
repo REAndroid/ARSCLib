@@ -3,7 +3,6 @@ package com.reandroid.lib.arsc.chunk.xml;
 import com.reandroid.lib.arsc.array.ResXmlIDArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.FixedBlockContainer;
-import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 import com.reandroid.lib.arsc.value.ValueType;
@@ -22,7 +21,7 @@ public class ResXmlAttribute extends FixedBlockContainer
     public ResXmlAttribute() {
         super(7);
         mNamespaceReference =new IntegerItem(-1);
-        mNameReference =new IntegerItem();
+        mNameReference =new IntegerItem(-1);
         mValueStringReference =new IntegerItem(-1);
         mNameType=new ShortItem((short) 0x0008);
         mReserved =new ByteItem();
@@ -138,60 +137,29 @@ public class ResXmlAttribute extends FixedBlockContainer
     public int getNameResourceID(){
         return getResourceId(getNameReference());
     }
-    public boolean setName(String name, int resourceId){
-        ResXmlStringPool stringPool=getStringPool();
-        if(stringPool==null){
-            return false;
-        }
-        String old=getName();
-        if(resourceId==0){
-            if(name.equals(old)){
-                return false;
-            }
-            ResXmlString resXmlString=stringPool.getOrCreate(name);
-            setNameReference(resXmlString.getIndex());
-            return true;
-        }
+    public void setNameResourceID(int resourceId){
         ResXmlIDMap xmlIDMap=getResXmlIDMap();
         if(xmlIDMap==null){
-            return false;
+            return;
         }
-        int oldId=getNameResourceID();
-        if(oldId==resourceId){
-            if(name.equals(old)){
-                return false;
-            }
+        ResXmlID xmlID = xmlIDMap.getOrCreate(resourceId);
+        setNameReference(xmlID.getIndex());
+    }
+    public void setName(String name, int resourceId){
+        if(resourceId!=0){
+            setNameResourceID(resourceId);
+            return;
         }
-        ResXmlID resXmlID=xmlIDMap.getByResId(resourceId);
-        if(resXmlID!=null){
-            int ref=resXmlID.getIndex();
-            ResXmlString idName=stringPool.get(ref);
-            if(idName != null){
-                if(name.equals(idName.getHtml())){
-                    setNameReference(ref);
-                }else {
-                    idName.set(name);
-                }
-                return true;
-            }
+        if(name==null){
+            name="";
         }
-        int stringsCount=stringPool.countStrings();
-        int idCount=xmlIDMap.getResXmlIDArray().childesCount();
-        if(idCount>stringsCount){
-            xmlIDMap.addResourceId(idCount, resourceId);;
-            stringPool.getStringsArray().ensureSize(idCount+1);
-            ResXmlString resXmlString=stringPool.get(idCount);
-            resXmlString.set(name);
-            setNameReference(idCount);
-            return true;
+        ResXmlIDMap xmlIDMap=getResXmlIDMap();
+        ResXmlStringPool stringPool=getStringPool();
+        if(stringPool==null || xmlIDMap==null){
+            return;
         }
-        xmlIDMap.addResourceId(stringsCount, resourceId);
-        stringPool.getStringsArray().ensureSize(stringsCount+1);
-        ResXmlString resXmlString=stringPool.get(stringsCount);
-        resXmlString.set(name);
-        setNameReference(stringsCount);
-        return true;
-
+        ResXmlString xmlString = stringPool.getOrCreateAttributeName(xmlIDMap.getResXmlIDArray().childesCount(), name);
+        setNameReference(xmlString.getIndex());
     }
     private int getResourceId(int ref){
         if(ref<0){
