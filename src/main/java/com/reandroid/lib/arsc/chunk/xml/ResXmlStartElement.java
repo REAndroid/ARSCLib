@@ -20,7 +20,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
     private final ResXmlAttributeArray mAttributeArray;
     private ResXmlEndElement mResXmlEndElement;
     public ResXmlStartElement() {
-        super(ChunkType.XML_START_ELEMENT, 6);
+        super(ChunkType.XML_START_ELEMENT, 7);
         mAttributeStart=new ShortItem(ATTRIBUTES_DEFAULT_START);
         mAttributeUnitSize =new ShortItem(ATTRIBUTES_UNIT_SIZE);
         mAttributeCount=new ShortItem();
