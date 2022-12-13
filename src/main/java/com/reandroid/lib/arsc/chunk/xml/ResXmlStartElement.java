@@ -2,11 +2,8 @@ package com.reandroid.lib.arsc.chunk.xml;
 
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.array.ResXmlAttributeArray;
-import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.ShortItem;
-import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 
-import java.io.IOException;
 import java.util.Collection;
 
 
@@ -37,18 +34,6 @@ public class ResXmlStartElement extends BaseXmlChunk {
         addChild(mAttributeArray);
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
-        if(mClassAttributePosition.get()==0 && mStyleAttributePosition.get()==0){
-            return;
-        }
-        ResXmlStringPool stringPool=getStringPool();
-        int c=(mClassAttributePosition.get() & 0xffff)-1;
-        int style = (mStyleAttributePosition.get() >>> 16) - 1;
-        int z=c+style;
-        stringPool.childesCount();
-    }
-    @Override
     protected void onPreRefreshRefresh(){
         sortAttributes();
     }
@@ -66,24 +51,22 @@ public class ResXmlStartElement extends BaseXmlChunk {
         if(classAttribute!=null){
             mClassAttributePosition.set((short) (classAttribute.getIndex()+1));
             // In case obfuscation
-            if(!"class".equals(classAttribute.getName())){
-                classAttribute.setName("class", 0);
+            if(!ATTRIBUTE_NAME_CLASS.equals(classAttribute.getName())){
+                classAttribute.setName(ATTRIBUTE_NAME_CLASS, 0);
             }
         }
         if(styleAttribute!=null){
             mStyleAttributePosition.set((short) (styleAttribute.getIndex()+1));
             // In case obfuscation
-            if(!"style".equals(styleAttribute.getName())){
-                styleAttribute.setName("style", 0);
+            if(!ATTRIBUTE_NAME_STYLE.equals(styleAttribute.getName())){
+                styleAttribute.setName(ATTRIBUTE_NAME_STYLE, 0);
             }
         }
     }
     void calculatePositions(){
-
-        int android_id=0x010100d0;
-        ResXmlAttribute idAttribute=getAttribute(android_id);
-        ResXmlAttribute classAttribute=getNoIdAttribute("class");
-        ResXmlAttribute styleAttribute=getNoIdAttribute("style");
+        ResXmlAttribute idAttribute=getAttribute(ATTRIBUTE_RESOURCE_ID_id);
+        ResXmlAttribute classAttribute=getNoIdAttribute(ATTRIBUTE_NAME_CLASS);
+        ResXmlAttribute styleAttribute=getNoIdAttribute(ATTRIBUTE_NAME_STYLE);
 
         if(idAttribute!=null){
             mIdAttributePosition.set((short) (idAttribute.getIndex()+1));
@@ -244,4 +227,17 @@ public class ResXmlStartElement extends BaseXmlChunk {
 
     private static final short ATTRIBUTES_UNIT_SIZE=0x0014;
     private static final short ATTRIBUTES_DEFAULT_START=0x0014;
+    /*
+    * Find another way to mark an attribute is class, device actually relies on
+    * value of mClassAttributePosition */
+    private static final String ATTRIBUTE_NAME_CLASS="class";
+    /*
+     * Find another way to mark an attribute is style, device actually relies on
+     * value of mStyleAttributePosition */
+    private static final String ATTRIBUTE_NAME_STYLE="style";
+    /*
+    * Resource id value of attribute 'android:id'
+    * instead of relying on hardcoded value, we should find another way to
+    * mark an attribute is 'id' */
+    private static final int ATTRIBUTE_RESOURCE_ID_id =0x010100d0;
 }

@@ -66,7 +66,6 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         }
         elementData=newInstance(0);
     }
-
     public void addAll(T[] blocks){
         if(blocks==null||blocks.length==0){
             return;
@@ -96,6 +95,16 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         elementData=update;
         if(foundNull){
             trimNullBlocks();
+        }
+    }
+    public void sort(Comparator<T> comparator){
+        T[] data=this.elementData;
+        if(comparator==null || data==null || data.length<2){
+            return;
+        }
+        Arrays.sort(data, 0, data.length, comparator);
+        for(int i=0;i<data.length;i++){
+            data[i].setIndex(i);
         }
     }
     public void setItem(int index, T item){
@@ -283,7 +292,6 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
             item.setParent(this);
         }
         elementData=update;
-        Arrays.fill(old, null);
     }
 
     @Override
@@ -293,7 +301,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
 
     private class BlockIterator implements Iterator<T> {
         private int mCursor;
-        private int mMaxSize;
+        private final int mMaxSize;
         private final boolean mSkipNullBlock;
         BlockIterator(boolean skipNullBlock){
             mSkipNullBlock=skipNullBlock;

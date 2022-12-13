@@ -302,7 +302,6 @@ public class ResXmlAttribute extends FixedBlockContainer
         setRawValue(val);
         setValueStringReference(-1);
     }
-
     private String getCompareName(){
         int id=getNameResourceID();
         StringBuilder builder=new StringBuilder();
@@ -317,7 +316,26 @@ public class ResXmlAttribute extends FixedBlockContainer
     }
     @Override
     public int compareTo(ResXmlAttribute other) {
-        return getCompareName().compareTo(other.getCompareName());
+        int id1=getNameResourceID();
+        int id2=other.getNameResourceID();
+        if(id1==0 && id2!=0){
+            return 1;
+        }
+        if(id2==0 && id1!=0){
+            return -1;
+        }
+        if(id1!=0){
+            return Integer.compare(id1, id2);
+        }
+        String name1=getName();
+        if(name1==null){
+            name1="";
+        }
+        String name2=other.getName();
+        if(name2==null){
+            name2="";
+        }
+        return name1.compareTo(name2);
     }
 
     @Override

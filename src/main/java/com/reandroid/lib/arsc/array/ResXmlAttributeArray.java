@@ -11,10 +11,7 @@ import com.reandroid.lib.json.JSONArray;
 import com.reandroid.lib.json.JSONObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
 
 public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         implements Comparator<ResXmlAttribute>, JSONConvert<JSONArray> {
@@ -27,14 +24,7 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         this.mAttributeCount=attributeCount;
     }
     public void sortAttributes(){
-        Collection<ResXmlAttribute> items = listItems();
-        if(items.size()<2){
-            return;
-        }
-        List<ResXmlAttribute> elementList = new ArrayList<>(items);
-        elementList.sort(this);
-        clearChildes();
-        addAll(elementList.toArray(new ResXmlAttribute[0]));
+        sort(this);
     }
     private void refreshCount(){
         short count= (short) childesCount();
@@ -76,6 +66,7 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
 
     @Override
     public JSONArray toJson() {
+        sortAttributes();
         JSONArray jsonArray=new JSONArray();
         int i=0;
         for(ResXmlAttribute attr:listItems()){
