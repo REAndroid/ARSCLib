@@ -114,5 +114,4 @@ public class ApkUtil {
     public static final String DEF_MODULE_NAME="base";
     public static final String NAME_value_type="value_type";
     public static final String NAME_data="data";
-    public static final String NAME_is_array="is_array";
 }

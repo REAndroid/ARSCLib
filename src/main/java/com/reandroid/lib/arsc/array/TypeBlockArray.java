@@ -17,12 +17,17 @@ import com.reandroid.lib.json.JSONObject;
 import java.io.IOException;
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
-public class TypeBlockArray extends BlockArray<TypeBlock> implements JSONConvert<JSONArray> {
+public class TypeBlockArray extends BlockArray<TypeBlock>
+        implements JSONConvert<JSONArray>, Comparator<TypeBlock> {
     private byte mTypeId;
     public TypeBlockArray(){
         super();
+    }
+    public void sort(){
+        sort(this);
     }
     public void removeEmptyBlocks(){
         List<TypeBlock> allTypes=new ArrayList<>(listItems());
@@ -271,5 +276,9 @@ public class TypeBlockArray extends BlockArray<TypeBlock> implements JSONConvert
             TypeBlock typeBlock=get(i);
             typeBlock.fromJson(jsonObject);
         }
+    }
+    @Override
+    public int compare(TypeBlock typeBlock1, TypeBlock typeBlock2) {
+        return typeBlock1.compareTo(typeBlock2);
     }
 }

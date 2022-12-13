@@ -15,7 +15,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class TypeBlock extends BaseTypeBlock implements JSONConvert<JSONObject> {
+public class TypeBlock extends BaseTypeBlock
+        implements JSONConvert<JSONObject>, Comparable<TypeBlock> {
     private final IntegerItem mEntriesStart;
     private final ResConfig mResConfig;
     private final IntegerArray mEntryOffsets;
@@ -136,6 +137,15 @@ public class TypeBlock extends BaseTypeBlock implements JSONConvert<JSONObject> 
         }
         getEntryBlockArray().fromJson(json.getJSONArray("entries"));
         getResConfig().fromJson(json.getJSONObject("config"));
+    }
+    @Override
+    public int compareTo(TypeBlock typeBlock) {
+        int id1=getTypeId();
+        int id2=typeBlock.getTypeId();
+        if(id1!=id2){
+            return Integer.compare(id1, id2);
+        }
+        return getResConfig().compareTo(typeBlock.getResConfig());
     }
     @Override
     public String toString(){

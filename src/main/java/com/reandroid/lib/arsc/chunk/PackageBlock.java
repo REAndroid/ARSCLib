@@ -85,6 +85,9 @@ public class PackageBlock extends BaseChunk implements BlockLoad, JSONConvert<JS
         addChild(mPackageLastBlocks);
 
     }
+    public void sortTypes(){
+        getSpecTypePairArray().sort();
+    }
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
         if(sender==mPackageId){

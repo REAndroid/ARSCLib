@@ -11,11 +11,18 @@ import com.reandroid.lib.json.JSONObject;
 
 import java.util.*;
 
-public class SpecTypePairArray extends BlockArray<SpecTypePair> implements JSONConvert<JSONArray> {
+public class SpecTypePairArray extends BlockArray<SpecTypePair>
+        implements JSONConvert<JSONArray>, Comparator<SpecTypePair> {
     public SpecTypePairArray(){
         super();
     }
 
+    public void sort(){
+        for(SpecTypePair specTypePair:listItems()){
+            specTypePair.sortTypes();
+        }
+        sort(this);
+    }
     public void removeEmptyPairs(){
         List<SpecTypePair> allPairs=new ArrayList<>(listItems());
         boolean foundEmpty=false;
@@ -218,5 +225,9 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair> implements JSONC
             SpecTypePair specTypePair=get(i);
             specTypePair.fromJson(jsonObject);
         }
+    }
+    @Override
+    public int compare(SpecTypePair typePair1, SpecTypePair typePair2) {
+        return typePair1.compareTo(typePair2);
     }
 }

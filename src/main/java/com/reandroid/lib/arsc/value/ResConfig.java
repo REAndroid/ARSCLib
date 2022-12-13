@@ -12,7 +12,8 @@ import com.reandroid.lib.json.JSONObject;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class ResConfig extends FixedBlockContainer implements BlockLoad, JSONConvert<JSONObject> {
+public class ResConfig extends FixedBlockContainer
+        implements BlockLoad, JSONConvert<JSONObject>, Comparable<ResConfig> {
 
     private final IntegerItem configSize;
     private final ByteArray mValuesContainer;
@@ -780,6 +781,10 @@ public class ResConfig extends FixedBlockContainer implements BlockLoad, JSONCon
             q="DEFAULT";
         }
         return "["+q+"]";
+    }
+    @Override
+    public int compareTo(ResConfig resConfig) {
+        return getQualifiers().compareTo(resConfig.getQualifiers());
     }
 
 

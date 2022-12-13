@@ -21,7 +21,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-public class SpecTypePair extends BlockContainer<Block> implements JSONConvert<JSONObject> {
+public class SpecTypePair extends BlockContainer<Block>
+        implements JSONConvert<JSONObject> , Comparable<SpecTypePair>{
     private final Block[] mChildes;
     private final SpecBlock mSpecBlock;
     private final TypeBlockArray mTypeBlockArray;
@@ -36,6 +37,9 @@ public class SpecTypePair extends BlockContainer<Block> implements JSONConvert<J
     }
     public SpecTypePair(){
         this(new SpecBlock(), new TypeBlockArray());
+    }
+    public void sortTypes(){
+        getTypeBlockArray().sort();
     }
     public void removeEmptyTypeBlocks(){
         getTypeBlockArray().removeEmptyBlocks();
@@ -154,5 +158,24 @@ public class SpecTypePair extends BlockContainer<Block> implements JSONConvert<J
     public void fromJson(JSONObject json) {
         getSpecBlock().setTypeId((byte) json.getInt("id"));
         getTypeBlockArray().fromJson(json.getJSONArray("types"));
+    }
+    @Override
+    public int compareTo(SpecTypePair specTypePair) {
+        return Integer.compare(getTypeId(), specTypePair.getTypeId());
+    }
+    @Override
+    public String toString(){
+        StringBuilder builder=new StringBuilder();
+        builder.append(String.format("0x%02x", getTypeId()));
+        builder.append(" (");
+        TypeString ts = getTypeString();
+        if(ts!=null){
+            builder.append(ts.get());
+        }else {
+            builder.append("null");
+        }
+        builder.append(") config count=");
+        builder.append(getTypeBlockArray().childesCount());
+        return builder.toString();
     }
 }

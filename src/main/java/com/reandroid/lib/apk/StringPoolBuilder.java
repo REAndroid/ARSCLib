@@ -4,6 +4,7 @@ import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
 import com.reandroid.lib.arsc.pool.TableStringPool;
+import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ValueType;
 import com.reandroid.lib.json.JSONArray;
 import com.reandroid.lib.json.JSONException;
@@ -74,8 +75,8 @@ public class StringPoolBuilder {
         return mSpecNameMap.get(pkgId);
     }
     private void scan(JSONObject jsonObject){
-        if(jsonObject.has(ApkUtil.NAME_is_array)){
-            addSpecName(jsonObject.optString("name"));
+        if(jsonObject.has(EntryBlock.NAME_entry_name)){
+            addSpecName(jsonObject.optString(EntryBlock.NAME_entry_name));
         }
         if(jsonObject.has(ApkUtil.NAME_value_type)){
             if(ValueType.STRING.name().equals(jsonObject.getString(ApkUtil.NAME_value_type))){

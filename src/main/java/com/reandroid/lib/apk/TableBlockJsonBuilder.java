@@ -49,6 +49,7 @@ public class TableBlockJsonBuilder {
         for(File typeFile:typeFileList){
             loadType(pkg, typeFile);
         }
+        pkg.sortTypes();
     }
     private void loadType(PackageBlock packageBlock, File typeJsonFile) throws IOException{
         FileInputStream inputStream=new FileInputStream(typeJsonFile);
