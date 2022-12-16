@@ -693,6 +693,8 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         SpecString spec = getPackageBlock()
                 .getSpecStringPool().getOrCreate(name);
         setSpecReference(spec.getIndex());
+        setEntryTypeShared(entryBlock.isEntryTypeShared());
+        setEntryTypePublic(entryBlock.isEntryTypePublic());
     }
     private ResValueBag getOrCreateResValueBag(){
         if(mResValue instanceof ResValueBag){
