@@ -18,9 +18,14 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public ResXmlElement getMainActivity(){
         for(ResXmlElement activity:listActivities()){
             for(ResXmlElement intentFilter:activity.listElements(TAG_intent_filter)){
-                ResXmlAttribute attribute = intentFilter.searchAttributeByResourceId(ID_name);
-                if(VALUE_android_intent_action_MAIN.equals(attribute.getValueAsString())){
-                    return activity;
+                for(ResXmlElement action:intentFilter.listElements(TAG_action)){
+                    ResXmlAttribute attribute = action.searchAttributeByResourceId(ID_name);
+                    if(attribute==null){
+                        continue;
+                    }
+                    if(VALUE_android_intent_action_MAIN.equals(attribute.getValueAsString())){
+                        return activity;
+                    }
                 }
             }
         }
@@ -294,6 +299,8 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public static final String NAME_versionCode = "versionCode";
     public static final String NAME_versionName = "versionName";
     public static final String NAME_name = "name";
+    public static final String NAME_extractNativeLibs = "extractNativeLibs";
+    public static final String NAME_isSplitRequired = "isSplitRequired";
 
     public static final int ID_name = 0x01010003;
     public static final int ID_compileSdkVersion = 0x01010572;
@@ -302,6 +309,8 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public static final int ID_host = 0x01010028;
     public static final int ID_configChanges = 0x0101001f;
     public static final int ID_screenOrientation = 0x0101001e;
+    public static final int ID_extractNativeLibs = 0x010104ea;
+    public static final int ID_isSplitRequired = 0x01010591;
 
     public static final String VALUE_android_intent_action_MAIN = "android.intent.action.MAIN";
 

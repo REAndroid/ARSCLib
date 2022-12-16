@@ -1,11 +1,17 @@
 package com.reandroid.lib.arsc.array;
 
+import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
+import com.reandroid.lib.arsc.value.BaseResValue;
 import com.reandroid.lib.arsc.value.EntryBlock;
+import com.reandroid.lib.arsc.value.ResValueInt;
+import com.reandroid.lib.arsc.value.ValueType;
 import com.reandroid.lib.json.JSONConvert;
 import com.reandroid.lib.json.JSONArray;
 import com.reandroid.lib.json.JSONObject;
+
+import java.util.Iterator;
 
 
 public class EntryBlockArray extends OffsetBlockArray<EntryBlock> implements JSONConvert<JSONArray> {
@@ -56,7 +62,6 @@ public class EntryBlockArray extends OffsetBlockArray<EntryBlock> implements JSO
         }
         return jsonArray;
     }
-
     @Override
     public void fromJson(JSONArray json) {
         clearChildes();
@@ -73,6 +78,34 @@ public class EntryBlockArray extends OffsetBlockArray<EntryBlock> implements JSO
             entryBlock.fromJson(jsonObject);
         }
         refreshCountAndStart();
+    }
+    public void merge(EntryBlockArray entryBlockArray){
+        if(entryBlockArray==null||entryBlockArray==this||entryBlockArray.isEmpty()){
+            return;
+        }
+        ensureSize(entryBlockArray.childesCount());
+        Iterator<EntryBlock> itr=entryBlockArray.iterator(true);
+        while (itr.hasNext()){
+            EntryBlock comingBlock=itr.next();
+            EntryBlock existingBlock=get(comingBlock.getIndex());
+            if(shouldMerge(existingBlock, comingBlock)){
+                existingBlock.merge(comingBlock);
+            }
+        }
+    }
+    private boolean shouldMerge(EntryBlock exist, EntryBlock coming){
+        if(exist.isNull()){
+            return true;
+        }
+        if(coming.isNull()){
+            return false;
+        }
+        BaseResValue resVal = coming.getResValue();
+        if(resVal instanceof ResValueInt){
+            ValueType valueType=((ResValueInt)resVal).getValueType();
+            return valueType!=ValueType.INT_BOOLEAN;
+        }
+        return true;
     }
     @Override
     public String toString(){

@@ -11,6 +11,9 @@ public abstract class BaseResValue extends BlockItem implements JSONConvert<JSON
         super(bytesLength);
     }
 
+    protected void onRemoved(){
+    }
+
     public EntryBlock getEntryBlock(){
         Block parent=getParent();
         while(parent!=null){

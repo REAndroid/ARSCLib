@@ -1,5 +1,6 @@
 package com.reandroid.lib.arsc.value;
 
+import com.reandroid.lib.arsc.array.LibraryInfoArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockCounter;
 import com.reandroid.lib.arsc.io.BlockReader;
@@ -87,6 +88,16 @@ public class LibraryInfo extends Block implements JSONConvert<JSONObject> {
     public void fromJson(JSONObject json) {
         setPackageId(json.getInt("id"));
         setPackageName(json.getString("name"));
+    }
+    public void merge(LibraryInfo info){
+        if(info==null||info==this){
+            return;
+        }
+        if(getPackageId()!=info.getPackageId()){
+            throw new IllegalArgumentException("Can not add different id libraries: "
+                    +getPackageId()+"!="+info.getPackageId());
+        }
+        setPackageName(info.getPackageName());
     }
     @Override
     public String toString(){

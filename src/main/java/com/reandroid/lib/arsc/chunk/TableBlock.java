@@ -30,6 +30,9 @@ public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
         addChild(mTableStringPool);
         addChild(mPackageArray);
     }
+    public void sortPackages(){
+        getPackageArray().sort();
+    }
     public Collection<PackageBlock> listPackages(){
         return getPackageArray().listItems();
     }
@@ -136,6 +139,16 @@ public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
     @Override
     public void fromJson(JSONObject json) {
         getPackageArray().fromJson(json.getJSONArray(NAME_packages));
+        refresh();
+    }
+    public void merge(TableBlock tableBlock){
+        if(tableBlock==null||tableBlock==this){
+            return;
+        }
+        if(getPackageArray().childesCount()==0){
+            getTableStringPool().merge(tableBlock.getTableStringPool());
+        }
+        getPackageArray().merge(tableBlock.getPackageArray());
         refresh();
     }
     public static TableBlock loadWithAndroidFramework(InputStream inputStream) throws IOException{

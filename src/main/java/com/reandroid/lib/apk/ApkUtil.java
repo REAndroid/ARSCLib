@@ -1,8 +1,9 @@
 package com.reandroid.lib.apk;
 
+import com.reandroid.archive.InputSource;
+
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class ApkUtil {
     public static String replaceRootDir(String path, String dirName){
@@ -103,6 +104,21 @@ public class ApkUtil {
                 }
                 results.add(file);
             }
+        }
+        return results;
+    }
+    public static String toModuleName(File file){
+        String name=file.getName();
+        int i=name.lastIndexOf('.');
+        if(i>0){
+            name=name.substring(0,i);
+        }
+        return name;
+    }
+    public static Map<String, InputSource> toAliasMap(Collection<InputSource> sourceList){
+        Map<String, InputSource> results=new HashMap<>();
+        for(InputSource inputSource:sourceList){
+            results.put(inputSource.getAlias(), inputSource);
         }
         return results;
     }

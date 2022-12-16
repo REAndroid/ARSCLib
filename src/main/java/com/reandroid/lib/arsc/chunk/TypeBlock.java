@@ -1,6 +1,7 @@
 package com.reandroid.lib.arsc.chunk;
 
 import com.reandroid.lib.arsc.array.EntryBlockArray;
+import com.reandroid.lib.arsc.array.TypeBlockArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.item.IntegerArray;
@@ -137,6 +138,17 @@ public class TypeBlock extends BaseTypeBlock
         }
         getEntryBlockArray().fromJson(json.getJSONArray("entries"));
         getResConfig().fromJson(json.getJSONObject("config"));
+    }
+    public void merge(TypeBlock typeBlock){
+        if(typeBlock==null||typeBlock==this){
+            return;
+        }
+        if(getTypeId() != typeBlock.getTypeId()){
+            throw new IllegalArgumentException("Can not merge different id types: "
+                    +getTypeId()+"!="+typeBlock.getTypeId());
+        }
+        setTypeName(typeBlock.getTypeName());
+        getEntryBlockArray().merge(typeBlock.getEntryBlockArray());
     }
     @Override
     public int compareTo(TypeBlock typeBlock) {

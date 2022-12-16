@@ -159,6 +159,17 @@ public class UncompressedFiles implements JSONConvert<JSONObject> {
             }
         }
     }
+    public void merge(UncompressedFiles uf){
+        if(uf==null||uf==this){
+            return;
+        }
+        for(String path: uf.mPathList){
+            addPath(path);
+        }
+        for(String ext:uf.mExtensionList){
+            addExtension(ext);
+        }
+    }
     public void fromJson(File jsonFile) throws IOException {
         if(!jsonFile.isFile()){
             return;

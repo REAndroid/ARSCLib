@@ -59,15 +59,26 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
         if(childesCount()==0){
             return null;
         }
-        int i=0;
-        for(StyleItem styleItem:listItems()){
-
-        }
         return null;
     }
     @Override
     public void fromJson(JSONArray json) {
 
+    }
+    public void merge(StyleArray styleArray){
+        if(styleArray==null||styleArray==this){
+            return;
+        }
+        if(childesCount()!=0){
+            return;
+        }
+        int count=styleArray.childesCount();
+        ensureSize(count);
+        for(int i=0;i<count;i++){
+            StyleItem exist=get(i);
+            StyleItem coming=styleArray.get(i);
+            exist.merge(coming);
+        }
     }
     private static final byte END_BYTE= (byte) 0xFF;
 }

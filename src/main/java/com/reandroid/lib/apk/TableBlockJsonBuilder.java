@@ -30,6 +30,7 @@ public class TableBlockJsonBuilder {
         for(File pkgDir:pkgDirList){
             scanPackageDirectory(tableBlock, pkgDir);
         }
+        tableBlock.sortPackages();
         tableBlock.refresh();
         return tableBlock;
     }

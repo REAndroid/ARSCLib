@@ -11,6 +11,10 @@ public class ResValueBagItem extends BaseResValueItem{
         super(BYTES_COUNT);
         setHeaderSize(BYTES_SIZE);
     }
+    @Override
+    public void onRemoved(){
+        removeTableReference();
+    }
     public String getValueAsString(){
         return getTableString(getData()).getHtml();
     }
@@ -184,6 +188,19 @@ public class ResValueBagItem extends BaseResValueItem{
             setValueAsBoolean(json.getBoolean(NAME_data));
         }else {
             setData(json.getInt(NAME_data));
+        }
+    }
+    public void merge(ResValueBagItem bagItem){
+        if(bagItem==null||bagItem==this){
+            return;
+        }
+        setId(bagItem.getId());
+        ValueType valueType=bagItem.getValueType();
+        if(valueType==ValueType.STRING){
+            setValueAsString(bagItem.getValueAsString());
+        }else {
+            setType(valueType);
+            setData(bagItem.getData());
         }
     }
 

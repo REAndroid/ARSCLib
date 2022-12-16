@@ -1,8 +1,10 @@
 package com.reandroid.lib.arsc.value;
 
+import com.reandroid.lib.arsc.array.EntryBlockArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockCounter;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
+import com.reandroid.lib.arsc.chunk.SpecBlock;
 import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.group.EntryGroup;
@@ -17,6 +19,7 @@ import com.reandroid.lib.json.JSONObject;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class EntryBlock extends Block implements JSONConvert<JSONObject> {
@@ -228,41 +231,23 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         removeSpecReferences();
     }
     public void setEntryTypeBag(boolean b){
-        int val=mFlagEntryType.get();
-        if(b){
-            val=val|0x1;
-        }else {
-            val=val&0xFE;
-        }
-        mFlagEntryType.set((byte) val);
+        mFlagEntryType.putBit(0, b);
         refreshHeaderSize();
     }
     public boolean isEntryTypeBag(){
-        return ((mFlagEntryType.get() & 0x1) != 0);
+        return mFlagEntryType.getBit(0);
     }
     public void setEntryTypeShared(boolean b){
-        int val=mFlagEntryType.get();
-        if(b){
-            val=val|0x2;
-        }else {
-            val=val&0xFD;
-        }
-        mFlagEntryType.set((byte) val);
+        mFlagEntryType.putBit(1, b);
     }
     public boolean isEntryTypeShared(){
-        return (mFlagEntryType.get() & 0x2) !=0;
+        return mFlagEntryType.getBit(1);
     }
     public void setEntryTypePublic(boolean b){
-        int val=mFlagEntryType.get();
-        if(b){
-            val=val|0x4;
-        }else {
-            val=val&0xFB;
-        }
-        mFlagEntryType.set((byte) val);
+        mFlagEntryType.putBit(2, b);
     }
     public boolean isEntryTypePublic(){
-        return (mFlagEntryType.get() & 0x4) !=0;
+        return mFlagEntryType.getBit(2);
     }
     private void setByteFlagsB(byte b){
         mByteFlagsB.set(b);
@@ -310,6 +295,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         if(mResValue!=null){
             mResValue.setIndex(-1);
             mResValue.setParent(null);
+            mResValue.onRemoved();
         }
         if(resValue!=null){
             setNull(false);
@@ -684,6 +670,41 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         setName(json.getString(NAME_entry_name));
         baseResValue.fromJson(json.getJSONObject(NAME_value));
         mResValue.onDataLoaded();
+    }
+    public void merge(EntryBlock entryBlock){
+        if(entryBlock==null||entryBlock==this||entryBlock.isNull()){
+            return;
+        }
+        String name=entryBlock.getName();
+        if(name==null){
+            name="";
+        }
+        if(!entryBlock.isEntryTypeBag()){
+            ResValueInt comingValue = (ResValueInt) entryBlock.getResValue();
+            ResValueInt exist = getOrCreateResValueInt();
+            setResValue(exist);
+            exist.merge(comingValue);
+        }else {
+            ResValueBag comingValue = (ResValueBag)  entryBlock.getResValue();
+            ResValueBag exist=getOrCreateResValueBag();
+            setResValue(exist);
+            exist.merge(comingValue);
+        }
+        SpecString spec = getPackageBlock()
+                .getSpecStringPool().getOrCreate(name);
+        setSpecReference(spec.getIndex());
+    }
+    private ResValueBag getOrCreateResValueBag(){
+        if(mResValue instanceof ResValueBag){
+            return (ResValueBag) mResValue;
+        }
+        return new ResValueBag();
+    }
+    private ResValueInt getOrCreateResValueInt(){
+        if(mResValue instanceof ResValueInt){
+            return (ResValueInt) mResValue;
+        }
+        return new ResValueInt();
     }
     @Override
     public String toString(){

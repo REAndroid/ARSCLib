@@ -307,6 +307,14 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
             addSpanInfo(spanInfo.getTag(), spanInfo.getFirst(), spanInfo.getLast());
         }
     }
+    public void merge(StyleItem styleItem){
+        if(styleItem==null||styleItem==this){
+            return;
+        }
+        for(int[] info:styleItem.getIntSpanInfoList()){
+            addStylePiece(info[0], info[1], info[2]);
+        }
+    }
     @Override
     public String toString(){
         return "Spans count = "+getSpanInfoList().size();

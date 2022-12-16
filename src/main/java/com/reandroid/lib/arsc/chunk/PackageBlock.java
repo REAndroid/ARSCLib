@@ -1,6 +1,7 @@
 package com.reandroid.lib.arsc.chunk;
 
 import com.reandroid.lib.arsc.array.LibraryInfoArray;
+import com.reandroid.lib.arsc.array.PackageArray;
 import com.reandroid.lib.arsc.array.SpecTypePairArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.PackageLastBlocks;
@@ -24,7 +25,8 @@ import java.io.IOException;
 import java.util.*;
 
 
-public class PackageBlock extends BaseChunk implements BlockLoad, JSONConvert<JSONObject> {
+public class PackageBlock extends BaseChunk
+        implements BlockLoad, JSONConvert<JSONObject>, Comparable<PackageBlock> {
     private final IntegerItem mPackageId;
     private final PackageName mPackageName;
 
@@ -136,7 +138,7 @@ public class PackageBlock extends BaseChunk implements BlockLoad, JSONConvert<JS
         return mSpecTypePairArray;
     }
     public Collection<LibraryInfo> listLibraryInfo(){
-        return mLibraryBlock.listLibraryInfo();
+        return getLibraryBlock().listLibraryInfo();
     }
 
     public void addLibrary(LibraryBlock libraryBlock){
@@ -148,7 +150,10 @@ public class PackageBlock extends BaseChunk implements BlockLoad, JSONConvert<JS
         }
     }
     public void addLibraryInfo(LibraryInfo info){
-        mLibraryBlock.addLibraryInfo(info);
+        getLibraryBlock().addLibraryInfo(info);
+    }
+    private LibraryBlock getLibraryBlock(){
+        return mLibraryBlock;
     }
     public Set<Integer> listResourceIds(){
         return mEntriesGroup.keySet();
@@ -290,6 +295,22 @@ public class PackageBlock extends BaseChunk implements BlockLoad, JSONConvert<JS
         getSpecTypePairArray().fromJson(json.getJSONArray(NAME_specs));
         LibraryInfoArray libraryInfoArray = mLibraryBlock.getLibraryInfoArray();
         libraryInfoArray.fromJson(json.optJSONArray(NAME_libraries));
+    }
+    public void merge(PackageBlock packageBlock){
+        if(packageBlock==null||packageBlock==this){
+            return;
+        }
+        if(getId()!=packageBlock.getId()){
+            throw new IllegalArgumentException("Can not merge different id packages: "
+                    +getId()+"!="+packageBlock.getId());
+        }
+        setName(packageBlock.getName());
+        getLibraryBlock().merge(packageBlock.getLibraryBlock());
+        getSpecTypePairArray().merge(packageBlock.getSpecTypePairArray());
+    }
+    @Override
+    public int compareTo(PackageBlock pkg) {
+        return Integer.compare(getId(), pkg.getId());
     }
     @Override
     public String toString(){

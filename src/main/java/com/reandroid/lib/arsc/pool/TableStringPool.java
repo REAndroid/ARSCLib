@@ -15,4 +15,22 @@ public class TableStringPool extends BaseStringPool<TableString> {
     StringArray<TableString> newInstance(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         return new TableStringArray(offsets, itemCount, itemStart, is_utf8);
     }
+    public void merge(TableStringPool stringPool){
+        if(stringPool==null||stringPool==this){
+            return;
+        }
+        StringArray<TableString> existArray = getStringsArray();
+        if(existArray.childesCount()!=0){
+            return;
+        }
+        StringArray<TableString> comingArray = stringPool.getStringsArray();
+        int count=comingArray.childesCount();
+        existArray.ensureSize(count);
+        for(int i=0;i<count;i++){
+            TableString exist = existArray.get(i);
+            TableString coming = comingArray.get(i);
+            exist.set(coming.get());
+        }
+        getStyleArray().merge(stringPool.getStyleArray());
+    }
 }

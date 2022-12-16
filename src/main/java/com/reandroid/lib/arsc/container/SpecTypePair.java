@@ -159,6 +159,16 @@ public class SpecTypePair extends BlockContainer<Block>
         getSpecBlock().setTypeId((byte) json.getInt("id"));
         getTypeBlockArray().fromJson(json.getJSONArray("types"));
     }
+    public void merge(SpecTypePair typePair){
+        if(typePair==null||typePair==this){
+            return;
+        }
+        if(getTypeId() != typePair.getTypeId()){
+            throw new IllegalArgumentException("Can not merge different id types: "
+                    +getTypeId()+"!="+typePair.getTypeId());
+        }
+        getTypeBlockArray().merge(typePair.getTypeBlockArray());
+    }
     @Override
     public int compareTo(SpecTypePair specTypePair) {
         return Integer.compare(getTypeId(), specTypePair.getTypeId());

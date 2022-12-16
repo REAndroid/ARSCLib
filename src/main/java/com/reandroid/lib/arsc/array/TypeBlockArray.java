@@ -5,6 +5,7 @@ import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockArray;
 import com.reandroid.lib.arsc.chunk.SpecBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
+import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.TypeString;
@@ -275,6 +276,15 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
             JSONObject jsonObject=json.getJSONObject(i);
             TypeBlock typeBlock=get(i);
             typeBlock.fromJson(jsonObject);
+        }
+    }
+    public void merge(TypeBlockArray typeBlockArray){
+        if(typeBlockArray==null||typeBlockArray==this){
+            return;
+        }
+        for(TypeBlock typeBlock:typeBlockArray.listItems()){
+            TypeBlock block=getOrCreate(typeBlock.getResConfig());
+            block.merge(typeBlock);
         }
     }
     @Override

@@ -50,10 +50,15 @@ public class LibraryBlock extends BaseChunk {
         mLibCount.set(count);
         mLibraryInfoArray.setChildesCount(count);
     }
-
     @Override
     protected void onChunkRefreshed() {
         mLibCount.set(mLibraryInfoArray.childesCount());
     }
 
+    public void merge(LibraryBlock libraryBlock){
+        if(libraryBlock==null||libraryBlock==this){
+            return;
+        }
+        getLibraryInfoArray().merge(libraryBlock.getLibraryInfoArray());
+    }
 }

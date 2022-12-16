@@ -11,13 +11,21 @@ import com.reandroid.lib.json.JSONArray;
 import com.reandroid.lib.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Iterator;
 
-public class PackageArray extends BlockArray<PackageBlock> implements BlockLoad, JSONConvert<JSONArray> {
+public class PackageArray extends BlockArray<PackageBlock>
+        implements BlockLoad, JSONConvert<JSONArray>, Comparator<PackageBlock> {
     private final IntegerItem mPackageCount;
     public PackageArray(IntegerItem packageCount){
         this.mPackageCount=packageCount;
         mPackageCount.setBlockLoad(this);
+    }
+    public void sort(){
+        for(PackageBlock packageBlock:listItems()){
+            packageBlock.sortTypes();
+        }
+        sort(this);
     }
     public PackageBlock getOrCreate(byte pkgId){
         PackageBlock packageBlock=getPackageBlockById(pkgId);
@@ -87,5 +95,18 @@ public class PackageArray extends BlockArray<PackageBlock> implements BlockLoad,
             PackageBlock packageBlock=get(i);
             packageBlock.fromJson(jsonObject);
         }
+    }
+    public void merge(PackageArray packageArray){
+        if(packageArray==null||packageArray==this){
+            return;
+        }
+        for(PackageBlock packageBlock:packageArray.listItems()){
+            PackageBlock exist=getOrCreate((byte) packageBlock.getId());
+            exist.merge(packageBlock);
+        }
+    }
+    @Override
+    public int compare(PackageBlock p1, PackageBlock p2) {
+        return p1.compareTo(p2);
     }
 }

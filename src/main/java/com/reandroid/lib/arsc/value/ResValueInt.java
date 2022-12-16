@@ -1,6 +1,7 @@
 package com.reandroid.lib.arsc.value;
 
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
+import com.reandroid.lib.arsc.item.SpecString;
 import com.reandroid.lib.arsc.item.TableString;
 import com.reandroid.lib.json.JSONObject;
 
@@ -8,6 +9,9 @@ public class ResValueInt extends BaseResValueItem  {
     public ResValueInt() {
         super(BYTES_COUNT);
         setHeaderSize(BYTES_SIZE);
+    }
+    protected void onRemoved(){
+        removeTableReference();
     }
     public String getValueAsString(){
         return getString(getData());
@@ -114,6 +118,18 @@ public class ResValueInt extends BaseResValueItem  {
         }else {
             setType(valueType);
             setData(json.getInt(NAME_data));
+        }
+    }
+    public void merge(ResValueInt resValueInt){
+        if(resValueInt==null||resValueInt==this){
+            return;
+        }
+        ValueType valueType=resValueInt.getValueType();
+        if(valueType==ValueType.STRING){
+            setValueAsString(resValueInt.getValueAsString());
+        }else {
+            setType(valueType);
+            setData(resValueInt.getData());
         }
     }
     @Override

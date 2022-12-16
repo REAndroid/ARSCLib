@@ -113,7 +113,6 @@ public class ResValueBag extends BaseResValue {
         if(isNull()){
             return 0;
         }
-        refreshCount();
         int result;
         result=mParentId.writeBytes(writer);
         result+=mCount.writeBytes(writer);
@@ -148,6 +147,14 @@ public class ResValueBag extends BaseResValue {
     public void fromJson(JSONObject json) {
         setParentId(json.getInt(NAME_parent));
         getResValueBagItemArray().fromJson(json.getJSONArray(NAME_items));
+        refreshCount();
+    }
+    public void merge(ResValueBag resValueBag){
+        if(resValueBag==null||resValueBag==this){
+            return;
+        }
+        setParentId(resValueBag.getParentId());
+        getResValueBagItemArray().merge(resValueBag.getResValueBagItemArray());
         refreshCount();
     }
 

@@ -2,6 +2,7 @@ package com.reandroid.lib.apk;
 
 import com.reandroid.archive.*;
 import com.reandroid.lib.arsc.array.PackageArray;
+import com.reandroid.lib.arsc.chunk.BaseChunk;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.chunk.xml.AndroidManifestBlock;
@@ -29,6 +30,16 @@ public class ApkModule {
         this.apkArchive=apkArchive;
         this.mUncompressedFiles=new UncompressedFiles();
         this.mUncompressedFiles.addPath(apkArchive);
+    }
+    public List<DexFileInputSource> listDexFiles(){
+        List<DexFileInputSource> results=new ArrayList<>();
+        for(InputSource source:getApkArchive().listInputSources()){
+            if(DexFileInputSource.isDexName(source.getAlias())){
+                results.add(new DexFileInputSource(source.getAlias(), source));
+            }
+        }
+        DexFileInputSource.sort(results);
+        return results;
     }
     public boolean isBaseModule(){
         if(!hasAndroidManifestBlock()){
@@ -223,6 +234,9 @@ public class ApkModule {
             tableBlock=((SplitJsonTableInputSource)inputSource).getTableBlock();
         }else if(inputSource instanceof SingleJsonTableInputSource){
             tableBlock=((SingleJsonTableInputSource)inputSource).getTableBlock();
+        }else if(inputSource instanceof BlockInputSource){
+            BaseChunk block = ((BlockInputSource<?>) inputSource).getBlock();
+            tableBlock=(TableBlock) block;
         }else {
             InputStream inputStream = inputSource.openStream();
             if(loadDefaultFramework){
@@ -246,6 +260,78 @@ public class ApkModule {
         this.loadDefaultFramework = loadDefaultFramework;
     }
 
+    public void merge(ApkModule module) throws IOException {
+        if(module==null||module==this){
+            return;
+        }
+        logMessage("Merging: "+module.getModuleName());
+        mergeDexFiles(module);
+        mergeTable(module);
+        mergeFiles(module);
+        getUncompressedFiles().merge(module.getUncompressedFiles());
+    }
+    private void mergeTable(ApkModule module) throws IOException {
+        if(!module.hasTableBlock()){
+            return;
+        }
+        logMessage("Merging resource table: "+module.getModuleName());
+        TableBlock exist;
+        if(!hasTableBlock()){
+            exist=new TableBlock();
+            BlockInputSource<TableBlock> inputSource=new BlockInputSource<>(TableBlock.FILE_NAME, exist);
+            getApkArchive().add(inputSource);
+        }else{
+            exist=getTableBlock();
+        }
+        TableBlock coming=module.getTableBlock();
+        exist.merge(coming);
+    }
+    private void mergeFiles(ApkModule module) throws IOException {
+        APKArchive archiveExist = getApkArchive();
+        APKArchive archiveComing = module.getApkArchive();
+        Map<String, InputSource> comingAlias=ApkUtil.toAliasMap(archiveComing.listInputSources());
+        Map<String, InputSource> existAlias=ApkUtil.toAliasMap(archiveExist.listInputSources());
+        UncompressedFiles uf=getUncompressedFiles();
+        for(InputSource inputSource:comingAlias.values()){
+            if(existAlias.containsKey(inputSource.getAlias())||existAlias.containsKey(inputSource.getName())){
+                continue;
+            }
+            if(DexFileInputSource.isDexName(inputSource.getName())){
+                continue;
+            }
+            logVerbose("Added: "+inputSource.getAlias());
+            archiveExist.add(inputSource);
+            uf.addPath(inputSource);
+        }
+    }
+    private void mergeDexFiles(ApkModule module){
+        List<DexFileInputSource> existList=listDexFiles();
+        List<DexFileInputSource> comingList=module.listDexFiles();
+        APKArchive archive=getApkArchive();
+        int index=0;
+        if(existList.size()>0){
+            index=existList.get(existList.size()-1).getDexNumber();
+            if(index==0){
+                index=2;
+            }else {
+                index++;
+            }
+        }
+        for(DexFileInputSource source:comingList){
+            String name=DexFileInputSource.getDexName(index);
+            DexFileInputSource add=new DexFileInputSource(name, source.getInputSource());
+            archive.add(add);
+            logMessage("Added ["+module.getModuleName()+"] "
+                    +source.getAlias()+" -> "+name);
+            index++;
+            if(index==1){
+                index=2;
+            }
+        }
+    }
+    void sortApkFiles(){
+        sortApkFiles(new ArrayList<>(getApkArchive().listInputSources()));
+    }
     public void setAPKLogger(APKLogger logger) {
         this.apkLogger = logger;
     }
@@ -264,11 +350,50 @@ public class ApkModule {
             apkLogger.logVerbose(msg);
         }
     }
+    @Override
+    public String toString(){
+        return getModuleName();
+    }
     public static ApkModule loadApkFile(File apkFile) throws IOException {
         return loadApkFile(apkFile, ApkUtil.DEF_MODULE_NAME);
     }
     public static ApkModule loadApkFile(File apkFile, String moduleName) throws IOException {
         APKArchive archive=APKArchive.loadZippedApk(apkFile);
         return new ApkModule(moduleName, archive);
+    }
+    private static void sortApkFiles(List<InputSource> sourceList){
+        Comparator<InputSource> cmp=new Comparator<InputSource>() {
+            @Override
+            public int compare(InputSource in1, InputSource in2) {
+                return getSortName(in1).compareTo(getSortName(in2));
+            }
+        };
+        sourceList.sort(cmp);
+        int i=0;
+        for(InputSource inputSource:sourceList){
+            inputSource.setSort(i);
+            i++;
+        }
+    }
+    private static String getSortName(InputSource inputSource){
+        String name=inputSource.getAlias();
+        StringBuilder builder=new StringBuilder();
+        if(name.equals(AndroidManifestBlock.FILE_NAME)){
+            builder.append("0 ");
+        }else if(name.equals(TableBlock.FILE_NAME)){
+            builder.append("1 ");
+        }else if(name.startsWith("classes")){
+            builder.append("2 ");
+        }else if(name.startsWith("res/")){
+            builder.append("3 ");
+        }else if(name.startsWith("lib/")){
+            builder.append("4 ");
+        }else if(name.startsWith("assets/")){
+            builder.append("5 ");
+        }else {
+            builder.append("6 ");
+        }
+        builder.append(name.toLowerCase());
+        return builder.toString();
     }
 }
