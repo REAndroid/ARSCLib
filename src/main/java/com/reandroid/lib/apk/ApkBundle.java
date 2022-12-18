@@ -38,7 +38,7 @@ public class ApkBundle {
             tableBlock.sortPackages();
             tableBlock.refresh();
         }
-        result.sortApkFiles();
+        result.getApkArchive().sortApkFiles();
         return result;
     }
     private ApkModule getLargestTableModule() throws IOException {

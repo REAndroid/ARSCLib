@@ -33,6 +33,12 @@ public class ResXmlBlock extends BaseChunk implements JSONConvert<JSONObject> {
         addChild(mResXmlIDMap);
         addChild(mResXmlElementContainer);
     }
+    void linkStringReferences(){
+        ResXmlElement element=getResXmlElement();
+        if(element!=null){
+            element.linkStringReferences();
+        }
+    }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         HeaderBlock headerBlock=reader.readHeaderBlock();
@@ -54,6 +60,11 @@ public class ResXmlBlock extends BaseChunk implements JSONConvert<JSONObject> {
         reader.offset(headerBlock.getChunkSize());
         chunkReader.close();
         onChunkLoaded();
+    }
+    @Override
+    public void onChunkLoaded(){
+        super.onChunkLoaded();
+        linkStringReferences();
     }
     private boolean readNext(BlockReader reader) throws IOException {
         if(!reader.isAvailable()){
@@ -146,7 +157,6 @@ public class ResXmlBlock extends BaseChunk implements JSONConvert<JSONObject> {
         }
         return jsonObject;
     }
-
     @Override
     public void fromJson(JSONObject json) {
         onFromJson(json);

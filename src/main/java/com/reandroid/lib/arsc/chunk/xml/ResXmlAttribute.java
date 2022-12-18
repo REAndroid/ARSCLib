@@ -3,11 +3,14 @@ package com.reandroid.lib.arsc.chunk.xml;
 import com.reandroid.lib.arsc.array.ResXmlIDArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.FixedBlockContainer;
+import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 import com.reandroid.lib.arsc.value.ValueType;
 import com.reandroid.lib.json.JSONConvert;
 import com.reandroid.lib.json.JSONObject;
+
+import java.io.IOException;
 
 public class ResXmlAttribute extends FixedBlockContainer
         implements Comparable<ResXmlAttribute>, JSONConvert<JSONObject> {
@@ -34,6 +37,20 @@ public class ResXmlAttribute extends FixedBlockContainer
         addChild(4, mReserved);
         addChild(5, mValueTypeByte);
         addChild(6, mRawValue);
+    }
+    public void linkStringReferences(){
+        linkStringReference(mNamespaceReference);
+        linkStringReference(mNameReference);
+        linkStringReference(mValueStringReference);
+        if(getValueType()==ValueType.STRING){
+            linkStringReference(mRawValue);
+        }
+    }
+    private void linkStringReference(IntegerItem item){
+        ResXmlString xmlString = getResXmlString(item.get());
+        if(xmlString!=null){
+            xmlString.addReferenceIfAbsent(item);
+        }
     }
     public String getUri(){
         return getString(getNamespaceReference());

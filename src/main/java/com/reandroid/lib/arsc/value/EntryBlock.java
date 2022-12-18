@@ -1,10 +1,8 @@
 package com.reandroid.lib.arsc.value;
 
-import com.reandroid.lib.arsc.array.EntryBlockArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockCounter;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
-import com.reandroid.lib.arsc.chunk.SpecBlock;
 import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.group.EntryGroup;
@@ -19,7 +17,6 @@ import com.reandroid.lib.json.JSONObject;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class EntryBlock extends Block implements JSONConvert<JSONObject> {

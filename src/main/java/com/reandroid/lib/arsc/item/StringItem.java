@@ -43,6 +43,11 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
             mReferencedList.add(ref);
         }
     }
+    public void addReferenceIfAbsent(ReferenceItem ref){
+        if(ref!=null && !mReferencedList.contains(ref)){
+            mReferencedList.add(ref);
+        }
+    }
     public void addReference(Collection<ReferenceItem> refList){
         if(refList==null){
             return;

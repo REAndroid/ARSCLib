@@ -28,18 +28,34 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
     private int mDepth;
     public ResXmlElement() {
         super(6);
-        this.mStartNamespaceList =new BlockList<>();
-        this.mStartElementContainer=new SingleBlockContainer<>();
-        this.mBody=new BlockList<>();
-        this.mResXmlTextContainer=new SingleBlockContainer<>();
-        this.mEndElementContainer=new SingleBlockContainer<>();
-        this.mEndNamespaceList =new BlockList<>();
+        this.mStartNamespaceList = new BlockList<>();
+        this.mStartElementContainer= new SingleBlockContainer<>();
+        this.mBody = new BlockList<>();
+        this.mResXmlTextContainer = new SingleBlockContainer<>();
+        this.mEndElementContainer = new SingleBlockContainer<>();
+        this.mEndNamespaceList = new BlockList<>();
         addChild(0, mStartNamespaceList);
         addChild(1, mStartElementContainer);
         addChild(2, mBody);
         addChild(3, mResXmlTextContainer);
         addChild(4, mEndElementContainer);
         addChild(5, mEndNamespaceList);
+    }
+    void linkStringReferences(){
+        for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
+            startNamespace.linkStringReferences();
+        }
+        ResXmlStartElement start = getStartElement();
+        if(start!=null){
+            start.linkStringReferences();
+        }
+        ResXmlText resXmlText=getResXmlText();
+        if(resXmlText!=null){
+            resXmlText.linkStringReferences();
+        }
+        for(ResXmlElement child:listElements()){
+            child.linkStringReferences();
+        }
     }
     public ResXmlElement createChildElement(){
         return createChildElement(null);
@@ -256,15 +272,12 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
         }
         return null;
     }
-
-
     public List<ResXmlStartNamespace> getStartNamespaceList(){
         return mStartNamespaceList.getChildes();
     }
     public void addStartNamespace(ResXmlStartNamespace item){
         mStartNamespaceList.add(item);
     }
-
     public List<ResXmlEndNamespace> getEndNamespaceList(){
         return mEndNamespaceList.getChildes();
     }

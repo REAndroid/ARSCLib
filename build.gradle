@@ -2,7 +2,7 @@
 apply plugin: 'java-library'
 
 group 'com.reandroid.lib.arsc'
-version '1.0.7'
+version '1.0.8'
 
 java {
     sourceCompatibility JavaVersion.VERSION_1_8
@@ -22,7 +22,6 @@ repositories {
 }
 
 dependencies {
-    compile(files("$rootProject.projectDir/libs/ArchiveUtil.jar"))
 }
 
 processResources {

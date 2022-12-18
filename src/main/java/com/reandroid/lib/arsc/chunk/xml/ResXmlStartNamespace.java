@@ -12,4 +12,12 @@ public class ResXmlStartNamespace extends ResXmlNamespace<ResXmlEndNamespace> {
     public void setEnd(ResXmlEndNamespace namespace){
         setPair(namespace);
     }
+    @Override
+    void linkStringReferences(){
+        super.linkStringReferences();
+        ResXmlEndNamespace end = getEnd();
+        if(end!=null){
+            end.linkStringReferences();
+        }
+    }
 }

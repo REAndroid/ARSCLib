@@ -10,6 +10,7 @@ import com.reandroid.lib.arsc.group.StringGroup;
 import com.reandroid.lib.arsc.item.TableString;
 import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.arsc.value.EntryBlock;
+import sun.tools.jconsole.Tab;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,8 +61,12 @@ public class ApkModule {
         writeApk(file, null);
     }
     public void writeApk(File file, WriteProgress progress) throws IOException {
-        ZipArchive archive=new ZipArchive();
-        archive.addAll(getApkArchive().listInputSources());
+        uncompressNonXmlResFiles();
+        APKArchive archive=getApkArchive();
+        InputSource table=archive.getInputSource(TableBlock.FILE_NAME);
+        if(table!=null){
+            table.setMethod(ZipEntry.STORED);
+        }
         UncompressedFiles uf=getUncompressedFiles();
         uf.apply(archive);
         int i=1;
@@ -75,9 +80,17 @@ public class ApkModule {
         if(manifest!=null){
             manifest.setSort(0);
         }
-        ZipSerializer serializer=new ZipSerializer(archive.listInputSources(), false);
+        ZipSerializer serializer=new ZipSerializer(archive.listInputSources());
         serializer.setWriteProgress(progress);
         serializer.writeZip(file);
+    }
+    private void uncompressNonXmlResFiles() throws IOException {
+        for(ResFile resFile:listResFiles()){
+            if(resFile.isBinaryXml()){
+                continue;
+            }
+            resFile.getInputSource().setMethod(ZipEntry.STORED);
+        }
     }
     public UncompressedFiles getUncompressedFiles(){
         return mUncompressedFiles;
@@ -329,9 +342,6 @@ public class ApkModule {
             }
         }
     }
-    void sortApkFiles(){
-        sortApkFiles(new ArrayList<>(getApkArchive().listInputSources()));
-    }
     public void setAPKLogger(APKLogger logger) {
         this.apkLogger = logger;
     }
@@ -360,40 +370,5 @@ public class ApkModule {
     public static ApkModule loadApkFile(File apkFile, String moduleName) throws IOException {
         APKArchive archive=APKArchive.loadZippedApk(apkFile);
         return new ApkModule(moduleName, archive);
-    }
-    private static void sortApkFiles(List<InputSource> sourceList){
-        Comparator<InputSource> cmp=new Comparator<InputSource>() {
-            @Override
-            public int compare(InputSource in1, InputSource in2) {
-                return getSortName(in1).compareTo(getSortName(in2));
-            }
-        };
-        sourceList.sort(cmp);
-        int i=0;
-        for(InputSource inputSource:sourceList){
-            inputSource.setSort(i);
-            i++;
-        }
-    }
-    private static String getSortName(InputSource inputSource){
-        String name=inputSource.getAlias();
-        StringBuilder builder=new StringBuilder();
-        if(name.equals(AndroidManifestBlock.FILE_NAME)){
-            builder.append("0 ");
-        }else if(name.equals(TableBlock.FILE_NAME)){
-            builder.append("1 ");
-        }else if(name.startsWith("classes")){
-            builder.append("2 ");
-        }else if(name.startsWith("res/")){
-            builder.append("3 ");
-        }else if(name.startsWith("lib/")){
-            builder.append("4 ");
-        }else if(name.startsWith("assets/")){
-            builder.append("5 ");
-        }else {
-            builder.append("6 ");
-        }
-        builder.append(name.toLowerCase());
-        return builder.toString();
     }
 }

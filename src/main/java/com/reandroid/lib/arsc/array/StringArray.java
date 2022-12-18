@@ -92,9 +92,6 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
             if(jsonObject==null){
                 continue;
             }
-            if(i>750){
-                i=i+0;
-            }
             jsonArray.put(i, jsonObject);
             i++;
         }

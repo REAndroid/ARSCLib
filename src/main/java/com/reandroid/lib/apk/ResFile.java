@@ -42,7 +42,7 @@ public class ResFile {
         String typeName=typeBlock.getTypeName()+typeBlock.getResConfig().getQualifiers();
         return root+typeName+"/"+name;
     }
-    private EntryBlock pickOne(){
+    public EntryBlock pickOne(){
         List<EntryBlock> entryList = entryBlockList;
         if(entryList.size()==0){
             return null;
@@ -99,6 +99,36 @@ public class ResFile {
         JSONObject jsonObject=resXmlBlock.toJson();
         jsonObject.write(file);
         return true;
+    }
+    public File buildOutFile(File dir){
+        String path=buildPath();
+        path=path.replace('/', File.separatorChar);
+        return new File(dir, path);
+    }
+    public String buildPath(){
+        EntryBlock entryBlock=pickOne();
+        TypeBlock typeBlock=entryBlock.getTypeBlock();
+        StringBuilder builder=new StringBuilder();
+        builder.append(typeBlock.getTypeName());
+        builder.append(typeBlock.getQualifiers());
+        builder.append('/');
+        builder.append(entryBlock.getName());
+        String ext=getFileExtension();
+        if(ext!=null){
+            builder.append(ext);
+        }
+        return builder.toString();
+    }
+    private String getFileExtension(){
+        if(isBinaryXml()){
+            return ".xml";
+        }
+        String path=getFilePath();
+        int i=path.lastIndexOf('.');
+        if(i<0){
+            return null;
+        }
+        return path.substring(0);
     }
     @Override
     public String toString(){

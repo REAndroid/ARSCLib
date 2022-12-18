@@ -6,7 +6,6 @@ import java.util.regex.Pattern;
 
 public class StyleBuilder {
     public static void buildStyle(StringItem stringItem){
-        System.out.println(stringItem.toString());
     }
     public static boolean hasStyle(StringItem stringItem){
         if(stringItem==null){

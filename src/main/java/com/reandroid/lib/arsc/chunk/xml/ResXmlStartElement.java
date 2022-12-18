@@ -3,6 +3,7 @@ package com.reandroid.lib.arsc.chunk.xml;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.array.ResXmlAttributeArray;
 import com.reandroid.lib.arsc.item.ShortItem;
+import com.reandroid.lib.arsc.value.ValueType;
 
 import java.util.Collection;
 
@@ -32,6 +33,13 @@ public class ResXmlStartElement extends BaseXmlChunk {
         addChild(mClassAttributePosition);
         addChild(mStyleAttributePosition);
         addChild(mAttributeArray);
+    }
+    @Override
+    void linkStringReferences(){
+        super.linkStringReferences();
+        for(ResXmlAttribute attr:listResXmlAttributes()){
+            attr.linkStringReferences();
+        }
     }
     @Override
     protected void onPreRefreshRefresh(){
@@ -225,8 +233,8 @@ public class ResXmlStartElement extends BaseXmlChunk {
         return builder.toString();
     }
 
-    private static final short ATTRIBUTES_UNIT_SIZE=0x0014;
-    private static final short ATTRIBUTES_DEFAULT_START=0x0014;
+    private static final short ATTRIBUTES_UNIT_SIZE=20;
+    private static final short ATTRIBUTES_DEFAULT_START=20;
     /*
     * Find another way to mark an attribute is class, device actually relies on
     * value of mClassAttributePosition */

@@ -31,8 +31,23 @@ public class BaseXmlChunk extends BaseChunk {
         addChild(mNamespaceReference);
         addChild(mStringReference);
     }
-
-
+    void linkStringReferences(){
+        linkStringReference(mCommentReference);
+        linkStringReference(mNamespaceReference);
+        linkStringReference(mStringReference);
+    }
+    private void linkStringReference(IntegerItem item){
+        ResXmlString xmlString = getResXmlString(item.get());
+        if(xmlString!=null){
+            xmlString.addReferenceIfAbsent(item);
+        }
+    }
+    void unLinkStringReference(IntegerItem item){
+        ResXmlString xmlString = getResXmlString(item.get());
+        if(xmlString!=null){
+            xmlString.removeReference(item);
+        }
+    }
     public void setLineNumber(int val){
         mLineNumber.set(val);
     }
@@ -40,19 +55,25 @@ public class BaseXmlChunk extends BaseChunk {
         return mLineNumber.get();
     }
     public void setCommentReference(int val){
+        unLinkStringReference(mCommentReference);
         mCommentReference.set(val);
+        linkStringReference(mCommentReference);
     }
     public int getCommentReference(){
         return mCommentReference.get();
     }
     public void setNamespaceReference(int val){
+        unLinkStringReference(mNamespaceReference);
         mNamespaceReference.set(val);
+        linkStringReference(mNamespaceReference);
     }
     public int getNamespaceReference(){
         return mNamespaceReference.get();
     }
     public void setStringReference(int val){
+        unLinkStringReference(mStringReference);
         mStringReference.set(val);
+        linkStringReference(mStringReference);
     }
     public int getStringReference(){
         return mStringReference.get();
@@ -66,8 +87,6 @@ public class BaseXmlChunk extends BaseChunk {
         setStringReference(xmlString.getIndex());
         return xmlString;
     }
-
-
     public ResXmlStringPool getStringPool(){
         Block parent=getParent();
         while (parent!=null){
@@ -134,7 +153,6 @@ public class BaseXmlChunk extends BaseChunk {
             setCommentReference(xmlString.getIndex());
         }
     }
-
     public ResXmlElement getParentResXmlElement(){
         Block parent=getParent();
         while (parent!=null){
@@ -146,20 +164,8 @@ public class BaseXmlChunk extends BaseChunk {
         return null;
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
-    }
-    @Override
     protected void onChunkRefreshed() {
 
-    }
-    @Override
-    public void onChunkLoaded(){
-        super.onChunkLoaded();
-        if(mCommentReference.get()!=-1){
-            String junk=getString(mCommentReference.get());
-            System.out.println(junk);
-        }
     }
     @Override
     public String toString(){

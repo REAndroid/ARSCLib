@@ -366,9 +366,6 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
             int length = jsonArray.length();
             List<StyledString> results=new ArrayList<>();
             for(int i=0;i<length;i++){
-                if(!jsonArray.getJSONObject(i).has(StringItem.NAME_style)){
-                    System.out.println("Dont have style at i="+i);
-                }
                 StyledString styledString=fromJson(jsonArray.getJSONObject(i));
                 results.add(styledString);
             }
