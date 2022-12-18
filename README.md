@@ -1,5 +1,32 @@
 # ARSCLib
-## Android binary resources read/write library
+## Android binary resources read/write java library
+This library is developed based on AOSP structure of androidfw/ResourceTypes.h , to totally replace aapt/aapt2
+### Read, write, modify and create
+* Resource table (resources.arsc)
+* Binary xml files (AndroidManifest.xml & resource xml)
+### Convert from/to json string
+* Decompiling resources to readable XML using traditional techniques is now becoming very challenging due to resource obfuscation (like Proguard & ResGuard)
+* Just like SMALI coding this library brings unbeatable coding style
+
+ ```html
+ <string name="app_name">My Application</string> 
+ ```
+can be represented in json as
+ ```json 
+      {
+       "entry_name": "app_name",
+       "id": 16,
+       "value": {
+        "value_type": "STRING",
+        "data": "My Application"
+       }
+ ```
+### Works on all java supported platforms (Android, Linux, Windows)
+* Use the jar file as dependency
+### Check this tool developed using this library
+[https://github.com/REAndroid/APKEditor](https://github.com/REAndroid/APKEditor)
+
+<details><summary> <b>See java example</b></summary>
 
 ```java
 import com.reandroid.lib.arsc.chunk.TableBlock;
@@ -112,5 +139,5 @@ import com.reandroid.lib.arsc.chunk.xml.ResXmlAttribute;
     }
     
 ```
+</details>
 
-[Check implementation on APKEditor](https://github.com/REAndroid/APKEditor)
