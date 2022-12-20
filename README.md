@@ -1,10 +1,10 @@
 # ARSCLib
 ## Android binary resources read/write java library
 This library is developed based on AOSP structure of androidfw/ResourceTypes.h , to totally replace aapt/aapt2
-### Read, write, modify and create
+#### Read, write, modify and create
 * Resource table (resources.arsc)
 * Binary xml files (AndroidManifest.xml & resource xml)
-### Convert from/to json string
+#### Convert from/to json string
 * Decompiling resources to readable XML using traditional techniques is now becoming very challenging due to resource obfuscation (like Proguard & ResGuard)
 * Just like SMALI coding this library brings unbeatable coding style
 
@@ -13,20 +13,20 @@ This library is developed based on AOSP structure of androidfw/ResourceTypes.h ,
  ```
 can be represented in json as
  ```json 
-      {
-       "entry_name": "app_name",
-       "id": 16,
-       "value": {
-        "value_type": "STRING",
-        "data": "My Application"
-       }
+    {
+     "entry_name": "app_name",
+     "id": 16,
+     "value": {
+     "value_type": "STRING",
+     "data": "My Application"
+    }
  ```
-### Works on all java supported platforms (Android, Linux, Windows)
+#### Works on all java supported platforms (Android, Linux, Windows)
 * Use the jar file as dependency
-### Check this tool developed using this library
+#### Check this tool developed using this library
 [https://github.com/REAndroid/APKEditor](https://github.com/REAndroid/APKEditor)
 
-<details><summary> <b>See java example</b></summary>
+<details><summary> <code><b>See java example</b></code></summary>
 
 ```java
 import com.reandroid.lib.arsc.chunk.TableBlock;
@@ -35,7 +35,7 @@ import com.reandroid.lib.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.lib.arsc.chunk.xml.ResXmlElement;
 import com.reandroid.lib.arsc.chunk.xml.ResXmlAttribute;
 
-    public static void exampleManifest() throws IOException{
+public static void exampleManifest() throws IOException{
         File inFile=new File("AndroidManifest.xml");
 
         // *** Loading AndroidManifest ***
@@ -45,7 +45,7 @@ import com.reandroid.lib.arsc.chunk.xml.ResXmlAttribute;
 
         List<String> usesPermissionList = manifestBlock.getUsesPermissions();
         for(String usesPermission:usesPermissionList){
-           System.out.println("Uses permission: "+usesPermission);
+        System.out.println("Uses permission: "+usesPermission);
         }
 
         // *** Modifying AndroidManifest ***
@@ -61,11 +61,11 @@ import com.reandroid.lib.arsc.chunk.xml.ResXmlAttribute;
         // Modify xml attribute
         List<ResXmlElement> activityList = manifestBlock.listActivities();
         for(ResXmlElement activityElement:activityList){
-          ResXmlAttribute attributeName = activityElement.searchAttributeByResourceId(AndroidManifestBlock.ID_name);
-          System.out.println("Old activity name: "+attributeName.getValueAsString());
-          attributeName.setValueAsString("com.app.MyActivity");
-          System.out.println("New activity name: "+attributeName.getValueAsString());
-          break;
+        ResXmlAttribute attributeName = activityElement.searchAttributeByResourceId(AndroidManifestBlock.ID_name);
+        System.out.println("Old activity name: "+attributeName.getValueAsString());
+        attributeName.setValueAsString("com.app.MyActivity");
+        System.out.println("New activity name: "+attributeName.getValueAsString());
+        break;
         }
 
         // Refresh to re-calculate offsets
@@ -75,7 +75,7 @@ import com.reandroid.lib.arsc.chunk.xml.ResXmlAttribute;
         manifestBlock.writeBytes(outFile);
 
         System.out.println("Saved: "+outFile);
-    }
+        }
 
 ```
 
@@ -91,16 +91,16 @@ import com.reandroid.lib.arsc.chunk.xml.ResXmlAttribute;
         Collection<PackageBlock> packageBlockList=tableBlock.listPackages();
         System.out.println("Packages count = "+packageBlockList.size());
         for(PackageBlock packageBlock:packageBlockList){
-            System.out.println("Package id = "+packageBlock.getId()
-                                     +", name = "+packageBlock.getName());
+        System.out.println("Package id = "+packageBlock.getId()
+        +", name = "+packageBlock.getName());
         }
 
         // *** Modify resource table
         // Change package name
         for(PackageBlock packageBlock:packageBlockList){
-           String name = packageBlock.getName();
-           String newName = name + ".new-name";
-           packageBlock.setName(newName);
+        String name = packageBlock.getName();
+        String newName = name + ".new-name";
+        packageBlock.setName(newName);
         }
 
         // Refresh to re-calculate offsets
@@ -110,7 +110,7 @@ import com.reandroid.lib.arsc.chunk.xml.ResXmlAttribute;
         tableBlock.writeBytes(outFile);
 
         System.out.println("Saved: "+outFile);
-    }
+        }
 
 ```
 
