@@ -25,6 +25,7 @@ dependencies {
     //No dependency
 }
 
+
 processResources {
     filesMatching('arsclib.properties') {
         expand('version': version)
