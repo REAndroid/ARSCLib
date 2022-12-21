@@ -109,6 +109,7 @@ public class PluralsBagItem {
         for(int i=0;i<len;i++){
             PluralsBagItem item=create(resValueBagItems[i]);
             if(item==null){
+                // If it reaches here type name is obfuscated
                 return null;
             }
             PluralsQuantity quantity=item.getQuantity();

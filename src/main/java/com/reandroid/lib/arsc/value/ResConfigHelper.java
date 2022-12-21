@@ -15,8 +15,6 @@
   */
 package com.reandroid.lib.arsc.value;
 
-
-
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -427,6 +425,9 @@ public class ResConfigHelper {
         }
         return ret.toString();
     }
+    /*
+    * Encodes density to value
+    * densityName is full name like: mdpi, xxxdpi, 580dpi ... */
     public static short encodeDensity(String densityName){
         short density=0;
         if(densityName==null){
@@ -436,29 +437,31 @@ public class ResConfigHelper {
         if(!matcher.find()){
             return density;
         }
-        String d=matcher.group("A");
-        if("l".equals(d)){
-            density = DENSITY_LOW;
-        }else if("m".equals(d)){
-            density = DENSITY_MEDIUM;
-        }else if("h".equals(d)){
-            density = DENSITY_HIGH;
-        }else if("tv".equals(d)){
-            density = DENSITY_TV;
-        }else if("xh".equals(d)){
-            density = DENSITY_XHIGH;
-        }else if("xxh".equals(d)){
-            density = DENSITY_XXHIGH;
-        }else if("xxxh".equals(d)){
-            density = DENSITY_XXXHIGH;
-        }else if("any".equals(d)){
-            density = DENSITY_ANY;
-        }else if("no".equals(d)){
-            density = DENSITY_NONE;
-        }else if(isDecimal(d)){
-            density = (short) Integer.parseInt(d);
+        return encodeDensityName(matcher.group(1));
+    }
+    private static short encodeDensityName(String name){
+        if("l".equals(name)){
+            return  DENSITY_LOW;
+        }else if("m".equals(name)){
+            return  DENSITY_MEDIUM;
+        }else if("h".equals(name)){
+            return  DENSITY_HIGH;
+        }else if("tv".equals(name)){
+            return  DENSITY_TV;
+        }else if("xh".equals(name)){
+            return  DENSITY_XHIGH;
+        }else if("xxh".equals(name)){
+            return  DENSITY_XXHIGH;
+        }else if("xxxh".equals(name)){
+            return  DENSITY_XXXHIGH;
+        }else if("any".equals(name)){
+            return  DENSITY_ANY;
+        }else if("no".equals(name)){
+            return  DENSITY_NONE;
+        }else if(isDecimal(name)){
+            return  (short) Integer.parseInt(name);
         }
-        return density;
+        return 0;
     }
     private static void encodeDensity(ResConfig resConfig, String[] split){
         int density=0;
@@ -471,28 +474,8 @@ public class ResConfigHelper {
             if(!matcher.find()){
                 continue;
             }
-            String d=matcher.group("A");
-            if("l".equals(d)){
-                density = DENSITY_LOW;
-            }else if("m".equals(d)){
-                density = DENSITY_MEDIUM;
-            }else if("h".equals(d)){
-                density = DENSITY_HIGH;
-            }else if("tv".equals(d)){
-                density = DENSITY_TV;
-            }else if("xh".equals(d)){
-                density = DENSITY_XHIGH;
-            }else if("xxh".equals(d)){
-                density = DENSITY_XXHIGH;
-            }else if("xxxh".equals(d)){
-                density = DENSITY_XXXHIGH;
-            }else if("any".equals(d)){
-                density = DENSITY_ANY;
-            }else if("no".equals(d)){
-                density = DENSITY_NONE;
-            }else if(isDecimal(d)){
-                density = Integer.parseInt(d);
-            }else {
+            density=encodeDensityName(matcher.group(1));
+            if(density==0){
                 continue;
             }
             split[i]=null;
@@ -840,50 +823,28 @@ public class ResConfigHelper {
         return ret.toString();
     }
     private static void encodeOrientation(ResConfig resConfig, String[] split){
-        byte orientation=0;
+        byte orientationByte=0;
         for(int i=0;i<split.length;i++){
             String s=split[i];
             if(s==null){
                 continue;
             }
-            if("port".equals(s)){
-                orientation = ORIENTATION_PORT;
-            }else if("land".equals(s)){
-                orientation = ORIENTATION_LAND;
-            }else {
+            ResConfig.Orientation orientation= ResConfig.Orientation.fromName(s);
+            if(orientation==null){
                 continue;
             }
+            orientationByte=orientation.getByteValue();
             split[i]=null;
             break;
         }
-        resConfig.setOrientation(orientation);
+        resConfig.setOrientation(orientationByte);
     }
     private static String decodeOrientation(ResConfig resConfig){
-        StringBuilder ret=new StringBuilder();
-        byte orientation=resConfig.getOrientationByte();
-        switch (orientation) {
-            case ORIENTATION_PORT:
-                ret.append("-port");
-                break;
-            case ORIENTATION_LAND:
-                ret.append("-land");
-                break;
-            case ORIENTATION_SQUARE:
-                ret.append("-square");
-                break;
+        ResConfig.Orientation orientation=resConfig.getOrientation();
+        if(orientation==null){
+            return null;
         }
-        return ret.toString();
-    }
-    public static String decodeOrientation(byte orientation){
-        switch (orientation) {
-            case ORIENTATION_PORT:
-                return "port";
-            case ORIENTATION_LAND:
-                return "land";
-            case ORIENTATION_SQUARE:
-                return "square";
-        }
-        return null;
+        return "-"+orientation.toString();
     }
     private static void encodeScreenLayout(ResConfig resConfig, String[] split){
         int screenLayout=0;
@@ -1085,8 +1046,8 @@ public class ResConfigHelper {
             if(!matcher.find()){
                 continue;
             }
-            String mccMnc=matcher.group("A");
-            int val=Integer.parseInt(matcher.group("B"));
+            String mccMnc=matcher.group(1);
+            int val=Integer.parseInt(matcher.group(2));
             if(val==0){
                 val=-1;
             }
@@ -1110,8 +1071,8 @@ public class ResConfigHelper {
             if(!matcher.find()){
                 continue;
             }
-            String mccMnc=matcher.group("A");
-            int val=Integer.parseInt(matcher.group("B"));
+            String mccMnc=matcher.group(1);
+            int val=Integer.parseInt(matcher.group(2));
             sh=(short)val;
             if(!"mnc".equals(mccMnc)){
                 continue;
@@ -1162,11 +1123,7 @@ public class ResConfigHelper {
             if(!matcher.find()){
                 continue;
             }
-            String pre=matcher.group("A");
-            if(!pre.equals("sw")){
-                continue;
-            }
-            val=Integer.parseInt(matcher.group("B"));
+            val=Integer.parseInt(matcher.group(1));
             split[i]=null;
             break;
         }
@@ -1193,11 +1150,11 @@ public class ResConfigHelper {
             if(!matcher.find()){
                 continue;
             }
-            String pre=matcher.group("A");
+            String pre=matcher.group(1);
             if(!pre.equals("h")){
                 continue;
             }
-            val=Integer.parseInt(matcher.group("B"));
+            val=Integer.parseInt(matcher.group(2));
             split[i]=null;
             break;
         }
@@ -1224,11 +1181,11 @@ public class ResConfigHelper {
             if(!matcher.find()){
                 continue;
             }
-            String pre=matcher.group("A");
+            String pre=matcher.group(1);
             if(!pre.equals("w")){
                 continue;
             }
-            val=Integer.parseInt(matcher.group("B"));
+            val=Integer.parseInt(matcher.group(2));
             split[i]=null;
             break;
         }
@@ -1255,7 +1212,7 @@ public class ResConfigHelper {
             if(!matcher.find()){
                 continue;
             }
-            val=Integer.parseInt(matcher.group("A"));
+            val=Integer.parseInt(matcher.group(1));
             split[i]=null;
             break;
         }
@@ -1292,8 +1249,8 @@ public class ResConfigHelper {
             if(!matcher.find()){
                 continue;
             }
-            int a=Integer.parseInt(matcher.group("A"));
-            int b=Integer.parseInt(matcher.group("B"));
+            int a=Integer.parseInt(matcher.group(1));
+            int b=Integer.parseInt(matcher.group(2));
             short w;
             short h;
             if(a>b){
@@ -1359,23 +1316,23 @@ public class ResConfigHelper {
         return matcher.find();
     }
 
-    private static final Pattern PATTERN_SDK_VERSION=Pattern.compile("^-?v(?<A>[0-9]+)$");
+    private static final Pattern PATTERN_SDK_VERSION=Pattern.compile("^-?v([0-9]+)$");
 
-    private static final Pattern PATTERN_SCREEN_DP=Pattern.compile("^(?<A>[wh])(?<B>[0-9]+)dp$");
+    private static final Pattern PATTERN_SCREEN_DP=Pattern.compile("^([wh])([0-9]+)dp$");
 
-    private static final Pattern PATTERN_SCREEN_SMALLEST_DP=Pattern.compile("^(?<A>(sw)|(sh))(?<B>[0-9]+)dp$");
+    private static final Pattern PATTERN_SCREEN_SMALLEST_DP=Pattern.compile("^sw([0-9]+)dp$");
 
     private static final Pattern PATTERN_LANG_NAME=Pattern.compile("^[a-z]{2}$");
 
     private static final Pattern PATTERN_COUNTRY_NAME=Pattern.compile("^[a-zA-Z]{2,3}$");
 
-    private static final Pattern PATTERN_MCC_MNC=Pattern.compile("^(?<A>m[cn]c)(?<B>[0-9]{2,3})$");
+    private static final Pattern PATTERN_MCC_MNC=Pattern.compile("^(m[cn]c)([0-9]{2,3})$");
 
-    private static final Pattern PATTERN_DENSITY=Pattern.compile("^(?<A>[^\\s]+)dpi$");
+    private static final Pattern PATTERN_DENSITY=Pattern.compile("^([^\\s]+)dpi$");
 
     private static final Pattern PATTERN_NUMBER=Pattern.compile("^[0-9]+$");
 
-    private static final Pattern PATTERN_SCREEN_SIZE=Pattern.compile("^-?(?<A>[0-9]+)x(?<B>[0-9]+)$");
+    private static final Pattern PATTERN_SCREEN_SIZE=Pattern.compile("^-?([0-9]+)x([0-9]+)$");
 
 
     public final static short MASK_LAYOUTDIR = 0xc0;
@@ -1403,11 +1360,6 @@ public class ResConfigHelper {
     public final static short SCREENLAYOUT_ROUND_NO = 0x1;
     public final static short SCREENLAYOUT_ROUND_YES = 0x2;
 
-
-    public final static byte ORIENTATION_ANY = 0;
-    public final static byte ORIENTATION_PORT = 1;
-    public final static byte ORIENTATION_LAND = 2;
-    public final static byte ORIENTATION_SQUARE = 3;
 
     public final static byte MASK_UI_MODE_TYPE = 0x0f;
     public final static byte UI_MODE_TYPE_ANY = 0x00;

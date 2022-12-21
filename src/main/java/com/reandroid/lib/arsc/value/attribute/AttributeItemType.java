@@ -45,8 +45,7 @@ public enum AttributeItemType {
             return null;
         }
         name=name.toUpperCase();
-        AttributeItemType[] all=values();
-        for(AttributeItemType bagType:all){
+        for(AttributeItemType bagType:values()){
             if(name.equals(bagType.name())){
                 return bagType;
             }

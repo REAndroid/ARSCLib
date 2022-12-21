@@ -45,7 +45,7 @@ public class BuildInfo {
         return sProperties;
     }
     private static Properties loadProperties(){
-        InputStream inputStream=BuildInfo.class.getResourceAsStream("/lib.properties");
+        InputStream inputStream=BuildInfo.class.getResourceAsStream("/arsclib.properties");
         Properties properties=new Properties();
         try{
             properties.load(inputStream);

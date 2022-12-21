@@ -43,15 +43,6 @@ public abstract class BlockItem extends Block {
         mBytes=bts;
         onBytesChanged();
     }
-    final void ensureMinLength(int minLen){
-        int len=mBytes.length;
-        if(minLen<=len){
-            return;
-        }
-        byte[] bts=new byte[minLen];
-        System.arraycopy(bts, 0, mBytes, 0, mBytes.length);
-        mBytes=bts;
-    }
     final void setBytesLength(int length){
         setBytesLength(length, true);
     }
@@ -104,8 +95,7 @@ public abstract class BlockItem extends Block {
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
-        byte[] bts=getBytesInternal();
-        reader.readFully(bts);
+        reader.readFully(getBytesInternal());
         onBytesChanged();
     }
     @Override

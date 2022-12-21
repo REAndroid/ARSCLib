@@ -654,9 +654,9 @@ public class ResourceIds {
                         String name=null;
                         Matcher matcher=pattern.matcher(element);
                         while (matcher.find()){
-                            String attr=matcher.group("Attr").toLowerCase();
-                            String value=matcher.group("Value");
-                            element=matcher.group("Next");
+                            String attr=matcher.group(1).toLowerCase();
+                            String value=matcher.group(2);
+                            element=matcher.group(3);
                             if(attr.equals("id")){
                                 id=Integer.decode(value);
                             }else if(attr.equals("name")){
@@ -674,7 +674,7 @@ public class ResourceIds {
                         }
                         return new Entry(id, type, name);
                     }
-                    private static final Pattern PATTERN=Pattern.compile("^\\s*(?<Attr>[^\\s=\"]+)\\s*=\\s*\"(?<Value>[^\"]+)\"(?<Next>.*)$");
+                    private static final Pattern PATTERN=Pattern.compile("^\\s*([^\\s=\"]+)\\s*=\\s*\"([^\"]+)\"(.*)$");
                 }
             }
 

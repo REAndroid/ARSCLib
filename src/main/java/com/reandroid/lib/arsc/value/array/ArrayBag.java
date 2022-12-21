@@ -15,8 +15,6 @@
   */
 package com.reandroid.lib.arsc.value.array;
 
-import com.reandroid.lib.arsc.item.SpecString;
-import com.reandroid.lib.arsc.item.TypeString;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResValueBag;
 import com.reandroid.lib.arsc.value.attribute.AttributeBag;
@@ -34,22 +32,14 @@ public class ArrayBag {
         if(entryBlock==null){
             return null;
         }
-        SpecString spec = entryBlock.getSpecString();
-        if(spec==null){
-            return null;
-        }
-        return spec.get();
+        return entryBlock.getName();
     }
     public String getTypeName(){
         EntryBlock entryBlock=getBagItems()[0].getBagItem().getEntryBlock();
         if(entryBlock==null){
             return null;
         }
-        TypeString typeString = entryBlock.getTypeString();
-        if(typeString==null){
-            return null;
-        }
-        return typeString.get();
+        return entryBlock.getTypeName();
     }
     @Override
     public String toString() {
@@ -81,11 +71,11 @@ public class ArrayBag {
         if(entryBlock==null){
             return false;
         }
-        TypeString typeString = entryBlock.getTypeString();
-        if(typeString==null){
+        String type = entryBlock.getTypeName();
+        if(type==null){
             return false;
         }
-        if(!NAME.equals(typeString.get())){
+        if(!type.startsWith(NAME)){
             return false;
         }
         return ArrayBagItem.create(resValueBag.getBagItems()) != null;

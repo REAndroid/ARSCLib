@@ -22,10 +22,11 @@ repositories {
 }
 
 dependencies {
+    //No dependency
 }
 
 processResources {
-    filesMatching('lib.properties') {
+    filesMatching('arsclib.properties') {
         expand('version': version)
     }
 }

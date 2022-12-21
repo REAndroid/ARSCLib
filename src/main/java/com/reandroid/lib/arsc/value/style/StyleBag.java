@@ -117,11 +117,11 @@ public class StyleBag {
         if(entryBlock==null){
             return false;
         }
-        TypeString typeString = entryBlock.getTypeString();
-        if(typeString==null){
+        String type = entryBlock.getTypeName();
+        if(type==null){
             return false;
         }
-        if(!NAME.equals(typeString.get())){
+        if(!type.startsWith(NAME)){
             return false;
         }
         return ArrayBagItem.create(resValueBag.getBagItems()) != null;

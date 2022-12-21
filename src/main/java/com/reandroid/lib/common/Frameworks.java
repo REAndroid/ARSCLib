@@ -15,7 +15,6 @@
   */
 package com.reandroid.lib.common;
 
-import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.util.FrameworkTable;
 
 import java.io.IOException;
@@ -31,7 +30,7 @@ public class Frameworks {
         load_once=true;
         FrameworkTable frameworkTable=null;
         try {
-            frameworkTable = loadFramework(ANDROID_FRAMEWORK);
+            frameworkTable = loadFramework(ANDROID_FRAMEWORK_30);
         } catch (IOException e) {
         }
         android_table=frameworkTable;
@@ -42,11 +41,10 @@ public class Frameworks {
         if(inputStream==null){
             return null;
         }
-        BlockReader reader=new BlockReader(inputStream);
         FrameworkTable frameworkTable=new FrameworkTable();
-        frameworkTable.readBytes(reader);
+        frameworkTable.readBytes(inputStream);
         return frameworkTable;
     }
 
-    private static final String ANDROID_FRAMEWORK= "/fwk/android_resources_30.arsc";
+    private static final String ANDROID_FRAMEWORK_30 = "/fwk/android_resources_30.arsc";
 }

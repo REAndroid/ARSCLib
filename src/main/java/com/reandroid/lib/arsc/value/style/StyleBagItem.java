@@ -15,12 +15,6 @@
   */
 package com.reandroid.lib.arsc.value.style;
 
-import com.reandroid.lib.arsc.chunk.PackageBlock;
-import com.reandroid.lib.arsc.chunk.TableBlock;
-import com.reandroid.lib.arsc.item.SpecString;
-import com.reandroid.lib.arsc.item.TableString;
-import com.reandroid.lib.arsc.pool.SpecStringPool;
-import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResValueBagItem;
 import com.reandroid.lib.arsc.value.ValueType;
@@ -76,41 +70,13 @@ public class StyleBagItem {
         return entryBlock.buildResourceName(id, prefix, includeType);
     }
     public String getStringValue(){
-        ValueType valueType=getValueType();
-        if(valueType!=ValueType.STRING){
-            throw new IllegalArgumentException("Not STRING ValueType="+valueType);
-        }
-        TableStringPool stringPool=getStringPool();
-        if(stringPool==null){
-            return null;
-        }
-        int ref=getValue();
-        TableString tableString = stringPool.get(ref);
-        if(tableString==null){
-            return null;
-        }
-        return tableString.getHtml();
+        return mBagItem.getValueAsString();
     }
     public ValueType getValueType(){
         return getBagItem().getValueType();
     }
     public int getValue(){
         return getBagItem().getData();
-    }
-    private TableStringPool getStringPool(){
-        EntryBlock entryBlock=getBagItem().getEntryBlock();
-        if(entryBlock==null){
-            return null;
-        }
-        PackageBlock pkg = entryBlock.getPackageBlock();
-        if(pkg==null){
-            return null;
-        }
-        TableBlock tableBlock= pkg.getTableBlock();
-        if(tableBlock==null){
-            return null;
-        }
-        return tableBlock.getTableStringPool();
     }
     @Override
     public String toString() {
@@ -158,7 +124,6 @@ public class StyleBagItem {
         if(resValueBagItem==null){
             return null;
         }
-        StyleBagItem item=new StyleBagItem(resValueBagItem);
-        return item;
+        return new StyleBagItem(resValueBagItem);
     }
 }
