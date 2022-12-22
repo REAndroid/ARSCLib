@@ -26,6 +26,7 @@ import java.io.*;
 public class SingleJsonTableInputSource extends InputSource {
     private final InputSource inputSource;
     private TableBlock mCache;
+    private APKLogger apkLogger;
     public SingleJsonTableInputSource(InputSource inputSource) {
         super(inputSource.getAlias());
         this.inputSource=inputSource;
@@ -54,6 +55,7 @@ public class SingleJsonTableInputSource extends InputSource {
         if(mCache!=null){
             return mCache;
         }
+        logMessage("Building resources table: "+inputSource.getAlias());
         TableBlock tableBlock=newInstance();
         InputStream inputStream=inputSource.openStream();
         try{
@@ -75,5 +77,23 @@ public class SingleJsonTableInputSource extends InputSource {
         String path=ApkUtil.toArchiveResourcePath(rootDir, jsonFile);
         FileInputSource fileInputSource=new FileInputSource(jsonFile, path);
         return new SingleJsonTableInputSource(fileInputSource);
+    }
+    void setAPKLogger(APKLogger logger) {
+        this.apkLogger = logger;
+    }
+    private void logMessage(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logMessage(msg);
+        }
+    }
+    private void logError(String msg, Throwable tr) {
+        if(apkLogger!=null){
+            apkLogger.logError(msg, tr);
+        }
+    }
+    private void logVerbose(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logVerbose(msg);
+        }
     }
 }

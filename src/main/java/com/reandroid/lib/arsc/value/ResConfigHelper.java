@@ -388,42 +388,22 @@ public class ResConfigHelper {
     private static void encodeKeyboard(ResConfig resConfig, String[] split){
         byte keyboard=0;
         for(int i=0;i<split.length;i++){
-            String s=split[i];
-            if(s==null){
+            ResConfig.Keyboard key = ResConfig.Keyboard.fromName(split[i]);
+            if(key==null){
                 continue;
             }
-            switch (s) {
-                case "nokeys":
-                    keyboard = KEYBOARD_NOKEYS;
-                    break;
-                case "qwerty":
-                    keyboard = KEYBOARD_QWERTY;
-                    break;
-                case "12key":
-                    keyboard = KEYBOARD_12KEY;
-                    break;
-                default:
-                    continue;
-            }
+            keyboard=key.getByteValue();
             split[i]=null;
             break;
         }
         resConfig.setKeyboard(keyboard);
     }
     private static String decodeKeyboard(ResConfig resConfig){
-        StringBuilder ret=new StringBuilder();
-        switch (resConfig.getKeyboardByte()) {
-            case KEYBOARD_NOKEYS:
-                ret.append("-nokeys");
-                break;
-            case KEYBOARD_QWERTY:
-                ret.append("-qwerty");
-                break;
-            case KEYBOARD_12KEY:
-                ret.append("-12key");
-                break;
+        ResConfig.Keyboard keyboard=resConfig.getKeyboard();
+        if(keyboard==null){
+            return "";
         }
-        return ret.toString();
+        return "-"+keyboard.toString();
     }
     /*
     * Encodes density to value
@@ -554,39 +534,22 @@ public class ResConfigHelper {
             if(s==null){
                 continue;
             }
-            switch (s) {
-                case "notouch":
-                    touchscreen = TOUCHSCREEN_NOTOUCH;
-                    break;
-                case "stylus":
-                    touchscreen = TOUCHSCREEN_STYLUS;
-                    break;
-                case "finger":
-                    touchscreen = TOUCHSCREEN_FINGER;
-                    break;
-                default:
-                    continue;
+            ResConfig.Touchscreen touch= ResConfig.Touchscreen.fromName(s);
+            if(touch==null){
+                continue;
             }
+            touchscreen=touch.getByteValue();
             split[i]=null;
             break;
         }
         resConfig.setTouchscreen(touchscreen);
     }
     private static String decodeTouchscreen(ResConfig resConfig){
-        StringBuilder ret=new StringBuilder();
-        byte touchscreen=resConfig.getTouchscreenByte();
-        switch (touchscreen) {
-            case TOUCHSCREEN_NOTOUCH:
-                ret.append("-notouch");
-                break;
-            case TOUCHSCREEN_STYLUS:
-                ret.append("-stylus");
-                break;
-            case TOUCHSCREEN_FINGER:
-                ret.append("-finger");
-                break;
+        ResConfig.Touchscreen touchscreen=resConfig.getTouchscreen();
+        if(touchscreen==null){
+            return "";
         }
-        return ret.toString();
+        return "-"+touchscreen.toString();
     }
     private static void encodeUiMode(ResConfig resConfig, String[] split){
         int uiMode=0;
@@ -842,7 +805,7 @@ public class ResConfigHelper {
     private static String decodeOrientation(ResConfig resConfig){
         ResConfig.Orientation orientation=resConfig.getOrientation();
         if(orientation==null){
-            return null;
+            return "";
         }
         return "-"+orientation.toString();
     }
@@ -1384,28 +1347,16 @@ public class ResConfigHelper {
     public final static byte UI_MODE_TYPE_LARGEUI = 0x0e;
     public final static byte UI_MODE_TYPE_HUGEUI = 0x0f;
 
-
-    public final static byte TOUCHSCREEN_ANY = 0;
-    public final static byte TOUCHSCREEN_NOTOUCH = 1;
-    public final static byte TOUCHSCREEN_STYLUS = 2;
-    public final static byte TOUCHSCREEN_FINGER = 3;
-
     public final static byte MASK_KEYSHIDDEN = 0x3;
     public final static byte KEYSHIDDEN_ANY = 0x0;
     public final static byte KEYSHIDDEN_NO = 0x1;
     public final static byte KEYSHIDDEN_YES = 0x2;
     public final static byte KEYSHIDDEN_SOFT = 0x3;
 
-    private final static byte KEYBOARD_ANY = 0;
-    private final static byte KEYBOARD_NOKEYS = 1;
-    private final static byte KEYBOARD_QWERTY = 2;
-    private final static byte KEYBOARD_12KEY = 3;
-
     public final static byte MASK_NAVHIDDEN = 0xc;
     public final static byte NAVHIDDEN_ANY = 0x0;
     public final static byte NAVHIDDEN_NO = 0x4;
     public final static byte NAVHIDDEN_YES = 0x8;
-
 
     private final static byte NAVIGATION_ANY = 0;
     private final static byte NAVIGATION_NONAV = 1;

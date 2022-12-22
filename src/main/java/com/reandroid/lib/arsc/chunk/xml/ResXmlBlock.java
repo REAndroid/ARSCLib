@@ -54,6 +54,20 @@ public class ResXmlBlock extends BaseChunk implements JSONConvert<JSONObject> {
             element.linkStringReferences();
         }
     }
+    /*
+     * method Block.addBytes is inefficient for large size byte array
+     * so let's override here because this block is the largest
+     */
+    @Override
+    public byte[] getBytes(){
+        ByteArrayOutputStream os=new ByteArrayOutputStream();
+        try {
+            writeBytes(os);
+            os.close();
+        } catch (IOException ignored) {
+        }
+        return os.toByteArray();
+    }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         HeaderBlock headerBlock=reader.readHeaderBlock();

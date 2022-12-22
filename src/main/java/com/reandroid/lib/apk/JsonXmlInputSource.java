@@ -26,6 +26,7 @@ import java.io.*;
 
 public class JsonXmlInputSource extends InputSource {
     private final InputSource inputSource;
+    private APKLogger apkLogger;
     public JsonXmlInputSource(InputSource inputSource) {
         super(inputSource.getAlias());
         this.inputSource=inputSource;
@@ -45,6 +46,7 @@ public class JsonXmlInputSource extends InputSource {
         return resXmlBlock.countBytes();
     }
     private ResXmlBlock getResXmlBlock() throws IOException{
+        logVerbose("From json: "+getAlias());
         ResXmlBlock resXmlBlock=newInstance();
         InputStream inputStream=inputSource.openStream();
         try{
@@ -58,6 +60,25 @@ public class JsonXmlInputSource extends InputSource {
     ResXmlBlock newInstance(){
         return new ResXmlBlock();
     }
+    void setAPKLogger(APKLogger logger) {
+        this.apkLogger = logger;
+    }
+    void logMessage(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logMessage(msg);
+        }
+    }
+    private void logError(String msg, Throwable tr) {
+        if(apkLogger!=null){
+            apkLogger.logError(msg, tr);
+        }
+    }
+    private void logVerbose(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logVerbose(msg);
+        }
+    }
+
     public static JsonXmlInputSource fromFile(File rootDir, File jsonFile){
         String path=ApkUtil.toArchiveResourcePath(rootDir, jsonFile);
         FileInputSource fileInputSource=new FileInputSource(jsonFile, path);

@@ -26,6 +26,7 @@ import java.util.List;
 
 public class ApkJsonEncoder {
     private APKArchive apkArchive;
+    private APKLogger apkLogger;
     public ApkJsonEncoder(){
     }
     public ApkModule scanDirectory(File moduleDir){
@@ -36,6 +37,7 @@ public class ApkJsonEncoder {
         scanResJsonDirs(moduleDir);
         scanRootDirs(moduleDir);
         ApkModule module=new ApkModule(moduleName, apkArchive);
+        module.setAPKLogger(apkLogger);
         loadUncompressed(module, moduleDir);
         applyResourceId(module, moduleDir);
         return module;
@@ -93,6 +95,7 @@ public class ApkJsonEncoder {
             return;
         }
         JsonManifestInputSource inputSource=JsonManifestInputSource.fromFile(moduleDir, file);
+        inputSource.setAPKLogger(apkLogger);
         apkArchive.add(inputSource);
     }
     private void scanTable(File moduleDir) {
@@ -108,6 +111,7 @@ public class ApkJsonEncoder {
             return false;
         }
         SplitJsonTableInputSource inputSource=new SplitJsonTableInputSource(dir);
+        inputSource.setAPKLogger(apkLogger);
         apkArchive.add(inputSource);
         return true;
     }
@@ -117,6 +121,7 @@ public class ApkJsonEncoder {
             return;
         }
         SingleJsonTableInputSource inputSource= SingleJsonTableInputSource.fromFile(moduleDir, file);
+        inputSource.setAPKLogger(apkLogger);
         apkArchive.add(inputSource);
     }
     private File toJsonTableFile(File dir){
@@ -142,5 +147,24 @@ public class ApkJsonEncoder {
     }
     private File toRootDir(File dir){
         return new File(dir, ApkUtil.ROOT_NAME);
+    }
+
+    public void setAPKLogger(APKLogger logger) {
+        this.apkLogger = logger;
+    }
+    private void logMessage(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logMessage(msg);
+        }
+    }
+    private void logError(String msg, Throwable tr) {
+        if(apkLogger!=null){
+            apkLogger.logError(msg, tr);
+        }
+    }
+    private void logVerbose(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logVerbose(msg);
+        }
     }
 }

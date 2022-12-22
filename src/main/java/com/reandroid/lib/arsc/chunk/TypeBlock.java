@@ -27,6 +27,8 @@ import com.reandroid.lib.arsc.value.ResConfig;
 import com.reandroid.lib.json.JSONConvert;
 import com.reandroid.lib.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -131,6 +133,20 @@ public class TypeBlock extends BaseTypeBlock
     protected void onPreRefreshRefresh(){
         mResConfig.refresh();
         super.onPreRefreshRefresh();
+    }
+    /*
+    * method Block.addBytes is inefficient for large size byte array
+    * so let's override here because this block is the largest
+    */
+    @Override
+    public byte[] getBytes(){
+        ByteArrayOutputStream os=new ByteArrayOutputStream();
+        try {
+            writeBytes(os);
+            os.close();
+        } catch (IOException ignored) {
+        }
+        return os.toByteArray();
     }
     @Override
     public JSONObject toJson() {

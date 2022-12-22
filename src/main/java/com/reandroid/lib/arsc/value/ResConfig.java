@@ -279,7 +279,11 @@ public class ResConfig extends FixedBlockContainer
         return Orientation.fromValue(getOrientationByte());
     }
     public void setOrientation(Orientation orientation){
-        setOrientation(orientation.getByteValue());
+        byte b=0;
+        if(orientation!=null){
+            b=orientation.getByteValue();
+        }
+        setOrientation(b);
     }
     public void setTouchscreen(byte b){
         if(getConfigSize()<SIZE_16){
@@ -300,7 +304,11 @@ public class ResConfig extends FixedBlockContainer
         return Touchscreen.fromValue(getTouchscreenByte());
     }
     public void setTouchscreen(Touchscreen touchscreen){
-        setTouchscreen(touchscreen.getByteValue());
+        byte b=0;
+        if(touchscreen!=null){
+            b=touchscreen.getByteValue();
+        }
+        setTouchscreen(b);
     }
     public void setDensity(short sh){
         if(getConfigSize()<SIZE_16){
@@ -342,7 +350,11 @@ public class ResConfig extends FixedBlockContainer
         return Keyboard.fromValue(getKeyboardByte());
     }
     public void setKeyboard(Keyboard keyboard){
-        setKeyboard(keyboard.getByteValue());
+        byte b=0;
+        if(keyboard!=null){
+            b=keyboard.getByteValue();
+        }
+        setKeyboard(b);
     }
     public void setNavigation(byte b){
         if(getConfigSize()<SIZE_28){
@@ -363,7 +375,11 @@ public class ResConfig extends FixedBlockContainer
         return Navigation.fromValue(getNavigationByte());
     }
     public void setNavigation(Navigation navigation){
-        setNavigation(navigation.getByteValue());
+        byte b=0;
+        if(navigation!=null){
+            b=navigation.getByteValue();
+        }
+        setNavigation(b);
     }
     public void setInputFlags(byte b){
         if(getConfigSize()<SIZE_28){
@@ -676,11 +692,11 @@ public class ResConfig extends FixedBlockContainer
             jsonObject.put(NAME_region, str);
         }
         Orientation orientation=getOrientation();
-        if(orientation!=Orientation.ANY){
+        if(orientation!=null){
             jsonObject.put(NAME_orientation, orientation.toString());
         }
         Touchscreen touchscreen=getTouchscreen();
-        if(touchscreen!=Touchscreen.NONE){
+        if(touchscreen!=null){
             jsonObject.put(NAME_touchscreen, touchscreen.toString());
         }
         str = getDensity();
@@ -688,11 +704,11 @@ public class ResConfig extends FixedBlockContainer
             jsonObject.put(NAME_density, str);
         }
         Keyboard keyboard = getKeyboard();
-        if(keyboard!=Keyboard.NONE){
+        if(keyboard!=null){
             jsonObject.put(NAME_keyboard, keyboard.toString());
         }
         Navigation navigation = getNavigation();
-        if(navigation!=Navigation.NONE){
+        if(navigation!=null){
             jsonObject.put(NAME_navigation, navigation.toString());
         }
         str = getInputFlags();
@@ -918,7 +934,6 @@ public class ResConfig extends FixedBlockContainer
         return result;
     }
     public enum Orientation{
-        ANY((byte) 0),
         PORT((byte) 0x1),
         LAND((byte) 0x2),
         SQUARE((byte) 0x3);
@@ -939,11 +954,11 @@ public class ResConfig extends FixedBlockContainer
                     return orientation;
                 }
             }
-            return ANY;
+            return null;
         }
         public static Orientation fromName(String name){
             if(name==null){
-                return ANY;
+                return null;
             }
             name=name.trim().toUpperCase();
             for(Orientation orientation:values()){
@@ -951,11 +966,10 @@ public class ResConfig extends FixedBlockContainer
                     return orientation;
                 }
             }
-            return ANY;
+            return null;
         }
     }
     public enum Touchscreen{
-        NONE((byte) 0x0),
         NOTOUCH((byte) 0x1),
         STYLUS((byte) 0x2),
         FINGER((byte) 0x3);
@@ -976,11 +990,11 @@ public class ResConfig extends FixedBlockContainer
                     return touchscreen;
                 }
             }
-            return NONE;
+            return null;
         }
         public static Touchscreen fromName(String name){
             if(name==null){
-                return NONE;
+                return null;
             }
             name=name.trim().toUpperCase();
             for(Touchscreen touchscreen:values()){
@@ -988,11 +1002,10 @@ public class ResConfig extends FixedBlockContainer
                     return touchscreen;
                 }
             }
-            return NONE;
+            return null;
         }
     }
     public enum Keyboard{
-        NONE((byte) 0x0),
         NOKEYS((byte) 0x1),
         QWERTY((byte) 0x2),
         KEY12((byte) 0x3);
@@ -1016,11 +1029,11 @@ public class ResConfig extends FixedBlockContainer
                     return keyboard;
                 }
             }
-            return NONE;
+            return null;
         }
         public static Keyboard fromName(String name){
             if(name==null){
-                return NONE;
+                return null;
             }
             name=name.trim().toUpperCase();
             if(name.equals("12KEY")){
@@ -1031,11 +1044,10 @@ public class ResConfig extends FixedBlockContainer
                     return keyboard;
                 }
             }
-            return NONE;
+            return null;
         }
     }
     public enum Navigation{
-        NONE((byte) 0),
         NONAV((byte) 0x1),
         DPAD((byte) 0x2),
         TRACKBALL((byte) 0x3),
@@ -1057,11 +1069,11 @@ public class ResConfig extends FixedBlockContainer
                     return navigation;
                 }
             }
-            return NONE;
+            return null;
         }
         public static Navigation fromName(String name){
             if(name==null){
-                return NONE;
+                return null;
             }
             name=name.trim().toUpperCase();
             for(Navigation navigation:values()){
@@ -1069,7 +1081,7 @@ public class ResConfig extends FixedBlockContainer
                     return navigation;
                 }
             }
-            return NONE;
+            return null;
         }
     }
 

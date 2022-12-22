@@ -25,7 +25,6 @@ import com.reandroid.lib.arsc.group.StringGroup;
 import com.reandroid.lib.arsc.item.TableString;
 import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.arsc.value.EntryBlock;
-import sun.tools.jconsole.Tab;
 
 import java.io.File;
 import java.io.IOException;
@@ -178,6 +177,9 @@ public class ApkModule {
             }
             for(TableString tableString:groupTableString.listItems()){
                 List<EntryBlock> entryBlockList = tableString.listReferencedEntries();
+                if(entryBlockList.size()==0){
+                    continue;
+                }
                 ResFile resFile=new ResFile(inputSource, entryBlockList);
                 results.add(resFile);
             }

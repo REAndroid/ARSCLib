@@ -47,5 +47,6 @@ public class TableStringPool extends BaseStringPool<TableString> {
             exist.set(coming.get());
         }
         getStyleArray().merge(stringPool.getStyleArray());
+        refreshUniqueIdMap();
     }
 }

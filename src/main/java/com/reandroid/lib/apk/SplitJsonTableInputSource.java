@@ -23,6 +23,7 @@ import java.io.*;
 public class SplitJsonTableInputSource extends InputSource {
     private final File dir;
     private TableBlock mCache;
+    private APKLogger apkLogger;
     public SplitJsonTableInputSource(File dir) {
         super(TableBlock.FILE_NAME);
         this.dir=dir;
@@ -55,5 +56,23 @@ public class SplitJsonTableInputSource extends InputSource {
         TableBlock tableBlock=builder.scanDirectory(dir);
         mCache=tableBlock;
         return tableBlock;
+    }
+    void setAPKLogger(APKLogger logger) {
+        this.apkLogger = logger;
+    }
+    void logMessage(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logMessage(msg);
+        }
+    }
+    private void logError(String msg, Throwable tr) {
+        if(apkLogger!=null){
+            apkLogger.logError(msg, tr);
+        }
+    }
+    private void logVerbose(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logVerbose(msg);
+        }
     }
 }

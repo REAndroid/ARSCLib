@@ -15,10 +15,10 @@
   */
 package com.reandroid.lib.apk;
 
-
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.group.EntryGroup;
+import com.reandroid.lib.arsc.pool.SpecStringPool;
 import com.reandroid.lib.json.JSONArray;
 import com.reandroid.lib.json.JSONObject;
 
@@ -36,8 +36,11 @@ public class ResourceIds {
     public ResourceIds(){
         this(new Table());
     }
-    public void applyTo(TableBlock tableBlock){
-        mTable.applyTo(tableBlock);
+    public Table getTable(){
+        return mTable;
+    }
+    public int applyTo(TableBlock tableBlock){
+        return mTable.applyTo(tableBlock);
     }
     public void fromJson(JSONObject jsonObject){
         mTable.fromJson(jsonObject);
@@ -91,14 +94,18 @@ public class ResourceIds {
         public Table(){
             this.packageMap = new HashMap<>();
         }
-        public void applyTo(TableBlock tableBlock){
+        public int applyTo(TableBlock tableBlock){
+            int renameCount=0;
             for(PackageBlock packageBlock : tableBlock.listPackages()){
                 Package pkg=getPackage((byte) packageBlock.getId());
                 if(pkg!=null){
-                    pkg.applyTo(packageBlock);
+                    renameCount+=pkg.applyTo(packageBlock);
                 }
             }
-            tableBlock.refresh();
+            if(renameCount>0){
+                tableBlock.refresh();
+            }
+            return renameCount;
         }
         public void add(Package pkg){
             Package exist=this.packageMap.get(pkg.id);
@@ -241,7 +248,8 @@ public class ResourceIds {
                 this.id = id;
                 this.typeMap = new HashMap<>();
             }
-            public void applyTo(PackageBlock packageBlock){
+            public int applyTo(PackageBlock packageBlock){
+                int renameCount=0;
                 Map<Integer, EntryGroup> map = packageBlock.getEntriesGroupMap();
                 for(Map.Entry<Integer, EntryGroup> entry:map.entrySet()){
                     byte typeId=Table.toTypeId(entry.getKey());
@@ -250,8 +258,20 @@ public class ResourceIds {
                         continue;
                     }
                     EntryGroup entryGroup=entry.getValue();
-                    type.applyTo(entryGroup);
+                    if(type.applyTo(entryGroup)){
+                        renameCount++;
+                    }
                 }
+                if(renameCount>0){
+                    cleanSpecStringPool(packageBlock);
+                }
+                return renameCount;
+            }
+            private void cleanSpecStringPool(PackageBlock packageBlock){
+                SpecStringPool specStringPool = packageBlock.getSpecStringPool();
+                specStringPool.refreshUniqueIdMap();
+                specStringPool.removeUnusedStrings();
+                packageBlock.refresh();
             }
             public void merge(Package pkg){
                 if(pkg==this||pkg==null){
@@ -389,18 +409,30 @@ public class ResourceIds {
             public static class Type implements Comparable<Type>, Comparator<Type.Entry>{
                 public final byte id;
                 public String name;
+                public String nameAlias;
                 public Package mPackage;
                 public final Map<Short, Entry> entryMap;
                 public Type(byte id){
                     this.id = id;
                     this.entryMap = new HashMap<>();
                 }
-                public void applyTo(EntryGroup entryGroup){
+                public boolean applyTo(EntryGroup entryGroup){
+                    boolean renamed=false;
                     Entry entry=entryMap.get(entryGroup.getEntryId());
                     if(entry!=null){
-                        entry.applyTo(entryGroup);
+                        if(entry.applyTo(entryGroup)){
+                            renamed=true;
+                        }
                     }
+                    return renamed;
                 }
+                public String getName() {
+                    if(nameAlias!=null){
+                        return nameAlias;
+                    }
+                    return name;
+                }
+
                 public byte getId(){
                     return id;
                 }
@@ -417,13 +449,14 @@ public class ResourceIds {
                     if(this.id!= type.id){
                         throw new DuplicateException("Different type ids: "+id+"!="+type.id);
                     }
-                    if(type.name!=null){
-                        this.name=type.name;
+                    String n=type.getName();
+                    if(n!=null){
+                        this.name=n;
                     }
                     for(Entry entry:type.entryMap.values()){
                         Short entryId=entry.getEntryId();
                         Entry existEntry=this.entryMap.get(entryId);
-                        if(existEntry != null && Objects.equals(existEntry.name, entry.name)){
+                        if(existEntry != null && Objects.equals(existEntry.getName(), entry.getName())){
                             continue;
                         }
                         this.entryMap.remove(entryId);
@@ -447,13 +480,13 @@ public class ResourceIds {
                     short key=entry.getEntryId();
                     Entry exist=entryMap.get(key);
                     if(exist!=null){
-                        if(Objects.equals(exist.name, entry.name)){
+                        if(Objects.equals(exist.getName(), entry.getName())){
                             return;
                         }
                         throw new DuplicateException("Duplicate entry exist: "+exist+", entry: "+entry);
                     }
-                    if(name == null){
-                        this.name = entry.typeName;
+                    if(getName() == null){
+                        this.name = entry.getTypeName();
                     }
                     entry.type=this;
                     entryMap.put(key, entry);
@@ -461,8 +494,8 @@ public class ResourceIds {
 
                 public JSONObject toJson(){
                     JSONObject jsonObject=new JSONObject();
-                    jsonObject.put("id", id);
-                    jsonObject.put("name", name);
+                    jsonObject.put("id", getId());
+                    jsonObject.put("name", getName());
                     JSONArray jsonArray=new JSONArray();
                     for(Entry entry: entryMap.values()){
                         jsonArray.put(entry.toJson());
@@ -507,8 +540,9 @@ public class ResourceIds {
                 public String toString(){
                     StringBuilder builder=new StringBuilder();
                     builder.append(getHexId());
-                    if(name !=null){
-                        builder.append(" ").append(name);
+                    String n=getName();
+                    if(n !=null){
+                        builder.append(" ").append(n);
                     }
                     builder.append(", entries=").append(entryMap.size());
                     return builder.toString();
@@ -532,6 +566,7 @@ public class ResourceIds {
                     public int resourceId;
                     public String typeName;
                     public String name;
+                    public String nameAlias;
                     public Type type;
                     public Entry(int resourceId, String typeName, String name){
                         this.resourceId = resourceId;
@@ -541,12 +576,18 @@ public class ResourceIds {
                     public Entry(int resourceId, String name){
                         this(resourceId, null, name);
                     }
-                    public void applyTo(EntryGroup entryGroup){
-                        entryGroup.renameSpec(this.name);
+                    public boolean applyTo(EntryGroup entryGroup){
+                        return entryGroup.renameSpec(this.getName());
+                    }
+                    public String getName() {
+                        if(nameAlias!=null){
+                            return nameAlias;
+                        }
+                        return name;
                     }
                     public String getTypeName(){
                         if(this.type!=null){
-                            return this.type.name;
+                            return this.type.getName();
                         }
                         return this.typeName;
                     }
@@ -594,7 +635,7 @@ public class ResourceIds {
                     public JSONObject toJson(){
                         JSONObject jsonObject=new JSONObject();
                         jsonObject.put("id", getResourceId());
-                        jsonObject.put("name", name);
+                        jsonObject.put("name", getName());
                         return jsonObject;
                     }
                     public String toXml(){
@@ -618,9 +659,10 @@ public class ResourceIds {
                             writer.append(tn);
                             writer.append("\"");
                         }
-                        if(name!=null){
+                        String n=getName();
+                        if(n!=null){
                             writer.write(" name=\"");
-                            writer.append(name);
+                            writer.append(n);
                             writer.append("\"");
                         }
                         writer.append("/>");

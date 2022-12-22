@@ -30,6 +30,8 @@ public class ResFile {
     private final InputSource inputSource;
     private boolean mBinXml;
     private boolean mBinXmlChecked;
+    private String mFileExtension;
+    private boolean mFileExtensionChecked;
     public ResFile(InputSource inputSource, List<EntryBlock> entryBlockList){
         this.inputSource=inputSource;
         this.entryBlockList=entryBlockList;
@@ -116,7 +118,7 @@ public class ResFile {
         return true;
     }
     public File buildOutFile(File dir){
-        String path=buildPath();
+        String path=getFilePath();
         path=path.replace('/', File.separatorChar);
         return new File(dir, path);
     }
@@ -135,15 +137,29 @@ public class ResFile {
         return builder.toString();
     }
     private String getFileExtension(){
+        if(!mFileExtensionChecked){
+            mFileExtensionChecked=true;
+            mFileExtension=readFileExtension();
+        }
+        return mFileExtension;
+    }
+    private String readFileExtension(){
         if(isBinaryXml()){
             return ".xml";
         }
         String path=getFilePath();
         int i=path.lastIndexOf('.');
-        if(i<0){
-            return null;
+        if(i>0){
+            return path.substring(i);
         }
-        return path.substring(0);
+        try {
+            String magicExt=FileMagic.getExtensionFromMagic(getInputSource());
+            if(magicExt!=null){
+                return magicExt;
+            }
+        } catch (IOException ignored) {
+        }
+        return null;
     }
     @Override
     public String toString(){
