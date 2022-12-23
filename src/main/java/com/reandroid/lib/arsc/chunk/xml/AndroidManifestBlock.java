@@ -60,6 +60,14 @@ public class AndroidManifestBlock extends ResXmlBlock{
         }
         return results;
     }
+    public List<ResXmlElement> listApplicationElementsByTag(String tag){
+        ResXmlElement application=getApplicationElement();
+        if(application==null){
+            return new ArrayList<>();
+        }
+        List<ResXmlElement> results = application.listElements(tag);
+        return results;
+    }
     public List<String> getUsesPermissions(){
         List<String> results=new ArrayList<>();
         ResXmlElement manifestElement=getManifestElement();
