@@ -316,6 +316,7 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public static final String NAME_compileSdkVersionCodename = "compileSdkVersionCodename";
     public static final String NAME_installLocation="installLocation";
     public static final String NAME_PACKAGE = "package";
+    public static final String NAME_coreApp = "coreApp";
     public static final String NAME_platformBuildVersionCode = "platformBuildVersionCode";
     public static final String NAME_platformBuildVersionName = "platformBuildVersionName";
     public static final String NAME_versionCode = "versionCode";

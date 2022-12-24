@@ -15,10 +15,13 @@
   */
 package com.reandroid.lib.arsc.util;
 
+import com.reandroid.lib.arsc.array.SpecTypePairArray;
+import com.reandroid.lib.arsc.array.TypeBlockArray;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
+import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
@@ -26,6 +29,7 @@ import com.reandroid.lib.arsc.item.ReferenceItem;
 import com.reandroid.lib.arsc.item.TableString;
 import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.lib.arsc.value.EntryBlock;
+import com.reandroid.lib.arsc.value.ResConfig;
 
 import java.io.*;
 import java.util.*;
@@ -88,13 +92,6 @@ public class FrameworkTable extends TableBlock {
         super.readBytes(reader);
     }
     @Override
-    public int onWriteBytes(OutputStream stream) throws IOException{
-        int length=super.onWriteBytes(stream);
-        stream.flush();
-        stream.close();
-        return length;
-    }
-    @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
         reader.close();
@@ -106,6 +103,9 @@ public class FrameworkTable extends TableBlock {
             removeEntryBlocks(entryBlockList);
         }
         for(PackageBlock pkg:listPackages()){
+            clearNonDefaultConfigs(pkg);
+        }
+        for(PackageBlock pkg:listPackages()){
             pkg.removeEmpty();
             pkg.refresh();
         }
@@ -114,6 +114,38 @@ public class FrameworkTable extends TableBlock {
         setFrameworkName(frameworkName);
         setFrameworkVersion(frameworkVersion);
         refresh();
+    }
+    private void clearNonDefaultConfigs(PackageBlock pkg){
+        SpecTypePairArray specTypePairArray = pkg.getSpecTypePairArray();
+        specTypePairArray.sort();
+        List<SpecTypePair> specTypePairList=new ArrayList<>(specTypePairArray.listItems());
+        for(SpecTypePair specTypePair:specTypePairList){
+            clearNonDefaultConfigs(specTypePair);
+        }
+    }
+    private void clearNonDefaultConfigs(SpecTypePair specTypePair){
+        TypeBlockArray typeBlockArray = specTypePair.getTypeBlockArray();
+        if(typeBlockArray.childesCount()<2){
+            return;
+        }
+        List<TypeBlock> typeBlockList=new ArrayList<>(typeBlockArray.listItems());
+        TypeBlock defTypeBlock=null;
+        for(TypeBlock typeBlock:typeBlockList){
+            if(defTypeBlock==null){
+                defTypeBlock=typeBlock;
+            }
+            ResConfig config = typeBlock.getResConfig();
+            if(config.isDefault()){
+                defTypeBlock=typeBlock;
+                break;
+            }
+        }
+        for(TypeBlock typeBlock:typeBlockList){
+            if(typeBlock==defTypeBlock){
+                continue;
+            }
+            typeBlockArray.remove(typeBlock);
+        }
     }
     private void optimizeTableString(){
         removeUnusedTableString();
@@ -253,11 +285,17 @@ public class FrameworkTable extends TableBlock {
         }
         return null;
     }
+    public boolean isOptimized(){
+        return getFrameworkVersion()!=null;
+    }
     @Override
     public String toString(){
         HeaderBlock headerBlock=getHeaderBlock();
         if(headerBlock.getChunkType()!= ChunkType.TABLE){
             return super.toString();
+        }
+        if(!isOptimized()){
+            return "Unoptimized: "+super.toString();
         }
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
@@ -291,6 +329,14 @@ public class FrameworkTable extends TableBlock {
             builder.append(":").append(packageBlock.getName());
         }
         return builder.toString();
+    }
+    public static FrameworkTable load(File file) throws IOException{
+        return load(new FileInputStream(file));
+    }
+    public static FrameworkTable load(InputStream inputStream) throws IOException{
+        FrameworkTable frameworkTable=new FrameworkTable();
+        frameworkTable.readBytes(inputStream);
+        return frameworkTable;
     }
     private static final String TITLE_STRING="Framework table";
     private static final String PROP_TITLE="TITLE";

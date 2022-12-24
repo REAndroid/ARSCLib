@@ -251,9 +251,12 @@ public class ApkModule {
                 || getApkArchive().getInputSource(TableBlock.FILE_NAME)!=null;
     }
     public TableBlock getTableBlock() throws IOException {
-        if(mTableBlock!=null){
-            return mTableBlock;
+        if(mTableBlock==null){
+            mTableBlock=loadTableBlock();
         }
+        return mTableBlock;
+    }
+    TableBlock loadTableBlock() throws IOException {
         APKArchive archive=getApkArchive();
         InputSource inputSource = archive.getInputSource(TableBlock.FILE_NAME);
         if(inputSource==null){
@@ -276,12 +279,11 @@ public class ApkModule {
             }
             inputStream.close();
         }
-        mTableBlock=tableBlock;
-        BlockInputSource<TableBlock> blockInputSource=new BlockInputSource<>(inputSource.getName(),tableBlock);
+        BlockInputSource<TableBlock> blockInputSource=new BlockInputSource<>(inputSource.getName(), tableBlock);
         blockInputSource.setMethod(inputSource.getMethod());
         blockInputSource.setSort(inputSource.getSort());
         archive.add(blockInputSource);
-        return mTableBlock;
+        return tableBlock;
     }
     public APKArchive getApkArchive() {
         return apkArchive;
@@ -362,7 +364,7 @@ public class ApkModule {
     public void setAPKLogger(APKLogger logger) {
         this.apkLogger = logger;
     }
-    private void logMessage(String msg) {
+    void logMessage(String msg) {
         if(apkLogger!=null){
             apkLogger.logMessage(msg);
         }

@@ -70,6 +70,12 @@ public class ZipArchive {
             }
         }
     }
+    public void clear(){
+        mEntriesMap.clear();
+    }
+    public int entriesCount(){
+        return mEntriesMap.size();
+    }
     public InputSource remove(String name){
         InputSource inputSource=mEntriesMap.remove(name);
         if(inputSource==null){
