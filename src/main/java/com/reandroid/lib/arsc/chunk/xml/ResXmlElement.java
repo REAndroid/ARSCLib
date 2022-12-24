@@ -22,6 +22,7 @@ import com.reandroid.lib.arsc.container.FixedBlockContainer;
 import com.reandroid.lib.arsc.container.SingleBlockContainer;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
+import com.reandroid.lib.arsc.item.ResXmlString;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 import com.reandroid.lib.json.JSONConvert;
 import com.reandroid.lib.json.JSONArray;
@@ -29,11 +30,9 @@ import com.reandroid.lib.json.JSONObject;
 
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
-public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JSONObject> {
+ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JSONObject> {
     private final BlockList<ResXmlStartNamespace> mStartNamespaceList;
     private final SingleBlockContainer<ResXmlStartElement> mStartElementContainer;
     private final BlockList<ResXmlElement> mBody;
@@ -55,6 +54,24 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
         addChild(3, mResXmlTextContainer);
         addChild(4, mEndElementContainer);
         addChild(5, mEndNamespaceList);
+    }
+    Set<ResXmlString> clearStringReferences(){
+        Set<ResXmlString> results=new HashSet<>();
+        for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
+            results.addAll(startNamespace.clearStringReferences());
+        }
+        ResXmlStartElement start = getStartElement();
+        if(start!=null){
+            results.addAll(start.clearStringReferences());
+        }
+        ResXmlText resXmlText=getResXmlText();
+        if(resXmlText!=null){
+            results.addAll(resXmlText.clearStringReferences());
+        }
+        for(ResXmlElement child:listElements()){
+            results.addAll(child.clearStringReferences());
+        }
+        return results;
     }
     void linkStringReferences(){
         for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
@@ -212,8 +229,18 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
     public void addElement(ResXmlElement element){
         mBody.add(element);
     }
-    public void removeElement(ResXmlElement element){
-        mBody.remove(element);
+    public boolean removeElement(ResXmlElement element){
+        if(element.getParent()!=null){
+            // TODO: Find a way to remove properly from StringPool
+            Set<ResXmlString> removedStrings = element.clearStringReferences();
+            for(ResXmlString xmlString:removedStrings){
+                if(xmlString.getReferencedList().size()!=0){
+                    continue;
+                }
+                xmlString.set("");
+            }
+        }
+        return mBody.remove(element);
     }
     public int countElements(){
         return mBody.size();

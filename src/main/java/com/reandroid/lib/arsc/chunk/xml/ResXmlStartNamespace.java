@@ -16,8 +16,11 @@
 package com.reandroid.lib.arsc.chunk.xml;
 
 import com.reandroid.lib.arsc.chunk.ChunkType;
+import com.reandroid.lib.arsc.item.ResXmlString;
 
-public class ResXmlStartNamespace extends ResXmlNamespace<ResXmlEndNamespace> {
+import java.util.Set;
+
+ public class ResXmlStartNamespace extends ResXmlNamespace<ResXmlEndNamespace> {
     public ResXmlStartNamespace() {
         super(ChunkType.XML_START_NAMESPACE);
     }
@@ -34,5 +37,14 @@ public class ResXmlStartNamespace extends ResXmlNamespace<ResXmlEndNamespace> {
         if(end!=null){
             end.linkStringReferences();
         }
+    }
+    @Override
+    Set<ResXmlString> clearStringReferences(){
+        Set<ResXmlString> results=super.clearStringReferences();
+        ResXmlEndNamespace end = getEnd();
+        if(end!=null){
+            results.addAll(end.clearStringReferences());
+        }
+        return results;
     }
 }

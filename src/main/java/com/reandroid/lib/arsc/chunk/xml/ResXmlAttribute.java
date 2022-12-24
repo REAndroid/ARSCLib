@@ -18,16 +18,16 @@ package com.reandroid.lib.arsc.chunk.xml;
 import com.reandroid.lib.arsc.array.ResXmlIDArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.FixedBlockContainer;
-import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 import com.reandroid.lib.arsc.value.ValueType;
 import com.reandroid.lib.json.JSONConvert;
 import com.reandroid.lib.json.JSONObject;
 
-import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
-public class ResXmlAttribute extends FixedBlockContainer
+ public class ResXmlAttribute extends FixedBlockContainer
         implements Comparable<ResXmlAttribute>, JSONConvert<JSONObject> {
     private final IntegerItem mNamespaceReference;
     private final IntegerItem mNameReference;
@@ -53,6 +53,27 @@ public class ResXmlAttribute extends FixedBlockContainer
         addChild(5, mValueTypeByte);
         addChild(6, mRawValue);
     }
+     Set<ResXmlString> clearStringReferences(){
+         Set<ResXmlString> results=new HashSet<>();
+         ResXmlString xmlString;
+         xmlString=unLinkStringReference(mNamespaceReference);
+         if(xmlString!=null){
+             results.add(xmlString);
+         }
+         xmlString=unLinkStringReference(mNameReference);
+         if(xmlString!=null){
+             results.add(xmlString);
+         }
+         xmlString=unLinkStringReference(mValueStringReference);
+         if(xmlString!=null){
+             results.add(xmlString);
+         }
+         xmlString=unLinkStringReference(mRawValue);
+         if(xmlString!=null){
+             results.add(xmlString);
+         }
+         return results;
+     }
     public void linkStringReferences(){
         linkStringReference(mNamespaceReference);
         linkStringReference(mNameReference);
@@ -66,6 +87,13 @@ public class ResXmlAttribute extends FixedBlockContainer
         if(xmlString!=null){
             xmlString.addReferenceIfAbsent(item);
         }
+    }
+    private ResXmlString unLinkStringReference(IntegerItem item){
+        ResXmlString xmlString = getResXmlString(item.get());
+        if(xmlString!=null){
+            xmlString.removeReference(item);
+        }
+        return xmlString;
     }
     public String getUri(){
         return getString(getNamespaceReference());

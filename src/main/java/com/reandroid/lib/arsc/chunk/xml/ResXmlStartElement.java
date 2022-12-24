@@ -17,13 +17,14 @@ package com.reandroid.lib.arsc.chunk.xml;
 
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.array.ResXmlAttributeArray;
+import com.reandroid.lib.arsc.item.ResXmlString;
 import com.reandroid.lib.arsc.item.ShortItem;
-import com.reandroid.lib.arsc.value.ValueType;
 
 import java.util.Collection;
+import java.util.Set;
 
 
-public class ResXmlStartElement extends BaseXmlChunk {
+ public class ResXmlStartElement extends BaseXmlChunk {
     private final ShortItem mAttributeStart;
     private final ShortItem mAttributeUnitSize;
     private final ShortItem mAttributeCount;
@@ -52,9 +53,25 @@ public class ResXmlStartElement extends BaseXmlChunk {
     @Override
     void linkStringReferences(){
         super.linkStringReferences();
+        ResXmlEndElement end = getResXmlEndElement();
+        if(end!=null){
+            end.linkStringReferences();
+        }
         for(ResXmlAttribute attr:listResXmlAttributes()){
             attr.linkStringReferences();
         }
+    }
+    @Override
+     Set<ResXmlString>  clearStringReferences(){
+        Set<ResXmlString> results=super.clearStringReferences();
+        ResXmlEndElement end = getResXmlEndElement();
+        if(end!=null){
+            results.addAll(end.clearStringReferences());
+        }
+        for(ResXmlAttribute attr:listResXmlAttributes()){
+            results.addAll(attr.clearStringReferences());
+        }
+        return results;
     }
     @Override
     protected void onPreRefreshRefresh(){

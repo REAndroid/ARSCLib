@@ -18,15 +18,15 @@ package com.reandroid.lib.arsc.chunk.xml;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.chunk.BaseChunk;
-import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.ResXmlString;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 
-import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 
-public class BaseXmlChunk extends BaseChunk {
+ public class BaseXmlChunk extends BaseChunk {
 
     private final IntegerItem mLineNumber;
     private final IntegerItem mCommentReference;
@@ -46,6 +46,23 @@ public class BaseXmlChunk extends BaseChunk {
         addChild(mNamespaceReference);
         addChild(mStringReference);
     }
+     Set<ResXmlString> clearStringReferences(){
+         Set<ResXmlString> results=new HashSet<>();
+         ResXmlString xmlString;
+         xmlString=unLinkStringReference(mCommentReference);
+         if(xmlString!=null){
+             results.add(xmlString);
+         }
+         xmlString=unLinkStringReference(mNamespaceReference);
+         if(xmlString!=null){
+             results.add(xmlString);
+         }
+         xmlString=unLinkStringReference(mStringReference);
+         if(xmlString!=null){
+             results.add(xmlString);
+         }
+         return results;
+     }
     void linkStringReferences(){
         linkStringReference(mCommentReference);
         linkStringReference(mNamespaceReference);
@@ -57,11 +74,12 @@ public class BaseXmlChunk extends BaseChunk {
             xmlString.addReferenceIfAbsent(item);
         }
     }
-    void unLinkStringReference(IntegerItem item){
+    ResXmlString unLinkStringReference(IntegerItem item){
         ResXmlString xmlString = getResXmlString(item.get());
         if(xmlString!=null){
             xmlString.removeReference(item);
         }
+        return xmlString;
     }
     public void setLineNumber(int val){
         mLineNumber.set(val);
