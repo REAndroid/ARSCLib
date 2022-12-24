@@ -212,6 +212,9 @@ public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JS
     public void addElement(ResXmlElement element){
         mBody.add(element);
     }
+    public void removeElement(ResXmlElement element){
+        mBody.remove(element);
+    }
     public int countElements(){
         return mBody.size();
     }
