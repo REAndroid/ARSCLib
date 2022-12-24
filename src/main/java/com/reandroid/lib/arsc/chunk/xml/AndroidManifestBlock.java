@@ -65,8 +65,7 @@ public class AndroidManifestBlock extends ResXmlBlock{
         if(application==null){
             return new ArrayList<>();
         }
-        List<ResXmlElement> results = application.listElements(tag);
-        return results;
+        return application.listElements(tag);
     }
     public List<String> getUsesPermissions(){
         List<String> results=new ArrayList<>();
