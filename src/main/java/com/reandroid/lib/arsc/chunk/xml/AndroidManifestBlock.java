@@ -335,6 +335,11 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public static final int ID_isSplitRequired = 0x01010591;
 
     public static final String VALUE_android_intent_action_MAIN = "android.intent.action.MAIN";
+    public static final String VALUE_com_android_vending_splits_required = "com.android.vending.splits.required";
+    public static final String VALUE_com_android_vending_splits = "com.android.vending.splits";
+    public static final String VALUE_com_android_vending_derived_apk_id = "com.android.vending.derived.apk.id";
+    public static final String VALUE_com_android_stamp_source = "com.android.stamp.source";
+    public static final String VALUE_com_android_stamp_type = "com.android.stamp.type";
 
     public static final String FILE_NAME="AndroidManifest.xml";
 }

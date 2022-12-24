@@ -445,7 +445,7 @@ public class ResXmlAttribute extends FixedBlockContainer
     }
     static final String NAME_id = "id";
     public static final String NAME_value_type = "value_type";
-    static final String NAME_name = "name";
+    public static final String NAME_name = "name";
     public static final String NAME_namespace_uri = "namespace_uri";
     public static final String NAME_data= "data";
 }
