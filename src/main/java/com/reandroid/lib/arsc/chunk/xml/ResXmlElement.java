@@ -55,6 +55,9 @@ import java.util.*;
         addChild(4, mEndElementContainer);
         addChild(5, mEndNamespaceList);
     }
+    public ResXmlAttribute newAttribute(){
+        return getStartElement().newAttribute();
+    }
     Set<ResXmlString> clearStringReferences(){
         Set<ResXmlString> results=new HashSet<>();
         for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
@@ -229,6 +232,9 @@ import java.util.*;
     public void addElement(ResXmlElement element){
         mBody.add(element);
     }
+    public boolean removeAttribute(ResXmlAttribute resXmlAttribute){
+        return getStartElement().getResXmlAttributeArray().remove(resXmlAttribute);
+    }
     public boolean removeElement(ResXmlElement element){
         if(element.getParent()!=null){
             // TODO: Find a way to remove properly from StringPool
@@ -330,7 +336,7 @@ import java.util.*;
         mEndNamespaceList.add(item);
     }
 
-    private ResXmlStartElement newStartElement(int lineNo){
+    ResXmlStartElement newStartElement(int lineNo){
         ResXmlStartElement startElement=new ResXmlStartElement();
         setStartElement(startElement);
 

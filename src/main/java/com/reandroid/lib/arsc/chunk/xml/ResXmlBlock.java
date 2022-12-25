@@ -48,6 +48,18 @@ public class ResXmlBlock extends BaseChunk implements JSONConvert<JSONObject> {
         addChild(mResXmlIDMap);
         addChild(mResXmlElementContainer);
     }
+    public ResXmlElement createRootElement(String tag){
+        int lineNo=1;
+        ResXmlElement resXmlElement=new ResXmlElement();
+        resXmlElement.newStartElement(lineNo);
+
+        setResXmlElement(resXmlElement);
+
+        if(tag!=null){
+            resXmlElement.setTag(tag);
+        }
+        return resXmlElement;
+    }
     void linkStringReferences(){
         ResXmlElement element=getResXmlElement();
         if(element!=null){

@@ -50,6 +50,10 @@ import java.util.Set;
         addChild(mStyleAttributePosition);
         addChild(mAttributeArray);
     }
+     public ResXmlAttribute newAttribute(){
+         ResXmlAttributeArray attributeArray = getResXmlAttributeArray();
+         return attributeArray.createNext();
+     }
     @Override
     void linkStringReferences(){
         super.linkStringReferences();
