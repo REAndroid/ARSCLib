@@ -118,12 +118,11 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         mUtf8=utf8;
         onBytesChanged();
     }
-
     @Override
-    public void onBytesChanged() {
+    protected void onBytesChanged() {
+        // To save cpu/memory usage, better to decode once only when bytes changed
         mCache=decodeString();
     }
-
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         if(reader.available()<4){

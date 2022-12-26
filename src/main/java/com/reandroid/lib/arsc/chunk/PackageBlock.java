@@ -323,6 +323,14 @@ public class PackageBlock extends BaseChunk
         getLibraryBlock().merge(packageBlock.getLibraryBlock());
         getSpecTypePairArray().merge(packageBlock.getSpecTypePairArray());
     }
+    /**
+     * It is allowed to have duplicate type name therefore it is not recommend to use this.
+     * Lets depreciate to warn developer
+     */
+    @Deprecated
+    public SpecTypePair searchByTypeName(String typeName){
+        return getSpecTypePairArray().searchByTypeName(typeName);
+    }
     @Override
     public int compareTo(PackageBlock pkg) {
         return Integer.compare(getId(), pkg.getId());

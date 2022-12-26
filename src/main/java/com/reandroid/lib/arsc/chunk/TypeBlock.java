@@ -190,6 +190,14 @@ public class TypeBlock extends BaseTypeBlock
         }
         return getResConfig().compareTo(typeBlock.getResConfig());
     }
+    /**
+     * It is allowed to have duplicate entry name therefore it is not recommend to use this.
+     * Lets depreciate to warn developer
+     */
+    @Deprecated
+    public EntryBlock searchByEntryName(String entryName){
+        return getEntryBlockArray().searchByEntryName(entryName);
+    }
     @Override
     public String toString(){
         StringBuilder builder=new StringBuilder();

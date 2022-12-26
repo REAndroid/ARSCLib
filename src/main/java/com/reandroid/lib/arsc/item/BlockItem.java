@@ -29,7 +29,8 @@ public abstract class BlockItem extends Block {
         super();
         mBytes=new byte[bytesLength];
     }
-    public abstract void onBytesChanged();
+    protected void onBytesChanged(){
+    }
     protected byte[] getBytesInternal() {
         return mBytes;
     }

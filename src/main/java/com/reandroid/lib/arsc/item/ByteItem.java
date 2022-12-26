@@ -44,9 +44,6 @@ public class ByteItem extends BlockItem {
         return getBytesInternal()[0];
     }
     @Override
-    public void onBytesChanged() {
-    }
-    @Override
     public String toString(){
         return String.valueOf(get());
     }

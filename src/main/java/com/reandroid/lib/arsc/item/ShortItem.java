@@ -38,7 +38,8 @@ public class ShortItem extends BlockItem {
         return mCache;
     }
     @Override
-    public void onBytesChanged() {
+    protected void onBytesChanged() {
+        // To save cpu usage, better to calculate once only when bytes changed
         mCache=readShortBytes();
     }
     private short readShortBytes(){

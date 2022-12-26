@@ -67,10 +67,6 @@ public abstract class BaseResValue extends BlockItem implements JSONConvert<JSON
         }
         entryBlock.addTableReference(ref);
     }
-    @Override
-    public void onBytesChanged() {
-
-    }
     void onDataLoaded() {
 
     }

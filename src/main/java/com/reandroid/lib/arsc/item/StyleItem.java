@@ -254,9 +254,6 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         return true;
     }
     @Override
-    public void onBytesChanged() {
-    }
-    @Override
     public void setNull(boolean is_null){
         if(!is_null){
             return;

@@ -149,10 +149,6 @@ public class ByteArray extends BlockItem {
             }
         };
     }
-
-    @Override
-    public void onBytesChanged() {
-    }
     @Override
     public String toString(){
         return "size="+size();

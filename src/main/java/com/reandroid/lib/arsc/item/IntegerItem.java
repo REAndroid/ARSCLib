@@ -41,11 +41,9 @@ public class IntegerItem extends BlockItem implements ReferenceItem{
     public int get(){
         return mCache;
     }
-
-
-
     @Override
-    public void onBytesChanged() {
+    protected void onBytesChanged() {
+        // To save cpu usage, better to calculate once only when bytes changed
         mCache=readIntBytes();
     }
     private int readIntBytes(){

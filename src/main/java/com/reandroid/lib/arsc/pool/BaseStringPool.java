@@ -144,6 +144,9 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
     public List<T> listUnusedStrings(){
         return getStringsArray().listUnusedStrings();
     }
+    public Collection<T> listStrings(){
+        return getStringsArray().listItems();
+    }
     public StyleArray getStyleArray(){
         return mArrayStyles;
     }
@@ -195,7 +198,7 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
     public final StringGroup<T> get(String str){
         return mUniqueMap.get(str);
     }
-    public final T getOrCreate(String str){
+    public T getOrCreate(String str){
         StringGroup<T> group=getOrCreateGroup(str);
         T[] items=group.getItems();
         if(items.length==0){

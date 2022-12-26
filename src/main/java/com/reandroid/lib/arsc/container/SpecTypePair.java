@@ -88,6 +88,21 @@ public class SpecTypePair extends BlockContainer<Block>
         mSpecBlock.setTypeId(id);
         mTypeBlockArray.setTypeId(id);
     }
+    public String getTypeName(){
+        TypeString typeString = getTypeString();
+        if(typeString!=null){
+            return typeString.get();
+        }
+        return null;
+    }
+    /**
+     * It is allowed to have duplicate entry name therefore it is not recommend to use this.
+     * Lets depreciate to warn developer
+     */
+    @Deprecated
+    public EntryBlock searchByEntryName(String entryName){
+        return getTypeBlockArray().searchByEntryName(entryName);
+    }
     public SpecBlock getSpecBlock(){
         return mSpecBlock;
     }
@@ -118,7 +133,7 @@ public class SpecTypePair extends BlockContainer<Block>
         return results;
     }
     public Collection<TypeBlock> listTypeBlocks(){
-        return mTypeBlockArray.listItems();
+        return getTypeBlockArray().listItems();
     }
 
     @Override

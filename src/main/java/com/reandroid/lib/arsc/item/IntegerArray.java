@@ -49,18 +49,16 @@ public class IntegerArray extends BlockItem {
         }
     }
     public final List<Integer> toList(){
-        List<Integer> results=new AbstractList<Integer>() {
+        return new AbstractList<Integer>() {
             @Override
             public Integer get(int i) {
                 return IntegerArray.this.get(i);
             }
-
             @Override
             public int size() {
                 return IntegerArray.this.size();
             }
         };
-        return results;
     }
     public final int[] toArray(){
         int s=size();
@@ -111,9 +109,5 @@ public class IntegerArray extends BlockItem {
         bts[i+2]= (byte) (value >>> 16 & 0xff);
         bts[i+1]= (byte) (value >>> 8 & 0xff);
         bts[i]= (byte) (value & 0xff);
-    }
-    @Override
-    public void onBytesChanged() {
-
     }
 }
