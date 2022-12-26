@@ -16,16 +16,34 @@
 package com.reandroid.lib.arsc.item;
 
 
-public class TypeString extends StringItem {
+ import com.reandroid.lib.arsc.base.Block;
+ import com.reandroid.lib.arsc.pool.TypeStringPool;
+
+ public class TypeString extends StringItem {
     public TypeString(boolean utf8) {
         super(utf8);
     }
     public byte getId(){
+        TypeStringPool stringPool=getTypeStringPool();
+        if(stringPool!=null){
+            return stringPool.idOf(this);
+        }
+        // Should not reach here , this means it not added to string pool
         return (byte) (getIndex()+1);
     }
     @Override
     public StyleItem getStyle(){
         // Type don't have style unless to obfuscate/confuse other decompilers
+        return null;
+    }
+    private TypeStringPool getTypeStringPool(){
+        Block parent=this;
+        while (parent!=null){
+            if(parent instanceof TypeStringPool){
+                return (TypeStringPool) parent;
+            }
+            parent=parent.getParent();
+        }
         return null;
     }
 }

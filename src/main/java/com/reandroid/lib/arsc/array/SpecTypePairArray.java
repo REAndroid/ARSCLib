@@ -254,6 +254,27 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
             exist.merge(typePair);
         }
     }
+    /**
+     * It is allowed to have duplicate type name therefore it is not recommend to use this.
+     * Lets depreciate to warn developer
+     */
+    @Deprecated
+    public SpecTypePair searchByTypeName(String typeName){
+        if(typeName==null){
+            return null;
+        }
+        SpecTypePair[] childes=getChildes();
+        if(childes==null){
+            return null;
+        }
+        for(int i=0;i<childes.length;i++){
+            SpecTypePair specTypePair=childes[i];
+            if(typeName.equals(specTypePair.getTypeName())){
+                return specTypePair;
+            }
+        }
+        return null;
+    }
     @Override
     public int compare(SpecTypePair typePair1, SpecTypePair typePair2) {
         return typePair1.compareTo(typePair2);

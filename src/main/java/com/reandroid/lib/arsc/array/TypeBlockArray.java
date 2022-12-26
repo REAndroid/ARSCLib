@@ -302,6 +302,21 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
             block.merge(typeBlock);
         }
     }
+    /**
+     * It is allowed to have duplicate entry name therefore it is not recommend to use this.
+     * Lets depreciate to warn developer
+     */
+    @Deprecated
+    public EntryBlock searchByEntryName(String entryName){
+        if(entryName==null){
+            return null;
+        }
+        TypeBlock[] childes = getChildes();
+        if(childes==null || childes.length==0){
+            return null;
+        }
+        return childes[0].searchByEntryName(entryName);
+    }
     @Override
     public int compare(TypeBlock typeBlock1, TypeBlock typeBlock2) {
         return typeBlock1.compareTo(typeBlock2);

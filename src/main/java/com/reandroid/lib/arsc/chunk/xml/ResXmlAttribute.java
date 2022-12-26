@@ -178,21 +178,9 @@ import java.util.Set;
         }
         return xmlElement.getStartNamespaceByUriRef(getNamespaceReference());
     }
+    @Deprecated
     public String getValueString(){
         return getString(getValueStringReference());
-    }
-    ResXmlString setValueString(String str){
-        ResXmlString resXmlString=getOrCreateResXmlString(str);
-        if(resXmlString==null){
-            return null;
-        }
-        int ref=resXmlString.getIndex();
-        setValueStringReference(ref);
-        if(getValueType()==ValueType.STRING){
-            setRawValue(ref);
-            setValueStringReference(ref);
-        }
-        return resXmlString;
     }
     public int getNameResourceID(){
         return getResourceId(getNameReference());
@@ -313,8 +301,8 @@ import java.util.Set;
         setRawValue(ref);
         setValueStringReference(-1);
     }
-    public void setValueAsInteger(int val){
-        setValueType(ValueType.FIRST_INT);
+    public void setValueAsIntegerDec(int val){
+        setValueType(ValueType.INT_DEC);
         setRawValue(val);
         setValueStringReference(-1);
     }
@@ -361,18 +349,6 @@ import java.util.Set;
         setValueType(ValueType.INT_COLOR_ARGB8);
         setRawValue(val);
         setValueStringReference(-1);
-    }
-    private String getCompareName(){
-        int id=getNameResourceID();
-        StringBuilder builder=new StringBuilder();
-        if(id!=0){
-            builder.append("0 ");
-            builder.append(String.format("%08x", id));
-        }else {
-            builder.append("1 ");
-            builder.append(getName());
-        }
-        return builder.toString();
     }
     @Override
     public int compareTo(ResXmlAttribute other) {
@@ -473,7 +449,7 @@ import java.util.Set;
     }
     static final String NAME_id = "id";
     public static final String NAME_value_type = "value_type";
-    static final String NAME_name = "name";
+    public static final String NAME_name = "name";
     public static final String NAME_namespace_uri = "namespace_uri";
     public static final String NAME_data= "data";
 }

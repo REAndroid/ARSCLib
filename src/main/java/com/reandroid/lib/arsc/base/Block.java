@@ -47,8 +47,7 @@ public abstract class Block {
             blockLoad.onBlockLoaded(reader, this);
         }
     }
-    public void onReadBytes(BlockReader reader) throws IOException{
-
+    protected void onReadBytes(BlockReader reader) throws IOException{
     }
     public final int writeBytes(OutputStream stream) throws IOException{
         if(isNull()){

@@ -15,7 +15,6 @@
   */
 package com.reandroid.lib.arsc.array;
 
-import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.value.BaseResValue;
@@ -56,12 +55,27 @@ public class EntryBlockArray extends OffsetBlockArray<EntryBlock> implements JSO
     public EntryBlock newInstance() {
         return new EntryBlock();
     }
-
     @Override
     public EntryBlock[] newInstance(int len) {
         return new EntryBlock[len];
     }
 
+    /**
+     * It is allowed to have duplicate entry name therefore it is not recommend to use this.
+     * Lets depreciate to warn developer
+     */
+    @Deprecated
+    public EntryBlock searchByEntryName(String entryName){
+        if(entryName==null){
+            return null;
+        }
+        for(EntryBlock entryBlock:listItems()){
+            if(entryName.equals(entryBlock.getName())){
+                return entryBlock;
+            }
+        }
+        return null;
+    }
     @Override
     public JSONArray toJson() {
         JSONArray jsonArray=new JSONArray();
