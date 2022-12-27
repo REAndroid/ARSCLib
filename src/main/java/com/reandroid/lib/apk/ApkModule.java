@@ -323,7 +323,7 @@ public class ApkModule {
         APKArchive archiveComing = module.getApkArchive();
         Map<String, InputSource> comingAlias=ApkUtil.toAliasMap(archiveComing.listInputSources());
         Map<String, InputSource> existAlias=ApkUtil.toAliasMap(archiveExist.listInputSources());
-        UncompressedFiles uf=getUncompressedFiles();
+        UncompressedFiles uncompressedFiles = module.getUncompressedFiles();
         for(InputSource inputSource:comingAlias.values()){
             if(existAlias.containsKey(inputSource.getAlias())||existAlias.containsKey(inputSource.getName())){
                 continue;
@@ -331,9 +331,11 @@ public class ApkModule {
             if(DexFileInputSource.isDexName(inputSource.getName())){
                 continue;
             }
+            if (inputSource.getAlias().startsWith("lib/")){
+                uncompressedFiles.removePath(inputSource.getAlias());
+            }
             logVerbose("Added: "+inputSource.getAlias());
             archiveExist.add(inputSource);
-            uf.addPath(inputSource);
         }
     }
     private void mergeDexFiles(ApkModule module){
