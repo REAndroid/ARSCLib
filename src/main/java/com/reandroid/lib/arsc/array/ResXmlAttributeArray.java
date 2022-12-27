@@ -38,6 +38,14 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         this.mAttributeStart=attributeStart;
         this.mAttributeCount=attributeCount;
     }
+    public ResXmlAttribute getFirstIntAttribute(){
+        for(ResXmlAttribute attribute:listItems()){
+            if(attribute.hasIntegerValue()){
+                return attribute;
+            }
+        }
+        return null;
+    }
     public void sortAttributes(){
         sort(this);
     }

@@ -15,6 +15,7 @@
   */
 package com.reandroid.lib.arsc.chunk.xml;
 
+import com.reandroid.lib.arsc.array.ResXmlAttributeArray;
 import com.reandroid.lib.arsc.array.ResXmlIDArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.FixedBlockContainer;
@@ -142,9 +143,11 @@ import java.util.Set;
         return ValueType.valueOf(getValueTypeByte());
     }
     public void setValueType(ValueType valueType){
+        byte b=0;
         if(valueType!=null){
-            setValueTypeByte(valueType.getByte());
+            b=valueType.getByte();
         }
+        setValueTypeByte(b);
     }
     public String getFullName(){
         String name=getName();
@@ -300,6 +303,36 @@ import java.util.Set;
         int ref=val?0xffffffff:0;
         setRawValue(ref);
         setValueStringReference(-1);
+    }
+    public boolean hasIntegerValue(){
+        ValueType valueType=getValueType();
+        return valueType==ValueType.INT_DEC
+                ||valueType==ValueType.FIRST_INT;
+    }
+    public Integer getValueAsInteger(){
+        if(hasIntegerValue()){
+            return getRawValue();
+        }
+        return null;
+    }
+    public void setValueAsInteger(int val){
+        setValueType(ValueType.INT_DEC);
+        ResXmlAttributeArray array=getParentResXmlAttributeArray();
+        if(array!=null && array.getFirstIntAttribute()==this){
+            setValueType(ValueType.FIRST_INT);
+        }
+        setRawValue(val);
+        setValueStringReference(-1);
+    }
+    private ResXmlAttributeArray getParentResXmlAttributeArray(){
+        Block parent=this;
+        while(parent!=null){
+            if(parent instanceof ResXmlAttributeArray){
+                return (ResXmlAttributeArray)parent;
+            }
+            parent=parent.getParent();
+        }
+        return null;
     }
     public void setValueAsIntegerDec(int val){
         setValueType(ValueType.INT_DEC);

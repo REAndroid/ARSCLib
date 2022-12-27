@@ -107,6 +107,28 @@ import java.util.*;
         }
         return resXmlElement;
     }
+    public ResXmlAttribute getOrCreateAndroidAttribute(String name, int resourceId){
+        return getOrCreateAttribute(NS_ANDROID_URI, NS_ANDROID_PREFIX, name, resourceId);
+    }
+    public ResXmlAttribute getOrCreateAttribute(String uri, String prefix, String name, int resourceId){
+        ResXmlAttribute attribute=searchAttribute(name, resourceId);
+        if(attribute==null){
+            attribute = createAttribute(name, resourceId);
+            if(uri!=null){
+                ResXmlElement root = getRootResXmlElement();
+                ResXmlStartNamespace ns = root.getOrCreateNamespace(uri, prefix);
+                attribute.setNamespaceReference(ns.getUriReference());
+            }
+        }
+        return attribute;
+    }
+    public ResXmlAttribute getOrCreateAttribute(String name, int resourceId){
+        ResXmlAttribute attribute=searchAttribute(name, resourceId);
+        if(attribute==null){
+            attribute=createAttribute(name, resourceId);
+        }
+        return attribute;
+    }
     public ResXmlAttribute createAndroidAttribute(String name, int resourceId){
         ResXmlAttribute attribute=createAttribute(name, resourceId);
         ResXmlStartNamespace ns = getOrCreateNamespace(NS_ANDROID_URI, NS_ANDROID_PREFIX);
@@ -132,6 +154,12 @@ import java.util.*;
             }
         }
         return null;
+    }
+    private ResXmlAttribute searchAttribute(String name, int resourceId){
+        if(resourceId==0){
+            return searchAttributeByName(name);
+        }
+        return searchAttributeByResourceId(resourceId);
     }
     public ResXmlAttribute searchAttributeByName(String name){
         ResXmlStartElement startElement=getStartElement();
@@ -265,6 +293,13 @@ import java.util.*;
             }
         }
         return results;
+    }
+    public ResXmlElement getRootResXmlElement(){
+        ResXmlElement parent=getParentResXmlElement();
+        if(parent!=null){
+            return parent.getRootResXmlElement();
+        }
+        return this;
     }
     public ResXmlElement getParentResXmlElement(){
         Block parent=getParent();

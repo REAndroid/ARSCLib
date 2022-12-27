@@ -115,7 +115,7 @@ public class AndroidManifestBlock extends ResXmlBlock{
             return exist;
         }
         ResXmlElement result = manifestElement.createChildElement(TAG_uses_permission);
-        ResXmlAttribute attr = result.createAndroidAttribute(NAME_name, ID_name);
+        ResXmlAttribute attr = result.getOrCreateAndroidAttribute(NAME_name, ID_name);
         attr.setValueAsString(permissionName);
         return result;
     }
@@ -145,8 +145,8 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public Integer getCompileSdkVersion(){
         return getManifestAttributeInt(ID_compileSdkVersion);
     }
-    public boolean setCompileSdkVersion(int val){
-        return setManifestAttributeInt(ID_compileSdkVersion, val);
+    public void setCompileSdkVersion(int val){
+        setManifestAttributeInt(NAME_compileSdkVersion, ID_compileSdkVersion, val);
     }
     public String getCompileSdkVersionCodename(){
         return getManifestAttributeString(ID_compileSdkVersionCodename);
@@ -166,14 +166,14 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public Integer getVersionCode(){
         return getManifestAttributeInt(ID_versionCode);
     }
-    public boolean setVersionCode(int val){
-        return setManifestAttributeInt(ID_versionCode, val);
+    public void setVersionCode(int val){
+        setManifestAttributeInt(NAME_versionCode, ID_versionCode, val);
     }
     public String getVersionName(){
         return getManifestAttributeString(ID_versionName);
     }
     public boolean setVersionName(String packageName){
-        return setManifestAttributeString(ID_versionName, packageName);
+        return setManifestAttributeString(NAME_versionName,  ID_versionName, packageName);
     }
     private String getManifestAttributeString(int resourceId){
         ResXmlElement manifest=getManifestElement();
@@ -186,29 +186,18 @@ public class AndroidManifestBlock extends ResXmlBlock{
         }
         return attribute.getValueAsString();
     }
-    private boolean setManifestAttributeString(int resourceId, String value){
-        ResXmlElement manifestElement=getManifestElement();
-        if(manifestElement==null){
-            return false;
-        }
-        ResXmlAttribute attribute = manifestElement.searchAttributeByResourceId(resourceId);
-        if(attribute==null){
-            return false;
-        }
+    private boolean setManifestAttributeString(String attributeName, int resourceId, String value){
+        ResXmlElement manifestElement=getOrCreateManifestElement();
+        ResXmlAttribute attribute = manifestElement
+                .getOrCreateAndroidAttribute(attributeName, resourceId);
         attribute.setValueAsString(value);
         return true;
     }
-    private boolean setManifestAttributeInt(int resId, int value){
-        ResXmlElement manifestElement=getManifestElement();
-        if(manifestElement==null){
-            return false;
-        }
-        ResXmlAttribute attribute= manifestElement.searchAttributeByResourceId(resId);
-        if(attribute==null){
-            return false;
-        }
-        attribute.setValueAsIntegerDec(value);
-        return true;
+    private void setManifestAttributeInt(String attributeName, int resourceId, int value){
+        ResXmlElement manifestElement=getOrCreateManifestElement();
+        ResXmlAttribute attribute = manifestElement
+                .getOrCreateAndroidAttribute(attributeName, resourceId);
+        attribute.setValueAsInteger(value);
     }
     private Integer getManifestAttributeInt(int resourceId){
         ResXmlElement manifestElement=getManifestElement();
@@ -216,10 +205,10 @@ public class AndroidManifestBlock extends ResXmlBlock{
             return null;
         }
         ResXmlAttribute attribute= manifestElement.searchAttributeByResourceId(resourceId);
-        if(attribute==null || attribute.getValueType()!=ValueType.INT_DEC){
+        if(attribute==null || !attribute.hasIntegerValue()){
             return null;
         }
-        return attribute.getRawValue();
+        return attribute.getValueAsInteger();
     }
     public ResXmlElement getApplicationElement(){
         ResXmlElement manifestElement=getManifestElement();
@@ -235,6 +224,16 @@ public class AndroidManifestBlock extends ResXmlBlock{
         }
         if(!TAG_manifest.equals(manifestElement.getTag())){
             return null;
+        }
+        return manifestElement;
+    }
+    private ResXmlElement getOrCreateManifestElement(){
+        ResXmlElement manifestElement=getResXmlElement();
+        if(manifestElement==null){
+            manifestElement=createRootElement(TAG_manifest);
+        }
+        if(!TAG_manifest.equals(manifestElement.getTag())){
+            manifestElement.setTag(TAG_manifest);
         }
         return manifestElement;
     }
