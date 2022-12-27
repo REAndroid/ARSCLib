@@ -28,6 +28,34 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public AndroidManifestBlock(){
         super();
     }
+    public boolean isDebuggable(){
+        ResXmlElement application=getApplicationElement();
+        if(application==null){
+            return false;
+        }
+        ResXmlAttribute attribute = application
+                .searchAttributeByResourceId(ID_debuggable);
+        if(attribute==null){
+            return false;
+        }
+        return attribute.getValueAsBoolean();
+    }
+    public void setDebuggable(boolean debuggable){
+        ResXmlElement application=getApplicationElement();
+        if(application==null){
+            return;
+        }
+        ResXmlAttribute attribute = application
+                .searchAttributeByResourceId(ID_debuggable);
+        if(debuggable){
+            if(attribute==null){
+                attribute=application.createAndroidAttribute(NAME_debuggable, ID_debuggable);
+            }
+            attribute.setValueAsBoolean(true);
+        }else if(attribute!=null) {
+            application.removeAttribute(attribute);
+        }
+    }
     public ResXmlElement getMainActivity(){
         for(ResXmlElement activity:listActivities()){
             for(ResXmlElement intentFilter:activity.listElements(TAG_intent_filter)){
@@ -313,6 +341,7 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public static final String NAME_isSplitRequired = "isSplitRequired";
     public static final String NAME_value = "value";
     public static final String NAME_resource = "resource";
+    public static final String NAME_debuggable = "debuggable";
 
     public static final int ID_name = 0x01010003;
     public static final int ID_compileSdkVersion = 0x01010572;
@@ -327,6 +356,7 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public static final int ID_resource = 0x01010025;
     public static final int ID_versionCode = 0x0101021b;
     public static final int ID_versionName = 0x0101021c;
+    public static final int ID_debuggable = 0x0101000f;
 
     public static final String VALUE_android_intent_action_MAIN = "android.intent.action.MAIN";
 
