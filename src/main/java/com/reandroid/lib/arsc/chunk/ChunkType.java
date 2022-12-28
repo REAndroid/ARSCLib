@@ -33,7 +33,10 @@ public enum ChunkType {
     PACKAGE((short)0x0200),
     TYPE((short)0x0201),
     SPEC((short)0x0202),
-    LIBRARY((short)0x0203);
+    LIBRARY((short)0x0203),
+    OVERLAYABLE((short)0x0204),
+    OVERLAYABLE_POLICY((short)0x0205),
+    STAGED_ALIAS((short)0x0206);
 
     public final short ID;
     ChunkType(short id) {
