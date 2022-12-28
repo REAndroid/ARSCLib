@@ -19,11 +19,16 @@ import com.reandroid.lib.arsc.array.ResXmlAttributeArray;
 import com.reandroid.lib.arsc.array.ResXmlIDArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.FixedBlockContainer;
+import com.reandroid.lib.arsc.decoder.ValueDecoder;
+import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.item.*;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 import com.reandroid.lib.arsc.value.ValueType;
+import com.reandroid.lib.common.EntryStore;
 import com.reandroid.lib.json.JSONConvert;
 import com.reandroid.lib.json.JSONObject;
+import com.reandroid.xml.XMLAttribute;
+import com.reandroid.xml.XMLException;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -406,7 +411,6 @@ import java.util.Set;
         }
         return name1.compareTo(name2);
     }
-
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
@@ -443,6 +447,43 @@ import java.util.Set;
             setValueType(valueType);
             setRawValue(json.getInt(NAME_data));
         }
+    }
+    public XMLAttribute decodeToXml(EntryStore entryStore, int currentPackageId) throws XMLException {
+        int resourceId=getNameResourceID();
+        String name;
+        if(resourceId==0){
+            name=getName();
+        }else {
+            EntryGroup group = entryStore.getEntryGroup(resourceId);
+            if(group==null){
+                throw new XMLException("Failed to decode attribute name: "
+                        + String.format("0x%08x", resourceId));
+            }else {
+                name=group.getSpecName();
+            }
+        }
+        String prefix = getNamePrefix();
+        if(prefix!=null){
+            name=prefix+":"+name;
+        }
+        ValueType valueType=getValueType();
+        int raw=getRawValue();
+        String value;
+        if(valueType==ValueType.STRING){
+            value = getValueAsString();
+        }else {
+            value = ValueDecoder.decode(entryStore,
+                    currentPackageId,
+                    resourceId,
+                    valueType,
+                    raw);
+        }
+        XMLAttribute attribute = new XMLAttribute(name, value);
+        attribute.setNameId(resourceId);
+        if(valueType==ValueType.REFERENCE||valueType==ValueType.ATTRIBUTE){
+            attribute.setValueId(raw);
+        }
+        return attribute;
     }
     @Override
     public String toString(){

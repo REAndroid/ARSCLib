@@ -17,6 +17,9 @@ package com.reandroid.lib.arsc.chunk.xml;
 
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.item.ResXmlString;
+import com.reandroid.xml.NameSpaceItem;
+import com.reandroid.xml.SchemaAttr;
+import com.reandroid.xml.XMLAttribute;
 
 import java.util.Set;
 
@@ -46,5 +49,8 @@ import java.util.Set;
             results.addAll(end.clearStringReferences());
         }
         return results;
+    }
+    public XMLAttribute decodeToXml(){
+        return new SchemaAttr(getPrefix(), getUri());
     }
 }

@@ -24,9 +24,14 @@ import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.ResXmlString;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
+import com.reandroid.lib.common.EntryStore;
 import com.reandroid.lib.json.JSONConvert;
 import com.reandroid.lib.json.JSONArray;
 import com.reandroid.lib.json.JSONObject;
+import com.reandroid.xml.NameSpaceItem;
+import com.reandroid.xml.XMLAttribute;
+import com.reandroid.xml.XMLElement;
+import com.reandroid.xml.XMLException;
 
 
 import java.io.IOException;
@@ -704,6 +709,34 @@ import java.util.*;
             }
         }
         start.calculatePositions();
+    }
+
+    /**
+     * Decodes binary {@link ResXmlElement} to readable {@link XMLElement}
+     * @param entryStore : used for decoding attribute name and values
+     * @param currentPackageId : is id of current package defining this xml, used for
+     *                         decoding reference names e.g @{package.name}:string/entry_name
+     * */
+    public XMLElement decodeToXml(EntryStore entryStore, int currentPackageId) throws XMLException {
+        XMLElement xmlElement = new XMLElement(getTagName());
+        for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
+            xmlElement.addAttribute(startNamespace.decodeToXml());
+        }
+        for(ResXmlAttribute resXmlAttribute:listAttributes()){
+            XMLAttribute xmlAttribute =
+                    resXmlAttribute.decodeToXml(entryStore, currentPackageId);
+            xmlElement.addAttribute(xmlAttribute);
+        }
+        for(ResXmlElement childResXmlElement:listElements()){
+            XMLElement childXMLElement =
+                    childResXmlElement.decodeToXml(entryStore, currentPackageId);
+            xmlElement.addChild(childXMLElement);
+        }
+        ResXmlText resXmlText = getResXmlText();
+        if(resXmlText!=null){
+            xmlElement.setTextContent(resXmlText.getText());
+        }
+        return xmlElement;
     }
     @Override
     public String toString(){

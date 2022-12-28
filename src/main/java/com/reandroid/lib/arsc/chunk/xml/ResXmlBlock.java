@@ -15,24 +15,28 @@
   */
 package com.reandroid.lib.arsc.chunk.xml;
 
-import com.reandroid.lib.arsc.chunk.ChunkType;
-import com.reandroid.lib.arsc.chunk.BaseChunk;
-import com.reandroid.lib.arsc.container.SingleBlockContainer;
-import com.reandroid.lib.arsc.header.HeaderBlock;
-import com.reandroid.lib.arsc.io.BlockReader;
-import com.reandroid.lib.arsc.pool.ResXmlStringPool;
-import com.reandroid.lib.arsc.value.ValueType;
-import com.reandroid.lib.json.JSONConvert;
-import com.reandroid.lib.json.JSONArray;
-import com.reandroid.lib.json.JSONObject;
+ import com.reandroid.lib.arsc.chunk.BaseChunk;
+ import com.reandroid.lib.arsc.chunk.ChunkType;
+ import com.reandroid.lib.arsc.container.SingleBlockContainer;
+ import com.reandroid.lib.arsc.header.HeaderBlock;
+ import com.reandroid.lib.arsc.io.BlockReader;
+ import com.reandroid.lib.arsc.pool.ResXmlStringPool;
+ import com.reandroid.lib.arsc.value.ValueType;
+ import com.reandroid.lib.common.EntryStore;
+ import com.reandroid.lib.json.JSONArray;
+ import com.reandroid.lib.json.JSONConvert;
+ import com.reandroid.lib.json.JSONObject;
+ import com.reandroid.xml.XMLDocument;
+ import com.reandroid.xml.XMLElement;
+ import com.reandroid.xml.XMLException;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+ import java.io.*;
+ import java.util.ArrayList;
+ import java.util.HashSet;
+ import java.util.List;
+ import java.util.Set;
 
-public class ResXmlBlock extends BaseChunk implements JSONConvert<JSONObject> {
+ public class ResXmlBlock extends BaseChunk implements JSONConvert<JSONObject> {
     private final ResXmlStringPool mResXmlStringPool;
     private final ResXmlIDMap mResXmlIDMap;
     private ResXmlElement mResXmlElement;
@@ -204,6 +208,13 @@ public class ResXmlBlock extends BaseChunk implements JSONConvert<JSONObject> {
         ResXmlElement xmlElement=getResXmlElement();
         xmlElement.fromJson(json.optJSONObject(ResXmlBlock.NAME_element));
         refresh();
+    }
+    public XMLDocument decodeToXml(EntryStore entryStore, int currentPackageId) throws XMLException {
+        XMLDocument xmlDocument = new XMLDocument();
+        XMLElement xmlElement = getResXmlElement()
+                .decodeToXml(entryStore, currentPackageId);
+        xmlDocument.setDocumentElement(xmlElement);
+        return xmlDocument;
     }
     private void onFromJson(JSONObject json){
         List<JSONObject> attributeList=recursiveAttributes(json.optJSONObject(ResXmlBlock.NAME_element));
