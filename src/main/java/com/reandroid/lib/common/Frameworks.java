@@ -30,7 +30,7 @@ public class Frameworks {
         load_once=true;
         FrameworkTable frameworkTable=null;
         try {
-            frameworkTable = loadFramework(ANDROID_FRAMEWORK_30);
+            frameworkTable = loadFramework(ANDROID_FRAMEWORK_33);
         } catch (IOException e) {
         }
         android_table=frameworkTable;
@@ -46,5 +46,5 @@ public class Frameworks {
         return frameworkTable;
     }
 
-    private static final String ANDROID_FRAMEWORK_30 = "/fwk/android_resources_30.arsc";
+    private static final String ANDROID_FRAMEWORK_33 = "/fwk/android_resources_33.arsc";
 }
