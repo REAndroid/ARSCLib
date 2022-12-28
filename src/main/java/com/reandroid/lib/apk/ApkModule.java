@@ -363,6 +363,9 @@ public class ApkModule {
             }
         }
     }
+    APKLogger getApkLogger(){
+        return apkLogger;
+    }
     public void setAPKLogger(APKLogger logger) {
         this.apkLogger = logger;
     }

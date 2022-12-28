@@ -145,4 +145,5 @@ public class ApkUtil {
     public static final String DEF_MODULE_NAME="base";
     public static final String NAME_value_type="value_type";
     public static final String NAME_data="data";
+    public static final String RES_DIR_NAME="res";
 }
