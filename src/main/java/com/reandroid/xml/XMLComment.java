@@ -1,0 +1,91 @@
+ /*
+  *  Copyright (C) 2022 github.com/REAndroid
+  *
+  *  Licensed under the Apache License, Version 2.0 (the "License");
+  *  you may not use this file except in compliance with the License.
+  *  You may obtain a copy of the License at
+  *
+  *      http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+package com.reandroid.xml;
+
+
+import java.io.IOException;
+import java.io.Writer;
+
+public class XMLComment extends XMLElement {
+    private String mStart;
+    private String mEnd;
+    private boolean mIsHidden;
+    public XMLComment(String commentText){
+        this();
+        setCommentText(commentText);
+    }
+    public XMLComment(){
+        super();
+        initializeStartEnd();
+    }
+    @Override
+    XMLElement onCloneElement(){
+        XMLComment ce=new XMLComment(getCommentText());
+        ce.setHidden(isHidden());
+        return ce;
+    }
+    @Override
+    void cloneAllAttributes(XMLElement element){
+    }
+    public void setHidden(boolean hide){
+        mIsHidden=hide;
+    }
+    public boolean isHidden(){
+        return mIsHidden;
+    }
+    public void setCommentText(String text){
+        setTextContent(text);
+    }
+    public String getCommentText(){
+        return getTextContent();
+    }
+    private void initializeStartEnd(){
+        setTagName("");
+        mStart="<!--";
+        mEnd="-->";
+        setStart(mStart);
+        setEnd(mEnd);
+        setStartPrefix("");
+        setEndPrefix("");
+    }
+    @Override
+    int getChildIndent(){
+        return getIndent();
+    }
+    @Override
+    boolean isEmpty(){
+        return XMLUtil.isEmpty(getTextContent());
+    }
+
+    @Override
+    public boolean write(Writer writer, boolean newLineAttributes) throws IOException {
+        if(isHidden()){
+            return false;
+        }
+        if(isEmpty()){
+            return false;
+        }
+        boolean appendOnce=appendComments(writer);
+        if(appendOnce){
+            writer.write(XMLUtil.NEW_LINE);
+        }
+        appendIndentText(writer);
+        writer.write(mStart);
+        writer.write(getCommentText());
+        writer.write(mEnd);
+        return true;
+    }
+}
