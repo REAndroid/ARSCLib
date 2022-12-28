@@ -4,23 +4,16 @@ This library is developed based on AOSP structure of androidfw/ResourceTypes.h ,
 #### Read, write, modify and create
 * Resource table (resources.arsc)
 * Binary xml files (AndroidManifest.xml & resource xml)
-#### Convert from/to json string
-* Decompiling resources to readable XML using traditional techniques is now becoming very challenging due to resource obfuscation (like Proguard & ResGuard)
-* Just like SMALI coding this library brings unbeatable coding style
+#### Convert from/to json string (for obfuscated resources)
 
- ```html
- <string name="app_name">My Application</string> 
- ```
-can be represented in json as
- ```json 
-    {
-     "entry_name": "app_name",
-     "id": 16,
-     "value": {
-     "value_type": "STRING",
-     "data": "My Application"
-    }
- ```
+* Decodes resources to readable json
+* Encodes/Builds sources in json format to binary resources
+
+#### Convert from/to XML string (for un-obfuscated resources)
+
+* Decodes resources to source code
+* Encodes/Builds source XML to binary resources 
+
 #### Works on all java supported platforms (Android, Linux, Windows)
 * Use the jar file as dependency
 #### Check this tool developed using this library
