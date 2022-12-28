@@ -45,12 +45,15 @@ abstract class BaseTypeBlock extends BaseChunk {
     public byte getTypeId(){
         return mTypeId.get();
     }
+    public int getTypeIdInt(){
+        return (0xff & mTypeId.get());
+    }
     public void setTypeId(byte id){
         mTypeId.set(id);
     }
     public void setTypeName(String name){
         TypeStringPool typeStringPool=getTypeStringPool();
-        byte id=getTypeId();
+        int id=getTypeIdInt();
         TypeString typeString=typeStringPool.getById(id);
         if(typeString==null){
             typeString=typeStringPool.getOrCreate(id, name);
@@ -96,7 +99,7 @@ abstract class BaseTypeBlock extends BaseChunk {
             return null;
         }
         TypeStringPool typeStringPool=packageBlock.getTypeStringPool();
-        mTypeString=typeStringPool.getById(getTypeId());
+        mTypeString=typeStringPool.getById(getTypeIdInt());
         return mTypeString;
     }
     SpecTypePair getSpecTypePair(){

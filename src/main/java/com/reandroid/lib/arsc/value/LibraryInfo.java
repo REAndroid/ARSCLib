@@ -15,7 +15,6 @@
   */
 package com.reandroid.lib.arsc.value;
 
-import com.reandroid.lib.arsc.array.LibraryInfoArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.base.BlockCounter;
 import com.reandroid.lib.arsc.io.BlockReader;

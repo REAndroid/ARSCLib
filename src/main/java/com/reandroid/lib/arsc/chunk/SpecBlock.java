@@ -72,7 +72,7 @@ public class SpecBlock extends BaseTypeBlock implements BlockLoad , JSONConvert<
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
-        jsonObject.put("id", getTypeId());
+        jsonObject.put("id", getTypeIdInt());
         return jsonObject;
     }
 

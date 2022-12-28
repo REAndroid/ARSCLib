@@ -151,7 +151,7 @@ public class TypeBlock extends BaseTypeBlock
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
-        jsonObject.put("id", getTypeId());
+        jsonObject.put("id", getTypeIdInt());
         TypeString typeString=getTypeString();
         if(typeString!=null){
             jsonObject.put("name", typeString.get());
@@ -183,8 +183,8 @@ public class TypeBlock extends BaseTypeBlock
     }
     @Override
     public int compareTo(TypeBlock typeBlock) {
-        int id1=getTypeId();
-        int id2=typeBlock.getTypeId();
+        int id1=getTypeIdInt();
+        int id2=typeBlock.getTypeIdInt();
         if(id1!=id2){
             return Integer.compare(id1, id2);
         }

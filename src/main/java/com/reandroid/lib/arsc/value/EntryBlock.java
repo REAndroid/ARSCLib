@@ -434,7 +434,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
             return 0;
         }
         int pkgId=packageBlock.getId();
-        int typeId=typeBlock.getTypeId();
+        int typeId=typeBlock.getTypeIdInt();
         int entryId=getIndex();
         return ((pkgId << 24) | (typeId << 16) | entryId);
     }

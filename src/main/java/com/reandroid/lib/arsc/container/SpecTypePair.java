@@ -180,7 +180,7 @@ public class SpecTypePair extends BlockContainer<Block>
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
-        jsonObject.put("id", getSpecBlock().getTypeId());
+        jsonObject.put("id", getSpecBlock().getTypeIdInt());
         jsonObject.put("types", getTypeBlockArray().toJson());
         return jsonObject;
     }

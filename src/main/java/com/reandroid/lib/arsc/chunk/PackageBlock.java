@@ -57,6 +57,7 @@ public class PackageBlock extends BaseChunk
 
     private final SpecTypePairArray mSpecTypePairArray;
     private final LibraryBlock mLibraryBlock;
+    private final StagedAlias mStagedAlias;
 
     private final PackageLastBlocks mPackageLastBlocks;
 
@@ -82,7 +83,11 @@ public class PackageBlock extends BaseChunk
 
         this.mSpecTypePairArray=new SpecTypePairArray();
         this.mLibraryBlock=new LibraryBlock();
-        this.mPackageLastBlocks=new PackageLastBlocks(mSpecTypePairArray, mLibraryBlock);
+        this.mStagedAlias=new StagedAlias();
+        this.mPackageLastBlocks = new PackageLastBlocks(
+                mSpecTypePairArray,
+                mLibraryBlock,
+                mStagedAlias);
 
         this.mEntriesGroup=new HashMap<>();
 
