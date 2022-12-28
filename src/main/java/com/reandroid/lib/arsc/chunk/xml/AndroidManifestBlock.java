@@ -28,6 +28,31 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public AndroidManifestBlock(){
         super();
     }
+    // TODO: find a better way
+    public byte guessCurrentPackageId(){
+        return (byte) ((getIconResourceId()>>24) & 0xff);
+    }
+    public int getIconResourceId(){
+        ResXmlElement applicationElement = getApplicationElement();
+        if(applicationElement==null){
+            return 0;
+        }
+        ResXmlAttribute iconAttribute=applicationElement.searchAttributeByResourceId(ID_icon);
+        if(iconAttribute==null || iconAttribute.getValueType() != ValueType.REFERENCE){
+            return 0;
+        }
+        return iconAttribute.getRawValue();
+    }
+    public void setIconResourceId(int resourceId){
+        ResXmlElement applicationElement = getApplicationElement();
+        if(applicationElement==null){
+            return;
+        }
+        ResXmlAttribute iconAttribute =
+                applicationElement.getOrCreateAndroidAttribute(NAME_icon, ID_icon);
+        iconAttribute.setValueType(ValueType.REFERENCE);
+        iconAttribute.setRawValue(resourceId);
+    }
     public boolean isDebuggable(){
         ResXmlElement application=getApplicationElement();
         if(application==null){
@@ -342,6 +367,7 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public static final String NAME_value = "value";
     public static final String NAME_resource = "resource";
     public static final String NAME_debuggable = "debuggable";
+    public static final String NAME_icon = "icon";
 
     public static final int ID_name = 0x01010003;
     public static final int ID_compileSdkVersion = 0x01010572;
@@ -357,6 +383,7 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public static final int ID_versionCode = 0x0101021b;
     public static final int ID_versionName = 0x0101021c;
     public static final int ID_debuggable = 0x0101000f;
+    public static final int ID_icon = 0x01010002;
 
     public static final String VALUE_android_intent_action_MAIN = "android.intent.action.MAIN";
 
