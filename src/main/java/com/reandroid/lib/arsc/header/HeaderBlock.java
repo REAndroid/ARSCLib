@@ -53,8 +53,8 @@ public class HeaderBlock extends ExpandableBlockContainer {
         mType.set(type);
     }
 
-    public short getHeaderSize(){
-        return mHeaderSize.get();
+    public int getHeaderSize(){
+        return (0xffff & mHeaderSize.get());
     }
     public void setHeaderSize(short headerSize){
         mHeaderSize.set(headerSize);

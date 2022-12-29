@@ -15,10 +15,8 @@
   */
 package com.reandroid.lib.arsc.container;
 
-import com.reandroid.lib.arsc.chunk.ChunkType;
+import com.reandroid.lib.arsc.chunk.*;
 import com.reandroid.lib.arsc.array.SpecTypePairArray;
-import com.reandroid.lib.arsc.chunk.LibraryBlock;
-import com.reandroid.lib.arsc.chunk.StagedAlias;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 
@@ -29,16 +27,24 @@ public class PackageLastBlocks extends FixedBlockContainer {
     private final SpecTypePairArray mSpecTypePairArray;
     private final LibraryBlock mLibraryBlock;
     private final StagedAlias mStagedAlias;
+    private final BlockList<Overlayable> mOverlayableList;
+    private final BlockList<OverlayablePolicy> mOverlayablePolicyList;
     public PackageLastBlocks(SpecTypePairArray specTypePairArray,
                              LibraryBlock libraryBlock,
-                             StagedAlias stagedAlias){
-        super(3);
+                             StagedAlias stagedAlias,
+                             BlockList<Overlayable> overlayableList,
+                             BlockList<OverlayablePolicy> overlayablePolicyList){
+        super(5);
         this.mSpecTypePairArray=specTypePairArray;
         this.mLibraryBlock=libraryBlock;
         this.mStagedAlias=stagedAlias;
+        this.mOverlayableList=overlayableList;
+        this.mOverlayablePolicyList=overlayablePolicyList;
         addChild(0, mSpecTypePairArray);
         addChild(1, mLibraryBlock);
         addChild(2, mStagedAlias);
+        addChild(3, mOverlayableList);
+        addChild(4, mOverlayablePolicyList);
     }
 
     @Override
@@ -59,6 +65,10 @@ public class PackageLastBlocks extends FixedBlockContainer {
             readSpecBlock(reader);
         }else if(chunkType==ChunkType.LIBRARY){
             readLibraryBlock(reader);
+        }else if(chunkType==ChunkType.OVERLAYABLE){
+            readOverlayable(reader);
+        }else if(chunkType==ChunkType.OVERLAYABLE_POLICY){
+            readOverlayablePolicy(reader);
         }else if(chunkType==ChunkType.STAGED_ALIAS){
             readStagedAlias(reader);
         }else {
@@ -79,6 +89,16 @@ public class PackageLastBlocks extends FixedBlockContainer {
         StagedAlias stagedAlias = new StagedAlias();
         stagedAlias.readBytes(reader);
         mStagedAlias.addStagedAliasEntries(stagedAlias);
+    }
+    private void readOverlayable(BlockReader reader) throws IOException{
+        Overlayable overlayable = new Overlayable();
+        overlayable.readBytes(reader);
+        mOverlayableList.add(overlayable);
+    }
+    private void readOverlayablePolicy(BlockReader reader) throws IOException{
+        OverlayablePolicy overlayablePolicy = new OverlayablePolicy();
+        overlayablePolicy.readBytes(reader);
+        mOverlayablePolicyList.add(overlayablePolicy);
     }
     private void readUnexpectedBlock(BlockReader reader, HeaderBlock headerBlock) throws IOException{
         throw new IOException(reader.getActualPosition()+", Unexpected block: "+headerBlock.toString());
