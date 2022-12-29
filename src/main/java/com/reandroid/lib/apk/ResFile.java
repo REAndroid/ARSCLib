@@ -36,6 +36,9 @@ public class ResFile {
         this.inputSource=inputSource;
         this.entryBlockList=entryBlockList;
     }
+    public List<EntryBlock> getEntryBlockList(){
+        return entryBlockList;
+    }
     public String validateTypeDirectoryName(){
         EntryBlock entryBlock=pickOne();
         if(entryBlock==null){
