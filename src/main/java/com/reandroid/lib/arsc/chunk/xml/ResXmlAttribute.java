@@ -456,8 +456,10 @@ import java.util.Set;
         }else {
             EntryGroup group = entryStore.getEntryGroup(resourceId);
             if(group==null){
-                throw new XMLException("Failed to decode attribute name: "
-                        + String.format("0x%08x", resourceId));
+                //Lets ignore such error until XML encoder implemented
+                //throw new XMLException("Failed to decode attribute name: "
+                        //+ String.format("@0x%08x", resourceId));
+                name=String.format("@0x%08x", resourceId);
             }else {
                 name=group.getSpecName();
             }
