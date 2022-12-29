@@ -30,7 +30,7 @@
          stagedAliasEntryArray = new StagedAliasEntryArray(count);
          addChild(stagedAliasEntryArray);
      }
-     public void addStagedAliasEntries(StagedAlias stagedAlias){
+     public void merge(StagedAlias stagedAlias){
          if(stagedAlias==null||stagedAlias==this){
              return;
          }
@@ -57,5 +57,22 @@
      public String toString(){
          return getClass().getSimpleName()+
                  ": count="+getStagedAliasEntryCount();
+     }
+     public static StagedAlias mergeAll(Collection<StagedAlias> stagedAliasList){
+         if(stagedAliasList.size()==0){
+             return null;
+         }
+         StagedAlias result=new StagedAlias();
+         for(StagedAlias stagedAlias:stagedAliasList){
+             if(stagedAlias.isNull()){
+                 continue;
+             }
+             result.merge(stagedAlias);
+         }
+         if(!result.isNull()){
+             result.refresh();
+             return result;
+         }
+         return null;
      }
  }

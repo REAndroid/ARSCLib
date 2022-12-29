@@ -33,6 +33,7 @@ package com.reandroid.lib.arsc.chunk;
  import com.reandroid.lib.arsc.pool.TypeStringPool;
  import com.reandroid.lib.arsc.value.EntryBlock;
  import com.reandroid.lib.arsc.value.LibraryInfo;
+ import com.reandroid.lib.json.JSONArray;
  import com.reandroid.lib.json.JSONConvert;
  import com.reandroid.lib.json.JSONObject;
 
@@ -289,11 +290,11 @@ package com.reandroid.lib.arsc.chunk;
         mSpecStringPoolCount.set(mSpecStringPool.countStrings());
     }
     private void refreshTypeIdOffset(){
-        int smallestId=getSpecTypePairArray().getSmallestTypeId();
-        if(smallestId>0){
-            smallestId=smallestId-1;
-        }
-        mTypeIdOffset.set(smallestId);
+        // TODO: find solution
+        //int largest=getSpecTypePairArray().getHighestTypeId();
+        //int count=getTypeStringPool().countStrings();
+        //mTypeIdOffset.set(count-largest);
+        mTypeIdOffset.set(0);
     }
     public void onEntryAdded(EntryBlock entryBlock){
         updateEntry(entryBlock);
@@ -321,6 +322,12 @@ package com.reandroid.lib.arsc.chunk;
         if(libraryInfoArray.childesCount()>0){
             jsonObject.put(NAME_libraries,libraryInfoArray.toJson());
         }
+        StagedAlias stagedAlias =
+                StagedAlias.mergeAll(getStagedAliasList().getChildes());
+        if(stagedAlias!=null){
+            jsonObject.put(NAME_staged_aliases,
+                    stagedAlias.getStagedAliasEntryArray().toJson());
+        }
         return jsonObject;
     }
     @Override
@@ -330,6 +337,12 @@ package com.reandroid.lib.arsc.chunk;
         getSpecTypePairArray().fromJson(json.getJSONArray(NAME_specs));
         LibraryInfoArray libraryInfoArray = mLibraryBlock.getLibraryInfoArray();
         libraryInfoArray.fromJson(json.optJSONArray(NAME_libraries));
+        if(json.has(NAME_staged_aliases)){
+            StagedAlias stagedAlias=new StagedAlias();
+            stagedAlias.getStagedAliasEntryArray()
+                    .fromJson(json.getJSONArray(NAME_staged_aliases));
+            mStagedAliasList.add(stagedAlias);
+        }
     }
     public void merge(PackageBlock packageBlock){
         if(packageBlock==null||packageBlock==this){
@@ -376,4 +389,5 @@ package com.reandroid.lib.arsc.chunk;
     public static final String JSON_FILE_NAME = "package.json";
     private static final String NAME_specs="specs";
     private static final String NAME_libraries="libraries";
+    private static final String NAME_staged_aliases="staged_aliases";
 }
