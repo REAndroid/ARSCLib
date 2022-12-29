@@ -15,35 +15,34 @@
   */
 package com.reandroid.lib.arsc.chunk;
 
-import com.reandroid.lib.arsc.array.LibraryInfoArray;
-import com.reandroid.lib.arsc.array.PackageArray;
-import com.reandroid.lib.arsc.array.SpecTypePairArray;
-import com.reandroid.lib.arsc.base.Block;
-import com.reandroid.lib.arsc.container.PackageLastBlocks;
-import com.reandroid.lib.arsc.container.SingleBlockContainer;
-import com.reandroid.lib.arsc.container.SpecTypePair;
-import com.reandroid.lib.arsc.group.EntryGroup;
-import com.reandroid.lib.arsc.io.BlockLoad;
-import com.reandroid.lib.arsc.io.BlockReader;
-import com.reandroid.lib.arsc.item.IntegerItem;
-import com.reandroid.lib.arsc.item.PackageName;
-import com.reandroid.lib.arsc.item.ReferenceItem;
-import com.reandroid.lib.arsc.pool.SpecStringPool;
-import com.reandroid.lib.arsc.pool.TableStringPool;
-import com.reandroid.lib.arsc.pool.TypeStringPool;
-import com.reandroid.lib.arsc.value.EntryBlock;
-import com.reandroid.lib.arsc.value.LibraryInfo;
-import com.reandroid.lib.json.JSONConvert;
-import com.reandroid.lib.json.JSONObject;
+ import com.reandroid.lib.arsc.array.LibraryInfoArray;
+ import com.reandroid.lib.arsc.array.SpecTypePairArray;
+ import com.reandroid.lib.arsc.base.Block;
+ import com.reandroid.lib.arsc.container.PackageLastBlocks;
+ import com.reandroid.lib.arsc.container.SingleBlockContainer;
+ import com.reandroid.lib.arsc.container.SpecTypePair;
+ import com.reandroid.lib.arsc.group.EntryGroup;
+ import com.reandroid.lib.arsc.io.BlockLoad;
+ import com.reandroid.lib.arsc.io.BlockReader;
+ import com.reandroid.lib.arsc.item.FixedLengthString;
+ import com.reandroid.lib.arsc.item.IntegerItem;
+ import com.reandroid.lib.arsc.item.ReferenceItem;
+ import com.reandroid.lib.arsc.pool.SpecStringPool;
+ import com.reandroid.lib.arsc.pool.TableStringPool;
+ import com.reandroid.lib.arsc.pool.TypeStringPool;
+ import com.reandroid.lib.arsc.value.EntryBlock;
+ import com.reandroid.lib.arsc.value.LibraryInfo;
+ import com.reandroid.lib.json.JSONConvert;
+ import com.reandroid.lib.json.JSONObject;
 
-import java.io.IOException;
-import java.util.*;
+ import java.io.IOException;
+ import java.util.*;
 
 
-public class PackageBlock extends BaseChunk
+ public class PackageBlock extends BaseChunk
         implements BlockLoad, JSONConvert<JSONObject>, Comparable<PackageBlock> {
     private final IntegerItem mPackageId;
-    private final PackageName mPackageName;
+    private final FixedLengthString mPackageName;
 
     private final IntegerItem mTypeStringPoolOffset;
     private final IntegerItem mTypeStringPoolCount;
@@ -66,7 +65,7 @@ public class PackageBlock extends BaseChunk
     public PackageBlock() {
         super(ChunkType.PACKAGE, 3);
         this.mPackageId=new IntegerItem();
-        this.mPackageName=new PackageName();
+        this.mPackageName = new FixedLengthString(256);
 
         this.mTypeStringPoolOffset = new IntegerItem();
         this.mTypeStringPoolCount = new IntegerItem();
