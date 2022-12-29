@@ -84,6 +84,9 @@ public class SpecTypePair extends BlockContainer<Block>
     public byte getTypeId(){
         return mSpecBlock.getTypeId();
     }
+    public int getTypeIdInt(){
+        return mSpecBlock.getTypeIdInt();
+    }
     public void setTypeId(byte id){
         mSpecBlock.setTypeId(id);
         mTypeBlockArray.setTypeId(id);
@@ -201,7 +204,7 @@ public class SpecTypePair extends BlockContainer<Block>
     }
     @Override
     public int compareTo(SpecTypePair specTypePair) {
-        return Integer.compare(getTypeId(), specTypePair.getTypeId());
+        return Integer.compare(getTypeIdInt(), specTypePair.getTypeIdInt());
     }
     @Override
     public String toString(){

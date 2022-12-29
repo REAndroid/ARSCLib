@@ -171,7 +171,7 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         }
         return results;
     }
-    public byte getSmallestTypeId(){
+    public int getSmallestTypeId(){
         SpecTypePair[] childes=getChildes();
         if(childes==null){
             return 0;
@@ -183,7 +183,7 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
             if(pair==null){
                 continue;
             }
-            int id=pair.getTypeId();
+            int id=pair.getTypeIdInt();
             if(!firstFound){
                 result=id;
             }
@@ -192,30 +192,25 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
                 result=id;
             }
         }
-        return (byte) result;
+        return result;
     }
-    public byte getHighestTypeId(){
+    public int getHighestTypeId(){
         SpecTypePair[] childes=getChildes();
         if(childes==null){
             return 0;
         }
         int result=0;
-        boolean firstFound=false;
         for (int i=0;i<childes.length;i++){
             SpecTypePair pair=childes[i];
             if(pair==null){
                 continue;
             }
-            int id=pair.getTypeId();
-            if(!firstFound){
-                result=id;
-            }
-            firstFound=true;
-            if(id<result){
+            int id=pair.getTypeIdInt();
+            if(id>result){
                 result=id;
             }
         }
-        return (byte) result;
+        return result;
     }
     @Override
     public JSONArray toJson() {
