@@ -33,7 +33,7 @@ package com.reandroid.lib.arsc.chunk;
  import com.reandroid.lib.arsc.pool.TypeStringPool;
  import com.reandroid.lib.arsc.value.EntryBlock;
  import com.reandroid.lib.arsc.value.LibraryInfo;
- import com.reandroid.lib.json.JSONArray;
+ import com.reandroid.lib.arsc.value.StagedAliasEntry;
  import com.reandroid.lib.json.JSONConvert;
  import com.reandroid.lib.json.JSONObject;
 
@@ -113,6 +113,17 @@ package com.reandroid.lib.arsc.chunk;
 
         addChild(mPackageLastBlocks);
 
+    }
+
+    public StagedAliasEntry searchByStagedResId(int stagedResId){
+        for(StagedAlias stagedAlias:getStagedAliasList().getChildes()){
+            StagedAliasEntry entry=stagedAlias.getStagedAliasEntryArray()
+                    .searchByStagedResId(stagedResId);
+            if(entry!=null){
+                return entry;
+            }
+        }
+        return null;
     }
     public BlockList<StagedAlias> getStagedAliasList(){
         return mStagedAliasList;

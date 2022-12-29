@@ -34,6 +34,19 @@
          this.count=count;
          this.count.setBlockLoad(this);
      }
+     public StagedAliasEntry searchByStagedResId(int stagedResId){
+         StagedAliasEntry[] childes=getChildes();
+         if(childes==null){
+             return null;
+         }
+         for(int i=0;i<childes.length;i++){
+             StagedAliasEntry entry=childes[i];
+             if(stagedResId==entry.getStagedResId()){
+                 return entry;
+             }
+         }
+         return null;
+     }
      @Override
      public void addAll(StagedAliasEntry[] aliasEntries){
          super.addAll(aliasEntries);
