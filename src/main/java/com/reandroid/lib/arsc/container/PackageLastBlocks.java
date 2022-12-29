@@ -26,23 +26,23 @@ public class PackageLastBlocks extends FixedBlockContainer {
 
     private final SpecTypePairArray mSpecTypePairArray;
     private final LibraryBlock mLibraryBlock;
-    private final StagedAlias mStagedAlias;
+    private final BlockList<StagedAlias> mStagedAliasList;
     private final BlockList<Overlayable> mOverlayableList;
     private final BlockList<OverlayablePolicy> mOverlayablePolicyList;
     public PackageLastBlocks(SpecTypePairArray specTypePairArray,
                              LibraryBlock libraryBlock,
-                             StagedAlias stagedAlias,
+                             BlockList<StagedAlias> stagedAliasList,
                              BlockList<Overlayable> overlayableList,
                              BlockList<OverlayablePolicy> overlayablePolicyList){
         super(5);
         this.mSpecTypePairArray=specTypePairArray;
         this.mLibraryBlock=libraryBlock;
-        this.mStagedAlias=stagedAlias;
+        this.mStagedAliasList=stagedAliasList;
         this.mOverlayableList=overlayableList;
         this.mOverlayablePolicyList=overlayablePolicyList;
         addChild(0, mSpecTypePairArray);
         addChild(1, mLibraryBlock);
-        addChild(2, mStagedAlias);
+        addChild(2, mStagedAliasList);
         addChild(3, mOverlayableList);
         addChild(4, mOverlayablePolicyList);
     }
@@ -88,7 +88,7 @@ public class PackageLastBlocks extends FixedBlockContainer {
     private void readStagedAlias(BlockReader reader) throws IOException{
         StagedAlias stagedAlias = new StagedAlias();
         stagedAlias.readBytes(reader);
-        mStagedAlias.addStagedAliasEntries(stagedAlias);
+        mStagedAliasList.add(stagedAlias);
     }
     private void readOverlayable(BlockReader reader) throws IOException{
         Overlayable overlayable = new Overlayable();

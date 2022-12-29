@@ -57,7 +57,7 @@ package com.reandroid.lib.arsc.chunk;
 
     private final SpecTypePairArray mSpecTypePairArray;
     private final LibraryBlock mLibraryBlock;
-    private final StagedAlias mStagedAlias;
+    private final BlockList<StagedAlias> mStagedAliasList;
     private final BlockList<Overlayable> mOverlayableList;
      private final BlockList<OverlayablePolicy> mOverlayablePolicyList;
 
@@ -85,13 +85,13 @@ package com.reandroid.lib.arsc.chunk;
 
         this.mSpecTypePairArray=new SpecTypePairArray();
         this.mLibraryBlock=new LibraryBlock();
-        this.mStagedAlias=new StagedAlias();
+        this.mStagedAliasList=new BlockList<>();
         this.mOverlayableList=new BlockList<>();
         this.mOverlayablePolicyList=new BlockList<>();
         this.mPackageLastBlocks = new PackageLastBlocks(
                 mSpecTypePairArray,
                 mLibraryBlock,
-                mStagedAlias,
+                mStagedAliasList,
                 mOverlayableList,
                 mOverlayablePolicyList);
 
@@ -113,8 +113,8 @@ package com.reandroid.lib.arsc.chunk;
         addChild(mPackageLastBlocks);
 
     }
-    public StagedAlias getStagedAlias(){
-        return mStagedAlias;
+    public BlockList<StagedAlias> getStagedAliasList(){
+        return mStagedAliasList;
     }
     public BlockList<Overlayable> getOverlayableList(){
         return mOverlayableList;
