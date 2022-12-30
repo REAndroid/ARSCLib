@@ -16,7 +16,6 @@
 package com.reandroid.lib.arsc.base;
 
 import com.reandroid.lib.arsc.container.BlockList;
-import com.reandroid.lib.arsc.container.FixedBlockContainer;
 import com.reandroid.lib.arsc.io.BlockReader;
 
 import java.io.IOException;
@@ -27,17 +26,6 @@ public abstract class BlockContainer<T extends Block> extends Block{
         super();
     }
 
-    protected final BlockContainer getTopContainer(){
-        Block parent=this;
-        BlockContainer result=this;
-        while (parent!=null){
-            if(parent instanceof BlockContainer){
-                result=(BlockContainer)parent;
-            }
-            parent=parent.getParent();
-        }
-        return result;
-    }
     protected void onPreRefreshRefresh(){
 
     }
