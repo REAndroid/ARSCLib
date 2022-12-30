@@ -20,7 +20,7 @@ package com.reandroid.lib.arsc.chunk;
  import com.reandroid.lib.arsc.array.SpecTypePairArray;
  import com.reandroid.lib.arsc.base.Block;
  import com.reandroid.lib.arsc.container.BlockList;
- import com.reandroid.lib.arsc.container.PackageLastBlocks;
+ import com.reandroid.lib.arsc.container.PackageBody;
  import com.reandroid.lib.arsc.container.SingleBlockContainer;
  import com.reandroid.lib.arsc.container.SpecTypePair;
  import com.reandroid.lib.arsc.group.EntryGroup;
@@ -57,7 +57,7 @@ package com.reandroid.lib.arsc.chunk;
     private final TypeStringPool mTypeStringPool;
     private final SpecStringPool mSpecStringPool;
 
-    private final PackageLastBlocks mBody;
+    private final PackageBody mBody;
 
     private final Map<Integer, EntryGroup> mEntriesGroup;
 
@@ -79,7 +79,7 @@ package com.reandroid.lib.arsc.chunk;
         this.mTypeStringPool=new TypeStringPool(false, mTypeIdOffset);
         this.mSpecStringPool=new SpecStringPool(true);
 
-        this.mBody = new PackageLastBlocks();
+        this.mBody = new PackageBody();
 
         this.mEntriesGroup=new HashMap<>();
 

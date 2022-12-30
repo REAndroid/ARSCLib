@@ -22,7 +22,7 @@ import com.reandroid.lib.arsc.io.BlockReader;
 
 import java.io.IOException;
 
-public class PackageLastBlocks extends FixedBlockContainer {
+public class PackageBody extends FixedBlockContainer {
 
     private final SpecTypePairArray mSpecTypePairArray;
     private final LibraryBlock mLibraryBlock;
@@ -30,7 +30,7 @@ public class PackageLastBlocks extends FixedBlockContainer {
     private final BlockList<Overlayable> mOverlayableList;
     private final BlockList<OverlayablePolicy> mOverlayablePolicyList;
     private final BlockList<UnknownChunk> mUnknownChunkList;
-    public PackageLastBlocks(){
+    public PackageBody(){
         super(6);
         this.mSpecTypePairArray = new SpecTypePairArray();
         this.mLibraryBlock = new LibraryBlock();
