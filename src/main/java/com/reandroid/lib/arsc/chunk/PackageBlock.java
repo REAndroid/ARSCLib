@@ -227,8 +227,25 @@ package com.reandroid.lib.arsc.chunk;
     public Collection<EntryGroup> listEntryGroup(){
         return getEntriesGroupMap().values();
     }
-    public EntryGroup getEntryGroup(int resId){
-        return getEntriesGroupMap().get(resId);
+
+    /**
+     * Searches entries by resource id from local map, then if not find
+     * search by alias resource id
+     * */
+    public EntryGroup getEntryGroup(int resourceId){
+        if(resourceId==0){
+            return null;
+        }
+        EntryGroup entryGroup=getEntriesGroupMap().get(resourceId);
+        if(entryGroup!=null){
+            return entryGroup;
+        }
+        StagedAliasEntry stagedAliasEntry = searchByStagedResId(resourceId);
+        if(stagedAliasEntry!=null){
+            return getEntriesGroupMap()
+                    .get(stagedAliasEntry.getFinalizedResId());
+        }
+        return null;
     }
     public void updateEntry(EntryBlock entryBlock){
         if(entryBlock==null||entryBlock.isNull()){

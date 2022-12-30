@@ -22,6 +22,7 @@ import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.pool.TableStringPool;
+import com.reandroid.lib.arsc.value.StagedAliasEntry;
 import com.reandroid.lib.common.Frameworks;
 import com.reandroid.lib.json.JSONConvert;
 import com.reandroid.lib.json.JSONArray;
@@ -111,22 +112,34 @@ public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
         if(resourceId==0){
             return null;
         }
-        int pkgId=resourceId>>24;
-        pkgId=pkgId&0xff;
-        PackageBlock packageBlock=getPackageBlockById(pkgId);
-        if(packageBlock!=null){
-            EntryGroup entryGroup=packageBlock.getEntryGroup(resourceId);
+        int aliasId = searchResourceIdAlias(resourceId);
+        for(PackageBlock packageBlock:listPackages()){
+            EntryGroup entryGroup = packageBlock.getEntryGroup(resourceId);
+            if(entryGroup!=null){
+                return entryGroup;
+            }
+            entryGroup = packageBlock.getEntryGroup(aliasId);
             if(entryGroup!=null){
                 return entryGroup;
             }
         }
         for(TableBlock tableBlock:getFrameWorks()){
-            EntryGroup entryGroup= tableBlock.search(resourceId);
+            EntryGroup entryGroup = tableBlock.search(resourceId);
             if(entryGroup!=null){
                 return entryGroup;
             }
         }
         return null;
+    }
+    public int searchResourceIdAlias(int resourceId){
+        for(PackageBlock packageBlock:listPackages()){
+            StagedAliasEntry stagedAliasEntry =
+                    packageBlock.searchByStagedResId(resourceId);
+            if(stagedAliasEntry!=null){
+                return stagedAliasEntry.getFinalizedResId();
+            }
+        }
+        return 0;
     }
     public Set<TableBlock> getFrameWorks(){
         return mFrameWorks;

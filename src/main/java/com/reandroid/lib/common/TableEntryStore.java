@@ -20,6 +20,7 @@ import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.item.TableString;
 import com.reandroid.lib.arsc.value.EntryBlock;
+import com.reandroid.lib.arsc.value.StagedAliasEntry;
 
 import java.util.*;
 
@@ -90,34 +91,19 @@ public class TableEntryStore implements EntryStore{
     }
     @Override
     public List<EntryGroup> getEntryGroups(int resourceId) {
-        List<EntryGroup> results=new ArrayList<>();
-        int pkgId = (resourceId>>24)&0xff;
-        Set<PackageBlock> packageBlockSet = mPackagesMap.get(pkgId);
-        if(packageBlockSet==null){
+        List<EntryGroup> results = searchEntryGroups(resourceId);
+        if(results.size()>0){
             return results;
         }
-        for(PackageBlock packageBlock: packageBlockSet){
-            EntryGroup group=packageBlock.getEntryGroup(resourceId);
-            if(group!=null){
-                results.add(group);
-            }
-        }
-        return results;
+        return searchEntryGroups(searchIdAlias(resourceId));
     }
     @Override
     public EntryGroup getEntryGroup(int resourceId) {
-        int pkgId = (resourceId>>24)&0xff;
-        Set<PackageBlock> packageBlockSet = mPackagesMap.get(pkgId);
-        if(packageBlockSet==null){
-            return null;
+        EntryGroup entryGroup = searchEntryGroup(resourceId);
+        if(entryGroup!=null){
+            return entryGroup;
         }
-        for(PackageBlock packageBlock: packageBlockSet){
-            EntryGroup group=packageBlock.getEntryGroup(resourceId);
-            if(group!=null && group.pickOne()!=null){
-                return group;
-            }
-        }
-        return null;
+        return searchEntryGroup(searchIdAlias(resourceId));
     }
     @Override
     public List<PackageBlock> getPackageBlocks(byte packageId) {
@@ -139,5 +125,51 @@ public class TableEntryStore implements EntryStore{
             }
         }
         return results;
+    }
+    private List<EntryGroup> searchEntryGroups(int resourceId) {
+        if(resourceId==0){
+            return new ArrayList<>();
+        }
+        List<EntryGroup> results=new ArrayList<>();
+        int pkgId = (resourceId>>24)&0xff;
+        Set<PackageBlock> packageBlockSet = mPackagesMap.get(pkgId);
+        if(packageBlockSet==null){
+            return results;
+        }
+        for(PackageBlock packageBlock: packageBlockSet){
+            EntryGroup group=packageBlock.getEntryGroup(resourceId);
+            if(group!=null){
+                results.add(group);
+            }
+        }
+        return results;
+    }
+    private EntryGroup searchEntryGroup(int resourceId) {
+        if(resourceId==0){
+            return null;
+        }
+        int packageId = (resourceId>>24)&0xff;
+        Set<PackageBlock> packageBlockSet = mPackagesMap.get(packageId);
+        if(packageBlockSet==null){
+            return null;
+        }
+        for(PackageBlock packageBlock: packageBlockSet){
+            EntryGroup group=packageBlock.getEntryGroup(resourceId);
+            if(group!=null && group.pickOne()!=null){
+                return group;
+            }
+        }
+        return null;
+    }
+    private int searchIdAlias(int resourceId) {
+        for(Set<PackageBlock> packageBlockSet : mPackagesMap.values()){
+            for(PackageBlock packageBlock:packageBlockSet){
+                StagedAliasEntry stagedAliasEntry = packageBlock.searchByStagedResId(resourceId);
+                if(stagedAliasEntry!=null){
+                    return stagedAliasEntry.getFinalizedResId();
+                }
+            }
+        }
+        return 0;
     }
 }
