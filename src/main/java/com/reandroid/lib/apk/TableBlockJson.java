@@ -15,6 +15,7 @@
   */
 package com.reandroid.lib.apk;
 
+import com.reandroid.lib.arsc.BuildInfo;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.StagedAlias;
 import com.reandroid.lib.arsc.chunk.TableBlock;
@@ -32,16 +33,22 @@ public class TableBlockJson {
     }
     public void writeJsonFiles(File outDir) throws IOException {
         for(PackageBlock packageBlock: tableBlock.listPackages()){
-            writeJsonFiles(outDir, packageBlock);
+            writePackageJsonFiles(outDir, packageBlock);
         }
     }
-    private void writeJsonFiles(File rootDir, PackageBlock packageBlock) throws IOException {
-        File pkgDir=new File(rootDir, getDirName(packageBlock));
-        if(!pkgDir.exists()){
-            pkgDir.mkdirs();
+    private void writePackageJsonFiles(File rootDir, PackageBlock packageBlock) throws IOException {
+        File pkgDir = new File(rootDir, getDirName(packageBlock));
+
+        writePackageJson(pkgDir, packageBlock);
+
+        for(SpecTypePair specTypePair: packageBlock.listAllSpecTypePair()){
+            for(TypeBlock typeBlock:specTypePair.getTypeBlockArray().listItems()){
+                writeTypeJsonFiles(pkgDir, typeBlock);
+            }
         }
-        File infoFile=new File(pkgDir, PackageBlock.JSON_FILE_NAME);
-        JSONObject jsonObject=new JSONObject();
+    }
+    private void writePackageJson(File packageDirectory, PackageBlock packageBlock) throws IOException {
+        JSONObject jsonObject = new JSONObject();
         jsonObject.put(PackageBlock.NAME_package_id, packageBlock.getId());
         jsonObject.put(PackageBlock.NAME_package_name, packageBlock.getName());
         StagedAlias stagedAlias=StagedAlias
@@ -50,15 +57,12 @@ public class TableBlockJson {
             jsonObject.put(PackageBlock.NAME_staged_aliases,
                     stagedAlias.getStagedAliasEntryArray().toJson());
         }
-        jsonObject.write(infoFile);
-        for(SpecTypePair specTypePair: packageBlock.listAllSpecTypePair()){
-            for(TypeBlock typeBlock:specTypePair.getTypeBlockArray().listItems()){
-                writeJsonFiles(pkgDir, typeBlock);
-            }
-        }
+
+        File packageFile = new File(packageDirectory, PackageBlock.JSON_FILE_NAME);
+        jsonObject.write(packageFile);
     }
-    private void writeJsonFiles(File pkgDir, TypeBlock typeBlock) throws IOException {
-        File file=new File(pkgDir,
+    private void writeTypeJsonFiles(File packageDirectory, TypeBlock typeBlock) throws IOException {
+        File file=new File(packageDirectory,
                 getFileName(typeBlock) + ApkUtil.JSON_FILE_EXTENSION);
         JSONObject jsonObject = typeBlock.toJson();
         jsonObject.write(file);
