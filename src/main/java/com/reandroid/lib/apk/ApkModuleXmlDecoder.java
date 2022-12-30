@@ -171,7 +171,7 @@ import java.util.*;
         if(docElement.getChildesCount()==0){
             return;
         }
-        File file=new File(outDir, typeBlock.getPackageBlock().getName());
+        File file=new File(outDir, getPackageDirName(typeBlock.getPackageBlock()));
         file=new File(file, ApkUtil.RES_DIR_NAME);
         file=new File(file, "values"+typeBlock.getQualifiers());
         String type=typeBlock.getTypeName();
