@@ -44,9 +44,11 @@ public class TableBlockJson {
         JSONObject jsonObject=new JSONObject();
         jsonObject.put(PackageBlock.NAME_package_id, packageBlock.getId());
         jsonObject.put(PackageBlock.NAME_package_name, packageBlock.getName());
-        StagedAlias stagedAlias=StagedAlias.mergeAll(packageBlock.getStagedAliasList().getChildes());
+        StagedAlias stagedAlias=StagedAlias
+                .mergeAll(packageBlock.getStagedAliasList().getChildes());
         if(stagedAlias!=null){
-            jsonObject.put(PackageBlock.NAME_staged_aliases, stagedAlias.getStagedAliasEntryArray().toJson());
+            jsonObject.put(PackageBlock.NAME_staged_aliases,
+                    stagedAlias.getStagedAliasEntryArray().toJson());
         }
         jsonObject.write(infoFile);
         for(SpecTypePair specTypePair: packageBlock.listAllSpecTypePair()){
@@ -56,8 +58,8 @@ public class TableBlockJson {
         }
     }
     private void writeJsonFiles(File pkgDir, TypeBlock typeBlock) throws IOException {
-        String name= getFileName(typeBlock)+".json";
-        File file=new File(pkgDir, name);
+        File file=new File(pkgDir,
+                getFileName(typeBlock) + ApkUtil.JSON_FILE_EXTENSION);
         JSONObject jsonObject = typeBlock.toJson();
         jsonObject.write(file);
     }

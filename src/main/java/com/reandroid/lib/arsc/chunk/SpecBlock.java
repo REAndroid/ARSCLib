@@ -72,12 +72,12 @@ public class SpecBlock extends BaseTypeBlock implements BlockLoad , JSONConvert<
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
-        jsonObject.put("id", getTypeIdInt());
+        jsonObject.put(TypeBlock.NAME_id, getTypeIdInt());
         return jsonObject;
     }
 
     @Override
     public void fromJson(JSONObject json) {
-        setTypeId((byte) json.getInt("id"));
+        setTypeId(json.getInt(TypeBlock.NAME_id));
     }
 }

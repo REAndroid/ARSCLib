@@ -48,6 +48,9 @@ abstract class BaseTypeBlock extends BaseChunk {
     public int getTypeIdInt(){
         return (0xff & mTypeId.get());
     }
+    public void setTypeId(int id){
+        setTypeId((byte) (0xff & id));
+    }
     public void setTypeId(byte id){
         mTypeId.set(id);
     }

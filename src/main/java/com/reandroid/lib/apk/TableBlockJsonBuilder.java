@@ -67,7 +67,7 @@ public class TableBlockJsonBuilder {
             stagedAlias.getStagedAliasEntryArray().fromJson(stagedJson);
             pkg.getStagedAliasList().add(stagedAlias);
         }
-        List<File> typeFileList=ApkUtil.listFiles(pkgDir, ".json");
+        List<File> typeFileList = ApkUtil.listFiles(pkgDir, ApkUtil.JSON_FILE_EXTENSION);
         typeFileList.remove(pkgFile);
         for(File typeFile:typeFileList){
             loadType(pkg, typeFile);
@@ -77,12 +77,13 @@ public class TableBlockJsonBuilder {
     private void loadType(PackageBlock packageBlock, File typeJsonFile) throws IOException{
         FileInputStream inputStream=new FileInputStream(typeJsonFile);
         JSONObject jsonObject=new JSONObject(inputStream);
-        // TODO: change json names to use from static field
-        JSONObject configObj=jsonObject.getJSONObject("config");
+        JSONObject configObj=jsonObject.getJSONObject(TypeBlock.NAME_config);
         ResConfig resConfig=new ResConfig();
         resConfig.fromJson(configObj);
         TypeBlock typeBlock=packageBlock.getSpecTypePairArray()
-                .getOrCreate(((byte)(0xff & jsonObject.getInt("id"))), resConfig);
+                .getOrCreate(
+                        ((byte)(0xff & jsonObject.getInt(TypeBlock.NAME_id)))
+                        , resConfig);
         typeBlock.fromJson(jsonObject);
     }
 }

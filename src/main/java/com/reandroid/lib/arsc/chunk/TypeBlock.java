@@ -151,24 +151,23 @@ public class TypeBlock extends BaseTypeBlock
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
-        jsonObject.put("id", getTypeIdInt());
-        TypeString typeString=getTypeString();
-        if(typeString!=null){
-            jsonObject.put("name", typeString.get());
-        }
-        jsonObject.put("config", getResConfig().toJson());
-        jsonObject.put("entries", getEntryBlockArray().toJson());
+        jsonObject.put(NAME_id, getTypeIdInt());
+        jsonObject.put(NAME_name, getTypeName());
+        jsonObject.put(NAME_config, getResConfig().toJson());
+        jsonObject.put(NAME_entries, getEntryBlockArray().toJson());
         return jsonObject;
     }
     @Override
     public void fromJson(JSONObject json) {
-        setTypeId((byte) json.getInt("id"));
-        String name= json.optString("name");
+        setTypeId(json.getInt(NAME_id));
+        String name = json.optString(NAME_name);
         if(name!=null){
             setTypeName(name);
         }
-        getEntryBlockArray().fromJson(json.getJSONArray("entries"));
-        getResConfig().fromJson(json.getJSONObject("config"));
+        getEntryBlockArray()
+                .fromJson(json.getJSONArray(NAME_entries));
+        getResConfig()
+                .fromJson(json.getJSONObject(NAME_config));
     }
     public void merge(TypeBlock typeBlock){
         if(typeBlock==null||typeBlock==this){
@@ -206,4 +205,9 @@ public class TypeBlock extends BaseTypeBlock
         builder.append(super.toString());
         return builder.toString();
     }
+
+    public static final String NAME_name = "name";
+    public static final String NAME_config = "config";
+    public static final String NAME_id = "id";
+    public static final String NAME_entries = "entries";
 }
