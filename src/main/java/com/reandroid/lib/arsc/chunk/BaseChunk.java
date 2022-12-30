@@ -35,6 +35,9 @@ public abstract class BaseChunk extends ExpandableBlockContainer {
     protected void addToHeader(Block block){
         mHeaderBlock.addChild(block);
     }
+    void setHeaderLoaded(HeaderBlock.HeaderLoaded headerLoaded){
+        mHeaderBlock.setHeaderLoaded(headerLoaded);
+    }
     public HeaderBlock getHeaderBlock(){
         return mHeaderBlock;
     }
@@ -50,15 +53,20 @@ public abstract class BaseChunk extends ExpandableBlockContainer {
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         HeaderBlock headerBlock=reader.readHeaderBlock();
-        ChunkType chunkType = headerBlock.getChunkType();
-        if(chunkType==null || chunkType==ChunkType.NULL){
-            throw new IOException("Invalid chunk: "+headerBlock);
-        }
-        BlockReader chunkReader=reader.create(reader.getPosition(), headerBlock.getChunkSize());
+        checkInvalidChunk(headerBlock);
+        BlockReader chunkReader = reader.create(
+                reader.getPosition(),
+                headerBlock.getChunkSize());
         super.onReadBytes(chunkReader);
         reader.offset(headerBlock.getChunkSize());
         chunkReader.close();
         onChunkLoaded();
+    }
+    void checkInvalidChunk(HeaderBlock headerBlock) throws IOException {
+        ChunkType chunkType = headerBlock.getChunkType();
+        if(chunkType==null || chunkType==ChunkType.NULL){
+            throw new IOException("Invalid chunk: "+headerBlock);
+        }
     }
     @Override
     public String toString(){

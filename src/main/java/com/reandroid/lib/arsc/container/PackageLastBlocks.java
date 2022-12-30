@@ -29,22 +29,30 @@ public class PackageLastBlocks extends FixedBlockContainer {
     private final BlockList<StagedAlias> mStagedAliasList;
     private final BlockList<Overlayable> mOverlayableList;
     private final BlockList<OverlayablePolicy> mOverlayablePolicyList;
+    private final BlockList<UnknownChunk> mUnknownChunkList;
     public PackageLastBlocks(SpecTypePairArray specTypePairArray,
                              LibraryBlock libraryBlock,
                              BlockList<StagedAlias> stagedAliasList,
                              BlockList<Overlayable> overlayableList,
                              BlockList<OverlayablePolicy> overlayablePolicyList){
-        super(5);
+        super(6);
         this.mSpecTypePairArray=specTypePairArray;
         this.mLibraryBlock=libraryBlock;
         this.mStagedAliasList=stagedAliasList;
         this.mOverlayableList=overlayableList;
         this.mOverlayablePolicyList=overlayablePolicyList;
+
+        this.mUnknownChunkList = new BlockList<>();
+
         addChild(0, mSpecTypePairArray);
         addChild(1, mLibraryBlock);
         addChild(2, mStagedAliasList);
         addChild(3, mOverlayableList);
         addChild(4, mOverlayablePolicyList);
+        addChild(5, mUnknownChunkList);
+    }
+    public BlockList<UnknownChunk> getUnknownChunkList(){
+        return mUnknownChunkList;
     }
 
     @Override
@@ -72,7 +80,7 @@ public class PackageLastBlocks extends FixedBlockContainer {
         }else if(chunkType==ChunkType.STAGED_ALIAS){
             readStagedAlias(reader);
         }else {
-            readUnexpectedBlock(reader, headerBlock);
+            readUnknownChunk(reader);
         }
         return pos!=reader.getPosition();
     }
@@ -100,7 +108,9 @@ public class PackageLastBlocks extends FixedBlockContainer {
         overlayablePolicy.readBytes(reader);
         mOverlayablePolicyList.add(overlayablePolicy);
     }
-    private void readUnexpectedBlock(BlockReader reader, HeaderBlock headerBlock) throws IOException{
-        throw new IOException(reader.getActualPosition()+", Unexpected block: "+headerBlock.toString());
+    private void readUnknownChunk(BlockReader reader) throws IOException{
+        UnknownChunk unknownChunk = new UnknownChunk();
+        unknownChunk.readBytes(reader);
+        mUnknownChunkList.add(unknownChunk);
     }
 }

@@ -18,13 +18,18 @@ package com.reandroid.lib.arsc.header;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.ExpandableBlockContainer;
+import com.reandroid.lib.arsc.io.BlockLoad;
+import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.ShortItem;
 
-public class HeaderBlock extends ExpandableBlockContainer {
+import java.io.IOException;
+
+ public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
     private final ShortItem mType;
     private final ShortItem mHeaderSize;
     private final IntegerItem mChunkSize;
+    private HeaderLoaded mHeaderLoaded;
     public HeaderBlock(short type){
         super(3);
         this.mType=new ShortItem(type);
@@ -33,6 +38,12 @@ public class HeaderBlock extends ExpandableBlockContainer {
         addChild(mType);
         addChild(mHeaderSize);
         addChild(mChunkSize);
+        this.mType.setBlockLoad(this);
+        this.mHeaderSize.setBlockLoad(this);
+        this.mChunkSize.setBlockLoad(this);
+    }
+    public void setHeaderLoaded(HeaderLoaded headerLoaded){
+        this.mHeaderLoaded=headerLoaded;
     }
     public ChunkType getChunkType(){
         return ChunkType.get(mType.get());
@@ -54,7 +65,7 @@ public class HeaderBlock extends ExpandableBlockContainer {
     }
 
     public int getHeaderSize(){
-        return (0xffff & mHeaderSize.get());
+        return mHeaderSize.unsignedInt();
     }
     public void setHeaderSize(short headerSize){
         mHeaderSize.set(headerSize);
@@ -81,6 +92,21 @@ public class HeaderBlock extends ExpandableBlockContainer {
         }
         int count=parent.countBytes();
         setChunkSize(count);
+    }
+    @Override
+    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
+        HeaderLoaded headerLoaded = mHeaderLoaded;
+        if(headerLoaded==null){
+            return;
+        }
+        if(sender==this.mType){
+            headerLoaded.onChunkTypeLoaded(mType.get());
+        }else if(sender==this.mHeaderSize){
+            headerLoaded.onHeaderSizeLoaded(mHeaderSize.unsignedInt());
+        }else if(sender==this.mChunkSize){
+            headerLoaded.onChunkSizeLoaded(mHeaderSize.unsignedInt(),
+                    mChunkSize.get());
+        }
     }
 
     @Override
@@ -109,5 +135,11 @@ public class HeaderBlock extends ExpandableBlockContainer {
         builder.append(getChunkSize());
         builder.append("}");
         return builder.toString();
+    }
+
+    public interface HeaderLoaded{
+        void onChunkTypeLoaded(short type);
+        void onHeaderSizeLoaded(int headerSize);
+        void onChunkSizeLoaded(int headerSize, int chunkSize);
     }
 }

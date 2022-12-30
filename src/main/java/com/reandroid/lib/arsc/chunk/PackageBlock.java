@@ -115,6 +115,9 @@ package com.reandroid.lib.arsc.chunk;
         addChild(mPackageLastBlocks);
 
     }
+    public BlockList<UnknownChunk> getUnknownChunkList(){
+         return mPackageLastBlocks.getUnknownChunkList();
+    }
 
     public StagedAliasEntry searchByStagedResId(int stagedResId){
         for(StagedAlias stagedAlias:getStagedAliasList().getChildes()){

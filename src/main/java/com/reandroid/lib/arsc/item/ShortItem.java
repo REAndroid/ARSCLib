@@ -37,6 +37,9 @@ public class ShortItem extends BlockItem {
     public short get(){
         return mCache;
     }
+    public int unsignedInt(){
+        return 0xffff & get();
+    }
     @Override
     protected void onBytesChanged() {
         // To save cpu usage, better to calculate once only when bytes changed
