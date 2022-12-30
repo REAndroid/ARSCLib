@@ -15,6 +15,7 @@
   */
 package com.reandroid.lib.apk;
 
+import com.reandroid.lib.apk.xmldecoder.XMLBagDecoder;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
@@ -22,10 +23,7 @@ import com.reandroid.lib.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.lib.arsc.chunk.xml.ResXmlBlock;
 import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
-import com.reandroid.lib.arsc.value.EntryBlock;
-import com.reandroid.lib.arsc.value.ResConfig;
-import com.reandroid.lib.arsc.value.ResValueInt;
-import com.reandroid.lib.arsc.value.ValueType;
+import com.reandroid.lib.arsc.value.*;
 import com.reandroid.lib.common.EntryStore;
 import com.reandroid.lib.common.Frameworks;
 import com.reandroid.lib.common.TableEntryStore;
@@ -42,6 +40,7 @@ import java.util.*;
  public class ApkModuleXmlDecoder {
     private final ApkModule apkModule;
     private final Map<Integer, Set<ResConfig>> decodedEntries;
+    private XMLBagDecoder xmlBagDecoder;
     public ApkModuleXmlDecoder(ApkModule apkModule){
         this.apkModule=apkModule;
         this.decodedEntries = new HashMap<>();
@@ -53,6 +52,7 @@ import java.util.*;
         entryStore.add(Frameworks.getAndroid());
         TableBlock tableBlock=apkModule.getTableBlock();
         entryStore.add(tableBlock);
+        xmlBagDecoder=new XMLBagDecoder(entryStore);
         decodeAndroidManifest(entryStore, outDir);
         logMessage("Decoding resource files ...");
         List<ResFile> resFileList=apkModule.listResFiles();
@@ -183,9 +183,12 @@ import java.util.*;
     }
     private XMLElement decodeValue(EntryStore entryStore, EntryBlock entryBlock){
         XMLElement element=new XMLElement(entryBlock.getTypeName());
-        element.setResourceId(entryBlock.getResourceId());
+        int resourceId=entryBlock.getResourceId();
+        XMLAttribute attribute=new XMLAttribute("name", entryBlock.getName());
+        element.addAttribute(attribute);
+        attribute.setNameId(resourceId);
+        element.setResourceId(resourceId);
         if(!entryBlock.isEntryTypeBag()){
-            String name=entryBlock.getName();
             String value;
             ResValueInt resValueInt=(ResValueInt) entryBlock.getResValue();
             if(resValueInt.getValueType()== ValueType.STRING){
@@ -196,12 +199,11 @@ import java.util.*;
                         resValueInt.getValueType(),
                         resValueInt.getData());
             }
-            XMLAttribute attribute=new XMLAttribute("name", name);
-            element.addAttribute(attribute);
             element.setTextContent(value);
         }else {
-            // TODO: implement bags entry decoder
-            return null;
+            ResValueBag resValueBag=(ResValueBag) entryBlock.getResValue();
+            xmlBagDecoder.decode(resValueBag, element);
+            return element;
         }
         return element;
     }
