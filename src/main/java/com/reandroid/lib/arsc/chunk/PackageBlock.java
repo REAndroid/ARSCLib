@@ -57,13 +57,7 @@ package com.reandroid.lib.arsc.chunk;
     private final TypeStringPool mTypeStringPool;
     private final SpecStringPool mSpecStringPool;
 
-    private final SpecTypePairArray mSpecTypePairArray;
-    private final LibraryBlock mLibraryBlock;
-    private final BlockList<StagedAlias> mStagedAliasList;
-    private final BlockList<Overlayable> mOverlayableList;
-     private final BlockList<OverlayablePolicy> mOverlayablePolicyList;
-
-    private final PackageLastBlocks mPackageLastBlocks;
+    private final PackageLastBlocks mBody;
 
     private final Map<Integer, EntryGroup> mEntriesGroup;
 
@@ -85,17 +79,7 @@ package com.reandroid.lib.arsc.chunk;
         this.mTypeStringPool=new TypeStringPool(false, mTypeIdOffset);
         this.mSpecStringPool=new SpecStringPool(true);
 
-        this.mSpecTypePairArray=new SpecTypePairArray();
-        this.mLibraryBlock=new LibraryBlock();
-        this.mStagedAliasList=new BlockList<>();
-        this.mOverlayableList=new BlockList<>();
-        this.mOverlayablePolicyList=new BlockList<>();
-        this.mPackageLastBlocks = new PackageLastBlocks(
-                mSpecTypePairArray,
-                mLibraryBlock,
-                mStagedAliasList,
-                mOverlayableList,
-                mOverlayablePolicyList);
+        this.mBody = new PackageLastBlocks();
 
         this.mEntriesGroup=new HashMap<>();
 
@@ -112,11 +96,11 @@ package com.reandroid.lib.arsc.chunk;
         addChild(mTypeStringPool);
         addChild(mSpecStringPool);
 
-        addChild(mPackageLastBlocks);
+        addChild(mBody);
 
     }
     public BlockList<UnknownChunk> getUnknownChunkList(){
-         return mPackageLastBlocks.getUnknownChunkList();
+         return mBody.getUnknownChunkList();
     }
 
     public StagedAliasEntry searchByStagedResId(int stagedResId){
@@ -130,13 +114,13 @@ package com.reandroid.lib.arsc.chunk;
         return null;
     }
     public BlockList<StagedAlias> getStagedAliasList(){
-        return mStagedAliasList;
+        return mBody.getStagedAliasList();
     }
     public BlockList<Overlayable> getOverlayableList(){
-        return mOverlayableList;
+        return mBody.getOverlayableList();
     }
     public BlockList<OverlayablePolicy> getOverlayablePolicyList(){
-        return mOverlayablePolicyList;
+        return mBody.getOverlayablePolicyList();
     }
     public void sortTypes(){
         getSpecTypePairArray().sort();
@@ -160,7 +144,7 @@ package com.reandroid.lib.arsc.chunk;
     public int getId(){
         return mPackageId.get();
     }
-     public void setId(byte id){
+    public void setId(byte id){
          setId(0xff & id);
      }
     public void setId(int id){
@@ -189,7 +173,7 @@ package com.reandroid.lib.arsc.chunk;
         return mSpecStringPool;
     }
     public SpecTypePairArray getSpecTypePairArray(){
-        return mSpecTypePairArray;
+        return mBody.getSpecTypePairArray();
     }
     public Collection<LibraryInfo> listLibraryInfo(){
         return getLibraryBlock().listLibraryInfo();
@@ -207,7 +191,7 @@ package com.reandroid.lib.arsc.chunk;
         getLibraryBlock().addLibraryInfo(info);
     }
     private LibraryBlock getLibraryBlock(){
-        return mLibraryBlock;
+        return mBody.getLibraryBlock();
     }
     public Set<Integer> listResourceIds(){
         return mEntriesGroup.keySet();
@@ -356,7 +340,7 @@ package com.reandroid.lib.arsc.chunk;
         jsonObject.put(NAME_package_id, getId());
         jsonObject.put(NAME_package_name, getName());
         jsonObject.put(NAME_specs, getSpecTypePairArray().toJson());
-        LibraryInfoArray libraryInfoArray = mLibraryBlock.getLibraryInfoArray();
+        LibraryInfoArray libraryInfoArray = getLibraryBlock().getLibraryInfoArray();
         if(libraryInfoArray.childesCount()>0){
             jsonObject.put(NAME_libraries,libraryInfoArray.toJson());
         }
@@ -373,13 +357,13 @@ package com.reandroid.lib.arsc.chunk;
         setId(json.getInt(NAME_package_id));
         setName(json.getString(NAME_package_name));
         getSpecTypePairArray().fromJson(json.getJSONArray(NAME_specs));
-        LibraryInfoArray libraryInfoArray = mLibraryBlock.getLibraryInfoArray();
+        LibraryInfoArray libraryInfoArray = getLibraryBlock().getLibraryInfoArray();
         libraryInfoArray.fromJson(json.optJSONArray(NAME_libraries));
         if(json.has(NAME_staged_aliases)){
             StagedAlias stagedAlias=new StagedAlias();
             stagedAlias.getStagedAliasEntryArray()
                     .fromJson(json.getJSONArray(NAME_staged_aliases));
-            mStagedAliasList.add(stagedAlias);
+            getStagedAliasList().add(stagedAlias);
         }
     }
     public void merge(PackageBlock packageBlock){
@@ -414,7 +398,7 @@ package com.reandroid.lib.arsc.chunk;
         builder.append(String.format("0x%02x", getId()));
         builder.append(", name=");
         builder.append(getName());
-        int libCount=mLibraryBlock.getLibraryCount();
+        int libCount=getLibraryBlock().getLibraryCount();
         if(libCount>0){
             builder.append(", libraries=");
             builder.append(libCount);

@@ -30,18 +30,13 @@ public class PackageLastBlocks extends FixedBlockContainer {
     private final BlockList<Overlayable> mOverlayableList;
     private final BlockList<OverlayablePolicy> mOverlayablePolicyList;
     private final BlockList<UnknownChunk> mUnknownChunkList;
-    public PackageLastBlocks(SpecTypePairArray specTypePairArray,
-                             LibraryBlock libraryBlock,
-                             BlockList<StagedAlias> stagedAliasList,
-                             BlockList<Overlayable> overlayableList,
-                             BlockList<OverlayablePolicy> overlayablePolicyList){
+    public PackageLastBlocks(){
         super(6);
-        this.mSpecTypePairArray=specTypePairArray;
-        this.mLibraryBlock=libraryBlock;
-        this.mStagedAliasList=stagedAliasList;
-        this.mOverlayableList=overlayableList;
-        this.mOverlayablePolicyList=overlayablePolicyList;
-
+        this.mSpecTypePairArray = new SpecTypePairArray();
+        this.mLibraryBlock = new LibraryBlock();
+        this.mStagedAliasList = new BlockList<>();
+        this.mOverlayableList = new BlockList<>();
+        this.mOverlayablePolicyList = new BlockList<>();
         this.mUnknownChunkList = new BlockList<>();
 
         addChild(0, mSpecTypePairArray);
@@ -50,6 +45,21 @@ public class PackageLastBlocks extends FixedBlockContainer {
         addChild(3, mOverlayableList);
         addChild(4, mOverlayablePolicyList);
         addChild(5, mUnknownChunkList);
+    }
+    public BlockList<Overlayable> getOverlayableList() {
+        return mOverlayableList;
+    }
+    public BlockList<OverlayablePolicy> getOverlayablePolicyList() {
+        return mOverlayablePolicyList;
+    }
+    public BlockList<StagedAlias> getStagedAliasList() {
+        return mStagedAliasList;
+    }
+    public LibraryBlock getLibraryBlock(){
+        return mLibraryBlock;
+    }
+    public SpecTypePairArray getSpecTypePairArray() {
+        return mSpecTypePairArray;
     }
     public BlockList<UnknownChunk> getUnknownChunkList(){
         return mUnknownChunkList;
