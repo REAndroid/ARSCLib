@@ -60,7 +60,7 @@ public class StringPoolBuilder {
         mCurrentPackageId=0;
         List<File> pkgDirList=ApkUtil.listDirectories(resourcesDir);
         for(File dir:pkgDirList){
-            File pkgFile=new File(dir, ApkUtil.PACKAGE_JSON_FILE);
+            File pkgFile=new File(dir, PackageBlock.JSON_FILE_NAME);
             scanFile(pkgFile);
             List<File> jsonFileList=ApkUtil.recursiveFiles(dir, ".json");
             for(File file:jsonFileList){

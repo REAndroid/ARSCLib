@@ -16,6 +16,7 @@
 package com.reandroid.lib.apk;
 
 import com.reandroid.lib.arsc.chunk.PackageBlock;
+import com.reandroid.lib.arsc.chunk.StagedAlias;
 import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.container.SpecTypePair;
@@ -43,6 +44,10 @@ public class TableBlockJson {
         JSONObject jsonObject=new JSONObject();
         jsonObject.put(PackageBlock.NAME_package_id, packageBlock.getId());
         jsonObject.put(PackageBlock.NAME_package_name, packageBlock.getName());
+        StagedAlias stagedAlias=StagedAlias.mergeAll(packageBlock.getStagedAliasList().getChildes());
+        if(stagedAlias!=null){
+            jsonObject.put(PackageBlock.NAME_staged_aliases, stagedAlias.getStagedAliasEntryArray().toJson());
+        }
         jsonObject.write(infoFile);
         for(SpecTypePair specTypePair: packageBlock.listAllSpecTypePair()){
             for(TypeBlock typeBlock:specTypePair.getTypeBlockArray().listItems()){
@@ -67,6 +72,8 @@ public class TableBlockJson {
     private String getDirName(PackageBlock packageBlock){
         StringBuilder builder=new StringBuilder();
         builder.append(String.format("0x%02x", packageBlock.getId()));
+        builder.append("-");
+        builder.append(packageBlock.getIndex());
         String name= packageBlock.getName();
         if(name!=null){
             builder.append('-');

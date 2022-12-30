@@ -140,7 +140,6 @@ public class ApkUtil {
     public static final String JSON_FILE_EXTENSION=".json";
     public static final String RES_JSON_NAME="res-json";
     public static final String ROOT_NAME="root";
-    public static final String PACKAGE_JSON_FILE="package.json";
     public static final String SPLIT_JSON_DIRECTORY="resources";
     public static final String DEF_MODULE_NAME="base";
     public static final String NAME_value_type="value_type";

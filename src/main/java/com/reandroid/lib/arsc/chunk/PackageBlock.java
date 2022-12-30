@@ -400,5 +400,5 @@ package com.reandroid.lib.arsc.chunk;
     public static final String JSON_FILE_NAME = "package.json";
     private static final String NAME_specs="specs";
     private static final String NAME_libraries="libraries";
-    private static final String NAME_staged_aliases="staged_aliases";
+    public static final String NAME_staged_aliases="staged_aliases";
 }

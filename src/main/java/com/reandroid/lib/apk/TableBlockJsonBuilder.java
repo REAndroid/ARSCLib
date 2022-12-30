@@ -16,9 +16,11 @@
 package com.reandroid.lib.apk;
 
 import com.reandroid.lib.arsc.chunk.PackageBlock;
+import com.reandroid.lib.arsc.chunk.StagedAlias;
 import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.value.ResConfig;
+import com.reandroid.lib.json.JSONArray;
 import com.reandroid.lib.json.JSONObject;
 
 import java.io.File;
@@ -50,7 +52,7 @@ public class TableBlockJsonBuilder {
         return tableBlock;
     }
     private void scanPackageDirectory(TableBlock tableBlock, File pkgDir) throws IOException{
-        File pkgFile=new File(pkgDir, "package.json");
+        File pkgFile=new File(pkgDir, PackageBlock.JSON_FILE_NAME);
         if(!pkgFile.isFile()){
             throw new IOException("Invalid package directory! Package file missing: "+pkgFile);
         }
@@ -60,6 +62,12 @@ public class TableBlockJsonBuilder {
         String name=jsonObject.optString(PackageBlock.NAME_package_name);
         PackageBlock pkg=tableBlock.getPackageArray().getOrCreate((byte) id);
         pkg.setName(name);
+        if(jsonObject.has(PackageBlock.NAME_staged_aliases)){
+            JSONArray stagedJson = jsonObject.getJSONArray(PackageBlock.NAME_staged_aliases);
+            StagedAlias stagedAlias = new StagedAlias();
+            stagedAlias.getStagedAliasEntryArray().fromJson(stagedJson);
+            pkg.getStagedAliasList().add(stagedAlias);
+        }
         List<File> typeFileList=ApkUtil.listFiles(pkgDir, ".json");
         typeFileList.remove(pkgFile);
         for(File typeFile:typeFileList){
