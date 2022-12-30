@@ -24,7 +24,7 @@ import com.reandroid.lib.arsc.value.EntryBlock;
 import java.util.*;
 
 public class TableEntryStore implements EntryStore{
-    private final Map<Byte, Set<PackageBlock>> mPackagesMap;
+    private final Map<Integer, Set<PackageBlock>> mPackagesMap;
     public TableEntryStore(){
         this.mPackagesMap = new HashMap<>();
     }
@@ -58,15 +58,14 @@ public class TableEntryStore implements EntryStore{
         if(packageBlock==null){
             return;
         }
-        byte pkgId= (byte) packageBlock.getId();
-        Set<PackageBlock> packageBlockSet=getOrCreate(pkgId);
+        Set<PackageBlock> packageBlockSet=getOrCreate(packageBlock.getId());
         if(packageBlockSet.contains(packageBlock)){
             return;
         }
         packageBlockSet.add(packageBlock);
     }
-    private Set<PackageBlock> getOrCreate(byte packageId){
-        Byte id=packageId;
+    private Set<PackageBlock> getOrCreate(int packageId){
+        Integer id=packageId;
         Set<PackageBlock> packageBlockSet=mPackagesMap.get(id);
         if(packageBlockSet==null){
             packageBlockSet=new HashSet<>();
@@ -78,7 +77,7 @@ public class TableEntryStore implements EntryStore{
     public EntryGroup searchEntryGroup(String packageName, String type, String name) {
         return null;
     }
-    private Set<TableBlock> getTableBlocks(byte packageId) {
+    private Set<TableBlock> getTableBlocks(int packageId) {
         Set<TableBlock> results=new HashSet<>();
         Set<PackageBlock> packageBlockSet = mPackagesMap.get(packageId);
         if(packageBlockSet!=null){
@@ -92,7 +91,7 @@ public class TableEntryStore implements EntryStore{
     @Override
     public List<EntryGroup> getEntryGroups(int resourceId) {
         List<EntryGroup> results=new ArrayList<>();
-        byte pkgId= (byte) ((resourceId>>24)&0xff);
+        int pkgId = (resourceId>>24)&0xff;
         Set<PackageBlock> packageBlockSet = mPackagesMap.get(pkgId);
         if(packageBlockSet==null){
             return results;
@@ -107,7 +106,7 @@ public class TableEntryStore implements EntryStore{
     }
     @Override
     public EntryGroup getEntryGroup(int resourceId) {
-        byte pkgId= (byte) ((resourceId>>24)&0xff);
+        int pkgId = (resourceId>>24)&0xff;
         Set<PackageBlock> packageBlockSet = mPackagesMap.get(pkgId);
         if(packageBlockSet==null){
             return null;
@@ -123,7 +122,7 @@ public class TableEntryStore implements EntryStore{
     @Override
     public List<PackageBlock> getPackageBlocks(byte packageId) {
         List<PackageBlock> results=new ArrayList<>();
-        Set<PackageBlock> packageBlockSet = mPackagesMap.get(packageId);
+        Set<PackageBlock> packageBlockSet = mPackagesMap.get(0xff & packageId);
         if(packageBlockSet!=null){
             results.addAll(packageBlockSet);
         }
@@ -132,7 +131,7 @@ public class TableEntryStore implements EntryStore{
     @Override
     public List<TableString> getTableStrings(byte packageId, int stringReference) {
         List<TableString> results=new ArrayList<>();
-        Set<TableBlock> tableBlockSet=getTableBlocks(packageId);
+        Set<TableBlock> tableBlockSet=getTableBlocks(0xff & packageId);
         for(TableBlock tableBlock:tableBlockSet){
             TableString tableString=tableBlock.getTableStringPool().get(stringReference);
             if(tableString!=null){

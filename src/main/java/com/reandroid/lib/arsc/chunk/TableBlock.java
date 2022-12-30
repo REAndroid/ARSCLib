@@ -54,7 +54,7 @@ public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
     public TableStringPool getTableStringPool(){
         return mTableStringPool;
     }
-    public PackageBlock getPackageBlockById(byte pkgId){
+    public PackageBlock getPackageBlockById(int pkgId){
         return getPackageArray().getPackageBlockById(pkgId);
     }
     public PackageArray getPackageArray(){
@@ -112,7 +112,7 @@ public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
         }
         int pkgId=resourceId>>24;
         pkgId=pkgId&0xff;
-        PackageBlock packageBlock=getPackageBlockById((byte) pkgId);
+        PackageBlock packageBlock=getPackageBlockById(pkgId);
         if(packageBlock!=null){
             EntryGroup entryGroup=packageBlock.getEntryGroup(resourceId);
             if(entryGroup!=null){

@@ -58,10 +58,9 @@ public class TableBlockJsonBuilder {
         }
         FileInputStream inputStream=new FileInputStream(pkgFile);
         JSONObject jsonObject=new JSONObject(inputStream);
-        int id = jsonObject.getInt(PackageBlock.NAME_package_id);
-        String name=jsonObject.optString(PackageBlock.NAME_package_name);
-        PackageBlock pkg=tableBlock.getPackageArray().getOrCreate((byte) id);
-        pkg.setName(name);
+        PackageBlock pkg=tableBlock.getPackageArray()
+                .getOrCreate(jsonObject.getInt(PackageBlock.NAME_package_id));
+        pkg.setName(jsonObject.optString(PackageBlock.NAME_package_name));
         if(jsonObject.has(PackageBlock.NAME_staged_aliases)){
             JSONArray stagedJson = jsonObject.getJSONArray(PackageBlock.NAME_staged_aliases);
             StagedAlias stagedAlias = new StagedAlias();
@@ -78,11 +77,12 @@ public class TableBlockJsonBuilder {
     private void loadType(PackageBlock packageBlock, File typeJsonFile) throws IOException{
         FileInputStream inputStream=new FileInputStream(typeJsonFile);
         JSONObject jsonObject=new JSONObject(inputStream);
-        int id= jsonObject.getInt("id");
+        // TODO: change json names to use from static field
         JSONObject configObj=jsonObject.getJSONObject("config");
         ResConfig resConfig=new ResConfig();
         resConfig.fromJson(configObj);
-        TypeBlock typeBlock=packageBlock.getSpecTypePairArray().getOrCreate((byte) id, resConfig);
+        TypeBlock typeBlock=packageBlock.getSpecTypePairArray()
+                .getOrCreate(((byte)(0xff & jsonObject.getInt("id"))), resConfig);
         typeBlock.fromJson(jsonObject);
     }
 }

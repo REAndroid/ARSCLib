@@ -31,9 +31,9 @@ import java.io.IOException;
 import java.util.*;
 
 public class StringPoolBuilder {
-    private final Map<Byte, Set<String>> mSpecNameMap;
+    private final Map<Integer, Set<String>> mSpecNameMap;
     private final Set<String> mTableStrings;
-    private byte mCurrentPackageId;
+    private int mCurrentPackageId;
     private JSONArray mStyledStrings;
     public StringPoolBuilder(){
         this.mSpecNameMap = new HashMap<>();
@@ -41,7 +41,7 @@ public class StringPoolBuilder {
     }
     public void apply(TableBlock tableBlock){
         applyTableString(tableBlock.getTableStringPool());
-        for(byte pkgId:mSpecNameMap.keySet()){
+        for(int pkgId:mSpecNameMap.keySet()){
             PackageBlock packageBlock=tableBlock.getPackageArray().getOrCreate(pkgId);
             applySpecString(packageBlock.getSpecStringPool());
         }
@@ -52,7 +52,7 @@ public class StringPoolBuilder {
         stringPool.refresh();
     }
     private void applySpecString(SpecStringPool stringPool){
-        byte pkgId= (byte) stringPool.getPackageBlock().getId();
+        int pkgId = stringPool.getPackageBlock().getId();
         stringPool.addStrings(getSpecString(pkgId));
         stringPool.refresh();
     }
@@ -86,7 +86,7 @@ public class StringPoolBuilder {
     public Set<String> getTableString(){
         return mTableStrings;
     }
-    public Set<String> getSpecString(byte pkgId){
+    public Set<String> getSpecString(int pkgId){
         return mSpecNameMap.get(pkgId);
     }
     private void scan(JSONObject jsonObject){
@@ -100,7 +100,7 @@ public class StringPoolBuilder {
             }
             return;
         }else if(jsonObject.has(PackageBlock.NAME_package_id)){
-            mCurrentPackageId= (byte) jsonObject.getInt(PackageBlock.NAME_package_id);
+            mCurrentPackageId = jsonObject.getInt(PackageBlock.NAME_package_id);
         }
         Set<String> keyList = jsonObject.keySet();
         for(String key:keyList){
@@ -143,7 +143,7 @@ public class StringPoolBuilder {
         if(name==null){
             return;
         }
-        byte pkgId=mCurrentPackageId;
+        int pkgId=mCurrentPackageId;
         if(pkgId==0){
             throw new IllegalArgumentException("Current package id is 0");
         }

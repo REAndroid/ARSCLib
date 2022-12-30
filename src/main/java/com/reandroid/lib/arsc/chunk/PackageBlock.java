@@ -156,6 +156,9 @@ package com.reandroid.lib.arsc.chunk;
     public int getId(){
         return mPackageId.get();
     }
+     public void setId(byte id){
+         setId(0xff & id);
+     }
     public void setId(int id){
         mPackageId.set(id);
     }

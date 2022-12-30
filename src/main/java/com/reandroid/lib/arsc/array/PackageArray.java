@@ -43,6 +43,9 @@ public class PackageArray extends BlockArray<PackageBlock>
         sort(this);
     }
     public PackageBlock getOrCreate(byte pkgId){
+        return getOrCreate(0xff & pkgId);
+    }
+    public PackageBlock getOrCreate(int pkgId){
         PackageBlock packageBlock=getPackageBlockById(pkgId);
         if(packageBlock!=null){
             return packageBlock;
@@ -53,6 +56,9 @@ public class PackageArray extends BlockArray<PackageBlock>
         return packageBlock;
     }
     public PackageBlock getPackageBlockById(byte pkgId){
+        return getPackageBlockById(0xff & pkgId);
+    }
+    public PackageBlock getPackageBlockById(int pkgId){
         Iterator<PackageBlock> itr=iterator(true);
         while (itr.hasNext()){
             PackageBlock packageBlock=itr.next();
