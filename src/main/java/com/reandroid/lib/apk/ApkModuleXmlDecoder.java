@@ -74,7 +74,7 @@ import java.util.*;
         EntryBlock entryBlock=resFile.pickOne();
         PackageBlock packageBlock=entryBlock.getPackageBlock();
 
-        File pkgDir=new File(outDir, packageBlock.getName());
+        File pkgDir=new File(outDir, getPackageDirName(packageBlock));
         File resDir=new File(pkgDir, ApkUtil.RES_DIR_NAME);
         String path=resFile.buildPath();
         path=path.replace('/', File.separatorChar);
@@ -97,7 +97,7 @@ import java.util.*;
         ResXmlBlock resXmlBlock=new ResXmlBlock();
         resXmlBlock.readBytes(resFile.getInputSource().openStream());
 
-        File pkgDir=new File(outDir, packageBlock.getName());
+        File pkgDir=new File(outDir, getPackageDirName(packageBlock));
         File resDir=new File(pkgDir, ApkUtil.RES_DIR_NAME);
         String path=resFile.buildPath();
         path=path.replace('/', File.separatorChar);
@@ -206,6 +206,9 @@ import java.util.*;
             return element;
         }
         return element;
+    }
+    private String getPackageDirName(PackageBlock packageBlock){
+        return packageBlock.getIndex()+"-"+packageBlock.getName();
     }
 
     private void logMessage(String msg) {
