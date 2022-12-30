@@ -15,6 +15,7 @@
   */
 package com.reandroid.lib.arsc.chunk;
 
+import com.reandroid.lib.arsc.BuildInfo;
 import com.reandroid.lib.arsc.array.PackageArray;
 import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.header.HeaderBlock;
@@ -144,6 +145,9 @@ public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
+
+        jsonObject.put(BuildInfo.NAME_arsc_lib_version, BuildInfo.getVersion());
+
         jsonObject.put(NAME_packages, getPackageArray().toJson());
         JSONArray jsonArray = getTableStringPool().toJson();
         if(jsonArray!=null){

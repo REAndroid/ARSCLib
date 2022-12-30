@@ -15,6 +15,7 @@
   */
 package com.reandroid.lib.arsc.chunk;
 
+ import com.reandroid.lib.arsc.BuildInfo;
  import com.reandroid.lib.arsc.array.LibraryInfoArray;
  import com.reandroid.lib.arsc.array.SpecTypePairArray;
  import com.reandroid.lib.arsc.base.Block;
@@ -329,6 +330,9 @@ package com.reandroid.lib.arsc.chunk;
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
+
+        jsonObject.put(BuildInfo.NAME_arsc_lib_version, BuildInfo.getVersion());
+
         jsonObject.put(NAME_package_id, getId());
         jsonObject.put(NAME_package_name, getName());
         jsonObject.put(NAME_specs, getSpecTypePairArray().toJson());

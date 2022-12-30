@@ -53,4 +53,6 @@ public class BuildInfo {
         }
         return properties;
     }
+
+    public static final String NAME_arsc_lib_version="arsc_lib_version";
 }

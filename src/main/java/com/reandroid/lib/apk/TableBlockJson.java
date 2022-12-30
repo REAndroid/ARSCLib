@@ -49,6 +49,9 @@ public class TableBlockJson {
     }
     private void writePackageJson(File packageDirectory, PackageBlock packageBlock) throws IOException {
         JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put(BuildInfo.NAME_arsc_lib_version, BuildInfo.getVersion());
+
         jsonObject.put(PackageBlock.NAME_package_id, packageBlock.getId());
         jsonObject.put(PackageBlock.NAME_package_name, packageBlock.getName());
         StagedAlias stagedAlias=StagedAlias
