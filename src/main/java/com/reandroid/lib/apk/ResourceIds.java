@@ -248,6 +248,9 @@ import java.util.*;
                 this.id = id;
                 this.typeMap = new HashMap<>();
             }
+            public int getIdInt(){
+                return 0xff & id;
+            }
             public int applyTo(PackageBlock packageBlock){
                 int renameCount=0;
                 Map<Integer, EntryGroup> map = packageBlock.getEntriesGroupMap();
@@ -328,7 +331,7 @@ import java.util.*;
             }
             public JSONObject toJson(){
                 JSONObject jsonObject=new JSONObject();
-                jsonObject.put("id", this.id);
+                jsonObject.put("id", this.getIdInt());
                 if(this.name!=null){
                     jsonObject.put("name", this.name);
                 }
@@ -341,7 +344,7 @@ import java.util.*;
             }
             @Override
             public int compareTo(Package pkg) {
-                return Integer.compare(id, pkg.id);
+                return Integer.compare(getIdInt(), pkg.getIdInt());
             }
             @Override
             public int compare(Type t1, Type t2) {
@@ -440,6 +443,9 @@ import java.util.*;
                     this.id = id;
                     this.entryMap = new HashMap<>();
                 }
+                public int getIdInt(){
+                    return 0xff & id;
+                }
                 public boolean applyTo(EntryGroup entryGroup){
                     boolean renamed=false;
                     Entry entry=entryMap.get(entryGroup.getEntryId());
@@ -522,7 +528,7 @@ import java.util.*;
 
                 public JSONObject toJson(){
                     JSONObject jsonObject=new JSONObject();
-                    jsonObject.put("id", getId());
+                    jsonObject.put("id", getIdInt());
                     jsonObject.put("name", getName());
                     JSONArray jsonArray=new JSONArray();
                     for(Entry entry: entryMap.values()){
@@ -546,7 +552,7 @@ import java.util.*;
                 }
                 @Override
                 public int compareTo(Type type) {
-                    return Integer.compare(id, type.id);
+                    return Integer.compare(getIdInt(), type.getIdInt());
                 }
                 @Override
                 public int compare(Entry entry1, Entry entry2) {
@@ -636,6 +642,9 @@ import java.util.*;
                     public short getEntryId(){
                         return (short) (resourceId & 0xffff);
                     }
+                    public int getEntryIdInt(){
+                        return resourceId & 0xffff;
+                    }
                     public int getResourceId(){
                         return ((getPackageId() & 0xff)<<24)
                                 | ((getTypeId() & 0xff)<<16)
@@ -646,7 +655,7 @@ import java.util.*;
                     }
                     @Override
                     public int compareTo(Entry entry) {
-                        return Integer.compare(getEntryId(), entry.getEntryId());
+                        return Integer.compare(getEntryIdInt(), entry.getEntryIdInt());
                     }
                     @Override
                     public boolean equals(Object o) {
