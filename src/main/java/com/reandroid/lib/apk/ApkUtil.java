@@ -49,7 +49,9 @@ public class ApkUtil {
     public static List<File> recursiveFiles(File dir, String ext){
         List<File> results=new ArrayList<>();
         if(dir.isFile()){
-            results.add(dir);
+            if(ext==null || dir.getName().endsWith(ext)){
+                results.add(dir);
+            }
             return results;
         }
         if(!dir.isDirectory()){
@@ -67,7 +69,7 @@ public class ApkUtil {
                 results.add(file);
                 continue;
             }
-            results.addAll(recursiveFiles(file));
+            results.addAll(recursiveFiles(file, ext));
         }
         return results;
     }
