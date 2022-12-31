@@ -270,8 +270,14 @@ public class ValueDecoder {
     private static String buildReferenceValue(EntryStore entryStore, ValueType valueType, String currentPackageName, int resourceId){
         char atOrQues;
         if(valueType==ValueType.REFERENCE){
+            if(resourceId==0){
+                return "@null";
+            }
             atOrQues='@';
         }else if(valueType==ValueType.ATTRIBUTE){
+            if(resourceId==0){
+                return "@empty";
+            }
             atOrQues='?';
         }else {
             return null;
@@ -494,13 +500,13 @@ public class ValueDecoder {
         result=result * y2;
         return result;
     }
-    private static String getDimensionUnit(int index){
+    static String getDimensionUnit(int index){
         if(index<0 || index>DIMENSION_UNIT_STRS.length){
             index=1;
         }
         return DIMENSION_UNIT_STRS[index];
     }
-    private static int getDimensionIndex(String unit){
+    static int getDimensionIndex(String unit){
         String[] dims=DIMENSION_UNIT_STRS;
         for(int i=0;i<dims.length;i++){
             if(dims[i].equals(unit)){
@@ -610,7 +616,7 @@ public class ValueDecoder {
 
     private static final String[] DIMENSION_UNIT_STRS = new String[] { "px", "dip", "sp", "pt", "in", "mm" };
     private static final float MANTISSA_MULT = 1.0f / (1 << 8);
-    private static final float[] RADIX_MULTS = new float[] {
+    static final float[] RADIX_MULTS = new float[] {
             1.0f * MANTISSA_MULT, 1.0f / (1 << 7) * MANTISSA_MULT,
             1.0f / (1 << 15) * MANTISSA_MULT, 1.0f / (1 << 23) * MANTISSA_MULT };
 }
