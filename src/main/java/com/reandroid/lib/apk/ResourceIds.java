@@ -52,7 +52,7 @@ import java.util.*;
             loadPackageBlock(packageBlock);
         }
     }
-    private void loadPackageBlock(PackageBlock packageBlock){
+    public void loadPackageBlock(PackageBlock packageBlock){
         Collection<EntryGroup> entryGroupList = packageBlock.listEntryGroup();
         String name= packageBlock.getName();
         for(EntryGroup entryGroup:entryGroupList){
@@ -74,9 +74,6 @@ import java.util.*;
     }
     public void writeXml(OutputStream outputStream) throws IOException {
         mTable.writeXml(outputStream);
-    }
-    public void writeXml(Writer writer) throws IOException {
-        mTable.writeXml(writer);
     }
     public void fromXml(File file) throws IOException {
         mTable.fromXml(file);
@@ -212,13 +209,10 @@ import java.util.*;
             writeXml(outputStream);
         }
         public void writeXml(OutputStream outputStream) throws IOException {
-            OutputStreamWriter writer=new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
-            writeXml(writer);
-            outputStream.close();
-        }
-        public void writeXml(Writer writer) throws IOException {
             XMLDocument xmlDocument=toXMLDocument();
-            xmlDocument.write(writer, false);
+            xmlDocument.setIndent(1);
+            xmlDocument.save(outputStream, false);
+            outputStream.close();
         }
         public void fromXml(File file) throws IOException {
             FileInputStream inputStream=new FileInputStream(file);
@@ -672,7 +666,7 @@ import java.util.*;
                         return jsonObject;
                     }
                     public XMLElement toXMLElement(){
-                        XMLElement element=new XMLElement();
+                        XMLElement element=new XMLElement("public");
                         element.setResourceId(getResourceId());
                         element.addAttribute(new XMLAttribute("id", getHexId()));
                         element.addAttribute(new XMLAttribute("type", getTypeName()));
