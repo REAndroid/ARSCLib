@@ -21,14 +21,13 @@ import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
 import com.reandroid.lib.json.JSONArray;
 import com.reandroid.lib.json.JSONObject;
+import com.reandroid.xml.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class ResourceIds {
+ public class ResourceIds {
     private final Table mTable;
     public ResourceIds(Table table){
         this.mTable=table;
@@ -85,8 +84,11 @@ public class ResourceIds {
     public void fromXml(InputStream inputStream) throws IOException {
         mTable.fromXml(inputStream);
     }
-    public void fromXml(Reader reader) throws IOException {
-        mTable.fromXml(reader);
+    public void fromXml(XMLDocument xmlDocument) throws IOException {
+        mTable.fromXml(xmlDocument);
+    }
+    public XMLDocument toXMLDocument(){
+        return mTable.toXMLDocument();
     }
 
     public static class Table implements Comparator<Table.Package>{
@@ -115,9 +117,9 @@ public class ResourceIds {
             }
             this.packageMap.put(pkg.id, pkg);
         }
-        public void add(Package.Type.Entry entry){
+        public Package add(Package.Type.Entry entry){
             if(entry==null){
-                return;
+                return null;
             }
             byte pkgId=entry.getPackageId();
             Package pkg = packageMap.get(pkgId);
@@ -126,6 +128,7 @@ public class ResourceIds {
                 packageMap.put(pkgId, pkg);
             }
             pkg.add(entry);
+            return pkg;
         }
         public Package.Type.Entry getEntry(int resourceId){
             byte packageId = (byte) ((resourceId>>24) & 0xff);
@@ -191,6 +194,15 @@ public class ResourceIds {
                 }
             }
         }
+        public XMLDocument toXMLDocument(){
+            XMLDocument xmlDocument = new XMLDocument();
+            XMLElement documentElement = new XMLElement("resources");
+            for(Package pkg:listPackages()){
+                pkg.toXMLElements(documentElement);
+            }
+            xmlDocument.setDocumentElement(documentElement);
+            return xmlDocument;
+        }
         public void writeXml(File file) throws IOException {
             File dir=file.getParentFile();
             if(dir!=null && !dir.exists()){
@@ -205,35 +217,29 @@ public class ResourceIds {
             outputStream.close();
         }
         public void writeXml(Writer writer) throws IOException {
-            writer.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-            writer.write("\n<resources>");
-            for(Package pkg:listPackages()){
-                pkg.writeXml(writer);
-            }
-            writer.write("\n</resources>");
-            writer.flush();
+            XMLDocument xmlDocument=toXMLDocument();
+            xmlDocument.write(writer, false);
         }
         public void fromXml(File file) throws IOException {
             FileInputStream inputStream=new FileInputStream(file);
             fromXml(inputStream);
-        }
-        public void fromXml(InputStream inputStream) throws IOException {
-            InputStreamReader reader=new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-            fromXml(reader);
             inputStream.close();
         }
-        public void fromXml(Reader reader) throws IOException {
-            BufferedReader bufferedReader;
-            if(reader instanceof BufferedReader){
-                bufferedReader=(BufferedReader) reader;
-            }else {
-                bufferedReader=new BufferedReader(reader);
+        public void fromXml(InputStream inputStream) throws IOException {
+            try {
+                fromXml(XMLDocument.load(inputStream));
+            } catch (XMLException ex) {
+                throw new IOException(ex.getMessage(), ex);
             }
-            String line;
-            while ((line=bufferedReader.readLine())!=null){
-                add(Package.Type.Entry.fromXml(line));
+        }
+        public void fromXml(XMLDocument xmlDocument) {
+            XMLElement documentElement = xmlDocument.getDocumentElement();
+            int count=documentElement.getChildesCount();
+            for(int i=0;i<count;i++){
+                XMLElement element=documentElement.getChildAt(i);
+                Package pkg = add(Package.Type.Entry.fromXml(element));
+                pkg.setPackageName(element.getCommentAt(0));
             }
-            bufferedReader.close();
         }
         @Override
         public int compare(Package pkg1, Package pkg2) {
@@ -347,16 +353,40 @@ public class ResourceIds {
             public int compare(Type t1, Type t2) {
                 return t1.compareTo(t2);
             }
-            public void writeXml(Writer writer) throws IOException {
-                writer.write("\n");
-                if(this.name!=null){
-                    writer.write("     <!-- packageName=\"");
-                    writer.write(this.name);
-                    writer.write("\" -->");
-                }
+            public void toXMLElements(XMLElement documentElement){
+                int count = documentElement.getChildesCount();
                 for(Type type:listTypes()){
-                    type.writeXml(writer);
+                    type.toXMLElements(documentElement);
                 }
+                XMLElement firstElement = documentElement.getChildAt(count);
+                if(firstElement!=null){
+                    XMLComment comment = new XMLComment(
+                            "packageName=\""+this.name+"\"");
+                    firstElement.addComment(comment);
+                }
+            }
+            void setPackageName(XMLComment xmlComment){
+                if(xmlComment==null){
+                    return;
+                }
+                String pkgName = xmlComment.getCommentText();
+                if(pkgName==null || !pkgName.contains("packageName")){
+                    return;
+                }
+                int i = pkgName.indexOf('"');
+                if(i>0){
+                    i++;
+                    pkgName=pkgName.substring(i);
+                }else {
+                    return;
+                }
+                i = pkgName.indexOf('"');
+                if(i>0){
+                    pkgName=pkgName.substring(0, i);
+                }else {
+                    return;
+                }
+                this.name=pkgName.trim();
             }
             public List<Package.Type.Entry> listEntries(){
                 List<Package.Type.Entry> results=new ArrayList<>(countEntries());
@@ -507,10 +537,9 @@ public class ResourceIds {
                     jsonObject.put("entries", jsonArray);
                     return jsonObject;
                 }
-                public void writeXml(Writer writer) throws IOException {
+                public void toXMLElements(XMLElement documentElement){
                     for(Entry entry:listEntries()){
-                        writer.write("\n     ");
-                        entry.writeXml(writer);
+                        documentElement.addChild(entry.toXMLElement());
                     }
                 }
                 public List<Entry> listEntries(){
@@ -642,38 +671,17 @@ public class ResourceIds {
                         jsonObject.put("name", getName());
                         return jsonObject;
                     }
-                    public String toXml(){
-                        StringWriter writer=new StringWriter();
-                        try {
-                            writeXml(writer);
-                            writer.flush();
-                            writer.close();
-                        } catch (IOException ignored) {
-                        }
-                        return writer.toString();
-                    }
-                    public void writeXml(Writer writer) throws IOException {
-                        writer.write("<public");
-                        writer.write(" id=\"");
-                        writer.write(getHexId());
-                        writer.write("\"");
-                        String tn=getTypeName();
-                        if(tn !=null){
-                            writer.append(" type=\"");
-                            writer.append(tn);
-                            writer.append("\"");
-                        }
-                        String n=getName();
-                        if(n!=null){
-                            writer.write(" name=\"");
-                            writer.append(n);
-                            writer.append("\"");
-                        }
-                        writer.append("/>");
+                    public XMLElement toXMLElement(){
+                        XMLElement element=new XMLElement();
+                        element.setResourceId(getResourceId());
+                        element.addAttribute(new XMLAttribute("id", getHexId()));
+                        element.addAttribute(new XMLAttribute("type", getTypeName()));
+                        element.addAttribute(new XMLAttribute("name", getName()));
+                        return element;
                     }
                     @Override
                     public String toString(){
-                        return toXml();
+                        return toXMLElement().toText(false);
                     }
                     public static Entry fromEntryGroup(EntryGroup entryGroup){
                         return new Entry(entryGroup.getResourceId(),
@@ -685,42 +693,12 @@ public class ResourceIds {
                                 jsonObject.optString("type", null),
                                 jsonObject.getString("name"));
                     }
-                    public static Entry fromXml(String xmlElement){
-                        String element=xmlElement;
-                        element=element.replaceAll("[\n\r\t]+", " ");
-                        element=element.trim();
-                        String start="<public ";
-                        if(!element.startsWith(start) || !element.endsWith(">")){
-                            return null;
-                        }
-                        element=element.substring(start.length()).trim();
-                        Pattern pattern=PATTERN;
-                        int id=0;
-                        String type=null;
-                        String name=null;
-                        Matcher matcher=pattern.matcher(element);
-                        while (matcher.find()){
-                            String attr=matcher.group(1).toLowerCase();
-                            String value=matcher.group(2);
-                            element=matcher.group(3);
-                            if(attr.equals("id")){
-                                id=Integer.decode(value);
-                            }else if(attr.equals("name")){
-                                name=value;
-                            }else if(attr.equals("type")){
-                                type=value;
-                            }
-                            matcher= pattern.matcher(element);
-                        }
-                        if(id==0){
-                            throw new DuplicateException("Missing id: "+xmlElement);
-                        }
-                        if(name==null){
-                            throw new DuplicateException("Missing name: "+xmlElement);
-                        }
-                        return new Entry(id, type, name);
+                    public static Entry fromXml(XMLElement element){
+                        return new Entry(
+                                Integer.decode(element.getAttributeValue("id")),
+                                element.getAttributeValue("type"),
+                                element.getAttributeValue("name"));
                     }
-                    private static final Pattern PATTERN=Pattern.compile("^\\s*([^\\s=\"]+)\\s*=\\s*\"([^\"]+)\"(.*)$");
                 }
             }
 
