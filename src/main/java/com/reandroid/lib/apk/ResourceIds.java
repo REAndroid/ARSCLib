@@ -483,7 +483,11 @@ public class ResourceIds {
                         if(Objects.equals(exist.getName(), entry.getName())){
                             return;
                         }
-                        throw new DuplicateException("Duplicate entry exist: "+exist+", entry: "+entry);
+                        /* Developer may have a reason adding duplicate
+                           resource ids , lets ignore rather than throw
+                         */
+                        // throw new DuplicateException("Duplicate entry exist: "+exist+", entry: "+entry);
+                        return;
                     }
                     if(getName() == null){
                         this.name = entry.getTypeName();
