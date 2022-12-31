@@ -145,4 +145,5 @@ public class ApkUtil {
     public static final String NAME_value_type="value_type";
     public static final String NAME_data="data";
     public static final String RES_DIR_NAME="res";
+    public static final String FILE_NAME_PUBLIC_XML ="public.xml";
 }

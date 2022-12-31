@@ -48,12 +48,17 @@ import java.util.*;
     public void decodeTo(File outDir)
             throws IOException, XMLException {
         this.decodedEntries.clear();
+        logMessage("Decoding ...");
         TableEntryStore entryStore=new TableEntryStore();
         entryStore.add(Frameworks.getAndroid());
         TableBlock tableBlock=apkModule.getTableBlock();
         entryStore.add(tableBlock);
         xmlBagDecoder=new XMLBagDecoder(entryStore);
+
+        decodePublicXml(tableBlock, outDir);
+
         decodeAndroidManifest(entryStore, outDir);
+
         logMessage("Decoding resource files ...");
         List<ResFile> resFileList=apkModule.listResFiles();
         for(ResFile resFile:resFileList){
@@ -109,6 +114,24 @@ import java.util.*;
 
         addDecodedEntry(resFile.getEntryBlockList());
     }
+    private void decodePublicXml(TableBlock tableBlock, File outDir)
+             throws IOException{
+        for(PackageBlock packageBlock:tableBlock.listPackages()){
+            decodePublicXml(packageBlock, outDir);
+        }
+    }
+    private void decodePublicXml(PackageBlock packageBlock, File outDir)
+             throws IOException {
+        String packageDirName=getPackageDirName(packageBlock);
+        logMessage("Decoding public.xml: "+packageDirName);
+        File file=new File(outDir, packageDirName);
+        file=new File(file, ApkUtil.RES_DIR_NAME);
+        file=new File(file, "values");
+        file=new File(file, ApkUtil.FILE_NAME_PUBLIC_XML);
+        ResourceIds resourceIds=new ResourceIds();
+        resourceIds.loadPackageBlock(packageBlock);
+        resourceIds.writeXml(file);
+    }
     private void decodeAndroidManifest(EntryStore entryStore, File outDir)
             throws IOException, XMLException {
         if(!apkModule.hasAndroidManifestBlock()){
@@ -152,7 +175,12 @@ import java.util.*;
         }
     }
     private void decodeValues(EntryStore entryStore, File outDir, PackageBlock packageBlock) throws IOException {
+        logMessage("Decoding values: "
+                +packageBlock.getIndex()
+                +"-"+packageBlock.getName());
+
         packageBlock.sortTypes();
+
         for(SpecTypePair specTypePair: packageBlock.listAllSpecTypePair()){
             for(TypeBlock typeBlock:specTypePair.listTypeBlocks()){
                 decodeValues(entryStore, outDir, typeBlock);
