@@ -26,10 +26,77 @@ import com.reandroid.lib.common.EntryStore;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class ValueDecoder {
+ public class ValueDecoder {
 
-    public static String decodeAttributeName(EntryStore store, PackageBlock currentPackage, int resourceId){
+     public static boolean isReference(String txt){
+         if(isNullReference(txt)){
+             return true;
+         }
+         return PATTERN_REFERENCE.matcher(txt).matches();
+     }
+     private static boolean isNullReference(String txt){
+         if("@null".equals(txt)){
+             return true;
+         }
+         if("@empty".equals(txt)){
+             return true;
+         }
+         return false;
+     }
+     public static int encodeFloatOrDimension(String dimensionString){
+         if(dimensionString==null){
+             return 0;
+         }
+         Matcher matcher=PATTERN_DIMEN.matcher(dimensionString);
+         if(!matcher.find()){
+             return 0;
+         }
+         String sign = matcher.group(1);
+         String number = matcher.group(2);
+         String unit = matcher.group(3);
+         float value = Float.parseFloat(number);
+         if("-".equals(sign)){
+             value=-value;
+         }
+         return encodeFloatOrDimension(value, unit);
+     }
+     private static int encodeFloatOrDimension(float val, String unit){
+         if(unit==null||"".equals(unit)){
+             return Float.floatToIntBits(val);
+         }
+         int index=0;
+         if("%".equals(unit)||"%p".equals(unit)){
+             val=val/100.0f;
+             if("%p".equals(unit)){
+                 index=1;
+             }
+         }else {
+             index=ValueDecoder.getDimensionIndex(unit);
+         }
+         int result = 0;
+         int shift = 0;
+         if(val!=0.0f){
+             for(int i=0;i<4;i++){
+                 float fl = val/ValueDecoder.RADIX_MULTS[i];
+                 int fl_int = (int)fl;
+                 int last = (fl_int&0xff);
+                 if(fl_int!=0 && last==0){
+                     shift = i;
+                     result = fl_int;
+                     break;
+                 }
+             }
+         }
+         shift=shift<<4;
+         result= result | shift;
+         result= result | index;
+         return result;
+     }
+
+     public static String decodeAttributeName(EntryStore store, PackageBlock currentPackage, int resourceId){
         EntryGroup entryGroup=searchEntryGroup(store, currentPackage, resourceId);
         if(entryGroup==null){
             return String.format("@0x%08x", resourceId);
@@ -619,4 +686,11 @@ public class ValueDecoder {
     static final float[] RADIX_MULTS = new float[] {
             1.0f * MANTISSA_MULT, 1.0f / (1 << 7) * MANTISSA_MULT,
             1.0f / (1 << 15) * MANTISSA_MULT, 1.0f / (1 << 23) * MANTISSA_MULT };
-}
+
+     private static final Pattern PATTERN_COLOR = Pattern.compile("^#([0-9a-fA-F]{6,8})$");
+     private static final Pattern PATTERN_DIMEN = Pattern.compile("^(-?)([0-9]+\\.[0-9E\\-+]+)([dimnpstx%]{0,3})$");
+     private static final Pattern PATTERN_INTEGER = Pattern.compile("^(-?)([0-9]+)$");
+     private static final Pattern PATTERN_HEX = Pattern.compile("^0x[0-9a-fA-F]+$");
+     private static final Pattern PATTERN_REFERENCE = Pattern.compile("^([?@])(([^\\s:@?/]+:)?)([^\\s:@?/]+)/([^\\s:@?/]+)$");
+
+ }
