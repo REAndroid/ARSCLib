@@ -32,6 +32,9 @@ import java.util.regex.Pattern;
  public class ValueDecoder {
 
      public static boolean isReference(String txt){
+         if(txt==null){
+             return false;
+         }
          if(isNullReference(txt)){
              return true;
          }
@@ -691,6 +694,6 @@ import java.util.regex.Pattern;
      private static final Pattern PATTERN_DIMEN = Pattern.compile("^(-?)([0-9]+\\.[0-9E\\-+]+)([dimnpstx%]{0,3})$");
      private static final Pattern PATTERN_INTEGER = Pattern.compile("^(-?)([0-9]+)$");
      private static final Pattern PATTERN_HEX = Pattern.compile("^0x[0-9a-fA-F]+$");
-     private static final Pattern PATTERN_REFERENCE = Pattern.compile("^([?@])(([^\\s:@?/]+:)?)([^\\s:@?/]+)/([^\\s:@?/]+)$");
+     public static final Pattern PATTERN_REFERENCE = Pattern.compile("^([?@])(([^\\s:@?/]+:)?)([^\\s:@?/]+)/([^\\s:@?/]+)$");
 
  }
