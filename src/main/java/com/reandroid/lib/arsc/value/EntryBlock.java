@@ -278,6 +278,10 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         mSpecReference.set(ref);
         updateSpecRef(old, ref);
     }
+    public void setSpecReference(SpecString specString){
+        removeSpecRef();
+        mSpecReference.set(specString.getIndex());
+    }
     public BaseResValue getResValue(){
         return mResValue;
     }
@@ -618,6 +622,21 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         SpecString specStringNew=specStringPool.get(newNef);
         if(specStringNew!=null){
             specStringNew.addReference(getSpecReferenceBlock());
+        }
+    }
+    private void removeSpecRef(){
+        TypeBlock typeBlock=getTypeBlock();
+        if(typeBlock==null){
+            return;
+        }
+        PackageBlock packageBlock=typeBlock.getPackageBlock();
+        if(packageBlock==null){
+            return;
+        }
+        SpecStringPool specStringPool=packageBlock.getSpecStringPool();
+        SpecString specString=specStringPool.get(getSpecReference());
+        if(specString!=null){
+            specString.removeReference(getSpecReferenceBlock());
         }
     }
     private void updatePackage(){
