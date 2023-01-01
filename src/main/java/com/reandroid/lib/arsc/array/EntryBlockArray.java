@@ -36,20 +36,25 @@ public class EntryBlockArray extends OffsetBlockArray<EntryBlock> implements JSO
         return !iterator(true).hasNext();
     }
     public void setEntry(short entryId, EntryBlock entryBlock){
-        setItem(entryId, entryBlock);
+        setItem(0xffff & entryId, entryBlock);
     }
     public EntryBlock getOrCreate(short entryId){
-        EntryBlock entryBlock=get(entryId);
+        int id = 0xffff & entryId;
+        EntryBlock entryBlock=get(id);
         if(entryBlock!=null){
             return entryBlock;
         }
-        int count=entryId+1;
+        int count=id+1;
         ensureSize(count);
         refreshCount();
-        return get(entryId);
+        return get(id);
+    }
+    public EntryBlock get(short entryId){
+        int index = 0xffff & entryId;
+        return super.get(index);
     }
     public EntryBlock getEntry(short entryId){
-        return get(entryId);
+        return get(0xffff & entryId);
     }
     @Override
     public EntryBlock newInstance() {
