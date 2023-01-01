@@ -44,6 +44,20 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
     public EntryBlock() {
         super();
     }
+
+    public ResValueInt setValueAsRaw(ValueType valueType, int rawValue){
+        ResValueInt resValueInt;
+        BaseResValue res = getResValue();
+        if(res instanceof ResValueInt){
+            resValueInt=(ResValueInt) res;
+        }else {
+            resValueInt=new ResValueInt();
+            setResValue(resValueInt);
+        }
+        resValueInt.setType(valueType);
+        resValueInt.setData(rawValue);
+        return resValueInt;
+    }
     public ResValueInt setValueAsBoolean(boolean val){
         ResValueInt resValueInt;
         BaseResValue res = getResValue();
