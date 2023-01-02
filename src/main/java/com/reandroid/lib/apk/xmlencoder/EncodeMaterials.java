@@ -107,6 +107,29 @@
          }
          return resolveFrameworkResourceId(packageName, type, name);
      }
+
+     public EntryBlock resolveEntryReference(String refString){
+         if("@null".equals(refString)){
+             return null;
+         }
+         Matcher matcher = ValueDecoder.PATTERN_REFERENCE.matcher(refString);
+         if(!matcher.find()){
+             return null;
+         }
+         String prefix=matcher.group(1);
+         String packageName = matcher.group(2);
+         if(packageName!=null && packageName.endsWith(":")){
+             packageName=packageName.substring(0, packageName.length()-1);
+         }
+         String type = matcher.group(4);
+         String name = matcher.group(5);
+         if(EncodeUtil.isEmpty(packageName)
+                 || packageName.equals(getCurrentPackageName())
+                 || !isFrameworkPackageName(packageName)){
+             return getLocalEntryBlock(type, name);
+         }
+         return getFrameworkEntry(packageName, type, name);
+     }
      public int resolveLocalResourceId(String type, String name){
          ResourceIds.Table.Package.Type.Entry entry =
                  this.packageIds.getEntry(type, name);

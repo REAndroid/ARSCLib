@@ -61,5 +61,9 @@ public class FilePathEncoder {
 
         entryBlock.setValueAsString(EncodeUtil.getEntryPathFromResFile(resFile));
         entryBlock.setSpecReference(materials.getSpecString(name));
+        if(resFile.getName().endsWith(".xml")){
+            XMLFileEncoder fileEncoder=new XMLFileEncoder(materials);
+            fileEncoder.encode(resFile);
+        }
     }
 }
