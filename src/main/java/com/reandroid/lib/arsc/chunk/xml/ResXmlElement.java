@@ -196,6 +196,10 @@ import java.util.*;
             name=tag.substring(i);
         }
         start.setName(name);
+        ResXmlStartNamespace ns = getStartNamespaceByPrefix(prefix);
+        if(ns!=null){
+            start.setNamespaceReference(ns.getUriReference());
+        }
     }
     public String getTagName(){
         ResXmlStartElement startElement=getStartElement();
@@ -363,6 +367,21 @@ import java.util.*;
         }
         return null;
     }
+     public ResXmlStartNamespace getStartNamespaceByPrefix(String prefix){
+         if(prefix==null){
+             return null;
+         }
+         for(ResXmlStartNamespace ns:mStartNamespaceList.getChildes()){
+             if(prefix.equals(ns.getPrefix())){
+                 return ns;
+             }
+         }
+         ResXmlElement xmlElement=getParentResXmlElement();
+         if(xmlElement!=null){
+             return xmlElement.getStartNamespaceByPrefix(prefix);
+         }
+         return null;
+     }
     public List<ResXmlStartNamespace> getStartNamespaceList(){
         return mStartNamespaceList.getChildes();
     }
