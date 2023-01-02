@@ -23,7 +23,7 @@ import com.reandroid.xml.XMLElement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class XMLValuesEncoderString extends XMLValuesEncoder{
+class XMLValuesEncoderString extends XMLValuesEncoder{
     XMLValuesEncoderString(EncodeMaterials materials) {
         super(materials);
     }

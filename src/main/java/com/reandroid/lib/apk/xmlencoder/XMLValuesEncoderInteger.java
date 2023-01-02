@@ -19,7 +19,7 @@ import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ValueType;
 
-public class XMLValuesEncoderInteger extends XMLValuesEncoder{
+class XMLValuesEncoderInteger extends XMLValuesEncoder{
     XMLValuesEncoderInteger(EncodeMaterials materials) {
         super(materials);
     }

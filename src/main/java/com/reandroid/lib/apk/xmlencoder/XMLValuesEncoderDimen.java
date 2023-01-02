@@ -18,7 +18,7 @@ package com.reandroid.lib.apk.xmlencoder;
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.value.EntryBlock;
 
-public class XMLValuesEncoderDimen extends XMLValuesEncoder{
+class XMLValuesEncoderDimen extends XMLValuesEncoder{
     XMLValuesEncoderDimen(EncodeMaterials materials) {
         super(materials);
     }

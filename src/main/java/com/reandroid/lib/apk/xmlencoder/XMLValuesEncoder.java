@@ -25,7 +25,7 @@ import com.reandroid.lib.arsc.value.ValueType;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 
-public class XMLValuesEncoder {
+class XMLValuesEncoder {
     private final EncodeMaterials materials;
     XMLValuesEncoder(EncodeMaterials materials){
         this.materials=materials;

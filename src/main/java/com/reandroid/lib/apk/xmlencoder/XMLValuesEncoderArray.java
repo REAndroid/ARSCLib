@@ -22,7 +22,7 @@ import com.reandroid.lib.arsc.value.ResValueBagItem;
 import com.reandroid.lib.arsc.value.ValueType;
 import com.reandroid.xml.XMLElement;
 
-public class XMLValuesEncoderArray extends XMLValuesEncoderBag{
+class XMLValuesEncoderArray extends XMLValuesEncoderBag{
     XMLValuesEncoderArray(EncodeMaterials materials) {
         super(materials);
     }

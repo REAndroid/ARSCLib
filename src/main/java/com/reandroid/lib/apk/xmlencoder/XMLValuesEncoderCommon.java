@@ -15,14 +15,24 @@
   */
 package com.reandroid.lib.apk.xmlencoder;
 
+import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.value.EntryBlock;
 
-public class XMLValuesEncoderCommon extends XMLValuesEncoder{
+class XMLValuesEncoderCommon extends XMLValuesEncoder{
     XMLValuesEncoderCommon(EncodeMaterials materials) {
         super(materials);
     }
     @Override
     void encodeStringValue(EntryBlock entryBlock, String value){
-        entryBlock.setValueAsString(value);
+        if(ValueDecoder.isReference(value)){
+            entryBlock.setValueAsReference(getMaterials().resolveReference(value));
+        }else {
+            ValueDecoder.EncodeResult encodeResult=ValueDecoder.encodeGuessAny(value);
+            if(encodeResult!=null){
+                entryBlock.setValueAsRaw(encodeResult.valueType, encodeResult.value);
+            }else {
+                entryBlock.setValueAsString(value);
+            }
+        }
     }
 }

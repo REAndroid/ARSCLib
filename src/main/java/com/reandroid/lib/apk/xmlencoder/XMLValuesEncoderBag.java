@@ -19,7 +19,7 @@ import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResValueBag;
 import com.reandroid.xml.XMLElement;
 
-public class XMLValuesEncoderBag extends XMLValuesEncoder{
+class XMLValuesEncoderBag extends XMLValuesEncoder{
     XMLValuesEncoderBag(EncodeMaterials materials) {
         super(materials);
     }

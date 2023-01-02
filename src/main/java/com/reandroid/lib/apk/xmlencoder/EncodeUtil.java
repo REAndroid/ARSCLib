@@ -16,10 +16,36 @@
 package com.reandroid.lib.apk.xmlencoder;
 
  import java.io.File;
+ import java.util.Comparator;
+ import java.util.List;
  import java.util.regex.Matcher;
  import java.util.regex.Pattern;
 
  public class EncodeUtil {
+     public static void sortValuesXml(List<File> fileList){
+         Comparator<File> cmp=new Comparator<File>() {
+             @Override
+             public int compare(File f1, File f2) {
+                 String n1=getValuesXmlCompare(f1);
+                 String n2=getValuesXmlCompare(f2);
+                 return n1.compareTo(n2);
+             }
+         };
+         fileList.sort(cmp);
+     }
+     private static String getValuesXmlCompare(File file){
+         String name=file.getName().toLowerCase();
+         if(name.equals("public.xml")){
+             return "0";
+         }
+         if(name.equals("ids.xml")){
+             return "1";
+         }
+         if(name.contains("attr")){
+             return "2";
+         }
+         return "3 "+name;
+     }
      public static boolean isEmpty(String text){
          if(text==null){
              return true;

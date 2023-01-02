@@ -23,7 +23,7 @@ import com.reandroid.lib.arsc.value.ValueType;
 import com.reandroid.lib.arsc.value.plurals.PluralsQuantity;
 import com.reandroid.xml.XMLElement;
 
-public class XMLValuesEncoderPlurals extends XMLValuesEncoderBag{
+class XMLValuesEncoderPlurals extends XMLValuesEncoderBag{
     XMLValuesEncoderPlurals(EncodeMaterials materials) {
         super(materials);
     }

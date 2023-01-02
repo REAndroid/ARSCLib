@@ -26,7 +26,7 @@ import com.reandroid.lib.arsc.value.attribute.AttributeValueType;
 import com.reandroid.xml.XMLAttribute;
 import com.reandroid.xml.XMLElement;
 
-public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
+class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
     XMLValuesEncoderAttr(EncodeMaterials materials) {
         super(materials);
     }
