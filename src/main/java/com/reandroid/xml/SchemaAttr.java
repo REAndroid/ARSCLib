@@ -106,12 +106,19 @@ public class SchemaAttr extends XMLAttribute {
         builder.append(prf);
         return builder.toString();
     }
-    static boolean looksSchema(String name, String value){
+    public static boolean looksSchema(String name, String value){
         if(value==null || !name.startsWith("xmlns:")){
             return false;
         }
         Matcher matcher=PATTERN_URI.matcher(value);
         return matcher.find();
+    }
+    public static String getPrefix(String xmlnsName){
+        String start="xmlns:";
+        if(!xmlnsName.startsWith("xmlns:")){
+            return null;
+        }
+        return xmlnsName.substring(start.length());
     }
     private static final Pattern PATTERN_URI=Pattern.compile("^\\s*(?<A>https?://[^:\\s]+)(:(?<B>([^:/\\s]+)))?\\s*$");
 }
