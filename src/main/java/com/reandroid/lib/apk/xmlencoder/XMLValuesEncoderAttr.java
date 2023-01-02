@@ -42,9 +42,6 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
     void encodeChildes(XMLElement parentElement, ResValueBag resValueBag){
         encodeAttributes(parentElement, resValueBag);
         encodeEnumOrFlag(parentElement, resValueBag);
-        AttributeBag attributeBag=AttributeBag.create(resValueBag);
-        getMaterials().logMessage(attributeBag.toString());
-        getMaterials().logMessage(attributeBag.toString());
     }
     private void encodeAttributes(XMLElement parentElement, ResValueBag resValueBag){
         int count=parentElement.getAttributeCount();

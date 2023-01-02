@@ -61,6 +61,41 @@ package com.reandroid.lib.apk.xmlencoder;
          }
          return "";
      }
+     public static String getEntryPathFromResFile(File resFile){
+         File typeDir=resFile.getParentFile();
+         File resDir=typeDir.getParentFile();
+         return resDir.getName()
+                 +"/"+typeDir.getName()
+                 +"/"+resFile.getName();
+     }
+     public static String getEntryNameFromResFile(File resFile){
+         String name=resFile.getName();
+         String ninePatch=".9.png";
+         if(name.endsWith(ninePatch)){
+             return name.substring(0, name.length()-ninePatch.length());
+         }
+         int i=name.lastIndexOf('.');
+         if(i>0){
+             name = name.substring(0, i);
+         }
+         return name;
+     }
+     public static String getQualifiersFromResFile(File resFile){
+         String name=resFile.getParentFile().getName();
+         int i=name.indexOf('-');
+         if(i>0){
+             return name.substring(i);
+         }
+         return "";
+     }
+     public static String getTypeNameFromResFile(File resFile){
+         String name=resFile.getParentFile().getName();
+         int i=name.indexOf('-');
+         if(i>0){
+             name=name.substring(0, i);
+         }
+         return name;
+     }
      public static String getTypeNameFromValuesXml(File valuesXml){
          String name=valuesXml.getName();
          name=name.substring(0, name.length()-4);

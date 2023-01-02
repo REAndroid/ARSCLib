@@ -35,10 +35,10 @@
  public class RESEncoder {
      private APKLogger apkLogger;
      private final TableBlock tableBlock;
-     private final Set<File> parsedFiles;
+     private final Set<File> parsedValueFiles;
      public RESEncoder(){
          this.tableBlock = new TableBlock();
-         this.parsedFiles = new HashSet<>();
+         this.parsedValueFiles = new HashSet<>();
      }
      public TableBlock getTableBlock(){
          return tableBlock;
@@ -54,6 +54,11 @@
              addParsedFiles(pubXmlFile);
              File resDir=toResDirectory(pubXmlFile);
              encodeResDir(encodeMaterials, resDir);
+             FilePathEncoder filePathEncoder = new FilePathEncoder(encodeMaterials);
+             filePathEncoder.encodeResDir(resDir);
+             PackageBlock packageBlock = encodeMaterials.getCurrentPackage();
+             packageBlock.sortTypes();
+             packageBlock.refresh();
          }
          tableBlock.refresh();
      }
@@ -144,10 +149,10 @@
          return results;
      }
      private boolean isAlreadyParsed(File file){
-         return parsedFiles.contains(file);
+         return parsedValueFiles.contains(file);
      }
      private void addParsedFiles(File file){
-         parsedFiles.add(file);
+         parsedValueFiles.add(file);
      }
      public void setAPKLogger(APKLogger logger) {
          this.apkLogger = logger;

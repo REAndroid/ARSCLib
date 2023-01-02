@@ -58,7 +58,7 @@ class ValuesEncoder {
         }
         String simpleName = valuesXmlFile.getParentFile().getName()
                 +File.separator+valuesXmlFile.getName();
-        materials.logMessage("Encoding: "+simpleName);
+        materials.logVerbose("Encoding: "+simpleName);
 
         String type = EncodeUtil.getTypeNameFromValuesXml(valuesXmlFile);
         String qualifiers = EncodeUtil.getQualifiersFromValuesXml(valuesXmlFile);
