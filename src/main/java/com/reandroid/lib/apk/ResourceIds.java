@@ -24,7 +24,6 @@ import com.reandroid.lib.json.JSONObject;
 import com.reandroid.xml.*;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
  public class ResourceIds {
@@ -248,6 +247,21 @@ import java.util.*;
                 this.id = id;
                 this.typeMap = new HashMap<>();
             }
+            public Type.Entry getEntry(String typeName, String name){
+                Type type=getType(typeName);
+                if(type==null){
+                    return null;
+                }
+                return type.getEntry(name);
+            }
+            private Type getType(String typeName){
+                for(Type type:typeMap.values()){
+                    if(type.getName().equals(typeName)){
+                        return type;
+                    }
+                }
+                return null;
+            }
             public int getIdInt(){
                 return 0xff & id;
             }
@@ -442,6 +456,14 @@ import java.util.*;
                 public Type(byte id){
                     this.id = id;
                     this.entryMap = new HashMap<>();
+                }
+                public Entry getEntry(String entryName){
+                    for(Entry entry:entryMap.values()){
+                        if(entry.getName().equals(entryName)){
+                            return entry;
+                        }
+                    }
+                    return null;
                 }
                 public int getIdInt(){
                     return 0xff & id;

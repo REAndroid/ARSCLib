@@ -48,7 +48,7 @@ public enum PluralsQuantity {
         if(name==null){
             return null;
         }
-        name=name.toUpperCase();
+        name=name.trim().toUpperCase();
         PluralsQuantity[] all=values();
         for(PluralsQuantity pq:all){
             if(name.equals(pq.name())){

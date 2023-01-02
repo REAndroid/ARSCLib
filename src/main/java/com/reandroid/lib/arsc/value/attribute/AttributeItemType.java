@@ -45,6 +45,9 @@ public enum AttributeItemType {
             return null;
         }
         name=name.toUpperCase();
+        if(name.equals("FORMATS")){
+            return FORMAT;
+        }
         for(AttributeItemType bagType:values()){
             if(name.equals(bagType.name())){
                 return bagType;

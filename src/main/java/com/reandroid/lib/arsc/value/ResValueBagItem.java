@@ -171,7 +171,7 @@ public class ResValueBagItem extends BaseResValueItem{
             return;
         }
         beforeDataValueChanged();
-        setShort(OFFSET_DATA+2, val);
+        setShort(OFFSET_DATA, val);
         afterDataValueChanged();
     }
     @Override

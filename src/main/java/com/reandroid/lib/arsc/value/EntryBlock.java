@@ -285,6 +285,9 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         return mSpecReference.get();
     }
     public void setSpecReference(int ref){
+        if(mSpecReference==null){
+            return;
+        }
         int old=mSpecReference.get();
         if(ref==old){
             return;
@@ -294,7 +297,9 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
     }
     public void setSpecReference(SpecString specString){
         removeSpecRef();
-        mSpecReference.set(specString.getIndex());
+        if(mSpecReference!=null){
+            mSpecReference.set(specString.getIndex());
+        }
     }
     public BaseResValue getResValue(){
         return mResValue;
@@ -639,6 +644,9 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         }
     }
     private void removeSpecRef(){
+        if(mSpecReference==null){
+            return;
+        }
         TypeBlock typeBlock=getTypeBlock();
         if(typeBlock==null){
             return;

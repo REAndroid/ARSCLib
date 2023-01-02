@@ -31,6 +31,49 @@ import java.util.regex.Pattern;
 
  public class ValueDecoder {
 
+     public static EncodeResult encodeGuessAny(String txt){
+         if(txt==null){
+             return null;
+         }
+         EncodeResult result=encodeColor(txt);
+         if(result!=null){
+             return result;
+         }
+         result=encodeDimensionOrFloat(txt);
+         if(result!=null){
+             return result;
+         }
+         result=encodeHexOrInt(txt);
+         if(result!=null){
+             return result;
+         }
+         return encodeBoolean(txt);
+     }
+     public static EncodeResult encodeBoolean(String txt){
+         if(txt==null){
+             return null;
+         }
+         txt=txt.trim().toLowerCase();
+         if(txt.equals("true")){
+             return new EncodeResult(ValueType.INT_BOOLEAN, 0xffffffff);
+         }
+         if(txt.equals("false")){
+             return new EncodeResult(ValueType.INT_BOOLEAN, 0);
+         }
+         return null;
+     }
+     public static boolean isInteger(String txt){
+         if(txt==null){
+             return false;
+         }
+         return PATTERN_INTEGER.matcher(txt).matches();
+     }
+     public static boolean isHex(String txt){
+         if(txt==null){
+             return false;
+         }
+         return PATTERN_HEX.matcher(txt).matches();
+     }
      public static boolean isReference(String txt){
          if(txt==null){
              return false;
@@ -49,33 +92,94 @@ import java.util.regex.Pattern;
          }
          return false;
      }
-     public static int encodeFloatOrDimension(String dimensionString){
-         if(dimensionString==null){
-             return 0;
+     public static EncodeResult encodeColor(String value){
+         if(value==null){
+             return null;
          }
-         Matcher matcher=PATTERN_DIMEN.matcher(dimensionString);
+         Matcher matcher = PATTERN_COLOR.matcher(value);
          if(!matcher.find()){
-             return 0;
+             return null;
+         }
+         value=matcher.group(1);
+         ValueType valueType;
+         if(value.length()==6){
+             valueType=ValueType.INT_COLOR_RGB8;
+         }else {
+             valueType=ValueType.INT_COLOR_ARGB8;
+         }
+         return new EncodeResult(valueType, parseHex(value));
+     }
+     public static EncodeResult encodeHexOrInt(String numString){
+         if(numString==null){
+             return null;
+         }
+         if(isHex(numString)){
+             return new EncodeResult(ValueType.INT_HEX, parseHex(numString));
+         }
+         if(isInteger(numString)){
+             return new EncodeResult(ValueType.INT_DEC, parseHex(numString));
+         }
+         return null;
+     }
+     public static int parseHex(String hexString){
+         boolean negative=false;
+         hexString=hexString.trim().toLowerCase();
+         if(hexString.startsWith("-")){
+             negative=true;
+             hexString=hexString.substring(1);
+         }
+         if(!hexString.startsWith("0x")){
+             hexString="0x"+hexString;
+         }
+         long l=Long.decode(hexString);
+         if(negative){
+             l=-l;
+         }
+         return (int) l;
+     }
+     public static int parseInteger(String intString){
+         intString=intString.trim();
+         boolean negative=false;
+         if(intString.startsWith("-")){
+             negative=true;
+             intString=intString.substring(1);
+         }
+         long l=Long.parseLong(intString);
+         if(negative){
+             l=-l;
+         }
+         return (int) l;
+     }
+     public static EncodeResult encodeDimensionOrFloat(String value){
+         if(value==null){
+             return null;
+         }
+         Matcher matcher=PATTERN_DIMEN.matcher(value);
+         if(!matcher.find()){
+             return null;
          }
          String sign = matcher.group(1);
          String number = matcher.group(2);
          String unit = matcher.group(3);
-         float value = Float.parseFloat(number);
+         float fraction = Float.parseFloat(number);
          if("-".equals(sign)){
-             value=-value;
+             fraction=-fraction;
          }
-         return encodeFloatOrDimension(value, unit);
+         return encodeDimensionOrFloat(fraction, unit);
      }
-     private static int encodeFloatOrDimension(float val, String unit){
+     private static EncodeResult encodeDimensionOrFloat(float val, String unit){
          if(unit==null||"".equals(unit)){
-             return Float.floatToIntBits(val);
+             return new EncodeResult(ValueType.FLOAT,
+                     Float.floatToIntBits(val));
          }
+         ValueType valueType = ValueType.DIMENSION;
          int index=0;
          if("%".equals(unit)||"%p".equals(unit)){
              val=val/100.0f;
              if("%p".equals(unit)){
                  index=1;
              }
+             valueType = ValueType.FRACTION;
          }else {
              index=ValueDecoder.getDimensionIndex(unit);
          }
@@ -93,10 +197,10 @@ import java.util.regex.Pattern;
                  }
              }
          }
-         shift=shift<<4;
-         result= result | shift;
-         result= result | index;
-         return result;
+         shift = shift<<4;
+         result = result | shift;
+         result = result | index;
+         return new EncodeResult(valueType, result);
      }
 
      public static String decodeAttributeName(EntryStore store, PackageBlock currentPackage, int resourceId){
@@ -252,7 +356,7 @@ import java.util.regex.Pattern;
             // Should not happen the string could be in ResXmlBlock, but if you are lazy here it goes
             return decodeString(entryStore, currentPackageId, rawVal);
         }
-        if(valueType==ValueType.FIRST_INT||valueType==ValueType.INT_HEX){
+        if(valueType==ValueType.FIRST_INT||valueType==ValueType.INT_DEC||valueType==ValueType.INT_HEX){
             result=decodeAttribute(entryStore, nameResourceId, rawVal);
             if(result!=null){
                 return result;
@@ -683,6 +787,18 @@ import java.util.regex.Pattern;
         str=str.trim();
         return str.length()==0;
     }
+    public static class EncodeResult{
+        public final ValueType valueType;
+        public final int value;
+        public EncodeResult(ValueType valueType, int value){
+            this.valueType=valueType;
+            this.value=value;
+        }
+        @Override
+        public String toString(){
+            return valueType+": "+String.format("0x%08x", value);
+        }
+    }
 
     private static final String[] DIMENSION_UNIT_STRS = new String[] { "px", "dip", "sp", "pt", "in", "mm" };
     private static final float MANTISSA_MULT = 1.0f / (1 << 8);
@@ -690,8 +806,8 @@ import java.util.regex.Pattern;
             1.0f * MANTISSA_MULT, 1.0f / (1 << 7) * MANTISSA_MULT,
             1.0f / (1 << 15) * MANTISSA_MULT, 1.0f / (1 << 23) * MANTISSA_MULT };
 
-     private static final Pattern PATTERN_COLOR = Pattern.compile("^#([0-9a-fA-F]{6,8})$");
-     private static final Pattern PATTERN_DIMEN = Pattern.compile("^(-?)([0-9]+\\.[0-9E\\-+]+)([dimnpstx%]{0,3})$");
+     public static final Pattern PATTERN_COLOR = Pattern.compile("^#([0-9a-fA-F]{6,8})$");
+     public static final Pattern PATTERN_DIMEN = Pattern.compile("^(-?)([0-9]+\\.[0-9E\\-+]+)([dimnpstx%]{0,3})$");
      private static final Pattern PATTERN_INTEGER = Pattern.compile("^(-?)([0-9]+)$");
      private static final Pattern PATTERN_HEX = Pattern.compile("^0x[0-9a-fA-F]+$");
      public static final Pattern PATTERN_REFERENCE = Pattern.compile("^([?@])(([^\\s:@?/]+:)?)([^\\s:@?/]+)/([^\\s:@?/]+)$");

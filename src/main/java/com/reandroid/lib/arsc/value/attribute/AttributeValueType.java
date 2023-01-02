@@ -15,10 +15,11 @@
   */
 package com.reandroid.lib.arsc.value.attribute;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.reandroid.lib.arsc.value.ValueType;
 
-public enum AttributeValueType {
+import java.util.*;
+
+ public enum AttributeValueType {
     REFERENCE((byte) 0x01),
     STRING((byte) 0x02),
     INTEGER((byte) 0x04),
@@ -128,5 +129,50 @@ public enum AttributeValueType {
             }
         }
         return null;
+    }
+    public static Set<ValueType> toValueTypes(AttributeValueType[] types){
+        Set<ValueType> results=new HashSet<>();
+        if(types==null){
+            return results;
+        }
+        for(AttributeValueType type:types){
+            if(type==ANY){
+                return new HashSet<>(Arrays.asList(ValueType.values()));
+            }
+            switch (type){
+                case REFERENCE:
+                    results.add(ValueType.REFERENCE);
+                    results.add(ValueType.ATTRIBUTE);
+                    results.add(ValueType.DYNAMIC_REFERENCE);
+                    results.add(ValueType.DYNAMIC_ATTRIBUTE);
+                    break;
+                case COLOR:
+                    results.add(ValueType.INT_COLOR_ARGB8);
+                    results.add(ValueType.INT_COLOR_ARGB4);
+                    results.add(ValueType.INT_COLOR_RGB8);
+                    results.add(ValueType.INT_COLOR_RGB4);
+                    break;
+                case STRING:
+                    results.add(ValueType.STRING);
+                    break;
+                case BOOL:
+                    results.add(ValueType.INT_BOOLEAN);
+                    break;
+                case FLOAT:
+                case FRACTION:
+                    results.add(ValueType.FLOAT);
+                    results.add(ValueType.FRACTION);
+                    break;
+                case DIMENSION:
+                    results.add(ValueType.FRACTION);
+                    results.add(ValueType.DIMENSION);
+                    break;
+                case INTEGER:
+                    results.add(ValueType.INT_DEC);
+                    results.add(ValueType.INT_HEX);
+                    break;
+            }
+        }
+        return results;
     }
 }

@@ -15,8 +15,10 @@
   */
 package com.reandroid.lib.arsc.value.attribute;
 
+import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResValueBag;
+import com.reandroid.lib.arsc.value.ValueType;
 import com.reandroid.lib.common.EntryStore;
 
 
@@ -25,12 +27,44 @@ public class AttributeBag {
     public AttributeBag(AttributeBagItem[] bagItems){
         this.mBagItems=bagItems;
     }
+    public ValueDecoder.EncodeResult encodeName(String valueString){
+        if(valueString==null){
+            return null;
+        }
+        int value=0;
+        boolean foundOnce=false;
+        String[] names=valueString.split("[\\s|]+");
+        for(String name:names){
+            AttributeBagItem item=searchByName(name);
+            if(item==null){
+                continue;
+            }
+            value|=item.getBagItem().getData();
+            foundOnce=true;
+        }
+        if(!foundOnce){
+            return null;
+        }
+        return new ValueDecoder.EncodeResult(ValueType.INT_HEX, value);
+    }
     public String decodeAttributeValue(EntryStore entryStore, int attrValue){
         AttributeBagItem[] bagItems=searchValue(attrValue);
         return AttributeBagItem.toString(entryStore, bagItems);
     }
     public String decodeValueType(){
         return AttributeValueType.toString(getValueTypes());
+    }
+    public AttributeBagItem searchByName(String entryName){
+        AttributeBagItem[] bagItems= getBagItems();
+        for(AttributeBagItem item:bagItems){
+            if(item.isType()){
+                continue;
+            }
+            if(entryName.equals(item.getNameOrHex())){
+                return item;
+            }
+        }
+        return null;
     }
     public AttributeBagItem[] searchValue(int attrValue){
         if(isFlag()){

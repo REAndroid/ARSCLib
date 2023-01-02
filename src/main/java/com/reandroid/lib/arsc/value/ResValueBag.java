@@ -80,6 +80,7 @@ public class ResValueBag extends BaseResValue {
             count=0;
         }
         mCount.set(count);
+        mResValueBagItemArray.setChildesCount(count);
     }
 
     @Override
@@ -121,7 +122,7 @@ public class ResValueBag extends BaseResValue {
     }
 
     private void refreshCount(){
-        setCount(getResValueBagItemArray().childesCount());
+        mCount.set(getResValueBagItemArray().childesCount());
     }
     @Override
     protected int onWriteBytes(OutputStream writer) throws IOException {

@@ -322,10 +322,6 @@ import java.util.Set;
     }
     public void setValueAsInteger(int val){
         setValueType(ValueType.INT_DEC);
-        ResXmlAttributeArray array=getParentResXmlAttributeArray();
-        if(array!=null && array.getFirstIntAttribute()==this){
-            setValueType(ValueType.FIRST_INT);
-        }
         setRawValue(val);
         setValueStringReference(-1);
     }
