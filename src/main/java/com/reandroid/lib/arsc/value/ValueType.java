@@ -50,6 +50,9 @@ public enum ValueType {
         ValueType[] all=values();
         for(ValueType vt:all){
             if(vt.mByte==b){
+                if(vt==FIRST_INT){
+                    return INT_DEC;
+                }
                 return vt;
             }
         }
@@ -63,6 +66,9 @@ public enum ValueType {
         ValueType[] all=values();
         for(ValueType vt:all){
             if(name.equals(vt.name())){
+                if(vt==FIRST_INT){
+                    return INT_DEC;
+                }
                 return vt;
             }
         }
