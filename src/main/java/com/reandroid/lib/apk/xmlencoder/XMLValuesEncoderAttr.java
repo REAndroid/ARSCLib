@@ -42,6 +42,8 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
     void encodeChildes(XMLElement parentElement, ResValueBag resValueBag){
         encodeAttributes(parentElement, resValueBag);
         encodeEnumOrFlag(parentElement, resValueBag);
+        // TODO: re-check if this is necessary
+        resValueBag.getEntryBlock().setEntryTypeShared(true);
     }
     private void encodeAttributes(XMLElement parentElement, ResValueBag resValueBag){
         int count=parentElement.getAttributeCount();
@@ -49,16 +51,17 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
 
         int bagIndex=0;
 
-        ResValueBagItem bagItem = bagItemArray.get(bagIndex);
+        ResValueBagItem formatItem = bagItemArray.get(bagIndex);
 
-        bagItem.setIdHigh((short) 0x0100);
-        bagItem.setIdLow(AttributeItemType.FORMAT.getValue());
-        bagItem.setType(ValueType.INT_DEC);
+        formatItem.setIdHigh((short) 0x0100);
+        formatItem.setIdLow(AttributeItemType.FORMAT.getValue());
+        formatItem.setType(ValueType.INT_DEC);
+        formatItem.setDataHigh(getChildTypes(parentElement));
 
         AttributeValueType[] valueTypes = AttributeValueType
                 .valuesOf(parentElement.getAttributeValue("formats"));
 
-        bagItem.setDataLow((short) (0xffff &
+        formatItem.setDataLow((short) (0xffff &
                 AttributeValueType.getByte(valueTypes)));
 
         bagIndex++;
@@ -74,7 +77,7 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
                 throw new EncodeException("Unknown attribute: '"+name
                         +"', on attribute: "+attribute.toString());
             }
-            bagItem = bagItemArray.get(bagIndex);
+            ResValueBagItem bagItem = bagItemArray.get(bagIndex);
             bagItem.setIdHigh((short) 0x0100);
             bagItem.setIdLow(itemType.getValue());
             bagItem.setType(ValueType.INT_DEC);
@@ -113,5 +116,18 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
             bagItem.setType(encodeResult.valueType);
             bagItem.setData(encodeResult.value);
         }
+    }
+    private short getChildTypes(XMLElement parent){
+        if(parent.getChildesCount()==0){
+            return 0;
+        }
+        String tagName=parent.getChildAt(0).getTagName();
+        if("enum".equals(tagName)){
+            return AttributeBag.TYPE_ENUM;
+        }
+        if("flag".equals(tagName)){
+            return AttributeBag.TYPE_FLAG;
+        }
+        return 0;
     }
 }
