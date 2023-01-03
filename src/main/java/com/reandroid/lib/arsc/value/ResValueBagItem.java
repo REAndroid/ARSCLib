@@ -82,6 +82,10 @@ public class ResValueBagItem extends BaseResValueItem{
         return getInt(OFFSET_ID);
     }
 
+    public void setTypeAndData(ValueType valueType, int data){
+        setType(valueType);
+        setData(data);
+    }
     @Override
     public void setType(ValueType valueType){
         byte type=0;

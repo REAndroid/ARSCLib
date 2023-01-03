@@ -32,6 +32,8 @@ public abstract class InputSource {
         this.name = name;
         this.alias = InputSourceUtil.sanitize(name);
     }
+    public void disposeInputSource(){
+    }
     public int getSort() {
         return sort;
     }

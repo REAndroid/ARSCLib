@@ -57,6 +57,7 @@ public class ZipSerializer {
             }
             length+=write(zipOutputStream, inputSource);
             zipOutputStream.closeEntry();
+            inputSource.disposeInputSource();
         }
         zipOutputStream.close();
         return length;

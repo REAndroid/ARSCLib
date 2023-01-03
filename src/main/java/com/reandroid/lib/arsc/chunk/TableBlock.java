@@ -47,6 +47,9 @@ public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
         addChild(mTableStringPool);
         addChild(mPackageArray);
     }
+    public PackageBlock pickOne(){
+        return getPackageArray().pickOne();
+    }
     public void sortPackages(){
         getPackageArray().sort();
     }

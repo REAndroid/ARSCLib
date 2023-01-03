@@ -21,7 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class ByteInputSource extends InputSource{
-    private final byte[] inBytes;
+    private byte[] inBytes;
     public ByteInputSource(byte[] inBytes, String name) {
         super(name);
         this.inBytes=inBytes;
@@ -38,5 +38,9 @@ public class ByteInputSource extends InputSource{
     }
     public byte[] getBytes() {
         return inBytes;
+    }
+    @Override
+    public void disposeInputSource(){
+        inBytes=new byte[0];
     }
 }

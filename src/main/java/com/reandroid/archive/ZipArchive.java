@@ -47,6 +47,7 @@ public class ZipArchive {
         FileOutputStream outputStream=new FileOutputStream(file);
         inputSource.write(outputStream);
         outputStream.close();
+        inputSource.disposeInputSource();
     }
     private File toOutFile(File outDir, String path){
         path=path.replace('/', File.separatorChar);

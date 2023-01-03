@@ -36,6 +36,25 @@ public class PackageArray extends BlockArray<PackageBlock>
         this.mPackageCount=packageCount;
         mPackageCount.setBlockLoad(this);
     }
+    public PackageBlock pickOne(){
+        PackageBlock[] items=getChildes();
+        if(items==null||items.length==0){
+            return null;
+        }
+        if(items.length==1){
+            return items[0];
+        }
+        PackageBlock largest=null;
+        for(PackageBlock packageBlock:items){
+            if(largest==null){
+                largest=packageBlock;
+            }else if(packageBlock.getEntriesGroupMap().size() >
+                    largest.getEntriesGroupMap().size()){
+                largest=packageBlock;
+            }
+        }
+        return largest;
+    }
     public void sort(){
         for(PackageBlock packageBlock:listItems()){
             packageBlock.sortTypes();

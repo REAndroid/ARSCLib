@@ -35,6 +35,12 @@ import java.util.regex.Pattern;
          if(txt==null){
              return null;
          }
+         if("@empty".equals(txt)){
+             return new EncodeResult(ValueType.NULL, 0);
+         }
+         if("@null".equals(txt)){
+             return new EncodeResult(ValueType.REFERENCE, 0);
+         }
          EncodeResult result=encodeColor(txt);
          if(result!=null){
              return result;
@@ -807,7 +813,7 @@ import java.util.regex.Pattern;
             1.0f / (1 << 15) * MANTISSA_MULT, 1.0f / (1 << 23) * MANTISSA_MULT };
 
      public static final Pattern PATTERN_COLOR = Pattern.compile("^#([0-9a-fA-F]{6,8})$");
-     public static final Pattern PATTERN_DIMEN = Pattern.compile("^(-?)([0-9]+\\.[0-9E\\-+]+)([dimnpstx%]{0,3})$");
+     public static final Pattern PATTERN_DIMEN = Pattern.compile("^(-?)([0-9]+\\.[0-9E+]+)([dimnpstx%]{0,3})$");
      private static final Pattern PATTERN_INTEGER = Pattern.compile("^(-?)([0-9]+)$");
      private static final Pattern PATTERN_HEX = Pattern.compile("^0x[0-9a-fA-F]+$");
      public static final Pattern PATTERN_REFERENCE = Pattern.compile("^([?@])(([^\\s:@?/]+:)?)([^\\s:@?/]+)/([^\\s:@?/]+)$");
