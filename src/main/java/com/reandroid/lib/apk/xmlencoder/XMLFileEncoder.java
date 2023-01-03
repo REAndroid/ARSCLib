@@ -106,7 +106,11 @@ public class XMLFileEncoder {
             String valueText=attribute.getValue();
 
             if(ValueDecoder.isReference(valueText)){
-                xmlAttribute.setValueType(ValueType.REFERENCE);
+                if(valueText.startsWith("?")){
+                    xmlAttribute.setValueType(ValueType.ATTRIBUTE);
+                }else {
+                    xmlAttribute.setValueType(ValueType.REFERENCE);
+                }
                 xmlAttribute.setRawValue(materials.resolveReference(valueText));
                 continue;
             }
