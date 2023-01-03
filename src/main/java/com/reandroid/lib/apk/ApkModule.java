@@ -40,7 +40,7 @@ public class ApkModule {
     private AndroidManifestBlock mManifestBlock;
     private final UncompressedFiles mUncompressedFiles;
     private APKLogger apkLogger;
-    ApkModule(String moduleName, APKArchive apkArchive){
+    public ApkModule(String moduleName, APKArchive apkArchive){
         this.moduleName=moduleName;
         this.apkArchive=apkArchive;
         this.mUncompressedFiles=new UncompressedFiles();

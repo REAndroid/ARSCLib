@@ -27,8 +27,12 @@ public class AttributeBag {
     public AttributeBag(AttributeBagItem[] bagItems){
         this.mBagItems=bagItems;
     }
-    public ValueDecoder.EncodeResult encodeName(String valueString){
-        if(valueString==null){
+
+    public boolean contains(AttributeValueType valueType){
+        return getFormat().contains(valueType);
+    }
+    public ValueDecoder.EncodeResult encodeEnumOrFlagValue(String valueString){
+        if(valueString==null || !isEnumOrFlag()){
             return null;
         }
         int value=0;
@@ -45,7 +49,8 @@ public class AttributeBag {
         if(!foundOnce){
             return null;
         }
-        return new ValueDecoder.EncodeResult(ValueType.INT_HEX, value);
+        ValueType valueType = isFlag()?ValueType.INT_HEX:ValueType.INT_DEC;
+        return new ValueDecoder.EncodeResult(valueType, value);
     }
     public String decodeAttributeValue(EntryStore entryStore, int attrValue){
         AttributeBagItem[] bagItems=searchValue(attrValue);
@@ -196,6 +201,9 @@ public class AttributeBag {
             }
         }
         return null;
+    }
+    private boolean isEnumOrFlag(){
+        return isFlag() || isEnum();
     }
     public boolean isFlag(){
         return getFormat().isFlag();

@@ -18,6 +18,7 @@
  import com.reandroid.lib.apk.APKLogger;
  import com.reandroid.lib.apk.ResourceIds;
  import com.reandroid.lib.arsc.chunk.PackageBlock;
+ import com.reandroid.lib.arsc.chunk.TableBlock;
  import com.reandroid.lib.arsc.chunk.TypeBlock;
  import com.reandroid.lib.arsc.container.SpecTypePair;
  import com.reandroid.lib.arsc.decoder.ValueDecoder;
@@ -25,6 +26,7 @@
  import com.reandroid.lib.arsc.item.SpecString;
  import com.reandroid.lib.arsc.util.FrameworkTable;
  import com.reandroid.lib.arsc.value.EntryBlock;
+ import com.reandroid.lib.common.Frameworks;
  import com.reandroid.lib.common.ResourceResolver;
 
  import java.util.Collection;
@@ -335,6 +337,22 @@
          if(apkLogger!=null){
              apkLogger.logVerbose(msg);
          }
+     }
+     public static EncodeMaterials create(TableBlock tableBlock){
+         PackageBlock packageBlock = tableBlock.pickOne();
+         if(packageBlock==null){
+             throw new EncodeException("No packages found on table block");
+         }
+         return create(packageBlock);
+     }
+     public static EncodeMaterials create(PackageBlock packageBlock){
+         ResourceIds resourceIds = new ResourceIds();
+         resourceIds.loadPackageBlock(packageBlock);
+         ResourceIds.Table.Package packageId = resourceIds.getTable().listPackages().get(0);
+         return new EncodeMaterials()
+                 .setPackageIds(packageId)
+                 .setCurrentPackage(packageBlock)
+                 .addFramework(Frameworks.getAndroid());
      }
 
  }

@@ -15,18 +15,33 @@
   */
 package com.reandroid.lib.apk.xmlencoder;
 
-import com.reandroid.lib.apk.ApkUtil;
-import com.reandroid.lib.arsc.chunk.PackageBlock;
-import com.reandroid.lib.arsc.chunk.TypeBlock;
-import com.reandroid.lib.arsc.value.EntryBlock;
+ import com.reandroid.archive.APKArchive;
+ import com.reandroid.archive.FileInputSource;
+ import com.reandroid.archive.InputSource;
+ import com.reandroid.lib.apk.ApkUtil;
+ import com.reandroid.lib.apk.UncompressedFiles;
+ import com.reandroid.lib.arsc.chunk.PackageBlock;
+ import com.reandroid.lib.arsc.chunk.TypeBlock;
+ import com.reandroid.lib.arsc.value.EntryBlock;
+ import com.reandroid.xml.source.XMLFileSource;
+ import com.reandroid.xml.source.XMLSource;
 
-import java.io.File;
-import java.util.List;
+ import java.io.File;
+ import java.util.List;
 
-public class FilePathEncoder {
+ public class FilePathEncoder {
     private final EncodeMaterials materials;
+    private APKArchive apkArchive;
+    private UncompressedFiles uncompressedFiles;
     public FilePathEncoder(EncodeMaterials encodeMaterials){
         this.materials =encodeMaterials;
+    }
+
+    public void setApkArchive(APKArchive apkArchive) {
+        this.apkArchive = apkArchive;
+    }
+    public void setUncompressedFiles(UncompressedFiles uncompressedFiles){
+        this.uncompressedFiles=uncompressedFiles;
     }
     public void encodeResDir(File resDir){
         materials.logVerbose("Scanning file list: "
@@ -46,7 +61,7 @@ public class FilePathEncoder {
             encodeFileEntry(file);
         }
     }
-    public void encodeFileEntry(File resFile){
+    public InputSource encodeFileEntry(File resFile){
         String type = EncodeUtil.getTypeNameFromResFile(resFile);
         PackageBlock packageBlock = materials.getCurrentPackage();
         byte typeId=packageBlock
@@ -59,11 +74,43 @@ public class FilePathEncoder {
         EntryBlock entryBlock=typeBlock
                 .getOrCreateEntry((short) (0xffff & resourceId));
 
-        entryBlock.setValueAsString(EncodeUtil.getEntryPathFromResFile(resFile));
+        String path=EncodeUtil.getEntryPathFromResFile(resFile);
+        entryBlock.setValueAsString(path);
         entryBlock.setSpecReference(materials.getSpecString(name));
-        if(resFile.getName().endsWith(".xml")){
-            XMLFileEncoder fileEncoder=new XMLFileEncoder(materials);
-            fileEncoder.encode(resFile);
+        InputSource inputSource=createInputSource(path, resFile);
+        addInputSource(inputSource);
+        return inputSource;
+    }
+    private InputSource createInputSource(String path, File resFile){
+        if(isXmlFile(resFile)){
+            return createXMLEncodeInputSource(path, resFile);
+        }
+        addUncompressedFiles(path);
+        return createRawFileInputSource(path, resFile);
+    }
+    private InputSource createRawFileInputSource(String path, File resFile){
+        return new FileInputSource(resFile, path);
+    }
+    private InputSource createXMLEncodeInputSource(String path, File resFile){
+        XMLSource xmlSource = new XMLFileSource(path, resFile);
+        return new XMLEncodeSource(materials, xmlSource);
+    }
+    private boolean isXmlFile(File resFile){
+        String name=resFile.getName();
+        if(!name.endsWith(".xml")){
+            return false;
+        }
+        String type=EncodeUtil.getTypeNameFromResFile(resFile);
+        return !type.equals("raw");
+    }
+    private void addInputSource(InputSource inputSource){
+        if(inputSource!=null && this.apkArchive!=null){
+            apkArchive.add(inputSource);
+        }
+    }
+    private void addUncompressedFiles(String path){
+        if(uncompressedFiles!=null){
+            uncompressedFiles.addPath(path);
         }
     }
 }

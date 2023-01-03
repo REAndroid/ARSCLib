@@ -15,15 +15,13 @@
   */
 package com.reandroid.lib.apk.xmlencoder;
 
-import com.reandroid.lib.arsc.chunk.xml.ResIdBuilder;
-import com.reandroid.lib.arsc.chunk.xml.ResXmlAttribute;
-import com.reandroid.lib.arsc.chunk.xml.ResXmlBlock;
-import com.reandroid.lib.arsc.chunk.xml.ResXmlElement;
+import com.reandroid.lib.arsc.chunk.xml.*;
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResValueBag;
 import com.reandroid.lib.arsc.value.ValueType;
 import com.reandroid.lib.arsc.value.attribute.AttributeBag;
+import com.reandroid.lib.arsc.value.attribute.AttributeValueType;
 import com.reandroid.xml.*;
 
 import java.io.File;
@@ -35,32 +33,36 @@ public class XMLFileEncoder {
     public XMLFileEncoder(EncodeMaterials materials){
         this.materials=materials;
     }
-    public void encode(String xmlString){
+    public ResXmlBlock encode(String xmlString){
         try {
-            encode(XMLDocument.load(xmlString));
+            return encode(XMLDocument.load(xmlString));
         } catch (XMLException ex) {
             materials.logMessage(ex.getMessage());
         }
+        return null;
     }
-    public void encode(InputStream inputStream){
+    public ResXmlBlock encode(InputStream inputStream){
         try {
-            encode(XMLDocument.load(inputStream));
+            return encode(XMLDocument.load(inputStream));
         } catch (XMLException ex) {
             materials.logMessage(ex.getMessage());
         }
+        return null;
     }
-    public void encode(File xmlFile){
+    public ResXmlBlock encode(File xmlFile){
         try {
-            encode(XMLDocument.load(xmlFile));
+            return encode(XMLDocument.load(xmlFile));
         } catch (XMLException ex) {
             materials.logMessage(ex.getMessage());
         }
+        return null;
     }
-    public void encode(XMLDocument xmlDocument){
+    public ResXmlBlock encode(XMLDocument xmlDocument){
         resXmlBlock=new ResXmlBlock();
         buildIdMap(xmlDocument);
         buildElement(xmlDocument);
         resXmlBlock.refresh();
+        return resXmlBlock;
     }
     public ResXmlBlock getResXmlBlock(){
         return resXmlBlock;
@@ -93,27 +95,39 @@ public class XMLFileEncoder {
             if(entryBlock!=null){
                 resourceId=entryBlock.getResourceId();
             }
+            ResXmlAttribute xmlAttribute =
+                    resXmlElement.createAttribute(attribute.getNameWoPrefix(), resourceId);
+            String prefix=attribute.getNamePrefix();
+            if(prefix!=null){
+                ResXmlStartNamespace ns = resXmlElement.getStartNamespaceByPrefix(prefix);
+                xmlAttribute.setNamespaceReference(ns.getUriReference());
+            }
+
             String valueText=attribute.getValue();
 
-            ResXmlAttribute xmlAttribute =
-                    resXmlElement.createAttribute(attribute.getName(), resourceId);
+            if(ValueDecoder.isReference(valueText)){
+                xmlAttribute.setValueType(ValueType.REFERENCE);
+                xmlAttribute.setRawValue(materials.resolveReference(valueText));
+                continue;
+            }
             if(entryBlock!=null){
                 AttributeBag attributeBag=AttributeBag
                         .create((ResValueBag) entryBlock.getResValue());
 
                 ValueDecoder.EncodeResult encodeResult =
-                        attributeBag.encodeName(valueText);
+                        attributeBag.encodeEnumOrFlagValue(valueText);
                 if(encodeResult!=null){
                     xmlAttribute.setValueType(encodeResult.valueType);
                     xmlAttribute.setRawValue(encodeResult.value);
                     continue;
                 }
+                if(attributeBag.contains(AttributeValueType.STRING)) {
+                    xmlAttribute.setValueAsString(valueText);
+                    continue;
+                }
             }
 
-            if(ValueDecoder.isReference(valueText)){
-                xmlAttribute.setValueType(ValueType.REFERENCE);
-                xmlAttribute.setRawValue(materials.resolveReference(valueText));
-            }else if(EncodeUtil.isEmpty(valueText)) {
+            if(EncodeUtil.isEmpty(valueText)) {
                 xmlAttribute.setValueType(ValueType.NULL);
                 xmlAttribute.setRawValue(0);
             }else{

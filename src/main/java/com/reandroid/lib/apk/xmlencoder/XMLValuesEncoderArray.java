@@ -40,17 +40,16 @@ class XMLValuesEncoderArray extends XMLValuesEncoderBag{
             String valueText=child.getTextContent();
 
             if(ValueDecoder.isReference(valueText)){
-                bagItem.setType(ValueType.REFERENCE);
-                bagItem.setData(getMaterials().resolveReference(valueText));
+                bagItem.setTypeAndData(ValueType.REFERENCE,
+                        getMaterials().resolveReference(valueText));
             }else if(EncodeUtil.isEmpty(valueText)) {
-                bagItem.setType(ValueType.NULL);
-                bagItem.setData(0);
+                bagItem.setTypeAndData(ValueType.NULL, 0);
             }else if(!tag_string){
                 ValueDecoder.EncodeResult encodeResult =
                         ValueDecoder.encodeGuessAny(valueText);
                 if(encodeResult!=null){
-                    bagItem.setType(encodeResult.valueType);
-                    bagItem.setData(encodeResult.value);
+                    bagItem.setTypeAndData(encodeResult.valueType,
+                            encodeResult.value);
                 }else {
                     bagItem.setValueAsString(valueText);
                 }

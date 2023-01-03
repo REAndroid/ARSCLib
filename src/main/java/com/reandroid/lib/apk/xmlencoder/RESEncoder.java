@@ -15,15 +15,17 @@
   */
  package com.reandroid.lib.apk.xmlencoder;
 
- import com.reandroid.lib.apk.APKLogger;
- import com.reandroid.lib.apk.ApkUtil;
- import com.reandroid.lib.apk.ResourceIds;
+ import com.reandroid.archive.APKArchive;
+ import com.reandroid.archive.FileInputSource;
+ import com.reandroid.lib.apk.*;
  import com.reandroid.lib.arsc.chunk.PackageBlock;
  import com.reandroid.lib.arsc.chunk.TableBlock;
  import com.reandroid.lib.arsc.chunk.xml.AndroidManifestBlock;
  import com.reandroid.lib.common.Frameworks;
  import com.reandroid.xml.XMLDocument;
  import com.reandroid.xml.XMLException;
+ import com.reandroid.xml.source.XMLFileSource;
+ import com.reandroid.xml.source.XMLSource;
 
  import java.io.File;
  import java.io.IOException;
@@ -35,19 +37,37 @@
  public class RESEncoder {
      private APKLogger apkLogger;
      private final TableBlock tableBlock;
-     private final Set<File> parsedValueFiles;
+     private final Set<File> parsedFiles = new HashSet<>();
+     private final ApkModule apkModule;
      public RESEncoder(){
-         this.tableBlock = new TableBlock();
-         this.parsedValueFiles = new HashSet<>();
+         this(new ApkModule("encoded",
+                 new APKArchive()), new TableBlock());
+     }
+     public RESEncoder(ApkModule module, TableBlock block){
+         this.apkModule = module;
+         this.tableBlock = block;
+         if(!module.hasTableBlock()){
+             BlockInputSource<TableBlock> inputSource=
+                     new BlockInputSource<>(TableBlock.FILE_NAME, block);
+             this.apkModule.getApkArchive().add(inputSource);
+         }
      }
      public TableBlock getTableBlock(){
          return tableBlock;
      }
-     public void scanDirectory(File rootDir) throws IOException, XMLException {
-         List<File> pubXmlFileList = searchPublicXmlFiles(rootDir);
+     public ApkModule getApkModule(){
+         return apkModule;
+     }
+     public void scanDirectory(File mainDir) throws IOException, XMLException {
+         scanResourceFiles(mainDir);
+         File rootDir=new File(mainDir, "root");
+         scanRootDir(rootDir);
+     }
+     private void scanResourceFiles(File mainDir) throws IOException, XMLException {
+         List<File> pubXmlFileList = searchPublicXmlFiles(mainDir);
          if(pubXmlFileList.size()==0){
              throw new IOException("No .*/values/"
-                     +ApkUtil.FILE_NAME_PUBLIC_XML+"  file found in '"+rootDir);
+                     +ApkUtil.FILE_NAME_PUBLIC_XML+"  file found in '"+mainDir);
          }
          for(File pubXmlFile:pubXmlFileList){
              EncodeMaterials encodeMaterials = loadPublicXml(pubXmlFile);
@@ -55,10 +75,21 @@
              File resDir=toResDirectory(pubXmlFile);
              encodeResDir(encodeMaterials, resDir);
              FilePathEncoder filePathEncoder = new FilePathEncoder(encodeMaterials);
+             filePathEncoder.setApkArchive(getApkModule().getApkArchive());
+             filePathEncoder.setUncompressedFiles(getApkModule().getUncompressedFiles());
              filePathEncoder.encodeResDir(resDir);
+
              PackageBlock packageBlock = encodeMaterials.getCurrentPackage();
              packageBlock.sortTypes();
              packageBlock.refresh();
+
+             File manifestFile=toAndroidManifest(pubXmlFile);
+             XMLSource xmlSource =
+                     new XMLFileSource(AndroidManifestBlock.FILE_NAME, manifestFile);
+             XMLEncodeSource xmlEncodeSource =
+                     new XMLEncodeSource(encodeMaterials, xmlSource);
+
+             getApkModule().getApkArchive().add(xmlEncodeSource);
          }
          tableBlock.refresh();
      }
@@ -137,9 +168,17 @@
          }
          return results;
      }
-     private List<File> searchPublicXmlFiles(File rootDir){
-         logVerbose("Searching public.xml: "+rootDir);
-         List<File> xmlFiles = ApkUtil.recursiveFiles(rootDir, ApkUtil.FILE_NAME_PUBLIC_XML);
+     private List<File> searchPublicXmlFiles(File mainDir){
+         logVerbose("Searching public.xml: "+mainDir);
+         List<File> dirList=ApkUtil.listDirectories(mainDir);
+         List<File> xmlFiles = new ArrayList<>();
+         for(File dir:dirList){
+             if(dir.getName().equals("root")){
+                 continue;
+             }
+             xmlFiles.addAll(
+                     ApkUtil.recursiveFiles(mainDir, ApkUtil.FILE_NAME_PUBLIC_XML));
+         }
          List<File> results = new ArrayList<>();
          for(File file:xmlFiles){
              if(toAndroidManifest(file).isFile()){
@@ -148,11 +187,23 @@
          }
          return results;
      }
+
+     //TODO: do this in separate class
+     private void scanRootDir(File rootDir){
+         APKArchive archive=getApkModule().getApkArchive();
+         List<File> rootFileList=ApkUtil.recursiveFiles(rootDir);
+         for(File file:rootFileList){
+             String path=ApkUtil.toArchivePath(rootDir, file);
+             FileInputSource inputSource=new FileInputSource(file, path);
+             archive.add(inputSource);
+         }
+     }
+
      private boolean isAlreadyParsed(File file){
-         return parsedValueFiles.contains(file);
+         return parsedFiles.contains(file);
      }
      private void addParsedFiles(File file){
-         parsedValueFiles.add(file);
+         parsedFiles.add(file);
      }
      public void setAPKLogger(APKLogger logger) {
          this.apkLogger = logger;

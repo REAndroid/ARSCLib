@@ -36,6 +36,8 @@ class XMLValuesEncoderBag extends XMLValuesEncoder{
         encodeChildes(element, resValueBag);
     }
     void encodeChildes(XMLElement element, ResValueBag resValueBag){
+        throw new EncodeException("Unimplemented bag type encoder: "
+                +element.getTagName());
 
     }
     int getChildesCount(XMLElement element){

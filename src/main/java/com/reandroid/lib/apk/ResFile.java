@@ -16,6 +16,7 @@
 package com.reandroid.lib.apk;
 
 import com.reandroid.archive.InputSource;
+import com.reandroid.lib.apk.xmlencoder.XMLEncodeSource;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
 import com.reandroid.lib.arsc.chunk.xml.ResXmlBlock;
 import com.reandroid.lib.arsc.value.EntryBlock;
@@ -101,9 +102,14 @@ public class ResFile {
             return mBinXml;
         }
         mBinXmlChecked=true;
-        try {
-            mBinXml=ResXmlBlock.isResXmlBlock(getInputSource().openStream());
-        } catch (IOException exception) {
+        InputSource inputSource=getInputSource();
+        if(inputSource instanceof XMLEncodeSource){
+            mBinXml=true;
+        }else{
+            try {
+                mBinXml=ResXmlBlock.isResXmlBlock(getInputSource().openStream());
+            } catch (IOException exception) {
+            }
         }
         return mBinXml;
     }

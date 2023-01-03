@@ -22,6 +22,7 @@ import com.reandroid.lib.arsc.value.ResValueBag;
 import com.reandroid.lib.arsc.value.ResValueBagItem;
 import com.reandroid.lib.arsc.value.ValueType;
 import com.reandroid.lib.arsc.value.attribute.AttributeBag;
+import com.reandroid.lib.arsc.value.attribute.AttributeValueType;
 import com.reandroid.xml.XMLElement;
 
 
@@ -33,41 +34,48 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
     void encodeChildes(XMLElement parentElement, ResValueBag resValueBag){
         int count = parentElement.getChildesCount();
         ResValueBagItemArray itemArray = resValueBag.getResValueBagItemArray();
-        EncodeMaterials materials=getMaterials();
         for(int i=0;i<count;i++){
             XMLElement child=parentElement.getChildAt(i);
-            ResValueBagItem bagItem = itemArray.get(i);
-            EntryBlock entryBlock=materials
+            EntryBlock attributeEntry=getMaterials()
                     .getAttributeBlock(child.getAttributeValue("name"));
-            if(entryBlock==null){
-                throw new EncodeException("Unknown attribute name: '"+child.toText()+"'");
+            if(attributeEntry==null){
+                throw new EncodeException("Unknown attribute name: '"+child.toText()
+                        +"', for style: "+parentElement.getAttributeValue("name"));
             }
-            bagItem.setId(entryBlock.getResourceId());
-            AttributeBag attributeBag=AttributeBag
-                    .create((ResValueBag) entryBlock.getResValue());
+            encodeChild(parentElement.getChildAt(i), attributeEntry, itemArray.get(i));
+        }
+    }
+    private void encodeChild(XMLElement child, EntryBlock attributeEntry, ResValueBagItem bagItem){
 
-            String valueText=child.getTextContent();
-            ValueDecoder.EncodeResult encodeResult =
-                    attributeBag.encodeName(valueText);
-            if(encodeResult!=null){
-                bagItem.setType(encodeResult.valueType);
-                bagItem.setData(encodeResult.value);
-                continue;
-            }
-            if(ValueDecoder.isReference(valueText)){
+        bagItem.setId(attributeEntry.getResourceId());
+        AttributeBag attributeBag=AttributeBag
+                .create((ResValueBag) attributeEntry.getResValue());
+
+        String valueText=child.getTextContent();
+        ValueDecoder.EncodeResult encodeEnumFlag =
+                attributeBag.encodeEnumOrFlagValue(valueText);
+        if(encodeEnumFlag!=null){
+            bagItem.setTypeAndData(encodeEnumFlag.valueType, encodeEnumFlag.value);
+            return;
+        }
+        if(ValueDecoder.isReference(valueText)){
+            if(valueText.startsWith("?")){
+                bagItem.setType(ValueType.ATTRIBUTE);
+            }else {
                 bagItem.setType(ValueType.REFERENCE);
-                bagItem.setData(getMaterials().resolveReference(valueText));
-            }else if(EncodeUtil.isEmpty(valueText)) {
-                bagItem.setType(ValueType.NULL);
-                bagItem.setData(0);
-            }else{
-                encodeResult=ValueDecoder.encodeGuessAny(valueText);
-                if(encodeResult!=null){
-                    bagItem.setType(encodeResult.valueType);
-                    bagItem.setData(encodeResult.value);
-                }else {
-                    bagItem.setValueAsString(valueText);
-                }
+            }
+            bagItem.setData(getMaterials().resolveReference(valueText));
+        }else if(attributeBag.contains(AttributeValueType.STRING)) {
+            bagItem.setValueAsString(valueText);
+        }else if(EncodeUtil.isEmpty(valueText)) {
+            bagItem.setTypeAndData(ValueType.NULL, 0);
+        }else{
+            ValueDecoder.EncodeResult encodeResult = ValueDecoder.encodeGuessAny(valueText);
+            if(encodeResult!=null){
+                bagItem.setTypeAndData(encodeResult.valueType,
+                        encodeResult.value);
+            }else {
+                bagItem.setValueAsString(valueText);
             }
         }
     }
