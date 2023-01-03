@@ -240,4 +240,7 @@ public class AttributeBag {
         AttributeBagItem[] bagItems=AttributeBagItem.create(resValueBag.getBagItems());
         return bagItems!=null;
     }
+
+    public static final short TYPE_ENUM = 0x0001;
+    public static final short TYPE_FLAG = 0x0002;
 }

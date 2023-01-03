@@ -107,8 +107,7 @@ public class AttributeBagItem {
             return false;
         }
         ResValueBagItem item=getBagItem();
-        short low=item.getDataHigh();
-        return low==0x0001;
+        return item.getDataHigh()==AttributeBag.TYPE_ENUM;
     }
     public boolean isFlag(){
         AttributeItemType type=getItemType();
@@ -116,8 +115,7 @@ public class AttributeBagItem {
             return false;
         }
         ResValueBagItem item=getBagItem();
-        short low=item.getDataHigh();
-        return low==0x0002;
+        return item.getDataHigh()==AttributeBag.TYPE_FLAG;
     }
     @Override
     public String toString(){
