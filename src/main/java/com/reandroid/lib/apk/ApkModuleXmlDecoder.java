@@ -15,6 +15,7 @@
   */
 package com.reandroid.lib.apk;
 
+import com.reandroid.archive.InputSource;
 import com.reandroid.lib.apk.xmldecoder.XMLBagDecoder;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.TableBlock;
@@ -65,6 +66,8 @@ import java.util.*;
             decodeResFile(entryStore, outDir, resFile);
         }
         decodeValues(entryStore, outDir, tableBlock);
+
+        extractRootFiles(outDir);
     }
     private void decodeResFile(EntryStore entryStore, File outDir, ResFile resFile)
             throws IOException, XMLException {
@@ -237,6 +240,25 @@ import java.util.*;
     }
     private String getPackageDirName(PackageBlock packageBlock){
         return packageBlock.getIndex()+"-"+packageBlock.getName();
+    }
+    private void extractRootFiles(File outDir) throws IOException {
+        logMessage("Extracting root files");
+        File rootDir = new File(outDir, "root");
+        for(InputSource inputSource:apkModule.getApkArchive().listInputSources()){
+            extractRootFiles(rootDir, inputSource);
+        }
+    }
+    private void extractRootFiles(File rootDir, InputSource inputSource) throws IOException {
+        String path=inputSource.getAlias();
+        path=path.replace(File.separatorChar, '/');
+        File file=new File(rootDir, path);
+        File dir=file.getParentFile();
+        if(!dir.exists()){
+            dir.mkdirs();
+        }
+        FileOutputStream outputStream=new FileOutputStream(file);
+        inputSource.write(outputStream);
+        outputStream.close();
     }
 
     private void logMessage(String msg) {
