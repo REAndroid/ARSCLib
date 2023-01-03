@@ -16,7 +16,6 @@
  package com.reandroid.lib.apk.xmlencoder;
 
  import com.reandroid.archive.APKArchive;
- import com.reandroid.archive.FileInputSource;
  import com.reandroid.lib.apk.*;
  import com.reandroid.lib.arsc.chunk.PackageBlock;
  import com.reandroid.lib.arsc.chunk.TableBlock;
@@ -60,8 +59,6 @@
      }
      public void scanDirectory(File mainDir) throws IOException, XMLException {
          scanResourceFiles(mainDir);
-         File rootDir=new File(mainDir, "root");
-         scanRootDir(rootDir);
      }
      private void scanResourceFiles(File mainDir) throws IOException, XMLException {
          List<File> pubXmlFileList = searchPublicXmlFiles(mainDir);
@@ -186,17 +183,6 @@
              }
          }
          return results;
-     }
-
-     //TODO: do this in separate class
-     private void scanRootDir(File rootDir){
-         APKArchive archive=getApkModule().getApkArchive();
-         List<File> rootFileList=ApkUtil.recursiveFiles(rootDir);
-         for(File file:rootFileList){
-             String path=ApkUtil.toArchivePath(rootDir, file);
-             FileInputSource inputSource=new FileInputSource(file, path);
-             archive.add(inputSource);
-         }
      }
 
      private boolean isAlreadyParsed(File file){
