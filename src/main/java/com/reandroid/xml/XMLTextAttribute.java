@@ -33,12 +33,6 @@ public class XMLTextAttribute extends XMLAttribute {
         if(unEscape){
             return XMLUtil.unEscapeXmlChars(mText);
         }
-        if(mText!=null){
-            String junk= XMLUtil.unEscapeXmlChars(mText);
-            if(!mText.equals(junk)){
-                junk.trim();
-            }
-        }
         return mText;
     }
     @Override

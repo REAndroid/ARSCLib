@@ -530,30 +530,17 @@ public class MXParser implements XmlPullParser
         }
         return i;
     }
-    public String getPositionDescription ()
+    @Override
+    public String getPositionDescription()
     {
-        String fragment = null;
-        if(posStart <= pos) {
-            final int start = findFragment(0, buf, posStart, pos);
-
-            if(start < pos) {
-                fragment = new String(buf, start, pos - start);
-            }
-            if(bufAbsoluteStart > 0 || start > 0) {
-                fragment = "..." + fragment;
-            }
-        }
-        return " "+TYPES[ eventType ] +
-            (fragment != null ? " seen "+printable(fragment)+"..." : "")
-            +" "+(location != null ? location : "")
-            +"@"+getLineNumber()+":"+getColumnNumber();
+        return "line="+getLineNumber()+", col="+getColumnNumber();
     }
-
+    @Override
     public int getLineNumber()
     {
         return lineNumber;
     }
-
+    @Override
     public int getColumnNumber()
     {
         return columnNumber;
@@ -740,11 +727,13 @@ public class MXParser implements XmlPullParser
         return attributeValue[ index ];
     }
 
-    public String getAttributeValue(String namespace,
-                                    String name)
+    @Override
+    public String getAttributeValue(String namespace, String name)
     {
-        if(eventType != START_TAG) throw new IndexOutOfBoundsException(
-                "only START_TAG can have attributes"+getPositionDescription());
+        if(eventType != START_TAG) {
+            throw new IndexOutOfBoundsException("only START_TAG can have attributes "
+                    +getPositionDescription());
+        }
         if(name == null) {
             throw new IllegalArgumentException("attribute name can not be null");
         }
@@ -1651,7 +1640,7 @@ public class MXParser implements XmlPullParser
         } // skip additional spaces
         if(ch != '=') {
             throw new XmlPullParserException(
-                    "expected = after attribute name", this, null);
+                    "expected = after attribute name '"+name+processNamespaces+"'", this, null);
         }
         ch = more();
         while(isS(ch)) {
@@ -2689,7 +2678,7 @@ public class MXParser implements XmlPullParser
         return (ch < LOOKUP_MAX_CHAR && lookupNameChar[ ch ])
             || (ch >= LOOKUP_MAX_CHAR && ch <= '\u2027')
             || (ch >= '\u202A' &&  ch <= '\u218F')
-            || (ch >= '\u2800' &&  ch <= '\uFFEF');
+            || (ch >= '\u2800' &&  ch <= '\uFFEF') || ch=='@';
     }
 
     protected boolean isS(char ch) {

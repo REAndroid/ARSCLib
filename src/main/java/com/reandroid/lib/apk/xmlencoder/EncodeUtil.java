@@ -113,4 +113,9 @@ package com.reandroid.lib.apk.xmlencoder;
      }
      public static final String NULL_PACKAGE_NAME = "NULL_PACKAGE_NAME";
      private static final Pattern PATTERN_TYPE=Pattern.compile("^([a-z]+)[^a-z]*.*$");
+
+     public static final String URI_ANDROID = "http://schemas.android.com/apk/res/android";
+     public static final String URI_APP = "http://schemas.android.com/apk/res-auto";
+     public static final String PREFIX_ANDROID = "android";
+     public static final String PREFIX_APP = "app";
 }

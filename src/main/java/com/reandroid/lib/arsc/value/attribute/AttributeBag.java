@@ -31,6 +31,9 @@ public class AttributeBag {
     public boolean contains(AttributeValueType valueType){
         return getFormat().contains(valueType);
     }
+    public boolean isEqualType(AttributeValueType valueType){
+        return getFormat().isEqualType(valueType);
+    }
     public ValueDecoder.EncodeResult encodeEnumOrFlagValue(String valueString){
         if(valueString==null || !isEnumOrFlag()){
             return null;

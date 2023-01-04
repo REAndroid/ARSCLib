@@ -39,6 +39,7 @@
      private PackageBlock currentPackage;
      private final Set<FrameworkTable> frameworkTables = new HashSet<>();
      private APKLogger apkLogger;
+     private boolean mForceCreateNamespaces = true;
      public EncodeMaterials(){
      }
      public SpecString getSpecString(String name){
@@ -278,6 +279,11 @@
          }
          return null;
      }
+
+     public EncodeMaterials setForceCreateNamespaces(boolean force) {
+         this.mForceCreateNamespaces = force;
+         return this;
+     }
      public EncodeMaterials setPackageIds(ResourceIds.Table.Package packageIds) {
          this.packageIds = packageIds;
          return this;
@@ -302,6 +308,10 @@
      public PackageBlock getCurrentPackage() {
          return currentPackage;
      }
+     public boolean isForceCreateNamespaces() {
+         return mForceCreateNamespaces;
+     }
+
      public String getCurrentPackageName(){
          return currentPackage.getName();
      }

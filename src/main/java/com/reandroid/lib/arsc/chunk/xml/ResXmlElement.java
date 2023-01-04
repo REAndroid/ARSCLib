@@ -60,6 +60,12 @@ import java.util.*;
         addChild(4, mEndElementContainer);
         addChild(5, mEndNamespaceList);
     }
+    public void calculatePositions(){
+        ResXmlStartElement start = getStartElement();
+        if(start!=null){
+            start.calculatePositions();
+        }
+    }
     public ResXmlAttribute newAttribute(){
         return getStartElement().newAttribute();
     }

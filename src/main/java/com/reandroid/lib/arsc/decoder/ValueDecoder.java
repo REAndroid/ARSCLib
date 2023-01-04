@@ -123,7 +123,7 @@ import java.util.regex.Pattern;
              return new EncodeResult(ValueType.INT_HEX, parseHex(numString));
          }
          if(isInteger(numString)){
-             return new EncodeResult(ValueType.INT_DEC, parseHex(numString));
+             return new EncodeResult(ValueType.INT_DEC, parseInteger(numString));
          }
          return null;
      }

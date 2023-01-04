@@ -278,28 +278,45 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
     private void setByteFlagsB(byte b){
         mByteFlagsB.set(b);
     }
-    public IntegerItem getSpecReferenceBlock(){
+    private IntegerItem getSpecReferenceBlock(){
         return mSpecReference;
     }
     public int getSpecReference(){
+        if(mSpecReference==null){
+            return -1;
+        }
         return mSpecReference.get();
     }
     public void setSpecReference(int ref){
-        if(mSpecReference==null){
-            return;
-        }
+        boolean created = createNullSpecReference();
         int old=mSpecReference.get();
         if(ref==old){
             return;
         }
         mSpecReference.set(ref);
         updateSpecRef(old, ref);
+        if(created){
+            updatePackage();
+        }
     }
     public void setSpecReference(SpecString specString){
         removeSpecRef();
-        if(mSpecReference!=null){
-            mSpecReference.set(specString.getIndex());
+        if(specString==null){
+            return;
         }
+        boolean created = createNullSpecReference();
+        mSpecReference.set(specString.getIndex());
+        if(created){
+            updatePackage();
+        }
+    }
+    private boolean createNullSpecReference(){
+        if(mSpecReference==null){
+            mSpecReference = new IntegerItem();
+            mSpecReference.setNull(true);
+            return true;
+        }
+        return false;
     }
     public BaseResValue getResValue(){
         return mResValue;
@@ -352,6 +369,13 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         }
         return specString.get();
     }
+    public String getNameOrHex(){
+        String name = getName();
+        if(name==null){
+            name = String.format("@0x%08x", getResourceId());
+        }
+        return name;
+    }
     private void setName(String name){
         PackageBlock packageBlock=getPackageBlock();
         EntryGroup entryGroup = packageBlock.getEntryGroup(getResourceId());
@@ -378,6 +402,9 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         return packageBlock.getName();
     }
     public SpecString getSpecString(){
+        if(mSpecReference==null){
+            return null;
+        }
         PackageBlock packageBlock=getPackageBlock();
         if(packageBlock==null){
             return null;
@@ -486,7 +513,11 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         this.mHeaderSize =new ShortItem();
         this.mFlagEntryType =new ByteItem();
         this.mByteFlagsB=new ByteItem();
-        this.mSpecReference = new IntegerItem();
+        if(mSpecReference==null){
+            this.mSpecReference = new IntegerItem();
+        }else if(mSpecReference.isNull()){
+            mSpecReference.setNull(false);
+        }
 
         mHeaderSize.setIndex(0);
         mFlagEntryType.setIndex(1);
@@ -625,11 +656,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         updateSpecRef(-1, getSpecReference());
     }
     private void updateSpecRef(int oldRef, int newNef){
-        TypeBlock typeBlock=getTypeBlock();
-        if(typeBlock==null){
-            return;
-        }
-        PackageBlock packageBlock=typeBlock.getPackageBlock();
+        PackageBlock packageBlock=getPackageBlock();
         if(packageBlock==null){
             return;
         }
@@ -647,11 +674,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         if(mSpecReference==null){
             return;
         }
-        TypeBlock typeBlock=getTypeBlock();
-        if(typeBlock==null){
-            return;
-        }
-        PackageBlock packageBlock=typeBlock.getPackageBlock();
+        PackageBlock packageBlock=getPackageBlock();
         if(packageBlock==null){
             return;
         }
@@ -662,11 +685,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         }
     }
     private void updatePackage(){
-        TypeBlock typeBlock=getTypeBlock();
-        if(typeBlock==null){
-            return;
-        }
-        PackageBlock packageBlock=typeBlock.getPackageBlock();
+        PackageBlock packageBlock=getPackageBlock();
         if(packageBlock==null){
             return;
         }
@@ -761,37 +780,6 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         }
         return new ResValueInt();
     }
-    @Override
-    public String toString(){
-        StringBuilder builder=new StringBuilder();
-        builder.append(getClass().getSimpleName());
-        builder.append(": ");
-        ResConfig resConfig=getResConfig();
-        if(resConfig!=null){
-            builder.append(resConfig.toString());
-            builder.append(", ");
-        }
-        builder.append(" resId=");
-        builder.append(String.format("0x%08x", getResourceId()));
-        if(isNull()){
-            builder.append(", null entry");
-            return builder.toString();
-        }
-        String name=getResourceName();
-        if(name!=null){
-            builder.append('(');
-            builder.append(name);
-            builder.append(')');
-        }
-        BaseResValue baseResValue=getResValue();
-        if(baseResValue instanceof ResValueInt){
-            ResValueInt resValueInt=(ResValueInt)baseResValue;
-            builder.append(" '");
-            builder.append(resValueInt.toString());
-            builder.append(" '");
-        }
-        return builder.toString();
-    }
     public static String buildResourceName(char prefix, String packageName, String type, String name){
         if(name==null){
             return null;
@@ -809,6 +797,39 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
             builder.append('/');
         }
         builder.append(name);
+        return builder.toString();
+    }
+    @Override
+    public String toString(){
+        StringBuilder builder=new StringBuilder();
+        builder.append(getClass().getSimpleName());
+        builder.append(": ");
+        ResConfig resConfig=getResConfig();
+        if(resConfig!=null){
+            builder.append(resConfig.toString());
+            builder.append(", ");
+        }
+        String name=getResourceName();
+        if(name==null){
+            name=getNameOrHex();
+        }else{
+            builder.append(" id=");
+            builder.append(String.format("0x%08x", getResourceId()));
+        }
+        builder.append('(');
+        builder.append(name);
+        builder.append(')');
+        if(isNull()){
+            builder.append(", null entry");
+            return builder.toString();
+        }
+        BaseResValue baseResValue=getResValue();
+        if(baseResValue instanceof ResValueInt){
+            ResValueInt resValueInt=(ResValueInt)baseResValue;
+            builder.append(" '");
+            builder.append(resValueInt.toString());
+            builder.append(" '");
+        }
         return builder.toString();
     }
 

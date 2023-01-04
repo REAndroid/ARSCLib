@@ -63,10 +63,12 @@ public class XMLEncodeSource extends ByteInputSource {
         }
         try {
             XMLFileEncoder xmlFileEncoder=new XMLFileEncoder(encodeMaterials);
+            xmlFileEncoder.setCurrentPath(xmlSource.getPath());
             encodeMaterials.logVerbose("Encoding xml: "+xmlSource.getPath());
             resXmlBlock = xmlFileEncoder.encode(xmlSource.getXMLDocument());
         } catch (XMLException ex) {
-            throw new IOException(ex.getMessage(), ex);
+            throw new EncodeException("XMLException on: '"+xmlSource.getPath()
+                    +"'\n         '"+ex.getMessage()+"'");
         }
         return resXmlBlock;
     }

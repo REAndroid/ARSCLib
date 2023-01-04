@@ -92,6 +92,14 @@ public class AttributeBagItem {
         int dataLow = 0xffff & getBagItem().getDataLow();
         return (dataLow & value) == value;
     }
+    public boolean isEqualType(AttributeValueType valueType){
+        if(valueType == null || getItemType()!=AttributeItemType.FORMAT){
+            return false;
+        }
+        int value = 0xff & valueType.getByte();
+        int dataLow = 0xffff & getBagItem().getDataLow();
+        return (dataLow  == value);
+    }
     public AttributeValueType[] getValueTypes(){
         AttributeItemType type=getItemType();
         if(type!=AttributeItemType.FORMAT){

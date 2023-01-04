@@ -42,9 +42,11 @@ import java.util.*;
     private final ApkModule apkModule;
     private final Map<Integer, Set<ResConfig>> decodedEntries;
     private XMLBagDecoder xmlBagDecoder;
+    private final Set<String> mDecodedPaths;
     public ApkModuleXmlDecoder(ApkModule apkModule){
         this.apkModule=apkModule;
         this.decodedEntries = new HashMap<>();
+        this.mDecodedPaths = new HashSet<>();
     }
     public void decodeTo(File outDir)
             throws IOException, XMLException {
@@ -59,6 +61,8 @@ import java.util.*;
         decodePublicXml(tableBlock, outDir);
 
         decodeAndroidManifest(entryStore, outDir);
+
+        addDecodedPath(TableBlock.FILE_NAME);
 
         logMessage("Decoding resource files ...");
         List<ResFile> resFileList=apkModule.listResFiles();
@@ -76,6 +80,7 @@ import java.util.*;
         }else {
             decodeResRaw(outDir, resFile);
         }
+        addDecodedPath(resFile.getFilePath());
     }
     private void decodeResRaw(File outDir, ResFile resFile)
             throws IOException {
@@ -147,6 +152,7 @@ import java.util.*;
         int currentPackageId= manifestBlock.guessCurrentPackageId();
         XMLDocument xmlDocument=manifestBlock.decodeToXml(entryStore, currentPackageId);
         xmlDocument.save(file, true);
+        addDecodedPath(AndroidManifestBlock.FILE_NAME);
     }
      private void addDecodedEntry(Collection<EntryBlock> entryBlockList){
          for(EntryBlock entryBlock:entryBlockList){
@@ -245,7 +251,11 @@ import java.util.*;
         logMessage("Extracting root files");
         File rootDir = new File(outDir, "root");
         for(InputSource inputSource:apkModule.getApkArchive().listInputSources()){
+            if(containsDecodedPath(inputSource.getAlias())){
+                continue;
+            }
             extractRootFiles(rootDir, inputSource);
+            addDecodedPath(inputSource.getAlias());
         }
     }
     private void extractRootFiles(File rootDir, InputSource inputSource) throws IOException {
@@ -259,6 +269,12 @@ import java.util.*;
         FileOutputStream outputStream=new FileOutputStream(file);
         inputSource.write(outputStream);
         outputStream.close();
+    }
+    private boolean containsDecodedPath(String path){
+        return mDecodedPaths.contains(path);
+    }
+    private void addDecodedPath(String path){
+        mDecodedPaths.add(path);
     }
 
     private void logMessage(String msg) {

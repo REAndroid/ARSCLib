@@ -65,7 +65,7 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
                 bagItem.setType(ValueType.REFERENCE);
             }
             bagItem.setData(getMaterials().resolveReference(valueText));
-        }else if(attributeBag.contains(AttributeValueType.STRING)) {
+        }else if(attributeBag.isEqualType(AttributeValueType.STRING)) {
             bagItem.setValueAsString(valueText);
         }else if(EncodeUtil.isEmpty(valueText)) {
             bagItem.setTypeAndData(ValueType.NULL, 0);

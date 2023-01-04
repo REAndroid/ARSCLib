@@ -49,7 +49,7 @@ public class ApkUtil {
     public static List<File> recursiveFiles(File dir, String ext){
         List<File> results=new ArrayList<>();
         if(dir.isFile()){
-            if(ext==null || dir.getName().endsWith(ext)){
+            if(hasExtension(dir, ext)){
                 results.add(dir);
             }
             return results;
@@ -63,7 +63,7 @@ public class ApkUtil {
         }
         for(File file:files){
             if(file.isFile()){
-                if(ext!=null && !file.getName().endsWith(ext)){
+                if(!hasExtension(file, ext)){
                     continue;
                 }
                 results.add(file);
@@ -74,26 +74,7 @@ public class ApkUtil {
         return results;
     }
     public static List<File> recursiveFiles(File dir){
-        List<File> results=new ArrayList<>();
-        if(dir.isFile()){
-            results.add(dir);
-            return results;
-        }
-        if(!dir.isDirectory()){
-            return results;
-        }
-        File[] files=dir.listFiles();
-        if(files==null){
-            return results;
-        }
-        for(File file:files){
-            if(file.isFile()){
-                results.add(file);
-                continue;
-            }
-            results.addAll(recursiveFiles(file));
-        }
-        return results;
+        return recursiveFiles(dir, null);
     }
     public static List<File> listDirectories(File dir){
         List<File> results=new ArrayList<>();
@@ -116,13 +97,21 @@ public class ApkUtil {
         }
         for(File file:files){
             if(file.isFile()){
-                if(ext!=null && !file.getName().endsWith(ext)){
+                if(!hasExtension(file, ext)){
                     continue;
                 }
                 results.add(file);
             }
         }
         return results;
+    }
+    private static boolean hasExtension(File file, String ext){
+        if(ext==null){
+            return true;
+        }
+        String name=file.getName().toLowerCase();
+        ext=ext.toLowerCase();
+        return name.endsWith(ext);
     }
     public static String toModuleName(File file){
         String name=file.getName();

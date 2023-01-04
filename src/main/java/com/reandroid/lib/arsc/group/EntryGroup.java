@@ -75,7 +75,7 @@ public class EntryGroup extends ItemGroup<EntryBlock> {
         }
         boolean renameOk=false;
         for(EntryBlock block:items){
-            if(block==null||block.isNull()){
+            if(block==null){
                 continue;
             }
             if(block.getSpecReference()==specReference){
@@ -87,15 +87,22 @@ public class EntryGroup extends ItemGroup<EntryBlock> {
         return renameOk;
     }
     public EntryBlock pickOne(){
-        EntryBlock defEntryBlock=getDefault();
-        if(defEntryBlock!=null){
-            return defEntryBlock;
+        EntryBlock[] items=getItems();
+        if(items==null){
+            return null;
         }
-        Iterator<EntryBlock> itr=iterator(true);
-        while (itr.hasNext()){
-            return itr.next();
+        EntryBlock result = null;
+        for(EntryBlock entryBlock:items){
+            if(entryBlock==null){
+                continue;
+            }
+            if(result==null || result.isNull()){
+                result=entryBlock;
+            }else if(entryBlock.isDefault()){
+                return entryBlock;
+            }
         }
-        return null;
+        return result;
     }
     public EntryBlock getDefault(){
         Iterator<EntryBlock> itr=iterator(true);

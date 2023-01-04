@@ -17,10 +17,7 @@ public class XmlPullParserException extends Exception {
         super(s);
     }
     public XmlPullParserException(String msg, XmlPullParser parser, Throwable chain) {
-        super ((msg == null ? "" : msg+" ")
-               + (parser == null ? "" : "(position:"+parser.getPositionDescription()+") ")
-               + (chain == null ? "" : "caused by: "+chain));
-
+        super(buildMessage(msg, parser));
         if (parser != null) {
             this.row = parser.getLineNumber();
             this.column = parser.getColumnNumber();
@@ -30,5 +27,19 @@ public class XmlPullParserException extends Exception {
     public Throwable getDetail() { return detail; }
     public int getLineNumber() { return row; }
     public int getColumnNumber() { return column; }
+    private static String buildMessage(String msg, XmlPullParser parser){
+        StringBuilder builder=new StringBuilder();
+        if(parser!=null){
+            builder.append("[line=");
+            builder.append(parser.getLineNumber());
+            builder.append(", col=");
+            builder.append(parser.getColumnNumber());
+            builder.append("] ");
+        }
+        if(msg!=null){
+            builder.append(msg);
+        }
+        return builder.toString();
+    }
 }
 

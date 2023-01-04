@@ -30,8 +30,14 @@ import java.io.InputStream;
 public class XMLFileEncoder {
     private final EncodeMaterials materials;
     private ResXmlBlock resXmlBlock;
+    private String mCurrentPath;
     public XMLFileEncoder(EncodeMaterials materials){
         this.materials=materials;
+    }
+
+    // Just for logging purpose
+    public void setCurrentPath(String path) {
+        this.mCurrentPath = path;
     }
     public ResXmlBlock encode(String xmlString){
         try {
@@ -50,6 +56,7 @@ public class XMLFileEncoder {
         return null;
     }
     public ResXmlBlock encode(File xmlFile){
+        setCurrentPath(xmlFile.getAbsolutePath());
         try {
             return encode(XMLDocument.load(xmlFile));
         } catch (XMLException ex) {
@@ -100,6 +107,14 @@ public class XMLFileEncoder {
             String prefix=attribute.getNamePrefix();
             if(prefix!=null){
                 ResXmlStartNamespace ns = resXmlElement.getStartNamespaceByPrefix(prefix);
+                if(ns==null){
+                    ns=forceCreateNamespace(resXmlElement, resourceId, prefix);
+                }
+                if(ns==null){
+                    throw new EncodeException("Namespace not found: "
+                            +attribute.toString()
+                            +", path="+mCurrentPath);
+                }
                 xmlAttribute.setNamespaceReference(ns.getUriReference());
             }
 
@@ -125,15 +140,14 @@ public class XMLFileEncoder {
                     xmlAttribute.setRawValue(encodeResult.value);
                     continue;
                 }
-                if(attributeBag.contains(AttributeValueType.STRING)) {
+                if(attributeBag.isEqualType(AttributeValueType.STRING)) {
                     xmlAttribute.setValueAsString(valueText);
                     continue;
                 }
             }
 
             if(EncodeUtil.isEmpty(valueText)) {
-                xmlAttribute.setValueType(ValueType.NULL);
-                xmlAttribute.setRawValue(0);
+                xmlAttribute.setValueAsString("");
             }else{
                 ValueDecoder.EncodeResult encodeResult =
                         ValueDecoder.encodeGuessAny(valueText);
@@ -145,6 +159,7 @@ public class XMLFileEncoder {
                 }
             }
         }
+        resXmlElement.calculatePositions();
     }
     private void ensureNamespaces(XMLElement element, ResXmlElement resXmlElement){
         int count=element.getAttributeCount();
@@ -180,5 +195,22 @@ public class XMLFileEncoder {
         if(entryBlock!=null){
             idBuilder.add(entryBlock.getResourceId(), entryBlock.getName());
         }
+    }
+    private ResXmlStartNamespace forceCreateNamespace(ResXmlElement resXmlElement,
+                                                      int resourceId, String prefix){
+        if(!materials.isForceCreateNamespaces()){
+            return null;
+        }
+        int pkgId = (resourceId>>24) & 0xff;
+        String uri;
+        if(pkgId==materials.getCurrentPackageId()){
+            uri=EncodeUtil.URI_APP;
+        }else {
+            uri=EncodeUtil.URI_ANDROID;
+        }
+        ResXmlElement root=resXmlElement.getRootResXmlElement();
+        ResXmlStartNamespace ns=root.getOrCreateNamespace(uri, prefix);
+        materials.logMessage("Force created ns: "+prefix+":"+uri);
+        return ns;
     }
 }
