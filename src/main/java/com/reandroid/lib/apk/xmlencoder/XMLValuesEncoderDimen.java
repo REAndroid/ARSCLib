@@ -26,6 +26,9 @@ class XMLValuesEncoderDimen extends XMLValuesEncoder{
     void encodeStringValue(EntryBlock entryBlock, String value){
         ValueDecoder.EncodeResult encodeResult =
                 ValueDecoder.encodeDimensionOrFloat(value);
+        if(encodeResult==null){
+            encodeResult=ValueDecoder.encodeHexOrInt(value);
+        }
         if(encodeResult!=null){
             entryBlock.setValueAsRaw(encodeResult.valueType, encodeResult.value);
         }else {
