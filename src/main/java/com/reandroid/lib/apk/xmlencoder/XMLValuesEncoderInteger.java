@@ -31,6 +31,10 @@ class XMLValuesEncoderInteger extends XMLValuesEncoder{
         }else if(ValueDecoder.isHex(value)){
             entryBlock.setValueAsRaw(ValueType.INT_HEX, ValueDecoder.parseHex(value));
         }else {
+            ValueDecoder.EncodeResult encodeResult=ValueDecoder.encodeDimensionOrFloat(value);
+            if(encodeResult!=null){
+                entryBlock.setValueAsRaw(encodeResult.valueType, encodeResult.value);
+            }
             throw new EncodeException("Unknown value for type <integer>: '"+value+"'");
         }
     }
