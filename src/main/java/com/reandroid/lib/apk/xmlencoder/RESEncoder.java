@@ -32,6 +32,7 @@
  import java.util.HashSet;
  import java.util.List;
  import java.util.Set;
+ import java.util.zip.ZipEntry;
 
  public class RESEncoder {
      private APKLogger apkLogger;
@@ -48,6 +49,8 @@
          if(!module.hasTableBlock()){
              BlockInputSource<TableBlock> inputSource=
                      new BlockInputSource<>(TableBlock.FILE_NAME, block);
+             inputSource.setMethod(ZipEntry.STORED);
+             this.apkModule.getUncompressedFiles().addPath(inputSource);
              this.apkModule.getApkArchive().add(inputSource);
          }
      }
