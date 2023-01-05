@@ -468,7 +468,7 @@ import java.util.Set;
         int raw=getRawValue();
         String value;
         if(valueType==ValueType.STRING){
-            value = getValueAsString();
+            value = ValueDecoder.escapeSpecialCharacter(getValueAsString());
         }else {
             value = ValueDecoder.decode(entryStore,
                     currentPackageId,

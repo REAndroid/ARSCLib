@@ -229,7 +229,8 @@ import java.util.*;
             String value;
             ResValueInt resValueInt=(ResValueInt) entryBlock.getResValue();
             if(resValueInt.getValueType()== ValueType.STRING){
-                value=resValueInt.getValueAsString();
+                value=ValueDecoder.escapeSpecialCharacter(
+                        resValueInt.getValueAsString());
             }else {
                 value= ValueDecoder.decodeEntryValue(entryStore,
                         entryBlock.getPackageBlock(),

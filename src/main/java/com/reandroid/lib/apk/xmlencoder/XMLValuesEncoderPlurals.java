@@ -52,7 +52,8 @@ class XMLValuesEncoderPlurals extends XMLValuesEncoderBag{
                 bagItem.setType(ValueType.NULL);
                 bagItem.setData(0);
             }else{
-                bagItem.setValueAsString(valueText);
+                bagItem.setValueAsString(ValueDecoder
+                        .unEscapeSpecialCharacter(valueText));
             }
         }
     }

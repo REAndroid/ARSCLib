@@ -66,7 +66,8 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
             }
             bagItem.setData(getMaterials().resolveReference(valueText));
         }else if(attributeBag.isEqualType(AttributeValueType.STRING)) {
-            bagItem.setValueAsString(valueText);
+            bagItem.setValueAsString(ValueDecoder
+                    .unEscapeSpecialCharacter(valueText));
         }else if(EncodeUtil.isEmpty(valueText)) {
             bagItem.setTypeAndData(ValueType.NULL, 0);
         }else{
@@ -75,7 +76,7 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
                 bagItem.setTypeAndData(encodeResult.valueType,
                         encodeResult.value);
             }else {
-                bagItem.setValueAsString(valueText);
+                bagItem.setValueAsString(ValueDecoder.unEscapeSpecialCharacter(valueText));
             }
         }
     }

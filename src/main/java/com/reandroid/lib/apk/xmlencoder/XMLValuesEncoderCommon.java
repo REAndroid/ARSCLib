@@ -31,7 +31,8 @@ class XMLValuesEncoderCommon extends XMLValuesEncoder{
             if(encodeResult!=null){
                 entryBlock.setValueAsRaw(encodeResult.valueType, encodeResult.value);
             }else {
-                entryBlock.setValueAsString(value);
+                entryBlock.setValueAsString(ValueDecoder
+                        .unEscapeSpecialCharacter(value));
             }
         }
     }

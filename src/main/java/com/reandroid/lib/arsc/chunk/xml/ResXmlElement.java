@@ -20,6 +20,7 @@ import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.BlockList;
 import com.reandroid.lib.arsc.container.FixedBlockContainer;
 import com.reandroid.lib.arsc.container.SingleBlockContainer;
+import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.ResXmlString;
@@ -759,7 +760,8 @@ import java.util.*;
         }
         ResXmlText resXmlText = getResXmlText();
         if(resXmlText!=null){
-            xmlElement.setTextContent(resXmlText.getText());
+            xmlElement.setTextContent(
+                    ValueDecoder.escapeSpecialCharacter(resXmlText.getText()));
         }
         return xmlElement;
     }

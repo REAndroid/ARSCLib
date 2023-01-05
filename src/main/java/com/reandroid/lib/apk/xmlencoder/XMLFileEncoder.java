@@ -141,7 +141,8 @@ public class XMLFileEncoder {
                     continue;
                 }
                 if(attributeBag.isEqualType(AttributeValueType.STRING)) {
-                    xmlAttribute.setValueAsString(valueText);
+                    xmlAttribute.setValueAsString(ValueDecoder
+                            .unEscapeSpecialCharacter(valueText));
                     continue;
                 }
             }
@@ -155,7 +156,8 @@ public class XMLFileEncoder {
                     xmlAttribute.setValueType(encodeResult.valueType);
                     xmlAttribute.setRawValue(encodeResult.value);
                 }else {
-                    xmlAttribute.setValueAsString(valueText);
+                    xmlAttribute.setValueAsString(ValueDecoder
+                            .unEscapeSpecialCharacter(valueText));
                 }
             }
         }

@@ -31,6 +31,34 @@ import java.util.regex.Pattern;
 
  public class ValueDecoder {
 
+     public static String escapeSpecialCharacter(String text){
+         if(text==null || text.length()==0){
+             return text;
+         }
+         if(isSpecialCharacter(text.charAt(0))){
+             return '\\' +text;
+         }
+         return text;
+     }
+     public static String unEscapeSpecialCharacter(String text){
+         if(text==null || text.length()<2){
+             return text;
+         }
+         if(text.charAt(0)!='\\' || !isSpecialCharacter(text.charAt(1))){
+             return text;
+         }
+         return text.substring(1);
+     }
+     private static boolean isSpecialCharacter(char ch){
+         switch (ch){
+             case '@':
+             case '?':
+             case '#':
+                 return true;
+             default:
+                 return false;
+         }
+     }
      public static EncodeResult encodeGuessAny(String txt){
          if(txt==null){
              return null;
@@ -574,7 +602,7 @@ import java.util.regex.Pattern;
         if(tableString==null){
             return null;
         }
-        return tableString.getHtml();
+        return escapeSpecialCharacter(tableString.getHtml());
     }
     private static String decodeString(EntryStore entryStore, int packageOrResourceId, int stringRef){
         if(entryStore==null||packageOrResourceId==0){
@@ -606,7 +634,7 @@ import java.util.regex.Pattern;
             }
         }
         if(tableString!=null){
-            return tableString.getHtml();
+            return escapeSpecialCharacter(tableString.getHtml());
         }
         return null;
     }
@@ -623,7 +651,7 @@ import java.util.regex.Pattern;
         if(tableString==null){
             return null;
         }
-        return tableString.getHtml();
+        return escapeSpecialCharacter(tableString.getHtml());
     }
 
     private static String decodeHex(int rawVal){

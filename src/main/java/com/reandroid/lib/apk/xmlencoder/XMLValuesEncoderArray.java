@@ -51,10 +51,12 @@ class XMLValuesEncoderArray extends XMLValuesEncoderBag{
                     bagItem.setTypeAndData(encodeResult.valueType,
                             encodeResult.value);
                 }else {
-                    bagItem.setValueAsString(valueText);
+                    bagItem.setValueAsString(ValueDecoder
+                            .unEscapeSpecialCharacter(valueText));
                 }
             }else {
-                bagItem.setValueAsString(valueText);
+                bagItem.setValueAsString(ValueDecoder
+                        .unEscapeSpecialCharacter(valueText));
             }
         }
     }

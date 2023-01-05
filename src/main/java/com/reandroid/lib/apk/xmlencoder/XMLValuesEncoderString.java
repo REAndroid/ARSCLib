@@ -34,7 +34,7 @@ class XMLValuesEncoderString extends XMLValuesEncoder{
     }
     @Override
     void encodeStringValue(EntryBlock entryBlock, String value){
-        entryBlock.setValueAsString(value);
+        entryBlock.setValueAsString(ValueDecoder.unEscapeSpecialCharacter(value));
     }
     @Override
     void encodeNullValue(EntryBlock entryBlock){
@@ -53,7 +53,7 @@ class XMLValuesEncoderString extends XMLValuesEncoder{
             if(value==null || ValueDecoder.isReference(value)){
                 continue;
             }
-            stringList.add(value);
+            stringList.add(ValueDecoder.unEscapeSpecialCharacter(value));
         }
         getMaterials().addTableStringPool(stringList);
     }
