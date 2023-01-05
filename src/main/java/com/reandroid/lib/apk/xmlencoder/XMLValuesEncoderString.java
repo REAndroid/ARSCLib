@@ -27,11 +27,7 @@ class XMLValuesEncoderString extends XMLValuesEncoder{
     XMLValuesEncoderString(EncodeMaterials materials) {
         super(materials);
     }
-    @Override
-    public void encode(String type, String qualifiers, XMLDocument xmlDocument){
-        preloadStringPool(xmlDocument);
-        super.encode(type, qualifiers, xmlDocument);
-    }
+
     @Override
     void encodeStringValue(EntryBlock entryBlock, String value){
         entryBlock.setValueAsString(ValueDecoder.unEscapeSpecialCharacter(value));
@@ -43,18 +39,5 @@ class XMLValuesEncoderString extends XMLValuesEncoder{
     @Override
     void encodeBooleanValue(EntryBlock entryBlock, String value){
         entryBlock.setValueAsString(value);
-    }
-    private void preloadStringPool(XMLDocument xmlDocument){
-        XMLElement documentElement = xmlDocument.getDocumentElement();
-        List<String> stringList = new ArrayList<>();
-        int count = documentElement.getChildesCount();
-        for(int i=0;i<count;i++){
-            String value=getValue(documentElement.getChildAt(i));
-            if(value==null || ValueDecoder.isReference(value)){
-                continue;
-            }
-            stringList.add(ValueDecoder.unEscapeSpecialCharacter(value));
-        }
-        getMaterials().addTableStringPool(stringList);
     }
 }

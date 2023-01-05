@@ -66,6 +66,7 @@
              throw new IOException("No .*/values/"
                      +ApkUtil.FILE_NAME_PUBLIC_XML+"  file found in '"+mainDir);
          }
+         preloadStringPool(pubXmlFileList);
          for(File pubXmlFile:pubXmlFileList){
              EncodeMaterials encodeMaterials = loadPublicXml(pubXmlFile);
              addParsedFiles(pubXmlFile);
@@ -89,6 +90,20 @@
              getApkModule().getApkArchive().add(xmlEncodeSource);
          }
          tableBlock.refresh();
+     }
+     private void preloadStringPool(List<File> pubXmlFileList){
+         logMessage("Loading string pool ...");
+         ValuesStringPoolBuilder poolBuilder=new ValuesStringPoolBuilder();
+         for(File pubXml:pubXmlFileList){
+             File resDir=toResDirectory(pubXml);
+             logMessage("Scanning: "+resDir.getParentFile().getName());
+             List<File> valuesDirList = listValuesDir(resDir);
+             for(File dir:valuesDirList){
+                 logVerbose(poolBuilder.size()+" building pool: "+dir.getName());
+                 poolBuilder.scanValuesDirectory(dir);
+             }
+         }
+         poolBuilder.addTo(tableBlock.getTableStringPool());
      }
      private EncodeMaterials loadPublicXml(File pubXmlFile) throws IOException, XMLException {
          ResourceIds resourceIds=new ResourceIds();
