@@ -17,6 +17,7 @@ package com.reandroid.lib.apk;
 
 import com.reandroid.archive.InputSource;
 import com.reandroid.lib.apk.xmldecoder.XMLBagDecoder;
+import com.reandroid.lib.apk.xmldecoder.XMLNamespaceValidator;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
@@ -117,6 +118,8 @@ import java.util.*;
         File file=new File(resDir, path);
 
         logVerbose("Decoding: "+path);
+        XMLNamespaceValidator namespaceValidator=new XMLNamespaceValidator(resXmlBlock);
+        namespaceValidator.validate();
         XMLDocument xmlDocument=resXmlBlock.decodeToXml(entryStore, packageBlock.getId());
         xmlDocument.save(file, true);
 
