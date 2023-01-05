@@ -184,11 +184,7 @@
              }
          }
          for(PackageBlock packageBlock:currentPackage.getTableBlock().listPackages()){
-             if(packageBlock==currentPackage ||
-                     packageBlock.getId()!=currentPackage.getId()){
-                 continue;
-             }
-             for(EntryGroup entryGroup : currentPackage.listEntryGroup()){
+             for(EntryGroup entryGroup : packageBlock.listEntryGroup()){
                  if(type.equals(entryGroup.getTypeName()) &&
                          name.equals(entryGroup.getSpecName())){
                      return entryGroup;
