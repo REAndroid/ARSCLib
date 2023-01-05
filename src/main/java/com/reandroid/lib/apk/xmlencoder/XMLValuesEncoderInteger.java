@@ -34,8 +34,9 @@ class XMLValuesEncoderInteger extends XMLValuesEncoder{
             ValueDecoder.EncodeResult encodeResult=ValueDecoder.encodeDimensionOrFloat(value);
             if(encodeResult!=null){
                 entryBlock.setValueAsRaw(encodeResult.valueType, encodeResult.value);
+            }else {
+                throw new EncodeException("Unknown value for type <integer>: '"+value+"'");
             }
-            throw new EncodeException("Unknown value for type <integer>: '"+value+"'");
         }
     }
 }
