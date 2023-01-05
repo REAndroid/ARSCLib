@@ -17,6 +17,7 @@ package com.reandroid.lib.apk.xmlencoder;
 
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.TypeBlock;
+import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.item.SpecString;
 import com.reandroid.lib.arsc.pool.TypeStringPool;
@@ -92,8 +93,13 @@ class XMLValuesEncoder {
         PackageBlock packageBlock = getMaterials().getCurrentPackage();
         TypeStringPool typeStringPool = packageBlock.getTypeStringPool();
         byte typeId = typeStringPool.idOf(type);
-        return packageBlock.getSpecTypePairArray()
-                .getOrCreateTypeBlock(typeId, qualifiers);
+        SpecTypePair specTypePair
+                = packageBlock.getSpecTypePairArray().getOrCreate(typeId);
+        int highest = specTypePair.getHighestEntryCount();
+        TypeBlock typeBlock = specTypePair
+                .getOrCreateTypeBlock(qualifiers);
+        typeBlock.getEntryBlockArray().ensureSize(highest);
+        return typeBlock;
     }
     EncodeMaterials getMaterials() {
         return materials;

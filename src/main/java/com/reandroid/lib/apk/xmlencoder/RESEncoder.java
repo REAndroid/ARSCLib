@@ -189,7 +189,7 @@
                  continue;
              }
              xmlFiles.addAll(
-                     ApkUtil.recursiveFiles(mainDir, ApkUtil.FILE_NAME_PUBLIC_XML));
+                     ApkUtil.recursiveFiles(dir, ApkUtil.FILE_NAME_PUBLIC_XML));
          }
          List<File> results = new ArrayList<>();
          for(File file:xmlFiles){
@@ -197,6 +197,7 @@
                  results.add(file);
              }
          }
+         EncodeUtil.sortPublicXml(results);
          return results;
      }
 

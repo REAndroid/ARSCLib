@@ -22,6 +22,17 @@ package com.reandroid.lib.apk.xmlencoder;
  import java.util.regex.Pattern;
 
  public class EncodeUtil {
+     public static void sortPublicXml(List<File> fileList){
+         Comparator<File> cmp=new Comparator<File>() {
+             @Override
+             public int compare(File f1, File f2) {
+                 String n1=f1.getAbsolutePath();
+                 String n2=f2.getAbsolutePath();
+                 return n1.compareTo(n2);
+             }
+         };
+         fileList.sort(cmp);
+     }
      public static void sortValuesXml(List<File> fileList){
          Comparator<File> cmp=new Comparator<File>() {
              @Override
