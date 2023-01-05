@@ -51,6 +51,18 @@ import java.util.Set;
         return results;
     }
     public XMLAttribute decodeToXml(){
-        return new SchemaAttr(getPrefix(), getUri());
+        String uri=getUri();
+        String prefix=getPrefix();
+        if(isEmpty(uri) || isEmpty(prefix)){
+            return null;
+        }
+        return new SchemaAttr(prefix, uri);
+    }
+    private boolean isEmpty(String txt){
+        if(txt==null){
+            return true;
+        }
+        txt=txt.trim();
+        return txt.length()==0;
     }
 }
