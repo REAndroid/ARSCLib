@@ -28,13 +28,6 @@ public class XmlHeaderElement extends XMLElement {
         initializeStartEnd();
         setDefaultAttr();
     }
-    @Override
-    XMLElement onCloneElement(){
-        return new XmlHeaderElement(this);
-    }
-    @Override
-    void cloneAllAttributes(XMLElement element){
-    }
     private void copyAll(XmlHeaderElement element){
         if(element==null){
             return;

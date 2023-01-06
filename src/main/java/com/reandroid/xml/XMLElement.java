@@ -21,20 +21,19 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.*;
 
-public class XMLElement {
+public class XMLElement extends XMLNode{
     static final long DEBUG_TO_STRING=500;
     private String mTagName;
     private XMLTextAttribute mTextAttribute;
-    private List<XMLAttribute> mAttributes;
-    private List<XMLElement> mChildes;
+    private final List<XMLAttribute> mAttributes = new ArrayList<>();
+    private final List<XMLElement> mChildes = new ArrayList<>();
     private List<XMLComment> mComments;
+    private final List<XMLText> mTexts = new ArrayList<>();
     private XMLElement mParent;
     private int mIndent;
     private Object mTag;
     private int mResId;
     private float mIndentScale;
-    private String mUniqueAttrName;
-    private List<String> mUniqueNameValues;
     private String mStart;
     private String mStartPrefix;
     private String mEnd;
@@ -48,6 +47,19 @@ public class XMLElement {
         setDefaultStartEnd();
     }
 
+    public void addText(XMLText text){
+        if(text==null){
+            return;
+        }
+        mTexts.add(text);
+        super.addChildNode(text);
+    }
+    private void appendText(String text){
+        if(text==null || text.length()==0){
+            return;
+        }
+        addText(new XMLText(text));
+    }
     public String getTagNamePrefix(){
         int i=mTagName.indexOf(":");
         if(i>0){
@@ -67,45 +79,6 @@ public class XMLElement {
         this.mEnd=">";
         this.mStartPrefix="/";
         this.mEndPrefix="/";
-    }
-    public XMLElement removeChild(XMLElement element){
-        if(mChildes==null || element==null){
-            return null;
-        }
-        int i=mChildes.indexOf(element);
-        if(i<0){
-            return null;
-        }
-        XMLElement result=mChildes.get(i);
-        mChildes.remove(i);
-        result.setParent(null);
-        return result;
-    }
-    public XMLElement getFirstChildWithAttrName(String name){
-        if(mChildes==null || name==null){
-            return null;
-        }
-        for(XMLElement element:mChildes){
-            XMLAttribute attr=element.getAttribute(name);
-            if(attr!=null){
-                return element;
-            }
-        }
-        return null;
-    }
-    public XMLElement getFirstChildWithAttr(String attrName, String attrValue){
-        if(mChildes==null || attrName==null || attrValue==null){
-            return null;
-        }
-        for(XMLElement element:mChildes){
-            XMLAttribute attr=element.getAttribute(attrName);
-            if(attr!=null){
-                if(attrValue.equals(attr.getValue())){
-                    return element;
-                }
-            }
-        }
-        return null;
     }
     public void applyNameSpaceItems(){
         if(nameSpaceItems!=null){
@@ -162,81 +135,23 @@ public class XMLElement {
         }
         return null;
     }
-    public void setStart(String start) {
+    void setStart(String start) {
         this.mStart = start;
     }
-    public void setEnd(String end) {
+    void setEnd(String end) {
         this.mEnd = end;
     }
-    public void setStartPrefix(String pfx) {
+    void setStartPrefix(String pfx) {
         if(pfx==null){
             pfx="";
         }
         this.mStartPrefix = pfx;
     }
-    public void setEndPrefix(String pfx) {
+    void setEndPrefix(String pfx) {
         if(pfx==null){
             pfx="";
         }
         this.mEndPrefix = pfx;
-    }
-
-    public void setUniqueAttrName(String attrName){
-        clearUniqueNameValues();
-        if(XMLUtil.isEmpty(attrName)){
-            mUniqueAttrName=null;
-            return;
-        }
-        mUniqueAttrName=attrName;
-    }
-    public String getUniqueAttrName(){
-        return mUniqueAttrName;
-    }
-    private void clearUniqueNameValues(){
-        if(mUniqueNameValues!=null){
-            mUniqueNameValues.clear();
-            mUniqueNameValues=null;
-        }
-    }
-    private void addUniqueNameValues(XMLElement element){
-        if(element==null){
-            return;
-        }
-        XMLAttribute baseAttr=element.getAttribute(getUniqueAttrName());
-        if(baseAttr==null){
-            return;
-        }
-        addUniqueNameValues(baseAttr.getValue());
-    }
-    private void addUniqueNameValues(String nameVal){
-        if(XMLUtil.isEmpty(nameVal)){
-            return;
-        }
-        if(mUniqueNameValues==null){
-            mUniqueNameValues=new ArrayList<>();
-        }
-        mUniqueNameValues.add(nameVal);
-    }
-    private boolean shouldCheckUniqueElement(){
-        return mUniqueAttrName!=null;
-    }
-    private boolean containsUniqueNameValue(XMLElement element){
-        if(element==null){
-            return false;
-        }
-        return containsUniqueNameValue(element.getAttribute(getUniqueAttrName()));
-    }
-    private boolean containsUniqueNameValue(XMLAttribute baseAttr){
-        if(baseAttr==null){
-            return false;
-        }
-        return containsUniqueNameValue(baseAttr.getValue());
-    }
-    private boolean containsUniqueNameValue(String nameVal){
-        if(mUniqueNameValues==null|| XMLUtil.isEmpty(nameVal)){
-            return false;
-        }
-        return mUniqueNameValues.contains(nameVal);
     }
     void setIndentScale(float scale){
         mIndentScale=scale;
@@ -254,81 +169,10 @@ public class XMLElement {
     public void setResourceId(int id){
         mResId=id;
     }
-    public boolean containsSameChild(XMLElement baseElement){
-        if(baseElement==null||mChildes==null){
-            return false;
-        }
-        for(XMLElement ch:mChildes){
-            if(baseElement.isSame(ch)){
-                return true;
-            }
-        }
-        return false;
-    }
-    private String getUniqueId(){
-        StringBuilder builder=new StringBuilder(getTagName());
-        builder.append(attributesToString(false));
-        return builder.toString();
-    }
-    private boolean isSame(XMLElement baseElement){
-        if(baseElement==null){
-            return false;
-        }
-        String s1=getUniqueId();
-        String s2=baseElement.getUniqueId();
-        return XMLUtil.isStringEqual(s1,s2);
-    }
-    public XMLElement cloneElement(){
-        XMLElement baseElement=onCloneElement();
-        baseElement.setTag(getTag());
-        cloneAllAttributes(baseElement);
-        if(mChildes!=null){
-            for(XMLElement element:mChildes){
-                baseElement.addChildNoCheck(element.cloneElement());
-            }
-        }
-        if(mComments!=null){
-            for(XMLComment ce:mComments){
-                baseElement.addComment((XMLComment) ce.cloneElement());
-            }
-        }
-        return baseElement;
-    }
-    void cloneAllAttributes(XMLElement element){
-        if(mAttributes!=null){
-            for(XMLAttribute attr:mAttributes){
-                element.addAttributeNoCheck(attr.cloneAttr());
-            }
-        }
-        XMLTextAttribute textAttribute=mTextAttribute;
-        if(textAttribute!=null){
-            element.mTextAttribute=mTextAttribute.cloneAttr();
-        }
-    }
-    XMLElement onCloneElement(){
-        return new XMLElement(getTagName());
-    }
     public XMLElement createElement(String tag) {
         XMLElement baseElement=new XMLElement(tag);
         addChildNoCheck(baseElement);
         return baseElement;
-    }
-    public boolean containsChild(XMLElement baseElement){
-        if(baseElement==null||mChildes==null){
-            return false;
-        }
-        return mChildes.contains(baseElement);
-    }
-
-    public void addChild(XMLElement[] elements) {
-        if(elements==null){
-            return;
-        }
-        int max=elements.length;
-        for(int i=0;i<max;i++){
-            XMLElement baseElement=elements[i];
-            addChild(baseElement);
-        }
     }
     public void addChild(Collection<XMLElement> elements) {
         if(elements==null){
@@ -338,8 +182,14 @@ public class XMLElement {
             addChild(element);
         }
     }
-    public void addChild(XMLElement baseElement) {
-        addChildNoCheck(baseElement);
+    public void addChild(XMLElement child) {
+        addChildNoCheck(child);
+    }
+    private void clearChildElements(){
+        mChildes.clear();
+    }
+    private void clearTexts(){
+        mTexts.clear();
     }
     public XMLComment getCommentAt(int index){
         if(mComments==null || index<0){
@@ -352,7 +202,7 @@ public class XMLElement {
     }
     public void hideComments(boolean recursive, boolean hide){
         hideComments(hide);
-        if(recursive && mChildes!=null){
+        if(recursive){
             for(XMLElement child:mChildes){
                 child.hideComments(recursive, hide);
             }
@@ -397,75 +247,30 @@ public class XMLElement {
         mComments.add(commentElement);
         commentElement.setIndent(getIndent());
         commentElement.setParent(this);
+        super.addChildNode(commentElement);
     }
-    public void removeAllChildes(){
-        if(mChildes==null){
-            return;
-        }
+    public void removeChildElements(){
         mChildes.clear();
     }
+    public List<XMLAttribute> listAttributes(){
+        return mAttributes;
+    }
     public int getChildesCount(){
-        if(mChildes==null){
-            return 0;
-        }
         return mChildes.size();
     }
-    public XMLElement getFirstElementByTagName(String tagName){
-        if(tagName==null||mChildes==null){
-            return null;
-        }
-        for(XMLElement element:mChildes){
-            if(tagName.equals(element.getTagName())){
-                return element;
-            }
-        }
-        return null;
-    }
-    public XMLElement[] getElementsByTagName(String tagName){
-        if(tagName==null||mChildes==null){
-            return null;
-        }
-        List<XMLElement> results=new ArrayList<>();
-        for(XMLElement element:mChildes){
-            if(tagName.equals(element.getTagName())){
-                results.add(element);
-            }
-        }
-        int max=results.size();
-        if(max==0){
-            return null;
-        }
-        return results.toArray(new XMLElement[max]);
-    }
-    public XMLElement[] getAllChildes(){
-        if(mChildes==null){
-            return null;
-        }
-        int max=mChildes.size();
-        if(max==0){
-            return null;
-        }
-        return mChildes.toArray(new XMLElement[max]);
+    public List<XMLElement> listChildElements(){
+        return mChildes;
     }
     public XMLElement getChildAt(int index){
-        if(mChildes==null||index<0){
-            return null;
-        }
-        if(index>=mChildes.size()){
+        if(index<0 || index>=mChildes.size()){
             return null;
         }
         return mChildes.get(index);
     }
     public int getAttributeCount(){
-        if(mAttributes==null){
-            return 0;
-        }
         return mAttributes.size();
     }
     public XMLAttribute getAttributeAt(int index){
-        if(mAttributes==null||index<0){
-            return null;
-        }
         if(index>=mAttributes.size()){
             return null;
         }
@@ -514,9 +319,6 @@ public class XMLElement {
         return attr.getValueBool();
     }
     public XMLAttribute getAttribute(String name){
-        if(mAttributes==null){
-            return null;
-        }
         if(XMLUtil.isEmpty(name)){
             return null;
         }
@@ -585,42 +387,22 @@ public class XMLElement {
         if(exist!=null){
             return;
         }
-        if(mAttributes==null){
-            mAttributes=new ArrayList<>();
-        }
         mAttributes.add(attr);
     }
     private void addAttributeNoCheck(XMLAttribute attr){
-        if(attr==null){
+        if(attr==null || attr.isEmpty()){
             return;
-        }
-        if(XMLUtil.isEmpty(attr.getName())){
-            return;
-        }
-        if(mAttributes==null){
-            mAttributes=new ArrayList<>();
         }
         mAttributes.add(attr);
     }
     public void sortChildes(Comparator<XMLElement> comparator){
-        if(mChildes==null||comparator==null){
+        if(comparator==null){
             return;
         }
         mChildes.sort(comparator);
     }
-    public void sortAttributesWithChildes(Comparator<XMLAttribute> comparator){
-        if(comparator==null){
-            return;
-        }
-        sortAttributes(comparator);
-        if(mChildes!=null){
-            for(XMLElement element:mChildes){
-                element.sortAttributesWithChildes(comparator);
-            }
-        }
-    }
     public void sortAttributes(Comparator<XMLAttribute> comparator){
-        if(mAttributes==null || comparator==null){
+        if(comparator==null){
             return;
         }
         mAttributes.sort(comparator);
@@ -631,16 +413,14 @@ public class XMLElement {
     void setParent(XMLElement baseElement){
         mParent=baseElement;
     }
-    private void addChildNoCheck(XMLElement baseElement){
-        if(baseElement==null){
+    private void addChildNoCheck(XMLElement child){
+        if(child==null || child == this){
             return;
         }
-        if(mChildes==null){
-            mChildes=new ArrayList<>();
-        }
-        baseElement.setParent(this);
-        baseElement.setIndent(getChildIndent());
-        mChildes.add(baseElement);
+        child.setParent(this);
+        child.setIndent(getChildIndent());
+        mChildes.add(child);
+        super.addChildNode(child);
     }
     public int getLevel(){
         int rs=0;
@@ -652,10 +432,13 @@ public class XMLElement {
         return rs;
     }
     int getIndent(){
+        if(hasTextContent()){
+            return 0;
+        }
         return mIndent;
     }
     int getChildIndent(){
-        if(mIndent<=0){
+        if(mIndent<=0 || hasTextContent()){
             return 0;
         }
         int rs=mIndent+1;
@@ -671,33 +454,15 @@ public class XMLElement {
     }
     public void setIndent(int indent){
         mIndent=indent;
-        if(mChildes!=null){
-            int chIndent=getChildIndent();
-            for(XMLElement be:mChildes){
-                be.setIndent(chIndent);
-            }
+        int chIndent=getChildIndent();
+        for(XMLElement child:mChildes){
+            child.setIndent(chIndent);
         }
         if(mComments!=null){
             for(XMLComment ce:mComments){
                 ce.setIndent(indent);
             }
         }
-    }
-    private String getAttributesIndentText(){
-        int i=getLevel()+1;
-        String tagName=getTagName();
-        if(tagName!=null){
-            i+=tagName.length();
-        }
-        if(i>12){
-            i=12;
-        }
-        tagName="";
-        while (tagName.length()<i){
-            tagName+=" ";
-        }
-        String rs=getIndentText();
-        return rs+tagName;
     }
     private boolean appendAttributesIndentText(Writer writer) throws IOException {
         int i=0;
@@ -770,18 +535,32 @@ public class XMLElement {
         mTag =tag;
     }
     public String getTextContent(){
-        return getTextContent(false);
+        return getTextContent(true);
     }
     public String getTextContent(boolean unEscape){
-        XMLTextAttribute textAttribute= getTextAttr();
-        return textAttribute.getText(unEscape);
+        String text=buildTextContent();
+        if(unEscape){
+            text=XMLUtil.unEscapeXmlChars(text);
+        }
+        return text;
     }
-    public XMLTextAttribute getTextAttribute(){
-        String txt=getTextContent();
-        if(txt==null){
+    private String buildTextContent(){
+        if(!hasTextContent()){
             return null;
         }
-        return mTextAttribute;
+        StringWriter writer=new StringWriter();
+        for(XMLNode child:getChildNodes()){
+            try {
+                child.write(writer, false);
+            } catch (IOException ignored) {
+            }
+        }
+        writer.flush();
+        try {
+            writer.close();
+        } catch (IOException ignored) {
+        }
+        return writer.toString();
     }
     XMLTextAttribute getTextAttr(){
         if(mTextAttribute==null){
@@ -789,43 +568,27 @@ public class XMLElement {
         }
         return mTextAttribute;
     }
-    private boolean appendTextContent(Writer writer) throws IOException {
-        if(mTextAttribute==null){
-            return false;
-        }
-        return mTextAttribute.write(writer);
-    }
-    private boolean hasTextContent() {
-        if(mTextAttribute==null){
-            return false;
-        }
-        return !mTextAttribute.isEmpty();
-    }
-    private void appendText(String text){
-        String old= getTextContent();
-        if (old!=null){
-            if(text!=null){
-                setTextContent(old+text);
-                return;
+    private void appendTextContent(Writer writer) throws IOException {
+        for(XMLNode child:getChildNodes()){
+            if(child instanceof XMLElement){
+                ((XMLElement)child).setIndent(0);
             }
+            child.write(writer, false);
         }
-        setTextContent(text);
     }
-    public XMLAttribute setTextContent(String text){
-        return setTextContent(text, true);
+    public boolean hasTextContent() {
+        return mTexts.size()>0;
     }
-    public XMLAttribute setTextContent(String text, boolean escape){
-        XMLTextAttribute textAttribute= getTextAttr();
-        if(XMLUtil.isEmpty(text)){
-            textAttribute.setText(null);
-            //textAttribute.setText(text);
-        }else {
-            if(escape){
-                text= XMLUtil.escapeXmlChars(text);
-            }
-            textAttribute.setText(text);
+    public void setTextContent(String text){
+        setTextContent(text, true);
+    }
+    public void setTextContent(String text, boolean escape){
+        clearChildElements();
+        clearTexts();
+        if(escape){
+            text=XMLUtil.escapeXmlChars(text);
         }
-        return textAttribute;
+        appendText(text);
     }
     private boolean appendAttributes(Writer writer, boolean newLineAttributes) throws IOException {
         if(mAttributes==null){
@@ -851,50 +614,24 @@ public class XMLElement {
         }
         return addedOnce;
     }
-    private String attributesToString(boolean newLineAttributes){
-        if(mAttributes==null){
-            return null;
-        }
-        StringBuilder builder=new StringBuilder();
-        boolean addedOnce=false;
-        for(XMLAttribute attr:mAttributes){
-            if(attr.isEmpty()){
-                continue;
-            }
-            if(addedOnce){
-                if(newLineAttributes){
-                    builder.append("\n");
-                    builder.append(getAttributesIndentText());
-                }else{
-                    builder.append(" ");
-                }
-            }
-            builder.append(attr.toString());
-            addedOnce=true;
-        }
-        if(addedOnce){
-            return builder.toString();
-        }
-        return null;
-    }
     boolean isEmpty(){
         if(mTagName!=null){
             return false;
         }
-        if(mAttributes!=null && mAttributes.size()>0){
+        if(mAttributes.size()>0){
             return false;
         }
         if(mComments!=null && mComments.size()>0){
             return false;
         }
-        return getTextContent()==null;
-    }
-    private boolean canAppendChildes(){
-        if(mChildes==null){
+        if(mTexts.size()>0){
             return false;
         }
-        for(XMLElement be:mChildes){
-            if (!be.isEmpty()){
+        return true;
+    }
+    private boolean canAppendChildes(){
+        for(XMLElement child:mChildes){
+            if (!child.isEmpty()){
                 return true;
             }
         }
@@ -921,22 +658,19 @@ public class XMLElement {
         return addedOnce;
     }
     private boolean appendChildes(Writer writer, boolean newLineAttributes) throws IOException {
-        if(mChildes==null){
-            return false;
-        }
         boolean appendPrevious=true;
         boolean addedOnce=false;
-        for(XMLElement be:mChildes){
+        for(XMLElement child:mChildes){
             if(stopWriting(writer)){
                 break;
             }
-            if(be.isEmpty()){
+            if(child.isEmpty()){
                 continue;
             }
             if(appendPrevious){
                 writer.write(XMLUtil.NEW_LINE);
             }
-            appendPrevious=be.write(writer, newLineAttributes);
+            appendPrevious=child.write(writer, newLineAttributes);
             if(!addedOnce && appendPrevious){
                 addedOnce=true;
             }
@@ -954,6 +688,7 @@ public class XMLElement {
         }
         return false;
     }
+    @Override
     public boolean write(Writer writer, boolean newLineAttributes) throws IOException {
         if(isEmpty()){
             return false;
@@ -973,19 +708,14 @@ public class XMLElement {
         }
         appendAttributes(writer, newLineAttributes);
         boolean useEndTag=false;
-        if(canAppendChildes()){
-            writer.write(mEnd);
-            appendChildes(writer, newLineAttributes);
-            useEndTag=true;
-        }
         boolean hasTextCon=hasTextContent();
         if(hasTextCon){
-            if(!useEndTag){
-                writer.write(mEnd);
-            }else {
-                writer.write(XMLUtil.NEW_LINE);
-            }
+            writer.write(mEnd);
             appendTextContent(writer);
+            useEndTag=true;
+        }else if(canAppendChildes()){
+            writer.write(mEnd);
+            appendChildes(writer, newLineAttributes);
             useEndTag=true;
         }
         if(useEndTag){
@@ -996,19 +726,13 @@ public class XMLElement {
             writer.write(mStart);
             writer.write(mStartPrefix);
             writer.write(getTagName());
-            writer.write(mEnd);
         }else {
             writer.write(mEndPrefix);
-            writer.write(mEnd);
         }
+        writer.write(mEnd);
         return true;
     }
-    public String toText(){
-        return toText(1, false);
-    }
-    public String toText(boolean newLineAttributes){
-        return toText(1, newLineAttributes);
-    }
+    @Override
     public String toText(int indent, boolean newLineAttributes){
         StringWriter writer=new StringWriter();
         setIndent(indent);
@@ -1019,6 +743,24 @@ public class XMLElement {
         } catch (IOException ignored) {
         }
         return writer.toString();
+    }
+    protected List<XMLNode> listSpannable(){
+        List<XMLNode> results = new ArrayList<>();
+        for(XMLNode child:getChildNodes()){
+            if((child instanceof XMLElement) || (child instanceof XMLText)){
+                results.add(child);
+            }
+        }
+        return results;
+    }
+    protected String getSpannableText() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(getTagName());
+        for(XMLAttribute attribute:listAttributes()){
+            builder.append(' ');
+            builder.append(attribute.toText(0, false));
+        }
+        return builder.toString();
     }
     @Override
     public String toString(){
@@ -1031,24 +773,5 @@ public class XMLElement {
         strWriter.flush();
         return strWriter.toString();
     }
-
-    public static List<XMLElement> getAllElementsRecursive(XMLElement parent){
-        List<XMLElement> results=new ArrayList<>();
-        if(parent==null){
-            return results;
-        }
-        XMLElement[] allChildes=parent.getAllChildes();
-        if(allChildes==null){
-            return results;
-        }
-        int max=allChildes.length;
-        for(int i=0;i<max;i++){
-            XMLElement child=allChildes[i];
-            results.add(child);
-            results.addAll(getAllElementsRecursive(child));
-        }
-        return results;
-    }
-
 
 }

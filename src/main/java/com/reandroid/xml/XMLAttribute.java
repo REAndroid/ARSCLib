@@ -20,19 +20,14 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 
-public class XMLAttribute {
+public class XMLAttribute extends XMLNode{
     private int mNameId;
     private int mValueId;
-    private Object mValueTag;
-    private Object mNameTag;
     private String mName;
     private String mValue;
     public XMLAttribute(String name, String val){
         mName=name;
         mValue= XMLUtil.escapeXmlChars(val);
-    }
-    public void setNameId(String id){
-        setNameId(XMLUtil.hexToInt(id,0));
     }
     public void setNameId(int id){
         mNameId=id;
@@ -54,18 +49,6 @@ public class XMLAttribute {
         baseAttr.setNameId(getNameId());
         baseAttr.setValueId(getValueId());
         return baseAttr;
-    }
-    public Object getValueTag(){
-        return mValueTag;
-    }
-    public void setValueTag(Object obj){
-        mValueTag =obj;
-    }
-    public Object geNameTag(){
-        return mNameTag;
-    }
-    public void setNameTag(Object obj){
-        mNameTag =obj;
     }
     public String getName(){
         return mName;
@@ -117,19 +100,9 @@ public class XMLAttribute {
     public boolean isEmpty(){
         return XMLUtil.isEmpty(getName());
     }
+
     @Override
-    public boolean equals(Object obj){
-        if(obj instanceof XMLAttribute){
-            XMLAttribute attr=(XMLAttribute)obj;
-            if(isEmpty()){
-                return attr.isEmpty();
-            }
-            String s=toString();
-            return s.equals(attr.toString());
-        }
-        return false;
-    }
-    public boolean write(Writer writer) throws IOException {
+    public boolean write(Writer writer, boolean newLineAttributes) throws IOException {
         if(isEmpty()){
             return false;
         }
@@ -143,16 +116,40 @@ public class XMLAttribute {
         return true;
     }
     @Override
-    public String toString(){
+    public String toText(int indent, boolean newLineAttributes) {
         if(isEmpty()){
             return null;
         }
         StringWriter writer=new StringWriter();
         try {
             write(writer);
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
         writer.flush();
         return writer.toString();
+    }
+    @Override
+    public int hashCode(){
+        String name=getName();
+        if(name==null){
+            name="";
+        }
+        name=getClass().getName()+name;
+        return name.hashCode();
+    }
+    @Override
+    public boolean equals(Object obj){
+        if(obj instanceof XMLAttribute){
+            XMLAttribute attr=(XMLAttribute)obj;
+            if(isEmpty()){
+                return attr.isEmpty();
+            }
+            return getName().equals(attr.getName());
+        }
+        return false;
+    }
+    @Override
+    public String toString(){
+        return toText();
     }
 }

@@ -15,23 +15,75 @@
   */
 package com.reandroid.lib.apk.xmlencoder;
 
+import com.reandroid.lib.arsc.array.StyleArray;
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
+import com.reandroid.lib.arsc.item.StyleItem;
+import com.reandroid.lib.arsc.item.TableString;
 import com.reandroid.lib.arsc.pool.TableStringPool;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
+import com.reandroid.xml.XMLSpanInfo;
+import com.reandroid.xml.XMLSpannable;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-public class ValuesStringPoolBuilder {
+ public class ValuesStringPoolBuilder {
     private final Set<String> stringList;
     public ValuesStringPoolBuilder(){
         this.stringList=new HashSet<>();
     }
     public void addTo(TableStringPool stringPool){
+        if(stringPool.getStringsArray().childesCount()==0){
+            buildWithStyles(stringPool);
+        }
         stringPool.addStrings(stringList);
         stringList.clear();
+        stringPool.refresh();
+    }
+    private void buildWithStyles(TableStringPool stringPool){
+        List<XMLSpannable> spannableList = buildSpannable();
+        if(spannableList.size()==0){
+            return;
+        }
+
+        Map<String, TableString> stringsMap = stringPool
+                .insertStrings(XMLSpannable.toTextList(spannableList));
+
+        List<String> tagList =
+                new ArrayList<>(XMLSpannable.tagList(spannableList));
+        EncodeUtil.sortStrings(tagList);
+        Map<String, TableString> tagsMap =
+                stringPool.insertStrings(tagList);
+
+        StyleArray styleArray = stringPool.getStyleArray();
+        styleArray.setChildesCount(stringsMap.size());
+
+        for(XMLSpannable spannable:spannableList){
+
+            TableString tableString=stringsMap.get(spannable.getText());
+            StyleItem styleItem = styleArray.get(tableString.getIndex());
+
+            for(XMLSpanInfo spanInfo:spannable.getSpanInfoList()){
+                int tagRef=tagsMap.get(spanInfo.tag).getIndex();
+                styleItem.addStylePiece(tagRef, spanInfo.start, spanInfo.end);
+            }
+        }
+        stringPool.refreshUniqueIdMap();
+    }
+    private List<XMLSpannable> buildSpannable(){
+        List<XMLSpannable> results=new ArrayList<>();
+        Set<String> removeList=new HashSet<>();
+        for(String text:stringList){
+            XMLSpannable spannable=XMLSpannable.parse(text);
+            if(spannable!=null){
+                results.add(spannable);
+                removeList.add(text);
+            }
+        }
+        stringList.removeAll(removeList);
+        XMLSpannable.sort(results);
+        return results;
     }
     public void scanValuesDirectory(File dir){
         addStringsFile(new File(dir, "strings.xml"));

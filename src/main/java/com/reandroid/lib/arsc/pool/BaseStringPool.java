@@ -102,9 +102,9 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
         }
         List<String> sortedList=new ArrayList<>(stringList);
         sortedList.sort(this);
-        insertStrings(sortedList);
+        insertStringList(sortedList);
     }
-    private void insertStrings(List<String> stringList){
+    private void insertStringList(List<String> stringList){
         StringArray<T> stringsArray = getStringsArray();
         int initialSize=stringsArray.childesCount();
         stringsArray.ensureSize(initialSize + stringList.size());
@@ -116,6 +116,23 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
             j++;
         }
         refreshUniqueIdMap();
+    }
+    public Map<String, T> insertStrings(List<String> stringList){
+        Map<String, T> results=new HashMap<>();
+        StringArray<T> stringsArray = getStringsArray();
+        int initialSize=stringsArray.childesCount();
+        stringsArray.ensureSize(initialSize + stringList.size());
+        int size=stringsArray.childesCount();
+        int j=0;
+        for (int i=initialSize;i<size;i++){
+            T item=stringsArray.get(i);
+            String str=stringList.get(j);
+            item.set(str);
+            results.put(str, item);
+            j++;
+        }
+        refreshUniqueIdMap();
+        return results;
     }
     // call this after modifying string values
     public void refreshUniqueIdMap(){

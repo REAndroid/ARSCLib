@@ -31,15 +31,7 @@ public class XMLComment extends XMLElement {
         super();
         initializeStartEnd();
     }
-    @Override
-    XMLElement onCloneElement(){
-        XMLComment ce=new XMLComment(getCommentText());
-        ce.setHidden(isHidden());
-        return ce;
-    }
-    @Override
-    void cloneAllAttributes(XMLElement element){
-    }
+
     public void setHidden(boolean hide){
         mIsHidden=hide;
     }

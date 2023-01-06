@@ -20,7 +20,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 
-public class XMLDocument {
+public class XMLDocument extends XMLNode{
     private XMLElement mDocumentElement;
     private Object mTag;
     private String mName;
@@ -189,6 +189,7 @@ public class XMLDocument {
         writer.close();
         return result;
     }
+    @Override
     public boolean write(Writer writer, boolean newLineAttributes) throws IOException{
         boolean has_header=appendDocumentAttribute(writer);
         if(has_header){
@@ -196,12 +197,7 @@ public class XMLDocument {
         }
         return appendDocumentElement(writer, newLineAttributes);
     }
-    public String toText(){
-        return toText(1, false);
-    }
-    public String toText(boolean newLineAttributes){
-        return toText(1, newLineAttributes);
-    }
+    @Override
     public String toText(int indent, boolean newLineAttributes){
         StringWriter writer=new StringWriter();
         setIndent(indent);

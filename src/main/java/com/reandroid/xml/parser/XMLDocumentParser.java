@@ -260,10 +260,10 @@ public class XMLDocumentParser {
         }
         String text=mCurrentText.toString();
         mCurrentText=null;
-        if(XMLUtil.isEmpty(text)){
+        if(text.trim().length()==0 && !mCurrentElement.hasTextContent()){
             return;
         }
-        mCurrentElement.setTextContent(text, true);
+        mCurrentElement.addText(new XMLText(text));
     }
     private void onEntityRef(){
         String name=mParser.getName();
