@@ -160,7 +160,7 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
             }
         };
     }
-    final List<StyleSpanInfo> getSpanInfoList(){
+    public final List<StyleSpanInfo> getSpanInfoList(){
         if(mSpanInfoList!=null){
             return mSpanInfoList;
         }

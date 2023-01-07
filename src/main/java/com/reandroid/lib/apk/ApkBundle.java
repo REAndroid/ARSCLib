@@ -17,6 +17,8 @@ package com.reandroid.lib.apk;
 
 import com.reandroid.archive.APKArchive;
 import com.reandroid.lib.arsc.chunk.TableBlock;
+import com.reandroid.lib.arsc.pool.TableStringPool;
+import com.reandroid.lib.arsc.pool.builder.StringPoolMerger;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -35,8 +37,11 @@ public class ApkBundle {
         if(moduleList.size()==0){
             throw new FileNotFoundException("Nothing to merge, empty modules");
         }
-        ApkModule result=new ApkModule("merged", new APKArchive());
+        ApkModule result=new ApkModule(generateMergedModuleName(), new APKArchive());
         result.setAPKLogger(apkLogger);
+
+        mergeStringPools(result);
+
         ApkModule base=getBaseModule();
         if(base==null){
             base=getLargestTableModule();
@@ -55,6 +60,43 @@ public class ApkBundle {
         }
         result.getApkArchive().sortApkFiles();
         return result;
+    }
+    private void mergeStringPools(ApkModule mergedModule) throws IOException {
+        if(!hasOneTableBlock() || mergedModule.hasTableBlock()){
+            return;
+        }
+        logMessage("Merging string pools ... ");
+        TableBlock createdTable = new TableBlock();
+        BlockInputSource<TableBlock> inputSource=
+                new BlockInputSource<>(TableBlock.FILE_NAME, createdTable);
+        mergedModule.getApkArchive().add(inputSource);
+
+        StringPoolMerger poolMerger = new StringPoolMerger();
+
+        for(ApkModule apkModule:getModules()){
+            if(!apkModule.hasTableBlock()){
+                continue;
+            }
+            TableStringPool stringPool = apkModule.getVolatileTableStringPool();
+            poolMerger.add(stringPool);
+        }
+
+        poolMerger.mergeTo(createdTable.getTableStringPool());
+
+        logMessage("Merged string pools="+poolMerger.getMergedPools()
+                +", style="+poolMerger.getMergedStyleStrings()
+                +", strings="+poolMerger.getMergedStrings());
+    }
+    private String generateMergedModuleName(){
+        Set<String> moduleNames=mModulesMap.keySet();
+        String merged="merged";
+        int i=1;
+        String name=merged;
+        while (moduleNames.contains(name)){
+            name=merged+"_"+i;
+            i++;
+        }
+        return name;
     }
     private ApkModule getLargestTableModule() throws IOException {
         ApkModule apkModule=null;
@@ -122,6 +164,14 @@ public class ApkBundle {
     }
     public Collection<ApkModule> getModules(){
         return mModulesMap.values();
+    }
+    private boolean hasOneTableBlock(){
+        for(ApkModule apkModule:getModules()){
+            if(apkModule.hasTableBlock()){
+                return true;
+            }
+        }
+        return false;
     }
     public void setAPKLogger(APKLogger logger) {
         this.apkLogger = logger;

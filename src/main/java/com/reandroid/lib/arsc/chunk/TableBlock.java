@@ -180,7 +180,7 @@ public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
         if(tableBlock==null||tableBlock==this){
             return;
         }
-        if(getPackageArray().childesCount()==0){
+        if(getPackageArray().childesCount()==0 && getTableStringPool().countStrings()==0){
             getTableStringPool().merge(tableBlock.getTableStringPool());
         }
         getPackageArray().merge(tableBlock.getPackageArray());
