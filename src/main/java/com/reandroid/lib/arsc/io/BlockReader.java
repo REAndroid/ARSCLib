@@ -327,22 +327,17 @@ public class BlockReader extends InputStream {
         return result;
     }
     private static byte[] loadBuffer(InputStream in) throws IOException {
-        byte[] result=new byte[0];
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         byte[] buff=new byte[40960];
         int len;
         while((len=in.read(buff))>0){
-            result=add(result, buff, len);
+            outputStream.write(buff, 0, len);
         }
-        if(!(in instanceof ZipInputStream)){
+        if(in instanceof FileInputStream){
             in.close();
         }
-        return result;
-    }
-    private static byte[] add(byte[] arr1, byte[] arr2, int len){
-        byte[] result=new byte[arr1.length + len];
-        System.arraycopy(arr1, 0, result, 0, arr1.length);
-        System.arraycopy(arr2, 0, result, arr1.length, len);
-        return result;
+        outputStream.close();
+        return outputStream.toByteArray();
     }
     public static HeaderBlock readHeaderBlock(File file) throws IOException{
         InputStream inputStream=new FileInputStream(file);
