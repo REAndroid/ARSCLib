@@ -256,6 +256,24 @@ public class ApkModule {
         }
         return mTableBlock;
     }
+    // If we need TableStringPool only, this loads pool without
+    // loading packages and other chunk blocks for faster and less memory usage
+    public TableStringPool getVolatileTableStringPool() throws IOException{
+        if(mTableBlock!=null){
+            return mTableBlock.getTableStringPool();
+        }
+        InputSource inputSource = getApkArchive()
+                .getInputSource(TableBlock.FILE_NAME);
+        if(inputSource==null){
+            throw new IOException("Module don't have: "+TableBlock.FILE_NAME);
+        }
+        if((inputSource instanceof ZipEntrySource)
+                ||(inputSource instanceof FileInputSource)){
+
+            return TableStringPool.readFromTable(inputSource.openStream());
+        }
+        return getTableBlock().getTableStringPool();
+    }
     TableBlock loadTableBlock() throws IOException {
         APKArchive archive=getApkArchive();
         InputSource inputSource = archive.getInputSource(TableBlock.FILE_NAME);
