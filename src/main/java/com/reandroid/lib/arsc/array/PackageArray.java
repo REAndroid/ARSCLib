@@ -141,7 +141,7 @@ public class PackageArray extends BlockArray<PackageBlock>
             return;
         }
         for(PackageBlock packageBlock:packageArray.listItems()){
-            PackageBlock exist=getOrCreate((byte) packageBlock.getId());
+            PackageBlock exist=getOrCreate(packageBlock.getId());
             exist.merge(packageBlock);
         }
     }
