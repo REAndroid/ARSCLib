@@ -95,16 +95,12 @@ import java.io.IOException;
     }
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        HeaderLoaded headerLoaded = mHeaderLoaded;
-        if(headerLoaded==null){
-            return;
-        }
         if(sender==this.mType){
-            headerLoaded.onChunkTypeLoaded(mType.get());
+            onChunkTypeLoaded(mType.get());
         }else if(sender==this.mHeaderSize){
-            headerLoaded.onHeaderSizeLoaded(mHeaderSize.unsignedInt());
+            onHeaderSizeLoaded(mHeaderSize.unsignedInt());
         }else if(sender==this.mChunkSize){
-            headerLoaded.onChunkSizeLoaded(mHeaderSize.unsignedInt(),
+            onChunkSizeLoaded(mHeaderSize.unsignedInt(),
                     mChunkSize.get());
         }
     }
@@ -116,6 +112,24 @@ import java.io.IOException;
     @Override
     protected void refreshChildes(){
         // Not required
+    }
+    void onChunkTypeLoaded(short chunkType){
+        HeaderLoaded headerLoaded = mHeaderLoaded;
+        if(headerLoaded!=null){
+            headerLoaded.onChunkTypeLoaded(chunkType);
+        }
+    }
+    void onHeaderSizeLoaded(int size){
+        HeaderLoaded headerLoaded = mHeaderLoaded;
+        if(headerLoaded!=null){
+            headerLoaded.onHeaderSizeLoaded(size);
+        }
+    }
+    void onChunkSizeLoaded(int headerSize, int chunkSize){
+        HeaderLoaded headerLoaded = mHeaderLoaded;
+        if(headerLoaded!=null){
+            headerLoaded.onChunkSizeLoaded(headerSize, chunkSize);
+        }
     }
 
     @Override

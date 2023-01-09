@@ -15,13 +15,13 @@
   */
 package com.reandroid.lib.arsc.io;
 
+import com.reandroid.lib.arsc.header.AnyHeader;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 
 import java.io.*;
-import java.util.zip.ZipInputStream;
 
 
-public class BlockReader extends InputStream {
+ public class BlockReader extends InputStream {
     private final Object mLock=new Object();
     private byte[] BUFFER;
     private final int mStart;
@@ -40,6 +40,9 @@ public class BlockReader extends InputStream {
     }
     public BlockReader(InputStream in) throws IOException {
         this(loadBuffer(in));
+    }
+    public BlockReader(InputStream in, int length) throws IOException {
+        this(loadBuffer(in, length));
     }
     public BlockReader(File file) throws IOException {
         this(loadBuffer(file));
@@ -161,32 +164,6 @@ public class BlockReader extends InputStream {
             return len;
         }
     }
-    public int lengthUntilLastZero(int offset){
-        if(mIsClosed || mPosition>=mLength){
-            return 0;
-        }
-        synchronized (mLock){
-            int actPos=mStart+mPosition-1;
-            int max=available();
-            int len=0;
-            boolean zeroFound=false;
-            for(int i=0;i<max;i++){
-                actPos++;
-                len++;
-                if(i<offset){
-                    continue;
-                }
-                byte b=BUFFER[actPos];
-                if(b==0){
-                    zeroFound=true;
-                }else if(zeroFound){
-                    len--;
-                    break;
-                }
-            }
-            return len;
-        }
-    }
     public int readFully(byte[] bts) throws IOException{
         return readFully(bts, 0, bts.length);
     }
@@ -197,25 +174,6 @@ public class BlockReader extends InputStream {
         return readFully(bts, 0, length);
     }
 
-    public int skipByteValues(byte b) throws IOException {
-        if(mIsClosed){
-            throw new IOException("Stream is closed");
-        }
-        if(mPosition>=mLength){
-            throw new EOFException("Finished reading: "+mPosition);
-        }
-        synchronized (mLock){
-            int i=0;
-            while (mPosition<mLength){
-                if(BUFFER[mStart+mPosition]!=b){
-                    return i;
-                }
-                mPosition++;
-                i++;
-            }
-            return i;
-        }
-    }
     public int readFully(byte[] bts, int start, int length) throws IOException {
         if(length==0){
             return 0;
@@ -339,15 +297,27 @@ public class BlockReader extends InputStream {
         outputStream.close();
         return outputStream.toByteArray();
     }
-    public static HeaderBlock readHeaderBlock(File file) throws IOException{
-        InputStream inputStream=new FileInputStream(file);
-        return readHeaderBlock(inputStream);
+    private static byte[] loadBuffer(InputStream in, int length) throws IOException {
+        byte[] buff=new byte[length];
+        if(length==0){
+            return buff;
+        }
+        int readLength = in.read(buff, 0, length);
+        if(readLength < length){
+            throw new IOException("Read length is less than expected: length="
+                    +length+", read="+readLength);
+        }
+        return buff;
     }
-    public static HeaderBlock readHeaderBlock(InputStream inputStream) throws IOException{
-        byte[] buffer=new byte[8];
-        inputStream.read(buffer, 0, 8);
+    public static AnyHeader readHeaderBlock(File file) throws IOException{
+        InputStream inputStream=new FileInputStream(file);
+        AnyHeader anyHeader = readHeaderBlock(inputStream);
         inputStream.close();
-        BlockReader reader=new BlockReader(buffer);
-        return reader.readHeaderBlock();
+        return anyHeader;
+    }
+    public static AnyHeader readHeaderBlock(InputStream inputStream) throws IOException{
+        AnyHeader anyHeader=new AnyHeader();
+        anyHeader.readBytes(inputStream);
+        return anyHeader;
     }
 }

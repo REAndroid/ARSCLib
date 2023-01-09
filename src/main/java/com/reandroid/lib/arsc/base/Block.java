@@ -41,6 +41,9 @@ public abstract class Block {
     public final void setBlockLoad(BlockLoad blockLoad){
         mBlockLoad=blockLoad;
     }
+    public void notifyBlockLoad() throws IOException {
+        notifyBlockLoad(null);
+    }
     private void notifyBlockLoad(BlockReader reader) throws IOException{
         BlockLoad blockLoad=mBlockLoad;
         if(blockLoad!=null){

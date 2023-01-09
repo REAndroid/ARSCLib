@@ -20,6 +20,7 @@ import com.reandroid.lib.arsc.base.BlockCounter;
 import com.reandroid.lib.arsc.io.BlockReader;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 public abstract class BlockItem extends Block {
@@ -103,5 +104,15 @@ public abstract class BlockItem extends Block {
     protected int onWriteBytes(OutputStream stream) throws IOException {
         stream.write(getBytesInternal());
         return getBytesLength();
+    }
+    public int readBytes(InputStream inputStream) throws IOException {
+        byte[] bts=getBytesInternal();
+        if(bts==null || bts.length==0){
+            return 0;
+        }
+        int readLength = inputStream.read(bts, 0, bts.length);
+        onBytesChanged();
+        super.notifyBlockLoad();
+        return readLength;
     }
 }

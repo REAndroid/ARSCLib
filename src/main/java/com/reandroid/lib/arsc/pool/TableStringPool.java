@@ -18,7 +18,7 @@ package com.reandroid.lib.arsc.pool;
 import com.reandroid.lib.arsc.array.StringArray;
 import com.reandroid.lib.arsc.array.TableStringArray;
 import com.reandroid.lib.arsc.chunk.ChunkType;
-import com.reandroid.lib.arsc.header.HeaderBlock;
+import com.reandroid.lib.arsc.header.AnyHeader;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
@@ -60,14 +60,16 @@ import java.io.InputStream;
       * Loads string pool from table block (resources.arsc)
       */
     public static TableStringPool readFromTable(InputStream inputStream) throws IOException {
-        //TODO: for better result, make blockReader to
-        // load buffer only the size of string pool
-        BlockReader blockReader = new BlockReader(inputStream);
-        HeaderBlock tableHeader = blockReader.readHeaderBlock();
+        AnyHeader tableHeader = BlockReader.readHeaderBlock(inputStream);
         if(tableHeader.getChunkType()!=ChunkType.TABLE){
             throw new IOException("Not TableBlock: "+tableHeader);
         }
-        blockReader.seek(tableHeader.getHeaderSize());
+        AnyHeader poolHeader = BlockReader.readHeaderBlock(inputStream);
+        if(poolHeader.getChunkType()!=ChunkType.STRING){
+            throw new IOException("Not StringPool: "+poolHeader);
+        }
+        byte[] poolBytes = poolHeader.readChunkBytes(inputStream);
+        BlockReader blockReader = new BlockReader(poolBytes);
         TableStringPool stringPool = new TableStringPool(true);
         stringPool.readBytes(blockReader);
         blockReader.close();

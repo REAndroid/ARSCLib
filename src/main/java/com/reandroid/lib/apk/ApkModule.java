@@ -269,8 +269,10 @@ public class ApkModule {
         }
         if((inputSource instanceof ZipEntrySource)
                 ||(inputSource instanceof FileInputSource)){
-
-            return TableStringPool.readFromTable(inputSource.openStream());
+            InputStream inputStream = inputSource.openStream();
+            TableStringPool stringPool = TableStringPool.readFromTable(inputStream);
+            inputStream.close();
+            return stringPool;
         }
         return getTableBlock().getTableStringPool();
     }

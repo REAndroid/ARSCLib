@@ -24,6 +24,7 @@ import com.reandroid.lib.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 public class ResFile {
@@ -103,12 +104,15 @@ public class ResFile {
         }
         mBinXmlChecked=true;
         InputSource inputSource=getInputSource();
-        if(inputSource instanceof XMLEncodeSource){
+        if((inputSource instanceof XMLEncodeSource)
+                || (inputSource instanceof JsonXmlInputSource)){
             mBinXml=true;
         }else{
             try {
-                mBinXml=ResXmlBlock.isResXmlBlock(getInputSource().openStream());
-            } catch (IOException exception) {
+                InputStream inputStream=getInputSource().openStream();
+                mBinXml=ResXmlBlock.isResXmlBlock(inputStream);
+                inputStream.close();
+            } catch (IOException ignored) {
             }
         }
         return mBinXml;

@@ -309,8 +309,10 @@ package com.reandroid.lib.arsc.chunk.xml;
         }
         try {
             InputStream inputStream=new FileInputStream(file);
-            return isResXmlBlock(inputStream);
-        } catch (FileNotFoundException ignored) {
+            boolean result = isResXmlBlock(inputStream);
+            inputStream.close();
+            return result;
+        } catch (IOException ignored) {
             return false;
         }
     }
