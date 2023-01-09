@@ -28,10 +28,7 @@
 
  import java.io.File;
  import java.io.IOException;
- import java.util.ArrayList;
- import java.util.HashSet;
- import java.util.List;
- import java.util.Set;
+ import java.util.*;
  import java.util.zip.ZipEntry;
 
  public class RESEncoder {
@@ -70,9 +67,23 @@
                      +ApkUtil.FILE_NAME_PUBLIC_XML+"  file found in '"+mainDir);
          }
          preloadStringPool(pubXmlFileList);
-         for(File pubXmlFile:pubXmlFileList){
-             EncodeMaterials encodeMaterials = loadPublicXml(pubXmlFile);
+
+         EncodeMaterials encodeMaterials=new EncodeMaterials();
+
+         Map<File, ResourceIds.Table.Package> map =
+                 initializeEncodeMaterials(pubXmlFileList, encodeMaterials);
+
+         for(Map.Entry<File, ResourceIds.Table.Package> entry:map.entrySet()){
+             File pubXmlFile=entry.getKey();
+             ResourceIds.Table.Package pkgResourceIds=entry.getValue();
              addParsedFiles(pubXmlFile);
+
+             PackageCreator packageCreator = new PackageCreator();
+             packageCreator.setPackageName(pkgResourceIds.name);
+
+             PackageBlock packageBlock = packageCreator.createNew(tableBlock, pkgResourceIds);
+             encodeMaterials.setCurrentPackage(packageBlock);
+
              File resDir=toResDirectory(pubXmlFile);
              encodeResDir(encodeMaterials, resDir);
              FilePathEncoder filePathEncoder = new FilePathEncoder(encodeMaterials);
@@ -80,7 +91,6 @@
              filePathEncoder.setUncompressedFiles(getApkModule().getUncompressedFiles());
              filePathEncoder.encodeResDir(resDir);
 
-             PackageBlock packageBlock = encodeMaterials.getCurrentPackage();
              packageBlock.sortTypes();
              packageBlock.refresh();
 
@@ -99,7 +109,6 @@
          ValuesStringPoolBuilder poolBuilder=new ValuesStringPoolBuilder();
          for(File pubXml:pubXmlFileList){
              File resDir=toResDirectory(pubXml);
-             logMessage("Scanning: "+resDir.getParentFile().getName());
              List<File> valuesDirList = listValuesDir(resDir);
              for(File dir:valuesDirList){
                  logVerbose(poolBuilder.size()+" building pool: "+dir.getName());
@@ -108,33 +117,37 @@
          }
          poolBuilder.addTo(tableBlock.getTableStringPool());
      }
-     private EncodeMaterials loadPublicXml(File pubXmlFile) throws IOException, XMLException {
-         ResourceIds resourceIds=new ResourceIds();
-         resourceIds.fromXml(pubXmlFile);
 
-         List<ResourceIds.Table.Package> pkgList = resourceIds
-                 .getTable().listPackages();
-         if(pkgList.size()!=1){
-             throw new IOException("Package count should be 1, count="
-                     +pkgList.size()+", in file: "+pubXmlFile);
+     private Map<File, ResourceIds.Table.Package> initializeEncodeMaterials(
+             List<File> pubXmlFileList, EncodeMaterials encodeMaterials)
+             throws IOException, XMLException {
+
+         Map<File, ResourceIds.Table.Package> results = new HashMap<>();
+
+         String packageName=null;
+         for(File pubXmlFile:pubXmlFileList){
+             if(packageName==null){
+                 packageName=readManifestPackageName(toAndroidManifest(pubXmlFile));
+             }
+             ResourceIds resourceIds=new ResourceIds();
+             resourceIds.fromXml(pubXmlFile);
+             ResourceIds.Table.Package pkg = resourceIds.getTable()
+                     .listPackages().get(0);
+             if(pkg.name==null){
+                 pkg.name=packageName;
+             }
+             encodeMaterials.addPackageIds(pkg);
+             results.put(pubXmlFile, pkg);
          }
 
-         XMLDocument manifestDocument = XMLDocument.load(toAndroidManifest(pubXmlFile));
-         String packageName = manifestDocument
-                 .getDocumentElement().getAttributeValue("package");
-
-         ResourceIds.Table.Package pkgResourceIds = pkgList.get(0);
-
-         PackageCreator packageCreator = new PackageCreator();
-         packageCreator.setPackageName(packageName);
-
-         PackageBlock packageBlock = packageCreator.createNew(tableBlock, pkgResourceIds);
-
-         return new EncodeMaterials()
-                 .addFramework(Frameworks.getAndroid())
-                 .setCurrentPackage(packageBlock)
-                 .setPackageIds(pkgResourceIds)
+         encodeMaterials.addFramework(Frameworks.getAndroid())
                  .setAPKLogger(apkLogger);
+         return results;
+     }
+     private String readManifestPackageName(File manifestFile) throws XMLException {
+         XMLDocument manifestDocument = XMLDocument.load(manifestFile);
+         return manifestDocument
+                 .getDocumentElement().getAttributeValue("package");
      }
      private void encodeResDir(EncodeMaterials materials, File resDir) throws XMLException {
 

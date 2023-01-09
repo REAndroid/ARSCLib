@@ -83,6 +83,7 @@ import java.util.*;
     public void fromXml(XMLDocument xmlDocument) throws IOException {
         mTable.fromXml(xmlDocument);
     }
+
     public XMLDocument toXMLDocument(){
         return mTable.toXMLDocument();
     }

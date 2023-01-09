@@ -35,11 +35,12 @@
  import java.util.regex.Matcher;
 
  public class EncodeMaterials implements ResourceResolver {
-     private ResourceIds.Table.Package packageIds;
+     private final Set<ResourceIds.Table.Package> packageIdSet = new HashSet<>();
      private PackageBlock currentPackage;
      private final Set<FrameworkTable> frameworkTables = new HashSet<>();
      private APKLogger apkLogger;
      private boolean mForceCreateNamespaces = true;
+     private Set<String> mFrameworkPackageNames;
      public EncodeMaterials(){
      }
      public SpecString getSpecString(String name){
@@ -134,10 +135,11 @@
          return getFrameworkEntry(packageName, type, name);
      }
      public int resolveLocalResourceId(String type, String name){
-         ResourceIds.Table.Package.Type.Entry entry =
-                 this.packageIds.getEntry(type, name);
-         if(entry!=null){
-             return entry.getResourceId();
+         for(ResourceIds.Table.Package pkg:packageIdSet){
+             ResourceIds.Table.Package.Type.Entry entry = pkg.getEntry(type, name);
+             if(entry!=null){
+                 return entry.getResourceId();
+             }
          }
          EntryGroup entryGroup=getLocalEntryGroup(type, name);
          if(entryGroup!=null){
@@ -240,14 +242,20 @@
          return null;
      }
      private boolean isFrameworkPackageName(String packageName){
+         return getFrameworkPackageNames().contains(packageName);
+     }
+     private Set<String> getFrameworkPackageNames(){
+         if(mFrameworkPackageNames!=null){
+             return mFrameworkPackageNames;
+         }
+         Set<String> results=new HashSet<>();
          for(FrameworkTable table:frameworkTables){
              for(PackageBlock packageBlock:table.listPackages()){
-                 if(packageName.equals(packageBlock.getName())){
-                     return true;
-                 }
+                 results.add(packageBlock.getName());
              }
          }
-         return false;
+         mFrameworkPackageNames=results;
+         return results;
      }
      public EntryBlock getFrameworkEntry(String packageName, String type, String name){
          for(FrameworkTable table:frameworkTables){
@@ -280,8 +288,12 @@
          this.mForceCreateNamespaces = force;
          return this;
      }
-     public EncodeMaterials setPackageIds(ResourceIds.Table.Package packageIds) {
-         this.packageIds = packageIds;
+     public EncodeMaterials addPackageIds(Collection<ResourceIds.Table.Package> packageIdList) {
+         this.packageIdSet.addAll(packageIdList);
+         return this;
+     }
+     public EncodeMaterials addPackageIds(ResourceIds.Table.Package packageIds) {
+         this.packageIdSet.add(packageIds);
          return this;
      }
      public EncodeMaterials setCurrentPackage(PackageBlock currentPackage) {
@@ -291,6 +303,7 @@
      public EncodeMaterials addFramework(FrameworkTable frameworkTable) {
          frameworkTable.loadResourceNameMap();
          this.frameworkTables.add(frameworkTable);
+         this.mFrameworkPackageNames=null;
          return this;
      }
      public EncodeMaterials setAPKLogger(APKLogger logger) {
@@ -298,9 +311,6 @@
          return this;
      }
 
-     public ResourceIds.Table.Package getPackageIds() {
-         return packageIds;
-     }
      public PackageBlock getCurrentPackage() {
          return currentPackage;
      }
@@ -317,7 +327,7 @@
 
      @Override
      public int resolveResourceId(String packageName, String type, String name) {
-         if(packageName==null || packageName.equals(getCurrentPackageName())){
+         if(!isFrameworkPackageName(packageName)){
              return resolveLocalResourceId(type, name);
          }
          return resolveFrameworkResourceId(packageName, type, name);
@@ -356,7 +366,7 @@
          resourceIds.loadPackageBlock(packageBlock);
          ResourceIds.Table.Package packageId = resourceIds.getTable().listPackages().get(0);
          return new EncodeMaterials()
-                 .setPackageIds(packageId)
+                 .addPackageIds(packageId)
                  .setCurrentPackage(packageBlock)
                  .addFramework(Frameworks.getAndroid());
      }
