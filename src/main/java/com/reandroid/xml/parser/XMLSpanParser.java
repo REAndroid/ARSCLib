@@ -21,21 +21,24 @@ import java.io.IOException;
 import java.io.StringReader;
 
 public class XMLSpanParser {
+    private final Object mLock = new Object();
     private final XmlPullParser mParser;
     private XMLElement mCurrentElement;
     public XMLSpanParser(){
         this.mParser = new MXParserNonValidating();
     }
     public XMLElement parse(String text) throws XMLException {
-        try {
-            text="<spannable-parser>"+text+"</spannable-parser>";
-            parseString(text);
-        } catch (XmlPullParserException|IOException ex) {
-            throw new XMLException(ex.getMessage());
+        synchronized (mLock){
+            try {
+                text="<spannable-parser>"+text+"</spannable-parser>";
+                parseString(text);
+            } catch (XmlPullParserException|IOException ex) {
+                throw new XMLException(ex.getMessage());
+            }
+            XMLElement element=mCurrentElement;
+            mCurrentElement=null;
+            return element;
         }
-        XMLElement element=mCurrentElement;
-        mCurrentElement=null;
-        return element;
     }
     private void parseString(String text) throws XmlPullParserException, IOException {
         mCurrentElement=null;
