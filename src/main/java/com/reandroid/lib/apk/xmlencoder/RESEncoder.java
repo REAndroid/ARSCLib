@@ -73,9 +73,8 @@
          Map<File, ResourceIds.Table.Package> map =
                  initializeEncodeMaterials(pubXmlFileList, encodeMaterials);
 
-         for(Map.Entry<File, ResourceIds.Table.Package> entry:map.entrySet()){
-             File pubXmlFile=entry.getKey();
-             ResourceIds.Table.Package pkgResourceIds=entry.getValue();
+         for(File pubXmlFile:pubXmlFileList){
+             ResourceIds.Table.Package pkgResourceIds=map.get(pubXmlFile);
              addParsedFiles(pubXmlFile);
 
              PackageCreator packageCreator = new PackageCreator();
