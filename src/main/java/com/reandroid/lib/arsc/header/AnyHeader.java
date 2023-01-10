@@ -64,10 +64,10 @@ public class AnyHeader extends HeaderBlock{
         byte[] buffer = new byte[chunkSize];
         int length = chunkSize - headerSize;
         int offset = loadHeaderBytes(buffer);
-        int readLength = inputStream.read(buffer, offset, length);
-        if(readLength < length){
-            throw new IOException("Read length is less than expected: length="
-                    +chunkSize+", read="+readLength);
+        while (length>0){
+            int len = inputStream.read(buffer, offset, length);
+            length=length-len;
+            offset=offset+len;
         }
         return buffer;
     }
