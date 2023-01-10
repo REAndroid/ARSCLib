@@ -14,25 +14,48 @@ This library is developed based on AOSP structure of androidfw/ResourceTypes.h ,
 * Decodes resources to source code
 * Encodes/Builds source XML to binary resources
 
-#### Works on all java supported platforms (Android, Linux, Windows)
-* Use the jar file as dependency
+##### _NOTES:_
 
-```gradle
-dependencies {
-    implementation(files("$rootProject.projectDir/libs/ARSCLib.jar"))
-}
-```
+  _1- Decoding resources to XML requires all source names should be un-obfuscated and valid_
+
+  _2- User of this lib is assumed to have good knowledge of android source XML syntax, thus
+  during encoding/building it does not validate or throw XML syntax errors as often as aapt/aapt2. For
+  example, you are allowed to set wrong values on some places and doesn't prevent from
+  successful building. On AndroidManifest.xml you can set  ``` package="Wrong 😂 (package) name!" ``` 
+  then you have to know such values are acceptable by android devices._
+
+
+#### Example application
+_Check this tool developed using this library_
+[https://github.com/REAndroid/APKEditor](https://github.com/REAndroid/APKEditor)
+
+#### Works on all java supported platforms (Android, Linux, Mac, Windows)
+
+
 * Maven
  ```gradle
 repositories {
     mavenCentral()
 }
 dependencies {
-    implementation("io.github.reandroid:ARSCLib:1.+")
+    implementation("io.github.reandroid:ARSCLib:+")
 }
 ```
-#### Check this tool developed using this library
-[https://github.com/REAndroid/APKEditor](https://github.com/REAndroid/APKEditor)
+* Jar
+
+```gradle
+dependencies {
+    implementation(files("$rootProject.projectDir/libs/ARSCLib.jar"))
+}
+```
+#### Build jar
+
+```ShellSession
+git clone https://github.com/REAndroid/ARSCLib.git
+cd ARSCLib
+./gradlew fatJar
+# Built jar will be placed ./build/libs/ARSCLib-x.x.x.jar
+```
 
 <details><summary> <code><b>See java example</b></code></summary>
 
