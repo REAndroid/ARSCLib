@@ -31,7 +31,6 @@ public enum ValueType {
     INT_DEC((byte) 0x10),
     INT_HEX((byte) 0x11),
     INT_BOOLEAN((byte) 0x12),
-    FIRST_COLOR_INT((byte) 0x1c),
     INT_COLOR_ARGB8((byte) 0x1c),
     INT_COLOR_RGB8((byte) 0x1d),
     INT_COLOR_ARGB4((byte) 0x1e),

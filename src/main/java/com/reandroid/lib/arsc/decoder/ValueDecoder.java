@@ -405,7 +405,6 @@ import java.util.regex.Pattern;
         switch (valueType){
             case INT_BOOLEAN:
                 return decodeBoolean(data);
-            case FIRST_COLOR_INT:
             case INT_COLOR_ARGB4:
             case INT_COLOR_ARGB8:
             case INT_COLOR_RGB4:
