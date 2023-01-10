@@ -19,9 +19,10 @@ import com.reandroid.lib.arsc.array.EntryBlockArray;
 import com.reandroid.lib.arsc.array.TypeBlockArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.SpecTypePair;
-import com.reandroid.lib.arsc.item.IntegerArray;
-import com.reandroid.lib.arsc.item.IntegerItem;
-import com.reandroid.lib.arsc.item.TypeString;
+import com.reandroid.lib.arsc.io.BlockLoad;
+import com.reandroid.lib.arsc.io.BlockReader;
+import com.reandroid.lib.arsc.item.*;
+import com.reandroid.lib.arsc.pool.TypeStringPool;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResConfig;
 import com.reandroid.lib.json.JSONConvert;
@@ -33,24 +34,104 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class TypeBlock extends BaseTypeBlock
-        implements JSONConvert<JSONObject>, Comparable<TypeBlock> {
-    private final IntegerItem mEntriesStart;
+public class TypeBlock extends BaseChunk
+        implements BlockLoad, JSONConvert<JSONObject>, Comparable<TypeBlock> {
+    private final ByteItem mTypeId;
+    private final ByteItem mTypeFlags;
+    private final IntegerItem mEntryCount;
     private final ResConfig mResConfig;
-    private final IntegerArray mEntryOffsets;
     private final EntryBlockArray mEntryArray;
+    private TypeString mTypeString;
     public TypeBlock() {
         super(ChunkType.TYPE, 2);
-        this.mEntriesStart=new IntegerItem();
-        this.mResConfig =new ResConfig();
-        this.mEntryOffsets=new IntegerArray();
-        this.mEntryArray=new EntryBlockArray(mEntryOffsets, getEntryCountBlock(), mEntriesStart);
+        this.mTypeId=new ByteItem();
+        this.mTypeFlags=new ByteItem();
+        ShortItem reserved = new ShortItem();
+        this.mEntryCount=new IntegerItem();
 
-        addToHeader(mEntriesStart);
+        IntegerItem entriesStart = new IntegerItem();
+        this.mResConfig =new ResConfig();
+        IntegerArray entryOffsets = new IntegerArray();
+        this.mEntryArray = new EntryBlockArray(entryOffsets, mEntryCount, entriesStart);
+
+        mTypeFlags.setBlockLoad(this);
+
+        addToHeader(mTypeId);
+        addToHeader(mTypeFlags);
+        addToHeader(reserved);
+        addToHeader(mEntryCount);
+        addToHeader(entriesStart);
         addToHeader(mResConfig);
 
-        addChild(mEntryOffsets);
+        addChild(entryOffsets);
         addChild(mEntryArray);
+    }
+    public PackageBlock getPackageBlock(){
+        Block parent=getParent();
+        while (parent!=null){
+            if(parent instanceof SpecTypePair){
+                return ((SpecTypePair)parent).getPackageBlock();
+            }
+            parent=parent.getParent();
+        }
+        return null;
+    }
+    public String getTypeName(){
+        TypeString typeString=getTypeString();
+        if(typeString==null){
+            return null;
+        }
+        return typeString.get();
+    }
+    public TypeString getTypeString(){
+        if(mTypeString!=null){
+            if(mTypeString.getId()==getTypeId()){
+                return mTypeString;
+            }
+            mTypeString=null;
+        }
+        PackageBlock packageBlock=getPackageBlock();
+        if(packageBlock==null){
+            return null;
+        }
+        TypeStringPool typeStringPool=packageBlock.getTypeStringPool();
+        mTypeString=typeStringPool.getById(getTypeIdInt());
+        return mTypeString;
+    }
+    public byte getTypeId(){
+        return mTypeId.get();
+    }
+    public int getTypeIdInt(){
+        return (0xff & mTypeId.get());
+    }
+    public void setTypeId(int id){
+        setTypeId((byte) (0xff & id));
+    }
+    public void setTypeId(byte id){
+        mTypeId.set(id);
+    }
+    public void setTypeName(String name){
+        TypeStringPool typeStringPool=getTypeStringPool();
+        int id=getTypeIdInt();
+        TypeString typeString=typeStringPool.getById(id);
+        if(typeString==null){
+            typeString=typeStringPool.getOrCreate(id, name);
+        }
+        typeString.set(name);
+    }
+    private TypeStringPool getTypeStringPool(){
+        PackageBlock packageBlock=getPackageBlock();
+        if(packageBlock!=null){
+            return packageBlock.getTypeStringPool();
+        }
+        return null;
+    }
+    public void setEntryCount(int count){
+        if(count == mEntryCount.get()){
+            return;
+        }
+        mEntryCount.set(count);
+        onSetEntryCount(count);
     }
     public boolean isEmpty(){
         return getEntryBlockArray().isEmpty();
@@ -121,8 +202,8 @@ public class TypeBlock extends BaseTypeBlock
     public EntryBlock getEntryBlock(int entryId){
         return getEntryBlockArray().get(entryId);
     }
-    @Override
-    void onSetEntryCount(int count) {
+
+    private void onSetEntryCount(int count) {
         getEntryBlockArray().setChildesCount(count);
     }
     @Override
@@ -196,6 +277,14 @@ public class TypeBlock extends BaseTypeBlock
     @Deprecated
     public EntryBlock searchByEntryName(String entryName){
         return getEntryBlockArray().searchByEntryName(entryName);
+    }
+    @Override
+    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
+        if(sender==mTypeFlags){
+            if(mTypeFlags.get()==0x1){
+                //ResTable_sparseTypeEntry ?
+            }
+        }
     }
     @Override
     public String toString(){
