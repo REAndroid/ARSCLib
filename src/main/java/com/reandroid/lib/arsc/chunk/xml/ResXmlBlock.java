@@ -198,7 +198,7 @@ package com.reandroid.lib.arsc.chunk.xml;
         jsonObject.put(ResXmlBlock.NAME_element, getResXmlElement().toJson());
         JSONArray pool = getStringPool().toJson();
         if(pool!=null){
-            jsonObject.put(ResXmlBlock.NAME_styled_strings, getResXmlElement().toJson());
+            jsonObject.put(ResXmlBlock.NAME_styled_strings, pool);
         }
         return jsonObject;
     }
