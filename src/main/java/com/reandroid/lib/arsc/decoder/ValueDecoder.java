@@ -390,7 +390,7 @@ import java.util.regex.Pattern;
             // Should not happen the string could be in ResXmlBlock, but if you are lazy here it goes
             return decodeString(entryStore, currentPackageId, rawVal);
         }
-        if(valueType==ValueType.FIRST_INT||valueType==ValueType.INT_DEC||valueType==ValueType.INT_HEX){
+        if(valueType==ValueType.INT_DEC||valueType==ValueType.INT_HEX){
             result=decodeAttribute(entryStore, nameResourceId, rawVal);
             if(result!=null){
                 return result;
@@ -409,7 +409,6 @@ import java.util.regex.Pattern;
             case INT_COLOR_ARGB8:
             case INT_COLOR_RGB4:
             case INT_COLOR_RGB8:
-            case LAST_COLOR_INT:
                 return decodeColor(data);
             case DIMENSION:
             case FLOAT:
@@ -418,8 +417,6 @@ import java.util.regex.Pattern;
             case INT_HEX:
                 return decodeHex(data);
             case INT_DEC:
-            case FIRST_INT:
-            case LAST_INT:
                 return decodeInt(data);
         }
         return null;

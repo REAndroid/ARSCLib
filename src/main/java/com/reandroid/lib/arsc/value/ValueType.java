@@ -27,16 +27,13 @@ public enum ValueType {
     FRACTION((byte) 0x06),
     DYNAMIC_REFERENCE((byte) 0x07),
     DYNAMIC_ATTRIBUTE((byte) 0x08),
-    FIRST_INT((byte) 0x10),
     INT_DEC((byte) 0x10),
     INT_HEX((byte) 0x11),
     INT_BOOLEAN((byte) 0x12),
     INT_COLOR_ARGB8((byte) 0x1c),
     INT_COLOR_RGB8((byte) 0x1d),
     INT_COLOR_ARGB4((byte) 0x1e),
-    INT_COLOR_RGB4((byte) 0x1f),
-    LAST_COLOR_INT((byte) 0x1f),
-    LAST_INT((byte) 0x1f);
+    INT_COLOR_RGB4((byte) 0x1f);
 
     private final byte mByte;
     ValueType(byte b) {
@@ -49,9 +46,6 @@ public enum ValueType {
         ValueType[] all=values();
         for(ValueType vt:all){
             if(vt.mByte==b){
-                if(vt==FIRST_INT){
-                    return INT_DEC;
-                }
                 return vt;
             }
         }
@@ -65,9 +59,6 @@ public enum ValueType {
         ValueType[] all=values();
         for(ValueType vt:all){
             if(name.equals(vt.name())){
-                if(vt==FIRST_INT){
-                    return INT_DEC;
-                }
                 return vt;
             }
         }

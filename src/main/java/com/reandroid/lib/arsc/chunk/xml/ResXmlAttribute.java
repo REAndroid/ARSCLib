@@ -311,8 +311,7 @@ import java.util.Set;
     }
     public boolean hasIntegerValue(){
         ValueType valueType=getValueType();
-        return valueType==ValueType.INT_DEC
-                ||valueType==ValueType.FIRST_INT;
+        return valueType==ValueType.INT_DEC;
     }
     public Integer getValueAsInteger(){
         if(hasIntegerValue()){
