@@ -21,8 +21,9 @@ import com.reandroid.lib.arsc.base.BlockArrayCreator;
 import java.util.AbstractList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
-public class ItemGroup<T extends Block> {
+ public class ItemGroup<T extends Block> {
     private final BlockArrayCreator<T> mBlockArrayCreator;
     private final String name;
     private T[] items;
@@ -31,7 +32,7 @@ public class ItemGroup<T extends Block> {
         this.mBlockArrayCreator=blockArrayCreator;
         this.name=name;
         this.items=blockArrayCreator.newInstance(0);
-        this.hashCode=(getClass().getName()+"-"+name).hashCode();
+        this.hashCode = Objects.hash(getClass(), name);
     }
     public Iterator<T> iterator(){
         return iterator(false);
