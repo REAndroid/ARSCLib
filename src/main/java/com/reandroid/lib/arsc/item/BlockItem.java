@@ -110,9 +110,16 @@ public abstract class BlockItem extends Block {
         if(bts==null || bts.length==0){
             return 0;
         }
-        int readLength = inputStream.read(bts, 0, bts.length);
+        int length=bts.length;
+        int offset=0;
+        int read=length;
+        while (length>0 && read>0){
+            read = inputStream.read(bts, offset, length);
+            length-=read;
+            offset+=read;
+        }
         onBytesChanged();
         super.notifyBlockLoad();
-        return readLength;
+        return bts.length;
     }
 }
