@@ -18,7 +18,6 @@ package com.reandroid.lib.arsc.chunk.xml;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.BlockList;
-import com.reandroid.lib.arsc.container.FixedBlockContainer;
 import com.reandroid.lib.arsc.container.SingleBlockContainer;
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.header.HeaderBlock;
@@ -29,37 +28,37 @@ import com.reandroid.lib.common.EntryStore;
 import com.reandroid.lib.json.JSONConvert;
 import com.reandroid.lib.json.JSONArray;
 import com.reandroid.lib.json.JSONObject;
-import com.reandroid.xml.NameSpaceItem;
-import com.reandroid.xml.XMLAttribute;
-import com.reandroid.xml.XMLElement;
-import com.reandroid.xml.XMLException;
+import com.reandroid.xml.*;
 
 
 import java.io.IOException;
 import java.util.*;
 
- public class ResXmlElement extends FixedBlockContainer implements JSONConvert<JSONObject> {
+ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject> {
     private final BlockList<ResXmlStartNamespace> mStartNamespaceList;
     private final SingleBlockContainer<ResXmlStartElement> mStartElementContainer;
-    private final BlockList<ResXmlElement> mBody;
-    private final SingleBlockContainer<ResXmlText> mResXmlTextContainer;
+    private final BlockList<ResXmlNode> mBody;
     private final SingleBlockContainer<ResXmlEndElement> mEndElementContainer;
     private final BlockList<ResXmlEndNamespace> mEndNamespaceList;
     private int mDepth;
     public ResXmlElement() {
-        super(6);
+        super(5);
         this.mStartNamespaceList = new BlockList<>();
         this.mStartElementContainer= new SingleBlockContainer<>();
         this.mBody = new BlockList<>();
-        this.mResXmlTextContainer = new SingleBlockContainer<>();
         this.mEndElementContainer = new SingleBlockContainer<>();
         this.mEndNamespaceList = new BlockList<>();
         addChild(0, mStartNamespaceList);
         addChild(1, mStartElementContainer);
         addChild(2, mBody);
-        addChild(3, mResXmlTextContainer);
-        addChild(4, mEndElementContainer);
-        addChild(5, mEndNamespaceList);
+        addChild(3, mEndElementContainer);
+        addChild(4, mEndNamespaceList);
+    }
+    public String getComment(){
+        return getStartElement().getComment();
+    }
+    public void setComment(String comment){
+        getStartElement().setComment(comment);
     }
     public void calculatePositions(){
         ResXmlStartElement start = getStartElement();
@@ -293,10 +292,53 @@ import java.util.*;
         return mBody.remove(element);
     }
     public int countElements(){
-        return mBody.size();
+        int result = 0;
+        for(ResXmlNode xmlNode:listXmlNodes()){
+            if(xmlNode instanceof ResXmlElement){
+                result++;
+            }
+        }
+        return result;
+    }
+    public void clearChildes(){
+        List<ResXmlNode> copyOfNodeList=new ArrayList<>(mBody.getChildes());
+        for(ResXmlNode xmlNode:copyOfNodeList){
+            if(xmlNode==null){
+                continue;
+            }
+            xmlNode.onRemove();
+            mBody.remove(xmlNode);
+        }
+    }
+    public List<ResXmlNode> listXmlNodes(){
+         return mBody.getChildes();
+    }
+    public List<ResXmlText> listXmlText(){
+        List<ResXmlText> results=new ArrayList<>();
+        for(ResXmlNode xmlNode:listXmlNodes()){
+            if(xmlNode instanceof ResXmlTextNode){
+                results.add(((ResXmlTextNode) xmlNode).getResXmlText());
+            }
+        }
+        return results;
+    }
+    public List<ResXmlTextNode> listXmlTextNodes(){
+        List<ResXmlTextNode> results=new ArrayList<>();
+        for(ResXmlNode xmlNode:listXmlNodes()){
+            if(xmlNode instanceof ResXmlTextNode){
+                results.add((ResXmlTextNode) xmlNode);
+            }
+        }
+        return results;
     }
     public List<ResXmlElement> listElements(){
-        return mBody.getChildes();
+        List<ResXmlElement> results=new ArrayList<>();
+        for(ResXmlNode xmlNode:listXmlNodes()){
+            if(xmlNode instanceof ResXmlElement){
+                results.add((ResXmlElement) xmlNode);
+            }
+        }
+        return results;
     }
     public List<ResXmlElement> listElements(String name){
         List<ResXmlElement> results=new ArrayList<>();
@@ -432,25 +474,40 @@ import java.util.*;
         mEndElementContainer.setItem(item);
     }
 
+    // Use listXmlText() instead to be removed on next version
+    @Deprecated
     public ResXmlText getResXmlText(){
-        return mResXmlTextContainer.getItem();
-    }
-    public void setResXmlText(ResXmlText xmlText){
-        mResXmlTextContainer.setItem(xmlText);
-    }
-    public void setResXmlText(String text){
-        if(text==null){
-            mResXmlTextContainer.setItem(null);
-        }else {
-            ResXmlText xmlText=mResXmlTextContainer.getItem();
-            if(xmlText==null){
-                xmlText=new ResXmlText();
-                mResXmlTextContainer.setItem(xmlText);
-                ResXmlStartElement start = getStartElement();
-                xmlText.setLineNumber(start.getLineNumber());
-            }
-            xmlText.setText(text);
+        List<ResXmlText> xmlTextList=listXmlText();
+        if(xmlTextList.size()==0){
+            return null;
         }
+        return xmlTextList.get(0);
+    }
+    public void addResXmlTextNode(ResXmlTextNode xmlTextNode){
+        mBody.add(xmlTextNode);
+    }
+    public void addResXmlText(ResXmlText xmlText){
+        if(xmlText!=null){
+            addResXmlTextNode(new ResXmlTextNode(xmlText));
+        }
+    }
+    // Use addResXmlText()
+    @Deprecated
+    public void setResXmlText(ResXmlText xmlText){
+        addResXmlText(xmlText);
+    }
+    @Deprecated
+    public void setResXmlText(String text){
+        clearChildes();
+        addResXmlText(text);
+    }
+    public void addResXmlText(String text){
+        if(text==null){
+            return;
+        }
+        ResXmlTextNode xmlTextNode=new ResXmlTextNode();
+        addResXmlTextNode(xmlTextNode);
+        xmlTextNode.setText(text);
     }
 
     private boolean isBalanced(){
@@ -602,7 +659,7 @@ import java.util.*;
     }
     private void onXmlText(BlockReader reader) throws IOException{
         ResXmlText xmlText=new ResXmlText();
-        setResXmlText(xmlText);
+        addResXmlText(xmlText);
         xmlText.readBytes(reader);
     }
 
@@ -644,6 +701,7 @@ import java.util.*;
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
+        jsonObject.put(NAME_node_type, NAME_element);
         ResXmlStartElement start = getStartElement();
         jsonObject.put(NAME_line, start.getLineNumber());
         int i=0;
@@ -663,13 +721,6 @@ import java.util.*;
         if(comment!=null){
             jsonObject.put(NAME_comment, comment);
         }
-        ResXmlText xmlText=getResXmlText();
-        if(xmlText!=null){
-            String text=xmlText.getText();
-            if(text!=null){
-                jsonObject.put(NAME_text, text);
-            }
-        }
         String uri=start.getUri();
         if(uri!=null){
             jsonObject.put(NAME_namespace_uri, uri);
@@ -678,8 +729,8 @@ import java.util.*;
         jsonObject.put(NAME_attributes, attrArray);
         i=0;
         JSONArray childes=new JSONArray();
-        for(ResXmlElement element:listElements()){
-            childes.put(i, element.toJson());
+        for(ResXmlNode xmlNode:listXmlNodes()){
+            childes.put(i, xmlNode.toJson());
             i++;
         }
         if(i>0){
@@ -730,11 +781,28 @@ import java.util.*;
             int length=childArray.length();
             for(int i=0;i<length;i++){
                 JSONObject childObject=childArray.getJSONObject(i);
-                ResXmlElement child = createChildElement();
-                child.fromJson(childObject);
+                if(isTextNode(childObject)){
+                    ResXmlTextNode xmlTextNode=new ResXmlTextNode();
+                    addResXmlTextNode(xmlTextNode);
+                    xmlTextNode.fromJson(childObject);
+                }else {
+                    ResXmlElement childElement = createChildElement();
+                    childElement.fromJson(childObject);
+                }
             }
         }
         start.calculatePositions();
+    }
+    private boolean isTextNode(JSONObject childObject){
+        String type=childObject.optString(NAME_node_type, null);
+        if(ResXmlTextNode.NAME_text.equals(type)){
+            return true;
+        }
+        if(NAME_element.equals(type)){
+            return false;
+        }
+        // support older ARSCLib versions
+        return childObject.has(NAME_text);
     }
 
     /**
@@ -745,6 +813,7 @@ import java.util.*;
      * */
     public XMLElement decodeToXml(EntryStore entryStore, int currentPackageId) throws XMLException {
         XMLElement xmlElement = new XMLElement(getTagName());
+        xmlElement.setLineNumber(getStartElement().getLineNumber());
         for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
             xmlElement.addAttribute(startNamespace.decodeToXml());
         }
@@ -753,15 +822,21 @@ import java.util.*;
                     resXmlAttribute.decodeToXml(entryStore, currentPackageId);
             xmlElement.addAttribute(xmlAttribute);
         }
-        for(ResXmlElement childResXmlElement:listElements()){
-            XMLElement childXMLElement =
-                    childResXmlElement.decodeToXml(entryStore, currentPackageId);
-            xmlElement.addChild(childXMLElement);
+        String comment=getComment();
+        if(comment!=null){
+            xmlElement.addComment(new XMLComment(comment));
         }
-        ResXmlText resXmlText = getResXmlText();
-        if(resXmlText!=null){
-            xmlElement.setTextContent(
-                    ValueDecoder.escapeSpecialCharacter(resXmlText.getText()));
+        for(ResXmlNode xmlNode:listXmlNodes()){
+            if(xmlNode instanceof ResXmlElement){
+                ResXmlElement childResXmlElement=(ResXmlElement)xmlNode;
+                XMLElement childXMLElement =
+                        childResXmlElement.decodeToXml(entryStore, currentPackageId);
+                xmlElement.addChild(childXMLElement);
+            }else if(xmlNode instanceof ResXmlTextNode){
+                ResXmlTextNode childResXmlTextNode=(ResXmlTextNode)xmlNode;
+                XMLText xmlText = childResXmlTextNode.decodeToXml();
+                xmlElement.addText(xmlText);
+            }
         }
         return xmlElement;
     }
@@ -799,6 +874,7 @@ import java.util.*;
     public static final String NS_ANDROID_URI = "http://schemas.android.com/apk/res/android";
     public static final String NS_ANDROID_PREFIX = "android";
 
+    static final String NAME_element = "element";
     static final String NAME_name = "name";
     static final String NAME_comment = "comment";
     static final String NAME_text = "text";

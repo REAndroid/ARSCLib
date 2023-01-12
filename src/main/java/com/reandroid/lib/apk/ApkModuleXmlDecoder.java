@@ -53,6 +53,7 @@ import java.util.*;
             throws IOException, XMLException {
         this.decodedEntries.clear();
         logMessage("Decoding ...");
+        decodeUncompressedFiles(outDir);
         TableEntryStore entryStore=new TableEntryStore();
         entryStore.add(Frameworks.getAndroid());
         TableBlock tableBlock=apkModule.getTableBlock();
@@ -73,6 +74,12 @@ import java.util.*;
         decodeValues(entryStore, outDir, tableBlock);
 
         extractRootFiles(outDir);
+    }
+    private void decodeUncompressedFiles(File outDir)
+             throws IOException {
+        File file=new File(outDir, UncompressedFiles.JSON_FILE);
+        UncompressedFiles uncompressedFiles = apkModule.getUncompressedFiles();
+        uncompressedFiles.toJson().write(file);
     }
     private void decodeResFile(EntryStore entryStore, File outDir, ResFile resFile)
             throws IOException, XMLException {

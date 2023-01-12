@@ -139,7 +139,11 @@ public class ResFile {
         EntryBlock entryBlock=pickOne();
         TypeBlock typeBlock=entryBlock.getTypeBlock();
         StringBuilder builder=new StringBuilder();
-        builder.append(typeBlock.getTypeName());
+        String type=typeBlock.getTypeName();
+        builder.append(type);
+        if(!type.equals("plurals") && !type.endsWith("s")){
+            builder.append('s');
+        }
         builder.append(typeBlock.getQualifiers());
         builder.append('/');
         builder.append(entryBlock.getName());

@@ -37,7 +37,7 @@ class XMLValuesEncoderId extends XMLValuesEncoder{
         setVisibility(entryBlock);
     }
     private void setVisibility(EntryBlock entryBlock){
-        entryBlock.setEntryTypePublic(true);
-        entryBlock.setEntryTypeShared(true);
+        entryBlock.setWeak(true);
+        entryBlock.setPublic(true);
     }
 }

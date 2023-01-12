@@ -56,7 +56,9 @@ import java.util.Set;
         if(isEmpty(uri) || isEmpty(prefix)){
             return null;
         }
-        return new SchemaAttr(prefix, uri);
+        SchemaAttr schemaAttr=new SchemaAttr(prefix, uri);
+        schemaAttr.setLineNumber(getLineNumber());
+        return schemaAttr;
     }
     private boolean isEmpty(String txt){
         if(txt==null){

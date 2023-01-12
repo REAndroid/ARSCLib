@@ -26,6 +26,11 @@ public class XMLText extends XMLNode{
     public XMLText(){
         this(null);
     }
+
+    @Override
+    public void addChildNode(XMLNode xmlNode){
+        throw new IllegalArgumentException("Can not add xml node on text: "+xmlNode);
+    }
     public String getText(){
         return getText(true);
     }

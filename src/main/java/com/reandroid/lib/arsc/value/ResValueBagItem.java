@@ -139,7 +139,9 @@ public class ResValueBagItem extends BaseResValueItem{
     }
     void refreshTableReference(){
         if(getValueType()==ValueType.STRING){
-            addTableReference(getTableStringReference());
+            if(!hasTableReference()){
+                addTableReference(getTableStringReference());
+            }
         }else {
             removeTableReference();
         }

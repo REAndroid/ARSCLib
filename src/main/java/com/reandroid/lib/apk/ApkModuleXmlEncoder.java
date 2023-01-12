@@ -19,6 +19,7 @@ package com.reandroid.lib.apk;
  import com.reandroid.archive.FileInputSource;
  import com.reandroid.lib.apk.xmlencoder.RESEncoder;
  import com.reandroid.lib.arsc.chunk.TableBlock;
+ import com.reandroid.lib.json.JSONObject;
  import com.reandroid.xml.XMLException;
 
  import java.io.File;
@@ -34,6 +35,7 @@ package com.reandroid.lib.apk;
          this.resEncoder = new RESEncoder(module, tableBlock);
      }
      public void scanDirectory(File mainDirectory) throws IOException, XMLException {
+         loadUncompressedFiles(mainDirectory);
          resEncoder.scanDirectory(mainDirectory);
          File rootDir=new File(mainDirectory, "root");
          scanRootDir(rootDir);
@@ -50,6 +52,11 @@ package com.reandroid.lib.apk;
              FileInputSource inputSource=new FileInputSource(file, path);
              archive.add(inputSource);
          }
+     }
+     private void loadUncompressedFiles(File mainDirectory) throws IOException, XMLException {
+         File file=new File(mainDirectory, UncompressedFiles.JSON_FILE);
+         UncompressedFiles uncompressedFiles = getApkModule().getUncompressedFiles();
+         uncompressedFiles.fromJson(file);
      }
      public void setApkLogger(APKLogger apkLogger) {
          this.resEncoder.setAPKLogger(apkLogger);

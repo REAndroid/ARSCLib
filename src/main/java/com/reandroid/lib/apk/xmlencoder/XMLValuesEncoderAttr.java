@@ -43,7 +43,7 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
         encodeAttributes(parentElement, resValueBag);
         encodeEnumOrFlag(parentElement, resValueBag);
         // TODO: re-check if this is necessary
-        resValueBag.getEntryBlock().setEntryTypeShared(true);
+        resValueBag.getEntryBlock().setPublic(true);
     }
     private void encodeAttributes(XMLElement parentElement, ResValueBag resValueBag){
         int count=parentElement.getAttributeCount();

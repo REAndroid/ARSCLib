@@ -57,7 +57,7 @@ public abstract class BaseResValueItem extends BaseResValue implements ResValueI
         return null;
     }
     public ReferenceItem getTableStringReference(){
-        if(getValueType()!=ValueType.STRING){
+        if(getValueType()!=ValueType.STRING || getEntryBlock()==null){
             return null;
         }
         if(mReferenceItem==null){

@@ -35,9 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EntryBlock extends Block implements JSONConvert<JSONObject> {
-    private ShortItem mHeaderSize;
-    private ByteItem mFlagEntryType;
-    private ByteItem mByteFlagsB;
+    private ByteArray entryHeader;
     private IntegerItem mSpecReference;
     private BaseResValue mResValue;
     private boolean mUnLocked;
@@ -127,20 +125,16 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         return tableString.getHtml();
     }
     public TableString getValueAsTableString(){
-        TableStringPool stringPool=getTableStringPool();
+        TableStringPool stringPool = getTableStringPool();
         if(stringPool==null){
             return null;
         }
-        BaseResValue res = getResValue();
-        if(!(res instanceof ResValueInt)){
+        BaseResValue baseResValue = getResValue();
+        if(!(baseResValue instanceof ResValueInt)){
             return null;
         }
-        ResValueInt resValueInt=(ResValueInt)res;
-        TableString tableString= stringPool.get(resValueInt.getData());
-        if(tableString==null){
-            return null;
-        }
-        return tableString;
+        ResValueInt resValueInt = (ResValueInt)baseResValue;
+        return stringPool.get(resValueInt.getData());
     }
     private TableStringPool getTableStringPool(){
         PackageBlock pkg=getPackageBlock();
@@ -256,27 +250,24 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         removeTableReferences();
         removeSpecReferences();
     }
-    public void setEntryTypeBag(boolean b){
-        mFlagEntryType.putBit(0, b);
+    private void setEntryTypeBag(boolean b){
+        entryHeader.putBit(OFFSET_FLAGS, 0, b);
         refreshHeaderSize();
     }
     public boolean isEntryTypeBag(){
-        return mFlagEntryType.getBit(0);
+        return entryHeader.getBit(OFFSET_FLAGS,0);
     }
-    public void setEntryTypeShared(boolean b){
-        mFlagEntryType.putBit(1, b);
+    public void setPublic(boolean b){
+        entryHeader.putBit(OFFSET_FLAGS,1, b);
     }
-    public boolean isEntryTypeShared(){
-        return mFlagEntryType.getBit(1);
+    public boolean isPublic(){
+        return entryHeader.getBit(OFFSET_FLAGS,1);
     }
-    public void setEntryTypePublic(boolean b){
-        mFlagEntryType.putBit(2, b);
+    public void setWeak(boolean b){
+        entryHeader.putBit(OFFSET_FLAGS, 2, b);
     }
-    public boolean isEntryTypePublic(){
-        return mFlagEntryType.getBit(2);
-    }
-    private void setByteFlagsB(byte b){
-        mByteFlagsB.set(b);
+    public boolean isWeak(){
+        return entryHeader.getBit(OFFSET_FLAGS,2);
     }
     private IntegerItem getSpecReferenceBlock(){
         return mSpecReference;
@@ -341,7 +332,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
             return;
         }
         if(resValue!=null){
-            resValue.setIndex(4);
+            resValue.setIndex(2);
             resValue.setParent(this);
         }
         if(mResValue!=null){
@@ -509,47 +500,32 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         if(mUnLocked){
             return;
         }
-        mUnLocked =true;
-        this.mHeaderSize =new ShortItem();
-        this.mFlagEntryType =new ByteItem();
-        this.mByteFlagsB=new ByteItem();
+        mUnLocked = true;
+        entryHeader = new ByteArray(4);
         if(mSpecReference==null){
             this.mSpecReference = new IntegerItem();
         }else if(mSpecReference.isNull()){
             mSpecReference.setNull(false);
         }
-
-        mHeaderSize.setIndex(0);
-        mFlagEntryType.setIndex(1);
-        mByteFlagsB.setIndex(2);
-        mSpecReference.setIndex(3);
-
-        mHeaderSize.setParent(this);
-        mFlagEntryType.setParent(this);
-        mByteFlagsB.setParent(this);
+        entryHeader.setIndex(0);
+        mSpecReference.setIndex(1);
+        entryHeader.setParent(this);
         mSpecReference.setParent(this);
-
     }
     private void lockEntry(){
         if(!mUnLocked){
             return;
         }
         removeAllReferences();
-        mUnLocked =false;
-        mHeaderSize.setParent(null);
-        mFlagEntryType.setParent(null);
-        mByteFlagsB.setParent(null);
+        mUnLocked = false;
+        entryHeader.setParent(null);
         mSpecReference.setParent(null);
 
-        mHeaderSize.setIndex(-1);
-        mFlagEntryType.setIndex(-1);
-        mByteFlagsB.setIndex(-1);
+        entryHeader.setIndex(-1);
         mSpecReference.setIndex(-1);
         removeResValue();
 
-        this.mHeaderSize =null;
-        this.mFlagEntryType =null;
-        this.mByteFlagsB =null;
+        this.entryHeader = null;
         this.mSpecReference =null;
     }
     private void removeResValue(){
@@ -560,11 +536,13 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         }
     }
     private void refreshHeaderSize(){
+        short size;
         if(isEntryTypeBag()){
-            mHeaderSize.set(HEADER_SIZE_BAG);
+            size=HEADER_SIZE_BAG;
         }else {
-            mHeaderSize.set(HEADER_SIZE_INT);
+            size=HEADER_SIZE_INT;
         }
+        entryHeader.putShort(OFFSET_SIZE, size);
     }
     private void createResValue(){
         if(getResValue()!=null){
@@ -599,9 +577,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         if(isNull()){
             return null;
         }
-        byte[] results=mHeaderSize.getBytes();
-        results=addBytes(results, mFlagEntryType.getBytes());
-        results=addBytes(results, mByteFlagsB.getBytes());
+        byte[] results=entryHeader.getBytes();
         results=addBytes(results, mSpecReference.getBytes());
         results=addBytes(results, mResValue.getBytes());
         return results;
@@ -612,8 +588,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
             return 0;
         }
         /*
-           mHeaderSize -> 2 bytes
-                mFlags -> 2 bytes
+           entryHeader -> 4 bytes
         mSpecReference -> 4 bytes
                           -------
                   Total = 8 bytes, thus this value is always fixed no need to re-count
@@ -633,9 +608,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
             return;
         }
         counter.addCount(countBytes());
-        mHeaderSize.onCountUpTo(counter);
-        mFlagEntryType.onCountUpTo(counter);
-        mByteFlagsB.onCountUpTo(counter);
+        entryHeader.onCountUpTo(counter);
         mSpecReference.onCountUpTo(counter);
         mResValue.onCountUpTo(counter);
     }
@@ -644,9 +617,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         if(isNull()){
             return 0;
         }
-        int result=mHeaderSize.writeBytes(stream);
-        result+= mFlagEntryType.writeBytes(stream);
-        result+=mByteFlagsB.writeBytes(stream);
+        int result=entryHeader.writeBytes(stream);
         result+= mSpecReference.writeBytes(stream);
         result+=mResValue.writeBytes(stream);
         return result;
@@ -695,15 +666,12 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
     public void onReadBytes(BlockReader reader) throws IOException{
         setNull(false);
         removeResValue();
-        mHeaderSize.readBytes(reader);
-        mFlagEntryType.readBytes(reader);
-        mByteFlagsB.readBytes(reader);
+        entryHeader.readBytes(reader);
         mSpecReference.readBytes(reader);
         createResValue();
         mResValue.readBytes(reader);
         updatePackage();
         updateSpecRef();
-        mResValue.onDataLoaded();
     }
     @Override
     public JSONObject toJson() {
@@ -715,10 +683,10 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         if(isEntryTypeBag()){
             jsonObject.put(NAME_is_bag, true);
         }
-        if(isEntryTypePublic()){
-            jsonObject.put(NAME_is_public, true);
+        if(isWeak()){
+            jsonObject.put(NAME_is_weak, true);
         }
-        if(isEntryTypeShared()){
+        if(isPublic()){
             jsonObject.put(NAME_is_shared, true);
         }
         jsonObject.put(NAME_value, getResValue().toJson());
@@ -737,8 +705,8 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
             baseResValue=new ResValueInt();
         }
         setResValue(baseResValue);
-        setEntryTypeShared(json.optBoolean(NAME_is_shared, false));
-        setEntryTypePublic(json.optBoolean(NAME_is_public, false));
+        setPublic(json.optBoolean(NAME_is_shared, false));
+        setWeak(json.optBoolean(NAME_is_weak, false));
         setName(json.getString(NAME_entry_name));
         baseResValue.fromJson(json.getJSONObject(NAME_value));
         mResValue.onDataLoaded();
@@ -765,8 +733,8 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         SpecString spec = getPackageBlock()
                 .getSpecStringPool().getOrCreate(name);
         setSpecReference(spec.getIndex());
-        setEntryTypeShared(entryBlock.isEntryTypeShared());
-        setEntryTypePublic(entryBlock.isEntryTypePublic());
+        setPublic(entryBlock.isPublic());
+        setWeak(entryBlock.isWeak());
     }
     private ResValueBag getOrCreateResValueBag(){
         if(mResValue instanceof ResValueBag){
@@ -833,13 +801,15 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         return builder.toString();
     }
 
-    private final static short HEADER_SIZE_BAG = 0x0010;
-    private final static short HEADER_SIZE_INT = 0x0008;
+    private static final int OFFSET_SIZE = 0;
+    private static final int OFFSET_FLAGS = 2;
+    private static final short HEADER_SIZE_BAG = 0x0010;
+    private static final short HEADER_SIZE_INT = 0x0008;
 
     public static final String NAME_entry_name ="entry_name";
     private static final String NAME_is_bag="is_bag";
     private static final String NAME_is_shared="is_shared";
-    private static final String NAME_is_public="is_public";
+    private static final String NAME_is_weak = "is_weak";
     private static final String NAME_value="value";
 
 }

@@ -425,6 +425,10 @@ public class MXParser implements XmlPullParser
     public InputStream getInputStream(){
         return inputStream;
     }
+    public Reader getReader(){
+        reset();
+        return reader;
+    }
 
     public String getInputEncoding() {
         return inputEncoding;

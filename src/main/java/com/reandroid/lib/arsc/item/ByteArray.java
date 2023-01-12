@@ -77,6 +77,23 @@ public class ByteArray extends BlockItem {
         byte[] bts = getBytesInternal();
         bts[index]=value;
     }
+    public boolean getBit(int byteOffset, int bitIndex){
+        return ((get(byteOffset)>>bitIndex) & 0x1) == 1;
+    }
+    public void putBit(int byteOffset, int bitIndex, boolean bit){
+        int val=get(byteOffset);
+        int left=val>>bitIndex;
+        if(bit){
+            left=left|0x1;
+        }else {
+            left=left & 0xFE;
+        }
+        left=left<<bitIndex;
+        bitIndex=8-bitIndex;
+        int right=(0xFF>>bitIndex) & val;
+        val=left|right;
+        put(byteOffset, (byte) val);
+    }
     public final void putShort(int offset, short val){
         byte[] bts = getBytesInternal();
         bts[offset+1]= (byte) (val >>> 8 & 0xff);

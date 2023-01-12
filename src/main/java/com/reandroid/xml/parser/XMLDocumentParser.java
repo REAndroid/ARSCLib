@@ -45,7 +45,7 @@ public class XMLDocumentParser {
     public XMLDocument parse() throws XMLParseException {
         try {
             XMLDocument document= parseDocument();
-            closeFileInputStream();
+            close();
             return document;
         } catch (XmlPullParserException | IOException e) {
             XMLParseException ex=new XMLParseException(e.getMessage());
@@ -53,18 +53,39 @@ public class XMLDocumentParser {
             throw ex;
         }
     }
+    private void close(){
+        closeReader();
+        closeFileInputStream();
+        mResDocument=null;
+        mCurrentElement=null;
+        mCurrentText=null;
+        mComments=null;
+    }
     private void closeFileInputStream(){
         if(!(mParser instanceof MXParser)){
             return;
         }
-        MXParser mxParser=(MXParser) mParser;
-        InputStream inputStream = mxParser.getInputStream();
+        MXParser parser=(MXParser) mParser;
+        InputStream inputStream = parser.getInputStream();
         if(!(inputStream instanceof FileInputStream)){
             return;
         }
         try {
             inputStream.close();
         } catch (IOException ignored) {
+        }
+    }
+    private void closeReader(){
+        if(!(mParser instanceof MXParser)){
+            return;
+        }
+        MXParser parser=(MXParser) mParser;
+        Reader reader = parser.getReader();
+        if(reader!=null){
+            try {
+                reader.close();
+            } catch (IOException ignored) {
+            }
         }
     }
 
@@ -121,6 +142,8 @@ public class XMLDocumentParser {
         }else {
             mCurrentElement=mCurrentElement.createElement(name);
         }
+        mCurrentElement.setColumnNumber(mParser.getColumnNumber());
+        mCurrentElement.setLineNumber(mParser.getLineNumber());
         checkIndent();
         flushComments(mCurrentElement);
         String ns=mParser.getNamespace();
@@ -284,6 +307,8 @@ public class XMLDocumentParser {
         }
         XMLComment commentElement=new XMLComment();
         commentElement.setCommentText(commentText);
+        commentElement.setColumnNumber(mParser.getColumnNumber());
+        commentElement.setLineNumber(mParser.getLineNumber());
         addComment(commentElement);
     }
     private void addComment(XMLComment ce){

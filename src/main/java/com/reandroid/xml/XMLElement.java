@@ -48,11 +48,16 @@ public class XMLElement extends XMLNode{
     }
 
     public void addText(XMLText text){
+        addTextInternal(text, true);
+    }
+    private void addTextInternal(XMLText text, boolean addSupper){
         if(text==null){
             return;
         }
         mTexts.add(text);
-        super.addChildNode(text);
+        if(addSupper){
+            super.addChildNodeInternal(text);
+        }
     }
     private void appendText(String text){
         if(text==null || text.length()==0){
@@ -171,7 +176,7 @@ public class XMLElement extends XMLNode{
     }
     public XMLElement createElement(String tag) {
         XMLElement baseElement=new XMLElement(tag);
-        addChildNoCheck(baseElement);
+        addChildNoCheck(baseElement, true);
         return baseElement;
     }
     public void addChild(Collection<XMLElement> elements) {
@@ -183,7 +188,7 @@ public class XMLElement extends XMLNode{
         }
     }
     public void addChild(XMLElement child) {
-        addChildNoCheck(child);
+        addChildNoCheck(child, true);
     }
     private void clearChildElements(){
         mChildes.clear();
@@ -238,6 +243,9 @@ public class XMLElement extends XMLNode{
         mComments=null;
     }
     public void addComment(XMLComment commentElement) {
+        addCommentInternal(commentElement, true);
+    }
+    void addCommentInternal(XMLComment commentElement, boolean addSuper) {
         if(commentElement==null){
             return;
         }
@@ -247,7 +255,9 @@ public class XMLElement extends XMLNode{
         mComments.add(commentElement);
         commentElement.setIndent(getIndent());
         commentElement.setParent(this);
-        super.addChildNode(commentElement);
+        if(addSuper){
+            super.addChildNodeInternal(commentElement);
+        }
     }
     public void removeChildElements(){
         mChildes.clear();
@@ -413,14 +423,26 @@ public class XMLElement extends XMLNode{
     void setParent(XMLElement baseElement){
         mParent=baseElement;
     }
-    private void addChildNoCheck(XMLElement child){
+    @Override
+    void onChildAdded(XMLNode xmlNode){
+        if(xmlNode instanceof XMLComment){
+            addCommentInternal((XMLComment) xmlNode, false);
+        }else if(xmlNode instanceof XMLElement){
+            addChildNoCheck((XMLElement) xmlNode, false);
+        }else if(xmlNode instanceof XMLText){
+            addTextInternal((XMLText) xmlNode, false);
+        }
+    }
+    private void addChildNoCheck(XMLElement child, boolean addSupper){
         if(child==null || child == this){
             return;
         }
         child.setParent(this);
         child.setIndent(getChildIndent());
         mChildes.add(child);
-        super.addChildNode(child);
+        if(addSupper){
+            super.addChildNodeInternal(child);
+        }
     }
     public int getLevel(){
         int rs=0;
@@ -579,12 +601,19 @@ public class XMLElement extends XMLNode{
     public boolean hasTextContent() {
         return mTexts.size()>0;
     }
+    public String getText(){
+        if(mTexts.size()==0){
+            return null;
+        }
+        return mTexts.get(0).getText();
+    }
     public void setTextContent(String text){
         setTextContent(text, true);
     }
     public void setTextContent(String text, boolean escape){
         clearChildElements();
         clearTexts();
+        super.getChildNodes().clear();
         if(escape){
             text=XMLUtil.escapeXmlChars(text);
         }

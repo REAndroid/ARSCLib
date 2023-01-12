@@ -21,12 +21,37 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class XMLNode {
+    private int mLineNumber;
+    private int mColumnNumber;
     private final List<XMLNode> mChildNodes = new ArrayList<>();
 
-    void addChildNode(XMLNode xmlNode){
-        if(xmlNode!=null && canAdd(xmlNode)){
-            mChildNodes.add(xmlNode);
+    public int getColumnNumber() {
+        return mColumnNumber;
+    }
+    public void setColumnNumber(int columnNumber) {
+        this.mColumnNumber = columnNumber;
+    }
+    public int getLineNumber() {
+        return mLineNumber;
+    }
+    public void setLineNumber(int lineNumber) {
+        this.mLineNumber = lineNumber;
+    }
+
+    public void addChildNode(XMLNode xmlNode){
+        boolean addOk=addChildNodeInternal(xmlNode);
+        if(addOk){
+            onChildAdded(xmlNode);
         }
+    }
+    boolean addChildNodeInternal(XMLNode xmlNode){
+        if(xmlNode!=null && canAdd(xmlNode)){
+            return mChildNodes.add(xmlNode);
+        }
+        return false;
+    }
+    void onChildAdded(XMLNode xmlNode){
+
     }
     boolean canAdd(XMLNode xmlNode){
         return !mChildNodes.contains(xmlNode);

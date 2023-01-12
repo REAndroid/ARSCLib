@@ -114,6 +114,9 @@ package com.reandroid.lib.apk.xmlencoder;
          if(i>0){
              name=name.substring(0, i);
          }
+         if(!name.equals("plurals") && name.endsWith("s")){
+             name=name.substring(0, name.length()-1);
+         }
          return name;
      }
      public static String getTypeNameFromValuesXml(File valuesXml){
