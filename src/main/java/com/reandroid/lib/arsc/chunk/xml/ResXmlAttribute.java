@@ -425,7 +425,7 @@ import java.util.Set;
     }
     @Override
     public void fromJson(JSONObject json) {
-        String name = json.getString(NAME_name);
+        String name = json.optString(NAME_name, "");
         int id =  json.optInt(NAME_id, 0);
         setName(name, id);
         String uri= json.optString(NAME_namespace_uri, null);
