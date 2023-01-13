@@ -752,8 +752,8 @@ import java.util.*;
             int length=nsArray.length();
             for(int i=0;i<length;i++){
                 JSONObject nsObject=nsArray.getJSONObject(i);
-                String uri=nsObject.getString(NAME_namespace_uri);
-                String prefix=nsObject.getString(NAME_namespace_prefix);
+                String uri=nsObject.optString(NAME_namespace_uri, "");
+                String prefix=nsObject.optString(NAME_namespace_prefix, "");
                 getOrCreateNamespace(uri,prefix);
             }
         }
