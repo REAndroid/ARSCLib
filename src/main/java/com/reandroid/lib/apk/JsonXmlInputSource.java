@@ -53,7 +53,7 @@ public class JsonXmlInputSource extends InputSource {
             JSONObject jsonObject=new JSONObject(inputStream);
             resXmlBlock.fromJson(jsonObject);
         }catch (JSONException ex){
-            throw new IOException(inputSource.getAlias()+": "+ex.getMessage());
+            throw new IOException(inputSource.getAlias()+": "+ex.getMessage(), ex);
         }
         return resXmlBlock;
     }
