@@ -204,7 +204,7 @@ public class ResValueBagItem extends BaseResValueItem{
         setType(valueType);
         setId(json.getInt(NAME_id));
         if(valueType==ValueType.STRING){
-            setValueAsString(json.getString(NAME_data));
+            setValueAsString(json.optString(NAME_data, ""));
         }else if(valueType==ValueType.INT_BOOLEAN){
             setValueAsBoolean(json.getBoolean(NAME_data));
         }else {

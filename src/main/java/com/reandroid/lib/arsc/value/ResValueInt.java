@@ -127,7 +127,7 @@ public class ResValueInt extends BaseResValueItem  {
     public void fromJson(JSONObject json) {
         ValueType valueType=ValueType.fromName(json.getString(NAME_value_type));
         if(valueType==ValueType.STRING){
-            setValueAsString(json.getString(NAME_data));
+            setValueAsString(json.optString(NAME_data, ""));
         }else if(valueType==ValueType.INT_BOOLEAN){
             setValueAsBoolean(json.getBoolean(NAME_data));
         }else {

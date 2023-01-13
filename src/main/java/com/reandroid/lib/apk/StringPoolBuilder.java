@@ -95,7 +95,7 @@ public class StringPoolBuilder {
         }
         if(jsonObject.has(ApkUtil.NAME_value_type)){
             if(ValueType.STRING.name().equals(jsonObject.getString(ApkUtil.NAME_value_type))){
-                String data= jsonObject.getString(ApkUtil.NAME_data);
+                String data= jsonObject.optString(ApkUtil.NAME_data, "");
                 addTableString(data);
             }
             return;

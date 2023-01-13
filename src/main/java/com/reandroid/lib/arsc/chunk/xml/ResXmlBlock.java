@@ -288,7 +288,7 @@ package com.reandroid.lib.arsc.chunk.xml;
                 results.add(attr.getString(ResXmlAttribute.NAME_name));
                 ValueType valueType=ValueType.fromName(attr.getString(ResXmlAttribute.NAME_value_type));
                 if(valueType==ValueType.STRING){
-                    results.add(attr.getString(ResXmlAttribute.NAME_data));
+                    results.add(attr.optString(ResXmlAttribute.NAME_data));
                 }
             }
         }

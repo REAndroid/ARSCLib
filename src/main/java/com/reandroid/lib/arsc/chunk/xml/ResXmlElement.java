@@ -761,7 +761,7 @@ import java.util.*;
         start.setComment(json.optString(NAME_comment, null));
         String text= json.optString(NAME_text, null);
         if(text!=null){
-            setResXmlText(text);
+            addResXmlText(text);
         }
         String uri = json.optString(NAME_namespace_uri, null);
         if(uri!=null){
