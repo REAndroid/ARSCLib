@@ -44,6 +44,7 @@ public class XMLNamespaceValidator {
     private void validate(ResXmlAttribute attribute){
         int resourceId=attribute.getNameResourceID();
         if(resourceId==0){
+            removeNamespace(attribute);
             return;
         }
         int pkgId=toPackageId(resourceId);
@@ -52,6 +53,9 @@ public class XMLNamespaceValidator {
         }else {
             setAppNamespace(attribute);
         }
+    }
+    private void removeNamespace(ResXmlAttribute attribute){
+        attribute.setNamespaceReference(-1);
     }
     private void setAppNamespace(ResXmlAttribute attribute){
         if(isValidAppNamespace(attribute)){
