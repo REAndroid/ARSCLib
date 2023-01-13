@@ -159,6 +159,8 @@ import java.util.*;
         File file=new File(outDir, AndroidManifestBlock.FILE_NAME);
         logMessage("Decoding: "+file.getName());
         AndroidManifestBlock manifestBlock=apkModule.getAndroidManifestBlock();
+        XMLNamespaceValidator namespaceValidator=new XMLNamespaceValidator(manifestBlock);
+        namespaceValidator.validate();
         int currentPackageId= manifestBlock.guessCurrentPackageId();
         XMLDocument xmlDocument=manifestBlock.decodeToXml(entryStore, currentPackageId);
         xmlDocument.save(file, true);
