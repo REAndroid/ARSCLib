@@ -16,9 +16,10 @@
 package com.reandroid.lib.arsc.chunk;
 
  import com.reandroid.lib.arsc.header.HeaderBlock;
+ import com.reandroid.lib.arsc.io.BlockReader;
  import com.reandroid.lib.arsc.item.ByteArray;
 
- import java.io.IOException;
+ import java.io.*;
 
  /**
  * This class can load any valid chunk, aimed to
@@ -56,6 +57,34 @@ public class UnknownChunk extends BaseChunk implements HeaderBlock.HeaderLoaded 
      }
      @Override
      protected void onChunkRefreshed() {
+     }
+     @Override
+     public byte[] getBytes(){
+         ByteArrayOutputStream os=new ByteArrayOutputStream();
+         try {
+             writeBytes(os);
+             os.close();
+         } catch (IOException ignored) {
+         }
+         return os.toByteArray();
+     }
+     public void readBytes(File file) throws IOException{
+         BlockReader reader=new BlockReader(file);
+         super.readBytes(reader);
+     }
+     public void readBytes(InputStream inputStream) throws IOException{
+         BlockReader reader=new BlockReader(inputStream);
+         super.readBytes(reader);
+     }
+     public final int writeBytes(File file) throws IOException{
+         File dir=file.getParentFile();
+         if(dir!=null && !dir.exists()){
+             dir.mkdirs();
+         }
+         OutputStream outputStream=new FileOutputStream(file);
+         int length = super.writeBytes(outputStream);
+         outputStream.close();
+         return length;
      }
      @Override
      public String toString(){
