@@ -24,25 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class AnyHeader extends HeaderBlock{
-    private final ByteArray extraBytes;
     public AnyHeader() {
         super(ChunkType.NULL.ID);
-        this.extraBytes = new ByteArray();
-        super.addChild(extraBytes);
-    }
-    public ByteArray getExtraBytes() {
-        return extraBytes;
-    }
-    @Override
-    void onHeaderSizeLoaded(int size){
-        int max = 0x0000ffff;
-        if(size > max){
-            size=max;
-        }else if(size<0){
-            size=0;
-        }
-        extraBytes.setSize(size-8);
-        super.onHeaderSizeLoaded(size);
     }
     public int readBytes(InputStream inputStream) throws IOException {
         int result=0;

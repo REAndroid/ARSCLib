@@ -90,12 +90,12 @@ package com.reandroid.lib.arsc.chunk.xml;
         if(headerBlock==null){
             return;
         }
-        ChunkType chunkType=headerBlock.getChunkType();
-        if(chunkType!=ChunkType.XML){
-            throw new IOException("Not ResXmlBlock: "+headerBlock);
-        }
         BlockReader chunkReader=reader.create(reader.getPosition(), headerBlock.getChunkSize());
-        getHeaderBlock().readBytes(chunkReader);
+        headerBlock=getHeaderBlock();
+        headerBlock.readBytes(chunkReader);
+        // android/aapt2 accepts 0x0000 (NULL) chunk type as XML, it could
+        // be android's bug and might be fixed in the future until then lets fix it ourselves
+        headerBlock.setType(ChunkType.XML);
         while (chunkReader.isAvailable()){
             boolean readOk=readNext(chunkReader);
             if(!readOk){

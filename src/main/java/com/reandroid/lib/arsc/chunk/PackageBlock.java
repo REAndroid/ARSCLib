@@ -129,7 +129,7 @@ package com.reandroid.lib.arsc.chunk;
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
         if(sender==mPackageId){
             int headerSize=getHeaderBlock().getHeaderSize();
-            if(headerSize!=288){
+            if(headerSize<288){
                 mTypeIdOffset.set(0);
                 mTypeIdOffsetContainer.setItem(null);
             }

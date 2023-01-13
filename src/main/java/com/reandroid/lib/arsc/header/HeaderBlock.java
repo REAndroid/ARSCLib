@@ -20,6 +20,7 @@ import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.ExpandableBlockContainer;
 import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
+import com.reandroid.lib.arsc.item.ByteArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.ShortItem;
 
@@ -30,17 +31,22 @@ import java.io.IOException;
     private final ShortItem mHeaderSize;
     private final IntegerItem mChunkSize;
     private HeaderLoaded mHeaderLoaded;
+    private final ByteArray extraBytes;
     public HeaderBlock(short type){
         super(3);
         this.mType=new ShortItem(type);
         this.mHeaderSize=new ShortItem();
         this.mChunkSize=new IntegerItem();
+        this.extraBytes=new ByteArray();
         addChild(mType);
         addChild(mHeaderSize);
         addChild(mChunkSize);
         this.mType.setBlockLoad(this);
         this.mHeaderSize.setBlockLoad(this);
         this.mChunkSize.setBlockLoad(this);
+    }
+    public ByteArray getExtraBytes() {
+         return extraBytes;
     }
     public void setHeaderLoaded(HeaderLoaded headerLoaded){
         this.mHeaderLoaded=headerLoaded;
@@ -92,6 +98,21 @@ import java.io.IOException;
         }
         int count=parent.countBytes();
         setChunkSize(count);
+    }
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        int start=reader.getPosition();
+        super.onReadBytes(reader);
+        int readActual=reader.getPosition() - start;
+        int difference=getHeaderSize()-readActual;
+        if(difference==0){
+            return;
+        }
+        if(extraBytes.getParent()==null){
+            addChild(extraBytes);
+        }
+        extraBytes.setSize(difference);
+        extraBytes.readBytes(reader);
     }
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
