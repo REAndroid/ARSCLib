@@ -2,7 +2,7 @@
 apply plugin: 'java'
 
 group 'com.reandroid.lib.arsc'
-version '1.1.1'
+version '1.1.2'
 
 java {
     sourceCompatibility JavaVersion.VERSION_1_8
@@ -30,6 +30,10 @@ processResources {
     filesMatching('arsclib.properties') {
         expand('version': version)
     }
+}
+
+jar {
+    exclude('com/reandroid/test/**')
 }
 
 task fatJar(type: Jar) {
