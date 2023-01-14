@@ -17,7 +17,6 @@ package com.reandroid.lib.arsc.value.plurals;
 
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResValueBag;
-import com.reandroid.lib.arsc.value.attribute.AttributeBag;
 
 public class PluralsBag {
     private final PluralsBagItem[] mBagItems;
@@ -62,21 +61,14 @@ public class PluralsBag {
         return builder.toString();
     }
 
-    /** TODO: find another method to check instead of checking type name (plurals),
-     * just like {@link AttributeBag} **/
+    /** The result of this is not always 100% accurate,
+     * in addition to this use your methods to cross check like type-name == "plurals"**/
     public static boolean isPlurals(ResValueBag resValueBag){
         if(resValueBag==null){
             return false;
         }
-        EntryBlock entryBlock= resValueBag.getEntryBlock();
+        EntryBlock entryBlock = resValueBag.getEntryBlock();
         if(entryBlock==null){
-            return false;
-        }
-        String type = entryBlock.getTypeName();
-        if(type==null){
-            return false;
-        }
-        if(!type.startsWith(NAME)){
             return false;
         }
         return PluralsBagItem.create(resValueBag.getBagItems()) != null;
@@ -92,5 +84,4 @@ public class PluralsBag {
         }
         return new PluralsBag(bagItems);
     }
-    public static final String NAME="plurals";
 }

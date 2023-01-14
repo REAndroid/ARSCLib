@@ -17,7 +17,7 @@ package com.reandroid.lib.arsc.value.array;
 
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResValueBag;
-import com.reandroid.lib.arsc.value.attribute.AttributeBag;
+import com.reandroid.lib.arsc.value.ResValueBagItem;
 
 public class ArrayBag {
     private final ArrayBagItem[] mBagItems;
@@ -61,24 +61,34 @@ public class ArrayBag {
         return builder.toString();
     }
 
-    /** TODO: find another method to check instead of checking type name (plurals),
-     * just like {@link AttributeBag} **/
+    /** The result of this is not always 100% accurate,
+     * in addition to this use your methods to cross check like type-name == "array"**/
     public static boolean isArray(ResValueBag resValueBag){
         if(resValueBag==null){
             return false;
         }
-        EntryBlock entryBlock= resValueBag.getEntryBlock();
+        EntryBlock entryBlock = resValueBag.getEntryBlock();
         if(entryBlock==null){
             return false;
         }
-        String type = entryBlock.getTypeName();
-        if(type==null){
+        if(resValueBag.getParentId()!=0){
             return false;
         }
-        if(!type.startsWith(NAME)){
+        ArrayBagItem[] arrayBagItems = ArrayBagItem.create(resValueBag.getBagItems());
+        if(arrayBagItems==null || arrayBagItems.length==0){
             return false;
         }
-        return ArrayBagItem.create(resValueBag.getBagItems()) != null;
+        for(int i=0;i< arrayBagItems.length; i++){
+            ArrayBagItem arrayBagItem = arrayBagItems[i];
+            ResValueBagItem resValueBagItem = arrayBagItem.getBagItem();
+            if(resValueBagItem.getIdHigh()!=0x0100){
+                return false;
+            }
+            if(resValueBagItem.getIdLow() != (i+1)){
+                return false;
+            }
+        }
+        return true;
     }
 
     public static ArrayBag create(ResValueBag resValueBag){
@@ -91,5 +101,4 @@ public class ArrayBag {
         }
         return new ArrayBag(bagItems);
     }
-    public static final String NAME="array";
 }

@@ -19,8 +19,6 @@ import com.reandroid.lib.arsc.item.SpecString;
 import com.reandroid.lib.arsc.item.TypeString;
 import com.reandroid.lib.arsc.value.EntryBlock;
 import com.reandroid.lib.arsc.value.ResValueBag;
-import com.reandroid.lib.arsc.value.array.ArrayBagItem;
-import com.reandroid.lib.arsc.value.attribute.AttributeBag;
 
 public class StyleBag {
     private final StyleBagItem[] mBagItems;
@@ -107,8 +105,8 @@ public class StyleBag {
         return builder.toString();
     }
 
-    /** TODO: find another method to check instead of checking type name (plurals),
-     * just like {@link AttributeBag} **/
+    /** The result of this is not always 100% accurate,
+     * in addition to this use your methods to cross check like type-name == "plurals"**/
     public static boolean isStyle(ResValueBag resValueBag){
         if(resValueBag==null){
             return false;
@@ -117,14 +115,7 @@ public class StyleBag {
         if(entryBlock==null){
             return false;
         }
-        String type = entryBlock.getTypeName();
-        if(type==null){
-            return false;
-        }
-        if(!type.startsWith(NAME)){
-            return false;
-        }
-        return ArrayBagItem.create(resValueBag.getBagItems()) != null;
+        return StyleBag.create(resValueBag) != null;
     }
 
     public static StyleBag create(ResValueBag resValueBag){
@@ -137,5 +128,4 @@ public class StyleBag {
         }
         return new StyleBag(bagItems);
     }
-    public static final String NAME="style";
 }
