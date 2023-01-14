@@ -169,26 +169,10 @@ public class XMLDocumentParser {
         String attrValue=mParser.getAttributeValue(i);
         String prefix=mParser.getAttributePrefix(i);
         if(!XMLUtil.isEmpty(prefix)){
-            prefix=validateNameSpace(prefix, i);
             attrName=appendPrefix(prefix, attrName);
             checkNamespace(prefix, i);
         }
-        XMLAttribute attr=mCurrentElement.setAttribute(attrName, attrValue);
-        addIds(attr, i);
-    }
-    private void addIds(XMLAttribute attr, int i){
-        if(attr==null){
-            return;
-        }
-        XmlPullParser parser=mParser;
-        if(!(parser instanceof AttrIDProvider)){
-            return;
-        }
-        AttrIDProvider idProvider=(AttrIDProvider)parser;
-        int nameId=idProvider.getAttributeNameResourceId(i);
-        int valueId=idProvider.getAttributeValueResourceId(i);
-        attr.setNameId(nameId);
-        attr.setValueId(valueId);
+        mCurrentElement.setAttribute(attrName, attrValue);
     }
     private String appendPrefix(String prefix, String attrName){
         if(!prefix.endsWith(":")){
@@ -210,42 +194,6 @@ public class XMLDocumentParser {
         } catch (XmlPullParserException e) {
         }
         checkNamespace(prefix, nsUri);
-    }
-    private String validateNameSpace(String prefix, int i){
-        XmlPullParser parser=mParser;
-        if(!(parser instanceof AttrIDProvider)){
-            return prefix;
-        }
-        AttrIDProvider idProvider=(AttrIDProvider)parser;
-        int resId=idProvider.getAttributeNameResourceId(i);
-        if(!isResourceId(resId)){
-            return prefix;
-        }
-        boolean isAndroid;
-        if(!isAndroid(resId)){
-            if(!"android".equals(prefix)){
-                return prefix;
-            }
-            isAndroid=false;
-        }else {
-            if("android".equals(prefix)){
-                return prefix;
-            }
-            isAndroid=true;
-        }
-        NameSpaceItem ns;
-        if(isAndroid){
-            ns=NameSpaceItem.getAndroid();
-        }else {
-            ns=NameSpaceItem.getApp();
-        }
-        String prefixNew=ns.getPrefix();
-        NameSpaceItem nsItem=mCurrentElement.getNameSpaceItemForPrefix(prefixNew);
-        if(nsItem==null){
-            mCurrentElement.addNameSpace(ns);
-            mNameSpaceCreated=true;
-        }
-        return prefixNew;
     }
     private void checkNamespace(String prefix, String nsUri){
         NameSpaceItem nsItem=mCurrentElement.getNameSpaceItemForPrefix(prefix);
