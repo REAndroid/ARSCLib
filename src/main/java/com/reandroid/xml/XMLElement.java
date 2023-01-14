@@ -24,9 +24,8 @@ import java.util.*;
 public class XMLElement extends XMLNode{
     static final long DEBUG_TO_STRING=500;
     private String mTagName;
-    private XMLTextAttribute mTextAttribute;
     private final List<XMLAttribute> mAttributes = new ArrayList<>();
-    private final List<XMLElement> mChildes = new ArrayList<>();
+    private final List<XMLElement> mChildElements = new ArrayList<>();
     private List<XMLComment> mComments;
     private final List<XMLText> mTexts = new ArrayList<>();
     private XMLElement mParent;
@@ -191,7 +190,7 @@ public class XMLElement extends XMLNode{
         addChildNoCheck(child, true);
     }
     private void clearChildElements(){
-        mChildes.clear();
+        mChildElements.clear();
     }
     private void clearTexts(){
         mTexts.clear();
@@ -208,7 +207,7 @@ public class XMLElement extends XMLNode{
     public void hideComments(boolean recursive, boolean hide){
         hideComments(hide);
         if(recursive){
-            for(XMLElement child:mChildes){
+            for(XMLElement child: mChildElements){
                 child.hideComments(recursive, hide);
             }
         }
@@ -260,22 +259,22 @@ public class XMLElement extends XMLNode{
         }
     }
     public void removeChildElements(){
-        mChildes.clear();
+        mChildElements.clear();
     }
     public List<XMLAttribute> listAttributes(){
         return mAttributes;
     }
     public int getChildesCount(){
-        return mChildes.size();
+        return mChildElements.size();
     }
     public List<XMLElement> listChildElements(){
-        return mChildes;
+        return mChildElements;
     }
     public XMLElement getChildAt(int index){
-        if(index<0 || index>=mChildes.size()){
+        if(index<0 || index>= mChildElements.size()){
             return null;
         }
-        return mChildes.get(index);
+        return mChildElements.get(index);
     }
     public int getAttributeCount(){
         return mAttributes.size();
@@ -409,7 +408,7 @@ public class XMLElement extends XMLNode{
         if(comparator==null){
             return;
         }
-        mChildes.sort(comparator);
+        mChildElements.sort(comparator);
     }
     public void sortAttributes(Comparator<XMLAttribute> comparator){
         if(comparator==null){
@@ -439,7 +438,7 @@ public class XMLElement extends XMLNode{
         }
         child.setParent(this);
         child.setIndent(getChildIndent());
-        mChildes.add(child);
+        mChildElements.add(child);
         if(addSupper){
             super.addChildNodeInternal(child);
         }
@@ -454,7 +453,8 @@ public class XMLElement extends XMLNode{
         return rs;
     }
     int getIndent(){
-        if(hasTextContent()){
+        XMLElement parent = getParent();
+        if(parent!=null && parent.hasTextContent()){
             return 0;
         }
         return mIndent;
@@ -477,7 +477,7 @@ public class XMLElement extends XMLNode{
     public void setIndent(int indent){
         mIndent=indent;
         int chIndent=getChildIndent();
-        for(XMLElement child:mChildes){
+        for(XMLElement child: mChildElements){
             child.setIndent(chIndent);
         }
         if(mComments!=null){
@@ -525,25 +525,6 @@ public class XMLElement extends XMLNode{
         }
         return i;
     }
-    private String getIndentText(){
-        float scale=getIndentScale();
-        scale = scale * (float) getIndent();
-        int i=(int)scale;
-        if(i<=0){
-            return "";
-        }
-        if(i>40){
-            i=40;
-        }
-        StringBuilder builder=new StringBuilder();
-        int max=i;
-        i=0;
-        while (i<max){
-            builder.append(" ");
-            i++;
-        }
-        return builder.toString();
-    }
     public String getTagName(){
         return mTagName;
     }
@@ -584,12 +565,6 @@ public class XMLElement extends XMLNode{
         }
         return writer.toString();
     }
-    XMLTextAttribute getTextAttr(){
-        if(mTextAttribute==null){
-            mTextAttribute=new XMLTextAttribute();
-        }
-        return mTextAttribute;
-    }
     private void appendTextContent(Writer writer) throws IOException {
         for(XMLNode child:getChildNodes()){
             if(child instanceof XMLElement){
@@ -620,9 +595,6 @@ public class XMLElement extends XMLNode{
         appendText(text);
     }
     private boolean appendAttributes(Writer writer, boolean newLineAttributes) throws IOException {
-        if(mAttributes==null){
-            return false;
-        }
         boolean addedOnce=false;
         for(XMLAttribute attr:mAttributes){
             if(attr.isEmpty()){
@@ -659,7 +631,7 @@ public class XMLElement extends XMLNode{
         return true;
     }
     private boolean canAppendChildes(){
-        for(XMLElement child:mChildes){
+        for(XMLElement child: mChildElements){
             if (!child.isEmpty()){
                 return true;
             }
@@ -689,7 +661,7 @@ public class XMLElement extends XMLNode{
     private boolean appendChildes(Writer writer, boolean newLineAttributes) throws IOException {
         boolean appendPrevious=true;
         boolean addedOnce=false;
-        for(XMLElement child:mChildes){
+        for(XMLElement child: mChildElements){
             if(stopWriting(writer)){
                 break;
             }
@@ -797,7 +769,7 @@ public class XMLElement extends XMLNode{
         ElementWriter writer=new ElementWriter(strWriter, DEBUG_TO_STRING);
         try {
             write(writer, false);
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
         strWriter.flush();
         return strWriter.toString();
