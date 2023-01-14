@@ -368,6 +368,9 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public static final String NAME_resource = "resource";
     public static final String NAME_debuggable = "debuggable";
     public static final String NAME_icon = "icon";
+    public static final String NAME_label = "label";
+    public static final String NAME_theme = "theme";
+    public static final String NAME_id = "id";
 
     public static final int ID_name = 0x01010003;
     public static final int ID_compileSdkVersion = 0x01010572;
@@ -384,6 +387,9 @@ public class AndroidManifestBlock extends ResXmlBlock{
     public static final int ID_versionName = 0x0101021c;
     public static final int ID_debuggable = 0x0101000f;
     public static final int ID_icon = 0x01010002;
+    public static final int ID_label = 0x01010001;
+    public static final int ID_theme = 0x01010000;
+    public static final int ID_id = 0x010100d0;
 
     public static final String VALUE_android_intent_action_MAIN = "android.intent.action.MAIN";
 
