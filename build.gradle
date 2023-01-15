@@ -2,7 +2,7 @@
 apply plugin: 'java'
 
 group 'com.reandroid.lib.arsc'
-version '1.1.2'
+version '1.1.3'
 
 java {
     sourceCompatibility JavaVersion.VERSION_1_8
@@ -30,6 +30,10 @@ processResources {
     filesMatching('arsclib.properties') {
         expand('version': version)
     }
+}
+
+javadoc {
+    exclude('com/reandroid/test/**')
 }
 
 jar {
