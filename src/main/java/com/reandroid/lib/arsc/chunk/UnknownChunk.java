@@ -16,7 +16,6 @@
 package com.reandroid.lib.arsc.chunk;
 
  import com.reandroid.lib.arsc.header.HeaderBlock;
- import com.reandroid.lib.arsc.io.BlockReader;
  import com.reandroid.lib.arsc.item.ByteArray;
 
  import java.io.*;
@@ -26,30 +25,25 @@ package com.reandroid.lib.arsc.chunk;
  * handle any future android changes
  * */
 public class UnknownChunk extends BaseChunk implements HeaderBlock.HeaderLoaded {
-     private final ByteArray headerExtra;
      private final ByteArray body;
      public UnknownChunk() {
          super(INITIAL_CHUNK_TYPE, 1);
-         this.headerExtra = new ByteArray();
          this.body = new ByteArray();
-
-         addToHeader(this.headerExtra);
          addChild(body);
-
          setHeaderLoaded(this);
+     }
+     public ByteArray getBody(){
+         return body;
      }
      @Override
      public void onChunkTypeLoaded(short type) {
      }
      @Override
      public void onHeaderSizeLoaded(int headerSize) {
-         int extraSize = headerSize - 8;
-         this.headerExtra.setSize(extraSize);
      }
      @Override
      public void onChunkSizeLoaded(int headerSize, int chunkSize) {
-         int bodySize = chunkSize - headerSize;
-         this.body.setSize(bodySize);
+         getBody().setSize(chunkSize - headerSize);
      }
 
      @Override
@@ -68,18 +62,25 @@ public class UnknownChunk extends BaseChunk implements HeaderBlock.HeaderLoaded 
          }
          return os.toByteArray();
      }
-     public void readBytes(File file) throws IOException{
-         BlockReader reader=new BlockReader(file);
-         super.readBytes(reader);
+     public int readBytes(File file) throws IOException{
+         FileInputStream inputStream=new FileInputStream(file);
+         int result=readBytes(inputStream);
+         inputStream.close();
+         return result;
      }
-     public void readBytes(InputStream inputStream) throws IOException{
-         BlockReader reader=new BlockReader(inputStream);
-         super.readBytes(reader);
+     public int readBytes(InputStream inputStream) throws IOException{
+         int result;
+         result=getHeaderBlock().readBytes(inputStream);
+         result+=getBody().readBytes(inputStream);
+         super.notifyBlockLoad();
+         return result;
      }
      public final int writeBytes(File file) throws IOException{
          File dir=file.getParentFile();
          if(dir!=null && !dir.exists()){
-             dir.mkdirs();
+             if(dir.mkdirs()){
+                 throw new IOException("Can not create directory: "+dir);
+             }
          }
          OutputStream outputStream=new FileOutputStream(file);
          int length = super.writeBytes(outputStream);
@@ -88,15 +89,10 @@ public class UnknownChunk extends BaseChunk implements HeaderBlock.HeaderLoaded 
      }
      @Override
      public String toString(){
-         HeaderBlock headerBlock = getHeaderBlock();
-         return getClass().getSimpleName()
-                 +"{ type="+String.format("0x%04x", headerBlock.getType())
-                 +", chunkSize="+headerBlock.getChunkSize()
-                 +", headerExtra="+headerExtra.size()
-                 +", body="+body.size()+"}";
+         return getHeaderBlock()
+                 +" {Body="+getBody().size()+"}";
      }
 
-     // This value must not exist is ChunkType enum list
-     private static final short INITIAL_CHUNK_TYPE = 0x0207;
+     private static final short INITIAL_CHUNK_TYPE = 0x0000;
 
  }

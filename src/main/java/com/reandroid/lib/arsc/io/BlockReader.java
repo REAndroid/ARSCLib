@@ -15,7 +15,6 @@
   */
 package com.reandroid.lib.arsc.io;
 
-import com.reandroid.lib.arsc.header.AnyHeader;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 
 import java.io.*;
@@ -309,15 +308,10 @@ import java.io.*;
         }
         return buff;
     }
-    public static AnyHeader readHeaderBlock(File file) throws IOException{
-        InputStream inputStream=new FileInputStream(file);
-        AnyHeader anyHeader = readHeaderBlock(inputStream);
-        inputStream.close();
-        return anyHeader;
+    public static HeaderBlock readHeaderBlock(File file) throws IOException{
+        return HeaderBlock.readHeaderBlock(file);
     }
-    public static AnyHeader readHeaderBlock(InputStream inputStream) throws IOException{
-        AnyHeader anyHeader=new AnyHeader();
-        anyHeader.readBytes(inputStream);
-        return anyHeader;
+    public static HeaderBlock readHeaderBlock(InputStream inputStream) throws IOException{
+        return HeaderBlock.readHeaderBlock(inputStream);
     }
 }

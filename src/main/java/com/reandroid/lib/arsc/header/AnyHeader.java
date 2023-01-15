@@ -15,55 +15,12 @@
   */
 package com.reandroid.lib.arsc.header;
 
-import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.chunk.ChunkType;
-import com.reandroid.lib.arsc.item.BlockItem;
-import com.reandroid.lib.arsc.item.ByteArray;
 
-import java.io.IOException;
-import java.io.InputStream;
-
+/**No importance of this class, to be removed latter*/
+@Deprecated
 public class AnyHeader extends HeaderBlock{
     public AnyHeader() {
         super(ChunkType.NULL.ID);
-    }
-    public int readBytes(InputStream inputStream) throws IOException {
-        int result=0;
-        Block[] childes = getChildes();
-        for(Block child:childes){
-            if(child instanceof BlockItem){
-                BlockItem blockItem=(BlockItem) child;
-                result += blockItem.readBytes(inputStream);
-            }
-        }
-        return result;
-    }
-    public byte[] readChunkBytes(InputStream inputStream) throws IOException{
-        int chunkSize = getChunkSize();
-        int headerSize = getHeaderSize();
-        if(chunkSize < 0 || chunkSize < headerSize){
-            throw new IOException("Invalid chunk size: " + super.toString());
-        }
-        byte[] buffer = new byte[chunkSize];
-        int length = chunkSize - headerSize;
-        int offset = loadHeaderBytes(buffer);
-        while (length>0){
-            int len = inputStream.read(buffer, offset, length);
-            length=length-len;
-            offset=offset+len;
-        }
-        return buffer;
-    }
-    private int loadHeaderBytes(byte[] buffer){
-        int index=0;
-        Block[] childes = getChildes();
-        for(Block child:childes){
-            byte[] childBytes=child.getBytes();
-            for(int i=0;i<childBytes.length;i++){
-                buffer[index]=childBytes[i];
-                index++;
-            }
-        }
-        return index;
     }
 }

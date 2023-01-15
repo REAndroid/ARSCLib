@@ -15,16 +15,23 @@
   */
 package com.reandroid.lib.arsc.header;
 
+import com.reandroid.lib.arsc.base.BlockContainer;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.base.Block;
+import com.reandroid.lib.arsc.container.BlockList;
 import com.reandroid.lib.arsc.container.ExpandableBlockContainer;
 import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
+import com.reandroid.lib.arsc.item.BlockItem;
 import com.reandroid.lib.arsc.item.ByteArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.ShortItem;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 
  public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
     private final ShortItem mType;
@@ -99,6 +106,46 @@ import java.io.IOException;
         int count=parent.countBytes();
         setChunkSize(count);
     }
+    /**Non buffering reader*/
+    public int readBytes(InputStream inputStream) throws IOException{
+         int result = onReadBytes(inputStream);
+         super.notifyBlockLoad();
+         return result;
+    }
+    private int onReadBytes(InputStream inputStream) throws IOException {
+         int readCount = readBytes(inputStream, this);
+         int difference = getHeaderSize() - readCount;
+         if(difference==0){
+             return readCount;
+         }
+         if(extraBytes.getParent()==null){
+             addChild(extraBytes);
+         }
+         extraBytes.setSize(difference);
+         readCount += extraBytes.readBytes(inputStream);
+         return readCount;
+    }
+    private int readBytes(InputStream inputStream, Block block) throws IOException{
+        int result=0;
+        if(block instanceof BlockItem){
+            result = ((BlockItem)block).readBytes(inputStream);
+        }else if(block instanceof BlockList){
+            List<? extends Block> childes=
+                    ((BlockList<? extends Block>) block).getChildes();
+            for(Block child:childes){
+                result+=readBytes(inputStream, child);
+            }
+        }else if(block instanceof BlockContainer){
+            Block[] childes =
+                    ((BlockContainer<? extends Block>) block).getChildes();
+            for(Block child:childes){
+                result+=readBytes(inputStream, child);
+            }
+        }else {
+            throw new IOException("Can not read block type: "+block.getClass());
+        }
+        return result;
+    }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         int start=reader.getPosition();
@@ -155,14 +202,14 @@ import java.io.IOException;
 
     @Override
     public String toString(){
-        short t= getType();
-        ChunkType type= ChunkType.get(t);
-        StringBuilder builder=new StringBuilder();
+        short t = getType();
+        ChunkType type = ChunkType.get(t);
+        StringBuilder builder = new StringBuilder();
         if(type!=null){
             builder.append(type.toString());
         }else {
             builder.append("Unknown type=");
-            builder.append(String.format("0x%02x", ((int)t)));
+            builder.append(String.format("0x%02x", (0xffff & t)));
         }
         builder.append("{Header=");
         builder.append(getHeaderSize());
@@ -170,6 +217,18 @@ import java.io.IOException;
         builder.append(getChunkSize());
         builder.append("}");
         return builder.toString();
+    }
+
+    public static HeaderBlock readHeaderBlock(File file) throws IOException{
+        InputStream inputStream = new FileInputStream(file);
+        HeaderBlock headerBlock = readHeaderBlock(inputStream);
+        inputStream.close();
+        return headerBlock;
+    }
+    public static HeaderBlock readHeaderBlock(InputStream inputStream) throws IOException {
+        HeaderBlock headerBlock=new HeaderBlock(ChunkType.NULL.ID);
+        headerBlock.readBytes(inputStream);
+        return headerBlock;
     }
 
     public interface HeaderLoaded{

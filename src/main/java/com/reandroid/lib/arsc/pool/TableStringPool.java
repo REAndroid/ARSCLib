@@ -18,7 +18,8 @@ package com.reandroid.lib.arsc.pool;
 import com.reandroid.lib.arsc.array.StringArray;
 import com.reandroid.lib.arsc.array.TableStringArray;
 import com.reandroid.lib.arsc.chunk.ChunkType;
-import com.reandroid.lib.arsc.header.AnyHeader;
+import com.reandroid.lib.arsc.chunk.UnknownChunk;
+import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
@@ -57,19 +58,21 @@ import java.io.InputStream;
     }
 
      /**
-      * Loads string pool from table block (resources.arsc)
+      * Loads string pool only from table block (resources.arsc) without
+      * loading other chunks
       */
     public static TableStringPool readFromTable(InputStream inputStream) throws IOException {
-        AnyHeader tableHeader = BlockReader.readHeaderBlock(inputStream);
+        HeaderBlock tableHeader = HeaderBlock.readHeaderBlock(inputStream);
         if(tableHeader.getChunkType()!=ChunkType.TABLE){
             throw new IOException("Not TableBlock: "+tableHeader);
         }
-        AnyHeader poolHeader = BlockReader.readHeaderBlock(inputStream);
+        UnknownChunk poolChunk = new UnknownChunk();
+        poolChunk.readBytes(inputStream);
+        HeaderBlock poolHeader = poolChunk.getHeaderBlock();
         if(poolHeader.getChunkType()!=ChunkType.STRING){
-            throw new IOException("Not StringPool: "+poolHeader);
+            throw new IOException("Not StringPool chunk: " + poolChunk);
         }
-        byte[] poolBytes = poolHeader.readChunkBytes(inputStream);
-        BlockReader blockReader = new BlockReader(poolBytes);
+        BlockReader blockReader = new BlockReader(poolChunk.getBytes());
         TableStringPool stringPool = new TableStringPool(true);
         stringPool.readBytes(blockReader);
         blockReader.close();
