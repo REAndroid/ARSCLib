@@ -41,6 +41,9 @@ public class IntegerItem extends BlockItem implements ReferenceItem{
     public int get(){
         return mCache;
     }
+    public String toHex(){
+        return String.format("0x%08x", get());
+    }
     @Override
     protected void onBytesChanged() {
         // To save cpu usage, better to calculate once only when bytes changed

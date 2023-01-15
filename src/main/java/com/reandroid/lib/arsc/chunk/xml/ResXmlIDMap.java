@@ -19,6 +19,7 @@ import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.array.ResXmlIDArray;
 import com.reandroid.lib.arsc.chunk.BaseChunk;
+import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.ResXmlID;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
@@ -26,10 +27,10 @@ import com.reandroid.lib.arsc.pool.ResXmlStringPool;
 import java.io.IOException;
 import java.util.Collection;
 
-public class ResXmlIDMap extends BaseChunk {
+public class ResXmlIDMap extends BaseChunk<HeaderBlock> {
     private final ResXmlIDArray mResXmlIDArray;
     public ResXmlIDMap() {
-        super(ChunkType.XML_RESOURCE_MAP, 1);
+        super(new HeaderBlock(ChunkType.XML_RESOURCE_MAP), 1);
         this.mResXmlIDArray=new ResXmlIDArray(getHeaderBlock());
         addChild(mResXmlIDArray);
     }

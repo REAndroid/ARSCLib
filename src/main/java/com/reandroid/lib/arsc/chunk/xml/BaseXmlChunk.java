@@ -18,6 +18,7 @@ package com.reandroid.lib.arsc.chunk.xml;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.chunk.BaseChunk;
+import com.reandroid.lib.arsc.header.XmlNodeHeader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.ResXmlString;
 import com.reandroid.lib.arsc.pool.ResXmlStringPool;
@@ -26,22 +27,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 
- public class BaseXmlChunk extends BaseChunk {
+ public class BaseXmlChunk extends BaseChunk<XmlNodeHeader> {
 
-    private final IntegerItem mLineNumber;
-    private final IntegerItem mCommentReference;
     private final IntegerItem mNamespaceReference;
     private final IntegerItem mStringReference;
     BaseXmlChunk(ChunkType chunkType, int initialChildesCount) {
-        super(chunkType, initialChildesCount+2);
-        this.mLineNumber=new IntegerItem();
-        this.mCommentReference =new IntegerItem(-1);
+        super(new XmlNodeHeader(chunkType), initialChildesCount+2);
 
         this.mNamespaceReference=new IntegerItem(-1);
         this.mStringReference=new IntegerItem(-1);
-
-        addToHeader(mLineNumber);
-        addToHeader(mCommentReference);
 
         addChild(mNamespaceReference);
         addChild(mStringReference);
@@ -49,7 +43,7 @@ import java.util.Set;
      Set<ResXmlString> clearStringReferences(){
          Set<ResXmlString> results=new HashSet<>();
          ResXmlString xmlString;
-         xmlString=unLinkStringReference(mCommentReference);
+         xmlString=unLinkStringReference(getHeaderBlock().getCommentReference());
          if(xmlString!=null){
              results.add(xmlString);
          }
@@ -64,7 +58,7 @@ import java.util.Set;
          return results;
      }
     void linkStringReferences(){
-        linkStringReference(mCommentReference);
+        linkStringReference(getHeaderBlock().getCommentReference());
         linkStringReference(mNamespaceReference);
         linkStringReference(mStringReference);
     }
@@ -82,18 +76,19 @@ import java.util.Set;
         return xmlString;
     }
     public void setLineNumber(int val){
-        mLineNumber.set(val);
+        getHeaderBlock().getLineNumber().set(val);
     }
     public int getLineNumber(){
-        return mLineNumber.get();
+        return getHeaderBlock().getLineNumber().get();
     }
     public void setCommentReference(int val){
-        unLinkStringReference(mCommentReference);
-        mCommentReference.set(val);
-        linkStringReference(mCommentReference);
+        IntegerItem comment=getHeaderBlock().getCommentReference();
+        unLinkStringReference(comment);
+        getHeaderBlock().getCommentReference().set(val);
+        linkStringReference(comment);
     }
     public int getCommentReference(){
-        return mCommentReference.get();
+        return getHeaderBlock().getCommentReference().get();
     }
     public void setNamespaceReference(int val){
         unLinkStringReference(mNamespaceReference);

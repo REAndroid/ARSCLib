@@ -16,11 +16,26 @@
 package com.reandroid.lib.arsc.header;
 
 import com.reandroid.lib.arsc.chunk.ChunkType;
+import com.reandroid.lib.arsc.item.IntegerItem;
 
-/**No importance of this class, to be removed latter*/
-@Deprecated
-public class AnyHeader extends HeaderBlock{
-    public AnyHeader() {
-        super(ChunkType.NULL.ID);
+public class StagedAliasHeader extends HeaderBlock{
+    private final IntegerItem count;
+    public StagedAliasHeader() {
+        super(ChunkType.STAGED_ALIAS.ID);
+        this.count = new IntegerItem();
+
+        addChild(count);
+    }
+
+    public IntegerItem getCount() {
+        return count;
+    }
+    @Override
+    public String toString(){
+        if(getChunkType()!=ChunkType.STAGED_ALIAS){
+            return super.toString();
+        }
+        return getClass().getSimpleName()
+                +" {count="+getCount()+ '}';
     }
 }

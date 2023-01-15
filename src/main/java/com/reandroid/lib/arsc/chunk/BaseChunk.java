@@ -15,35 +15,28 @@
   */
 package com.reandroid.lib.arsc.chunk;
 
-import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.ExpandableBlockContainer;
 import com.reandroid.lib.arsc.header.HeaderBlock;
 import com.reandroid.lib.arsc.io.BlockReader;
 
 import java.io.IOException;
 
-public abstract class BaseChunk extends ExpandableBlockContainer {
-    private final HeaderBlock mHeaderBlock;
-    protected BaseChunk(short chunkType, int initialChildesCount) {
+public abstract class BaseChunk<T extends HeaderBlock> extends ExpandableBlockContainer {
+    private final T mHeaderBlock;
+    protected BaseChunk(T headerBlock, int initialChildesCount) {
         super(initialChildesCount+1);
-        mHeaderBlock=new HeaderBlock(chunkType);
-        addChild(mHeaderBlock);
-    }
-    protected BaseChunk(ChunkType chunkType, int initialChildesCount) {
-        this(chunkType.ID, initialChildesCount);
-    }
-    protected void addToHeader(Block block){
-        mHeaderBlock.addChild(block);
+        this.mHeaderBlock = headerBlock;
+        addChild(headerBlock);
     }
     void setHeaderLoaded(HeaderBlock.HeaderLoaded headerLoaded){
-        mHeaderBlock.setHeaderLoaded(headerLoaded);
+        getHeaderBlock().setHeaderLoaded(headerLoaded);
     }
-    public HeaderBlock getHeaderBlock(){
+    public final T getHeaderBlock(){
         return mHeaderBlock;
     }
     @Override
     protected final void onRefreshed() {
-        mHeaderBlock.refreshHeader();
+        getHeaderBlock().refreshHeader();
         onChunkRefreshed();
     }
     protected abstract void onChunkRefreshed();
@@ -73,7 +66,7 @@ public abstract class BaseChunk extends ExpandableBlockContainer {
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(": ");
-        builder.append(mHeaderBlock.toString());
+        builder.append(getHeaderBlock());
         return builder.toString();
     }
 }

@@ -19,6 +19,7 @@ import com.reandroid.lib.arsc.array.EntryBlockArray;
 import com.reandroid.lib.arsc.array.TypeBlockArray;
 import com.reandroid.lib.arsc.base.Block;
 import com.reandroid.lib.arsc.container.SpecTypePair;
+import com.reandroid.lib.arsc.header.TypeHeader;
 import com.reandroid.lib.arsc.io.BlockLoad;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.*;
@@ -34,34 +35,20 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class TypeBlock extends BaseChunk
+public class TypeBlock extends BaseChunk<TypeHeader>
         implements BlockLoad, JSONConvert<JSONObject>, Comparable<TypeBlock> {
-    private final ByteItem mTypeId;
-    private final ByteItem mTypeFlags;
-    private final IntegerItem mEntryCount;
-    private final ResConfig mResConfig;
+
     private final EntryBlockArray mEntryArray;
     private TypeString mTypeString;
     public TypeBlock() {
-        super(ChunkType.TYPE, 2);
-        this.mTypeId=new ByteItem();
-        this.mTypeFlags=new ByteItem();
-        ShortItem reserved = new ShortItem();
-        this.mEntryCount=new IntegerItem();
+        super(new TypeHeader(), 2);
+        TypeHeader header = getHeaderBlock();
 
-        IntegerItem entriesStart = new IntegerItem();
-        this.mResConfig =new ResConfig();
         IntegerArray entryOffsets = new IntegerArray();
-        this.mEntryArray = new EntryBlockArray(entryOffsets, mEntryCount, entriesStart);
+        this.mEntryArray = new EntryBlockArray(entryOffsets,
+                header.getCount(), header.getEntriesStart());
 
-        mTypeFlags.setBlockLoad(this);
-
-        addToHeader(mTypeId);
-        addToHeader(mTypeFlags);
-        addToHeader(reserved);
-        addToHeader(mEntryCount);
-        addToHeader(entriesStart);
-        addToHeader(mResConfig);
+        header.getFlags().setBlockLoad(this);
 
         addChild(entryOffsets);
         addChild(mEntryArray);
@@ -99,16 +86,16 @@ public class TypeBlock extends BaseChunk
         return mTypeString;
     }
     public byte getTypeId(){
-        return mTypeId.get();
+        return getHeaderBlock().getId().get();
     }
     public int getTypeIdInt(){
-        return (0xff & mTypeId.get());
+        return getHeaderBlock().getId().unsignedInt();
     }
     public void setTypeId(int id){
         setTypeId((byte) (0xff & id));
     }
     public void setTypeId(byte id){
-        mTypeId.set(id);
+        getHeaderBlock().getId().set(id);
     }
     public void setTypeName(String name){
         TypeStringPool typeStringPool=getTypeStringPool();
@@ -127,10 +114,11 @@ public class TypeBlock extends BaseChunk
         return null;
     }
     public void setEntryCount(int count){
-        if(count == mEntryCount.get()){
+        IntegerItem entryCount = getHeaderBlock().getCount();
+        if(count == entryCount.get()){
             return;
         }
-        mEntryCount.set(count);
+        entryCount.set(count);
         onSetEntryCount(count);
     }
     public boolean isEmpty(){
@@ -182,7 +170,7 @@ public class TypeBlock extends BaseChunk
         return getEntryBlockArray().getEntry(entryId);
     }
     public ResConfig getResConfig(){
-        return mResConfig;
+        return getHeaderBlock().getConfig();
     }
     public EntryBlockArray getEntryBlockArray(){
         return mEntryArray;
@@ -212,7 +200,7 @@ public class TypeBlock extends BaseChunk
     }
     @Override
     protected void onPreRefreshRefresh(){
-        mResConfig.refresh();
+        getHeaderBlock().getConfig().refresh();
         super.onPreRefreshRefresh();
     }
     /*
@@ -280,8 +268,8 @@ public class TypeBlock extends BaseChunk
     }
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender==mTypeFlags){
-            if(mTypeFlags.get()==0x1){
+        if(sender==getHeaderBlock().getFlags()){
+            if(getHeaderBlock().getFlags().unsignedInt()==0x1){
                 //ResTable_sparseTypeEntry ?
             }
         }

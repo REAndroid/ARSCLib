@@ -16,21 +16,20 @@
 package com.reandroid.lib.arsc.chunk;
 
 import com.reandroid.lib.arsc.array.LibraryInfoArray;
+import com.reandroid.lib.arsc.header.LibraryHeader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.value.LibraryInfo;
 
 import java.util.Collection;
 import java.util.List;
 
-public class LibraryBlock extends BaseChunk {
-    private final IntegerItem mLibCount;
+public class LibraryBlock extends BaseChunk<LibraryHeader> {
     private final LibraryInfoArray mLibraryInfoArray;
     public LibraryBlock() {
-        super(ChunkType.LIBRARY,1);
-        this.mLibCount=new IntegerItem();
-        this.mLibraryInfoArray=new LibraryInfoArray(mLibCount);
+        super(new LibraryHeader(),1);
+        LibraryHeader header = getHeaderBlock();
+        this.mLibraryInfoArray = new LibraryInfoArray(header.getCount());
 
-        addToHeader(mLibCount);
         addChild(mLibraryInfoArray);
     }
     public LibraryInfoArray getLibraryInfoArray(){
@@ -49,7 +48,7 @@ public class LibraryBlock extends BaseChunk {
             return;
         }
         getLibraryInfoArray().add(info);
-        mLibCount.set(mLibraryInfoArray.childesCount());
+        getHeaderBlock().getCount().set(mLibraryInfoArray.childesCount());
     }
     public Collection<LibraryInfo> listLibraryInfo(){
         return getLibraryInfoArray().listItems();
@@ -62,12 +61,12 @@ public class LibraryBlock extends BaseChunk {
         return mLibraryInfoArray.childesCount();
     }
     public void setLibraryCount(int count){
-        mLibCount.set(count);
+        getHeaderBlock().getCount().set(count);
         mLibraryInfoArray.setChildesCount(count);
     }
     @Override
     protected void onChunkRefreshed() {
-        mLibCount.set(mLibraryInfoArray.childesCount());
+        getHeaderBlock().getCount().set(mLibraryInfoArray.childesCount());
     }
 
     public void merge(LibraryBlock libraryBlock){

@@ -15,72 +15,58 @@
   */
 package com.reandroid.lib.arsc.pool;
 
-import com.reandroid.lib.arsc.chunk.ChunkType;
-import com.reandroid.lib.arsc.array.StringArray;
-import com.reandroid.lib.arsc.array.StyleArray;
-import com.reandroid.lib.arsc.base.Block;
-import com.reandroid.lib.arsc.chunk.BaseChunk;
-import com.reandroid.lib.arsc.group.StringGroup;
-import com.reandroid.lib.arsc.io.BlockLoad;
-import com.reandroid.lib.arsc.io.BlockReader;
-import com.reandroid.lib.arsc.item.*;
-import com.reandroid.lib.arsc.model.StyleSpanInfo;
-import com.reandroid.lib.json.JSONConvert;
-import com.reandroid.lib.json.JSONArray;
-import com.reandroid.lib.json.JSONObject;
+ import com.reandroid.lib.arsc.array.StringArray;
+ import com.reandroid.lib.arsc.array.StyleArray;
+ import com.reandroid.lib.arsc.base.Block;
+ import com.reandroid.lib.arsc.chunk.BaseChunk;
+ import com.reandroid.lib.arsc.group.StringGroup;
+ import com.reandroid.lib.arsc.header.StringPoolHeader;
+ import com.reandroid.lib.arsc.io.BlockLoad;
+ import com.reandroid.lib.arsc.io.BlockReader;
+ import com.reandroid.lib.arsc.item.*;
+ import com.reandroid.lib.json.JSONArray;
+ import com.reandroid.lib.json.JSONConvert;
 
-import java.io.IOException;
-import java.util.*;
+ import java.io.IOException;
+ import java.util.*;
 
 
-public abstract class BaseStringPool<T extends StringItem> extends BaseChunk implements BlockLoad, JSONConvert<JSONArray>, Comparator<String> {
-    private final IntegerItem mCountStrings;
-    private final IntegerItem mCountStyles;
-    private final ShortItem mFlagUtf8;
-    private final ShortItem mFlagSorted;
-    private final IntegerItem mStartStrings;
-    private final IntegerItem mStartStyles;
-    private final IntegerArray mOffsetStrings;
-    private final IntegerArray mOffsetStyles;
+ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk<StringPoolHeader> implements BlockLoad, JSONConvert<JSONArray>, Comparator<String> {
     private final StringArray<T> mArrayStrings;
     private final StyleArray mArrayStyles;
 
     private final Map<String, StringGroup<T>> mUniqueMap;
 
-
     BaseStringPool(boolean is_utf8){
-        super(ChunkType.STRING, 4);
+        super(new StringPoolHeader(), 4);
 
-        this.mCountStrings=new IntegerItem(); //header
-        this.mCountStyles=new IntegerItem(); //header
-        this.mFlagUtf8 =new ShortItem(); //header
-        this.mFlagSorted=new ShortItem(); //header
-        this.mStartStrings=new IntegerItem(); //header
-        this.mStartStyles=new IntegerItem(); //header
+        IntegerArray offsetStrings = new IntegerArray();
+        IntegerArray offsetStyles = new IntegerArray();
 
-        this.mOffsetStrings=new IntegerArray();//1
-        this.mOffsetStyles=new IntegerArray(); //2
-        this.mArrayStrings=newInstance(mOffsetStrings, mCountStrings, mStartStrings, is_utf8); //3
-        this.mArrayStyles=new StyleArray(mOffsetStyles, mCountStyles, mStartStyles); //4
+        StringPoolHeader header = getHeaderBlock();
 
-        addToHeader(mCountStrings);
-        addToHeader(mCountStyles);
-        addToHeader(mFlagUtf8);
-        addToHeader(mFlagSorted);
-        addToHeader(mStartStrings);
-        addToHeader(mStartStyles);
+        this.mArrayStrings = newInstance(
+                offsetStrings,
+                header.getCountStrings(),
+                header.getStartStrings(),
+                is_utf8);
 
-        addChild(mOffsetStrings);
-        addChild(mOffsetStyles);
+        this.mArrayStyles = new StyleArray(
+                offsetStyles,
+                header.getCountStyles(),
+                header.getStartStyles());
+
+
+        addChild(offsetStrings);
+        addChild(offsetStyles);
         addChild(mArrayStrings);
         addChild(mArrayStyles);
 
         setUtf8(is_utf8, false);
 
-        mFlagUtf8.setBlockLoad(this);
+        header.getFlagUtf8().setBlockLoad(this);
 
-        mUniqueMap=new HashMap<>();
-
+        mUniqueMap = new HashMap<>();
     }
     public List<String> toStringList(){
         return getStringsArray().toStringList();
@@ -137,13 +123,12 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
     // call this after modifying string values
     public void refreshUniqueIdMap(){
         mUniqueMap.clear();
-        T[] allChildes=getStrings();
-        if(allChildes==null){
+        T[] stringsArray = getStrings();
+        if(stringsArray==null){
             return;
         }
-        int max=allChildes.length;
-        for(int i=0;i<max;i++){
-            T item=allChildes[i];
+        for(int i=0;i<stringsArray.length;i++){
+            T item=stringsArray[i];
             if(item==null){
                 continue;
             }
@@ -237,7 +222,7 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
     private T createNewString(String str){
         T item=mArrayStrings.createNext();
         item.set(str);
-        mCountStrings.set(mArrayStrings.childesCount());
+        getHeaderBlock().getCountStrings().set(mArrayStrings.childesCount());
         return item;
     }
     public final StyleItem getStyle(int index){
@@ -249,35 +234,30 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
     public final int countStyles(){
         return mArrayStyles.childesCount();
     }
-
     public final T[] getStrings(){
         return mArrayStrings.getChildes();
     }
     public final StyleItem[] getStyles(){
         return mArrayStyles.getChildes();
     }
-    private void setUtf8Flag(short flag){
-        mFlagUtf8.set(flag);
-    }
     public void setUtf8(boolean is_utf8){
         setUtf8(is_utf8, true);
     }
-    private void setSortedFlag(short flag){
-        mFlagSorted.set(flag);
-    }
     public final void setSorted(boolean sorted){
+        ShortItem flagSorted = getHeaderBlock().getFlagSorted();
         if(sorted){
-            setSortedFlag(FLAG_SORTED);
+            flagSorted.set(FLAG_SORTED);
         }else {
-            setSortedFlag((short)0);
+            flagSorted.set((short)0);
         }
     }
     private void setUtf8(boolean is_utf8, boolean updateAll){
-        boolean old= isUtf8Flag();
+        ShortItem flagUtf8 = getHeaderBlock().getFlagUtf8();
+        boolean old = isUtf8Flag();
         if(is_utf8){
-            setUtf8Flag(UTF8_FLAG_VALUE);
+            flagUtf8.set(UTF8_FLAG_VALUE);
         }else {
-            setUtf8Flag((short) 0);
+            flagUtf8.set((short) 0);
         }
         if(!updateAll || old == isUtf8Flag()){
             return;
@@ -285,13 +265,8 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
         mArrayStrings.setUtf8(is_utf8);
     }
     private boolean isUtf8Flag(){
-        return (mFlagUtf8.get() & FLAG_UTF8) !=0;
+        return (getHeaderBlock().getFlagUtf8().get() & FLAG_UTF8) !=0;
     }
-    private boolean isSortedFlag(){
-        return (mFlagSorted.get() & FLAG_SORTED) !=0;
-    }
-
-
     abstract StringArray<T> newInstance(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8);
     @Override
     protected void onChunkRefreshed() {
@@ -305,7 +280,7 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
 
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender== mFlagUtf8){
+        if(sender == getHeaderBlock().getFlagUtf8()){
             mArrayStrings.setUtf8(isUtf8Flag());
         }
     }
@@ -319,112 +294,15 @@ public abstract class BaseStringPool<T extends StringItem> extends BaseChunk imp
         if(json==null){
             return;
         }
-        loadStyledStrings(json);
+        JsonStringPoolHelper<T> helper=new JsonStringPoolHelper<>(this);
+        helper.loadStyledStrings(json);
         refresh();
-    }
-    public void loadStyledStrings(JSONArray jsonArray) {
-        //Styled strings should be at first rows of string pool thus we clear all before adding
-        getStringsArray().clearChildes();
-        getStyleArray().clearChildes();
-
-        List<StyledString> styledStringList = StyledString.fromJson(jsonArray);
-        loadText(styledStringList);
-        Map<String, Integer> tagIndexMap = loadStyleTags(styledStringList);
-        loadStyles(styledStringList, tagIndexMap);
-        refreshUniqueIdMap();
-    }
-    private void loadText(List<StyledString> styledStringList) {
-        StringArray<T> stringsArray = getStringsArray();
-        int size=styledStringList.size();
-        stringsArray.ensureSize(size);
-        for(int i=0;i<size;i++){
-            StyledString styledString=styledStringList.get(i);
-            T item=stringsArray.get(i);
-            item.set(styledString.text);
-        }
-    }
-    private Map<String, Integer> loadStyleTags(List<StyledString> styledStringList) {
-        Map<String, Integer> indexMap=new HashMap<>();
-        List<String> tagList=new ArrayList<>(getStyleTags(styledStringList));
-        tagList.sort(this);
-        StringArray<T> stringsArray = getStringsArray();
-        int tagsSize = tagList.size();
-        int initialSize = stringsArray.childesCount();
-        stringsArray.ensureSize(initialSize + tagsSize);
-        for(int i=0;i<tagsSize;i++){
-            String tag = tagList.get(i);
-            T item = stringsArray.get(initialSize + i);
-            item.set(tag);
-            indexMap.put(tag, item.getIndex());
-        }
-        return indexMap;
-    }
-    private void loadStyles(List<StyledString> styledStringList, Map<String, Integer> tagIndexMap){
-        StyleArray styleArray = getStyleArray();
-        int size=styledStringList.size();
-        styleArray.ensureSize(size);
-        for(int i=0;i<size;i++){
-            StyledString ss = styledStringList.get(i);
-            StyleItem styleItem = styleArray.get(i);
-            for(StyleSpanInfo spanInfo:ss.spanInfoList){
-                int tagIndex=tagIndexMap.get(spanInfo.getTag());
-                styleItem.addStylePiece(tagIndex, spanInfo.getFirst(), spanInfo.getLast());
-            }
-        }
-    }
-    private static Set<String> getStyleTags(List<StyledString> styledStringList){
-        Set<String> results=new HashSet<>();
-        for(StyledString ss:styledStringList){
-            for(StyleSpanInfo spanInfo:ss.spanInfoList){
-                results.add(spanInfo.getTag());
-            }
-        }
-        return results;
     }
     @Override
     public int compare(String s1, String s2) {
         return s1.compareTo(s2);
     }
 
-    private static class StyledString{
-        final String text;
-        final List<StyleSpanInfo> spanInfoList;
-        StyledString(String text, List<StyleSpanInfo> spanInfoList){
-            this.text=text;
-            this.spanInfoList=spanInfoList;
-        }
-        @Override
-        public String toString(){
-            return text;
-        }
-        static List<StyledString> fromJson(JSONArray jsonArray){
-            int length = jsonArray.length();
-            List<StyledString> results=new ArrayList<>();
-            for(int i=0;i<length;i++){
-                StyledString styledString=fromJson(jsonArray.getJSONObject(i));
-                results.add(styledString);
-            }
-            return results;
-        }
-        static StyledString fromJson(JSONObject jsonObject){
-            String text= jsonObject.getString(StringItem.NAME_string);
-            JSONObject style=jsonObject.getJSONObject(StringItem.NAME_style);
-            JSONArray spansArray=style.getJSONArray(StyleItem.NAME_spans);
-            List<StyleSpanInfo> spanInfoList = toSpanInfoList(spansArray);
-            return new StyledString(text, spanInfoList);
-        }
-        private static List<StyleSpanInfo> toSpanInfoList(JSONArray jsonArray){
-            int length = jsonArray.length();
-            List<StyleSpanInfo> results=new ArrayList<>(length);
-            for(int i=0;i<length;i++){
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                StyleSpanInfo spanInfo=new StyleSpanInfo(null, 0,0);
-                spanInfo.fromJson(jsonObject);
-                results.add(spanInfo);
-            }
-            return results;
-        }
-    }
     private static final short UTF8_FLAG_VALUE=0x0100;
 
     private static final short FLAG_UTF8 = 0x0100;

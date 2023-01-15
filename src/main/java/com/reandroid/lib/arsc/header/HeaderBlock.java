@@ -26,11 +26,9 @@ import com.reandroid.lib.arsc.item.BlockItem;
 import com.reandroid.lib.arsc.item.ByteArray;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.item.ShortItem;
+import com.reandroid.lib.arsc.util.HexBytesWriter;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.List;
 
  public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
@@ -51,6 +49,9 @@ import java.util.List;
         this.mType.setBlockLoad(this);
         this.mHeaderSize.setBlockLoad(this);
         this.mChunkSize.setBlockLoad(this);
+    }
+    public HeaderBlock(ChunkType chunkType){
+        this(chunkType.ID);
     }
     public ByteArray getExtraBytes() {
          return extraBytes;
@@ -199,7 +200,12 @@ import java.util.List;
             headerLoaded.onChunkSizeLoaded(headerSize, chunkSize);
         }
     }
-
+    /**
+     * Prints bytes in hex for debug/testing
+     * */
+    public String toHex(){
+        return HexBytesWriter.toHex(getBytes());
+    }
     @Override
     public String toString(){
         short t = getType();

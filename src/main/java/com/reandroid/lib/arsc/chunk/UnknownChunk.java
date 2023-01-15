@@ -24,10 +24,10 @@ package com.reandroid.lib.arsc.chunk;
  * This class can load any valid chunk, aimed to
  * handle any future android changes
  * */
-public class UnknownChunk extends BaseChunk implements HeaderBlock.HeaderLoaded {
+public class UnknownChunk extends BaseChunk<HeaderBlock> implements HeaderBlock.HeaderLoaded {
      private final ByteArray body;
      public UnknownChunk() {
-         super(INITIAL_CHUNK_TYPE, 1);
+         super(new HeaderBlock(INITIAL_CHUNK_TYPE), 1);
          this.body = new ByteArray();
          addChild(body);
          setHeaderLoaded(this);

@@ -19,6 +19,7 @@ import com.reandroid.lib.arsc.BuildInfo;
 import com.reandroid.lib.arsc.array.PackageArray;
 import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.header.HeaderBlock;
+import com.reandroid.lib.arsc.header.TableHeader;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerItem;
 import com.reandroid.lib.arsc.pool.TableStringPool;
@@ -33,17 +34,15 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
-    private final IntegerItem mPackageCount;
+public class TableBlock extends BaseChunk<TableHeader> implements JSONConvert<JSONObject> {
     private final TableStringPool mTableStringPool;
     private final PackageArray mPackageArray;
     private final Set<TableBlock> mFrameWorks=new HashSet<>();
     public TableBlock() {
-        super(ChunkType.TABLE, 2);
-        this.mPackageCount=new IntegerItem();
+        super(new TableHeader(), 2);
+        TableHeader header = getHeaderBlock();
         this.mTableStringPool=new TableStringPool(true);
-        this.mPackageArray=new PackageArray(mPackageCount);
-        addToHeader(mPackageCount);
+        this.mPackageArray=new PackageArray(header.getPackageCount());
         addChild(mTableStringPool);
         addChild(mPackageArray);
     }
@@ -68,7 +67,7 @@ public class TableBlock extends BaseChunk implements JSONConvert<JSONObject> {
 
     private void refreshPackageCount(){
         int count = getPackageArray().childesCount();
-        mPackageCount.set(count);
+        getHeaderBlock().getPackageCount().set(count);
     }
     @Override
     protected void onChunkRefreshed() {

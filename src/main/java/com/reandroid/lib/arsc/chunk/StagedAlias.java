@@ -16,18 +16,19 @@
  package com.reandroid.lib.arsc.chunk;
 
  import com.reandroid.lib.arsc.array.StagedAliasEntryArray;
+ import com.reandroid.lib.arsc.header.StagedAliasHeader;
  import com.reandroid.lib.arsc.item.IntegerItem;
  import com.reandroid.lib.arsc.value.StagedAliasEntry;
 
  import java.util.Collection;
 
- public class StagedAlias extends BaseChunk{
+ public class StagedAlias extends BaseChunk<StagedAliasHeader>{
      private final StagedAliasEntryArray stagedAliasEntryArray;
      public StagedAlias() {
-         super(ChunkType.STAGED_ALIAS, 1);
-         IntegerItem count = new IntegerItem();
-         addToHeader(count);
-         stagedAliasEntryArray = new StagedAliasEntryArray(count);
+         super(new StagedAliasHeader(), 1);
+         StagedAliasHeader header = getHeaderBlock();
+
+         stagedAliasEntryArray = new StagedAliasEntryArray(header.getCount());
          addChild(stagedAliasEntryArray);
      }
      public void merge(StagedAlias stagedAlias){

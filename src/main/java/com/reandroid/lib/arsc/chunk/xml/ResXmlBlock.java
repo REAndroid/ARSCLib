@@ -36,13 +36,13 @@ package com.reandroid.lib.arsc.chunk.xml;
  import java.util.List;
  import java.util.Set;
 
- public class ResXmlBlock extends BaseChunk implements JSONConvert<JSONObject> {
+ public class ResXmlBlock extends BaseChunk<HeaderBlock> implements JSONConvert<JSONObject> {
     private final ResXmlStringPool mResXmlStringPool;
     private final ResXmlIDMap mResXmlIDMap;
     private ResXmlElement mResXmlElement;
     private final SingleBlockContainer<ResXmlElement> mResXmlElementContainer;
     public ResXmlBlock() {
-        super(ChunkType.XML,3);
+        super(new HeaderBlock(ChunkType.XML),3);
         this.mResXmlStringPool=new ResXmlStringPool(true);
         this.mResXmlIDMap=new ResXmlIDMap();
         this.mResXmlElement=new ResXmlElement();

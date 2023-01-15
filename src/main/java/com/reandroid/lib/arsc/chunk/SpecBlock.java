@@ -18,27 +18,19 @@
  import com.reandroid.lib.arsc.array.TypeBlockArray;
  import com.reandroid.lib.arsc.base.Block;
  import com.reandroid.lib.arsc.container.SpecTypePair;
+ import com.reandroid.lib.arsc.header.SpecHeader;
  import com.reandroid.lib.arsc.item.*;
  import com.reandroid.lib.json.JSONConvert;
  import com.reandroid.lib.json.JSONObject;
 
  import java.util.List;
 
- public class SpecBlock extends BaseChunk implements JSONConvert<JSONObject> {
+ public class SpecBlock extends BaseChunk<SpecHeader> implements JSONConvert<JSONObject> {
      private final SpecFlagsArray specFlagsArray;
-     private final ByteItem mTypeId;
      public SpecBlock() {
-         super(ChunkType.SPEC, 1);
-         this.mTypeId=new ByteItem();
-         ByteItem res0 = new ByteItem();
-         ShortItem res1 = new ShortItem();
-         IntegerItem entryCount = new IntegerItem();
-         this.specFlagsArray = new SpecFlagsArray(entryCount);
-         addToHeader(mTypeId);
-         addToHeader(res0);
-         addToHeader(res1);
-         addToHeader(entryCount);
-
+         super(new SpecHeader(), 1);
+         SpecHeader header = getHeaderBlock();
+         this.specFlagsArray = new SpecFlagsArray(header.getEntryCount());
          addChild(specFlagsArray);
      }
      public SpecFlagsArray getSpecFlagsArray(){
@@ -48,16 +40,16 @@
          return specFlagsArray.toList();
      }
      public byte getTypeId(){
-         return mTypeId.get();
+         return getHeaderBlock().getId().get();
      }
      public int getTypeIdInt(){
-         return (0xff & mTypeId.get());
+         return getHeaderBlock().getId().unsignedInt();
      }
      public void setTypeId(int id){
          setTypeId((byte) (0xff & id));
      }
      public void setTypeId(byte id){
-         mTypeId.set(id);
+         getHeaderBlock().getId().set(id);
      }
      public TypeBlockArray getTypeBlockArray(){
          SpecTypePair specTypePair=getSpecTypePair();

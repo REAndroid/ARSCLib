@@ -40,6 +40,9 @@ public class ShortItem extends BlockItem {
     public int unsignedInt(){
         return 0xffff & get();
     }
+    public String toHex(){
+        return String.format("0x%04x", unsignedInt());
+    }
     @Override
     protected void onBytesChanged() {
         // To save cpu usage, better to calculate once only when bytes changed

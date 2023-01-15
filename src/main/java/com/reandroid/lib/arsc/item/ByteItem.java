@@ -43,6 +43,12 @@ public class ByteItem extends BlockItem {
     public byte get(){
         return getBytesInternal()[0];
     }
+    public int unsignedInt(){
+        return 0xff & get();
+    }
+    public String toHex(){
+        return String.format("0x%02x", unsignedInt());
+    }
     @Override
     public String toString(){
         return String.valueOf(get());

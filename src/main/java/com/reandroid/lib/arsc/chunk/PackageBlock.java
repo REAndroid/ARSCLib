@@ -24,6 +24,7 @@ package com.reandroid.lib.arsc.chunk;
  import com.reandroid.lib.arsc.container.SingleBlockContainer;
  import com.reandroid.lib.arsc.container.SpecTypePair;
  import com.reandroid.lib.arsc.group.EntryGroup;
+ import com.reandroid.lib.arsc.header.PackageHeader;
  import com.reandroid.lib.arsc.io.BlockLoad;
  import com.reandroid.lib.arsc.io.BlockReader;
  import com.reandroid.lib.arsc.item.FixedLengthString;
@@ -42,17 +43,8 @@ package com.reandroid.lib.arsc.chunk;
  import java.util.*;
 
 
- public class PackageBlock extends BaseChunk
-        implements BlockLoad, JSONConvert<JSONObject>, Comparable<PackageBlock> {
-    private final IntegerItem mPackageId;
-    private final FixedLengthString mPackageName;
-
-    private final IntegerItem mTypeStringPoolOffset;
-    private final IntegerItem mTypeStringPoolCount;
-    private final IntegerItem mSpecStringPoolOffset;
-    private final IntegerItem mSpecStringPoolCount;
-    private final SingleBlockContainer<IntegerItem> mTypeIdOffsetContainer;
-    private final IntegerItem mTypeIdOffset;
+ public class PackageBlock extends BaseChunk<PackageHeader>
+        implements JSONConvert<JSONObject>, Comparable<PackageBlock> {
 
     private final TypeStringPool mTypeStringPool;
     private final SpecStringPool mSpecStringPool;
@@ -62,42 +54,19 @@ package com.reandroid.lib.arsc.chunk;
     private final Map<Integer, EntryGroup> mEntriesGroup;
 
     public PackageBlock() {
-        super(ChunkType.PACKAGE, 3);
-        this.mPackageId=new IntegerItem();
-        this.mPackageName = new FixedLengthString(256);
+        super(new PackageHeader(), 3);
+        PackageHeader header = getHeaderBlock();
 
-        this.mTypeStringPoolOffset = new IntegerItem();
-        this.mTypeStringPoolCount = new IntegerItem();
-        this.mSpecStringPoolOffset = new IntegerItem();
-        this.mSpecStringPoolCount = new IntegerItem();
-
-        this.mTypeIdOffsetContainer = new SingleBlockContainer<>();
-        this.mTypeIdOffset = new IntegerItem();
-        this.mTypeIdOffsetContainer.setItem(mTypeIdOffset);
-
-
-        this.mTypeStringPool=new TypeStringPool(false, mTypeIdOffset);
+        this.mTypeStringPool=new TypeStringPool(false, header.getTypeIdOffset());
         this.mSpecStringPool=new SpecStringPool(true);
 
         this.mBody = new PackageBody();
 
         this.mEntriesGroup=new HashMap<>();
 
-        mPackageId.setBlockLoad(this);
-
-        addToHeader(mPackageId);
-        addToHeader(mPackageName);
-        addToHeader(mTypeStringPoolOffset);
-        addToHeader(mTypeStringPoolCount);
-        addToHeader(mSpecStringPoolOffset);
-        addToHeader(mSpecStringPoolCount);
-        addToHeader(mTypeIdOffsetContainer);
-
         addChild(mTypeStringPool);
         addChild(mSpecStringPool);
-
         addChild(mBody);
-
     }
     public BlockList<UnknownChunk> getUnknownChunkList(){
          return mBody.getUnknownChunkList();
@@ -125,16 +94,7 @@ package com.reandroid.lib.arsc.chunk;
     public void sortTypes(){
         getSpecTypePairArray().sort();
     }
-    @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender==mPackageId){
-            int headerSize=getHeaderBlock().getHeaderSize();
-            if(headerSize<288){
-                mTypeIdOffset.set(0);
-                mTypeIdOffsetContainer.setItem(null);
-            }
-        }
-    }
+
     public void removeEmpty(){
         getSpecTypePairArray().removeEmptyPairs();
     }
@@ -142,19 +102,19 @@ package com.reandroid.lib.arsc.chunk;
         return getSpecTypePairArray().isEmpty();
     }
     public int getId(){
-        return mPackageId.get();
+        return getHeaderBlock().getPackageId().get();
     }
     public void setId(byte id){
          setId(0xff & id);
      }
     public void setId(int id){
-        mPackageId.set(id);
+        getHeaderBlock().getPackageId().set(id);
     }
     public String getName(){
-        return mPackageName.get();
+        return getHeaderBlock().getPackageName().get();
     }
     public void setName(String name){
-        mPackageName.set(name);
+        getHeaderBlock().getPackageName().set(name);
     }
     public TableBlock getTableBlock(){
         Block parent=getParent();
@@ -296,24 +256,24 @@ package com.reandroid.lib.arsc.chunk;
 
     private void refreshTypeStringPoolOffset(){
         int pos=countUpTo(mTypeStringPool);
-        mTypeStringPoolOffset.set(pos);
+        getHeaderBlock().getTypeStringPoolOffset().set(pos);
     }
     private void refreshTypeStringPoolCount(){
-        mTypeStringPoolCount.set(mTypeStringPool.countStrings());
+        getHeaderBlock().getTypeStringPoolCount().set(mTypeStringPool.countStrings());
     }
     private void refreshSpecStringPoolOffset(){
         int pos=countUpTo(mSpecStringPool);
-        mSpecStringPoolOffset.set(pos);
+        getHeaderBlock().getSpecStringPoolOffset().set(pos);
     }
     private void refreshSpecStringCount(){
-        mSpecStringPoolCount.set(mSpecStringPool.countStrings());
+        getHeaderBlock().getSpecStringPoolCount().set(mSpecStringPool.countStrings());
     }
     private void refreshTypeIdOffset(){
         // TODO: find solution
         //int largest=getSpecTypePairArray().getHighestTypeId();
         //int count=getTypeStringPool().countStrings();
-        //mTypeIdOffset.set(count-largest);
-        mTypeIdOffset.set(0);
+        //getHeaderBlock().getTypeIdOffset().set(count-largest);
+        getHeaderBlock().getTypeIdOffset().set(0);
     }
     public void onEntryAdded(EntryBlock entryBlock){
         updateEntry(entryBlock);

@@ -20,6 +20,7 @@ import com.reandroid.lib.arsc.array.TableStringArray;
 import com.reandroid.lib.arsc.chunk.ChunkType;
 import com.reandroid.lib.arsc.chunk.UnknownChunk;
 import com.reandroid.lib.arsc.header.HeaderBlock;
+import com.reandroid.lib.arsc.header.StringPoolHeader;
 import com.reandroid.lib.arsc.io.BlockReader;
 import com.reandroid.lib.arsc.item.IntegerArray;
 import com.reandroid.lib.arsc.item.IntegerItem;

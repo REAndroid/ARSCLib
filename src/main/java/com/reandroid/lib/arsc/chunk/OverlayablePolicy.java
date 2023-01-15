@@ -16,6 +16,7 @@
  package com.reandroid.lib.arsc.chunk;
 
  import com.reandroid.lib.arsc.base.Block;
+ import com.reandroid.lib.arsc.header.OverlayablePolicyHeader;
  import com.reandroid.lib.arsc.io.BlockLoad;
  import com.reandroid.lib.arsc.io.BlockReader;
  import com.reandroid.lib.arsc.item.IntegerArray;
@@ -29,22 +30,15 @@
   * We didn't test this class with resource table, if someone found a resource/apk please
   * create issue on https://github.com/REAndroid/ARSCLib
   * */
- public class OverlayablePolicy extends BaseChunk implements BlockLoad {
-  private final IntegerItem flags;
-  private final IntegerItem entryCount;
+ public class OverlayablePolicy extends BaseChunk<OverlayablePolicyHeader> implements BlockLoad {
   private final IntegerArray tableRefArray;
   public OverlayablePolicy(){
-   super(ChunkType.OVERLAYABLE_POLICY, 1);
-   this.flags = new IntegerItem();
-   this.entryCount = new IntegerItem();
+   super(new OverlayablePolicyHeader(), 1);
    this.tableRefArray = new IntegerArray();
-
-   addToHeader(this.flags);
-   addToHeader(this.entryCount);
 
    addChild(this.tableRefArray);
 
-   this.entryCount.setBlockLoad(this);
+   getHeaderBlock().getEntryCount().setBlockLoad(this);
   }
   @Override
   public boolean isNull() {
@@ -61,10 +55,10 @@
    return tableRefArray;
   }
   public int getFlags() {
-   return flags.get();
+   return getHeaderBlock().getFlags().get();
   }
   public void setFlags(int flags){
-   this.flags.set(flags);
+   getHeaderBlock().getFlags().set(flags);
   }
   public void setFlags(PolicyFlag[] policyFlags){
    setFlags(PolicyFlag.sum(policyFlags));
@@ -78,11 +72,12 @@
   }
   @Override
   protected void onChunkRefreshed() {
-   this.entryCount.set(getTableRefArray().size());
+   getHeaderBlock().getEntryCount().set(getTableRefArray().size());
   }
   @Override
   public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-   if(sender==this.entryCount){
+   IntegerItem entryCount = getHeaderBlock().getEntryCount();
+   if(sender==entryCount){
     this.tableRefArray.setSize(entryCount.get());
    }
   }
