@@ -16,6 +16,7 @@
 package com.reandroid.lib.apk.xmldecoder;
 
 import com.reandroid.lib.apk.ApkUtil;
+import com.reandroid.lib.apk.XmlHelper;
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.value.ResValueBag;
 import com.reandroid.lib.arsc.value.ResValueBagItem;
@@ -38,11 +39,16 @@ import java.util.Set;
         Set<ValueType> valueTypes = new HashSet<>();
         for(int i=0;i<bagItems.length;i++){
             ResValueBagItem bagItem = bagItems[i];
-            String value = ValueDecoder.decodeIntEntry(entryStore, bagItem);
+            ValueType valueType = bagItem.getValueType();
             XMLElement child = new XMLElement("item");
-            child.setTextContent(value);
+            if(valueType == ValueType.STRING){
+                XmlHelper.setTextContent(child, bagItem.getValueAsPoolString());
+            }else {
+                String value = ValueDecoder.decodeIntEntry(entryStore, bagItem);
+                child.setTextContent(value);
+            }
             parentElement.addChild(child);
-            valueTypes.add(bagItem.getValueType());
+            valueTypes.add(valueType);
         }
         if(valueTypes.contains(ValueType.STRING)){
             parentElement.setTagName(ApkUtil.TAG_STRING_ARRAY);

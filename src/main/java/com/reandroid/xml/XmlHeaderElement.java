@@ -15,7 +15,10 @@
   */
 package com.reandroid.xml;
 
-public class XmlHeaderElement extends XMLElement {
+ import java.io.IOException;
+ import java.io.Writer;
+
+ public class XmlHeaderElement extends XMLElement {
     private static final String ATTR_VERSION="version";
     private static final String ATTR_ENCODING="encoding";
     private static final String ATTR_STANDALONE="standalone";
@@ -99,5 +102,9 @@ public class XmlHeaderElement extends XMLElement {
     @Override
     int getIndent(){
         return 0;
+    }
+    @Override
+    void buildTextContent(Writer writer) throws IOException {
+
     }
 }

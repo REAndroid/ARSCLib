@@ -15,6 +15,7 @@
   */
 package com.reandroid.lib.apk.xmldecoder;
 
+import com.reandroid.lib.apk.XmlHelper;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.value.ResValueBag;
@@ -57,11 +58,14 @@ class XMLCommonBagDecoder extends BagDecoder{
 
             child.setAttribute("name", name);
 
-            String value = ValueDecoder.decode(entryStore, currentPackageId,
-                    resourceId, item.getValueType(), item.getData());
-
-            child.setTextContent(value);
-
+            ValueType valueType = item.getValueType();
+            if(valueType == ValueType.STRING){
+                XmlHelper.setTextContent(child, item.getValueAsPoolString());
+            }else {
+                String value = ValueDecoder.decode(entryStore, currentPackageId,
+                        resourceId, item.getValueType(), item.getData());
+                child.setTextContent(value);
+            }
             parentElement.addChild(child);
         }
     }

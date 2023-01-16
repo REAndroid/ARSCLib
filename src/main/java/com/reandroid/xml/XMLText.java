@@ -44,6 +44,10 @@ public class XMLText extends XMLNode{
         this.text=XMLUtil.escapeXmlChars(text);
     }
     @Override
+    void buildTextContent(Writer writer) throws IOException{
+        writer.write(this.text);
+    }
+    @Override
     public boolean write(Writer writer, boolean newLineAttributes) throws IOException {
         if(!XMLUtil.isEmpty(this.text)){
             writer.write(this.text);

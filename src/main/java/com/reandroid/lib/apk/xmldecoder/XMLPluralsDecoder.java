@@ -15,10 +15,12 @@
   */
 package com.reandroid.lib.apk.xmldecoder;
 
+import com.reandroid.lib.apk.XmlHelper;
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.value.BaseResValue;
 import com.reandroid.lib.arsc.value.ResValueBag;
 import com.reandroid.lib.arsc.value.ResValueBagItem;
+import com.reandroid.lib.arsc.value.ValueType;
 import com.reandroid.lib.arsc.value.plurals.PluralsQuantity;
 import com.reandroid.lib.common.EntryStore;
 import com.reandroid.xml.XMLElement;
@@ -36,11 +38,15 @@ class XMLPluralsDecoder extends BagDecoder{
             ResValueBagItem item = bagItems[i];
 
             PluralsQuantity quantity = PluralsQuantity.valueOf(item.getIdLow());
-
-            String value = ValueDecoder.decodeIntEntry(entryStore, item);
             XMLElement child=new XMLElement("item");
             child.setAttribute("quantity", quantity.toString());
-            child.setTextContent(value);
+
+            if(item.getValueType() == ValueType.STRING){
+                XmlHelper.setTextContent(child, item.getValueAsPoolString());
+            }else {
+                String value = ValueDecoder.decodeIntEntry(entryStore, item);
+                child.setTextContent(value);
+            }
 
             parentElement.addChild(child);
         }

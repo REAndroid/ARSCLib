@@ -27,6 +27,10 @@ public abstract class BaseResValueItem extends BaseResValue implements ResValueI
     BaseResValueItem(int bytesLength) {
         super(bytesLength);
     }
+
+    public TableString getValueAsPoolString(){
+        return getTableString(getData());
+    }
     String getString(int ref){
         TableString tableString=getTableString(ref);
         if(tableString==null){

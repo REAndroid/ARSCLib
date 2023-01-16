@@ -62,6 +62,9 @@ public class XMLComment extends XMLElement {
         return XMLUtil.isEmpty(getTextContent());
     }
 
+
+    void buildTextContent(Writer writer) throws IOException{
+    }
     @Override
     public boolean write(Writer writer, boolean newLineAttributes) throws IOException {
         if(isHidden()){

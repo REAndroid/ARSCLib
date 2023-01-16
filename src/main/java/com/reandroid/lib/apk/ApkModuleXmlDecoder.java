@@ -25,6 +25,7 @@ import com.reandroid.lib.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.lib.arsc.chunk.xml.ResXmlBlock;
 import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
+import com.reandroid.lib.arsc.item.TableString;
 import com.reandroid.lib.arsc.value.*;
 import com.reandroid.lib.common.EntryStore;
 import com.reandroid.lib.common.Frameworks;
@@ -238,18 +239,17 @@ import java.util.*;
         attribute.setNameId(resourceId);
         element.setResourceId(resourceId);
         if(!entryBlock.isEntryTypeBag()){
-            String value;
             ResValueInt resValueInt=(ResValueInt) entryBlock.getResValue();
             if(resValueInt.getValueType()== ValueType.STRING){
-                value=ValueDecoder.escapeSpecialCharacter(
-                        resValueInt.getValueAsString());
+                XmlHelper.setTextContent(element,
+                        resValueInt.getValueAsPoolString());
             }else {
-                value= ValueDecoder.decodeEntryValue(entryStore,
+                String value = ValueDecoder.decodeEntryValue(entryStore,
                         entryBlock.getPackageBlock(),
                         resValueInt.getValueType(),
                         resValueInt.getData());
+                element.setTextContent(value);
             }
-            element.setTextContent(value);
         }else {
             ResValueBag resValueBag=(ResValueBag) entryBlock.getResValue();
             xmlBagDecoder.decode(resValueBag, element);

@@ -66,8 +66,20 @@ public abstract class XMLNode {
         }
         mChildNodes.remove(xmlNode);
     }
+    public void clearChildNodes(){
+        clearChildNodesInternal();
+    }
+    void clearChildNodesInternal(){
+        mChildNodes.clear();
+    }
     public List<XMLNode> getChildNodes() {
         return mChildNodes;
+    }
+    boolean hasChildNodes(){
+        return mChildNodes.size()>0;
+    }
+    void buildTextContent(Writer writer) throws IOException{
+
     }
     public boolean write(Writer writer) throws IOException {
         return write(writer, false);

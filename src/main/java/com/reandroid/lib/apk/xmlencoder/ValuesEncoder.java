@@ -15,6 +15,7 @@
   */
 package com.reandroid.lib.apk.xmlencoder;
 
+import com.reandroid.lib.apk.ApkUtil;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLException;
@@ -85,6 +86,9 @@ class ValuesEncoder {
         if(type.startsWith("plurals")){
             return true;
         }
+        if(type.startsWith("array")){
+            return true;
+        }
         if(type.startsWith("string")){
             return false;
         }
@@ -108,7 +112,13 @@ class ValuesEncoder {
         if(type==null){
             type=first.getTagName();
         }
-        if(type==null||type.equals("item")){
+        if(type==null){
+            return def;
+        }
+        if(type.endsWith("-array")){
+            return "array";
+        }
+        if(type.equals("item")){
             return def;
         }
         return type;

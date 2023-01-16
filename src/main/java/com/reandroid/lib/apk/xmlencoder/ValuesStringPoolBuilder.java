@@ -30,8 +30,10 @@ import java.util.*;
 
  public class ValuesStringPoolBuilder {
     private final Set<String> stringList;
+    private final Set<String> styleList;
     public ValuesStringPoolBuilder(){
         this.stringList=new HashSet<>();
+        this.styleList=new HashSet<>();
     }
     public void addTo(TableStringPool stringPool){
         if(stringPool.getStringsArray().childesCount()==0){
@@ -39,6 +41,7 @@ import java.util.*;
         }
         stringPool.addStrings(stringList);
         stringList.clear();
+        styleList.clear();
         stringPool.refresh();
     }
     private void buildWithStyles(TableStringPool stringPool){
@@ -74,11 +77,13 @@ import java.util.*;
     private List<XMLSpannable> buildSpannable(){
         List<XMLSpannable> results=new ArrayList<>();
         Set<String> removeList=new HashSet<>();
-        for(String text:stringList){
+        for(String text:styleList){
             XMLSpannable spannable=XMLSpannable.parse(text);
             if(spannable!=null){
                 results.add(spannable);
                 removeList.add(text);
+            }else {
+                stringList.add(text);
             }
         }
         stringList.removeAll(removeList);
@@ -143,14 +148,21 @@ import java.util.*;
         }
     }
     private void addStrings(XMLElement element){
-        String text = ValueDecoder
-                .unEscapeSpecialCharacter(element.getTextContent());
-        addString(text);
+        if(element.hasChildElements()){
+            addStyleElement(element);
+        }else {
+            String text = ValueDecoder
+                    .unEscapeSpecialCharacter(element.getTextContent());
+            addString(text);
+        }
     }
     private void addString(String text){
         if(text!=null && text.length()>0 && text.charAt(0)!='@'){
             stringList.add(text);
         }
+    }
+    private void addStyleElement(XMLElement element){
+        styleList.add(element.buildTextContent());
     }
 
 }

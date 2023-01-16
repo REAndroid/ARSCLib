@@ -16,6 +16,8 @@
 package com.reandroid.xml;
 
 
+import com.reandroid.xml.parser.XMLSpanParser;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -26,7 +28,7 @@ public class XMLElement extends XMLNode{
     private String mTagName;
     private final List<XMLAttribute> mAttributes = new ArrayList<>();
     private final List<XMLElement> mChildElements = new ArrayList<>();
-    private List<XMLComment> mComments;
+    private final List<XMLComment> mComments = new ArrayList<>();
     private final List<XMLText> mTexts = new ArrayList<>();
     private XMLElement mParent;
     private int mIndent;
@@ -196,7 +198,7 @@ public class XMLElement extends XMLNode{
         mTexts.clear();
     }
     public XMLComment getCommentAt(int index){
-        if(mComments==null || index<0){
+        if(index<0){
             return null;
         }
         if(index>=mComments.size()){
@@ -213,17 +215,11 @@ public class XMLElement extends XMLNode{
         }
     }
     private void hideComments(boolean hide){
-        if(mComments==null){
-            return;
-        }
         for(XMLComment ce:mComments){
             ce.setHidden(hide);
         }
     }
     public int getCommentsCount(){
-        if(mComments==null){
-            return 0;
-        }
         return mComments.size();
     }
     public void addComments(Collection<XMLComment> commentElements){
@@ -235,11 +231,7 @@ public class XMLElement extends XMLNode{
         }
     }
     public void clearComments(){
-        if(mComments==null){
-            return;
-        }
         mComments.clear();
-        mComments=null;
     }
     public void addComment(XMLComment commentElement) {
         addCommentInternal(commentElement, true);
@@ -248,9 +240,6 @@ public class XMLElement extends XMLNode{
         if(commentElement==null){
             return;
         }
-        if(mComments==null){
-            mComments=new ArrayList<>();
-        }
         mComments.add(commentElement);
         commentElement.setIndent(getIndent());
         commentElement.setParent(this);
@@ -258,8 +247,12 @@ public class XMLElement extends XMLNode{
             super.addChildNodeInternal(commentElement);
         }
     }
-    public void removeChildElements(){
+    @Override
+    void clearChildNodesInternal(){
+        super.clearChildNodesInternal();
         mChildElements.clear();
+        mComments.clear();
+        mTexts.clear();
     }
     public List<XMLAttribute> listAttributes(){
         return mAttributes;
@@ -538,32 +531,40 @@ public class XMLElement extends XMLNode{
         mTag =tag;
     }
     public String getTextContent(){
-        return getTextContent(true);
-    }
-    public String getTextContent(boolean unEscape){
-        String text=buildTextContent();
-        if(unEscape){
-            text=XMLUtil.unEscapeXmlChars(text);
-        }
-        return text;
-    }
-    private String buildTextContent(){
         if(!hasTextContent()){
             return null;
         }
+        return buildTextContent();
+    }
+    public String buildTextContent(){
         StringWriter writer=new StringWriter();
-        for(XMLNode child:getChildNodes()){
-            try {
-                child.write(writer, false);
-            } catch (IOException ignored) {
-            }
-        }
-        writer.flush();
         try {
+            for(XMLNode node:getChildNodes()){
+                node.buildTextContent(writer);
+            }
+            writer.flush();
             writer.close();
         } catch (IOException ignored) {
         }
         return writer.toString();
+    }
+    void buildTextContent(Writer writer) throws IOException {
+        writer.write("<");
+        writer.write(getTagName());
+        appendAttributes(writer, false);
+        if(!hasChildNodes()){
+            writer.write("/>");
+            return;
+        }
+        writer.write('>');
+        for(XMLNode node:getChildNodes()){
+            node.buildTextContent(writer);
+        }
+        if(hasChildNodes()){
+            writer.write("</");
+            writer.write(getTagName());
+            writer.write('>');
+        }
     }
     private void appendTextContent(Writer writer) throws IOException {
         for(XMLNode child:getChildNodes()){
@@ -573,6 +574,9 @@ public class XMLElement extends XMLNode{
             child.write(writer, false);
         }
     }
+    public boolean hasChildElements(){
+        return mChildElements.size()>0;
+    }
     public boolean hasTextContent() {
         return mTexts.size()>0;
     }
@@ -581,6 +585,17 @@ public class XMLElement extends XMLNode{
             return null;
         }
         return mTexts.get(0).getText();
+    }
+    public void setSpannableText(String text){
+        clearChildNodes();
+        XMLElement element = parseSpanSafe(text);
+        if(element==null){
+            addText( new XMLText(text));
+            return;
+        }
+        for(XMLNode xmlNode:element.getChildNodes()){
+            super.addChildNode(xmlNode);
+        }
     }
     public void setTextContent(String text){
         setTextContent(text, true);
@@ -773,6 +788,18 @@ public class XMLElement extends XMLNode{
         }
         strWriter.flush();
         return strWriter.toString();
+    }
+
+    private static XMLElement parseSpanSafe(String spanText){
+        if(spanText==null){
+            return null;
+        }
+        try {
+            XMLSpanParser spanParser = new XMLSpanParser();
+            return spanParser.parse(spanText);
+        } catch (XMLException ignored) {
+            return null;
+        }
     }
 
 }
