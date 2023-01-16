@@ -74,9 +74,9 @@ import java.util.*;
             if(vt==null){
                 continue;
             }
-            i=i|vt.mByte;
+            i=i|(0xff & vt.mByte);
         }
-        return (byte) i;
+        return (byte) (0xff & i);
     }
     public static AttributeValueType valueOf(byte b){
         AttributeValueType[] all=values();
