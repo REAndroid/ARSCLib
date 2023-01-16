@@ -15,13 +15,18 @@
   */
 package com.reandroid.lib.apk.xmldecoder;
 
+import com.reandroid.lib.apk.ApkUtil;
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.value.ResValueBag;
 import com.reandroid.lib.arsc.value.ResValueBagItem;
+import com.reandroid.lib.arsc.value.ValueType;
 import com.reandroid.lib.common.EntryStore;
 import com.reandroid.xml.XMLElement;
 
-class XMLArrayDecoder extends BagDecoder{
+import java.util.HashSet;
+import java.util.Set;
+
+ class XMLArrayDecoder extends BagDecoder{
     public XMLArrayDecoder(EntryStore entryStore) {
         super(entryStore);
     }
@@ -30,11 +35,19 @@ class XMLArrayDecoder extends BagDecoder{
     public void decode(ResValueBag resValueBag, XMLElement parentElement) {
         ResValueBagItem[] bagItems = resValueBag.getBagItems();
         EntryStore entryStore=getEntryStore();
+        Set<ValueType> valueTypes = new HashSet<>();
         for(int i=0;i<bagItems.length;i++){
-            String value = ValueDecoder.decodeIntEntry(entryStore, bagItems[i]);
-            XMLElement child=new XMLElement("item");
+            ResValueBagItem bagItem = bagItems[i];
+            String value = ValueDecoder.decodeIntEntry(entryStore, bagItem);
+            XMLElement child = new XMLElement("item");
             child.setTextContent(value);
             parentElement.addChild(child);
+            valueTypes.add(bagItem.getValueType());
+        }
+        if(valueTypes.contains(ValueType.STRING)){
+            parentElement.setTagName(ApkUtil.TAG_STRING_ARRAY);
+        }else if(valueTypes.size()==1 && valueTypes.contains(ValueType.INT_DEC)){
+            parentElement.setTagName(ApkUtil.TAG_INTEGER_ARRAY);
         }
     }
     @Override

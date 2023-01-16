@@ -137,4 +137,7 @@ public class ApkUtil {
     public static final String NAME_data="data";
     public static final String RES_DIR_NAME="res";
     public static final String FILE_NAME_PUBLIC_XML ="public.xml";
+
+    public static final String TAG_STRING_ARRAY = "string-array";
+    public static final String TAG_INTEGER_ARRAY = "integer-array";
 }

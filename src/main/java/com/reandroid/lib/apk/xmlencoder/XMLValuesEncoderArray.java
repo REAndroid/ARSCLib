@@ -15,6 +15,7 @@
   */
 package com.reandroid.lib.apk.xmlencoder;
 
+import com.reandroid.lib.apk.ApkUtil;
 import com.reandroid.lib.arsc.array.ResValueBagItemArray;
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
 import com.reandroid.lib.arsc.value.ResValueBag;
@@ -29,7 +30,14 @@ class XMLValuesEncoderArray extends XMLValuesEncoderBag{
     @Override
     void encodeChildes(XMLElement parentElement, ResValueBag resValueBag){
         int count = parentElement.getChildesCount();
-        boolean tag_string="string-array".equals(parentElement.getTagName());
+        String tagName = parentElement.getTagName();
+        boolean force_string = false;
+        boolean force_integer = false;
+        if(ApkUtil.TAG_STRING_ARRAY.equals(tagName)){
+            force_string = true;
+        }else if(ApkUtil.TAG_INTEGER_ARRAY.equals(tagName)){
+            force_integer = true;
+        }
         ResValueBagItemArray itemArray = resValueBag.getResValueBagItemArray();
         for(int i=0;i<count;i++){
             XMLElement child=parentElement.getChildAt(i);
@@ -39,12 +47,24 @@ class XMLValuesEncoderArray extends XMLValuesEncoderBag{
 
             String valueText=child.getTextContent();
 
-            if(ValueDecoder.isReference(valueText)){
+            if(force_string){
+                bagItem.setValueAsString(ValueDecoder
+                        .unEscapeSpecialCharacter(valueText));
+            }else if(force_integer){
+                valueText=trimText(valueText);
+                if(!ValueDecoder.isInteger(valueText)){
+                    throw new EncodeException("Invalid integer value for array name="
+                            +parentElement.getAttributeValue("name")
+                            +", entry no"+(i+1)+", near line: " + child.getLineNumber());
+                }
+                bagItem.setTypeAndData(ValueType.INT_DEC,
+                        ValueDecoder.parseInteger(valueText));
+            }else if(ValueDecoder.isReference(valueText)){
                 bagItem.setTypeAndData(ValueType.REFERENCE,
                         getMaterials().resolveReference(valueText));
             }else if(EncodeUtil.isEmpty(valueText)) {
                 bagItem.setTypeAndData(ValueType.NULL, 0);
-            }else if(!tag_string){
+            }else {
                 ValueDecoder.EncodeResult encodeResult =
                         ValueDecoder.encodeGuessAny(valueText);
                 if(encodeResult!=null){
@@ -54,10 +74,13 @@ class XMLValuesEncoderArray extends XMLValuesEncoderBag{
                     bagItem.setValueAsString(ValueDecoder
                             .unEscapeSpecialCharacter(valueText));
                 }
-            }else {
-                bagItem.setValueAsString(ValueDecoder
-                        .unEscapeSpecialCharacter(valueText));
             }
         }
+    }
+    private static String trimText(String text){
+        if(text==null){
+            return null;
+        }
+        return text.trim();
     }
 }
