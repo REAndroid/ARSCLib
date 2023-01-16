@@ -184,6 +184,9 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
             CharBuffer charBuffer=charsetDecoder.decode(buf);
             return charBuffer.toString();
         } catch (CharacterCodingException ex) {
+            if(isUtf8){
+                return new String(allStringBytes, offLen[0], offLen[1], StandardCharsets.UTF_8);
+            }
             return new String(allStringBytes, offLen[0], offLen[1], StandardCharsets.UTF_16LE);
         }
     }
