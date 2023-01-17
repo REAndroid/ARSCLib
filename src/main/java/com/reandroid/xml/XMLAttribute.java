@@ -32,9 +32,6 @@ public class XMLAttribute extends XMLNode{
     public void setNameId(int id){
         mNameId=id;
     }
-    public void setValueId(String id){
-        setValueId(XMLUtil.hexToInt(id,0));
-    }
     public void setValueId(int id){
         mValueId=id;
     }

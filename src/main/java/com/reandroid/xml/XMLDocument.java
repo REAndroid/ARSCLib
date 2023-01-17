@@ -250,8 +250,5 @@ public class XMLDocument extends XMLNode{
         }
         docEle.setIndent(indent);
     }
-    public static String htmlToXml(String htmlString){
-        return XMLUtil.htmlToXml(htmlString);
-    }
 
 }
