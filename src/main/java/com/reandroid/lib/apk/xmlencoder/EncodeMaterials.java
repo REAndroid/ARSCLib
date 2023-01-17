@@ -214,8 +214,7 @@
              }
          }
          for(PackageBlock packageBlock:currentPackage.getTableBlock().listPackages()){
-             if(packageBlock==currentPackage ||
-                     packageBlock.getId()!=currentPackage.getId()){
+             if(packageBlock==currentPackage){
                  continue;
              }
              specTypePair=packageBlock.searchByTypeName(type);
