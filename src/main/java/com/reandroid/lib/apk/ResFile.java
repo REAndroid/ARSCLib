@@ -34,6 +34,7 @@ public class ResFile {
     private boolean mBinXmlChecked;
     private String mFileExtension;
     private boolean mFileExtensionChecked;
+    private EntryBlock mSelectedEntryBlock;
     public ResFile(InputSource inputSource, List<EntryBlock> entryBlockList){
         this.inputSource=inputSource;
         this.entryBlockList=entryBlockList;
@@ -65,6 +66,12 @@ public class ResFile {
         return root+typeName+"/"+name;
     }
     public EntryBlock pickOne(){
+        if(mSelectedEntryBlock==null){
+            mSelectedEntryBlock=selectOne();
+        }
+        return mSelectedEntryBlock;
+    }
+    private EntryBlock selectOne(){
         List<EntryBlock> entryList = entryBlockList;
         if(entryList.size()==0){
             return null;
