@@ -28,7 +28,9 @@ class XMLValuesEncoderColor extends XMLValuesEncoder{
         if(encodeResult!=null){
             entryBlock.setValueAsRaw(encodeResult.valueType, encodeResult.value);
         }else {
-            throw new EncodeException("Unknown color value: "+value);
+            // If reaches here the value might be
+            // file path e.g. res/color/something.xml
+            entryBlock.setValueAsString(value);
         }
     }
 }

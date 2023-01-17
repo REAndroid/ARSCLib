@@ -25,7 +25,6 @@ import com.reandroid.lib.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.lib.arsc.chunk.xml.ResXmlBlock;
 import com.reandroid.lib.arsc.container.SpecTypePair;
 import com.reandroid.lib.arsc.decoder.ValueDecoder;
-import com.reandroid.lib.arsc.item.TableString;
 import com.reandroid.lib.arsc.value.*;
 import com.reandroid.lib.common.EntryStore;
 import com.reandroid.lib.common.Frameworks;
@@ -110,7 +109,7 @@ import java.util.*;
         resFile.getInputSource().write(outputStream);
         outputStream.close();
 
-        addDecodedEntry(resFile.getEntryBlockList());
+        addDecodedEntry(resFile.pickOne());
     }
     private void decodeResXml(EntryStore entryStore, File outDir, ResFile resFile)
             throws IOException, XMLException{
@@ -131,7 +130,7 @@ import java.util.*;
         XMLDocument xmlDocument=resXmlBlock.decodeToXml(entryStore, packageBlock.getId());
         xmlDocument.save(file, true);
 
-        addDecodedEntry(resFile.getEntryBlockList());
+        addDecodedEntry(resFile.pickOne());
     }
     private void decodePublicXml(TableBlock tableBlock, File outDir)
              throws IOException{
@@ -167,11 +166,6 @@ import java.util.*;
         xmlDocument.save(file, true);
         addDecodedPath(AndroidManifestBlock.FILE_NAME);
     }
-     private void addDecodedEntry(Collection<EntryBlock> entryBlockList){
-         for(EntryBlock entryBlock:entryBlockList){
-             addDecodedEntry(entryBlock);
-         }
-     }
     private void addDecodedEntry(EntryBlock entryBlock){
         if(entryBlock.isNull()){
             return;
