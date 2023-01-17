@@ -73,6 +73,8 @@
          Map<File, ResourceIds.Table.Package> map =
                  initializeEncodeMaterials(pubXmlFileList, encodeMaterials);
 
+         Map<File, PackageBlock> packageBlockMap=new HashMap<>();
+
          for(File pubXmlFile:pubXmlFileList){
              ResourceIds.Table.Package pkgResourceIds=map.get(pubXmlFile);
              addParsedFiles(pubXmlFile);
@@ -81,6 +83,36 @@
              packageCreator.setPackageName(pkgResourceIds.name);
 
              PackageBlock packageBlock = packageCreator.createNew(tableBlock, pkgResourceIds);
+             encodeMaterials.setCurrentPackage(packageBlock);
+             packageBlockMap.put(pubXmlFile, packageBlock);
+
+             ValuesEncoder valuesEncoder = new ValuesEncoder(encodeMaterials);
+             File fileIds = toId(pubXmlFile);
+             if(fileIds.isFile()){
+                 valuesEncoder.encodeValuesXml(fileIds);
+                 packageBlock.sortTypes();
+                 packageBlock.refresh();
+                 addParsedFiles(fileIds);
+             }
+             File fileAttrs = toAttr(pubXmlFile);
+             if(fileAttrs.isFile()){
+                 valuesEncoder.encodeValuesXml(fileAttrs);
+                 packageBlock.sortTypes();
+                 packageBlock.refresh();
+                 addParsedFiles(fileAttrs);
+             }
+         }
+         for(File pubXmlFile:pubXmlFileList){
+             ResourceIds.Table.Package pkgResourceIds=map.get(pubXmlFile);
+             addParsedFiles(pubXmlFile);
+
+             PackageBlock packageBlock=packageBlockMap.get(pubXmlFile);
+
+             if(packageBlock==null){
+                 PackageCreator packageCreator = new PackageCreator();
+                 packageCreator.setPackageName(pkgResourceIds.name);
+                 packageBlock = packageCreator.createNew(tableBlock, pkgResourceIds);
+             }
              encodeMaterials.setCurrentPackage(packageBlock);
 
              File resDir=toResDirectory(pubXmlFile);
@@ -177,6 +209,12 @@
          return pubXmlFile
                  .getParentFile()
                  .getParentFile();
+     }
+     private File toId(File pubXmlFile){
+         return new File(pubXmlFile.getParentFile(), "ids.xml");
+     }
+     private File toAttr(File pubXmlFile){
+         return new File(pubXmlFile.getParentFile(), "attrs.xml");
      }
      private List<File> listValuesDir(File resDir){
          List<File> results=new ArrayList<>();
