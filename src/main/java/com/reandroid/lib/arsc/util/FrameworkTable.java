@@ -39,8 +39,7 @@ public class FrameworkTable extends TableBlock {
     private String mFrameworkTitle;
     private String mFrameworkName;
     private String mFrameworkVersion;
-    private Map<String, Map<String, EntryGroup>> mNameGroupMap;
-    private final Object mMapLock=new Object();
+    private ResNameMap<EntryGroup> mNameGroupMap;
     public FrameworkTable(){
         super();
     }
@@ -57,55 +56,40 @@ public class FrameworkTable extends TableBlock {
      * Call this if you plan to search entries frequently
      */
     public void loadResourceNameMap(){
-        synchronized (mMapLock){
-            if(mNameGroupMap !=null){
-                return;
-            }
-            Map<String, Map<String, EntryGroup>> typeMap=new HashMap<>();
+        ResNameMap<EntryGroup> resNameMap = mNameGroupMap;
+        if(resNameMap == null){
+            resNameMap = new ResNameMap<>();
             for(PackageBlock packageBlock:listPackages()){
                 for(EntryGroup group:packageBlock.listEntryGroup()){
-                    String type=group.getTypeName();
-                    Map<String, EntryGroup> groupMap=typeMap.get(type);
-                    if(groupMap==null){
-                        groupMap=new HashMap<>();
-                        typeMap.put(type, groupMap);
-                    }
-                    groupMap.put(group.getSpecName(), group);
+                    resNameMap.add(group.getTypeName(),
+                            group.getSpecName(),
+                            group);
                 }
             }
-            mNameGroupMap = typeMap;
+            mNameGroupMap = resNameMap;
         }
     }
     /**
      * Clears resource name map from memory
      */
     public void clearResourceNameMap(){
-        synchronized (mMapLock){
-            if(mNameGroupMap!=null){
-                mNameGroupMap.clear();
-                mNameGroupMap =null;
-            }
+        if(mNameGroupMap!=null){
+            mNameGroupMap.clear();
+            mNameGroupMap =null;
         }
     }
     private boolean hasResourceGroupMap(){
-        synchronized (mMapLock){
-            return mNameGroupMap!=null;
-        }
+        return mNameGroupMap!=null;
     }
     private EntryBlock searchEntryBlockFromMap(String typeName, String entryName){
-        synchronized (mMapLock){
-            if(mNameGroupMap ==null){
-                return null;
-            }
-            Map<String, EntryGroup> groupMap = mNameGroupMap.get(typeName);
-            if(groupMap!=null){
-                EntryGroup group=groupMap.get(entryName);
-                if(group!=null){
-                    return group.pickOne();
-                }
-            }
+        if(mNameGroupMap ==null){
             return null;
         }
+        EntryGroup entryGroup = mNameGroupMap.get(typeName, entryName);
+        if(entryGroup!=null){
+            return entryGroup.pickOne();
+        }
+        return null;
     }
     public EntryBlock searchEntryBlock(String typeName, String entryName){
         if(hasResourceGroupMap()){

@@ -25,6 +25,7 @@
  import com.reandroid.lib.arsc.group.EntryGroup;
  import com.reandroid.lib.arsc.item.SpecString;
  import com.reandroid.lib.arsc.util.FrameworkTable;
+ import com.reandroid.lib.arsc.util.ResNameMap;
  import com.reandroid.lib.arsc.value.EntryBlock;
  import com.reandroid.lib.common.Frameworks;
  import com.reandroid.lib.common.ResourceResolver;
@@ -41,35 +42,13 @@
      private APKLogger apkLogger;
      private boolean mForceCreateNamespaces = true;
      private Set<String> mFrameworkPackageNames;
+     private final ResNameMap<EntryBlock> mLocalResNameMap = new ResNameMap<>();
      public EncodeMaterials(){
      }
      public SpecString getSpecString(String name){
          return currentPackage.getSpecStringPool()
                  .get(name)
                  .get(0);
-     }
-     public void addTableStringPool(Collection<String> stringList){
-         getCurrentPackage()
-                 .getTableBlock()
-                 .getTableStringPool()
-                 .addStrings(stringList);
-     }
-     public int resolveAttributeNameReference(String refString){
-         String packageName = null;
-         String type = "attr";
-         String name = refString;
-         int i=refString.lastIndexOf(':');
-         if(i>=0){
-             packageName=refString.substring(0, i);
-             name=refString.substring(i+1);
-         }
-         if(EncodeUtil.isEmpty(packageName)
-                 || packageName.equals(getCurrentPackageName())
-                 || !isFrameworkPackageName(packageName)){
-
-             return resolveLocalResourceId(type, name);
-         }
-         return resolveFrameworkResourceId(packageName, type, name);
      }
      public EntryBlock getAttributeBlock(String refString){
          String packageName = null;
@@ -111,34 +90,11 @@
          }
          return resolveFrameworkResourceId(packageName, type, name);
      }
-
-     public EntryBlock resolveEntryReference(String refString){
-         if("@null".equals(refString)){
-             return null;
-         }
-         Matcher matcher = ValueDecoder.PATTERN_REFERENCE.matcher(refString);
-         if(!matcher.find()){
-             return null;
-         }
-         String prefix=matcher.group(1);
-         String packageName = matcher.group(2);
-         if(packageName!=null && packageName.endsWith(":")){
-             packageName=packageName.substring(0, packageName.length()-1);
-         }
-         String type = matcher.group(4);
-         String name = matcher.group(5);
-         if(EncodeUtil.isEmpty(packageName)
-                 || packageName.equals(getCurrentPackageName())
-                 || !isFrameworkPackageName(packageName)){
-             return getLocalEntryBlock(type, name);
-         }
-         return getFrameworkEntry(packageName, type, name);
-     }
      public int resolveLocalResourceId(String type, String name){
          for(ResourceIds.Table.Package pkg:packageIdSet){
-             ResourceIds.Table.Package.Type.Entry entry = pkg.getEntry(type, name);
-             if(entry!=null){
-                 return entry.getResourceId();
+             Integer resId = pkg.getResourceId(type, name);
+             if(resId!=null){
+                 return resId;
              }
          }
          EntryGroup entryGroup=getLocalEntryGroup(type, name);
@@ -146,15 +102,6 @@
              return entryGroup.getResourceId();
          }
          throw new EncodeException("Local entry not found: " +
-                 "type="+type+
-                 ", name="+name);
-     }
-     public int resolveFrameworkResourceId(String type, String name){
-         EntryBlock entryBlock = getFrameworkEntry(type, name);
-         if(entryBlock!=null){
-             return entryBlock.getResourceId();
-         }
-         throw new EncodeException("Framework entry not found: " +
                  "type="+type+
                  ", name="+name);
      }
@@ -196,6 +143,22 @@
          return null;
      }
      public EntryBlock getLocalEntryBlock(String type, String name){
+         EntryBlock entryBlock=mLocalResNameMap.get(type, name);
+         if(entryBlock!=null){
+             return entryBlock;
+         }
+         loadLocalEntryBlockMap(type);
+         entryBlock=mLocalResNameMap.get(type, name);
+         if(entryBlock!=null){
+             return entryBlock;
+         }
+         entryBlock= searchLocalEntryBlock(type, name);
+         if(entryBlock!=null){
+             mLocalResNameMap.add(type, name, entryBlock);
+         }
+         return entryBlock;
+     }
+     private EntryBlock searchLocalEntryBlock(String type, String name){
          for(EntryGroup entryGroup : currentPackage.listEntryGroup()){
              if(type.equals(entryGroup.getTypeName()) &&
                      name.equals(entryGroup.getSpecName())){
@@ -205,7 +168,7 @@
          SpecTypePair specTypePair=currentPackage.searchByTypeName(type);
          if(specTypePair!=null){
              for(TypeBlock typeBlock:specTypePair.listTypeBlocks()){
-                 for(EntryBlock entryBlock:typeBlock.listEntries()){
+                 for(EntryBlock entryBlock:typeBlock.listEntries(true)){
                      if(name.equals(entryBlock.getName())){
                          return entryBlock;
                      }
@@ -220,7 +183,7 @@
              specTypePair=packageBlock.searchByTypeName(type);
              if(specTypePair!=null){
                  for(TypeBlock typeBlock:specTypePair.listTypeBlocks()){
-                     for(EntryBlock entryBlock:typeBlock.listEntries()){
+                     for(EntryBlock entryBlock:typeBlock.listEntries(true)){
                          if(name.equals(entryBlock.getName())){
                              return entryBlock;
                          }
@@ -230,6 +193,20 @@
              }
          }
          return null;
+     }
+     private void loadLocalEntryBlockMap(String type){
+         ResNameMap<EntryBlock> localMap = mLocalResNameMap;
+         for(PackageBlock packageBlock:currentPackage.getTableBlock().listPackages()){
+             SpecTypePair specTypePair=packageBlock.searchByTypeName(type);
+             if(specTypePair!=null){
+                 for(TypeBlock typeBlock:specTypePair.listTypeBlocks()){
+                     for(EntryBlock entryBlock:typeBlock.listEntries(true)){
+                         localMap.add(entryBlock.getTypeName(),
+                                 entryBlock.getName(), entryBlock);
+                     }
+                 }
+             }
+         }
      }
      public EntryBlock getFrameworkEntry(String type, String name){
          for(FrameworkTable table:frameworkTables){
@@ -282,16 +259,12 @@
          }
          return null;
      }
-
      public EncodeMaterials setForceCreateNamespaces(boolean force) {
          this.mForceCreateNamespaces = force;
          return this;
      }
-     public EncodeMaterials addPackageIds(Collection<ResourceIds.Table.Package> packageIdList) {
-         this.packageIdSet.addAll(packageIdList);
-         return this;
-     }
      public EncodeMaterials addPackageIds(ResourceIds.Table.Package packageIds) {
+         packageIds.loadEntryMap();
          this.packageIdSet.add(packageIds);
          return this;
      }

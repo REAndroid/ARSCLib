@@ -19,6 +19,7 @@ import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.group.EntryGroup;
 import com.reandroid.lib.arsc.pool.SpecStringPool;
+import com.reandroid.lib.arsc.util.ResNameMap;
 import com.reandroid.lib.json.JSONArray;
 import com.reandroid.lib.json.JSONObject;
 import com.reandroid.xml.*;
@@ -244,9 +245,23 @@ import java.util.*;
             public final byte id;
             public String name;
             public final Map<Byte, Type> typeMap;
+            private final ResNameMap<Integer> mEntryNameMap;
             public Package(byte id){
                 this.id = id;
                 this.typeMap = new HashMap<>();
+                this.mEntryNameMap = new ResNameMap<>();
+            }
+            public void loadEntryMap(){
+                mEntryNameMap.clear();
+                for(Type type:typeMap.values()){
+                    String typeName=type.getName();
+                    for(Type.Entry entry: type.entryMap.values()){
+                        mEntryNameMap.add(typeName, entry.getName(), entry.getResourceId());
+                    }
+                }
+            }
+            public Integer getResourceId(String typeName, String name){
+                return mEntryNameMap.get(typeName, name);
             }
             public Type.Entry getEntry(String typeName, String name){
                 Type type=getType(typeName);

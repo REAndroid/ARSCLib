@@ -99,16 +99,23 @@ public class XMLFileEncoder {
         int count=element.getAttributeCount();
         for(int i=0;i<count;i++){
             XMLAttribute attribute=element.getAttributeAt(i);
+            if(attribute instanceof SchemaAttr){
+                continue;
+            }
             if(SchemaAttr.looksSchema(attribute.getName(), attribute.getValue())){
                 continue;
             }
-            EntryBlock entryBlock=materials.getAttributeBlock(attribute.getName());
-            int resourceId=0;
-            if(entryBlock!=null){
-                resourceId=entryBlock.getResourceId();
+            String name=attribute.getNameWoPrefix();
+            int resourceId=decodeUnknownAttributeHex(name);
+            EntryBlock entryBlock=null;
+            if(resourceId==0){
+                entryBlock=getAttributeBlock(attribute);
+                if(entryBlock!=null){
+                    resourceId=entryBlock.getResourceId();
+                }
             }
             ResXmlAttribute xmlAttribute =
-                    resXmlElement.createAttribute(attribute.getNameWoPrefix(), resourceId);
+                    resXmlElement.createAttribute(name, resourceId);
             String prefix=attribute.getNamePrefix();
             if(prefix!=null){
                 ResXmlStartNamespace ns = resXmlElement.getStartNamespaceByPrefix(prefix);
@@ -198,10 +205,36 @@ public class XMLFileEncoder {
         }
     }
     private void addResourceId(ResIdBuilder idBuilder, XMLAttribute attribute){
-        EntryBlock entryBlock = materials.getAttributeBlock(attribute.getName());
+        String name=attribute.getNameWoPrefix();
+        int id=decodeUnknownAttributeHex(name);
+        if(id!=0){
+            idBuilder.add(id, name);
+            return;
+        }
+        EntryBlock entryBlock = getAttributeBlock(attribute);
         if(entryBlock!=null){
             idBuilder.add(entryBlock.getResourceId(), entryBlock.getName());
         }
+    }
+    private int decodeUnknownAttributeHex(String name){
+        if(name.length()==0||name.charAt(0)!='@'){
+            return 0;
+        }
+        name=name.substring(1);
+        if(!ValueDecoder.isHex(name)){
+            return 0;
+        }
+        return ValueDecoder.parseHex(name);
+    }
+    private EntryBlock getAttributeBlock(XMLAttribute attribute){
+        if(attribute instanceof SchemaAttr){
+            return null;
+        }
+        String name=attribute.getName();
+        if(name.indexOf(':')<0){
+            return null;
+        }
+        return materials.getAttributeBlock(name);
     }
     private ResXmlStartNamespace forceCreateNamespace(ResXmlElement resXmlElement,
                                                       int resourceId, String prefix){
