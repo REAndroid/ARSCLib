@@ -82,6 +82,9 @@ package com.reandroid.lib.arsc.chunk;
         }
         return null;
     }
+    public List<StagedAlias> listStagedAlias(){
+        return getStagedAliasList().getChildes();
+    }
     public BlockList<StagedAlias> getStagedAliasList(){
         return mBody.getStagedAliasList();
     }
@@ -150,7 +153,7 @@ package com.reandroid.lib.arsc.chunk;
     public void addLibraryInfo(LibraryInfo info){
         getLibraryBlock().addLibraryInfo(info);
     }
-    private LibraryBlock getLibraryBlock(){
+    public LibraryBlock getLibraryBlock(){
         return mBody.getLibraryBlock();
     }
     public Set<Integer> listResourceIds(){
@@ -293,13 +296,18 @@ package com.reandroid.lib.arsc.chunk;
 
     @Override
     public JSONObject toJson() {
+        return toJson(true);
+    }
+    public JSONObject toJson(boolean addSpecs) {
         JSONObject jsonObject=new JSONObject();
 
         jsonObject.put(BuildInfo.NAME_arsc_lib_version, BuildInfo.getVersion());
 
         jsonObject.put(NAME_package_id, getId());
         jsonObject.put(NAME_package_name, getName());
-        jsonObject.put(NAME_specs, getSpecTypePairArray().toJson());
+        if(addSpecs){
+            jsonObject.put(NAME_specs, getSpecTypePairArray().toJson());
+        }
         LibraryInfoArray libraryInfoArray = getLibraryBlock().getLibraryInfoArray();
         if(libraryInfoArray.childesCount()>0){
             jsonObject.put(NAME_libraries,libraryInfoArray.toJson());
@@ -316,7 +324,7 @@ package com.reandroid.lib.arsc.chunk;
     public void fromJson(JSONObject json) {
         setId(json.getInt(NAME_package_id));
         setName(json.getString(NAME_package_name));
-        getSpecTypePairArray().fromJson(json.getJSONArray(NAME_specs));
+        getSpecTypePairArray().fromJson(json.optJSONArray(NAME_specs));
         LibraryInfoArray libraryInfoArray = getLibraryBlock().getLibraryInfoArray();
         libraryInfoArray.fromJson(json.optJSONArray(NAME_libraries));
         if(json.has(NAME_staged_aliases)){
@@ -370,6 +378,6 @@ package com.reandroid.lib.arsc.chunk;
     public static final String NAME_package_name = "package_name";
     public static final String JSON_FILE_NAME = "package.json";
     private static final String NAME_specs="specs";
-    private static final String NAME_libraries="libraries";
+    public static final String NAME_libraries="libraries";
     public static final String NAME_staged_aliases="staged_aliases";
 }

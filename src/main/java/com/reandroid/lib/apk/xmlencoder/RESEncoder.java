@@ -79,10 +79,7 @@
              ResourceIds.Table.Package pkgResourceIds=map.get(pubXmlFile);
              addParsedFiles(pubXmlFile);
 
-             PackageCreator packageCreator = new PackageCreator();
-             packageCreator.setPackageName(pkgResourceIds.name);
-
-             PackageBlock packageBlock = packageCreator.createNew(tableBlock, pkgResourceIds);
+             PackageBlock packageBlock = createPackage(pkgResourceIds, pubXmlFile);
              encodeMaterials.setCurrentPackage(packageBlock);
              packageBlockMap.put(pubXmlFile, packageBlock);
 
@@ -109,9 +106,7 @@
              PackageBlock packageBlock=packageBlockMap.get(pubXmlFile);
 
              if(packageBlock==null){
-                 PackageCreator packageCreator = new PackageCreator();
-                 packageCreator.setPackageName(pkgResourceIds.name);
-                 packageBlock = packageCreator.createNew(tableBlock, pkgResourceIds);
+                 packageBlock = createPackage(pkgResourceIds, pubXmlFile);
              }
              encodeMaterials.setCurrentPackage(packageBlock);
 
@@ -134,6 +129,14 @@
              getApkModule().getApkArchive().add(xmlEncodeSource);
          }
          tableBlock.refresh();
+     }
+     private PackageBlock createPackage(ResourceIds.Table.Package pkgResourceIds
+             , File pubXmlFile){
+         PackageCreator packageCreator = new PackageCreator();
+         packageCreator.setPackageName(pkgResourceIds.name);
+         packageCreator.setAPKLogger(apkLogger);
+         packageCreator.setPackageDirectory(toPackageDirectory(pubXmlFile));
+         return packageCreator.createNew(this.tableBlock, pkgResourceIds);
      }
      private void preloadStringPool(List<File> pubXmlFileList){
          logMessage("Loading string pool ...");
@@ -205,6 +208,10 @@
          File root = packageDirectory.getParentFile();
          return new File(root, AndroidManifestBlock.FILE_NAME);
      }
+     private File toPackageDirectory(File pubXmlFile){
+         return toResDirectory(pubXmlFile)
+                 .getParentFile();
+     }
      private File toResDirectory(File pubXmlFile){
          return pubXmlFile
                  .getParentFile()
@@ -262,6 +269,7 @@
      }
      public void setAPKLogger(APKLogger logger) {
          this.apkLogger = logger;
+         this.apkModule.setAPKLogger(logger);
      }
      private void logMessage(String msg) {
          if(apkLogger!=null){

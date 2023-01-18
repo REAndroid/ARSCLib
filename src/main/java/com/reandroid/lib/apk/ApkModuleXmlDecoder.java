@@ -29,6 +29,7 @@ import com.reandroid.lib.arsc.value.*;
 import com.reandroid.lib.common.EntryStore;
 import com.reandroid.lib.common.Frameworks;
 import com.reandroid.lib.common.TableEntryStore;
+import com.reandroid.lib.json.JSONObject;
 import com.reandroid.xml.XMLAttribute;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
@@ -58,6 +59,9 @@ import java.util.*;
         entryStore.add(Frameworks.getAndroid());
         TableBlock tableBlock=apkModule.getTableBlock();
         entryStore.add(tableBlock);
+
+        decodePackageInfo(outDir, tableBlock);
+
         xmlBagDecoder=new XMLBagDecoder(entryStore);
 
         decodePublicXml(tableBlock, outDir);
@@ -74,6 +78,17 @@ import java.util.*;
         decodeValues(entryStore, outDir, tableBlock);
 
         extractRootFiles(outDir);
+    }
+    private void decodePackageInfo(File outDir, TableBlock tableBlock) throws IOException {
+        for(PackageBlock packageBlock:tableBlock.listPackages()){
+            decodePackageInfo(outDir, packageBlock);
+        }
+    }
+    private void decodePackageInfo(File outDir, PackageBlock packageBlock) throws IOException {
+        File pkgDir = new File(outDir, getPackageDirName(packageBlock));
+        File packageJsonFile = new File(pkgDir, PackageBlock.JSON_FILE_NAME);
+        JSONObject jsonObject = packageBlock.toJson(false);
+        jsonObject.write(packageJsonFile);
     }
     private void decodeUncompressedFiles(File outDir)
              throws IOException {

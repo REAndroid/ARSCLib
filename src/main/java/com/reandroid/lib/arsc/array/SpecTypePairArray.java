@@ -228,8 +228,11 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
     }
     @Override
     public void fromJson(JSONArray json) {
-        int length= json.length();
         clearChildes();
+        if(json==null){
+            return;
+        }
+        int length = json.length();
         ensureSize(length);
         for (int i=0;i<length;i++){
             JSONObject jsonObject=json.getJSONObject(i);

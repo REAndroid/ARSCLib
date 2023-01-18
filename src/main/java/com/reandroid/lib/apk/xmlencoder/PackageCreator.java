@@ -15,11 +15,16 @@
   */
 package com.reandroid.lib.apk.xmlencoder;
 
+import com.reandroid.lib.apk.APKLogger;
 import com.reandroid.lib.apk.ResourceIds;
 import com.reandroid.lib.arsc.chunk.PackageBlock;
 import com.reandroid.lib.arsc.chunk.TableBlock;
 import com.reandroid.lib.arsc.pool.TypeStringPool;
+import com.reandroid.lib.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +32,13 @@ class PackageCreator {
     private List<String> mSpecNames;
     private String mPackageName;
     private int mPackageId;
+    private File packageDirectory;
+    private APKLogger apkLogger;
     public PackageCreator(){
+    }
+
+    public void setPackageDirectory(File packageDirectory) {
+        this.packageDirectory = packageDirectory;
     }
     public void setPackageName(String name){
         this.mPackageName=name;
@@ -37,6 +48,9 @@ class PackageCreator {
         PackageBlock packageBlock=new PackageBlock();
         packageBlock.setName(mPackageName);
         packageBlock.setId(mPackageId);
+
+        loadPackageInfoJson(packageBlock);
+
         tableBlock.getPackageArray()
                 .add(packageBlock);
         packageBlock.getSpecStringPool()
@@ -45,6 +59,33 @@ class PackageCreator {
         initTypeStringPool(packageBlock, pkgResourceIds);
 
         return packageBlock;
+    }
+    private void loadPackageInfoJson(PackageBlock packageBlock){
+        File dir = this.packageDirectory;
+        if(dir==null || !dir.isDirectory()){
+            return;
+        }
+        String simplePath = dir.getName() + File.separator
+                + PackageBlock.JSON_FILE_NAME;
+        logMessage("Loading: " + simplePath);
+        File file = new File(dir, PackageBlock.JSON_FILE_NAME);
+        if(!file.isFile()){
+            logMessage("W: File not found, this could be decompiled using old version: '"
+                    + simplePath+"'");
+            return;
+        }
+        JSONObject jsonObject;
+        try {
+            FileInputStream inputStream = new FileInputStream(file);
+            jsonObject = new JSONObject(inputStream);
+            inputStream.close();
+        } catch (IOException ex) {
+            logMessage("Error loading: '" + simplePath
+                    + "', "+ex.getMessage());
+            return;
+        }
+        packageBlock.fromJson(jsonObject);
+        logMessage("OK: " + simplePath);
     }
     private void initTypeStringPool(PackageBlock packageBlock,
                                     ResourceIds.Table.Package pkgResourceIds){
@@ -66,6 +107,24 @@ class PackageCreator {
         this.mPackageId=pkg.getIdInt();
         for(ResourceIds.Table.Package.Type.Entry entry:pkg.listEntries()){
             mSpecNames.add(entry.getName());
+        }
+    }
+    public void setAPKLogger(APKLogger logger) {
+        this.apkLogger = logger;
+    }
+    private void logMessage(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logMessage(msg);
+        }
+    }
+    private void logError(String msg, Throwable tr) {
+        if(apkLogger!=null){
+            apkLogger.logError(msg, tr);
+        }
+    }
+    private void logVerbose(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logVerbose(msg);
         }
     }
 }
