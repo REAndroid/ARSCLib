@@ -46,7 +46,6 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
         resValueBag.getEntryBlock().setPublic(true);
     }
     private void encodeAttributes(XMLElement parentElement, ResValueBag resValueBag){
-        int count=parentElement.getAttributeCount();
         ResValueBagItemArray bagItemArray = resValueBag.getResValueBagItemArray();
 
         int bagIndex=0;
@@ -66,8 +65,7 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
 
         bagIndex++;
 
-        for(int i=0;i<count;i++){
-            XMLAttribute attribute = parentElement.getAttributeAt(i);
+        for(XMLAttribute attribute : parentElement.listAttributes()){
             String name = attribute.getName();
             if("name".equals(name) || "formats".equals(name)){
                 continue;

@@ -94,15 +94,9 @@ public class XMLAttribute extends XMLNode{
     public void setValue(String val){
         mValue= XMLUtil.escapeXmlChars(val);
     }
-    public boolean isEmpty(){
-        return XMLUtil.isEmpty(getName());
-    }
 
     @Override
     public boolean write(Writer writer, boolean newLineAttributes) throws IOException {
-        if(isEmpty()){
-            return false;
-        }
         writer.write(getName());
         writer.write("=\"");
         String val= XMLUtil.trimQuote(getValue());
@@ -114,9 +108,6 @@ public class XMLAttribute extends XMLNode{
     }
     @Override
     public String toText(int indent, boolean newLineAttributes) {
-        if(isEmpty()){
-            return null;
-        }
         StringWriter writer=new StringWriter();
         try {
             write(writer);
@@ -131,16 +122,12 @@ public class XMLAttribute extends XMLNode{
         if(name==null){
             name="";
         }
-        name=getClass().getName()+name;
         return name.hashCode();
     }
     @Override
     public boolean equals(Object obj){
         if(obj instanceof XMLAttribute){
             XMLAttribute attr=(XMLAttribute)obj;
-            if(isEmpty()){
-                return attr.isEmpty();
-            }
             return getName().equals(attr.getName());
         }
         return false;

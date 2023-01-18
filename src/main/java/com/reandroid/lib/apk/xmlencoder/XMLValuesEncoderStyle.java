@@ -36,14 +36,43 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
         ResValueBagItemArray itemArray = resValueBag.getResValueBagItemArray();
         for(int i=0;i<count;i++){
             XMLElement child=parentElement.getChildAt(i);
+            ResValueBagItem item = itemArray.get(i);
+            String name=child.getAttributeValue("name");
+            int id=decodeUnknownAttributeHex(name);
+            if(id!=0){
+                String value = child.getTextContent();
+                if(ValueDecoder.isReference(value)){
+                    item.setTypeAndData(ValueType.REFERENCE,
+                            getMaterials().resolveReference(value));
+                }else {
+                    ValueDecoder.EncodeResult encodeResult = ValueDecoder.encodeGuessAny(value);
+                    if(encodeResult!=null){
+                        item.setTypeAndData(encodeResult.valueType, encodeResult.value);
+                    }else {
+                        item.setValueAsString(value);
+                    }
+                }
+                continue;
+            }
+
             EntryBlock attributeEntry=getMaterials()
-                    .getAttributeBlock(child.getAttributeValue("name"));
+                    .getAttributeBlock(name);
             if(attributeEntry==null){
                 throw new EncodeException("Unknown attribute name: '"+child.toText()
                         +"', for style: "+parentElement.getAttributeValue("name"));
             }
-            encodeChild(parentElement.getChildAt(i), attributeEntry, itemArray.get(i));
+            encodeChild(child, attributeEntry, item);
         }
+    }
+    private int decodeUnknownAttributeHex(String name){
+        if(name.length()==0||name.charAt(0)!='@'){
+            return 0;
+        }
+        name=name.substring(1);
+        if(!ValueDecoder.isHex(name)){
+            return 0;
+        }
+        return ValueDecoder.parseHex(name);
     }
     private void encodeChild(XMLElement child, EntryBlock attributeEntry, ResValueBagItem bagItem){
 

@@ -162,7 +162,7 @@ import java.util.*;
         }
     }
     private void addStyleElement(XMLElement element){
-        styleList.add(element.buildTextContent());
+        styleList.add(element.buildTextContent(false));
     }
 
 }

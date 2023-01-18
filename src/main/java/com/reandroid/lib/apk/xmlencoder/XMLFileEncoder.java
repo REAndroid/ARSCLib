@@ -96,9 +96,7 @@ public class XMLFileEncoder {
         }
     }
     private void buildAttributes(XMLElement element, ResXmlElement resXmlElement){
-        int count=element.getAttributeCount();
-        for(int i=0;i<count;i++){
-            XMLAttribute attribute=element.getAttributeAt(i);
+        for(XMLAttribute attribute:element.listAttributes()){
             if(attribute instanceof SchemaAttr){
                 continue;
             }
@@ -176,9 +174,7 @@ public class XMLFileEncoder {
         resXmlElement.calculatePositions();
     }
     private void ensureNamespaces(XMLElement element, ResXmlElement resXmlElement){
-        int count=element.getAttributeCount();
-        for(int i=0;i<count;i++){
-            XMLAttribute attribute = element.getAttributeAt(i);
+        for(XMLAttribute attribute:element.listAttributes()){
             String prefix = SchemaAttr.getPrefix(attribute.getName());
             if(prefix==null){
                 continue;
@@ -194,12 +190,10 @@ public class XMLFileEncoder {
         idBuilder.buildTo(resXmlBlock.getResXmlIDMap());
     }
     private void searchResIds(ResIdBuilder idBuilder, XMLElement element){
-        int count=element.getAttributeCount();
-        for(int i=0;i<count;i++){
-            XMLAttribute attribute = element.getAttributeAt(i);
+        for(XMLAttribute attribute : element.listAttributes()){
             addResourceId(idBuilder, attribute);
         }
-        count=element.getChildesCount();
+        int count=element.getChildesCount();
         for(int i=0;i<count;i++){
             searchResIds(idBuilder, element.getChildAt(i));
         }

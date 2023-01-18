@@ -29,7 +29,7 @@ public class XMLUtil {
         if(str==null){
             return null;
         }
-        if(!PATTERN_ESCAPE.matcher(str).matches()){
+        if(str.indexOf('&')<0 && str.indexOf('<')<0 && str.indexOf('>')<0){
             return str;
         }
         str=str.replaceAll("&amp;", "&");

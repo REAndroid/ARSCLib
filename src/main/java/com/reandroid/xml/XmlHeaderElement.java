@@ -35,9 +35,7 @@ package com.reandroid.xml;
         if(element==null){
             return;
         }
-        int max=element.getAttributeCount();
-        for(int i=0;i<max;i++){
-            XMLAttribute exist=element.getAttributeAt(i);
+        for(XMLAttribute exist : element.listAttributes()){
             setAttribute(exist.getName(), exist.getValue());
         }
     }
@@ -104,7 +102,7 @@ package com.reandroid.xml;
         return 0;
     }
     @Override
-    void buildTextContent(Writer writer) throws IOException {
+    void buildTextContent(Writer writer, boolean unEscape) throws IOException {
 
     }
 }

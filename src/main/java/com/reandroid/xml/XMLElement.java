@@ -26,7 +26,7 @@ import java.util.*;
 public class XMLElement extends XMLNode{
     static final long DEBUG_TO_STRING=500;
     private String mTagName;
-    private final List<XMLAttribute> mAttributes = new ArrayList<>();
+    private final LinkedHashMap<String, XMLAttribute> mAttributes = new LinkedHashMap<>();
     private final List<XMLElement> mChildElements = new ArrayList<>();
     private final List<XMLComment> mComments = new ArrayList<>();
     private final List<XMLText> mTexts = new ArrayList<>();
@@ -94,7 +94,7 @@ public class XMLElement extends XMLNode{
                 if(exist!=null){
                     exist.setValue(schemaAttr.getValue());
                 }else {
-                    addAttributeNoCheck(schemaAttr);
+                    addAttribute(schemaAttr);
                 }
             }
         }
@@ -254,8 +254,8 @@ public class XMLElement extends XMLNode{
         mComments.clear();
         mTexts.clear();
     }
-    public List<XMLAttribute> listAttributes(){
-        return mAttributes;
+    public Collection<XMLAttribute> listAttributes(){
+        return mAttributes.values();
     }
     public int getChildesCount(){
         return mChildElements.size();
@@ -271,12 +271,6 @@ public class XMLElement extends XMLNode{
     }
     public int getAttributeCount(){
         return mAttributes.size();
-    }
-    public XMLAttribute getAttributeAt(int index){
-        if(index>=mAttributes.size()){
-            return null;
-        }
-        return mAttributes.get(index);
     }
     public String getAttributeValue(String name){
         XMLAttribute attr=getAttribute(name);
@@ -303,48 +297,11 @@ public class XMLElement extends XMLNode{
             throw new XMLException(ex.getMessage()+": "+" '"+toString()+"'");
         }
     }
-    public boolean getAttributeValueBool(String name, boolean def){
-        XMLAttribute attr=getAttribute(name);
-        if (attr==null){
-            return def;
-        }
-        if(!attr.isValueBool()){
-            return def;
-        }
-        return attr.getValueBool();
-    }
-    public boolean getAttributeValueBool(String name) throws XMLException {
-        XMLAttribute attr=getAttribute(name);
-        if (attr==null || !attr.isValueBool()){
-            throw new XMLException("Expecting boolean for attr <"+name+ "> at '"+toString()+"'");
-        }
-        return attr.getValueBool();
-    }
     public XMLAttribute getAttribute(String name){
-        if(XMLUtil.isEmpty(name)){
-            return null;
-        }
-        for(XMLAttribute attr:mAttributes){
-            if(name.equals(attr.getName())){
-                return attr;
-            }
-        }
-        return null;
+        return mAttributes.get(name);
     }
     public XMLAttribute removeAttribute(String name){
-        if(XMLUtil.isEmpty(name)){
-            return null;
-        }
-        XMLAttribute attr=getAttribute(name);
-        if(attr==null){
-            return null;
-        }
-        int i=mAttributes.indexOf(attr);
-        if(i<0){
-            return null;
-        }
-        mAttributes.remove(i);
-        return attr;
+        return mAttributes.remove(name);
     }
     public XMLAttribute setAttribute(String name, int value){
         return setAttribute(name, String.valueOf(value));
@@ -364,7 +321,7 @@ public class XMLElement extends XMLNode{
             }else{
                 attr=new XMLAttribute(name,value);
             }
-            addAttributeNoCheck(attr);
+            addAttribute(attr);
         }else {
             attr.setValue(value);
         }
@@ -382,32 +339,21 @@ public class XMLElement extends XMLNode{
         if(attr==null){
             return;
         }
-        if(XMLUtil.isEmpty(attr.getName())){
+        String name = attr.getName();
+        if(XMLUtil.isEmpty(name)){
             return;
         }
-        XMLAttribute exist=getAttribute(attr.getName());
+        XMLAttribute exist = mAttributes.get(name);
         if(exist!=null){
             return;
         }
-        mAttributes.add(attr);
-    }
-    private void addAttributeNoCheck(XMLAttribute attr){
-        if(attr==null || attr.isEmpty()){
-            return;
-        }
-        mAttributes.add(attr);
+        mAttributes.put(name, attr);
     }
     public void sortChildes(Comparator<XMLElement> comparator){
         if(comparator==null){
             return;
         }
         mChildElements.sort(comparator);
-    }
-    public void sortAttributes(Comparator<XMLAttribute> comparator){
-        if(comparator==null){
-            return;
-        }
-        mAttributes.sort(comparator);
     }
     public XMLElement getParent(){
         return mParent;
@@ -534,13 +480,13 @@ public class XMLElement extends XMLNode{
         if(!hasTextContent()){
             return null;
         }
-        return buildTextContent();
+        return buildTextContent(true);
     }
-    public String buildTextContent(){
+    public String buildTextContent(boolean unEscape){
         StringWriter writer=new StringWriter();
         try {
             for(XMLNode node:getChildNodes()){
-                node.buildTextContent(writer);
+                node.buildTextContent(writer, unEscape);
             }
             writer.flush();
             writer.close();
@@ -548,7 +494,7 @@ public class XMLElement extends XMLNode{
         }
         return writer.toString();
     }
-    void buildTextContent(Writer writer) throws IOException {
+    void buildTextContent(Writer writer, boolean unEscape) throws IOException {
         writer.write("<");
         writer.write(getTagName());
         appendAttributes(writer, false);
@@ -558,7 +504,7 @@ public class XMLElement extends XMLNode{
         }
         writer.write('>');
         for(XMLNode node:getChildNodes()){
-            node.buildTextContent(writer);
+            node.buildTextContent(writer, unEscape);
         }
         if(hasChildNodes()){
             writer.write("</");
@@ -611,10 +557,7 @@ public class XMLElement extends XMLNode{
     }
     private boolean appendAttributes(Writer writer, boolean newLineAttributes) throws IOException {
         boolean addedOnce=false;
-        for(XMLAttribute attr:mAttributes){
-            if(attr.isEmpty()){
-                continue;
-            }
+        for(XMLAttribute attr:listAttributes()){
             if(addedOnce){
                 if(newLineAttributes){
                     writer.write(XMLUtil.NEW_LINE);

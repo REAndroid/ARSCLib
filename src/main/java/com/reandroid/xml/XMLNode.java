@@ -78,7 +78,7 @@ public abstract class XMLNode {
     boolean hasChildNodes(){
         return mChildNodes.size()>0;
     }
-    void buildTextContent(Writer writer) throws IOException{
+    void buildTextContent(Writer writer, boolean unEscape) throws IOException{
 
     }
     public boolean write(Writer writer) throws IOException {

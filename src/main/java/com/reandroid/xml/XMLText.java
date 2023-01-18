@@ -21,7 +21,7 @@ import java.io.Writer;
 public class XMLText extends XMLNode{
     private String text;
     public XMLText(String text){
-        this.text=text;
+        this.text=XMLUtil.escapeXmlChars(text);
     }
     public XMLText(){
         this(null);
@@ -44,8 +44,8 @@ public class XMLText extends XMLNode{
         this.text=XMLUtil.escapeXmlChars(text);
     }
     @Override
-    void buildTextContent(Writer writer) throws IOException{
-        writer.write(this.text);
+    void buildTextContent(Writer writer, boolean unEscape) throws IOException{
+        writer.write(getText(unEscape));
     }
     @Override
     public boolean write(Writer writer, boolean newLineAttributes) throws IOException {
