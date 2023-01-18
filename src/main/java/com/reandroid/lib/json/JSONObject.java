@@ -14,15 +14,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.ResourceBundle;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 public class JSONObject extends JSONItem{
@@ -53,18 +46,12 @@ public class JSONObject extends JSONItem{
 
     static final Pattern NUMBER_PATTERN = Pattern.compile("-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?");
 
-    private final Map<String, Object> map;
+    private final LinkedHashMap<String, Object> map;
 
     public static final Object NULL = new Null();
 
     public JSONObject() {
-        // HashMap is used on purpose to ensure that elements are unordered by 
-        // the specification.
-        // JSON tends to be a portable transfer format to allows the container 
-        // implementations to rearrange their items for a faster element 
-        // retrieval based on associative access.
-        // Therefore, an implementation mustn't rely on the order of the item.
-        this.map = new HashMap<String, Object>();
+        this.map = new LinkedHashMap<>();
     }
 
     public JSONObject(JSONObject jo, String ... names) {
@@ -139,9 +126,9 @@ public class JSONObject extends JSONItem{
 
     public JSONObject(Map<?, ?> m) {
         if (m == null) {
-            this.map = new HashMap<String, Object>();
+            this.map = new LinkedHashMap<String, Object>();
         } else {
-            this.map = new HashMap<String, Object>(m.size());
+            this.map = new LinkedHashMap<String, Object>(m.size());
         	for (final Entry<?, ?> e : m.entrySet()) {
         	    if(e.getKey() == null) {
         	        throw new NullPointerException("Null key.");
@@ -210,7 +197,7 @@ public class JSONObject extends JSONItem{
     
 
     protected JSONObject(int initialCapacity){
-        this.map = new HashMap<String, Object>(initialCapacity);
+        this.map = new LinkedHashMap<String, Object>(initialCapacity);
     }
 
 
@@ -1374,8 +1361,8 @@ public class JSONObject extends JSONItem{
         }
     }
 
-    public Map<String, Object> toMap() {
-        Map<String, Object> results = new HashMap<String, Object>();
+    public LinkedHashMap<String, Object> toMap() {
+        LinkedHashMap<String, Object> results = new LinkedHashMap<String, Object>();
         for (Entry<String, Object> entry : this.entrySet()) {
             Object value;
             if (entry.getValue() == null || NULL.equals(entry.getValue())) {
