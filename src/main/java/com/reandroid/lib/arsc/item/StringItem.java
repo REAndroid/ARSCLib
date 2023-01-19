@@ -90,7 +90,21 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         if(styleItem==null){
             return str;
         }
-        return styleItem.applyHtml(str);
+        return styleItem.applyHtml(str, false);
+    }
+    public String getXml(){
+        String str=get();
+        if(str==null){
+            return null;
+        }
+        if(str.startsWith("*Plus taxes if applicable")){
+            String junk="";
+        }
+        StyleItem styleItem=getStyle();
+        if(styleItem==null){
+            return str;
+        }
+        return styleItem.applyHtml(str, true);
     }
     public String get(){
         return mCache;

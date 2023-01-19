@@ -27,7 +27,7 @@ public class XmlHelper {
         if(!stringItem.hasStyle()){
             element.setTextContent(stringItem.get());
         }else {
-            element.setSpannableText(stringItem.getHtml());
+            element.setSpannableText(stringItem.getXml());
         }
     }
 }

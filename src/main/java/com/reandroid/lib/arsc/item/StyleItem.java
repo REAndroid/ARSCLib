@@ -171,10 +171,14 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
                 if(ref<=0){
                     return null;
                 }
-                return new StyleSpanInfo(
+                StyleSpanInfo spanInfo = new StyleSpanInfo(
                         getStringFromPool(ref),
                         getFirstChar(i),
                         getLastChar(i));
+                if(!spanInfo.isValid()){
+                    return null;
+                }
+                return spanInfo;
             }
             @Override
             public int size() {
@@ -205,7 +209,7 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         return null;
     }
 
-    public String applyHtml(String str){
+    public String applyHtml(String str, boolean xml){
         if(str==null){
             return null;
         }
@@ -232,15 +236,46 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
                     if(isLast){
                         builder.append(info.getEndTag());
                     }else {
-                        builder.append(info.getStartTag());
+                        builder.append(info.getStartTag(xml));
                     }
                 }
             }
             if(!lastAppend){
+                if(xml){
+                    if(isWildXml(ch) && !isEntity(allChars, i)){
+                        if(ch=='>'){
+                            builder.append("&gt;");
+                        }else if(ch=='<'){
+                            builder.append("&lt;");
+                        }else if(ch=='&'){
+                            builder.append("&amp;");
+                        }
+                        continue;
+                    }
+                }
                 builder.append(ch);
             }
         }
         return builder.toString();
+    }
+    private boolean isWildXml(char ch){
+        switch (ch){
+            case '&':
+            case '<':
+            case '>':
+                return true;
+            default:
+                return false;
+        }
+    }
+    private boolean isEntity(char[] chars, int offset){
+        if((offset+4)>=chars.length){
+            return false;
+        }
+        return chars[offset]=='a'
+                && chars[offset+1]=='m'
+                && chars[offset+2]=='p'
+                && chars[offset+3]==';';
     }
     private boolean isEmpty(List<StyleSpanInfo> spanInfoList){
         if(spanInfoList.size()==0){

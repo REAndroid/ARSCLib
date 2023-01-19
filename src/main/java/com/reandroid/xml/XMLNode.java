@@ -54,7 +54,7 @@ public abstract class XMLNode {
 
     }
     boolean canAdd(XMLNode xmlNode){
-        return !mChildNodes.contains(xmlNode);
+        return xmlNode!=null;
     }
     boolean contains(XMLNode xmlNode){
         return mChildNodes.contains(xmlNode);
