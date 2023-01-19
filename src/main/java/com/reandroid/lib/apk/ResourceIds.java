@@ -736,7 +736,7 @@ import java.util.*;
                     }
                     public static Entry fromXml(XMLElement element){
                         return new Entry(
-                                Integer.decode(element.getAttributeValue("id")),
+                                ApkUtil.parseHex(element.getAttributeValue("id")),
                                 element.getAttributeValue("type"),
                                 element.getAttributeValue("name"));
                     }

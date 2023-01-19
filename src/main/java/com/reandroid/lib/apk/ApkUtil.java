@@ -21,6 +21,10 @@ import java.io.File;
 import java.util.*;
 
 public class ApkUtil {
+    public static int parseHex(String hex){
+        long l=Long.decode(hex);
+        return (int) l;
+    }
     public static String replaceRootDir(String path, String dirName){
         int i=path.indexOf('/')+1;
         path=path.substring(i);
