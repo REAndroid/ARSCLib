@@ -23,8 +23,13 @@ import java.util.zip.ZipOutputStream;
 public class ZipSerializer {
     private final List<InputSource> mSourceList;
     private WriteProgress writeProgress;
+    private WriteInterceptor writeInterceptor;
     public ZipSerializer(List<InputSource> sourceList){
         this.mSourceList=sourceList;
+    }
+
+    public void setWriteInterceptor(WriteInterceptor writeInterceptor) {
+        this.writeInterceptor = writeInterceptor;
     }
     public void setWriteProgress(WriteProgress writeProgress){
         this.writeProgress=writeProgress;
@@ -52,6 +57,10 @@ public class ZipSerializer {
         WriteProgress progress=writeProgress;
         ZipOutputStream zipOutputStream=new ZipOutputStream(outputStream);
         for(InputSource inputSource:mSourceList){
+            inputSource = interceptWrite(inputSource);
+            if(inputSource==null){
+                continue;
+            }
             if(progress!=null){
                 progress.onCompressFile(inputSource.getAlias(), inputSource.getMethod(), length);
             }
@@ -77,5 +86,12 @@ public class ZipSerializer {
             zipEntry.setSize(inputSource.getLength());
         }
         return zipEntry;
+    }
+    private InputSource interceptWrite(InputSource inputSource){
+        WriteInterceptor interceptor=writeInterceptor;
+        if(interceptor!=null){
+            return interceptor.onWriteArchive(inputSource);
+        }
+        return inputSource;
     }
 }

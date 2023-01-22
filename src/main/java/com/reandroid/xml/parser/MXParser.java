@@ -14,8 +14,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
-import com.reandroid.xml.parser.XmlPullParser;
-import com.reandroid.xml.parser.XmlPullParserException;
 
 public class MXParser implements XmlPullParser
 {

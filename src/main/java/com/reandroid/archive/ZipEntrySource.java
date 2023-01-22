@@ -20,7 +20,7 @@ import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class ZipEntrySource extends InputSource{
+public class ZipEntrySource extends InputSource {
     private final ZipFile zipFile;
     private final ZipEntry zipEntry;
     public ZipEntrySource(ZipFile zipFile, ZipEntry zipEntry){

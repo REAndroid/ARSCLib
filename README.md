@@ -60,21 +60,21 @@ cd ARSCLib
 <details><summary> <code><b>See java example</b></code></summary>
 
 ```java
-import com.reandroid.lib.arsc.chunk.TableBlock;
-import com.reandroid.lib.arsc.chunk.PackageBlock;
-import com.reandroid.lib.arsc.chunk.xml.AndroidManifestBlock;
-import com.reandroid.lib.arsc.chunk.xml.ResXmlElement;
-import com.reandroid.lib.arsc.chunk.xml.ResXmlAttribute;
+import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.arsc.chunk.xml.ResXmlElement;
+import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
 
-public static void exampleManifest() throws IOException{
+public static void exampleManifest()throws IOException{
         File inFile=new File("AndroidManifest.xml");
 
         // *** Loading AndroidManifest ***
-        AndroidManifestBlock manifestBlock = AndroidManifestBlock.load(inFile);
+        AndroidManifestBlock manifestBlock=AndroidManifestBlock.load(inFile);
 
         System.out.println("Package name: "+manifestBlock.getPackageName());
 
-        List<String> usesPermissionList = manifestBlock.getUsesPermissions();
+        List<String> usesPermissionList=manifestBlock.getUsesPermissions();
         for(String usesPermission:usesPermissionList){
         System.out.println("Uses permission: "+usesPermission);
         }
@@ -90,9 +90,9 @@ public static void exampleManifest() throws IOException{
         manifestBlock.setVersionName("9.0.4");
 
         // Modify xml attribute
-        List<ResXmlElement> activityList = manifestBlock.listActivities();
+        List<ResXmlElement> activityList=manifestBlock.listActivities();
         for(ResXmlElement activityElement:activityList){
-        ResXmlAttribute attributeName = activityElement.searchAttributeByResourceId(AndroidManifestBlock.ID_name);
+        ResXmlAttribute attributeName=activityElement.searchAttributeByResourceId(AndroidManifestBlock.ID_name);
         System.out.println("Old activity name: "+attributeName.getValueAsString());
         attributeName.setValueAsString("com.app.MyActivity");
         System.out.println("New activity name: "+attributeName.getValueAsString());

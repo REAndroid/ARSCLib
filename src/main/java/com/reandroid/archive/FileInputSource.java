@@ -17,7 +17,7 @@ package com.reandroid.archive;
 
 import java.io.*;
 
-public class FileInputSource extends InputSource{
+public class FileInputSource extends InputSource {
     private final File file;
     public FileInputSource(File file, String name){
         super(name);

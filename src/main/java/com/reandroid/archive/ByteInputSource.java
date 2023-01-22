@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class ByteInputSource extends InputSource{
+public class ByteInputSource extends InputSource {
     private byte[] inBytes;
     public ByteInputSource(byte[] inBytes, String name) {
         super(name);
