@@ -293,10 +293,10 @@ import java.io.*;
         }
         return buff;
     }
-    public static HeaderBlock readHeaderBlock(File file) throws IOException{
-        return HeaderBlock.readHeaderBlock(file);
+    public static InfoHeader readHeaderBlock(File file) throws IOException{
+        return InfoHeader.readHeaderBlock(file);
     }
-    public static HeaderBlock readHeaderBlock(InputStream inputStream) throws IOException{
-        return HeaderBlock.readHeaderBlock(inputStream);
+    public static InfoHeader readHeaderBlock(InputStream inputStream) throws IOException{
+        return InfoHeader.readHeaderBlock(inputStream);
     }
 }

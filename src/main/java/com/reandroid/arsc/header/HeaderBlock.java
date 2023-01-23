@@ -225,18 +225,6 @@ import java.util.List;
         return builder.toString();
     }
 
-    public static HeaderBlock readHeaderBlock(File file) throws IOException{
-        InputStream inputStream = new FileInputStream(file);
-        HeaderBlock headerBlock = readHeaderBlock(inputStream);
-        inputStream.close();
-        return headerBlock;
-    }
-    public static HeaderBlock readHeaderBlock(InputStream inputStream) throws IOException {
-        HeaderBlock headerBlock=new HeaderBlock(ChunkType.NULL.ID);
-        headerBlock.readBytes(inputStream);
-        return headerBlock;
-    }
-
     public interface HeaderLoaded{
         void onChunkTypeLoaded(short type);
         void onHeaderSizeLoaded(int headerSize);

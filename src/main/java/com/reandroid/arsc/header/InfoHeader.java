@@ -15,7 +15,13 @@
   */
  package com.reandroid.arsc.header;
 
+ import com.reandroid.arsc.io.BlockReader;
  import com.reandroid.arsc.item.ByteArray;
+
+ import java.io.File;
+ import java.io.FileInputStream;
+ import java.io.IOException;
+ import java.io.InputStream;
 
  public class InfoHeader extends HeaderBlock{
      public InfoHeader(short type) {
@@ -30,5 +36,23 @@
      @Override
      public int countBytes() {
          return 8;
+     }
+
+
+     public static InfoHeader readHeaderBlock(File file) throws IOException {
+         InputStream inputStream = new FileInputStream(file);
+         InfoHeader infoHeader = readHeaderBlock(inputStream);
+         inputStream.close();
+         return infoHeader;
+     }
+     public static InfoHeader readHeaderBlock(InputStream inputStream) throws IOException {
+         InfoHeader infoHeader=new InfoHeader();
+         infoHeader.readBytes(inputStream);
+         return infoHeader;
+     }
+     public static InfoHeader readHeaderBlock(BlockReader blockReader) throws IOException {
+         InfoHeader infoHeader=new InfoHeader();
+         infoHeader.readBytes(blockReader);
+         return infoHeader;
      }
  }
