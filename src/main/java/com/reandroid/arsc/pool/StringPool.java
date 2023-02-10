@@ -31,13 +31,13 @@ package com.reandroid.arsc.pool;
  import java.util.*;
 
 
- public abstract class BaseStringPool<T extends StringItem> extends Chunk<StringPoolHeader> implements BlockLoad, JSONConvert<JSONArray>, Comparator<String> {
+ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolHeader> implements BlockLoad, JSONConvert<JSONArray>, Comparator<String> {
     private final StringArray<T> mArrayStrings;
     private final StyleArray mArrayStyles;
 
     private final Map<String, StringGroup<T>> mUniqueMap;
 
-    BaseStringPool(boolean is_utf8){
+    StringPool(boolean is_utf8){
         super(new StringPoolHeader(), 4);
 
         IntegerArray offsetStrings = new IntegerArray();

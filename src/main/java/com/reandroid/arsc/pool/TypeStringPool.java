@@ -23,24 +23,24 @@ import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.TypeString;
 
-public class TypeStringPool extends BaseStringPool<TypeString> {
+public class TypeStringPool extends StringPool<TypeString> {
     private final IntegerItem mTypeIdOffset;
     public TypeStringPool(boolean is_utf8, IntegerItem typeIdOffset) {
         super(is_utf8);
         this.mTypeIdOffset = typeIdOffset;
     }
-    public byte idOf(String typeName){
+    public int idOf(String typeName){
         return idOf(getByName(typeName));
     }
     /**
      * Resolves id of {@link TypeBlock}
      * Not recommend to use unless unless you are sure of proper pool
      **/
-    public byte idOf(TypeString typeString){
+    public int idOf(TypeString typeString){
         if(typeString==null){
             return 0;
         }
-        return (byte) (typeString.getIndex()+mTypeIdOffset.get()+1);
+        return (typeString.getIndex()+mTypeIdOffset.get()+1);
     }
     /**
      * Searches string entry {@link TypeBlock}

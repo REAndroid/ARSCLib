@@ -23,7 +23,7 @@ import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ResXmlString;
 
-public class ResXmlStringPool extends BaseStringPool<ResXmlString> {
+public class ResXmlStringPool extends StringPool<ResXmlString> {
     public ResXmlStringPool(boolean is_utf8) {
         super(is_utf8);
     }

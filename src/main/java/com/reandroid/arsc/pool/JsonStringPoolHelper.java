@@ -12,8 +12,8 @@ import java.util.*;
 
 class JsonStringPoolHelper<T extends StringItem> {
 
-    private final BaseStringPool<T> stringPool;
-    JsonStringPoolHelper(BaseStringPool<T> stringPool){
+    private final StringPool<T> stringPool;
+    JsonStringPoolHelper(StringPool<T> stringPool){
         this.stringPool=stringPool;
     }
     void loadStyledStrings(JSONArray jsonArray) {

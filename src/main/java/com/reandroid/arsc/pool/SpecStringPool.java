@@ -23,7 +23,7 @@ import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.SpecString;
 
-public class SpecStringPool extends BaseStringPool<SpecString> {
+public class SpecStringPool extends StringPool<SpecString> {
     public SpecStringPool(boolean is_utf8){
         super(is_utf8);
     }
