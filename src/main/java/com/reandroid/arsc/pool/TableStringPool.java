@@ -20,7 +20,7 @@ import com.reandroid.arsc.array.TableStringArray;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.chunk.UnknownChunk;
 import com.reandroid.arsc.header.HeaderBlock;
-import com.reandroid.arsc.header.InfoHeader;
+import com.reandroid.arsc.header.TableHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
@@ -29,7 +29,7 @@ import com.reandroid.arsc.item.TableString;
 import java.io.IOException;
 import java.io.InputStream;
 
- public class TableStringPool extends BaseStringPool<TableString> {
+ public class TableStringPool extends StringPool<TableString> {
     public TableStringPool(boolean is_utf8) {
         super(is_utf8);
     }
@@ -63,7 +63,8 @@ import java.io.InputStream;
       * loading other chunks
       */
     public static TableStringPool readFromTable(InputStream inputStream) throws IOException {
-        InfoHeader tableHeader = InfoHeader.readHeaderBlock(inputStream);
+        TableHeader tableHeader = new TableHeader();
+        tableHeader.readBytes(inputStream);
         if(tableHeader.getChunkType()!=ChunkType.TABLE){
             throw new IOException("Not TableBlock: "+tableHeader);
         }
