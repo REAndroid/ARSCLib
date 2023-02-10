@@ -15,6 +15,7 @@
   */
 package com.reandroid.apk.xmlencoder;
 
+import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.array.StyleArray;
 import com.reandroid.arsc.decoder.ValueDecoder;
 import com.reandroid.arsc.item.StyleItem;
@@ -49,9 +50,12 @@ import java.util.*;
         if(spannableList.size()==0){
             return;
         }
+        StringArray<TableString> stringsArray = stringPool.getStringsArray();
+        StyleArray styleArray = stringPool.getStyleArray();
 
-        Map<String, TableString> stringsMap = stringPool
-                .insertStrings(XMLSpannable.toTextList(spannableList));
+        int stylesCount = spannableList.size();
+        stringsArray.setChildesCount(stylesCount);
+        styleArray.setChildesCount(stylesCount);
 
         List<String> tagList =
                 new ArrayList<>(XMLSpannable.tagList(spannableList));
@@ -59,21 +63,23 @@ import java.util.*;
         Map<String, TableString> tagsMap =
                 stringPool.insertStrings(tagList);
 
-        StyleArray styleArray = stringPool.getStyleArray();
-        styleArray.setChildesCount(stringsMap.size());
+        List<String> textList = XMLSpannable.toTextList(spannableList);
 
-        for(XMLSpannable spannable:spannableList){
+        for(int i=0;i<stylesCount;i++){
+            XMLSpannable spannable = spannableList.get(i);
+            TableString tableString = stringsArray.get(i);
+            StyleItem styleItem = styleArray.get(i);
 
-            TableString tableString=stringsMap.get(spannable.getText());
-            StyleItem styleItem = styleArray.get(tableString.getIndex());
+            tableString.set(textList.get(i));
 
             for(XMLSpanInfo spanInfo:spannable.getSpanInfoList()){
-                int tagRef=tagsMap.get(spanInfo.tag).getIndex();
+                TableString tag = tagsMap.get(spanInfo.tag);
+                int tagRef=tag.getIndex();
                 styleItem.addStylePiece(tagRef, spanInfo.start, spanInfo.end);
             }
         }
         stringPool.refreshUniqueIdMap();
-    }
+     }
     private List<XMLSpannable> buildSpannable(){
         List<XMLSpannable> results=new ArrayList<>();
         Set<String> removeList=new HashSet<>();
