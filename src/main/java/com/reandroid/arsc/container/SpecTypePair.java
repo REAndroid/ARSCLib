@@ -53,6 +53,15 @@ public class SpecTypePair extends BlockContainer<Block>
     public SpecTypePair(){
         this(new SpecBlock(), new TypeBlockArray());
     }
+    public EntryBlock getAnyEntry(String name){
+        for(TypeBlock typeBlock:listTypeBlocks()){
+            EntryBlock entryBlock=typeBlock.searchByEntryName(name);
+            if(entryBlock!=null){
+                return entryBlock;
+            }
+        }
+        return null;
+    }
     public void sortTypes(){
         getTypeBlockArray().sort();
     }
@@ -74,6 +83,9 @@ public class SpecTypePair extends BlockContainer<Block>
     public TypeBlock getOrCreateTypeBlock(String qualifiers){
         return getTypeBlockArray().getOrCreate(qualifiers);
     }
+    public TypeBlock getOrCreateTypeBlock(ResConfig resConfig){
+        return getTypeBlockArray().getOrCreate(resConfig);
+    }
     public TypeBlock getTypeBlock(String qualifiers){
         return getTypeBlockArray().getTypeBlock(qualifiers);
     }
@@ -84,8 +96,8 @@ public class SpecTypePair extends BlockContainer<Block>
     public byte getTypeId(){
         return mSpecBlock.getTypeId();
     }
-    public int getTypeIdInt(){
-        return mSpecBlock.getTypeIdInt();
+    public int getId(){
+        return mSpecBlock.getId();
     }
     public void setTypeId(byte id){
         mSpecBlock.setTypeId(id);
@@ -177,13 +189,17 @@ public class SpecTypePair extends BlockContainer<Block>
         return typeEntryCount;
     }
     public TypeString getTypeString(){
-        return getTypeBlockArray().getTypeString();
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock!=null){
+            return packageBlock.getTypeStringPool().getById(getId());
+        }
+        return null;
     }
 
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
-        jsonObject.put("id", getSpecBlock().getTypeIdInt());
+        jsonObject.put("id", getSpecBlock().getId());
         jsonObject.put("types", getTypeBlockArray().toJson());
         return jsonObject;
     }
@@ -204,7 +220,7 @@ public class SpecTypePair extends BlockContainer<Block>
     }
     @Override
     public int compareTo(SpecTypePair specTypePair) {
-        return Integer.compare(getTypeIdInt(), specTypePair.getTypeIdInt());
+        return Integer.compare(getId(), specTypePair.getId());
     }
     @Override
     public String toString(){

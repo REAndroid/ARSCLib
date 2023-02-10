@@ -475,7 +475,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
             return 0;
         }
         int pkgId=packageBlock.getId();
-        int typeId=typeBlock.getTypeIdInt();
+        int typeId=typeBlock.getId();
         int entryId=getIndex();
         return ((pkgId << 24) | (typeId << 16) | entryId);
     }
@@ -607,7 +607,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         if(isNull()){
             return;
         }
-        counter.addCount(countBytes());
+        //counter.addCount(countBytes());
         entryHeader.onCountUpTo(counter);
         mSpecReference.onCountUpTo(counter);
         mResValue.onCountUpTo(counter);
@@ -712,7 +712,7 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         mResValue.onDataLoaded();
     }
     public void merge(EntryBlock entryBlock){
-        if(entryBlock==null||entryBlock==this||entryBlock.isNull()){
+        if(!shouldMerge(entryBlock)){
             return;
         }
         String name=entryBlock.getName();
@@ -735,6 +735,27 @@ public class EntryBlock extends Block implements JSONConvert<JSONObject> {
         setSpecReference(spec.getIndex());
         setPublic(entryBlock.isPublic());
         setWeak(entryBlock.isWeak());
+    }
+    private boolean shouldMerge(EntryBlock coming){
+        if(coming == null || coming == this || coming.isNull()){
+            return false;
+        }
+        if(this.isNull()){
+            return true;
+        }
+        BaseResValue value = this.getResValue();
+        if(value instanceof ResValueInt){
+            ValueType valueType = ((ResValueInt)value).getValueType();
+            if(valueType==null || valueType==ValueType.NULL){
+                return true;
+            }
+        }
+        value = coming.getResValue();
+        if(value instanceof ResValueInt){
+            ValueType valueType = ((ResValueInt)value).getValueType();
+            return valueType!=null && valueType != ValueType.NULL;
+        }
+        return true;
     }
     private ResValueBag getOrCreateResValueBag(){
         if(mResValue instanceof ResValueBag){

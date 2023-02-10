@@ -48,7 +48,7 @@ public abstract class BlockItem extends Block {
     final void setBytesLength(int length){
         setBytesLength(length, true);
     }
-    final void setBytesLength(int length, boolean notify){
+    protected final void setBytesLength(int length, boolean notify){
         if(length<0){
             length=0;
         }
@@ -121,5 +121,31 @@ public abstract class BlockItem extends Block {
         onBytesChanged();
         super.notifyBlockLoad();
         return bts.length;
+    }
+
+    protected static int getInteger(byte[] bts, int offset){
+        if((offset+4)>bts.length){
+            return 0;
+        }
+        return bts[offset] & 0xff |
+                (bts[offset+1] & 0xff) << 8 |
+                (bts[offset+2] & 0xff) << 16 |
+                (bts[offset+3] & 0xff) << 24;
+    }
+    protected static short getShort(byte[] bts, int offset){
+        return (short) (bts[offset] & 0xff | (bts[offset+1] & 0xff) << 8);
+    }
+    protected static void putInteger(byte[] bts, int offset, int val){
+        if((offset+4)>bts.length){
+            return;
+        }
+        bts[offset+3]= (byte) (val >>> 24 & 0xff);
+        bts[offset+2]= (byte) (val >>> 16 & 0xff);
+        bts[offset+1]= (byte) (val >>> 8 & 0xff);
+        bts[offset]= (byte) (val & 0xff);
+    }
+    protected static void putShort(byte[] bts, int offset, short val){
+        bts[offset+1]= (byte) (val >>> 8 & 0xff);
+        bts[offset]= (byte) (val & 0xff);
     }
 }

@@ -105,6 +105,9 @@ public class ByteArray extends BlockItem {
     }
     public final void putInteger(int offset, int val){
         byte[] bts = getBytesInternal();
+        if((offset+4)>bts.length){
+            return;
+        }
         bts[offset+3]= (byte) (val >>> 24 & 0xff);
         bts[offset+2]= (byte) (val >>> 16 & 0xff);
         bts[offset+1]= (byte) (val >>> 8 & 0xff);
@@ -112,6 +115,9 @@ public class ByteArray extends BlockItem {
     }
     public final int getInteger(int offset){
         byte[] bts = getBytesInternal();
+        if((offset+4)>bts.length){
+            return 0;
+        }
         return bts[offset] & 0xff |
                 (bts[offset+1] & 0xff) << 8 |
                 (bts[offset+2] & 0xff) << 16 |

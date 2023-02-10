@@ -166,7 +166,7 @@ public class ResValueBag extends BaseResValue {
         refreshCount();
     }
     public void merge(ResValueBag resValueBag){
-        if(resValueBag==null||resValueBag==this){
+        if(resValueBag==null || resValueBag==this || resValueBag.getCount()==0){
             return;
         }
         setParentId(resValueBag.getParentId());

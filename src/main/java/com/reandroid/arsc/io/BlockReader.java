@@ -47,6 +47,16 @@ import java.io.*;
     public BlockReader(File file) throws IOException {
         this(loadBuffer(file));
     }
+    public int readUnsignedShort() throws IOException {
+        return 0x0000ffff & readShort();
+    }
+    public short readShort() throws IOException {
+        int pos = getPosition();
+        byte[] bts = new byte[2];
+        readFully(bts);
+        seek(pos);
+        return toShort(bts, 0);
+    }
     public InfoHeader readHeaderBlock() throws IOException {
         InfoHeader infoHeader = new InfoHeader();
         if(available() < infoHeader.countBytes()){
@@ -79,6 +89,10 @@ import java.io.*;
                 (bts[offset+1] & 0xff) << 8 |
                 (bts[offset+2] & 0xff) << 16 |
                 (bts[offset+3] & 0xff) << 24;
+    }
+    private short toShort(byte[] bts, int offset){
+         return (short) (bts[offset] & 0xff |
+                          (bts[offset+1] & 0xff) << 8);
     }
     public byte[] getBytes(){
         int len = length();

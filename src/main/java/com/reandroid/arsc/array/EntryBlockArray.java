@@ -122,24 +122,8 @@ public class EntryBlockArray extends OffsetBlockArray<EntryBlock> implements JSO
         while (itr.hasNext()){
             EntryBlock comingBlock=itr.next();
             EntryBlock existingBlock=get(comingBlock.getIndex());
-            if(shouldMerge(existingBlock, comingBlock)){
-                existingBlock.merge(comingBlock);
-            }
+            existingBlock.merge(comingBlock);
         }
-    }
-    private boolean shouldMerge(EntryBlock exist, EntryBlock coming){
-        if(exist.isNull()){
-            return true;
-        }
-        if(coming.isNull()){
-            return false;
-        }
-        BaseResValue resVal = coming.getResValue();
-        if(resVal instanceof ResValueInt){
-            ValueType valueType=((ResValueInt)resVal).getValueType();
-            return valueType!=ValueType.INT_BOOLEAN;
-        }
-        return true;
     }
     @Override
     public String toString(){

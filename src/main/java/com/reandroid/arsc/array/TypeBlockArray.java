@@ -20,6 +20,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
+import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
@@ -142,16 +143,12 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         }
     }
     public byte getTypeId(){
-        if(mTypeId != 0){
-            return mTypeId;
-        }
         SpecBlock specBlock=getSpecBlock();
         if(specBlock!=null){
-            byte id=specBlock.getTypeId();
-            if(id!=0){
-                mTypeId=id;
-                return id;
-            }
+            return specBlock.getTypeId();
+        }
+        if(mTypeId != 0){
+            return mTypeId;
         }
         TypeBlock[] allChildes=getChildes();
         if(allChildes==null){
@@ -192,8 +189,8 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     private SpecBlock getSpecBlock(){
         Block parent=getParent();
         while(parent!=null){
-            if(parent instanceof SpecBlock){
-                return (SpecBlock)parent;
+            if(parent instanceof SpecTypePair){
+                return ((SpecTypePair) parent).getSpecBlock();
             }
             parent=parent.getParent();
         }

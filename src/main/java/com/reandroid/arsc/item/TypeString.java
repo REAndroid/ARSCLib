@@ -23,13 +23,13 @@ package com.reandroid.arsc.item;
     public TypeString(boolean utf8) {
         super(utf8);
     }
-    public byte getId(){
+    public int getId(){
         TypeStringPool stringPool=getTypeStringPool();
         if(stringPool!=null){
             return stringPool.idOf(this);
         }
         // Should not reach here , this means it not added to string pool
-        return (byte) (getIndex()+1);
+        return getIndex()+1;
     }
     @Override
     public StyleItem getStyle(){

@@ -72,8 +72,18 @@ public class PackageHeader extends HeaderBlock{
     public IntegerItem getSpecStringPoolCount() {
         return specStringPoolCount;
     }
-    public IntegerItem getTypeIdOffset() {
+    public IntegerItem getTypeIdOffsetItem() {
         return typeIdOffset;
+    }
+    public void setTypeIdOffset(int offset){
+        typeIdOffset.set(offset);
+        typeIdOffsetContainer.setItem(typeIdOffset);
+    }
+    public int getTypeIdOffset() {
+        if(typeIdOffset.getParent()==null){
+            typeIdOffset.set(0);
+        }
+        return typeIdOffset.get();
     }
     @Override
     void onHeaderSizeLoaded(int size){

@@ -182,7 +182,7 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
             if(pair==null){
                 continue;
             }
-            int id=pair.getTypeIdInt();
+            int id=pair.getId();
             if(!firstFound){
                 result=id;
             }
@@ -204,7 +204,7 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
             if(pair==null){
                 continue;
             }
-            int id=pair.getTypeIdInt();
+            int id=pair.getId();
             if(id>result){
                 result=id;
             }

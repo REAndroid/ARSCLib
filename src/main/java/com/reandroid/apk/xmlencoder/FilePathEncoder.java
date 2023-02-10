@@ -64,10 +64,10 @@ package com.reandroid.apk.xmlencoder;
     public InputSource encodeFileEntry(File resFile){
         String type = EncodeUtil.getTypeNameFromResFile(resFile);
         PackageBlock packageBlock = materials.getCurrentPackage();
-        byte typeId=packageBlock
+        int typeId=packageBlock
                 .getTypeStringPool().idOf(type);
         String qualifiers = EncodeUtil.getQualifiersFromResFile(resFile);
-        TypeBlock typeBlock = packageBlock.getOrCreateTypeBlock(typeId, qualifiers);
+        TypeBlock typeBlock = packageBlock.getOrCreateTypeBlock((byte)typeId, qualifiers);
         String name = EncodeUtil.getEntryNameFromResFile(resFile);
         int resourceId=materials.resolveLocalResourceId(type, name);
 

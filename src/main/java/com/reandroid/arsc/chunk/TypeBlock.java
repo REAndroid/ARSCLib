@@ -25,6 +25,7 @@ import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.value.EntryBlock;
 import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.arsc.value.ValueType;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
@@ -81,16 +82,16 @@ public class TypeBlock extends Chunk<TypeHeader>
             return null;
         }
         TypeStringPool typeStringPool=packageBlock.getTypeStringPool();
-        mTypeString=typeStringPool.getById(getTypeIdInt());
+        mTypeString=typeStringPool.getById(getId());
         return mTypeString;
     }
     public byte getTypeId(){
         return getHeaderBlock().getId().get();
     }
-    public int getTypeIdInt(){
+    public int getId(){
         return getHeaderBlock().getId().unsignedInt();
     }
-    public void setTypeId(int id){
+    public void setId(int id){
         setTypeId((byte) (0xff & id));
     }
     public void setTypeId(byte id){
@@ -98,7 +99,7 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     public void setTypeName(String name){
         TypeStringPool typeStringPool=getTypeStringPool();
-        int id=getTypeIdInt();
+        int id= getId();
         TypeString typeString=typeStringPool.getById(id);
         if(typeString==null){
             typeString=typeStringPool.getOrCreate(id, name);
@@ -162,6 +163,29 @@ public class TypeBlock extends Chunk<TypeHeader>
         }
         entryBlock.setNull(true);
     }
+    public EntryBlock getOrCreateEntry(String name){
+        for(EntryBlock entryBlock:getEntryBlockArray().listItems()){
+            if(name.equals(entryBlock.getName())){
+                return entryBlock;
+            }
+        }
+        SpecTypePair specTypePair = getParentSpecTypePair();
+        EntryBlock exist=specTypePair.getAnyEntry(name);
+        int id;
+        if(exist!=null){
+            id=exist.getIndex();
+        }else {
+            id = specTypePair.getHighestEntryCount();
+        }
+        SpecString specString = getPackageBlock()
+                .getSpecStringPool().getOrCreate(name);
+        EntryBlock entryBlock = getOrCreateEntry((short) id);
+        if(entryBlock.isNull()){
+            entryBlock.setValueAsRaw(ValueType.NULL, 0);
+        }
+        entryBlock.setSpecReference(specString.getIndex());
+        return entryBlock;
+    }
     public EntryBlock getOrCreateEntry(short entryId){
         return getEntryBlockArray().getOrCreate(entryId);
     }
@@ -219,7 +243,7 @@ public class TypeBlock extends Chunk<TypeHeader>
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
-        jsonObject.put(NAME_id, getTypeIdInt());
+        jsonObject.put(NAME_id, getId());
         jsonObject.put(NAME_name, getTypeName());
         jsonObject.put(NAME_config, getResConfig().toJson());
         jsonObject.put(NAME_entries, getEntryBlockArray().toJson());
@@ -227,7 +251,7 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     @Override
     public void fromJson(JSONObject json) {
-        setTypeId(json.getInt(NAME_id));
+        setId(json.getInt(NAME_id));
         String name = json.optString(NAME_name);
         if(name!=null){
             setTypeName(name);
@@ -250,8 +274,8 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     @Override
     public int compareTo(TypeBlock typeBlock) {
-        int id1=getTypeIdInt();
-        int id2=typeBlock.getTypeIdInt();
+        int id1= getId();
+        int id2=typeBlock.getId();
         if(id1!=id2){
             return Integer.compare(id1, id2);
         }

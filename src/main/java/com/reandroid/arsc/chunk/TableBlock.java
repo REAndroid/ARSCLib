@@ -22,6 +22,7 @@ import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.header.TableHeader;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.StagedAliasEntry;
 import com.reandroid.common.Frameworks;
@@ -34,7 +35,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class TableBlock extends Chunk<TableHeader> implements JSONConvert<JSONObject> {
+public class TableBlock extends Chunk<TableHeader>
+        implements MainChunk, JSONConvert<JSONObject> {
     private final TableStringPool mTableStringPool;
     private final PackageArray mPackageArray;
     private final Set<TableBlock> mFrameWorks=new HashSet<>();
@@ -54,6 +56,10 @@ public class TableBlock extends Chunk<TableHeader> implements JSONConvert<JSONOb
     }
     public Collection<PackageBlock> listPackages(){
         return getPackageArray().listItems();
+    }
+    @Override
+    public TableStringPool getStringPool() {
+        return mTableStringPool;
     }
     public TableStringPool getTableStringPool(){
         return mTableStringPool;

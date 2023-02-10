@@ -30,6 +30,7 @@ package com.reandroid.arsc.chunk;
  import com.reandroid.arsc.pool.TypeStringPool;
  import com.reandroid.arsc.value.EntryBlock;
  import com.reandroid.arsc.value.LibraryInfo;
+ import com.reandroid.arsc.value.ResConfig;
  import com.reandroid.arsc.value.StagedAliasEntry;
  import com.reandroid.json.JSONConvert;
  import com.reandroid.json.JSONObject;
@@ -51,7 +52,7 @@ package com.reandroid.arsc.chunk;
         super(new PackageHeader(), 3);
         PackageHeader header = getHeaderBlock();
 
-        this.mTypeStringPool=new TypeStringPool(false, header.getTypeIdOffset());
+        this.mTypeStringPool=new TypeStringPool(false, header.getTypeIdOffsetItem());
         this.mSpecStringPool=new SpecStringPool(true);
 
         this.mBody = new PackageBody();
@@ -61,6 +62,34 @@ package com.reandroid.arsc.chunk;
         addChild(mTypeStringPool);
         addChild(mSpecStringPool);
         addChild(mBody);
+    }
+    public EntryBlock getOrCreate(String qualifiers, String type, String name){
+        ResConfig resConfig = new ResConfig();
+        resConfig.parseQualifiers(qualifiers);
+        return getOrCreate(resConfig, type, name);
+    }
+    public EntryBlock getOrCreate(ResConfig resConfig, String type, String name){
+        SpecTypePair specTypePair = getOrCreateSpecType(type);
+        TypeBlock typeBlock = specTypePair.getOrCreateTypeBlock(resConfig);
+        return typeBlock.getOrCreateEntry(name);
+    }
+    public SpecTypePair getOrCreateSpecType(String type){
+        int last = 0;
+        for(SpecTypePair specTypePair:listAllSpecTypePair()){
+            if(type.equals(specTypePair.getTypeName())){
+                return specTypePair;
+            }
+            int id = specTypePair.getId();
+            if(id>last){
+                last=id;
+            }
+        }
+        last++;
+        getTypeStringPool().getOrCreate(last, type);
+        return getSpecTypePairArray().getOrCreate((byte) last);
+    }
+    public int getTypeIdOffset(){
+        return getHeaderBlock().getTypeIdOffset();
     }
     public BlockList<UnknownChunk> getUnknownChunkList(){
          return mBody.getUnknownChunkList();
@@ -270,7 +299,7 @@ package com.reandroid.arsc.chunk;
         //int largest=getSpecTypePairArray().getHighestTypeId();
         //int count=getTypeStringPool().countStrings();
         //getHeaderBlock().getTypeIdOffset().set(count-largest);
-        getHeaderBlock().getTypeIdOffset().set(0);
+        getHeaderBlock().getTypeIdOffsetItem().set(0);
     }
     public void onEntryAdded(EntryBlock entryBlock){
         updateEntry(entryBlock);

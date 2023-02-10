@@ -92,7 +92,7 @@ class XMLValuesEncoder {
     private TypeBlock getTypeBlock(String type, String qualifiers){
         PackageBlock packageBlock = getMaterials().getCurrentPackage();
         TypeStringPool typeStringPool = packageBlock.getTypeStringPool();
-        byte typeId = typeStringPool.idOf(type);
+        byte typeId = (byte) typeStringPool.idOf(type);
         SpecTypePair specTypePair
                 = packageBlock.getSpecTypePairArray().getOrCreate(typeId);
         int highest = specTypePair.getHighestEntryCount();

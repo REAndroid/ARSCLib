@@ -18,7 +18,7 @@ package com.reandroid.arsc.item;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.model.StyleSpanInfo;
-import com.reandroid.arsc.pool.BaseStringPool;
+import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
@@ -64,7 +64,7 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         super.put(i, val);
     }
     public void addStylePiece(String tag, int firstChar, int lastChar){
-        BaseStringPool<?> stringPool = getStringPool();
+        StringPool<?> stringPool = getStringPool();
         if(stringPool==null){
             throw new IllegalArgumentException("Null string pool, must be added to parent StyleArray first");
         }
@@ -188,7 +188,7 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         return mSpanInfoList;
     }
     private String getStringFromPool(int ref){
-        BaseStringPool<?> stringPool = getStringPool();
+        StringPool<?> stringPool = getStringPool();
         if(stringPool==null){
             return null;
         }
@@ -198,11 +198,11 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         }
         return stringItem.get();
     }
-    private BaseStringPool<?> getStringPool(){
+    private StringPool<?> getStringPool(){
         Block parent=getParent();
         while (parent!=null){
-            if(parent instanceof BaseStringPool){
-                return (BaseStringPool<?>)parent;
+            if(parent instanceof StringPool){
+                return (StringPool<?>)parent;
             }
             parent=parent.getParent();
         }
@@ -310,7 +310,7 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
     public void addSpanInfo(String tag, int first, int last){
         int index=getStylePieceCount();
         setStylePieceCount(index+1);
-        BaseStringPool<?> stringPool = getStringPool();
+        StringPool<?> stringPool = getStringPool();
         if(stringPool==null){
             throw new IllegalArgumentException("Null string pool, must be added to parent StyleArray first");
         }

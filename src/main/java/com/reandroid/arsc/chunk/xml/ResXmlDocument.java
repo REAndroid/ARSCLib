@@ -17,6 +17,7 @@
 
  import com.reandroid.arsc.chunk.Chunk;
  import com.reandroid.arsc.chunk.ChunkType;
+ import com.reandroid.arsc.chunk.MainChunk;
  import com.reandroid.arsc.container.SingleBlockContainer;
  import com.reandroid.arsc.header.HeaderBlock;
  import com.reandroid.arsc.io.BlockReader;
@@ -36,7 +37,8 @@
  import java.util.List;
  import java.util.Set;
 
- public class ResXmlDocument extends Chunk<HeaderBlock> implements JSONConvert<JSONObject> {
+ public class ResXmlDocument extends Chunk<HeaderBlock>
+         implements MainChunk, JSONConvert<JSONObject> {
      private final ResXmlStringPool mResXmlStringPool;
      private final ResXmlIDMap mResXmlIDMap;
      private ResXmlElement mResXmlElement;
@@ -160,6 +162,7 @@
          }
          return false;
      }
+     @Override
      public ResXmlStringPool getStringPool(){
          return mResXmlStringPool;
      }

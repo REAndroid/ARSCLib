@@ -42,14 +42,15 @@
      public byte getTypeId(){
          return getHeaderBlock().getId().get();
      }
-     public int getTypeIdInt(){
+     public int getId(){
          return getHeaderBlock().getId().unsignedInt();
      }
-     public void setTypeId(int id){
+     public void setId(int id){
          setTypeId((byte) (0xff & id));
      }
      public void setTypeId(byte id){
          getHeaderBlock().getId().set(id);
+         getTypeBlockArray().setTypeId(id);
      }
      public TypeBlockArray getTypeBlockArray(){
          SpecTypePair specTypePair=getSpecTypePair();
@@ -94,12 +95,12 @@
      @Override
      public JSONObject toJson() {
          JSONObject jsonObject=new JSONObject();
-         jsonObject.put(TypeBlock.NAME_id, getTypeIdInt());
+         jsonObject.put(TypeBlock.NAME_id, getId());
          return jsonObject;
      }
 
      @Override
      public void fromJson(JSONObject json) {
-         setTypeId(json.getInt(TypeBlock.NAME_id));
+         setId(json.getInt(TypeBlock.NAME_id));
      }
  }

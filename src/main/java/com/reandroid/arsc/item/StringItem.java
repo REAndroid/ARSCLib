@@ -17,7 +17,7 @@ package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.pool.BaseStringPool;
+import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
@@ -212,18 +212,18 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         return styleItem.getSpanInfoList().size()>0;
     }
     public StyleItem getStyle(){
-        BaseStringPool<?> stringPool=getStringPool();
+        StringPool<?> stringPool=getStringPool();
         if(stringPool==null){
             return null;
         }
         int index=getIndex();
         return stringPool.getStyle(index);
     }
-    private BaseStringPool<?> getStringPool(){
+    private StringPool<?> getStringPool(){
         Block parent=getParent();
         while (parent!=null){
-            if(parent instanceof BaseStringPool){
-                return (BaseStringPool<?>)parent;
+            if(parent instanceof StringPool){
+                return (StringPool<?>)parent;
             }
             parent=parent.getParent();
         }

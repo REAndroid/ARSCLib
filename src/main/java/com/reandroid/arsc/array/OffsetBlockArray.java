@@ -102,10 +102,6 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
                 if(item==null || item.isNull()){
                     offset=-1;
                 }else {
-                    // slow but accurate
-                    //offset=countUpTo(item);
-
-                    // fast but fails for duplicate items
                     offset=sum;
                     sum+=item.countBytes();
                 }

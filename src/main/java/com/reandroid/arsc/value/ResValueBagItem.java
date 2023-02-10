@@ -228,6 +228,8 @@ public class ResValueBagItem extends BaseResValueItem{
         }else {
             builder.append("Unknown");
         }
+        builder.append(" size=").append(getHeaderSize());
+        builder.append(" bytes=").append(countBytes());
         builder.append('(');
         builder.append(String.format("0x%02x", getType()));
         builder.append(") id=");
