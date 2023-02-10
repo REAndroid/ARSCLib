@@ -25,7 +25,7 @@ public class TableString extends StringItem {
     public TableString(boolean utf8) {
         super(utf8);
     }
-    public List<EntryBlock> listReferencedEntries(){
+    public List<EntryBlock> listReferencedEntries(boolean ignoreBagEntries){
         List<EntryBlock> results=new ArrayList<>();
         for(ReferenceItem ref:getReferencedList()){
             if(!(ref instanceof ResValueReference)){
@@ -33,6 +33,9 @@ public class TableString extends StringItem {
             }
             EntryBlock entryBlock=((ResValueReference)ref).getEntryBlock();
             if(entryBlock==null){
+                continue;
+            }
+            if(ignoreBagEntries && entryBlock.isEntryTypeBag()){
                 continue;
             }
             results.add(entryBlock);
