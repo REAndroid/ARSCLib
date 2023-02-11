@@ -26,6 +26,10 @@ public class HexBytesWriter {
     private final int indent;
     private boolean mAppendString = true;
     private String mEncoding;
+    private int lineNumber;
+    private boolean showLineNumber;
+    private boolean decimalLineNumber;
+    private String lineNumberFormat;
     public HexBytesWriter(byte[] byteArray, int width, int columns, int indent){
         this.byteArray = byteArray;
         this.width = (width <= 0) ? DEFAULT_WIDTH : width;
@@ -39,6 +43,12 @@ public class HexBytesWriter {
         this(byteArray, DEFAULT_WIDTH, DEFAULT_COLUMNS, DEFAULT_INDENT);
     }
 
+    public void setShowLineNumber(boolean showLineNumber) {
+        this.showLineNumber = showLineNumber;
+    }
+    public void setDecimalLineNumber(boolean decimalLineNumber) {
+        this.decimalLineNumber = decimalLineNumber;
+    }
     public void setAppendString(boolean appendString) {
         this.mAppendString = appendString;
     }
@@ -66,6 +76,7 @@ public class HexBytesWriter {
         if(byteArray==null){
             return;
         }
+        initLineNumber(byteArray.length);
         int width = this.width;
         int columns = this.columns;
         int x = 0;
@@ -78,6 +89,7 @@ public class HexBytesWriter {
                     newLineAppended=true;
                 }
                 writeIndent(writer);
+                writeLineNumber(writer);
                 x=0;
             }else if(x%columns==0){
                 writer.write(' ');
@@ -89,7 +101,7 @@ public class HexBytesWriter {
             newLineAppended=false;
             writeHex(writer, byteArray[offset+i]);
         }
-        if(x>1){
+        if(x>0){
             writeString(writer,x , length);
         }
     }
@@ -121,11 +133,14 @@ public class HexBytesWriter {
     private void fillLastRow(Writer writer, int position) throws IOException {
         int rem = width - position % width;
         for(int i=0; i<rem; i++){
-            if(i%columns == 0){
+            if(i!=0 && i%columns == 0){
                 writer.write(' ');
             }
             writer.write(' ');
             writer.write(' ');
+            writer.write(' ');
+        }
+        if((rem % columns)==0){
             writer.write(' ');
         }
     }
@@ -153,13 +168,52 @@ public class HexBytesWriter {
             writer.write(' ');
         }
     }
+    private void writeLineNumber(Writer writer) throws IOException {
+        if(!showLineNumber){
+            return;
+        }
+        String line = String.format(lineNumberFormat, this.lineNumber);
+        if(!decimalLineNumber){
+            line = line.toUpperCase();
+        }
+        writer.write(line);
+        writer.write(": ");
+        lineNumber=lineNumber+width;
+    }
+    private void initLineNumber(int max){
+        lineNumber = 0;
+        int base = decimalLineNumber?10:16;
+        int digits = 1;
+        while (max>base){
+            digits++;
+            max=max/base;
+        }
+        lineNumberFormat = "%0"+digits+(decimalLineNumber?"d":"x");
+    }
     private void writeNewLine(Writer writer) throws IOException {
         writer.write('\n');
     }
 
+    public static String printHex(byte[] byteArray){
+        return toHex(byteArray, false, false);
+    }
     public static String toHex(byte[] byteArray){
+        if(byteArray==null){
+            return "null";
+        }
+        return toHex(byteArray, byteArray.length>64);
+    }
+    public static String toHex(byte[] byteArray, boolean showLineNumber){
+        return toHex(byteArray, showLineNumber, true);
+    }
+    public static String toHex(byte[] byteArray, boolean showLineNumber, boolean appendString){
+        if(byteArray==null){
+            return "null";
+        }
         StringWriter writer=new StringWriter();
         HexBytesWriter hexBytesWriter = new HexBytesWriter(byteArray);
+        hexBytesWriter.setShowLineNumber(showLineNumber);
+        hexBytesWriter.setAppendString(appendString);
         try {
             hexBytesWriter.write(writer);
             writer.flush();
