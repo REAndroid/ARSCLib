@@ -8,6 +8,16 @@ public class StagedAliasEntry extends ByteArray implements JSONConvert<JSONObjec
     public StagedAliasEntry(){
         super(8);
     }
+    public boolean isEqual(StagedAliasEntry other){
+        if(other==null){
+            return false;
+        }
+        if(other==this){
+            return true;
+        }
+        return getStagedResId()==other.getStagedResId()
+                && getFinalizedResId()==other.getFinalizedResId();
+    }
     public int getStagedResId(){
         return getInteger(0);
     }

@@ -23,8 +23,22 @@ public class IntegerArray extends BlockItem {
     public IntegerArray() {
         super(0);
     }
+    public final boolean contains(int value){
+        int s=size();
+        for(int i=0;i<s;i++){
+            if(value==get(i)){
+                return true;
+            }
+        }
+        return false;
+    }
     public final void clear(){
         setSize(0);
+    }
+    public final void add(int value){
+        int old=size();
+        setSize(old+1);
+        put(old, value);
     }
     public final void add(int[] values){
         if(values==null || values.length==0){

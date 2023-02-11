@@ -25,6 +25,8 @@ package com.reandroid.arsc.chunk;
  import com.reandroid.arsc.group.EntryGroup;
  import com.reandroid.arsc.header.PackageHeader;
  import com.reandroid.arsc.item.ReferenceItem;
+ import com.reandroid.arsc.list.OverlayableList;
+ import com.reandroid.arsc.list.StagedAliasList;
  import com.reandroid.arsc.pool.SpecStringPool;
  import com.reandroid.arsc.pool.TableStringPool;
  import com.reandroid.arsc.pool.TypeStringPool;
@@ -32,6 +34,7 @@ package com.reandroid.arsc.chunk;
  import com.reandroid.arsc.value.LibraryInfo;
  import com.reandroid.arsc.value.ResConfig;
  import com.reandroid.arsc.value.StagedAliasEntry;
+ import com.reandroid.json.JSONArray;
  import com.reandroid.json.JSONConvert;
  import com.reandroid.json.JSONObject;
 
@@ -108,10 +111,10 @@ package com.reandroid.arsc.chunk;
     public List<StagedAlias> listStagedAlias(){
         return getStagedAliasList().getChildes();
     }
-    public BlockList<StagedAlias> getStagedAliasList(){
+    public StagedAliasList getStagedAliasList(){
         return mBody.getStagedAliasList();
     }
-    public BlockList<Overlayable> getOverlayableList(){
+    public OverlayableList getOverlayableList(){
         return mBody.getOverlayableList();
     }
     public BlockList<OverlayablePolicy> getOverlayablePolicyList(){
@@ -341,6 +344,10 @@ package com.reandroid.arsc.chunk;
             jsonObject.put(NAME_staged_aliases,
                     stagedAlias.getStagedAliasEntryArray().toJson());
         }
+        JSONArray jsonArray = getOverlayableList().toJson();
+        if(jsonArray!=null){
+            jsonObject.put(NAME_overlaybles, jsonArray);
+        }
         return jsonObject;
     }
     @Override
@@ -356,6 +363,9 @@ package com.reandroid.arsc.chunk;
                     .fromJson(json.getJSONArray(NAME_staged_aliases));
             getStagedAliasList().add(stagedAlias);
         }
+        if(json.has(NAME_overlaybles)){
+            getOverlayableList().fromJson(json.getJSONArray(NAME_overlaybles));
+        }
     }
     public void merge(PackageBlock packageBlock){
         if(packageBlock==null||packageBlock==this){
@@ -368,6 +378,8 @@ package com.reandroid.arsc.chunk;
         setName(packageBlock.getName());
         getLibraryBlock().merge(packageBlock.getLibraryBlock());
         getSpecTypePairArray().merge(packageBlock.getSpecTypePairArray());
+        getOverlayableList().merge(packageBlock.getOverlayableList());
+        getStagedAliasList().merge(packageBlock.getStagedAliasList());
     }
     /**
      * It is allowed to have duplicate type name therefore it is not recommend to use this.
@@ -400,7 +412,8 @@ package com.reandroid.arsc.chunk;
     public static final String NAME_package_id = "package_id";
     public static final String NAME_package_name = "package_name";
     public static final String JSON_FILE_NAME = "package.json";
-    private static final String NAME_specs="specs";
-    public static final String NAME_libraries="libraries";
-    public static final String NAME_staged_aliases="staged_aliases";
+    private static final String NAME_specs = "specs";
+    public static final String NAME_libraries = "libraries";
+    public static final String NAME_staged_aliases = "staged_aliases";
+    public static final String NAME_overlaybles = "overlaybles";
 }

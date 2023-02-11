@@ -21,6 +21,9 @@
  import com.reandroid.arsc.io.BlockReader;
  import com.reandroid.arsc.item.IntegerArray;
  import com.reandroid.arsc.item.IntegerItem;
+ import com.reandroid.json.JSONArray;
+ import com.reandroid.json.JSONConvert;
+ import com.reandroid.json.JSONObject;
 
  import java.io.IOException;
  import java.util.Collection;
@@ -30,7 +33,8 @@
   * We didn't test this class with resource table, if someone found a resource/apk please
   * create issue on https://github.com/REAndroid/ARSCLib
   * */
- public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements BlockLoad {
+ public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements BlockLoad,
+         JSONConvert<JSONObject> {
   private final IntegerArray tableRefArray;
   public OverlayablePolicy(){
    super(new OverlayablePolicyHeader(), 1);
@@ -81,6 +85,43 @@
     this.tableRefArray.setSize(entryCount.get());
    }
   }
+
+  @Override
+  public JSONObject toJson() {
+   JSONObject jsonObject = new JSONObject();
+   jsonObject.put(NAME_flags, getFlags());
+   JSONArray jsonArray = new JSONArray();
+   for(Integer reference:listTableReferences()){
+    jsonArray.put(reference);
+   }
+   jsonObject.put(NAME_references, jsonArray);
+   return jsonObject;
+  }
+  @Override
+  public void fromJson(JSONObject json) {
+   setFlags(json.getInt(NAME_flags));
+   JSONArray jsonArray = json.getJSONArray(NAME_references);
+   IntegerArray integerArray = getTableRefArray();
+   int length = jsonArray.length();
+   integerArray.setSize(length);
+   for(int i=0;i<length;i++){
+    integerArray.put(i, jsonArray.getInt(i));
+   }
+  }
+  public void merge(OverlayablePolicy policy){
+   if(policy==null||policy==this){
+    return;
+   }
+   setFlags(policy.getFlags());
+   IntegerArray exist = getTableRefArray();
+   IntegerArray coming = policy.getTableRefArray();
+   for(int reference: coming.toArray()){
+    if(!exist.contains(reference)){
+     exist.add(reference);
+    }
+   }
+  }
+
   @Override
   public String toString(){
    return getClass().getSimpleName()+
@@ -234,4 +275,7 @@
     return null;
    }
   }
+
+  public static final String NAME_flags = "flags";
+  public static final String NAME_references = "references";
  }

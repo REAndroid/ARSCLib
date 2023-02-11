@@ -34,8 +34,12 @@
          if(stagedAlias==null||stagedAlias==this){
              return;
          }
-         stagedAliasEntryArray.addAll(stagedAlias
-                 .getStagedAliasEntryArray().getChildes());
+         StagedAliasEntryArray exist = getStagedAliasEntryArray();
+         for(StagedAliasEntry entry:stagedAlias.listStagedAliasEntry()){
+             if(!exist.contains(entry)){
+                 exist.add(entry);
+             }
+         }
      }
      public StagedAliasEntryArray getStagedAliasEntryArray() {
          return stagedAliasEntryArray;
@@ -52,6 +56,7 @@
      }
      @Override
      protected void onChunkRefreshed() {
+         getHeaderBlock().getCount().set(getStagedAliasEntryCount());
      }
      @Override
      public String toString(){

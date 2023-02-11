@@ -34,6 +34,19 @@
          this.count=count;
          this.count.setBlockLoad(this);
      }
+     public boolean contains(StagedAliasEntry aliasEntry){
+         StagedAliasEntry[] childes=getChildes();
+         if(childes==null){
+             return false;
+         }
+         for(int i=0;i<childes.length;i++){
+             StagedAliasEntry entry=childes[i];
+             if(entry.isEqual(aliasEntry)){
+                 return true;
+             }
+         }
+         return false;
+     }
      public StagedAliasEntry searchByStagedResId(int stagedResId){
          StagedAliasEntry[] childes=getChildes();
          if(childes==null){

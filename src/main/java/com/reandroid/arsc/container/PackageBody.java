@@ -19,6 +19,8 @@ import com.reandroid.arsc.chunk.*;
 import com.reandroid.arsc.array.SpecTypePairArray;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.list.OverlayableList;
+import com.reandroid.arsc.list.StagedAliasList;
 
 import java.io.IOException;
 
@@ -26,16 +28,16 @@ public class PackageBody extends FixedBlockContainer {
 
     private final SpecTypePairArray mSpecTypePairArray;
     private final LibraryBlock mLibraryBlock;
-    private final BlockList<StagedAlias> mStagedAliasList;
-    private final BlockList<Overlayable> mOverlayableList;
+    private final StagedAliasList mStagedAliasList;
+    private final OverlayableList mOverlayableList;
     private final BlockList<OverlayablePolicy> mOverlayablePolicyList;
     private final BlockList<UnknownChunk> mUnknownChunkList;
     public PackageBody(){
         super(6);
         this.mSpecTypePairArray = new SpecTypePairArray();
         this.mLibraryBlock = new LibraryBlock();
-        this.mStagedAliasList = new BlockList<>();
-        this.mOverlayableList = new BlockList<>();
+        this.mStagedAliasList = new StagedAliasList();
+        this.mOverlayableList = new OverlayableList();
         this.mOverlayablePolicyList = new BlockList<>();
         this.mUnknownChunkList = new BlockList<>();
 
@@ -46,13 +48,13 @@ public class PackageBody extends FixedBlockContainer {
         addChild(4, mOverlayablePolicyList);
         addChild(5, mUnknownChunkList);
     }
-    public BlockList<Overlayable> getOverlayableList() {
+    public OverlayableList getOverlayableList() {
         return mOverlayableList;
     }
     public BlockList<OverlayablePolicy> getOverlayablePolicyList() {
         return mOverlayablePolicyList;
     }
-    public BlockList<StagedAlias> getStagedAliasList() {
+    public StagedAliasList getStagedAliasList() {
         return mStagedAliasList;
     }
     public LibraryBlock getLibraryBlock(){
