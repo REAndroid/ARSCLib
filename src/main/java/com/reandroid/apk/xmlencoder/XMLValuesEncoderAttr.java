@@ -99,8 +99,12 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
         for(int i=0;i<count;i++){
             XMLElement child=element.getChildAt(i);
 
-            int resourceId=materials.resolveLocalResourceId("id",
-                    child.getAttributeValue("name"));
+            String name = child.getAttributeValue("name");
+            int resourceId = decodeUnknownAttributeHex(name);
+            if(resourceId==0){
+                resourceId=materials.resolveLocalResourceId("id",
+                        name);
+            }
 
             ValueDecoder.EncodeResult encodeResult =
                     ValueDecoder.encodeHexOrInt(child.getTextContent());
@@ -127,5 +131,15 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
             return AttributeBag.TYPE_FLAG;
         }
         return 0;
+    }
+    private int decodeUnknownAttributeHex(String name){
+        if(name.length()==0||name.charAt(0)!='@'){
+            return 0;
+        }
+        name=name.substring(1);
+        if(!ValueDecoder.isHex(name)){
+            return 0;
+        }
+        return ValueDecoder.parseHex(name);
     }
 }
