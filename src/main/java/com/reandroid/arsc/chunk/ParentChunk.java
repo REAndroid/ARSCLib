@@ -13,17 +13,10 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-package com.reandroid.arsc.value;
+package com.reandroid.arsc.chunk;
 
-public interface ResValueItem extends Value{
-    void setHeaderSize(short size);
-    short getHeaderSize();
+import com.reandroid.arsc.pool.StringPool;
 
-    void setReserved(byte reserved);
-    byte getReserved();
-
-    void setType(byte type);
-    byte getType();
-
-    void onSetReference(int data);
+public interface ParentChunk {
+    public StringPool<?> getSpecStringPool();
 }
