@@ -15,10 +15,10 @@
   */
 package com.reandroid.apk.xmlencoder;
 
-import com.reandroid.arsc.array.ResValueBagItemArray;
+import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.ResValueBag;
-import com.reandroid.arsc.value.ResValueBagItem;
+import com.reandroid.arsc.value.ResTableMapEntry;
+import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.arsc.value.plurals.PluralsQuantity;
 import com.reandroid.xml.XMLElement;
@@ -28,20 +28,20 @@ class XMLValuesEncoderPlurals extends XMLValuesEncoderBag{
         super(materials);
     }
     @Override
-    void encodeChildes(XMLElement parentElement, ResValueBag resValueBag){
+    void encodeChildes(XMLElement parentElement, ResTableMapEntry resValueBag){
         int count = parentElement.getChildesCount();
-        ResValueBagItemArray itemArray = resValueBag.getResValueBagItemArray();
+        ResValueMapArray itemArray = resValueBag.getValue();
         for(int i=0;i<count;i++){
             XMLElement child=parentElement.getChildAt(i);
-            ResValueBagItem bagItem = itemArray.get(i);
+            ResValueMap bagItem = itemArray.get(i);
             PluralsQuantity quantity = PluralsQuantity
                     .value(child.getAttributeValue("quantity"));
             if(quantity==null){
                 throw new EncodeException("Unknown plurals quantity: "
                         +child.toText());
             }
-            bagItem.setIdHigh((short) 0x0100);
-            bagItem.setIdLow(quantity.getId());
+            bagItem.setNameHigh((short) 0x0100);
+            bagItem.setNameLow(quantity.getId());
 
             String valueText=child.getTextContent();
 

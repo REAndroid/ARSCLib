@@ -16,21 +16,21 @@
 package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Entry;
 
-class XMLValuesEncoderDimen extends XMLValuesEncoder{
+ class XMLValuesEncoderDimen extends XMLValuesEncoder{
     XMLValuesEncoderDimen(EncodeMaterials materials) {
         super(materials);
     }
     @Override
-    void encodeStringValue(EntryBlock entryBlock, String value){
+    void encodeStringValue(Entry entry, String value){
         ValueDecoder.EncodeResult encodeResult =
                 ValueDecoder.encodeDimensionOrFloat(value);
         if(encodeResult==null){
             encodeResult=ValueDecoder.encodeHexOrInt(value);
         }
         if(encodeResult!=null){
-            entryBlock.setValueAsRaw(encodeResult.valueType, encodeResult.value);
+            entry.setValueAsRaw(encodeResult.valueType, encodeResult.value);
         }else {
             throw new EncodeException("Unknown dimen value: "+value);
         }

@@ -16,33 +16,35 @@
 package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.base.BlockArray;
-import com.reandroid.arsc.value.ResValueBagItem;
+import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 
-public class ResValueBagItemArray extends BlockArray<ResValueBagItem> implements JSONConvert<JSONArray> {
-    public ResValueBagItemArray(){
+public class ResValueMapArray extends BlockArray<ResValueMap> implements JSONConvert<JSONArray> {
+    public ResValueMapArray(){
         super();
     }
     @Override
-    public ResValueBagItem newInstance() {
-        return new ResValueBagItem();
+    public ResValueMap newInstance() {
+        return new ResValueMap();
     }
 
     @Override
-    public ResValueBagItem[] newInstance(int len) {
-        return new ResValueBagItem[len];
+    public ResValueMap[] newInstance(int len) {
+        return new ResValueMap[len];
     }
 
     @Override
     protected void onRefreshed() {
-
+    }
+    public void onRemoved(){
+        for(ResValueMap resValueMap:listItems()){
+            resValueMap.onRemoved();
+        }
     }
     @Override
     public void clearChildes(){
-        for(ResValueBagItem bagItem:listItems()){
-            bagItem.onRemoved();
-        }
+        this.onRemoved();
         super.clearChildes();
     }
     @Override
@@ -51,7 +53,7 @@ public class ResValueBagItemArray extends BlockArray<ResValueBagItem> implements
         if(isNull()){
             return jsonArray;
         }
-        ResValueBagItem[] childes = getChildes();
+        ResValueMap[] childes = getChildes();
         for(int i=0;i<childes.length;i++){
             jsonArray.put(i, childes[i].toJson());
         }
@@ -69,7 +71,7 @@ public class ResValueBagItemArray extends BlockArray<ResValueBagItem> implements
             get(i).fromJson(json.getJSONObject(i));
         }
     }
-    public void merge(ResValueBagItemArray bagItemArray){
+    public void merge(ResValueMapArray bagItemArray){
         if(bagItemArray==null||bagItemArray==this){
             return;
         }
@@ -77,8 +79,8 @@ public class ResValueBagItemArray extends BlockArray<ResValueBagItem> implements
         int count=bagItemArray.childesCount();
         ensureSize(count);
         for(int i=0;i<count;i++){
-            ResValueBagItem coming=bagItemArray.get(i);
-            ResValueBagItem exist=get(i);
+            ResValueMap coming=bagItemArray.get(i);
+            ResValueMap exist=get(i);
             exist.merge(coming);
         }
     }

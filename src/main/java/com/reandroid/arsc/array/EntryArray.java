@@ -17,10 +17,7 @@ package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
-import com.reandroid.arsc.value.BaseResValue;
-import com.reandroid.arsc.value.EntryBlock;
-import com.reandroid.arsc.value.ResValueInt;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
@@ -28,41 +25,41 @@ import com.reandroid.json.JSONObject;
 import java.util.Iterator;
 
 
-public class EntryBlockArray extends OffsetBlockArray<EntryBlock> implements JSONConvert<JSONArray> {
-    public EntryBlockArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart){
+public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<JSONArray> {
+    public EntryArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart){
         super(offsets, itemCount, itemStart);
     }
     public boolean isEmpty(){
         return !iterator(true).hasNext();
     }
-    public void setEntry(short entryId, EntryBlock entryBlock){
-        setItem(0xffff & entryId, entryBlock);
+    public void setEntry(short entryId, Entry entry){
+        setItem(0xffff & entryId, entry);
     }
-    public EntryBlock getOrCreate(short entryId){
+    public Entry getOrCreate(short entryId){
         int id = 0xffff & entryId;
-        EntryBlock entryBlock=get(id);
-        if(entryBlock!=null){
-            return entryBlock;
+        Entry entry =get(id);
+        if(entry !=null){
+            return entry;
         }
         int count=id+1;
         ensureSize(count);
         refreshCount();
         return get(id);
     }
-    public EntryBlock get(short entryId){
+    public Entry get(short entryId){
         int index = 0xffff & entryId;
         return super.get(index);
     }
-    public EntryBlock getEntry(short entryId){
+    public Entry getEntry(short entryId){
         return get(0xffff & entryId);
     }
     @Override
-    public EntryBlock newInstance() {
-        return new EntryBlock();
+    public Entry newInstance() {
+        return new Entry();
     }
     @Override
-    public EntryBlock[] newInstance(int len) {
-        return new EntryBlock[len];
+    public Entry[] newInstance(int len) {
+        return new Entry[len];
     }
 
     /**
@@ -70,13 +67,13 @@ public class EntryBlockArray extends OffsetBlockArray<EntryBlock> implements JSO
      * Lets depreciate to warn developer
      */
     @Deprecated
-    public EntryBlock searchByEntryName(String entryName){
+    public Entry searchByEntryName(String entryName){
         if(entryName==null){
             return null;
         }
-        for(EntryBlock entryBlock:listItems()){
-            if(entryName.equals(entryBlock.getName())){
-                return entryBlock;
+        for(Entry entry:listItems()){
+            if(entryName.equals(entry.getName())){
+                return entry;
             }
         }
         return null;
@@ -85,12 +82,12 @@ public class EntryBlockArray extends OffsetBlockArray<EntryBlock> implements JSO
     public JSONArray toJson() {
         JSONArray jsonArray=new JSONArray();
         int index=0;
-        for(EntryBlock entryBlock:listItems()){
-            JSONObject childObject = entryBlock.toJson();
+        for(Entry entry :listItems()){
+            JSONObject childObject = entry.toJson();
             if(childObject==null){
                 continue;
             }
-            childObject.put(NAME_id, entryBlock.getIndex());
+            childObject.put(NAME_id, entry.getIndex());
             jsonArray.put(index, childObject);
             index++;
         }
@@ -108,20 +105,20 @@ public class EntryBlockArray extends OffsetBlockArray<EntryBlock> implements JSO
             }
             int id=jsonObject.getInt(NAME_id);
             ensureSize(id+1);
-            EntryBlock entryBlock=get(id);
-            entryBlock.fromJson(jsonObject);
+            Entry entry =get(id);
+            entry.fromJson(jsonObject);
         }
         refreshCountAndStart();
     }
-    public void merge(EntryBlockArray entryBlockArray){
-        if(entryBlockArray==null||entryBlockArray==this||entryBlockArray.isEmpty()){
+    public void merge(EntryArray entryArray){
+        if(entryArray ==null|| entryArray ==this|| entryArray.isEmpty()){
             return;
         }
-        ensureSize(entryBlockArray.childesCount());
-        Iterator<EntryBlock> itr=entryBlockArray.iterator(true);
+        ensureSize(entryArray.childesCount());
+        Iterator<Entry> itr = entryArray.iterator(true);
         while (itr.hasNext()){
-            EntryBlock comingBlock=itr.next();
-            EntryBlock existingBlock=get(comingBlock.getIndex());
+            Entry comingBlock = itr.next();
+            Entry existingBlock = get(comingBlock.getIndex());
             existingBlock.merge(comingBlock);
         }
     }

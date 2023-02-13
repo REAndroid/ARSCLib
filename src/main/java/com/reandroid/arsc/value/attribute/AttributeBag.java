@@ -15,9 +15,10 @@
   */
 package com.reandroid.arsc.value.attribute;
 
+import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.EntryBlock;
-import com.reandroid.arsc.value.ResValueBag;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.common.EntryStore;
 
@@ -220,9 +221,9 @@ public class AttributeBag {
         AttributeBagItem[] bagItems= getBagItems();
         StringBuilder builder=new StringBuilder();
         AttributeBagItem format=getFormat();
-        EntryBlock entryBlock=format.getBagItem().getEntryBlock();
-        if(entryBlock!=null){
-            builder.append(entryBlock.getSpecString());
+        Entry entry =format.getBagItem().getEntry();
+        if(entry !=null){
+            builder.append(entry.getSpecString());
         }
         int len=bagItems.length;
         builder.append(", childes=").append(len);
@@ -234,21 +235,21 @@ public class AttributeBag {
         return builder.toString();
     }
 
-    public static AttributeBag create(ResValueBag resValueBag){
-        if(resValueBag==null){
+    public static AttributeBag create(ResValueMapArray resValueMapArray){
+        if(resValueMapArray==null){
             return null;
         }
-        AttributeBagItem[] bagItems=AttributeBagItem.create(resValueBag.getBagItems());
+        AttributeBagItem[] bagItems=AttributeBagItem.create(resValueMapArray.getChildes());
         if(bagItems==null){
             return null;
         }
         return new AttributeBag(bagItems);
     }
-    public static boolean isAttribute(ResValueBag resValueBag){
-        if(resValueBag==null){
+    public static boolean isAttribute(ResTableMapEntry mapEntry){
+        if(mapEntry==null){
             return false;
         }
-        AttributeBagItem[] bagItems=AttributeBagItem.create(resValueBag.getBagItems());
+        AttributeBagItem[] bagItems=AttributeBagItem.create(mapEntry.listResValueMap());
         return bagItems!=null;
     }
 

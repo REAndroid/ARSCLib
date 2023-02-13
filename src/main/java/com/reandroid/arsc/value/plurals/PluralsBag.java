@@ -15,10 +15,10 @@
   */
 package com.reandroid.arsc.value.plurals;
 
-import com.reandroid.arsc.value.EntryBlock;
-import com.reandroid.arsc.value.ResValueBag;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResTableMapEntry;
 
-public class PluralsBag {
+ public class PluralsBag {
     private final PluralsBagItem[] mBagItems;
     private PluralsBag(PluralsBagItem[] bagItems){
         this.mBagItems=bagItems;
@@ -27,18 +27,18 @@ public class PluralsBag {
         return mBagItems;
     }
     public String getName(){
-        EntryBlock entryBlock=getBagItems()[0].getBagItem().getEntryBlock();
-        if(entryBlock==null){
+        Entry entry =getBagItems()[0].getBagItem().getEntry();
+        if(entry ==null){
             return null;
         }
-        return entryBlock.getName();
+        return entry.getName();
     }
     public String getTypeName(){
-        EntryBlock entryBlock=getBagItems()[0].getBagItem().getEntryBlock();
-        if(entryBlock==null){
+        Entry entry =getBagItems()[0].getBagItem().getEntry();
+        if(entry ==null){
             return null;
         }
-        return entryBlock.getTypeName();
+        return entry.getTypeName();
     }
 
     @Override
@@ -63,22 +63,18 @@ public class PluralsBag {
 
     /** The result of this is not always 100% accurate,
      * in addition to this use your methods to cross check like type-name == "plurals"**/
-    public static boolean isPlurals(ResValueBag resValueBag){
-        if(resValueBag==null){
+    public static boolean isPlurals(ResTableMapEntry mapEntry){
+        if(mapEntry==null){
             return false;
         }
-        EntryBlock entryBlock = resValueBag.getEntryBlock();
-        if(entryBlock==null){
-            return false;
-        }
-        return PluralsBagItem.create(resValueBag.getBagItems()) != null;
+        return PluralsBagItem.create(mapEntry.listResValueMap()) != null;
     }
 
-    public static PluralsBag create(ResValueBag resValueBag){
-        if(resValueBag==null){
+    public static PluralsBag create(ResTableMapEntry mapEntry){
+        if(mapEntry==null){
             return null;
         }
-        PluralsBagItem[] bagItems=PluralsBagItem.create(resValueBag.getBagItems());
+        PluralsBagItem[] bagItems=PluralsBagItem.create(mapEntry.listResValueMap());
         if(bagItems==null){
             return null;
         }

@@ -18,7 +18,7 @@ package com.reandroid.arsc.array;
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
@@ -62,11 +62,11 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         }
         return true;
     }
-    public EntryBlock getOrCreateEntry(byte typeId, short entryId, String qualifiers){
+    public Entry getOrCreateEntry(byte typeId, short entryId, String qualifiers){
         TypeBlock typeBlock=getOrCreateTypeBlock(typeId, qualifiers);
         return typeBlock.getOrCreateEntry(entryId);
     }
-    public EntryBlock getEntry(byte typeId, short entryId, String qualifiers){
+    public Entry getEntry(byte typeId, short entryId, String qualifiers){
         TypeBlock typeBlock=getTypeBlock(typeId, qualifiers);
         if(typeBlock==null){
             return null;

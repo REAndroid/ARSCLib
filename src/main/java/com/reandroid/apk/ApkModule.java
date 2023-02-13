@@ -24,7 +24,7 @@ import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Entry;
 
 import java.io.File;
 import java.io.IOException;
@@ -180,11 +180,11 @@ public class ApkModule {
                 continue;
             }
             for(TableString tableString:groupTableString.listItems()){
-                List<EntryBlock> entryBlockList = tableString.listReferencedEntries(true);
-                if(entryBlockList.size()==0){
+                List<Entry> entryList = tableString.listReferencedEntries(true);
+                if(entryList.size()==0){
                     continue;
                 }
-                ResFile resFile=new ResFile(inputSource, entryBlockList);
+                ResFile resFile=new ResFile(inputSource, entryList);
                 results.add(resFile);
             }
         }

@@ -107,8 +107,8 @@ import java.util.*;
     }
     private void decodeResRaw(File outDir, ResFile resFile)
             throws IOException {
-        EntryBlock entryBlock=resFile.pickOne();
-        PackageBlock packageBlock=entryBlock.getPackageBlock();
+        Entry entry =resFile.pickOne();
+        PackageBlock packageBlock= entry.getPackageBlock();
 
         File pkgDir=new File(outDir, getPackageDirName(packageBlock));
         File resDir=new File(pkgDir, ApkUtil.RES_DIR_NAME);
@@ -128,8 +128,8 @@ import java.util.*;
     }
     private void decodeResXml(EntryStore entryStore, File outDir, ResFile resFile)
             throws IOException, XMLException{
-        EntryBlock entryBlock=resFile.pickOne();
-        PackageBlock packageBlock=entryBlock.getPackageBlock();
+        Entry entry =resFile.pickOne();
+        PackageBlock packageBlock= entry.getPackageBlock();
         ResXmlDocument resXmlDocument =new ResXmlDocument();
         resXmlDocument.readBytes(resFile.getInputSource().openStream());
 
@@ -181,24 +181,24 @@ import java.util.*;
         xmlDocument.save(file, true);
         addDecodedPath(AndroidManifestBlock.FILE_NAME);
     }
-    private void addDecodedEntry(EntryBlock entryBlock){
-        if(entryBlock.isNull()){
+    private void addDecodedEntry(Entry entry){
+        if(entry.isNull()){
             return;
         }
-        int resourceId=entryBlock.getResourceId();
+        int resourceId= entry.getResourceId();
         Set<ResConfig> resConfigSet=decodedEntries.get(resourceId);
         if(resConfigSet==null){
             resConfigSet=new HashSet<>();
             decodedEntries.put(resourceId, resConfigSet);
         }
-        resConfigSet.add(entryBlock.getResConfig());
+        resConfigSet.add(entry.getResConfig());
     }
-    private boolean containsDecodedEntry(EntryBlock entryBlock){
-        Set<ResConfig> resConfigSet=decodedEntries.get(entryBlock.getResourceId());
+    private boolean containsDecodedEntry(Entry entry){
+        Set<ResConfig> resConfigSet=decodedEntries.get(entry.getResourceId());
         if(resConfigSet==null){
             return false;
         }
-        return resConfigSet.contains(entryBlock.getResConfig());
+        return resConfigSet.contains(entry.getResConfig());
     }
     private void decodeValues(EntryStore entryStore, File outDir, TableBlock tableBlock) throws IOException {
         for(PackageBlock packageBlock:tableBlock.listPackages()){
@@ -221,11 +221,11 @@ import java.util.*;
     private void decodeValues(EntryStore entryStore, File outDir, TypeBlock typeBlock) throws IOException {
         XMLDocument xmlDocument = new XMLDocument("resources");
         XMLElement docElement = xmlDocument.getDocumentElement();
-        for(EntryBlock entryBlock:typeBlock.listEntries(true)){
-            if(containsDecodedEntry(entryBlock)){
+        for(Entry entry :typeBlock.listEntries(true)){
+            if(containsDecodedEntry(entry)){
                 continue;
             }
-            docElement.addChild(decodeValue(entryStore, entryBlock));
+            docElement.addChild(decodeValue(entryStore, entry));
         }
         if(docElement.getChildesCount()==0){
             return;
@@ -240,28 +240,28 @@ import java.util.*;
         file=new File(file, type+".xml");
         xmlDocument.save(file, false);
     }
-    private XMLElement decodeValue(EntryStore entryStore, EntryBlock entryBlock){
-        XMLElement element=new XMLElement(entryBlock.getTypeName());
-        int resourceId=entryBlock.getResourceId();
-        XMLAttribute attribute=new XMLAttribute("name", entryBlock.getName());
+    private XMLElement decodeValue(EntryStore entryStore, Entry entry){
+        XMLElement element=new XMLElement(entry.getTypeName());
+        int resourceId= entry.getResourceId();
+        XMLAttribute attribute=new XMLAttribute("name", entry.getName());
         element.addAttribute(attribute);
         attribute.setNameId(resourceId);
         element.setResourceId(resourceId);
-        if(!entryBlock.isEntryTypeBag()){
-            ResValueInt resValueInt=(ResValueInt) entryBlock.getResValue();
-            if(resValueInt.getValueType()== ValueType.STRING){
+        if(!entry.isComplex()){
+            ResValue resValue =(ResValue) entry.getTableEntry().getValue();
+            if(resValue.getValueType()== ValueType.STRING){
                 XmlHelper.setTextContent(element,
-                        resValueInt.getValueAsPoolString());
+                        resValue.getDataAsPoolString());
             }else {
                 String value = ValueDecoder.decodeEntryValue(entryStore,
-                        entryBlock.getPackageBlock(),
-                        resValueInt.getValueType(),
-                        resValueInt.getData());
+                        entry.getPackageBlock(),
+                        resValue.getValueType(),
+                        resValue.getData());
                 element.setTextContent(value);
             }
         }else {
-            ResValueBag resValueBag=(ResValueBag) entryBlock.getResValue();
-            xmlBagDecoder.decode(resValueBag, element);
+            ResTableMapEntry mapEntry = (ResTableMapEntry) entry.getTableEntry();
+            xmlBagDecoder.decode(mapEntry, element);
             return element;
         }
         return element;

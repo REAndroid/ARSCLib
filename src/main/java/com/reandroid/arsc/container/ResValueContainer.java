@@ -16,13 +16,13 @@
 package com.reandroid.arsc.container;
 
 import com.reandroid.arsc.base.BlockContainer;
-import com.reandroid.arsc.value.BaseResValue;
+import com.reandroid.arsc.value.ValueItem;
 
-public class ResValueContainer extends BlockContainer<BaseResValue> {
-    private final BaseResValue[] mChildes;
+public class ResValueContainer extends BlockContainer<ValueItem> {
+    private final ValueItem[] mChildes;
     public ResValueContainer(){
         super();
-        mChildes=new BaseResValue[1];
+        mChildes=new ValueItem[1];
     }
     @Override
     protected void onRefreshed(){
@@ -32,11 +32,11 @@ public class ResValueContainer extends BlockContainer<BaseResValue> {
         return mChildes.length;
     }
     @Override
-    public BaseResValue[] getChildes() {
+    public ValueItem[] getChildes() {
         return mChildes;
     }
-    public void setResValue(BaseResValue resValue){
-        BaseResValue old=getResValue();
+    public void setResValue(ValueItem resValue){
+        ValueItem old=getResValue();
         if(old!=null){
             old.setIndex(-1);
             old.setParent(null);
@@ -48,7 +48,7 @@ public class ResValueContainer extends BlockContainer<BaseResValue> {
         resValue.setIndex(0);
         resValue.setParent(this);
     }
-    public BaseResValue getResValue(){
+    public ValueItem getResValue(){
         if(mChildes.length==0){
             return null;
         }

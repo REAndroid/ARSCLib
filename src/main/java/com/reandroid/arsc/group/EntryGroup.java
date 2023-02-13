@@ -21,11 +21,11 @@ import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.pool.SpecStringPool;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Entry;
 
 import java.util.Iterator;
 
-public class EntryGroup extends ItemGroup<EntryBlock> {
+public class EntryGroup extends ItemGroup<Entry> {
     private final int resourceId;
     public EntryGroup(int resId) {
         super(create(), String.format("0x%08x", resId));
@@ -35,7 +35,7 @@ public class EntryGroup extends ItemGroup<EntryBlock> {
         return resourceId;
     }
     public boolean renameSpec(String name){
-        EntryBlock[] items=getItems();
+        Entry[] items=getItems();
         if(items==null || name==null){
             return false;
         }
@@ -56,25 +56,25 @@ public class EntryGroup extends ItemGroup<EntryBlock> {
         return (short) (getResourceId() & 0xffff);
     }
     private boolean isAllSameSpec(){
-        EntryBlock first=null;
-        for(EntryBlock entryBlock:listItems()){
+        Entry first=null;
+        for(Entry entry :listItems()){
             if(first==null){
-                first=entryBlock;
+                first= entry;
                 continue;
             }
-            if(first.getSpecReference()!=entryBlock.getSpecReference()){
+            if(first.getSpecReference()!= entry.getSpecReference()){
                 return false;
             }
         }
         return true;
     }
     public boolean renameSpec(int specReference){
-        EntryBlock[] items=getItems();
+        Entry[] items=getItems();
         if(items==null){
             return false;
         }
         boolean renameOk=false;
-        for(EntryBlock block:items){
+        for(Entry block:items){
             if(block==null){
                 continue;
             }
@@ -86,45 +86,45 @@ public class EntryGroup extends ItemGroup<EntryBlock> {
         }
         return renameOk;
     }
-    public EntryBlock pickOne(){
-        EntryBlock[] items=getItems();
+    public Entry pickOne(){
+        Entry[] items=getItems();
         if(items==null){
             return null;
         }
-        EntryBlock result = null;
-        for(EntryBlock entryBlock:items){
-            if(entryBlock==null){
+        Entry result = null;
+        for(Entry entry :items){
+            if(entry ==null){
                 continue;
             }
             if(result==null || result.isNull()){
-                result=entryBlock;
-            }else if(entryBlock.isDefault()){
-                return entryBlock;
+                result= entry;
+            }else if(entry.isDefault()){
+                return entry;
             }
         }
         return result;
     }
-    public EntryBlock getDefault(){
-        Iterator<EntryBlock> itr=iterator(true);
+    public Entry getDefault(){
+        Iterator<Entry> itr=iterator(true);
         while (itr.hasNext()){
-            EntryBlock entryBlock=itr.next();
-            if(entryBlock.isDefault()){
-                return entryBlock;
+            Entry entry =itr.next();
+            if(entry.isDefault()){
+                return entry;
             }
         }
         return null;
     }
     public TypeString getTypeString(){
-        EntryBlock entryBlock=pickOne();
-        if(entryBlock!=null){
-            return entryBlock.getTypeString();
+        Entry entry =pickOne();
+        if(entry !=null){
+            return entry.getTypeString();
         }
         return null;
     }
     public SpecString getSpecString(){
-        EntryBlock entryBlock=pickOne();
-        if(entryBlock!=null){
-            return entryBlock.getSpecString();
+        Entry entry =pickOne();
+        if(entry !=null){
+            return entry.getSpecString();
         }
         return null;
     }
@@ -143,11 +143,11 @@ public class EntryGroup extends ItemGroup<EntryBlock> {
         return specString.get();
     }
     private SpecStringPool getSpecStringPool(){
-        EntryBlock entryBlock=get(0);
-        if(entryBlock==null){
+        Entry entry =get(0);
+        if(entry ==null){
             return null;
         }
-        TypeBlock typeBlock=entryBlock.getTypeBlock();
+        TypeBlock typeBlock= entry.getTypeBlock();
         if(typeBlock==null){
             return null;
         }
@@ -159,22 +159,22 @@ public class EntryGroup extends ItemGroup<EntryBlock> {
     }
     @Override
     public String toString(){
-        EntryBlock entryBlock=pickOne();
-        if(entryBlock==null){
+        Entry entry =pickOne();
+        if(entry ==null){
             return super.toString();
         }
-        return super.toString()+"{"+entryBlock.toString()+"}";
+        return super.toString()+"{"+ entry.toString()+"}";
     }
-    private static BlockArrayCreator<EntryBlock> create(){
-        return new BlockArrayCreator<EntryBlock>(){
+    private static BlockArrayCreator<Entry> create(){
+        return new BlockArrayCreator<Entry>(){
             @Override
-            public EntryBlock newInstance() {
-                return new EntryBlock();
+            public Entry newInstance() {
+                return new Entry();
             }
 
             @Override
-            public EntryBlock[] newInstance(int len) {
-                return new EntryBlock[len];
+            public Entry[] newInstance(int len) {
+                return new Entry[len];
             }
         };
     }

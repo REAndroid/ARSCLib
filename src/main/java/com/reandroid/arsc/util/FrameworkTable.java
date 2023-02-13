@@ -28,7 +28,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ReferenceItem;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 
 import java.io.*;
@@ -45,9 +45,9 @@ public class FrameworkTable extends TableBlock {
     }
 
     public int resolveResourceId(String typeName, String entryName){
-        EntryBlock entryBlock=searchEntryBlock(typeName, entryName);
-        if(entryBlock!=null){
-            return entryBlock.getResourceId();
+        Entry entry = searchEntry(typeName, entryName);
+        if(entry !=null){
+            return entry.getResourceId();
         }
         return 0;
     }
@@ -81,7 +81,7 @@ public class FrameworkTable extends TableBlock {
     private boolean hasResourceGroupMap(){
         return mNameGroupMap!=null;
     }
-    private EntryBlock searchEntryBlockFromMap(String typeName, String entryName){
+    private Entry searchEntryFromMap(String typeName, String entryName){
         if(mNameGroupMap ==null){
             return null;
         }
@@ -91,16 +91,16 @@ public class FrameworkTable extends TableBlock {
         }
         return null;
     }
-    public EntryBlock searchEntryBlock(String typeName, String entryName){
+    public Entry searchEntry(String typeName, String entryName){
         if(hasResourceGroupMap()){
-            return searchEntryBlockFromMap(typeName, entryName);
+            return searchEntryFromMap(typeName, entryName);
         }
-        return searchEntryBlockFromTable(typeName, entryName);
+        return searchEntryFromTable(typeName, entryName);
     }
     /**
      * Since this is framework, we are sure of proper names.
      */
-    public EntryBlock searchEntryBlockFromTable(String typeName, String entryName){
+    public Entry searchEntryFromTable(String typeName, String entryName){
         for(PackageBlock packageBlock:listPackages()){
             SpecTypePair specTypePair = packageBlock.searchByTypeName(typeName);
             if(specTypePair!=null){
@@ -166,8 +166,8 @@ public class FrameworkTable extends TableBlock {
     public void optimize(String frameworkName, String frameworkVersion){
         Map<Integer, EntryGroup> groupMap=scanAllEntryGroups();
         for(EntryGroup group:groupMap.values()){
-            List<EntryBlock> entryBlockList=getEntriesToRemove(group);
-            removeEntryBlocks(entryBlockList);
+            List<Entry> entryList =getEntriesToRemove(group);
+            removeEntries(entryList);
         }
         for(PackageBlock pkg:listPackages()){
             clearNonDefaultConfigs(pkg);
@@ -246,32 +246,32 @@ public class FrameworkTable extends TableBlock {
         }
         zero.addReference(allRef);
     }
-    private void removeEntryBlocks(List<EntryBlock> removeList){
-        for(EntryBlock entryBlock:removeList){
-            removeEntryBlock(entryBlock);
+    private void removeEntries(List<Entry> removeList){
+        for(Entry entry :removeList){
+            removeEntry(entry);
         }
     }
-    private void removeEntryBlock(EntryBlock entryBlock){
-        TypeBlock typeBlock=entryBlock.getTypeBlock();
+    private void removeEntry(Entry entry){
+        TypeBlock typeBlock= entry.getTypeBlock();
         if(typeBlock==null){
             return;
         }
-        typeBlock.removeEntry(entryBlock);
+        typeBlock.removeEntry(entry);
 
     }
-    private List<EntryBlock> getEntriesToRemove(EntryGroup group){
-        List<EntryBlock> results=new ArrayList<>();
-        EntryBlock mainEntry=group.pickOne();
+    private List<Entry> getEntriesToRemove(EntryGroup group){
+        List<Entry> results=new ArrayList<>();
+        Entry mainEntry=group.pickOne();
         if(mainEntry==null){
             return results;
         }
-        Iterator<EntryBlock> itr = group.iterator(true);
+        Iterator<Entry> itr = group.iterator(true);
         while (itr.hasNext()){
-            EntryBlock entryBlock=itr.next();
-            if(entryBlock==mainEntry){
+            Entry entry =itr.next();
+            if(entry ==mainEntry){
                 continue;
             }
-            results.add(entryBlock);
+            results.add(entry);
         }
         return results;
     }

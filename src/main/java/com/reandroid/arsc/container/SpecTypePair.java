@@ -25,7 +25,7 @@ import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
@@ -53,11 +53,11 @@ public class SpecTypePair extends BlockContainer<Block>
     public SpecTypePair(){
         this(new SpecBlock(), new TypeBlockArray());
     }
-    public EntryBlock getAnyEntry(String name){
+    public Entry getAnyEntry(String name){
         for(TypeBlock typeBlock:listTypeBlocks()){
-            EntryBlock entryBlock=typeBlock.searchByEntryName(name);
-            if(entryBlock!=null){
-                return entryBlock;
+            Entry entry =typeBlock.searchByEntryName(name);
+            if(entry !=null){
+                return entry;
             }
         }
         return null;
@@ -74,10 +74,10 @@ public class SpecTypePair extends BlockContainer<Block>
     public int countTypeBlocks(){
         return getTypeBlockArray().childesCount();
     }
-    public EntryBlock getOrCreateEntry(short entryId, String qualifiers){
+    public Entry getOrCreateEntry(short entryId, String qualifiers){
         return getTypeBlockArray().getOrCreateEntry(entryId, qualifiers);
     }
-    public EntryBlock getEntry(short entryId, String qualifiers){
+    public Entry getEntry(short entryId, String qualifiers){
         return getTypeBlockArray().getEntry(entryId, qualifiers);
     }
     public TypeBlock getOrCreateTypeBlock(String qualifiers){
@@ -115,7 +115,7 @@ public class SpecTypePair extends BlockContainer<Block>
      * Lets depreciate to warn developer
      */
     @Deprecated
-    public EntryBlock searchByEntryName(String entryName){
+    public Entry searchByEntryName(String entryName){
         return getTypeBlockArray().searchByEntryName(entryName);
     }
     public SpecBlock getSpecBlock(){
@@ -134,16 +134,16 @@ public class SpecTypePair extends BlockContainer<Block>
         }
         return null;
     }
-    public List<EntryBlock> listEntries(int entryId){
-        List<EntryBlock> results=new ArrayList<>();
+    public List<Entry> listEntries(int entryId){
+        List<Entry> results=new ArrayList<>();
         Iterator<TypeBlock> itr = mTypeBlockArray.iterator(true);
         while (itr.hasNext()){
             TypeBlock typeBlock=itr.next();
-            EntryBlock entryBlock=typeBlock.getEntryBlock(entryId);
-            if(entryBlock==null||entryBlock.isNull()){
+            Entry entry = typeBlock.getEntry(entryId);
+            if(entry ==null|| entry.isNull()){
                 continue;
             }
-            results.add(entryBlock);
+            results.add(entry);
         }
         return results;
     }

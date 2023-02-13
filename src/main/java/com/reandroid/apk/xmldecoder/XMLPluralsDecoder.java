@@ -17,10 +17,7 @@ package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.apk.XmlHelper;
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.BaseResValue;
-import com.reandroid.arsc.value.ResValueBag;
-import com.reandroid.arsc.value.ResValueBagItem;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.plurals.PluralsQuantity;
 import com.reandroid.common.EntryStore;
 import com.reandroid.xml.XMLElement;
@@ -30,19 +27,19 @@ class XMLPluralsDecoder extends BagDecoder{
         super(entryStore);
     }
     @Override
-    public void decode(ResValueBag resValueBag, XMLElement parentElement) {
-        ResValueBagItem[] bagItems = resValueBag.getBagItems();
+    public void decode(ResTableMapEntry mapEntry, XMLElement parentElement) {
+        ResValueMap[] bagItems = mapEntry.listResValueMap();
         int len=bagItems.length;
         EntryStore entryStore=getEntryStore();
         for(int i=0;i<len;i++){
-            ResValueBagItem item = bagItems[i];
-
-            PluralsQuantity quantity = PluralsQuantity.valueOf(item.getIdLow());
+            ResValueMap item = bagItems[i];
+            int low = item.getName() & 0xffff;
+            PluralsQuantity quantity = PluralsQuantity.valueOf((short) low);
             XMLElement child=new XMLElement("item");
             child.setAttribute("quantity", quantity.toString());
 
             if(item.getValueType() == ValueType.STRING){
-                XmlHelper.setTextContent(child, item.getValueAsPoolString());
+                XmlHelper.setTextContent(child, item.getDataAsPoolString());
             }else {
                 String value = ValueDecoder.decodeIntEntry(entryStore, item);
                 child.setTextContent(value);
@@ -53,27 +50,29 @@ class XMLPluralsDecoder extends BagDecoder{
     }
 
     @Override
-    public boolean canDecode(ResValueBag resValueBag) {
-        return isResBagPluralsValue(resValueBag);
+    public boolean canDecode(ResTableMapEntry mapEntry) {
+        return isResBagPluralsValue(mapEntry);
     }
 
-    public static boolean isResBagPluralsValue(BaseResValue baseResValue){
-        ResValueBag resValueBag=(ResValueBag)baseResValue;
-        int parentId=resValueBag.getParentId();
+    public static boolean isResBagPluralsValue(ResTableMapEntry valueItem){
+        int parentId=valueItem.getParentId();
         if(parentId!=0){
             return false;
         }
-        ResValueBagItem[] bagItems = resValueBag.getBagItems();
+        ResValueMap[] bagItems = valueItem.listResValueMap();
         if(bagItems==null||bagItems.length==0){
             return false;
         }
         int len=bagItems.length;
         for(int i=0;i<len;i++){
-            ResValueBagItem item=bagItems[i];
-            if(item.getIdHigh()!=0x0100){
+            ResValueMap item=bagItems[i];
+            int name = item.getName();
+            int high = (name >> 16) & 0xffff;
+            if(high!=0x0100){
                 return false;
             }
-            PluralsQuantity pq=PluralsQuantity.valueOf(item.getIdLow());
+            int low = name & 0xffff;
+            PluralsQuantity pq=PluralsQuantity.valueOf((short) low);
             if(pq==null){
                 return false;
             }

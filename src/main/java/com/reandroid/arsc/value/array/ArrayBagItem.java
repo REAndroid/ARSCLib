@@ -19,19 +19,19 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.arsc.value.EntryBlock;
-import com.reandroid.arsc.value.ResValueBagItem;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.ValueType;
 
 import java.util.ArrayList;
 import java.util.List;
 
  public class ArrayBagItem {
-    private final ResValueBagItem mBagItem;
-    public ArrayBagItem(ResValueBagItem bagItem){
+    private final ResValueMap mBagItem;
+    public ArrayBagItem(ResValueMap bagItem){
         this.mBagItem=bagItem;
     }
-    public ResValueBagItem getBagItem() {
+    public ResValueMap getBagItem() {
         return mBagItem;
     }
 
@@ -39,11 +39,11 @@ import java.util.List;
         return getBagItem().getValueType();
     }
     private TableStringPool getStringPool(){
-        EntryBlock entryBlock=getBagItem().getEntryBlock();
-        if(entryBlock==null){
+        Entry entry =getBagItem().getEntry();
+        if(entry ==null){
             return null;
         }
-        PackageBlock pkg = entryBlock.getPackageBlock();
+        PackageBlock pkg = entry.getPackageBlock();
         if(pkg==null){
             return null;
         }
@@ -88,17 +88,17 @@ import java.util.List;
         builder.append("</item>");
         return builder.toString();
     }
-    public static ArrayBagItem[] create(ResValueBagItem[] resValueBagItems){
-        if(resValueBagItems==null){
+    public static ArrayBagItem[] create(ResValueMap[] resValueMaps){
+        if(resValueMaps ==null){
             return null;
         }
-        int len=resValueBagItems.length;
+        int len= resValueMaps.length;
         if(len==0){
             return null;
         }
         List<ArrayBagItem> results=new ArrayList<>();
         for(int i=0;i<len;i++){
-            ArrayBagItem item=create(resValueBagItems[i]);
+            ArrayBagItem item=create(resValueMaps[i]);
             if(item==null){
                 return null;
             }
@@ -106,11 +106,11 @@ import java.util.List;
         }
         return results.toArray(new ArrayBagItem[0]);
     }
-    public static ArrayBagItem create(ResValueBagItem resValueBagItem){
-        if(resValueBagItem==null){
+    public static ArrayBagItem create(ResValueMap resValueMap){
+        if(resValueMap ==null){
             return null;
         }
-        ArrayBagItem item=new ArrayBagItem(resValueBagItem);
+        ArrayBagItem item=new ArrayBagItem(resValueMap);
         return item;
     }
 }

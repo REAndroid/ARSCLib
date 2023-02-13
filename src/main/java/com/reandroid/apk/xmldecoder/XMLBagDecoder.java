@@ -15,7 +15,8 @@
   */
 package com.reandroid.apk.xmldecoder;
 
-import com.reandroid.arsc.value.ResValueBag;
+import com.reandroid.arsc.array.ResValueMapArray;
+import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.common.EntryStore;
 import com.reandroid.xml.XMLElement;
 
@@ -34,13 +35,13 @@ public class XMLBagDecoder {
         this.decoderList.add(new XMLArrayDecoder(entryStore));
         this.commonBagDecoder = new XMLCommonBagDecoder(entryStore);
     }
-    public void decode(ResValueBag resValueBag, XMLElement parentElement){
-        BagDecoder bagDecoder=getFor(resValueBag);
-        bagDecoder.decode(resValueBag, parentElement);
+    public void decode(ResTableMapEntry mapEntry, XMLElement parentElement){
+        BagDecoder bagDecoder=getFor(mapEntry);
+        bagDecoder.decode(mapEntry, parentElement);
     }
-    private BagDecoder getFor(ResValueBag resValueBag){
+    private BagDecoder getFor(ResTableMapEntry mapEntry){
         for(BagDecoder bagDecoder:decoderList){
-            if(bagDecoder.canDecode(resValueBag)){
+            if(bagDecoder.canDecode(mapEntry)){
                 return bagDecoder;
             }
         }

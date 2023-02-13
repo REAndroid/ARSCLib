@@ -15,7 +15,7 @@
   */
 package com.reandroid.arsc.chunk;
 
-import com.reandroid.arsc.array.EntryBlockArray;
+import com.reandroid.arsc.array.EntryArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.header.TypeHeader;
@@ -23,7 +23,7 @@ import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.TypeStringPool;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.json.JSONConvert;
@@ -38,14 +38,14 @@ import java.util.List;
 public class TypeBlock extends Chunk<TypeHeader>
         implements BlockLoad, JSONConvert<JSONObject>, Comparable<TypeBlock> {
 
-    private final EntryBlockArray mEntryArray;
+    private final EntryArray mEntryArray;
     private TypeString mTypeString;
     public TypeBlock() {
         super(new TypeHeader(), 2);
         TypeHeader header = getHeaderBlock();
 
         IntegerArray entryOffsets = new IntegerArray();
-        this.mEntryArray = new EntryBlockArray(entryOffsets,
+        this.mEntryArray = new EntryArray(entryOffsets,
                 header.getCount(), header.getEntriesStart());
 
         header.getFlags().setBlockLoad(this);
@@ -122,7 +122,7 @@ public class TypeBlock extends Chunk<TypeHeader>
         onSetEntryCount(count);
     }
     public boolean isEmpty(){
-        return getEntryBlockArray().isEmpty();
+        return getEntryArray().isEmpty();
     }
     public boolean isDefault(){
         return getResConfig().isDefault();
@@ -134,7 +134,7 @@ public class TypeBlock extends Chunk<TypeHeader>
         getResConfig().parseQualifiers(qualifiers);
     }
     public int countNonNullEntries(){
-        return getEntryBlockArray().countNonNull();
+        return getEntryArray().countNonNull();
     }
     public SpecTypePair getParentSpecTypePair(){
         Block parent=getParent();
@@ -148,29 +148,29 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     public void cleanEntries(){
         PackageBlock packageBlock=getPackageBlock();
-        List<EntryBlock> allEntries=listEntries(true);
-        for(EntryBlock entryBlock:allEntries){
+        List<Entry> allEntries=listEntries(true);
+        for(Entry entry :allEntries){
             if(packageBlock!=null){
-                packageBlock.removeEntryGroup(entryBlock);
+                packageBlock.removeEntryGroup(entry);
             }
-            entryBlock.setNull(true);
+            entry.setNull(true);
         }
     }
-    public void removeEntry(EntryBlock entryBlock){
+    public void removeEntry(Entry entry){
         PackageBlock packageBlock=getPackageBlock();
         if(packageBlock!=null){
-            packageBlock.removeEntryGroup(entryBlock);
+            packageBlock.removeEntryGroup(entry);
         }
-        entryBlock.setNull(true);
+        entry.setNull(true);
     }
-    public EntryBlock getOrCreateEntry(String name){
-        for(EntryBlock entryBlock:getEntryBlockArray().listItems()){
-            if(name.equals(entryBlock.getName())){
-                return entryBlock;
+    public Entry getOrCreateEntry(String name){
+        for(Entry entry : getEntryArray().listItems()){
+            if(name.equals(entry.getName())){
+                return entry;
             }
         }
         SpecTypePair specTypePair = getParentSpecTypePair();
-        EntryBlock exist=specTypePair.getAnyEntry(name);
+        Entry exist=specTypePair.getAnyEntry(name);
         int id;
         if(exist!=null){
             id=exist.getIndex();
@@ -179,47 +179,47 @@ public class TypeBlock extends Chunk<TypeHeader>
         }
         SpecString specString = getPackageBlock()
                 .getSpecStringPool().getOrCreate(name);
-        EntryBlock entryBlock = getOrCreateEntry((short) id);
-        if(entryBlock.isNull()){
-            entryBlock.setValueAsRaw(ValueType.NULL, 0);
+        Entry entry = getOrCreateEntry((short) id);
+        if(entry.isNull()){
+            entry.setValueAsRaw(ValueType.NULL, 0);
         }
-        entryBlock.setSpecReference(specString.getIndex());
-        return entryBlock;
+        entry.setSpecReference(specString.getIndex());
+        return entry;
     }
-    public EntryBlock getOrCreateEntry(short entryId){
-        return getEntryBlockArray().getOrCreate(entryId);
+    public Entry getOrCreateEntry(short entryId){
+        return getEntryArray().getOrCreate(entryId);
     }
-    public EntryBlock getEntry(short entryId){
-        return getEntryBlockArray().getEntry(entryId);
+    public Entry getEntry(short entryId){
+        return getEntryArray().getEntry(entryId);
     }
     public ResConfig getResConfig(){
         return getHeaderBlock().getConfig();
     }
-    public EntryBlockArray getEntryBlockArray(){
+    public EntryArray getEntryArray(){
         return mEntryArray;
     }
-    public List<EntryBlock> listEntries(){
+    public List<Entry> listEntries(){
         return listEntries(false);
     }
-    public List<EntryBlock> listEntries(boolean skipNullBlock){
-        List<EntryBlock> results=new ArrayList<>();
-        Iterator<EntryBlock> itr = getEntryBlockArray().iterator(skipNullBlock);
+    public List<Entry> listEntries(boolean skipNullBlock){
+        List<Entry> results=new ArrayList<>();
+        Iterator<Entry> itr = getEntryArray().iterator(skipNullBlock);
         while (itr.hasNext()){
-            EntryBlock block=itr.next();
+            Entry block=itr.next();
             results.add(block);
         }
         return results;
     }
-    public EntryBlock getEntryBlock(int entryId){
-        return getEntryBlockArray().get(entryId);
+    public Entry getEntry(int entryId){
+        return getEntryArray().get(entryId);
     }
 
     private void onSetEntryCount(int count) {
-        getEntryBlockArray().setChildesCount(count);
+        getEntryArray().setChildesCount(count);
     }
     @Override
     protected void onChunkRefreshed() {
-        getEntryBlockArray().refreshCountAndStart();
+        getEntryArray().refreshCountAndStart();
     }
     @Override
     protected void onPreRefreshRefresh(){
@@ -246,7 +246,7 @@ public class TypeBlock extends Chunk<TypeHeader>
         jsonObject.put(NAME_id, getId());
         jsonObject.put(NAME_name, getTypeName());
         jsonObject.put(NAME_config, getResConfig().toJson());
-        jsonObject.put(NAME_entries, getEntryBlockArray().toJson());
+        jsonObject.put(NAME_entries, getEntryArray().toJson());
         return jsonObject;
     }
     @Override
@@ -256,7 +256,7 @@ public class TypeBlock extends Chunk<TypeHeader>
         if(name!=null){
             setTypeName(name);
         }
-        getEntryBlockArray()
+        getEntryArray()
                 .fromJson(json.getJSONArray(NAME_entries));
         getResConfig()
                 .fromJson(json.getJSONObject(NAME_config));
@@ -270,7 +270,7 @@ public class TypeBlock extends Chunk<TypeHeader>
                     +getTypeId()+"!="+typeBlock.getTypeId());
         }
         setTypeName(typeBlock.getTypeName());
-        getEntryBlockArray().merge(typeBlock.getEntryBlockArray());
+        getEntryArray().merge(typeBlock.getEntryArray());
     }
     @Override
     public int compareTo(TypeBlock typeBlock) {
@@ -286,8 +286,8 @@ public class TypeBlock extends Chunk<TypeHeader>
      * Lets depreciate to warn developer
      */
     @Deprecated
-    public EntryBlock searchByEntryName(String entryName){
-        return getEntryBlockArray().searchByEntryName(entryName);
+    public Entry searchByEntryName(String entryName){
+        return getEntryArray().searchByEntryName(entryName);
     }
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {

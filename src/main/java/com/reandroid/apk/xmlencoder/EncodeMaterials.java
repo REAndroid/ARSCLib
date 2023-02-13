@@ -26,7 +26,7 @@
  import com.reandroid.arsc.item.SpecString;
  import com.reandroid.arsc.util.FrameworkTable;
  import com.reandroid.arsc.util.ResNameMap;
- import com.reandroid.arsc.value.EntryBlock;
+ import com.reandroid.arsc.value.Entry;
  import com.reandroid.common.Frameworks;
  import com.reandroid.common.ResourceResolver;
 
@@ -41,7 +41,7 @@
      private APKLogger apkLogger;
      private boolean mForceCreateNamespaces = true;
      private Set<String> mFrameworkPackageNames;
-     private final ResNameMap<EntryBlock> mLocalResNameMap = new ResNameMap<>();
+     private final ResNameMap<Entry> mLocalResNameMap = new ResNameMap<>();
      public EncodeMaterials(){
      }
      public SpecString getSpecString(String name){
@@ -49,7 +49,7 @@
                  .get(name)
                  .get(0);
      }
-     public EntryBlock getAttributeBlock(String refString){
+     public Entry getAttributeBlock(String refString){
          String packageName = null;
          String type = "attr";
          String name = refString;
@@ -62,7 +62,7 @@
                  || packageName.equals(getCurrentPackageName())
                  || !isFrameworkPackageName(packageName)){
 
-             return getLocalEntryBlock(type, name);
+             return getLocalEntry(type, name);
          }
          return getFrameworkEntry(type, name);
      }
@@ -105,9 +105,9 @@
                  ", name="+name);
      }
      public int resolveFrameworkResourceId(String packageName, String type, String name){
-         EntryBlock entryBlock = getFrameworkEntry(packageName, type, name);
-         if(entryBlock!=null){
-             return entryBlock.getResourceId();
+         Entry entry = getFrameworkEntry(packageName, type, name);
+         if(entry !=null){
+             return entry.getResourceId();
          }
          throw new EncodeException("Framework entry not found: " +
                  "package="+packageName+
@@ -115,9 +115,9 @@
                  ", name="+name);
      }
      public int resolveFrameworkResourceId(int packageId, String type, String name){
-         EntryBlock entryBlock = getFrameworkEntry(packageId, type, name);
-         if(entryBlock!=null){
-             return entryBlock.getResourceId();
+         Entry entry = getFrameworkEntry(packageId, type, name);
+         if(entry !=null){
+             return entry.getResourceId();
          }
          throw new EncodeException("Framework entry not found: " +
                  "packageId="+String.format("0x%02x", packageId)+
@@ -141,23 +141,23 @@
          }
          return null;
      }
-     public EntryBlock getLocalEntryBlock(String type, String name){
-         EntryBlock entryBlock=mLocalResNameMap.get(type, name);
-         if(entryBlock!=null){
-             return entryBlock;
+     public Entry getLocalEntry(String type, String name){
+         Entry entry =mLocalResNameMap.get(type, name);
+         if(entry !=null){
+             return entry;
          }
-         loadLocalEntryBlockMap(type);
-         entryBlock=mLocalResNameMap.get(type, name);
-         if(entryBlock!=null){
-             return entryBlock;
+         loadLocalEntryMap(type);
+         entry =mLocalResNameMap.get(type, name);
+         if(entry !=null){
+             return entry;
          }
-         entryBlock= searchLocalEntryBlock(type, name);
-         if(entryBlock!=null){
-             mLocalResNameMap.add(type, name, entryBlock);
+         entry = searchLocalEntry(type, name);
+         if(entry !=null){
+             mLocalResNameMap.add(type, name, entry);
          }
-         return entryBlock;
+         return entry;
      }
-     private EntryBlock searchLocalEntryBlock(String type, String name){
+     private Entry searchLocalEntry(String type, String name){
          for(EntryGroup entryGroup : currentPackage.listEntryGroup()){
              if(type.equals(entryGroup.getTypeName()) &&
                      name.equals(entryGroup.getSpecName())){
@@ -167,9 +167,9 @@
          SpecTypePair specTypePair=currentPackage.searchByTypeName(type);
          if(specTypePair!=null){
              for(TypeBlock typeBlock:specTypePair.listTypeBlocks()){
-                 for(EntryBlock entryBlock:typeBlock.listEntries(true)){
-                     if(name.equals(entryBlock.getName())){
-                         return entryBlock;
+                 for(Entry entry :typeBlock.listEntries(true)){
+                     if(name.equals(entry.getName())){
+                         return entry;
                      }
                  }
                  break;
@@ -182,9 +182,9 @@
              specTypePair=packageBlock.searchByTypeName(type);
              if(specTypePair!=null){
                  for(TypeBlock typeBlock:specTypePair.listTypeBlocks()){
-                     for(EntryBlock entryBlock:typeBlock.listEntries(true)){
-                         if(name.equals(entryBlock.getName())){
-                             return entryBlock;
+                     for(Entry entry :typeBlock.listEntries(true)){
+                         if(name.equals(entry.getName())){
+                             return entry;
                          }
                      }
                      break;
@@ -193,25 +193,25 @@
          }
          return null;
      }
-     private void loadLocalEntryBlockMap(String type){
-         ResNameMap<EntryBlock> localMap = mLocalResNameMap;
+     private void loadLocalEntryMap(String type){
+         ResNameMap<Entry> localMap = mLocalResNameMap;
          for(PackageBlock packageBlock:currentPackage.getTableBlock().listPackages()){
              SpecTypePair specTypePair=packageBlock.searchByTypeName(type);
              if(specTypePair!=null){
                  for(TypeBlock typeBlock:specTypePair.listTypeBlocks()){
-                     for(EntryBlock entryBlock:typeBlock.listEntries(true)){
-                         localMap.add(entryBlock.getTypeName(),
-                                 entryBlock.getName(), entryBlock);
+                     for(Entry entry :typeBlock.listEntries(true)){
+                         localMap.add(entry.getTypeName(),
+                                 entry.getName(), entry);
                      }
                  }
              }
          }
      }
-     public EntryBlock getFrameworkEntry(String type, String name){
+     public Entry getFrameworkEntry(String type, String name){
          for(FrameworkTable table:frameworkTables){
-             EntryBlock entryBlock = table.searchEntryBlock(type, name);
-             if(entryBlock!=null){
-                 return entryBlock;
+             Entry entry = table.searchEntry(type, name);
+             if(entry !=null){
+                 return entry;
              }
          }
          return null;
@@ -232,26 +232,26 @@
          mFrameworkPackageNames=results;
          return results;
      }
-     public EntryBlock getFrameworkEntry(String packageName, String type, String name){
+     public Entry getFrameworkEntry(String packageName, String type, String name){
          for(FrameworkTable table:frameworkTables){
              for(PackageBlock packageBlock:table.listPackages()){
                  if(packageName.equals(packageBlock.getName())){
-                     EntryBlock entryBlock = table.searchEntryBlock(type, name);
-                     if(entryBlock!=null){
-                         return entryBlock;
+                     Entry entry = table.searchEntry(type, name);
+                     if(entry !=null){
+                         return entry;
                      }
                  }
              }
          }
          return null;
      }
-     public EntryBlock getFrameworkEntry(int packageId, String type, String name){
+     public Entry getFrameworkEntry(int packageId, String type, String name){
          for(FrameworkTable table:frameworkTables){
              for(PackageBlock packageBlock:table.listPackages()){
                  if(packageId==packageBlock.getId()){
-                     EntryBlock entryBlock = table.searchEntryBlock(type, name);
-                     if(entryBlock!=null){
-                         return entryBlock;
+                     Entry entry = table.searchEntry(type, name);
+                     if(entry !=null){
+                         return entry;
                      }
                  }
              }

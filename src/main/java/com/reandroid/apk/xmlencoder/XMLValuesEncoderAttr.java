@@ -15,10 +15,10 @@
   */
 package com.reandroid.apk.xmlencoder;
 
-import com.reandroid.arsc.array.ResValueBagItemArray;
+import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.ResValueBag;
-import com.reandroid.arsc.value.ResValueBagItem;
+import com.reandroid.arsc.value.ResTableMapEntry;
+import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.arsc.value.attribute.AttributeItemType;
@@ -39,21 +39,21 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
         return count;
     }
     @Override
-    void encodeChildes(XMLElement parentElement, ResValueBag resValueBag){
-        encodeAttributes(parentElement, resValueBag);
-        encodeEnumOrFlag(parentElement, resValueBag);
+    void encodeChildes(XMLElement parentElement, ResTableMapEntry mapEntry){
+        encodeAttributes(parentElement, mapEntry);
+        encodeEnumOrFlag(parentElement, mapEntry);
         // TODO: re-check if this is necessary
-        resValueBag.getEntryBlock().setPublic(true);
+        mapEntry.getHeader().setPublic(true);
     }
-    private void encodeAttributes(XMLElement parentElement, ResValueBag resValueBag){
-        ResValueBagItemArray bagItemArray = resValueBag.getResValueBagItemArray();
+    private void encodeAttributes(XMLElement parentElement, ResTableMapEntry mapEntry){
+        ResValueMapArray mapArray = mapEntry.getValue();
 
         int bagIndex=0;
 
-        ResValueBagItem formatItem = bagItemArray.get(bagIndex);
+        ResValueMap formatItem = mapArray.get(bagIndex);
 
-        formatItem.setIdHigh((short) 0x0100);
-        formatItem.setIdLow(AttributeItemType.FORMAT.getValue());
+        formatItem.setNameHigh((short) 0x0100);
+        formatItem.setNameLow(AttributeItemType.FORMAT.getValue());
         formatItem.setValueType(ValueType.INT_DEC);
         formatItem.setDataHigh(getChildTypes(parentElement));
 
@@ -75,15 +75,15 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
                 throw new EncodeException("Unknown attribute: '"+name
                         +"', on attribute: "+attribute.toString());
             }
-            ResValueBagItem bagItem = bagItemArray.get(bagIndex);
-            bagItem.setIdHigh((short) 0x0100);
-            bagItem.setIdLow(itemType.getValue());
+            ResValueMap bagItem = mapArray.get(bagIndex);
+            bagItem.setNameHigh((short) 0x0100);
+            bagItem.setNameLow(itemType.getValue());
             bagItem.setValueType(ValueType.INT_DEC);
             bagItem.setData(ValueDecoder.parseInteger(attribute.getValue()));
             bagIndex++;
         }
     }
-    private void encodeEnumOrFlag(XMLElement element, ResValueBag resValueBag){
+    private void encodeEnumOrFlag(XMLElement element, ResTableMapEntry mapEntry){
         int count=element.getChildesCount();
         if(count==0){
             return;
@@ -94,7 +94,7 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
         }
 
         EncodeMaterials materials = getMaterials();
-        ResValueBagItemArray bagItemArray = resValueBag.getResValueBagItemArray();
+        ResValueMapArray mapArray = mapEntry.getValue();
 
         for(int i=0;i<count;i++){
             XMLElement child=element.getChildAt(i);
@@ -113,8 +113,8 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
                 throw new EncodeException("Unknown value for element '"+child.toText()+"'");
             }
 
-            ResValueBagItem bagItem = bagItemArray.get(i+offset);
-            bagItem.setId(resourceId);
+            ResValueMap bagItem = mapArray.get(i+offset);
+            bagItem.setName(resourceId);
             bagItem.setValueType(encodeResult.valueType);
             bagItem.setData(encodeResult.value);
         }

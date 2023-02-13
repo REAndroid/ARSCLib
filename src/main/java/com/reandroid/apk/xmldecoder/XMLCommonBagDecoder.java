@@ -18,8 +18,8 @@ package com.reandroid.apk.xmldecoder;
 import com.reandroid.apk.XmlHelper;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.ResValueBag;
-import com.reandroid.arsc.value.ResValueBagItem;
+import com.reandroid.arsc.value.ResTableMapEntry;
+import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.common.EntryStore;
 import com.reandroid.xml.XMLElement;
@@ -30,12 +30,12 @@ class XMLCommonBagDecoder extends BagDecoder{
     }
 
     @Override
-    public void decode(ResValueBag resValueBag, XMLElement parentElement) {
+    public void decode(ResTableMapEntry mapEntry, XMLElement parentElement) {
 
-        PackageBlock currentPackage=resValueBag
-                .getEntryBlock().getPackageBlock();
+        PackageBlock currentPackage= mapEntry
+                .getParentEntry().getPackageBlock();
 
-        int parentId = resValueBag.getParentId();
+        int parentId = mapEntry.getParentId();
         String parent;
         if(parentId!=0){
             parent = ValueDecoder.decodeEntryValue(getEntryStore(),
@@ -47,20 +47,20 @@ class XMLCommonBagDecoder extends BagDecoder{
             parentElement.setAttribute("parent", parent);
         }
         int currentPackageId=currentPackage.getId();
-        ResValueBagItem[] bagItems = resValueBag.getBagItems();
+        ResValueMap[] bagItems = mapEntry.listResValueMap();
         EntryStore entryStore = getEntryStore();
         for(int i=0;i< bagItems.length;i++){
-            ResValueBagItem item=bagItems[i];
-            int resourceId=item.getId();
+            ResValueMap item=bagItems[i];
+            int resourceId=item.getName();
             XMLElement child=new XMLElement("item");
             String name = ValueDecoder.decodeAttributeName(
-                    entryStore, currentPackage, item.getId());
+                    entryStore, currentPackage, item.getName());
 
             child.setAttribute("name", name);
 
             ValueType valueType = item.getValueType();
             if(valueType == ValueType.STRING){
-                XmlHelper.setTextContent(child, item.getValueAsPoolString());
+                XmlHelper.setTextContent(child, item.getDataAsPoolString());
             }else {
                 String value = ValueDecoder.decode(entryStore, currentPackageId,
                         resourceId, item.getValueType(), item.getData());
@@ -70,7 +70,7 @@ class XMLCommonBagDecoder extends BagDecoder{
         }
     }
     @Override
-    public boolean canDecode(ResValueBag resValueBag) {
-        return resValueBag!=null;
+    public boolean canDecode(ResTableMapEntry mapEntry) {
+        return mapEntry !=null;
     }
 }

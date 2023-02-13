@@ -16,7 +16,7 @@
 package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Entry;
 
  class XMLValuesEncoderString extends XMLValuesEncoder{
     XMLValuesEncoderString(EncodeMaterials materials) {
@@ -24,15 +24,15 @@ import com.reandroid.arsc.value.EntryBlock;
     }
 
     @Override
-    void encodeStringValue(EntryBlock entryBlock, String value){
-        entryBlock.setValueAsString(ValueDecoder.unEscapeSpecialCharacter(value));
+    void encodeStringValue(Entry entry, String value){
+        entry.setValueAsString(ValueDecoder.unEscapeSpecialCharacter(value));
     }
     @Override
-    void encodeNullValue(EntryBlock entryBlock){
-        entryBlock.setValueAsString("");
+    void encodeNullValue(Entry entry){
+        entry.setValueAsString("");
     }
     @Override
-    void encodeBooleanValue(EntryBlock entryBlock, String value){
-        entryBlock.setValueAsString(value);
+    void encodeBooleanValue(Entry entry, String value){
+        entry.setValueAsString(value);
     }
 }

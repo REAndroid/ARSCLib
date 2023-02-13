@@ -15,8 +15,8 @@
   */
 package com.reandroid.apk.xmlencoder;
 
-import com.reandroid.arsc.value.EntryBlock;
-import com.reandroid.arsc.value.ResValueBag;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.xml.XMLElement;
 
 class XMLValuesEncoderBag extends XMLValuesEncoder{
@@ -24,18 +24,19 @@ class XMLValuesEncoderBag extends XMLValuesEncoder{
         super(materials);
     }
     @Override
-    void encodeValue(EntryBlock entryBlock, XMLElement element){
-        ResValueBag resValueBag=new ResValueBag();
-        entryBlock.setResValue(resValueBag);
+    void encodeValue(Entry entry, XMLElement element){
+        ResTableMapEntry tableMapEntry = new ResTableMapEntry();
+        entry.setTableEntry(tableMapEntry);
         String parent=element.getAttributeValue("parent");
         if(!EncodeUtil.isEmpty(parent)){
             int parentId=getMaterials().resolveReference(parent);
-            resValueBag.setParentId(parentId);
+            tableMapEntry.getHeader().setParentId(parentId);
         }
-        resValueBag.setCount(getChildesCount(element));
-        encodeChildes(element, resValueBag);
+        tableMapEntry.getValue().setChildesCount(getChildesCount(element));
+        encodeChildes(element, tableMapEntry);
+        tableMapEntry.refresh();
     }
-    void encodeChildes(XMLElement element, ResValueBag resValueBag){
+    void encodeChildes(XMLElement element, ResTableMapEntry mapEntry){
         throw new EncodeException("Unimplemented bag type encoder: "
                 +element.getTagName());
 

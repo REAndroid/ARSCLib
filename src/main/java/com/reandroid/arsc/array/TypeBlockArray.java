@@ -24,7 +24,7 @@ import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
@@ -58,7 +58,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
             trimNullBlocks();
         }
     }
-    public EntryBlock getOrCreateEntry(short entryId, String qualifiers){
+    public Entry getOrCreateEntry(short entryId, String qualifiers){
         TypeBlock typeBlock=getOrCreate(qualifiers);
         return typeBlock.getOrCreateEntry(entryId);
     }
@@ -70,7 +70,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         }
         return true;
     }
-    public EntryBlock getEntry(short entryId, String qualifiers){
+    public Entry getEntry(short entryId, String qualifiers){
         TypeBlock typeBlock=getTypeBlock(qualifiers);
         if(typeBlock==null){
             return null;
@@ -243,7 +243,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     public int getHighestEntryCount(){
         int result=0;
         for(TypeBlock typeBlock:getChildes()){
-            int count=typeBlock.getEntryBlockArray().childesCount();
+            int count=typeBlock.getEntryArray().childesCount();
             if(count>result){
                 result=count;
             }
@@ -303,7 +303,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
      * Lets depreciate to warn developer
      */
     @Deprecated
-    public EntryBlock searchByEntryName(String entryName){
+    public Entry searchByEntryName(String entryName){
         if(entryName==null){
             return null;
         }

@@ -97,9 +97,6 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         if(str==null){
             return null;
         }
-        if(str.startsWith("*Plus taxes if applicable")){
-            String junk="";
-        }
         StyleItem styleItem=getStyle();
         if(styleItem==null){
             return str;

@@ -13,20 +13,26 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-package com.reandroid.apk.xmldecoder;
+package com.reandroid.arsc.item;
 
-import com.reandroid.arsc.value.ResTableMapEntry;
-import com.reandroid.common.EntryStore;
-import com.reandroid.xml.XMLElement;
+import com.reandroid.arsc.base.Block;
 
-abstract class BagDecoder {
-    private final EntryStore entryStore;
-    public BagDecoder(EntryStore entryStore){
-        this.entryStore=entryStore;
+public class ReferenceBlock<T extends Block> implements ReferenceItem{
+    private final T block;
+    private final int offset;
+    public ReferenceBlock(T block, int offset){
+        this.block = block;
+        this.offset = offset;
     }
-    EntryStore getEntryStore(){
-        return entryStore;
+    public T getBlock(){
+        return this.block;
     }
-    public abstract void decode(ResTableMapEntry mapEntry, XMLElement parentElement);
-    public abstract boolean canDecode(ResTableMapEntry mapEntry);
+    @Override
+    public void set(int val) {
+        BlockItem.putInteger(this.block.getBytes(), this.offset, val);
+    }
+    @Override
+    public int get() {
+        return BlockItem.getInteger(this.block.getBytes(), this.offset);
+    }
 }

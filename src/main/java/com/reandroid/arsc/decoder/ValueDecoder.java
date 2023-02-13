@@ -242,14 +242,14 @@ import java.util.regex.Pattern;
         if(entryGroup==null){
             return String.format("@0x%08x", resourceId);
         }
-        EntryBlock entryBlock=entryGroup.pickOne();
-        if(entryBlock==null){
+        Entry entry =entryGroup.pickOne();
+        if(entry ==null){
             return String.format("@0x%08x", resourceId);
         }
         String prefix=null;
         if(currentPackage!=null){
             String name=currentPackage.getName();
-            String other=entryBlock.getPackageBlock().getName();
+            String other= entry.getPackageBlock().getName();
             if(!name.equals(other)){
                 prefix=other+":";
             }
@@ -300,34 +300,34 @@ import java.util.regex.Pattern;
         }
         return decode(valueType, data);
     }
-    public static String decodeIntEntry(EntryStore store, EntryBlock entryBlock){
-        if(entryBlock==null){
+    public static String decodeIntEntry(EntryStore store, Entry entry){
+        if(entry ==null){
             return null;
         }
-        BaseResValue baseResValue = entryBlock.getResValue();
-        if(!(baseResValue instanceof ResValueInt)){
+        TableEntry<?, ?> tableEntry = entry.getTableEntry();
+        if(tableEntry == null || (tableEntry instanceof ResTableMapEntry)){
             return null;
         }
-        ResValueInt resValueInt=(ResValueInt)baseResValue;
-        return decodeIntEntry(store, resValueInt);
+        ResValue resValue =(ResValue) tableEntry.getValue();
+        return decodeIntEntry(store, resValue);
     }
-    public static String decodeIntEntry(EntryStore store, ResValueInt resValueInt){
-        if(resValueInt==null){
+    public static String decodeIntEntry(EntryStore store, ResValue resValue){
+        if(resValue ==null){
             return null;
         }
-        EntryBlock parentEntry=resValueInt.getEntryBlock();
+        Entry parentEntry = resValue.getEntry();
         if(parentEntry==null){
             return null;
         }
-        ValueType valueType=resValueInt.getValueType();
-        int data=resValueInt.getData();
+        ValueType valueType= resValue.getValueType();
+        int data= resValue.getData();
         return decodeIntEntry(store, parentEntry, valueType, data);
     }
-    public static String decodeIntEntry(EntryStore store, ResValueBagItem bagItem){
+    public static String decodeIntEntry(EntryStore store, ResValueMap bagItem){
         if(bagItem==null){
             return null;
         }
-        EntryBlock parentEntry=bagItem.getEntryBlock();
+        Entry parentEntry=bagItem.getEntry();
         if(parentEntry==null){
             return null;
         }
@@ -335,7 +335,7 @@ import java.util.regex.Pattern;
         int data=bagItem.getData();
         return decodeIntEntry(store, parentEntry, valueType, data);
     }
-    public static String decodeIntEntry(EntryStore store, EntryBlock parentEntry, ValueType valueType, int data){
+    public static String decodeIntEntry(EntryStore store, Entry parentEntry, ValueType valueType, int data){
         if(valueType==ValueType.NULL){
             return "@empty";
         }
@@ -367,18 +367,18 @@ import java.util.regex.Pattern;
         }
         return decode(valueType, data);
     }
-    public static String buildReferenceValue(EntryStore store, EntryBlock entryBlock){
-        if(entryBlock==null){
+    public static String buildReferenceValue(EntryStore store, Entry entry){
+        if(entry ==null){
             return null;
         }
-        BaseResValue baseResValue = entryBlock.getResValue();
-        if(!(baseResValue instanceof ResValueInt)){
+        TableEntry<?, ?> tableEntry = entry.getTableEntry();
+        if(tableEntry == null || (tableEntry instanceof ResTableMapEntry)){
             return null;
         }
-        ResValueInt resValueInt=(ResValueInt)baseResValue;
-        int resourceId=resValueInt.getData();
-        ValueType valueType=resValueInt.getValueType();
-        return buildReferenceValue(store, entryBlock, valueType, resourceId);
+        ResValue resValue =(ResValue) tableEntry.getValue();
+        int resourceId= resValue.getData();
+        ValueType valueType= resValue.getValueType();
+        return buildReferenceValue(store, entry, valueType, resourceId);
     }
     public static String decode(EntryStore entryStore, int currentPackageId, int nameResourceId, ValueType valueType, int rawVal){
         String currPackageName=getPackageName(entryStore, currentPackageId);
@@ -446,17 +446,17 @@ import java.util.regex.Pattern;
         return builder.toString();
     }
 
-    private static String buildReferenceValue(EntryStore store, EntryBlock entryBlock, ValueType valueType, int resourceId){
-        if(entryBlock==null){
+    private static String buildReferenceValue(EntryStore store, Entry entry, ValueType valueType, int resourceId){
+        if(entry ==null){
             return null;
         }
-        EntryGroup value=searchEntryGroup(store, entryBlock, resourceId);
+        EntryGroup value=searchEntryGroup(store, entry, resourceId);
         if(value==null){
             return null;
         }
-        return buildReferenceValue(valueType, entryBlock, value);
+        return buildReferenceValue(valueType, entry, value);
     }
-    private static String buildReferenceValue(ValueType valueType, EntryBlock entryBlock, EntryGroup value){
+    private static String buildReferenceValue(ValueType valueType, Entry entry, EntryGroup value){
         char atOrQues;
         if(valueType==ValueType.REFERENCE){
             atOrQues='@';
@@ -465,7 +465,7 @@ import java.util.regex.Pattern;
         }else {
             atOrQues=0;
         }
-        String currentPackageName=getPackageName(entryBlock);
+        String currentPackageName=getPackageName(entry);
         String referredPackageName=getPackageName(value);
         String typeName=value.getTypeName();
         String name=value.getSpecName();
@@ -524,18 +524,18 @@ import java.util.regex.Pattern;
         }
         return getPackageName(entryGroup.pickOne());
     }
-    private static String getPackageName(EntryBlock entryBlock){
-        if(entryBlock==null){
+    private static String getPackageName(Entry entry){
+        if(entry ==null){
             return null;
         }
-        PackageBlock packageBlock=entryBlock.getPackageBlock();
+        PackageBlock packageBlock= entry.getPackageBlock();
         if(packageBlock==null){
             return null;
         }
         return packageBlock.getName();
     }
-    private static EntryGroup searchEntryGroup(EntryStore store, EntryBlock entryBlock, int resourceId){
-        EntryGroup entryGroup=searchEntryGroup(entryBlock, resourceId);
+    private static EntryGroup searchEntryGroup(EntryStore store, Entry entry, int resourceId){
+        EntryGroup entryGroup=searchEntryGroup(entry, resourceId);
         if(entryGroup!=null){
             return entryGroup;
         }
@@ -544,11 +544,11 @@ import java.util.regex.Pattern;
         }
         return store.getEntryGroup(resourceId);
     }
-    private static EntryGroup searchEntryGroup(EntryBlock entryBlock, int resourceId){
-        if(entryBlock==null){
+    private static EntryGroup searchEntryGroup(Entry entry, int resourceId){
+        if(entry ==null){
             return null;
         }
-        PackageBlock packageBlock=entryBlock.getPackageBlock();
+        PackageBlock packageBlock= entry.getPackageBlock();
         if(packageBlock==null){
             return null;
         }
@@ -581,11 +581,11 @@ import java.util.regex.Pattern;
         }
         return null;
     }
-    private static String decodeIntEntryString(EntryBlock entryBlock, int data){
-        if(entryBlock==null){
+    private static String decodeIntEntryString(Entry entry, int data){
+        if(entry ==null){
             return null;
         }
-        PackageBlock packageBlock=entryBlock.getPackageBlock();
+        PackageBlock packageBlock= entry.getPackageBlock();
         if(packageBlock==null){
             return null;
         }
@@ -719,9 +719,9 @@ import java.util.regex.Pattern;
         }
         return 0;
     }
-    private static String getResourceName(EntryStore store, EntryBlock entryBlock, int resourceId){
-        if(entryBlock!=null){
-            EntryGroup group=searchEntryGroup(entryBlock, resourceId);
+    private static String getResourceName(EntryStore store, Entry entry, int resourceId){
+        if(entry !=null){
+            EntryGroup group=searchEntryGroup(entry, resourceId);
             if(group!=null){
                 String name=group.getSpecName();
                 if(name!=null){
@@ -748,58 +748,58 @@ import java.util.regex.Pattern;
         return null;
     }
     private static AttributeBag getAttributeBag(EntryStore store, int resourceId){
-        ResValueBag resValueBag=getAttributeValueBag(store, resourceId);
-        if(resValueBag==null){
+        ResTableMapEntry mapEntry=getAttributeValueBag(store, resourceId);
+        if(mapEntry==null){
             return null;
         }
-        return AttributeBag.create(resValueBag);
+        return AttributeBag.create(mapEntry.getValue());
     }
-    private static ResValueBag getAttributeValueBag(EntryStore store, int resourceId){
+    private static ResTableMapEntry getAttributeValueBag(EntryStore store, int resourceId){
         if(store==null){
             return null;
         }
         Collection<EntryGroup> foundGroups = store.getEntryGroups(resourceId);
-        ResValueBag best=null;
+        ResTableMapEntry best=null;
         for(EntryGroup group:foundGroups){
-            ResValueBag valueBag= getAttributeValueBag(group);
+            ResTableMapEntry valueBag = getAttributeValueBag(group);
             best=chooseBest(best, valueBag);
         }
         return best;
     }
-    private static ResValueBag getAttributeValueBag(EntryGroup entryGroup){
+    private static ResTableMapEntry getAttributeValueBag(EntryGroup entryGroup){
         if(entryGroup==null){
             return null;
         }
-        ResValueBag best=null;
-        Iterator<EntryBlock> iterator=entryGroup.iterator(true);
+        ResTableMapEntry best=null;
+        Iterator<Entry> iterator=entryGroup.iterator(true);
         while (iterator.hasNext()){
-            EntryBlock entryBlock=iterator.next();
-            ResValueBag valueBag= getAttributeValueBag(entryBlock);
+            Entry entry =iterator.next();
+            ResTableMapEntry valueBag = getAttributeValueBag(entry);
             best=chooseBest(best, valueBag);
         }
         return best;
     }
-    private static ResValueBag getAttributeValueBag(EntryBlock entryBlock){
-        if(entryBlock==null){
+    private static ResTableMapEntry getAttributeValueBag(Entry entry){
+        if(entry ==null){
             return null;
         }
-        BaseResValue baseResValue = entryBlock.getResValue();
-        if(baseResValue instanceof ResValueBag){
-            return (ResValueBag) baseResValue;
+        TableEntry<?, ?> tableEntry = entry.getTableEntry();
+        if(tableEntry instanceof ResTableMapEntry){
+            return (ResTableMapEntry) tableEntry;
         }
         return null;
     }
-    private static ResValueBag chooseBest(ResValueBag valueBag1, ResValueBag valueBag2){
-        if(valueBag1==null){
-            return valueBag2;
+    private static ResTableMapEntry chooseBest(ResTableMapEntry entry1, ResTableMapEntry entry2){
+        if(entry1==null){
+            return entry2;
         }
-        if(valueBag2==null){
-            return valueBag1;
+        if(entry2==null){
+            return entry1;
         }
-        if(valueBag2.getCount()>valueBag1.getCount()){
-            return valueBag2;
+        if(entry2.getValue().childesCount()>entry1.getValue().childesCount()){
+            return entry2;
         }
-        return valueBag1;
+        return entry1;
     }
     private static String toHexResourceId(int resourceId){
         return String.format("0x%08x", resourceId);

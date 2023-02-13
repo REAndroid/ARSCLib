@@ -16,9 +16,8 @@
 package com.reandroid.arsc.value.style;
 
 import com.reandroid.arsc.item.SpecString;
-import com.reandroid.arsc.item.TypeString;
-import com.reandroid.arsc.value.EntryBlock;
-import com.reandroid.arsc.value.ResValueBag;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResTableMapEntry;
 
 public class StyleBag {
     private final StyleBagItem[] mBagItems;
@@ -29,11 +28,11 @@ public class StyleBag {
         return mBagItems;
     }
     public String getName(){
-        EntryBlock entryBlock=getEntryBlock();
-        if(entryBlock==null){
+        Entry entry = getEntry();
+        if(entry ==null){
             return null;
         }
-        SpecString spec = entryBlock.getSpecString();
+        SpecString spec = entry.getSpecString();
         if(spec==null){
             return null;
         }
@@ -44,39 +43,35 @@ public class StyleBag {
         if(id==0){
             return null;
         }
-        EntryBlock entryBlock=getEntryBlock();
-        if(entryBlock==null){
+        Entry entry = getEntry();
+        if(entry ==null){
             return null;
         }
-        return entryBlock.buildResourceName(id, '@', true);
+        return entry.buildResourceName(id, '@', true);
     }
     public int getParentId(){
-        ResValueBag resValueBag=getBagItems()[0].getBagItem().getParentBag();
-        if(resValueBag==null){
+        ResTableMapEntry mapEntry = getBagItems()[0].getBagItem().getParentMapEntry();
+        if(mapEntry==null){
             return 0;
         }
-        return resValueBag.getParentId();
+        return mapEntry.getParentId();
     }
     public int getResourceId(){
-        EntryBlock entryBlock=getEntryBlock();
-        if(entryBlock==null){
+        Entry entry = getEntry();
+        if(entry ==null){
             return 0;
         }
-        return entryBlock.getResourceId();
+        return entry.getResourceId();
     }
     public String getTypeName(){
-        EntryBlock entryBlock=getBagItems()[0].getBagItem().getEntryBlock();
-        if(entryBlock==null){
+        Entry entry =getBagItems()[0].getBagItem().getEntry();
+        if(entry ==null){
             return null;
         }
-        TypeString typeString = entryBlock.getTypeString();
-        if(typeString==null){
-            return null;
-        }
-        return typeString.get();
+        return entry.getTypeName();
     }
-    private EntryBlock getEntryBlock(){
-        return getBagItems()[0].getBagItem().getEntryBlock();
+    private Entry getEntry(){
+        return getBagItems()[0].getBagItem().getEntry();
     }
     @Override
     public String toString() {
@@ -107,22 +102,18 @@ public class StyleBag {
 
     /** The result of this is not always 100% accurate,
      * in addition to this use your methods to cross check like type-name == "plurals"**/
-    public static boolean isStyle(ResValueBag resValueBag){
-        if(resValueBag==null){
+    public static boolean isStyle(ResTableMapEntry mapEntry){
+        if(mapEntry==null){
             return false;
         }
-        EntryBlock entryBlock = resValueBag.getEntryBlock();
-        if(entryBlock==null){
-            return false;
-        }
-        return StyleBag.create(resValueBag) != null;
+        return StyleBag.create(mapEntry) != null;
     }
 
-    public static StyleBag create(ResValueBag resValueBag){
-        if(resValueBag==null){
+    public static StyleBag create(ResTableMapEntry mapEntry){
+        if(mapEntry==null){
             return null;
         }
-        StyleBagItem[] bagItems=StyleBagItem.create(resValueBag.getBagItems());
+        StyleBagItem[] bagItems=StyleBagItem.create(mapEntry.getValue().getChildes());
         if(bagItems==null){
             return null;
         }

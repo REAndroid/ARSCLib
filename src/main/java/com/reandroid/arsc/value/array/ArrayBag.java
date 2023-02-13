@@ -15,9 +15,9 @@
   */
 package com.reandroid.arsc.value.array;
 
-import com.reandroid.arsc.value.EntryBlock;
-import com.reandroid.arsc.value.ResValueBag;
-import com.reandroid.arsc.value.ResValueBagItem;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResTableMapEntry;
+import com.reandroid.arsc.value.ResValueMap;
 
 public class ArrayBag {
     private final ArrayBagItem[] mBagItems;
@@ -28,18 +28,18 @@ public class ArrayBag {
         return mBagItems;
     }
     public String getName(){
-        EntryBlock entryBlock=getBagItems()[0].getBagItem().getEntryBlock();
-        if(entryBlock==null){
+        Entry entry =getBagItems()[0].getBagItem().getEntry();
+        if(entry ==null){
             return null;
         }
-        return entryBlock.getName();
+        return entry.getName();
     }
     public String getTypeName(){
-        EntryBlock entryBlock=getBagItems()[0].getBagItem().getEntryBlock();
-        if(entryBlock==null){
+        Entry entry =getBagItems()[0].getBagItem().getEntry();
+        if(entry ==null){
             return null;
         }
-        return entryBlock.getTypeName();
+        return entry.getTypeName();
     }
     @Override
     public String toString() {
@@ -63,39 +63,38 @@ public class ArrayBag {
 
     /** The result of this is not always 100% accurate,
      * in addition to this use your methods to cross check like type-name == "array"**/
-    public static boolean isArray(ResValueBag resValueBag){
-        if(resValueBag==null){
+    public static boolean isArray(ResTableMapEntry mapEntry){
+        if(mapEntry==null){
             return false;
         }
-        EntryBlock entryBlock = resValueBag.getEntryBlock();
-        if(entryBlock==null){
+        if(mapEntry.getParentId()!=0){
             return false;
         }
-        if(resValueBag.getParentId()!=0){
-            return false;
-        }
-        ArrayBagItem[] arrayBagItems = ArrayBagItem.create(resValueBag.getBagItems());
+        ArrayBagItem[] arrayBagItems = ArrayBagItem.create(mapEntry.listResValueMap());
         if(arrayBagItems==null || arrayBagItems.length==0){
             return false;
         }
         for(int i=0;i< arrayBagItems.length; i++){
             ArrayBagItem arrayBagItem = arrayBagItems[i];
-            ResValueBagItem resValueBagItem = arrayBagItem.getBagItem();
-            if(resValueBagItem.getIdHigh()!=0x0100){
+            ResValueMap resValueMap = arrayBagItem.getBagItem();
+            int name = resValueMap.getName();
+            int high = (name >> 16) & 0xffff;
+            if(high!=0x0100){
                 return false;
             }
-            if(resValueBagItem.getIdLow() != (i+1)){
+            int low = name & 0xffff;
+            if(low != (i+1)){
                 return false;
             }
         }
         return true;
     }
 
-    public static ArrayBag create(ResValueBag resValueBag){
-        if(resValueBag==null){
+    public static ArrayBag create(ResTableMapEntry mapEntry){
+        if(mapEntry==null){
             return null;
         }
-        ArrayBagItem[] bagItems=ArrayBagItem.create(resValueBag.getBagItems());
+        ArrayBagItem[] bagItems=ArrayBagItem.create(mapEntry.listResValueMap());
         if(bagItems==null){
             return null;
         }

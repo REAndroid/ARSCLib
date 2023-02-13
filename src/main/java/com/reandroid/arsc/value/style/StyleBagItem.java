@@ -15,24 +15,24 @@
   */
 package com.reandroid.arsc.value.style;
 
-import com.reandroid.arsc.value.EntryBlock;
-import com.reandroid.arsc.value.ResValueBagItem;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.ValueType;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class StyleBagItem {
-    private final ResValueBagItem mBagItem;
-    public StyleBagItem(ResValueBagItem bagItem){
+    private final ResValueMap mBagItem;
+    public StyleBagItem(ResValueMap bagItem){
         this.mBagItem=bagItem;
     }
-    public ResValueBagItem getBagItem() {
+    public ResValueMap getBagItem() {
         return mBagItem;
     }
 
     public String getName(){
-        EntryBlock block=getBagItem().getEntryBlock();
+        Entry block=getBagItem().getEntry();
         if(block==null){
             return null;
         }
@@ -40,7 +40,7 @@ public class StyleBagItem {
         return block.buildResourceName(getNameId(), prefix, false);
     }
     public int getNameId(){
-        return getBagItem().getId();
+        return getBagItem().getName();
     }
     public boolean hasStringValue(){
         return getValueType()== ValueType.STRING;
@@ -56,8 +56,8 @@ public class StyleBagItem {
         if(valueType!=ValueType.REFERENCE && valueType!=ValueType.ATTRIBUTE){
             throw new IllegalArgumentException("Not REF ValueType="+valueType);
         }
-        EntryBlock entryBlock=getBagItem().getEntryBlock();
-        if(entryBlock==null){
+        Entry entry =getBagItem().getEntry();
+        if(entry ==null){
             return null;
         }
         char prefix='@';
@@ -67,7 +67,7 @@ public class StyleBagItem {
             includeType=false;
         }
         int id=getValue();
-        return entryBlock.buildResourceName(id, prefix, includeType);
+        return entry.buildResourceName(id, prefix, includeType);
     }
     public String getStringValue(){
         return mBagItem.getValueAsString();
@@ -102,17 +102,17 @@ public class StyleBagItem {
         builder.append("</item>");
         return builder.toString();
     }
-    public static StyleBagItem[] create(ResValueBagItem[] resValueBagItems){
-        if(resValueBagItems==null){
+    public static StyleBagItem[] create(ResValueMap[] resValueMaps){
+        if(resValueMaps ==null){
             return null;
         }
-        int len=resValueBagItems.length;
+        int len= resValueMaps.length;
         if(len==0){
             return null;
         }
         List<StyleBagItem> results=new ArrayList<>();
         for(int i=0;i<len;i++){
-            StyleBagItem item=create(resValueBagItems[i]);
+            StyleBagItem item=create(resValueMaps[i]);
             if(item==null){
                 return null;
             }
@@ -120,10 +120,10 @@ public class StyleBagItem {
         }
         return results.toArray(new StyleBagItem[0]);
     }
-    public static StyleBagItem create(ResValueBagItem resValueBagItem){
-        if(resValueBagItem==null){
+    public static StyleBagItem create(ResValueMap resValueMap){
+        if(resValueMap ==null){
             return null;
         }
-        return new StyleBagItem(resValueBagItem);
+        return new StyleBagItem(resValueMap);
     }
 }

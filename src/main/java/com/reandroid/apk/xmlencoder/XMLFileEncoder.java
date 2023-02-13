@@ -15,10 +15,10 @@
   */
 package com.reandroid.apk.xmlencoder;
 
+import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.chunk.xml.*;
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.EntryBlock;
-import com.reandroid.arsc.value.ResValueBag;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.arsc.value.attribute.AttributeValueType;
@@ -105,11 +105,11 @@ public class XMLFileEncoder {
             }
             String name=attribute.getNameWoPrefix();
             int resourceId=decodeUnknownAttributeHex(name);
-            EntryBlock entryBlock=null;
+            Entry entry =null;
             if(resourceId==0){
-                entryBlock=getAttributeBlock(attribute);
-                if(entryBlock!=null){
-                    resourceId=entryBlock.getResourceId();
+                entry =getAttributeBlock(attribute);
+                if(entry !=null){
+                    resourceId= entry.getResourceId();
                 }
             }
             ResXmlAttribute xmlAttribute =
@@ -139,9 +139,9 @@ public class XMLFileEncoder {
                 xmlAttribute.setData(materials.resolveReference(valueText));
                 continue;
             }
-            if(entryBlock!=null){
+            if(entry !=null){
                 AttributeBag attributeBag=AttributeBag
-                        .create((ResValueBag) entryBlock.getResValue());
+                        .create((ResValueMapArray) entry.getTableEntry().getValue());
 
                 ValueDecoder.EncodeResult encodeResult =
                         attributeBag.encodeEnumOrFlagValue(valueText);
@@ -205,9 +205,9 @@ public class XMLFileEncoder {
             idBuilder.add(id, name);
             return;
         }
-        EntryBlock entryBlock = getAttributeBlock(attribute);
-        if(entryBlock!=null){
-            idBuilder.add(entryBlock.getResourceId(), entryBlock.getName());
+        Entry entry = getAttributeBlock(attribute);
+        if(entry !=null){
+            idBuilder.add(entry.getResourceId(), entry.getName());
         }
     }
     private int decodeUnknownAttributeHex(String name){
@@ -220,7 +220,7 @@ public class XMLFileEncoder {
         }
         return ValueDecoder.parseHex(name);
     }
-    private EntryBlock getAttributeBlock(XMLAttribute attribute){
+    private Entry getAttributeBlock(XMLAttribute attribute){
         if(attribute instanceof SchemaAttr){
             return null;
         }

@@ -15,7 +15,7 @@
   */
 package com.reandroid.apk.xmldecoder;
 
-import com.reandroid.arsc.value.ResValueBag;
+import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.arsc.value.attribute.AttributeBagItem;
 import com.reandroid.common.EntryStore;
@@ -26,8 +26,8 @@ class XMLAttrDecoder extends BagDecoder{
         super(entryStore);
     }
     @Override
-    public void decode(ResValueBag resValueBag, XMLElement parentElement){
-        AttributeBag attributeBag=AttributeBag.create(resValueBag);
+    public void decode(ResTableMapEntry mapEntry, XMLElement parentElement){
+        AttributeBag attributeBag=AttributeBag.create(mapEntry.getValue());
         decodeParentAttributes(parentElement, attributeBag);
 
         boolean is_flag=attributeBag.isFlag();
@@ -55,8 +55,8 @@ class XMLAttrDecoder extends BagDecoder{
         }
     }
     @Override
-    public boolean canDecode(ResValueBag resValueBag) {
-        return AttributeBag.isAttribute(resValueBag);
+    public boolean canDecode(ResTableMapEntry mapEntry) {
+        return AttributeBag.isAttribute(mapEntry);
     }
 
     private void decodeParentAttributes(XMLElement element, AttributeBag attributeBag){

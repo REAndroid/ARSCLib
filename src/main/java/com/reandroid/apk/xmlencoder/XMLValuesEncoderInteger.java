@@ -16,7 +16,7 @@
 package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ValueType;
 
 class XMLValuesEncoderInteger extends XMLValuesEncoder{
@@ -24,16 +24,16 @@ class XMLValuesEncoderInteger extends XMLValuesEncoder{
         super(materials);
     }
     @Override
-    void encodeStringValue(EntryBlock entryBlock, String value){
+    void encodeStringValue(Entry entry, String value){
         value=value.trim();
         if(ValueDecoder.isInteger(value)){
-            entryBlock.setValueAsRaw(ValueType.INT_DEC, ValueDecoder.parseInteger(value));
+            entry.setValueAsRaw(ValueType.INT_DEC, ValueDecoder.parseInteger(value));
         }else if(ValueDecoder.isHex(value)){
-            entryBlock.setValueAsRaw(ValueType.INT_HEX, ValueDecoder.parseHex(value));
+            entry.setValueAsRaw(ValueType.INT_HEX, ValueDecoder.parseHex(value));
         }else {
             ValueDecoder.EncodeResult encodeResult=ValueDecoder.encodeDimensionOrFloat(value);
             if(encodeResult!=null){
-                entryBlock.setValueAsRaw(encodeResult.valueType, encodeResult.value);
+                entry.setValueAsRaw(encodeResult.valueType, encodeResult.value);
             }else {
                 throw new EncodeException("Unknown value for type <integer>: '"+value+"'");
             }

@@ -148,4 +148,21 @@ public abstract class BlockItem extends Block {
         bts[offset+1]= (byte) (val >>> 8 & 0xff);
         bts[offset]= (byte) (val & 0xff);
     }
+    protected static boolean getBit(byte[] bts, int byteOffset, int bitIndex){
+        return (((bts[byteOffset] & 0xff) >>bitIndex) & 0x1) == 1;
+    }
+    protected static void putBit(byte[] bts, int byteOffset, int bitIndex, boolean bit){
+        int val=bts[byteOffset] & 0xff;
+        int left=val>>bitIndex;
+        if(bit){
+            left=left|0x1;
+        }else {
+            left=left & 0xFE;
+        }
+        left=left<<bitIndex;
+        bitIndex=8-bitIndex;
+        int right=(0xFF>>bitIndex) & val;
+        val=left|right;
+        bts[byteOffset]=(byte) val;
+    }
 }

@@ -16,10 +16,10 @@
 package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.apk.ApkUtil;
-import com.reandroid.arsc.array.ResValueBagItemArray;
+import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.ResValueBag;
-import com.reandroid.arsc.value.ResValueBagItem;
+import com.reandroid.arsc.value.ResTableMapEntry;
+import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.xml.XMLElement;
 
@@ -28,7 +28,7 @@ class XMLValuesEncoderArray extends XMLValuesEncoderBag{
         super(materials);
     }
     @Override
-    void encodeChildes(XMLElement parentElement, ResValueBag resValueBag){
+    void encodeChildes(XMLElement parentElement, ResTableMapEntry mapEntry){
         int count = parentElement.getChildesCount();
         String tagName = parentElement.getTagName();
         boolean force_string = false;
@@ -38,12 +38,12 @@ class XMLValuesEncoderArray extends XMLValuesEncoderBag{
         }else if(ApkUtil.TAG_INTEGER_ARRAY.equals(tagName)){
             force_integer = true;
         }
-        ResValueBagItemArray itemArray = resValueBag.getResValueBagItemArray();
+        ResValueMapArray itemArray = mapEntry.getValue();
         for(int i=0;i<count;i++){
             XMLElement child=parentElement.getChildAt(i);
-            ResValueBagItem bagItem = itemArray.get(i);
-            bagItem.setIdHigh((short) 0x0100);
-            bagItem.setIdLow((short) (i+1));
+            ResValueMap bagItem = itemArray.get(i);
+            bagItem.setNameHigh((short) 0x0100);
+            bagItem.setNameLow((short) (i+1));
 
             String valueText=child.getTextContent();
 

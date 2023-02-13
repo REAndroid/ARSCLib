@@ -19,8 +19,8 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.arsc.value.EntryBlock;
-import com.reandroid.arsc.value.ResValueBagItem;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.ValueType;
 
 import java.util.ArrayList;
@@ -29,26 +29,27 @@ import java.util.List;
 import java.util.Set;
 
 public class PluralsBagItem {
-    private final ResValueBagItem mBagItem;
-    private PluralsBagItem(ResValueBagItem bagItem){
+    private final ResValueMap mBagItem;
+    private PluralsBagItem(ResValueMap bagItem){
         this.mBagItem=bagItem;
     }
-    public ResValueBagItem getBagItem() {
+    public ResValueMap getBagItem() {
         return mBagItem;
     }
     public PluralsQuantity getQuantity(){
-        ResValueBagItem item=getBagItem();
-        return PluralsQuantity.valueOf(item.getIdLow());
+        ResValueMap item=getBagItem();
+        int low = item.getName() & 0xffff;
+        return PluralsQuantity.valueOf((short) low);
     }
     public ValueType getValueType(){
         return getBagItem().getValueType();
     }
     private TableStringPool getStringPool(){
-        EntryBlock entryBlock=getBagItem().getEntryBlock();
-        if(entryBlock==null){
+        Entry entry =getBagItem().getEntry();
+        if(entry ==null){
             return null;
         }
-        PackageBlock pkg = entryBlock.getPackageBlock();
+        PackageBlock pkg = entry.getPackageBlock();
         if(pkg==null){
             return null;
         }
@@ -96,22 +97,23 @@ public class PluralsBagItem {
         return builder.toString();
     }
 
-    public static PluralsBagItem[] create(ResValueBagItem[] resValueBagItems){
-        if(resValueBagItems==null){
+    public static PluralsBagItem[] create(ResValueMap[] resValueMaps){
+        if(resValueMaps ==null){
             return null;
         }
-        int len=resValueBagItems.length;
+        int len= resValueMaps.length;
         if(len==0){
             return null;
         }
         Set<PluralsQuantity> duplicates=new HashSet<>();
         List<PluralsBagItem> results=new ArrayList<>();
         for(int i=0;i<len;i++){
-            ResValueBagItem resValueBagItem = resValueBagItems[i];
-            if(resValueBagItem.getIdHigh() != 0x0100){
+            ResValueMap resValueMap = resValueMaps[i];
+            int high = (resValueMap.getName() >> 16) & 0xffff;
+            if(high != 0x0100){
                 return null;
             }
-            PluralsBagItem item=create(resValueBagItem);
+            PluralsBagItem item=create(resValueMap);
             if(item==null){
                 // If it reaches here type name is obfuscated
                 return null;
@@ -125,8 +127,8 @@ public class PluralsBagItem {
         }
         return results.toArray(new PluralsBagItem[0]);
     }
-    public static PluralsBagItem create(ResValueBagItem resValueBagItem){
-        PluralsBagItem item=new PluralsBagItem(resValueBagItem);
+    public static PluralsBagItem create(ResValueMap resValueMap){
+        PluralsBagItem item=new PluralsBagItem(resValueMap);
         if(item.getQuantity()==null){
             return null;
         }

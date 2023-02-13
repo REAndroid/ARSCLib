@@ -19,7 +19,7 @@ import com.reandroid.archive.InputSource;
 import com.reandroid.apk.xmlencoder.XMLEncodeSource;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.*;
 import com.reandroid.json.JSONObject;
 
 import java.io.File;
@@ -28,23 +28,23 @@ import java.io.InputStream;
 import java.util.List;
 
 public class ResFile {
-    private final List<EntryBlock> entryBlockList;
+    private final List<Entry> entryList;
     private final InputSource inputSource;
     private boolean mBinXml;
     private boolean mBinXmlChecked;
     private String mFileExtension;
     private boolean mFileExtensionChecked;
-    private EntryBlock mSelectedEntryBlock;
-    public ResFile(InputSource inputSource, List<EntryBlock> entryBlockList){
+    private Entry mSelectedEntry;
+    public ResFile(InputSource inputSource, List<Entry> entryList){
         this.inputSource=inputSource;
-        this.entryBlockList=entryBlockList;
+        this.entryList = entryList;
     }
-    public List<EntryBlock> getEntryBlockList(){
-        return entryBlockList;
+    public List<Entry> getEntryList(){
+        return entryList;
     }
     public String validateTypeDirectoryName(){
-        EntryBlock entryBlock=pickOne();
-        if(entryBlock==null){
+        Entry entry =pickOne();
+        if(entry ==null){
             return null;
         }
         String path=getFilePath();
@@ -61,34 +61,34 @@ public class ResFile {
             i++;
             name=path.substring(i);
         }
-        TypeBlock typeBlock=entryBlock.getTypeBlock();
+        TypeBlock typeBlock= entry.getTypeBlock();
         String typeName=typeBlock.getTypeName()+typeBlock.getResConfig().getQualifiers();
         return root+typeName+"/"+name;
     }
-    public EntryBlock pickOne(){
-        if(mSelectedEntryBlock==null){
-            mSelectedEntryBlock=selectOne();
+    public Entry pickOne(){
+        if(mSelectedEntry ==null){
+            mSelectedEntry =selectOne();
         }
-        return mSelectedEntryBlock;
+        return mSelectedEntry;
     }
-    private EntryBlock selectOne(){
-        List<EntryBlock> entryList = entryBlockList;
+    private Entry selectOne(){
+        List<Entry> entryList = this.entryList;
         if(entryList.size()==0){
             return null;
         }
-        for(EntryBlock entryBlock:entryList){
-            if(!entryBlock.isNull() && entryBlock.isDefault()){
-                return entryBlock;
+        for(Entry entry :entryList){
+            if(!entry.isNull() && entry.isDefault()){
+                return entry;
             }
         }
-        for(EntryBlock entryBlock:entryList){
-            if(!entryBlock.isNull()){
-                return entryBlock;
+        for(Entry entry :entryList){
+            if(!entry.isNull()){
+                return entry;
             }
         }
-        for(EntryBlock entryBlock:entryList){
-            if(entryBlock.isDefault()){
-                return entryBlock;
+        for(Entry entry :entryList){
+            if(entry.isDefault()){
+                return entry;
             }
         }
         return entryList.get(0);
@@ -98,8 +98,13 @@ public class ResFile {
     }
     public void setFilePath(String filePath){
         getInputSource().setAlias(filePath);
-        for(EntryBlock entryBlock:entryBlockList){
-            entryBlock.getValueAsTableString().set(filePath);
+        for(Entry entry : entryList){
+            TableEntry<?, ?> tableEntry = entry.getTableEntry();
+            if(!(tableEntry instanceof ResTableEntry)){
+                continue;
+            }
+            ResValue resValue = ((ResTableEntry) tableEntry).getValue();
+            resValue.setValueAsString(filePath);
         }
     }
     public InputSource getInputSource() {
@@ -143,13 +148,13 @@ public class ResFile {
         return new File(dir, path);
     }
     public String buildPath(){
-        EntryBlock entryBlock=pickOne();
-        TypeBlock typeBlock=entryBlock.getTypeBlock();
+        Entry entry =pickOne();
+        TypeBlock typeBlock= entry.getTypeBlock();
         StringBuilder builder=new StringBuilder();
         builder.append(typeBlock.getTypeName());
         builder.append(typeBlock.getQualifiers());
         builder.append('/');
-        builder.append(entryBlock.getName());
+        builder.append(entry.getName());
         String ext=getFileExtension();
         if(ext!=null){
             builder.append(ext);

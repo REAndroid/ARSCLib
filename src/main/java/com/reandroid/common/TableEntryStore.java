@@ -19,7 +19,7 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.item.TableString;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.StagedAliasEntry;
 
 import java.util.*;
@@ -31,13 +31,13 @@ public class TableEntryStore implements EntryStore{
     }
 
     public String getEntryName(int resourceId){
-        EntryBlock entryBlock=getEntryBlock(resourceId);
-        if(entryBlock==null){
+        Entry entry = getEntry(resourceId);
+        if(entry ==null){
             return null;
         }
-        return entryBlock.getName();
+        return entry.getName();
     }
-    public EntryBlock getEntryBlock(int resourceId){
+    public Entry getEntry(int resourceId){
         if(resourceId==0){
             return null;
         }

@@ -15,12 +15,9 @@
   */
 package com.reandroid.apk.xmlencoder;
 
-import com.reandroid.arsc.array.ResValueBagItemArray;
+import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.EntryBlock;
-import com.reandroid.arsc.value.ResValueBag;
-import com.reandroid.arsc.value.ResValueBagItem;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.arsc.value.attribute.AttributeValueType;
 import com.reandroid.xml.XMLElement;
@@ -31,12 +28,12 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
         super(materials);
     }
     @Override
-    void encodeChildes(XMLElement parentElement, ResValueBag resValueBag){
+    void encodeChildes(XMLElement parentElement, ResTableMapEntry resValueBag){
         int count = parentElement.getChildesCount();
-        ResValueBagItemArray itemArray = resValueBag.getResValueBagItemArray();
+        ResValueMapArray itemArray = resValueBag.getValue();
         for(int i=0;i<count;i++){
             XMLElement child=parentElement.getChildAt(i);
-            ResValueBagItem item = itemArray.get(i);
+            ResValueMap item = itemArray.get(i);
             String name=child.getAttributeValue("name");
             int id=decodeUnknownAttributeHex(name);
             if(id!=0){
@@ -55,7 +52,7 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
                 continue;
             }
 
-            EntryBlock attributeEntry=getMaterials()
+            Entry attributeEntry=getMaterials()
                     .getAttributeBlock(name);
             if(attributeEntry==null){
                 throw new EncodeException("Unknown attribute name: '"+child.toText()
@@ -74,11 +71,12 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
         }
         return ValueDecoder.parseHex(name);
     }
-    private void encodeChild(XMLElement child, EntryBlock attributeEntry, ResValueBagItem bagItem){
+    private void encodeChild(XMLElement child, Entry attributeEntry, ResValueMap bagItem){
 
-        bagItem.setId(attributeEntry.getResourceId());
+        bagItem.setName(attributeEntry.getResourceId());
+        ResTableMapEntry tableEntry = (ResTableMapEntry) attributeEntry.getTableEntry();
         AttributeBag attributeBag=AttributeBag
-                .create((ResValueBag) attributeEntry.getResValue());
+                .create(tableEntry.getValue());
 
         String valueText=child.getTextContent();
         ValueDecoder.EncodeResult encodeEnumFlag =

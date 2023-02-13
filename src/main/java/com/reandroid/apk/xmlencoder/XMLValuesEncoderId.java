@@ -15,29 +15,31 @@
   */
 package com.reandroid.apk.xmlencoder;
 
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Header;
+import com.reandroid.arsc.value.Entry;
 
-class XMLValuesEncoderId extends XMLValuesEncoder{
+ class XMLValuesEncoderId extends XMLValuesEncoder{
     public XMLValuesEncoderId(EncodeMaterials materials) {
         super(materials);
     }
 
     @Override
-    void encodeStringValue(EntryBlock entryBlock, String value){
+    void encodeStringValue(Entry entry, String value){
         throw new EncodeException("Unexpected value for id: "+value);
     }
     @Override
-    void encodeNullValue(EntryBlock entryBlock){
-        entryBlock.setValueAsString("");
-        setVisibility(entryBlock);
+    void encodeNullValue(Entry entry){
+        entry.setValueAsString("");
+        setVisibility(entry);
     }
     @Override
-    void encodeBooleanValue(EntryBlock entryBlock, String value){
-        super.encodeBooleanValue(entryBlock, value);
-        setVisibility(entryBlock);
+    void encodeBooleanValue(Entry entry, String value){
+        super.encodeBooleanValue(entry, value);
+        setVisibility(entry);
     }
-    private void setVisibility(EntryBlock entryBlock){
-        entryBlock.setWeak(true);
-        entryBlock.setPublic(true);
+    private void setVisibility(Entry entry){
+        Header header = entry.getHeader();
+        header.setWeak(true);
+        header.setPublic(true);
     }
 }

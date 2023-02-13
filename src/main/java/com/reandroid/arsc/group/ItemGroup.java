@@ -42,6 +42,7 @@ import java.util.Objects;
     }
     public List<T> listItems(){
         return new AbstractList<T>() {
+            private final int mSize = ItemGroup.this.size();
             @Override
             public T get(int i) {
                 return ItemGroup.this.get(i);
@@ -49,7 +50,7 @@ import java.util.Objects;
 
             @Override
             public int size() {
-                return ItemGroup.this.size();
+                return mSize;
             }
         };
     }

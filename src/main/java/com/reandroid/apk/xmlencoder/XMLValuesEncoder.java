@@ -21,7 +21,7 @@ import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.decoder.ValueDecoder;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.pool.TypeStringPool;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
@@ -37,7 +37,7 @@ class XMLValuesEncoder {
 
         int count = documentElement.getChildesCount();
 
-        typeBlock.getEntryBlockArray().ensureSize(count);
+        typeBlock.getEntryArray().ensureSize(count);
 
         for(int i=0;i<count;i++){
             XMLElement element = documentElement.getChildAt(i);
@@ -48,45 +48,46 @@ class XMLValuesEncoder {
         String name = element.getAttributeValue("name");
         int resourceId = getMaterials()
                 .resolveLocalResourceId(typeBlock.getTypeName(), name);
-        EntryBlock entryBlock = typeBlock
+        Entry entry = typeBlock
                 .getOrCreateEntry((short) (0xffff & resourceId));
 
-        encodeValue(entryBlock, element);
+        encodeValue(entry, element);
 
         SpecString specString = getMaterials().getSpecString(name);
-        entryBlock.setSpecReference(specString);
+        entry.setSpecReference(specString);
+        entry.getPackageBlock().onEntryAdded(entry);
     }
-    void encodeValue(EntryBlock entryBlock, XMLElement element){
+    void encodeValue(Entry entry, XMLElement element){
         String value = getValue(element);
-        encodeValue(entryBlock, value);
+        encodeValue(entry, value);
     }
-    void encodeValue(EntryBlock entryBlock, String value){
+    void encodeValue(Entry entry, String value){
         if(EncodeUtil.isEmpty(value)){
-            encodeNullValue(entryBlock);
+            encodeNullValue(entry);
         }else if(isLiteralEmpty(value)){
-            encodeLiteralEmptyValue(entryBlock, value);
+            encodeLiteralEmptyValue(entry, value);
         }else if(isBoolean(value)){
-            encodeBooleanValue(entryBlock, value);
+            encodeBooleanValue(entry, value);
         }else if(ValueDecoder.isReference(value)){
-            encodeReferenceValue(entryBlock, value);
+            encodeReferenceValue(entry, value);
         }else {
-            encodeStringValue(entryBlock, value);
+            encodeStringValue(entry, value);
         }
     }
-    void encodeNullValue(EntryBlock entryBlock){
+    void encodeNullValue(Entry entry){
         // Nothing to do
     }
-    void encodeLiteralEmptyValue(EntryBlock entryBlock, String value){
-        entryBlock.setValueAsRaw(ValueType.NULL, 0);
+    void encodeLiteralEmptyValue(Entry entry, String value){
+        entry.setValueAsRaw(ValueType.NULL, 0);
     }
-    void encodeBooleanValue(EntryBlock entryBlock, String value){
-        entryBlock.setValueAsBoolean("true".equals(value.toLowerCase()));
+    void encodeBooleanValue(Entry entry, String value){
+        entry.setValueAsBoolean("true".equals(value.toLowerCase()));
     }
-    void encodeReferenceValue(EntryBlock entryBlock, String value){
+    void encodeReferenceValue(Entry entry, String value){
         int resourceId = getMaterials().resolveReference(value);
-        entryBlock.setValueAsReference(resourceId);
+        entry.setValueAsReference(resourceId);
     }
-    void encodeStringValue(EntryBlock entryBlock, String value){
+    void encodeStringValue(Entry entry, String value){
 
     }
     private TypeBlock getTypeBlock(String type, String qualifiers){
@@ -98,7 +99,7 @@ class XMLValuesEncoder {
         int highest = specTypePair.getHighestEntryCount();
         TypeBlock typeBlock = specTypePair
                 .getOrCreateTypeBlock(qualifiers);
-        typeBlock.getEntryBlockArray().ensureSize(highest);
+        typeBlock.getEntryArray().ensureSize(highest);
         return typeBlock;
     }
     EncodeMaterials getMaterials() {

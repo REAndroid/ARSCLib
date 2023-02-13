@@ -24,13 +24,11 @@ package com.reandroid.arsc.chunk;
  import com.reandroid.arsc.container.SpecTypePair;
  import com.reandroid.arsc.group.EntryGroup;
  import com.reandroid.arsc.header.PackageHeader;
- import com.reandroid.arsc.item.ReferenceItem;
  import com.reandroid.arsc.list.OverlayableList;
  import com.reandroid.arsc.list.StagedAliasList;
  import com.reandroid.arsc.pool.SpecStringPool;
- import com.reandroid.arsc.pool.TableStringPool;
  import com.reandroid.arsc.pool.TypeStringPool;
- import com.reandroid.arsc.value.EntryBlock;
+ import com.reandroid.arsc.value.Entry;
  import com.reandroid.arsc.value.LibraryInfo;
  import com.reandroid.arsc.value.ResConfig;
  import com.reandroid.arsc.value.StagedAliasEntry;
@@ -42,7 +40,9 @@ package com.reandroid.arsc.chunk;
 
 
  public class PackageBlock extends Chunk<PackageHeader>
-        implements JSONConvert<JSONObject>, Comparable<PackageBlock> {
+        implements ParentChunk,
+         JSONConvert<JSONObject>,
+         Comparable<PackageBlock> {
 
     private final TypeStringPool mTypeStringPool;
     private final SpecStringPool mSpecStringPool;
@@ -66,12 +66,12 @@ package com.reandroid.arsc.chunk;
         addChild(mSpecStringPool);
         addChild(mBody);
     }
-    public EntryBlock getOrCreate(String qualifiers, String type, String name){
+    public Entry getOrCreate(String qualifiers, String type, String name){
         ResConfig resConfig = new ResConfig();
         resConfig.parseQualifiers(qualifiers);
         return getOrCreate(resConfig, type, name);
     }
-    public EntryBlock getOrCreate(ResConfig resConfig, String type, String name){
+    public Entry getOrCreate(ResConfig resConfig, String type, String name){
         SpecTypePair specTypePair = getOrCreateSpecType(type);
         TypeBlock typeBlock = specTypePair.getOrCreateTypeBlock(resConfig);
         return typeBlock.getOrCreateEntry(name);
@@ -158,6 +158,7 @@ package com.reandroid.arsc.chunk;
     public TypeStringPool getTypeStringPool(){
         return mTypeStringPool;
     }
+    @Override
     public SpecStringPool getSpecStringPool(){
         return mSpecStringPool;
     }
@@ -185,10 +186,10 @@ package com.reandroid.arsc.chunk;
     public Set<Integer> listResourceIds(){
         return mEntriesGroup.keySet();
     }
-    public EntryBlock getOrCreateEntry(byte typeId, short entryId, String qualifiers){
+    public Entry getOrCreateEntry(byte typeId, short entryId, String qualifiers){
         return getSpecTypePairArray().getOrCreateEntry(typeId, entryId, qualifiers);
     }
-    public EntryBlock getEntry(byte typeId, short entryId, String qualifiers){
+    public Entry getEntry(byte typeId, short entryId, String qualifiers){
         return getSpecTypePairArray().getEntry(typeId, entryId, qualifiers);
     }
     public TypeBlock getOrCreateTypeBlock(byte typeId, String qualifiers){
@@ -223,48 +224,38 @@ package com.reandroid.arsc.chunk;
         }
         return null;
     }
-    public void updateEntry(EntryBlock entryBlock){
-        if(entryBlock==null||entryBlock.isNull()){
+    public void updateEntry(Entry entry){
+        if(entry ==null|| entry.isNull()){
             return;
         }
-        updateEntryGroup(entryBlock);
-        updateEntryTableReferences(entryBlock);
+        updateEntryGroup(entry);
     }
-    public void removeEntryGroup(EntryBlock entryBlock){
-        if(entryBlock==null){
+    public void removeEntryGroup(Entry entry){
+        if(entry ==null){
             return;
         }
-        int id=entryBlock.getResourceId();
+        int id= entry.getResourceId();
         EntryGroup group=getEntriesGroupMap().get(id);
         if(group==null){
             return;
         }
-        group.remove(entryBlock);
+        group.remove(entry);
         if(group.size()==0){
             getEntriesGroupMap().remove(id);
         }
     }
-    private void updateEntryTableReferences(EntryBlock entryBlock){
-        TableBlock tableBlock=getTableBlock();
-        if(tableBlock==null){
-            return;
-        }
-        List<ReferenceItem> tableReferences=entryBlock.getTableStringReferences();
-        TableStringPool tableStringPool=tableBlock.getTableStringPool();
-        tableStringPool.addReferences(tableReferences);
-    }
-    private void updateEntryGroup(EntryBlock entryBlock){
-        int resId=entryBlock.getResourceId();
+    private void updateEntryGroup(Entry entry){
+        int resId= entry.getResourceId();
         EntryGroup group=getEntriesGroupMap().get(resId);
         if(group==null){
             group=new EntryGroup(resId);
             getEntriesGroupMap().put(resId, group);
         }
-        group.add(entryBlock);
+        group.add(entry);
     }
 
-    public List<EntryBlock> listEntries(byte typeId, int entryId){
-        List<EntryBlock> results=new ArrayList<>();
+    public List<Entry> listEntries(byte typeId, int entryId){
+        List<Entry> results=new ArrayList<>();
         for(SpecTypePair pair:listSpecTypePair(typeId)){
             results.addAll(pair.listEntries(entryId));
         }
@@ -304,8 +295,8 @@ package com.reandroid.arsc.chunk;
         //getHeaderBlock().getTypeIdOffset().set(count-largest);
         getHeaderBlock().getTypeIdOffsetItem().set(0);
     }
-    public void onEntryAdded(EntryBlock entryBlock){
-        updateEntry(entryBlock);
+    public void onEntryAdded(Entry entry){
+        updateEntry(entry);
     }
     @Override
     public void onChunkLoaded() {

@@ -22,7 +22,7 @@ package com.reandroid.apk.xmlencoder;
  import com.reandroid.apk.UncompressedFiles;
  import com.reandroid.arsc.chunk.PackageBlock;
  import com.reandroid.arsc.chunk.TypeBlock;
- import com.reandroid.arsc.value.EntryBlock;
+ import com.reandroid.arsc.value.Entry;
  import com.reandroid.xml.source.XMLFileSource;
  import com.reandroid.xml.source.XMLSource;
 
@@ -71,12 +71,12 @@ package com.reandroid.apk.xmlencoder;
         String name = EncodeUtil.getEntryNameFromResFile(resFile);
         int resourceId=materials.resolveLocalResourceId(type, name);
 
-        EntryBlock entryBlock=typeBlock
+        Entry entry =typeBlock
                 .getOrCreateEntry((short) (0xffff & resourceId));
 
         String path=EncodeUtil.getEntryPathFromResFile(resFile);
-        entryBlock.setValueAsString(path);
-        entryBlock.setSpecReference(materials.getSpecString(name));
+        entry.setValueAsString(path);
+        entry.setSpecReference(materials.getSpecString(name));
         InputSource inputSource=createInputSource(path, resFile);
         addInputSource(inputSource);
         return inputSource;

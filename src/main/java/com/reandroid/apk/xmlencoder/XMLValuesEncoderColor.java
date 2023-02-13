@@ -16,21 +16,21 @@
 package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.EntryBlock;
+import com.reandroid.arsc.value.Entry;
 
 class XMLValuesEncoderColor extends XMLValuesEncoder{
     XMLValuesEncoderColor(EncodeMaterials materials) {
         super(materials);
     }
     @Override
-    void encodeStringValue(EntryBlock entryBlock, String value){
+    void encodeStringValue(Entry entry, String value){
         ValueDecoder.EncodeResult encodeResult=ValueDecoder.encodeColor(value);
         if(encodeResult!=null){
-            entryBlock.setValueAsRaw(encodeResult.valueType, encodeResult.value);
+            entry.setValueAsRaw(encodeResult.valueType, encodeResult.value);
         }else {
             // If reaches here the value might be
             // file path e.g. res/color/something.xml
-            entryBlock.setValueAsString(value);
+            entry.setValueAsString(value);
         }
     }
 }

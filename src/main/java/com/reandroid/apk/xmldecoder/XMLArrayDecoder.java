@@ -18,8 +18,8 @@ package com.reandroid.apk.xmldecoder;
 import com.reandroid.apk.ApkUtil;
 import com.reandroid.apk.XmlHelper;
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.ResValueBag;
-import com.reandroid.arsc.value.ResValueBagItem;
+import com.reandroid.arsc.value.ResTableMapEntry;
+import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.common.EntryStore;
 import com.reandroid.xml.XMLElement;
@@ -33,16 +33,16 @@ import java.util.Set;
     }
 
     @Override
-    public void decode(ResValueBag resValueBag, XMLElement parentElement) {
-        ResValueBagItem[] bagItems = resValueBag.getBagItems();
+    public void decode(ResTableMapEntry mapEntry, XMLElement parentElement) {
+        ResValueMap[] bagItems = mapEntry.listResValueMap();
         EntryStore entryStore=getEntryStore();
         Set<ValueType> valueTypes = new HashSet<>();
         for(int i=0;i<bagItems.length;i++){
-            ResValueBagItem bagItem = bagItems[i];
+            ResValueMap bagItem = bagItems[i];
             ValueType valueType = bagItem.getValueType();
             XMLElement child = new XMLElement("item");
             if(valueType == ValueType.STRING){
-                XmlHelper.setTextContent(child, bagItem.getValueAsPoolString());
+                XmlHelper.setTextContent(child, bagItem.getDataAsPoolString());
             }else {
                 String value = ValueDecoder.decodeIntEntry(entryStore, bagItem);
                 child.setTextContent(value);
@@ -57,25 +57,28 @@ import java.util.Set;
         }
     }
     @Override
-    public boolean canDecode(ResValueBag resValueBag) {
-        return isResBagArrayValue(resValueBag);
+    public boolean canDecode(ResTableMapEntry mapEntry) {
+        return isArrayValue(mapEntry);
     }
-    public static boolean isResBagArrayValue(ResValueBag resValueBag){
-        int parentId=resValueBag.getParentId();
+    public static boolean isArrayValue(ResTableMapEntry mapEntry){
+        int parentId=mapEntry.getParentId();
         if(parentId!=0){
             return false;
         }
-        ResValueBagItem[] bagItems = resValueBag.getBagItems();
+        ResValueMap[] bagItems = mapEntry.listResValueMap();
         if(bagItems==null||bagItems.length==0){
             return false;
         }
         int len=bagItems.length;
         for(int i=0;i<len;i++){
-            ResValueBagItem item=bagItems[i];
-            if(item.getIdHigh()!=0x0100 && item.getIdHigh()!=0x0200){
+            ResValueMap item=bagItems[i];
+            int name = item.getName();
+            int high = (name >> 16) & 0xffff;
+            if(high!=0x0100 && high!=0x0200){
                 return false;
             }
-            int id=item.getIdLow()-1;
+            int low = name & 0xffff;
+            int id = low - 1;
             if(id!=i){
                 return false;
             }
