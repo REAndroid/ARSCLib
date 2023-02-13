@@ -73,17 +73,6 @@ public class ResValueMap extends ValueItem{
         setName(json.getInt(NAME_name));
     }
 
-    @Override
-    public String toString(){
-        return "name="+String.format("0x%08x", getName())
-                +", "+super.toString();
-    }
-
-    private static final int OFFSET_NAME = 0;
-    private static final int OFFSET_SIZE = 4;
-
-    public static final String NAME_name = "name";
-
     public void setNameHigh(short val){
         int name = getName() & 0xffff;
         name = ((val & 0xffff) <<16 ) | name;
@@ -104,12 +93,24 @@ public class ResValueMap extends ValueItem{
         data = (val & 0xffff) | data;
         setData(data);
     }
-    public void merge(ResValueMap resValueMap){
-        if(resValueMap==null||resValueMap==this){
+    @Override
+    public void merge(ValueItem valueItem){
+        if(valueItem==this || !(valueItem instanceof ResValueMap)){
             return;
         }
+        ResValueMap resValueMap = (ResValueMap) valueItem;
         super.merge(resValueMap);
         setName(resValueMap.getName());
     }
+    @Override
+    public String toString(){
+        return "name="+String.format("0x%08x", getName())
+                +", "+super.toString();
+    }
+
+    private static final int OFFSET_NAME = 0;
+    private static final int OFFSET_SIZE = 4;
+
+    public static final String NAME_name = "name";
 
 }
