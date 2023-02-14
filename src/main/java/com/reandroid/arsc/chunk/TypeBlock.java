@@ -300,9 +300,10 @@ public class TypeBlock extends Chunk<TypeHeader>
     @Override
     public String toString(){
         StringBuilder builder=new StringBuilder();
-        builder.append(getResConfig().toString());
-        builder.append(" ");
-        builder.append(super.toString());
+        builder.append(getTypeName());
+        builder.append('{');
+        builder.append(getHeaderBlock());
+        builder.append('}');
         return builder.toString();
     }
 
