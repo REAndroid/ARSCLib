@@ -50,8 +50,16 @@
                  .get(0);
      }
      public Entry getAttributeBlock(String refString){
-         String packageName = null;
          String type = "attr";
+         Entry entry = getAttributeBlock(type, refString);
+         if(entry == null){
+             type = "^attr-private";
+             entry = getAttributeBlock(type, refString);
+         }
+         return entry;
+     }
+     private Entry getAttributeBlock(String type, String refString){
+         String packageName = null;
          String name = refString;
          int i=refString.lastIndexOf(':');
          if(i>=0){

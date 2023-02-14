@@ -128,6 +128,9 @@ package com.reandroid.apk.xmlencoder;
          return name;
      }
      public static String sanitizeType(String type){
+         if(type.startsWith("^attr")){
+             return type;
+         }
          Matcher matcher=PATTERN_TYPE.matcher(type);
          if(!matcher.find()){
              return "";

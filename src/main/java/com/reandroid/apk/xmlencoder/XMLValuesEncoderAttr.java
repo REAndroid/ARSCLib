@@ -17,6 +17,7 @@ package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.value.EntryHeaderMap;
 import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.ValueType;
@@ -42,8 +43,10 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
     void encodeChildes(XMLElement parentElement, ResTableMapEntry mapEntry){
         encodeAttributes(parentElement, mapEntry);
         encodeEnumOrFlag(parentElement, mapEntry);
-        // TODO: re-check if this is necessary
-        mapEntry.getHeader().setPublic(true);
+        EntryHeaderMap header = mapEntry.getHeader();
+        boolean is_public = !mapEntry.getParentEntry()
+                .getTypeName().contains("private");
+        header.setPublic(is_public);
     }
     private void encodeAttributes(XMLElement parentElement, ResTableMapEntry mapEntry){
         ResValueMapArray mapArray = mapEntry.getValue();

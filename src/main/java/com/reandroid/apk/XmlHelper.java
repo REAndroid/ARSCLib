@@ -30,4 +30,11 @@ public class XmlHelper {
             element.setSpannableText(stringItem.getXml());
         }
     }
+    public static String toXMLTagName(String typeName){
+        // e.g ^attr-private
+        if(typeName.length()>0 && typeName.charAt(0)=='^'){
+            typeName = typeName.substring(1);
+        }
+        return typeName;
+    }
 }

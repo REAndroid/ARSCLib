@@ -44,7 +44,9 @@ class ValuesEncoder {
         this.commonEncoder=new XMLValuesEncoderCommon(materials);
 
         Map<String, XMLValuesEncoderBag> mapBag=new HashMap<>();
-        mapBag.put("attr", new XMLValuesEncoderAttr(materials));
+        XMLValuesEncoderAttr encoderAttr = new XMLValuesEncoderAttr(materials);
+        mapBag.put("attr", encoderAttr);
+        mapBag.put("^attr-private", encoderAttr);
         mapBag.put("plurals", new XMLValuesEncoderPlurals(materials));
         mapBag.put("array", new XMLValuesEncoderArray(materials));
         mapBag.put("style", new XMLValuesEncoderStyle(materials));
@@ -77,6 +79,9 @@ class ValuesEncoder {
     }
     private boolean isBag(XMLDocument xmlDocument, String type){
         if(type.startsWith("attr")){
+            return true;
+        }
+        if(type.startsWith("^attr")){
             return true;
         }
         if(type.startsWith("style")){
@@ -116,6 +121,9 @@ class ValuesEncoder {
         }
         if(type.endsWith("-array")){
             return "array";
+        }
+        if(type.startsWith("attr-private")){
+            return "^attr-private";
         }
         if(type.equals("item")){
             return def;

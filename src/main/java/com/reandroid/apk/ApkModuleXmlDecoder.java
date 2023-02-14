@@ -241,7 +241,7 @@ import java.util.*;
         xmlDocument.save(file, false);
     }
     private XMLElement decodeValue(EntryStore entryStore, Entry entry){
-        XMLElement element=new XMLElement(entry.getTypeName());
+        XMLElement element=new XMLElement(XmlHelper.toXMLTagName(entry.getTypeName()));
         int resourceId= entry.getResourceId();
         XMLAttribute attribute=new XMLAttribute("name", entry.getName());
         element.addAttribute(attribute);
