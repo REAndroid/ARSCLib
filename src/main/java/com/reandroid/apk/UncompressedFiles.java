@@ -58,11 +58,7 @@ public class UncompressedFiles implements JSONConvert<JSONObject> {
         if(containsPath(path)||containsExtension(path)||isResRawDir(path)){
             return true;
         }
-        int i=path.indexOf('.');
-        if(i<0){
-            return false;
-        }
-        String extension=path.substring(i);
+        String extension=getExtension(path);
         return containsExtension(extension);
     }
     private boolean isResRawDir(String path){
@@ -205,6 +201,23 @@ public class UncompressedFiles implements JSONConvert<JSONObject> {
         }
         return path;
     }
+    private static String getExtension(String path){
+        path=sanitizePath(path);
+        if(path==null){
+            return null;
+        }
+        int i = path.lastIndexOf('/');
+        if(i>0){
+            i++;
+            path=path.substring(i);
+        }
+        i = path.lastIndexOf('.');
+        if(i>0){
+            return path.substring(i);
+        }
+        return null;
+    }
+
     public static final String JSON_FILE = "uncompressed-files.json";
     public static final String NAME_paths = "paths";
     public static final String NAME_extensions = "extensions";
