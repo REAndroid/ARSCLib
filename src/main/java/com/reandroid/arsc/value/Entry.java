@@ -160,14 +160,7 @@
      }
 
      public TypeBlock getTypeBlock(){
-         Block parent = getParent();
-         while (parent!=null){
-             if(parent instanceof TypeBlock){
-                 return (TypeBlock) parent;
-             }
-             parent = parent.getParent();
-         }
-         return null;
+         return getParent(TypeBlock.class);
      }
      private String getPackageName(){
          PackageBlock packageBlock = getPackageBlock();
@@ -177,14 +170,7 @@
          return null;
      }
      public PackageBlock getPackageBlock(){
-         Block parent = getParent();
-         while (parent!=null){
-             if(parent instanceof PackageBlock){
-                 return (PackageBlock) parent;
-             }
-             parent = parent.getParent();
-         }
-         return null;
+         return getParent(PackageBlock.class);
      }
      private TableEntry<?, ?> ensureTableEntry(boolean is_complex){
          TableEntry<?, ?> tableEntry = getTableEntry();

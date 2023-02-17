@@ -59,6 +59,7 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
     }
     private void refreshStart(){
         Block parent=getParent();
+        clearChildes();
         if(parent==null){
             return;
         }
@@ -85,6 +86,23 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         reader.seek(start);
         setChildesCount(mAttributeCount.get());
         super.onReadBytes(reader);
+    }
+    @Override
+    public void clearChildes(){
+        ResXmlAttribute[] childes = getChildes();
+        if(childes==null || childes.length==0){
+            super.clearChildes();
+            return;
+        }
+        int length = childes.length;
+        for(int i=0;i<length;i++){
+            ResXmlAttribute child = childes[i];
+            if(child==null){
+                continue;
+            }
+            child.onRemoved();
+        }
+        super.clearChildes();
     }
     @Override
     public int compare(ResXmlAttribute attr1, ResXmlAttribute attr2) {

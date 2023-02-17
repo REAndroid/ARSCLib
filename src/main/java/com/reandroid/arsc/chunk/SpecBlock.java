@@ -60,14 +60,7 @@
          return null;
      }
      SpecTypePair getSpecTypePair(){
-         Block parent=getParent();
-         while (parent!=null){
-             if(parent instanceof SpecTypePair){
-                 return (SpecTypePair)parent;
-             }
-             parent=parent.getParent();
-         }
-         return null;
+         return getParent(SpecTypePair.class);
      }
      public int getEntryCount() {
          return specFlagsArray.size();

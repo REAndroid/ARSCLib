@@ -16,7 +16,6 @@
 package com.reandroid.arsc.item;
 
 
- import com.reandroid.arsc.base.Block;
  import com.reandroid.arsc.pool.TypeStringPool;
 
  public class TypeString extends StringItem {
@@ -24,7 +23,7 @@ package com.reandroid.arsc.item;
         super(utf8);
     }
     public int getId(){
-        TypeStringPool stringPool=getTypeStringPool();
+        TypeStringPool stringPool = getParent(TypeStringPool.class);
         if(stringPool!=null){
             return stringPool.idOf(this);
         }
@@ -34,16 +33,6 @@ package com.reandroid.arsc.item;
     @Override
     public StyleItem getStyle(){
         // Type don't have style unless to obfuscate/confuse other decompilers
-        return null;
-    }
-    private TypeStringPool getTypeStringPool(){
-        Block parent=this;
-        while (parent!=null){
-            if(parent instanceof TypeStringPool){
-                return (TypeStringPool) parent;
-            }
-            parent=parent.getParent();
-        }
         return null;
     }
 }

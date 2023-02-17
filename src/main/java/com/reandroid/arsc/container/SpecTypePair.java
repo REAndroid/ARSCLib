@@ -125,14 +125,7 @@ public class SpecTypePair extends BlockContainer<Block>
         return mTypeBlockArray;
     }
     public PackageBlock getPackageBlock(){
-        Block parent=getParent();
-        while (parent!=null){
-            if(parent instanceof PackageBlock){
-                return (PackageBlock)parent;
-            }
-            parent=parent.getParent();
-        }
-        return null;
+        return getParent(PackageBlock.class);
     }
     public List<Entry> listEntries(int entryId){
         List<Entry> results=new ArrayList<>();

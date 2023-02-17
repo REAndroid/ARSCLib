@@ -90,6 +90,16 @@ public abstract class Block {
     public final Block getParent(){
         return mParent;
     }
+    public final <T> T getParent(Class<T> parentClass){
+        Block parent = getParent();
+        while (parent!=null){
+            if(parent.getClass() == parentClass){
+                return (T) parent;
+            }
+            parent = parent.getParent();
+        }
+        return null;
+    }
 
 
     protected static byte[] addBytes(byte[] bts1, byte[] bts2){

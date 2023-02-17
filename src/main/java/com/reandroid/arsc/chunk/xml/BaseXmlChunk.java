@@ -72,7 +72,6 @@
          if(xmlString!=null){
              xmlString.removeReference(item);
          }
-         return xmlString;
      }
      public void setLineNumber(int val){
          getHeaderBlock().getLineNumber().set(val);
@@ -181,14 +180,7 @@
          }
      }
      public ResXmlElement getParentResXmlElement(){
-         Block parent=getParent();
-         while (parent!=null){
-             if(parent instanceof ResXmlElement){
-                 return (ResXmlElement)parent;
-             }
-             parent=parent.getParent();
-         }
-         return null;
+         return getParent(ResXmlElement.class);
      }
      @Override
      protected void onChunkRefreshed() {

@@ -137,14 +137,7 @@ public class TypeBlock extends Chunk<TypeHeader>
         return getEntryArray().countNonNull();
     }
     public SpecTypePair getParentSpecTypePair(){
-        Block parent=getParent();
-        while (parent!=null){
-            if(parent instanceof SpecTypePair){
-                return (SpecTypePair)parent;
-            }
-            parent=parent.getParent();
-        }
-        return null;
+        return getParent(SpecTypePair.class);
     }
     public void cleanEntries(){
         PackageBlock packageBlock=getPackageBlock();

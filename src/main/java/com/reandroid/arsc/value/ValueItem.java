@@ -31,58 +31,49 @@ import java.io.IOException;
  public abstract class ValueItem extends BlockItem implements Value,
          JSONConvert<JSONObject>{
      private ReferenceItem mStringReference;
-     public ValueItem(int bytesLength) {
+     private final int sizeOffset;
+     public ValueItem(int bytesLength, int sizeOffset) {
          super(bytesLength);
+         this.sizeOffset = sizeOffset;
+         
          writeSize();
      }
      public void onRemoved(){
          unLinkStringReference();
      }
-     public Entry getParentEntry(){
-         Block parent=getParent();
-         while (parent!=null){
-             if(parent instanceof Entry){
-                 return (Entry) parent;
-             }
-             parent = parent.getParent();
-         }
-         return null;
+     protected void onDataChanged(){
      }
      public void refresh(){
          writeSize();
      }
-     public ReferenceItem getTableStringReference(){
-         return mStringReference;
-     }
-
-     abstract int getSizeOffset();
 
      byte getRes0(){
-         return getBytesInternal()[getSizeOffset()+OFFSET_RES0];
+         return getBytesInternal()[this.sizeOffset + OFFSET_RES0];
      }
      public byte getType(){
-         return getBytesInternal()[getSizeOffset()+OFFSET_TYPE];
+         return getBytesInternal()[this.sizeOffset + OFFSET_TYPE];
      }
      public void setType(byte type){
          if(type == getType()){
              return;
          }
          byte[] bts = getBytesInternal();
-         int offset = getSizeOffset()+OFFSET_TYPE;
+         int offset = this.sizeOffset + OFFSET_TYPE;
          byte old = bts[offset];
          bts[offset] = type;
          onTypeChanged(old, type);
+         onDataChanged();
      }
      public int getSize(){
-         return 0xffff & getShort(getBytesInternal(), getSizeOffset()+OFFSET_SIZE);
+         return 0xffff & getShort(getBytesInternal(), this.sizeOffset + OFFSET_SIZE);
      }
      public void setSize(int size){
-         size = getSizeOffset() + size;
+         size = this.sizeOffset + size;
          setBytesLength(size, false);
          writeSize();
      }
      private void writeSize(){
-         int offset = getSizeOffset();
+         int offset = this.sizeOffset;
          int size = countBytes() - offset;
          putShort(getBytesInternal(), offset + OFFSET_SIZE, (short) size);
      }
@@ -107,20 +98,21 @@ import java.io.IOException;
      }
      @Override
      public int getData(){
-         return getInteger(getBytesInternal(), getSizeOffset()+OFFSET_DATA);
+         return getInteger(getBytesInternal(), this.sizeOffset + OFFSET_DATA);
      }
      @Override
      public void setData(int data){
          byte[] bts = getBytesInternal();
-         int old = getInteger(bts, getSizeOffset()+OFFSET_DATA);
+         int old = getInteger(bts, this.sizeOffset + OFFSET_DATA);
          if(old == data){
              return;
          }
          unLinkStringReference();
-         putInteger(bts, getSizeOffset()+OFFSET_DATA, data);
+         putInteger(bts, this.sizeOffset + OFFSET_DATA, data);
          if(ValueType.STRING==getValueType()){
              linkStringReference();
          }
+         onDataChanged();
      }
 
 
@@ -148,7 +140,7 @@ import java.io.IOException;
          if(stringReference!=null){
              unLinkStringReference();
          }
-         stringReference = new ReferenceBlock<>(this, getSizeOffset()+OFFSET_DATA);
+         stringReference = new ReferenceBlock<>(this, this.sizeOffset + OFFSET_DATA);
          mStringReference = stringReference;
          tableString.addReference(stringReference);
      }
@@ -162,9 +154,14 @@ import java.io.IOException;
          if(stringPool == null){
              return;
          }
-         stringPool.removeReference(stringReference);
+         StringItem stringItem = stringPool.removeReference(stringReference);
+         if(stringItem!=null){
+             onUnlinkDataString(stringItem);
+         }
      }
-     private StringPool<?> getStringPool(){
+     protected void onUnlinkDataString(StringItem stringItem){
+     }
+     public StringPool<?> getStringPool(){
          Block parent = getParent();
          while (parent!=null){
              if(parent instanceof MainChunk){
@@ -182,7 +179,7 @@ import java.io.IOException;
      }
      private void initializeBytes(BlockReader reader) throws IOException {
          int position = reader.getPosition();
-         int offset = getSizeOffset();
+         int offset = this.sizeOffset;
          reader.offset(offset);
          int size = reader.readUnsignedShort();
          reader.seek(position);
@@ -290,6 +287,6 @@ import java.io.IOException;
      private static final int OFFSET_DATA = 4;
 
 
-     static final String NAME_data = "data";
-     static final String NAME_value_type = "value_type";
+     public static final String NAME_data = "data";
+     public static final String NAME_value_type = "value_type";
  }

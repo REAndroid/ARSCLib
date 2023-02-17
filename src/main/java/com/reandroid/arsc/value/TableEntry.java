@@ -40,14 +40,7 @@ public abstract class TableEntry<HEADER extends Header, VALUE extends Block> ext
         this.resValue.setIndex(1);
     }
     public Entry getParentEntry(){
-        Block parent = getParent();
-        while (parent!=null){
-            if(parent instanceof Entry){
-                return (Entry) parent;
-            }
-            parent=parent.getParent();
-        }
-        return null;
+        return getParent(Entry.class);
     }
     public void refresh(){
     }
