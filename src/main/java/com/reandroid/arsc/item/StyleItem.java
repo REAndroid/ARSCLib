@@ -24,14 +24,20 @@ import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
 
 import java.io.IOException;
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
     private List<StyleSpanInfo> mSpanInfoList;
+    private final Set<StyleItemReference> mReferences;
     public StyleItem() {
         super();
+        this.mReferences = new HashSet<>();
+    }
+    void onRemoved(){
+        setStylePieceCount(0);
+    }
+    public void onDataLoaded(){
+        linkAll();
     }
     private void setEndValue(int negOne){
         super.put(size()-1, negOne);
@@ -44,8 +50,66 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         return super.get(i);
     }
     final void setStringRef(int index, int val){
+        setStringRef(index, val, true);
+    }
+    final void setStringRef(int index, int val, boolean link){
+        if(link){
+            unLink(index);
+        }
         int i=index * INTEGERS_COUNT + INDEX_STRING_REF;
         super.put(i, val);
+        if(link){
+            link(getStringItem(val), index);
+        }
+    }
+    private void linkAll(){
+        int count = getStylePieceCount();
+        for(int i=0; i<count;i++){
+            int[] spanInfo = getStylePiece(i);
+            if(spanInfo == null){
+                continue;
+            }
+            StringItem stringItem = getStringItem(spanInfo[0]);
+            if(stringItem==null){
+                continue;
+            }
+            link(stringItem, i);
+        }
+    }
+    private void unlinkAll(){
+        for(StyleItemReference itemReference:mReferences){
+            StringItem stringItem = getStringItem(itemReference.get());
+            if(stringItem!=null){
+                stringItem.removeReference(itemReference);
+            }
+        }
+        mReferences.clear();
+    }
+    private void link(StringItem stringItem, int index){
+        if(stringItem==null){
+            return;
+        }
+        unLink(stringItem, index);
+        StyleItemReference itemReference = new StyleItemReference(this, index);
+        mReferences.add(itemReference);
+        stringItem.addReference(itemReference);
+    }
+    private void unLink(int index){
+        Integer ref = getStringRef(index);
+        if(ref==null){
+            return;
+        }
+        unLink(getStringItem(ref), index);
+    }
+    private void unLink(StringItem stringItem, int index){
+        if(stringItem == null){
+            return;
+        }
+        StyleItemReference itemReference = new StyleItemReference(this, index);
+        if(!mReferences.remove(itemReference)){
+            return;
+        }
+        stringItem.removeReference(itemReference);
     }
     final Integer getFirstChar(int index){
         int i=index * INTEGERS_COUNT + INDEX_CHAR_FIRST;
@@ -77,10 +141,12 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         setStylePiece(index, refString, firstChar, lastChar);
     }
     final void setStylePiece(int index, int refString, int firstChar, int lastChar){
+        unLink(index);
         int i=index * INTEGERS_COUNT;
         super.put(i+ INDEX_STRING_REF, refString);
         super.put(i+ INDEX_CHAR_FIRST, firstChar);
         super.put(i+ INDEX_CHAR_LAST, lastChar);
+        link(getStringItem(refString), index);
     }
     final int[] getStylePiece(int index){
         if(index<0||index>= getStylePieceCount()){
@@ -102,14 +168,6 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         super.put(i + INDEX_CHAR_FIRST, three[INDEX_CHAR_FIRST]);
         super.put(i + INDEX_CHAR_LAST, three[INDEX_CHAR_LAST]);
     }
-    final void ensureStylePieceCount(int count){
-        if(count<0){
-            count=0;
-        }
-        if(count<getStylePieceCount()){
-            setStylePieceCount(count);
-        }
-    }
     final int getStylePieceCount(){
         int sz=size()-1;
         if(sz<0){
@@ -124,6 +182,9 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         int cur = getStylePieceCount();
         if(count==cur){
             return;
+        }
+        if(count == 0){
+            unlinkAll();
         }
         int max=count * INTEGERS_COUNT + 1;
         if(size()==0 || count==0){
@@ -188,15 +249,18 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         return mSpanInfoList;
     }
     private String getStringFromPool(int ref){
+        StringItem stringItem = getStringItem(ref);
+        if(stringItem!=null){
+            return stringItem.get();
+        }
+        return null;
+    }
+    private StringItem getStringItem(int ref){
         StringPool<?> stringPool = getStringPool();
-        if(stringPool==null){
-            return null;
+        if(stringPool!=null){
+            return stringPool.get(ref);
         }
-        StringItem stringItem = stringPool.get(ref);
-        if(stringItem==null){
-            return null;
-        }
-        return stringItem.get();
+        return null;
     }
     private StringPool<?> getStringPool(){
         Block parent=getParent();

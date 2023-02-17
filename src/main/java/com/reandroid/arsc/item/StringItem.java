@@ -118,6 +118,12 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         }else if(str.equals(old)){
             return;
         }
+        if(str==null){
+            StyleItem styleItem = getStyle();
+            if(styleItem!=null){
+                styleItem.onRemoved();
+            }
+        }
         byte[] bts=encodeString(str);
         setBytesInternal(bts);
     }

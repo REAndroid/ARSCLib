@@ -277,6 +277,12 @@ package com.reandroid.arsc.pool;
     @Override
     public void onChunkLoaded() {
         refreshUniqueIdMap();
+        StyleItem[] styles = getStyles();
+        if(styles!=null){
+            for(StyleItem styleItem:styles){
+                styleItem.onDataLoaded();
+            }
+        }
     }
 
     @Override
