@@ -35,4 +35,8 @@ package com.reandroid.arsc.item;
         // Type don't have style unless to obfuscate/confuse other decompilers
         return null;
     }
+    @Override
+    public String toString(){
+        return String.format("0x%02x", getId())+':'+get();
+    }
 }

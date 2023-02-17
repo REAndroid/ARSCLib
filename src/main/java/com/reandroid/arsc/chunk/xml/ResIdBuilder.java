@@ -38,14 +38,14 @@ public class ResIdBuilder implements Comparator<Integer> {
         xmlIDArray.ensureSize(size);
         for(int i=0;i<size;i++){
             ResXmlString xmlString = xmlStringsArray.get(i);
-            if(xmlString.getReferencedList().size()>0){
+            if(xmlString.hasReference()){
                 ResXmlString replaceXmlString=new ResXmlString(xmlString.isUtf8(), xmlString.get());
                 xmlStringsArray.setItem(i, replaceXmlString);
                 xmlStringsArray.add(xmlString);
                 xmlString=replaceXmlString;
             }
             ResXmlID xmlID = xmlIDArray.get(i);
-            if(xmlID.getReferencedList().size()>0){
+            if(xmlID.hasReference()){
                 ResXmlID replaceXmlId = new ResXmlID(xmlID.get());
                 xmlIDArray.setItem(i, replaceXmlId);
                 xmlIDArray.add(xmlID);

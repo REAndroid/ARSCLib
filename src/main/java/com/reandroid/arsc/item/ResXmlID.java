@@ -42,6 +42,9 @@ public class ResXmlID extends IntegerItem {
             mReferencedList.add(ref);
         }
     }
+    public boolean hasReference(){
+        return mReferencedList.size()>0;
+    }
     public int getReferenceCount(){
         return mReferencedList.size();
     }

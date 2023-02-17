@@ -58,7 +58,7 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     public List<T> listUnusedStrings(){
         List<T> results=new ArrayList<>();
         for(T item:listItems()){
-            if(item.getReferencedList().size()==0){
+            if(!item.hasReference()){
                 results.add(item);
             }
         }

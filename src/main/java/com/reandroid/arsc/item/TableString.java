@@ -28,7 +28,7 @@ public class TableString extends StringItem {
     public TableString(boolean utf8) {
         super(utf8);
     }
-    public List<Entry> listReferencedEntries(){
+    public List<Entry> listReferencedResValueEntries(){
         List<Entry> results=new ArrayList<>();
         for(ReferenceItem ref:getReferencedList()){
             if(!(ref instanceof ReferenceBlock)){
@@ -45,10 +45,5 @@ public class TableString extends StringItem {
             results.add(resValue.getEntry());
         }
         return results;
-    }
-    @Override
-    public String toString(){
-        List<ReferenceItem> refList = getReferencedList();
-        return "USED BY="+refList.size()+"{"+super.toString()+"}";
     }
 }

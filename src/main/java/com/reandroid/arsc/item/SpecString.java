@@ -15,8 +15,6 @@
   */
 package com.reandroid.arsc.item;
 
- import java.util.List;
-
  public class SpecString extends StringItem {
     public SpecString(boolean utf8) {
         super(utf8);
@@ -26,9 +24,4 @@ package com.reandroid.arsc.item;
         // Spec (resource name) don't have style unless to obfuscate/confuse other decompilers
         return null;
     }
-     @Override
-     public String toString(){
-         List<ReferenceItem> refList = getReferencedList();
-         return "USED BY="+refList.size()+"{"+super.toString()+"}";
-     }
 }

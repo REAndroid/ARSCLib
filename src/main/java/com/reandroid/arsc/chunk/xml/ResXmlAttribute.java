@@ -197,7 +197,7 @@
      }
      @Override
      protected void onUnlinkDataString(StringItem stringItem){
-         if(stringItem.getReferencedList().size()==0){
+         if(!stringItem.hasReference()){
              stringItem.set("");
          }
      }
@@ -277,7 +277,7 @@
              return;
          }
          stringItem.removeReference(reference);
-         if(stringItem.getReferencedList().size()==0){
+         if(!stringItem.hasReference()){
              stringItem.set("");
          }
      }

@@ -50,6 +50,9 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
     public void removeAllReference(){
         mReferencedList.clear();
     }
+    public boolean hasReference(){
+        return mReferencedList.size()>0;
+    }
     public List<ReferenceItem> getReferencedList(){
         return mReferencedList;
     }
@@ -250,11 +253,11 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
     }
     @Override
     public String toString(){
-        String str=get();
+        String str=getHtml();
         if(str==null){
             return "NULL";
         }
-        return str;
+        return "USED BY="+getReferencedList().size()+"{"+str+"}";
     }
 
     private static int[] decodeUtf8StringByteLength(byte[] lengthBytes) {
