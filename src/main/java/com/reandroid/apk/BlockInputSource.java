@@ -22,7 +22,7 @@ import com.reandroid.arsc.chunk.Chunk;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class BlockInputSource<T extends Chunk> extends ByteInputSource{
+public class BlockInputSource<T extends Chunk<?>> extends ByteInputSource{
     private final T mBlock;
     public BlockInputSource(String name, T block) {
         super(new byte[0], name);
