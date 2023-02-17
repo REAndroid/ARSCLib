@@ -15,29 +15,14 @@
   */
 package com.reandroid.arsc.value;
 
-import com.reandroid.arsc.base.Block;
-
  public class ResValue extends ValueItem  {
     public ResValue() {
-        super(8);
+        super(8, OFFSET_SIZE);
     }
+
     public Entry getEntry(){
-        Block parent = getParent();
-        while (parent!=null){
-            if(parent instanceof Entry){
-                return (Entry) parent;
-            }
-            parent = parent.getParent();
-        }
-        return null;
+        return getParent(Entry.class);
     }
-
-    @Override
-    int getSizeOffset(){
-        return OFFSET_SIZE;
-    }
-
 
     private static final int OFFSET_SIZE = 0;
-
 }

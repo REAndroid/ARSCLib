@@ -250,7 +250,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
         ResXmlElement manifestElement=getOrCreateManifestElement();
         ResXmlAttribute attribute = manifestElement
                 .getOrCreateAndroidAttribute(attributeName, resourceId);
-        attribute.setValueAsInteger(value);
+        attribute.setTypeAndData(ValueType.INT_DEC, value);
     }
     private Integer getManifestAttributeInt(int resourceId){
         ResXmlElement manifestElement=getManifestElement();
@@ -258,10 +258,10 @@ public class AndroidManifestBlock extends ResXmlDocument {
             return null;
         }
         ResXmlAttribute attribute= manifestElement.searchAttributeByResourceId(resourceId);
-        if(attribute==null || !attribute.hasIntegerValue()){
+        if(attribute==null || attribute.getValueType()!=ValueType.INT_DEC){
             return null;
         }
-        return attribute.getValueAsInteger();
+        return attribute.getData();
     }
     public ResXmlElement getApplicationElement(){
         ResXmlElement manifestElement=getManifestElement();

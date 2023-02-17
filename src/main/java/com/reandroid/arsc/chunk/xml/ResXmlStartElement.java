@@ -66,21 +66,17 @@
          if(end!=null){
              end.linkStringReferences();
          }
-         for(ResXmlAttribute attr:listResXmlAttributes()){
-             attr.linkStringReferences();
-         }
      }
      @Override
-     Set<ResXmlString>  clearStringReferences(){
-         Set<ResXmlString> results=super.clearStringReferences();
+     void onRemoved(){
+         super.onRemoved();
          ResXmlEndElement end = getResXmlEndElement();
          if(end!=null){
-             results.addAll(end.clearStringReferences());
+             end.onRemoved();
          }
          for(ResXmlAttribute attr:listResXmlAttributes()){
-             results.addAll(attr.clearStringReferences());
+             attr.onRemoved();
          }
-         return results;
      }
      @Override
      protected void onPreRefreshRefresh(){

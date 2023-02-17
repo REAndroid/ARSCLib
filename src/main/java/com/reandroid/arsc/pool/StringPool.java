@@ -163,15 +163,16 @@ package com.reandroid.arsc.pool;
             removeReference(ref);
         }
     }
-    public boolean removeReference(ReferenceItem ref){
+    public T removeReference(ReferenceItem ref){
         if(ref==null){
-            return false;
+            return null;
         }
         T item=get(ref.get());
         if(item!=null){
-            return item.removeReference(ref);
+            item.removeReference(ref);
+            return item;
         }
-        return false;
+        return null;
     }
     public void addReference(ReferenceItem ref){
         if(ref==null){

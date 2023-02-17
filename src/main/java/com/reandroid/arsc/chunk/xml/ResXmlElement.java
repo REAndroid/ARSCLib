@@ -21,7 +21,6 @@
  import com.reandroid.arsc.container.SingleBlockContainer;
  import com.reandroid.arsc.header.HeaderBlock;
  import com.reandroid.arsc.io.BlockReader;
- import com.reandroid.arsc.item.ResXmlString;
  import com.reandroid.arsc.pool.ResXmlStringPool;
  import com.reandroid.common.EntryStore;
  import com.reandroid.json.JSONConvert;
@@ -77,23 +76,21 @@
      public ResXmlAttribute newAttribute(){
          return getStartElement().newAttribute();
      }
-     Set<ResXmlString> clearStringReferences(){
-         Set<ResXmlString> results=new HashSet<>();
+     void onRemoved(){
          for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
-             results.addAll(startNamespace.clearStringReferences());
+             startNamespace.onRemoved();
          }
          ResXmlStartElement start = getStartElement();
          if(start!=null){
-             results.addAll(start.clearStringReferences());
+             start.onRemoved();
          }
          ResXmlText resXmlText=getResXmlText();
          if(resXmlText!=null){
-             results.addAll(resXmlText.clearStringReferences());
+             resXmlText.onRemoved();
          }
          for(ResXmlElement child:listElements()){
-             results.addAll(child.clearStringReferences());
+             child.onRemoved();
          }
-         return results;
      }
      void linkStringReferences(){
          for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
@@ -284,18 +281,14 @@
          mBody.add(element);
      }
      public boolean removeAttribute(ResXmlAttribute resXmlAttribute){
+         if(resXmlAttribute != null){
+             resXmlAttribute.onRemoved();
+         }
          return getStartElement().getResXmlAttributeArray().remove(resXmlAttribute);
      }
      public boolean removeElement(ResXmlElement element){
          if(element.getParent()!=null){
-             // TODO: Find a way to remove properly from StringPool
-             Set<ResXmlString> removedStrings = element.clearStringReferences();
-             for(ResXmlString xmlString:removedStrings){
-                 if(xmlString.getReferencedList().size()!=0){
-                     continue;
-                 }
-                 xmlString.set("");
-             }
+             element.onRemoved();
          }
          return mBody.remove(element);
      }

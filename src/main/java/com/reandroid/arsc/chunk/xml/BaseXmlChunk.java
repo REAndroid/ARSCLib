@@ -39,22 +39,10 @@
          addChild(mNamespaceReference);
          addChild(mStringReference);
      }
-     Set<ResXmlString> clearStringReferences(){
-         Set<ResXmlString> results=new HashSet<>();
-         ResXmlString xmlString;
-         xmlString=unLinkStringReference(getHeaderBlock().getCommentReference());
-         if(xmlString!=null){
-             results.add(xmlString);
-         }
-         xmlString=unLinkStringReference(mNamespaceReference);
-         if(xmlString!=null){
-             results.add(xmlString);
-         }
-         xmlString=unLinkStringReference(mStringReference);
-         if(xmlString!=null){
-             results.add(xmlString);
-         }
-         return results;
+     void onRemoved(){
+         unLinkStringReference(getHeaderBlock().getCommentReference());
+         unLinkStringReference(mNamespaceReference);
+         unLinkStringReference(mStringReference);
      }
      void linkStringReferences(){
          linkStringReference(getHeaderBlock().getCommentReference());
@@ -67,7 +55,7 @@
              xmlString.addReferenceIfAbsent(item);
          }
      }
-     ResXmlString unLinkStringReference(IntegerItem item){
+     void unLinkStringReference(IntegerItem item){
          ResXmlString xmlString = getResXmlString(item.get());
          if(xmlString!=null){
              xmlString.removeReference(item);

@@ -15,7 +15,9 @@
   */
 package com.reandroid.arsc.item;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResValue;
 import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.ValueItem;
 
@@ -26,20 +28,21 @@ public class TableString extends StringItem {
     public TableString(boolean utf8) {
         super(utf8);
     }
-    public List<Entry> listReferencedEntries(boolean ignoreBagEntries){
+    public List<Entry> listReferencedEntries(){
         List<Entry> results=new ArrayList<>();
         for(ReferenceItem ref:getReferencedList()){
             if(!(ref instanceof ReferenceBlock)){
                 continue;
             }
-            ValueItem valueItem = (ValueItem) ((ReferenceBlock)ref).getBlock();
-            if(valueItem ==null){
+            Block block = ((ReferenceBlock<?>)ref).getBlock();
+            if(block ==null){
                 continue;
             }
-            if(ignoreBagEntries && (valueItem instanceof ResValueMap)){
+            if(!(block instanceof ResValue)){
                 continue;
             }
-            results.add(valueItem.getParentEntry());
+            ResValue resValue = (ResValue) block;
+            results.add(resValue.getEntry());
         }
         return results;
     }

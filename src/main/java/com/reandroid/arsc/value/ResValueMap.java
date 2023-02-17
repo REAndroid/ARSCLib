@@ -21,18 +21,11 @@ import com.reandroid.json.JSONObject;
 public class ResValueMap extends ValueItem{
 
     public ResValueMap() {
-        super(12);
+        super(12, OFFSET_SIZE);
     }
 
     public Entry getEntry(){
-        Block parent = getParent();
-        while (parent!=null){
-            if(parent instanceof Entry){
-                return (Entry) parent;
-            }
-            parent = parent.getParent();
-        }
-        return null;
+        return getParent(Entry.class);
     }
 
     public ResTableMapEntry getParentMapEntry(){
@@ -53,10 +46,6 @@ public class ResValueMap extends ValueItem{
         putInteger(getBytesInternal(), OFFSET_NAME, name);
     }
 
-    @Override
-    int getSizeOffset(){
-        return OFFSET_SIZE;
-    }
 
     @Override
     public JSONObject toJson() {

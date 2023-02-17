@@ -180,7 +180,7 @@ public class ApkModule {
                 continue;
             }
             for(TableString tableString:groupTableString.listItems()){
-                List<Entry> entryList = tableString.listReferencedEntries(true);
+                List<Entry> entryList = tableString.listReferencedEntries();
                 if(entryList.size()==0){
                     continue;
                 }

@@ -41,13 +41,11 @@
          }
      }
      @Override
-     Set<ResXmlString> clearStringReferences(){
-         Set<ResXmlString> results=super.clearStringReferences();
+     void onRemoved(){
          ResXmlEndNamespace end = getEnd();
          if(end!=null){
-             results.addAll(end.clearStringReferences());
+             end.onRemoved();
          }
-         return results;
      }
      public XMLAttribute decodeToXml(){
          String uri=getUri();
