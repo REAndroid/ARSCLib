@@ -20,7 +20,6 @@ import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class ResXmlID extends IntegerItem {
@@ -35,12 +34,6 @@ public class ResXmlID extends IntegerItem {
     public boolean removeReference(ReferenceItem ref){
         return mReferencedList.remove(ref);
     }
-    public boolean removeAllReference(Collection<ReferenceItem> referenceItems){
-        return mReferencedList.removeAll(referenceItems);
-    }
-    public void removeAllReference(){
-        mReferencedList.clear();
-    }
     public List<ReferenceItem> getReferencedList(){
         return mReferencedList;
     }
@@ -49,13 +42,8 @@ public class ResXmlID extends IntegerItem {
             mReferencedList.add(ref);
         }
     }
-    public void addReference(Collection<ReferenceItem> refList){
-        if(refList==null){
-            return;
-        }
-        for(ReferenceItem ref:refList){
-            addReference(ref);
-        }
+    public int getReferenceCount(){
+        return mReferencedList.size();
     }
     private void reUpdateReferences(int newIndex){
         for(ReferenceItem ref:mReferencedList){
@@ -67,15 +55,18 @@ public class ResXmlID extends IntegerItem {
         reUpdateReferences(newIndex);
     }
     public String getName(){
-        ResXmlStringPool stringPool=getXmlStringPool();
-        if(stringPool==null){
-            return null;
-        }
-        ResXmlString xmlString = stringPool.get(getIndex());
+        ResXmlString xmlString = getResXmlString();
         if(xmlString==null){
             return null;
         }
         return xmlString.getHtml();
+    }
+    public ResXmlString getResXmlString(){
+        ResXmlStringPool stringPool=getXmlStringPool();
+        if(stringPool==null){
+            return null;
+        }
+        return stringPool.get(getIndex());
     }
     private ResXmlStringPool getXmlStringPool(){
         Block parent=this;
@@ -89,6 +80,19 @@ public class ResXmlID extends IntegerItem {
     }
     @Override
     public String toString(){
-        return getIndex()+": "+String.format("0x%08x", get());
+        StringBuilder builder = new StringBuilder();
+        builder.append("USED-BY=");
+        builder.append(getReferenceCount());
+        builder.append('{');
+        String name = getName();
+        if(name!=null){
+            builder.append(name);
+        }else {
+            builder.append(getIndex());
+        }
+        builder.append(':');
+        builder.append(String.format("0x%08x", get()));
+        builder.append('}');
+        return builder.toString();
     }
 }

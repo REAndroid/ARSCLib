@@ -15,7 +15,6 @@
   */
  package com.reandroid.arsc.chunk.xml;
 
- import com.reandroid.arsc.array.ResXmlIDArray;
  import com.reandroid.arsc.decoder.ValueDecoder;
  import com.reandroid.arsc.group.EntryGroup;
  import com.reandroid.arsc.io.BlockReader;
@@ -34,7 +33,8 @@
  public class ResXmlAttribute extends ValueItem implements Comparable<ResXmlAttribute>{
      private ReferenceItem mNSReference;
      private ReferenceItem mNameReference;
-     private ReferenceItem mStringReference;
+     private ReferenceItem mNameIdReference;
+     private ReferenceItem mValueStringReference;
      public ResXmlAttribute(int attributeUnitSize) {
          super(attributeUnitSize, OFFSET_SIZE);
          byte[] bts = getBytesInternal();
@@ -79,7 +79,11 @@
          return getString(getValueStringReference());
      }
      public int getNameResourceID(){
-         return getResourceId(getNameReference());
+         ResXmlID xmlID = getResXmlID();
+         if(xmlID != null){
+             return xmlID.get();
+         }
+         return 0;
      }
      public void setNameResourceID(int resourceId){
          ResXmlIDMap xmlIDMap=getResXmlIDMap();
@@ -130,20 +134,12 @@
          }
          return stringItem.getHtml();
      }
-     private int getResourceId(int ref){
-         if(ref<0){
-             return 0;
+     private ResXmlID getResXmlID(){
+         ResXmlIDMap xmlIDMap = getResXmlIDMap();
+         if(xmlIDMap == null){
+             return null;
          }
-         ResXmlIDMap xmlIDMap=getResXmlIDMap();
-         if(xmlIDMap==null){
-             return 0;
-         }
-         ResXmlIDArray xmlIDArray = xmlIDMap.getResXmlIDArray();
-         ResXmlID xmlID = xmlIDArray.get(ref);
-         if(xmlID!=null){
-             return xmlID.get();
-         }
-         return 0;
+         return xmlIDMap.getResXmlIDArray().get(getNameReference());
      }
      private ResXmlIDMap getResXmlIDMap(){
          ResXmlElement xmlElement=getParentResXmlElement();
@@ -171,9 +167,11 @@
          if(ref == getNameReference()){
              return;
          }
+         unLinkNameId(getResXmlID());
          unlink(mNameReference);
          putInteger(getBytesInternal(), OFFSET_NAME, ref);
          mNameReference = link(OFFSET_NAME);
+         linkNameId();
      }
      int getValueStringReference(){
          return getInteger(getBytesInternal(), OFFSET_STRING);
@@ -182,9 +180,9 @@
          if(ref == getValueStringReference()){
              return;
          }
-         unlink(mStringReference);
+         unlink(mValueStringReference);
          putInteger(getBytesInternal(), OFFSET_STRING, ref);
-         mStringReference = link(OFFSET_STRING);
+         mValueStringReference = link(OFFSET_STRING);
      }
 
      @Override
@@ -205,22 +203,49 @@
      }
      @Override
      protected void onDataChanged(){
-         if(getValueType()!=ValueType.STRING){
+         if(getValueType()==ValueType.STRING){
+             setValueStringReference(getData());
+         }else {
              setValueStringReference(-1);
          }
+     }
+     private void linkNameId(){
+         ResXmlID xmlID = getResXmlID();
+         if(xmlID==null){
+             return;
+         }
+         unLinkNameId(xmlID);
+         ReferenceItem referenceItem = new ReferenceBlock<>(this, OFFSET_NAME);
+         xmlID.addReference(referenceItem);
+         mNameIdReference = referenceItem;
+     }
+     private void unLinkNameId(ResXmlID xmlID){
+         ReferenceItem referenceItem = mNameIdReference;
+         if(referenceItem==null || xmlID == null){
+             return;
+         }
+         xmlID.removeReference(referenceItem);
+         mNameIdReference = null;
      }
      private void linkAll(){
          unlink(mNSReference);
          mNSReference = link(OFFSET_NS);
          unlink(mNameReference);
          mNameReference = link(OFFSET_NAME);
-         unlink(mStringReference);
-         mStringReference = link(OFFSET_STRING);
+         unlink(mValueStringReference);
+         mValueStringReference = link(OFFSET_STRING);
+
+         linkNameId();
      }
      private void unlinkAll(){
          unlink(mNSReference);
          unlink(mNameReference);
-         unlink(mStringReference);
+         unlink(mValueStringReference);
+         mNSReference = null;
+         mNameReference = null;
+         mValueStringReference = null;
+
+         unLinkNameId(getResXmlID());
      }
      private ReferenceItem link(int offset){
          if(offset<0){
