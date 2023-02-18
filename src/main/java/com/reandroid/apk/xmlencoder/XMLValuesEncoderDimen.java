@@ -32,7 +32,8 @@ import com.reandroid.arsc.value.Entry;
         if(encodeResult!=null){
             entry.setValueAsRaw(encodeResult.valueType, encodeResult.value);
         }else {
-            throw new EncodeException("Unknown dimen value: "+value);
+            getMaterials().logMessage("Encoding as string dimen value: "+value);
+            entry.setValueAsString(value);
         }
 
     }
