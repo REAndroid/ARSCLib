@@ -27,6 +27,7 @@ import java.util.List;
 public class AndroidManifestBlock extends ResXmlDocument {
     public AndroidManifestBlock(){
         super();
+        super.getStringPool().setUtf8(false);
     }
     // TODO: find a better way
     public byte guessCurrentPackageId(){
