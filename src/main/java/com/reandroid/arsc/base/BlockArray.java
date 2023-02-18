@@ -122,6 +122,25 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
             data[i].setIndex(i);
         }
     }
+    public void insertItem(int index, T item){
+        int count = childesCount();
+        if(count < index){
+            count = index;
+        }
+        ensureSize(count + 1);
+        T[] childes = getChildes();
+        int lastIndex = childes.length - 2;
+        for(int i = lastIndex; i >= index; i--){
+            T exist = childes[i];
+            childes[i] = null;
+            int newIndex = i + 1;
+            childes[newIndex] = exist;
+            exist.setIndex(newIndex);
+        }
+        childes[index] = item;
+        item.setParent(this);
+        item.setIndex(index);
+    }
     public void setItem(int index, T item){
         ensureSize(index+1);
         elementData[index]=item;
