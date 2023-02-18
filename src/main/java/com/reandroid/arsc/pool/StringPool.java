@@ -244,30 +244,26 @@ package com.reandroid.arsc.pool;
     public void setUtf8(boolean is_utf8){
         setUtf8(is_utf8, true);
     }
-    public final void setSorted(boolean sorted){
-        ShortItem flagSorted = getHeaderBlock().getFlagSorted();
-        if(sorted){
-            flagSorted.set(FLAG_SORTED);
-        }else {
-            flagSorted.set((short)0);
-        }
-    }
     private void setUtf8(boolean is_utf8, boolean updateAll){
-        ShortItem flagUtf8 = getHeaderBlock().getFlagUtf8();
-        boolean old = isUtf8Flag();
-        if(is_utf8){
-            flagUtf8.set(UTF8_FLAG_VALUE);
-        }else {
-            flagUtf8.set((short) 0);
+        StringPoolHeader header = getHeaderBlock();
+        if(is_utf8 == header.isUtf8()){
+            return;
         }
-        if(!updateAll || old == isUtf8Flag()){
+        ByteItem flagUtf8 = header.getFlagUtf8();
+        if(is_utf8){
+            flagUtf8.set((byte) 0x01);
+        }else {
+            flagUtf8.set((byte) 0x00);
+        }
+        if(!updateAll){
             return;
         }
         mArrayStrings.setUtf8(is_utf8);
     }
-    private boolean isUtf8Flag(){
-        return (getHeaderBlock().getFlagUtf8().get() & FLAG_UTF8) !=0;
+    public void setFlagSorted(boolean sorted){
+        getHeaderBlock().setSorted(sorted);
     }
+
     abstract StringArray<T> newInstance(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8);
     @Override
     protected void onChunkRefreshed() {
@@ -287,8 +283,9 @@ package com.reandroid.arsc.pool;
 
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender == getHeaderBlock().getFlagUtf8()){
-            mArrayStrings.setUtf8(isUtf8Flag());
+        StringPoolHeader header = getHeaderBlock();
+        if(sender == header.getFlagUtf8()){
+            mArrayStrings.setUtf8(header.isUtf8());
         }
     }
     @Override
@@ -310,8 +307,4 @@ package com.reandroid.arsc.pool;
         return s1.compareTo(s2);
     }
 
-    private static final short UTF8_FLAG_VALUE=0x0100;
-
-    private static final short FLAG_UTF8 = 0x0100;
-    private static final short FLAG_SORTED = 0x0100;
 }

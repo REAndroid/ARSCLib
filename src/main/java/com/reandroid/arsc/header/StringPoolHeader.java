@@ -16,29 +16,34 @@
 package com.reandroid.arsc.header;
 
 import com.reandroid.arsc.chunk.ChunkType;
+import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ShortItem;
+
 
 public class StringPoolHeader extends HeaderBlock{
     private final IntegerItem countStrings;
     private final IntegerItem countStyles;
-    private final ShortItem flagUtf8;
-    private final ShortItem flagSorted;
+    private final ByteItem flagSorted;
+    private final ByteItem flagUtf8;
+    private final ShortItem flagExtra;
     private final IntegerItem startStrings;
     private final IntegerItem startStyles;
     public StringPoolHeader() {
         super(ChunkType.STRING.ID);
         this.countStrings = new IntegerItem();
         this.countStyles = new IntegerItem();
-        this.flagUtf8 = new ShortItem();
-        this.flagSorted = new ShortItem();
+        this.flagSorted = new ByteItem();
+        this.flagUtf8 = new ByteItem();
+        this.flagExtra = new ShortItem();
         this.startStrings = new IntegerItem();
         this.startStyles = new IntegerItem();
 
         addChild(countStrings);
         addChild(countStyles);
-        addChild(flagUtf8);
         addChild(flagSorted);
+        addChild(flagUtf8);
+        addChild(flagExtra);
         addChild(startStrings);
         addChild(startStyles);
     }
@@ -48,11 +53,14 @@ public class StringPoolHeader extends HeaderBlock{
     public IntegerItem getCountStyles() {
         return countStyles;
     }
-    public ShortItem getFlagUtf8() {
+    public ByteItem getFlagUtf8() {
         return flagUtf8;
     }
-    public ShortItem getFlagSorted() {
+    public ByteItem getFlagSorted() {
         return flagSorted;
+    }
+    public ShortItem getFlagExtra(){
+        return flagExtra;
     }
     public IntegerItem getStartStrings() {
         return startStrings;
@@ -60,6 +68,20 @@ public class StringPoolHeader extends HeaderBlock{
     public IntegerItem getStartStyles() {
         return startStyles;
     }
+
+    public boolean isUtf8(){
+        return (getFlagUtf8().get() & 0x01) !=0;
+    }
+    public void setUtf8(boolean utf8){
+        getFlagUtf8().set((byte) (utf8 ? 0x01 : 0x00));
+    }
+    public boolean isSorted(){
+        return (getFlagSorted().get() & 0x01) !=0;
+    }
+    public void setSorted(boolean sorted){
+        getFlagSorted().set((byte) (sorted ? 0x01 : 0x00));
+    }
+
     @Override
     public String toString(){
         if(getChunkType()!=ChunkType.STRING){
@@ -68,8 +90,9 @@ public class StringPoolHeader extends HeaderBlock{
         return getClass().getSimpleName()
                 +" {strings="+getCountStrings()
                 +", styles="+getCountStyles()
-                +", utf8="+getFlagUtf8().toHex()
-                +", sorted="+getFlagSorted().toHex()
+                +", utf8="+isUtf8()
+                +", sorted="+isSorted()
+                +", flagExtra="+getFlagExtra().toHex()
                 +", offset-strings="+getStartStrings().get()
                 +", offset-styles="+getStartStyles().get() + '}';
     }
