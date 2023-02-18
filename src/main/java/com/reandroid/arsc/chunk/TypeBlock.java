@@ -54,12 +54,9 @@ public class TypeBlock extends Chunk<TypeHeader>
         addChild(mEntryArray);
     }
     public PackageBlock getPackageBlock(){
-        Block parent=getParent();
-        while (parent!=null){
-            if(parent instanceof SpecTypePair){
-                return ((SpecTypePair)parent).getPackageBlock();
-            }
-            parent=parent.getParent();
+        SpecTypePair specTypePair = getParent(SpecTypePair.class);
+        if(specTypePair!=null){
+            return specTypePair.getPackageBlock();
         }
         return null;
     }

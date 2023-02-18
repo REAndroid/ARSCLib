@@ -140,6 +140,13 @@ package com.reandroid.arsc.pool;
             group.add(item);
         }
     }
+    void updateUniqueIdMap(T item){
+        if(item==null){
+            return;
+        }
+        StringGroup<T> group = getOrCreateGroup(item.getHtml());
+        group.add(item);
+    }
     public List<T> removeUnusedStrings(){
         return getStringsArray().removeUnusedStrings();
     }

@@ -261,12 +261,9 @@
          return null;
      }
      public ResXmlIDMap getResXmlIDMap(){
-         Block parent=getParent();
-         while (parent!=null){
-             if(parent instanceof ResXmlDocument){
-                 return ((ResXmlDocument)parent).getResXmlIDMap();
-             }
-             parent=parent.getParent();
+         ResXmlDocument resXmlDocument = getParentInstance(ResXmlDocument.class);
+         if(resXmlDocument!=null){
+             return resXmlDocument.getResXmlIDMap();
          }
          return null;
      }

@@ -263,14 +263,7 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         return null;
     }
     private StringPool<?> getStringPool(){
-        Block parent=getParent();
-        while (parent!=null){
-            if(parent instanceof StringPool){
-                return (StringPool<?>)parent;
-            }
-            parent=parent.getParent();
-        }
-        return null;
+        return getParentInstance(StringPool.class);
     }
 
     public String applyHtml(String str, boolean xml){

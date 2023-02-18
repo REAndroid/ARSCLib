@@ -33,13 +33,6 @@ public class SpecStringPool extends StringPool<SpecString> {
         return new SpecStringArray(offsets, itemCount, itemStart, is_utf8);
     }
     public PackageBlock getPackageBlock(){
-        Block parent=getParent();
-        while (parent!=null){
-            if(parent instanceof PackageBlock){
-                return (PackageBlock) parent;
-            }
-            parent=parent.getParent();
-        }
-        return null;
+        return getParent(PackageBlock.class);
     }
 }

@@ -218,22 +218,12 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         return styleItem.getSpanInfoList().size()>0;
     }
     public StyleItem getStyle(){
-        StringPool<?> stringPool=getStringPool();
+        StringPool<?> stringPool = getParentInstance(StringPool.class);
         if(stringPool==null){
             return null;
         }
         int index=getIndex();
         return stringPool.getStyle(index);
-    }
-    private StringPool<?> getStringPool(){
-        Block parent=getParent();
-        while (parent!=null){
-            if(parent instanceof StringPool){
-                return (StringPool<?>)parent;
-            }
-            parent=parent.getParent();
-        }
-        return null;
     }
     @Override
     public JSONObject toJson() {

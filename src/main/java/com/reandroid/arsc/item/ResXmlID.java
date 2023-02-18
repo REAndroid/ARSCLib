@@ -72,12 +72,9 @@ public class ResXmlID extends IntegerItem {
         return stringPool.get(getIndex());
     }
     private ResXmlStringPool getXmlStringPool(){
-        Block parent=this;
-        while (parent!=null){
-            if(parent instanceof ResXmlDocument){
-                return ((ResXmlDocument)parent).getStringPool();
-            }
-            parent=parent.getParent();
+        ResXmlDocument resXmlDocument = getParentInstance(ResXmlDocument.class);
+        if(resXmlDocument!=null){
+            return resXmlDocument.getStringPool();
         }
         return null;
     }
