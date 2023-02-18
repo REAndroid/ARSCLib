@@ -100,6 +100,16 @@ public abstract class Block {
         }
         return null;
     }
+    public final <T> T getParentInstance(Class<T> parentClass){
+        Block parent = getParent();
+        while (parent!=null){
+            if(parentClass.isInstance(parent)){
+                return (T) parent;
+            }
+            parent = parent.getParent();
+        }
+        return null;
+    }
 
 
     protected static byte[] addBytes(byte[] bts1, byte[] bts2){
