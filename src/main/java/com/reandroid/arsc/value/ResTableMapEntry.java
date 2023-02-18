@@ -42,7 +42,7 @@ public class ResTableMapEntry extends TableEntry<EntryHeaderMap, ResValueMapArra
         getValue().setChildesCount(valuesCount);
     }
     @Override
-    void onHeaderLoaded(Header header){
+    void onHeaderLoaded(ValueHeader valueHeader){
         getValue().setChildesCount(getValuesCount());
     }
 

@@ -195,7 +195,7 @@
      public TableEntry<?, ?> getTableEntry(){
          return mTableEntry;
      }
-     public Header getHeader(){
+     public ValueHeader getHeader(){
          TableEntry<?, ?> tableEntry = getTableEntry();
          if(tableEntry!=null){
              return tableEntry.getHeader();
@@ -319,7 +319,7 @@
              setNull(true);
              return;
          }
-         boolean is_complex = json.optBoolean(Header.NAME_is_complex, false);
+         boolean is_complex = json.optBoolean(ValueHeader.NAME_is_complex, false);
          TableEntry<?, ?> entry = createTableEntry(is_complex);
          setTableEntry(entry);
          entry.fromJson(json);

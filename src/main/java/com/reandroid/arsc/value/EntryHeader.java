@@ -15,7 +15,7 @@
   */
 package com.reandroid.arsc.value;
 
-public class EntryHeader extends Header{
+public class EntryHeader extends ValueHeader {
     public EntryHeader(){
         super(HEADER_SIZE_SCALAR);
     }

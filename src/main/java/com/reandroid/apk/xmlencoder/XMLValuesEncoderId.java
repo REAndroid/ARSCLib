@@ -15,7 +15,7 @@
   */
 package com.reandroid.apk.xmlencoder;
 
-import com.reandroid.arsc.value.Header;
+import com.reandroid.arsc.value.ValueHeader;
 import com.reandroid.arsc.value.Entry;
 
  class XMLValuesEncoderId extends XMLValuesEncoder{
@@ -38,8 +38,8 @@ import com.reandroid.arsc.value.Entry;
         setVisibility(entry);
     }
     private void setVisibility(Entry entry){
-        Header header = entry.getHeader();
-        header.setWeak(true);
-        header.setPublic(true);
+        ValueHeader valueHeader = entry.getHeader();
+        valueHeader.setWeak(true);
+        valueHeader.setPublic(true);
     }
 }

@@ -17,7 +17,7 @@ package com.reandroid.arsc.value;
 
 import com.reandroid.json.JSONObject;
 
-public class EntryHeaderMap extends Header{
+public class EntryHeaderMap extends ValueHeader {
     public EntryHeaderMap(){
         super(HEADER_SIZE_COMPLEX);
         setComplex(true);
@@ -36,12 +36,12 @@ public class EntryHeaderMap extends Header{
     }
 
     @Override
-    public void merge(Header header){
-        if(header == this || !(header instanceof EntryHeaderMap)){
+    public void merge(ValueHeader valueHeader){
+        if(valueHeader == this || !(valueHeader instanceof EntryHeaderMap)){
             return;
         }
-        super.merge(header);
-        EntryHeaderMap entryHeaderMap = (EntryHeaderMap) header;
+        super.merge(valueHeader);
+        EntryHeaderMap entryHeaderMap = (EntryHeaderMap) valueHeader;
         setParentId(entryHeaderMap.getParentId());
         setValuesCount(entryHeaderMap.getValuesCount());
     }

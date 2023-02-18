@@ -24,7 +24,7 @@ import com.reandroid.json.JSONObject;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public abstract class TableEntry<HEADER extends Header, VALUE extends Block> extends Block implements
+public abstract class TableEntry<HEADER extends ValueHeader, VALUE extends Block> extends Block implements
         JSONConvert<JSONObject> {
     private final HEADER header;
     private final VALUE resValue;
@@ -78,9 +78,9 @@ public abstract class TableEntry<HEADER extends Header, VALUE extends Block> ext
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        Header header = getHeader();
-        header.readBytes(reader);
-        onHeaderLoaded(header);
+        ValueHeader valueHeader = getHeader();
+        valueHeader.readBytes(reader);
+        onHeaderLoaded(valueHeader);
         getValue().readBytes(reader);
     }
 
@@ -92,7 +92,7 @@ public abstract class TableEntry<HEADER extends Header, VALUE extends Block> ext
         return result;
     }
 
-    void onHeaderLoaded(Header header){
+    void onHeaderLoaded(ValueHeader valueHeader){
     }
     abstract void onRemoved();
     abstract boolean shouldMerge(TableEntry<?, ?> tableEntry);

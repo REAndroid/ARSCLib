@@ -25,9 +25,9 @@ import com.reandroid.json.JSONObject;
 
 import java.io.IOException;
 
-public class Header extends BlockItem implements JSONConvert<JSONObject> {
+public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
     private ReferenceItem mStringReference;
-    public Header(int size){
+    public ValueHeader(int size){
         super(size);
         writeSize();
         putInteger(getBytesInternal(), OFFSET_SPEC_REFERENCE, -1);
@@ -161,14 +161,14 @@ public class Header extends BlockItem implements JSONConvert<JSONObject> {
         setKey(stringItem.getIndex());
         linkStringReference(stringItem);
     }
-    public void merge(Header header){
-        if(header == null || header ==this){
+    public void merge(ValueHeader valueHeader){
+        if(valueHeader == null || valueHeader ==this){
             return;
         }
-        setComplex(header.isComplex());
-        setWeak(header.isWeak());
-        setPublic(header.isPublic());
-        setName(header.getName());
+        setComplex(valueHeader.isComplex());
+        setWeak(valueHeader.isWeak());
+        setPublic(valueHeader.isPublic());
+        setName(valueHeader.getName());
     }
     public void toJson(JSONObject jsonObject) {
         jsonObject.put(NAME_entry_name, getName());

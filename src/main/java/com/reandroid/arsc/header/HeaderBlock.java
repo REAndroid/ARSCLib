@@ -217,7 +217,7 @@ import java.util.List;
             builder.append("Unknown type=");
             builder.append(String.format("0x%02x", (0xffff & t)));
         }
-        builder.append("{Header=");
+        builder.append("{ValueHeader=");
         builder.append(getHeaderSize());
         builder.append(", Chunk=");
         builder.append(getChunkSize());
