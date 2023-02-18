@@ -59,7 +59,6 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
     }
     private void refreshStart(){
         Block parent=getParent();
-        clearChildes();
         if(parent==null){
             return;
         }
