@@ -15,21 +15,94 @@
   */
 package com.reandroid.arsc.pool;
 
+import com.reandroid.arsc.array.ResXmlIDArray;
 import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.array.ResXmlStringArray;
 import com.reandroid.arsc.array.StyleArray;
+import com.reandroid.arsc.chunk.xml.ResXmlDocument;
+import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.ResXmlID;
 import com.reandroid.arsc.item.ResXmlString;
 
-public class ResXmlStringPool extends StringPool<ResXmlString> {
+import java.util.Objects;
+
+ public class ResXmlStringPool extends StringPool<ResXmlString> {
     public ResXmlStringPool(boolean is_utf8) {
         super(is_utf8);
     }
     @Override
     StringArray<ResXmlString> newInstance(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         return new ResXmlStringArray(offsets, itemCount, itemStart, is_utf8);
+    }
+    public ResXmlString getOrCreate(String str){
+        return getOrCreateAttribute(0, str);
+    }
+    public ResXmlString getOrCreateAttribute(int resourceId, String str){
+        ResXmlIDMap resXmlIDMap = getResXmlIDMap();
+        if(resXmlIDMap == null){
+            return super.getOrCreate(str);
+        }
+        ResXmlIDArray idArray = resXmlIDMap.getResXmlIDArray();
+        int count = idArray.childesCount();
+        if(resourceId == 0){
+            return getOrCreateAfter(count, str);
+        }
+        StringArray<ResXmlString> stringsArray = getStringsArray();
+        ResXmlID xmlID = idArray.getByResId(resourceId);
+        if(xmlID != null){
+            ResXmlString xmlString = stringsArray.get(xmlID.getIndex());
+            if(xmlString!=null && Objects.equals(str, xmlString.get())){
+                return xmlString;
+            }
+        }
+        count = idArray.childesCount() + 1;
+        stringsArray.ensureSize(count);
+        idArray.setChildesCount(count);
+        int index = count - 1;
+        xmlID = idArray.get(index);
+        xmlID.set(resourceId);
+        idArray.refreshIdMap();
+
+        ResXmlString xmlString = stringsArray.newInstance();
+        xmlString.set(str);
+        stringsArray.insertItem(index, xmlString);
+
+        updateUniqueIdMap(xmlString);
+        return xmlString;
+    }
+    private ResXmlString getOrCreateAfter(int position, String str){
+        if(position<0){
+            position=0;
+        }
+        StringGroup<ResXmlString> group = get(str);
+        if(group!=null){
+            for(ResXmlString xmlString:group.listItems()){
+                int index = xmlString.getIndex();
+                if(index > position || (position==0 && position == index)){
+                    return xmlString;
+                }
+            }
+        }
+        StringArray<ResXmlString> stringsArray = getStringsArray();
+        int count = stringsArray.childesCount();
+        if(count < position){
+            count = position;
+        }
+        stringsArray.ensureSize(count+1);
+        ResXmlString xmlString = stringsArray.get(count);
+        xmlString.set(str);
+        super.updateUniqueIdMap(xmlString);
+        return xmlString;
+    }
+    private ResXmlIDMap getResXmlIDMap(){
+        ResXmlDocument resXmlDocument = getParentInstance(ResXmlDocument.class);
+        if(resXmlDocument!=null){
+            return resXmlDocument.getResXmlIDMap();
+        }
+        return null;
     }
     public ResXmlString getOrCreateAttributeName(int idMapCount, String str){
         StringGroup<ResXmlString> group = get(str);

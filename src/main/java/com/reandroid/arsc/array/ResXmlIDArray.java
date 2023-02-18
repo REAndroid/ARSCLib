@@ -59,6 +59,10 @@ public class ResXmlIDArray extends BlockArray<ResXmlID>  {
         updateIdMap();
         return mResIdMap.get(resId);
     }
+    public void refreshIdMap(){
+        mUpdated = false;
+        updateIdMap();
+    }
     private void updateIdMap(){
         if(mUpdated){
             return;

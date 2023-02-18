@@ -94,21 +94,23 @@
          setNameReference(xmlID.getIndex());
      }
      public void setName(String name, int resourceId){
-         if(resourceId!=0){
-             setNameResourceID(resourceId);
+         unlink(mNameReference);
+         unLinkNameId(getResXmlID());
+         ResXmlString xmlString = getOrCreateAttributeName(name, resourceId);
+         if(xmlString==null){
              return;
          }
-         if(name==null){
-             name="";
-         }
-         ResXmlIDMap xmlIDMap = getResXmlIDMap();
+         setNameReference(xmlString.getIndex());
+         mNameReference = link(OFFSET_NAME);
+         linkNameId();
+     }
+     private ResXmlString getOrCreateAttributeName(String name, int resourceId){
          StringPool<?> stringPool = getStringPool();
-         if(stringPool==null || xmlIDMap==null){
-             return;
+         if(stringPool==null){
+             return null;
          }
          ResXmlStringPool resXmlStringPool = (ResXmlStringPool) stringPool;
-         ResXmlString xmlString = resXmlStringPool.getOrCreateAttributeName(xmlIDMap.getResXmlIDArray().childesCount(), name);
-         setNameReference(xmlString.getIndex());
+         return resXmlStringPool.getOrCreateAttribute(resourceId, name);
      }
      public ResXmlElement getParentResXmlElement(){
          return getParent(ResXmlElement.class);
