@@ -81,10 +81,18 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        int start=mHeaderBlock.getHeaderSize()+mAttributeStart.get();
+        int start = mHeaderBlock.getHeaderSize() + mAttributeStart.get();
         reader.seek(start);
         setChildesCount(mAttributeCount.get());
-        super.onReadBytes(reader);
+        int attributeSize = mAttributesUnitSize.unsignedInt();
+        ResXmlAttribute[] childes = getChildes();
+        for(int i=0;i<childes.length;i++){
+            int position = reader.getPosition();
+            ResXmlAttribute attribute = childes[i];
+            attribute.readBytes(reader);
+            int remaining = attributeSize - (reader.getPosition() - position);
+            reader.offset(remaining);
+        }
     }
     @Override
     public void clearChildes(){
