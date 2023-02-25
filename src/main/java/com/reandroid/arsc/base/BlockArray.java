@@ -24,6 +24,36 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         elementData= newInstance(0);
     }
 
+    public List<T> subList(int start){
+        return subList(start, -1);
+    }
+    public List<T> subList(int start, int count){
+        T[] items = this.elementData;
+        if(items==null){
+            return new ArrayList<>();
+        }
+        int length = items.length;
+        if(start>=length){
+            return new ArrayList<>();
+        }
+        if(start < 0){
+            start=0;
+        }
+        int end = count;
+        if(end < 0){
+            end = items.length;
+        }else {
+            end = start + count;
+            if(end > length){
+                end=length;
+            }
+        }
+        List<T> results = new ArrayList<>(end - start);
+        for(int i=start; i<end; i++){
+            results.add(items[i]);
+        }
+        return results;
+    }
     public Collection<T> listItems(){
         return new AbstractCollection<T>() {
             @Override
