@@ -174,12 +174,7 @@ public class SpecTypePair extends BlockContainer<Block>
         throw new IOException("Unexpected block: "+headerBlock.toString()+", Should be: "+ChunkType.SPEC);
     }
     public int getHighestEntryCount(){
-        int specEntryCount=getSpecBlock().getEntryCount();
-        int typeEntryCount=getTypeBlockArray().getHighestEntryCount();
-        if(specEntryCount>typeEntryCount){
-            return specEntryCount;
-        }
-        return typeEntryCount;
+        return getTypeBlockArray().getHighestEntryCount();
     }
     public TypeString getTypeString(){
         PackageBlock packageBlock = getPackageBlock();
