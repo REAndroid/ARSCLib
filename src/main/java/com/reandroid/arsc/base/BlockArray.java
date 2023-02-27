@@ -24,6 +24,34 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         elementData= newInstance(0);
     }
 
+    public void removeAllNull(int start){
+        removeAll(start, true);
+    }
+    public void removeAll(int start){
+        removeAll(start, false);
+    }
+    private void removeAll(int start, boolean check_null){
+        List<T> removeList = subList(start);
+        if(removeList.size()==0 || (check_null && !isAllNull(removeList))){
+            return;
+        }
+        T[] itemArray = this.elementData;
+        for(T item:removeList){
+            if(item==null){
+                continue;
+            }
+            if(!item.isNull()){
+                item.setNull(true);
+            }
+            int index = item.getIndex();
+            if(index>=0 && itemArray[index]==item){
+                item.setIndex(-1);
+                item.setParent(null);
+                itemArray[index] = null;
+            }
+        }
+        setChildesCount(start);
+    }
     public List<T> subList(int start){
         return subList(start, -1);
     }
@@ -361,6 +389,15 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
     @Override
     public String toString(){
         return "count="+ childesCount();
+    }
+
+    public static boolean isAllNull(Collection<? extends Block> itemsList){
+        for(Block item:itemsList){
+            if(item!=null && !item.isNull()){
+                return false;
+            }
+        }
+        return true;
     }
 
     private class BlockIterator implements Iterator<T> {

@@ -35,4 +35,8 @@ public class ReferenceBlock<T extends Block> implements ReferenceItem{
     public int get() {
         return BlockItem.getInteger(this.block.getBytes(), this.offset);
     }
+    @Override
+    public String toString(){
+        return get()+":"+this.block;
+    }
 }

@@ -65,6 +65,15 @@ public class SpecTypePair extends BlockContainer<Block>
     public void sortTypes(){
         getTypeBlockArray().sort();
     }
+    public boolean removeNullEntries(int startId){
+        startId = 0x0000ffff & startId;
+        boolean removed = getTypeBlockArray().removeNullEntries(startId);
+        if(!removed){
+            return false;
+        }
+        getSpecBlock().setEntryCount(startId);
+        return true;
+    }
     public void removeEmptyTypeBlocks(){
         getTypeBlockArray().removeEmptyBlocks();
     }

@@ -53,6 +53,12 @@ public class TypeBlock extends Chunk<TypeHeader>
         addChild(entryOffsets);
         addChild(mEntryArray);
     }
+    public boolean removeNullEntries(int startId){
+        startId = 0x0000ffff & startId;
+        EntryArray entryArray = getEntryArray();
+        entryArray.removeAllNull(startId);
+        return entryArray.childesCount() == startId;
+    }
     public PackageBlock getPackageBlock(){
         SpecTypePair specTypePair = getParent(SpecTypePair.class);
         if(specTypePair!=null){

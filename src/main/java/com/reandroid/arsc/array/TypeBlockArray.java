@@ -45,6 +45,14 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     public void sort(){
         sort(this);
     }
+    public boolean removeNullEntries(int startId){
+        boolean result = true;
+        for(TypeBlock typeBlock:listItems()){
+            boolean removed = typeBlock.removeNullEntries(startId);
+            result = result && removed;
+        }
+        return result;
+    }
     public void removeEmptyBlocks(){
         List<TypeBlock> allTypes=new ArrayList<>(listItems());
         boolean foundEmpty=false;
