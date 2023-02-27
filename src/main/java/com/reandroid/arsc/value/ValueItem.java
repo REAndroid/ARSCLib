@@ -173,17 +173,28 @@ import java.io.IOException;
      }
      @Override
      public void onReadBytes(BlockReader reader) throws IOException {
-         initializeBytes(reader);
+         int readSize = initializeBytes(reader);
          super.onReadBytes(reader);
+         if(readSize<8){
+             setBytesLength(this.sizeOffset + 8, false);
+             writeSize();
+         }
          onDataLoaded();
      }
-     private void initializeBytes(BlockReader reader) throws IOException {
+     private int initializeBytes(BlockReader reader) throws IOException {
          int position = reader.getPosition();
          int offset = this.sizeOffset;
          reader.offset(offset);
-         int size = reader.readUnsignedShort();
+         int readSize = reader.readUnsignedShort();
+         int size = readSize;
+         if(size<8){
+             if(reader.available()>=8){
+                 size = 8;
+             }
+         }
          reader.seek(position);
          setBytesLength(offset + size, false);
+         return readSize;
      }
      public String getValueAsString(){
          StringItem stringItem = getDataAsPoolString();
