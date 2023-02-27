@@ -21,12 +21,17 @@ import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.common.Frameworks;
+import com.reandroid.common.TableEntryStore;
+import com.reandroid.xml.XMLDocument;
+import com.reandroid.xml.XMLException;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +47,7 @@ public class ApkModule {
     private AndroidManifestBlock mManifestBlock;
     private final UncompressedFiles mUncompressedFiles;
     private APKLogger apkLogger;
+    private TableEntryStore mEntryStore;
     public ApkModule(String moduleName, APKArchive apkArchive){
         this.moduleName=moduleName;
         this.apkArchive=apkArchive;
@@ -83,6 +89,23 @@ public class ApkModule {
             archive.remove(path);
         }
         return results;
+    }
+    public XMLDocument decodeXMLFile(String path) throws IOException, XMLException {
+        InputSource inputSource = apkArchive.getInputSource(path);
+        ResXmlDocument resXmlDocument = new ResXmlDocument();
+        resXmlDocument.readBytes(inputSource.openStream());
+        AndroidManifestBlock manifestBlock = getAndroidManifestBlock();
+        int pkgId = manifestBlock.guessCurrentPackageId();
+        return resXmlDocument.decodeToXml(getTableEntryStore(), pkgId);
+    }
+    private TableEntryStore getTableEntryStore() throws IOException {
+        if(mEntryStore!=null){
+            return mEntryStore;
+        }
+        mEntryStore = new TableEntryStore();
+        mEntryStore.add(getTableBlock());
+        mEntryStore.add(Frameworks.getAndroid());
+        return mEntryStore;
     }
     public List<DexFileInputSource> listDexFiles(){
         List<DexFileInputSource> results=new ArrayList<>();
