@@ -21,10 +21,12 @@ import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,6 +47,42 @@ public class ApkModule {
         this.apkArchive=apkArchive;
         this.mUncompressedFiles=new UncompressedFiles();
         this.mUncompressedFiles.addPath(apkArchive);
+    }
+    public void removeResFilesWithEntry(int resourceId) throws IOException {
+        removeResFilesWithEntry(resourceId, null, true);
+    }
+    public void removeResFilesWithEntry(int resourceId, ResConfig resConfig, boolean trimEntryArray) throws IOException {
+        List<Entry> removedList = removeResFiles(resourceId, resConfig);
+        SpecTypePair specTypePair = null;
+        for(Entry entry:removedList){
+            if(entry == null || entry.isNull()){
+                continue;
+            }
+            if(trimEntryArray && specTypePair==null){
+                specTypePair = entry.getTypeBlock().getParentSpecTypePair();
+            }
+            entry.setNull(true);
+        }
+        if(specTypePair!=null){
+            specTypePair.removeNullEntries(resourceId);
+        }
+    }
+    public List<Entry> removeResFiles(int resourceId) throws IOException {
+        return removeResFiles(resourceId, null);
+    }
+    public List<Entry> removeResFiles(int resourceId, ResConfig resConfig) throws IOException {
+        List<Entry> results = new ArrayList<>();
+        if(resourceId == 0 && resConfig==null){
+            return results;
+        }
+        List<ResFile> resFileList = listResFiles(resourceId, resConfig);
+        APKArchive archive = getApkArchive();
+        for(ResFile resFile:resFileList){
+            results.addAll(resFile.getEntryList());
+            String path = resFile.getFilePath();
+            archive.remove(path);
+        }
+        return results;
     }
     public List<DexFileInputSource> listDexFiles(){
         List<DexFileInputSource> results=new ArrayList<>();
@@ -170,6 +208,9 @@ public class ApkModule {
         getTableBlock().refresh();
     }
     public List<ResFile> listResFiles() throws IOException {
+        return listResFiles(0, null);
+    }
+    public List<ResFile> listResFiles(int resourceId, ResConfig resConfig) throws IOException {
         List<ResFile> results=new ArrayList<>();
         TableBlock tableBlock=getTableBlock();
         TableStringPool stringPool= tableBlock.getTableStringPool();
@@ -180,13 +221,33 @@ public class ApkModule {
                 continue;
             }
             for(TableString tableString:groupTableString.listItems()){
-                List<Entry> entryList = tableString.listReferencedResValueEntries();
+                List<Entry> entryList = filterResFileEntries(
+                        tableString.listReferencedResValueEntries(), resourceId, resConfig);
                 if(entryList.size()==0){
                     continue;
                 }
-                ResFile resFile=new ResFile(inputSource, entryList);
+                ResFile resFile = new ResFile(inputSource, entryList);
                 results.add(resFile);
             }
+        }
+        return results;
+    }
+    private List<Entry> filterResFileEntries(List<Entry> entryList, int resourceId, ResConfig resConfig){
+        if(resourceId == 0 && resConfig == null || entryList.size()==0){
+            return entryList;
+        }
+        List<Entry> results = new ArrayList<>();
+        for(Entry entry:entryList){
+            if(entry==null || entry.isNull()){
+                continue;
+            }
+            if(resourceId!=0 && resourceId!=entry.getResourceId()){
+                continue;
+            }
+            if(resConfig!=null && !resConfig.equals(entry.getResConfig())){
+                continue;
+            }
+            results.add(entry);
         }
         return results;
     }
