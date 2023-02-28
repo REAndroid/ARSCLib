@@ -253,6 +253,9 @@
          }
          List<File> results = new ArrayList<>();
          for(File file:xmlFiles){
+             if(!EncodeUtil.isPublicXml(file)){
+                 continue;
+             }
              if(toAndroidManifest(file).isFile()){
                  results.add(file);
              }

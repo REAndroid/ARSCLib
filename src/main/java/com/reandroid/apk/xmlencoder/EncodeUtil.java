@@ -15,6 +15,8 @@
   */
 package com.reandroid.apk.xmlencoder;
 
+ import com.reandroid.apk.ApkUtil;
+
  import java.io.File;
  import java.util.Comparator;
  import java.util.List;
@@ -30,6 +32,13 @@ package com.reandroid.apk.xmlencoder;
              }
          };
          stringList.sort(cmp);
+     }
+     public static boolean isPublicXml(File file){
+         if(!ApkUtil.FILE_NAME_PUBLIC_XML.equals(file.getName())){
+             return false;
+         }
+         File dir = file.getParentFile();
+         return dir!=null && dir.getName().equals("values");
      }
      public static void sortPublicXml(List<File> fileList){
          Comparator<File> cmp=new Comparator<File>() {
