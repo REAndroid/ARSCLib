@@ -2680,7 +2680,8 @@ public class MXParser implements XmlPullParser
         return (ch < LOOKUP_MAX_CHAR && lookupNameChar[ ch ])
             || (ch >= LOOKUP_MAX_CHAR && ch <= '\u2027')
             || (ch >= '\u202A' &&  ch <= '\u218F')
-            || (ch >= '\u2800' &&  ch <= '\uFFEF') || ch=='@';
+            || (ch >= '\u2800' &&  ch <= '\uFFEF')
+                || ch=='@' || ch=='$';
     }
 
     protected boolean isS(char ch) {
