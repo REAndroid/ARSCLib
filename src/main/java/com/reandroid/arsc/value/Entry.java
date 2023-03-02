@@ -340,7 +340,7 @@
          if(this.isNull()){
              return true;
          }
-         return coming.getTableEntry().shouldMerge(coming.getTableEntry());
+         return getTableEntry().shouldMerge(coming.getTableEntry());
      }
 
      public String buildResourceName(int resourceId, char prefix, boolean includeType){
