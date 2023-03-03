@@ -37,6 +37,9 @@
          super();
      }
 
+     public void ensureComplex(boolean isComplex){
+         ensureTableEntry(isComplex);
+     }
      public int getId(){
          return getIndex();
      }

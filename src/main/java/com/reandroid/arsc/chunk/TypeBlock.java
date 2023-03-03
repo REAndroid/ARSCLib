@@ -177,7 +177,7 @@ public class TypeBlock extends Chunk<TypeHeader>
                 .getSpecStringPool().getOrCreate(name);
         Entry entry = getOrCreateEntry((short) id);
         if(entry.isNull()){
-            entry.setValueAsRaw(ValueType.NULL, 0);
+            entry.ensureComplex(getEntryArray().hasComplexEntry());
         }
         entry.setSpecReference(specString.getIndex());
         return entry;
