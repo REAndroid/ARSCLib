@@ -32,8 +32,10 @@ public class BlockList<T extends Block> extends Block {
         mItems=new ArrayList<>();
     }
     public boolean remove(T item){
-        item.setParent(null);
-        item.setIndex(-1);
+        if(item!=null){
+            item.setParent(null);
+            item.setIndex(-1);
+        }
         return mItems.remove(item);
     }
     public void add(T item){
