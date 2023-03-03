@@ -89,12 +89,13 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
     public JSONArray toJson() {
         JSONArray jsonArray=new JSONArray();
         int index=0;
+        String name_id = Entry.NAME_id;
         for(Entry entry :listItems()){
             JSONObject childObject = entry.toJson();
             if(childObject==null){
                 continue;
             }
-            childObject.put(NAME_id, entry.getIndex());
+            childObject.put(name_id, entry.getId());
             jsonArray.put(index, childObject);
             index++;
         }
@@ -105,12 +106,13 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         clearChildes();
         int length=json.length();
         ensureSize(length);
+        String name_id = Entry.NAME_id;
         for(int i=0;i<length;i++){
             JSONObject jsonObject= json.getJSONObject(i);
             if(jsonObject==null){
                 continue;
             }
-            int id=jsonObject.getInt(NAME_id);
+            int id = jsonObject.getInt(name_id);
             ensureSize(id+1);
             Entry entry =get(id);
             entry.fromJson(jsonObject);
@@ -128,10 +130,10 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
             Entry existingBlock = get(comingBlock.getIndex());
             existingBlock.merge(comingBlock);
         }
+        refreshCountAndStart();
     }
     @Override
     public String toString(){
         return getClass().getSimpleName()+": size="+childesCount();
     }
-    private static final String NAME_id="id";
 }

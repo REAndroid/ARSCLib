@@ -124,4 +124,8 @@ public class IntegerArray extends BlockItem {
         bts[i+1]= (byte) (value >>> 8 & 0xff);
         bts[i]= (byte) (value & 0xff);
     }
+    @Override
+    public String toString(){
+        return "size="+size();
+    }
 }

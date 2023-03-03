@@ -73,6 +73,13 @@
      protected void onChunkRefreshed() {
          specFlagsArray.refresh();
      }
+
+     public void merge(SpecBlock specBlock){
+         if(specBlock == null || specBlock==this){
+             return;
+         }
+         this.getSpecFlagsArray().merge(specBlock.getSpecFlagsArray());
+     }
      @Override
      public String toString(){
          StringBuilder builder=new StringBuilder();
@@ -89,11 +96,17 @@
      public JSONObject toJson() {
          JSONObject jsonObject=new JSONObject();
          jsonObject.put(TypeBlock.NAME_id, getId());
+         jsonObject.put(NAME_spec_flags, getSpecFlagsArray().toJson());
          return jsonObject;
      }
 
      @Override
      public void fromJson(JSONObject json) {
          setId(json.getInt(TypeBlock.NAME_id));
+         getSpecFlagsArray().fromJson(json.optJSONArray(NAME_spec_flags));
      }
+
+     public static final String NAME_spec = "spec";
+     public static final String NAME_spec_flags = "spec_flags";
+     public static final String NAME_flag = "flag";
  }

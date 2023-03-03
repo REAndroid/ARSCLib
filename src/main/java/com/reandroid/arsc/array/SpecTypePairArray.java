@@ -16,6 +16,7 @@
 package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.base.BlockArray;
+import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.value.Entry;
@@ -216,7 +217,7 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         JSONArray jsonArray=new JSONArray();
         int i=0;
         for(SpecTypePair specTypePair:listItems()){
-            JSONObject jsonObject= specTypePair.toJson();
+            JSONObject jsonObject = specTypePair.toJson();
             if(jsonObject==null){
                 continue;
             }
@@ -232,10 +233,11 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
             return;
         }
         int length = json.length();
-        ensureSize(length);
         for (int i=0;i<length;i++){
-            JSONObject jsonObject=json.getJSONObject(i);
-            SpecTypePair specTypePair=get(i);
+            JSONObject jsonObject = json.getJSONObject(i);
+            int id = jsonObject.getJSONObject(SpecBlock.NAME_spec)
+                    .getInt(TypeBlock.NAME_id);
+            SpecTypePair specTypePair = getOrCreate((byte) id);
             specTypePair.fromJson(jsonObject);
         }
     }

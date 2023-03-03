@@ -196,14 +196,14 @@ public class SpecTypePair extends BlockContainer<Block>
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
-        jsonObject.put("id", getSpecBlock().getId());
-        jsonObject.put("types", getTypeBlockArray().toJson());
+        jsonObject.put(SpecBlock.NAME_spec, getSpecBlock().toJson());
+        jsonObject.put(NAME_types, getTypeBlockArray().toJson());
         return jsonObject;
     }
     @Override
     public void fromJson(JSONObject json) {
-        getSpecBlock().setTypeId((byte) json.getInt("id"));
-        getTypeBlockArray().fromJson(json.getJSONArray("types"));
+        getSpecBlock().fromJson(json.getJSONObject(SpecBlock.NAME_spec));
+        getTypeBlockArray().fromJson(json.getJSONArray(NAME_types));
     }
     public void merge(SpecTypePair typePair){
         if(typePair==null||typePair==this){
@@ -213,6 +213,7 @@ public class SpecTypePair extends BlockContainer<Block>
             throw new IllegalArgumentException("Can not merge different id types: "
                     +getTypeId()+"!="+typePair.getTypeId());
         }
+        getSpecBlock().merge(typePair.getSpecBlock());
         getTypeBlockArray().merge(typePair.getTypeBlockArray());
     }
     @Override
@@ -234,4 +235,6 @@ public class SpecTypePair extends BlockContainer<Block>
         builder.append(getTypeBlockArray().childesCount());
         return builder.toString();
     }
+
+    public static final String NAME_types = "types";
 }

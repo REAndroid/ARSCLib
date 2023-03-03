@@ -424,4 +424,6 @@
          builder.append(name);
          return builder.toString();
      }
+
+     public static final String NAME_id = "id";
  }
