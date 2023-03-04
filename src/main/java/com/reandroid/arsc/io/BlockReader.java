@@ -15,8 +15,9 @@
   */
 package com.reandroid.arsc.io;
 
-import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.InfoHeader;
+import com.reandroid.arsc.header.SpecHeader;
+import com.reandroid.arsc.header.TypeHeader;
 
 import java.io.*;
 
@@ -56,6 +57,26 @@ import java.io.*;
         readFully(bts);
         seek(pos);
         return toShort(bts, 0);
+    }
+     public SpecHeader readSpecHeader() throws IOException{
+         SpecHeader specHeader = new SpecHeader();
+         if(available() < specHeader.countBytes()){
+             return null;
+         }
+         int pos = getPosition();
+         specHeader.readBytes(this);
+         seek(pos);
+         return specHeader;
+     }
+    public TypeHeader readTypeHeader() throws IOException{
+        TypeHeader typeHeader = new TypeHeader();
+        if(available() < typeHeader.countBytes()){
+            return null;
+        }
+        int pos = getPosition();
+        typeHeader.readBytes(this);
+        seek(pos);
+        return typeHeader;
     }
     public InfoHeader readHeaderBlock() throws IOException {
         InfoHeader infoHeader = new InfoHeader();

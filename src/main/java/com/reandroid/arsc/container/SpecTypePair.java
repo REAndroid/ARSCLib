@@ -173,11 +173,14 @@ public class SpecTypePair extends BlockContainer<Block>
             return;
         }
         ChunkType chunkType=headerBlock.getChunkType();
+        if(chunkType == ChunkType.TYPE){
+            mTypeBlockArray.readBytes(reader);
+            return;
+        }
         if(chunkType!=ChunkType.SPEC){
             readUnexpectedNonSpecBlock(reader, headerBlock);
         }
         mSpecBlock.readBytes(reader);
-        mTypeBlockArray.readBytes(reader);
     }
     private void readUnexpectedNonSpecBlock(BlockReader reader, HeaderBlock headerBlock) throws IOException{
         throw new IOException("Unexpected block: "+headerBlock.toString()+", Should be: "+ChunkType.SPEC);

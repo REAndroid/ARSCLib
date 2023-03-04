@@ -22,6 +22,7 @@ import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.header.HeaderBlock;
+import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.value.Entry;
@@ -241,6 +242,11 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         }
         ChunkType chunkType=headerBlock.getChunkType();
         if(chunkType!=ChunkType.TYPE){
+            return false;
+        }
+        TypeHeader typeHeader = reader.readTypeHeader();
+        int id = getTypeId();
+        if(id!=0 && typeHeader.getId().unsignedInt() != id){
             return false;
         }
         int pos=reader.getPosition();

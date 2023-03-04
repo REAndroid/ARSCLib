@@ -18,6 +18,8 @@ package com.reandroid.arsc.container;
 import com.reandroid.arsc.chunk.*;
 import com.reandroid.arsc.array.SpecTypePairArray;
 import com.reandroid.arsc.header.HeaderBlock;
+import com.reandroid.arsc.header.SpecHeader;
+import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.list.OverlayableList;
 import com.reandroid.arsc.list.StagedAliasList;
@@ -83,6 +85,8 @@ public class PackageBody extends FixedBlockContainer {
         ChunkType chunkType=headerBlock.getChunkType();
         if(chunkType==ChunkType.SPEC){
             readSpecBlock(reader);
+        }else if(chunkType==ChunkType.TYPE){
+            readTypeBlock(reader);
         }else if(chunkType==ChunkType.LIBRARY){
             readLibraryBlock(reader);
         }else if(chunkType==ChunkType.OVERLAYABLE){
@@ -97,8 +101,15 @@ public class PackageBody extends FixedBlockContainer {
         return pos!=reader.getPosition();
     }
     private void readSpecBlock(BlockReader reader) throws IOException{
-        SpecTypePair specTypePair=mSpecTypePairArray.createNext();
-        specTypePair.readBytes(reader);
+        SpecHeader specHeader = reader.readSpecHeader();
+        SpecTypePair specTypePair = mSpecTypePairArray.getOrCreate(specHeader.getId().get());
+        specTypePair.getSpecBlock().readBytes(reader);
+    }
+    private void readTypeBlock(BlockReader reader) throws IOException{
+        TypeHeader typeHeader = reader.readTypeHeader();
+        SpecTypePair specTypePair = mSpecTypePairArray.getOrCreate(typeHeader.getId().get());
+        TypeBlock typeBlock = specTypePair.getTypeBlockArray().createNext();
+        typeBlock.readBytes(reader);
     }
     private void readLibraryBlock(BlockReader reader) throws IOException{
         LibraryBlock libraryBlock=new LibraryBlock();
