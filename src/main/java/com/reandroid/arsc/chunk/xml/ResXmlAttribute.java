@@ -333,6 +333,10 @@
          String uri= json.optString(NAME_namespace_uri, null);
          if(uri!=null){
              ResXmlStartNamespace ns = getParentResXmlElement().getStartNamespaceByUri(uri);
+             if(ns==null){
+                 ns = getParentResXmlElement().getRootResXmlElement()
+                         .getOrCreateNamespace(uri, "");
+             }
              setNamespaceReference(ns.getUriReference());
          }
          ValueType valueType=ValueType.fromName(json.getString(NAME_value_type));
