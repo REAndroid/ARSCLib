@@ -55,7 +55,8 @@ public class FrameworkApk extends ApkModule{
          archive.add(tableSource);
          archive.add(manifestSource);
      }
-     public FrameworkTable getTableBlock() throws IOException {
+     @Override
+     public FrameworkTable getTableBlock() {
          return (FrameworkTable) super.getTableBlock();
      }
      @Override
@@ -67,6 +68,7 @@ public class FrameworkApk extends ApkModule{
          }
          InputStream inputStream = inputSource.openStream();
          FrameworkTable frameworkTable=FrameworkTable.load(inputStream);
+         frameworkTable.setApkFile(this);
          if(hasAndroidManifestBlock()){
              optimizeTable(frameworkTable);
          }

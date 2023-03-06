@@ -15,6 +15,7 @@
   */
 package com.reandroid.arsc.chunk;
 
+import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.BuildInfo;
 import com.reandroid.arsc.array.PackageArray;
 import com.reandroid.arsc.group.EntryGroup;
@@ -22,24 +23,23 @@ import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.header.TableHeader;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.StagedAliasEntry;
+import com.reandroid.common.EntryStore;
 import com.reandroid.common.Frameworks;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
 
 import java.io.*;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-public class TableBlock extends Chunk<TableHeader>
-        implements MainChunk, JSONConvert<JSONObject> {
+ public class TableBlock extends Chunk<TableHeader>
+        implements MainChunk, JSONConvert<JSONObject>, EntryStore {
     private final TableStringPool mTableStringPool;
     private final PackageArray mPackageArray;
     private final Set<TableBlock> mFrameWorks=new HashSet<>();
+    private ApkFile mApkFile;
     public TableBlock() {
         super(new TableHeader(), 2);
         TableHeader header = getHeaderBlock();
@@ -60,6 +60,14 @@ public class TableBlock extends Chunk<TableHeader>
     @Override
     public TableStringPool getStringPool() {
         return mTableStringPool;
+    }
+    @Override
+    public ApkFile getApkFile(){
+        return mApkFile;
+    }
+    @Override
+    public void setApkFile(ApkFile apkFile){
+        this.mApkFile = apkFile;
     }
     public TableStringPool getTableStringPool(){
         return mTableStringPool;
@@ -132,16 +140,23 @@ public class TableBlock extends Chunk<TableHeader>
         return length;
     }
 
-    @Override
-    public String toString(){
-        StringBuilder builder=new StringBuilder();
-        builder.append(super.toString());
-        builder.append(", packages=");
-        int pkgCount=mPackageArray.childesCount();
-        builder.append(pkgCount);
-        return builder.toString();
-    }
     public EntryGroup search(int resourceId){
+        if(resourceId==0){
+            return null;
+        }
+        EntryGroup entryGroup = searchLocal(resourceId);
+        if(entryGroup!=null){
+            return entryGroup;
+        }
+        for(TableBlock tableBlock:getFrameWorks()){
+            entryGroup = tableBlock.search(resourceId);
+            if(entryGroup!=null){
+                return entryGroup;
+            }
+        }
+        return null;
+    }
+    private EntryGroup searchLocal(int resourceId){
         if(resourceId==0){
             return null;
         }
@@ -156,13 +171,35 @@ public class TableBlock extends Chunk<TableHeader>
                 return entryGroup;
             }
         }
-        for(TableBlock tableBlock:getFrameWorks()){
-            EntryGroup entryGroup = tableBlock.search(resourceId);
-            if(entryGroup!=null){
-                return entryGroup;
-            }
-        }
         return null;
+    }
+    @Override
+    public Collection<EntryGroup> getEntryGroups(int resourceId) {
+        List<EntryGroup> results = new ArrayList<>();
+        EntryGroup entryGroup = searchLocal(resourceId);
+        if(entryGroup!=null){
+            results.add(entryGroup);
+        }
+        for(TableBlock framework:getFrameWorks()){
+            results.addAll(framework.getEntryGroups(resourceId));
+        }
+        return results;
+    }
+    @Override
+    public EntryGroup getEntryGroup(int resourceId) {
+        return search(resourceId);
+    }
+    @Override
+    public Collection<PackageBlock> getPackageBlocks(int packageId) {
+        List<PackageBlock> results=new ArrayList<>();
+        PackageBlock packageBlock = getPackageBlockById(packageId);
+        if(packageBlock!=null){
+            results.add(packageBlock);
+        }
+        for(TableBlock tableBlock:getFrameWorks()){
+            results.addAll(tableBlock.getPackageBlocks(packageId));
+        }
+        return results;
     }
     public int searchResourceIdAlias(int resourceId){
         for(PackageBlock packageBlock:listPackages()){
@@ -216,6 +253,16 @@ public class TableBlock extends Chunk<TableHeader>
         getPackageArray().merge(tableBlock.getPackageArray());
         refresh();
     }
+    @Override
+    public String toString(){
+        StringBuilder builder=new StringBuilder();
+        builder.append(super.toString());
+        builder.append(", packages=");
+        int pkgCount=mPackageArray.childesCount();
+        builder.append(pkgCount);
+        return builder.toString();
+    }
+
     public static TableBlock loadWithAndroidFramework(InputStream inputStream) throws IOException{
         TableBlock tableBlock=load(inputStream);
         tableBlock.addFramework(Frameworks.getAndroid());

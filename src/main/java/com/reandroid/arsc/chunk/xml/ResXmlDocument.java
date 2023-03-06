@@ -15,10 +15,8 @@
   */
  package com.reandroid.arsc.chunk.xml;
 
- import com.reandroid.arsc.chunk.Chunk;
- import com.reandroid.arsc.chunk.ChunkType;
- import com.reandroid.arsc.chunk.MainChunk;
- import com.reandroid.arsc.chunk.ParentChunk;
+ import com.reandroid.arsc.ApkFile;
+ import com.reandroid.arsc.chunk.*;
  import com.reandroid.arsc.container.SingleBlockContainer;
  import com.reandroid.arsc.header.HeaderBlock;
  import com.reandroid.arsc.io.BlockReader;
@@ -45,6 +43,7 @@
      private final ResXmlIDMap mResXmlIDMap;
      private ResXmlElement mResXmlElement;
      private final SingleBlockContainer<ResXmlElement> mResXmlElementContainer;
+     private ApkFile mApkFile;
      public ResXmlDocument() {
          super(new HeaderBlock(ChunkType.XML),3);
          this.mResXmlStringPool=new ResXmlStringPool(true);
@@ -169,6 +168,14 @@
          return mResXmlStringPool;
      }
      @Override
+     public ApkFile getApkFile(){
+         return mApkFile;
+     }
+     @Override
+     public void setApkFile(ApkFile apkFile){
+         this.mApkFile = apkFile;
+     }
+     @Override
      public StringPool<?> getSpecStringPool() {
          return null;
      }
@@ -223,6 +230,24 @@
          ResXmlElement xmlElement=getResXmlElement();
          xmlElement.fromJson(json.optJSONObject(ResXmlDocument.NAME_element));
          refresh();
+     }
+     public XMLDocument decodeToXml() throws XMLException {
+         ApkFile apkFile = getApkFile();
+         if(apkFile == null){
+             throw new XMLException("Null parent apk file");
+         }
+         int currentPackageId = 0;
+         AndroidManifestBlock manifestBlock;
+         if(this instanceof AndroidManifestBlock){
+             manifestBlock = ((AndroidManifestBlock)this);
+         }else {
+             manifestBlock = apkFile.getAndroidManifestBlock();
+         }
+         if(manifestBlock!=null){
+             currentPackageId = manifestBlock.guessCurrentPackageId();
+         }
+         TableBlock tableBlock = apkFile.getTableBlock();
+         return decodeToXml(tableBlock, currentPackageId);
      }
      public XMLDocument decodeToXml(EntryStore entryStore, int currentPackageId) throws XMLException {
          XMLDocument xmlDocument = new XMLDocument();

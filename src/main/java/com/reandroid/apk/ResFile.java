@@ -129,19 +129,6 @@ public class ResFile {
         }
         return mBinXml;
     }
-    public boolean dumpToJson(File rootDir) throws IOException {
-        if(!isBinaryXml()){
-            return false;
-        }
-        String fileName=getFilePath()+ApkUtil.JSON_FILE_EXTENSION;
-        fileName=fileName.replace('/', File.separatorChar);
-        File file=new File(rootDir, fileName);
-        ResXmlDocument resXmlDocument =new ResXmlDocument();
-        resXmlDocument.readBytes(getInputSource().openStream());
-        JSONObject jsonObject= resXmlDocument.toJson();
-        jsonObject.write(file);
-        return true;
-    }
     public File buildOutFile(File dir){
         String path=getFilePath();
         path=path.replace('/', File.separatorChar);

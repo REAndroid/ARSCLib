@@ -25,13 +25,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AndroidManifestBlock extends ResXmlDocument {
+    private int mGuessedPackageId;
     public AndroidManifestBlock(){
         super();
         super.getStringPool().setUtf8(false);
     }
     // TODO: find a better way
-    public byte guessCurrentPackageId(){
-        return (byte) ((getIconResourceId()>>24) & 0xff);
+    public int guessCurrentPackageId(){
+        if(mGuessedPackageId == 0){
+            mGuessedPackageId = ((getIconResourceId()>>24) & 0xff);
+        }
+        return mGuessedPackageId;
     }
     public int getIconResourceId(){
         ResXmlElement applicationElement = getApplicationElement();

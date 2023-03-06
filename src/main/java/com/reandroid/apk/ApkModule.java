@@ -16,6 +16,7 @@
 package com.reandroid.apk;
 
 import com.reandroid.archive.*;
+import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.array.PackageArray;
 import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.chunk.PackageBlock;
@@ -34,12 +35,13 @@ import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.zip.ZipEntry;
 
-public class ApkModule {
+public class ApkModule implements ApkFile {
     private final String moduleName;
     private final APKArchive apkArchive;
     private boolean loadDefaultFramework = true;
@@ -91,9 +93,7 @@ public class ApkModule {
         return results;
     }
     public XMLDocument decodeXMLFile(String path) throws IOException, XMLException {
-        InputSource inputSource = apkArchive.getInputSource(path);
-        ResXmlDocument resXmlDocument = new ResXmlDocument();
-        resXmlDocument.readBytes(inputSource.openStream());
+        ResXmlDocument resXmlDocument = loadResXmlDocument(path);
         AndroidManifestBlock manifestBlock = getAndroidManifestBlock();
         int pkgId = manifestBlock.guessCurrentPackageId();
         return resXmlDocument.decodeToXml(getTableEntryStore(), pkgId);
@@ -124,10 +124,10 @@ public class ApkModule {
         AndroidManifestBlock manifestBlock;
         try {
             manifestBlock=getAndroidManifestBlock();
-        } catch (IOException ignored) {
+            return manifestBlock.getMainActivity()!=null;
+        } catch (Exception ignored) {
             return false;
         }
-        return manifestBlock.getMainActivity()!=null;
     }
     public String getModuleName(){
         return moduleName;
@@ -315,35 +315,61 @@ public class ApkModule {
         return mManifestBlock!=null
                 || getApkArchive().getInputSource(AndroidManifestBlock.FILE_NAME)!=null;
     }
-    public AndroidManifestBlock getAndroidManifestBlock() throws IOException {
+    public boolean hasTableBlock(){
+        return mTableBlock!=null
+                || getApkArchive().getInputSource(TableBlock.FILE_NAME)!=null;
+    }
+    public AndroidManifestBlock getAndroidManifestBlock() {
         if(mManifestBlock!=null){
             return mManifestBlock;
         }
         APKArchive archive=getApkArchive();
         InputSource inputSource = archive.getInputSource(AndroidManifestBlock.FILE_NAME);
         if(inputSource==null){
-            throw new IOException("Entry not found: "+AndroidManifestBlock.FILE_NAME);
+            return null;
         }
-        InputStream inputStream = inputSource.openStream();
-        AndroidManifestBlock manifestBlock=AndroidManifestBlock.load(inputStream);
-        inputStream.close();
-        BlockInputSource<AndroidManifestBlock> blockInputSource=new BlockInputSource<>(inputSource.getName(),manifestBlock);
-        blockInputSource.setSort(inputSource.getSort());
-        blockInputSource.setMethod(inputSource.getMethod());
-        archive.add(blockInputSource);
-        mManifestBlock=manifestBlock;
+        InputStream inputStream = null;
+        try {
+            inputStream = inputSource.openStream();
+            AndroidManifestBlock manifestBlock=AndroidManifestBlock.load(inputStream);
+            inputStream.close();
+            BlockInputSource<AndroidManifestBlock> blockInputSource=new BlockInputSource<>(inputSource.getName(),manifestBlock);
+            blockInputSource.setSort(inputSource.getSort());
+            blockInputSource.setMethod(inputSource.getMethod());
+            archive.add(blockInputSource);
+            manifestBlock.setApkFile(this);
+            mManifestBlock = manifestBlock;
+        } catch (IOException exception) {
+            throw new IllegalArgumentException(exception);
+        }
         return mManifestBlock;
     }
-    public boolean hasTableBlock(){
-        return mTableBlock!=null
-                || getApkArchive().getInputSource(TableBlock.FILE_NAME)!=null;
-    }
-    public TableBlock getTableBlock() throws IOException {
+    @Override
+    public TableBlock getTableBlock() {
         if(mTableBlock==null){
-            mTableBlock=loadTableBlock();
+            if(!hasTableBlock()){
+                return null;
+            }
+            try {
+                mTableBlock = loadTableBlock();
+            } catch (IOException exception) {
+                throw new IllegalArgumentException(exception);
+            }
         }
         return mTableBlock;
     }
+    @Override
+    public ResXmlDocument loadResXmlDocument(String path) throws IOException{
+        InputSource inputSource = getApkArchive().getInputSource(path);
+        if(inputSource==null){
+            throw new FileNotFoundException("No such file in apk: " + path);
+        }
+        ResXmlDocument resXmlDocument = new ResXmlDocument();
+        resXmlDocument.setApkFile(this);
+        resXmlDocument.readBytes(inputSource.openStream());
+        return resXmlDocument;
+    }
+
     // If we need TableStringPool only, this loads pool without
     // loading packages and other chunk blocks for faster and less memory usage
     public TableStringPool getVolatileTableStringPool() throws IOException{
@@ -391,6 +417,7 @@ public class ApkModule {
         blockInputSource.setMethod(inputSource.getMethod());
         blockInputSource.setSort(inputSource.getSort());
         archive.add(blockInputSource);
+        tableBlock.setApkFile(this);
         return tableBlock;
     }
     public APKArchive getApkArchive() {

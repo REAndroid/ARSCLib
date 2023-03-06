@@ -124,14 +124,14 @@ import java.util.*;
         resFile.getInputSource().write(outputStream);
         outputStream.close();
 
-        addDecodedEntry(resFile.pickOne());
+        addDecodedEntry(entry);
     }
     private void decodeResXml(EntryStore entryStore, File outDir, ResFile resFile)
             throws IOException, XMLException{
         Entry entry =resFile.pickOne();
         PackageBlock packageBlock= entry.getPackageBlock();
-        ResXmlDocument resXmlDocument =new ResXmlDocument();
-        resXmlDocument.readBytes(resFile.getInputSource().openStream());
+        ResXmlDocument resXmlDocument = apkModule.loadResXmlDocument(
+                resFile.getInputSource().getName());
 
         File pkgDir=new File(outDir, getPackageDirName(packageBlock));
         File resDir=new File(pkgDir, ApkUtil.RES_DIR_NAME);
