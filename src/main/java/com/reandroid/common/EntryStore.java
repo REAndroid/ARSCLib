@@ -22,12 +22,7 @@ import com.reandroid.arsc.item.TableString;
 import java.util.Collection;
 
 public interface EntryStore {
-    EntryGroup searchEntryGroup(String packageName, String type, String name);
     Collection<EntryGroup> getEntryGroups(int resourceId);
-
     EntryGroup getEntryGroup(int resourceId);
-
-    Collection<PackageBlock> getPackageBlocks(byte packageId);
-
-    Collection<TableString> getTableStrings(byte packageId, int stringReference);
+    Collection<PackageBlock> getPackageBlocks(int packageId);
 }

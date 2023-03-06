@@ -75,21 +75,6 @@ public class TableEntryStore implements EntryStore{
         return packageBlockSet;
     }
     @Override
-    public EntryGroup searchEntryGroup(String packageName, String type, String name) {
-        return null;
-    }
-    private Set<TableBlock> getTableBlocks(int packageId) {
-        Set<TableBlock> results=new HashSet<>();
-        Set<PackageBlock> packageBlockSet = mPackagesMap.get(packageId);
-        if(packageBlockSet!=null){
-            for(PackageBlock packageBlock:packageBlockSet){
-                TableBlock tableBlock=packageBlock.getTableBlock();
-                results.add(tableBlock);
-            }
-        }
-        return results;
-    }
-    @Override
     public List<EntryGroup> getEntryGroups(int resourceId) {
         List<EntryGroup> results = searchEntryGroups(resourceId);
         if(results.size()>0){
@@ -106,23 +91,11 @@ public class TableEntryStore implements EntryStore{
         return searchEntryGroup(searchIdAlias(resourceId));
     }
     @Override
-    public List<PackageBlock> getPackageBlocks(byte packageId) {
+    public List<PackageBlock> getPackageBlocks(int packageId) {
         List<PackageBlock> results=new ArrayList<>();
         Set<PackageBlock> packageBlockSet = mPackagesMap.get(0xff & packageId);
         if(packageBlockSet!=null){
             results.addAll(packageBlockSet);
-        }
-        return results;
-    }
-    @Override
-    public List<TableString> getTableStrings(byte packageId, int stringReference) {
-        List<TableString> results=new ArrayList<>();
-        Set<TableBlock> tableBlockSet=getTableBlocks(0xff & packageId);
-        for(TableBlock tableBlock:tableBlockSet){
-            TableString tableString=tableBlock.getTableStringPool().get(stringReference);
-            if(tableString!=null){
-                results.add(tableString);
-            }
         }
         return results;
     }

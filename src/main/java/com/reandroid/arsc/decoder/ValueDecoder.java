@@ -506,7 +506,8 @@ import java.util.regex.Pattern;
         if(pkgId==0){
             pkgId=packageOrResourceId;
         }
-        Collection<PackageBlock> allPkg = entryStore.getPackageBlocks((byte) pkgId);
+        pkgId = pkgId & 0xff;
+        Collection<PackageBlock> allPkg = entryStore.getPackageBlocks(pkgId);
         if(allPkg==null){
             return null;
         }

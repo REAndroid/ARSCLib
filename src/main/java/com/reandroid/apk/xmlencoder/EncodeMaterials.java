@@ -28,13 +28,12 @@
  import com.reandroid.arsc.util.ResNameMap;
  import com.reandroid.arsc.value.Entry;
  import com.reandroid.common.Frameworks;
- import com.reandroid.common.ResourceResolver;
 
  import java.util.HashSet;
  import java.util.Set;
  import java.util.regex.Matcher;
 
- public class EncodeMaterials implements ResourceResolver {
+ public class EncodeMaterials {
      private final Set<ResourceIds.Table.Package> packageIdSet = new HashSet<>();
      private PackageBlock currentPackage;
      private final Set<FrameworkTable> frameworkTables = new HashSet<>();
@@ -304,20 +303,6 @@
          return currentPackage.getId();
      }
 
-     @Override
-     public int resolveResourceId(String packageName, String type, String name) {
-         if(!isFrameworkPackageName(packageName)){
-             return resolveLocalResourceId(type, name);
-         }
-         return resolveFrameworkResourceId(packageName, type, name);
-     }
-     @Override
-     public int resolveResourceId(int packageId, String type, String name) {
-         if(packageId==getCurrentPackageId()){
-             return resolveLocalResourceId(type, name);
-         }
-         return resolveFrameworkResourceId(packageId, type, name);
-     }
      public void logMessage(String msg) {
          if(apkLogger!=null){
              apkLogger.logMessage(msg);
