@@ -32,7 +32,8 @@
  import java.io.IOException;
  import java.util.*;
 
- public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject> {
+ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>,
+         Comparator<ResXmlNode> {
      private final BlockList<ResXmlStartNamespace> mStartNamespaceList;
      private final SingleBlockContainer<ResXmlStartElement> mStartElementContainer;
      private final BlockList<ResXmlNode> mBody;
@@ -51,6 +52,31 @@
          addChild(2, mBody);
          addChild(3, mEndElementContainer);
          addChild(4, mEndNamespaceList);
+     }
+     public void changeIndex(ResXmlElement element, int index){
+         int i = 0;
+         for(ResXmlNode xmlNode:mBody.getChildes()){
+             if(i == index){
+                 element.setIndex(i);
+                 i++;
+             }
+             if(xmlNode==element){
+                 continue;
+             }
+             xmlNode.setIndex(i);
+             i++;
+         }
+         mBody.sort(this);
+     }
+     public int indexOf(ResXmlElement element){
+         int index = 0;
+         for(ResXmlNode xmlNode:mBody.getChildes()){
+             if(xmlNode==element){
+                 return index;
+             }
+             index++;
+         }
+         return -1;
      }
      public void setAttributesUnitSize(int size, boolean setToAll){
          ResXmlStartElement startElement = getStartElement();
@@ -847,6 +873,10 @@
              }
          }
          return xmlElement;
+     }
+     @Override
+     public int compare(ResXmlNode node1, ResXmlNode node2) {
+         return Integer.compare(node1.getIndex(), node2.getIndex());
      }
      @Override
      public String toString(){

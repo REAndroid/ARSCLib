@@ -23,6 +23,7 @@ import com.reandroid.arsc.io.BlockReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class BlockList<T extends Block> extends Block {
@@ -30,6 +31,9 @@ public class BlockList<T extends Block> extends Block {
     public BlockList(){
         super();
         mItems=new ArrayList<>();
+    }
+    public void sort(Comparator<T> comparator){
+        mItems.sort(comparator);
     }
     public boolean remove(T item){
         if(item!=null){
