@@ -96,6 +96,25 @@ import java.util.regex.Pattern;
          }
          return null;
      }
+     public static EncodeResult encodeHexReference(String txt){
+         if(txt==null){
+             return null;
+         }
+         txt=txt.trim().toLowerCase();
+         Matcher matcher = PATTERN_HEX_REFERENCE.matcher(txt);
+         if(!matcher.find()){
+             return null;
+         }
+         String prefix = matcher.group(1);
+         int value = parseHex(matcher.group(2));
+         ValueType valueType;
+         if("?".equals(prefix)){
+             valueType = ValueType.ATTRIBUTE;
+         }else {
+             valueType = ValueType.REFERENCE;
+         }
+         return new EncodeResult(valueType, value);
+     }
      public static boolean isInteger(String txt){
          if(txt==null){
              return false;
@@ -115,7 +134,13 @@ import java.util.regex.Pattern;
          if(isNullReference(txt)){
              return true;
          }
+         if(isHexReference(txt)){
+             return true;
+         }
          return PATTERN_REFERENCE.matcher(txt).matches();
+     }
+     private static boolean isHexReference(String txt){
+         return PATTERN_HEX_REFERENCE.matcher(txt).matches();
      }
      private static boolean isNullReference(String txt){
          if("@null".equals(txt)){
@@ -842,5 +867,5 @@ import java.util.regex.Pattern;
      private static final Pattern PATTERN_INTEGER = Pattern.compile("^(-?)([0-9]+)$");
      private static final Pattern PATTERN_HEX = Pattern.compile("^0x[0-9a-fA-F]+$");
      public static final Pattern PATTERN_REFERENCE = Pattern.compile("^([?@])(([^\\s:@?/]+:)?)([^\\s:@?/]+)/([^\\s:@?/]+)$");
-
+     public static final Pattern PATTERN_HEX_REFERENCE = Pattern.compile("^([?@])(0x[0-9a-f]{7,8})$");
  }
