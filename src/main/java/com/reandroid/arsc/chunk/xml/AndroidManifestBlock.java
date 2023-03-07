@@ -175,6 +175,9 @@ public class AndroidManifestBlock extends ResXmlDocument {
         ResXmlElement result = manifestElement.createChildElement(TAG_uses_permission);
         ResXmlAttribute attr = result.getOrCreateAndroidAttribute(NAME_name, ID_name);
         attr.setValueAsString(permissionName);
+        int i = manifestElement.lastIndexOf(TAG_uses_permission);
+        i++;
+        manifestElement.changeIndex(result, i);
         return result;
     }
     public String getPackageName(){

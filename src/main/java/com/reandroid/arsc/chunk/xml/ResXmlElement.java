@@ -68,6 +68,22 @@
          }
          mBody.sort(this);
      }
+     public int lastIndexOf(String tagName){
+         List<ResXmlElement> elementList = listElements(tagName);
+         int i = elementList.size();
+         if(i==0){
+             return -1;
+         }
+         i--;
+         return elementList.get(i).getIndex();
+     }
+     public int indexOf(String tagName){
+         ResXmlElement element = getElementByTagName(tagName);
+         if(element!=null){
+             return element.getIndex();
+         }
+         return -1;
+     }
      public int indexOf(ResXmlElement element){
          int index = 0;
          for(ResXmlNode xmlNode:mBody.getChildes()){
