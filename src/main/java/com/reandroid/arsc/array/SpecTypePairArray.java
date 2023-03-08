@@ -214,21 +214,10 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
     }
     @Override
     public JSONArray toJson() {
-        JSONArray jsonArray=new JSONArray();
-        int i=0;
-        for(SpecTypePair specTypePair:listItems()){
-            JSONObject jsonObject = specTypePair.toJson();
-            if(jsonObject==null){
-                continue;
-            }
-            jsonArray.put(i, jsonObject);
-            i++;
-        }
-        return jsonArray;
+        return toJson(false);
     }
     @Override
     public void fromJson(JSONArray json) {
-        clearChildes();
         if(json==null){
             return;
         }
@@ -240,6 +229,19 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
             SpecTypePair specTypePair = getOrCreate((byte) id);
             specTypePair.fromJson(jsonObject);
         }
+    }
+    public JSONArray toJson(boolean specsOnly) {
+        JSONArray jsonArray=new JSONArray();
+        int i=0;
+        for(SpecTypePair specTypePair:listItems()){
+            JSONObject jsonObject = specTypePair.toJson(specsOnly);
+            if(jsonObject==null){
+                continue;
+            }
+            jsonArray.put(i, jsonObject);
+            i++;
+        }
+        return jsonArray;
     }
     public void merge(SpecTypePairArray pairArray){
         if(pairArray==null || pairArray==this){

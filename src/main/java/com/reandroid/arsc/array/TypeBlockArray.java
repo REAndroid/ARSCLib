@@ -294,8 +294,10 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     @Override
     public void fromJson(JSONArray json) {
+        if(json == null){
+            return;
+        }
         int length= json.length();
-        clearChildes();
         ensureSize(length);
         for (int i=0;i<length;i++){
             JSONObject jsonObject=json.getJSONObject(i);

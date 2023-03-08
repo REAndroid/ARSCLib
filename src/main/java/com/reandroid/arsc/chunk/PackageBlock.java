@@ -315,16 +315,14 @@ package com.reandroid.arsc.chunk;
     public JSONObject toJson() {
         return toJson(true);
     }
-    public JSONObject toJson(boolean addSpecs) {
+    public JSONObject toJson(boolean addTypes) {
         JSONObject jsonObject=new JSONObject();
 
         jsonObject.put(BuildInfo.NAME_arsc_lib_version, BuildInfo.getVersion());
 
         jsonObject.put(NAME_package_id, getId());
         jsonObject.put(NAME_package_name, getName());
-        if(addSpecs){
-            jsonObject.put(NAME_specs, getSpecTypePairArray().toJson());
-        }
+        jsonObject.put(NAME_specs, getSpecTypePairArray().toJson(!addTypes));
         LibraryInfoArray libraryInfoArray = getLibraryBlock().getLibraryInfoArray();
         if(libraryInfoArray.childesCount()>0){
             jsonObject.put(NAME_libraries,libraryInfoArray.toJson());

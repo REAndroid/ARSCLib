@@ -198,15 +198,20 @@ public class SpecTypePair extends BlockContainer<Block>
 
     @Override
     public JSONObject toJson() {
-        JSONObject jsonObject=new JSONObject();
-        jsonObject.put(SpecBlock.NAME_spec, getSpecBlock().toJson());
-        jsonObject.put(NAME_types, getTypeBlockArray().toJson());
-        return jsonObject;
+        return toJson(false);
     }
     @Override
     public void fromJson(JSONObject json) {
         getSpecBlock().fromJson(json.getJSONObject(SpecBlock.NAME_spec));
-        getTypeBlockArray().fromJson(json.getJSONArray(NAME_types));
+        getTypeBlockArray().fromJson(json.optJSONArray(NAME_types));
+    }
+    public JSONObject toJson(boolean specOnly) {
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put(SpecBlock.NAME_spec, getSpecBlock().toJson());
+        if(!specOnly){
+            jsonObject.put(NAME_types, getTypeBlockArray().toJson());
+        }
+        return jsonObject;
     }
     public void merge(SpecTypePair typePair){
         if(typePair==null||typePair==this){
