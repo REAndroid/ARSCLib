@@ -77,6 +77,9 @@
 
          for(File pubXmlFile:pubXmlFileList){
              ResourceIds.Table.Package pkgResourceIds=map.get(pubXmlFile);
+             if(pkgResourceIds==null){
+                 continue;
+             }
              addParsedFiles(pubXmlFile);
 
              PackageBlock packageBlock = createPackage(pkgResourceIds, pubXmlFile);
@@ -101,6 +104,9 @@
          }
          for(File pubXmlFile:pubXmlFileList){
              ResourceIds.Table.Package pkgResourceIds=map.get(pubXmlFile);
+             if(pkgResourceIds==null){
+                 continue;
+             }
              addParsedFiles(pubXmlFile);
 
              PackageBlock packageBlock=packageBlockMap.get(pubXmlFile);
@@ -165,8 +171,12 @@
              }
              ResourceIds resourceIds=new ResourceIds();
              resourceIds.fromXml(pubXmlFile);
-             ResourceIds.Table.Package pkg = resourceIds.getTable()
-                     .listPackages().get(0);
+             List<ResourceIds.Table.Package> pkgList = resourceIds.getTable()
+                     .listPackages();
+             if(pkgList.size()==0){
+                 continue;
+             }
+             ResourceIds.Table.Package pkg = pkgList.get(0);
              if(pkg.name==null){
                  pkg.name=packageName;
              }

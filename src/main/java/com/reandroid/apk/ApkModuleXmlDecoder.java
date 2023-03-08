@@ -152,6 +152,22 @@ import java.util.*;
         for(PackageBlock packageBlock:tableBlock.listPackages()){
             decodePublicXml(packageBlock, outDir);
         }
+        if(tableBlock.getPackageArray().childesCount()==0){
+            decodeEmptyTable(outDir);
+        }
+    }
+    private void decodeEmptyTable(File outDir) throws IOException {
+        logMessage("Decoding empty table ...");
+        String pkgName = apkModule.getPackageName();
+        if(pkgName==null){
+            return;
+        }
+        File pkgDir = new File(outDir, "0-"+pkgName);
+        File resDir = new File(pkgDir, ApkUtil.RES_DIR_NAME);
+        File values = new File(resDir, "values");
+        File pubXml = new File(values, ApkUtil.FILE_NAME_PUBLIC_XML);
+        XMLDocument xmlDocument = new XMLDocument("resources");
+        xmlDocument.save(pubXml, false);
     }
     private void decodePublicXml(PackageBlock packageBlock, File outDir)
              throws IOException {
