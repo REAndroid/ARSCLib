@@ -18,8 +18,10 @@
  import com.reandroid.arsc.base.Block;
  import com.reandroid.arsc.base.BlockCounter;
  import com.reandroid.arsc.chunk.PackageBlock;
+ import com.reandroid.arsc.chunk.SpecBlock;
  import com.reandroid.arsc.chunk.TableBlock;
  import com.reandroid.arsc.chunk.TypeBlock;
+ import com.reandroid.arsc.container.SpecTypePair;
  import com.reandroid.arsc.group.EntryGroup;
  import com.reandroid.arsc.io.BlockReader;
  import com.reandroid.arsc.item.*;
@@ -37,6 +39,13 @@
          super();
      }
 
+     public SpecFlag getSpecFlag(){
+         SpecBlock specBlock = getSpecBlock();
+         if(specBlock == null){
+             return null;
+         }
+         return specBlock.getSpecFlag(getId());
+     }
      public void ensureComplex(boolean isComplex){
          ensureTableEntry(isComplex);
      }
@@ -161,7 +170,17 @@
          }
          return null;
      }
-
+     public SpecBlock getSpecBlock(){
+         TypeBlock typeBlock = getTypeBlock();
+         if(typeBlock == null){
+             return null;
+         }
+         SpecTypePair specTypePair = typeBlock.getParentSpecTypePair();
+         if(specTypePair==null){
+             return null;
+         }
+         return specTypePair.getSpecBlock();
+     }
      public TypeBlock getTypeBlock(){
          return getParent(TypeBlock.class);
      }
@@ -392,6 +411,11 @@
          ResConfig resConfig = getResConfig();
          if(resConfig!=null){
              builder.append(resConfig);
+             builder.append(' ');
+         }
+         SpecFlag specFlag = getSpecFlag();
+         if(specFlag!=null){
+             builder.append(specFlag);
              builder.append(' ');
          }
          if(isNull()){

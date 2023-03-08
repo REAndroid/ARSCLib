@@ -303,11 +303,14 @@
          return null;
      }
      public ResXmlIDMap getResXmlIDMap(){
-         ResXmlDocument resXmlDocument = getParentInstance(ResXmlDocument.class);
+         ResXmlDocument resXmlDocument = getParentDocument();
          if(resXmlDocument!=null){
              return resXmlDocument.getResXmlIDMap();
          }
          return null;
+     }
+     public ResXmlDocument getParentDocument(){
+         return getParentInstance(ResXmlDocument.class);
      }
 
      public int getDepth(){

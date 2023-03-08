@@ -25,7 +25,6 @@ import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
-import com.reandroid.arsc.value.ValueType;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 

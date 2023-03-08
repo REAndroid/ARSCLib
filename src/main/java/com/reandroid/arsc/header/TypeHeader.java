@@ -70,7 +70,6 @@ public class TypeHeader extends HeaderBlock{
                 +", flags=" + getFlags().toHex()
                 +", count=" + getCount()
                 +", entriesStart=" + getEntriesStart()
-                +", config=" + getConfig()
-                +", flags=" + getFlags().toHex() + '}';
+                +", config=" + getConfig() + '}';
     }
 }

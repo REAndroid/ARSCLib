@@ -15,7 +15,6 @@
   */
  package com.reandroid.arsc.chunk.xml;
 
- import com.reandroid.arsc.base.Block;
  import com.reandroid.arsc.chunk.ChunkType;
  import com.reandroid.arsc.array.ResXmlIDArray;
  import com.reandroid.arsc.chunk.Chunk;

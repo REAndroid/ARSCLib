@@ -16,7 +16,6 @@
  package com.reandroid.arsc.chunk;
 
  import com.reandroid.arsc.array.TypeBlockArray;
- import com.reandroid.arsc.base.Block;
  import com.reandroid.arsc.container.SpecTypePair;
  import com.reandroid.arsc.header.SpecHeader;
  import com.reandroid.arsc.item.*;
@@ -32,6 +31,9 @@
          SpecHeader header = getHeaderBlock();
          this.specFlagsArray = new SpecFlagsArray(header.getEntryCount());
          addChild(specFlagsArray);
+     }
+     public SpecFlag getSpecFlag(int id){
+         return getSpecFlagsArray().getFlag(id);
      }
      public SpecFlagsArray getSpecFlagsArray(){
          return specFlagsArray;
@@ -104,6 +106,50 @@
      public void fromJson(JSONObject json) {
          setId(json.getInt(TypeBlock.NAME_id));
          getSpecFlagsArray().fromJson(json.optJSONArray(NAME_spec_flags));
+     }
+
+     public enum Flag{
+         SPEC_PUBLIC((byte) 0x40),
+         SPEC_STAGED_API((byte) 0x20);
+
+         private final byte flag;
+         Flag(byte flag) {
+             this.flag = flag;
+         }
+         public byte getFlag() {
+             return flag;
+         }
+         public static boolean isPublic(byte flag){
+             return (SPEC_PUBLIC.flag & flag) == SPEC_PUBLIC.flag;
+         }
+         public static boolean isStagedApi(byte flag){
+             return (SPEC_STAGED_API.flag & flag) == SPEC_STAGED_API.flag;
+         }
+         public static String toString(byte flagValue){
+             StringBuilder builder = new StringBuilder();
+             boolean appendOnce = false;
+             int sum = 0;
+             int flagValueInt = flagValue & 0xff;
+             for(Flag flag:values()){
+                 int flagInt = flag.flag & 0xff;
+                 if((flagInt & flagValueInt) != flagInt){
+                     continue;
+                 }
+                 if(appendOnce){
+                     builder.append('|');
+                 }
+                 builder.append(flag);
+                 appendOnce = true;
+                 sum = sum | flagInt;
+             }
+             if(sum != flagValueInt){
+                 if(appendOnce){
+                     builder.append('|');
+                 }
+                 builder.append(String.format("0x%02x", flagValueInt));
+             }
+             return builder.toString();
+         }
      }
 
      public static final String NAME_spec = "spec";

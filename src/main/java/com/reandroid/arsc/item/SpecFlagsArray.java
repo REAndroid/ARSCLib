@@ -25,14 +25,36 @@ import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
 import java.io.IOException;
+import java.util.AbstractList;
 
 public class SpecFlagsArray extends IntegerArray implements BlockLoad, JSONConvert<JSONArray> {
     private final IntegerItem entryCount;
+    private AbstractList<SpecFlag> specFlagList;
     public SpecFlagsArray(IntegerItem entryCount) {
         super();
         this.entryCount = entryCount;
         this.entryCount.setBlockLoad(this);
         setBlockLoad(this);
+    }
+    public AbstractList<SpecFlag> listSpecFlags(){
+        if(specFlagList==null){
+            specFlagList = new AbstractList<SpecFlag>() {
+                @Override
+                public SpecFlag get(int i) {
+                    return SpecFlagsArray.this.getFlag(i);
+                }
+                @Override
+                public int size() {
+                    return SpecFlagsArray.this.size();
+                }
+            };
+        }
+        return specFlagList;
+    }
+    public SpecFlag getFlag(int id){
+        int offset = id & 0xffff;
+        offset = offset * 4;
+        return new SpecFlag(this, offset);
     }
     public void set(int entryId, int value){
         setFlag(entryId, value);
