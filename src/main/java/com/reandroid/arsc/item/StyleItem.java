@@ -15,7 +15,6 @@
   */
 package com.reandroid.arsc.item;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.model.StyleSpanInfo;
 import com.reandroid.arsc.pool.StringPool;
@@ -33,8 +32,10 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         super();
         this.mReferences = new HashSet<>();
     }
-    void onRemoved(){
+    public void onRemoved(){
         setStylePieceCount(0);
+        mSpanInfoList = null;
+        setParent(null);
     }
     public void onDataLoaded(){
         linkAll();

@@ -66,6 +66,14 @@ package com.reandroid.arsc.chunk;
         addChild(mSpecStringPool);
         addChild(mBody);
     }
+    public void destroy(){
+        getEntriesGroupMap().clear();
+        getPackageBody().destroy();
+        getTypeStringPool().destroy();
+        getSpecStringPool().destroy();
+        setId(0);
+        setName("");
+    }
     public Entry getOrCreate(String qualifiers, String type, String name){
         ResConfig resConfig = new ResConfig();
         resConfig.parseQualifiers(qualifiers);
@@ -161,6 +169,9 @@ package com.reandroid.arsc.chunk;
     @Override
     public SpecStringPool getSpecStringPool(){
         return mSpecStringPool;
+    }
+    public PackageBody getPackageBody() {
+         return mBody;
     }
     public SpecTypePairArray getSpecTypePairArray(){
         return mBody.getSpecTypePairArray();

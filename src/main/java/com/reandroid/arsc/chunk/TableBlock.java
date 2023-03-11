@@ -38,7 +38,7 @@ import java.util.*;
         implements MainChunk, JSONConvert<JSONObject>, EntryStore {
     private final TableStringPool mTableStringPool;
     private final PackageArray mPackageArray;
-    private final Set<TableBlock> mFrameWorks=new HashSet<>();
+    private final List<TableBlock> mFrameWorks=new ArrayList<>();
     private ApkFile mApkFile;
     public TableBlock() {
         super(new TableHeader(), 2);
@@ -48,6 +48,16 @@ import java.util.*;
         addChild(mTableStringPool);
         addChild(mPackageArray);
     }
+    public void destroy(){
+        getPackageArray().destroy();
+        getStringPool().destroy();
+        clearFrameworks();
+        refresh();
+    }
+    public int countPackages(){
+        return getPackageArray().childesCount();
+    }
+
     public PackageBlock pickOne(){
         return getPackageArray().pickOne();
     }
@@ -232,7 +242,7 @@ import java.util.*;
         jsonObject.put(BuildInfo.NAME_arsc_lib_version, BuildInfo.getVersion());
 
         jsonObject.put(NAME_packages, getPackageArray().toJson());
-        JSONArray jsonArray = getTableStringPool().toJson();
+        JSONArray jsonArray = getStringPool().toJson();
         if(jsonArray!=null){
             jsonObject.put(NAME_styled_strings, jsonArray);
         }
@@ -247,8 +257,8 @@ import java.util.*;
         if(tableBlock==null||tableBlock==this){
             return;
         }
-        if(getPackageArray().childesCount()==0 && getTableStringPool().countStrings()==0){
-            getTableStringPool().merge(tableBlock.getTableStringPool());
+        if(countPackages()==0 && getStringPool().countStrings()==0){
+            getStringPool().merge(tableBlock.getStringPool());
         }
         getPackageArray().merge(tableBlock.getPackageArray());
         refresh();

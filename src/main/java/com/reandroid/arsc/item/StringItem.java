@@ -80,6 +80,13 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
             ref.set(newIndex);
         }
     }
+    public void onRemoved(){
+        StyleItem style = getStyle();
+        if(style!=null){
+            style.onRemoved();
+        }
+        setParent(null);
+    }
     @Override
     public void onIndexChanged(int oldIndex, int newIndex){
         reUpdateReferences(newIndex);

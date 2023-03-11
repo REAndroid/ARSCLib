@@ -31,6 +31,13 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
         setEndBytes(END_BYTE);
     }
     @Override
+    public void clearChildes(){
+        for(StyleItem styleItem:listItems()){
+            styleItem.onRemoved();
+        }
+        super.clearChildes();
+    }
+    @Override
     void refreshEnd4Block(BlockReader reader, ByteArray end4Block) throws IOException {
         end4Block.clear();
         if(reader.available()<4){

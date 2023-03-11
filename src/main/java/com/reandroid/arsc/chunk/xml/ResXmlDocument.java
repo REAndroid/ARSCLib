@@ -55,6 +55,16 @@
          addChild(mResXmlIDMap);
          addChild(mResXmlElementContainer);
      }
+     public void destroy(){
+         ResXmlElement root = getResXmlElement();
+         if(root!=null){
+             root.clearChildes();
+             setResXmlElement(null);
+         }
+         getResXmlIDMap().destroy();
+         getStringPool().destroy();
+         refresh();
+     }
      public void setAttributesUnitSize(int size, boolean setToAll){
          ResXmlElement root = getResXmlElement();
          if(root!=null){

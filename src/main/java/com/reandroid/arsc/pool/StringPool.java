@@ -68,6 +68,10 @@ package com.reandroid.arsc.pool;
 
         mUniqueMap = new HashMap<>();
     }
+    public void destroy(){
+        getStyleArray().clearChildes();
+        getStringsArray().clearChildes();
+    }
     public List<String> toStringList(){
         return getStringsArray().toStringList();
     }

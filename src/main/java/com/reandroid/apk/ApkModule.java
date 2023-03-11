@@ -201,7 +201,7 @@ public class ApkModule implements ApkFile {
             }
             logVerbose("Dir validated: '"+path+"' -> '"+pathNew+"'");
         }
-        TableStringPool stringPool= getTableBlock().getTableStringPool();
+        TableStringPool stringPool= getTableBlock().getStringPool();
         stringPool.refreshUniqueIdMap();
         getTableBlock().refresh();
     }
@@ -226,7 +226,7 @@ public class ApkModule implements ApkFile {
             }
             logVerbose("Root changed: '"+path+"' -> '"+pathNew+"'");
         }
-        TableStringPool stringPool= getTableBlock().getTableStringPool();
+        TableStringPool stringPool= getTableBlock().getStringPool();
         stringPool.refreshUniqueIdMap();
         getTableBlock().refresh();
     }
@@ -236,7 +236,7 @@ public class ApkModule implements ApkFile {
     public List<ResFile> listResFiles(int resourceId, ResConfig resConfig) throws IOException {
         List<ResFile> results=new ArrayList<>();
         TableBlock tableBlock=getTableBlock();
-        TableStringPool stringPool= tableBlock.getTableStringPool();
+        TableStringPool stringPool= tableBlock.getStringPool();
         for(InputSource inputSource:getApkArchive().listInputSources()){
             String name=inputSource.getAlias();
             StringGroup<TableString> groupTableString = stringPool.get(name);
@@ -274,7 +274,7 @@ public class ApkModule implements ApkFile {
         }
         return results;
     }
-    public String getPackageName() throws IOException {
+    public String getPackageName(){
         if(hasAndroidManifestBlock()){
             return getAndroidManifestBlock().getPackageName();
         }
@@ -289,7 +289,7 @@ public class ApkModule implements ApkFile {
         }
         return pkg.getName();
     }
-    public void setPackageName(String name) throws IOException {
+    public void setPackageName(String name) {
         String old=getPackageName();
         if(hasAndroidManifestBlock()){
             getAndroidManifestBlock().setPackageName(name);
@@ -319,6 +319,46 @@ public class ApkModule implements ApkFile {
         return mTableBlock!=null
                 || getApkArchive().getInputSource(TableBlock.FILE_NAME)!=null;
     }
+    public void destroy(){
+        getApkArchive().clear();
+        AndroidManifestBlock manifestBlock = this.mManifestBlock;
+        if(manifestBlock!=null){
+            manifestBlock.destroy();
+            this.mManifestBlock = null;
+        }
+        TableBlock tableBlock = this.mTableBlock;
+        if(tableBlock!=null){
+            tableBlock.destroy();
+            this.mTableBlock = null;
+        }
+    }
+    public void setManifest(AndroidManifestBlock manifestBlock){
+        APKArchive archive = getApkArchive();
+        if(manifestBlock==null){
+            mManifestBlock = null;
+            archive.remove(AndroidManifestBlock.FILE_NAME);
+            return;
+        }
+        manifestBlock.setApkFile(this);
+        BlockInputSource<AndroidManifestBlock> source =
+                new BlockInputSource<>(AndroidManifestBlock.FILE_NAME, manifestBlock);
+        archive.add(source);
+        mManifestBlock = manifestBlock;
+    }
+    public void setTableBlock(TableBlock tableBlock){
+        APKArchive archive = getApkArchive();
+        if(tableBlock==null){
+            mTableBlock = null;
+            archive.remove(TableBlock.FILE_NAME);
+            return;
+        }
+        tableBlock.setApkFile(this);
+        BlockInputSource<TableBlock> source =
+                new BlockInputSource<>(TableBlock.FILE_NAME, tableBlock);
+        archive.add(source);
+        mTableBlock = tableBlock;
+    }
+    @Override
     public AndroidManifestBlock getAndroidManifestBlock() {
         if(mManifestBlock!=null){
             return mManifestBlock;
@@ -374,7 +414,7 @@ public class ApkModule implements ApkFile {
     // loading packages and other chunk blocks for faster and less memory usage
     public TableStringPool getVolatileTableStringPool() throws IOException{
         if(mTableBlock!=null){
-            return mTableBlock.getTableStringPool();
+            return mTableBlock.getStringPool();
         }
         InputSource inputSource = getApkArchive()
                 .getInputSource(TableBlock.FILE_NAME);
@@ -388,7 +428,7 @@ public class ApkModule implements ApkFile {
             inputStream.close();
             return stringPool;
         }
-        return getTableBlock().getTableStringPool();
+        return getTableBlock().getStringPool();
     }
     TableBlock loadTableBlock() throws IOException {
         APKArchive archive=getApkArchive();

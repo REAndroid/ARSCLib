@@ -31,6 +31,9 @@
          this.mResXmlIDArray=new ResXmlIDArray(getHeaderBlock());
          addChild(mResXmlIDArray);
      }
+     public void destroy(){
+         getResXmlIDArray().clearChildes();
+     }
      public ResXmlIDArray getResXmlIDArray(){
          return mResXmlIDArray;
      }

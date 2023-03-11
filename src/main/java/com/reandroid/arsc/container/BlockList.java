@@ -32,6 +32,12 @@ public class BlockList<T extends Block> extends Block {
         super();
         mItems=new ArrayList<>();
     }
+    public void clearChildes(){
+        ArrayList<T> childList = new ArrayList<>(getChildes());
+        for(T child:childList){
+            remove(child);
+        }
+    }
     public void sort(Comparator<T> comparator){
         mItems.sort(comparator);
     }

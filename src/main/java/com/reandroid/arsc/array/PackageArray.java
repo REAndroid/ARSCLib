@@ -36,6 +36,14 @@ public class PackageArray extends BlockArray<PackageBlock>
         this.mPackageCount=packageCount;
         mPackageCount.setBlockLoad(this);
     }
+    public void destroy(){
+        Iterator<PackageBlock> itr = iterator(true);
+        while (itr.hasNext()){
+            PackageBlock packageBlock=itr.next();
+            packageBlock.destroy();
+        }
+        clearChildes();
+    }
     public PackageBlock pickOne(){
         PackageBlock[] items=getChildes();
         if(items==null||items.length==0){
