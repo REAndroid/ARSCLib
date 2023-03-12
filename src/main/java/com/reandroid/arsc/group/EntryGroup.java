@@ -22,6 +22,7 @@ import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResConfig;
 
 import java.util.Iterator;
 
@@ -93,16 +94,74 @@ public class EntryGroup extends ItemGroup<Entry> {
         }
         Entry result = null;
         for(Entry entry :items){
-            if(entry ==null){
+            if(entry == null){
                 continue;
             }
-            if(result==null || result.isNull()){
-                result= entry;
-            }else if(entry.isDefault()){
+            if(entry.isDefault() && !entry.isNull()){
                 return entry;
             }
+            if(result==null || result.isNull()){
+                result = entry;
+                continue;
+            }
+            result = choose(result, entry);
         }
         return result;
+    }
+    private Entry choose(Entry entry1, Entry entry2){
+        if(entry1 == null || entry1 == entry2){
+            return entry2;
+        }
+        if(entry2 == null){
+            return entry1;
+        }
+        if(entry1.isNull() && !entry2.isNull()){
+            return entry2;
+        }
+        if(!entry1.isNull() && entry2.isNull()){
+            return entry1;
+        }
+        if(entry1.isDefault()){
+            return entry1;
+        }
+        if(entry2.isDefault()){
+            return entry2;
+        }
+        ResConfig config1 = entry1.getResConfig();
+        ResConfig config2 = entry2.getResConfig();
+        if(config1 == null && config2==null){
+            return entry1;
+        }
+        if(config1 == null){
+            return entry2;
+        }
+        if(config2 == null){
+            return entry1;
+        }
+        boolean lang1 = isDefaultLanguage(config1);
+        boolean lang2 = isDefaultLanguage(config2);
+        if((lang1 && !lang2) || (!lang1 && !lang2)){
+            return entry1;
+        }
+        if(!lang1){
+            return entry2;
+        }
+        String region1 = config1.getRegion();
+        String region2 = config2.getRegion();
+        if((region1!=null && region2==null) || (region1==null && region2==null)){
+            return entry1;
+        }
+        if(region1==null){
+            return entry2;
+        }
+        return entry1;
+    }
+    private boolean isDefaultLanguage(ResConfig resConfig){
+        String lang = resConfig.getLanguage();
+        if(lang == null){
+            return true;
+        }
+        return "en".equals(lang);
     }
     public Entry getDefault(){
         Iterator<Entry> itr=iterator(true);
