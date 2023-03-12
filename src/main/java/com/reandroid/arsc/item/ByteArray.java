@@ -73,6 +73,13 @@ public class ByteArray extends BlockItem {
         }
         return getBytesInternal()[index];
     }
+    public int getByteUnsigned(int index){
+        Byte b = get(index);
+        if(b==null){
+            return 0;
+        }
+        return 0xff & b;
+    }
     public final void put(int index, byte value){
         byte[] bts = getBytesInternal();
         bts[index]=value;
@@ -98,6 +105,9 @@ public class ByteArray extends BlockItem {
         byte[] bts = getBytesInternal();
         bts[offset+1]= (byte) (val >>> 8 & 0xff);
         bts[offset]= (byte) (val & 0xff);
+    }
+    public final int getShortUnsigned(int offset){
+        return 0xffff & getShort(offset);
     }
     public final short getShort(int offset){
         byte[] bts = getBytesInternal();
