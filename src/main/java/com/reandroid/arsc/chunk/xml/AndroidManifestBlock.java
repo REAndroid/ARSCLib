@@ -203,6 +203,32 @@ public class AndroidManifestBlock extends ResXmlDocument {
         attribute.setValueAsString(packageName);
         return true;
     }
+    public Integer getPlatformBuildVersionCode(){
+        ResXmlElement manifest = getManifestElement();
+        if(manifest==null){
+            return null;
+        }
+        ResXmlAttribute attribute = manifest.searchAttributeByName(NAME_platformBuildVersionCode);
+        if(attribute==null || attribute.getValueType()!=ValueType.INT_DEC){
+            return null;
+        }
+        return attribute.getData();
+    }
+    public Integer getTargetSdkVersion(){
+        ResXmlElement manifest = getManifestElement();
+        if(manifest==null){
+            return null;
+        }
+        ResXmlElement usesSdk = manifest.getElementByTagName(TAG_uses_sdk);
+        if(usesSdk==null){
+            return null;
+        }
+        ResXmlAttribute attribute = usesSdk.searchAttributeByResourceId(ID_targetSdkVersion);
+        if(attribute==null || attribute.getValueType()!=ValueType.INT_DEC){
+            return null;
+        }
+        return attribute.getData();
+    }
     public Integer getCompileSdkVersion(){
         return getManifestAttributeInt(ID_compileSdkVersion);
     }
@@ -382,6 +408,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
 
     public static final int ID_name = 0x01010003;
     public static final int ID_compileSdkVersion = 0x01010572;
+    public static final int ID_targetSdkVersion = 0x01010270;
     public static final int ID_compileSdkVersionCodename = 0x01010573;
     public static final int ID_authorities = 0x01010018;
     public static final int ID_host = 0x01010028;
