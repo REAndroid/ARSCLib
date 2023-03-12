@@ -15,7 +15,6 @@
   */
 package com.reandroid.arsc.item;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 
@@ -55,7 +54,7 @@ public class ResXmlID extends IntegerItem {
     }
     @Override
     public void onIndexChanged(int oldIndex, int newIndex){
-        reUpdateReferences(newIndex);
+        //TODO: We have to ignore this to avoid conflict with ResXmlIDMap.removeSafely
     }
     public String getName(){
         ResXmlString xmlString = getResXmlString();

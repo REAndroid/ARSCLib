@@ -27,6 +27,7 @@ import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Objects;
 
  public abstract class ValueItem extends BlockItem implements Value,
          JSONConvert<JSONObject>{
@@ -150,16 +151,14 @@ import java.io.IOException;
              return;
          }
          mStringReference = null;
+         onUnlinkDataString(stringReference);
+     }
+     protected void onUnlinkDataString(ReferenceItem referenceItem){
          StringPool<?> stringPool = getStringPool();
          if(stringPool == null){
              return;
          }
-         StringItem stringItem = stringPool.removeReference(stringReference);
-         if(stringItem!=null){
-             onUnlinkDataString(stringItem);
-         }
-     }
-     protected void onUnlinkDataString(StringItem stringItem){
+         stringPool.removeReference(referenceItem);
      }
      public StringPool<?> getStringPool(){
          Block parent = getParent();
@@ -204,6 +203,10 @@ import java.io.IOException;
          return null;
      }
      public void setValueAsString(String str){
+         if(getValueType() != ValueType.STRING
+                 && Objects.equals(str, getValueAsString())){
+             return;
+         }
          StringItem stringItem = getStringPool().getOrCreate(str);
          setData(stringItem.getIndex());
          setValueType(ValueType.STRING);

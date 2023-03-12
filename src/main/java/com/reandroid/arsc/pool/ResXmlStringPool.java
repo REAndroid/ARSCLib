@@ -22,16 +22,37 @@ import com.reandroid.arsc.array.StyleArray;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
 import com.reandroid.arsc.group.StringGroup;
-import com.reandroid.arsc.item.IntegerArray;
-import com.reandroid.arsc.item.IntegerItem;
-import com.reandroid.arsc.item.ResXmlID;
-import com.reandroid.arsc.item.ResXmlString;
+import com.reandroid.arsc.item.*;
 
 import java.util.Objects;
 
  public class ResXmlStringPool extends StringPool<ResXmlString> {
     public ResXmlStringPool(boolean is_utf8) {
         super(is_utf8);
+    }
+    @Override
+    public ResXmlString removeReference(ReferenceItem referenceItem){
+        if(referenceItem==null){
+            return null;
+        }
+        ResXmlString stringItem = super.removeReference(referenceItem);
+        removeNotUsedItem(stringItem);
+        return stringItem;
+    }
+    private void removeNotUsedItem(ResXmlString xmlString){
+        if(xmlString == null || xmlString.hasReference()){
+            return;
+        }
+        ResXmlIDMap idMap = getResXmlIDMap();
+        int lastIdIndex = -1;
+        if(idMap!=null){
+            lastIdIndex = idMap.countId() - 1;
+        }
+        if(idMap!=null && xmlString.getIndex()>lastIdIndex){
+            removeString(xmlString);
+        }else {
+            xmlString.set("");
+        }
     }
     @Override
     StringArray<ResXmlString> newInstance(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {

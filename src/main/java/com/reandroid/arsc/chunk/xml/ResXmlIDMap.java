@@ -20,6 +20,7 @@
  import com.reandroid.arsc.chunk.Chunk;
  import com.reandroid.arsc.header.HeaderBlock;
  import com.reandroid.arsc.item.ResXmlID;
+ import com.reandroid.arsc.item.ResXmlString;
  import com.reandroid.arsc.pool.ResXmlStringPool;
 
  import java.util.Collection;
@@ -30,6 +31,32 @@
          super(new HeaderBlock(ChunkType.XML_RESOURCE_MAP), 1);
          this.mResXmlIDArray=new ResXmlIDArray(getHeaderBlock());
          addChild(mResXmlIDArray);
+     }
+     void removeSafely(ResXmlID resXmlID){
+         if(resXmlID==null
+                 || resXmlID.getParent()==null
+                 || resXmlID.getIndex()<0
+                 || resXmlID.hasReference()){
+             return;
+         }
+         ResXmlString xmlString = resXmlID.getResXmlString();
+         if(xmlString == null
+                 || xmlString.getParent()==null
+                 || xmlString.getIndex()<0
+                 || xmlString.hasReference()){
+             return;
+         }
+         ResXmlStringPool stringPool = getXmlStringPool();
+         if(stringPool == null){
+             return;
+         }
+         resXmlID.set(0);
+         ResXmlIDArray idArray = getResXmlIDArray();
+         idArray.remove(resXmlID);
+         stringPool.removeString(xmlString);
+     }
+     public int countId(){
+         return getResXmlIDArray().childesCount();
      }
      public void destroy(){
          getResXmlIDArray().clearChildes();

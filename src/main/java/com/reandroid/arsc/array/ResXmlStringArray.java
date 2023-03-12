@@ -15,13 +15,43 @@
   */
 package com.reandroid.arsc.array;
 
+import com.reandroid.arsc.chunk.xml.ResXmlDocument;
+import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
 import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ResXmlString;
 
-public class ResXmlStringArray extends StringArray<ResXmlString> {
+import java.util.ArrayList;
+import java.util.List;
+
+ public class ResXmlStringArray extends StringArray<ResXmlString> {
     public ResXmlStringArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         super(offsets, itemCount, itemStart, is_utf8);
+    }
+    @Override
+    List<ResXmlString> listUnusedStringsToRemove(){
+        List<ResXmlString> results=new ArrayList<>();
+        ResXmlIDMap idMap = getResXmlIDMap();
+        int lastIndex = -1;
+        if(idMap!=null){
+            lastIndex = idMap.countId();
+        }
+        for(ResXmlString item:listItems()){
+            if(item == null
+                    || item.hasReference()
+                    || item.getIndex()<lastIndex){
+                continue;
+            }
+            results.add(item);
+        }
+        return results;
+    }
+    private ResXmlIDMap getResXmlIDMap(){
+        ResXmlDocument xmlDocument = getParentInstance(ResXmlDocument.class);
+        if(xmlDocument!=null){
+            return xmlDocument.getResXmlIDMap();
+        }
+        return null;
     }
     @Override
     public ResXmlString newInstance() {

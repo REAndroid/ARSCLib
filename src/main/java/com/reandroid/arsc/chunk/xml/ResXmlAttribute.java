@@ -29,6 +29,7 @@
  import com.reandroid.xml.XMLException;
 
  import java.io.IOException;
+ import java.util.Objects;
 
  public class ResXmlAttribute extends ValueItem implements Comparable<ResXmlAttribute>{
      private ReferenceItem mNSReference;
@@ -94,6 +95,9 @@
          setNameReference(xmlID.getIndex());
      }
      public void setName(String name, int resourceId){
+         if(Objects.equals(name, getName()) && resourceId==getNameResourceID()){
+             return;
+         }
          unlink(mNameReference);
          unLinkNameId(getResXmlID());
          ResXmlString xmlString = getOrCreateAttributeName(name, resourceId);
@@ -104,13 +108,34 @@
          mNameReference = link(OFFSET_NAME);
          linkNameId();
      }
+     private void linkStartNameSpace(){
+         ResXmlElement xmlElement=getParentResXmlElement();
+         if(xmlElement==null){
+             return;
+         }
+         ResXmlStartNamespace startNamespace=xmlElement.getStartNamespaceByUriRef(getNamespaceReference());
+         if(startNamespace==null){
+             return;
+         }
+         startNamespace.addAttributeReference(this);
+     }
+     private void unLinkStartNameSpace(){
+         ResXmlElement xmlElement=getParentResXmlElement();
+         if(xmlElement==null){
+             return;
+         }
+         ResXmlStartNamespace startNamespace=xmlElement.getStartNamespaceByUriRef(getNamespaceReference());
+         if(startNamespace==null){
+             return;
+         }
+         startNamespace.removeAttributeReference(this);
+     }
      private ResXmlString getOrCreateAttributeName(String name, int resourceId){
-         StringPool<?> stringPool = getStringPool();
+         ResXmlStringPool stringPool = getStringPool();
          if(stringPool==null){
              return null;
          }
-         ResXmlStringPool resXmlStringPool = (ResXmlStringPool) stringPool;
-         return resXmlStringPool.getOrCreateAttribute(resourceId, name);
+         return stringPool.getOrCreateAttribute(resourceId, name);
      }
      public ResXmlElement getParentResXmlElement(){
          return getParent(ResXmlElement.class);
@@ -161,6 +186,7 @@
          unlink(mNSReference);
          putInteger(getBytesInternal(), OFFSET_NS, ref);
          mNSReference = link(OFFSET_NS);
+         linkStartNameSpace();
      }
      int getNameReference(){
          return getInteger(getBytesInternal(), OFFSET_NAME);
@@ -191,17 +217,17 @@
      public void onReadBytes(BlockReader reader) throws IOException {
          super.onReadBytes(reader);
          linkAll();
+         linkStartNameSpace();
      }
      @Override
      public void onRemoved(){
          super.onRemoved();
+         unLinkStartNameSpace();
          unlinkAll();
      }
      @Override
-     protected void onUnlinkDataString(StringItem stringItem){
-         if(!stringItem.hasReference()){
-             stringItem.set("");
-         }
+     protected void onUnlinkDataString(ReferenceItem referenceItem){
+         unlink(referenceItem);
      }
      @Override
      protected void onDataChanged(){
@@ -228,6 +254,14 @@
          }
          xmlID.removeReference(referenceItem);
          mNameIdReference = null;
+         if(xmlID.hasReference()){
+             return;
+         }
+         ResXmlIDMap xmlIDMap = getResXmlIDMap();
+         if(xmlIDMap == null){
+             return;
+         }
+         xmlIDMap.removeSafely(xmlID);
      }
      private void linkAll(){
          unlink(mNSReference);
@@ -270,21 +304,20 @@
          if(reference == null){
              return;
          }
-         StringPool<?> stringPool = getStringPool();
+         ResXmlStringPool stringPool = getStringPool();
          if(stringPool==null){
              return;
          }
-         StringItem stringItem = stringPool.get(reference.get());
-         if(stringItem==null){
-             return;
-         }
-         stringItem.removeReference(reference);
-         if(!stringItem.hasReference()){
-             stringItem.set("");
-         }
+         stringPool.removeReference(reference);
      }
-
-
+     @Override
+     public ResXmlStringPool getStringPool(){
+         StringPool<?> stringPool = super.getStringPool();
+         if(stringPool instanceof ResXmlStringPool){
+             return (ResXmlStringPool) stringPool;
+         }
+         return null;
+     }
      @Override
      public int compareTo(ResXmlAttribute other) {
          int id1=getNameResourceID();

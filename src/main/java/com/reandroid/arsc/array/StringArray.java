@@ -51,12 +51,15 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         };
     }
     public List<T> removeUnusedStrings(){
-        List<T> unusedList=listUnusedStrings();
+        List<T> unusedList = listUnusedStringsToRemove();
         remove(unusedList);
         for(T item:unusedList){
             item.onRemoved();
         }
         return unusedList;
+    }
+    List<T> listUnusedStringsToRemove(){
+        return listUnusedStrings();
     }
     public List<T> listUnusedStrings(){
         List<T> results=new ArrayList<>();

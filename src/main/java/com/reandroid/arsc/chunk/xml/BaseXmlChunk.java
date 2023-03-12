@@ -40,9 +40,13 @@
          addChild(mStringReference);
      }
      void onRemoved(){
-         unLinkStringReference(getHeaderBlock().getCommentReference());
-         unLinkStringReference(mNamespaceReference);
-         unLinkStringReference(mStringReference);
+         ResXmlStringPool stringPool = getStringPool();
+         if(stringPool==null){
+             return;
+         }
+         stringPool.removeReference(getHeaderBlock().getCommentReference());
+         stringPool.removeReference(mNamespaceReference);
+         stringPool.removeReference(mStringReference);
      }
      void linkStringReferences(){
          linkStringReference(getHeaderBlock().getCommentReference());
@@ -68,6 +72,9 @@
          return getHeaderBlock().getLineNumber().get();
      }
      public void setCommentReference(int val){
+         if(val == getCommentReference()){
+             return;
+         }
          IntegerItem comment=getHeaderBlock().getCommentReference();
          unLinkStringReference(comment);
          getHeaderBlock().getCommentReference().set(val);
@@ -77,6 +84,9 @@
          return getHeaderBlock().getCommentReference().get();
      }
      public void setNamespaceReference(int val){
+         if(val == getNamespaceReference()){
+             return;
+         }
          unLinkStringReference(mNamespaceReference);
          mNamespaceReference.set(val);
          linkStringReference(mNamespaceReference);
@@ -85,6 +95,9 @@
          return mNamespaceReference.get();
      }
      public void setStringReference(int val){
+         if(val == getStringReference()){
+             return;
+         }
          unLinkStringReference(mStringReference);
          mStringReference.set(val);
          linkStringReference(mStringReference);

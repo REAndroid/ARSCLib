@@ -329,14 +329,20 @@
          return getStartElement().getResXmlAttributeArray().remove(resXmlAttribute);
      }
      public boolean removeElement(ResXmlElement element){
-         if(element.getParent()!=null){
+         if(element !=null && element.getParent()!=null){
              element.onRemoved();
          }
          return mBody.remove(element);
      }
+     public boolean removeNode(ResXmlNode node){
+         if(node instanceof ResXmlElement){
+             return removeElement((ResXmlElement) node);
+         }
+         return mBody.remove(node);
+     }
      public int countElements(){
          int result = 0;
-         for(ResXmlNode xmlNode:listXmlNodes()){
+         for(ResXmlNode xmlNode: getXmlNodes()){
              if(xmlNode instanceof ResXmlElement){
                  result++;
              }
@@ -354,11 +360,14 @@
          }
      }
      public List<ResXmlNode> listXmlNodes(){
+         return new ArrayList<>(getXmlNodes());
+     }
+     private List<ResXmlNode> getXmlNodes(){
          return mBody.getChildes();
      }
      public List<ResXmlText> listXmlText(){
          List<ResXmlText> results=new ArrayList<>();
-         for(ResXmlNode xmlNode:listXmlNodes()){
+         for(ResXmlNode xmlNode: getXmlNodes()){
              if(xmlNode instanceof ResXmlTextNode){
                  results.add(((ResXmlTextNode) xmlNode).getResXmlText());
              }
@@ -367,7 +376,7 @@
      }
      public List<ResXmlTextNode> listXmlTextNodes(){
          List<ResXmlTextNode> results=new ArrayList<>();
-         for(ResXmlNode xmlNode:listXmlNodes()){
+         for(ResXmlNode xmlNode: getXmlNodes()){
              if(xmlNode instanceof ResXmlTextNode){
                  results.add((ResXmlTextNode) xmlNode);
              }
@@ -376,7 +385,7 @@
      }
      public List<ResXmlElement> listElements(){
          List<ResXmlElement> results=new ArrayList<>();
-         for(ResXmlNode xmlNode:listXmlNodes()){
+         for(ResXmlNode xmlNode: getXmlNodes()){
              if(xmlNode instanceof ResXmlElement){
                  results.add((ResXmlElement) xmlNode);
              }
@@ -782,7 +791,7 @@
          jsonObject.put(NAME_attributes, attrArray);
          i=0;
          JSONArray childes=new JSONArray();
-         for(ResXmlNode xmlNode:listXmlNodes()){
+         for(ResXmlNode xmlNode: getXmlNodes()){
              childes.put(i, xmlNode.toJson());
              i++;
          }
@@ -879,7 +888,7 @@
          if(comment!=null){
              xmlElement.addComment(new XMLComment(comment));
          }
-         for(ResXmlNode xmlNode:listXmlNodes()){
+         for(ResXmlNode xmlNode: getXmlNodes()){
              if(xmlNode instanceof ResXmlElement){
                  ResXmlElement childResXmlElement=(ResXmlElement)xmlNode;
                  XMLElement childXMLElement =

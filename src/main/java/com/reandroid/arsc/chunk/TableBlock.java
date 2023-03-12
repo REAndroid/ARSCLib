@@ -221,7 +221,7 @@ import java.util.*;
         }
         return 0;
     }
-    public Set<TableBlock> getFrameWorks(){
+    public List<TableBlock> getFrameWorks(){
         return mFrameWorks;
     }
     public void addFramework(TableBlock tableBlock){
@@ -229,11 +229,17 @@ import java.util.*;
             return;
         }
         for(TableBlock frm:tableBlock.getFrameWorks()){
-            if(frm==this){
+            if(frm==this || frm==tableBlock || tableBlock.equals(frm)){
                 return;
             }
         }
         mFrameWorks.add(tableBlock);
+    }
+    public void removeFramework(TableBlock tableBlock){
+        mFrameWorks.remove(tableBlock);
+    }
+    public void clearFrameworks(){
+        mFrameWorks.clear();
     }
     @Override
     public JSONObject toJson() {

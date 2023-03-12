@@ -16,15 +16,17 @@
  package com.reandroid.arsc.chunk.xml;
 
  import com.reandroid.arsc.chunk.ChunkType;
- import com.reandroid.arsc.item.ResXmlString;
  import com.reandroid.xml.SchemaAttr;
  import com.reandroid.xml.XMLAttribute;
 
+ import java.util.HashSet;
  import java.util.Set;
 
  public class ResXmlStartNamespace extends ResXmlNamespace {
+     private final Set<ResXmlAttribute> mReferencedAttributes;
      public ResXmlStartNamespace() {
          super(ChunkType.XML_START_NAMESPACE);
+         this.mReferencedAttributes = new HashSet<>();
      }
      public ResXmlEndNamespace getEnd(){
          return (ResXmlEndNamespace) getPair();
@@ -45,6 +47,26 @@
          ResXmlEndNamespace end = getEnd();
          if(end!=null){
              end.onRemoved();
+         }
+         mReferencedAttributes.clear();
+     }
+     public boolean hasReferencedAttributes(){
+         return mReferencedAttributes.size()>0;
+     }
+     public void clearReferencedAttributes(){
+         mReferencedAttributes.clear();
+     }
+     public Set<ResXmlAttribute> getReferencedAttributes(){
+         return mReferencedAttributes;
+     }
+     void addAttributeReference(ResXmlAttribute attribute){
+         if(attribute!=null){
+             mReferencedAttributes.add(attribute);
+         }
+     }
+     void removeAttributeReference(ResXmlAttribute attribute){
+         if(attribute!=null){
+             mReferencedAttributes.remove(attribute);
          }
      }
      public XMLAttribute decodeToXml(){
