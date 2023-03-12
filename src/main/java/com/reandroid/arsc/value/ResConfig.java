@@ -34,6 +34,7 @@ public class ResConfig extends FixedBlockContainer
     private final ByteArray mValuesContainer;
 
     private String mQualifiers;
+    private int mQualifiersStamp;
 
     public ResConfig(){
         super(2);
@@ -42,7 +43,7 @@ public class ResConfig extends FixedBlockContainer
         addChild(0, configSize);
         addChild(1, mValuesContainer);
         this.configSize.setBlockLoad(this);
-        this.mValuesContainer.setBlockLoad(this);
+        this.mQualifiersStamp = 0;
     }
     public void copyFrom(ResConfig resConfig){
         if(resConfig==this||resConfig==null){
@@ -55,8 +56,6 @@ public class ResConfig extends FixedBlockContainer
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
         if(sender==configSize){
             setConfigSize(configSize.get());
-        }else if(sender==mValuesContainer){
-            valuesChanged();
         }
     }
     @Override
@@ -65,28 +64,18 @@ public class ResConfig extends FixedBlockContainer
         configSize.set(count);
     }
     @Override
-    protected void onRefreshed() { 
-        valuesChanged();
+    protected void onRefreshed() {
     }
     public void parseQualifiers(String name){
         ResConfigHelper.parseQualifiers(this, name);
-        mQualifiers=null;
     }
     public void setConfigSize(int size){
-        if(    size != SIZE_16
-                && size != SIZE_28
-                && size != SIZE_32
-                && size != SIZE_36
-                && size != SIZE_48
-                && size != SIZE_56
-                && size != SIZE_64
-        ){
+        if(!isValidSize(size)){
             throw new IllegalArgumentException("Invalid config size = " + size);
         }
         this.configSize.set(size);
         size=size-4;
         mValuesContainer.setSize(size);
-        valuesChanged();
     }
     public int getConfigSize(){
         return this.configSize.get();
@@ -96,14 +85,7 @@ public class ResConfig extends FixedBlockContainer
         if(current==size){
             return true;
         }
-        if(    size != SIZE_16
-                && size != SIZE_28
-                && size != SIZE_32
-                && size != SIZE_36
-                && size != SIZE_48
-                && size != SIZE_56
-                && size != SIZE_64
-        ){
+        if(!isValidSize(size)){
             return false;
         }
         if(current<size){
@@ -129,11 +111,11 @@ public class ResConfig extends FixedBlockContainer
         }
         mValuesContainer.putShort(OFFSET_mcc, sh);
     }
-    public short getMcc(){
+    public int getMcc(){
         if(getConfigSize()<SIZE_16){
             return 0;
         }
-        return mValuesContainer.getShort(OFFSET_mcc);
+        return mValuesContainer.getShortUnsigned(OFFSET_mcc);
     }
     public void setMnc(short sh){
         if(getConfigSize()<SIZE_16){
@@ -144,11 +126,11 @@ public class ResConfig extends FixedBlockContainer
         }
         mValuesContainer.putShort(OFFSET_mnc, sh);
     }
-    public short getMnc(){
+    public int getMnc(){
         if(getConfigSize()<SIZE_16){
             return 0;
         }
-        return mValuesContainer.getShort(OFFSET_mnc);
+        return mValuesContainer.getShortUnsigned(OFFSET_mnc);
     }
     public void setLanguageIn0(byte b){
         if(getConfigSize()<SIZE_16){
@@ -319,20 +301,20 @@ public class ResConfig extends FixedBlockContainer
         }
         mValuesContainer.putShort(OFFSET_density, sh);
     }
-    public short getDensityValue(){
+    public int getDensityValue(){
         if(getConfigSize()<SIZE_16){
             return 0;
         }
-        return mValuesContainer.getShort(OFFSET_density);
+        return mValuesContainer.getShortUnsigned(OFFSET_density);
     }
     public String getDensity(){
         return ResConfigHelper.decodeDensity(getDensityValue());
     }
     public void setDensity(String density){
-        setDensity(ResConfigHelper.encodeDensity(density));
+        setDensity((short) ResConfigHelper.encodeDensity(density));
     }
     public void setKeyboard(byte b){
-        if(getConfigSize()<SIZE_28){
+        if(getConfigSize()<SIZE_16){
             if(b==0){
                 return;
             }
@@ -341,7 +323,7 @@ public class ResConfig extends FixedBlockContainer
         mValuesContainer.put(OFFSET_keyboard, b);
     }
     public byte getKeyboardByte(){
-        if(getConfigSize()<SIZE_28){
+        if(getConfigSize()<SIZE_16){
             return 0;
         }
         return mValuesContainer.get(OFFSET_keyboard);
@@ -357,7 +339,7 @@ public class ResConfig extends FixedBlockContainer
         setKeyboard(b);
     }
     public void setNavigation(byte b){
-        if(getConfigSize()<SIZE_28){
+        if(getConfigSize()<SIZE_16){
             if(b==0){
                 return;
             }
@@ -366,7 +348,7 @@ public class ResConfig extends FixedBlockContainer
         mValuesContainer.put(OFFSET_navigation, b);
     }
     public byte getNavigationByte(){
-        if(getConfigSize()<SIZE_28){
+        if(getConfigSize()<SIZE_16){
             return 0;
         }
         return mValuesContainer.get(OFFSET_navigation);
@@ -426,11 +408,11 @@ public class ResConfig extends FixedBlockContainer
         }
         mValuesContainer.putShort(OFFSET_screenWidth, sh);
     }
-    public short getScreenWidth(){
+    public int getScreenWidth(){
         if(getConfigSize()<SIZE_28){
             return 0;
         }
-        return mValuesContainer.getShort(OFFSET_screenWidth);
+        return mValuesContainer.getShortUnsigned(OFFSET_screenWidth);
     }
     public void setScreenHeight(short sh){
         if(getConfigSize()<SIZE_28){
@@ -441,11 +423,11 @@ public class ResConfig extends FixedBlockContainer
         }
         mValuesContainer.putShort(OFFSET_screenHeight, sh);
     }
-    public short getScreenHeight(){
+    public int getScreenHeight(){
         if(getConfigSize()<SIZE_28){
             return 0;
         }
-        return mValuesContainer.getShort(OFFSET_screenHeight);
+        return mValuesContainer.getShortUnsigned(OFFSET_screenHeight);
     }
     public void setScreenSize(short w, short h){
         this.setScreenWidth(w);
@@ -460,11 +442,11 @@ public class ResConfig extends FixedBlockContainer
         }
         mValuesContainer.putShort(OFFSET_sdkVersion, sh);
     }
-    public short getSdkVersion(){
+    public int getSdkVersion(){
         if(getConfigSize()<SIZE_28){
             return 0;
         }
-        return mValuesContainer.getShort(OFFSET_sdkVersion);
+        return mValuesContainer.getShortUnsigned(OFFSET_sdkVersion);
     }
     public void setMinorVersion(short sh){
         if(getConfigSize()<SIZE_28){
@@ -475,11 +457,11 @@ public class ResConfig extends FixedBlockContainer
         }
         mValuesContainer.putShort(OFFSET_minorVersion, sh);
     }
-    public short getMinorVersion(){
+    public int getMinorVersion(){
         if(getConfigSize()<SIZE_28){
             return 0;
         }
-        return mValuesContainer.getShort(OFFSET_minorVersion);
+        return mValuesContainer.getShortUnsigned(OFFSET_minorVersion);
     }
     public void setScreenLayout(byte b){
         if(getConfigSize()<SIZE_32){
@@ -532,11 +514,11 @@ public class ResConfig extends FixedBlockContainer
         }
         mValuesContainer.putShort(OFFSET_smallestScreenWidthDp, sh);
     }
-    public short getSmallestScreenWidthDp(){
+    public int getSmallestScreenWidthDp(){
         if(getConfigSize()<SIZE_32){
             return 0;
         }
-        return mValuesContainer.getShort(OFFSET_smallestScreenWidthDp);
+        return mValuesContainer.getShortUnsigned(OFFSET_smallestScreenWidthDp);
     }
     public void setScreenWidthDp(short sh){
         if(getConfigSize()<SIZE_36){
@@ -547,11 +529,11 @@ public class ResConfig extends FixedBlockContainer
         }
         mValuesContainer.putShort(OFFSET_screenWidthDp, sh);
     }
-    public short getScreenWidthDp(){
+    public int getScreenWidthDp(){
         if(getConfigSize()<SIZE_36){
             return 0;
         }
-        return mValuesContainer.getShort(OFFSET_screenWidthDp);
+        return mValuesContainer.getShortUnsigned(OFFSET_screenWidthDp);
     }
     public void setScreenHeightDp(short sh){
         if(getConfigSize()<SIZE_36){
@@ -562,11 +544,11 @@ public class ResConfig extends FixedBlockContainer
         }
         mValuesContainer.putShort(OFFSET_screenHeightDp, sh);
     }
-    public short getScreenHeightDp(){
+    public int getScreenHeightDp(){
         if(getConfigSize()<SIZE_36){
             return 0;
         }
-        return mValuesContainer.getShort(OFFSET_screenHeightDp);
+        return mValuesContainer.getShortUnsigned(OFFSET_screenHeightDp);
     }
     public void setLocaleScript(byte[] bts){
         if(getConfigSize()<SIZE_48){
@@ -582,12 +564,35 @@ public class ResConfig extends FixedBlockContainer
         byte[] bts=toByteArray(chs, LEN_localeScript);
         setLocaleScript(bts);
     }
-    public char[] getLocaleScript(){
+    public void setLocaleScript(String script){
+        char[] chs = null;
+        script = trimPostfix(script, POSTFIX_locale);
+        if(script!=null){
+            chs = script.toCharArray();
+        }
+        setLocaleScript(chs);
+    }
+    public char[] getLocaleScriptChars(){
         if(getConfigSize()<SIZE_48){
             return null;
         }
         byte[] bts = mValuesContainer.getByteArray(OFFSET_localeScript, LEN_localeScript);
-        return toCharArray(bts);
+        return trimEndingZero(toCharArray(bts));
+    }
+    private String getLocaleScriptInternal(){
+        char[] chs = getLocaleScriptChars();
+        if(chs==null){
+            return null;
+        }
+        return new String(chs);
+    }
+    public String getLocaleScript(){
+        String script = getLocaleScriptInternal();
+        if(script==null){
+            return null;
+        }
+        script = ensureLength(script, 3, POSTFIX_locale);
+        return script;
     }
     public void setLocaleVariant(byte[] bts){
         if(getConfigSize()<SIZE_48){
@@ -603,15 +608,44 @@ public class ResConfig extends FixedBlockContainer
         byte[] bts=toByteArray(chs, LEN_localeVariant);
         setLocaleVariant(bts);
     }
-    public char[] getLocaleVariant(){
+    public void setLocaleVariant(String variant){
+        if(variant!=null){
+            variant = variant.toLowerCase();
+        }
+        setLocaleVariantInternal(variant);
+    }
+    private void setLocaleVariantInternal(String variant){
+        char[] chs = null;
+        variant = trimPostfix(variant, POSTFIX_locale);
+        if(variant!=null){
+            chs = variant.toCharArray();
+        }
+        setLocaleVariant(chs);
+    }
+    public char[] getLocaleVariantChars(){
         if(getConfigSize()<SIZE_48){
             return null;
         }
         byte[] bts = mValuesContainer.getByteArray(OFFSET_localeVariant, LEN_localeVariant);
-        return toCharArray(bts);
+        return trimEndingZero(toCharArray(bts));
+    }
+    private String getLocaleVariantInternal(){
+        char[] chs = getLocaleVariantChars();
+        if(chs==null){
+            return null;
+        }
+        return new String(chs);
+    }
+    public String getLocaleVariant(){
+        String variant = getLocaleVariantInternal();
+        if(variant==null){
+            return null;
+        }
+        variant = ensureLength(variant, 5, POSTFIX_locale);
+        return variant.toUpperCase();
     }
     public void setScreenLayout2(byte b){
-        if(getConfigSize()<SIZE_56){
+        if(getConfigSize()<SIZE_52){
             if(b==0){
                 return;
             }
@@ -620,7 +654,7 @@ public class ResConfig extends FixedBlockContainer
         mValuesContainer.put(OFFSET_screenLayout2, b);
     }
     public byte getScreenLayout2(){
-        if(getConfigSize()<SIZE_56){
+        if(getConfigSize()<SIZE_52){
             return 0;
         }
         return mValuesContainer.get(OFFSET_screenLayout2);
@@ -641,14 +675,12 @@ public class ResConfig extends FixedBlockContainer
         return mValuesContainer.get(OFFSET_colorMode);
     }
 
-    private void valuesChanged(){
-        mQualifiers=null;
-    }
-
     public String getQualifiers(){
-        if(mQualifiers==null){
+        int hash = this.hashCode();
+        if(mQualifiers==null || mQualifiersStamp!=hash){
             try{
                 mQualifiers = ResConfigHelper.toQualifier(this).trim();
+                mQualifiersStamp = hash;
             }catch (Exception ex){
                 mQualifiers = "";
             }
@@ -751,6 +783,14 @@ public class ResConfig extends FixedBlockContainer
         if(val!=0){
             jsonObject.put(NAME_screenHeightDp, val);
         }
+        str = getLocaleScriptInternal();
+        if(str!=null){
+            jsonObject.put(NAME_localeScript, str);
+        }
+        str = getLocaleVariantInternal();
+        if(str!=null){
+            jsonObject.put(NAME_localeVariant, str);
+        }
         return jsonObject;
     }
     @Override
@@ -780,9 +820,10 @@ public class ResConfig extends FixedBlockContainer
         setSmallestScreenWidthDp((short) json.optInt(NAME_smallestScreenWidthDp));
         setScreenWidthDp((short) json.optInt(NAME_screenWidthDp));
         setScreenHeightDp((short) json.optInt(NAME_screenHeightDp));
+        setLocaleScript(json.optString(NAME_localeScript));
+        setLocaleVariantInternal(json.optString(NAME_localeVariant));
 
         trimToSize(SIZE_48);
-        valuesChanged();
     }
     @Override
     public int hashCode(){
@@ -892,9 +933,31 @@ public class ResConfig extends FixedBlockContainer
         int sz=bts.length;
         char[] chs=new char[sz];
         for(int i=0; i<sz;i++){
-            chs[i]= (char) bts[i];
+            int val = 0xff & bts[i];
+            chs[i]= (char) val;
         }
         return chs;
+    }
+    private static char[] trimEndingZero(char[] chars){
+        if(chars==null){
+            return null;
+        }
+        int lastNonZero = -1;
+        for(int i=0;i<chars.length;i++){
+            if(chars[i]!=0){
+                lastNonZero = i;
+            }
+        }
+        if(lastNonZero==-1){
+            return null;
+        }
+        lastNonZero = lastNonZero+1;
+        if(lastNonZero==chars.length){
+            return chars;
+        }
+        char[] result = new char[lastNonZero];
+        System.arraycopy(chars, 0, result, 0, lastNonZero);
+        return result;
     }
     private static boolean isNull(char[] chs){
         if(chs==null){
@@ -933,6 +996,48 @@ public class ResConfig extends FixedBlockContainer
         System.arraycopy(bts, 0, result, 0, max);
         return result;
     }
+    private static String ensureLength(String str, int min, char postfix){
+        int length = str.length();
+        if(length >= min){
+            return str;
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append(str);
+        int remain = min - length;
+        for(int i=0; i<remain; i++){
+            builder.append(postfix);
+        }
+        return builder.toString();
+    }
+    private static String trimPostfix(String str, char postfix){
+        if(str==null){
+            return null;
+        }
+        int length = str.length();
+        int index = length-1;
+        while (length>0 && str.charAt(index) == postfix){
+            str = str.substring(0, index);
+            length = str.length();
+            index = length - 1;
+        }
+        return str;
+    }
+    public static boolean isValidSize(int size){
+        switch (size){
+            case SIZE_16:
+            case SIZE_28:
+            case SIZE_32:
+            case SIZE_36:
+            case SIZE_48:
+            case SIZE_52:
+            case SIZE_56:
+            case SIZE_64:
+                return true;
+            default:
+                return size > SIZE_64;
+        }
+    }
+
     public enum Orientation{
         PORT((byte) 0x1),
         LAND((byte) 0x2),
@@ -1090,6 +1195,7 @@ public class ResConfig extends FixedBlockContainer
     public static final int SIZE_32 = 32;
     public static final int SIZE_36 = 36;
     public static final int SIZE_48 = 48;
+    public static final int SIZE_52 = 52;
     public static final int SIZE_56 = 56;
     public static final int SIZE_64 = 64;
 
@@ -1160,5 +1266,6 @@ public class ResConfig extends FixedBlockContainer
     private static final String NAME_screenLayout2 = "screenLayout2";
     private static final String NAME_colorMode = "colorMode";
 
+    private static final char POSTFIX_locale = '#';
 
 }

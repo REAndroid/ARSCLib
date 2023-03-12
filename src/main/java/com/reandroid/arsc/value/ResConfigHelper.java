@@ -27,7 +27,7 @@ public class ResConfigHelper {
         result.refresh();
         return result;
     }
-    static String toQualifier(ResConfig resConfig){
+    public static String toQualifier(ResConfig resConfig){
         StringBuilder builder=new StringBuilder();
         builder.append(decodeLanguageAndCountry(resConfig));
         builder.append(decodeOrientation(resConfig));
@@ -105,6 +105,7 @@ public class ResConfigHelper {
         encodeMnc(resConfig, split);
         encodeScreenSize(resConfig, split);
         encodeLanguageAndCountry(resConfig, split);
+        encodeScriptAndVariant(resConfig, split);
     }
 
     private static void encodeLanguageAndCountry(ResConfig resConfig, String[] split){
@@ -151,6 +152,93 @@ public class ResConfigHelper {
         char[] chs=country.toCharArray();
         resConfig.setRegion(chs);
     }
+    private static void encodeScriptAndVariant(ResConfig resConfig, String[] split){
+        if(split==null){
+            return;
+        }
+        for(int i=0;i<split.length;i++){
+            String s=split[i];
+            if(encodeScriptAndVariant(resConfig, s)){
+                split[i] = null;
+                break;
+            }
+        }
+    }
+    private static boolean encodeScriptAndVariant(ResConfig resConfig, String str){
+        if(str==null){
+            return false;
+        }
+        if(!str.startsWith("b+")){
+            return false;
+        }
+        str = str.substring(2);
+        String[] splits = str.split("\\+");
+        String lang = null;
+        String region = null;
+        String script = null;
+        String variant = null;
+        for(int i=0; i<splits.length; i++){
+            String s = splits[i];
+            int len = s.length();
+            if(len==0){
+                continue;
+            }
+            if(isLocaleVariant(s)){
+                if(variant!=null){
+                    return false;
+                }
+                variant = s;
+                continue;
+            }
+            if(isLanguageName(s)){
+                if(lang!=null){
+                    return false;
+                }
+                lang = s;
+                continue;
+            }
+            boolean is_region = (region==null && isCountryName(s));
+            boolean is_script = (script==null && isLocaleScript(s));
+            if(is_region && is_script){
+                if(s.charAt(len-1)=='#'){
+                    script = s;
+                    continue;
+                }
+                if(len==3 && s.charAt(0)=='r'){
+                    region = s;
+                    continue;
+                }
+                // TODO: should throw error or false ?
+                return false;
+            }
+            if(is_region){
+                region = s;
+                continue;
+            }
+            if(is_script){
+                script = s;
+                continue;
+            }
+            // TODO: should throw error or false ?
+            return false;
+        }
+        if(lang!=null){
+            resConfig.setLanguage(lang);
+        }
+        if(region!=null){
+            if(region.charAt(0)=='r'){
+                region = region.substring(1);
+            }
+            resConfig.setRegion(region);
+        }
+        if(script!=null){
+            resConfig.setLocaleScript(script);
+        }
+        if(variant!=null){
+            resConfig.setLocaleVariant(variant);
+        }
+        return true;
+    }
     public static String decodeLanguage(char[] language){
         StringBuilder builder=new StringBuilder();
         if(language[0]!=0){
@@ -191,8 +279,8 @@ public class ResConfigHelper {
     }
     private static String decodeLanguageAndCountry(ResConfig resConfig) {
         StringBuilder builder = new StringBuilder();
-        char[] localeVariant=resConfig.getLocaleVariant();
-        char[] localeScript=resConfig.getLocaleScript();
+        String localeVariant = resConfig.getLocaleVariant();
+        String localeScript = resConfig.getLocaleScript();
         char[] region=resConfig.getRegionChars();
         char[] language=resConfig.getLanguageChars();
         if (localeVariant == null && localeScript == null && (region[0] != '\00' || language[0] != '\00') &&
@@ -201,22 +289,19 @@ public class ResConfigHelper {
             if (region[0] != '\00') {
                 builder.append("-r").append(region);
             }
-        } else {
-            if (language[0] == '\00' && region[0] == '\00') {
-                return builder.toString();
-            }
-            builder.append("-b+");
+        } else if(language[0] != 0 || region[0] != 0 || localeScript!=null || localeVariant!=null){
+            builder.append("-b");
             if (language[0] != '\00') {
-                builder.append(language);
+                builder.append('+').append(language);
             }
-            if (localeScript != null && localeScript.length == 4) {
-                builder.append("+").append(localeScript);
+            if (localeScript != null) {
+                builder.append('+').append(localeScript);
             }
             if ((region.length == 2 || region.length == 3) && region[0] != '\00') {
-                builder.append("+").append(region);
+                builder.append('+').append(region);
             }
-            if (localeVariant != null && localeVariant.length >= 5) {
-                builder.append("+").append(toUpper(localeVariant));
+            if (localeVariant != null) {
+                builder.append('+').append(localeVariant);
             }
         }
         return builder.toString();
@@ -408,7 +493,7 @@ public class ResConfigHelper {
     /*
     * Encodes density to value
     * densityName is full name like: mdpi, xxxdpi, 580dpi ... */
-    public static short encodeDensity(String densityName){
+    public static int encodeDensity(String densityName){
         short density=0;
         if(densityName==null){
             return density;
@@ -419,7 +504,7 @@ public class ResConfigHelper {
         }
         return encodeDensityName(matcher.group(1));
     }
-    private static short encodeDensityName(String name){
+    private static int encodeDensityName(String name){
         if("l".equals(name)){
             return  DENSITY_LOW;
         }else if("m".equals(name)){
@@ -501,7 +586,7 @@ public class ResConfigHelper {
         }
         return ret.toString();
     }
-    public static String decodeDensity(short density){
+    public static String decodeDensity(int density){
         switch (density) {
             case DENSITY_DEFAULT:
                 return null;
@@ -1046,8 +1131,8 @@ public class ResConfigHelper {
         resConfig.setMnc(sh);
     }
     private static String decodeMccMnc(ResConfig resConfig){
-        short mcc=resConfig.getMcc();
-        short mnc=resConfig.getMnc();
+        int mcc=resConfig.getMcc();
+        int mnc=resConfig.getMnc();
         int size=resConfig.getConfigSize();
         StringBuilder ret = new StringBuilder();
         if (mcc != 0) {
@@ -1191,8 +1276,8 @@ public class ResConfigHelper {
         return builder.toString();
     }
     private static String decodeScreenSize(ResConfig resConfig){
-        short width=resConfig.getScreenWidth();
-        short height=resConfig.getScreenHeight();
+        int width=resConfig.getScreenWidth();
+        int height=resConfig.getScreenHeight();
         if(width==0||height==0){
             return "";
         }
@@ -1234,6 +1319,20 @@ public class ResConfigHelper {
             return false;
         }
         Matcher matcher=PATTERN_LANG_NAME.matcher(str);
+        return matcher.find();
+    }
+    private static boolean isLocaleScript(String str){
+        if(str==null){
+            return false;
+        }
+        Matcher matcher=PATTERN_LOCALE_SCRIPT.matcher(str);
+        return matcher.find();
+    }
+    private static boolean isLocaleVariant(String str){
+        if(str==null){
+            return false;
+        }
+        Matcher matcher=PATTERN_LOCALE_VARIANT.matcher(str);
         return matcher.find();
     }
     private static boolean isCountryName(String str){
@@ -1288,6 +1387,10 @@ public class ResConfigHelper {
     private static final Pattern PATTERN_LANG_NAME=Pattern.compile("^[a-z]{2}$");
 
     private static final Pattern PATTERN_COUNTRY_NAME=Pattern.compile("^[a-zA-Z]{2,3}$");
+
+    private static final Pattern PATTERN_LOCALE_SCRIPT=Pattern.compile("^[a-zA-Z0-9]{3,4}$");
+
+    private static final Pattern PATTERN_LOCALE_VARIANT=Pattern.compile("^[a-zA-Z0-9#]{5,8}$");
 
     private static final Pattern PATTERN_MCC_MNC=Pattern.compile("^(m[cn]c)([0-9]{2,3})$");
 
@@ -1374,8 +1477,8 @@ public class ResConfigHelper {
     private final static int DENSITY_XHIGH = 320;
     private final static int DENSITY_XXHIGH = 480;
     private final static int DENSITY_XXXHIGH = 640;
-    private final static int DENSITY_ANY = -2;
-    private final static int DENSITY_NONE = -1;
+    private final static int DENSITY_ANY = 0xfffe;
+    private final static int DENSITY_NONE = 0xffff;
 
 
 }
