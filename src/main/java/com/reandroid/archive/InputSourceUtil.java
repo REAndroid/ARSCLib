@@ -15,12 +15,13 @@
   */
 package com.reandroid.archive;
 
-import java.io.File;
+import java.io.*;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
-public class InputSourceUtil {
+ public class InputSourceUtil {
 
     public static String toRelative(File rootDir, File file){
         int len=rootDir.getAbsolutePath().length();
@@ -37,14 +38,11 @@ public class InputSourceUtil {
         while (path.startsWith("/")){
             path=path.substring(1);
         }
-        while (path.startsWith(File.separator)){
-            path=path.substring(1);
-        }
         return path;
     }
 
     public static Map<String, InputSource> mapZipFileSources(ZipFile zipFile){
-        Map<String, InputSource> results=new HashMap<>();
+        Map<String, InputSource> results=new LinkedHashMap<>();
         Enumeration<? extends ZipEntry> entriesEnum = zipFile.entries();
         int i=0;
         while (entriesEnum.hasMoreElements()){
@@ -54,10 +52,41 @@ public class InputSourceUtil {
             }
             ZipEntrySource source=new ZipEntrySource(zipFile, zipEntry);
             source.setSort(i);
+            source.setMethod(zipEntry.getMethod());
             results.put(source.getName(), source);
             i++;
         }
         return results;
+    }
+    public static Map<String, ByteInputSource> mapInputStreamAsBuffer(InputStream inputStream) throws IOException {
+        Map<String, ByteInputSource> results = new LinkedHashMap<>();
+        ZipInputStream zin = new ZipInputStream(inputStream);
+        ZipEntry zipEntry;
+        int i=0;
+        while ((zipEntry=zin.getNextEntry())!=null){
+            if(zipEntry.isDirectory()){
+                continue;
+            }
+            byte[] buffer = loadBuffer(zin);
+            String name = sanitize(zipEntry.getName());
+            ByteInputSource source = new ByteInputSource(buffer, name);
+            source.setSort(i);
+            source.setMethod(zipEntry.getMethod());
+            results.put(name, source);
+            i++;
+        }
+        zin.close();
+        return results;
+    }
+    private static byte[] loadBuffer(InputStream in) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        byte[] buff=new byte[40960];
+        int len;
+        while((len=in.read(buff))>0){
+            outputStream.write(buff, 0, len);
+        }
+        outputStream.close();
+        return outputStream.toByteArray();
     }
     public static List<InputSource> listZipFileSources(ZipFile zipFile){
         List<InputSource> results=new ArrayList<>();

@@ -30,7 +30,7 @@ public class ZipArchive {
         this.mEntriesMap=entriesMap;
     }
     public ZipArchive(){
-        this(new HashMap<>());
+        this(new LinkedHashMap<>());
     }
 
     public void extract(File outDir) throws IOException {
@@ -95,19 +95,22 @@ public class ZipArchive {
         List<InputSource> sourceList = InputSourceUtil.listZipFileSources(zipFile);
         this.addAll(sourceList);
     }
-    public void addAll(Collection<InputSource> inputSourceList){
+    public void addAll(Collection<? extends InputSource> inputSourceList){
         for(InputSource inputSource:inputSourceList){
             add(inputSource);
         }
     }
     public void add(InputSource inputSource){
+        if(inputSource==null){
+            return;
+        }
         String name=inputSource.getName();
         Map<String, InputSource> map=mEntriesMap;
         map.remove(name);
         map.put(name, inputSource);
     }
     public List<InputSource> listInputSources(){
-        return InputSourceUtil.sort(new ArrayList<>(mEntriesMap.values()));
+        return new ArrayList<>(mEntriesMap.values());
     }
     public InputSource getInputSource(String name){
         return mEntriesMap.get(name);
