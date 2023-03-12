@@ -15,6 +15,7 @@
   */
 package com.reandroid.arsc.util;
 
+import com.reandroid.arsc.BuildInfo;
 import com.reandroid.arsc.array.SpecTypePairArray;
 import com.reandroid.arsc.array.TypeBlockArray;
 import com.reandroid.arsc.chunk.ChunkType;
@@ -24,26 +25,35 @@ import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.header.HeaderBlock;
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ReferenceItem;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
-import com.reandroid.arsc.value.ResConfig;
 
 import java.io.*;
 import java.util.*;
 
 public class FrameworkTable extends TableBlock {
 
-    private String mFrameworkTitle;
-    private String mFrameworkName;
-    private String mFrameworkVersion;
+    private String frameworkName;
+    private int versionCode;
     private ResNameMap<EntryGroup> mNameGroupMap;
+    private boolean mOptimized;
+    private boolean mOptimizeChecked;
     public FrameworkTable(){
         super();
     }
 
+    @Override
+    public void destroy(){
+        ResNameMap<EntryGroup> nameGroupMap = this.mNameGroupMap;
+        if(nameGroupMap!=null){
+            nameGroupMap.clear();
+        }
+        this.frameworkName = null;
+        this.versionCode = 0;
+        super.destroy();
+    }
     public int resolveResourceId(String typeName, String entryName){
         Entry entry = searchEntry(typeName, entryName);
         if(entry !=null){
@@ -109,127 +119,89 @@ public class FrameworkTable extends TableBlock {
         }
         return null;
     }
-    public String getFrameworkTitle(){
-        if(mFrameworkTitle==null){
-            mFrameworkTitle=loadProperty(PROP_TITLE);
+    public int getVersionCode(){
+        if(versionCode == 0 && isOptimized()){
+            String version = loadProperty(PROP_VERSION_CODE);
+            if(version!=null){
+                try{
+                    versionCode = Integer.parseInt(version);
+                }catch (NumberFormatException ignored){
+                }
+            }
         }
-        return mFrameworkTitle;
+        return versionCode;
+    }
+    public void setVersionCode(int value){
+        versionCode = value;
+        if(isOptimized()){
+            writeVersionCode(value);
+        }
     }
     public String getFrameworkName(){
-        if(mFrameworkName==null){
-            mFrameworkName=loadProperty(PROP_NAME);
+        if(frameworkName == null){
+            frameworkName = loadProperty(PROP_NAME);
         }
-        return mFrameworkName;
-    }
-    public String getFrameworkVersion(){
-        if(mFrameworkVersion==null){
-            mFrameworkVersion=loadProperty(PROP_VERSION);
-        }
-        return mFrameworkVersion;
-    }
-    private void setFrameworkTitle(String value){
-        mFrameworkTitle=null;
-        writeProperty(PROP_TITLE, value);
+        return frameworkName;
     }
     public void setFrameworkName(String value){
-        mFrameworkName=null;
-        writeProperty(PROP_NAME, value);
-    }
-    public void setFrameworkVersion(String value){
-        mFrameworkVersion=null;
-        writeProperty(PROP_VERSION, value);
-    }
-    public int writeTable(File resourcesArscFile) throws IOException{
-        File dir=resourcesArscFile.getParentFile();
-        if(dir!=null && !dir.exists()){
-            dir.mkdirs();
+        frameworkName = value;
+        if(isOptimized()){
+            writeProperty(PROP_NAME, value);
         }
-        FileOutputStream outputStream=new FileOutputStream(resourcesArscFile, false);
-        return writeTable(outputStream);
     }
-    public int writeTable(OutputStream outputStream) throws IOException{
-        return writeBytes(outputStream);
-    }
-    public void readTable(File resourcesArscFile) throws IOException{
-        FileInputStream inputStream=new FileInputStream(resourcesArscFile);
-        readTable(inputStream);
-    }
-    public void readTable(InputStream inputStream) throws IOException{
-        BlockReader reader=new BlockReader(inputStream);
-        super.readBytes(reader);
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
-        reader.close();
-    }
-    public void optimize(String frameworkName, String frameworkVersion){
+
+    public void optimize(String name, int version){
+        mOptimizeChecked = true;
+        mOptimized = false;
         Map<Integer, EntryGroup> groupMap=scanAllEntryGroups();
         for(EntryGroup group:groupMap.values()){
-            List<Entry> entryList =getEntriesToRemove(group);
+            List<Entry> entryList = getEntriesToRemove(group);
             removeEntries(entryList);
         }
         for(PackageBlock pkg:listPackages()){
-            clearNonDefaultConfigs(pkg);
+            removeEmptyBlocks(pkg);
         }
         for(PackageBlock pkg:listPackages()){
             pkg.removeEmpty();
             pkg.refresh();
         }
         optimizeTableString();
-        setFrameworkTitle(TITLE_STRING);
-        setFrameworkName(frameworkName);
-        setFrameworkVersion(frameworkVersion);
+        writeVersionCode(version);
+        mOptimizeChecked = false;
+        setFrameworkName(name);
         refresh();
     }
-    private void clearNonDefaultConfigs(PackageBlock pkg){
+    private void removeEmptyBlocks(PackageBlock pkg){
         SpecTypePairArray specTypePairArray = pkg.getSpecTypePairArray();
         specTypePairArray.sort();
         List<SpecTypePair> specTypePairList=new ArrayList<>(specTypePairArray.listItems());
         for(SpecTypePair specTypePair:specTypePairList){
-            clearNonDefaultConfigs(specTypePair);
+            removeEmptyBlocks(specTypePair);
         }
     }
-    private void clearNonDefaultConfigs(SpecTypePair specTypePair){
+    private void removeEmptyBlocks(SpecTypePair specTypePair){
         TypeBlockArray typeBlockArray = specTypePair.getTypeBlockArray();
         if(typeBlockArray.childesCount()<2){
             return;
         }
-        List<TypeBlock> typeBlockList=new ArrayList<>(typeBlockArray.listItems());
-        TypeBlock defTypeBlock=null;
-        for(TypeBlock typeBlock:typeBlockList){
-            if(defTypeBlock==null){
-                defTypeBlock=typeBlock;
-            }
-            ResConfig config = typeBlock.getResConfig();
-            if(config.isDefault()){
-                defTypeBlock=typeBlock;
-                break;
-            }
-        }
-        for(TypeBlock typeBlock:typeBlockList){
-            if(typeBlock==defTypeBlock){
-                continue;
-            }
-            typeBlockArray.remove(typeBlock);
-        }
+        typeBlockArray.removeEmptyBlocks();
     }
     private void optimizeTableString(){
         removeUnusedTableString();
         shrinkTableString();
+        getStringPool().getStyleArray().clearChildes();
         removeUnusedTableString();
     }
     private void removeUnusedTableString(){
-        TableStringPool tableStringPool=getTableStringPool();
-        tableStringPool.getStyleArray().clearChildes();
+        TableStringPool tableStringPool=getStringPool();
         tableStringPool.removeUnusedStrings();
         tableStringPool.refresh();
     }
     private void shrinkTableString(){
-        TableStringPool tableStringPool=getTableStringPool();
+        TableStringPool tableStringPool=getStringPool();
         tableStringPool.getStringsArray().ensureSize(1);
         TableString title=tableStringPool.get(0);
-        title.set(PROP_TITLE+":"+TITLE_STRING);
+        title.set(BuildInfo.getRepo());
         for(TableString tableString:tableStringPool.getStringsArray().listItems()){
             if(tableString==title){
                 continue;
@@ -308,7 +280,7 @@ public class FrameworkTable extends TableBlock {
         if(tableString!=null){
             tableString.set(value);
         }else {
-            TableStringPool tableStringPool=getTableStringPool();
+            TableStringPool tableStringPool=getStringPool();
             tableString=tableStringPool.getOrCreate(value);
         }
         return tableString;
@@ -325,7 +297,7 @@ public class FrameworkTable extends TableBlock {
             return null;
         }
         String str=tableString.get().trim();
-        return str.substring(name.length());
+        return str.substring(name.length()).trim();
     }
     private TableString loadPropertyString(String name){
         if(name==null){
@@ -334,7 +306,7 @@ public class FrameworkTable extends TableBlock {
         if(!name.endsWith(":")){
             name=name+":";
         }
-        TableStringPool tableStringPool=getTableStringPool();
+        TableStringPool tableStringPool=getStringPool();
         int max=PROP_COUNT;
         for(int i=0;i<max;i++){
             TableString tableString=tableStringPool.get(i);
@@ -353,7 +325,21 @@ public class FrameworkTable extends TableBlock {
         return null;
     }
     public boolean isOptimized(){
-        return getFrameworkVersion()!=null;
+        if(!mOptimizeChecked){
+            mOptimizeChecked = true;
+            String version = loadProperty(PROP_VERSION_CODE);
+            if(version!=null){
+                try{
+                    int v = Integer.parseInt(version);
+                    mOptimized = (v!=0);
+                }catch (NumberFormatException ignored){
+                }
+            }
+        }
+        return mOptimized;
+    }
+    private void writeVersionCode(int value){
+        writeProperty(PROP_VERSION_CODE, String.valueOf(value));
     }
     @Override
     public String toString(){
@@ -364,38 +350,7 @@ public class FrameworkTable extends TableBlock {
         if(!isOptimized()){
             return "Unoptimized: "+super.toString();
         }
-        StringBuilder builder=new StringBuilder();
-        builder.append(getClass().getSimpleName());
-        builder.append(": SIZE=").append(headerBlock.getChunkSize());
-        String str=getFrameworkTitle();
-        builder.append("\n");
-        if(str==null){
-            builder.append(PROP_TITLE).append(":null");
-        }else {
-            builder.append(str);
-        }
-        str=getFrameworkName();
-        builder.append("\n  ").append(PROP_NAME).append(":");
-        if(str==null){
-            builder.append("null");
-        }else {
-            builder.append(str);
-        }
-        str=getFrameworkVersion();
-        builder.append("\n  ").append(PROP_VERSION).append(":");
-        if(str==null){
-            builder.append("null");
-        }else {
-            builder.append(str);
-        }
-        Collection<PackageBlock> allPkg = listPackages();
-        builder.append("\n  PACKAGES=").append(allPkg.size());
-        for(PackageBlock packageBlock:allPkg){
-            builder.append("\n    ");
-            builder.append(String.format("0x%02x", packageBlock.getId()));
-            builder.append(":").append(packageBlock.getName());
-        }
-        return builder.toString();
+        return getFrameworkName()+'-'+getVersionCode();
     }
     public static FrameworkTable load(File file) throws IOException{
         return load(new FileInputStream(file));
@@ -405,9 +360,9 @@ public class FrameworkTable extends TableBlock {
         frameworkTable.readBytes(inputStream);
         return frameworkTable;
     }
-    private static final String TITLE_STRING="Framework table";
-    private static final String PROP_TITLE="TITLE";
-    private static final String PROP_NAME="NAME";
-    private static final String PROP_VERSION="VERSION";
+
+    private static final String PROP_NAME = "NAME";
+    private static final String PROP_VERSION_CODE = "VERSION_CODE";
+    private static final String PROP_VERSION_NAME = "VERSION_NAME";
     private static final int PROP_COUNT=10;
 }

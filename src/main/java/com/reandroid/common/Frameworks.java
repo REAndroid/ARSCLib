@@ -15,11 +15,14 @@
   */
 package com.reandroid.common;
 
+import com.reandroid.apk.AndroidFrameworks;
 import com.reandroid.arsc.util.FrameworkTable;
 
 import java.io.IOException;
 import java.io.InputStream;
 
+/**Use {@link AndroidFrameworks} */
+@Deprecated
 public class Frameworks {
     private static FrameworkTable android_table;
     private static boolean load_once;
