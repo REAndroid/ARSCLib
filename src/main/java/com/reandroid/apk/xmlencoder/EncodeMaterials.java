@@ -79,6 +79,10 @@
          }
          Matcher matcher = ValueDecoder.PATTERN_REFERENCE.matcher(refString);
          if(!matcher.find()){
+             ValueDecoder.EncodeResult ref = ValueDecoder.encodeHexReference(refString);
+             if(ref!=null){
+                 return ref.value;
+             }
              throw new EncodeException(
                      "Not proper reference string: '"+refString+"'");
          }

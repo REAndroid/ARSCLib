@@ -37,6 +37,7 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
             String name=child.getAttributeValue("name");
             int id=decodeUnknownAttributeHex(name);
             if(id!=0){
+                item.setName(id);
                 String value = child.getTextContent();
                 if(ValueDecoder.isReference(value)){
                     item.setTypeAndData(ValueType.REFERENCE,
