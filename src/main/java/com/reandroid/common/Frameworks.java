@@ -26,6 +26,7 @@ import java.io.InputStream;
 public class Frameworks {
     private static FrameworkTable android_table;
     private static boolean load_once;
+    @Deprecated
     public static FrameworkTable getAndroid(){
         if(android_table!=null || load_once){
             return android_table;
@@ -33,21 +34,10 @@ public class Frameworks {
         load_once=true;
         FrameworkTable frameworkTable=null;
         try {
-            frameworkTable = loadFramework(ANDROID_FRAMEWORK_33);
+            frameworkTable = AndroidFrameworks.getLatest().getTableBlock();
         } catch (IOException e) {
         }
         android_table=frameworkTable;
         return android_table;
     }
-    private static FrameworkTable loadFramework(String name) throws IOException {
-        InputStream inputStream= Frameworks.class.getResourceAsStream(name);
-        if(inputStream==null){
-            return null;
-        }
-        FrameworkTable frameworkTable=new FrameworkTable();
-        frameworkTable.readBytes(inputStream);
-        return frameworkTable;
-    }
-
-    private static final String ANDROID_FRAMEWORK_33 = "/fwk/android_resources_33.arsc";
 }

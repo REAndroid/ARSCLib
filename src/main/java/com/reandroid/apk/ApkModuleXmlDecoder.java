@@ -27,8 +27,6 @@ import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.decoder.ValueDecoder;
 import com.reandroid.arsc.value.*;
 import com.reandroid.common.EntryStore;
-import com.reandroid.common.Frameworks;
-import com.reandroid.common.TableEntryStore;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLAttribute;
 import com.reandroid.xml.XMLDocument;
@@ -55,27 +53,25 @@ import java.util.*;
         this.decodedEntries.clear();
         logMessage("Decoding ...");
         decodeUncompressedFiles(outDir);
-        TableEntryStore entryStore=new TableEntryStore();
-        entryStore.add(Frameworks.getAndroid());
+        apkModule.initializeAndroidFramework();
         TableBlock tableBlock=apkModule.getTableBlock();
-        entryStore.add(tableBlock);
 
         decodePackageInfo(outDir, tableBlock);
 
-        xmlBagDecoder=new XMLBagDecoder(entryStore);
+        xmlBagDecoder=new XMLBagDecoder(tableBlock);
 
         decodePublicXml(tableBlock, outDir);
 
-        decodeAndroidManifest(entryStore, outDir);
+        decodeAndroidManifest(tableBlock, outDir);
 
         addDecodedPath(TableBlock.FILE_NAME);
 
         logMessage("Decoding resource files ...");
         List<ResFile> resFileList=apkModule.listResFiles();
         for(ResFile resFile:resFileList){
-            decodeResFile(entryStore, outDir, resFile);
+            decodeResFile(tableBlock, outDir, resFile);
         }
-        decodeValues(entryStore, outDir, tableBlock);
+        decodeValues(tableBlock, outDir, tableBlock);
 
         extractRootFiles(outDir);
     }

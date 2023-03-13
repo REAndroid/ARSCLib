@@ -16,6 +16,7 @@
  package com.reandroid.apk.xmlencoder;
 
  import com.reandroid.apk.APKLogger;
+ import com.reandroid.apk.FrameworkApk;
  import com.reandroid.apk.ResourceIds;
  import com.reandroid.arsc.chunk.PackageBlock;
  import com.reandroid.arsc.chunk.TableBlock;
@@ -282,6 +283,12 @@
          this.currentPackage = currentPackage;
          return this;
      }
+     public EncodeMaterials addFramework(FrameworkApk frameworkApk) {
+         if(frameworkApk!=null){
+             addFramework(frameworkApk.getTableBlock());
+         }
+         return this;
+     }
      public EncodeMaterials addFramework(FrameworkTable frameworkTable) {
          frameworkTable.loadResourceNameMap();
          this.frameworkTables.add(frameworkTable);
@@ -333,10 +340,16 @@
          ResourceIds resourceIds = new ResourceIds();
          resourceIds.loadPackageBlock(packageBlock);
          ResourceIds.Table.Package packageId = resourceIds.getTable().listPackages().get(0);
-         return new EncodeMaterials()
+         EncodeMaterials encodeMaterials = new EncodeMaterials()
                  .addPackageIds(packageId)
-                 .setCurrentPackage(packageBlock)
-                 .addFramework(Frameworks.getAndroid());
+                 .setCurrentPackage(packageBlock);
+         TableBlock tableBlock = packageBlock.getTableBlock();
+         for(TableBlock frameworkTable:tableBlock.getFrameWorks()){
+             if(frameworkTable instanceof FrameworkTable){
+                 encodeMaterials.addFramework((FrameworkTable) frameworkTable);
+             }
+         }
+         return encodeMaterials;
      }
 
  }

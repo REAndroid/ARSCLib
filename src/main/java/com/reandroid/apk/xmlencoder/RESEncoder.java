@@ -20,7 +20,6 @@
  import com.reandroid.arsc.chunk.PackageBlock;
  import com.reandroid.arsc.chunk.TableBlock;
  import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
- import com.reandroid.common.Frameworks;
  import com.reandroid.xml.XMLDocument;
  import com.reandroid.xml.XMLException;
  import com.reandroid.xml.source.XMLFileSource;
@@ -162,12 +161,18 @@
              List<File> pubXmlFileList, EncodeMaterials encodeMaterials)
              throws IOException, XMLException {
 
+         encodeMaterials.setAPKLogger(apkLogger);
+
          Map<File, ResourceIds.Table.Package> results = new HashMap<>();
 
          String packageName=null;
          for(File pubXmlFile:pubXmlFileList){
              if(packageName==null){
-                 packageName=readManifestPackageName(toAndroidManifest(pubXmlFile));
+                 File manifestFile = toAndroidManifest(pubXmlFile);
+                 packageName=readManifestPackageName(manifestFile);
+                 FrameworkApk frameworkApk = getApkModule()
+                         .initializeAndroidFramework(XMLDocument.load(manifestFile));
+                 encodeMaterials.addFramework(frameworkApk);
              }
              ResourceIds resourceIds=new ResourceIds();
              resourceIds.fromXml(pubXmlFile);
@@ -184,8 +189,7 @@
              results.put(pubXmlFile, pkg);
          }
 
-         encodeMaterials.addFramework(Frameworks.getAndroid())
-                 .setAPKLogger(apkLogger);
+         encodeMaterials.setAPKLogger(apkLogger);
          return results;
      }
      private String readManifestPackageName(File manifestFile) throws XMLException {

@@ -15,6 +15,7 @@
   */
 package com.reandroid.apk.xmlencoder;
 
+import com.reandroid.arsc.decoder.ValueDecoder;
 import com.reandroid.arsc.value.ValueHeader;
 import com.reandroid.arsc.value.Entry;
 
@@ -25,7 +26,7 @@ import com.reandroid.arsc.value.Entry;
 
     @Override
     void encodeStringValue(Entry entry, String value){
-        throw new EncodeException("Unexpected value for id: "+value);
+        entry.setValueAsString(ValueDecoder.unEscapeSpecialCharacter(value));
     }
     @Override
     void encodeNullValue(Entry entry){

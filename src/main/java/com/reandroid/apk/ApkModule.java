@@ -33,6 +33,7 @@ import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.common.Frameworks;
 import com.reandroid.common.TableEntryStore;
 import com.reandroid.xml.XMLDocument;
+import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLException;
 
 import java.io.File;
@@ -57,27 +58,31 @@ public class ApkModule implements ApkFile {
         this.mUncompressedFiles=new UncompressedFiles();
         this.mUncompressedFiles.addPath(apkArchive);
     }
-    public void initializeAndroidFramework() throws IOException {
+    public FrameworkApk initializeAndroidFramework() throws IOException {
         if(!hasTableBlock()){
-            return;
+            return null;
         }
-        initializeAndroidFramework(getTableBlock());
+        Integer version = getAndroidFrameworkVersion();
+        return initializeAndroidFramework(getTableBlock(false), version);
     }
-    private void initializeAndroidFramework(TableBlock tableBlock) throws IOException {
+    private FrameworkApk initializeAndroidFramework(TableBlock tableBlock, Integer version) throws IOException {
         if(tableBlock == null || isAndroid(tableBlock)){
-            return;
+            return null;
         }
         List<TableBlock> frameWorkList = tableBlock.getFrameWorks();
         for(TableBlock frameWork:frameWorkList){
             if(isAndroid(frameWork)){
-                return;
+                ApkFile apkFile = frameWork.getApkFile();
+                if(apkFile instanceof FrameworkApk){
+                    return (FrameworkApk) apkFile;
+                }
+                return null;
             }
         }
         logMessage("Initializing android framework ...");
-        Integer version = getAndroidFrameworkVersion();
         FrameworkApk frameworkApk;
         if(version==null){
-            logMessage("Can not read framework version from manifest, loading latest");
+            logMessage("Can not read framework version, loading latest");
             frameworkApk = AndroidFrameworks.getLatest();
         }else {
             logMessage("Loading android framework for version: " + version);
@@ -86,6 +91,7 @@ public class ApkModule implements ApkFile {
         FrameworkTable frameworkTable = frameworkApk.getTableBlock();
         tableBlock.addFramework(frameworkTable);
         logMessage("Initialized framework: "+frameworkApk.getName());
+        return frameworkApk;
     }
     private boolean isAndroid(TableBlock tableBlock){
         if(tableBlock instanceof FrameworkTable){
@@ -93,6 +99,60 @@ public class ApkModule implements ApkFile {
             return frameworkTable.isAndroid();
         }
         return false;
+    }
+
+    public FrameworkApk initializeAndroidFramework(XMLDocument xmlDocument) throws IOException {
+        TableBlock tableBlock = getTableBlock(false);
+        if(isAndroidCoreApp(xmlDocument)){
+            logMessage("Looks framework itself, skip loading frameworks");
+            return null;
+        }
+        Integer version = readCompileVersionCode(xmlDocument);
+        return initializeAndroidFramework(tableBlock, version);
+    }
+    private boolean isAndroidCoreApp(XMLDocument manifestDocument){
+        XMLElement root = manifestDocument.getDocumentElement();
+        if(root == null){
+            return false;
+        }
+        if(!"android".equals(root.getAttributeValue("package"))){
+            return false;
+        }
+        String coreApp = root.getAttributeValue("coreApp");
+        return "true".equals(coreApp);
+    }
+    private Integer readCompileVersionCode(XMLDocument manifestDocument) {
+        XMLElement root = manifestDocument.getDocumentElement();
+        String versionString = readVersionCodeString(root);
+        if(versionString==null){
+            return null;
+        }
+        try{
+            return Integer.parseInt(versionString);
+        }catch (NumberFormatException exception){
+            logMessage("NumberFormatException on manifest version reading: '"
+                    +versionString+"': "+exception.getMessage());
+            return null;
+        }
+    }
+    private String readVersionCodeString(XMLElement manifestRoot){
+        String versionString = manifestRoot.getAttributeValue("android:compileSdkVersion");
+        if(versionString!=null){
+            return versionString;
+        }
+        versionString = manifestRoot.getAttributeValue("platformBuildVersionCode");
+        if(versionString!=null){
+            return versionString;
+        }
+        for(XMLElement element:manifestRoot.listChildElements()){
+            if(AndroidManifestBlock.TAG_uses_sdk.equals(element.getTagName())){
+                versionString = element.getAttributeValue("android:targetSdkVersion");
+                if(versionString!=null){
+                    return versionString;
+                }
+            }
+        }
+        return null;
     }
     public Integer getAndroidFrameworkVersion(){
         if(!hasAndroidManifestBlock()){
@@ -148,16 +208,7 @@ public class ApkModule implements ApkFile {
         ResXmlDocument resXmlDocument = loadResXmlDocument(path);
         AndroidManifestBlock manifestBlock = getAndroidManifestBlock();
         int pkgId = manifestBlock.guessCurrentPackageId();
-        return resXmlDocument.decodeToXml(getTableEntryStore(), pkgId);
-    }
-    private TableEntryStore getTableEntryStore() throws IOException {
-        if(mEntryStore!=null){
-            return mEntryStore;
-        }
-        mEntryStore = new TableEntryStore();
-        mEntryStore.add(getTableBlock());
-        mEntryStore.add(Frameworks.getAndroid());
-        return mEntryStore;
+        return resXmlDocument.decodeToXml(getTableBlock(), pkgId);
     }
     public List<DexFileInputSource> listDexFiles(){
         List<DexFileInputSource> results=new ArrayList<>();
@@ -436,22 +487,26 @@ public class ApkModule implements ApkFile {
         }
         return mManifestBlock;
     }
-    @Override
-    public TableBlock getTableBlock() {
+    public TableBlock getTableBlock(boolean initFramework) {
         if(mTableBlock==null){
             if(!hasTableBlock()){
                 return null;
             }
             try {
                 mTableBlock = loadTableBlock();
-                if(loadDefaultFramework){
-                    initializeAndroidFramework(mTableBlock);
+                if(initFramework && loadDefaultFramework){
+                    Integer version = getAndroidFrameworkVersion();
+                    initializeAndroidFramework(mTableBlock, version);
                 }
             } catch (IOException exception) {
                 throw new IllegalArgumentException(exception);
             }
         }
         return mTableBlock;
+    }
+    @Override
+    public TableBlock getTableBlock() {
+        return getTableBlock(true);
     }
     @Override
     public ResXmlDocument loadResXmlDocument(String path) throws IOException{
