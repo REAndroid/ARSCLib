@@ -38,10 +38,12 @@ javadoc {
 
 jar {
     exclude('com/reandroid/test/**')
+    exclude('com/reandroid/facebook/**')
 }
 
 task fatJar(type: Jar) {
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
+
 
