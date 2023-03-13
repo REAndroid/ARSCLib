@@ -15,6 +15,7 @@
   */
 package com.reandroid.arsc.container;
 
+import com.reandroid.arsc.array.EntryArray;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.array.TypeBlockArray;
 import com.reandroid.arsc.base.Block;
@@ -22,6 +23,7 @@ import com.reandroid.arsc.base.BlockContainer;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
+import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
@@ -31,10 +33,7 @@ import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class SpecTypePair extends BlockContainer<Block>
         implements JSONConvert<JSONObject>, Comparable<SpecTypePair>{
@@ -52,6 +51,40 @@ public class SpecTypePair extends BlockContainer<Block>
     }
     public SpecTypePair(){
         this(new SpecBlock(), new TypeBlockArray());
+    }
+    public Map<Integer, EntryGroup> createEntryGroups(){
+        Map<Integer, EntryGroup> map = new HashMap<>();
+        for(TypeBlock typeBlock:listTypeBlocks()){
+            EntryArray entryArray = typeBlock.getEntryArray();
+            for(Entry entry:entryArray.listItems()){
+                if(entry==null){
+                    continue;
+                }
+                int id = entry.getResourceId();
+                EntryGroup entryGroup = map.get(id);
+                if(entryGroup == null){
+                    entryGroup = new EntryGroup(id);
+                    map.put(id, entryGroup);
+                }
+                entryGroup.add(entry);
+            }
+        }
+        return map;
+    }
+    public EntryGroup createEntryGroup(int id){
+        id = 0xffff & id;
+        EntryGroup entryGroup = null;
+        for(TypeBlock typeBlock:listTypeBlocks()){
+            Entry entry = typeBlock.getEntry(id);
+            if(entry == null){
+                continue;
+            }
+            if(entryGroup == null){
+                entryGroup = new EntryGroup(entry.getResourceId());
+            }
+            entryGroup.add(entry);
+        }
+        return entryGroup;
     }
     public void destroy(){
         getSpecBlock().destroy();

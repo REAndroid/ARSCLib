@@ -164,7 +164,10 @@ public class EntryGroup extends ItemGroup<Entry> {
         return "en".equals(lang);
     }
     public Entry getDefault(){
-        Iterator<Entry> itr=iterator(true);
+        return getDefault(true);
+    }
+    public Entry getDefault(boolean skipNull){
+        Iterator<Entry> itr=iterator(skipNull);
         while (itr.hasNext()){
             Entry entry =itr.next();
             if(entry.isDefault()){
