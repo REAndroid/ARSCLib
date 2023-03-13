@@ -37,6 +37,7 @@ public class FrameworkTable extends TableBlock {
 
     private String frameworkName;
     private int versionCode;
+    private int mainPackageId;
     private ResNameMap<EntryGroup> mNameGroupMap;
     private boolean mOptimized;
     private boolean mOptimizeChecked;
@@ -44,14 +45,28 @@ public class FrameworkTable extends TableBlock {
         super();
     }
 
+    public boolean isAndroid(){
+        return "android".equals(getFrameworkName())
+                && getMainPackageId() == 0x01;
+    }
+
+    public int getMainPackageId() {
+        if(mainPackageId!=0){
+            return mainPackageId;
+        }
+        PackageBlock packageBlock = pickOne();
+        if(packageBlock!=null){
+            mainPackageId = packageBlock.getId();
+        }
+        return mainPackageId;
+    }
+
     @Override
     public void destroy(){
-        ResNameMap<EntryGroup> nameGroupMap = this.mNameGroupMap;
-        if(nameGroupMap!=null){
-            nameGroupMap.clear();
-        }
+        clearResourceNameMap();
         this.frameworkName = null;
         this.versionCode = 0;
+        this.mainPackageId = 0;
         super.destroy();
     }
     public int resolveResourceId(String typeName, String entryName){
@@ -140,6 +155,15 @@ public class FrameworkTable extends TableBlock {
     public String getFrameworkName(){
         if(frameworkName == null){
             frameworkName = loadProperty(PROP_NAME);
+        }
+        if(frameworkName == null){
+            PackageBlock packageBlock = pickOne();
+            if(packageBlock!=null){
+                String name = packageBlock.getName();
+                if(name!=null && !name.trim().isEmpty()){
+                    frameworkName = name;
+                }
+            }
         }
         return frameworkName;
     }

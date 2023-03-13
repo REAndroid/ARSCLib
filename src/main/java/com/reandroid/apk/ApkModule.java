@@ -27,6 +27,7 @@ import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
+import com.reandroid.arsc.util.FrameworkTable;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.common.Frameworks;
@@ -55,6 +56,57 @@ public class ApkModule implements ApkFile {
         this.apkArchive=apkArchive;
         this.mUncompressedFiles=new UncompressedFiles();
         this.mUncompressedFiles.addPath(apkArchive);
+    }
+    public void initializeAndroidFramework() throws IOException {
+        if(!hasTableBlock()){
+            return;
+        }
+        initializeAndroidFramework(getTableBlock());
+    }
+    private void initializeAndroidFramework(TableBlock tableBlock) throws IOException {
+        if(tableBlock == null || isAndroid(tableBlock)){
+            return;
+        }
+        List<TableBlock> frameWorkList = tableBlock.getFrameWorks();
+        for(TableBlock frameWork:frameWorkList){
+            if(isAndroid(frameWork)){
+                return;
+            }
+        }
+        logMessage("Initializing android framework ...");
+        Integer version = getAndroidFrameworkVersion();
+        FrameworkApk frameworkApk;
+        if(version==null){
+            logMessage("Can not read framework version from manifest, loading latest");
+            frameworkApk = AndroidFrameworks.getLatest();
+        }else {
+            logMessage("Loading android framework for version: " + version);
+            frameworkApk = AndroidFrameworks.getBestMatch(version);
+        }
+        FrameworkTable frameworkTable = frameworkApk.getTableBlock();
+        tableBlock.addFramework(frameworkTable);
+        logMessage("Initialized framework: "+frameworkApk.getName());
+    }
+    private boolean isAndroid(TableBlock tableBlock){
+        if(tableBlock instanceof FrameworkTable){
+            FrameworkTable frameworkTable = (FrameworkTable) tableBlock;
+            return frameworkTable.isAndroid();
+        }
+        return false;
+    }
+    public Integer getAndroidFrameworkVersion(){
+        if(!hasAndroidManifestBlock()){
+            return null;
+        }
+        AndroidManifestBlock manifestBlock = getAndroidManifestBlock();
+        Integer version = manifestBlock.getCompileSdkVersion();
+        if(version == null){
+            version = manifestBlock.getPlatformBuildVersionCode();
+        }
+        if(version == null){
+            version = manifestBlock.getTargetSdkVersion();
+        }
+        return version;
     }
     public void removeResFilesWithEntry(int resourceId) throws IOException {
         removeResFilesWithEntry(resourceId, null, true);
@@ -392,6 +444,9 @@ public class ApkModule implements ApkFile {
             }
             try {
                 mTableBlock = loadTableBlock();
+                if(loadDefaultFramework){
+                    initializeAndroidFramework(mTableBlock);
+                }
             } catch (IOException exception) {
                 throw new IllegalArgumentException(exception);
             }
@@ -442,15 +497,11 @@ public class ApkModule implements ApkFile {
         }else if(inputSource instanceof SingleJsonTableInputSource){
             tableBlock=((SingleJsonTableInputSource)inputSource).getTableBlock();
         }else if(inputSource instanceof BlockInputSource){
-            Chunk block = ((BlockInputSource<?>) inputSource).getBlock();
-            tableBlock=(TableBlock) block;
+            Chunk<?> block = ((BlockInputSource<?>) inputSource).getBlock();
+            tableBlock = (TableBlock) block;
         }else {
             InputStream inputStream = inputSource.openStream();
-            if(loadDefaultFramework){
-                tableBlock=TableBlock.loadWithAndroidFramework(inputStream);
-            }else {
-                tableBlock=TableBlock.load(inputStream);
-            }
+            tableBlock = TableBlock.load(inputStream);
             inputStream.close();
         }
         BlockInputSource<TableBlock> blockInputSource=new BlockInputSource<>(inputSource.getName(), tableBlock);

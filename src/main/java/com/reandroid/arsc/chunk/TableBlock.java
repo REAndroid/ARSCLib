@@ -279,6 +279,7 @@ import java.util.*;
         return builder.toString();
     }
 
+    @Deprecated
     public static TableBlock loadWithAndroidFramework(InputStream inputStream) throws IOException{
         TableBlock tableBlock=load(inputStream);
         tableBlock.addFramework(Frameworks.getAndroid());
