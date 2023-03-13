@@ -29,6 +29,7 @@ import com.reandroid.arsc.item.ReferenceItem;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResConfig;
 
 import java.io.*;
 import java.util.*;
@@ -173,20 +174,54 @@ public class FrameworkTable extends TableBlock {
             writeProperty(PROP_NAME, value);
         }
     }
-
-    public void optimize(String name, int version, boolean keepOnlyAttrsAndId){
+    public void optimize(String name, int version){
         mOptimizeChecked = true;
         mOptimized = false;
-        if(keepOnlyAttrsAndId){
-            removeTypesExceptAttrId();
-        }else {
-            optimizeEntries();
-        }
+        ensureTypeBlockNonNullEntries();
+        optimizeEntries();
         optimizeTableString();
         writeVersionCode(version);
         mOptimizeChecked = false;
         setFrameworkName(name);
         refresh();
+    }
+    private void ensureTypeBlockNonNullEntries(){
+        for(PackageBlock packageBlock:listPackages()){
+            ensureTypeBlockNonNullEntries(packageBlock);
+        }
+    }
+    private void ensureTypeBlockNonNullEntries(PackageBlock packageBlock){
+        for(SpecTypePair specTypePair:packageBlock.listAllSpecTypePair()){
+            ensureTypeBlockNonNullEntries(specTypePair);
+        }
+    }
+    private void ensureTypeBlockNonNullEntries(SpecTypePair specTypePair){
+        Map<Integer, EntryGroup> map = specTypePair.createEntryGroups();
+        for(EntryGroup entryGroup:map.values()){
+            ensureNonNullDefaultEntry(entryGroup);
+        }
+    }
+    private void ensureNonNullDefaultEntry(EntryGroup entryGroup){
+        Entry defEntry = entryGroup.getDefault(false);
+        Entry entry;
+        if(defEntry==null){
+            entry = entryGroup.pickOne();
+            if(entry == null){
+                return;
+            }
+            SpecTypePair specTypePair = entry.getTypeBlock().getParentSpecTypePair();
+            TypeBlock type = specTypePair.getOrCreateTypeBlock(new ResConfig());
+            defEntry = type.getOrCreateEntry((short) (entry.getId() & 0xffff));
+        }
+        if(!defEntry.isNull()){
+            return;
+        }
+        entry = entryGroup.pickOne();
+        if(entry.isNull()){
+            return;
+        }
+        defEntry.merge(entry);
+        defEntry.isDefault();
     }
     private void optimizeEntries(){
         Map<Integer, EntryGroup> groupMap=scanAllEntryGroups();
@@ -201,29 +236,6 @@ public class FrameworkTable extends TableBlock {
             pkg.removeEmpty();
             pkg.refresh();
         }
-    }
-    private void removeTypesExceptAttrId(){
-        for(PackageBlock pkg:listPackages()){
-            SpecTypePairArray pairArray = pkg.getSpecTypePairArray();
-            List<SpecTypePair> specTypePairList =
-                    new ArrayList<>(pairArray.listItems());
-            for(SpecTypePair specTypePair:specTypePairList){
-                String name=specTypePair.getTypeName();
-                if(shouldRemoveType(name)){
-                    specTypePair.destroy();
-                    pairArray.remove(specTypePair);
-                }
-            }
-        }
-    }
-    private boolean shouldRemoveType(String typeName){
-        if(typeName==null){
-            return true;
-        }
-        if("id".equals(typeName)){
-            return false;
-        }
-        return !typeName.contains("attr");
     }
     private void removeEmptyBlocks(PackageBlock pkg){
         SpecTypePairArray specTypePairArray = pkg.getSpecTypePairArray();

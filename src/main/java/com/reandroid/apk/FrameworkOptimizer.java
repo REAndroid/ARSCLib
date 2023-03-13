@@ -36,11 +36,9 @@ import java.util.zip.ZipEntry;
     private final ApkModule frameworkApk;
     private APKLogger apkLogger;
     private boolean mOptimizing;
-    private final boolean keepOnlyAttrsAndId;
-    public FrameworkOptimizer(ApkModule frameworkApk, boolean keepOnlyAttrsAndId){
+    public FrameworkOptimizer(ApkModule frameworkApk){
         this.frameworkApk = frameworkApk;
         this.apkLogger = frameworkApk.getApkLogger();
-        this.keepOnlyAttrsAndId = keepOnlyAttrsAndId;
     }
     public void optimize(){
         if(mOptimizing){
@@ -102,7 +100,7 @@ import java.util.zip.ZipEntry;
             backupManifestValue(manifestBlock, table);
         }
         logMessage("Optimizing table ...");
-        table.optimize(name, version, keepOnlyAttrsAndId);
+        table.optimize(name, version);
         long diff=prev - table.countBytes();
         long percent=(diff*100L)/prev;
         logMessage("Table size reduced by: "+percent+" %");

@@ -174,9 +174,6 @@
          return frameworkTable;
      }
      public void optimize(){
-         optimize(true);
-     }
-     public void optimize(boolean keepOnlyAttrsAndId){
          synchronized (mLock){
              if(mOptimizing){
                  return;
@@ -190,7 +187,7 @@
                  mOptimizing = false;
                  return;
              }
-             FrameworkOptimizer optimizer = new FrameworkOptimizer(this, keepOnlyAttrsAndId);
+             FrameworkOptimizer optimizer = new FrameworkOptimizer(this);
              optimizer.optimize();
              mOptimizing = false;
          }
