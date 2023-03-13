@@ -52,8 +52,11 @@ public class SpecFlagsArray extends IntegerArray implements BlockLoad, JSONConve
         return specFlagList;
     }
     public SpecFlag getFlag(int id){
-        int offset = id & 0xffff;
-        offset = offset * 4;
+        id = id & 0xffff;
+        if(id >= size()){
+            return null;
+        }
+        int offset = id * 4;
         return new SpecFlag(this, offset);
     }
     public void set(int entryId, int value){
