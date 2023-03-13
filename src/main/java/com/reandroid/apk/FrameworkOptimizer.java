@@ -30,8 +30,9 @@ import com.reandroid.arsc.value.*;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.zip.ZipEntry;
 
-public class FrameworkOptimizer {
+ public class FrameworkOptimizer {
     private final ApkModule frameworkApk;
     private APKLogger apkLogger;
     private boolean mOptimizing;
@@ -57,6 +58,9 @@ public class FrameworkOptimizer {
             manifestBlock = frameworkApk.getAndroidManifestBlock();
         }
         optimizeTable(frameworkTable, manifestBlock);
+        UncompressedFiles uncompressedFiles = frameworkApk.getUncompressedFiles();
+        uncompressedFiles.clearExtensions();
+        uncompressedFiles.clearPaths();
         clearFiles(frameworkApk.getApkArchive());
         logMessage("Optimized");
     }
@@ -69,6 +73,12 @@ public class FrameworkOptimizer {
         InputSource tableSource = archive.getInputSource(TableBlock.FILE_NAME);
         InputSource manifestSource = archive.getInputSource(AndroidManifestBlock.FILE_NAME);
         archive.clear();
+        if(tableSource!=null){
+            tableSource.setMethod(ZipEntry.DEFLATED);
+        }
+        if(manifestSource!=null){
+            manifestSource.setMethod(ZipEntry.DEFLATED);
+        }
         archive.add(tableSource);
         archive.add(manifestSource);
         count = count - archive.entriesCount();
