@@ -32,6 +32,10 @@
          this.specFlagsArray = new SpecFlagsArray(header.getEntryCount());
          addChild(specFlagsArray);
      }
+     public void destroy(){
+         setParent(null);
+         getSpecFlagsArray().clear();
+     }
      public SpecFlag getSpecFlag(int id){
          return getSpecFlagsArray().getFlag(id);
      }

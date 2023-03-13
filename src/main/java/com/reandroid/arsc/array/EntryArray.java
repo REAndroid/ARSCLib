@@ -29,6 +29,14 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
     public EntryArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart){
         super(offsets, itemCount, itemStart);
     }
+    public void destroy(){
+        for(Entry entry:listItems()){
+            if(entry!=null){
+                entry.setNull(true);
+            }
+        }
+        clearChildes();
+    }
     public boolean hasComplexEntry(){
         Entry first = iterator(true).next();
         if(first==null){

@@ -53,6 +53,10 @@ public class SpecTypePair extends BlockContainer<Block>
     public SpecTypePair(){
         this(new SpecBlock(), new TypeBlockArray());
     }
+    public void destroy(){
+        getSpecBlock().destroy();
+        getTypeBlockArray().destroy();
+    }
     public Entry getAnyEntry(String name){
         for(TypeBlock typeBlock:listTypeBlocks()){
             Entry entry =typeBlock.searchByEntryName(name);

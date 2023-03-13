@@ -43,6 +43,14 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     public TypeBlockArray(){
         super();
     }
+    public void destroy(){
+        for(TypeBlock typeBlock:listItems()){
+            if(typeBlock!=null){
+                typeBlock.destroy();
+            }
+        }
+        clearChildes();
+    }
     public void sort(){
         sort(this);
     }

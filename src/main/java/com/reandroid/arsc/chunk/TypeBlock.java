@@ -52,6 +52,11 @@ public class TypeBlock extends Chunk<TypeHeader>
         addChild(entryOffsets);
         addChild(mEntryArray);
     }
+    public void destroy(){
+        getEntryArray().destroy();
+        setId(0);
+        setParent(null);
+    }
     public boolean removeNullEntries(int startId){
         startId = 0x0000ffff & startId;
         EntryArray entryArray = getEntryArray();
