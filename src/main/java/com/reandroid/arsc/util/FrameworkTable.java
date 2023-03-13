@@ -174,9 +174,21 @@ public class FrameworkTable extends TableBlock {
         }
     }
 
-    public void optimize(String name, int version){
+    public void optimize(String name, int version, boolean keepOnlyAttrsAndId){
         mOptimizeChecked = true;
         mOptimized = false;
+        if(keepOnlyAttrsAndId){
+            removeTypesExceptAttrId();
+        }else {
+            optimizeEntries();
+        }
+        optimizeTableString();
+        writeVersionCode(version);
+        mOptimizeChecked = false;
+        setFrameworkName(name);
+        refresh();
+    }
+    private void optimizeEntries(){
         Map<Integer, EntryGroup> groupMap=scanAllEntryGroups();
         for(EntryGroup group:groupMap.values()){
             List<Entry> entryList = getEntriesToRemove(group);
@@ -189,11 +201,29 @@ public class FrameworkTable extends TableBlock {
             pkg.removeEmpty();
             pkg.refresh();
         }
-        optimizeTableString();
-        writeVersionCode(version);
-        mOptimizeChecked = false;
-        setFrameworkName(name);
-        refresh();
+    }
+    private void removeTypesExceptAttrId(){
+        for(PackageBlock pkg:listPackages()){
+            SpecTypePairArray pairArray = pkg.getSpecTypePairArray();
+            List<SpecTypePair> specTypePairList =
+                    new ArrayList<>(pairArray.listItems());
+            for(SpecTypePair specTypePair:specTypePairList){
+                String name=specTypePair.getTypeName();
+                if(shouldRemoveType(name)){
+                    specTypePair.destroy();
+                    pairArray.remove(specTypePair);
+                }
+            }
+        }
+    }
+    private boolean shouldRemoveType(String typeName){
+        if(typeName==null){
+            return true;
+        }
+        if("id".equals(typeName)){
+            return false;
+        }
+        return !typeName.contains("attr");
     }
     private void removeEmptyBlocks(PackageBlock pkg){
         SpecTypePairArray specTypePairArray = pkg.getSpecTypePairArray();

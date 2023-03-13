@@ -35,11 +35,12 @@ public class FrameworkOptimizer {
     private final ApkModule frameworkApk;
     private APKLogger apkLogger;
     private boolean mOptimizing;
-    public FrameworkOptimizer(ApkModule frameworkApk){
+    private final boolean keepOnlyAttrsAndId;
+    public FrameworkOptimizer(ApkModule frameworkApk, boolean keepOnlyAttrsAndId){
         this.frameworkApk = frameworkApk;
         this.apkLogger = frameworkApk.getApkLogger();
+        this.keepOnlyAttrsAndId = keepOnlyAttrsAndId;
     }
-
     public void optimize(){
         if(mOptimizing){
             return;
@@ -91,7 +92,7 @@ public class FrameworkOptimizer {
             backupManifestValue(manifestBlock, table);
         }
         logMessage("Optimizing table ...");
-        table.optimize(name, version);
+        table.optimize(name, version, keepOnlyAttrsAndId);
         long diff=prev - table.countBytes();
         long percent=(diff*100L)/prev;
         logMessage("Table size reduced by: "+percent+" %");
