@@ -31,6 +31,7 @@ public class ZipAlign {
     private static final int ZIP_ENTRY_USES_DATA_DESCR = 0x0008;
     private static final int ZIP_ENTRY_DATA_DESCRIPTOR_LEN = 16;
     private static final int ALIGNMENT_4 = 4;
+    private static final int ALIGNMENT_PAGE = 4096;
 
     private static class XEntry {
         public final ZipEntry entry;
@@ -118,6 +119,7 @@ public class ZipAlign {
         final Enumeration<?> entries = mZipFile.entries();
         while (entries.hasMoreElements()) {
             final ZipEntry entry = (ZipEntry) entries.nextElement();
+            final String name = entry.getName();
 
             int flags = entry.getMethod() == ZipEntry.STORED ? 0 : 1 << 3;
             flags |= 1 << 11;
@@ -125,7 +127,7 @@ public class ZipAlign {
             final long outputEntryHeaderOffset = mOutputStream.totalWritten;
 
             final int inputEntryHeaderSize = ZIP_ENTRY_HEADER_LEN + (entry.getExtra() != null ? entry.getExtra().length : 0)
-                    + entry.getName().getBytes(StandardCharsets.UTF_8).length;
+                    + name.getBytes(StandardCharsets.UTF_8).length;
             final long inputEntryDataOffset = mInputFileOffset + inputEntryHeaderSize;
 
             final int padding;
@@ -133,8 +135,12 @@ public class ZipAlign {
             if (entry.getMethod() != ZipEntry.STORED) {
                 padding = 0;
             } else {
+                int alignment = mAlignment;
+                if (name.startsWith("lib/") && name.endsWith(".so")) {
+                    alignment = ALIGNMENT_PAGE;
+                }
                 long newOffset = inputEntryDataOffset + mTotalPadding;
-                padding = (int) ((mAlignment - (newOffset % mAlignment)) % mAlignment);
+                padding = (int) ((alignment - (newOffset % alignment)) % alignment);
                 mTotalPadding += padding;
             }
 
