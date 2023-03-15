@@ -46,10 +46,7 @@ class XMLValuesEncoder {
     }
     private void encode(TypeBlock typeBlock, XMLElement element){
         String name = element.getAttributeValue("name");
-        int resourceId = getMaterials()
-                .resolveLocalResourceId(typeBlock.getTypeName(), name);
-        Entry entry = typeBlock
-                .getOrCreateEntry((short) (0xffff & resourceId));
+        Entry entry = typeBlock.getOrCreateEntry(name);
 
         encodeValue(entry, element);
 
