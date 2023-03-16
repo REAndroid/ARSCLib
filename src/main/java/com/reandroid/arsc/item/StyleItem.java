@@ -287,13 +287,14 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
                 }
                 boolean isLast=(info.getLast()==i);
                 if(info.getFirst()==i || isLast){
+                    if(isLast){
+                        builder.append(info.getEndTag());
+                    }
                     if(isLast && !lastAppend){
                         builder.append(ch);
                         lastAppend=true;
                     }
-                    if(isLast){
-                        builder.append(info.getEndTag());
-                    }else {
+                    if(!isLast) {
                         builder.append(info.getStartTag(xml));
                     }
                 }
