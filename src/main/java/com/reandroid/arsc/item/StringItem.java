@@ -398,8 +398,8 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         return result;
     }
 
-    private final CharsetDecoder UTF16LE_DECODER = StandardCharsets.UTF_16LE.newDecoder();
-    private final CharsetDecoder UTF8_DECODER = StandardCharsets.UTF_8.newDecoder();
+    private static final CharsetDecoder UTF16LE_DECODER = StandardCharsets.UTF_16LE.newDecoder();
+    private static final CharsetDecoder UTF8_DECODER = StandardCharsets.UTF_8.newDecoder();
 
     public static final String NAME_string="string";
     public static final String NAME_style="style";
