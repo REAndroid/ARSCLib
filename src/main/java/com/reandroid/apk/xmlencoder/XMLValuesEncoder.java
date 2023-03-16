@@ -55,7 +55,6 @@ class XMLValuesEncoder {
 
         SpecString specString = getMaterials().getSpecString(name);
         entry.setSpecReference(specString);
-        entry.getPackageBlock().onEntryAdded(entry);
     }
     void encodeValue(Entry entry, XMLElement element){
         String value = getValue(element);
