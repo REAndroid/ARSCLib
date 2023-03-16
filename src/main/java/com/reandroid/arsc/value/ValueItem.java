@@ -203,7 +203,7 @@ import java.util.Objects;
          return null;
      }
      public void setValueAsString(String str){
-         if(getValueType() != ValueType.STRING
+         if(getValueType() == ValueType.STRING
                  && Objects.equals(str, getValueAsString())){
              return;
          }
