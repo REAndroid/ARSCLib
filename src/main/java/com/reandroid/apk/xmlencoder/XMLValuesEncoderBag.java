@@ -44,4 +44,9 @@ class XMLValuesEncoderBag extends XMLValuesEncoder{
     int getChildesCount(XMLElement element){
         return element.getChildesCount();
     }
+
+    @Override
+    void encodeNullValue(Entry entry){
+        // Nothing to do
+    }
 }

@@ -74,7 +74,7 @@ class XMLValuesEncoder {
         }
     }
     void encodeNullValue(Entry entry){
-        // Nothing to do
+        entry.setValueAsString("");
     }
     void encodeLiteralEmptyValue(Entry entry, String value){
         entry.setValueAsRaw(ValueType.NULL, 0);
