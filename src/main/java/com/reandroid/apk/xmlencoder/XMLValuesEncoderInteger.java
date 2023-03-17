@@ -31,7 +31,7 @@ class XMLValuesEncoderInteger extends XMLValuesEncoder{
         }else if(ValueDecoder.isHex(value)){
             entry.setValueAsRaw(ValueType.INT_HEX, ValueDecoder.parseHex(value));
         }else {
-            ValueDecoder.EncodeResult encodeResult=ValueDecoder.encodeDimensionOrFloat(value);
+            ValueDecoder.EncodeResult encodeResult=ValueDecoder.encodeFloat(value);
             if(encodeResult!=null){
                 entry.setValueAsRaw(encodeResult.valueType, encodeResult.value);
             }else {

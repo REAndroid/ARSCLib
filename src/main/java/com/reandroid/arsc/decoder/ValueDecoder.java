@@ -73,11 +73,15 @@ import java.util.regex.Pattern;
          if(result!=null){
              return result;
          }
-         result=encodeDimensionOrFloat(txt);
+         result=encodeDimension(txt);
          if(result!=null){
              return result;
          }
          result=encodeHexOrInt(txt);
+         if(result!=null){
+             return result;
+         }
+         result=encodeFloat(txt);
          if(result!=null){
              return result;
          }
@@ -126,6 +130,12 @@ import java.util.regex.Pattern;
              return false;
          }
          return PATTERN_HEX.matcher(txt).matches();
+     }
+     public static boolean isFloat(String txt){
+         if(txt==null){
+             return false;
+         }
+         return PATTERN_FLOAT.matcher(txt).matches();
      }
      public static boolean isReference(String txt){
          if(txt==null){
@@ -209,7 +219,13 @@ import java.util.regex.Pattern;
          }
          return (int) l;
      }
-     public static EncodeResult encodeDimensionOrFloat(String value){
+     public static EncodeResult encodeFloat(String value){
+         if(!isFloat(value)){
+             return null;
+         }
+         return new EncodeResult(ValueType.FLOAT, Float.floatToIntBits(Float.parseFloat(value)));
+     }
+     public static EncodeResult encodeDimension(String value){
          if(value==null){
              return null;
          }
@@ -217,19 +233,16 @@ import java.util.regex.Pattern;
          if(!matcher.find()){
              return null;
          }
-         String sign = matcher.group(1);
-         String number = matcher.group(2);
-         String unit = matcher.group(3);
-         float fraction = Float.parseFloat(number);
-         if("-".equals(sign)){
-             fraction=-fraction;
+         String number = matcher.group(1);
+         String unit = matcher.group(2);
+         if("dip".equals(unit)) {
+             unit = "dp";
          }
-         return encodeDimensionOrFloat(fraction, unit);
+         return encodeDimension(Float.parseFloat(number), unit);
      }
-     private static EncodeResult encodeDimensionOrFloat(float val, String unit){
+     private static EncodeResult encodeDimension(float val, String unit){
          if(unit==null||"".equals(unit)){
-             return new EncodeResult(ValueType.FLOAT,
-                     Float.floatToIntBits(val));
+             return null;
          }
          ValueType valueType = ValueType.DIMENSION;
          int index=0;
@@ -856,14 +869,15 @@ import java.util.regex.Pattern;
         }
     }
 
-    private static final String[] DIMENSION_UNIT_STRS = new String[] { "px", "dip", "sp", "pt", "in", "mm" };
+    private static final String[] DIMENSION_UNIT_STRS = new String[] { "px", "dp", "sp", "pt", "in", "mm" };
     private static final float MANTISSA_MULT = 1.0f / (1 << 8);
     static final float[] RADIX_MULTS = new float[] {
             1.0f * MANTISSA_MULT, 1.0f / (1 << 7) * MANTISSA_MULT,
             1.0f / (1 << 15) * MANTISSA_MULT, 1.0f / (1 << 23) * MANTISSA_MULT };
 
      public static final Pattern PATTERN_COLOR = Pattern.compile("^#([0-9a-fA-F]{6,8})$");
-     public static final Pattern PATTERN_DIMEN = Pattern.compile("^(-?)([0-9]+\\.[0-9E+]+)([dimnpstx%]{0,3})$");
+     public static final Pattern PATTERN_FLOAT = Pattern.compile("^(-?)([0-9]+\\.[0-9E+]+)$");
+     public static final Pattern PATTERN_DIMEN = Pattern.compile("^(-?[0-9]+\\.?[0-9E+]*)([dimnpstx%]{0,3})$");
      private static final Pattern PATTERN_INTEGER = Pattern.compile("^(-?)([0-9]+)$");
      private static final Pattern PATTERN_HEX = Pattern.compile("^0x[0-9a-fA-F]+$");
      public static final Pattern PATTERN_REFERENCE = Pattern.compile("^([?@])(([^\\s:@?/]+:)?)([^\\s:@?/]+)/([^\\s:@?/]+)$");

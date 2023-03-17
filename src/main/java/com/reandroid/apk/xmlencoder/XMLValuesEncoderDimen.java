@@ -25,7 +25,7 @@ import com.reandroid.arsc.value.Entry;
     @Override
     void encodeStringValue(Entry entry, String value){
         ValueDecoder.EncodeResult encodeResult =
-                ValueDecoder.encodeDimensionOrFloat(value);
+                ValueDecoder.encodeDimension(value);
         if(encodeResult==null){
             encodeResult=ValueDecoder.encodeHexOrInt(value);
         }
