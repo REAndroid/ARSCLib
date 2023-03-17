@@ -168,10 +168,10 @@ public class ApkModule implements ApkFile {
         }
         return version;
     }
-    public void removeResFilesWithEntry(int resourceId) throws IOException {
+    public void removeResFilesWithEntry(int resourceId) {
         removeResFilesWithEntry(resourceId, null, true);
     }
-    public void removeResFilesWithEntry(int resourceId, ResConfig resConfig, boolean trimEntryArray) throws IOException {
+    public void removeResFilesWithEntry(int resourceId, ResConfig resConfig, boolean trimEntryArray) {
         List<Entry> removedList = removeResFiles(resourceId, resConfig);
         SpecTypePair specTypePair = null;
         for(Entry entry:removedList){
@@ -187,10 +187,10 @@ public class ApkModule implements ApkFile {
             specTypePair.removeNullEntries(resourceId);
         }
     }
-    public List<Entry> removeResFiles(int resourceId) throws IOException {
+    public List<Entry> removeResFiles(int resourceId) {
         return removeResFiles(resourceId, null);
     }
-    public List<Entry> removeResFiles(int resourceId, ResConfig resConfig) throws IOException {
+    public List<Entry> removeResFiles(int resourceId, ResConfig resConfig) {
         List<Entry> results = new ArrayList<>();
         if(resourceId == 0 && resConfig==null){
             return results;
@@ -266,7 +266,7 @@ public class ApkModule implements ApkFile {
         serializer.setWriteInterceptor(interceptor);
         serializer.writeZip(file);
     }
-    private void uncompressNonXmlResFiles() throws IOException {
+    private void uncompressNonXmlResFiles() {
         for(ResFile resFile:listResFiles()){
             if(resFile.isBinaryXml()){
                 continue;
@@ -280,7 +280,7 @@ public class ApkModule implements ApkFile {
     public void removeDir(String dirName){
         getApkArchive().removeDir(dirName);
     }
-    public void validateResourcesDir() throws IOException {
+    public void validateResourcesDir() {
         List<ResFile> resFileList = listResFiles();
         Set<String> existPaths=new HashSet<>();
         List<InputSource> sourceList = getApkArchive().listInputSources();
@@ -308,7 +308,7 @@ public class ApkModule implements ApkFile {
         stringPool.refreshUniqueIdMap();
         getTableBlock().refresh();
     }
-    public void setResourcesRootDir(String dirName) throws IOException {
+    public void setResourcesRootDir(String dirName) {
         List<ResFile> resFileList = listResFiles();
         Set<String> existPaths=new HashSet<>();
         List<InputSource> sourceList = getApkArchive().listInputSources();
@@ -333,12 +333,15 @@ public class ApkModule implements ApkFile {
         stringPool.refreshUniqueIdMap();
         getTableBlock().refresh();
     }
-    public List<ResFile> listResFiles() throws IOException {
+    public List<ResFile> listResFiles() {
         return listResFiles(0, null);
     }
-    public List<ResFile> listResFiles(int resourceId, ResConfig resConfig) throws IOException {
+    public List<ResFile> listResFiles(int resourceId, ResConfig resConfig) {
         List<ResFile> results=new ArrayList<>();
         TableBlock tableBlock=getTableBlock();
+        if (tableBlock==null){
+            return results;
+        }
         TableStringPool stringPool= tableBlock.getStringPool();
         for(InputSource inputSource:getApkArchive().listInputSources()){
             String name=inputSource.getAlias();
@@ -583,7 +586,7 @@ public class ApkModule implements ApkFile {
         mergeFiles(module);
         getUncompressedFiles().merge(module.getUncompressedFiles());
     }
-    private void mergeTable(ApkModule module) throws IOException {
+    private void mergeTable(ApkModule module) {
         if(!module.hasTableBlock()){
             return;
         }
@@ -599,7 +602,7 @@ public class ApkModule implements ApkFile {
         TableBlock coming=module.getTableBlock();
         exist.merge(coming);
     }
-    private void mergeFiles(ApkModule module) throws IOException {
+    private void mergeFiles(ApkModule module) {
         APKArchive archiveExist = getApkArchive();
         APKArchive archiveComing = module.getApkArchive();
         Map<String, InputSource> comingAlias=ApkUtil.toAliasMap(archiveComing.listInputSources());
