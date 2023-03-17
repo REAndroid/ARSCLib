@@ -45,7 +45,12 @@ public class PackageArray extends BlockArray<PackageBlock>
         clearChildes();
     }
     public PackageBlock pickOne(){
-        PackageBlock[] items=getChildes();
+        return pickOne(getChildes(), 0);
+    }
+    public PackageBlock pickOne(int packageId){
+        return pickOne(getChildes(), packageId);
+    }
+    private PackageBlock pickOne(PackageBlock[] items, int packageId){
         if(items==null||items.length==0){
             return null;
         }
@@ -54,6 +59,12 @@ public class PackageArray extends BlockArray<PackageBlock>
         }
         PackageBlock largest=null;
         for(PackageBlock packageBlock:items){
+            if(packageBlock == null){
+                continue;
+            }
+            if(packageId!=0 && packageId!=packageBlock.getId()){
+                continue;
+            }
             if(largest==null){
                 largest=packageBlock;
             }else if(packageBlock.getEntriesGroupMap().size() >

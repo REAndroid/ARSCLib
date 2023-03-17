@@ -61,6 +61,9 @@ import java.util.*;
     public PackageBlock pickOne(){
         return getPackageArray().pickOne();
     }
+    public PackageBlock pickOne(int packageId){
+         return getPackageArray().pickOne(packageId);
+    }
     public void sortPackages(){
         getPackageArray().sort();
     }
