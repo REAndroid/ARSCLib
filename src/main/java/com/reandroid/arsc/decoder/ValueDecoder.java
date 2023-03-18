@@ -213,35 +213,51 @@ import java.util.regex.Pattern;
          if(value==null){
              return null;
          }
-         Matcher matcher=PATTERN_DIMEN.matcher(value);
+         EncodeResult result = encodeFloat(value);
+         if(result == null){
+             result = encodeDimensionOrFraction(value);
+         }
+         return result;
+     }
+     public static EncodeResult encodeFloat(String txt){
+         Float value = parseFloat(txt);
+         if(value==null){
+             return null;
+         }
+         return new EncodeResult(ValueType.FLOAT,
+                 Float.floatToIntBits(value));
+     }
+     public static Float parseFloat(String txt){
+         if(txt==null || txt.indexOf('.')<0){
+             return null;
+         }
+         try{
+             return Float.parseFloat(txt);
+         }catch (NumberFormatException ignored){
+             return null;
+         }
+     }
+     public static EncodeResult encodeDimensionOrFraction(String value){
+         if(value==null){
+             return null;
+         }
+         Matcher matcher = PATTERN_DIMEN.matcher(value);
          if(!matcher.find()){
              return null;
          }
-         String sign = matcher.group(1);
-         String number = matcher.group(2);
-         String unit = matcher.group(3);
+         String number = matcher.group(1);
+         String unit = matcher.group(4);
          float fraction = Float.parseFloat(number);
-         if("-".equals(sign)){
-             fraction=-fraction;
-         }
-         return encodeDimensionOrFloat(fraction, unit);
+         return encodeDimensionOrFraction(fraction, unit);
      }
-     private static EncodeResult encodeDimensionOrFloat(float val, String unit){
-         if(unit==null||"".equals(unit)){
-             return new EncodeResult(ValueType.FLOAT,
-                     Float.floatToIntBits(val));
-         }
+     // TODO: This method should be revised
+     private static EncodeResult encodeDimensionOrFraction(float val, String unit){
          ValueType valueType = ValueType.DIMENSION;
-         int index=0;
-         if("%".equals(unit)||"%p".equals(unit)){
+         if(unit.charAt(0) == '%'){
              val=val/100.0f;
-             if("%p".equals(unit)){
-                 index=1;
-             }
              valueType = ValueType.FRACTION;
-         }else {
-             index=ValueDecoder.getDimensionIndex(unit);
          }
+         int index = ValueDecoder.getDimensionIndex(unit);
          int result = 0;
          int shift = 0;
          if(val!=0.0f){
@@ -736,14 +752,27 @@ import java.util.regex.Pattern;
         }
         return DIMENSION_UNIT_STRS[index];
     }
-    static int getDimensionIndex(String unit){
+    private static int getDimensionIndex(String unit){
+        if("%".equals(unit)){
+            return 0;
+        }
+        if("%p".equals(unit)){
+            return 1;
+        }
+        if("dip".equals(unit)){
+            unit = "dp";
+        }
         String[] dims=DIMENSION_UNIT_STRS;
         for(int i=0;i<dims.length;i++){
             if(dims[i].equals(unit)){
                 return i;
             }
         }
-        return 0;
+        /**
+         * Will not happen, we are are confident of {@link PATTERN_DIMEN}
+         * and NOT fraction checked
+         * */
+        throw new IllegalArgumentException("Unexpected dimension unit: '"+unit+"'");
     }
     private static String getResourceName(EntryStore store, Entry entry, int resourceId){
         if(entry !=null){
@@ -855,15 +884,14 @@ import java.util.regex.Pattern;
             return valueType+": "+String.format("0x%08x", value);
         }
     }
-
-    private static final String[] DIMENSION_UNIT_STRS = new String[] { "px", "dip", "sp", "pt", "in", "mm" };
+    private static final String[] DIMENSION_UNIT_STRS = new String[] { "px", "dp", "sp", "pt", "in", "mm" };
     private static final float MANTISSA_MULT = 1.0f / (1 << 8);
     static final float[] RADIX_MULTS = new float[] {
             1.0f * MANTISSA_MULT, 1.0f / (1 << 7) * MANTISSA_MULT,
             1.0f / (1 << 15) * MANTISSA_MULT, 1.0f / (1 << 23) * MANTISSA_MULT };
 
      public static final Pattern PATTERN_COLOR = Pattern.compile("^#([0-9a-fA-F]{6,8})$");
-     public static final Pattern PATTERN_DIMEN = Pattern.compile("^(-?)([0-9]+\\.[0-9E+]+)([dimnpstx%]{0,3})$");
+     public static final Pattern PATTERN_DIMEN = Pattern.compile("^([+\\-]?[0-9]+(\\.[0-9]+(E\\+?-?[0-9]+)?)?)(px|di?p|sp|pt|in|mm|%p?)$");
      private static final Pattern PATTERN_INTEGER = Pattern.compile("^(-?)([0-9]+)$");
      private static final Pattern PATTERN_HEX = Pattern.compile("^0x[0-9a-fA-F]+$");
      public static final Pattern PATTERN_REFERENCE = Pattern.compile("^([?@])(([^\\s:@?/]+:)?)([^\\s:@?/]+)/([^\\s:@?/]+)$");
