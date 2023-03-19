@@ -250,31 +250,16 @@ import java.util.regex.Pattern;
          float fraction = Float.parseFloat(number);
          return encodeDimensionOrFraction(fraction, unit);
      }
-     // TODO: This method should be revised
-     private static EncodeResult encodeDimensionOrFraction(float val, String unit){
-         ValueType valueType = ValueType.DIMENSION;
-         if(unit.charAt(0) == '%'){
-             val=val/100.0f;
+     private static EncodeResult encodeDimensionOrFraction(float value, String unitSymbol){
+         ComplexUtil.Unit unit = ComplexUtil.Unit.fromSymbol(unitSymbol);
+         ValueType valueType;
+         if(unit == ComplexUtil.Unit.FRACTION || unit == ComplexUtil.Unit.FRACTION_PARENT){
              valueType = ValueType.FRACTION;
+             value = value / 100.0f;
+         }else {
+             valueType = ValueType.DIMENSION;
          }
-         int index = ValueDecoder.getDimensionIndex(unit);
-         int result = 0;
-         int shift = 0;
-         if(val!=0.0f){
-             for(int i=0;i<4;i++){
-                 float fl = val/ValueDecoder.RADIX_MULTS[i];
-                 int fl_int = (int)fl;
-                 int last = (fl_int&0xff);
-                 if(fl_int!=0 && last==0){
-                     shift = i;
-                     result = fl_int;
-                     break;
-                 }
-             }
-         }
-         shift = shift<<4;
-         result = result | shift;
-         result = result | index;
+         int result = ComplexUtil.encodeComplex(value, unit);
          return new EncodeResult(valueType, result);
      }
 
@@ -714,93 +699,11 @@ import java.util.regex.Pattern;
         return String.format("#%08x", rawVal);
     }
     private static String decodeDimensionOrFloat(ValueType valueType, int rawVal){
-        return decodeFloat(rawVal, valueType);
-    }
-    private static String decodeFloat(int val, ValueType valueType){
         if(valueType==ValueType.FLOAT){
-            float f=Float.intBitsToFloat(val);
+            float f=Float.intBitsToFloat(rawVal);
             return Float.toString(f);
         }
-        float f=complexToFloat(val);
-        String unit="";
-        switch (valueType){
-            case FRACTION:
-                f=f*100;
-                if((val & 0x3)==0){
-                    unit="%";
-                }else {
-                    unit="%p";
-                }
-                break;
-            case DIMENSION:
-                int i=(val & 0xf);
-                unit=getDimensionUnit(i);
-                break;
-        }
-        return Float.toString(f)+unit;
-    }
-    private static float complexToFloat(int complex) {
-        int y=(complex >> 4) & 0x3;
-        float result=complex & 0xffffff00;
-        float y2=RADIX_MULTS[y];
-        result=result * y2;
-        return result;
-    }
-    static String getDimensionUnit(int index){
-        if(index<0 || index>DIMENSION_UNIT_STRS.length){
-            index=1;
-        }
-        return DIMENSION_UNIT_STRS[index];
-    }
-    private static int getDimensionIndex(String unit){
-        if("%".equals(unit)){
-            return 0;
-        }
-        if("%p".equals(unit)){
-            return 1;
-        }
-        if("dip".equals(unit)){
-            unit = "dp";
-        }
-        String[] dims=DIMENSION_UNIT_STRS;
-        for(int i=0;i<dims.length;i++){
-            if(dims[i].equals(unit)){
-                return i;
-            }
-        }
-        /**
-         * Will not happen, we are are confident of {@link PATTERN_DIMEN}
-         * and NOT fraction checked
-         * */
-        throw new IllegalArgumentException("Unexpected dimension unit: '"+unit+"'");
-    }
-    private static String getResourceName(EntryStore store, Entry entry, int resourceId){
-        if(entry !=null){
-            EntryGroup group=searchEntryGroup(entry, resourceId);
-            if(group!=null){
-                String name=group.getSpecName();
-                if(name!=null){
-                    return name;
-                }
-            }
-        }
-        if(store==null){
-            return null;
-        }
-        Collection<EntryGroup> foundGroups = store.getEntryGroups(resourceId);
-        return pickResourceName(foundGroups);
-    }
-    private static String pickResourceName(Collection<EntryGroup> groups){
-        if(groups==null){
-            return null;
-        }
-        for(EntryGroup entryGroup:groups){
-            String name=entryGroup.getSpecName();
-            if(name!=null){
-                return name;
-            }
-        }
-        return null;
+        return ComplexUtil.decodeComplex(valueType == ValueType.FRACTION, rawVal);
     }
     private static AttributeBag getAttributeBag(EntryStore store, int resourceId){
         ResTableMapEntry mapEntry=getAttributeValueBag(store, resourceId);
@@ -884,11 +787,6 @@ import java.util.regex.Pattern;
             return valueType+": "+String.format("0x%08x", value);
         }
     }
-    private static final String[] DIMENSION_UNIT_STRS = new String[] { "px", "dp", "sp", "pt", "in", "mm" };
-    private static final float MANTISSA_MULT = 1.0f / (1 << 8);
-    static final float[] RADIX_MULTS = new float[] {
-            1.0f * MANTISSA_MULT, 1.0f / (1 << 7) * MANTISSA_MULT,
-            1.0f / (1 << 15) * MANTISSA_MULT, 1.0f / (1 << 23) * MANTISSA_MULT };
 
      public static final Pattern PATTERN_COLOR = Pattern.compile("^#([0-9a-fA-F]{6,8})$");
      public static final Pattern PATTERN_DIMEN = Pattern.compile("^([+\\-]?[0-9]+(\\.[0-9]+(E\\+?-?[0-9]+)?)?)(px|di?p|sp|pt|in|mm|%p?)$");
