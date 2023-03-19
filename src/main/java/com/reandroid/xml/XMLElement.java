@@ -434,7 +434,6 @@ public class XMLElement extends XMLNode{
 
     /**
      * @param indentScale scale of attributes indent relative to element tag start
-     *  - when less than 0.0f indenting will be off and no new line
      */
     public void setAttributesIndentScale(float indentScale){
         setAttributesIndentScale(indentScale, true);
