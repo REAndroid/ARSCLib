@@ -32,6 +32,7 @@ public class XMLElement extends XMLNode{
     private final List<XMLText> mTexts = new ArrayList<>();
     private XMLElement mParent;
     private int mIndent;
+    private float mAttributeIndentScale = 1.0f;
     private Object mTag;
     private int mResId;
     private float mIndentScale;
@@ -301,7 +302,11 @@ public class XMLElement extends XMLNode{
         return mAttributes.get(name);
     }
     public XMLAttribute removeAttribute(String name){
-        return mAttributes.remove(name);
+        XMLAttribute attribute = mAttributes.remove(name);
+        if(attribute!=null){
+            attribute.setParent(null);
+        }
+        return attribute;
     }
     public XMLAttribute setAttribute(String name, int value){
         return setAttribute(name, String.valueOf(value));
@@ -348,6 +353,7 @@ public class XMLElement extends XMLNode{
             return;
         }
         mAttributes.put(name, attr);
+        attr.setParent(this);
     }
     public void sortChildes(Comparator<XMLElement> comparator){
         if(comparator==null){
@@ -425,21 +431,54 @@ public class XMLElement extends XMLNode{
             }
         }
     }
-    private boolean appendAttributesIndentText(Writer writer) throws IOException {
-        int i=0;
-        String tagName=getTagName();
+
+    /**
+     * @param indentScale scale of attributes indent relative to element tag start
+     *  - when less than 0.0f indenting will be off and no new line
+     */
+    public void setAttributesIndentScale(float indentScale){
+        setAttributesIndentScale(indentScale, true);
+    }
+    public void setAttributesIndentScale(float indentScale, boolean setToChildes){
+        this.mAttributeIndentScale = indentScale;
+        if(!setToChildes){
+            return;
+        }
+        for(XMLElement child:listChildElements()){
+            child.setAttributesIndentScale(indentScale, true);
+        }
+    }
+    private float getAttributeIndentScale(){
+        return mAttributeIndentScale;
+    }
+    private int calculateAttributesIndent(){
+        float scale = getAttributeIndentScale();
+        int indent = 0;
+        String tagName = getTagName();
         if(tagName!=null){
-            i+=tagName.length();
+            indent += tagName.length();
         }
-        i+=2;
-        if(i>15){
-            i=15;
+        indent += 2;
+        if(indent>MAX_ATTRIBUTE_INDENT){
+            indent = MAX_ATTRIBUTE_INDENT;
         }
-        i+=getIndentWidth();
-        int j=0;
-        while (j<i){
-            writer.write(' ');
-            j++;
+        int baseIndent = getIndentWidth();
+        indent = (int) (scale * indent);
+        indent = baseIndent + indent;
+        if(indent<0){
+            indent = 0;
+        }
+        return indent;
+    }
+    private boolean appendAttributesIndentText(Writer writer, boolean appendOnce, int indent) throws IOException {
+        if(indent<=0){
+            return false;
+        }
+        if(appendOnce){
+            writer.write(XMLUtil.NEW_LINE);
+            for(int i=0;i<indent;i++){
+                writer.write(' ');
+            }
         }
         return true;
     }
@@ -557,12 +596,14 @@ public class XMLElement extends XMLNode{
     }
     private boolean appendAttributes(Writer writer, boolean newLineAttributes) throws IOException {
         boolean addedOnce=false;
+        int attributesIndent = calculateAttributesIndent();
+        boolean indentAppend = false;
         for(XMLAttribute attr:listAttributes()){
+            if(newLineAttributes){
+                indentAppend = appendAttributesIndentText(writer, indentAppend, attributesIndent);
+            }
             if(addedOnce){
-                if(newLineAttributes){
-                    writer.write(XMLUtil.NEW_LINE);
-                    appendAttributesIndentText(writer);
-                }else{
+                if(!indentAppend){
                     writer.write(' ');
                 }
             }else {
@@ -745,4 +786,5 @@ public class XMLElement extends XMLNode{
         }
     }
 
+    private static final int MAX_ATTRIBUTE_INDENT = 20;
 }

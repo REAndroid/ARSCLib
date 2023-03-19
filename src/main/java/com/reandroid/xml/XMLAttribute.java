@@ -25,9 +25,16 @@ public class XMLAttribute extends XMLNode{
     private int mValueId;
     private String mName;
     private String mValue;
+    private XMLElement mParent;
     public XMLAttribute(String name, String val){
         mName=name;
         mValue= XMLUtil.escapeXmlChars(val);
+    }
+    public XMLElement getParent(){
+        return mParent;
+    }
+    void setParent(XMLElement parent){
+        this.mParent = parent;
     }
     public void setNameId(int id){
         mNameId=id;
