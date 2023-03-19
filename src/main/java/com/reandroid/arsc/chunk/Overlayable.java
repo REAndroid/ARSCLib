@@ -119,14 +119,15 @@
          jsonObject.put(NAME_actor, getActor());
          JSONArray jsonArray = new JSONArray();
          for(OverlayablePolicy policy:listOverlayablePolicies()){
-             jsonArray.put(policy);
+             jsonArray.put(policy.toJson());
          }
+         jsonObject.put(NAME_policies, jsonArray);
          return jsonObject;
      }
      @Override
      public void fromJson(JSONObject json) {
-         setName(json.getString(NAME_name));
-         setActor(json.getString(NAME_actor));
+         setName(json.optString(NAME_name));
+         setActor(json.optString(NAME_actor));
          JSONArray jsonArray = json.getJSONArray(NAME_policies);
          int length = jsonArray.length();
          BlockList<OverlayablePolicy> policyList = this.policyList;
