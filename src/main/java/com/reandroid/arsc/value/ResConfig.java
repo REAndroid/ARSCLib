@@ -132,116 +132,81 @@ public class ResConfig extends FixedBlockContainer
         }
         return mValuesContainer.getShortUnsigned(OFFSET_mnc);
     }
-    public void setLanguageIn0(byte b){
+
+    public byte[] getLanguageBytes(){
         if(getConfigSize()<SIZE_16){
-            if(b==0){
+            return new byte[2];
+        }
+        return mValuesContainer.getByteArray(OFFSET_language, 2);
+    }
+    public void setLanguageBytes(byte[] bytes){
+        if(getConfigSize()<SIZE_16){
+            if(isNull(bytes)){
                 return;
             }
-            throw new IllegalArgumentException("Can not set languageIn0 for config size="+getConfigSize());
+            throw new IllegalArgumentException("Can not set language bytes for config size="+getConfigSize());
         }
-        mValuesContainer.put(OFFSET_languageIn0, b);
+        mValuesContainer.putByteArray(OFFSET_language, bytes);
     }
-    public byte getLanguageIn0(){
-        if(getConfigSize()<SIZE_16){
-            return 0;
-        }
-        return mValuesContainer.get(OFFSET_languageIn0);
+    public char[] getLanguageChars(){
+        byte[] bytes = getLanguageBytes();
+        return unPackLanguage(bytes[0], bytes[1]);
     }
-    public void setLanguageIn1(byte b){
-        if(getConfigSize()<SIZE_16){
-            if(b==0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set languageIn1 for config size="+getConfigSize());
-        }
-        mValuesContainer.put(OFFSET_languageIn1, b);
-    }
-    public byte getLanguageIn1(){
-        if(getConfigSize()<SIZE_16){
-            return 0;
-        }
-        return mValuesContainer.get(OFFSET_languageIn1);
-    }
-    public String getLanguage(){
-        return ResConfigHelper.decodeLanguage(getLanguageChars());
+    public void setLanguage(char[] chars){
+        setLanguageBytes(packLanguage(chars));
     }
     public void setLanguage(String language){
-        char[] chs=new char[2];
+        char[] chs = null;
         if(language!=null){
             chs=language.toCharArray();
         }
         setLanguage(chs);
     }
-    public char[] getLanguageChars(){
-        byte b0=getLanguageIn0();
-        byte b1=getLanguageIn1();
-        return unpackLanguageOrRegion(b0, b1, 'a');
-    }
-    public void setLanguage(char[] chs){
-        byte[] bts;
-        if(isNull(chs)){
-            bts=new byte[2];
-        }else {
-            bts=packLanguageOrRegion(chs);
+    public String getLanguage(){
+        char[] chars = getLanguageChars();
+        if(isNull(chars)){
+            return null;
         }
-        setLanguageIn0(bts[0]);
-        setLanguageIn1(bts[1]);
+        return new String(chars);
     }
-    public void setCountryIn0(byte b){
+
+    public byte[] getRegionBytes(){
         if(getConfigSize()<SIZE_16){
-            if(b==0){
+            return new byte[2];
+        }
+        return mValuesContainer.getByteArray(OFFSET_region, 2);
+    }
+    public void setRegionBytes(byte[] bytes){
+        if(getConfigSize()<SIZE_16){
+            if(isNull(bytes)){
                 return;
             }
-            throw new IllegalArgumentException("Can not set countryIn0 for config size="+getConfigSize());
+            throw new IllegalArgumentException("Can not set region bytes for config size="+getConfigSize());
         }
-        mValuesContainer.put(OFFSET_countryIn0, b);
-    }
-    public byte getCountryIn0(){
-        if(getConfigSize()<SIZE_16){
-            return 0;
-        }
-        return mValuesContainer.get(OFFSET_countryIn0);
-    }
-    public void setCountryIn1(byte b){
-        if(getConfigSize()<SIZE_16){
-            if(b==0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set countryIn1 for config size="+getConfigSize());
-        }
-        mValuesContainer.put(OFFSET_countryIn1, b);
-    }
-    public byte getCountryIn1(){
-        if(getConfigSize()<SIZE_16){
-            return 0;
-        }
-        return mValuesContainer.get(OFFSET_countryIn1);
-    }
-    public String getRegion(){
-        return ResConfigHelper.decodeRegion(getRegionChars());
+        mValuesContainer.putByteArray(OFFSET_region, bytes);
     }
     public char[] getRegionChars(){
-        byte b0=getCountryIn0();
-        byte b1=getCountryIn1();
-        return unpackLanguageOrRegion(b0, b1, '0');
+        byte[] bytes = getRegionBytes();
+        return unPackRegion(bytes[0], bytes[1]);
     }
-    public void setRegion(char[] chs){
-        byte[] bts;
-        if(isNull(chs)){
-            bts=new byte[2];
-        }else {
-            bts=packLanguageOrRegion(chs);
-        }
-        setCountryIn0(bts[0]);
-        setCountryIn1(bts[1]);
+    public void setRegion(char[] chars){
+        setRegionBytes(packRegion(chars));
     }
     public void setRegion(String region){
-        char[] chs=new char[2];
+        char[] chars = null;
         if(region!=null){
-            chs=region.toCharArray();
+            chars = region.toCharArray();
         }
-        setRegion(chs);
+        setRegion(chars);
     }
+    public String getRegion(){
+        char[] chars = getRegionChars();
+        if(isNull(chars)){
+            return null;
+        }
+        return new String(chars);
+    }
+
     public void setOrientation(byte b){
         if(getConfigSize()<SIZE_16){
             if(b==0){
@@ -860,61 +825,57 @@ public class ResConfig extends FixedBlockContainer
     }
 
 
-    private static char[] unpackLanguageOrRegion(byte b0, byte b1, char base){
-        if ((((b0 >> 7) & 1) == 1)) {
-            int first = b1 & 0x1F;
-            int x=((b1 & 0xE0) >> 5);
-            int y=((b0 & 0x03) << 3);
-            int second = x + y;
-            int third = (b0 & 0x7C) >> 2;
-
-            return new char[] { (char) (first + base), (char) (second + base), (char) (third + base) };
-        }
-        return new char[] { (char) b0, (char) b1 };
+    private static char[] unPackLanguage(byte in0, byte in1) {
+        return unpackLanguageOrRegion(in0, in1, 'a');
     }
-    private static byte[] packLanguageOrRegion(char[] chs){
-        if(chs==null || chs.length<2){
-            return new byte[2];
-        }
-        if(chs.length==2 || chs.length>3){
-            byte[] result=new byte[2];
-            result[0]=(byte) chs[0];
-            result[1]=(byte) chs[1];
-            return result;
-        }
-        int base=getBase(chs[0]);
-        int first=chs[0] - base;
-        int second=chs[1] - base;
-        int third=chs[2] - base;
-
-        int b1Right=first & 0x1F;
-
-        int b0Left=third;
-        b0Left=b0Left << 2;
-
-        int b1Left=second & 7;
-        b1Left=b1Left<<5;
-
-        int b1=(b1Left | b1Right);
-
-        int b0Right=second >> 3;
-        b0Right=b0Right & 0x3;
-
-        int b0=(b0Left | b0Right);
-        return new byte[] { (byte) b0, (byte) b1 };
+    private static char[] unPackRegion(byte in0, byte in1) {
+        return unpackLanguageOrRegion(in0, in1, '0');
     }
-    private static int getBase(char ch){
-        int result=ch;
-        if(ch>='0' && ch<='9'){
-            result='0';
-        }else if(ch>='a' && ch<='z'){
-            result='a';
-        }else if(ch>='A' && ch<='Z'){
-            result='A';
+    private static char[] unpackLanguageOrRegion(byte in0, byte in1, char base) {
+        char[] out;
+        if ((in0 & 0x80) !=0) {
+            out = new char[3];
+            byte first = (byte) (in1 & 0x1f);
+            byte second = (byte) (((in1 & 0xe0) >> 5) + ((in0 & 0x03) << 3));
+            byte third = (byte) ((in0 & 0x7c) >> 2);
+
+            out[0] = (char) (first + base);
+            out[1] = (char) (second + base);
+            out[2] = (char) (third + base);
+        }else if (in0 != 0) {
+            out = new char[2];
+            out[0] = (char) in0;
+            out[1] = (char) in1;
+        }else {
+            out = new char[2];
         }
-        result=result+32;
-        return result;
+        return out;
     }
+    private static byte[] packLanguage(char[] language) {
+        return packLanguageOrRegion(language, 'a');
+    }
+    private static byte[] packRegion(char[] region) {
+        return packLanguageOrRegion(region, '0');
+    }
+    private static byte[] packLanguageOrRegion(char[] in, char base) {
+        byte[] out = new byte[2];
+        if(in==null || in.length<2){
+            return out;
+        }
+        if (in[2] == 0 || in[2] == '-') {
+            out[0] = (byte) in[0];
+            out[1] = (byte) in[1];
+        } else {
+            byte first = (byte) ((in[0] - base) & 0x007f);
+            byte second = (byte) ((in[1] - base) & 0x007f);
+            byte third = (byte) ((in[2] - base) & 0x007f);
+
+            out[0] = (byte) (0x80 | (third << 2) | (second >> 3));
+            out[1] = (byte) ((second << 5) | first);
+        }
+        return out;
+    }
+
     private static byte[] toByteArray(char[] chs, int len){
         byte[] bts=new byte[len];
         if(chs==null){
@@ -1201,10 +1162,8 @@ public class ResConfig extends FixedBlockContainer
 
     private static final int OFFSET_mcc = 0;
     private static final int OFFSET_mnc = 2;
-    private static final int OFFSET_languageIn0 = 4;
-    private static final int OFFSET_languageIn1 = 5;
-    private static final int OFFSET_countryIn0 = 6;
-    private static final int OFFSET_countryIn1 = 7;
+    private static final int OFFSET_language = 4;
+    private static final int OFFSET_region = 6;
     private static final int OFFSET_orientation = 8;
     private static final int OFFSET_touchscreen = 9;
     private static final int OFFSET_density = 10;

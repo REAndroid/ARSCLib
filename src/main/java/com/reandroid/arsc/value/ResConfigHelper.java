@@ -239,38 +239,18 @@ public class ResConfigHelper {
         }
         return true;
     }
-    public static String decodeLanguage(char[] language){
-        StringBuilder builder=new StringBuilder();
-        if(language[0]!=0){
-            builder.append(language[0]).append(language[1]);
-        }
-        if(builder.length()==0){
-            return null;
-        }
-        return builder.toString();
-    }
-    public static String decodeRegion(char[] region){
-        StringBuilder builder=new StringBuilder();
-        if(region[0]!=0){
-            builder.append(region[0]).append(region[1]);
-        }
-        if(builder.length()==0){
-            return null;
-        }
-        return builder.toString();
-    }
     public static String decodeLocale(ResConfig resConfig){
-        char[] region=resConfig.getRegionChars();
-        char[] language=resConfig.getLanguageChars();
+        String region = resConfig.getRegion();
+        String language = resConfig.getLanguage();
         StringBuilder builder=new StringBuilder();
-        if(language[0]!=0){
-            builder.append(language[0]).append(language[1]);
+        if(language!=null){
+            builder.append(language);
         }
-        if(region[0]!=0){
-            if(language[0]!=0){
+        if(region!=null){
+            if(language!=null){
                 builder.append('-');
             }
-            builder.append(region[0]).append(region[1]);
+            builder.append(region);
         }
         if(builder.length()==0){
             return null;
