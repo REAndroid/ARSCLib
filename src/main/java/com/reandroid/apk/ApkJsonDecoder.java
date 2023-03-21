@@ -77,9 +77,17 @@ public class ApkJsonDecoder {
         jsonObject.write(file);
         addDecoded(path);
     }
+    // TODO: temporary fix
     private void writeRootFiles(File dir) throws IOException {
         for(InputSource inputSource:apkModule.getApkArchive().listInputSources()){
-            writeRootFile(dir, inputSource);
+            try{
+                writeRootFile(dir, inputSource);
+            }catch (IOException ex){
+                APKLogger logger = apkModule.getApkLogger();
+                if(logger!=null){
+                    logger.logMessage("ERROR: "+ex.getMessage());
+                }
+            }
         }
     }
     private void writeRootFile(File dir, InputSource inputSource) throws IOException {

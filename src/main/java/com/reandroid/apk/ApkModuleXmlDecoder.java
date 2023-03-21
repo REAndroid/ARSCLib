@@ -279,7 +279,11 @@ import java.util.*;
         return element;
     }
     private String getPackageDirName(PackageBlock packageBlock){
-        return packageBlock.getIndex()+"-"+packageBlock.getName();
+        String name = ApkUtil.sanitizeForFileName(packageBlock.getName());
+        if(name==null){
+            name="package";
+        }
+        return packageBlock.getIndex()+"-"+name;
     }
     private void extractRootFiles(File outDir) throws IOException {
         logMessage("Extracting root files");
@@ -300,9 +304,14 @@ import java.util.*;
         if(!dir.exists()){
             dir.mkdirs();
         }
-        FileOutputStream outputStream=new FileOutputStream(file);
-        inputSource.write(outputStream);
-        outputStream.close();
+        // TODO:Temporary fix
+        try{
+            FileOutputStream outputStream=new FileOutputStream(file);
+            inputSource.write(outputStream);
+            outputStream.close();
+        }catch (IOException ex){
+            logMessage("ERROR: "+ex.getMessage());
+        }
     }
     private boolean containsDecodedPath(String path){
         return mDecodedPaths.contains(path);

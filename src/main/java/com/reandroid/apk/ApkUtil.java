@@ -21,6 +21,53 @@ import java.io.File;
 import java.util.*;
 
 public class ApkUtil {
+    public static String sanitizeForFileName(String name){
+        if(name==null){
+            return null;
+        }
+        StringBuilder builder = new StringBuilder();
+        char[] chars = name.toCharArray();
+        boolean skipNext = true;
+        int length = 0;
+        int lengthMax = MAX_FILE_NAME_LENGTH;
+        for(int i=0;i<chars.length;i++){
+            if(length>=lengthMax){
+                break;
+            }
+            char ch = chars[i];
+            if(isGoodFileNameSymbol(ch)){
+                if(!skipNext){
+                    builder.append(ch);
+                    length++;
+                }
+                skipNext=true;
+                continue;
+            }
+            if(!isGoodFileNameChar(ch)){
+                skipNext = true;
+                continue;
+            }
+            builder.append(ch);
+            length++;
+            skipNext=false;
+        }
+        if(length==0){
+            return null;
+        }
+        return builder.toString();
+    }
+    private static boolean isGoodFileNameSymbol(char ch){
+        return ch == '.'
+                || ch == '+'
+                || ch == '-'
+                || ch == '_'
+                || ch == '#';
+    }
+    private static boolean isGoodFileNameChar(char ch){
+        return (ch >= '0' && ch <= '9')
+                || (ch >= 'A' && ch <= 'Z')
+                || (ch >= 'a' && ch <= 'z');
+    }
     public static int parseHex(String hex){
         long l=Long.decode(hex);
         return (int) l;
@@ -144,4 +191,6 @@ public class ApkUtil {
 
     public static final String TAG_STRING_ARRAY = "string-array";
     public static final String TAG_INTEGER_ARRAY = "integer-array";
+
+    private static final int MAX_FILE_NAME_LENGTH = 50;
 }
