@@ -15,7 +15,7 @@
   */
 package com.reandroid.arsc.item;
 
-import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.decoder.ThreeByteCharsetDecoder;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONConvert;
@@ -212,9 +212,18 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
             return charBuffer.toString();
         } catch (CharacterCodingException ex) {
             if(isUtf8){
-                return new String(allStringBytes, offLen[0], offLen[1], StandardCharsets.UTF_8);
+                return tryThreeByteDecoder(allStringBytes, offLen[0], offLen[1]);
             }
             return new String(allStringBytes, offLen[0], offLen[1], StandardCharsets.UTF_16LE);
+        }
+    }
+    private String tryThreeByteDecoder(byte[] bytes, int offset, int length){
+        try {
+            ByteBuffer byteBuffer = ByteBuffer.wrap(bytes, offset, length);
+            CharBuffer charBuffer = DECODER_3B.decode(byteBuffer);
+            return charBuffer.toString();
+        } catch (CharacterCodingException e) {
+            return new String(bytes, offset, length, StandardCharsets.UTF_8);
         }
     }
     public boolean hasStyle(){
@@ -314,7 +323,7 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
 
 
     private static byte[] encodeUtf8ToBytes(String str){
-        byte[] bts=new byte[0];
+        byte[] bts;
         byte[] lenBytes=new byte[2];
         if(str!=null){
             bts=str.getBytes(StandardCharsets.UTF_8);
@@ -400,6 +409,7 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
 
     private static final CharsetDecoder UTF16LE_DECODER = StandardCharsets.UTF_16LE.newDecoder();
     private static final CharsetDecoder UTF8_DECODER = StandardCharsets.UTF_8.newDecoder();
+    private static final CharsetDecoder DECODER_3B = ThreeByteCharsetDecoder.INSTANCE;
 
     public static final String NAME_string="string";
     public static final String NAME_style="style";
