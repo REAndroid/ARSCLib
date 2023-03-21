@@ -279,7 +279,7 @@ public class ResConfig extends FixedBlockContainer
         setDensity((short) ResConfigHelper.encodeDensity(density));
     }
     public void setKeyboard(byte b){
-        if(getConfigSize()<SIZE_16){
+        if(getConfigSize()<SIZE_28){
             if(b==0){
                 return;
             }
@@ -288,7 +288,7 @@ public class ResConfig extends FixedBlockContainer
         mValuesContainer.put(OFFSET_keyboard, b);
     }
     public byte getKeyboardByte(){
-        if(getConfigSize()<SIZE_16){
+        if(getConfigSize()<SIZE_28){
             return 0;
         }
         return mValuesContainer.get(OFFSET_keyboard);
@@ -304,7 +304,7 @@ public class ResConfig extends FixedBlockContainer
         setKeyboard(b);
     }
     public void setNavigation(byte b){
-        if(getConfigSize()<SIZE_16){
+        if(getConfigSize()<SIZE_28){
             if(b==0){
                 return;
             }
@@ -313,7 +313,7 @@ public class ResConfig extends FixedBlockContainer
         mValuesContainer.put(OFFSET_navigation, b);
     }
     public byte getNavigationByte(){
-        if(getConfigSize()<SIZE_16){
+        if(getConfigSize()<SIZE_28){
             return 0;
         }
         return mValuesContainer.get(OFFSET_navigation);
