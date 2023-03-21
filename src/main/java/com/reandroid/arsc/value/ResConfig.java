@@ -862,7 +862,7 @@ public class ResConfig extends FixedBlockContainer
         if(in==null || in.length<2){
             return out;
         }
-        if (in[2] == 0 || in[2] == '-') {
+        if (in.length==2 || in[2] == 0 || in[2] == '-') {
             out[0] = (byte) in[0];
             out[1] = (byte) in[1];
         } else {
