@@ -53,6 +53,9 @@ import java.util.List;
     public HeaderBlock(ChunkType chunkType){
         this(chunkType.ID);
     }
+    public int getMinimumSize(){
+        return countBytes();
+    }
     public ByteArray getExtraBytes() {
          return extraBytes;
     }

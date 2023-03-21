@@ -44,6 +44,10 @@ public class TypeHeader extends HeaderBlock{
         addChild(config);
     }
 
+    @Override
+    public int getMinimumSize(){
+        return TYPE_MIN_SIZE;
+    }
     public ByteItem getId() {
         return id;
     }
@@ -72,4 +76,7 @@ public class TypeHeader extends HeaderBlock{
                 +", entriesStart=" + getEntriesStart()
                 +", config=" + getConfig() + '}';
     }
+
+    //typeHeader.countBytes() - getConfig().countBytes() + ResConfig.SIZE_16
+    private static final int TYPE_MIN_SIZE = 36;
 }

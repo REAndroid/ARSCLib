@@ -30,6 +30,12 @@
      public InfoHeader() {
          this((short) 0);
      }
+
+     @Override
+     public int getMinimumSize(){
+         return INFO_MIN_SIZE;
+     }
+
      @Override
      void initExtraBytes(ByteArray extraBytes, int difference){
      }
@@ -55,4 +61,6 @@
          infoHeader.readBytes(blockReader);
          return infoHeader;
      }
+
+     private static final int INFO_MIN_SIZE = 8;
  }

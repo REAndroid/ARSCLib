@@ -70,7 +70,7 @@ import java.io.*;
      }
     public TypeHeader readTypeHeader() throws IOException{
         TypeHeader typeHeader = new TypeHeader();
-        if(available() < typeHeader.countBytes()){
+        if(available() < typeHeader.getMinimumSize()){
             return null;
         }
         int pos = getPosition();
@@ -80,7 +80,7 @@ import java.io.*;
     }
     public InfoHeader readHeaderBlock() throws IOException {
         InfoHeader infoHeader = new InfoHeader();
-        if(available() < infoHeader.countBytes()){
+        if(available() < infoHeader.getMinimumSize()){
             return null;
         }
         int pos = getPosition();
