@@ -19,8 +19,11 @@ import com.reandroid.archive.APKArchive;
 import com.reandroid.archive.FileInputSource;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.json.JSONArray;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -40,7 +43,26 @@ public class ApkJsonEncoder {
         module.setAPKLogger(apkLogger);
         loadUncompressed(module, moduleDir);
         applyResourceId(module, moduleDir);
+        restorePathMap(moduleDir, module);
         return module;
+    }
+    private void restorePathMap(File dir, ApkModule apkModule){
+        File file = new File(dir, PathMap.JSON_FILE);
+        if(!file.isFile()){
+            return;
+        }
+        logMessage("Restoring file path ...");
+        PathMap pathMap = new PathMap();
+        FileInputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream(file);
+        } catch (FileNotFoundException exception) {
+            logError("Failed to load path-map", exception);
+            return;
+        }
+        JSONArray jsonArray = new JSONArray(inputStream);
+        pathMap.fromJson(jsonArray);
+        pathMap.restore(apkModule);
     }
     private void applyResourceId(ApkModule apkModule, File moduleDir) {
         if(!apkModule.hasTableBlock()){

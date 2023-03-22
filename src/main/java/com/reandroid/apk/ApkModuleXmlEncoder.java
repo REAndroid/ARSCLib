@@ -19,9 +19,11 @@ package com.reandroid.apk;
  import com.reandroid.archive.FileInputSource;
  import com.reandroid.apk.xmlencoder.RESEncoder;
  import com.reandroid.arsc.chunk.TableBlock;
+ import com.reandroid.json.JSONArray;
  import com.reandroid.xml.XMLException;
 
  import java.io.File;
+ import java.io.FileInputStream;
  import java.io.IOException;
  import java.util.List;
 
@@ -38,6 +40,18 @@ package com.reandroid.apk;
          resEncoder.scanDirectory(mainDirectory);
          File rootDir=new File(mainDirectory, "root");
          scanRootDir(rootDir);
+         restorePathMap(mainDirectory);
+     }
+     private void restorePathMap(File dir) throws IOException{
+         File file = new File(dir, PathMap.JSON_FILE);
+         if(!file.isFile()){
+             return;
+         }
+         PathMap pathMap = new PathMap();
+         FileInputStream inputStream = new FileInputStream(file);
+         JSONArray jsonArray = new JSONArray(inputStream);
+         pathMap.fromJson(jsonArray);
+         pathMap.restore(getApkModule());
      }
      public ApkModule getApkModule(){
          return resEncoder.getApkModule();

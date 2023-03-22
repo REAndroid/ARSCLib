@@ -48,6 +48,10 @@ import java.util.*;
         this.decodedEntries = new HashMap<>();
         this.mDecodedPaths = new HashSet<>();
     }
+    public void sanitizeFilePaths(){
+        PathSanitizer sanitizer = new PathSanitizer(apkModule);
+        sanitizer.sanitize();
+    }
     public void decodeTo(File outDir)
             throws IOException, XMLException {
         this.decodedEntries.clear();
@@ -74,6 +78,14 @@ import java.util.*;
         decodeValues(tableBlock, outDir, tableBlock);
 
         extractRootFiles(outDir);
+
+        writePathMap(outDir);
+    }
+    private void writePathMap(File dir) throws IOException {
+        PathMap pathMap = new PathMap();
+        pathMap.add(apkModule.getApkArchive());
+        File file = new File(dir, PathMap.JSON_FILE);
+        pathMap.toJson().write(file);
     }
     private void decodePackageInfo(File outDir, TableBlock tableBlock) throws IOException {
         for(PackageBlock packageBlock:tableBlock.listPackages()){
@@ -103,22 +115,21 @@ import java.util.*;
     }
     private void decodeResRaw(File outDir, ResFile resFile)
             throws IOException {
-        Entry entry =resFile.pickOne();
+        Entry entry = resFile.pickOne();
         PackageBlock packageBlock= entry.getPackageBlock();
 
         File pkgDir=new File(outDir, getPackageDirName(packageBlock));
-        File resDir=new File(pkgDir, ApkUtil.RES_DIR_NAME);
-        String path=resFile.buildPath();
-        path=path.replace('/', File.separatorChar);
-        File file=new File(resDir, path);
+        String alias = resFile.buildPath(ApkUtil.RES_DIR_NAME);
+        String path = alias.replace('/', File.separatorChar);
+        File file=new File(pkgDir, path);
         File dir=file.getParentFile();
         if(!dir.exists()){
             dir.mkdirs();
         }
-
         FileOutputStream outputStream=new FileOutputStream(file);
         resFile.getInputSource().write(outputStream);
         outputStream.close();
+        resFile.setFilePath(alias);
 
         addDecodedEntry(entry);
     }
@@ -130,16 +141,18 @@ import java.util.*;
                 resFile.getInputSource().getName());
 
         File pkgDir=new File(outDir, getPackageDirName(packageBlock));
-        File resDir=new File(pkgDir, ApkUtil.RES_DIR_NAME);
-        String path=resFile.buildPath();
+        String alias = resFile.buildPath(ApkUtil.RES_DIR_NAME);
+        String path = alias.replace('/', File.separatorChar);
         path=path.replace('/', File.separatorChar);
-        File file=new File(resDir, path);
+        File file=new File(pkgDir, path);
 
         logVerbose("Decoding: "+path);
         XMLNamespaceValidator namespaceValidator=new XMLNamespaceValidator(resXmlDocument);
         namespaceValidator.validate();
         XMLDocument xmlDocument= resXmlDocument.decodeToXml(entryStore, packageBlock.getId());
         xmlDocument.save(file, true);
+
+        resFile.setFilePath(alias);
 
         addDecodedEntry(resFile.pickOne());
     }
@@ -304,14 +317,9 @@ import java.util.*;
         if(!dir.exists()){
             dir.mkdirs();
         }
-        // TODO:Temporary fix
-        try{
-            FileOutputStream outputStream=new FileOutputStream(file);
-            inputSource.write(outputStream);
-            outputStream.close();
-        }catch (IOException ex){
-            logMessage("ERROR: "+ex.getMessage());
-        }
+        FileOutputStream outputStream=new FileOutputStream(file);
+        inputSource.write(outputStream);
+        outputStream.close();
     }
     private boolean containsDecodedPath(String path){
         return mDecodedPaths.contains(path);

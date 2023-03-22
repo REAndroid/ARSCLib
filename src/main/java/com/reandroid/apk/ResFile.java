@@ -135,14 +135,23 @@ public class ResFile {
         return new File(dir, path);
     }
     public String buildPath(){
-        Entry entry =pickOne();
-        TypeBlock typeBlock= entry.getTypeBlock();
-        StringBuilder builder=new StringBuilder();
+        return buildPath(null);
+    }
+    public String buildPath(String parent){
+        Entry entry = pickOne();
+        StringBuilder builder = new StringBuilder();
+        if(parent!=null){
+            builder.append(parent);
+            if(!parent.endsWith("/")){
+                builder.append('/');
+            }
+        }
+        TypeBlock typeBlock = entry.getTypeBlock();
         builder.append(typeBlock.getTypeName());
         builder.append(typeBlock.getQualifiers());
         builder.append('/');
         builder.append(entry.getName());
-        String ext=getFileExtension();
+        String ext = getFileExtension();
         if(ext!=null){
             builder.append(ext);
         }

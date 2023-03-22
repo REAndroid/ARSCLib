@@ -39,6 +39,10 @@ public class ApkJsonDecoder {
     public ApkJsonDecoder(ApkModule apkModule){
         this(apkModule, false);
     }
+    public void sanitizeFilePaths(){
+        PathSanitizer sanitizer = new PathSanitizer(apkModule);
+        sanitizer.sanitize();
+    }
     public File writeToDirectory(File dir) throws IOException {
         this.decodedPaths.clear();
         writeUncompressed(dir);
@@ -48,7 +52,14 @@ public class ApkJsonDecoder {
         //writePublicXml(dir);
         writeResources(dir);
         writeRootFiles(dir);
+        writePathMap(dir);
         return new File(dir, apkModule.getModuleName());
+    }
+    private void writePathMap(File dir) throws IOException {
+        PathMap pathMap = new PathMap();
+        pathMap.add(apkModule.getApkArchive());
+        File file = toPathMapJsonFile(dir);
+        pathMap.toJson().write(file);
     }
     private void writeUncompressed(File dir) throws IOException {
         File file=toUncompressedJsonFile(dir);
@@ -77,17 +88,9 @@ public class ApkJsonDecoder {
         jsonObject.write(file);
         addDecoded(path);
     }
-    // TODO: temporary fix
     private void writeRootFiles(File dir) throws IOException {
         for(InputSource inputSource:apkModule.getApkArchive().listInputSources()){
-            try{
-                writeRootFile(dir, inputSource);
-            }catch (IOException ex){
-                APKLogger logger = apkModule.getApkLogger();
-                if(logger!=null){
-                    logger.logMessage("ERROR: "+ex.getMessage());
-                }
-            }
+            writeRootFile(dir, inputSource);
         }
     }
     private void writeRootFile(File dir, InputSource inputSource) throws IOException {
@@ -185,6 +188,10 @@ public class ApkJsonDecoder {
         File file=new File(dir, apkModule.getModuleName());
         String name = "public.xml";
         return new File(file, name);
+    }
+    private File toPathMapJsonFile(File dir){
+        File file = new File(dir, apkModule.getModuleName());
+        return new File(file, PathMap.JSON_FILE);
     }
     private File toUncompressedJsonFile(File dir){
         File file = new File(dir, apkModule.getModuleName());
