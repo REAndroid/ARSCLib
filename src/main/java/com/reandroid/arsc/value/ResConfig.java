@@ -1220,11 +1220,11 @@ import java.util.Arrays;
     }
     public static final class UiModeNight extends Flag{
         public static final int MASK_UI_MODE_NIGHT = 0x30;
+        public static final UiModeNight NONIGHT = new UiModeNight("nonight",0x10);
         public static final UiModeNight NIGHT = new UiModeNight("night",0x20);
-        public static final UiModeNight NONIGHT = new UiModeNight("nonight",0x20);
         private static final UiModeNight[] VALUES = new UiModeNight[]{
-                NIGHT,
-                NONIGHT
+                NONIGHT,
+                NIGHT
         };
         private UiModeNight(String name, int flag) {
             super(name, flag);
