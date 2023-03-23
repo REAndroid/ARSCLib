@@ -33,6 +33,7 @@ public class ResConfigHelper {
         builder.append(decodeOrientation(resConfig));
         builder.append(decodeScreenLayout(resConfig));
         builder.append(decodeScreenLayout2(resConfig));
+        builder.append(decodeColorMode(resConfig));
         builder.append(decodeScreenSize(resConfig));
         builder.append(decodeDensity(resConfig));
         builder.append(decodeScreenHeightDp(resConfig));
@@ -101,6 +102,7 @@ public class ResConfigHelper {
         encodeOrientation(resConfig, split);
         encodeScreenLayout(resConfig, split);
         encodeScreenLayout2(resConfig, split);
+        encodeColorMode(resConfig, split);
         encodeMcc(resConfig, split);
         encodeMnc(resConfig, split);
         encodeScreenSize(resConfig, split);
@@ -287,181 +289,34 @@ public class ResConfigHelper {
         return builder.toString();
     }
     private static void encodeNavigation(ResConfig resConfig, String[] split){
-        byte navigation=0;
-        for(int i=0;i<split.length;i++){
-            String s=split[i];
-            if(s==null){
-                continue;
-            }
-            switch (s) {
-                case "nonav":
-                    navigation = NAVIGATION_NONAV;
-                    break;
-                case "dpad":
-                    navigation = NAVIGATION_DPAD;
-                    break;
-                case "trackball":
-                    navigation = NAVIGATION_TRACKBALL;
-                    break;
-                case "wheel":
-                    navigation = NAVIGATION_WHEEL;
-                    break;
-                default:
-                    continue;
-            }
-            split[i]=null;
-            break;
-        }
-        resConfig.setNavigation(navigation);
+        resConfig.setNavigation(ResConfig.Navigation.fromQualifiers(split));
     }
     private static String decodeNavigation(ResConfig resConfig){
         StringBuilder ret=new StringBuilder();
-        switch (resConfig.getNavigationByte()) {
-            case NAVIGATION_NONAV:
-                ret.append("-nonav");
-                break;
-            case NAVIGATION_DPAD:
-                ret.append("-dpad");
-                break;
-            case NAVIGATION_TRACKBALL:
-                ret.append("-trackball");
-                break;
-            case NAVIGATION_WHEEL:
-                ret.append("-wheel");
-                break;
+        ResConfig.Navigation navigation = resConfig.getNavigation();
+        if(navigation!=null){
+            ret.append('-').append(navigation);
         }
         return ret.toString();
     }
     private static void encodeInputFlags(ResConfig resConfig, String[] split){
-        int inputFlags=0;
-        for(int i=0;i<split.length;i++){
-            String s=split[i];
-            if(s==null){
-                continue;
-            }
-            int val;
-            switch (s) {
-                case "keysexposed":
-                    val = (KEYSHIDDEN_NO);
-                    break;
-                case "keyshidden":
-                    val = (KEYSHIDDEN_YES);
-                    break;
-                case "keyssoft":
-                    val = (KEYSHIDDEN_SOFT);
-                    break;
-                case "navexposed":
-                    val = (NAVHIDDEN_NO);
-                    break;
-                case "navhidden":
-                    val = (NAVHIDDEN_YES);
-                    break;
-                default:
-                    continue;
-            }
-            inputFlags=(inputFlags | val);
-            split[i]=null;
-        }
-        resConfig.setInputFlags((byte)inputFlags);
-    }
-    public static byte encodeInputFlags(String inputFlags){
-        if(inputFlags==null){
-            return 0;
-        }
-        String[] split=inputFlags.split("-");
-        int result=0;
-        for(int i=0;i<split.length;i++){
-            String s=split[i];
-            if(s==null){
-                continue;
-            }
-            int val;
-            switch (s) {
-                case "keysexposed":
-                    val = (KEYSHIDDEN_NO);
-                    break;
-                case "keyshidden":
-                    val = (KEYSHIDDEN_YES);
-                    break;
-                case "keyssoft":
-                    val = (KEYSHIDDEN_SOFT);
-                    break;
-                case "navexposed":
-                    val = (NAVHIDDEN_NO);
-                    break;
-                case "navhidden":
-                    val = (NAVHIDDEN_YES);
-                    break;
-                default:
-                    continue;
-            }
-            result=(result | val);
-            split[i]=null;
-        }
-        return (byte)result;
+        resConfig.setInputFlagsKeysHidden(ResConfig.InputFlagsKeysHidden.fromQualifiers(split));
+        resConfig.setInputFlagsNavHidden(ResConfig.InputFlagsNavHidden.fromQualifiers(split));
     }
     private static String decodeInputFlags(ResConfig resConfig){
-        StringBuilder ret=new StringBuilder();
-        int inputFlags=resConfig.getInputFlagsValue();
-        switch (inputFlags & MASK_KEYSHIDDEN) {
-            case KEYSHIDDEN_NO:
-                ret.append("-keysexposed");
-                break;
-            case KEYSHIDDEN_YES:
-                ret.append("-keyshidden");
-                break;
-            case KEYSHIDDEN_SOFT:
-                ret.append("-keyssoft");
-                break;
-        }
-        switch (inputFlags & MASK_NAVHIDDEN) {
-            case NAVHIDDEN_NO:
-                ret.append("-navexposed");
-                break;
-            case NAVHIDDEN_YES:
-                ret.append("-navhidden");
-                break;
-        }
-        return ret.toString();
-    }
-    public static String decodeInputFlags(byte inputFlags){
         StringBuilder builder=new StringBuilder();
-        switch (inputFlags & MASK_KEYSHIDDEN) {
-            case KEYSHIDDEN_NO:
-                builder.append("-keysexposed");
-                break;
-            case KEYSHIDDEN_YES:
-                builder.append("-keyshidden");
-                break;
-            case KEYSHIDDEN_SOFT:
-                builder.append("-keyssoft");
-                break;
+        ResConfig.InputFlagsKeysHidden keysHidden = resConfig.getInputFlagsKeysHidden();
+        if(keysHidden!=null){
+            builder.append('-').append(keysHidden.toString());
         }
-        switch (inputFlags & MASK_NAVHIDDEN) {
-            case NAVHIDDEN_NO:
-                builder.append("-navexposed");
-                break;
-            case NAVHIDDEN_YES:
-                builder.append("-navhidden");
-                break;
-        }
-        if(builder.length()==0){
-            return null;
+        ResConfig.InputFlagsNavHidden navHidden = resConfig.getInputFlagsNavHidden();
+        if(navHidden!=null){
+            builder.append('-').append(navHidden.toString());
         }
         return builder.toString();
     }
     private static void encodeKeyboard(ResConfig resConfig, String[] split){
-        byte keyboard=0;
-        for(int i=0;i<split.length;i++){
-            ResConfig.Keyboard key = ResConfig.Keyboard.fromName(split[i]);
-            if(key==null){
-                continue;
-            }
-            keyboard=key.getByteValue();
-            split[i]=null;
-            break;
-        }
-        resConfig.setKeyboard(keyboard);
+        resConfig.setKeyboard(ResConfig.Keyboard.fromQualifiers(split));
     }
     private static String decodeKeyboard(ResConfig resConfig){
         ResConfig.Keyboard keyboard=resConfig.getKeyboard();
@@ -470,151 +325,27 @@ public class ResConfigHelper {
         }
         return "-"+keyboard.toString();
     }
-    /*
-    * Encodes density to value
-    * densityName is full name like: mdpi, xxxdpi, 580dpi ... */
-    public static int encodeDensity(String densityName){
-        short density=0;
-        if(densityName==null){
-            return density;
-        }
-        Matcher matcher=PATTERN_DENSITY.matcher(densityName);
-        if(!matcher.find()){
-            return density;
-        }
-        return encodeDensityName(matcher.group(1));
-    }
-    private static int encodeDensityName(String name){
-        if("l".equals(name)){
-            return  DENSITY_LOW;
-        }else if("m".equals(name)){
-            return  DENSITY_MEDIUM;
-        }else if("h".equals(name)){
-            return  DENSITY_HIGH;
-        }else if("tv".equals(name)){
-            return  DENSITY_TV;
-        }else if("xh".equals(name)){
-            return  DENSITY_XHIGH;
-        }else if("xxh".equals(name)){
-            return  DENSITY_XXHIGH;
-        }else if("xxxh".equals(name)){
-            return  DENSITY_XXXHIGH;
-        }else if("any".equals(name)){
-            return  DENSITY_ANY;
-        }else if("no".equals(name)){
-            return  DENSITY_NONE;
-        }else if(isDecimal(name)){
-            return  (short) Integer.parseInt(name);
-        }
-        return 0;
-    }
     private static void encodeDensity(ResConfig resConfig, String[] split){
-        int density=0;
-        for(int i=0;i<split.length;i++){
-            String s=split[i];
-            if(s==null){
-                continue;
-            }
-            Matcher matcher=PATTERN_DENSITY.matcher(s);
-            if(!matcher.find()){
-                continue;
-            }
-            density=encodeDensityName(matcher.group(1));
-            if(density==0){
-                continue;
-            }
-            split[i]=null;
-            break;
-        }
-        resConfig.setDensity((short) density);
+        resConfig.setDensity(ResConfig.Density.fromQualifiers(split));
     }
     private static String decodeDensity(ResConfig resConfig){
         StringBuilder ret=new StringBuilder();
-        int density=resConfig.getDensityValue();
-        switch (density) {
-            case DENSITY_DEFAULT:
-                break;
-            case DENSITY_LOW:
-                ret.append("-ldpi");
-                break;
-            case DENSITY_MEDIUM:
-                ret.append("-mdpi");
-                break;
-            case DENSITY_HIGH:
-                ret.append("-hdpi");
-                break;
-            case DENSITY_TV:
-                ret.append("-tvdpi");
-                break;
-            case DENSITY_XHIGH:
-                ret.append("-xhdpi");
-                break;
-            case DENSITY_XXHIGH:
-                ret.append("-xxhdpi");
-                break;
-            case DENSITY_XXXHIGH:
-                ret.append("-xxxhdpi");
-                break;
-            case DENSITY_ANY:
-                ret.append("-anydpi");
-                break;
-            case DENSITY_NONE:
-                ret.append("-nodpi");
-                break;
-            default:
-                ret.append('-').append(density).append("dpi");
+        ResConfig.Density density=resConfig.getDensity();
+        if(density!=null){
+            ret.append('-').append(density.toString());
         }
         return ret.toString();
     }
-    public static String decodeDensity(int density){
-        switch (density) {
-            case DENSITY_DEFAULT:
-                return null;
-            case DENSITY_LOW:
-                return "ldpi";
-            case DENSITY_MEDIUM:
-                return "mdpi";
-            case DENSITY_HIGH:
-                return "hdpi";
-            case DENSITY_TV:
-                return "tvdpi";
-            case DENSITY_XHIGH:
-                return "xhdpi";
-            case DENSITY_XXHIGH:
-                return "xxhdpi";
-            case DENSITY_XXXHIGH:
-                return "xxxhdpi";
-            case DENSITY_ANY:
-                return "anydpi";
-            case DENSITY_NONE:
-                return "nodpi";
-            default:
-                return density+"dpi";
-        }
-    }
     private static void encodeTouchscreen(ResConfig resConfig, String[] split){
-        byte touchscreen=0;
-        for(int i=0;i<split.length;i++){
-            String s=split[i];
-            if(s==null){
-                continue;
-            }
-            ResConfig.Touchscreen touch= ResConfig.Touchscreen.fromName(s);
-            if(touch==null){
-                continue;
-            }
-            touchscreen=touch.getByteValue();
-            split[i]=null;
-            break;
-        }
-        resConfig.setTouchscreen(touchscreen);
+        resConfig.setTouchscreen(ResConfig.Touchscreen.fromQualifiers(split));
     }
     private static String decodeTouchscreen(ResConfig resConfig){
+        StringBuilder ret=new StringBuilder();
         ResConfig.Touchscreen touchscreen=resConfig.getTouchscreen();
-        if(touchscreen==null){
-            return "";
+        if(touchscreen!=null){
+            ret.append('-').append(touchscreen.toString());
         }
-        return "-"+touchscreen.toString();
+        return ret.toString();
     }
     private static void encodeUiMode(ResConfig resConfig, String[] split){
         resConfig.setUiModeNight(ResConfig.UiModeNight.fromQualifiers(split));
@@ -633,28 +364,15 @@ public class ResConfigHelper {
         return ret.toString();
     }
     private static void encodeOrientation(ResConfig resConfig, String[] split){
-        byte orientationByte=0;
-        for(int i=0;i<split.length;i++){
-            String s=split[i];
-            if(s==null){
-                continue;
-            }
-            ResConfig.Orientation orientation= ResConfig.Orientation.fromName(s);
-            if(orientation==null){
-                continue;
-            }
-            orientationByte=orientation.getByteValue();
-            split[i]=null;
-            break;
-        }
-        resConfig.setOrientation(orientationByte);
+        resConfig.setOrientation(ResConfig.Orientation.fromQualifiers(split));
     }
     private static String decodeOrientation(ResConfig resConfig){
+        StringBuilder builder = new StringBuilder();
         ResConfig.Orientation orientation=resConfig.getOrientation();
-        if(orientation==null){
-            return "";
+        if(orientation!=null){
+            builder.append('-').append(orientation);
         }
-        return "-"+orientation.toString();
+        return builder.toString();
     }
     private static void encodeScreenLayout(ResConfig resConfig, String[] split){
         resConfig.setScreenLayoutSize(ResConfig.ScreenLayoutSize.fromQualifiers(split));
@@ -678,37 +396,31 @@ public class ResConfigHelper {
         return builder.toString();
     }
     private static void encodeScreenLayout2(ResConfig resConfig, String[] split){
-        int screenLayout2=0;
-        for(int i=0;i<split.length;i++){
-            String s=split[i];
-            if(s==null){
-                continue;
-            }
-            int val;
-            if("round".equals(s)){
-                val = (SCREENLAYOUT_ROUND_YES);
-            }else if("notround".equals(s)){
-                val = (SCREENLAYOUT_ROUND_NO);
-            }else {
-                continue;
-            }
-            screenLayout2 = (screenLayout2 | val);
-            split[i]=null;
-            break;
-        }
-        resConfig.setScreenLayout2((byte) screenLayout2);
+        resConfig.setScreenLayoutRound(ResConfig.ScreenLayoutRound.fromQualifiers(split));
     }
     private static String decodeScreenLayout2(ResConfig resConfig){
-        StringBuilder ret=new StringBuilder();
-        switch (resConfig.getScreenLayout2() & MASK_SCREENROUND) {
-            case SCREENLAYOUT_ROUND_NO:
-                ret.append("-notround");
-                break;
-            case SCREENLAYOUT_ROUND_YES:
-                ret.append("-round");
-                break;
+        StringBuilder builder = new StringBuilder();
+        ResConfig.ScreenLayoutRound layoutRound = resConfig.getScreenLayoutRound();
+        if(layoutRound!=null){
+            builder.append('-').append(layoutRound.toString());
         }
-        return ret.toString();
+        return builder.toString();
+    }
+    private static String decodeColorMode(ResConfig resConfig){
+        StringBuilder builder = new StringBuilder();
+        ResConfig.ColorModeWide colorModeWide = resConfig.getColorModeWide();
+        if(colorModeWide!=null){
+            builder.append('-').append(colorModeWide.toString());
+        }
+        ResConfig.ColorModeHdr colorModeHdr = resConfig.getColorModeHdr();
+        if(colorModeHdr!=null){
+            builder.append('-').append(colorModeHdr.toString());
+        }
+        return builder.toString();
+    }
+    private static void encodeColorMode(ResConfig resConfig, String[] split){
+        resConfig.setColorModeWide(ResConfig.ColorModeWide.fromQualifiers(split));
+        resConfig.setColorModeHdr(ResConfig.ColorModeHdr.fromQualifiers(split));
     }
     private static void encodeMcc(ResConfig resConfig, String[] split){
         short sh=(short)0;
@@ -969,12 +681,6 @@ public class ResConfigHelper {
         Matcher matcher=PATTERN_COUNTRY_NAME.matcher(str);
         return matcher.find();
     }
-    private static char[] toUpper(char[] chs){
-        for(int i=0;i<chs.length;i++){
-            chs[i]=Character.toUpperCase(chs[i]);
-        }
-        return chs;
-    }
     private static boolean isNull(String[] split){
         if(split==null){
             return true;
@@ -1021,47 +727,9 @@ public class ResConfigHelper {
 
     private static final Pattern PATTERN_MCC_MNC=Pattern.compile("^(m[cn]c)([0-9]{2,3})$");
 
-    private static final Pattern PATTERN_DENSITY=Pattern.compile("^([^\\s]+)dpi$");
-
     private static final Pattern PATTERN_NUMBER=Pattern.compile("^[0-9]+$");
 
     private static final Pattern PATTERN_SCREEN_SIZE=Pattern.compile("^-?([0-9]+)x([0-9]+)$");
-
-    public final static short MASK_SCREENROUND = 0x03;
-    public final static short SCREENLAYOUT_ROUND_ANY = 0;
-    public final static short SCREENLAYOUT_ROUND_NO = 0x1;
-    public final static short SCREENLAYOUT_ROUND_YES = 0x2;
-
-    public final static byte MASK_KEYSHIDDEN = 0x3;
-    public final static byte KEYSHIDDEN_ANY = 0x0;
-    public final static byte KEYSHIDDEN_NO = 0x1;
-    public final static byte KEYSHIDDEN_YES = 0x2;
-    public final static byte KEYSHIDDEN_SOFT = 0x3;
-
-    public final static byte MASK_NAVHIDDEN = 0xc;
-    public final static byte NAVHIDDEN_ANY = 0x0;
-    public final static byte NAVHIDDEN_NO = 0x4;
-    public final static byte NAVHIDDEN_YES = 0x8;
-
-    private final static byte NAVIGATION_ANY = 0;
-    private final static byte NAVIGATION_NONAV = 1;
-    private final static byte NAVIGATION_DPAD = 2;
-    private final static byte NAVIGATION_TRACKBALL = 3;
-    private final static byte NAVIGATION_WHEEL = 4;
-
-
-    private final static int DENSITY_DEFAULT = 0;
-    private final static int DENSITY_LOW = 120;
-    private final static int DENSITY_MEDIUM = 160;
-    private final static int DENSITY_400 = 190;
-    private final static int DENSITY_TV = 213;
-    private final static int DENSITY_HIGH = 240;
-    private final static int DENSITY_XHIGH = 320;
-    private final static int DENSITY_XXHIGH = 480;
-    private final static int DENSITY_XXXHIGH = 640;
-    private final static int DENSITY_ANY = 0xfffe;
-    private final static int DENSITY_NONE = 0xffff;
-
 
 }
 

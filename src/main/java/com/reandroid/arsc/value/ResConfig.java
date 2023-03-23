@@ -206,64 +206,56 @@
          }
          return new String(chars);
      }
-     public void setOrientation(byte b){
+     public void setOrientation(int orientation){
          if(getConfigSize()<SIZE_16){
-             if(b==0){
+             if(orientation==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set orientation for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_orientation, b);
+         mValuesContainer.put(OFFSET_orientation, (byte) orientation);
      }
-     public byte getOrientationByte(){
+     public int getOrientationValue(){
          if(getConfigSize()<SIZE_16){
              return 0;
          }
-         return mValuesContainer.get(OFFSET_orientation);
+         return mValuesContainer.getByteUnsigned(OFFSET_orientation);
      }
      public Orientation getOrientation(){
-         return Orientation.fromValue(getOrientationByte());
+         return Orientation.valueOf(getOrientationValue());
      }
      public void setOrientation(Orientation orientation){
-         byte b=0;
-         if(orientation!=null){
-             b=orientation.getByteValue();
-         }
-         setOrientation(b);
+         setOrientation(Orientation.update(orientation, getOrientationValue()));
      }
-     public void setTouchscreen(byte b){
+     public void setTouchscreen(int touchscreen){
          if(getConfigSize()<SIZE_16){
-             if(b==0){
+             if(touchscreen==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set touchscreen for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_touchscreen, b);
+         mValuesContainer.put(OFFSET_touchscreen, (byte) touchscreen);
      }
-     public byte getTouchscreenByte(){
+     public int getTouchscreenValue(){
          if(getConfigSize()<SIZE_16){
              return 0;
          }
-         return mValuesContainer.get(OFFSET_touchscreen);
+         return mValuesContainer.getByteUnsigned(OFFSET_touchscreen);
      }
      public Touchscreen getTouchscreen(){
-         return Touchscreen.fromValue(getTouchscreenByte());
+         return Touchscreen.valueOf(getTouchscreenValue());
      }
      public void setTouchscreen(Touchscreen touchscreen){
-         byte b=0;
-         if(touchscreen!=null){
-             b=touchscreen.getByteValue();
-         }
-         setTouchscreen(b);
+         setTouchscreen(Touchscreen.update(touchscreen, getTouchscreenValue()));
      }
-     public void setDensity(short sh){
+     public void setDensity(int density){
          if(getConfigSize()<SIZE_16){
-             if(sh==0){
+             if(density==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set density for config size="+getConfigSize());
          }
-         mValuesContainer.putShort(OFFSET_density, sh);
+         mValuesContainer.putShort(OFFSET_density, (short) density);
      }
      public int getDensityValue(){
          if(getConfigSize()<SIZE_16){
@@ -271,82 +263,80 @@
          }
          return mValuesContainer.getShortUnsigned(OFFSET_density);
      }
-     public String getDensity(){
-         return ResConfigHelper.decodeDensity(getDensityValue());
+     public Density getDensity(){
+         return Density.valueOf(getDensityValue());
      }
-     public void setDensity(String density){
-         setDensity((short) ResConfigHelper.encodeDensity(density));
+     public void setDensity(Density density){
+         setDensity(Density.update(density, getDensityValue()));
      }
-     public void setKeyboard(byte b){
+     public void setKeyboard(int keyboard){
          if(getConfigSize()<SIZE_28){
-             if(b==0){
+             if(keyboard==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set keyboard for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_keyboard, b);
+         mValuesContainer.put(OFFSET_keyboard, (byte) keyboard);
      }
-     public byte getKeyboardByte(){
+     public int getKeyboardValue(){
          if(getConfigSize()<SIZE_28){
              return 0;
          }
-         return mValuesContainer.get(OFFSET_keyboard);
+         return mValuesContainer.getByteUnsigned(OFFSET_keyboard);
      }
      public Keyboard getKeyboard(){
-         return Keyboard.fromValue(getKeyboardByte());
+         return Keyboard.valueOf(getKeyboardValue());
      }
      public void setKeyboard(Keyboard keyboard){
-         byte b=0;
-         if(keyboard!=null){
-             b=keyboard.getByteValue();
-         }
-         setKeyboard(b);
+         setKeyboard(Keyboard.update(keyboard, getKeyboardValue()));
      }
-     public void setNavigation(byte b){
+     public void setNavigation(int navigation){
          if(getConfigSize()<SIZE_28){
-             if(b==0){
+             if(navigation==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set navigation for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_navigation, b);
+         mValuesContainer.put(OFFSET_navigation, (byte) navigation);
      }
-     public byte getNavigationByte(){
+     public int getNavigationValue(){
          if(getConfigSize()<SIZE_28){
              return 0;
          }
-         return mValuesContainer.get(OFFSET_navigation);
+         return mValuesContainer.getByteUnsigned(OFFSET_navigation);
      }
      public Navigation getNavigation(){
-         return Navigation.fromValue(getNavigationByte());
+         return Navigation.valueOf(getNavigationValue());
      }
      public void setNavigation(Navigation navigation){
-         byte b=0;
-         if(navigation!=null){
-             b=navigation.getByteValue();
-         }
-         setNavigation(b);
+         setNavigation(Navigation.update(navigation, getNavigationValue()));
      }
-     public void setInputFlags(byte b){
+     public void setInputFlags(int inputFlags){
          if(getConfigSize()<SIZE_28){
-             if(b==0){
+             if(inputFlags==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set inputFlags for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_inputFlags, b);
+         mValuesContainer.put(OFFSET_inputFlags, (byte) inputFlags);
      }
-     public byte getInputFlagsValue(){
+     public int getInputFlagsValue(){
          if(getConfigSize()<SIZE_28){
              return 0;
          }
-         return mValuesContainer.get(OFFSET_inputFlags);
+         return mValuesContainer.getByteUnsigned(OFFSET_inputFlags);
      }
-     public String getInputFlags(){
-         return ResConfigHelper.decodeInputFlags(getInputFlagsValue());
+     public InputFlagsKeysHidden getInputFlagsKeysHidden(){
+         return InputFlagsKeysHidden.valueOf(getInputFlagsValue());
      }
-     public void setInputFlags(String inputFlags){
-         setInputFlags(ResConfigHelper.encodeInputFlags(inputFlags));
+     public void setInputFlagsKeysHidden(InputFlagsKeysHidden keysHidden){
+         setInputFlags(InputFlagsKeysHidden.update(keysHidden, getInputFlagsValue()));
+     }
+     public InputFlagsNavHidden getInputFlagsNavHidden(){
+         return InputFlagsNavHidden.valueOf(getInputFlagsValue());
+     }
+     public void setInputFlagsNavHidden(InputFlagsNavHidden navHidden){
+         setInputFlags(InputFlagsNavHidden.update(navHidden, getInputFlagsValue()));
      }
      public void setInputPad0(byte b){
          if(getConfigSize()<SIZE_28){
@@ -427,33 +417,6 @@
          }
          return mValuesContainer.getShortUnsigned(OFFSET_minorVersion);
      }
-     public void setUiMode(int mode){
-         if(getConfigSize()<SIZE_32){
-             if(mode==0){
-                 return;
-             }
-             throw new IllegalArgumentException("Can not set uiMode for config size="+getConfigSize());
-         }
-         mValuesContainer.put(OFFSET_uiMode, (byte) mode);
-     }
-     public int getUiMode(){
-         if(getConfigSize()<SIZE_32){
-             return 0;
-         }
-         return mValuesContainer.getByteUnsigned(OFFSET_uiMode);
-     }
-     public UiModeType getUiModeType(){
-         return UiModeType.valueOf(getUiMode());
-     }
-     public void setUiModeType(UiModeType uiModeType){
-         setUiMode(UiModeType.update(uiModeType, getUiMode()));
-     }
-     public UiModeNight getUiModeNight(){
-         return UiModeNight.valueOf(getUiMode());
-     }
-     public void setUiModeNight(UiModeNight uiModeNight){
-         setUiMode(UiModeNight.update(uiModeNight, getUiMode()));
-     }
      public void setScreenLayout(int layout){
          if(getConfigSize()<SIZE_32){
              if(layout==0){
@@ -486,6 +449,33 @@
      }
      public void setScreenLayoutDir(ScreenLayoutDir layoutDir){
          setScreenLayout(ScreenLayoutDir.update(layoutDir, getScreenLayout()));
+     }
+     public void setUiMode(int mode){
+         if(getConfigSize()<SIZE_32){
+             if(mode==0){
+                 return;
+             }
+             throw new IllegalArgumentException("Can not set uiMode for config size="+getConfigSize());
+         }
+         mValuesContainer.put(OFFSET_uiMode, (byte) mode);
+     }
+     public int getUiMode(){
+         if(getConfigSize()<SIZE_32){
+             return 0;
+         }
+         return mValuesContainer.getByteUnsigned(OFFSET_uiMode);
+     }
+     public UiModeType getUiModeType(){
+         return UiModeType.valueOf(getUiMode());
+     }
+     public void setUiModeType(UiModeType uiModeType){
+         setUiMode(UiModeType.update(uiModeType, getUiMode()));
+     }
+     public UiModeNight getUiModeNight(){
+         return UiModeNight.valueOf(getUiMode());
+     }
+     public void setUiModeNight(UiModeNight uiModeNight){
+         setUiMode(UiModeNight.update(uiModeNight, getUiMode()));
      }
      public void setSmallestScreenWidthDp(short sh){
          if(getConfigSize()<SIZE_32){
@@ -626,35 +616,53 @@
          variant = ensureLength(variant, 5, POSTFIX_locale);
          return variant.toUpperCase();
      }
-     public void setScreenLayout2(byte b){
+     public void setScreenLayout2(int screenLayout2){
          if(getConfigSize()<SIZE_52){
-             if(b==0){
+             if(screenLayout2==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set screenLayout2 for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_screenLayout2, b);
+         mValuesContainer.put(OFFSET_screenLayout2, (byte) screenLayout2);
      }
-     public byte getScreenLayout2(){
+     public int getScreenLayout2(){
          if(getConfigSize()<SIZE_52){
              return 0;
          }
-         return mValuesContainer.get(OFFSET_screenLayout2);
+         return mValuesContainer.getByteUnsigned(OFFSET_screenLayout2);
      }
-     public void setColorMode(byte b){
+     public ScreenLayoutRound getScreenLayoutRound(){
+         return ScreenLayoutRound.valueOf(getScreenLayout2());
+     }
+     public void setScreenLayoutRound(ScreenLayoutRound layoutRound){
+         setScreenLayout2(ScreenLayoutRound.update(layoutRound, getScreenLayout2()));
+     }
+     public void setColorMode(int colorMode){
          if(getConfigSize()<SIZE_56){
-             if(b==0){
+             if(colorMode==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set colorMode for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_colorMode, b);
+         mValuesContainer.put(OFFSET_colorMode, (byte) colorMode);
      }
-     public byte getColorMode(){
+     public int getColorMode(){
          if(getConfigSize()<SIZE_56){
              return 0;
          }
-         return mValuesContainer.get(OFFSET_colorMode);
+         return mValuesContainer.getByteUnsigned(OFFSET_colorMode);
+     }
+     public ColorModeWide getColorModeWide(){
+         return ColorModeWide.valueOf(getColorMode());
+     }
+     public void setColorModeWide(ColorModeWide colorModeWide){
+         setColorMode(ColorModeWide.update(colorModeWide, getColorMode()));
+     }
+     public ColorModeHdr getColorModeHdr(){
+         return ColorModeHdr.valueOf(getColorMode());
+     }
+     public void setColorModeHdr(ColorModeHdr colorModeHdr){
+         setColorMode(ColorModeHdr.update(colorModeHdr, getColorMode()));
      }
 
      public String getQualifiers(){
@@ -705,30 +713,13 @@
          if(str!=null){
              jsonObject.put(NAME_region, str);
          }
-         Orientation orientation=getOrientation();
-         if(orientation!=null){
-             jsonObject.put(NAME_orientation, orientation.toString());
-         }
-         Touchscreen touchscreen=getTouchscreen();
-         if(touchscreen!=null){
-             jsonObject.put(NAME_touchscreen, touchscreen.toString());
-         }
-         str = getDensity();
-         if(str!=null){
-             jsonObject.put(NAME_density, str);
-         }
-         Keyboard keyboard = getKeyboard();
-         if(keyboard!=null){
-             jsonObject.put(NAME_keyboard, keyboard.toString());
-         }
-         Navigation navigation = getNavigation();
-         if(navigation!=null){
-             jsonObject.put(NAME_navigation, navigation.toString());
-         }
-         str = getInputFlags();
-         if(str!=null){
-             jsonObject.put(NAME_inputFlags, str);
-         }
+         jsonObject.put(NAME_orientation, Flag.toString(getOrientation()));
+         jsonObject.put(NAME_touchscreen, Flag.toString(getTouchscreen()));
+         jsonObject.put(NAME_density, Flag.toString(getDensity()));
+         jsonObject.put(NAME_keyboard, Flag.toString(getKeyboard()));
+         jsonObject.put(NAME_navigation, Flag.toString(getNavigation()));
+         jsonObject.put(NAME_input_flags_keys_hidden, Flag.toString(getInputFlagsKeysHidden()));
+         jsonObject.put(NAME_input_flags_nav_hidden, Flag.toString(getInputFlagsNavHidden()));
          val = getScreenWidth();
          if(val!=0){
              jsonObject.put(NAME_screenWidth, val);
@@ -770,6 +761,9 @@
          if(str!=null){
              jsonObject.put(NAME_localeVariant, str);
          }
+         jsonObject.put(NAME_screen_layout_round, Flag.toString(getScreenLayoutRound()));
+         jsonObject.put(NAME_color_mode_wide, Flag.toString(getColorModeWide()));
+         jsonObject.put(NAME_color_mode_hdr, Flag.toString(getColorModeHdr()));
          return jsonObject;
      }
      @Override
@@ -784,12 +778,13 @@
          setMnc((short) json.optInt(NAME_mnc));
          setLanguage(json.optString(NAME_language));
          setRegion(json.optString(NAME_region));
-         setOrientation(Orientation.fromName(json.optString(NAME_orientation)));
-         setTouchscreen(Touchscreen.fromName(json.optString(NAME_touchscreen)));
-         setDensity(json.optString(NAME_density));
-         setKeyboard(Keyboard.fromName(json.optString(NAME_keyboard)));
-         setNavigation(Navigation.fromName(json.optString(NAME_navigation)));
-         setInputFlags(json.optString(NAME_inputFlags));
+         setOrientation(Orientation.valueOf(json.optString(NAME_orientation)));
+         setTouchscreen(Touchscreen.valueOf(json.optString(NAME_touchscreen)));
+         setDensity(Density.valueOf(json.optString(NAME_density)));
+         setKeyboard(Keyboard.valueOf(json.optString(NAME_keyboard)));
+         setNavigation(Navigation.valueOf(json.optString(NAME_navigation)));
+         setInputFlagsKeysHidden(InputFlagsKeysHidden.valueOf(json.optString(NAME_input_flags_keys_hidden)));
+         setInputFlagsNavHidden(InputFlagsNavHidden.valueOf(json.optString(NAME_input_flags_nav_hidden)));
          setScreenWidth((short) json.optInt(NAME_screenWidth));
          setScreenHeight((short) json.optInt(NAME_screenHeight));
          setSdkVersion((short) json.optInt(NAME_sdkVersion));
@@ -804,6 +799,9 @@
          setScreenHeightDp((short) json.optInt(NAME_screenHeightDp));
          setLocaleScript(json.optString(NAME_localeScript));
          setLocaleVariantInternal(json.optString(NAME_localeVariant));
+         setScreenLayoutRound(ScreenLayoutRound.valueOf(json.optString(NAME_screen_layout_round)));
+         setColorModeWide(ColorModeWide.valueOf(json.optString(NAME_color_mode_wide)));
+         setColorModeHdr(ColorModeHdr.valueOf(json.optString(NAME_color_mode_hdr)));
 
          trimToSize(SIZE_48);
      }
@@ -1016,155 +1014,264 @@
          }
      }
 
-     public enum Orientation{
-         PORT((byte) 0x1),
-         LAND((byte) 0x2),
-         SQUARE((byte) 0x3);
-         private final byte mByteValue;
-         Orientation(byte b) {
-             this.mByteValue=b;
+     public static final class Orientation extends Flag{
+         public static final int MASK = 0x0f;
+
+         public static final Orientation PORT = new Orientation("port", 0x01);
+         public static final Orientation LAND = new Orientation("land", 0x02);
+         public static final Orientation SQUARE = new Orientation("square", 0x03);
+
+         public static final Orientation[] VALUES = new Orientation[]{
+                 PORT,
+                 LAND,
+                 SQUARE
+         };
+         private Orientation(String name, int flag) {
+             super(name, flag);
          }
-         public byte getByteValue() {
-             return mByteValue;
+         public static Orientation valueOf(int flag){
+             return Flag.valueOf(VALUES, MASK, flag);
          }
-         @Override
-         public String toString(){
-             return name().toLowerCase();
+         public static Orientation valueOf(String name){
+             return Flag.valueOf(VALUES, name);
          }
-         public static Orientation fromValue(byte b){
-             for(Orientation orientation:values()){
-                 if(b==orientation.getByteValue()){
-                     return orientation;
-                 }
-             }
-             return null;
+         public static Orientation fromQualifiers(String qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
          }
-         public static Orientation fromName(String name){
-             if(name==null){
-                 return null;
-             }
-             name=name.trim().toUpperCase();
-             for(Orientation orientation:values()){
-                 if(name.equals(orientation.name())){
-                     return orientation;
-                 }
-             }
-             return null;
+         public static Orientation fromQualifiers(String[] qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static int update(Orientation flag, int value){
+             return Flag.update(MASK, flag, value);
          }
      }
-     public enum Touchscreen{
-         NOTOUCH((byte) 0x1),
-         STYLUS((byte) 0x2),
-         FINGER((byte) 0x3);
-         private final byte mByteValue;
-         Touchscreen(byte b) {
-             this.mByteValue=b;
+     public static final class Touchscreen extends Flag{
+         public static final int MASK = 0x0f;
+
+         public static final Touchscreen NOTOUCH = new Touchscreen("notouch", 0x01);
+         public static final Touchscreen STYLUS = new Touchscreen("stylus", 0x02);
+         public static final Touchscreen FINGER = new Touchscreen("finger", 0x03);
+
+         public static final Touchscreen[] VALUES = new Touchscreen[]{
+                 NOTOUCH,
+                 STYLUS,
+                 FINGER
+         };
+         private Touchscreen(String name, int flag) {
+             super(name, flag);
          }
-         public byte getByteValue() {
-             return mByteValue;
+         public static Touchscreen valueOf(int flag){
+             return Flag.valueOf(VALUES, MASK, flag);
          }
-         @Override
-         public String toString(){
-             return name().toLowerCase();
+         public static Touchscreen valueOf(String name){
+             return Flag.valueOf(VALUES, name);
          }
-         public static Touchscreen fromValue(byte b){
-             for(Touchscreen touchscreen:values()){
-                 if(b==touchscreen.getByteValue()){
-                     return touchscreen;
-                 }
-             }
-             return null;
+         public static Touchscreen fromQualifiers(String qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
          }
-         public static Touchscreen fromName(String name){
-             if(name==null){
-                 return null;
-             }
-             name=name.trim().toUpperCase();
-             for(Touchscreen touchscreen:values()){
-                 if(name.equals(touchscreen.name())){
-                     return touchscreen;
-                 }
-             }
-             return null;
+         public static Touchscreen fromQualifiers(String[] qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static int update(Touchscreen flag, int value){
+             return Flag.update(MASK, flag, value);
          }
      }
-     public enum Keyboard{
-         NOKEYS((byte) 0x1),
-         QWERTY((byte) 0x2),
-         KEY12((byte) 0x3);
-         private final byte mByteValue;
-         Keyboard(byte b) {
-             this.mByteValue=b;
+     public static final class Density extends Flag{
+         public static final int MASK = 0xffff;
+
+         public static final Density LDPI = new Density("ldpi", 120);
+         public static final Density MDPI = new Density("mdpi", 160);
+         public static final Density TVDPI = new Density("tvdpi", 213);
+         public static final Density HDPI = new Density("hdpi", 240);
+         public static final Density XHDPI = new Density("xhdpi", 320);
+         public static final Density XXHDPI = new Density("xxhdpi", 480);
+         public static final Density XXXHDPI = new Density("xxxhdpi", 640);
+         public static final Density ANYDPI = new Density("anydpi", 0xfffe);
+         public static final Density NODPI = new Density("nodpi", 0xffff);
+
+         public static final Density[] VALUES = new Density[]{LDPI,
+                 MDPI,
+                 TVDPI,
+                 HDPI,
+                 XHDPI,
+                 XXHDPI,
+                 XXXHDPI,
+                 ANYDPI,
+                 NODPI
+         };
+         private Density(String name, int flag) {
+             super(name, flag);
          }
-         public byte getByteValue() {
-             return mByteValue;
-         }
-         @Override
-         public String toString(){
-             if(this==KEY12){
-                 return "12key";
-             }
-             return name().toLowerCase();
-         }
-         public static Keyboard fromValue(byte b){
-             for(Keyboard keyboard:values()){
-                 if(b==keyboard.getByteValue()){
-                     return keyboard;
-                 }
-             }
-             return null;
-         }
-         public static Keyboard fromName(String name){
-             if(name==null){
+         public static Density valueOf(int flag){
+             if(flag==0){
                  return null;
              }
-             name=name.trim().toUpperCase();
-             if(name.equals("12KEY")){
-                 return KEY12;
+             Density density = Flag.valueOf(VALUES, MASK, flag);
+             if(density == null){
+                 flag = flag & MASK;
+                 density = new Density(flag+"dpi", flag);
              }
-             for(Keyboard keyboard:values()){
-                 if(name.equals(keyboard.name())){
-                     return keyboard;
+             return density;
+         }
+         public static Density valueOf(String name){
+             if(name == null || name.length() < 4){
+                 return null;
+             }
+             name = name.toLowerCase();
+             if(name.charAt(0)=='-'){
+                 name = name.substring(1);
+             }
+             Density density = Flag.valueOf(VALUES, name);
+             if(density == null && name.endsWith("dpi")){
+                 name = name.substring(0, name.length()-3);
+                 try{
+                     int flag = Integer.parseInt(name);
+                     density = new Density(flag+"dpi", flag);
+                 }catch (NumberFormatException ignored){
                  }
              }
+             return density;
+         }
+         public static Density fromQualifiers(String qualifiers){
+             return fromQualifiers(qualifiers.split("\\s*-\\s*"));
+         }
+         public static Density fromQualifiers(String[] qualifiers){
+             if(qualifiers==null){
+                 return null;
+             }
+             for(int i=0; i < qualifiers.length;i++){
+                 Density density = valueOf(qualifiers[i]);
+                 if(density==null){
+                     continue;
+                 }
+                 qualifiers[i] = null;
+                 return density;
+             }
              return null;
+         }
+         public static int update(Density flag, int value){
+             return Flag.update(MASK, flag, value);
          }
      }
-     public enum Navigation{
-         NONAV((byte) 0x1),
-         DPAD((byte) 0x2),
-         TRACKBALL((byte) 0x3),
-         WHEEL((byte) 0x4);
-         private final byte mByteValue;
-         Navigation(byte b) {
-             this.mByteValue=b;
+     public static final class Keyboard extends Flag{
+         public static final int MASK = 0x0f;
+
+         public static final Keyboard NOKEYS = new Keyboard("nokeys", 0x01);
+         public static final Keyboard QWERTY = new Keyboard("nokeys", 0x02);
+         public static final Keyboard KEY12 = new Keyboard("12key", 0x03);
+
+         public static final Keyboard[] VALUES = new Keyboard[]{
+                 NOKEYS,
+                 QWERTY,
+                 KEY12
+         };
+         private Keyboard(String name, int flag) {
+             super(name, flag);
          }
-         public byte getByteValue() {
-             return mByteValue;
+         public static Keyboard valueOf(int flag){
+             return Flag.valueOf(VALUES, MASK, flag);
          }
-         @Override
-         public String toString(){
-             return name().toLowerCase();
+         public static Keyboard valueOf(String name){
+             return Flag.valueOf(VALUES, name);
          }
-         public static Navigation fromValue(byte b){
-             for(Navigation navigation:values()){
-                 if(b==navigation.getByteValue()){
-                     return navigation;
-                 }
-             }
-             return null;
+         public static Keyboard fromQualifiers(String qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
          }
-         public static Navigation fromName(String name){
-             if(name==null){
-                 return null;
-             }
-             name=name.trim().toUpperCase();
-             for(Navigation navigation:values()){
-                 if(name.equals(navigation.name())){
-                     return navigation;
-                 }
-             }
-             return null;
+         public static Keyboard fromQualifiers(String[] qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static int update(Keyboard flag, int value){
+             return Flag.update(MASK, flag, value);
+         }
+     }
+     public static final class Navigation extends Flag{
+         public static final int MASK = 0x0f;
+
+         public static final Navigation NONAV = new Navigation("nonav", 0x01);
+         public static final Navigation DPAD = new Navigation("dpad", 0x02);
+         public static final Navigation TRACKBALL = new Navigation("trackball", 0x03);
+         public static final Navigation WHEEL = new Navigation("wheel", 0x04);
+         public static final Navigation[] VALUES = new Navigation[]{
+                 NONAV,
+                 DPAD,
+                 TRACKBALL,
+                 WHEEL
+         };
+         private Navigation(String name, int flag) {
+             super(name, flag);
+         }
+         public static Navigation valueOf(int flag){
+             return Flag.valueOf(VALUES, MASK, flag);
+         }
+         public static Navigation valueOf(String name){
+             return Flag.valueOf(VALUES, name);
+         }
+         public static Navigation fromQualifiers(String qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static Navigation fromQualifiers(String[] qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static int update(Navigation flag, int value){
+             return Flag.update(MASK, flag, value);
+         }
+     }
+     public static final class InputFlagsKeysHidden extends Flag{
+         public static final int MASK = 0x03;
+
+         public static final InputFlagsKeysHidden KEYSEXPOSED = new InputFlagsKeysHidden("keysexposed", 0x01);
+         public static final InputFlagsKeysHidden KEYSHIDDEN = new InputFlagsKeysHidden("keyshidden", 0x02);
+         public static final InputFlagsKeysHidden KEYSSOFT = new InputFlagsKeysHidden("keyssoft", 0x03);
+         public static final InputFlagsKeysHidden[] VALUES = new InputFlagsKeysHidden[]{
+                 KEYSEXPOSED,
+                 KEYSHIDDEN,
+                 KEYSSOFT
+         };
+         private InputFlagsKeysHidden(String name, int flag) {
+             super(name, flag);
+         }
+         public static InputFlagsKeysHidden valueOf(int flag){
+             return Flag.valueOf(VALUES, MASK, flag);
+         }
+         public static InputFlagsKeysHidden valueOf(String name){
+             return Flag.valueOf(VALUES, name);
+         }
+         public static InputFlagsKeysHidden fromQualifiers(String qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static InputFlagsKeysHidden fromQualifiers(String[] qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static int update(InputFlagsKeysHidden flag, int value){
+             return Flag.update(MASK, flag, value);
+         }
+     }
+     public static final class InputFlagsNavHidden extends Flag{
+         public static final int MASK = 0x0C;
+
+         public static final InputFlagsNavHidden NAVEXPOSED = new InputFlagsNavHidden("navexposed", 0x04);
+         public static final InputFlagsNavHidden NAVHIDDEN = new InputFlagsNavHidden("navhidden", 0x08);
+         public static final InputFlagsNavHidden[] VALUES = new InputFlagsNavHidden[]{
+                 NAVEXPOSED,
+                 NAVHIDDEN
+         };
+         private InputFlagsNavHidden(String name, int flag) {
+             super(name, flag);
+         }
+         public static InputFlagsNavHidden valueOf(int flag){
+             return Flag.valueOf(VALUES, MASK, flag);
+         }
+         public static InputFlagsNavHidden valueOf(String name){
+             return Flag.valueOf(VALUES, name);
+         }
+         public static InputFlagsNavHidden fromQualifiers(String qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static InputFlagsNavHidden fromQualifiers(String[] qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static int update(InputFlagsNavHidden flag, int value){
+             return Flag.update(MASK, flag, value);
          }
      }
      public static final class UiModeType extends Flag{
@@ -1330,6 +1437,87 @@
              return Flag.update(MASK, flag, value);
          }
      }
+     public static final class ScreenLayoutRound extends Flag{
+         public static final int MASK = 0x03;
+         public static final ScreenLayoutRound NOROUND = new ScreenLayoutRound("noround", 0x01);
+         public static final ScreenLayoutRound ROUND = new ScreenLayoutRound("round", 0x02);
+         public static final ScreenLayoutRound[] VALUES = new ScreenLayoutRound[]{
+                 NOROUND,
+                 ROUND
+         };
+         private ScreenLayoutRound(String name, int flag) {
+             super(name, flag);
+         }
+         public static ScreenLayoutRound valueOf(int flag){
+             return Flag.valueOf(VALUES, MASK, flag);
+         }
+         public static ScreenLayoutRound valueOf(String name){
+             return Flag.valueOf(VALUES, name);
+         }
+         public static ScreenLayoutRound fromQualifiers(String qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static ScreenLayoutRound fromQualifiers(String[] qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static int update(ScreenLayoutRound flag, int value){
+             return Flag.update(MASK, flag, value);
+         }
+     }
+     public static final class ColorModeWide extends Flag{
+         public static final int MASK = 0x03;
+         public static final ColorModeWide NOWIDECG = new ColorModeWide("nowidecg", 0x01);
+         public static final ColorModeWide WIDECG = new ColorModeWide("widecg", 0x02);
+         public static final ColorModeWide[] VALUES = new ColorModeWide[]{
+                 NOWIDECG,
+                 WIDECG
+         };
+         private ColorModeWide(String name, int flag) {
+             super(name, flag);
+         }
+         public static ColorModeWide valueOf(int flag){
+             return Flag.valueOf(VALUES, MASK, flag);
+         }
+         public static ColorModeWide valueOf(String name){
+             return Flag.valueOf(VALUES, name);
+         }
+         public static ColorModeWide fromQualifiers(String qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static ColorModeWide fromQualifiers(String[] qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static int update(ColorModeWide flag, int value){
+             return Flag.update(MASK, flag, value);
+         }
+     }
+     public static final class ColorModeHdr extends Flag{
+         public static final int MASK = 0x0C;
+         public static final ColorModeHdr LOWDR = new ColorModeHdr("lowdr", 0x04);
+         public static final ColorModeHdr HIGHDR = new ColorModeHdr("highdr", 0x08);
+         public static final ColorModeHdr[] VALUES = new ColorModeHdr[]{
+                 LOWDR,
+                 HIGHDR
+         };
+         private ColorModeHdr(String name, int flag) {
+             super(name, flag);
+         }
+         public static ColorModeHdr valueOf(int flag){
+             return Flag.valueOf(VALUES, MASK, flag);
+         }
+         public static ColorModeHdr valueOf(String name){
+             return Flag.valueOf(VALUES, name);
+         }
+         public static ColorModeHdr fromQualifiers(String qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static ColorModeHdr fromQualifiers(String[] qualifiers){
+             return Flag.fromQualifiers(VALUES, qualifiers);
+         }
+         public static int update(ColorModeHdr flag, int value){
+             return Flag.update(MASK, flag, value);
+         }
+     }
 
      static class Flag{
          private final String name;
@@ -1466,7 +1654,8 @@
      //SIZE=16
      private static final String NAME_keyboard = "keyboard";
      private static final String NAME_navigation = "navigation";
-     private static final String NAME_inputFlags = "inputFlags";
+     private static final String NAME_input_flags_keys_hidden = "input_flags_keys_hidden";
+     private static final String NAME_input_flags_nav_hidden = "input_flags_nav_hidden";
      private static final String NAME_inputPad0 = "inputPad0";
      private static final String NAME_screenWidth = "screenWidth";
      private static final String NAME_screenHeight = "screenHeight";
@@ -1485,8 +1674,9 @@
      //SIZE=36
      private static final String NAME_localeScript = "localeScript";
      private static final String NAME_localeVariant = "localeVariant";
-     private static final String NAME_screenLayout2 = "screenLayout2";
-     private static final String NAME_colorMode = "colorMode";
+     private static final String NAME_screen_layout_round = "screen_layout_round";
+     private static final String NAME_color_mode_wide = "color_mode_wide";
+     private static final String NAME_color_mode_hdr = "color_mode_hdr";
 
      private static final char POSTFIX_locale = '#';
 
