@@ -428,26 +428,38 @@ import java.util.Arrays;
         }
         return mValuesContainer.getShortUnsigned(OFFSET_minorVersion);
     }
-    public void setScreenLayout(byte b){
+    public void setScreenLayout(int layout){
         if(getConfigSize()<SIZE_32){
-            if(b==0){
+            if(layout==0){
                 return;
             }
             throw new IllegalArgumentException("Can not set screenLayout for config size="+getConfigSize());
         }
-        mValuesContainer.put(OFFSET_screenLayout, b);
+        mValuesContainer.put(OFFSET_screenLayout, (byte) layout);
     }
-    public byte getScreenLayoutValue(){
+    public int getScreenLayout(){
         if(getConfigSize()<SIZE_32){
             return 0;
         }
-        return mValuesContainer.get(OFFSET_screenLayout);
+        return mValuesContainer.getByteUnsigned(OFFSET_screenLayout);
     }
-    public String getScreenLayout(){
-        return ResConfigHelper.decodeScreenLayout(getScreenLayoutValue());
+    public ScreenLayoutSize getScreenLayoutSize(){
+        return ScreenLayoutSize.valueOf(getScreenLayout());
     }
-    public void setScreenLayout(String screenLayout){
-        setScreenLayout(ResConfigHelper.encodeScreenLayout(screenLayout));
+    public void setScreenLayoutSize(ScreenLayoutSize layoutSize){
+        setScreenLayout(ScreenLayoutSize.update(layoutSize, getScreenLayout()));
+    }
+    public ScreenLayoutLong getScreenLayoutLong(){
+        return ScreenLayoutLong.valueOf(getScreenLayout());
+    }
+    public void setScreenLayoutLong(ScreenLayoutLong layoutLong){
+        setScreenLayout(ScreenLayoutLong.update(layoutLong, getScreenLayout()));
+    }
+    public ScreenLayoutDir getScreenLayoutDir(){
+        return ScreenLayoutDir.valueOf(getScreenLayout());
+    }
+    public void setScreenLayoutDir(ScreenLayoutDir layoutDir){
+        setScreenLayout(ScreenLayoutDir.update(layoutDir, getScreenLayout()));
     }
     public void setUiMode(byte b){
         if(getConfigSize()<SIZE_32){
@@ -462,29 +474,19 @@ import java.util.Arrays;
         if(getConfigSize()<SIZE_32){
             return 0;
         }
-        return mValuesContainer.get(OFFSET_uiMode) & 0xff;
+        return mValuesContainer.getByteUnsigned(OFFSET_uiMode);
     }
     public UiModeType getUiModeType(){
         return UiModeType.valueOf(getUiMode());
     }
     public void setUiModeType(UiModeType uiModeType){
-        int flip = (~UiModeType.MASK_UI_MODE_TYPE) & 0xff;
-        int value = getUiMode() & flip;
-        if(uiModeType!=null){
-            value = value | uiModeType.getFlag();
-        }
-        setUiMode((byte) value);
+        setUiMode((byte) UiModeType.update(uiModeType, getUiMode()));
     }
     public UiModeNight getUiModeNight(){
         return UiModeNight.valueOf(getUiMode());
     }
     public void setUiModeNight(UiModeNight uiModeNight){
-        int flip = (~UiModeNight.MASK_UI_MODE_NIGHT) & 0xff;
-        int value = getUiMode() & flip;
-        if(uiModeNight != null){
-            value = value | uiModeNight.getFlag();
-        }
-        setUiMode((byte) value);
+        setUiMode((byte) UiModeNight.update(uiModeNight, getUiMode()));
     }
     public void setSmallestScreenWidthDp(short sh){
         if(getConfigSize()<SIZE_32){
@@ -744,18 +746,11 @@ import java.util.Arrays;
         if(val!=0){
             jsonObject.put(NAME_minorVersion, val);
         }
-        str = getScreenLayout();
-        if(str!=null){
-            jsonObject.put(NAME_screenLayout, str);
-        }
-        UiModeType uiModeType = getUiModeType();
-        if(uiModeType!=null){
-            jsonObject.put(NAME_ui_mode_type, uiModeType.toString());
-        }
-        UiModeNight uiModeNight = getUiModeNight();
-        if(uiModeNight!=null){
-            jsonObject.put(NAME_ui_mode_night, uiModeNight.toString());
-        }
+        jsonObject.put(NAME_screen_layout_size, Flag.toString(getScreenLayoutSize()));
+        jsonObject.put(NAME_screen_layout_long, Flag.toString(getScreenLayoutLong()));
+        jsonObject.put(NAME_screen_layout_dir, Flag.toString(getScreenLayoutDir()));
+        jsonObject.put(NAME_ui_mode_type, Flag.toString(getUiModeType()));
+        jsonObject.put(NAME_ui_mode_night, Flag.toString(getUiModeNight()));
         val = getSmallestScreenWidthDp();
         if(val!=0){
             jsonObject.put(NAME_smallestScreenWidthDp, val);
@@ -800,7 +795,9 @@ import java.util.Arrays;
         setScreenHeight((short) json.optInt(NAME_screenHeight));
         setSdkVersion((short) json.optInt(NAME_sdkVersion));
         setMinorVersion((short) json.optInt(NAME_minorVersion));
-        setScreenLayout(json.optString(NAME_screenLayout));
+        setScreenLayoutSize(ScreenLayoutSize.valueOf(json.optString(NAME_screen_layout_size)));
+        setScreenLayoutLong(ScreenLayoutLong.valueOf(json.optString(NAME_screen_layout_long)));
+        setScreenLayoutDir(ScreenLayoutDir.valueOf(json.optString(NAME_screen_layout_dir)));
         setUiModeType(UiModeType.valueOf(json.optString(NAME_ui_mode_type)));
         setUiModeNight(UiModeNight.valueOf(json.optString(NAME_ui_mode_night)));
         setSmallestScreenWidthDp((short) json.optInt(NAME_smallestScreenWidthDp));
@@ -1172,7 +1169,7 @@ import java.util.Arrays;
         }
     }
     public static final class UiModeType extends Flag{
-        public static final int MASK_UI_MODE_TYPE = 0x0f;
+        public static final int MASK = 0x0f;
 
         public static final UiModeType NORMAL = new UiModeType("normal", 0x01);
         public static final UiModeType DESK = new UiModeType("desk", 0x02);
@@ -1206,7 +1203,7 @@ import java.util.Arrays;
             super(name, flag);
         }
         public static UiModeType valueOf(int flag){
-            return Flag.valueOf(VALUES, MASK_UI_MODE_TYPE, flag);
+            return Flag.valueOf(VALUES, MASK, flag);
         }
         public static UiModeType valueOf(String name){
             return Flag.valueOf(VALUES, name);
@@ -1217,9 +1214,12 @@ import java.util.Arrays;
         public static UiModeType fromQualifiers(String[] qualifiers){
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
+        public static int update(UiModeType flag, int value){
+            return Flag.update(MASK, flag, value);
+        }
     }
     public static final class UiModeNight extends Flag{
-        public static final int MASK_UI_MODE_NIGHT = 0x30;
+        public static final int MASK = 0x30;
         public static final UiModeNight NONIGHT = new UiModeNight("nonight",0x10);
         public static final UiModeNight NIGHT = new UiModeNight("night",0x20);
         private static final UiModeNight[] VALUES = new UiModeNight[]{
@@ -1230,7 +1230,7 @@ import java.util.Arrays;
             super(name, flag);
         }
         public static UiModeNight valueOf(int flag){
-            return Flag.valueOf(VALUES, MASK_UI_MODE_NIGHT, flag);
+            return Flag.valueOf(VALUES, MASK, flag);
         }
         public static UiModeNight valueOf(String name){
             return Flag.valueOf(VALUES, name);
@@ -1241,7 +1241,97 @@ import java.util.Arrays;
         public static UiModeNight fromQualifiers(String[] qualifiers){
             return Flag.fromQualifiers(VALUES, qualifiers);
         }
+        public static int update(UiModeNight flag, int value){
+            return Flag.update(MASK, flag, value);
+        }
     }
+    public static final class ScreenLayoutSize extends Flag{
+        public static final int MASK = 0x0f;
+
+        public static final ScreenLayoutSize SMALL = new ScreenLayoutSize("small", 0x01);
+        public static final ScreenLayoutSize NORMAL = new ScreenLayoutSize("normal", 0x02);
+        public static final ScreenLayoutSize LARGE = new ScreenLayoutSize("large", 0x03);
+        public static final ScreenLayoutSize XLARGE = new ScreenLayoutSize("xlarge", 0x04);
+        public static final ScreenLayoutSize[] VALUES = new ScreenLayoutSize[]{
+                SMALL,
+                NORMAL,
+                LARGE,
+                XLARGE
+        };
+        private ScreenLayoutSize(String name, int flag) {
+            super(name, flag);
+        }
+        public static ScreenLayoutSize valueOf(int flag){
+            return Flag.valueOf(VALUES, MASK, flag);
+        }
+        public static ScreenLayoutSize valueOf(String name){
+            return Flag.valueOf(VALUES, name);
+        }
+        public static ScreenLayoutSize fromQualifiers(String qualifiers){
+            return Flag.fromQualifiers(VALUES, qualifiers);
+        }
+        public static ScreenLayoutSize fromQualifiers(String[] qualifiers){
+            return Flag.fromQualifiers(VALUES, qualifiers);
+        }
+        public static int update(ScreenLayoutSize flag, int value){
+            return Flag.update(MASK, flag, value);
+        }
+    }
+    public static final class ScreenLayoutLong extends Flag{
+        public static final int MASK = 0x30;
+        public static final ScreenLayoutLong NOTLONG = new ScreenLayoutLong("notlong", 0x10);
+        public static final ScreenLayoutLong LONG = new ScreenLayoutLong("long", 0x20);
+        public static final ScreenLayoutLong[] VALUES = new ScreenLayoutLong[]{
+                NOTLONG,
+                LONG
+        };
+        private ScreenLayoutLong(String name, int flag) {
+            super(name, flag);
+        }
+        public static ScreenLayoutLong valueOf(int flag){
+            return Flag.valueOf(VALUES, MASK, flag);
+        }
+        public static ScreenLayoutLong valueOf(String name){
+            return Flag.valueOf(VALUES, name);
+        }
+        public static ScreenLayoutLong fromQualifiers(String qualifiers){
+            return Flag.fromQualifiers(VALUES, qualifiers);
+        }
+        public static ScreenLayoutLong fromQualifiers(String[] qualifiers){
+            return Flag.fromQualifiers(VALUES, qualifiers);
+        }
+        public static int update(ScreenLayoutLong flag, int value){
+            return Flag.update(MASK, flag, value);
+        }
+    }
+    public static final class ScreenLayoutDir extends Flag{
+        public static final int MASK = 0xC0;
+        public static final ScreenLayoutDir LDLTR = new ScreenLayoutDir("ldltr", 0x40);
+        public static final ScreenLayoutDir LDRTL = new ScreenLayoutDir("ldrtl", 0x80);
+        public static final ScreenLayoutDir[] VALUES = new ScreenLayoutDir[]{
+                LDLTR,
+                LDRTL
+        };
+        private ScreenLayoutDir(String name, int flag) {
+            super(name, flag);
+        }
+        public static ScreenLayoutDir valueOf(int flag){
+            return Flag.valueOf(VALUES, MASK, flag);
+        }
+        public static ScreenLayoutDir valueOf(String name){
+            return Flag.valueOf(VALUES, name);
+        }
+        public static ScreenLayoutDir fromQualifiers(String qualifiers){
+            return Flag.fromQualifiers(VALUES, qualifiers);
+        }
+        public static ScreenLayoutDir fromQualifiers(String[] qualifiers){
+            return Flag.fromQualifiers(VALUES, qualifiers);
+        }
+        public static int update(ScreenLayoutDir flag, int value){
+            return Flag.update(MASK, flag, value);
+        }
+    }
+
     static class Flag{
         private final String name;
         private final int flag;
@@ -1263,6 +1353,12 @@ import java.util.Arrays;
         @Override
         public String toString() {
             return name;
+        }
+        public static String toString(Flag flag){
+            if(flag!=null){
+                return flag.toString();
+            }
+            return null;
         }
         static<T extends Flag> T fromQualifiers(T[] values, String qualifiers){
             if(qualifiers == null){
@@ -1305,6 +1401,14 @@ import java.util.Arrays;
                 }
             }
             return null;
+        }
+        public static int update(int mask, Flag flag, int value){
+            int flip = (~mask) & 0xff;
+            value = value & flip;
+            if(flag != null){
+                value = value | flag.getFlag();
+            }
+            return value;
         }
     }
 
@@ -1370,7 +1474,9 @@ import java.util.Arrays;
     private static final String NAME_sdkVersion = "sdkVersion";
     private static final String NAME_minorVersion = "minorVersion";
     //SIZE=28
-    private static final String NAME_screenLayout = "screenLayout";
+    private static final String NAME_screen_layout_size = "screen_layout_size";
+    private static final String NAME_screen_layout_long = "screen_layout_long";
+    private static final String NAME_screen_layout_dir = "screen_layout_dir";
     private static final String NAME_ui_mode_type = "ui_mode_type";
     private static final String NAME_ui_mode_night = "ui_mode_night";
     private static final String NAME_smallestScreenWidthDp = "smallestScreenWidthDp";

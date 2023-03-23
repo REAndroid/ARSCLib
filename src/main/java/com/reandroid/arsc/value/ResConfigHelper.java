@@ -657,160 +657,25 @@ public class ResConfigHelper {
         return "-"+orientation.toString();
     }
     private static void encodeScreenLayout(ResConfig resConfig, String[] split){
-        int screenLayout=0;
-        for(int i=0;i<split.length;i++){
-            String s=split[i];
-            if(s==null){
-                continue;
-            }
-            int val;
-            switch (s) {
-                case "ldrtl":
-                    val = (SCREENLAYOUT_LAYOUTDIR_RTL);
-                    break;
-                case "ldltr":
-                    val = (SCREENLAYOUT_LAYOUTDIR_LTR);
-                    break;
-                case "small":
-                    val = (SCREENSIZE_SMALL);
-                    break;
-                case "normal":
-                    val = (SCREENSIZE_NORMAL);
-                    break;
-                case "large":
-                    val = (SCREENSIZE_LARGE);
-                    break;
-                case "xlarge":
-                    val = (SCREENSIZE_XLARGE);
-                    break;
-                case "long":
-                    val = (SCREENLONG_YES);
-                    break;
-                case "notlong":
-                    val = (SCREENLONG_NO);
-                    break;
-                default:
-                    continue;
-            }
-            screenLayout = (screenLayout | val);
-            split[i]=null;
-        }
-        resConfig.setScreenLayout((byte) screenLayout);
-    }
-    public static byte encodeScreenLayout(String screenLayout){
-        if(screenLayout==null){
-            return 0;
-        }
-        String[] split=screenLayout.split("-");
-        int result=0;
-        for(int i=0;i<split.length;i++){
-            String s=split[i];
-            if(s==null){
-                continue;
-            }
-            int val;
-            switch (s) {
-                case "ldrtl":
-                    val = (SCREENLAYOUT_LAYOUTDIR_RTL);
-                    break;
-                case "ldltr":
-                    val = (SCREENLAYOUT_LAYOUTDIR_LTR);
-                    break;
-                case "small":
-                    val = (SCREENSIZE_SMALL);
-                    break;
-                case "normal":
-                    val = (SCREENSIZE_NORMAL);
-                    break;
-                case "large":
-                    val = (SCREENSIZE_LARGE);
-                    break;
-                case "xlarge":
-                    val = (SCREENSIZE_XLARGE);
-                    break;
-                case "long":
-                    val = (SCREENLONG_YES);
-                    break;
-                case "notlong":
-                    val = (SCREENLONG_NO);
-                    break;
-                default:
-                    continue;
-            }
-            result = (result | val);
-            split[i]=null;
-        }
-        return (byte) result;
+        resConfig.setScreenLayoutSize(ResConfig.ScreenLayoutSize.fromQualifiers(split));
+        resConfig.setScreenLayoutLong(ResConfig.ScreenLayoutLong.fromQualifiers(split));
+        resConfig.setScreenLayoutDir(ResConfig.ScreenLayoutDir.fromQualifiers(split));
     }
     private static String decodeScreenLayout(ResConfig resConfig){
-        StringBuilder ret=new StringBuilder();
-        byte screenLayout=resConfig.getScreenLayoutValue();
-        switch (screenLayout & MASK_LAYOUTDIR) {
-            case SCREENLAYOUT_LAYOUTDIR_RTL:
-                ret.append("-ldrtl");
-                break;
-            case SCREENLAYOUT_LAYOUTDIR_LTR:
-                ret.append("-ldltr");
+        StringBuilder builder=new StringBuilder();
+        ResConfig.ScreenLayoutSize layoutSize = resConfig.getScreenLayoutSize();
+        if(layoutSize!=null){
+            builder.append('-').append(layoutSize.toString());
         }
-        switch (screenLayout & MASK_SCREENSIZE) {
-            case SCREENSIZE_SMALL:
-                ret.append("-small");
-                break;
-            case SCREENSIZE_NORMAL:
-                ret.append("-normal");
-                break;
-            case SCREENSIZE_LARGE:
-                ret.append("-large");
-                break;
-            case SCREENSIZE_XLARGE:
-                ret.append("-xlarge");
-                break;
+        ResConfig.ScreenLayoutLong layoutLong = resConfig.getScreenLayoutLong();
+        if(layoutLong!=null){
+            builder.append('-').append(layoutLong.toString());
         }
-        switch (screenLayout & MASK_SCREENLONG) {
-            case SCREENLONG_YES:
-                ret.append("-long");
-                break;
-            case SCREENLONG_NO:
-                ret.append("-notlong");
-                break;
+        ResConfig.ScreenLayoutDir layoutDir = resConfig.getScreenLayoutDir();
+        if(layoutDir!=null){
+            builder.append('-').append(layoutDir.toString());
         }
-        return ret.toString();
-    }
-    public static String decodeScreenLayout(byte screenLayout){
-        StringBuilder ret=new StringBuilder();
-        switch (screenLayout & MASK_LAYOUTDIR) {
-            case SCREENLAYOUT_LAYOUTDIR_RTL:
-                ret.append("-ldrtl");
-                break;
-            case SCREENLAYOUT_LAYOUTDIR_LTR:
-                ret.append("-ldltr");
-        }
-        switch (screenLayout & MASK_SCREENSIZE) {
-            case SCREENSIZE_SMALL:
-                ret.append("-small");
-                break;
-            case SCREENSIZE_NORMAL:
-                ret.append("-normal");
-                break;
-            case SCREENSIZE_LARGE:
-                ret.append("-large");
-                break;
-            case SCREENSIZE_XLARGE:
-                ret.append("-xlarge");
-                break;
-        }
-        switch (screenLayout & MASK_SCREENLONG) {
-            case SCREENLONG_YES:
-                ret.append("-long");
-                break;
-            case SCREENLONG_NO:
-                ret.append("-notlong");
-                break;
-        }
-        if(ret.length()==0){
-            return null;
-        }
-        return ret.toString();
+        return builder.toString();
     }
     private static void encodeScreenLayout2(ResConfig resConfig, String[] split){
         int screenLayout2=0;
@@ -1161,27 +1026,6 @@ public class ResConfigHelper {
     private static final Pattern PATTERN_NUMBER=Pattern.compile("^[0-9]+$");
 
     private static final Pattern PATTERN_SCREEN_SIZE=Pattern.compile("^-?([0-9]+)x([0-9]+)$");
-
-
-    public final static short MASK_LAYOUTDIR = 0xc0;
-    public final static short SCREENLAYOUT_LAYOUTDIR_ANY = 0x00;
-    public final static short SCREENLAYOUT_LAYOUTDIR_LTR = 0x40;
-    public final static short SCREENLAYOUT_LAYOUTDIR_RTL = 0x80;
-    public final static short SCREENLAYOUT_LAYOUTDIR_SHIFT = 0x06;
-
-
-    public final static byte MASK_SCREENSIZE = 0x0f;
-    public final static byte SCREENSIZE_ANY = 0x00;
-    public final static byte SCREENSIZE_SMALL = 0x01;
-    public final static byte SCREENSIZE_NORMAL = 0x02;
-    public final static byte SCREENSIZE_LARGE = 0x03;
-    public final static byte SCREENSIZE_XLARGE = 0x04;
-
-    public final static byte MASK_SCREENLONG = 0x30;
-    public final static byte SCREENLONG_ANY = 0x00;
-    public final static byte SCREENLONG_NO = 0x10;
-    public final static byte SCREENLONG_YES = 0x20;
-
 
     public final static short MASK_SCREENROUND = 0x03;
     public final static short SCREENLAYOUT_ROUND_ANY = 0;
