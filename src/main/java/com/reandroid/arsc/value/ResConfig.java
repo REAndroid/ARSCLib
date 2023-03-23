@@ -27,7 +27,7 @@ import com.reandroid.json.JSONObject;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class ResConfig extends FixedBlockContainer
+ public class ResConfig extends FixedBlockContainer
         implements BlockLoad, JSONConvert<JSONObject>, Comparable<ResConfig> {
 
     private final IntegerItem configSize;
@@ -458,17 +458,33 @@ public class ResConfig extends FixedBlockContainer
         }
         mValuesContainer.put(OFFSET_uiMode, b);
     }
-    public byte getUiModeValue(){
+    public int getUiMode(){
         if(getConfigSize()<SIZE_32){
             return 0;
         }
-        return mValuesContainer.get(OFFSET_uiMode);
+        return mValuesContainer.get(OFFSET_uiMode) & 0xff;
     }
-    public String getUiMode(){
-        return ResConfigHelper.decodeUiMode(getUiModeValue());
+    public UiModeType getUiModeType(){
+        return UiModeType.valueOf(getUiMode());
     }
-    public void setUiMode(String uiMode){
-        setUiMode(ResConfigHelper.encodeUiMode(uiMode));
+    public void setUiModeType(UiModeType uiModeType){
+        int flip = (~UiModeType.MASK_UI_MODE_TYPE) & 0xff;
+        int value = getUiMode() & flip;
+        if(uiModeType!=null){
+            value = value | uiModeType.getFlag();
+        }
+        setUiMode((byte) value);
+    }
+    public UiModeNight getUiModeNight(){
+        return UiModeNight.valueOf(getUiMode());
+    }
+    public void setUiModeNight(UiModeNight uiModeNight){
+        int flip = (~UiModeNight.MASK_UI_MODE_NIGHT) & 0xff;
+        int value = getUiMode() & flip;
+        if(uiModeNight != null){
+            value = value | uiModeNight.getFlag();
+        }
+        setUiMode((byte) value);
     }
     public void setSmallestScreenWidthDp(short sh){
         if(getConfigSize()<SIZE_32){
@@ -732,9 +748,13 @@ public class ResConfig extends FixedBlockContainer
         if(str!=null){
             jsonObject.put(NAME_screenLayout, str);
         }
-        str = getUiMode();
-        if(str!=null){
-            jsonObject.put(NAME_uiMode, str);
+        UiModeType uiModeType = getUiModeType();
+        if(uiModeType!=null){
+            jsonObject.put(NAME_ui_mode_type, uiModeType.toString());
+        }
+        UiModeNight uiModeNight = getUiModeNight();
+        if(uiModeNight!=null){
+            jsonObject.put(NAME_ui_mode_night, uiModeNight.toString());
         }
         val = getSmallestScreenWidthDp();
         if(val!=0){
@@ -781,7 +801,8 @@ public class ResConfig extends FixedBlockContainer
         setSdkVersion((short) json.optInt(NAME_sdkVersion));
         setMinorVersion((short) json.optInt(NAME_minorVersion));
         setScreenLayout(json.optString(NAME_screenLayout));
-        setUiMode(json.optString(NAME_uiMode));
+        setUiModeType(UiModeType.valueOf(json.optString(NAME_ui_mode_type)));
+        setUiModeNight(UiModeNight.valueOf(json.optString(NAME_ui_mode_night)));
         setSmallestScreenWidthDp((short) json.optInt(NAME_smallestScreenWidthDp));
         setScreenWidthDp((short) json.optInt(NAME_screenWidthDp));
         setScreenHeightDp((short) json.optInt(NAME_screenHeightDp));
@@ -1150,6 +1171,142 @@ public class ResConfig extends FixedBlockContainer
             return null;
         }
     }
+    public static final class UiModeType extends Flag{
+        public static final int MASK_UI_MODE_TYPE = 0x0f;
+
+        public static final UiModeType NORMAL = new UiModeType("normal", 0x01);
+        public static final UiModeType DESK = new UiModeType("desk", 0x02);
+        public static final UiModeType CAR = new UiModeType("car", 0x03);
+        public static final UiModeType TELEVISION = new UiModeType("television", 0x04);
+        public static final UiModeType APPLIANCE = new UiModeType("appliance", 0x05);
+        public static final UiModeType WATCH = new UiModeType("watch", 0x06);
+        public static final UiModeType VRHEADSET = new UiModeType("vrheadset", 0x07);
+        public static final UiModeType GODZILLAUI = new UiModeType("godzillaui", 0x0b);
+        public static final UiModeType SMALLUI = new UiModeType("smallui", 0x0c);
+        public static final UiModeType MEDIUMUI = new UiModeType("mediumui", 0x0d);
+        public static final UiModeType LARGEUI = new UiModeType("largeui", 0x0e);
+        public static final UiModeType HUGEUI = new UiModeType("hugeui", 0x0f);
+
+        private static final UiModeType[] VALUES = new UiModeType[]{
+               NORMAL,
+               DESK,
+               CAR,
+               TELEVISION,
+               APPLIANCE,
+               WATCH,
+               VRHEADSET,
+               GODZILLAUI,
+               SMALLUI,
+               MEDIUMUI,
+               LARGEUI,
+               HUGEUI
+        };
+
+        private UiModeType(String name, int flag) {
+            super(name, flag);
+        }
+        public static UiModeType valueOf(int flag){
+            return Flag.valueOf(VALUES, MASK_UI_MODE_TYPE, flag);
+        }
+        public static UiModeType valueOf(String name){
+            return Flag.valueOf(VALUES, name);
+        }
+        public static UiModeType fromQualifiers(String qualifiers){
+            return Flag.fromQualifiers(VALUES, qualifiers);
+        }
+        public static UiModeType fromQualifiers(String[] qualifiers){
+            return Flag.fromQualifiers(VALUES, qualifiers);
+        }
+    }
+    public static final class UiModeNight extends Flag{
+        public static final int MASK_UI_MODE_NIGHT = 0x30;
+        public static final UiModeNight NIGHT = new UiModeNight("night",0x20);
+        public static final UiModeNight NONIGHT = new UiModeNight("nonight",0x20);
+        private static final UiModeNight[] VALUES = new UiModeNight[]{
+                NIGHT,
+                NONIGHT
+        };
+        private UiModeNight(String name, int flag) {
+            super(name, flag);
+        }
+        public static UiModeNight valueOf(int flag){
+            return Flag.valueOf(VALUES, MASK_UI_MODE_NIGHT, flag);
+        }
+        public static UiModeNight valueOf(String name){
+            return Flag.valueOf(VALUES, name);
+        }
+        public static UiModeNight fromQualifiers(String qualifiers){
+            return Flag.fromQualifiers(VALUES, qualifiers);
+        }
+        public static UiModeNight fromQualifiers(String[] qualifiers){
+            return Flag.fromQualifiers(VALUES, qualifiers);
+        }
+    }
+    static class Flag{
+        private final String name;
+        private final int flag;
+        Flag(String name, int flag){
+            this.name = name;
+            this.flag = flag;
+        }
+        public int getFlag() {
+            return flag;
+        }
+        @Override
+        public boolean equals(Object obj) {
+            return obj == this;
+        }
+        @Override
+        public int hashCode() {
+            return super.hashCode();
+        }
+        @Override
+        public String toString() {
+            return name;
+        }
+        static<T extends Flag> T fromQualifiers(T[] values, String qualifiers){
+            if(qualifiers == null){
+                return null;
+            }
+            return fromQualifiers(values, qualifiers.split("\\s*-\\s*"));
+        }
+        static<T extends Flag> T fromQualifiers(T[] values, String[] qualifiers){
+            if(qualifiers == null){
+                return null;
+            }
+            for(String name:qualifiers){
+                T flag = Flag.valueOf(values, name);
+                if(flag != null){
+                    return flag;
+                }
+            }
+            return null;
+        }
+        static<T extends Flag> T valueOf(T[] values, int mask, int flagValue){
+            flagValue = flagValue & mask;
+            for(T flag:values){
+                if(flagValue == flag.getFlag()){
+                    return flag;
+                }
+            }
+            return null;
+        }
+        static<T extends Flag> T valueOf(T[] values, String name){
+            if(name == null || name.length()==0){
+                return null;
+            }
+            if(name.charAt(0)=='-'){
+                name = name.substring(1);
+            }
+            name = name.toLowerCase();
+            for(T flag:values){
+                if(name.equals(flag.toString())){
+                    return flag;
+                }
+            }
+            return null;
+        }
+    }
 
     public static final int SIZE_16 = 16;
     public static final int SIZE_28 = 28;
@@ -1214,7 +1371,8 @@ public class ResConfig extends FixedBlockContainer
     private static final String NAME_minorVersion = "minorVersion";
     //SIZE=28
     private static final String NAME_screenLayout = "screenLayout";
-    private static final String NAME_uiMode = "uiMode";
+    private static final String NAME_ui_mode_type = "ui_mode_type";
+    private static final String NAME_ui_mode_night = "ui_mode_night";
     private static final String NAME_smallestScreenWidthDp = "smallestScreenWidthDp";
     //SIZE=32 = "";
     private static final String NAME_screenWidthDp = "screenWidthDp";
