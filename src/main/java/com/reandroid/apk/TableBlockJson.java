@@ -83,7 +83,7 @@ public class TableBlockJson {
         builder.append(String.format("0x%02x", packageBlock.getId()));
         builder.append("-");
         builder.append(packageBlock.getIndex());
-        String name= packageBlock.getName();
+        String name= ApkUtil.sanitizeForFileName(packageBlock.getName());
         if(name!=null){
             builder.append('-');
             builder.append(name);
