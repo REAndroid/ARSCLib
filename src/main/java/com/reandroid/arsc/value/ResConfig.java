@@ -664,6 +664,41 @@
      public void setColorModeHdr(ColorModeHdr colorModeHdr){
          setColorMode(ColorModeHdr.update(colorModeHdr, getColorMode()));
      }
+     public void setLocaleNumberingSystem(byte[] bts){
+         if(getConfigSize()<SIZE_64){
+             if(isNull(bts)){
+                 return;
+             }
+             throw new IllegalArgumentException("Can not set localeNumberingSystem for config size="+getConfigSize());
+         }
+         bts = ensureArrayLength(bts, LEN_localeNumberingSystem);
+         mValuesContainer.putByteArray(OFFSET_localeNumberingSystem, bts);
+     }
+     public String getLocaleNumberingSystem(){
+         char[] chars = getLocaleNumberingSystemChars();
+         if(isNull(chars)){
+             return null;
+         }
+         return new String(chars);
+     }
+     public char[] getLocaleNumberingSystemChars(){
+         if(getConfigSize()<SIZE_64){
+             return null;
+         }
+         byte[] bts = mValuesContainer.getByteArray(OFFSET_localeNumberingSystem, LEN_localeNumberingSystem);
+         return trimEndingZero(toCharArray(bts));
+     }
+     public void setLocaleNumberingSystem(char[] chs){
+         byte[] bts=toByteArray(chs, LEN_localeNumberingSystem);
+         setLocaleNumberingSystem(bts);
+     }
+     public void setLocaleNumberingSystem(String numberingSystem){
+         char[] chars = null;
+         if(numberingSystem!=null){
+             chars = numberingSystem.toCharArray();
+         }
+         setLocaleNumberingSystem(chars);
+     }
 
      public String getQualifiers(){
          int hash = this.hashCode();
@@ -764,6 +799,10 @@
          jsonObject.put(NAME_screen_layout_round, Flag.toString(getScreenLayoutRound()));
          jsonObject.put(NAME_color_mode_wide, Flag.toString(getColorModeWide()));
          jsonObject.put(NAME_color_mode_hdr, Flag.toString(getColorModeHdr()));
+         str = getLocaleNumberingSystem();
+         if(str!=null){
+             jsonObject.put(NAME_localeNumberingSystem, str);
+         }
          return jsonObject;
      }
      @Override
@@ -802,7 +841,7 @@
          setScreenLayoutRound(ScreenLayoutRound.valueOf(json.optString(NAME_screen_layout_round)));
          setColorModeWide(ColorModeWide.valueOf(json.optString(NAME_color_mode_wide)));
          setColorModeHdr(ColorModeHdr.valueOf(json.optString(NAME_color_mode_hdr)));
-
+         setLocaleNumberingSystem(json.optString(NAME_localeNumberingSystem));
          trimToSize(SIZE_48);
      }
      @Override
@@ -1644,6 +1683,8 @@
              appendFlag(resConfig.getColorModeWide());
              appendFlag(resConfig.getColorModeHdr());
 
+             appendLocaleNumberingSystem();
+
              return mBuilder.toString();
          }
          private void appendScreenWidthHeight(){
@@ -1691,6 +1732,15 @@
                  builder.append(separator);
                  builder.append(variant);
              }
+         }
+         private void appendLocaleNumberingSystem(){
+             String numberingSystem = mConfig.getLocaleNumberingSystem();
+             if(numberingSystem==null){
+                 return;
+             }
+             StringBuilder builder = mBuilder;
+             builder.append("-u+nu+");
+             builder.append(numberingSystem);
          }
          private void appendFlag(ResConfig.Flag flag){
              if(flag==null){
@@ -1763,10 +1813,12 @@
      private static final int OFFSET_colorMode = 45;
      private static final int OFFSET_reservedPadding = 46;
      //SIZE=52
-     private static final int OFFSET_endBlock = 52;
+     private static final int OFFSET_localeNumberingSystem = 48;
+     //SIZE=60
 
      private static final int LEN_localeScript = 4;
      private static final int LEN_localeVariant = 8;
+     private static final int LEN_localeNumberingSystem = 8;
 
      private static final String NAME_mcc = "mcc";
      private static final String NAME_mnc = "mnc";
@@ -1801,6 +1853,8 @@
      private static final String NAME_screen_layout_round = "screen_layout_round";
      private static final String NAME_color_mode_wide = "color_mode_wide";
      private static final String NAME_color_mode_hdr = "color_mode_hdr";
+
+     private static final String NAME_localeNumberingSystem = "localeNumberingSystem";
 
      private static final char POSTFIX_locale = '#';
 
