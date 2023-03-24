@@ -703,12 +703,8 @@
      public String getQualifiers(){
          int hash = this.hashCode();
          if(mQualifiers==null || mQualifiersStamp!=hash){
-             try{
-                 mQualifiers = new QualifierBuilder(this).build();
-                 mQualifiersStamp = hash;
-             }catch (Exception ex){
-                 mQualifiers = "";
-             }
+             mQualifiers = new QualifierBuilder(this).build();
+             mQualifiersStamp = hash;
          }
          return mQualifiers;
      }
