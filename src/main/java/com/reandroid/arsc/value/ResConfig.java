@@ -669,7 +669,7 @@
          int hash = this.hashCode();
          if(mQualifiers==null || mQualifiersStamp!=hash){
              try{
-                 mQualifiers = ResConfigHelper.toQualifier(this).trim();
+                 mQualifiers = new QualifierBuilder(this).build();
                  mQualifiersStamp = hash;
              }catch (Exception ex){
                  mQualifiers = "";
@@ -1596,6 +1596,130 @@
                  value = value | flag.getFlag();
              }
              return value;
+         }
+     }
+
+     static class QualifierBuilder{
+         private final ResConfig mConfig;
+         private StringBuilder mBuilder;
+         public QualifierBuilder(ResConfig resConfig){
+             this.mConfig = resConfig;
+         }
+         public String build(){
+             ResConfig resConfig = this.mConfig;
+             if(resConfig.isDefault()){
+                 return "";
+             }
+             this.mBuilder = new StringBuilder();
+             appendNumber("mcc", resConfig.getMcc());
+             appendNumber("mnc", resConfig.getMnc());
+
+             appendLanguageAndRegion();
+
+             appendFlag(resConfig.getOrientation());
+             appendFlag(resConfig.getTouchscreen());
+             appendFlag(resConfig.getDensity());
+             appendFlag(resConfig.getKeyboard());
+             appendFlag(resConfig.getNavigation());
+             appendFlag(resConfig.getInputFlagsKeysHidden());
+             appendFlag(resConfig.getInputFlagsNavHidden());
+
+             appendScreenWidthHeight();
+
+             appendNumber("v", resConfig.getSdkVersion());
+             // append resConfig.getMinorVersion()
+             appendFlag(resConfig.getScreenLayoutSize());
+             appendFlag(resConfig.getScreenLayoutLong());
+             appendFlag(resConfig.getScreenLayoutDir());
+
+             appendFlag(resConfig.getUiModeType());
+             appendFlag(resConfig.getUiModeNight());
+
+             appendDp("sw", resConfig.getSmallestScreenWidthDp());
+             appendDp("w", resConfig.getScreenWidthDp());
+             appendDp("h", resConfig.getScreenHeightDp());
+
+             appendFlag(resConfig.getScreenLayoutRound());
+
+             appendFlag(resConfig.getColorModeWide());
+             appendFlag(resConfig.getColorModeHdr());
+
+             return mBuilder.toString();
+         }
+         private void appendScreenWidthHeight(){
+             ResConfig resConfig = this.mConfig;
+             int width = resConfig.getScreenWidth();
+             int height = resConfig.getScreenHeight();
+             if(width==0 && height==0){
+                 return;
+             }
+             mBuilder.append(width).append('x').append(height);
+         }
+         private void appendLanguageAndRegion(){
+             ResConfig resConfig = this.mConfig;
+             String language = resConfig.getLanguage();
+             String region = resConfig.getRegion();
+             String script = resConfig.getLocaleScript();
+             String variant = resConfig.getLocaleVariant();
+             if(language==null && region==null){
+                 return;
+             }
+             StringBuilder builder = this.mBuilder;
+             char separator;
+             if(script != null || variant != null){
+                 builder.append('b');
+                 separator = '+';
+             }else {
+                 separator = '-';
+             }
+             if(language!=null){
+                 builder.append(separator);
+                 builder.append(language);
+             }
+             if(region!=null){
+                 builder.append(separator);
+                 if(region.length()==2){
+                     builder.append('r');
+                 }
+                 builder.append(region);
+             }
+             if(script!=null){
+                 builder.append(separator);
+                 builder.append(script);
+             }
+             if(variant!=null){
+                 builder.append(separator);
+                 builder.append(variant);
+             }
+         }
+         private void appendFlag(ResConfig.Flag flag){
+             if(flag==null){
+                 return;
+             }
+             mBuilder.append('-').append(flag.toString());
+         }
+         private void appendDp(String prefix, int number){
+             if(number == 0){
+                 return;
+             }
+             StringBuilder builder = this.mBuilder;
+             builder.append('-');
+             if(prefix!=null){
+                 builder.append(prefix);
+             }
+             builder.append(number);
+             builder.append("dp");
+         }
+         private void appendNumber(String prefix, int number){
+             if(number == 0){
+                 return;
+             }
+             StringBuilder builder = this.mBuilder;
+             builder.append('-');
+             if(prefix!=null){
+                 builder.append(prefix);
+             }
+             builder.append(number);
          }
      }
 
