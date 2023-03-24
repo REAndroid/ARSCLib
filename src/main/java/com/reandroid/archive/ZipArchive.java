@@ -85,15 +85,11 @@ public class ZipArchive {
         return inputSource;
     }
     public void addArchive(File archiveFile) throws IOException {
-        ZipFile zipFile=new ZipFile(archiveFile);
-        add(zipFile);
+        List<InputSource> sourceList = InputSourceUtil.listZipFileSources(archiveFile);
+        this.addAll(sourceList);
     }
     public void addDirectory(File dir){
         addAll(InputSourceUtil.listDirectory(dir));
-    }
-    public void add(ZipFile zipFile){
-        List<InputSource> sourceList = InputSourceUtil.listZipFileSources(zipFile);
-        this.addAll(sourceList);
     }
     public void addAll(Collection<? extends InputSource> inputSourceList){
         for(InputSource inputSource:inputSourceList){

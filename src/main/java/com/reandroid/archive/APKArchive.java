@@ -16,6 +16,7 @@
 package com.reandroid.archive;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -35,17 +36,14 @@ public class APKArchive extends ZipArchive {
         sortApkFiles(new ArrayList<>(listInputSources()));
     }
     public long writeApk(File outApk) throws IOException{
-        ZipSerializer serializer=new ZipSerializer(listInputSources());
+        ZipSerializer serializer=new ZipSerializer(listInputSources(), new ZipAlign());
         return serializer.writeZip(outApk);
     }
     public long writeApk(OutputStream outputStream) throws IOException{
-        ZipSerializer serializer=new ZipSerializer(listInputSources());
+        ZipSerializer serializer=new ZipSerializer(listInputSources(), new ZipAlign());
         return serializer.writeZip(outputStream);
     }
     public static APKArchive loadZippedApk(File zipFile) throws IOException {
-        return loadZippedApk(new ZipFile(zipFile));
-    }
-    public static APKArchive loadZippedApk(ZipFile zipFile) {
         Map<String, InputSource> entriesMap = InputSourceUtil.mapZipFileSources(zipFile);
         return new APKArchive(entriesMap);
     }

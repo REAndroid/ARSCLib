@@ -15,22 +15,89 @@
   */
 package com.reandroid.archive;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class ZipEntrySource extends InputSource {
-    private final ZipFile zipFile;
     private final ZipEntry zipEntry;
-    public ZipEntrySource(ZipFile zipFile, ZipEntry zipEntry){
+    private final FileChannel channel;
+    private final long headerOffset;
+    private long dataOffset;
+
+    public ZipEntrySource(ZipEntry zipEntry, long headerOffset, FileChannel channel) {
         super(zipEntry.getName());
-        this.zipFile=zipFile;
-        this.zipEntry=zipEntry;
+        this.zipEntry = zipEntry;
         super.setMethod(zipEntry.getMethod());
+        this.channel = channel;
+        this.headerOffset = headerOffset;
+        this.dataOffset = ZipDeserializer.dataOffset(headerOffset, zipEntry);
     }
+
+    @Override
+    public long getLength() {
+        return zipEntry.getSize();
+    }
+
+    @Override
+    public long getCrc() {
+        return zipEntry.getCrc();
+    }
+
+    private InputStream rawStream() {
+        return new InputStream() {
+            private int cursor = 0;
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
+                long remaining = zipEntry.getCompressedSize() - cursor;
+
+                if (len == 0) {
+                    return 0;
+                }
+                if (len < 0 || off < 0 || (len + off) < b.length) {
+                    throw new IOException("Invalid length/offset.");
+                }
+                if (remaining == 0) {
+                    return -1;
+                }
+
+                len = (int) Math.min(remaining, len);
+                int n = channel.read(ByteBuffer.wrap(b).position(off).limit(off + len), dataOffset + cursor);
+                cursor += n;
+                return n;
+            }
+
+            @Override
+            public int read() throws IOException {
+                byte[] b = new byte[1];
+                int n = read(b);
+                if (n == 1)
+                    return b[0] & 0xff;
+                return -1;
+            }
+        };
+    }
+
     @Override
     public InputStream openStream() throws IOException {
-        return zipFile.getInputStream(zipEntry);
+        InputStream stream = rawStream();
+        switch (zipEntry.getMethod()) {
+            case ZipEntry.DEFLATED:
+                return new InflaterInputStream(stream, new Inflater(true));
+            case ZipEntry.STORED:
+                return stream;
+            default:
+                throw new IOException("Unsupported compression method: " + zipEntry.getMethod());
+        }
+    }
+
+    public WriteCompressedResult writeCompressed(OutputStream outputStream) throws IOException {
+        write(outputStream, rawStream());
+        return new WriteCompressedResult(getCrc(), zipEntry.getCompressedSize(), getLength());
     }
 }

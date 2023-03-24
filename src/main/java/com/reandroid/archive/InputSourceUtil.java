@@ -41,23 +41,16 @@ import java.util.zip.ZipInputStream;
         return path;
     }
 
-    public static Map<String, InputSource> mapZipFileSources(ZipFile zipFile){
-        Map<String, InputSource> results=new LinkedHashMap<>();
-        Enumeration<? extends ZipEntry> entriesEnum = zipFile.entries();
-        int i=0;
-        while (entriesEnum.hasMoreElements()){
-            ZipEntry zipEntry = entriesEnum.nextElement();
-            if(zipEntry.isDirectory()){
-                continue;
-            }
-            ZipEntrySource source=new ZipEntrySource(zipFile, zipEntry);
-            source.setSort(i);
-            source.setMethod(zipEntry.getMethod());
-            results.put(source.getName(), source);
-            i++;
-        }
-        return results;
+    public static Map<String, InputSource> mapZipFileSources(File zipFile) throws IOException {
+        ZipDeserializer deserializer = new ZipDeserializer(zipFile);
+        return deserializer.mapInputSources();
     }
+
+     public static List<InputSource> listZipFileSources(File zipFile) throws IOException {
+         ZipDeserializer deserializer = new ZipDeserializer(zipFile);
+         return deserializer.listInputSources();
+     }
+
     public static Map<String, ByteInputSource> mapInputStreamAsBuffer(InputStream inputStream) throws IOException {
         Map<String, ByteInputSource> results = new LinkedHashMap<>();
         ZipInputStream zin = new ZipInputStream(inputStream);
@@ -88,21 +81,7 @@ import java.util.zip.ZipInputStream;
         outputStream.close();
         return outputStream.toByteArray();
     }
-    public static List<InputSource> listZipFileSources(ZipFile zipFile){
-        List<InputSource> results=new ArrayList<>();
-        Enumeration<? extends ZipEntry> entriesEnum = zipFile.entries();
-        int i=0;
-        while (entriesEnum.hasMoreElements()){
-            ZipEntry zipEntry = entriesEnum.nextElement();
-            if(zipEntry.isDirectory()){
-                continue;
-            }
-            ZipEntrySource source=new ZipEntrySource(zipFile, zipEntry);
-            source.setSort(i);
-            results.add(source);
-        }
-        return results;
-    }
+
     public static List<InputSource> listDirectory(File dir){
         List<InputSource> results=new ArrayList<>();
         recursiveDirectory(results, dir, dir);

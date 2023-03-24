@@ -268,7 +268,7 @@ public class ApkModule implements ApkFile {
         if(manifest!=null){
             manifest.setSort(0);
         }
-        ZipSerializer serializer=new ZipSerializer(archive.listInputSources());
+        ZipSerializer serializer=new ZipSerializer(archive.listInputSources(), new ZipAlign());
         serializer.setWriteProgress(progress);
         serializer.setWriteInterceptor(interceptor);
         serializer.writeZip(file);
