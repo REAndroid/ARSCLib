@@ -26,6 +26,8 @@
 
  import java.io.IOException;
  import java.util.Arrays;
+ import java.util.regex.Matcher;
+ import java.util.regex.Pattern;
 
  public class ResConfig extends FixedBlockContainer
          implements BlockLoad, JSONConvert<JSONObject>, Comparable<ResConfig> {
@@ -66,8 +68,13 @@
      @Override
      protected void onRefreshed() {
      }
-     public void parseQualifiers(String name){
-         ResConfigHelper.parseQualifiers(this, name);
+     /**
+      * returns null if parsing is ok, else returns unknown qualifiers
+      * */
+     public String[] parseQualifiers(String qualifiers){
+         QualifierParser parser = new QualifierParser(this, qualifiers);
+         parser.parse();
+         return parser.getErrors();
      }
      public void setConfigSize(int size){
          if(!isValidSize(size)){
@@ -102,14 +109,14 @@
          return true;
      }
 
-     public void setMcc(short sh){
+     public void setMcc(int  value){
          if(getConfigSize()<SIZE_16){
-             if(sh==0){
+             if(value==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set mcc for config size="+getConfigSize());
          }
-         mValuesContainer.putShort(OFFSET_mcc, sh);
+         mValuesContainer.putShort(OFFSET_mcc, value);
      }
      public int getMcc(){
          if(getConfigSize()<SIZE_16){
@@ -117,14 +124,14 @@
          }
          return mValuesContainer.getShortUnsigned(OFFSET_mcc);
      }
-     public void setMnc(short sh){
+     public void setMnc(int value){
          if(getConfigSize()<SIZE_16){
-             if(sh==0){
+             if(value==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set mnc for config size="+getConfigSize());
          }
-         mValuesContainer.putShort(OFFSET_mnc, sh);
+         mValuesContainer.putShort(OFFSET_mnc, value);
      }
      public int getMnc(){
          if(getConfigSize()<SIZE_16){
@@ -195,6 +202,9 @@
      public void setRegion(String region){
          char[] chars = null;
          if(region!=null){
+             if(region.length()==3 && region.charAt(0) == 'r'){
+                 region = region.substring(1);
+             }
              chars = region.toCharArray();
          }
          setRegion(chars);
@@ -213,7 +223,7 @@
              }
              throw new IllegalArgumentException("Can not set orientation for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_orientation, (byte) orientation);
+         mValuesContainer.putByte(OFFSET_orientation, orientation);
      }
      public int getOrientationValue(){
          if(getConfigSize()<SIZE_16){
@@ -234,7 +244,7 @@
              }
              throw new IllegalArgumentException("Can not set touchscreen for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_touchscreen, (byte) touchscreen);
+         mValuesContainer.putByte(OFFSET_touchscreen, touchscreen);
      }
      public int getTouchscreenValue(){
          if(getConfigSize()<SIZE_16){
@@ -255,7 +265,7 @@
              }
              throw new IllegalArgumentException("Can not set density for config size="+getConfigSize());
          }
-         mValuesContainer.putShort(OFFSET_density, (short) density);
+         mValuesContainer.putShort(OFFSET_density, density);
      }
      public int getDensityValue(){
          if(getConfigSize()<SIZE_16){
@@ -276,7 +286,7 @@
              }
              throw new IllegalArgumentException("Can not set keyboard for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_keyboard, (byte) keyboard);
+         mValuesContainer.putByte(OFFSET_keyboard, keyboard);
      }
      public int getKeyboardValue(){
          if(getConfigSize()<SIZE_28){
@@ -297,7 +307,7 @@
              }
              throw new IllegalArgumentException("Can not set navigation for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_navigation, (byte) navigation);
+         mValuesContainer.putByte(OFFSET_navigation, navigation);
      }
      public int getNavigationValue(){
          if(getConfigSize()<SIZE_28){
@@ -318,7 +328,7 @@
              }
              throw new IllegalArgumentException("Can not set inputFlags for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_inputFlags, (byte) inputFlags);
+         mValuesContainer.putByte(OFFSET_inputFlags, inputFlags);
      }
      public int getInputFlagsValue(){
          if(getConfigSize()<SIZE_28){
@@ -353,14 +363,14 @@
          }
          return mValuesContainer.get(OFFSET_inputPad0);
      }
-     public void setScreenWidth(short sh){
+     public void setScreenWidth(int value){
          if(getConfigSize()<SIZE_28){
-             if(sh==0){
+             if(value==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set screenWidth for config size="+getConfigSize());
          }
-         mValuesContainer.putShort(OFFSET_screenWidth, sh);
+         mValuesContainer.putShort(OFFSET_screenWidth, value);
      }
      public int getScreenWidth(){
          if(getConfigSize()<SIZE_28){
@@ -368,14 +378,14 @@
          }
          return mValuesContainer.getShortUnsigned(OFFSET_screenWidth);
      }
-     public void setScreenHeight(short sh){
+     public void setScreenHeight(int value){
          if(getConfigSize()<SIZE_28){
-             if(sh==0){
+             if(value==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set screenHeight for config size="+getConfigSize());
          }
-         mValuesContainer.putShort(OFFSET_screenHeight, sh);
+         mValuesContainer.putShort(OFFSET_screenHeight, value);
      }
      public int getScreenHeight(){
          if(getConfigSize()<SIZE_28){
@@ -383,18 +393,18 @@
          }
          return mValuesContainer.getShortUnsigned(OFFSET_screenHeight);
      }
-     public void setScreenSize(short w, short h){
-         this.setScreenWidth(w);
-         this.setScreenHeight(h);
+     public void setScreenSize(int width, int height){
+         this.setScreenWidth(width);
+         this.setScreenHeight(height);
      }
-     public void setSdkVersion(short sh){
+     public void setSdkVersion(int value){
          if(getConfigSize()<SIZE_28){
-             if(sh==0){
+             if(value==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set sdkVersion for config size="+getConfigSize());
          }
-         mValuesContainer.putShort(OFFSET_sdkVersion, sh);
+         mValuesContainer.putShort(OFFSET_sdkVersion, value);
      }
      public int getSdkVersion(){
          if(getConfigSize()<SIZE_28){
@@ -402,14 +412,14 @@
          }
          return mValuesContainer.getShortUnsigned(OFFSET_sdkVersion);
      }
-     public void setMinorVersion(short sh){
+     public void setMinorVersion(int value){
          if(getConfigSize()<SIZE_28){
-             if(sh==0){
+             if(value==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set minorVersion for config size="+getConfigSize());
          }
-         mValuesContainer.putShort(OFFSET_minorVersion, sh);
+         mValuesContainer.putShort(OFFSET_minorVersion, value);
      }
      public int getMinorVersion(){
          if(getConfigSize()<SIZE_28){
@@ -424,7 +434,7 @@
              }
              throw new IllegalArgumentException("Can not set screenLayout for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_screenLayout, (byte) layout);
+         mValuesContainer.putByte(OFFSET_screenLayout, layout);
      }
      public int getScreenLayout(){
          if(getConfigSize()<SIZE_32){
@@ -457,7 +467,7 @@
              }
              throw new IllegalArgumentException("Can not set uiMode for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_uiMode, (byte) mode);
+         mValuesContainer.putByte(OFFSET_uiMode, mode);
      }
      public int getUiMode(){
          if(getConfigSize()<SIZE_32){
@@ -477,14 +487,14 @@
      public void setUiModeNight(UiModeNight uiModeNight){
          setUiMode(UiModeNight.update(uiModeNight, getUiMode()));
      }
-     public void setSmallestScreenWidthDp(short sh){
+     public void setSmallestScreenWidthDp(int value){
          if(getConfigSize()<SIZE_32){
-             if(sh==0){
+             if(value==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set smallestScreenWidthDp for config size="+getConfigSize());
          }
-         mValuesContainer.putShort(OFFSET_smallestScreenWidthDp, sh);
+         mValuesContainer.putShort(OFFSET_smallestScreenWidthDp, value);
      }
      public int getSmallestScreenWidthDp(){
          if(getConfigSize()<SIZE_32){
@@ -492,14 +502,14 @@
          }
          return mValuesContainer.getShortUnsigned(OFFSET_smallestScreenWidthDp);
      }
-     public void setScreenWidthDp(short sh){
+     public void setScreenWidthDp(int value){
          if(getConfigSize()<SIZE_36){
-             if(sh==0){
+             if(value==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set screenWidthDp for config size="+getConfigSize());
          }
-         mValuesContainer.putShort(OFFSET_screenWidthDp, sh);
+         mValuesContainer.putShort(OFFSET_screenWidthDp, value);
      }
      public int getScreenWidthDp(){
          if(getConfigSize()<SIZE_36){
@@ -507,14 +517,14 @@
          }
          return mValuesContainer.getShortUnsigned(OFFSET_screenWidthDp);
      }
-     public void setScreenHeightDp(short sh){
+     public void setScreenHeightDp(int value){
          if(getConfigSize()<SIZE_36){
-             if(sh==0){
+             if(value==0){
                  return;
              }
              throw new IllegalArgumentException("Can not set screenHeightDp for config size="+getConfigSize());
          }
-         mValuesContainer.putShort(OFFSET_screenHeightDp, sh);
+         mValuesContainer.putShort(OFFSET_screenHeightDp, value);
      }
      public int getScreenHeightDp(){
          if(getConfigSize()<SIZE_36){
@@ -623,7 +633,7 @@
              }
              throw new IllegalArgumentException("Can not set screenLayout2 for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_screenLayout2, (byte) screenLayout2);
+         mValuesContainer.putByte(OFFSET_screenLayout2, screenLayout2);
      }
      public int getScreenLayout2(){
          if(getConfigSize()<SIZE_52){
@@ -644,7 +654,7 @@
              }
              throw new IllegalArgumentException("Can not set colorMode for config size="+getConfigSize());
          }
-         mValuesContainer.put(OFFSET_colorMode, (byte) colorMode);
+         mValuesContainer.putByte(OFFSET_colorMode, colorMode);
      }
      public int getColorMode(){
          if(getConfigSize()<SIZE_56){
@@ -710,14 +720,7 @@
      }
 
      public boolean isEqualQualifiers(String qualifiers){
-         if(qualifiers==null){
-             qualifiers="";
-         }
-         qualifiers=ResConfigHelper.sortQualifiers(qualifiers);
-         return getQualifiers().equals(qualifiers);
-     }
-     public String getLocale(){
-         return ResConfigHelper.decodeLocale(this);
+         return this.equals(parse(qualifiers));
      }
      public boolean isDefault(){
          return isNull(mValuesContainer.getBytes());
@@ -809,8 +812,8 @@
          }
          trimToSize(SIZE_64);
 
-         setMcc((short) json.optInt(NAME_mcc));
-         setMnc((short) json.optInt(NAME_mnc));
+         setMcc(json.optInt(NAME_mcc));
+         setMnc(json.optInt(NAME_mnc));
          setLanguage(json.optString(NAME_language));
          setRegion(json.optString(NAME_region));
          setOrientation(Orientation.valueOf(json.optString(NAME_orientation)));
@@ -820,18 +823,18 @@
          setNavigation(Navigation.valueOf(json.optString(NAME_navigation)));
          setInputFlagsKeysHidden(InputFlagsKeysHidden.valueOf(json.optString(NAME_input_flags_keys_hidden)));
          setInputFlagsNavHidden(InputFlagsNavHidden.valueOf(json.optString(NAME_input_flags_nav_hidden)));
-         setScreenWidth((short) json.optInt(NAME_screenWidth));
-         setScreenHeight((short) json.optInt(NAME_screenHeight));
-         setSdkVersion((short) json.optInt(NAME_sdkVersion));
-         setMinorVersion((short) json.optInt(NAME_minorVersion));
+         setScreenWidth(json.optInt(NAME_screenWidth));
+         setScreenHeight(json.optInt(NAME_screenHeight));
+         setSdkVersion(json.optInt(NAME_sdkVersion));
+         setMinorVersion(json.optInt(NAME_minorVersion));
          setScreenLayoutSize(ScreenLayoutSize.valueOf(json.optString(NAME_screen_layout_size)));
          setScreenLayoutLong(ScreenLayoutLong.valueOf(json.optString(NAME_screen_layout_long)));
          setScreenLayoutDir(ScreenLayoutDir.valueOf(json.optString(NAME_screen_layout_dir)));
          setUiModeType(UiModeType.valueOf(json.optString(NAME_ui_mode_type)));
          setUiModeNight(UiModeNight.valueOf(json.optString(NAME_ui_mode_night)));
-         setSmallestScreenWidthDp((short) json.optInt(NAME_smallestScreenWidthDp));
-         setScreenWidthDp((short) json.optInt(NAME_screenWidthDp));
-         setScreenHeightDp((short) json.optInt(NAME_screenHeightDp));
+         setSmallestScreenWidthDp(json.optInt(NAME_smallestScreenWidthDp));
+         setScreenWidthDp(json.optInt(NAME_screenWidthDp));
+         setScreenHeightDp(json.optInt(NAME_screenHeightDp));
          setLocaleScript(json.optString(NAME_localeScript));
          setLocaleVariantInternal(json.optString(NAME_localeVariant));
          setScreenLayoutRound(ScreenLayoutRound.valueOf(json.optString(NAME_screen_layout_round)));
@@ -872,6 +875,12 @@
      @Override
      public int compareTo(ResConfig resConfig) {
          return getQualifiers().compareTo(resConfig.getQualifiers());
+     }
+
+     public static ResConfig parse(String qualifiers){
+         ResConfig resConfig = new ResConfig();
+         resConfig.parseQualifiers(qualifiers);
+         return resConfig;
      }
 
 
@@ -1192,7 +1201,7 @@
          public static final int MASK = 0x0f;
 
          public static final Keyboard NOKEYS = new Keyboard("nokeys", 0x01);
-         public static final Keyboard QWERTY = new Keyboard("nokeys", 0x02);
+         public static final Keyboard QWERTY = new Keyboard("qwerty", 0x02);
          public static final Keyboard KEY12 = new Keyboard("12key", 0x03);
 
          public static final Keyboard[] VALUES = new Keyboard[]{
@@ -1361,10 +1370,10 @@
      }
      public static final class UiModeNight extends Flag{
          public static final int MASK = 0x30;
-         public static final UiModeNight NONIGHT = new UiModeNight("nonight",0x10);
+         public static final UiModeNight NOTNIGHT = new UiModeNight("notnight",0x10);
          public static final UiModeNight NIGHT = new UiModeNight("night",0x20);
          private static final UiModeNight[] VALUES = new UiModeNight[]{
-                 NONIGHT,
+                 NOTNIGHT,
                  NIGHT
          };
          private UiModeNight(String name, int flag) {
@@ -1474,10 +1483,10 @@
      }
      public static final class ScreenLayoutRound extends Flag{
          public static final int MASK = 0x03;
-         public static final ScreenLayoutRound NOROUND = new ScreenLayoutRound("noround", 0x01);
+         public static final ScreenLayoutRound NOTROUND = new ScreenLayoutRound("notround", 0x01);
          public static final ScreenLayoutRound ROUND = new ScreenLayoutRound("round", 0x02);
          public static final ScreenLayoutRound[] VALUES = new ScreenLayoutRound[]{
-                 NOROUND,
+                 NOTROUND,
                  ROUND
          };
          private ScreenLayoutRound(String name, int flag) {
@@ -1592,9 +1601,10 @@
              if(qualifiers == null){
                  return null;
              }
-             for(String name:qualifiers){
-                 T flag = Flag.valueOf(values, name);
+             for(int i=0;i < qualifiers.length;i++){
+                 T flag = Flag.valueOf(values, qualifiers[i]);
                  if(flag != null){
+                     qualifiers[i] = null;
                      return flag;
                  }
              }
@@ -1646,8 +1656,8 @@
                  return "";
              }
              this.mBuilder = new StringBuilder();
-             appendNumber("mcc", resConfig.getMcc());
-             appendNumber("mnc", resConfig.getMnc());
+             appendPrefixedNumber("mcc", resConfig.getMcc());
+             appendPrefixedNumber("mnc", resConfig.getMnc());
 
              appendLanguageAndRegion();
 
@@ -1661,7 +1671,7 @@
 
              appendScreenWidthHeight();
 
-             appendNumber("v", resConfig.getSdkVersion());
+             appendPrefixedNumber("v", resConfig.getSdkVersion());
              // append resConfig.getMinorVersion()
              appendFlag(resConfig.getScreenLayoutSize());
              appendFlag(resConfig.getScreenLayoutLong());
@@ -1704,6 +1714,7 @@
              StringBuilder builder = this.mBuilder;
              char separator;
              if(script != null || variant != null){
+                 builder.append('-');
                  builder.append('b');
                  separator = '+';
              }else {
@@ -1756,17 +1767,366 @@
              builder.append(number);
              builder.append("dp");
          }
-         private void appendNumber(String prefix, int number){
+         private void appendPrefixedNumber(String prefix, int number){
              if(number == 0){
                  return;
              }
              StringBuilder builder = this.mBuilder;
              builder.append('-');
-             if(prefix!=null){
-                 builder.append(prefix);
-             }
+             builder.append(prefix);
              builder.append(number);
          }
+     }
+     static class QualifierParser{
+         private final ResConfig mConfig;
+         private final String[] mQualifiers;
+         private final int mPreferredSize;
+         private boolean mEmpty;
+         private boolean mLanguageRegionParsed;
+         private boolean mParseComplete;
+
+         public QualifierParser(ResConfig resConfig, String[] qualifiers){
+             this.mConfig = resConfig;
+             this.mQualifiers = qualifiers;
+             this.mPreferredSize = resConfig.getConfigSize();
+         }
+         public QualifierParser(ResConfig resConfig, String qualifiers){
+             this(resConfig, splitQualifiers(qualifiers));
+         }
+
+         public void parse(){
+             if(this.mParseComplete){
+                 return;
+             }
+             if(isEmpty()){
+                 onParseComplete();
+                 return;
+             }
+             ResConfig resConfig = this.mConfig;
+             resConfig.setConfigSize(ResConfig.SIZE_64);
+             parsePrefixedNumber();
+             parseDp();
+             parseWidthHeight();
+             parseLocaleNumberingSystem();
+             if(isEmpty()){
+                 onParseComplete();
+                 return;
+             }
+             String[] qualifiers = this.mQualifiers;
+             resConfig.setOrientation(ResConfig.Orientation.fromQualifiers(qualifiers));
+             resConfig.setTouchscreen(ResConfig.Touchscreen.fromQualifiers(qualifiers));
+             resConfig.setDensity(ResConfig.Density.fromQualifiers(qualifiers));
+             resConfig.setKeyboard(ResConfig.Keyboard.fromQualifiers(qualifiers));
+             resConfig.setNavigation(ResConfig.Navigation.fromQualifiers(qualifiers));
+             if(isEmpty()){
+                 onParseComplete();
+                 return;
+             }
+             resConfig.setInputFlagsKeysHidden(ResConfig.InputFlagsKeysHidden.fromQualifiers(qualifiers));
+             resConfig.setInputFlagsNavHidden(ResConfig.InputFlagsNavHidden.fromQualifiers(qualifiers));
+             resConfig.setScreenLayoutSize(ResConfig.ScreenLayoutSize.fromQualifiers(qualifiers));
+             resConfig.setScreenLayoutLong(ResConfig.ScreenLayoutLong.fromQualifiers(qualifiers));
+             resConfig.setScreenLayoutDir(ResConfig.ScreenLayoutDir.fromQualifiers(qualifiers));
+             if(isEmpty()){
+                 onParseComplete();
+                 return;
+             }
+             resConfig.setUiModeType(ResConfig.UiModeType.fromQualifiers(qualifiers));
+             resConfig.setUiModeNight(ResConfig.UiModeNight.fromQualifiers(qualifiers));
+
+             resConfig.setScreenLayoutRound(ResConfig.ScreenLayoutRound.fromQualifiers(qualifiers));
+
+             resConfig.setColorModeWide(ResConfig.ColorModeWide.fromQualifiers(qualifiers));
+             resConfig.setColorModeHdr(ResConfig.ColorModeHdr.fromQualifiers(qualifiers));
+             if(isEmpty()){
+                 onParseComplete();
+                 return;
+             }
+             parseLocaleScriptVariant();
+             parseLanguage();
+             parseRegion();
+             onParseComplete();
+         }
+         public String[] getErrors(){
+             if(!this.mParseComplete){
+                 return null;
+             }
+             String[] qualifiers = this.mQualifiers;
+             if(qualifiers==null || qualifiers.length==0){
+                 return null;
+             }
+             int length = qualifiers.length;
+             String[] tmp = new String[length];
+             int count = 0;
+             for(int i=0;i<length;i++){
+                 String qualifier = qualifiers[i];
+                 if(qualifier==null || qualifier.length()==0){
+                     continue;
+                 }
+                 tmp[count] = qualifier;
+                 count++;
+             }
+             if(count == 0){
+                 return null;
+             }
+             if(count == length){
+                 return tmp;
+             }
+             String[] errors = new String[count];
+             System.arraycopy(tmp, 0, errors, 0, count);
+             return errors;
+         }
+         private void onParseComplete(){
+             this.mConfig.trimToSize(this.mPreferredSize);
+             this.mParseComplete = true;
+         }
+
+         private void parsePrefixedNumber(){
+             if(isEmpty()){
+                 return;
+             }
+             String[] qualifiers = this.mQualifiers;
+             for(int i=0;i < qualifiers.length;i++){
+                 if(parsePrefixedNumber(qualifiers[i])){
+                     qualifiers[i] = null;
+                 }
+             }
+         }
+         private boolean parsePrefixedNumber(String qualifier){
+             if(qualifier==null){
+                 return false;
+             }
+             Matcher matcher = PATTERN_PREFIX_NUMBER.matcher(qualifier);
+             if(!matcher.find()){
+                 return false;
+             }
+             String prefix = matcher.group(1);
+             int value = Integer.parseInt(matcher.group(2));
+             ResConfig resConfig = mConfig;
+             if("mcc".equals(prefix)){
+                 resConfig.setMcc(value);
+             }else if("mnc".equals(prefix)) {
+                 resConfig.setMnc(value);
+             }else if("v".equals(prefix)){
+                 resConfig.setSdkVersion(value);
+             }else {
+                 return false;
+             }
+             return true;
+         }
+         private void parseDp(){
+             if(isEmpty()){
+                 return;
+             }
+             String[] qualifiers = this.mQualifiers;
+             for(int i=0;i < qualifiers.length;i++){
+                 if(parseDp(qualifiers[i])){
+                     qualifiers[i] = null;
+                 }
+             }
+         }
+         private boolean parseDp(String qualifier){
+             if(qualifier==null){
+                 return false;
+             }
+             Matcher matcher = PATTERN_DP.matcher(qualifier);
+             if(!matcher.find()){
+                 return false;
+             }
+             String prefix = matcher.group(1);
+             int value = Integer.parseInt(matcher.group(2));
+             ResConfig resConfig = this.mConfig;
+             if("sw".equals(prefix)){
+                 resConfig.setSmallestScreenWidthDp(value);
+             }else if("w".equals(prefix)) {
+                 resConfig.setScreenWidthDp(value);
+             }else if("h".equals(prefix)){
+                 resConfig.setScreenHeightDp(value);
+             }else {
+                 return false;
+             }
+             return true;
+         }
+         private void parseWidthHeight(){
+             if(isEmpty()){
+                 return;
+             }
+             String[] qualifiers = this.mQualifiers;
+             for(int i=0;i < qualifiers.length;i++){
+                 if(parseWidthHeight(qualifiers[i])){
+                     qualifiers[i] = null;
+                     return;
+                 }
+             }
+         }
+         private boolean parseWidthHeight(String qualifier){
+             if(qualifier==null){
+                 return false;
+             }
+             Matcher matcher = PATTERN_WIDTH_HEIGHT.matcher(qualifier);
+             if(!matcher.find()){
+                 return false;
+             }
+             int width = Integer.parseInt(matcher.group(1));
+             int height = Integer.parseInt(matcher.group(2));
+             ResConfig resConfig = this.mConfig;
+             resConfig.setScreenWidth(width);
+             resConfig.setScreenHeight(height);
+             return true;
+         }
+         private void parseLocaleNumberingSystem(){
+             if(isEmpty()){
+                 return;
+             }
+             String[] qualifiers = this.mQualifiers;
+             for(int i=0;i < qualifiers.length;i++){
+                 if(parseLocaleNumberingSystem(qualifiers[i])){
+                     qualifiers[i] = null;
+                     return;
+                 }
+             }
+         }
+         private boolean parseLocaleNumberingSystem(String qualifier){
+             if(qualifier==null){
+                 return false;
+             }
+             Matcher matcher = PATTERN_LOCALE_NUMBERING_SYSTEM.matcher(qualifier);
+             if(!matcher.find()){
+                 return false;
+             }
+             this.mConfig.setLocaleNumberingSystem(matcher.group(1));
+             return true;
+         }
+         private void parseLocaleScriptVariant(){
+             if(this.mLanguageRegionParsed || isEmpty()){
+                 return;
+             }
+             String[] qualifiers = this.mQualifiers;
+             for(int i=0;i < qualifiers.length;i++){
+                 if(parseLocaleScriptVariant(qualifiers[i])){
+                     qualifiers[i] = null;
+                     this.mLanguageRegionParsed = true;
+                     return;
+                 }
+             }
+         }
+         private boolean parseLocaleScriptVariant(String qualifier){
+             if(qualifier==null){
+                 return false;
+             }
+             Matcher matcher = PATTERN_LOCALE_SCRIPT_VARIANT.matcher(qualifier);
+             if(!matcher.find()){
+                 return false;
+             }
+             String language = trimPlus(matcher.group(1));
+             String region = trimPlus(matcher.group(2));
+             String script = trimPlus(matcher.group(3));
+             String variant = trimPlus(matcher.group(4));
+             if(script == null && variant == null){
+                 return false;
+             }
+             ResConfig resConfig = this.mConfig;
+             resConfig.setLanguage(language);
+             resConfig.setRegion(region);
+             resConfig.setLocaleScript(script);
+             resConfig.setLocaleVariant(variant);
+             return true;
+         }
+
+         private void parseLanguage(){
+             if(mLanguageRegionParsed || isEmpty()){
+                 return;
+             }
+             String[] qualifiers = this.mQualifiers;
+             for(int i=0;i < qualifiers.length;i++){
+                 if(parseLanguage(qualifiers[i])){
+                     qualifiers[i] = null;
+                     return;
+                 }
+             }
+         }
+         private boolean parseLanguage(String qualifier){
+             if(qualifier==null){
+                 return false;
+             }
+             Matcher matcher = PATTERN_LANGUAGE.matcher(qualifier);
+             if(!matcher.matches()){
+                 return false;
+             }
+             this.mConfig.setLanguage(qualifier);
+             return true;
+         }
+         private void parseRegion(){
+             if(mLanguageRegionParsed || isEmpty()){
+                 return;
+             }
+             String[] qualifiers = this.mQualifiers;
+             for(int i=0;i < qualifiers.length;i++){
+                 if(parseRegion(qualifiers[i])){
+                     qualifiers[i] = null;
+                     return;
+                 }
+             }
+         }
+         private boolean parseRegion(String qualifier){
+             if(qualifier==null){
+                 return false;
+             }
+             Matcher matcher = PATTERN_REGION.matcher(qualifier);
+             if(!matcher.matches()){
+                 return false;
+             }
+             this.mConfig.setRegion(qualifier);
+             return true;
+         }
+
+         private boolean isEmpty(){
+             if(!mEmpty){
+                 mEmpty = isEmpty(mQualifiers);
+             }
+             return mEmpty;
+         }
+
+         private static boolean isEmpty(String[] qualifiers){
+             if(qualifiers == null){
+                 return true;
+             }
+             for(int i=0;i< qualifiers.length;i++){
+                 String qualifier = qualifiers[i];
+                 if(qualifier == null){
+                     continue;
+                 }
+                 if(qualifier.length()==0){
+                     qualifiers[i] = null;
+                     continue;
+                 }
+                 return false;
+             }
+             return true;
+         }
+         private static String trimPlus(String text){
+             if(text==null||text.length()==0){
+                 return null;
+             }
+             if(text.charAt(0)=='+'){
+                 text = text.substring(1);
+             }
+             return text;
+         }
+         private static String[] splitQualifiers(String qualifier){
+             if(qualifier==null || qualifier.length()==0){
+                 return null;
+             }
+             return qualifier.split("-");
+         }
+
+         private static final Pattern PATTERN_PREFIX_NUMBER = Pattern.compile("^([mcnv]+)([0-9]+)$");
+         private static final Pattern PATTERN_DP = Pattern.compile("^([swh]+)([0-9]+)dp$");
+         private static final Pattern PATTERN_WIDTH_HEIGHT = Pattern.compile("^([0-9]+)[xX]([0-9]+)$");
+         private static final Pattern PATTERN_LOCALE_NUMBERING_SYSTEM = Pattern.compile("^u\\+nu\\+(.{1,8})$");
+         private static final Pattern PATTERN_LOCALE_SCRIPT_VARIANT = Pattern.compile("^b(\\+[a-z]{2})?(\\+r[A-Z]{2})?(\\+[A-Z][a-z]{3})?(\\+[A-Z]{2,8})?$");
+         private static final Pattern PATTERN_LANGUAGE = Pattern.compile("^[a-z]{2}$");
+         private static final Pattern PATTERN_REGION = Pattern.compile("^r[A-Z]{2}$");
      }
 
      public static final int SIZE_16 = 16;
