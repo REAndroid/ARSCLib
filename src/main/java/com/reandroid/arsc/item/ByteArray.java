@@ -80,7 +80,7 @@ public class ByteArray extends BlockItem {
         }
         return 0xff & b;
     }
-    public final void put(int index, int byteValue){
+    public final void putByte(int index, int byteValue){
         put(index, (byte) byteValue);
     }
     public final void put(int index, byte value){
@@ -91,18 +91,11 @@ public class ByteArray extends BlockItem {
         return ((get(byteOffset)>>bitIndex) & 0x1) == 1;
     }
     public void putBit(int byteOffset, int bitIndex, boolean bit){
-        int val=get(byteOffset);
-        int left=val>>bitIndex;
-        if(bit){
-            left=left|0x1;
-        }else {
-            left=left & 0xFE;
-        }
-        left=left<<bitIndex;
-        bitIndex=8-bitIndex;
-        int right=(0xFF>>bitIndex) & val;
-        val=left|right;
-        put(byteOffset, (byte) val);
+        int mask = 1 << bitIndex;
+        int add = bit ? mask : 0;
+        mask = (~mask) & 0xff;
+        int value = (get(byteOffset) & mask) | add;
+        putByte(byteOffset, value);
     }
     public final void putShort(int offset, int value){
         putShort(offset, (short) value);
