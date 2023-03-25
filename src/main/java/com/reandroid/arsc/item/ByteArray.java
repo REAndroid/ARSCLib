@@ -80,6 +80,9 @@ public class ByteArray extends BlockItem {
         }
         return 0xff & b;
     }
+    public final void put(int index, int byteValue){
+        put(index, (byte) byteValue);
+    }
     public final void put(int index, byte value){
         byte[] bts = getBytesInternal();
         bts[index]=value;
@@ -100,6 +103,9 @@ public class ByteArray extends BlockItem {
         int right=(0xFF>>bitIndex) & val;
         val=left|right;
         put(byteOffset, (byte) val);
+    }
+    public final void putShort(int offset, int value){
+        putShort(offset, (short) value);
     }
     public final void putShort(int offset, short val){
         byte[] bts = getBytesInternal();
