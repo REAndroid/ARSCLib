@@ -57,6 +57,9 @@ public class BlockList<T extends Block> extends Block {
         mItems.add(item);
     }
     public T get(int i){
+        if(i>=mItems.size() || i<0){
+            return null;
+        }
         return mItems.get(i);
     }
     public int size(){

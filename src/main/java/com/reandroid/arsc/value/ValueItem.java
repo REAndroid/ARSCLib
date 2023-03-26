@@ -118,6 +118,9 @@ import java.util.Objects;
 
 
      public StringItem getDataAsPoolString(){
+         if(getValueType()!=ValueType.STRING){
+             return null;
+         }
          StringPool<?> stringPool = getStringPool();
          if(stringPool == null){
              return null;

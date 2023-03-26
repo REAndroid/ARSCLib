@@ -8,6 +8,7 @@
 /*This package is renamed from org.xmlpull.* to avoid conflicts*/
 package com.reandroid.xml.parser;
 
+@Deprecated
 public class XmlPullParserException extends Exception {
     protected Throwable detail;
     protected int row = -1;

@@ -39,7 +39,7 @@
      private final BlockList<ResXmlNode> mBody;
      private final SingleBlockContainer<ResXmlEndElement> mEndElementContainer;
      private final BlockList<ResXmlEndNamespace> mEndNamespaceList;
-     private int mDepth;
+     private int mLevel;
      public ResXmlElement() {
          super(5);
          this.mStartNamespaceList = new BlockList<>();
@@ -103,6 +103,7 @@
              }
          }
      }
+     @Override
      public String getComment(){
          return getStartElement().getComment();
      }
@@ -282,6 +283,20 @@
          }
          return null;
      }
+     public int getAttributeCount() {
+         ResXmlStartElement startElement=getStartElement();
+         if(startElement!=null){
+             return startElement.getResXmlAttributeArray().childesCount();
+         }
+         return 0;
+     }
+     public ResXmlAttribute getAttributeAt(int index){
+         ResXmlStartElement startElement=getStartElement();
+         if(startElement!=null){
+             return startElement.getResXmlAttributeArray().get(index);
+         }
+         return null;
+     }
      public Collection<ResXmlAttribute> listAttributes(){
          ResXmlStartElement startElement=getStartElement();
          if(startElement!=null){
@@ -313,11 +328,21 @@
          return getParentInstance(ResXmlDocument.class);
      }
 
+     @Override
      public int getDepth(){
-         return mDepth;
+         int depth = 0;
+         ResXmlElement parent = getParentResXmlElement();
+         while (parent!=null){
+             depth++;
+             parent = parent.getParentResXmlElement();
+         }
+         return depth;
      }
-     private void setDepth(int depth){
-         mDepth=depth;
+     public int getLevel(){
+         return mLevel;
+     }
+     private void setLevel(int level){
+         mLevel = level;
      }
      public void addElement(ResXmlElement element){
          mBody.add(element);
@@ -358,6 +383,12 @@
              xmlNode.onRemove();
              mBody.remove(xmlNode);
          }
+     }
+     public ResXmlNode getResXmlNode(int position){
+         return mBody.get(position);
+     }
+     public int countResXmlNodes(){
+         return mBody.size();
      }
      public List<ResXmlNode> listXmlNodes(){
          return new ArrayList<>(getXmlNodes());
@@ -412,14 +443,7 @@
          return this;
      }
      public ResXmlElement getParentResXmlElement(){
-         Block parent=getParent();
-         while (parent!=null){
-             if(parent instanceof ResXmlElement){
-                 return (ResXmlElement)parent;
-             }
-             parent=parent.getParent();
-         }
-         return null;
+         return getParentInstance(ResXmlElement.class);
      }
      public ResXmlStartNamespace getStartNamespaceByUriRef(int uriRef){
          if(uriRef<0){
@@ -669,7 +693,7 @@
      }
      private void onFinishedRead(BlockReader reader, HeaderBlock headerBlock) throws IOException{
          int avail=reader.available();
-         if(avail>0 && getDepth()==0){
+         if(avail>0 && getLevel()==0){
              onFinishedUnexpected(reader);
              return;
          }
@@ -692,7 +716,7 @@
          if(hasStartElement()){
              ResXmlElement childElement=new ResXmlElement();
              addElement(childElement);
-             childElement.setDepth(getDepth()+1);
+             childElement.setLevel(getLevel()+1);
              childElement.readBytes(reader);
          }else{
              ResXmlStartElement startElement=new ResXmlStartElement();

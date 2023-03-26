@@ -110,6 +110,8 @@ public class XMLFileEncoder {
                 entry =getAttributeBlock(attribute);
                 if(entry !=null){
                     resourceId= entry.getResourceId();
+                }else if(attribute.getNamePrefix()!=null){
+                    throw new EncodeException("No resource found for: "+attribute.getName()+": "+mCurrentPath);
                 }
             }
             ResXmlAttribute xmlAttribute =

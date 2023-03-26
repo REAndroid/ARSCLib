@@ -75,7 +75,7 @@
          }
          return startNamespace.getPrefix();
      }
-     @Deprecated
+     // WARN! Careful this is not real value
      public String getValueString(){
          return getString(getValueStringReference());
      }

@@ -35,6 +35,22 @@ public class ResXmlTextNode extends ResXmlNode {
     public int getLineNumber(){
         return getResXmlText().getLineNumber();
     }
+    @Override
+    public String getComment() {
+        return getResXmlText().getComment();
+    }
+    @Override
+    public int getDepth(){
+        ResXmlElement parent = getParentResXmlElement();
+        if(parent!=null){
+            return parent.getDepth() + 1;
+        }
+        return 0;
+    }
+    public ResXmlElement getParentResXmlElement(){
+        return getResXmlText().getParentResXmlElement();
+    }
+
     public void setLineNumber(int lineNumber){
         getResXmlText().setLineNumber(lineNumber);
     }

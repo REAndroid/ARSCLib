@@ -25,6 +25,8 @@ public abstract class ResXmlNode extends FixedBlockContainer  implements JSONCon
     }
     void onRemove(){
     }
+    public abstract String getComment();
+    public abstract int getDepth();
 
     public static final String NAME_node_type="node_type";
 }

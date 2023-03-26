@@ -15,7 +15,10 @@
   */
 package com.reandroid.xml.parser;
 
+import com.android.org.kxml2.io.KXmlParser;
 import com.reandroid.xml.*;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -343,7 +346,7 @@ public class XMLDocumentParser {
     }
     private static XmlPullParser createParser(InputStream in) throws XMLParseException {
         try {
-            XmlPullParser parser = new MXParserNonValidating();
+            XmlPullParser parser = new KXmlParser();
             parser.setInput(in, null);
             return parser;
         } catch (XmlPullParserException e) {

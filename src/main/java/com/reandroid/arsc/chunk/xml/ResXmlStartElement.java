@@ -52,6 +52,15 @@
          addChild(mStyleAttributePosition);
          addChild(mAttributeArray);
      }
+     public ResXmlAttribute getIdAttribute(){
+         return getResXmlAttributeArray().get(mIdAttributePosition.unsignedInt()-1);
+     }
+     public ResXmlAttribute getClassAttribute(){
+         return getResXmlAttributeArray().get(mClassAttributePosition.unsignedInt()-1);
+     }
+     public ResXmlAttribute getStyleAttribute(){
+         return getResXmlAttributeArray().get(mStyleAttributePosition.unsignedInt()-1);
+     }
      void setAttributesUnitSize(int size){
          mAttributeArray.setAttributesUnitSize(size);
      }
