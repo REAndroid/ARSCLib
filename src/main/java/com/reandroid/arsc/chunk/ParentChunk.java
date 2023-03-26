@@ -19,4 +19,5 @@ import com.reandroid.arsc.pool.StringPool;
 
 public interface ParentChunk {
     public StringPool<?> getSpecStringPool();
+    public MainChunk getMainChunk();
 }

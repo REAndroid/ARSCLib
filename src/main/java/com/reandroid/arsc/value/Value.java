@@ -15,9 +15,20 @@
   */
  package com.reandroid.arsc.value;
 
+ import com.reandroid.arsc.chunk.MainChunk;
+ import com.reandroid.arsc.chunk.ParentChunk;
+
  public interface Value {
      void setValueType(ValueType valueType);
      ValueType getValueType();
      int getData();
      void setData(int data);
+     ParentChunk getParentChunk();
+     default MainChunk getMainChunk(){
+         ParentChunk parentChunk = getParentChunk();
+         if(parentChunk!=null){
+             return parentChunk.getMainChunk();
+         }
+         return null;
+     }
  }

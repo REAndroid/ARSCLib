@@ -237,6 +237,15 @@
              setValueStringReference(-1);
          }
      }
+     @Override
+     public ResXmlDocument getParentChunk() {
+         ResXmlElement element = getParentResXmlElement();
+         if(element!=null){
+             return element.getParentDocument();
+         }
+         return null;
+     }
+
      private void linkNameId(){
          ResXmlID xmlID = getResXmlID();
          if(xmlID==null){

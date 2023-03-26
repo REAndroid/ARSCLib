@@ -170,6 +170,10 @@ package com.reandroid.arsc.chunk;
     public SpecStringPool getSpecStringPool(){
         return mSpecStringPool;
     }
+    @Override
+    public TableBlock getMainChunk(){
+        return getTableBlock();
+    }
     public PackageBody getPackageBody() {
          return mBody;
     }

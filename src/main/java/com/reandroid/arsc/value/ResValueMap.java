@@ -16,6 +16,7 @@
 package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.json.JSONObject;
 
 public class ResValueMap extends ValueItem{
@@ -26,6 +27,14 @@ public class ResValueMap extends ValueItem{
 
     public Entry getEntry(){
         return getParent(Entry.class);
+    }
+    @Override
+    public PackageBlock getParentChunk(){
+        Entry entry = getEntry();
+        if(entry!=null){
+            return entry.getPackageBlock();
+        }
+        return null;
     }
 
     public ResTableMapEntry getParentMapEntry(){

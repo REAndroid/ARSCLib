@@ -15,6 +15,8 @@
   */
 package com.reandroid.arsc.value;
 
+ import com.reandroid.arsc.chunk.PackageBlock;
+
  public class ResValue extends ValueItem  {
     public ResValue() {
         super(8, OFFSET_SIZE);
@@ -22,6 +24,15 @@ package com.reandroid.arsc.value;
 
     public Entry getEntry(){
         return getParent(Entry.class);
+    }
+
+    @Override
+    public PackageBlock getParentChunk(){
+        Entry entry = getEntry();
+        if(entry != null){
+            return entry.getPackageBlock();
+        }
+        return null;
     }
 
     private static final int OFFSET_SIZE = 0;
