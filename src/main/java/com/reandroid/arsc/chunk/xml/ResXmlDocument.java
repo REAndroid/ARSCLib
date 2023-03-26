@@ -189,6 +189,10 @@
      public StringPool<?> getSpecStringPool() {
          return null;
      }
+     @Override
+     public MainChunk getMainChunk(){
+         return this;
+     }
      public ResXmlIDMap getResXmlIDMap(){
          return mResXmlIDMap;
      }
