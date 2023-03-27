@@ -623,6 +623,7 @@ public class ApkModule implements ApkFile {
         }
     }
     private void mergeDexFiles(ApkModule module){
+        UncompressedFiles uncompressedFiles=module.getUncompressedFiles();
         List<DexFileInputSource> existList=listDexFiles();
         List<DexFileInputSource> comingList=module.listDexFiles();
         APKArchive archive=getApkArchive();
@@ -636,6 +637,7 @@ public class ApkModule implements ApkFile {
             }
         }
         for(DexFileInputSource source:comingList){
+            uncompressedFiles.removePath(source.getAlias());
             String name= DexFileInputSource.getDexName(index);
             DexFileInputSource add=new DexFileInputSource(name, source.getInputSource());
             archive.add(add);
