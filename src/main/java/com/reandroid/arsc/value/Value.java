@@ -23,6 +23,7 @@
      ValueType getValueType();
      int getData();
      void setData(int data);
+     String getValueAsString();
      ParentChunk getParentChunk();
      default MainChunk getMainChunk(){
          ParentChunk parentChunk = getParentChunk();
