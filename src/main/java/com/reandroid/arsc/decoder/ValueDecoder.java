@@ -69,6 +69,9 @@ import java.util.regex.Pattern;
          if("@null".equals(txt)){
              return new EncodeResult(ValueType.REFERENCE, 0);
          }
+         if("?null".equals(txt)){
+             return new EncodeResult(ValueType.ATTRIBUTE, 0);
+         }
          EncodeResult result=encodeColor(txt);
          if(result!=null){
              return result;
@@ -143,7 +146,7 @@ import java.util.regex.Pattern;
          return PATTERN_HEX_REFERENCE.matcher(txt).matches();
      }
      private static boolean isNullReference(String txt){
-         if("@null".equals(txt)){
+         if("@null".equals(txt)||"?null".equals(txt)){
              return true;
          }
          if("@empty".equals(txt)){
@@ -326,17 +329,6 @@ import java.util.regex.Pattern;
         }
         return decode(valueType, data);
     }
-    public static String decodeIntEntry(EntryStore store, Entry entry){
-        if(entry ==null){
-            return null;
-        }
-        TableEntry<?, ?> tableEntry = entry.getTableEntry();
-        if(tableEntry == null || (tableEntry instanceof ResTableMapEntry)){
-            return null;
-        }
-        ResValue resValue =(ResValue) tableEntry.getValue();
-        return decodeIntEntry(store, resValue);
-    }
     public static String decodeIntEntry(EntryStore store, ResValue resValue){
         if(resValue ==null){
             return null;
@@ -406,6 +398,44 @@ import java.util.regex.Pattern;
         ValueType valueType= resValue.getValueType();
         return buildReferenceValue(store, entry, valueType, resourceId);
     }
+    public static String decode(EntryStore entryStore, int currentPackageId, Value value){
+
+        ValueType valueType = value.getValueType();
+        if(valueType == ValueType.STRING){
+            return value.getValueAsString();
+        }
+        int data = value.getData();
+        if(valueType==ValueType.REFERENCE || valueType==ValueType.ATTRIBUTE){
+            String currentPackageName = getPackageName(entryStore, currentPackageId);
+            return buildReferenceValue(entryStore,
+                    valueType, currentPackageName,
+                    data);
+        }
+        return decode(valueType, data);
+    }
+    public static String decode(EntryStore entryStore, int currentPackageId, AttributeValue attributeValue){
+        ValueType valueType = attributeValue.getValueType();
+        if(valueType == ValueType.STRING){
+            return attributeValue.getValueAsString();
+        }
+        int data = attributeValue.getData();
+        if(valueType==ValueType.REFERENCE || valueType==ValueType.ATTRIBUTE){
+            String currentPackageName = getPackageName(entryStore, currentPackageId);
+            return buildReferenceValue(entryStore,
+                    valueType, currentPackageName,
+                    data);
+        }
+        if(valueType==ValueType.INT_DEC || valueType==ValueType.INT_HEX){
+            String result = decodeAttribute(entryStore,
+                    attributeValue.getNameResourceID(),
+                    attributeValue.getData());
+            if(result!=null){
+                return result;
+            }
+        }
+        return decode(valueType, data);
+    }
+    @Deprecated
     public static String decode(EntryStore entryStore, int currentPackageId, int nameResourceId, ValueType valueType, int rawVal){
         String currPackageName=getPackageName(entryStore, currentPackageId);
         String result=buildReferenceValue(entryStore, valueType, currPackageName, rawVal);
@@ -506,7 +536,7 @@ import java.util.regex.Pattern;
             atOrQues='@';
         }else if(valueType==ValueType.ATTRIBUTE){
             if(resourceId==0){
-                return "@empty";
+                return "?null";
             }
             atOrQues='?';
         }else {
