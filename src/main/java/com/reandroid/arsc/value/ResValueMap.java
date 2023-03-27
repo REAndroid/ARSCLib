@@ -19,7 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.json.JSONObject;
 
-public class ResValueMap extends ValueItem{
+public class ResValueMap extends ValueItem implements AttributeValue{
 
     public ResValueMap() {
         super(12, OFFSET_SIZE);
@@ -55,6 +55,14 @@ public class ResValueMap extends ValueItem{
         putInteger(getBytesInternal(), OFFSET_NAME, name);
     }
 
+    @Override
+    public int getNameResourceID() {
+        return getName();
+    }
+    @Override
+    public void setNameResourceID(int resourceId){
+        setName(resourceId);
+    }
 
     @Override
     public JSONObject toJson() {

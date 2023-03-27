@@ -21,6 +21,7 @@
  import com.reandroid.arsc.item.*;
  import com.reandroid.arsc.pool.ResXmlStringPool;
  import com.reandroid.arsc.pool.StringPool;
+ import com.reandroid.arsc.value.AttributeValue;
  import com.reandroid.arsc.value.ValueItem;
  import com.reandroid.arsc.value.ValueType;
  import com.reandroid.common.EntryStore;
@@ -31,7 +32,7 @@
  import java.io.IOException;
  import java.util.Objects;
 
- public class ResXmlAttribute extends ValueItem implements Comparable<ResXmlAttribute>{
+ public class ResXmlAttribute extends ValueItem implements AttributeValue, Comparable<ResXmlAttribute>{
      private ReferenceItem mNSReference;
      private ReferenceItem mNameReference;
      private ReferenceItem mNameIdReference;
@@ -79,6 +80,7 @@
      public String getValueString(){
          return getString(getValueStringReference());
      }
+     @Override
      public int getNameResourceID(){
          ResXmlID xmlID = getResXmlID();
          if(xmlID != null){
@@ -86,6 +88,7 @@
          }
          return 0;
      }
+     @Override
      public void setNameResourceID(int resourceId){
          ResXmlIDMap xmlIDMap=getResXmlIDMap();
          if(xmlIDMap==null){
