@@ -51,7 +51,6 @@ class XMLCommonBagDecoder extends BagDecoder{
         EntryStore entryStore = getEntryStore();
         for(int i=0;i< bagItems.length;i++){
             ResValueMap item=bagItems[i];
-            int resourceId=item.getName();
             XMLElement child=new XMLElement("item");
             String name = ValueDecoder.decodeAttributeName(
                     entryStore, currentPackage, item.getName());
@@ -63,7 +62,7 @@ class XMLCommonBagDecoder extends BagDecoder{
                 XmlHelper.setTextContent(child, item.getDataAsPoolString());
             }else {
                 String value = ValueDecoder.decode(entryStore, currentPackageId,
-                        resourceId, item.getValueType(), item.getData());
+                        item);
                 child.setTextContent(value);
             }
             parentElement.addChild(child);

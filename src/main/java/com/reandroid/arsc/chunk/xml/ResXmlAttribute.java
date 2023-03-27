@@ -416,16 +416,7 @@
          }
          ValueType valueType = getValueType();
          int raw = getData();
-         String value;
-         if(valueType==ValueType.STRING){
-             value = ValueDecoder.escapeSpecialCharacter(getValueAsString());
-         }else {
-             value = ValueDecoder.decode(entryStore,
-                     currentPackageId,
-                     resourceId,
-                     valueType,
-                     raw);
-         }
+         String value = ValueDecoder.decode(entryStore, currentPackageId, (AttributeValue) this);
          XMLAttribute attribute = new XMLAttribute(name, value);
          attribute.setNameId(resourceId);
          if(valueType==ValueType.REFERENCE||valueType==ValueType.ATTRIBUTE){

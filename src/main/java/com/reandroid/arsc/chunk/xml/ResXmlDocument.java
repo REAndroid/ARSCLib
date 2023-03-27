@@ -356,6 +356,14 @@
          }
          return results;
      }
+     void addEvents(ParserEventList parserEventList){
+         ResXmlElement xmlElement = getResXmlElement();
+         parserEventList.add(new ParserEvent(ParserEvent.START_DOCUMENT, xmlElement));
+         if(xmlElement!=null){
+             xmlElement.addEvents(parserEventList);
+         }
+         parserEventList.add(new ParserEvent(ParserEvent.END_DOCUMENT, xmlElement));
+     }
 
      public static boolean isResXmlBlock(File file){
          if(file==null){

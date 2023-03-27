@@ -35,7 +35,6 @@ public class ResXmlTextNode extends ResXmlNode {
     public int getLineNumber(){
         return getResXmlText().getLineNumber();
     }
-    @Override
     public String getComment() {
         return getResXmlText().getComment();
     }
@@ -46,6 +45,15 @@ public class ResXmlTextNode extends ResXmlNode {
             return parent.getDepth() + 1;
         }
         return 0;
+    }
+    @Override
+    void addEvents(ParserEventList parserEventList){
+        String comment = getComment();
+        if(comment!=null){
+            parserEventList.add(
+                    new ParserEvent(ParserEvent.COMMENT, this, comment, false));
+        }
+        parserEventList.add(new ParserEvent(ParserEvent.TEXT, this));
     }
     public ResXmlElement getParentResXmlElement(){
         return getResXmlText().getParentResXmlElement();

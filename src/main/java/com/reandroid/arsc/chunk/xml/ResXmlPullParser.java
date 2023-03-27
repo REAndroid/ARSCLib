@@ -16,6 +16,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 import android.content.res.XmlResourceParser;
+import com.reandroid.arsc.decoder.Decoder;
 import com.reandroid.arsc.value.ValueType;
 import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
@@ -27,11 +28,10 @@ import java.util.List;
 import java.util.Objects;
 
 public class ResXmlPullParser implements XmlResourceParser {
+    private Decoder mDecoder;
+    private final ParserEventList mEventList = new ParserEventList();
     private ResXmlDocument mDocument;
     private boolean mDocumentCreatedHere;
-    private ResXmlElement mCurrentElement;
-    private ResXmlTextNode mCurrentText;
-    private int mEvent = -1;
 
 
     public ResXmlPullParser(){
@@ -40,15 +40,28 @@ public class ResXmlPullParser implements XmlResourceParser {
     public void setResXmlDocument(ResXmlDocument xmlDocument){
         closeDocument();
         this.mDocument = xmlDocument;
+        initializeDecoder(xmlDocument);
+        xmlDocument.addEvents(mEventList);
     }
     public ResXmlDocument getResXmlDocument() {
         return mDocument;
     }
 
+    public void setDecoder(Decoder decoder) {
+        this.mDecoder = decoder;
+    }
+    public Decoder getDecoder(){
+        return mDecoder;
+    }
+    private void initializeDecoder(ResXmlDocument xmlDocument){
+        if(mDecoder!=null){
+            return;
+        }
+        mDecoder = Decoder.create(xmlDocument);
+    }
+
     public void closeDocument(){
-        mCurrentElement = null;
-        mCurrentText = null;
-        mEvent = -1;
+        mEventList.clear();
         destroyDocument();
     }
     private void destroyDocument(){
@@ -69,31 +82,23 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public int getAttributeCount() {
-        return mCurrentElement.getAttributeCount();
+        ResXmlElement element = getCurrentElement();
+        if(element!=null){
+            return element.getAttributeCount();
+        }
+        return 0;
     }
     @Override
     public String getAttributeName(int index) {
-        ResXmlAttribute xmlAttribute = mCurrentElement.getAttributeAt(index);
-        if(xmlAttribute!=null){
-            return xmlAttribute.getName();
-        }
-        return null;
+        return decodeAttributeName(getResXmlAttributeAt(index));
     }
     @Override
     public String getAttributeValue(int index) {
-        ResXmlAttribute xmlAttribute = geResXmlAttributeAt(index);
-        if(xmlAttribute!=null){
-            return xmlAttribute.getValueString();
-        }
-        return null;
+        return decodeAttributeValue(getResXmlAttributeAt(index));
     }
     @Override
     public String getAttributeValue(String namespace, String name) {
-        ResXmlAttribute attribute = getAttribute(namespace, name);
-        if(attribute != null){
-            return attribute.getValueString();
-        }
-        return null;
+        return decodeAttributeValue(getAttribute(namespace, name));
     }
     @Override
     public String getPositionDescription() {
@@ -101,7 +106,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public int getAttributeNameResource(int index) {
-        ResXmlAttribute attribute = geResXmlAttributeAt(index);
+        ResXmlAttribute attribute = getResXmlAttributeAt(index);
         if(attribute!=null){
             return attribute.getNameResourceID();
         }
@@ -114,7 +119,7 @@ public class ResXmlPullParser implements XmlResourceParser {
             return 0;
         }
         List<String> list = Arrays.asList(options);
-        int index = list.indexOf(xmlAttribute.getValueString());
+        int index = list.indexOf(decodeAttributeValue(xmlAttribute));
         if(index==-1){
             return defaultValue;
         }
@@ -183,12 +188,12 @@ public class ResXmlPullParser implements XmlResourceParser {
 
     @Override
     public int getAttributeListValue(int index, String[] options, int defaultValue) {
-        ResXmlAttribute xmlAttribute = geResXmlAttributeAt(index);
+        ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
         if(xmlAttribute == null){
             return 0;
         }
         List<String> list = Arrays.asList(options);
-        int i = list.indexOf(xmlAttribute.getValueString());
+        int i = list.indexOf(decodeAttributeValue(xmlAttribute));
         if(i==-1){
             return defaultValue;
         }
@@ -196,7 +201,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public boolean getAttributeBooleanValue(int index, boolean defaultValue) {
-        ResXmlAttribute xmlAttribute = geResXmlAttributeAt(index);
+        ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
         if(xmlAttribute == null || xmlAttribute.getValueType() != ValueType.INT_BOOLEAN){
             return defaultValue;
         }
@@ -204,7 +209,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public int getAttributeResourceValue(int index, int defaultValue) {
-        ResXmlAttribute xmlAttribute = geResXmlAttributeAt(index);
+        ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
         if(xmlAttribute == null){
             return 0;
         }
@@ -219,32 +224,23 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public int getAttributeIntValue(int index, int defaultValue) {
-        ResXmlAttribute xmlAttribute = geResXmlAttributeAt(index);
+        ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
         if(xmlAttribute == null){
-            return 0;
+            return defaultValue;
         }
-        ValueType valueType=xmlAttribute.getValueType();
-        if(valueType==ValueType.INT_DEC
-                ||valueType==ValueType.INT_HEX){
-            return xmlAttribute.getData();
-        }
-        return defaultValue;
+        return xmlAttribute.getData();
     }
     @Override
     public int getAttributeUnsignedIntValue(int index, int defaultValue) {
-        ResXmlAttribute xmlAttribute = geResXmlAttributeAt(index);
+        ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
         if(xmlAttribute == null){
             return 0;
         }
-        ValueType valueType=xmlAttribute.getValueType();
-        if(valueType==ValueType.INT_DEC){
-            return xmlAttribute.getData();
-        }
-        return defaultValue;
+        return xmlAttribute.getData();
     }
     @Override
     public float getAttributeFloatValue(int index, float defaultValue) {
-        ResXmlAttribute xmlAttribute = geResXmlAttributeAt(index);
+        ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
         if(xmlAttribute == null){
             return 0;
         }
@@ -337,7 +333,8 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public String getInputEncoding() {
-        return null;
+        // Not applicable but let not return null
+        return "UTF-8";
     }
     @Override
     public void defineEntityReplacementText(String entityName, String replacementText) throws XmlPullParserException {
@@ -355,7 +352,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public String getNamespacePrefix(int pos) throws XmlPullParserException {
-        ResXmlAttribute attribute = mCurrentElement.getAttributeAt(pos);
+        ResXmlAttribute attribute = getResXmlAttributeAt(pos);
         if(attribute!=null){
             return attribute.getNamePrefix();
         }
@@ -363,7 +360,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public String getNamespaceUri(int pos) throws XmlPullParserException {
-        ResXmlAttribute attribute = mCurrentElement.getAttributeAt(pos);
+        ResXmlAttribute attribute = getResXmlAttributeAt(pos);
         if(attribute!=null){
             return attribute.getUri();
         }
@@ -371,44 +368,26 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public String getNamespace(String prefix) {
-        ResXmlStartNamespace startNamespace = mCurrentElement.getStartNamespaceByPrefix(prefix);
-        if(startNamespace!=null){
-            return startNamespace.getUri();
+        ResXmlElement element = getCurrentElement();
+        if(element!=null){
+            ResXmlStartNamespace startNamespace = element.getStartNamespaceByPrefix(prefix);
+            if(startNamespace!=null){
+                return startNamespace.getUri();
+            }
         }
         return null;
     }
     @Override
     public int getDepth() {
-        int event = mEvent;
-        if(event == START_TAG || event == END_TAG){
-            return mCurrentElement.getDepth();
-        }
-        if(event == TEXT){
-            return mCurrentText.getDepth();
+        int event = mEventList.getType();
+        if(event == START_TAG || event == END_TAG || event == TEXT){
+            return mEventList.getXmlNode().getDepth();
         }
         return 0;
     }
     @Override
     public int getLineNumber() {
-        int event = mEvent;
-        if(event == START_TAG){
-            ResXmlStartElement startElement = mCurrentElement.getStartElement();
-            if(startElement!=null){
-                return startElement.getLineNumber();
-            }
-            return 0;
-        }
-        if(event == END_TAG){
-            ResXmlEndElement endElement = mCurrentElement.getEndElement();
-            if(endElement!=null){
-                return endElement.getLineNumber();
-            }
-            return 0;
-        }
-        if(event == TEXT){
-            return mCurrentText.getLineNumber();
-        }
-        return 0;
+        return mEventList.getLineNumber();
     }
     @Override
     public int getColumnNumber() {
@@ -416,18 +395,16 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public boolean isWhitespace() throws XmlPullParserException {
-        return false;
+        String text = getText();
+        if(text == null){
+            return true;
+        }
+        text = text.trim();
+        return text.length() == 0;
     }
     @Override
     public String getText() {
-        int event = mEvent;
-        if(event == TEXT){
-            return mCurrentText.getText();
-        }
-        if(event == START_TAG || event == END_TAG){
-            return mCurrentElement.getTag();
-        }
-        return null;
+        return mEventList.getText();
     }
     @Override
     public char[] getTextCharacters(int[] holderForStartAndLength) {
@@ -476,7 +453,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public String getAttributeNamespace(int index) {
-        ResXmlAttribute attribute = geResXmlAttributeAt(index);
+        ResXmlAttribute attribute = getResXmlAttributeAt(index);
         if(attribute != null){
             return attribute.getUri();
         }
@@ -484,7 +461,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public String getAttributePrefix(int index) {
-        ResXmlAttribute attribute = geResXmlAttributeAt(index);
+        ResXmlAttribute attribute = getResXmlAttributeAt(index);
         if(attribute != null){
             return attribute.getNamePrefix();
         }
@@ -498,14 +475,30 @@ public class ResXmlPullParser implements XmlResourceParser {
     public boolean isAttributeDefault(int index) {
         return false;
     }
-    private ResXmlAttribute geResXmlAttributeAt(int index){
+    private String decodeAttributeName(ResXmlAttribute attribute){
+        if(attribute==null){
+            return null;
+        }
+        String name = mDecoder.decodeResourceName(attribute.getNameResourceID());
+        if(name == null){
+            name = attribute.getName();
+        }
+        return name;
+    }
+    private String decodeAttributeValue(ResXmlAttribute attribute){
+        if(attribute==null){
+            return null;
+        }
+        return mDecoder.decodeAttributeValue(attribute);
+    }
+    public ResXmlAttribute getResXmlAttributeAt(int index){
         ResXmlElement element = getCurrentElement();
         if(element == null){
             return null;
         }
         return element.getAttributeAt(index);
     }
-    private ResXmlAttribute getAttribute(String namespace, String name) {
+    public ResXmlAttribute getAttribute(String namespace, String name) {
         ResXmlElement element = getCurrentElement();
         if(element == null){
             return null;
@@ -525,143 +518,21 @@ public class ResXmlPullParser implements XmlResourceParser {
         }
         return null;
     }
-    private ResXmlElement getCurrentElement() {
-        int event = mEvent;
-        if(event!=START_TAG && event!=END_TAG){
-            return null;
+    public ResXmlElement getCurrentElement() {
+        int type = mEventList.getType();
+        if(type==START_TAG||type==END_TAG){
+            return mEventList.getElement();
         }
-        return mCurrentElement;
+        return null;
     }
     @Override
     public int getEventType() throws XmlPullParserException {
-        return mEvent;
+        return mEventList.getType();
     }
     @Override
     public int next() throws XmlPullParserException, IOException {
-        checkNotEnded();
-        int event = calculateNextEvent(mEvent);
-        if(event == START_DOCUMENT){
-            onStartDocument();
-        }else if(event == END_DOCUMENT){
-            onEndDocument();
-        }else if(event == START_TAG){
-            onStartTag();
-        }else if(event == END_TAG){
-            onEndTag();
-        }else if(event == TEXT){
-            onText();
-        }
-        this.mEvent = event;
-        return event;
-    }
-    private void onEndTag() throws XmlPullParserException {
-        int previous = mEvent;
-        if(previous == END_TAG){
-            mCurrentElement = mCurrentElement.getParentResXmlElement();
-        }
-        mCurrentText = null;
-    }
-    private void onText() throws XmlPullParserException {
-        int previous = mEvent;
-        if(previous == END_TAG){
-            int position = mCurrentElement.getIndex();
-            ResXmlElement parent = mCurrentElement.getParentResXmlElement();
-            position++;
-            mCurrentText = (ResXmlTextNode) parent.getResXmlNode(position);
-            mCurrentElement = parent;
-        }else if(previous == START_TAG){
-            ResXmlElement parent = mCurrentElement;
-            mCurrentText = (ResXmlTextNode) parent.getResXmlNode(0);
-        }else if(previous == TEXT){
-            int position = mCurrentText.getIndex();
-            ResXmlElement parent = mCurrentElement;
-            position++;
-            mCurrentText = (ResXmlTextNode) parent.getResXmlNode(position);
-            mCurrentText = (ResXmlTextNode) parent.getResXmlNode(0);
-        }else {
-            throw new XmlPullParserException("Unknown state at onText() prev="+previous);
-        }
-    }
-    private void onStartTag() throws XmlPullParserException {
-        int previous = mEvent;
-        if(previous == START_DOCUMENT){
-            mCurrentElement = mDocument.getResXmlElement();
-            mCurrentText = null;
-        }else if(previous == END_TAG){
-            int position = mCurrentElement.getIndex();
-            ResXmlElement parent = mCurrentElement.getParentResXmlElement();
-            position++;
-            mCurrentElement = (ResXmlElement) parent.getResXmlNode(position);
-        }else if(previous == TEXT){
-            int position = mCurrentText.getIndex();
-            ResXmlElement parent = mCurrentText.getResXmlText().getParentResXmlElement();
-            position++;
-            mCurrentElement = (ResXmlElement) parent.getResXmlNode(position);
-        }else if(previous == START_TAG){
-            mCurrentElement = (ResXmlElement) mCurrentElement.getResXmlNode(0);
-        }else {
-            throw new XmlPullParserException("Unknown state at onStartTag() prev="+previous);
-        }
-        mCurrentText = null;
-
-    }
-    private void onStartDocument(){
-    }
-    private void onEndDocument() throws XmlPullParserException {
-        mCurrentElement = null;
-        mCurrentText = null;
-        close();
-    }
-    private void checkNotEnded() throws XmlPullParserException {
-        if(mEvent == END_DOCUMENT){
-            throw new XmlPullParserException("Document reached to end");
-        }
-    }
-    private int calculateNextEvent(int previous) throws XmlPullParserException {
-        if(previous < 0){
-            if(mDocument == null){
-                return previous;
-            }
-            return START_DOCUMENT;
-        }
-        if(previous == START_DOCUMENT){
-            ResXmlElement element = mDocument.getResXmlElement();
-            if(element==null){
-                return END_DOCUMENT;
-            }
-            return START_TAG;
-        }
-        if(previous == END_DOCUMENT){
-            return END_DOCUMENT;
-        }
-        if(previous == START_TAG){
-            ResXmlElement element = mCurrentElement;
-            ResXmlNode firstChild = element.getResXmlNode(0);
-            if(firstChild == null){
-                return END_TAG;
-            }
-            if(firstChild instanceof ResXmlTextNode){
-                return TEXT;
-            }
-            return START_TAG;
-        }
-        if(previous == END_TAG || previous==TEXT){
-            ResXmlElement element = mCurrentElement;
-            ResXmlElement parent = element.getParentResXmlElement();
-            if(parent == null){
-                return END_DOCUMENT;
-            }
-            int position = element.getIndex() + 1;
-            ResXmlNode nextNode = parent.getResXmlNode(position);
-            if(nextNode==null){
-                return END_TAG;
-            }
-            if(nextNode instanceof ResXmlTextNode){
-                return TEXT;
-            }
-            return START_TAG;
-        }
-        throw new XmlPullParserException("Unknown state at calculateNextEvent() prev="+previous);
+        mEventList.next();
+        return mEventList.getType();
     }
     @Override
     public int nextToken() throws XmlPullParserException, IOException {
@@ -669,14 +540,38 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public void require(int type, String namespace, String name) throws XmlPullParserException, IOException {
+        if (type != this.getEventType()
+                || (namespace != null && !namespace.equals(getNamespace()))
+                || (name != null && !name.equals(getName()))) {
+            throw new XmlPullParserException(
+                    "expected: " + TYPES[type] + " {" + namespace + "}" + name, this, null);
+        }
     }
     @Override
     public String nextText() throws XmlPullParserException, IOException {
-        return null;
+        int event = getEventType();
+        if (event != START_TAG) {
+            throw new XmlPullParserException("precondition: START_TAG", this, null);
+        }
+        while (event!=TEXT && event!=END_TAG && event!=END_DOCUMENT){
+            event=next();
+        }
+        if(event==TEXT){
+            return getText();
+        }
+        return "";
     }
     @Override
     public int nextTag() throws XmlPullParserException, IOException {
-        return 0;
+        int event = getEventType();
+        if (event != START_TAG) {
+            throw new XmlPullParserException("precondition: START_TAG", this, null);
+        }
+        event = next();
+        while (event!=START_TAG && event!=END_DOCUMENT){
+            event=next();
+        }
+        return event;
     }
 
     private static InputStream getFromLock(Reader reader){
@@ -691,10 +586,5 @@ public class ResXmlPullParser implements XmlResourceParser {
         }
         return null;
     }
-
-    /**
-     * This non-final re-declaration is to force compiler from using literal int value on this class
-     * */
-
 
 }

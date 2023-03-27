@@ -103,9 +103,33 @@
              }
          }
      }
-     @Override
-     public String getComment(){
-         return getStartElement().getComment();
+     public String getStartComment(){
+         ResXmlStartElement start = getStartElement();
+         if(start!=null){
+             return start.getComment();
+         }
+         return null;
+     }
+     public String getEndComment(){
+         ResXmlEndElement end = getEndElement();
+         if(end!=null){
+             return end.getComment();
+         }
+         return null;
+     }
+     public int getStartLineNumber(){
+         ResXmlStartElement start = getStartElement();
+         if(start!=null){
+             return start.getLineNumber();
+         }
+         return 0;
+     }
+     public int getEndLineNumber(){
+         ResXmlEndElement end = getEndElement();
+         if(end!=null){
+             return end.getLineNumber();
+         }
+         return 0;
      }
      public void setComment(String comment){
          getStartElement().setComment(comment);
@@ -337,6 +361,24 @@
              parent = parent.getParentResXmlElement();
          }
          return depth;
+     }
+     @Override
+     void addEvents(ParserEventList parserEventList){
+         String comment = getStartComment();
+         if(comment!=null){
+             parserEventList.add(
+                     new ParserEvent(ParserEvent.COMMENT, this, comment, false));
+         }
+         parserEventList.add(new ParserEvent(ParserEvent.START_TAG, this));
+         for(ResXmlNode xmlNode:getXmlNodes()){
+             xmlNode.addEvents(parserEventList);
+         }
+         comment = getEndComment();
+         if(comment!=null){
+             parserEventList.add(
+                     new ParserEvent(ParserEvent.COMMENT, this, comment, true));
+         }
+         parserEventList.add(new ParserEvent(ParserEvent.END_TAG, this));
      }
      public int getLevel(){
          return mLevel;
@@ -908,7 +950,11 @@
                      resXmlAttribute.decodeToXml(entryStore, currentPackageId);
              xmlElement.addAttribute(xmlAttribute);
          }
-         String comment=getComment();
+         String comment=getStartComment();
+         if(comment!=null){
+             xmlElement.addComment(new XMLComment(comment));
+         }
+         comment=getEndComment();
          if(comment!=null){
              xmlElement.addComment(new XMLComment(comment));
          }
