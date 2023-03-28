@@ -98,7 +98,7 @@ public class ApkBundle {
         }
         return name;
     }
-    private ApkModule getLargestTableModule() throws IOException {
+    private ApkModule getLargestTableModule(){
         ApkModule apkModule=null;
         int chunkSize=0;
         for(ApkModule module:getApkModuleList()){
@@ -143,6 +143,7 @@ public class ApkBundle {
         }
     }
     public void addModule(ApkModule apkModule){
+        apkModule.setLoadDefaultFramework(false);
         String name=apkModule.getModuleName();
         mModulesMap.remove(name);
         mModulesMap.put(name, apkModule);
