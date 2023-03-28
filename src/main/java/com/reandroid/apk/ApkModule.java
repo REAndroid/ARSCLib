@@ -24,14 +24,13 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.container.SpecTypePair;
+import com.reandroid.arsc.decoder.Decoder;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.util.FrameworkTable;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
-import com.reandroid.common.Frameworks;
-import com.reandroid.common.TableEntryStore;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLException;
@@ -47,16 +46,24 @@ public class ApkModule implements ApkFile {
     private final String moduleName;
     private final APKArchive apkArchive;
     private boolean loadDefaultFramework = true;
+    private boolean mDisableLoadFramework = false;
     private TableBlock mTableBlock;
     private AndroidManifestBlock mManifestBlock;
     private final UncompressedFiles mUncompressedFiles;
     private APKLogger apkLogger;
-    private TableEntryStore mEntryStore;
+    private Decoder mDecoder;
+    private ApkType mApkType;
     public ApkModule(String moduleName, APKArchive apkArchive){
         this.moduleName=moduleName;
         this.apkArchive=apkArchive;
         this.mUncompressedFiles=new UncompressedFiles();
         this.mUncompressedFiles.addPath(apkArchive);
+    }
+    public String getSplit(){
+        if(!hasAndroidManifestBlock()){
+            return null;
+        }
+        return getAndroidManifestBlock().getSplit();
     }
     public FrameworkApk initializeAndroidFramework() throws IOException {
         if(!hasTableBlock()){
@@ -485,10 +492,14 @@ public class ApkModule implements ApkFile {
             archive.add(blockInputSource);
             manifestBlock.setApkFile(this);
             mManifestBlock = manifestBlock;
+            onManifestBlockLoaded(manifestBlock);
         } catch (IOException exception) {
             throw new IllegalArgumentException(exception);
         }
         return mManifestBlock;
+    }
+    private void onManifestBlockLoaded(AndroidManifestBlock manifestBlock){
+        initializeApkType(manifestBlock);
     }
     public TableBlock getTableBlock(boolean initFramework) {
         if(mTableBlock==null){
@@ -509,7 +520,7 @@ public class ApkModule implements ApkFile {
     }
     @Override
     public TableBlock getTableBlock() {
-        return getTableBlock(true);
+        return getTableBlock(!mDisableLoadFramework);
     }
     @Override
     public ResXmlDocument loadResXmlDocument(String path) throws IOException{
@@ -521,6 +532,38 @@ public class ApkModule implements ApkFile {
         resXmlDocument.setApkFile(this);
         resXmlDocument.readBytes(inputSource.openStream());
         return resXmlDocument;
+    }
+    @Override
+    public Decoder getDecoder(){
+        return mDecoder;
+    }
+    @Override
+    public void setDecoder(Decoder decoder){
+        this.mDecoder = decoder;
+    }
+    public ApkType getApkType(){
+        if(mApkType!=null){
+            return mApkType;
+        }
+        return initializeApkType(mManifestBlock);
+    }
+    public void setApkType(ApkType apkType){
+        this.mApkType = apkType;
+    }
+    private ApkType initializeApkType(AndroidManifestBlock manifestBlock){
+        if(mApkType!=null){
+            return mApkType;
+        }
+        ApkType apkType = null;
+        if(manifestBlock!=null){
+            apkType = manifestBlock.guessApkType();
+        }
+        if(apkType != null){
+            mApkType = apkType;
+        }else {
+            apkType = ApkType.UNKNOWN;
+        }
+        return apkType;
     }
 
     // If we need TableStringPool only, this loads pool without
@@ -574,6 +617,7 @@ public class ApkModule implements ApkFile {
     }
     public void setLoadDefaultFramework(boolean loadDefaultFramework) {
         this.loadDefaultFramework = loadDefaultFramework;
+        this.mDisableLoadFramework = !loadDefaultFramework;
     }
 
     public void merge(ApkModule module) throws IOException {

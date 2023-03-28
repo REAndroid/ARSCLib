@@ -35,6 +35,7 @@ import java.io.IOException;
 public class Decoder {
     private final EntryStore entryStore;
     private int currentPackageId;
+    private ApkFile mApkFile;
     public Decoder(EntryStore entryStore, int currentPackageId){
         this.entryStore = entryStore;
         this.currentPackageId = currentPackageId;
@@ -83,6 +84,15 @@ public class Decoder {
     public void setCurrentPackageId(int currentPackageId) {
         this.currentPackageId = currentPackageId;
     }
+    public ApkFile getApkFile(){
+        return mApkFile;
+    }
+    public void setApkFile(ApkFile apkFile) {
+        this.mApkFile = apkFile;
+    }
+    public boolean isNullDecoder(){
+        return false;
+    }
 
     public static Decoder create(ResXmlDocument resXmlDocument){
         MainChunk mainChunk = resXmlDocument.getMainChunk();
@@ -107,7 +117,7 @@ public class Decoder {
         return create(tableBlock);
     }
     public static Decoder create(TableBlock tableBlock){
-        if(tableBlock.getFrameWorks().size()==0){
+        if(!tableBlock.hasFramework() && !tableBlock.isAndroid()){
             tableBlock.addFramework(getFramework());
         }
         int currentPackageId;
@@ -121,7 +131,7 @@ public class Decoder {
         return create(tableBlock, currentPackageId);
     }
     public static Decoder create(TableBlock tableBlock, int currentPackageId){
-        if(tableBlock.getFrameWorks().size()==0){
+        if(!tableBlock.hasFramework() && !tableBlock.isAndroid()){
             TableBlock framework = getFramework();
             if(framework!=null){
                 PackageBlock packageBlock = framework.pickOne();
@@ -151,10 +161,19 @@ public class Decoder {
             return NULL_ENTRY_STORE_DECODER;
         }
         synchronized (Decoder.class){
-            Decoder decoder = new Decoder(getFramework(), 0x7f);
+            NullEntryDecoder decoder = new NullEntryDecoder(getFramework(), 0x7f);
             NULL_ENTRY_STORE_DECODER = decoder;
             return decoder;
         }
     }
-    private static Decoder NULL_ENTRY_STORE_DECODER;
+    static class NullEntryDecoder extends Decoder{
+        public NullEntryDecoder(EntryStore entryStore, int currentPackageId) {
+            super(entryStore, currentPackageId);
+        }
+        @Override
+        public boolean isNullDecoder(){
+            return true;
+        }
+    }
+    private static NullEntryDecoder NULL_ENTRY_STORE_DECODER;
 }

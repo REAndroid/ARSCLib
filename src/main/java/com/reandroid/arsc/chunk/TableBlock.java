@@ -227,6 +227,17 @@ import java.util.*;
     public List<TableBlock> getFrameWorks(){
         return mFrameWorks;
     }
+    public boolean isAndroid(){
+        PackageBlock packageBlock = pickOne();
+        if(packageBlock == null){
+            return false;
+        }
+        return "android".equals(packageBlock.getName())
+                && packageBlock.getId() == 0x01;
+    }
+    public boolean hasFramework(){
+        return getFrameWorks().size() != 0;
+    }
     public void addFramework(TableBlock tableBlock){
         if(tableBlock==null||tableBlock==this){
             return;

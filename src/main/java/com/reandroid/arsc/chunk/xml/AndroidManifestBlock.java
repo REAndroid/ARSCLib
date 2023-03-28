@@ -15,6 +15,7 @@
   */
 package com.reandroid.arsc.chunk.xml;
 
+import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.value.ValueType;
 
 import java.io.File;
@@ -29,6 +30,33 @@ public class AndroidManifestBlock extends ResXmlDocument {
     public AndroidManifestBlock(){
         super();
         super.getStringPool().setUtf8(false);
+    }
+    public ApkFile.ApkType guessApkType(){
+        if(isSplit()){
+            return ApkFile.ApkType.SPLIT;
+        }
+        Boolean core = isCoreApp();
+        if(core!=null && core){
+            return ApkFile.ApkType.CORE;
+        }
+        if(getMainActivity()!=null){
+            return ApkFile.ApkType.BASE;
+        }
+        return null;
+    }
+    public Boolean isCoreApp(){
+        ResXmlElement manifest = getManifestElement();
+        if(manifest == null){
+            return null;
+        }
+        ResXmlAttribute attribute = manifest.searchAttributeByName(NAME_coreApp);
+        if(attribute == null){
+            return null;
+        }
+        if(attribute.getValueType() != ValueType.INT_BOOLEAN){
+            return null;
+        }
+        return attribute.getValueAsBoolean();
     }
     public boolean isSplit(){
         ResXmlElement manifest = getManifestElement();
