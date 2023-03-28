@@ -16,6 +16,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 import android.content.res.XmlResourceParser;
+import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.decoder.Decoder;
 import com.reandroid.arsc.value.ValueType;
 import org.xmlpull.v1.XmlPullParserException;
@@ -33,11 +34,23 @@ public class ResXmlPullParser implements XmlResourceParser {
     private ResXmlDocument mDocument;
     private boolean mDocumentCreatedHere;
 
-
-    public ResXmlPullParser(){
+    public ResXmlPullParser(Decoder decoder){
+        this.mDecoder = decoder;
     }
-
-    public void setResXmlDocument(ResXmlDocument xmlDocument){
+    public ResXmlPullParser(){
+        this(null);
+    }
+    public synchronized ResXmlPullParser getParser(){
+        if(isBusy()){
+            return new ResXmlPullParser(getDecoder());
+        }
+        closeDocument();
+        return this;
+    }
+    public synchronized boolean isBusy() {
+        return !mEventList.hasNext();
+    }
+    public synchronized void setResXmlDocument(ResXmlDocument xmlDocument){
         closeDocument();
         this.mDocument = xmlDocument;
         initializeDecoder(xmlDocument);
@@ -54,8 +67,20 @@ public class ResXmlPullParser implements XmlResourceParser {
         return mDecoder;
     }
     private void initializeDecoder(ResXmlDocument xmlDocument){
-        if(mDecoder!=null){
+        Decoder decoder = this.mDecoder;
+        if(decoder!=null){
+            if(decoder.getApkFile()==null){
+                decoder.setApkFile(xmlDocument.getApkFile());
+            }
             return;
+        }
+        ApkFile apkFile = xmlDocument.getApkFile();
+        if(apkFile!=null){
+            decoder = apkFile.getDecoder();
+            if(decoder!=null){
+                this.mDecoder = decoder;
+                return;
+            }
         }
         mDecoder = Decoder.create(xmlDocument);
     }
@@ -320,16 +345,18 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public void setInput(InputStream inputStream, String inputEncoding) throws XmlPullParserException {
-        ResXmlDocument xmlDocument = new ResXmlDocument();
-        try {
-            xmlDocument.readBytes(inputStream);
-        } catch (IOException exception) {
-            XmlPullParserException pullParserException = new XmlPullParserException(exception.getMessage());
-            pullParserException.initCause(exception);
-            throw pullParserException;
+        synchronized (this){
+            ResXmlDocument xmlDocument = new ResXmlDocument();
+            try {
+                xmlDocument.readBytes(inputStream);
+            } catch (IOException exception) {
+                XmlPullParserException pullParserException = new XmlPullParserException(exception.getMessage());
+                pullParserException.initCause(exception);
+                throw pullParserException;
+            }
+            setResXmlDocument(xmlDocument);
+            this.mDocumentCreatedHere = true;
         }
-        setResXmlDocument(xmlDocument);
-        this.mDocumentCreatedHere = true;
     }
     @Override
     public String getInputEncoding() {
