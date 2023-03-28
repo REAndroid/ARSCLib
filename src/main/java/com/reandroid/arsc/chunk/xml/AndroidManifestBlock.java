@@ -30,6 +30,40 @@ public class AndroidManifestBlock extends ResXmlDocument {
         super();
         super.getStringPool().setUtf8(false);
     }
+    public boolean isSplit(){
+        ResXmlElement manifest = getManifestElement();
+        if(manifest == null){
+            return false;
+        }
+        return manifest.searchAttributeByName(NAME_split)!=null;
+    }
+    public String getSplit(){
+        ResXmlElement manifest = getManifestElement();
+        if(manifest == null){
+            return null;
+        }
+        ResXmlAttribute attribute = manifest.searchAttributeByName(NAME_split);
+        if(attribute!=null){
+            return attribute.getValueAsString();
+        }
+        return null;
+    }
+    public void setSplit(String split, boolean forceCreate){
+        ResXmlElement manifest = getManifestElement();
+        if(manifest == null){
+            return;
+        }
+        ResXmlAttribute attribute;
+        if(forceCreate){
+            attribute = manifest.getOrCreateAttribute(NAME_split, 0);
+        }else {
+            attribute = manifest.searchAttributeByName(NAME_split);
+            if(attribute==null){
+                return;
+            }
+        }
+        attribute.setValueAsString(split);
+    }
     // TODO: find a better way
     public int guessCurrentPackageId(){
         if(mGuessedPackageId == 0){
@@ -390,6 +424,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
     public static final String NAME_compileSdkVersionCodename = "compileSdkVersionCodename";
     public static final String NAME_installLocation="installLocation";
     public static final String NAME_PACKAGE = "package";
+    public static final String NAME_split = "split";
     public static final String NAME_coreApp = "coreApp";
     public static final String NAME_platformBuildVersionCode = "platformBuildVersionCode";
     public static final String NAME_platformBuildVersionName = "platformBuildVersionName";
