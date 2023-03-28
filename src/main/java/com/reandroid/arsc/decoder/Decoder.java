@@ -24,6 +24,7 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.util.FrameworkTable;
 import com.reandroid.arsc.value.AttributeValue;
 import com.reandroid.arsc.value.Value;
 import com.reandroid.arsc.value.ValueType;
@@ -141,7 +142,8 @@ public class Decoder {
             return frameworkApk.getTableBlock();
         } catch (IOException ignored) {
         }
-        return null;
+        // Should not reach here but to be safe return dummy
+        return new FrameworkTable();
     }
 
     public static Decoder getNullEntryStoreDecoder(){
@@ -149,8 +151,7 @@ public class Decoder {
             return NULL_ENTRY_STORE_DECODER;
         }
         synchronized (Decoder.class){
-            TableBlock tableBlock = new TableBlock();
-            Decoder decoder = new Decoder(tableBlock, 0x7f);
+            Decoder decoder = new Decoder(getFramework(), 0x7f);
             NULL_ENTRY_STORE_DECODER = decoder;
             return decoder;
         }
