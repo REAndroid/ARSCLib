@@ -244,6 +244,7 @@
          }
          return searchAttributeByResourceId(resourceId);
      }
+     // Searches attribute with resource id = 0
      public ResXmlAttribute searchAttributeByName(String name){
          ResXmlStartElement startElement=getStartElement();
          if(startElement!=null){

@@ -168,12 +168,13 @@
          }
          return null;
      }
+     // Searches attribute with resource id = 0
      public ResXmlAttribute searchAttributeByName(String name){
          if(name==null){
              return null;
          }
          for(ResXmlAttribute attribute:listResXmlAttributes()){
-             if(name.equals(attribute.getFullName()) || name.equals(attribute.getName())){
+             if(name.equals(attribute.getName()) || name.equals(attribute.getFullName())){
                  return attribute;
              }
          }
