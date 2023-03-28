@@ -479,9 +479,12 @@ public class ResXmlPullParser implements XmlResourceParser {
         if(attribute==null){
             return null;
         }
-        String name = mDecoder.decodeResourceName(attribute.getNameResourceID());
-        if(name == null){
+        String name;
+        int resourceId = attribute.getNameResourceID();
+        if(resourceId == 0 || mDecoder==null){
             name = attribute.getName();
+        }else {
+            name = mDecoder.decodeResourceName(attribute.getNameResourceID(), true);
         }
         return name;
     }

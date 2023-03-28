@@ -39,11 +39,23 @@ public class Decoder {
         this.currentPackageId = currentPackageId;
     }
     public String decodeResourceName(int resourceId){
+        return decodeResourceName(resourceId, true);
+    }
+    public String decodeResourceName(int resourceId, boolean defaultHex){
+        if(resourceId == 0){
+            return null;
+        }
         EntryGroup entryGroup = getEntryStore().getEntryGroup(resourceId);
         if(entryGroup!=null){
             return entryGroup.getSpecName();
         }
+        if(defaultHex){
+            return hexResourceName(resourceId);
+        }
         return null;
+    }
+    private String hexResourceName(int resourceId){
+        return String.format("@0x%08x", resourceId);
     }
     public String decodeValue(Value value){
         if(value==null){
