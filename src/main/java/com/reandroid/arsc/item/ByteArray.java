@@ -88,14 +88,10 @@ public class ByteArray extends BlockItem {
         bts[index]=value;
     }
     public boolean getBit(int byteOffset, int bitIndex){
-        return ((get(byteOffset)>>bitIndex) & 0x1) == 1;
+        return getBit(getBytesInternal(), byteOffset, bitIndex);
     }
     public void putBit(int byteOffset, int bitIndex, boolean bit){
-        int mask = 1 << bitIndex;
-        int add = bit ? mask : 0;
-        mask = (~mask) & 0xff;
-        int value = (get(byteOffset) & mask) | add;
-        putByte(byteOffset, value);
+        putBit(getBytesInternal(), byteOffset, bitIndex, bit);
     }
     public final void putShort(int offset, int value){
         putShort(offset, (short) value);
