@@ -208,12 +208,25 @@
          return getInteger(getBytesInternal(), OFFSET_STRING);
      }
      void setValueStringReference(int ref){
-         if(ref == getValueStringReference()){
+         if(ref == getValueStringReference() && mValueStringReference!=null){
              return;
          }
+         StringPool<?> stringPool = getStringPool();
+         if(stringPool == null){
+             return;
+         }
+         StringItem stringItem = stringPool.get(ref);
          unlink(mValueStringReference);
+         if(stringItem!=null){
+             ref = stringItem.getIndex();
+         }
          putInteger(getBytesInternal(), OFFSET_STRING, ref);
-         mValueStringReference = link(OFFSET_STRING);
+         ReferenceItem referenceItem = null;
+         if(stringItem!=null){
+             referenceItem = new ReferenceBlock<>(this, OFFSET_STRING);
+             stringItem.addReference(referenceItem);
+         }
+         mValueStringReference = referenceItem;
      }
 
      @Override
