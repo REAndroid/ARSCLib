@@ -115,7 +115,7 @@ public abstract class CommonHeader extends ZipHeader {
         putShort(offsetGeneralPurpose + 2, value);
     }
     public long getDosTime(){
-        return getUnsignedLong(offsetGeneralPurpose + 4);
+        return getIntegerUnsigned(offsetGeneralPurpose + 4);
     }
     public void setDosTime(long value){
         putInteger(offsetGeneralPurpose + 4, value);
@@ -130,19 +130,19 @@ public abstract class CommonHeader extends ZipHeader {
         setDosTime(javaToDosTime(date));
     }
     public long getCrc(){
-        return getUnsignedLong(offsetGeneralPurpose + 8);
+        return getIntegerUnsigned(offsetGeneralPurpose + 8);
     }
     public void setCrc(long value){
         putInteger(offsetGeneralPurpose + 8, value);
     }
     public long getCompressedSize(){
-        return getUnsignedLong(offsetGeneralPurpose + 12);
+        return getIntegerUnsigned(offsetGeneralPurpose + 12);
     }
     public void setCompressedSize(long value){
         putInteger(offsetGeneralPurpose + 12, value);
     }
     public long getSize(){
-        return getUnsignedLong(offsetGeneralPurpose + 16);
+        return getIntegerUnsigned(offsetGeneralPurpose + 16);
     }
     public void setSize(long value){
         putInteger(offsetGeneralPurpose + 16, value);

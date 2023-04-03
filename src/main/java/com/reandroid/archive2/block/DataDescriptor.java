@@ -22,19 +22,19 @@ public class DataDescriptor extends ZipHeader{
         super(MIN_LENGTH, ZipSignature.DATA_DESCRIPTOR);
     }
     public long getCrc(){
-        return getUnsignedLong(OFFSET_crc);
+        return getIntegerUnsigned(OFFSET_crc);
     }
     public void setCrc(long value){
         putInteger(OFFSET_crc, value);
     }
     public long getCompressedSize(){
-        return getUnsignedLong(OFFSET_compressed_size);
+        return getIntegerUnsigned(OFFSET_compressed_size);
     }
     public void setCompressedSize(long value){
         putInteger(OFFSET_compressed_size, value);
     }
     public long getSize(){
-        return getUnsignedLong(OFFSET_size);
+        return getIntegerUnsigned(OFFSET_size);
     }
     public void setSize(long value){
         putInteger(OFFSET_size, value);

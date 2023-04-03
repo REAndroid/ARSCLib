@@ -21,6 +21,7 @@ import com.reandroid.archive2.block.LocalFileHeader;
 import com.reandroid.archive2.io.ArchiveFile;
 import com.reandroid.archive2.io.ArchiveUtil;
 import com.reandroid.archive2.io.ZipSource;
+import com.reandroid.archive2.model.ApkSigBlock;
 import com.reandroid.archive2.model.LocalFileDirectory;
 
 import java.io.File;
@@ -37,6 +38,7 @@ public class Archive {
     private final ZipSource zipSource;
     private final List<ArchiveEntry> entryList;
     private final EndRecord endRecord;
+    private final ApkSigBlock apkSigBlock;
     public Archive(ZipSource zipSource) throws IOException {
         this.zipSource = zipSource;
         LocalFileDirectory lfd = new LocalFileDirectory();
@@ -52,6 +54,7 @@ public class Archive {
         }
         this.entryList  = entryList;
         this.endRecord = lfd.getCentralFileDirectory().getEndRecord();
+        this.apkSigBlock = lfd.getApkSigBlock();
     }
     public Archive(File file) throws IOException {
         this(new ArchiveFile(file));
@@ -69,6 +72,13 @@ public class Archive {
     }
     public List<ArchiveEntry> getEntryList() {
         return entryList;
+    }
+
+    public ApkSigBlock getApkSigBlock() {
+        return apkSigBlock;
+    }
+    public EndRecord getEndRecord() {
+        return endRecord;
     }
 
     // for test

@@ -46,13 +46,13 @@ public class EndRecord extends ZipHeader{
         putShort(OFFSET_totalNumberOfDirectories, value);
     }
     public long getLengthOfCentralDirectory(){
-        return getUnsignedLong(OFFSET_lengthOfCentralDirectory);
+        return getIntegerUnsigned(OFFSET_lengthOfCentralDirectory);
     }
     public void setLengthOfCentralDirectory(long value){
         putInteger(OFFSET_lengthOfCentralDirectory, value);
     }
     public long getOffsetOfCentralDirectory(){
-        return getUnsignedLong(OFFSET_offsetOfCentralDirectory);
+        return getIntegerUnsigned(OFFSET_offsetOfCentralDirectory);
     }
     public void setOffsetOfCentralDirectory(int value){
         putInteger(OFFSET_offsetOfCentralDirectory, value);

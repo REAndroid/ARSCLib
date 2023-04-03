@@ -15,10 +15,7 @@
  */
 package com.reandroid.archive2.model;
 
-import com.reandroid.archive2.block.CentralEntryHeader;
-import com.reandroid.archive2.block.DataDescriptor;
-import com.reandroid.archive2.block.EndRecord;
-import com.reandroid.archive2.block.LocalFileHeader;
+import com.reandroid.archive2.block.*;
 import com.reandroid.archive2.io.ZipSource;
 
 import java.io.IOException;
@@ -41,12 +38,12 @@ public class LocalFileDirectory {
     public void visit(ZipSource zipSource) throws IOException {
         getCentralFileDirectory().visit(zipSource);
         visitLocalFile(zipSource);
+        visitApkSigBlock(zipSource);
     }
     private void visitLocalFile(ZipSource zipSource) throws IOException {
         EndRecord endRecord = getCentralFileDirectory().getEndRecord();
         InputStream inputStream = zipSource.getInputStream(0, endRecord.getOffsetOfCentralDirectory());
         visitLocalFile(inputStream);
-        visitApkSigBlock(inputStream);
         inputStream.close();
     }
     private void visitLocalFile(InputStream inputStream) throws IOException {
@@ -82,19 +79,23 @@ public class LocalFileDirectory {
         }
         mTotalDataLength = offset;
     }
-    private void visitApkSigBlock(InputStream inputStream) throws IOException{
-        int blockSize = (int) (getCentralFileDirectory().getEndRecord().getOffsetOfCentralDirectory()
-                - getTotalDataLength());
-        if(blockSize<=0){
+    private void visitApkSigBlock(ZipSource zipSource) throws IOException{
+        CentralFileDirectory cfd = getCentralFileDirectory();
+        SignatureFooter footer = cfd.getSignatureFooter();
+        if(footer == null || !footer.isValid()){
             return;
         }
-        byte[] bytes = new byte[blockSize];
-        inputStream.read(bytes, 0, bytes.length);
-        ApkSigBlock apkSigBlock = new ApkSigBlock();
-        apkSigBlock.parse(bytes);
+        EndRecord endRecord = cfd.getEndRecord();
+        long length = footer.getSigBlockSizeInFooter() + 8;
+        long offset = endRecord.getOffsetOfCentralDirectory()
+                - length;
+        ApkSigBlock apkSigBlock = new ApkSigBlock(footer);
+        apkSigBlock.readBytes(zipSource.getInputStream(offset, length));
         this.apkSigBlock = apkSigBlock;
     }
-
+    public ApkSigBlock getApkSigBlock() {
+        return apkSigBlock;
+    }
     public CentralFileDirectory getCentralFileDirectory() {
         return centralFileDirectory;
     }

@@ -15,45 +15,56 @@
  */
 package com.reandroid.archive2.model;
 
+import com.reandroid.archive2.block.ApkSignature;
+import com.reandroid.archive2.block.LongBlock;
+import com.reandroid.archive2.block.SignatureFooter;
+
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ApkSigBlock {
-    public ApkSigBlock(){
+    private final SignatureFooter signatureFooter;
+    private final LongBlock mSize;
+    private final List<ApkSignature> mSignatures;
+    public ApkSigBlock(SignatureFooter signatureFooter){
+        this.signatureFooter = signatureFooter;
+        this.mSize = new LongBlock();
+        this.mSignatures = new ArrayList<>();
     }
 
-    //TODO : implement all
-    public void parse(byte[] bytes) throws IOException {
-        int offset = findSignature(bytes);
-        if(offset<0){
-            return;
-        }
-        offset += APK_SIGNING_BLOCK_MAGIC.length;
-        int length = bytes.length - offset;
+    public LongBlock getTotalSize(){
+        return mSize;
     }
-    private int findSignature(byte[] bytes){
-        for(int i=0;i<bytes.length;i++){
-            if (matchesSignature(bytes, i)){
-                return i;
-            }
-        }
-        return -1;
+    public List<ApkSignature> getSignatures() {
+        return mSignatures;
     }
-    private boolean matchesSignature(byte[] bytes, int offset){
-        byte[] sig = APK_SIGNING_BLOCK_MAGIC;
-        int length = bytes.length - offset;
-        if (length<sig.length){
-            return false;
+
+    public void readBytes(InputStream inputStream) throws IOException {
+        mSize.readBytes(inputStream);
+        ApkSignature apkSignature;
+        while ((apkSignature = readNext(inputStream))!=null){
+            mSignatures.add(apkSignature);
         }
-        for(int i=0;i<sig.length;i++){
-            int j = offset+i;
-            if(sig[i] != bytes[j]){
-                return false;
-            }
-            if(bytes[j] ==0){
-                return false;
-            }
+    }
+    private ApkSignature readNext(InputStream inputStream) throws IOException {
+        ApkSignature apkSignature = new ApkSignature();
+        apkSignature.readBytes(inputStream);
+        if(apkSignature.isValid()){
+            return apkSignature;
         }
-        return true;
+        return null;
+    }
+    public void writeSigData(File dir) throws IOException{
+        for(ApkSignature apkSignature:mSignatures){
+            apkSignature.writeToDir(dir);
+        }
+    }
+    @Override
+    public String toString(){
+        return "size=" + getTotalSize() + ", count=" + getSignatures().size();
     }
 
     private static final long CONTENT_DIGESTED_CHUNK_MAX_SIZE_BYTES = 1024 * 1024;

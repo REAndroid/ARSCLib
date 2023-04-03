@@ -43,7 +43,34 @@ public abstract class ZipBlock extends BlockItem {
         this.readBytes((InputStream) blockReader);
     }
 
-    long getUnsignedLong(int offset){
+    byte[] getBytes(int offset, int length, boolean strict){
+        byte[] bytes = getBytesInternal();
+        if(strict){
+            if(offset<0 || offset>=bytes.length || (offset + length)>bytes.length){
+                return null;
+            }
+        }
+        if(offset < 0){
+            offset = 0;
+        }
+        int available = bytes.length - offset;
+        if(length<=0 || available <=0){
+            return new byte[0];
+        }
+        if(length > available){
+            length = available;
+        }
+        byte[] result = new byte[length];
+        System.arraycopy(getBytesInternal(), offset, result, 0, length);
+        return result;
+    }
+    long getLong(int offset){
+        return getLong(getBytesInternal(), offset);
+    }
+    void putLong(int offset, long value){
+        putLong(getBytesInternal(), offset, value);
+    }
+    long getIntegerUnsigned(int offset){
         return getInteger(offset) & 0x00000000ffffffffL;
     }
     void putBit(int offset, int bitIndex, boolean bit){
@@ -71,4 +98,29 @@ public abstract class ZipBlock extends BlockItem {
         putShort(getBytesInternal(), offset, (short) value);
     }
 
+    public static long getLong(byte[] bytes, int offset){
+        if((offset + 8)>bytes.length){
+            return 0;
+        }
+        long result = 0;
+        int index = offset + 7;
+        while (index>=offset){
+            result = result << 8;
+            result |= (bytes[index] & 0xff);
+            index --;
+        }
+        return result;
+    }
+    public static void putLong(byte[] bytes, int offset, long value){
+        if((offset + 8) > bytes.length){
+            return;
+        }
+        int index = offset;
+        offset = index + 8;
+        while (index<offset){
+            bytes[index] = (byte) (value & 0xff);
+            value = value >>> 8;
+            index++;
+        }
+    }
 }

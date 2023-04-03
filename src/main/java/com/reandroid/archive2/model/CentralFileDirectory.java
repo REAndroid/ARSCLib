@@ -18,6 +18,7 @@ package com.reandroid.archive2.model;
 import com.reandroid.archive2.block.CentralEntryHeader;
 import com.reandroid.archive2.block.EndRecord;
 import com.reandroid.archive2.block.LocalFileHeader;
+import com.reandroid.archive2.block.SignatureFooter;
 import com.reandroid.archive2.io.ZipSource;
 
 import java.io.ByteArrayInputStream;
@@ -30,6 +31,7 @@ import java.util.Objects;
 public class CentralFileDirectory {
     private final List<CentralEntryHeader> headerList;
     private EndRecord endRecord;
+    private SignatureFooter signatureFooter;
     public CentralFileDirectory(){
         this.headerList = new ArrayList<>();
     }
@@ -64,20 +66,25 @@ public class CentralFileDirectory {
     public List<CentralEntryHeader> getHeaderList() {
         return headerList;
     }
+
+    public SignatureFooter getSignatureFooter() {
+        return signatureFooter;
+    }
     public EndRecord getEndRecord() {
         return endRecord;
     }
     public void visit(ZipSource zipSource) throws IOException {
-        byte[] footer = zipSource.getFooter(EndRecord.MAX_LENGTH);
+        byte[] footer = zipSource.getFooter(SignatureFooter.MIN_SIZE + EndRecord.MAX_LENGTH);
         EndRecord endRecord = findEndRecord(footer);
         int length = (int) endRecord.getLengthOfCentralDirectory();
         int endLength = endRecord.countBytes();
         if(footer.length < (length + endLength)){
-            footer = zipSource.getFooter(length + endLength);
+            footer = zipSource.getFooter(SignatureFooter.MIN_SIZE + length + endLength);
         }
         int offset = footer.length - length - endLength;
         this.endRecord = endRecord;
         loadCentralFileHeaders(footer, offset, length);
+        this.signatureFooter = tryFindSignatureFooter(footer, endRecord);
     }
     private void loadCentralFileHeaders(byte[] footer, int offset, int length) throws IOException {
         ByteArrayInputStream inputStream = new ByteArrayInputStream(footer, offset, length);
@@ -106,5 +113,21 @@ public class CentralFileDirectory {
             }
         }
         throw new IOException("Failed to find end record");
+    }
+    private SignatureFooter tryFindSignatureFooter(byte[] footer, EndRecord endRecord) throws IOException {
+        int lenCd = (int) endRecord.getLengthOfCentralDirectory();
+        int endLength = endRecord.countBytes();
+        int length = SignatureFooter.MIN_SIZE;
+        int offset = footer.length - endLength - lenCd - length;
+        if(offset < 0){
+            return null;
+        }
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(footer, offset, length);
+        SignatureFooter signatureFooter = new SignatureFooter();
+        signatureFooter.readBytes(inputStream);
+        if(signatureFooter.isValid()){
+            return signatureFooter;
+        }
+        return null;
     }
 }

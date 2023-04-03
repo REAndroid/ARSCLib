@@ -166,12 +166,12 @@ public class ApkModule implements ApkFile {
             return null;
         }
         AndroidManifestBlock manifestBlock = getAndroidManifestBlock();
-        Integer version = manifestBlock.getCompileSdkVersion();
+        Integer version = manifestBlock.getTargetSdkVersion();
         if(version == null){
             version = manifestBlock.getPlatformBuildVersionCode();
         }
         if(version == null){
-            version = manifestBlock.getTargetSdkVersion();
+            version = manifestBlock.getCompileSdkVersion();
         }
         return version;
     }
