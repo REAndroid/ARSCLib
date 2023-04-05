@@ -158,4 +158,29 @@ public abstract class BlockItem extends Block {
         int value = (bytes[byteOffset] & mask) | add;
         bytes[byteOffset] = (byte) value;
     }
+    protected static long getLong(byte[] bytes, int offset){
+        if((offset + 8)>bytes.length){
+            return 0;
+        }
+        long result = 0;
+        int index = offset + 7;
+        while (index>=offset){
+            result = result << 8;
+            result |= (bytes[index] & 0xff);
+            index --;
+        }
+        return result;
+    }
+    protected static void putLong(byte[] bytes, int offset, long value){
+        if((offset + 8) > bytes.length){
+            return;
+        }
+        int index = offset;
+        offset = index + 8;
+        while (index<offset){
+            bytes[index] = (byte) (value & 0xff);
+            value = value >>> 8;
+            index++;
+        }
+    }
 }

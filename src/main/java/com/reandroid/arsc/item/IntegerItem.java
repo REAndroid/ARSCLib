@@ -46,6 +46,9 @@ package com.reandroid.arsc.item;
     public int get(){
         return mCache;
     }
+    public long unsignedLong(){
+        return get() & 0x00000000ffffffffL;
+    }
     public String toHex(){
         return String.format("0x%08x", get());
     }
