@@ -16,7 +16,9 @@
 package com.reandroid.arsc.value.plurals;
 
 
-public enum PluralsQuantity {
+ import com.reandroid.arsc.value.ResValueMap;
+
+ public enum PluralsQuantity {
     OTHER((short) 0x0004),
     ZERO((short) 0x0005),
     ONE((short) 0x0006),
@@ -43,6 +45,13 @@ public enum PluralsQuantity {
             }
         }
         return null;
+    }
+    public static PluralsQuantity valueOf(ResValueMap valueMap){
+        if (valueMap == null) {
+            return null;
+        }
+        int low = valueMap.getName() & 0xffff;
+        return valueOf((short) low);
     }
     public static PluralsQuantity value(String name){
         if(name==null){

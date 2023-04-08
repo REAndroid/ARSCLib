@@ -196,21 +196,12 @@
      }
      private TableEntry<?, ?> ensureTableEntry(boolean is_complex){
          TableEntry<?, ?> tableEntry = getTableEntry();
-         if(tableEntry == null){
+
+         boolean is_correct_type = (is_complex && tableEntry instanceof ResTableMapEntry) || (!is_complex && tableEntry instanceof ResTableEntry);
+         if (tableEntry == null || !is_correct_type) {
              tableEntry = createTableEntry(is_complex);
              setTableEntry(tableEntry);
-             return tableEntry;
          }
-         if(is_complex){
-             if(tableEntry instanceof ResTableMapEntry){
-                 return tableEntry;
-             }
-             tableEntry = createTableEntry(true);
-             setTableEntry(tableEntry);
-             return tableEntry;
-         }
-         tableEntry = createTableEntry(false);
-         setTableEntry(tableEntry);
          return tableEntry;
      }
 
