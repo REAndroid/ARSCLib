@@ -16,7 +16,9 @@
 package com.reandroid.archive2.model;
 
 import com.reandroid.archive2.block.*;
+import com.reandroid.archive2.block.ApkSignatureBlock;
 import com.reandroid.archive2.io.ZipSource;
+import com.reandroid.arsc.io.BlockReader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +28,7 @@ import java.util.List;
 public class LocalFileDirectory {
     private final CentralFileDirectory centralFileDirectory;
     private final List<LocalFileHeader> headerList;
-    private ApkSigBlock apkSigBlock;
+    private ApkSignatureBlock apkSignatureBlock;
     private long mTotalDataLength;
     public LocalFileDirectory(CentralFileDirectory centralFileDirectory){
         this.centralFileDirectory = centralFileDirectory;
@@ -86,15 +88,14 @@ public class LocalFileDirectory {
             return;
         }
         EndRecord endRecord = cfd.getEndRecord();
-        long length = footer.getSigBlockSizeInFooter() + 8;
-        long offset = endRecord.getOffsetOfCentralDirectory()
-                - length;
-        ApkSigBlock apkSigBlock = new ApkSigBlock(footer);
-        apkSigBlock.readBytes(zipSource.getInputStream(offset, length));
-        this.apkSigBlock = apkSigBlock;
+        long length = footer.getSignatureSize() + 8;
+        long offset = endRecord.getOffsetOfCentralDirectory() - length;
+        ApkSignatureBlock apkSignatureBlock = new ApkSignatureBlock(footer);
+        apkSignatureBlock.readBytes(new BlockReader(zipSource.getInputStream(offset, length)));
+        this.apkSignatureBlock = apkSignatureBlock;
     }
-    public ApkSigBlock getApkSigBlock() {
-        return apkSigBlock;
+    public ApkSignatureBlock getApkSigBlock() {
+        return apkSignatureBlock;
     }
     public CentralFileDirectory getCentralFileDirectory() {
         return centralFileDirectory;

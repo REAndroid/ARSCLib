@@ -31,25 +31,37 @@ public class SignatureFooter extends ZipBlock{
         byte[] bytes = getBytesInternal();
         return inputStream.read(bytes, 0, bytes.length);
     }
-    public long getSigBlockSizeInFooter(){
+    public long getSignatureSize(){
         return getLong(OFFSET_size);
     }
-    public void setSigBlockSizeInFooter(long size){
+    public void setSignatureSize(long size){
+        int minLength = MIN_SIZE;
+        if(countBytes() < minLength){
+            setBytesLength(minLength, false);
+        }
         putLong(OFFSET_size, size);
     }
     public byte[] getMagic() {
         return getBytes(OFFSET_magic, APK_SIG_BLOCK_MAGIC.length, false);
     }
     public void setMagic(byte[] magic){
+        if(magic == null){
+            magic = new byte[0];
+        }
+        int length = OFFSET_magic + magic.length;
+        setBytesLength(length, false);
         putBytes(magic, 0, OFFSET_magic, magic.length);
     }
     public boolean isValid(){
-        return getSigBlockSizeInFooter() > MIN_SIZE
+        return getSignatureSize() > MIN_SIZE
                 && ByteArray.equals(APK_SIG_BLOCK_MAGIC, getMagic());
+    }
+    public void updateMagic(){
+        setMagic(APK_SIG_BLOCK_MAGIC);
     }
     @Override
     public String toString(){
-        return getSigBlockSizeInFooter() + " ["+new String(getMagic())+"]";
+        return getSignatureSize() + " ["+new String(getMagic())+"]";
     }
 
     public static final int MIN_SIZE = 24;
