@@ -13,117 +13,149 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-package com.reandroid.arsc.value.style;
+ package com.reandroid.arsc.value.style;
 
-import com.reandroid.arsc.value.Entry;
-import com.reandroid.arsc.value.ResValueMap;
-import com.reandroid.arsc.value.ValueType;
+ import com.reandroid.arsc.decoder.ValueDecoder;
+ import com.reandroid.arsc.item.StringItem;
+ import com.reandroid.arsc.item.TableString;
+ import com.reandroid.arsc.value.bag.BagItem;
+ import com.reandroid.arsc.value.Entry;
+ import com.reandroid.arsc.value.ResValueMap;
+ import com.reandroid.arsc.value.ValueType;
 
-import java.util.ArrayList;
-import java.util.List;
+ public class StyleBagItem extends BagItem {
+     private StyleBagItem(ResValueMap bagItem) {
+         super(bagItem);
+     }
 
-public class StyleBagItem {
-    private final ResValueMap mBagItem;
-    public StyleBagItem(ResValueMap bagItem){
-        this.mBagItem=bagItem;
-    }
-    public ResValueMap getBagItem() {
-        return mBagItem;
-    }
+     private StyleBagItem(ValueType valueType, int data) {
+         super(valueType, data);
+     }
 
-    public String getName(){
-        Entry block=getBagItem().getEntry();
-        if(block==null){
-            return null;
-        }
-        char prefix=0;
-        return block.buildResourceName(getNameId(), prefix, false);
-    }
-    public int getNameId(){
-        return getBagItem().getName();
-    }
-    public boolean hasStringValue(){
-        return getValueType()== ValueType.STRING;
-    }
-    public boolean hasReferenceValue(){
-        return getValueType()==ValueType.REFERENCE;
-    }
-    public boolean hasAttributeValue(){
-        return getValueType()==ValueType.REFERENCE;
-    }
-    public String getValueAsReference(){
-        ValueType valueType=getValueType();
-        if(valueType!=ValueType.REFERENCE && valueType!=ValueType.ATTRIBUTE){
-            throw new IllegalArgumentException("Not REF ValueType="+valueType);
-        }
-        Entry entry =getBagItem().getEntry();
-        if(entry ==null){
-            return null;
-        }
-        char prefix='@';
-        boolean includeType=true;
-        if(valueType==ValueType.ATTRIBUTE){
-            prefix='?';
-            includeType=false;
-        }
-        int id=getValue();
-        return entry.buildResourceName(id, prefix, includeType);
-    }
-    public String getStringValue(){
-        return mBagItem.getValueAsString();
-    }
-    public ValueType getValueType(){
-        return getBagItem().getValueType();
-    }
-    public int getValue(){
-        return getBagItem().getData();
-    }
-    @Override
-    public String toString() {
-        StringBuilder builder=new StringBuilder();
-        builder.append("<item name=\"");
-        String name=getName();
-        if(name==null){
-            name=String.format("@0x%08x", getNameId());
-        }
-        builder.append(name);
-        builder.append("\">");
-        if(hasStringValue()){
-            builder.append(getStringValue());
-        }
-        String val=null;
-        if(hasReferenceValue()||hasAttributeValue()) {
-            val=getValueAsReference();
-        }
-        if(val==null) {
-            val=String.format("0x%08x", getValue());
-        }
-        builder.append(val);
-        builder.append("</item>");
-        return builder.toString();
-    }
-    public static StyleBagItem[] create(ResValueMap[] resValueMaps){
-        if(resValueMaps ==null){
-            return null;
-        }
-        int len= resValueMaps.length;
-        if(len==0){
-            return null;
-        }
-        List<StyleBagItem> results=new ArrayList<>();
-        for(int i=0;i<len;i++){
-            StyleBagItem item=create(resValueMaps[i]);
-            if(item==null){
-                return null;
-            }
-            results.add(item);
-        }
-        return results.toArray(new StyleBagItem[0]);
-    }
-    public static StyleBagItem create(ResValueMap resValueMap){
-        if(resValueMap ==null){
-            return null;
-        }
-        return new StyleBagItem(resValueMap);
-    }
-}
+     private StyleBagItem(StringItem str) {
+         super(str);
+     }
+
+     public String getName() {
+         if (mBagItem == null) {
+             return null;
+         }
+         Entry block = mBagItem.getEntry();
+         if (block == null) {
+             return null;
+         }
+         char prefix = 0;
+         return block.buildResourceName(mBagItem.getName(), prefix, false);
+     }
+
+     public int getNameId() {
+         if (mBagItem == null) {
+             return 0;
+         }
+         return mBagItem.getName();
+     }
+
+     public boolean hasAttributeValue() {
+         return getValueType() == ValueType.ATTRIBUTE;
+     }
+
+     public String getValueAsReference() {
+         ValueType valueType = getValueType();
+         if (valueType != ValueType.REFERENCE && valueType != ValueType.ATTRIBUTE) {
+             throw new IllegalArgumentException("Not REF ValueType=" + valueType);
+         }
+         Entry entry = getBagItem().getEntry();
+         if (entry == null) {
+             return null;
+         }
+         char prefix = '@';
+         boolean includeType = true;
+         if (valueType == ValueType.ATTRIBUTE) {
+             prefix = '?';
+             includeType = false;
+         }
+         int id = getValue();
+         return entry.buildResourceName(id, prefix, includeType);
+     }
+
+     @Override
+     public String toString() {
+         StringBuilder builder = new StringBuilder();
+         builder.append("<item name=\"");
+         String name = getName();
+         if (name == null) {
+             name = String.format("@0x%08x", getNameId());
+         }
+         builder.append(name);
+         builder.append("\">");
+         if (hasStringValue()) {
+             builder.append(getStringValue());
+         }
+         String val = null;
+         if (hasReferenceValue() || hasAttributeValue()) {
+             val = getValueAsReference();
+         }
+         if (val == null) {
+             val = String.format("0x%08x", getValue());
+         }
+         builder.append(val);
+         builder.append("</item>");
+         return builder.toString();
+     }
+
+     protected static StyleBagItem create(ResValueMap resValueMap) {
+         if (resValueMap == null) {
+             return null;
+         }
+         return new StyleBagItem(resValueMap);
+     }
+
+     public static StyleBagItem create(ValueType valueType, int value) {
+         if (valueType == null || valueType == ValueType.STRING) {
+             return null;
+         }
+         return new StyleBagItem(valueType, value);
+     }
+
+     protected static StyleBagItem copyOf(ResValueMap resValueMap) {
+         ValueType valueType = resValueMap.getValueType();
+         if (valueType == ValueType.STRING) {
+             return new StyleBagItem(resValueMap.getDataAsPoolString());
+         } else {
+             return new StyleBagItem(valueType, resValueMap.getData());
+         }
+     }
+
+     public static StyleBagItem integer(int n) {
+         return new StyleBagItem(ValueType.INT_DEC, n);
+     }
+
+     public static StyleBagItem string(TableString str) {
+         if (str == null) {
+             return null;
+         }
+         return new StyleBagItem(str);
+     }
+
+     public static StyleBagItem reference(int resourceId) {
+         return new StyleBagItem(ValueType.REFERENCE, resourceId);
+     }
+     public static StyleBagItem attribute(int resourceId) {
+         return new StyleBagItem(ValueType.ATTRIBUTE, resourceId);
+     }
+     public static StyleBagItem encoded(ValueDecoder.EncodeResult encodeResult) {
+         if (encodeResult == null) {
+             return null;
+         }
+         return create(encodeResult.valueType, encodeResult.value);
+     }
+     public static StyleBagItem color(String color) {
+         return encoded(ValueDecoder.encodeColor(color));
+     }
+     public static StyleBagItem dimensionOrFraction(String str) {
+         return encoded(ValueDecoder.encodeDimensionOrFraction(str));
+     }
+     public static StyleBagItem createFloat(float n) {
+         return new StyleBagItem(ValueType.FLOAT, Float.floatToIntBits(n));
+     }
+ }
