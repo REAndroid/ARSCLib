@@ -15,26 +15,23 @@
  */
 package com.reandroid.archive2.block;
 
-import java.io.IOException;
-import java.io.InputStream;
+import com.reandroid.arsc.container.ExpandableBlockContainer;
 
-public class LongBlock extends ZipBlock{
-    public LongBlock() {
-        super(8);
+public class SignatureScheme extends ExpandableBlockContainer {
+    private final SignatureId signatureId;
+    public SignatureScheme(int childesCount, SignatureId signatureId){
+        super(childesCount);
+        this.signatureId = signatureId;
     }
-    @Override
-    public int readBytes(InputStream inputStream) throws IOException {
-        byte[] bytes = getBytesInternal();
-        return inputStream.read(bytes, 0, bytes.length);
+    public SignatureId getSignatureId() {
+        return signatureId;
     }
-    public long get(){
-        return getLong(0);
-    }
-    public void set(long value){
-        putLong(0, value);
+
+    public SignatureInfo getSignatureInfo(){
+        return getParent(SignatureInfo.class);
     }
     @Override
     public String toString(){
-        return String.valueOf(get());
+        return "id=" + getSignatureId();
     }
 }
