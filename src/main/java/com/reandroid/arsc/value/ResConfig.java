@@ -47,6 +47,30 @@
          this.configSize.setBlockLoad(this);
          this.mQualifiersStamp = 0;
      }
+     public boolean isEqualOrMoreSpecificThan(ResConfig resConfig){
+         if(resConfig == null){
+             return false;
+         }
+         if(resConfig == this || resConfig.isDefault()){
+             return true;
+         }
+         byte[] bytes = ByteArray.trimTrailZeros(this.mValuesContainer.getBytes());
+         byte[] otherBytes = ByteArray.trimTrailZeros(resConfig.mValuesContainer.getBytes());
+         int max = otherBytes.length;
+         if(max > bytes.length){
+             return false;
+         }
+         for(int i=0; i<max; i++){
+             byte other = otherBytes[i];
+             if(other == 0){
+                 continue;
+             }
+             if(bytes[i] != other){
+                 return false;
+             }
+         }
+         return true;
+     }
      public void copyFrom(ResConfig resConfig){
          if(resConfig==this||resConfig==null){
              return;
