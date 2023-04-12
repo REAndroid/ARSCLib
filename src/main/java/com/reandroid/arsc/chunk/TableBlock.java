@@ -24,15 +24,16 @@ import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.header.TableHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.arsc.value.StagedAliasEntry;
+import com.reandroid.arsc.value.*;
 import com.reandroid.common.EntryStore;
-import com.reandroid.common.Frameworks;
+import com.reandroid.common.ReferenceResolver;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Predicate;
 
  public class TableBlock extends Chunk<TableHeader>
         implements MainChunk, JSONConvert<JSONObject>, EntryStore {
@@ -40,6 +41,7 @@ import java.util.*;
     private final PackageArray mPackageArray;
     private final List<TableBlock> mFrameWorks=new ArrayList<>();
     private ApkFile mApkFile;
+    private ReferenceResolver referenceResolver;
     public TableBlock() {
         super(new TableHeader(), 2);
         TableHeader header = getHeaderBlock();
@@ -47,6 +49,25 @@ import java.util.*;
         this.mPackageArray=new PackageArray(header.getPackageCount());
         addChild(mTableStringPool);
         addChild(mPackageArray);
+    }
+    public List<Entry> resolveReference(int referenceId){
+        return resolveReference(referenceId, null);
+    }
+    public List<Entry> resolveReferenceWithConfig(int referenceId, ResConfig resConfig){
+        ReferenceResolver resolver = this.referenceResolver;
+        if(resolver == null){
+            resolver = new ReferenceResolver(this);
+            this.referenceResolver = resolver;
+        }
+        return resolver.resolveWithConfig(referenceId, resConfig);
+    }
+    public List<Entry> resolveReference(int referenceId, Predicate<Entry> filter){
+        ReferenceResolver resolver = this.referenceResolver;
+        if(resolver == null){
+            resolver = new ReferenceResolver(this);
+            this.referenceResolver = resolver;
+        }
+        return resolver.resolveAll(referenceId, filter);
     }
     public void destroy(){
         getPackageArray().destroy();
