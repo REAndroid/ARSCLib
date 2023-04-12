@@ -108,6 +108,11 @@
          setConfigSize(size);
          return true;
      }
+     public void trimToMinimumSize(){
+         int size = ByteArray.trimTrailZeros(mValuesContainer.getBytes()).length + 4;
+         size = nearestSize(size);
+         trimToSize(size);
+     }
 
      public void setMcc(int  value){
          if(getConfigSize()<SIZE_16){
@@ -881,6 +886,30 @@
          ResConfig resConfig = new ResConfig();
          resConfig.parseQualifiers(qualifiers);
          return resConfig;
+     }
+     public static int nearestSize(int size){
+         if(size <= SIZE_16){
+             return SIZE_16;
+         }
+         if(size <= SIZE_28){
+             return SIZE_28;
+         }
+         if(size <= SIZE_32){
+             return SIZE_32;
+         }
+         if(size <= SIZE_36){
+             return SIZE_36;
+         }
+         if(size <= SIZE_48){
+             return SIZE_48;
+         }
+         if(size <= SIZE_52){
+             return SIZE_52;
+         }
+         if(size <= SIZE_56){
+             return SIZE_56;
+         }
+         return SIZE_64;
      }
 
 
