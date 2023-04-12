@@ -15,6 +15,7 @@
   */
  package com.reandroid.arsc.value;
 
+ import com.reandroid.arsc.array.ResValueMapArray;
  import com.reandroid.arsc.base.Block;
  import com.reandroid.arsc.base.BlockCounter;
  import com.reandroid.arsc.chunk.PackageBlock;
@@ -39,6 +40,20 @@
          super();
      }
 
+     public ResValue getResValue(){
+         TableEntry<?, ?> tableEntry = getTableEntry();
+         if(tableEntry instanceof ResTableEntry){
+             return ((ResTableEntry)tableEntry).getValue();
+         }
+         return null;
+     }
+     public ResValueMapArray getResValueMapArray(){
+         TableEntry<?, ?> tableEntry = getTableEntry();
+         if(tableEntry instanceof ResTableMapEntry){
+             return ((ResTableMapEntry)tableEntry).getValue();
+         }
+         return null;
+     }
      public SpecFlag getSpecFlag(){
          SpecBlock specBlock = getSpecBlock();
          if(specBlock == null){
