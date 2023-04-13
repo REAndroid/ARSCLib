@@ -24,6 +24,15 @@ public class ResValueMapArray extends BlockArray<ResValueMap> implements JSONCon
     public ResValueMapArray(){
         super();
     }
+
+    public ResValueMap getByName(int name){
+        for(ResValueMap resValueMap:listItems()){
+            if(resValueMap != null &&name == resValueMap.getName()){
+                return resValueMap;
+            }
+        }
+        return null;
+    }
     @Override
     public ResValueMap newInstance() {
         return new ResValueMap();
