@@ -25,6 +25,7 @@ import com.reandroid.json.JSONObject;
 import com.reandroid.xml.*;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
  public class ResourceIds {
@@ -210,10 +211,31 @@ import java.util.*;
             writeXml(outputStream);
         }
         public void writeXml(OutputStream outputStream) throws IOException {
-            XMLDocument xmlDocument=toXMLDocument();
-            xmlDocument.setIndent(1);
-            xmlDocument.save(outputStream, false);
+            String indent = "     ";
+            writeXml(indent, outputStream);
+        }
+        public void writeXml(String indent, OutputStream outputStream) throws IOException {
+            OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
+            writeXml(indent, writer);
+            writer.close();
             outputStream.close();
+        }
+        public void writeXml(String indent, Writer writer) throws IOException{
+            writeBegin(writer);
+            for(Package pkg:listPackages()){
+                pkg.writeXml(indent, writer);
+            }
+            writeEnd(writer);
+            writer.flush();
+        }
+        private void writeBegin(Writer writer) throws IOException{
+            writer.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+            writer.write('\n');
+            writer.write("<resources>");
+        }
+        private void writeEnd(Writer writer) throws IOException{
+            writer.write('\n');
+            writer.write("</resources>");
         }
         public void fromXml(File file) throws IOException {
             FileInputStream inputStream=new FileInputStream(file);
@@ -434,6 +456,23 @@ import java.util.*;
                 }
                 return results;
             }
+            public void writeXml(String indent, Writer writer) throws IOException{
+                writeComment(indent, writer);
+                for(Type type:listTypes()){
+                    type.writeXml(indent, writer);
+                }
+            }
+            private void writeComment(String indent, Writer writer) throws IOException{
+                String name = this.name;
+                if(name == null){
+                    return;
+                }
+                writer.write('\n');
+                writer.write(indent);
+                writer.write("<!--packageName=\"");
+                writer.write(name);
+                writer.write("\"-->");
+            }
 
             @Override
             public boolean equals(Object o) {
@@ -588,6 +627,11 @@ import java.util.*;
                 int countEntries(){
                     return entryMap.size();
                 }
+                public void writeXml(String indent, Writer writer) throws IOException{
+                    for(Entry entry:listEntries()){
+                        entry.writeXml(indent, writer);
+                    }
+                }
                 @Override
                 public int compareTo(Type type) {
                     return Integer.compare(getIdInt(), type.getIdInt());
@@ -690,6 +734,18 @@ import java.util.*;
                     }
                     public String getHexId(){
                         return String.format("0x%08x", getResourceId());
+                    }
+
+                    public void writeXml(String indent, Writer writer) throws IOException{
+                        writer.write('\n');
+                        writer.write(indent);
+                        writer.write("<public id=\"");
+                        writer.write(getHexId());
+                        writer.write("\" type=\"");
+                        writer.write(getTypeName());
+                        writer.write("\" name=\"");
+                        writer.write(getName());
+                        writer.write("\"/>");
                     }
                     @Override
                     public int compareTo(Entry entry) {
