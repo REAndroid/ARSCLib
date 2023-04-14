@@ -381,9 +381,14 @@ package com.reandroid.arsc.chunk;
         }
         setName(packageBlock.getName());
         getLibraryBlock().merge(packageBlock.getLibraryBlock());
+        mergeSpecStringPool(packageBlock);
         getSpecTypePairArray().merge(packageBlock.getSpecTypePairArray());
         getOverlayableList().merge(packageBlock.getOverlayableList());
         getStagedAliasList().merge(packageBlock.getStagedAliasList());
+    }
+    private void mergeSpecStringPool(PackageBlock coming){
+        this.getSpecStringPool().addStrings(
+                coming.getSpecStringPool().toStringList());
     }
     /**
      * It is allowed to have duplicate type name therefore it is not recommend to use this.

@@ -39,6 +39,7 @@ public class ApkBundle {
         }
         ApkModule result=new ApkModule(generateMergedModuleName(), new APKArchive());
         result.setAPKLogger(apkLogger);
+        result.setLoadDefaultFramework(false);
 
         mergeStringPools(result);
 

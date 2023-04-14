@@ -158,8 +158,7 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
             return;
         }
         StringItem stringItem = stringPool.getOrCreate(name);
-        setKey(stringItem.getIndex());
-        linkStringReference(stringItem);
+        setKey(stringItem);
     }
     public void merge(ValueHeader valueHeader){
         if(valueHeader == null || valueHeader ==this){
