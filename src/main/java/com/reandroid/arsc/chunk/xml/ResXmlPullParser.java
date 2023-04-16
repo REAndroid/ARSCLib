@@ -379,17 +379,17 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public String getNamespacePrefix(int pos) throws XmlPullParserException {
-        ResXmlAttribute attribute = getResXmlAttributeAt(pos);
-        if(attribute!=null){
-            return attribute.getNamePrefix();
+        ResXmlElement element = getCurrentElement();
+        if(element!=null){
+            return element.getStartNamespaceList().get(pos).getPrefix();
         }
         return null;
     }
     @Override
     public String getNamespaceUri(int pos) throws XmlPullParserException {
-        ResXmlAttribute attribute = getResXmlAttributeAt(pos);
-        if(attribute!=null){
-            return attribute.getUri();
+        ResXmlElement element = getCurrentElement();
+        if(element!=null){
+            return element.getStartNamespaceList().get(pos).getUri();
         }
         return null;
     }
