@@ -15,11 +15,13 @@
   */
  package com.reandroid.arsc.value.plurals;
 
+ import com.reandroid.arsc.chunk.TableBlock;
  import com.reandroid.arsc.item.StringItem;
  import com.reandroid.arsc.item.TableString;
- import com.reandroid.arsc.value.ResValueMap;
- import com.reandroid.arsc.value.ValueType;
+ import com.reandroid.arsc.value.*;
  import com.reandroid.arsc.value.bag.BagItem;
+
+ import java.util.List;
 
  public class PluralsBagItem extends BagItem {
      private PluralsBagItem(ResValueMap bagItem) {
@@ -41,15 +43,47 @@
          return PluralsQuantity.valueOf(mBagItem);
      }
 
-     public String getQualityString() {
+     public String getQualityString(ResConfig resConfig) {
          switch (getValueType()) {
              case STRING:
                  return getStringValue();
              case REFERENCE:
-                 // TODO: resolve string reference based on language
+                 Entry entry = null;
+                 if (mBagItem != null) {
+                     entry = mBagItem.getEntry();
+                 }
+                 if (entry == null) {
+                     return null;
+                 }
+
+                 if (resConfig == null) {
+                     resConfig = entry.getResConfig();
+                 }
+
+                 Entry stringRes = null;
+                 if (resConfig != null) {
+                     TableBlock tableBlock = entry.getPackageBlock().getTableBlock();
+                     List<Entry> resolvedList = tableBlock.resolveReferenceWithConfig(getValue(), resConfig);
+                     if (resolvedList.size() > 0) {
+                         stringRes = resolvedList.get(0);
+                     }
+                 }
+
+                 if (stringRes == null) {
+                     return null;
+                 }
+                 ResValue resValue = stringRes.getResValue();
+                 if (resValue == null || resValue.getValueType() != ValueType.STRING) {
+                     throw new IllegalArgumentException("Not a STR reference: " + formattedRefValue());
+                 }
+                 return resValue.getValueAsString();
              default:
                  throw new IllegalArgumentException("Not STR/REFERENCE ValueType=" + getValueType());
          }
+     }
+
+     private String formattedRefValue() {
+         return String.format("@0x%08x", getValue());
      }
 
      @Override
@@ -61,7 +95,7 @@
          if (hasStringValue()) {
              builder.append(getStringValue());
          } else {
-             builder.append(String.format("@0x%08x", getValue()));
+             builder.append(formattedRefValue());
          }
          builder.append("</item>");
          return builder.toString();

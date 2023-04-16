@@ -15,6 +15,7 @@
   */
  package com.reandroid.arsc.value.plurals;
 
+ import com.reandroid.arsc.value.ResConfig;
  import com.reandroid.arsc.value.ResValueMap;
  import com.reandroid.arsc.value.ValueType;
  import com.reandroid.arsc.value.bag.MapBag;
@@ -50,12 +51,15 @@
          return PluralsQuantity.valueOf(valueMap);
      }
 
-     public String getQuantityString(PluralsQuantity quantity) {
+     public String getQuantityString(PluralsQuantity quantity, ResConfig resConfig) {
          PluralsBagItem item = get(quantity);
          if (item == null) {
              return null;
          }
-         return item.getQualityString();
+         return item.getQualityString(resConfig);
+     }
+     public String getQuantityString(PluralsQuantity quantity) {
+         return getQuantityString(quantity, null);
      }
 
      public void setQuantityString(PluralsQuantity quantity, String str) {
