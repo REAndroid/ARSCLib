@@ -18,10 +18,13 @@
  import com.reandroid.arsc.decoder.ValueDecoder;
  import com.reandroid.arsc.item.StringItem;
  import com.reandroid.arsc.item.TableString;
+ import com.reandroid.arsc.value.attribute.AttributeBag;
+ import com.reandroid.arsc.value.attribute.AttributeBagItem;
  import com.reandroid.arsc.value.bag.BagItem;
  import com.reandroid.arsc.value.Entry;
  import com.reandroid.arsc.value.ResValueMap;
  import com.reandroid.arsc.value.ValueType;
+ import com.reandroid.common.EntryStore;
 
  public class StyleBagItem extends BagItem {
      private StyleBagItem(ResValueMap bagItem) {
@@ -47,6 +50,12 @@
          char prefix = 0;
          return block.buildResourceName(mBagItem.getName(), prefix, false);
      }
+     public Entry getAttributeEntry(EntryStore entryStore) {
+         if (mBagItem == null) {
+             return null;
+         }
+         return entryStore.getEntryGroup(mBagItem.getName()).pickOne();
+     }
 
      public int getNameId() {
          if (mBagItem == null) {
@@ -57,6 +66,10 @@
 
      public boolean hasAttributeValue() {
          return getValueType() == ValueType.ATTRIBUTE;
+     }
+     public boolean hasIntValue() {
+         ValueType valueType = getValueType();
+         return valueType == ValueType.INT_DEC || valueType == ValueType.INT_HEX;
      }
 
      public String getValueAsReference() {
@@ -76,6 +89,18 @@
          }
          int id = getValue();
          return entry.buildResourceName(id, prefix, includeType);
+     }
+     public String decodeAttributeValue(AttributeBag attr, EntryStore entryStore) {
+         if (!hasIntValue()) {
+             return null;
+         }
+         return attr.decodeAttributeValue(entryStore, getValue());
+     }
+     public AttributeBagItem[] getFlagsOrEnum(AttributeBag attr) {
+         if (!hasIntValue()) {
+             return null;
+         }
+         return attr.searchValue(getValue());
      }
 
      @Override
@@ -157,5 +182,8 @@
      }
      public static StyleBagItem createFloat(float n) {
          return new StyleBagItem(ValueType.FLOAT, Float.floatToIntBits(n));
+     }
+     public static StyleBagItem enumOrFlag(AttributeBag attr, String valueString) {
+         return encoded(attr.encodeEnumOrFlagValue(valueString));
      }
  }
