@@ -42,6 +42,9 @@ public class ParserEventList implements Iterator<ParserEvent> {
         if(type == ParserEvent.START_TAG || type == ParserEvent.END_TAG){
             return getElement().getTag();
         }
+        if(type == ParserEvent.TEXT){
+            return ((ResXmlTextNode)getXmlNode()).getText();
+        }
         return null;
     }
     public int getLineNumber(){
