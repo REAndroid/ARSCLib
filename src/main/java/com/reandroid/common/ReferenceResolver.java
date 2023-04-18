@@ -24,7 +24,7 @@ import com.reandroid.arsc.value.ValueType;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class ReferenceResolver {
+public class ReferenceResolver{
     private final EntryStore entryStore;
     private final List<Entry> results;
     private final Set<Integer> resolvedIds;
@@ -49,7 +49,10 @@ public class ReferenceResolver {
     }
 
     public List<Entry> resolveWithConfig(int referenceId, ResConfig resConfig){
-        return resolveAll(referenceId, new ConfigFilter(resConfig));
+        ConfigFilter configFilter = new ConfigFilter(resConfig);
+        List<Entry> results = resolveAll(referenceId, configFilter);
+        results.sort(configFilter);
+        return results;
     }
     public List<Entry> resolveAll(int referenceId){
         return resolveAll(referenceId, (Predicate<Entry>)null);
@@ -112,7 +115,7 @@ public class ReferenceResolver {
         return results;
     }
 
-    public static class ConfigFilter implements Predicate<Entry>{
+    public static class ConfigFilter implements Predicate<Entry>, Comparator<Entry>{
         private final ResConfig config;
         public ConfigFilter(ResConfig config){
             this.config = config;
@@ -124,6 +127,18 @@ public class ReferenceResolver {
                 return false;
             }
             return resConfig.isEqualOrMoreSpecificThan(this.config);
+        }
+        @Override
+        public int compare(Entry entry1, Entry entry2) {
+            ResConfig config1 = entry1.getResConfig();
+            ResConfig config2 = entry1.getResConfig();
+            if (config.equals(config1)){
+                return -1;
+            }
+            if(config.equals(config2)){
+                return 1;
+            }
+            return 0;
         }
     }
 }
