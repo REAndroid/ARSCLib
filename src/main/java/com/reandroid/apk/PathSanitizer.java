@@ -75,6 +75,9 @@ public class PathSanitizer {
         }
         mSanitizedPaths.add(name);
         String alias = inputSource.getAlias();
+        if(shouldIgnore(alias)){
+            return null;
+        }
         String replace = sanitize(alias, depth, fixedDepth);
         if(alias.equals(replace)){
             return null;
@@ -108,6 +111,9 @@ public class PathSanitizer {
             appendPathName(builder, split);
         }
         return builder.toString();
+    }
+    private boolean shouldIgnore(String path){
+        return path.startsWith("lib/") && path.endsWith(".so");
     }
 
     public void setApkLogger(APKLogger apkLogger) {
