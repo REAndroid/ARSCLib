@@ -33,6 +33,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     private final ParserEventList mEventList = new ParserEventList();
     private ResXmlDocument mDocument;
     private boolean mDocumentCreatedHere;
+    private DocumentLoadedListener documentLoadedListener;
 
     public ResXmlPullParser(Decoder decoder){
         this.mDecoder = decoder;
@@ -345,18 +346,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public void setInput(InputStream inputStream, String inputEncoding) throws XmlPullParserException {
-        synchronized (this){
-            ResXmlDocument xmlDocument = new ResXmlDocument();
-            try {
-                xmlDocument.readBytes(inputStream);
-            } catch (IOException exception) {
-                XmlPullParserException pullParserException = new XmlPullParserException(exception.getMessage());
-                pullParserException.initCause(exception);
-                throw pullParserException;
-            }
-            setResXmlDocument(xmlDocument);
-            this.mDocumentCreatedHere = true;
-        }
+        loadResXmlDocument(inputStream);
     }
     @Override
     public String getInputEncoding() {
@@ -615,6 +605,33 @@ public class ResXmlPullParser implements XmlResourceParser {
         }catch (Throwable ignored){
         }
         return null;
+    }
+
+    public void setDocumentLoadedListener(DocumentLoadedListener documentLoadedListener) {
+        this.documentLoadedListener = documentLoadedListener;
+    }
+
+    private void loadResXmlDocument(InputStream inputStream) throws XmlPullParserException {
+        synchronized (this){
+            ResXmlDocument xmlDocument = new ResXmlDocument();
+            try {
+                xmlDocument.readBytes(inputStream);
+            } catch (IOException exception) {
+                XmlPullParserException pullParserException = new XmlPullParserException(exception.getMessage());
+                pullParserException.initCause(exception);
+                throw pullParserException;
+            }
+            DocumentLoadedListener listener = this.documentLoadedListener;
+            if(listener != null){
+                xmlDocument = listener.onDocumentLoaded(xmlDocument);
+            }
+            setResXmlDocument(xmlDocument);
+            this.mDocumentCreatedHere = true;
+        }
+    }
+
+    public static interface DocumentLoadedListener{
+        public ResXmlDocument onDocumentLoaded(ResXmlDocument resXmlDocument);
     }
 
 }

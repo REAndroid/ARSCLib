@@ -15,6 +15,7 @@
   */
 package com.reandroid.apk;
 
+import com.reandroid.apk.xmldecoder.ResXmlDocumentSerializer;
 import com.reandroid.archive.InputSource;
 import com.reandroid.apk.xmldecoder.XMLBagDecoder;
 import com.reandroid.apk.xmldecoder.XMLNamespaceValidator;
@@ -32,10 +33,12 @@ import com.reandroid.xml.XMLAttribute;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLException;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
  public class ApkModuleXmlDecoder {
@@ -43,13 +46,22 @@ import java.util.*;
     private final Map<Integer, Set<ResConfig>> decodedEntries;
     private XMLBagDecoder xmlBagDecoder;
     private final Set<String> mDecodedPaths;
+    private ResXmlDocumentSerializer documentSerializer;
+    private boolean useAndroidSerializer;
     public ApkModuleXmlDecoder(ApkModule apkModule){
         this.apkModule=apkModule;
         this.decodedEntries = new HashMap<>();
         this.mDecodedPaths = new HashSet<>();
+        this.useAndroidSerializer = true;
+    }
+    public void setUseAndroidSerializer(boolean useAndroidSerializer) {
+        this.useAndroidSerializer = useAndroidSerializer;
     }
     public void sanitizeFilePaths(){
-        PathSanitizer sanitizer = new PathSanitizer(apkModule);
+        sanitizeFilePaths(false);
+    }
+    public void sanitizeFilePaths(boolean sanitizeResourceFiles){
+        PathSanitizer sanitizer = new PathSanitizer(apkModule, sanitizeResourceFiles);
         sanitizer.sanitize();
     }
     public void decodeTo(File outDir)
@@ -66,14 +78,14 @@ import java.util.*;
 
         decodePublicXml(tableBlock, outDir);
 
-        decodeAndroidManifest(tableBlock, outDir);
+        decodeAndroidManifest(outDir);
 
         addDecodedPath(TableBlock.FILE_NAME);
 
         logMessage("Decoding resource files ...");
         List<ResFile> resFileList=apkModule.listResFiles();
         for(ResFile resFile:resFileList){
-            decodeResFile(tableBlock, outDir, resFile);
+            decodeResFile(outDir, resFile);
         }
         decodeValues(tableBlock, outDir, tableBlock);
 
@@ -104,10 +116,10 @@ import java.util.*;
         UncompressedFiles uncompressedFiles = apkModule.getUncompressedFiles();
         uncompressedFiles.toJson().write(file);
     }
-    private void decodeResFile(EntryStore entryStore, File outDir, ResFile resFile)
-            throws IOException, XMLException {
+    private void decodeResFile(File outDir, ResFile resFile)
+            throws IOException{
         if(resFile.isBinaryXml()){
-            decodeResXml(entryStore, outDir, resFile);
+            decodeResXml(outDir, resFile);
         }else {
             decodeResRaw(outDir, resFile);
         }
@@ -133,28 +145,32 @@ import java.util.*;
 
         addDecodedEntry(entry);
     }
-    private void decodeResXml(EntryStore entryStore, File outDir, ResFile resFile)
-            throws IOException, XMLException{
-        Entry entry =resFile.pickOne();
-        PackageBlock packageBlock= entry.getPackageBlock();
-        ResXmlDocument resXmlDocument = apkModule.loadResXmlDocument(
-                resFile.getInputSource().getName());
+    private void decodeResXml(File outDir, ResFile resFile)
+             throws IOException{
+        Entry entry = resFile.pickOne();
+        PackageBlock packageBlock = entry.getPackageBlock();
 
-        File pkgDir=new File(outDir, getPackageDirName(packageBlock));
+        File pkgDir = new File(outDir, getPackageDirName(packageBlock));
         String alias = resFile.buildPath(ApkUtil.RES_DIR_NAME);
         String path = alias.replace('/', File.separatorChar);
-        path=path.replace('/', File.separatorChar);
-        File file=new File(pkgDir, path);
+        path = path.replace('/', File.separatorChar);
+        File file = new File(pkgDir, path);
 
-        logVerbose("Decoding: "+path);
-        XMLNamespaceValidator namespaceValidator=new XMLNamespaceValidator(resXmlDocument);
-        namespaceValidator.validate();
-        XMLDocument xmlDocument= resXmlDocument.decodeToXml(entryStore, packageBlock.getId());
-        xmlDocument.save(file, true);
+        logVerbose("Decoding: " + path);
+        serializeXml(packageBlock.getId(), resFile.getInputSource(), file);
 
         resFile.setFilePath(alias);
-
-        addDecodedEntry(resFile.pickOne());
+        addDecodedEntry(entry);
+    }
+    private ResXmlDocumentSerializer getDocumentSerializer(){
+        if(documentSerializer == null){
+            documentSerializer = new ResXmlDocumentSerializer(apkModule);
+            documentSerializer.setValidateXmlNamespace(true);
+        }
+        return documentSerializer;
+    }
+    private TableBlock getTableBlock(){
+        return apkModule.getTableBlock();
     }
     private void decodePublicXml(TableBlock tableBlock, File outDir)
              throws IOException{
@@ -190,8 +206,8 @@ import java.util.*;
         resourceIds.loadPackageBlock(packageBlock);
         resourceIds.writeXml(file);
     }
-    private void decodeAndroidManifest(EntryStore entryStore, File outDir)
-            throws IOException, XMLException {
+    private void decodeAndroidManifest(File outDir)
+             throws IOException {
         if(!apkModule.hasAndroidManifestBlock()){
             logMessage("Don't have: "+ AndroidManifestBlock.FILE_NAME);
             return;
@@ -199,13 +215,58 @@ import java.util.*;
         File file=new File(outDir, AndroidManifestBlock.FILE_NAME);
         logMessage("Decoding: "+file.getName());
         AndroidManifestBlock manifestBlock=apkModule.getAndroidManifestBlock();
-        XMLNamespaceValidator namespaceValidator=new XMLNamespaceValidator(manifestBlock);
-        namespaceValidator.validate();
-        int currentPackageId= manifestBlock.guessCurrentPackageId();
-        XMLDocument xmlDocument=manifestBlock.decodeToXml(entryStore, currentPackageId);
-        xmlDocument.save(file, true);
+        int currentPackageId = manifestBlock.guessCurrentPackageId();
+        serializeXml(currentPackageId, manifestBlock, file);
         addDecodedPath(AndroidManifestBlock.FILE_NAME);
     }
+    private void serializeXml(int currentPackageId, ResXmlDocument document, File outFile)
+            throws IOException {
+        XMLNamespaceValidator namespaceValidator = new XMLNamespaceValidator(document);
+        namespaceValidator.validate();
+        if(useAndroidSerializer){
+            ResXmlDocumentSerializer serializer = getDocumentSerializer();
+            if(currentPackageId != 0){
+                serializer.getDecoder().setCurrentPackageId(currentPackageId);
+            }
+            try {
+                serializer.write(document, outFile);
+            } catch (XmlPullParserException ex) {
+                throw new IOException("Error: "+outFile.getName(), ex);
+            }
+        }else {
+            try {
+                XMLDocument xmlDocument = document.decodeToXml(getTableBlock(), currentPackageId);
+                xmlDocument.save(outFile, true);
+            } catch (XMLException ex) {
+                throw new IOException("Error: "+outFile.getName(), ex);
+            }
+        }
+    }
+    private void serializeXml(int currentPackageId, InputSource inputSource, File outFile)
+             throws IOException {
+
+         if(useAndroidSerializer){
+             ResXmlDocumentSerializer serializer = getDocumentSerializer();
+             if(currentPackageId != 0){
+                 serializer.getDecoder().setCurrentPackageId(currentPackageId);
+             }
+             try {
+                 serializer.write(inputSource, outFile);
+             } catch (XmlPullParserException ex) {
+                 throw new IOException("Error: "+outFile.getName(), ex);
+             }
+         }else {
+             try {
+                 ResXmlDocument document = apkModule.loadResXmlDocument(inputSource);
+                 XMLNamespaceValidator namespaceValidator = new XMLNamespaceValidator(document);
+                 namespaceValidator.validate();
+                 XMLDocument xmlDocument = document.decodeToXml(getTableBlock(), currentPackageId);
+                 xmlDocument.save(outFile, true);
+             } catch (XMLException ex) {
+                 throw new IOException("Error: "+outFile.getName(), ex);
+             }
+         }
+     }
     private void addDecodedEntry(Entry entry){
         if(entry.isNull()){
             return;

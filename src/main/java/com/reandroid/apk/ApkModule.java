@@ -528,6 +528,9 @@ public class ApkModule implements ApkFile {
         if(inputSource==null){
             throw new FileNotFoundException("No such file in apk: " + path);
         }
+        return loadResXmlDocument(inputSource);
+    }
+    public ResXmlDocument loadResXmlDocument(InputSource inputSource) throws IOException{
         ResXmlDocument resXmlDocument = new ResXmlDocument();
         resXmlDocument.setApkFile(this);
         resXmlDocument.readBytes(inputSource.openStream());
