@@ -25,23 +25,40 @@ public class PathSanitizer {
     private final ApkModule apkModule;
     private APKLogger apkLogger;
     private final Set<String> mSanitizedPaths;
-    public PathSanitizer(ApkModule apkModule){
+    private final boolean sanitizeResourceFiles;
+    public PathSanitizer(ApkModule apkModule, boolean sanitizeResourceFiles){
         this.apkModule = apkModule;
         this.apkLogger = apkModule.getApkLogger();
         this.mSanitizedPaths = new HashSet<>();
+        this.sanitizeResourceFiles = sanitizeResourceFiles;
+    }
+    public PathSanitizer(ApkModule apkModule){
+        this(apkModule, false);
     }
     public void sanitize(){
         mSanitizedPaths.clear();
         logMessage("Sanitizing paths ...");
-        List<ResFile> resFileList = apkModule.listResFiles();
-        for(ResFile resFile:resFileList){
-            sanitize(resFile);
-        }
+        sanitizeResFiles();
         List<InputSource> sourceList = apkModule.getApkArchive().listInputSources();
         for(InputSource inputSource:sourceList){
             sanitize(inputSource, 1, false);
         }
         logMessage("DONE = "+mSanitizedPaths.size());
+    }
+    private void sanitizeResFiles(){
+        boolean sanitizeRes = this.sanitizeResourceFiles;
+        Set<String> sanitizedPaths = this.mSanitizedPaths;
+        if(sanitizeRes){
+            logMessage("Sanitizing resource files ...");
+        }
+        List<ResFile> resFileList = apkModule.listResFiles();
+        for(ResFile resFile:resFileList){
+            if(sanitizeRes){
+                sanitize(resFile);
+            }else {
+                sanitizedPaths.add(resFile.getFilePath());
+            }
+        }
     }
     private void sanitize(ResFile resFile){
         InputSource inputSource = resFile.getInputSource();
@@ -178,6 +195,6 @@ public class PathSanitizer {
                 || (ch >= 'a' && ch <= 'z');
     }
 
-    private static final int MAX_NAME_LENGTH = 50;
+    private static final int MAX_NAME_LENGTH = 75;
     private static final int MAX_PATH_LENGTH = 100;
 }
