@@ -53,7 +53,7 @@ dependencies {
 ```ShellSession
 git clone https://github.com/REAndroid/ARSCLib.git
 cd ARSCLib
-./gradlew fatJar
+./gradlew jar
 # Built jar will be placed ./build/libs/ARSCLib-x.x.x.jar
 ```
 
