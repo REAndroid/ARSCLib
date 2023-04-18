@@ -126,11 +126,19 @@ public class ApkBundle {
     public List<ApkModule> getApkModuleList(){
         return new ArrayList<>(mModulesMap.values());
     }
-    public void loadApkDirectory(File dir) throws IOException {
+    public void loadApkDirectory(File dir) throws IOException{
+        loadApkDirectory(dir, false);
+    }
+    public void loadApkDirectory(File dir, boolean recursive) throws IOException {
         if(!dir.isDirectory()){
             throw new FileNotFoundException("No such directory: "+dir);
         }
-        List<File> apkList=ApkUtil.listFiles(dir, ".apk");
+        List<File> apkList;
+        if(recursive){
+            apkList = ApkUtil.recursiveFiles(dir, ".apk");
+        }else {
+            apkList = ApkUtil.listFiles(dir, ".apk");
+        }
         if(apkList.size()==0){
             throw new FileNotFoundException("No '*.apk' files in directory: "+dir);
         }
