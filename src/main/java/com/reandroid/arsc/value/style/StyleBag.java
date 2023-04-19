@@ -40,6 +40,9 @@
      public int getParentId() {
          return getTableEntry().getParentId();
      }
+     public void setParentId(int id) {
+         getTableEntry().setParentId(id);
+     }
 
      public int getResourceId() {
          com.reandroid.arsc.value.Entry entry = getEntry();
