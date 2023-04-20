@@ -402,7 +402,11 @@ public class KXmlSerializer implements XmlSerializer {
             indentAttributeReference += prefix.length() + 1;
         }
         append(name);
-        indentAttributeReference += name.length();
+        int len = name.length();
+        if(len > 20){
+            len = 20;
+        }
+        indentAttributeReference += len;
         pending = true;
         return this;
     }
