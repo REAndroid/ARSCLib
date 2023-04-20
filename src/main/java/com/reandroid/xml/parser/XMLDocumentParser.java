@@ -57,6 +57,7 @@ public class XMLDocumentParser {
         }
     }
     private void close(){
+        closeParser();
         closeReader();
         closeFileInputStream();
         mResDocument=null;
@@ -89,6 +90,16 @@ public class XMLDocumentParser {
                 reader.close();
             } catch (IOException ignored) {
             }
+        }
+    }
+    private void closeParser(){
+        if(!(mParser instanceof Closeable)){
+            return;
+        }
+        Closeable closeable = (Closeable) mParser;
+        try {
+            closeable.close();
+        } catch (IOException ignored) {
         }
     }
 
