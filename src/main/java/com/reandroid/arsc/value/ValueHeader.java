@@ -73,6 +73,9 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         linkStringReference();
     }
     public void setKey(StringItem stringItem){
+        if(ignoreUpdateKey(stringItem)){
+            return;
+        }
         unLinkStringReference();
         int key = -1;
         if(stringItem!=null){
@@ -80,6 +83,17 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         }
         putInteger(getBytesInternal(), OFFSET_SPEC_REFERENCE, key);
         linkStringReference(stringItem);
+    }
+    private boolean ignoreUpdateKey(StringItem stringItem){
+        int key = getKey();
+        ReferenceItem referenceItem = this.mStringReference;
+        if(stringItem == null){
+            return referenceItem == null && key == -1;
+        }
+        if(referenceItem == null || key != stringItem.getIndex()){
+            return false;
+        }
+        return getSpecString(key) == stringItem;
     }
     public void setSize(int size){
         super.setBytesLength(size, false);
@@ -126,11 +140,17 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         stringItem.removeReference(stringReference);
     }
     public StringItem getNameString(){
+        return getSpecString(getKey());
+    }
+    private StringItem getSpecString(int key){
+        if(key < 0){
+            return null;
+        }
         StringPool<?> specStringPool = getSpecStringPool();
         if(specStringPool==null){
             return null;
         }
-        return specStringPool.get(getKey());
+        return specStringPool.get(key);
     }
     private StringPool<?> getSpecStringPool(){
         Block parent = getParent();
