@@ -34,10 +34,12 @@ public class ResXmlDocumentSerializer implements ResXmlPullParser.DocumentLoaded
     private final XmlSerializer serializer;
     private final XmlParserToSerializer parserToSerializer;
     private boolean validateXmlNamespace;
+    private String mCurrentPath;
     public ResXmlDocumentSerializer(ResXmlPullParser parser){
         this.parser = parser;
         this.serializer = new KXmlSerializer();
         this.parserToSerializer = new XmlParserToSerializer(parser, serializer);
+        this.parser.setDocumentLoadedListener(this);
     }
     public ResXmlDocumentSerializer(Decoder decoder){
         this(new ResXmlPullParser(decoder));
@@ -61,9 +63,14 @@ public class ResXmlDocumentSerializer implements ResXmlPullParser.DocumentLoaded
             this.parser.setInput(inputStream, null);
             OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
             this.serializer.setOutput(writer);
-            this.parserToSerializer.write();
+            try{
+                this.parserToSerializer.write();
+            }catch (Exception ex){
+                throw getError(ex);
+            }
             writer.close();
             outputStream.close();
+            mCurrentPath = null;
         }
     }
     public void write(InputStream inputStream, File file)
@@ -72,11 +79,13 @@ public class ResXmlDocumentSerializer implements ResXmlPullParser.DocumentLoaded
         if(dir != null && !dir.exists()){
             dir.mkdirs();
         }
+        mCurrentPath = String.valueOf(file);
         FileOutputStream outputStream = new FileOutputStream(file);
         write(inputStream, outputStream);
     }
     public void write(ResXmlDocument xmlDocument, File file)
             throws IOException, XmlPullParserException {
+        mCurrentPath = String.valueOf(file);
         File dir = file.getParentFile();
         if(dir != null && !dir.exists()){
             dir.mkdirs();
@@ -115,6 +124,27 @@ public class ResXmlDocumentSerializer implements ResXmlPullParser.DocumentLoaded
         XMLNamespaceValidator namespaceValidator = new XMLNamespaceValidator(resXmlDocument);
         namespaceValidator.validate();
         return resXmlDocument;
+    }
+    private IOException getError(Exception exception){
+        String path = mCurrentPath;
+        if(exception instanceof IOException){
+            String msg = path + ":" + exception.getMessage();
+            IOException ioException = new  IOException(msg);
+            ioException.setStackTrace(exception.getStackTrace());
+            Throwable cause = ioException.getCause();
+            if(cause != null){
+                ioException.initCause(cause);
+            }
+            return ioException;
+        }
+        String msg = path + ":" + exception.getClass() + ":" + exception.getMessage();
+        IOException otherException = new IOException(msg);
+        otherException.setStackTrace(exception.getStackTrace());
+        Throwable cause = otherException.getCause();
+        if(cause != null){
+            otherException.initCause(cause);
+        }
+        return otherException;
     }
 
     private static Decoder createDecoder(ApkModule apkModule){

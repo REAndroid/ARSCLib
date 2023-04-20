@@ -70,10 +70,18 @@ public class Decoder {
         return ValueDecoder.decode(getEntryStore(), getCurrentPackageId(), value);
     }
     public String decodeAttributeValue(AttributeValue attributeValue){
+        return decodeAttributeValue(attributeValue, true);
+    }
+    public String decodeAttributeValue(AttributeValue attributeValue, boolean escapeStartChar){
         if(attributeValue == null){
             return null;
         }
-        return ValueDecoder.decode(getEntryStore(), getCurrentPackageId(), attributeValue);
+        String result = ValueDecoder.decode(getEntryStore(), getCurrentPackageId(), attributeValue);
+        if(!escapeStartChar || result == null || result.length() == 0
+                || attributeValue.getValueType() != ValueType.STRING){
+            return result;
+        }
+        return ValueDecoder.escapeSpecialCharacter(result);
     }
     private EntryStore getEntryStore() {
         return entryStore;

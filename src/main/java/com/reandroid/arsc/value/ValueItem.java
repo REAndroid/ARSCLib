@@ -202,7 +202,11 @@ import java.util.Objects;
      public String getValueAsString(){
          StringItem stringItem = getDataAsPoolString();
          if(stringItem!=null){
-             return stringItem.getHtml();
+             String value = stringItem.getHtml();
+             if(value == null){
+                 value = "";
+             }
+             return value;
          }
          return null;
      }
