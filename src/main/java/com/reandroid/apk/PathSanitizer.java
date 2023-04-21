@@ -192,11 +192,11 @@ public class PathSanitizer {
         return ch == '.'
                 || ch == '+'
                 || ch == '-'
-                || ch == '_'
                 || ch == '#';
     }
     private static boolean isGoodFileNameChar(char ch){
-        return (ch >= '0' && ch <= '9')
+        return ch == '_'
+                || (ch >= '0' && ch <= '9')
                 || (ch >= 'A' && ch <= 'Z')
                 || (ch >= 'a' && ch <= 'z');
     }
