@@ -12,6 +12,7 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -121,8 +122,16 @@ public class ZipAlign {
             final ZipEntry entry = (ZipEntry) entries.nextElement();
             final String name = entry.getName();
 
-            int flags = entry.getMethod() == ZipEntry.STORED ? 0 : 1 << 3;
-            flags |= 1 << 11;
+            int flags;
+
+            Integer actualFlags = getFlag(entry);
+
+            if(actualFlags != null){
+                flags = actualFlags;
+            }else {
+                flags = entry.getMethod() == ZipEntry.STORED ? 0 : 1 << 3;
+                flags |= 1 << 11;
+            }
 
             final long outputEntryHeaderOffset = mOutputStream.totalWritten;
 
@@ -328,6 +337,15 @@ public class ZipAlign {
             return new File(name);
         }
         return new File(dir, name);
+    }
+    private static Integer getFlag(ZipEntry zipEntry){
+        try {
+            Field flagField = ZipEntry.class.getDeclaredField("flag");
+            flagField.setAccessible(true);
+            return flagField.getInt(zipEntry);
+        } catch (NoSuchFieldException|IllegalAccessException e) {
+            return null;
+        }
     }
 }
 
