@@ -17,7 +17,6 @@ package com.reandroid.archive2.block;
 
 import com.reandroid.archive2.ZipSignature;
 
-
 public class LocalFileHeader extends CommonHeader {
     private DataDescriptor dataDescriptor;
     public LocalFileHeader(){
@@ -48,6 +47,7 @@ public class LocalFileHeader extends CommonHeader {
     }
     public void setDataDescriptor(DataDescriptor dataDescriptor){
         this.dataDescriptor = dataDescriptor;
+        getGeneralPurposeFlag().setHasDataDescriptor(dataDescriptor!=null);
     }
 
     public static LocalFileHeader fromCentralEntryHeader(CentralEntryHeader ceh){

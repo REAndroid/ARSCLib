@@ -17,7 +17,7 @@ package com.reandroid.archive2.model;
 
 import com.reandroid.archive2.block.*;
 import com.reandroid.archive2.block.ApkSignatureBlock;
-import com.reandroid.archive2.io.ZipSource;
+import com.reandroid.archive2.io.ZipInput;
 import com.reandroid.arsc.io.BlockReader;
 
 import java.io.IOException;
@@ -37,14 +37,14 @@ public class LocalFileDirectory {
     public LocalFileDirectory(){
         this(new CentralFileDirectory());
     }
-    public void visit(ZipSource zipSource) throws IOException {
-        getCentralFileDirectory().visit(zipSource);
-        visitLocalFile(zipSource);
-        visitApkSigBlock(zipSource);
+    public void visit(ZipInput zipInput) throws IOException {
+        getCentralFileDirectory().visit(zipInput);
+        visitLocalFile(zipInput);
+        visitApkSigBlock(zipInput);
     }
-    private void visitLocalFile(ZipSource zipSource) throws IOException {
+    private void visitLocalFile(ZipInput zipInput) throws IOException {
         EndRecord endRecord = getCentralFileDirectory().getEndRecord();
-        InputStream inputStream = zipSource.getInputStream(0, endRecord.getOffsetOfCentralDirectory());
+        InputStream inputStream = zipInput.getInputStream(0, endRecord.getOffsetOfCentralDirectory());
         visitLocalFile(inputStream);
         inputStream.close();
     }
@@ -81,7 +81,7 @@ public class LocalFileDirectory {
         }
         mTotalDataLength = offset;
     }
-    private void visitApkSigBlock(ZipSource zipSource) throws IOException{
+    private void visitApkSigBlock(ZipInput zipInput) throws IOException{
         CentralFileDirectory cfd = getCentralFileDirectory();
         SignatureFooter footer = cfd.getSignatureFooter();
         if(footer == null || !footer.isValid()){
@@ -91,7 +91,7 @@ public class LocalFileDirectory {
         long length = footer.getSignatureSize() + 8;
         long offset = endRecord.getOffsetOfCentralDirectory() - length;
         ApkSignatureBlock apkSignatureBlock = new ApkSignatureBlock(footer);
-        apkSignatureBlock.readBytes(new BlockReader(zipSource.getInputStream(offset, length)));
+        apkSignatureBlock.readBytes(new BlockReader(zipInput.getInputStream(offset, length)));
         this.apkSignatureBlock = apkSignatureBlock;
     }
     public ApkSignatureBlock getApkSigBlock() {

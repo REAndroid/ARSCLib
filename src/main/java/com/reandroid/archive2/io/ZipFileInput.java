@@ -20,17 +20,39 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 
-public class ArchiveFile extends ZipSource{
+public class ZipFileInput extends ZipInput {
     private final File file;
     private FileChannel fileChannel;
-    private SlicedInputStream mCurrentInputStream;
-    public ArchiveFile(File file){
+    private InputStream mCurrentInputStream;
+    public ZipFileInput(File file){
         this.file = file;
+    }
+
+    @Override
+    public long position() throws IOException {
+        FileChannel fileChannel = this.fileChannel;
+        if(fileChannel != null){
+            return fileChannel.position();
+        }
+        return 0;
+    }
+    @Override
+    public void position(long pos) throws IOException {
+        getFileChannel().position(pos);
     }
     @Override
     public long getLength(){
         return this.file.length();
     }
+    @Override
+    public InputStream getInputStream(long offset, long length) throws IOException {
+        closeCurrentInputStream();
+        FileChannel fileChannel = getFileChannel();
+        fileChannel.position(offset);
+        mCurrentInputStream = new FileChannelInputStream(fileChannel, length);
+        return mCurrentInputStream;
+    }
+
     @Override
     public byte[] getFooter(int minLength) throws IOException {
         long position = getLength();
@@ -45,16 +67,7 @@ public class ArchiveFile extends ZipSource{
         return buffer.array();
     }
     @Override
-    public InputStream getInputStream(long offset, long length) throws IOException {
-        close();
-        mCurrentInputStream = new SlicedInputStream(new FileInputStream(this.file), offset, length);
-        return mCurrentInputStream;
-    }
-    @Override
-    public OutputStream getOutputStream(long offset) throws IOException {
-        return null;
-    }
-    private FileChannel getFileChannel() throws IOException {
+    public FileChannel getFileChannel() throws IOException {
         FileChannel fileChannel = this.fileChannel;
         if(fileChannel != null){
             return fileChannel;
@@ -67,8 +80,18 @@ public class ArchiveFile extends ZipSource{
     }
     @Override
     public void close() throws IOException {
-        closeChannel();
         closeCurrentInputStream();
+        closeChannel();
+    }
+    @Override
+    public boolean isOpen(){
+        FileChannel fileChannel = this.fileChannel;
+        if(fileChannel == null){
+            return false;
+        }
+        synchronized (this){
+            return fileChannel.isOpen();
+        }
     }
     private void closeChannel() throws IOException {
         FileChannel fileChannel = this.fileChannel;
@@ -81,7 +104,7 @@ public class ArchiveFile extends ZipSource{
         }
     }
     private void closeCurrentInputStream() throws IOException {
-        SlicedInputStream current = this.mCurrentInputStream;
+        InputStream current = this.mCurrentInputStream;
         if(current == null){
             return;
         }

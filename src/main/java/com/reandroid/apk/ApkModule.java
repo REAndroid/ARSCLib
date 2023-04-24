@@ -16,6 +16,8 @@
 package com.reandroid.apk;
 
 import com.reandroid.archive.*;
+import com.reandroid.archive2.Archive;
+import com.reandroid.archive2.writter.ApkWriter;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.array.PackageArray;
 import com.reandroid.arsc.chunk.Chunk;
@@ -268,10 +270,15 @@ public class ApkModule implements ApkFile {
         if(manifest!=null){
             manifest.setSort(0);
         }
+        ApkWriter apkWriter = new ApkWriter(file, archive.listInputSources());
+        apkWriter.write();
+        apkWriter.close();
+        /*
         ZipSerializer serializer=new ZipSerializer(archive.listInputSources());
         serializer.setWriteProgress(progress);
         serializer.setWriteInterceptor(interceptor);
         serializer.writeZip(file);
+        */
     }
     private void uncompressNonXmlResFiles() {
         for(ResFile resFile:listResFiles()){
@@ -725,7 +732,7 @@ public class ApkModule implements ApkFile {
         return loadApkFile(apkFile, ApkUtil.DEF_MODULE_NAME);
     }
     public static ApkModule loadApkFile(File apkFile, String moduleName) throws IOException {
-        APKArchive archive=APKArchive.loadZippedApk(apkFile);
-        return new ApkModule(moduleName, archive);
+        Archive archive = new Archive(apkFile);
+        return new ApkModule(moduleName, archive.createAPKArchive());
     }
 }

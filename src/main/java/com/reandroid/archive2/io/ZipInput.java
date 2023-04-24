@@ -15,14 +15,8 @@
  */
 package com.reandroid.archive2.io;
 
-import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
-public abstract class ZipSource implements Closeable {
-    public abstract long getLength();
+public abstract class ZipInput implements ReadOnlyStream {
     public abstract byte[] getFooter(int minLength) throws IOException;
-    public abstract InputStream getInputStream(long offset, long length) throws IOException;
-    public abstract OutputStream getOutputStream(long offset) throws IOException;
 }

@@ -15,10 +15,13 @@
  */
 package com.reandroid.archive2;
 
+import com.reandroid.archive.APKArchive;
+import com.reandroid.archive.InputSource;
 import com.reandroid.archive2.block.*;
-import com.reandroid.archive2.io.ArchiveFile;
+import com.reandroid.archive2.io.ArchiveEntrySource;
+import com.reandroid.archive2.io.ZipFileInput;
 import com.reandroid.archive2.io.ArchiveUtil;
-import com.reandroid.archive2.io.ZipSource;
+import com.reandroid.archive2.io.ZipInput;
 import com.reandroid.archive2.model.LocalFileDirectory;
 
 import java.io.File;
@@ -26,23 +29,25 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipEntry;
 
 public class Archive {
-    private final ZipSource zipSource;
+    private final ZipInput zipInput;
     private final List<ArchiveEntry> entryList;
     private final EndRecord endRecord;
     private final ApkSignatureBlock apkSignatureBlock;
-    public Archive(ZipSource zipSource) throws IOException {
-        this.zipSource = zipSource;
+    public Archive(ZipInput zipInput) throws IOException {
+        this.zipInput = zipInput;
         LocalFileDirectory lfd = new LocalFileDirectory();
-        lfd.visit(zipSource);
+        lfd.visit(zipInput);
         List<LocalFileHeader> localFileHeaderList = lfd.getHeaderList();
         List<CentralEntryHeader> centralEntryHeaderList = lfd.getCentralFileDirectory().getHeaderList();
-        List<ArchiveEntry> entryList = new ArrayList<>();
+        List<ArchiveEntry> entryList = new ArrayList<>(localFileHeaderList.size());
         for(int i=0;i<localFileHeaderList.size();i++){
             LocalFileHeader lfh = localFileHeaderList.get(i);
             CentralEntryHeader ceh = centralEntryHeaderList.get(i);
@@ -54,10 +59,24 @@ public class Archive {
         this.apkSignatureBlock = lfd.getApkSigBlock();
     }
     public Archive(File file) throws IOException {
-        this(new ArchiveFile(file));
+        this(new ZipFileInput(file));
+    }
+    public APKArchive createAPKArchive(){
+        return new APKArchive(mapEntrySource());
+    }
+    public Map<String, InputSource> mapEntrySource(){
+        Map<String, InputSource> map = new LinkedHashMap<>();
+        ZipInput zipInput = this.zipInput;
+        List<ArchiveEntry> entryList = this.entryList;
+        for(int i=0; i<entryList.size(); i++){
+            ArchiveEntry entry = entryList.get(i);
+            ArchiveEntrySource entrySource = new ArchiveEntrySource(zipInput, entry);
+            map.put(entrySource.getAlias(), entrySource);
+        }
+        return map;
     }
     public InputStream openRawInputStream(ArchiveEntry archiveEntry) throws IOException {
-        return zipSource.getInputStream(archiveEntry.getFileOffset(), archiveEntry.getDataSize());
+        return zipInput.getInputStream(archiveEntry.getFileOffset(), archiveEntry.getDataSize());
     }
     public InputStream openInputStream(ArchiveEntry archiveEntry) throws IOException {
         InputStream rawInputStream = openRawInputStream(archiveEntry);

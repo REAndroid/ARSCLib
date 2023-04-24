@@ -49,6 +49,14 @@ public class DataDescriptor extends ZipHeader{
         builder.append(", size=").append(getSize());
         return builder.toString();
     }
+    public static DataDescriptor fromLocalFile(LocalFileHeader lfh){
+        DataDescriptor dataDescriptor = new DataDescriptor();
+        dataDescriptor.setSignature(ZipSignature.DATA_DESCRIPTOR);
+        dataDescriptor.setSize(lfh.getSize());
+        dataDescriptor.setCompressedSize(lfh.getCompressedSize());
+        dataDescriptor.setCrc(lfh.getCrc());
+        return dataDescriptor;
+    }
 
     private static final int OFFSET_crc = 4;
     private static final int OFFSET_compressed_size = 8;

@@ -87,6 +87,12 @@ public class CentralEntryHeader extends CommonHeader {
         setBytesLength(length, false);
         putShort(OFFSET_commentLength, value);
     }
+    public long getLocalRelativeOffset(){
+        return getIntegerUnsigned(OFFSET_localRelativeOffset);
+    }
+    public void setLocalRelativeOffset(long offset){
+        putInteger(OFFSET_localRelativeOffset, offset);
+    }
     @Override
     void onUtf8Changed(boolean oldValue){
         String str = mComment;
@@ -139,6 +145,7 @@ public class CentralEntryHeader extends CommonHeader {
         builder.append(", fileNameLength=").append(getFileNameLength());
         builder.append(", extraLength=").append(getExtraLength());
         builder.append(", commentLength=").append(getCommentLength());
+        builder.append(", offset=").append(getLocalRelativeOffset());
         return builder.toString();
     }
 
@@ -146,7 +153,9 @@ public class CentralEntryHeader extends CommonHeader {
     public static CentralEntryHeader fromLocalFileHeader(LocalFileHeader lfh){
         CentralEntryHeader ceh = new CentralEntryHeader();
         ceh.setSignature(ZipSignature.CENTRAL_FILE);
-        ceh.setVersionMadeBy(lfh.getVersionMadeBy());
+        ceh.setVersionMadeBy(0x0300);
+        long offset = lfh.getFileOffset() - lfh.countBytes();
+        ceh.setLocalRelativeOffset(offset);
         ceh.getGeneralPurposeFlag().setValue(lfh.getGeneralPurposeFlag().getValue());
         ceh.setMethod(lfh.getMethod());
         ceh.setDosTime(lfh.getDosTime());

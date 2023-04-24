@@ -49,6 +49,12 @@ public abstract class CommonHeader extends ZipHeader {
         }
         return getCompressedSize();
     }
+    public void setDataSize(long size){
+        if(getMethod() == ZipEntry.STORED){
+            setSize(size);
+        }
+        setCompressedSize(size);
+    }
 
     @Override
     int readNext(InputStream inputStream) throws IOException {
@@ -113,6 +119,8 @@ public abstract class CommonHeader extends ZipHeader {
     }
     public void setMethod(int value){
         putShort(offsetGeneralPurpose + 2, value);
+        GeneralPurposeFlag gpf = getGeneralPurposeFlag();
+        //gpf.setHasDataDescriptor(value != ZipEntry.STORED);
     }
     public long getDosTime(){
         return getIntegerUnsigned(offsetGeneralPurpose + 4);
@@ -353,26 +361,34 @@ public abstract class CommonHeader extends ZipHeader {
             return this.localFileHeader.getBit(offset + 1, 3);
         }
         public void setUtf8(boolean flag){
+            setUtf8(flag, true);
+        }
+        private void setUtf8(boolean flag, boolean notify){
             boolean oldUtf8 = getUtf8();
             if(oldUtf8 == flag){
                 return;
             }
             this.localFileHeader.putBit(offset +1, 3, flag);
-            this.localFileHeader.onUtf8Changed(oldUtf8);
+            if(notify){
+                this.localFileHeader.onUtf8Changed(oldUtf8);
+            }
         }
 
         public int getValue(){
-            return this.localFileHeader.getInteger(offset);
+            return this.localFileHeader.getShortUnsigned(offset);
         }
         public void setValue(int value){
             if(value == getValue()){
                 return;
             }
             boolean oldUtf8 = getUtf8();
-            this.localFileHeader.putInteger(offset, value);
+            this.localFileHeader.putShort(offset, value);
             if(oldUtf8 != getUtf8()){
                 this.localFileHeader.onUtf8Changed(oldUtf8);
             }
+        }
+        public void initDefault(){
+            setUtf8(false, false);
         }
 
         @Override

@@ -64,7 +64,7 @@ public abstract class InputSource {
     }
     private long write(OutputStream outputStream, InputStream inputStream) throws IOException {
         long result=0;
-        byte[] buffer=new byte[10240];
+        byte[] buffer=new byte[1024 * 1000];
         int len;
         while ((len=inputStream.read(buffer))>0){
             outputStream.write(buffer, 0, len);

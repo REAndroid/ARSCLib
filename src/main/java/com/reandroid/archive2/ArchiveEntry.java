@@ -53,7 +53,7 @@ public class ArchiveEntry extends ZipEntry {
     }
     @Override
     public long getSize() {
-        return localFileHeader.getSize();
+        return centralEntryHeader.getSize();
     }
     @Override
     public void setSize(long size) {
@@ -62,7 +62,7 @@ public class ArchiveEntry extends ZipEntry {
     }
     @Override
     public long getCrc() {
-        return localFileHeader.getCrc();
+        return centralEntryHeader.getCrc();
     }
     @Override
     public void setCrc(long crc) {
@@ -71,7 +71,7 @@ public class ArchiveEntry extends ZipEntry {
     }
     @Override
     public long getCompressedSize() {
-        return localFileHeader.getCompressedSize();
+        return centralEntryHeader.getCompressedSize();
     }
     @Override
     public void setCompressedSize(long csize) {
@@ -83,7 +83,7 @@ public class ArchiveEntry extends ZipEntry {
     }
     @Override
     public String getName(){
-        return localFileHeader.getFileName();
+        return centralEntryHeader.getFileName();
     }
     public void setName(String name){
         centralEntryHeader.setFileName(name);

@@ -19,7 +19,7 @@ import com.reandroid.archive2.block.CentralEntryHeader;
 import com.reandroid.archive2.block.EndRecord;
 import com.reandroid.archive2.block.LocalFileHeader;
 import com.reandroid.archive2.block.SignatureFooter;
-import com.reandroid.archive2.io.ZipSource;
+import com.reandroid.archive2.io.ZipInput;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -73,13 +73,13 @@ public class CentralFileDirectory {
     public EndRecord getEndRecord() {
         return endRecord;
     }
-    public void visit(ZipSource zipSource) throws IOException {
-        byte[] footer = zipSource.getFooter(SignatureFooter.MIN_SIZE + EndRecord.MAX_LENGTH);
+    public void visit(ZipInput zipInput) throws IOException {
+        byte[] footer = zipInput.getFooter(SignatureFooter.MIN_SIZE + EndRecord.MAX_LENGTH);
         EndRecord endRecord = findEndRecord(footer);
         int length = (int) endRecord.getLengthOfCentralDirectory();
         int endLength = endRecord.countBytes();
         if(footer.length < (length + endLength)){
-            footer = zipSource.getFooter(SignatureFooter.MIN_SIZE + length + endLength);
+            footer = zipInput.getFooter(SignatureFooter.MIN_SIZE + length + endLength);
         }
         int offset = footer.length - length - endLength;
         this.endRecord = endRecord;

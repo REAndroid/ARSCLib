@@ -87,9 +87,6 @@ public abstract class LengthPrefixedList<T extends Block> extends FixedBlockCont
         }
         BlockReader chunkReader = reader.create(totalSize);
         readElements(chunkReader);
-        if(chunkReader.isAvailable()){
-            String junk = "";
-        }
         bottomContainer.readBytes(chunkReader);
         reader.offset(totalSize);
     }
