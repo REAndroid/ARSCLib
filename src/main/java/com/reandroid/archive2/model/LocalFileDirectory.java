@@ -17,11 +17,12 @@ package com.reandroid.archive2.model;
 
 import com.reandroid.archive2.block.*;
 import com.reandroid.archive2.block.ApkSignatureBlock;
+import com.reandroid.archive2.io.FileChannelInputStream;
 import com.reandroid.archive2.io.ZipInput;
 import com.reandroid.arsc.io.BlockReader;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +30,6 @@ public class LocalFileDirectory {
     private final CentralFileDirectory centralFileDirectory;
     private final List<LocalFileHeader> headerList;
     private ApkSignatureBlock apkSignatureBlock;
-    private long mTotalDataLength;
     public LocalFileDirectory(CentralFileDirectory centralFileDirectory){
         this.centralFileDirectory = centralFileDirectory;
         this.headerList = new ArrayList<>();
@@ -43,27 +43,23 @@ public class LocalFileDirectory {
         visitApkSigBlock(zipInput);
     }
     private void visitLocalFile(ZipInput zipInput) throws IOException {
-        EndRecord endRecord = getCentralFileDirectory().getEndRecord();
-        InputStream inputStream = zipInput.getInputStream(0, endRecord.getOffsetOfCentralDirectory());
-        visitLocalFile(inputStream);
-        inputStream.close();
-    }
-    private void visitLocalFile(InputStream inputStream) throws IOException {
         List<LocalFileHeader> headerList = this.getHeaderList();
-        long offset = 0;
+        long offset;
         int read;
-        CentralFileDirectory centralFileDirectory = getCentralFileDirectory();
-        LocalFileHeader lfh = new LocalFileHeader();
-        read = lfh.readBytes(inputStream);
         int index = 0;
-        while (lfh.isValidSignature()){
-            offset += read;
-            lfh.setIndex(index);
-            CentralEntryHeader ceh = centralFileDirectory.get(lfh);
-            lfh.mergeZeroValues(ceh);
+        CentralFileDirectory centralFileDirectory = getCentralFileDirectory();
+        long length = zipInput.getLength();
+        FileChannelInputStream inputStream= (FileChannelInputStream) zipInput.getInputStream(0, length);
+        FileChannel fileChannel = inputStream.getFileChannel();
+        for(CentralEntryHeader ceh: centralFileDirectory.getHeaderList()){
+            offset = ceh.getLocalRelativeOffset();
+            fileChannel.position(offset);
+            LocalFileHeader lfh = new LocalFileHeader();
+            lfh.readBytes(inputStream);
+            offset = offset + lfh.countBytes();
             lfh.setFileOffset(offset);
             ceh.setFileOffset(offset);
-            offset += inputStream.skip(lfh.getDataSize());
+            offset = inputStream.skip(lfh.getDataSize());
             DataDescriptor dataDescriptor = null;
             if(lfh.hasDataDescriptor()){
                 dataDescriptor = new DataDescriptor();
@@ -72,14 +68,13 @@ public class LocalFileDirectory {
                     offset += read;
                 }
             }
+            index++;
+            lfh.setIndex(index);
             lfh.setDataDescriptor(dataDescriptor);
             headerList.add(lfh);
-            index++;
-
-            lfh = new LocalFileHeader();
-            read = lfh.readBytes(inputStream);
+            length = length - offset;
+            inputStream.reset();
         }
-        mTotalDataLength = offset;
     }
     private void visitApkSigBlock(ZipInput zipInput) throws IOException{
         CentralFileDirectory cfd = getCentralFileDirectory();
@@ -102,8 +97,5 @@ public class LocalFileDirectory {
     }
     public List<LocalFileHeader> getHeaderList() {
         return headerList;
-    }
-    public long getTotalDataLength() {
-        return mTotalDataLength;
     }
 }

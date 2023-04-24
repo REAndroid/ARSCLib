@@ -39,6 +39,11 @@ public class FileChannelInputStream extends InputStream {
         this.bufferLength = len;
         this.pos = len;
     }
+
+    public FileChannel getFileChannel() {
+        return fileChannel;
+    }
+
     @Override
     public int read(byte[] bytes) throws IOException {
         return read(bytes, 0, bytes.length);
@@ -95,5 +100,9 @@ public class FileChannelInputStream extends InputStream {
     @Override
     public int read() throws IOException {
         throw new IOException("Why one byte?");
+    }
+    @Override
+    public void reset(){
+        total = 0;
     }
 }
