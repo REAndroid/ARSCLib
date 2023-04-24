@@ -13,18 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.archive2.writter;
+package com.reandroid.archive2.writer;
 
-import com.reandroid.apk.RenamedInputSource;
-import com.reandroid.archive2.io.ArchiveEntrySource;
+import com.reandroid.archive2.io.ZipFileInput;
 
-public class RenamedArchiveSource extends ArchiveOutputSource{
-    public RenamedArchiveSource(RenamedInputSource<?> inputSource) {
-        super(inputSource);
+import java.io.File;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+
+public class BufferFileInput extends ZipFileInput {
+    private boolean unlocked;
+    public BufferFileInput(File file){
+        super(file);
     }
+
+    public void unlock(){
+        this.unlocked = true;
+    }
+
     @Override
-    ArchiveEntrySource getArchiveSource(){
-        return (ArchiveEntrySource)
-                ((RenamedInputSource<?>)super.getInputSource()).getInputSource();
+    public FileChannel getFileChannel() throws IOException {
+        if(unlocked){
+            return super.getFileChannel();
+        }
+        throw new IOException("File locked!");
     }
 }

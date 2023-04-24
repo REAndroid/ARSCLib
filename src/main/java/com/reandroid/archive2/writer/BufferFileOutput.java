@@ -13,28 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.archive2.writter;
+package com.reandroid.archive2.writer;
 
-import com.reandroid.archive2.io.ZipFileInput;
+import com.reandroid.archive2.io.ZipFileOutput;
 
-public class EntryBuffer {
-    private final ZipFileInput zipFileInput;
-    private final long offset;
-    private final long length;
-    public EntryBuffer(ZipFileInput zipFileInput, long offset, long length){
-        this.zipFileInput = zipFileInput;
-        this.offset = offset;
-        this.length = length;
-    }
+import java.io.File;
+import java.io.IOException;
 
-    public ZipFileInput getZipFileInput() {
-        return zipFileInput;
+public class BufferFileOutput extends ZipFileOutput {
+    public BufferFileOutput(File file) throws IOException {
+        super(file);
     }
-    public long getOffset() {
-        return offset;
-    }
-    public long getLength() {
-        return length;
-    }
-
 }

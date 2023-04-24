@@ -13,15 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.archive2.writter;
+package com.reandroid.archive2.writer;
 
-import com.reandroid.archive2.io.ZipFileOutput;
+import com.reandroid.apk.RenamedInputSource;
+import com.reandroid.archive2.io.ArchiveEntrySource;
 
-import java.io.File;
-import java.io.IOException;
-
-public class BufferFileOutput extends ZipFileOutput {
-    public BufferFileOutput(File file) throws IOException {
-        super(file);
+public class RenamedArchiveSource extends ArchiveOutputSource{
+    public RenamedArchiveSource(RenamedInputSource<?> inputSource) {
+        super(inputSource);
+    }
+    @Override
+    ArchiveEntrySource getArchiveSource(){
+        return (ArchiveEntrySource)
+                ((RenamedInputSource<?>)super.getInputSource()).getInputSource();
     }
 }

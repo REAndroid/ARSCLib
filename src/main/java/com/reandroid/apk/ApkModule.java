@@ -17,7 +17,7 @@ package com.reandroid.apk;
 
 import com.reandroid.archive.*;
 import com.reandroid.archive2.Archive;
-import com.reandroid.archive2.writter.ApkWriter;
+import com.reandroid.archive2.writer.ApkWriter;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.array.PackageArray;
 import com.reandroid.arsc.chunk.Chunk;

@@ -13,30 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.archive2.writter;
+package com.reandroid.archive2.writer;
 
 import com.reandroid.archive2.io.ZipFileInput;
-import com.reandroid.archive2.io.ZipInput;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-
-public class BufferFileInput extends ZipFileInput {
-    private boolean unlocked;
-    public BufferFileInput(File file){
-        super(file);
+public class EntryBuffer {
+    private final ZipFileInput zipFileInput;
+    private final long offset;
+    private final long length;
+    public EntryBuffer(ZipFileInput zipFileInput, long offset, long length){
+        this.zipFileInput = zipFileInput;
+        this.offset = offset;
+        this.length = length;
     }
 
-    public void unlock(){
-        this.unlocked = true;
+    public ZipFileInput getZipFileInput() {
+        return zipFileInput;
+    }
+    public long getOffset() {
+        return offset;
+    }
+    public long getLength() {
+        return length;
     }
 
-    @Override
-    public FileChannel getFileChannel() throws IOException {
-        if(unlocked){
-            return super.getFileChannel();
-        }
-        throw new IOException("File locked!");
-    }
 }
