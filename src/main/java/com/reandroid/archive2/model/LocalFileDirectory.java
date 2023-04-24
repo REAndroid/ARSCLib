@@ -56,6 +56,7 @@ public class LocalFileDirectory {
             fileChannel.position(offset);
             LocalFileHeader lfh = new LocalFileHeader();
             lfh.readBytes(inputStream);
+            lfh.mergeZeroValues(ceh);
             offset = offset + lfh.countBytes();
             lfh.setFileOffset(offset);
             ceh.setFileOffset(offset);
