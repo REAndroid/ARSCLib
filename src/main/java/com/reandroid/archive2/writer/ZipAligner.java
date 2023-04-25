@@ -29,7 +29,6 @@ public class ZipAligner {
     private final Map<Pattern, Integer> alignmentMap;
     private int defaultAlignment;
     private boolean enableDataDescriptor;
-    private long mTotalPadding;
     private long mCurrentOffset;
 
     public ZipAligner(){
@@ -55,7 +54,6 @@ public class ZipAligner {
         this.defaultAlignment = defaultAlignment;
     }
     public void reset(){
-        mTotalPadding = 0;
         mCurrentOffset = 0;
     }
     public void setEnableDataDescriptor(boolean enableDataDescriptor) {
@@ -63,15 +61,15 @@ public class ZipAligner {
     }
 
     void align(InputSource inputSource, LocalFileHeader lfh){
+        lfh.setExtra(null);
         int padding;
         if(inputSource.getMethod() != ZipEntry.STORED){
             padding = 0;
             createDataDescriptor(lfh);
         }else {
             int alignment = getAlignment(inputSource.getAlias());
-            long newOffset = mCurrentOffset + mTotalPadding;
-            padding = (int) ((alignment - (newOffset % alignment)) % alignment);
-            mTotalPadding += padding;
+            long dataOffset = mCurrentOffset + lfh.countBytes();
+            padding = (int) ((alignment - (dataOffset % alignment)) % alignment);
         }
         lfh.setExtra(new byte[padding]);
         mCurrentOffset += lfh.getDataSize() + lfh.countBytes();
