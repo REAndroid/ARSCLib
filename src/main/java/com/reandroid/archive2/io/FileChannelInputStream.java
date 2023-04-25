@@ -148,7 +148,7 @@ public class FileChannelInputStream extends InputStream {
         position += availableChannel;
         remaining = remaining - availableChannel;
         amount = amount - remaining;
-        fileChannel.position(fileChannel.position() + amount);
+        fileChannel.position(fileChannel.position() + availableChannel);
         return amount;
     }
     private int skipBuffer(int amount){
