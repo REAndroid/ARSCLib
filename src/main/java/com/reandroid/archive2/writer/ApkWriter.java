@@ -85,6 +85,9 @@ public class ApkWriter extends ZipFileOutput {
     }
     private void align(List<OutputSource> outputList){
         ZipAligner aligner = getZipAligner();
+        if(aligner!=null){
+            aligner.reset();
+        }
         for(OutputSource outputSource:outputList){
             outputSource.align(aligner);
         }

@@ -53,13 +53,13 @@ public class ZipAligner {
         }
         this.defaultAlignment = defaultAlignment;
     }
-    public void reset(){
-        mCurrentOffset = 0;
-    }
     public void setEnableDataDescriptor(boolean enableDataDescriptor) {
         this.enableDataDescriptor = enableDataDescriptor;
     }
 
+    void reset(){
+        mCurrentOffset = 0;
+    }
     void align(InputSource inputSource, LocalFileHeader lfh){
         lfh.setExtra(null);
         int padding;
