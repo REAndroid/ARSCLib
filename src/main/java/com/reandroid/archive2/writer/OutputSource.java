@@ -29,18 +29,23 @@ import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.ZipEntry;
 
-public class OutputSource {
+class OutputSource {
     private final InputSource inputSource;
     private LocalFileHeader lfh;
     private EntryBuffer entryBuffer;
 
-    public OutputSource(InputSource inputSource){
+    OutputSource(InputSource inputSource){
         this.inputSource = inputSource;
     }
-    public void align(ZipAligner aligner){
-        aligner.align(getInputSource(), getLocalFileHeader());
+    void align(ZipAligner aligner){
+        LocalFileHeader lfh = getLocalFileHeader();
+        if(aligner == null){
+            lfh.setExtra(null);
+        }else {
+            aligner.align(getInputSource(), lfh);
+        }
     }
-    public void makeBuffer(BufferFileInput input, BufferFileOutput output) throws IOException {
+    void makeBuffer(BufferFileInput input, BufferFileOutput output) throws IOException {
         EntryBuffer entryBuffer = this.entryBuffer;
         if(entryBuffer != null){
             return;
@@ -62,7 +67,7 @@ public class OutputSource {
         return null;
     }
 
-    public void writeApk(ApkWriter apkWriter) throws IOException{
+    void writeApk(ApkWriter apkWriter) throws IOException{
         EntryBuffer entryBuffer = this.entryBuffer;
         FileChannel input = entryBuffer.getZipFileInput().getFileChannel();
         input.position(entryBuffer.getOffset());
@@ -71,7 +76,7 @@ public class OutputSource {
         writeData(input, entryBuffer.getLength(), apkWriter);
         writeDD(lfh.getDataDescriptor(), apkWriter);
     }
-    public void writeCEH(ApkWriter apkWriter) throws IOException{
+    void writeCEH(ApkWriter apkWriter) throws IOException{
         LocalFileHeader lfh = getLocalFileHeader();
         CentralEntryHeader ceh = CentralEntryHeader.fromLocalFileHeader(lfh);
         ceh.writeBytes(apkWriter.getOutputStream());
@@ -127,10 +132,10 @@ public class OutputSource {
         }
     }
 
-    public InputSource getInputSource() {
+    InputSource getInputSource() {
         return inputSource;
     }
-    public LocalFileHeader getLocalFileHeader(){
+    LocalFileHeader getLocalFileHeader(){
         if(lfh == null){
             lfh = createLocalFileHeader();
             clearAlignment(lfh);

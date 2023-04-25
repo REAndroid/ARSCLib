@@ -19,21 +19,56 @@ import com.reandroid.archive.InputSource;
 import com.reandroid.archive2.block.DataDescriptor;
 import com.reandroid.archive2.block.LocalFileHeader;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
 public class ZipAligner {
+    private final Map<Pattern, Integer> alignmentMap;
+    private int defaultAlignment;
+    private boolean enableDataDescriptor;
     private long mTotalPadding;
     private long mCurrentOffset;
-    private boolean enableDataDescriptor = true;
+
     public ZipAligner(){
+        alignmentMap = new HashMap<>();
     }
-    public void align(InputSource inputSource, LocalFileHeader lfh){
+
+    public void setFileAlignment(Pattern patternFileName, int alignment){
+        if(patternFileName == null){
+            return;
+        }
+        alignmentMap.remove(patternFileName);
+        if(alignment >= 0){
+            alignmentMap.put(patternFileName, alignment);
+        }
+    }
+    public void clearFileAlignment(){
+        alignmentMap.clear();
+    }
+    public void setDefaultAlignment(int defaultAlignment) {
+        if(defaultAlignment < 0){
+            defaultAlignment = 0;
+        }
+        this.defaultAlignment = defaultAlignment;
+    }
+    public void reset(){
+        mTotalPadding = 0;
+        mCurrentOffset = 0;
+    }
+    public void setEnableDataDescriptor(boolean enableDataDescriptor) {
+        this.enableDataDescriptor = enableDataDescriptor;
+    }
+
+    void align(InputSource inputSource, LocalFileHeader lfh){
         int padding;
         if(inputSource.getMethod() != ZipEntry.STORED){
             padding = 0;
             createDataDescriptor(lfh);
         }else {
-            int alignment = getAlignment(inputSource);
+            int alignment = getAlignment(inputSource.getAlias());
             long newOffset = mCurrentOffset + mTotalPadding;
             padding = (int) ((alignment - (newOffset % alignment)) % alignment);
             mTotalPadding += padding;
@@ -54,21 +89,23 @@ public class ZipAligner {
         }
         lfh.setDataDescriptor(dataDescriptor);
     }
-    public void reset(){
-        mTotalPadding = 0;
-        mCurrentOffset = 0;
-    }
-    public void setEnableDataDescriptor(boolean enableDataDescriptor) {
-        this.enableDataDescriptor = enableDataDescriptor;
+    private int getAlignment(String name){
+        for(Map.Entry<Pattern, Integer> entry:alignmentMap.entrySet()){
+            Matcher matcher = entry.getKey().matcher(name);
+            if(matcher.matches()){
+                return entry.getValue();
+            }
+        }
+        return defaultAlignment;
     }
 
-    private int getAlignment(InputSource inputSource){
-        String name = inputSource.getAlias();
-        if(name.startsWith("lib/") && name.endsWith(".so")){
-            return ALIGNMENT_PAGE;
-        }else {
-            return ALIGNMENT_4;
-        }
+    public static ZipAligner apkAligner(){
+        ZipAligner zipAligner = new ZipAligner();
+        zipAligner.setDefaultAlignment(ALIGNMENT_4);
+        Pattern patternNativeLib = Pattern.compile("^lib/.+\\.so$");
+        zipAligner.setFileAlignment(patternNativeLib, ALIGNMENT_PAGE);
+        zipAligner.setEnableDataDescriptor(true);
+        return zipAligner;
     }
 
     private static final int ALIGNMENT_4 = 4;

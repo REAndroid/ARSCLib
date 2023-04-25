@@ -30,20 +30,30 @@ import java.util.List;
 
 public class ApkWriter extends ZipFileOutput {
     private final Collection<? extends InputSource> sourceList;
+    private ZipAligner zipAligner;
+
     public ApkWriter(File file, Collection<? extends InputSource> sourceList) throws IOException {
         super(file);
         this.sourceList = sourceList;
+        this.zipAligner = ZipAligner.apkAligner();
     }
     public void write()throws IOException {
         List<OutputSource> outputList = buildOutputEntry();
         BufferFileInput buffer = writeBuffer(outputList);
         buffer.unlock();
-        ZipAligner aligner = new ZipAligner();
-        align(aligner, outputList);
+        align(outputList);
         writeApk(outputList);
         writeCEH(outputList);
         buffer.close();
+        this.close();
     }
+    public ZipAligner getZipAligner() {
+        return zipAligner;
+    }
+    public void setZipAligner(ZipAligner zipAligner) {
+        this.zipAligner = zipAligner;
+    }
+
     private void writeCEH(List<OutputSource> outputList) throws IOException{
         EndRecord endRecord = new EndRecord();
         endRecord.setSignature(ZipSignature.END_RECORD);
@@ -73,7 +83,8 @@ public class ApkWriter extends ZipFileOutput {
         output.close();
         return input;
     }
-    private void align(ZipAligner aligner, List<OutputSource> outputList) throws IOException{
+    private void align(List<OutputSource> outputList){
+        ZipAligner aligner = getZipAligner();
         for(OutputSource outputSource:outputList){
             outputSource.align(aligner);
         }
