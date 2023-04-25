@@ -17,31 +17,32 @@ package com.reandroid.archive2.io;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
 public class FileChannelInputStream extends InputStream {
     private final FileChannel fileChannel;
-    private final long length;
-    private long total;
+    private final long totalLength;
+    private long startOffset;
+    private long position;
     private final byte[] buffer;
-    private int pos;
+    private int bufferPosition;
     private int bufferLength;
 
-    public FileChannelInputStream(FileChannel fileChannel, long length){
+    public FileChannelInputStream(FileChannel fileChannel, long length, int bufferSize) throws IOException {
         this.fileChannel = fileChannel;
-        this.length = length;
-        int len = 1024 * 1000 * 100;
-        if(length < len){
-            len = (int) length;
+        this.totalLength = length;
+        if(length < bufferSize){
+            bufferSize = (int) length;
         }
-        this.buffer = new byte[len];
-        this.bufferLength = len;
-        this.pos = len;
+        this.buffer = new byte[bufferSize];
+        this.bufferLength = bufferSize;
+        this.bufferPosition = bufferSize;
+        this.startOffset = fileChannel.position();
     }
-
-    public FileChannel getFileChannel() {
-        return fileChannel;
+    public FileChannelInputStream(FileChannel fileChannel, long length) throws IOException {
+        this(fileChannel, length, DEFAULT_BUFFER_SIZE);
     }
 
     @Override
@@ -72,7 +73,7 @@ public class FileChannelInputStream extends InputStream {
         return result;
     }
     private int readBuffer(byte[] bytes, int offset, int length){
-        int avail = bufferLength - pos;
+        int avail = bufferLength - bufferPosition;
         if(avail == 0){
             return 0;
         }
@@ -80,29 +81,105 @@ public class FileChannelInputStream extends InputStream {
         if(read > avail){
             read = avail;
         }
-        System.arraycopy(buffer, pos, bytes, offset, read);
-        pos += read;
-        total += read;
+        System.arraycopy(buffer, bufferPosition, bytes, offset, read);
+        bufferPosition += read;
+        position += read;
         return read;
     }
     private void loadBuffer() throws IOException {
         byte[] buffer = this.buffer;
-        if(this.pos < buffer.length){
+        if(this.bufferPosition < bufferLength){
             return;
         }
         ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
         bufferLength = fileChannel.read(byteBuffer);
-        pos = 0;
+        bufferPosition = 0;
     }
     private boolean isFinished(){
-        return total >= length;
+        return position >= totalLength;
     }
     @Override
     public int read() throws IOException {
-        throw new IOException("Why one byte?");
+        byte[] bytes = new byte[1];
+        int read = read(bytes);
+        if(read < 0){
+            return read;
+        }
+        return bytes[0] & 0xff;
+    }
+    public long transferTo(OutputStream out) throws IOException{
+        long transferred = 0;
+        if(isFinished()){
+            return transferred;
+        }
+        while (!isFinished()){
+            loadBuffer();
+            int offset = bufferPosition;
+            int length = bufferLength - bufferPosition;
+            if(length <= 0){
+                break;
+            }
+            out.write(buffer, offset, length);
+            bufferPosition += length;
+            position += length;
+            transferred += length;
+        }
+        return transferred;
     }
     @Override
-    public void reset(){
-        total = 0;
+    public long skip(long amount) throws IOException {
+        if(amount <= 0){
+            return amount;
+        }
+        long remaining = amount;
+        remaining = remaining - skipBuffer((int) remaining);
+        if(remaining == 0){
+            return amount;
+        }
+        long availableChannel = totalLength - position;
+        if(availableChannel > remaining){
+            availableChannel = remaining;
+        }
+        position += availableChannel;
+        remaining = remaining - availableChannel;
+        amount = amount - remaining;
+        fileChannel.position(fileChannel.position() + amount);
+        return amount;
     }
+    private int skipBuffer(int amount){
+        int availableBuffer = bufferLength - bufferPosition;
+        if(availableBuffer > amount){
+            availableBuffer = amount;
+        }
+        bufferPosition += availableBuffer;
+        position += availableBuffer;
+        return availableBuffer;
+    }
+    @Override
+    public void reset() throws IOException {
+        position = 0;
+        bufferPosition = bufferLength;
+        fileChannel.position(startOffset);
+    }
+    @Override
+    public int available(){
+        return (int) (totalLength - position);
+    }
+    @Override
+    public boolean markSupported() {
+        return true;
+    }
+    @Override
+    public synchronized void mark(int readLimit){
+        if(readLimit < 0){
+            readLimit = 0;
+        }
+        startOffset = readLimit;
+    }
+    @Override
+    public String toString(){
+        return position + " / " + totalLength;
+    }
+
+    private static final int DEFAULT_BUFFER_SIZE = 1024 * 100;
 }

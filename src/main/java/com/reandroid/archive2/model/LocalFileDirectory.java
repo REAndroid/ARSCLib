@@ -17,12 +17,11 @@ package com.reandroid.archive2.model;
 
 import com.reandroid.archive2.block.*;
 import com.reandroid.archive2.block.ApkSignatureBlock;
-import com.reandroid.archive2.io.FileChannelInputStream;
 import com.reandroid.archive2.io.ZipInput;
 import com.reandroid.arsc.io.BlockReader;
 
 import java.io.IOException;
-import java.nio.channels.FileChannel;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,36 +44,36 @@ public class LocalFileDirectory {
     private void visitLocalFile(ZipInput zipInput) throws IOException {
         List<LocalFileHeader> headerList = this.getHeaderList();
         long offset;
-        int read;
         int index = 0;
         CentralFileDirectory centralFileDirectory = getCentralFileDirectory();
         long length = zipInput.getLength();
-        FileChannelInputStream inputStream= (FileChannelInputStream) zipInput.getInputStream(0, length);
-        FileChannel fileChannel = inputStream.getFileChannel();
-        for(CentralEntryHeader ceh: centralFileDirectory.getHeaderList()){
+        InputStream inputStream = zipInput.getInputStream(0, length);
+        for(CentralEntryHeader ceh : centralFileDirectory.getHeaderList()){
             offset = ceh.getLocalRelativeOffset();
-            fileChannel.position(offset);
-            LocalFileHeader lfh = new LocalFileHeader();
-            lfh.readBytes(inputStream);
-            lfh.mergeZeroValues(ceh);
+            inputStream.reset();
+            offset = inputStream.skip(offset);
+            LocalFileHeader lfh = LocalFileHeader.read(inputStream);
+            if(lfh == null){
+                throw new IOException("Error reading LFH at "
+                        + offset + ", for CEH = " + ceh.getFileName());
+            }
             offset = offset + lfh.countBytes();
             lfh.setFileOffset(offset);
             ceh.setFileOffset(offset);
-            offset = inputStream.skip(lfh.getDataSize());
+            lfh.mergeZeroValues(ceh);
+            inputStream.skip(lfh.getDataSize());
             DataDescriptor dataDescriptor = null;
             if(lfh.hasDataDescriptor()){
                 dataDescriptor = new DataDescriptor();
-                read = dataDescriptor.readBytes(inputStream);
-                if(read>0){
-                    offset += read;
+                int read = dataDescriptor.readBytes(inputStream);
+                if(read != dataDescriptor.countBytes()){
+                    dataDescriptor = null;
                 }
             }
-            index++;
-            lfh.setIndex(index);
             lfh.setDataDescriptor(dataDescriptor);
+            lfh.setIndex(index);
             headerList.add(lfh);
-            length = length - offset;
-            inputStream.reset();
+            index++;
         }
     }
     private void visitApkSigBlock(ZipInput zipInput) throws IOException{

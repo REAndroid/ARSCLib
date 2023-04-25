@@ -17,6 +17,9 @@ package com.reandroid.archive2.block;
 
 import com.reandroid.archive2.ZipSignature;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 public class LocalFileHeader extends CommonHeader {
     private DataDescriptor dataDescriptor;
     public LocalFileHeader(){
@@ -63,6 +66,15 @@ public class LocalFileHeader extends CommonHeader {
         lfh.setFileName(ceh.getFileName());
         lfh.setExtra(ceh.getExtra());
         return lfh;
+    }
+
+    public static LocalFileHeader read(InputStream inputStream) throws IOException {
+        LocalFileHeader localFileHeader = new LocalFileHeader();
+        localFileHeader.readBytes(inputStream);
+        if(localFileHeader.isValidSignature()){
+            return localFileHeader;
+        }
+        return null;
     }
     private static final int OFFSET_signature = 0;
     private static final int OFFSET_versionMadeBy = 4;
