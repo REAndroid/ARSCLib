@@ -16,6 +16,7 @@
 package com.reandroid.apk;
 
 import com.reandroid.archive.APKArchive;
+import com.reandroid.archive2.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.builder.StringPoolMerger;
@@ -48,12 +49,23 @@ public class ApkBundle {
             base=getLargestTableModule();
         }
         result.merge(base);
+        ApkSignatureBlock signatureBlock = null;
         for(ApkModule module:moduleList){
+            ApkSignatureBlock asb = module.getApkSignatureBlock();
             if(module==base){
+                if(asb != null){
+                    signatureBlock = asb;
+                }
                 continue;
+            }
+            if(signatureBlock == null){
+                signatureBlock = asb;
             }
             result.merge(module);
         }
+
+        result.setApkSignatureBlock(signatureBlock);
+
         if(result.hasTableBlock()){
             TableBlock tableBlock=result.getTableBlock();
             tableBlock.sortPackages();

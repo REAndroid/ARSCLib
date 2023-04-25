@@ -17,6 +17,7 @@ package com.reandroid.apk;
 
 import com.reandroid.archive.*;
 import com.reandroid.archive2.Archive;
+import com.reandroid.archive2.block.ApkSignatureBlock;
 import com.reandroid.archive2.writer.ApkWriter;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.array.PackageArray;
@@ -55,12 +56,21 @@ public class ApkModule implements ApkFile {
     private APKLogger apkLogger;
     private Decoder mDecoder;
     private ApkType mApkType;
+    private ApkSignatureBlock apkSignatureBlock;
     public ApkModule(String moduleName, APKArchive apkArchive){
         this.moduleName=moduleName;
         this.apkArchive=apkArchive;
         this.mUncompressedFiles=new UncompressedFiles();
         this.mUncompressedFiles.addPath(apkArchive);
     }
+
+    public ApkSignatureBlock getApkSignatureBlock() {
+        return apkSignatureBlock;
+    }
+    public void setApkSignatureBlock(ApkSignatureBlock apkSignatureBlock) {
+        this.apkSignatureBlock = apkSignatureBlock;
+    }
+
     public String getSplit(){
         if(!hasAndroidManifestBlock()){
             return null;
@@ -271,14 +281,10 @@ public class ApkModule implements ApkFile {
             manifest.setSort(0);
         }
         ApkWriter apkWriter = new ApkWriter(file, archive.listInputSources());
+        apkWriter.setAPKLogger(getApkLogger());
+        apkWriter.setApkSignatureBlock(getApkSignatureBlock());
         apkWriter.write();
         apkWriter.close();
-        /*
-        ZipSerializer serializer=new ZipSerializer(archive.listInputSources());
-        serializer.setWriteProgress(progress);
-        serializer.setWriteInterceptor(interceptor);
-        serializer.writeZip(file);
-        */
     }
     private void uncompressNonXmlResFiles() {
         for(ResFile resFile:listResFiles()){
@@ -733,6 +739,8 @@ public class ApkModule implements ApkFile {
     }
     public static ApkModule loadApkFile(File apkFile, String moduleName) throws IOException {
         Archive archive = new Archive(apkFile);
-        return new ApkModule(moduleName, archive.createAPKArchive());
+        ApkModule apkModule = new ApkModule(moduleName, archive.createAPKArchive());
+        apkModule.setApkSignatureBlock(archive.getApkSignatureBlock());
+        return apkModule;
     }
 }

@@ -15,9 +15,11 @@
  */
 package com.reandroid.archive2.writer;
 
+import com.reandroid.apk.APKLogger;
 import com.reandroid.apk.RenamedInputSource;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive2.ZipSignature;
+import com.reandroid.archive2.block.ApkSignatureBlock;
 import com.reandroid.archive2.block.EndRecord;
 import com.reandroid.archive2.io.ArchiveEntrySource;
 import com.reandroid.archive2.io.ZipFileOutput;
@@ -31,6 +33,8 @@ import java.util.List;
 public class ApkWriter extends ZipFileOutput {
     private final Collection<? extends InputSource> sourceList;
     private ZipAligner zipAligner;
+    private ApkSignatureBlock apkSignatureBlock;
+    private APKLogger apkLogger;
 
     public ApkWriter(File file, Collection<? extends InputSource> sourceList) throws IOException {
         super(file);
@@ -39,13 +43,20 @@ public class ApkWriter extends ZipFileOutput {
     }
     public void write()throws IOException {
         List<OutputSource> outputList = buildOutputEntry();
+        logMessage("Buffering compress changed files ...");
         BufferFileInput buffer = writeBuffer(outputList);
         buffer.unlock();
         align(outputList);
         writeApk(outputList);
-        writeCEH(outputList);
         buffer.close();
+
+        writeSignatureBlock();
+
+        writeCEH(outputList);
         this.close();
+    }
+    public void setApkSignatureBlock(ApkSignatureBlock apkSignatureBlock) {
+        this.apkSignatureBlock = apkSignatureBlock;
     }
     public ZipAligner getZipAligner() {
         return zipAligner;
@@ -55,6 +66,7 @@ public class ApkWriter extends ZipFileOutput {
     }
 
     private void writeCEH(List<OutputSource> outputList) throws IOException{
+        logMessage("Writing CEH ...");
         EndRecord endRecord = new EndRecord();
         endRecord.setSignature(ZipSignature.END_RECORD);
         long offset = position();
@@ -69,9 +81,18 @@ public class ApkWriter extends ZipFileOutput {
         endRecord.writeBytes(getOutputStream());
     }
     private void writeApk(List<OutputSource> outputList) throws IOException{
+        logMessage("Writing files: " + outputList.size());
         for(OutputSource outputSource:outputList){
             outputSource.writeApk( this);
         }
+    }
+    private void writeSignatureBlock() throws IOException {
+        ApkSignatureBlock signatureBlock = this.apkSignatureBlock;
+        if(signatureBlock == null){
+            return;
+        }
+        logMessage("Writing signature block ...");
+        signatureBlock.writeBytes(getOutputStream());
     }
     private BufferFileInput writeBuffer(List<OutputSource> outputList) throws IOException {
         File bufferFile = getBufferFile();
@@ -87,6 +108,7 @@ public class ApkWriter extends ZipFileOutput {
         ZipAligner aligner = getZipAligner();
         if(aligner!=null){
             aligner.reset();
+            logMessage("Zip align ...");
         }
         for(OutputSource outputSource:outputList){
             outputSource.align(aligner);
@@ -125,6 +147,28 @@ public class ApkWriter extends ZipFileOutput {
             }
         }
         return new OutputSource(inputSource);
+    }
+
+    APKLogger getApkLogger(){
+        return apkLogger;
+    }
+    public void setAPKLogger(APKLogger logger) {
+        this.apkLogger = logger;
+    }
+    private void logMessage(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logMessage(msg);
+        }
+    }
+    private void logError(String msg, Throwable tr) {
+        if(apkLogger!=null){
+            apkLogger.logError(msg, tr);
+        }
+    }
+    private void logVerbose(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logVerbose(msg);
+        }
     }
 
 }

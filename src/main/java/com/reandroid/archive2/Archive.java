@@ -90,7 +90,7 @@ public class Archive {
         return entryList;
     }
 
-    public ApkSignatureBlock getApkSigBlock() {
+    public ApkSignatureBlock getApkSignatureBlock() {
         return apkSignatureBlock;
     }
     public EndRecord getEndRecord() {
@@ -122,7 +122,7 @@ public class Archive {
     }
     // for test
     public void writeSignatureData(File dir) throws IOException{
-        ApkSignatureBlock apkSignatureBlock = getApkSigBlock();
+        ApkSignatureBlock apkSignatureBlock = getApkSignatureBlock();
         if(apkSignatureBlock == null){
             throw new IOException("Does not have signature block");
         }
