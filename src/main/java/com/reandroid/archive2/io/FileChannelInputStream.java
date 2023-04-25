@@ -91,7 +91,12 @@ public class FileChannelInputStream extends InputStream {
         if(this.bufferPosition < bufferLength){
             return;
         }
-        ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
+        int length = buffer.length;
+        long available = totalLength - position;
+        if(length > available){
+            length = (int) available;
+        }
+        ByteBuffer byteBuffer = ByteBuffer.wrap(buffer, 0, length);
         bufferLength = fileChannel.read(byteBuffer);
         bufferPosition = 0;
     }
