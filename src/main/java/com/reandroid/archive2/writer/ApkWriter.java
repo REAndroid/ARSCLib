@@ -26,11 +26,13 @@ import com.reandroid.archive2.io.ZipFileOutput;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 public class ApkWriter extends ZipFileOutput {
+    private final Object mLock = new Object();
     private final Collection<? extends InputSource> sourceList;
     private ZipAligner zipAligner;
     private ApkSignatureBlock apkSignatureBlock;
@@ -42,18 +44,21 @@ public class ApkWriter extends ZipFileOutput {
         this.zipAligner = ZipAligner.apkAligner();
     }
     public void write()throws IOException {
-        List<OutputSource> outputList = buildOutputEntry();
-        logMessage("Buffering compress changed files ...");
-        BufferFileInput buffer = writeBuffer(outputList);
-        buffer.unlock();
-        align(outputList);
-        writeApk(outputList);
-        buffer.close();
+        synchronized (mLock){
+            List<OutputSource> outputList = buildOutputEntry();
+            logMessage("Buffering compress changed files ...");
+            BufferFileInput buffer = writeBuffer(outputList);
+            buffer.unlock();
+            align(outputList);
+            writeApk(outputList);
+            buffer.close();
 
-        writeSignatureBlock();
+            writeSignatureBlock();
 
-        writeCEH(outputList);
-        this.close();
+            writeCEH(outputList);
+            this.close();
+            logMessage("Written to: " + getFile().getName());
+        }
     }
     public void setApkSignatureBlock(ApkSignatureBlock apkSignatureBlock) {
         this.apkSignatureBlock = apkSignatureBlock;
@@ -92,7 +97,16 @@ public class ApkWriter extends ZipFileOutput {
             return;
         }
         logMessage("Writing signature block ...");
-        signatureBlock.writeBytes(getOutputStream());
+        long offset = position();
+        int alignment = 4096;
+        int padding = (int) ((alignment - (offset % alignment)) % alignment);
+        OutputStream outputStream = getOutputStream();
+        if(padding > 0){
+            outputStream.write(new byte[padding]);
+        }
+        signatureBlock.refresh();
+        logVerbose("padding = " + padding + ", signatures = " + signatureBlock.countBytes());
+        signatureBlock.writeBytes(outputStream);
     }
     private BufferFileInput writeBuffer(List<OutputSource> outputList) throws IOException {
         File bufferFile = getBufferFile();

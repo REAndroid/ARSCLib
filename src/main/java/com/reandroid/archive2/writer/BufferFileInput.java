@@ -38,4 +38,15 @@ public class BufferFileInput extends ZipFileInput {
         }
         throw new IOException("File locked!");
     }
+    @Override
+    public void close() throws IOException {
+        super.close();
+        if(unlocked){
+            File file = super.getFile();
+            if(file.isFile()){
+                file.delete();
+            }
+            unlocked = false;
+        }
+    }
 }

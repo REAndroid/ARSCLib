@@ -28,6 +28,10 @@ public class ZipFileInput extends ZipInput {
         this.file = file;
     }
 
+    public File getFile(){
+        return file;
+    }
+
     @Override
     public long position() throws IOException {
         FileChannel fileChannel = this.fileChannel;
