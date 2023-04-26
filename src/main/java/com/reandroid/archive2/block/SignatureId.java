@@ -35,9 +35,9 @@ public class SignatureId {
     }
     public String toFileName() {
         if (this.name != null) {
-            return name + FILE_EXTENSION;
+            return name + FILE_EXT_RAW;
         }
-        return String.format("0x%08x", id) + FILE_EXTENSION;
+        return String.format("0x%08x", id) + FILE_EXT_RAW;
     }
     @Override
     public boolean equals(Object obj) {
@@ -66,7 +66,7 @@ public class SignatureId {
         if (name == null) {
             return null;
         }
-        String ext = FILE_EXTENSION;
+        String ext = FILE_EXT_RAW;
         if (name.endsWith(ext)) {
             name = name.substring(0, name.length() - ext.length());
         }
@@ -105,5 +105,5 @@ public class SignatureId {
             V2, V3, V31, STAMP_V1, STAMP_V2, PADDING, NULL
     };
 
-    private static final String FILE_EXTENSION = ".bin";
+    public static final String FILE_EXT_RAW = ".signature.info.bin";
 }

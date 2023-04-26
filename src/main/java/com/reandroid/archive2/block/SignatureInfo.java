@@ -28,6 +28,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -87,8 +88,7 @@ public class SignatureInfo extends LengthPrefixedBlock implements BlockLoad {
         }
         schemeContainer.setItem(scheme);
     }
-    // for test
-    public void writeData(File file) throws IOException{
+    public void writeRaw(File file) throws IOException{
         File dir = file.getParentFile();
         if(dir != null && !dir.exists()){
             dir.mkdirs();
@@ -97,11 +97,14 @@ public class SignatureInfo extends LengthPrefixedBlock implements BlockLoad {
         writeBytes(outputStream);
         outputStream.close();
     }
-    // for test
-    public File writeToDir(File dir) throws IOException{
-        File file = new File(dir, getId().toFileName());
-        writeData(file);
+    public File writeRawToDirectory(File dir) throws IOException{
+        String name = getIndex() + "_" + getId().toFileName();
+        File file = new File(dir, name);
+        writeRaw(file);
         return file;
+    }
+    public void read(File file) throws IOException {
+        super.readBytes(new BlockReader(file));
     }
     @Override
     public String toString() {

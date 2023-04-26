@@ -120,12 +120,4 @@ public class Archive {
         String name = archiveEntry.getName().replace('/', File.separatorChar);
         return new File(dir, name);
     }
-    // for test
-    public void writeSignatureData(File dir) throws IOException{
-        ApkSignatureBlock apkSignatureBlock = getApkSignatureBlock();
-        if(apkSignatureBlock == null){
-            throw new IOException("Does not have signature block");
-        }
-        apkSignatureBlock.writeSignatureData(dir);
-    }
 }

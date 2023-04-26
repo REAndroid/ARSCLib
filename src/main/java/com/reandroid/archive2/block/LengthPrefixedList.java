@@ -25,6 +25,7 @@ import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.LongItem;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 
 public abstract class LengthPrefixedList<T extends Block> extends FixedBlockContainer
@@ -74,6 +75,9 @@ public abstract class LengthPrefixedList<T extends Block> extends FixedBlockCont
     }
     public boolean remove(T element){
         return this.elements.remove(element);
+    }
+    public void sort(Comparator<T> comparator){
+        this.elements.sort(comparator);
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{

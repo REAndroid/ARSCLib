@@ -99,13 +99,13 @@ public class ApkWriter extends ZipFileOutput {
         logMessage("Writing signature block ...");
         long offset = position();
         int alignment = 4096;
-        int padding = (int) ((alignment - (offset % alignment)) % alignment);
+        int filesPadding = (int) ((alignment - (offset % alignment)) % alignment);
         OutputStream outputStream = getOutputStream();
-        if(padding > 0){
-            outputStream.write(new byte[padding]);
+        if(filesPadding > 0){
+            outputStream.write(new byte[filesPadding]);
         }
-        signatureBlock.refresh();
-        logVerbose("padding = " + padding + ", signatures = " + signatureBlock.countBytes());
+        logMessage("files padding = " + filesPadding);
+        signatureBlock.updatePadding();
         signatureBlock.writeBytes(outputStream);
     }
     private BufferFileInput writeBuffer(List<OutputSource> outputList) throws IOException {

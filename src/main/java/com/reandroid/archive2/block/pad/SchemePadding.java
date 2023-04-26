@@ -30,11 +30,28 @@ public class SchemePadding extends SignatureScheme {
         this.byteArray = new ByteArray();
         addChild(this.byteArray);
     }
+    public int getPadding(){
+        return byteArray.size();
+    }
+    public void setPadding(int padding){
+        byteArray.setSize(padding);
+    }
+    public byte[] getPaddingBytes() {
+        return byteArray.getBytes();
+    }
+    public void setPadding(byte[] bytes){
+        byteArray.set(bytes);
+    }
+
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
         SignatureInfo signatureInfo = getSignatureInfo();
         int size = (int) signatureInfo.getDataSize() - 4;
         byteArray.setSize(size);
         super.onReadBytes(reader);
+    }
+    @Override
+    public String toString(){
+        return "padding = " + getPadding();
     }
 }
