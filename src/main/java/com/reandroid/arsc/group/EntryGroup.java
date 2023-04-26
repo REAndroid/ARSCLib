@@ -29,7 +29,7 @@ import java.util.Iterator;
 public class EntryGroup extends ItemGroup<Entry> {
     private final int resourceId;
     public EntryGroup(int resId) {
-        super(create(), String.format("0x%08x", resId));
+        super(ARRAY_CREATOR, String.valueOf(resId));
         this.resourceId=resId;
     }
     public int getResourceId(){
@@ -220,6 +220,10 @@ public class EntryGroup extends ItemGroup<Entry> {
         return packageBlock.getSpecStringPool();
     }
     @Override
+    public int hashCode(){
+        return resourceId;
+    }
+    @Override
     public String toString(){
         Entry entry =pickOne();
         if(entry ==null){
@@ -227,18 +231,17 @@ public class EntryGroup extends ItemGroup<Entry> {
         }
         return super.toString()+"{"+ entry.toString()+"}";
     }
-    private static BlockArrayCreator<Entry> create(){
-        return new BlockArrayCreator<Entry>(){
-            @Override
-            public Entry newInstance() {
-                return new Entry();
-            }
 
-            @Override
-            public Entry[] newInstance(int len) {
-                return new Entry[len];
-            }
-        };
-    }
+    private static final BlockArrayCreator<Entry> ARRAY_CREATOR = new BlockArrayCreator<Entry>(){
+        @Override
+        public Entry newInstance() {
+            return new Entry();
+        }
+
+        @Override
+        public Entry[] newInstance(int len) {
+            return new Entry[len];
+        }
+    };
 
 }

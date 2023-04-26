@@ -28,18 +28,16 @@ import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
     private String mCache;
     private boolean mUtf8;
-    private final List<ReferenceItem> mReferencedList;
+    private final Set<ReferenceItem> mReferencedList;
     public StringItem(boolean utf8) {
         super(0);
         this.mUtf8=utf8;
-        this.mReferencedList=new ArrayList<>();
+        this.mReferencedList = new HashSet<>();
     }
     public boolean removeReference(ReferenceItem ref){
         return mReferencedList.remove(ref);
@@ -53,7 +51,7 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
     public boolean hasReference(){
         return mReferencedList.size()>0;
     }
-    public List<ReferenceItem> getReferencedList(){
+    public Collection<ReferenceItem> getReferencedList(){
         return mReferencedList;
     }
     public void addReference(ReferenceItem ref){
@@ -62,7 +60,7 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         }
     }
     public void addReferenceIfAbsent(ReferenceItem ref){
-        if(ref!=null && !mReferencedList.contains(ref)){
+        if(ref!=null){
             mReferencedList.add(ref);
         }
     }

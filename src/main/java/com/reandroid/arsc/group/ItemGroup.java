@@ -27,12 +27,10 @@ import java.util.Objects;
     private final BlockArrayCreator<T> mBlockArrayCreator;
     private final String name;
     private T[] items;
-    private final int hashCode;
     public ItemGroup(BlockArrayCreator<T> blockArrayCreator, String name){
         this.mBlockArrayCreator=blockArrayCreator;
         this.name=name;
         this.items=blockArrayCreator.newInstance(0);
-        this.hashCode = Objects.hash(getClass(), name);
     }
     public Iterator<T> iterator(){
         return iterator(false);
@@ -139,12 +137,12 @@ import java.util.Objects;
     }
     @Override
     public int hashCode(){
-        return hashCode;
+        return 31 * name.hashCode();
     }
     @Override
     public boolean equals(Object obj){
         if(obj instanceof StringGroup){
-            return hashCode==obj.hashCode();
+            return hashCode()==obj.hashCode();
         }
         return false;
     }
