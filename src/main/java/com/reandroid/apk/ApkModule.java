@@ -71,6 +71,48 @@ public class ApkModule implements ApkFile {
         this.apkSignatureBlock = apkSignatureBlock;
     }
 
+    public boolean hasSignatureBlock(){
+        return getApkSignatureBlock() != null;
+    }
+
+    public void dumpSignatureInfoFiles(File directory) throws IOException{
+        ApkSignatureBlock apkSignatureBlock = getApkSignatureBlock();
+        if(apkSignatureBlock == null){
+            throw new IOException("Don't have signature block");
+        }
+        apkSignatureBlock.writeSplitRawToDirectory(directory);
+    }
+    public void dumpSignatureBlock(File file) throws IOException{
+        ApkSignatureBlock apkSignatureBlock = getApkSignatureBlock();
+        if(apkSignatureBlock == null){
+            throw new IOException("Don't have signature block");
+        }
+        apkSignatureBlock.writeRaw(file);
+    }
+
+    public void scanSignatureInfoFiles(File directory) throws IOException{
+        if(!directory.isDirectory()){
+            throw new IOException("No such directory: " + directory);
+        }
+        ApkSignatureBlock apkSignatureBlock = this.apkSignatureBlock;
+        if(apkSignatureBlock == null){
+            apkSignatureBlock = new ApkSignatureBlock();
+        }
+        apkSignatureBlock.scanSplitFiles(directory);
+        setApkSignatureBlock(apkSignatureBlock);
+    }
+    public void loadSignatureBlock(File file) throws IOException{
+        if(!file.isFile()){
+            throw new IOException("No such file: " + file);
+        }
+        ApkSignatureBlock apkSignatureBlock = this.apkSignatureBlock;
+        if(apkSignatureBlock == null){
+            apkSignatureBlock = new ApkSignatureBlock();
+        }
+        apkSignatureBlock.read(file);
+        setApkSignatureBlock(apkSignatureBlock);
+    }
+
     public String getSplit(){
         if(!hasAndroidManifestBlock()){
             return null;
