@@ -16,15 +16,14 @@
 package com.reandroid.arsc.container;
 
 import com.reandroid.arsc.array.EntryArray;
-import com.reandroid.arsc.chunk.ChunkType;
+import com.reandroid.arsc.array.SparseTypeBlockArray;
+import com.reandroid.arsc.chunk.*;
 import com.reandroid.arsc.array.TypeBlockArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockContainer;
-import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.chunk.SpecBlock;
-import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.header.HeaderBlock;
+import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.value.Entry;
@@ -40,18 +39,31 @@ public class SpecTypePair extends BlockContainer<Block>
     private final Block[] mChildes;
     private final SpecBlock mSpecBlock;
     private final TypeBlockArray mTypeBlockArray;
+    private final SparseTypeBlockArray sparseTypeBlockArray;
     public SpecTypePair(SpecBlock specBlock, TypeBlockArray typeBlockArray){
         this.mSpecBlock = specBlock;
         this.mTypeBlockArray = typeBlockArray;
-        this.mChildes=new Block[]{specBlock, typeBlockArray};
+        this.sparseTypeBlockArray = new SparseTypeBlockArray();
+
+        this.mChildes=new Block[]{specBlock, typeBlockArray, sparseTypeBlockArray};
         mSpecBlock.setIndex(0);
         mTypeBlockArray.setIndex(1);
+        sparseTypeBlockArray.setIndex(2);
         mSpecBlock.setParent(this);
         mTypeBlockArray.setParent(this);
+        sparseTypeBlockArray.setParent(this);
     }
     public SpecTypePair(){
         this(new SpecBlock(), new TypeBlockArray());
     }
+
+    public SparseTypeBlockArray getSparseTypeBlockArray() {
+        return sparseTypeBlockArray;
+    }
+    public Collection<SparseTypeBlock> listSparseTypeBlock(){
+        return sparseTypeBlockArray.listItems();
+    }
+
     public Map<Integer, EntryGroup> createEntryGroups(){
         Map<Integer, EntryGroup> map = new HashMap<>();
         for(TypeBlock typeBlock:listTypeBlocks()){
@@ -211,13 +223,22 @@ public class SpecTypePair extends BlockContainer<Block>
         }
         ChunkType chunkType=headerBlock.getChunkType();
         if(chunkType == ChunkType.TYPE){
-            mTypeBlockArray.readBytes(reader);
+            readTypeBlock(reader);
             return;
         }
         if(chunkType!=ChunkType.SPEC){
             readUnexpectedNonSpecBlock(reader, headerBlock);
         }
         mSpecBlock.readBytes(reader);
+    }
+    private void readTypeBlock(BlockReader reader) throws IOException {
+        TypeHeader typeHeader = reader.readTypeHeader();
+        if(typeHeader.isSparse()){
+            SparseTypeBlock sparseTypeBlock = sparseTypeBlockArray.createNext();
+            sparseTypeBlock.readBytes(reader);
+            return;
+        }
+        mTypeBlockArray.readBytes(reader);
     }
     private void readUnexpectedNonSpecBlock(BlockReader reader, HeaderBlock headerBlock) throws IOException{
         throw new IOException("Unexpected block: "+headerBlock.toString()+", Should be: "+ChunkType.SPEC);
@@ -260,6 +281,7 @@ public class SpecTypePair extends BlockContainer<Block>
         }
         getSpecBlock().merge(typePair.getSpecBlock());
         getTypeBlockArray().merge(typePair.getTypeBlockArray());
+        getSparseTypeBlockArray().merge(typePair.getSparseTypeBlockArray());
     }
     @Override
     public int compareTo(SpecTypePair specTypePair) {

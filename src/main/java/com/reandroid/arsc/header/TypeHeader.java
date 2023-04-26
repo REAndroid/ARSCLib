@@ -43,6 +43,18 @@ public class TypeHeader extends HeaderBlock{
         addChild(entriesStart);
         addChild(config);
     }
+    public boolean isSparse(){
+        return (getFlags().get() & FLAG_SPARSE) == FLAG_SPARSE;
+    }
+    public void setSparse(boolean sparse){
+        byte flag = getFlags().get();
+        if(sparse){
+            flag = (byte) (flag | FLAG_SPARSE);
+        }else {
+            flag = (byte) (flag & (~FLAG_SPARSE & 0xff));
+        }
+        getFlags().set(flag);
+    }
 
     @Override
     public int getMinimumSize(){
@@ -76,6 +88,8 @@ public class TypeHeader extends HeaderBlock{
                 +", entriesStart=" + getEntriesStart()
                 +", config=" + getConfig() + '}';
     }
+
+    private static final byte FLAG_SPARSE = 0x1;
 
     //typeHeader.countBytes() - getConfig().countBytes() + ResConfig.SIZE_16
     private static final int TYPE_MIN_SIZE = 36;
