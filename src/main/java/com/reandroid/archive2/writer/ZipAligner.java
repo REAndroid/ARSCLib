@@ -40,7 +40,7 @@ public class ZipAligner {
             return;
         }
         alignmentMap.remove(patternFileName);
-        if(alignment >= 0){
+        if(alignment > 1){
             alignmentMap.put(patternFileName, alignment);
         }
     }
@@ -48,8 +48,8 @@ public class ZipAligner {
         alignmentMap.clear();
     }
     public void setDefaultAlignment(int defaultAlignment) {
-        if(defaultAlignment < 0){
-            defaultAlignment = 0;
+        if(defaultAlignment <= 0){
+            defaultAlignment = 1;
         }
         this.defaultAlignment = defaultAlignment;
     }
