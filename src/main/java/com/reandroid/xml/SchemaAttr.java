@@ -79,11 +79,11 @@ public class SchemaAttr extends XMLAttribute {
             super.setValue(uri);
             return;
         }
-        String prf=matcher.group("B");
+        String prf=matcher.group(3);
         if(!XMLUtil.isEmpty(prf)){
             setPrefix(prf);
         }
-        uri=matcher.group("A");
+        uri=matcher.group(1);
         super.setValue(uri);
     }
 
@@ -110,8 +110,8 @@ public class SchemaAttr extends XMLAttribute {
         if(value==null || !name.startsWith("xmlns:")){
             return false;
         }
-        Matcher matcher=PATTERN_URI.matcher(value);
-        return matcher.find();
+        Matcher matcher = PATTERN_URI.matcher(value);
+        return matcher.matches();
     }
     public static String getPrefix(String xmlnsName){
         String start="xmlns:";
@@ -120,5 +120,5 @@ public class SchemaAttr extends XMLAttribute {
         }
         return xmlnsName.substring(start.length());
     }
-    private static final Pattern PATTERN_URI=Pattern.compile("^\\s*(?<A>https?://[^:\\s]+)(:(?<B>([^:/\\s]+)))?\\s*$");
+    private static final Pattern PATTERN_URI=Pattern.compile("^\\s*(https?://[^:\\s]+)(:([^:/\\s]+))?\\s*$");
 }
