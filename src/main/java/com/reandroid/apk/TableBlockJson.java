@@ -72,6 +72,7 @@ public class TableBlockJson {
     }
     private String getFileName(TypeBlock typeBlock){
         StringBuilder builder=new StringBuilder();
+        builder.append(String.format("%03d-", typeBlock.getIndex()));
         builder.append(String.format("0x%02x", typeBlock.getTypeId()));
         String name= typeBlock.getTypeName();
         builder.append('-').append(name);
