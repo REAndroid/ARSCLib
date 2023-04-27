@@ -52,6 +52,9 @@ public class Archive {
             LocalFileHeader lfh = localFileHeaderList.get(i);
             CentralEntryHeader ceh = centralEntryHeaderList.get(i);
             ArchiveEntry archiveEntry = new ArchiveEntry(lfh, ceh);
+            if(archiveEntry.isDirectory()){
+                continue;
+            }
             entryList.add(archiveEntry);
         }
         this.entryList  = entryList;
@@ -70,6 +73,9 @@ public class Archive {
         List<ArchiveEntry> entryList = this.entryList;
         for(int i=0; i<entryList.size(); i++){
             ArchiveEntry entry = entryList.get(i);
+            if(entry.isDirectory()){
+                continue;
+            }
             ArchiveEntrySource entrySource = new ArchiveEntrySource(zipInput, entry);
             map.put(entrySource.getAlias(), entrySource);
         }
