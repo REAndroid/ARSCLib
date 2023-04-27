@@ -160,7 +160,10 @@ public class XMLFileEncoder {
             }
 
             if(EncodeUtil.isEmpty(valueText)) {
-                xmlAttribute.setValueAsString("");
+                if(valueText == null){
+                    valueText = "";
+                }
+                xmlAttribute.setValueAsString(valueText);
             }else{
                 ValueDecoder.EncodeResult encodeResult =
                         ValueDecoder.encodeGuessAny(valueText);
