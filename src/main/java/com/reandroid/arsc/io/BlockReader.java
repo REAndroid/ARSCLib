@@ -69,7 +69,7 @@ import java.io.*;
          return specHeader;
      }
     public TypeHeader readTypeHeader() throws IOException{
-        TypeHeader typeHeader = new TypeHeader();
+        TypeHeader typeHeader = new TypeHeader(false);
         if(available() < typeHeader.getMinimumSize()){
             return null;
         }

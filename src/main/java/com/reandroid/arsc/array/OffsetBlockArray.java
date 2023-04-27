@@ -1,18 +1,18 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.array;
 
 
@@ -22,7 +22,6 @@ import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
-import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
 
 
@@ -30,18 +29,21 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> implements BlockLoad {
-    private final IntegerArray mOffsets;
+    private final OffsetArray mOffsets;
     private final IntegerItem mItemStart;
     private final IntegerItem mItemCount;
     private final ByteArray mEnd4Block;
     private byte mEnd4Type;
-    public OffsetBlockArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart){
+    public OffsetBlockArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart){
         super();
         this.mOffsets=offsets;
         this.mItemCount=itemCount;
         this.mItemStart=itemStart;
         this.mEnd4Block=new ByteArray();
         mItemCount.setBlockLoad(this);
+    }
+    OffsetArray getOffsetArray(){
+        return mOffsets;
     }
     void setEndBytes(byte b){
         this.mEnd4Type=b;
@@ -91,7 +93,8 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
     @Override
     protected void onRefreshed() {
         int count=childesCount();
-        mOffsets.setSize(count);
+        OffsetArray offsetArray = this.mOffsets;
+        offsetArray.setSize(count);
         T[] childes=getChildes();
         int sum=0;
         if(childes!=null){
@@ -105,7 +108,7 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
                     offset=sum;
                     sum+=item.countBytes();
                 }
-                mOffsets.put(i, offset);
+                offsetArray.setOffset(i, offset);
             }
         }
         refreshCount();
@@ -167,7 +170,7 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         if(childes==null||childes.length==0){
             return;
         }
-        int[] offsetArray=mOffsets.toArray();
+        int[] offsetArray=mOffsets.getOffsets();
         int max=childes.length;
         int start=mItemStart.get();
         reader.seek(start);

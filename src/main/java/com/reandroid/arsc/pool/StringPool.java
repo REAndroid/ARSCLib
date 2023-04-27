@@ -1,37 +1,38 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.pool;
 
- import com.reandroid.arsc.array.StringArray;
- import com.reandroid.arsc.array.StyleArray;
- import com.reandroid.arsc.base.Block;
- import com.reandroid.arsc.chunk.Chunk;
- import com.reandroid.arsc.group.StringGroup;
- import com.reandroid.arsc.header.StringPoolHeader;
- import com.reandroid.arsc.io.BlockLoad;
- import com.reandroid.arsc.io.BlockReader;
- import com.reandroid.arsc.item.*;
- import com.reandroid.json.JSONArray;
- import com.reandroid.json.JSONConvert;
+import com.reandroid.arsc.array.OffsetArray;
+import com.reandroid.arsc.array.StringArray;
+import com.reandroid.arsc.array.StyleArray;
+import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.chunk.Chunk;
+import com.reandroid.arsc.group.StringGroup;
+import com.reandroid.arsc.header.StringPoolHeader;
+import com.reandroid.arsc.io.BlockLoad;
+import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.*;
+import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONConvert;
 
- import java.io.IOException;
- import java.util.*;
+import java.io.IOException;
+import java.util.*;
 
 
- public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolHeader> implements BlockLoad, JSONConvert<JSONArray>, Comparator<String> {
+public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolHeader> implements BlockLoad, JSONConvert<JSONArray>, Comparator<String> {
     private final StringArray<T> mArrayStrings;
     private final StyleArray mArrayStyles;
 
@@ -40,8 +41,8 @@ package com.reandroid.arsc.pool;
     StringPool(boolean is_utf8){
         super(new StringPoolHeader(), 4);
 
-        IntegerArray offsetStrings = new IntegerArray();
-        IntegerArray offsetStyles = new IntegerArray();
+        OffsetArray offsetStrings = new OffsetArray();
+        OffsetArray offsetStyles = new OffsetArray();
 
         StringPoolHeader header = getHeaderBlock();
 
@@ -278,7 +279,7 @@ package com.reandroid.arsc.pool;
         getHeaderBlock().setSorted(sorted);
     }
 
-    abstract StringArray<T> newInstance(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8);
+    abstract StringArray<T> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8);
     @Override
     protected void onChunkRefreshed() {
         mArrayStrings.refreshCountAndStart();

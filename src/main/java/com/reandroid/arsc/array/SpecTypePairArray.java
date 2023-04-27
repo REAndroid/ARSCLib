@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -90,11 +90,11 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         return pair.getTypeBlockArray().getOrCreate(resConfig);
     }
     public SpecTypePair getOrCreate(byte typeId){
-        SpecTypePair pair=getPair(typeId);
+        SpecTypePair pair = getPair(typeId);
         if(pair!=null){
             return pair;
         }
-        pair=createNext();
+        pair = createNext();
         pair.setTypeId(typeId);
         return pair;
     }
@@ -115,25 +115,9 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         }
         return null;
     }
-    public byte getTypeId(){
-        SpecTypePair[] items=getChildes();
-        if(items==null){
-            return 0;
-        }
-        int max=items.length;
-        for(int i=0;i<max;i++){
-            SpecTypePair pair=items[i];
-            if(pair!=null){
-                return pair.getTypeId();
-            }
-        }
-        return 0;
-    }
     @Override
     public SpecTypePair newInstance() {
-        SpecTypePair pair=new SpecTypePair();
-        pair.setTypeId(getTypeId());
-        return pair;
+        return new SpecTypePair();
     }
     @Override
     public SpecTypePair[] newInstance(int len) {
@@ -147,7 +131,7 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
     protected void onPreRefreshRefresh(){
         validateEntryCounts();
     }
-    // For android API < 26, it is required to have equal entry count on all SpecTypePair
+
     private void validateEntryCounts(){
         Map<Byte, Integer> entryCountMap=mapHighestEntryCount();
         for(Map.Entry<Byte, Integer> entry:entryCountMap.entrySet()){

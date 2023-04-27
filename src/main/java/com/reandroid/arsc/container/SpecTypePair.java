@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,6 @@
 package com.reandroid.arsc.container;
 
 import com.reandroid.arsc.array.EntryArray;
-import com.reandroid.arsc.array.SparseTypeBlockArray;
 import com.reandroid.arsc.chunk.*;
 import com.reandroid.arsc.array.TypeBlockArray;
 import com.reandroid.arsc.base.Block;
@@ -39,29 +38,21 @@ public class SpecTypePair extends BlockContainer<Block>
     private final Block[] mChildes;
     private final SpecBlock mSpecBlock;
     private final TypeBlockArray mTypeBlockArray;
-    private final SparseTypeBlockArray sparseTypeBlockArray;
+
     public SpecTypePair(SpecBlock specBlock, TypeBlockArray typeBlockArray){
         this.mSpecBlock = specBlock;
         this.mTypeBlockArray = typeBlockArray;
-        this.sparseTypeBlockArray = new SparseTypeBlockArray();
 
-        this.mChildes=new Block[]{specBlock, typeBlockArray, sparseTypeBlockArray};
-        mSpecBlock.setIndex(0);
-        mTypeBlockArray.setIndex(1);
-        sparseTypeBlockArray.setIndex(2);
-        mSpecBlock.setParent(this);
-        mTypeBlockArray.setParent(this);
-        sparseTypeBlockArray.setParent(this);
+        this.mChildes = new Block[]{specBlock, typeBlockArray};
+
+        specBlock.setIndex(0);
+        typeBlockArray.setIndex(1);
+
+        specBlock.setParent(this);
+        typeBlockArray.setParent(this);
     }
     public SpecTypePair(){
         this(new SpecBlock(), new TypeBlockArray());
-    }
-
-    public SparseTypeBlockArray getSparseTypeBlockArray() {
-        return sparseTypeBlockArray;
-    }
-    public Collection<SparseTypeBlock> listSparseTypeBlock(){
-        return sparseTypeBlockArray.listItems();
     }
 
     public Map<Integer, EntryGroup> createEntryGroups(){
@@ -233,12 +224,8 @@ public class SpecTypePair extends BlockContainer<Block>
     }
     private void readTypeBlock(BlockReader reader) throws IOException {
         TypeHeader typeHeader = reader.readTypeHeader();
-        if(typeHeader.isSparse()){
-            SparseTypeBlock sparseTypeBlock = sparseTypeBlockArray.createNext();
-            sparseTypeBlock.readBytes(reader);
-            return;
-        }
-        mTypeBlockArray.readBytes(reader);
+        TypeBlock typeBlock = mTypeBlockArray.createNext(typeHeader.isSparse());
+        typeBlock.readBytes(reader);
     }
     private void readUnexpectedNonSpecBlock(BlockReader reader, HeaderBlock headerBlock) throws IOException{
         throw new IOException("Unexpected block: "+headerBlock.toString()+", Should be: "+ChunkType.SPEC);
@@ -281,7 +268,6 @@ public class SpecTypePair extends BlockContainer<Block>
         }
         getSpecBlock().merge(typePair.getSpecBlock());
         getTypeBlockArray().merge(typePair.getTypeBlockArray());
-        getSparseTypeBlockArray().merge(typePair.getSparseTypeBlockArray());
     }
     @Override
     public int compareTo(SpecTypePair specTypePair) {
@@ -304,4 +290,5 @@ public class SpecTypePair extends BlockContainer<Block>
     }
 
     public static final String NAME_types = "types";
+    public static final String NAME_sparse_types = "sparse_types";
 }

@@ -1,24 +1,21 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.pool;
 
-import com.reandroid.arsc.array.ResXmlIDArray;
-import com.reandroid.arsc.array.StringArray;
-import com.reandroid.arsc.array.ResXmlStringArray;
-import com.reandroid.arsc.array.StyleArray;
+import com.reandroid.arsc.array.*;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
 import com.reandroid.arsc.group.StringGroup;
@@ -26,7 +23,7 @@ import com.reandroid.arsc.item.*;
 
 import java.util.Objects;
 
- public class ResXmlStringPool extends StringPool<ResXmlString> {
+public class ResXmlStringPool extends StringPool<ResXmlString> {
     public ResXmlStringPool(boolean is_utf8) {
         super(is_utf8);
     }
@@ -55,7 +52,7 @@ import java.util.Objects;
         }
     }
     @Override
-    StringArray<ResXmlString> newInstance(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
+    StringArray<ResXmlString> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         return new ResXmlStringArray(offsets, itemCount, itemStart, is_utf8);
     }
     public ResXmlString getOrCreate(String str){

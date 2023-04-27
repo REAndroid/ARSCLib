@@ -15,19 +15,26 @@
  */
 package com.reandroid.arsc.array;
 
-import com.reandroid.arsc.item.IntegerItem;
-import com.reandroid.arsc.item.TableString;
+import com.reandroid.arsc.item.IntegerArray;
 
-public class TableStringArray extends StringArray<TableString> {
-    public TableStringArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
-        super(offsets, itemCount, itemStart, is_utf8);
+public class OffsetArray extends IntegerArray {
+    public OffsetArray(){
+        super();
     }
-    @Override
-    public TableString newInstance() {
-        return new TableString(isUtf8());
+    public int getOffset(int i){
+        return super.getAt(i);
     }
-    @Override
-    public TableString[] newInstance(int len) {
-        return new TableString[len];
+    public void setOffset(int index, int value){
+        super.put(index, value);
     }
+    public int[] getOffsets(){
+        int length = size();
+        int[] result = new int[length];
+        for(int i=0;i<length;i++){
+            result[i] = getOffset(i);
+        }
+        return result;
+    }
+
+    public static final int NO_ENTRY = 0xFFFFFFFF;
 }

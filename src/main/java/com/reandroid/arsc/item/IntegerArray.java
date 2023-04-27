@@ -113,6 +113,14 @@ public class IntegerArray extends BlockItem {
                 (bts[i+2] & 0xff) << 16 |
                 (bts[i+3] & 0xff) << 24;
     }
+    public int getAt(int index){
+        int i=index*4;
+        byte[] bts = getBytesInternal();
+        return bts[i] & 0xff |
+                (bts[i+1] & 0xff) << 8 |
+                (bts[i+2] & 0xff) << 16 |
+                (bts[i+3] & 0xff) << 24;
+    }
     public final int size(){
         return getBytesLength()/4;
     }

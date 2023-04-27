@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -95,14 +95,17 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return typeBlock.getEntry(entryId);
     }
     public TypeBlock getOrCreate(ResConfig resConfig){
-        TypeBlock typeBlock=getTypeBlock(resConfig);
-        if(typeBlock!=null){
+        return getOrCreate(resConfig, false);
+    }
+    public TypeBlock getOrCreate(ResConfig resConfig, boolean sparse){
+        TypeBlock typeBlock = getTypeBlock(resConfig, sparse);
+        if(typeBlock != null){
             return typeBlock;
         }
-        byte id=getTypeId();
-        typeBlock=createNext();
+        byte id = getTypeId();
+        typeBlock = createNext(sparse);
         typeBlock.setTypeId(id);
-        ResConfig config=typeBlock.getResConfig();
+        ResConfig config = typeBlock.getResConfig();
         config.copyFrom(resConfig);
         return typeBlock;
     }
@@ -131,18 +134,24 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return null;
     }
     public TypeBlock getTypeBlock(ResConfig config){
+        return getTypeBlock(config, false);
+    }
+    public TypeBlock getTypeBlock(ResConfig config, boolean sparse){
         if(config==null){
             return null;
         }
-        TypeBlock[] items=getChildes();
-        if(items==null){
+        TypeBlock[] items = getChildes();
+        if(items == null){
             return null;
         }
-        int max=items.length;
-        for(int i=0;i<max;i++){
-            TypeBlock block=items[i];
-            if(config.equals(block.getResConfig())){
-                return block;
+        int length = items.length;
+        for(int i = 0; i < length; i++){
+            TypeBlock typeBlock = items[i];
+            if(typeBlock == null || sparse != typeBlock.isSparse()){
+                continue;
+            }
+            if(config.equals(typeBlock.getResConfig())){
+                return typeBlock;
             }
         }
         return null;
@@ -204,12 +213,9 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         };
     }
     private SpecBlock getSpecBlock(){
-        Block parent=getParent();
-        while(parent!=null){
-            if(parent instanceof SpecTypePair){
-                return ((SpecTypePair) parent).getSpecBlock();
-            }
-            parent=parent.getParent();
+        SpecTypePair parent = getParent(SpecTypePair.class);
+        if(parent != null){
+            return parent.getSpecBlock();
         }
         return null;
     }
@@ -223,14 +229,21 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     @Override
     public TypeBlock newInstance() {
-        byte id=getTypeId();
-        TypeBlock typeBlock=new TypeBlock();
+        byte id = getTypeId();
+        TypeBlock typeBlock = new TypeBlock(false);
         typeBlock.setTypeId(id);
         return typeBlock;
     }
     @Override
     public TypeBlock[] newInstance(int len) {
         return new TypeBlock[len];
+    }
+    public TypeBlock createNext(boolean sparse){
+        byte id = getTypeId();
+        TypeBlock typeBlock = new TypeBlock(sparse);
+        typeBlock.setTypeId(id);
+        add(typeBlock);
+        return typeBlock;
     }
     @Override
     protected void onRefreshed() {
@@ -265,16 +278,18 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     public int getHighestEntryCount(){
         int result=0;
         for(TypeBlock typeBlock:getChildes()){
-            int count=typeBlock.getEntryArray().childesCount();
-            if(count>result){
-                result=count;
+            int high = typeBlock.getEntryArray().getHighestEntryId();
+            if(high > result){
+                result = high;
             }
         }
         return result;
     }
     public void setEntryCount(int count){
         for(TypeBlock typeBlock:getChildes()){
-            typeBlock.setEntryCount(count);
+            if(!typeBlock.isSparse()){
+                typeBlock.setEntryCount(count);
+            }
         }
     }
     public TypeString getTypeString(){
@@ -305,21 +320,22 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         if(json == null){
             return;
         }
-        int length= json.length();
-        ensureSize(length);
-        for (int i=0;i<length;i++){
-            JSONObject jsonObject=json.getJSONObject(i);
-            TypeBlock typeBlock=get(i);
+        int length = json.length();
+        for(int i = 0; i < length; i++){
+            JSONObject jsonObject = json.getJSONObject(i);
+            TypeBlock typeBlock = createNext(
+                    jsonObject.optBoolean(TypeBlock.NAME_is_sparse, false));
             typeBlock.fromJson(jsonObject);
         }
     }
     public void merge(TypeBlockArray typeBlockArray){
-        if(typeBlockArray==null||typeBlockArray==this){
+        if(typeBlockArray == null || typeBlockArray == this){
             return;
         }
         for(TypeBlock typeBlock:typeBlockArray.listItems()){
-            TypeBlock block=getOrCreate(typeBlock.getResConfig());
-            block.merge(typeBlock);
+            TypeBlock exist = getOrCreate(
+                    typeBlock.getResConfig(), typeBlock.isSparse());
+            exist.merge(typeBlock);
         }
     }
     /**

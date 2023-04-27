@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
   */
 package com.reandroid.arsc.array;
 
-import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.json.JSONConvert;
@@ -29,7 +28,7 @@ import java.util.List;
 public abstract class StringArray<T extends StringItem> extends OffsetBlockArray<T> implements JSONConvert<JSONArray> {
     private boolean mUtf8;
 
-    public StringArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
+    public StringArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         super(offsets, itemCount, itemStart);
         this.mUtf8=is_utf8;
         setEndBytes((byte)0x00);

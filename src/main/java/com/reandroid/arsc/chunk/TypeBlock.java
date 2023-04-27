@@ -1,21 +1,23 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.chunk;
 
 import com.reandroid.arsc.array.EntryArray;
+import com.reandroid.arsc.array.OffsetArray;
+import com.reandroid.arsc.array.SparseOffsetsArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.header.TypeHeader;
@@ -39,11 +41,16 @@ public class TypeBlock extends Chunk<TypeHeader>
 
     private final EntryArray mEntryArray;
     private TypeString mTypeString;
-    public TypeBlock() {
-        super(new TypeHeader(), 2);
+    public TypeBlock(boolean sparse) {
+        super(new TypeHeader(sparse), 2);
         TypeHeader header = getHeaderBlock();
 
-        IntegerArray entryOffsets = new IntegerArray();
+        OffsetArray entryOffsets;
+        if(sparse){
+            entryOffsets = new SparseOffsetsArray();
+        }else {
+            entryOffsets = new OffsetArray();
+        }
         this.mEntryArray = new EntryArray(entryOffsets,
                 header.getCount(), header.getEntriesStart());
 
@@ -51,6 +58,9 @@ public class TypeBlock extends Chunk<TypeHeader>
 
         addChild(entryOffsets);
         addChild(mEntryArray);
+    }
+    public boolean isSparse(){
+        return getHeaderBlock().isSparse();
     }
     public void destroy(){
         getEntryArray().destroy();
@@ -227,9 +237,9 @@ public class TypeBlock extends Chunk<TypeHeader>
         super.onPreRefreshRefresh();
     }
     /*
-    * method Block.addBytes is inefficient for large size byte array
-    * so let's override here because this block is the largest
-    */
+     * method Block.addBytes is inefficient for large size byte array
+     * so let's override here because this block is the largest
+     */
     @Override
     public byte[] getBytes(){
         ByteArrayOutputStream os=new ByteArrayOutputStream();
@@ -242,7 +252,10 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     @Override
     public JSONObject toJson() {
-        JSONObject jsonObject=new JSONObject();
+        JSONObject jsonObject = new JSONObject();
+        if(isSparse()){
+            jsonObject.put(NAME_is_sparse, true);
+        }
         jsonObject.put(NAME_id, getId());
         jsonObject.put(NAME_name, getTypeName());
         jsonObject.put(NAME_config, getResConfig().toJson());
@@ -274,12 +287,16 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     @Override
     public int compareTo(TypeBlock typeBlock) {
-        int id1= getId();
-        int id2=typeBlock.getId();
-        if(id1!=id2){
+        int id1 = getId();
+        int id2 = typeBlock.getId();
+        if(id1 != id2){
             return Integer.compare(id1, id2);
         }
-        return getResConfig().compareTo(typeBlock.getResConfig());
+        String q1 = (isSparse() ? "1" : "0")
+                + getResConfig().getQualifiers();
+        String q2 = (typeBlock.isSparse() ? "1" : "0")
+                + typeBlock.getResConfig().getQualifiers();
+        return q1.compareTo(q2);
     }
     /**
      * It is allowed to have duplicate entry name therefore it is not recommend to use this.
@@ -311,4 +328,5 @@ public class TypeBlock extends Chunk<TypeHeader>
     public static final String NAME_config = "config";
     public static final String NAME_id = "id";
     public static final String NAME_entries = "entries";
+    public static final String NAME_is_sparse = "is_sparse";
 }

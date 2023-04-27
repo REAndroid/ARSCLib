@@ -1,20 +1,21 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.pool;
 
+import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.array.TableStringArray;
 import com.reandroid.arsc.chunk.ChunkType;
@@ -29,13 +30,13 @@ import com.reandroid.arsc.item.TableString;
 import java.io.IOException;
 import java.io.InputStream;
 
- public class TableStringPool extends StringPool<TableString> {
+public class TableStringPool extends StringPool<TableString> {
     public TableStringPool(boolean is_utf8) {
         super(is_utf8);
     }
 
     @Override
-    StringArray<TableString> newInstance(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
+    StringArray<TableString> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         return new TableStringArray(offsets, itemCount, itemStart, is_utf8);
     }
     public void merge(TableStringPool stringPool){
@@ -58,10 +59,10 @@ import java.io.InputStream;
         refreshUniqueIdMap();
     }
 
-     /**
-      * Loads string pool only from table block (resources.arsc) without
-      * loading other chunks
-      */
+    /**
+     * Loads string pool only from table block (resources.arsc) without
+     * loading other chunks
+     */
     public static TableStringPool readFromTable(InputStream inputStream) throws IOException {
         TableHeader tableHeader = new TableHeader();
         tableHeader.readBytes(inputStream);

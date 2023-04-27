@@ -15,7 +15,6 @@
   */
 package com.reandroid.arsc.array;
 
-import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.json.JSONConvert;
@@ -26,8 +25,31 @@ import java.util.Iterator;
 
 
 public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<JSONArray> {
-    public EntryArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart){
+    public EntryArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart){
         super(offsets, itemCount, itemStart);
+    }
+    public int getHighestEntryId(){
+        if(isSparse()){
+            return ((SparseOffsetsArray) getOffsetArray()).getHighestId();
+        }
+        return childesCount();
+    }
+    public int getEntryId(int index){
+        OffsetArray offsetArray = getOffsetArray();
+        if(offsetArray instanceof SparseOffsetsArray){
+            return ((SparseOffsetsArray) offsetArray).getIdx(index);
+        }
+        return index;
+    }
+    public int getEntryIndex(int entryId){
+        OffsetArray offsetArray = getOffsetArray();
+        if(offsetArray instanceof SparseOffsetsArray){
+            return ((SparseOffsetsArray) offsetArray).indexOf(entryId);
+        }
+        return entryId;
+    }
+    public boolean isSparse(){
+        return super.getOffsetArray() instanceof SparseOffsetsArray;
     }
     public void destroy(){
         for(Entry entry:listItems()){
@@ -47,26 +69,41 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
     public boolean isEmpty(){
         return !iterator(true).hasNext();
     }
-    public void setEntry(short entryId, Entry entry){
-        setItem(0xffff & entryId, entry);
-    }
+
     public Entry getOrCreate(short entryId){
         int id = 0xffff & entryId;
-        Entry entry =get(id);
-        if(entry !=null){
+        Entry entry = getEntry(id);
+        if(entry != null){
             return entry;
         }
-        int count=id+1;
+        boolean sparse = isSparse();
+        int count;
+        if(sparse){
+            count = childesCount() + 1;
+        }else {
+            count = id + 1;
+        }
         ensureSize(count);
+        if(!sparse){
+            refreshCount();
+            return super.get(id);
+        }
+        SparseOffsetsArray offsetsArray = (SparseOffsetsArray) getOffsetArray();
+        offsetsArray.ensureArraySize(count);
+        int index = count - 1;
+        offsetsArray.setIdx(index, id);
         refreshCount();
-        return get(id);
-    }
-    public Entry get(short entryId){
-        int index = 0xffff & entryId;
         return super.get(index);
     }
+    public Entry get(short entryId){
+        return getEntry(entryId);
+    }
     public Entry getEntry(short entryId){
-        return get(0xffff & entryId);
+        return getEntry(0xffff & entryId);
+    }
+    public Entry getEntry(int entryId){
+        int index = getEntryIndex(entryId);
+        return super.get(index);
     }
     @Override
     public Entry newInstance() {
@@ -98,7 +135,7 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         JSONArray jsonArray=new JSONArray();
         int index=0;
         String name_id = Entry.NAME_id;
-        for(Entry entry :listItems()){
+        for(Entry entry : listItems(true)){
             JSONObject childObject = entry.toJson();
             if(childObject==null){
                 continue;
@@ -112,33 +149,74 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
     @Override
     public void fromJson(JSONArray json) {
         clearChildes();
+        if(isSparse()){
+            fromJsonSparse(json);
+        }else {
+            fromJsonNonSparse(json);
+        }
+        refreshCountAndStart();
+    }
+    private void fromJsonNonSparse(JSONArray json){
         int length=json.length();
         ensureSize(length);
         String name_id = Entry.NAME_id;
         for(int i=0;i<length;i++){
-            JSONObject jsonObject= json.getJSONObject(i);
+            JSONObject jsonObject = json.optJSONObject(i);
             if(jsonObject==null){
                 continue;
             }
             int id = jsonObject.getInt(name_id);
-            ensureSize(id+1);
-            Entry entry =get(id);
+            ensureSize(id + 1);
+            Entry entry = super.get(id);
             entry.fromJson(jsonObject);
+        }
+    }
+    private void fromJsonSparse(JSONArray json){
+        SparseOffsetsArray offsetsArray = (SparseOffsetsArray) getOffsetArray();
+        offsetsArray.setSize(0);
+        int length = json.length();
+        ensureSize(length);
+        offsetsArray.setSize(length);
+        String name_id = Entry.NAME_id;
+        for(int i=0;i<length;i++){
+            JSONObject jsonObject = json.optJSONObject(i);
+            if(jsonObject==null){
+                offsetsArray.setIdx(i , OffsetArray.NO_ENTRY);
+                continue;
+            }
+            int id = jsonObject.getInt(name_id);
+            Entry entry = super.get(i);
+            offsetsArray.setIdx(i, id);
+            entry.fromJson(jsonObject);
+        }
+    }
+    public void merge(EntryArray entryArray){
+        if(entryArray ==null|| entryArray == this|| entryArray.isEmpty()){
+            return;
+        }
+        if(isSparse()){
+            mergeSparse(entryArray);
+        }else {
+            mergeNonSparse(entryArray);
         }
         refreshCountAndStart();
     }
-    public void merge(EntryArray entryArray){
-        if(entryArray ==null|| entryArray ==this|| entryArray.isEmpty()){
-            return;
+    private void mergeSparse(EntryArray entryArray){
+        Iterator<Entry> itr = entryArray.iterator(true);
+        while (itr.hasNext()){
+            Entry comingBlock = itr.next();
+            Entry existingBlock = getOrCreate((short) comingBlock.getId());
+            existingBlock.merge(comingBlock);
         }
+    }
+    private void mergeNonSparse(EntryArray entryArray){
         ensureSize(entryArray.childesCount());
         Iterator<Entry> itr = entryArray.iterator(true);
         while (itr.hasNext()){
             Entry comingBlock = itr.next();
-            Entry existingBlock = get(comingBlock.getIndex());
+            Entry existingBlock = super.get(comingBlock.getIndex());
             existingBlock.merge(comingBlock);
         }
-        refreshCountAndStart();
     }
     @Override
     public String toString(){

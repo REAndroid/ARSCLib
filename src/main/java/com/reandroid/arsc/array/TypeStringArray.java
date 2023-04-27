@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,13 +15,12 @@
   */
 package com.reandroid.arsc.array;
 
-import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.TypeString;
 
 public class TypeStringArray extends StringArray<TypeString> {
     private int lastCreateIndex;
-    public TypeStringArray(IntegerArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
+    public TypeStringArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         super(offsets, itemCount, itemStart, is_utf8);
     }
     @Override

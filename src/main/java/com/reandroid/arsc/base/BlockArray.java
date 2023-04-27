@@ -83,10 +83,13 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         return results;
     }
     public Collection<T> listItems(){
+        return listItems(false);
+    }
+    public Collection<T> listItems(boolean skipNullBlocks){
         return new AbstractCollection<T>() {
             @Override
             public Iterator<T> iterator(){
-                return BlockArray.this.iterator();
+                return BlockArray.this.iterator(skipNullBlocks);
             }
             @Override
             public boolean contains(Object o){
@@ -277,11 +280,14 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         }
         int len=items.length;
         for(int i=0;i<len;i++){
-            if(block==items[i]){
+            if(isEqual(items[i], block)){
                 return true;
             }
         }
         return false;
+    }
+    protected boolean isEqual(T item, Object obj){
+        return obj == item;
     }
     public void remove(Collection<T> blockList){
         T[] items=elementData;

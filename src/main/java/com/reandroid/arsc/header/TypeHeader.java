@@ -27,7 +27,7 @@ public class TypeHeader extends HeaderBlock{
     private final IntegerItem count;
     private final IntegerItem entriesStart;
     private final ResConfig config;
-    public TypeHeader() {
+    public TypeHeader(boolean sparse) {
         super(ChunkType.TYPE.ID);
         this.id = new ByteItem();
         this.flags = new ByteItem();
@@ -42,6 +42,7 @@ public class TypeHeader extends HeaderBlock{
         addChild(count);
         addChild(entriesStart);
         addChild(config);
+        setSparse(sparse);
     }
     public boolean isSparse(){
         return (getFlags().get() & FLAG_SPARSE) == FLAG_SPARSE;
