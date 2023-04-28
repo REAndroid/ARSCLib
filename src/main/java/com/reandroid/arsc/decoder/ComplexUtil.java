@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,7 @@ public class ComplexUtil {
     public static String decodeComplex(boolean fraction, int complex_value){
         int radixFlag = (complex_value >> COMPLEX_RADIX_SHIFT) & COMPLEX_RADIX_MASK;
         Radix radix = Radix.forFlag(radixFlag);
-        long mantissa = (complex_value >> COMPLEX_MANTISSA_SHIFT) & COMPLEX_MANTISSA_MASK;
+        int mantissa = (complex_value >> COMPLEX_MANTISSA_SHIFT) & COMPLEX_MANTISSA_MASK;
         mantissa = mantissa << radix.getShift();
         float value = mantissa * MANTISSA_MULTIPLIER;
         int unit_type = (complex_value >> COMPLEX_UNIT_SHIFT) & COMPLEX_UNIT_MASK;
