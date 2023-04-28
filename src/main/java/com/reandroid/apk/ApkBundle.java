@@ -40,7 +40,6 @@ public class ApkBundle {
         }
         ApkModule result = new ApkModule(generateMergedModuleName(), new APKArchive());
         result.setAPKLogger(apkLogger);
-        result.setDisableEntryGroupMap(true);
         result.setLoadDefaultFramework(false);
 
         mergeStringPools(result);
@@ -166,7 +165,6 @@ public class ApkBundle {
     }
     public void addModule(ApkModule apkModule){
         apkModule.setLoadDefaultFramework(false);
-        apkModule.setDisableEntryGroupMap(true);
         String name = apkModule.getModuleName();
         mModulesMap.remove(name);
         mModulesMap.put(name, apkModule);

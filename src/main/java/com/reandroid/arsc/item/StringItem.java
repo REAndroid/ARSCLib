@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -65,11 +65,13 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         }
     }
     public void addReference(Collection<ReferenceItem> refList){
-        if(refList==null){
+        if(refList == null){
             return;
         }
         for(ReferenceItem ref:refList){
-            addReference(ref);
+            if(ref != null){
+                this.mReferencedList.add(ref);
+            }
         }
     }
     private void reUpdateReferences(int newIndex){

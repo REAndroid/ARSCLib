@@ -42,7 +42,6 @@ public class TableBlock extends Chunk<TableHeader>
     private final List<TableBlock> mFrameWorks;
     private ApkFile mApkFile;
     private ReferenceResolver referenceResolver;
-    private boolean disableEntryGroupMap;
 
     public TableBlock() {
         super(new TableHeader(), 2);
@@ -54,15 +53,6 @@ public class TableBlock extends Chunk<TableHeader>
         addChild(mPackageArray);
     }
 
-    public boolean isDisableEntryGroupMap() {
-        return disableEntryGroupMap;
-    }
-    public void setDisableEntryGroupMap(boolean disable) {
-        this.disableEntryGroupMap = disable;
-        for(PackageBlock packageBlock : listPackages()){
-            packageBlock.setDisableEntryGroupMap(disable);
-        }
-    }
     public List<Entry> resolveReference(int referenceId){
         return resolveReference(referenceId, null);
     }

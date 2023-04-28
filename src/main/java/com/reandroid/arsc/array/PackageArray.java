@@ -92,10 +92,6 @@ public class PackageArray extends BlockArray<PackageBlock>
         packageBlock = createNext();
         packageBlock.setId(pkgId);
         packageBlock.setName("PACKAGE NAME");
-        TableBlock tableBlock = getParentInstance(TableBlock.class);
-        if(tableBlock != null){
-            packageBlock.setDisableEntryGroupMap(tableBlock.isDisableEntryGroupMap());
-        }
         return packageBlock;
     }
     public PackageBlock getPackageBlockById(byte pkgId){
@@ -135,10 +131,6 @@ public class PackageArray extends BlockArray<PackageBlock>
             return;
         }
         setChildesCount(mPackageCount.get());
-        TableBlock tableBlock = getParentInstance(TableBlock.class);
-        if(tableBlock != null){
-            tableBlock.setDisableEntryGroupMap(tableBlock.isDisableEntryGroupMap());
-        }
     }
     @Override
     public JSONArray toJson() {

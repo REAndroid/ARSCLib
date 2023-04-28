@@ -50,7 +50,7 @@ public class PackageBlock extends Chunk<PackageHeader>
     private final PackageBody mBody;
 
     private final Map<Integer, EntryGroup> mEntriesGroup;
-    private boolean disableEntryGroupMap;
+    private boolean entryGroupMapLocked;
 
     public PackageBlock() {
         super(new PackageHeader(), 3);
@@ -61,7 +61,8 @@ public class PackageBlock extends Chunk<PackageHeader>
 
         this.mBody = new PackageBody();
 
-        this.mEntriesGroup=new HashMap<>();
+        this.mEntriesGroup = new HashMap<>();
+        this.entryGroupMapLocked = true;
 
         addChild(mTypeStringPool);
         addChild(mSpecStringPool);
@@ -200,7 +201,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         return mBody.getLibraryBlock();
     }
     public Set<Integer> listResourceIds(){
-        return mEntriesGroup.keySet();
+        return getEntriesGroupMap().keySet();
     }
     public Entry getOrCreateEntry(byte typeId, short entryId, String qualifiers){
         return getSpecTypePairArray().getOrCreateEntry(typeId, entryId, qualifiers);
@@ -215,13 +216,30 @@ public class PackageBlock extends Chunk<PackageHeader>
         return getSpecTypePairArray().getTypeBlock(typeId, qualifiers);
     }
 
-    public boolean isDisableEntryGroupMap() {
-        return disableEntryGroupMap;
+    public boolean isEntryGroupMapLocked() {
+        return entryGroupMapLocked;
     }
-    public void setDisableEntryGroupMap(boolean disable) {
-        this.disableEntryGroupMap = disable;
+    private void unlockEntryGroup() {
+        synchronized (this){
+            if(!this.entryGroupMapLocked){
+                return;
+            }
+            System.err.println("\nUnlocking EntryGroupMap ...");
+            this.entryGroupMapLocked = false;
+            Map<Integer, EntryGroup> map = this.mEntriesGroup;
+            map.clear();
+            createEntryGroupMap(map);
+            System.err.println("\nEntryGroupMap unlocked!");
+        }
+    }
+    private void createEntryGroupMap(Map<Integer, EntryGroup> map){
+        map.clear();
+        for(SpecTypePair specTypePair:listAllSpecTypePair()){
+            map.putAll(specTypePair.createEntryGroups());
+        }
     }
     public Map<Integer, EntryGroup> getEntriesGroupMap(){
+        unlockEntryGroup();
         return mEntriesGroup;
     }
     public Collection<EntryGroup> listEntryGroup(){
@@ -248,7 +266,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         return null;
     }
     public void updateEntry(Entry entry){
-        if(isDisableEntryGroupMap()){
+        if(isEntryGroupMapLocked()){
             return;
         }
         if(entry == null || entry.isNull()){
