@@ -157,5 +157,5 @@ public class ApkSignatureBlock extends LengthPrefixedList<SignatureInfo>
         return 0;
     }
 
-    public static final String FILE_EXT = ".signature.block.bin";
+    public static final String FILE_EXT = ".sig";
 }

@@ -1,21 +1,22 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.apk;
 
 import com.reandroid.archive.InputSource;
+import com.reandroid.archive2.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
@@ -53,7 +54,17 @@ public class ApkJsonDecoder {
         writeResources(dir);
         writeRootFiles(dir);
         writePathMap(dir);
+        dumpSignatures(dir);
         return new File(dir, apkModule.getModuleName());
+    }
+    private void dumpSignatures(File outDir) throws IOException {
+        ApkSignatureBlock signatureBlock = apkModule.getApkSignatureBlock();
+        if(signatureBlock == null){
+            return;
+        }
+        apkModule.logMessage("Dumping signatures: " + ApkUtil.SIGNATURE_FILE_NAME);
+        File file = toSignatureFile(outDir);
+        signatureBlock.writeRaw(file);
     }
     private void writePathMap(File dir) throws IOException {
         PathMap pathMap = new PathMap();
@@ -188,6 +199,10 @@ public class ApkJsonDecoder {
         File file=new File(dir, apkModule.getModuleName());
         String name = "public.xml";
         return new File(file, name);
+    }
+    private File toSignatureFile(File dir){
+        File file = new File(dir, apkModule.getModuleName());
+        return new File(file, ApkUtil.SIGNATURE_FILE_NAME);
     }
     private File toPathMapJsonFile(File dir){
         File file = new File(dir, apkModule.getModuleName());

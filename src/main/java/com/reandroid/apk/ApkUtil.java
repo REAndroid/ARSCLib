@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 package com.reandroid.apk;
 
 import com.reandroid.archive.InputSource;
+import com.reandroid.archive2.block.ApkSignatureBlock;
 
 import java.io.File;
 import java.util.*;
@@ -191,6 +192,8 @@ public class ApkUtil {
 
     public static final String TAG_STRING_ARRAY = "string-array";
     public static final String TAG_INTEGER_ARRAY = "integer-array";
+
+    public static final String SIGNATURE_FILE_NAME = "signatures" + ApkSignatureBlock.FILE_EXT;
 
     private static final int MAX_FILE_NAME_LENGTH = 50;
 }

@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@ import com.reandroid.apk.xmldecoder.ResXmlDocumentSerializer;
 import com.reandroid.archive.InputSource;
 import com.reandroid.apk.xmldecoder.XMLBagDecoder;
 import com.reandroid.apk.xmldecoder.XMLNamespaceValidator;
+import com.reandroid.archive2.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
@@ -92,6 +93,17 @@ import java.util.*;
         extractRootFiles(outDir);
 
         writePathMap(outDir);
+
+        dumpSignatures(outDir);
+    }
+    private void dumpSignatures(File outDir) throws IOException {
+        ApkSignatureBlock signatureBlock = apkModule.getApkSignatureBlock();
+        if(signatureBlock == null){
+            return;
+        }
+        logMessage("Dumping signatures: " + ApkUtil.SIGNATURE_FILE_NAME);
+        File file = new File(outDir, ApkUtil.SIGNATURE_FILE_NAME);
+        signatureBlock.writeRaw(file);
     }
     private void writePathMap(File dir) throws IOException {
         PathMap pathMap = new PathMap();
