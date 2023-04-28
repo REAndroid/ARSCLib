@@ -42,7 +42,9 @@ import java.util.Objects;
      }
 
      void linkTableStrings(TableStringPool tableStringPool){
-         linkStringReference(tableStringPool);
+         if(getValueType() == ValueType.STRING){
+             linkStringReference(tableStringPool);
+         }
      }
      public void onRemoved(){
          unLinkStringReference();

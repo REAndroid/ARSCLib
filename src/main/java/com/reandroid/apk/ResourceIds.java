@@ -742,9 +742,15 @@ import java.util.*;
                         writer.write("<public id=\"");
                         writer.write(getHexId());
                         writer.write("\" type=\"");
-                        writer.write(getTypeName());
+                        String str = getTypeName();
+                        if(str != null){
+                            writer.write(str);
+                        }
                         writer.write("\" name=\"");
-                        writer.write(getName());
+                        str = getName();
+                        if(str != null){
+                            writer.write(str);
+                        }
                         writer.write("\"/>");
                     }
                     @Override

@@ -68,10 +68,13 @@ public class SpecTypePair extends BlockContainer<Block>
         }
     }
     public Map<Integer, EntryGroup> createEntryGroups(){
+        return createEntryGroups(false);
+    }
+    public Map<Integer, EntryGroup> createEntryGroups(boolean skipNullEntries){
         Map<Integer, EntryGroup> map = new HashMap<>();
         for(TypeBlock typeBlock:listTypeBlocks()){
             EntryArray entryArray = typeBlock.getEntryArray();
-            for(Entry entry:entryArray.listItems()){
+            for(Entry entry:entryArray.listItems(skipNullEntries)){
                 if(entry==null){
                     continue;
                 }

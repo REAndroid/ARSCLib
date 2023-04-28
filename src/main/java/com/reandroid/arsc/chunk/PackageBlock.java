@@ -241,7 +241,7 @@ public class PackageBlock extends Chunk<PackageHeader>
     private void createEntryGroupMap(Map<Integer, EntryGroup> map){
         map.clear();
         for(SpecTypePair specTypePair:listAllSpecTypePair()){
-            map.putAll(specTypePair.createEntryGroups());
+            map.putAll(specTypePair.createEntryGroups(true));
         }
     }
     public Map<Integer, EntryGroup> getEntriesGroupMap(){
