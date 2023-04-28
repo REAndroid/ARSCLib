@@ -75,7 +75,7 @@ public class SparseOffsetsArray extends OffsetArray{
         if(offset == NO_ENTRY){
             value = 0;
         }else {
-            int idx  = getAt(0);
+            int idx  = getAt(index);
             idx = idx & 0xffff;
             offset = offset & 0xffff;
             offset = offset / 4;
