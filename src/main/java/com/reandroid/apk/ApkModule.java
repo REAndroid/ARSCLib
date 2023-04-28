@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -57,6 +57,8 @@ public class ApkModule implements ApkFile {
     private Decoder mDecoder;
     private ApkType mApkType;
     private ApkSignatureBlock apkSignatureBlock;
+    private boolean disableEntryGroupMap;
+
     public ApkModule(String moduleName, APKArchive apkArchive){
         this.moduleName=moduleName;
         this.apkArchive=apkArchive;
@@ -64,6 +66,16 @@ public class ApkModule implements ApkFile {
         this.mUncompressedFiles.addPath(apkArchive);
     }
 
+    public boolean isDisableEntryGroupMap() {
+        return disableEntryGroupMap;
+    }
+    public void setDisableEntryGroupMap(boolean disable) {
+        this.disableEntryGroupMap = disable;
+        TableBlock tableBlock = this.mTableBlock;
+        if(tableBlock != null){
+            tableBlock.setDisableEntryGroupMap(disable);
+        }
+    }
     public ApkSignatureBlock getApkSignatureBlock() {
         return apkSignatureBlock;
     }
@@ -525,6 +537,7 @@ public class ApkModule implements ApkFile {
                 new BlockInputSource<>(TableBlock.FILE_NAME, tableBlock);
         archive.add(source);
         mTableBlock = tableBlock;
+        tableBlock.setDisableEntryGroupMap(isDisableEntryGroupMap());
     }
     @Override
     public AndroidManifestBlock getAndroidManifestBlock() {
@@ -563,6 +576,7 @@ public class ApkModule implements ApkFile {
             }
             try {
                 mTableBlock = loadTableBlock();
+                mTableBlock.setDisableEntryGroupMap(isDisableEntryGroupMap());
                 if(initFramework && loadDefaultFramework){
                     Integer version = getAndroidFrameworkVersion();
                     initializeAndroidFramework(mTableBlock, version);

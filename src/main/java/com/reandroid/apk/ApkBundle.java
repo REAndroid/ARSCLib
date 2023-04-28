@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,8 +38,9 @@ public class ApkBundle {
         if(moduleList.size()==0){
             throw new FileNotFoundException("Nothing to merge, empty modules");
         }
-        ApkModule result=new ApkModule(generateMergedModuleName(), new APKArchive());
+        ApkModule result = new ApkModule(generateMergedModuleName(), new APKArchive());
         result.setAPKLogger(apkLogger);
+        result.setDisableEntryGroupMap(true);
         result.setLoadDefaultFramework(false);
 
         mergeStringPools(result);
@@ -157,15 +158,16 @@ public class ApkBundle {
         logMessage("Found apk files: "+apkList.size());
         for(File file:apkList){
             logVerbose("Loading: "+file.getName());
-            String name=ApkUtil.toModuleName(file);
-            ApkModule module=ApkModule.loadApkFile(file, name);
+            String name = ApkUtil.toModuleName(file);
+            ApkModule module = ApkModule.loadApkFile(file, name);
             module.setAPKLogger(apkLogger);
             addModule(module);
         }
     }
     public void addModule(ApkModule apkModule){
         apkModule.setLoadDefaultFramework(false);
-        String name=apkModule.getModuleName();
+        apkModule.setDisableEntryGroupMap(true);
+        String name = apkModule.getModuleName();
         mModulesMap.remove(name);
         mModulesMap.put(name, apkModule);
     }

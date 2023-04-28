@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@ package com.reandroid.arsc.array;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
@@ -84,13 +85,17 @@ public class PackageArray extends BlockArray<PackageBlock>
         return getOrCreate(0xff & pkgId);
     }
     public PackageBlock getOrCreate(int pkgId){
-        PackageBlock packageBlock=getPackageBlockById(pkgId);
-        if(packageBlock!=null){
+        PackageBlock packageBlock = getPackageBlockById(pkgId);
+        if(packageBlock != null){
             return packageBlock;
         }
-        packageBlock=createNext();
+        packageBlock = createNext();
         packageBlock.setId(pkgId);
         packageBlock.setName("PACKAGE NAME");
+        TableBlock tableBlock = getParentInstance(TableBlock.class);
+        if(tableBlock != null){
+            packageBlock.setDisableEntryGroupMap(tableBlock.isDisableEntryGroupMap());
+        }
         return packageBlock;
     }
     public PackageBlock getPackageBlockById(byte pkgId){
@@ -126,8 +131,13 @@ public class PackageArray extends BlockArray<PackageBlock>
 
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender==mPackageCount){
-            setChildesCount(mPackageCount.get());
+        if(sender != mPackageCount){
+            return;
+        }
+        setChildesCount(mPackageCount.get());
+        TableBlock tableBlock = getParentInstance(TableBlock.class);
+        if(tableBlock != null){
+            tableBlock.setDisableEntryGroupMap(tableBlock.isDisableEntryGroupMap());
         }
     }
     @Override

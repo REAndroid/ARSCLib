@@ -1,18 +1,18 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.chunk;
 
 import com.reandroid.arsc.ApkFile;
@@ -35,20 +35,33 @@ import java.io.*;
 import java.util.*;
 import java.util.function.Predicate;
 
- public class TableBlock extends Chunk<TableHeader>
+public class TableBlock extends Chunk<TableHeader>
         implements MainChunk, JSONConvert<JSONObject>, EntryStore {
     private final TableStringPool mTableStringPool;
     private final PackageArray mPackageArray;
-    private final List<TableBlock> mFrameWorks=new ArrayList<>();
+    private final List<TableBlock> mFrameWorks;
     private ApkFile mApkFile;
     private ReferenceResolver referenceResolver;
+    private boolean disableEntryGroupMap;
+
     public TableBlock() {
         super(new TableHeader(), 2);
         TableHeader header = getHeaderBlock();
-        this.mTableStringPool=new TableStringPool(true);
-        this.mPackageArray=new PackageArray(header.getPackageCount());
+        this.mTableStringPool = new TableStringPool(true);
+        this.mPackageArray = new PackageArray(header.getPackageCount());
+        this.mFrameWorks = new ArrayList<>();
         addChild(mTableStringPool);
         addChild(mPackageArray);
+    }
+
+    public boolean isDisableEntryGroupMap() {
+        return disableEntryGroupMap;
+    }
+    public void setDisableEntryGroupMap(boolean disable) {
+        this.disableEntryGroupMap = disable;
+        for(PackageBlock packageBlock : listPackages()){
+            packageBlock.setDisableEntryGroupMap(disable);
+        }
     }
     public List<Entry> resolveReference(int referenceId){
         return resolveReference(referenceId, null);
@@ -83,7 +96,7 @@ import java.util.function.Predicate;
         return getPackageArray().pickOne();
     }
     public PackageBlock pickOne(int packageId){
-         return getPackageArray().pickOne(packageId);
+        return getPackageArray().pickOne(packageId);
     }
     public void sortPackages(){
         getPackageArray().sort();

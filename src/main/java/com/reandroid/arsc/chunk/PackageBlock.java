@@ -1,48 +1,48 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.chunk;
 
- import com.reandroid.arsc.BuildInfo;
- import com.reandroid.arsc.array.LibraryInfoArray;
- import com.reandroid.arsc.array.SpecTypePairArray;
- import com.reandroid.arsc.base.Block;
- import com.reandroid.arsc.container.BlockList;
- import com.reandroid.arsc.container.PackageBody;
- import com.reandroid.arsc.container.SpecTypePair;
- import com.reandroid.arsc.group.EntryGroup;
- import com.reandroid.arsc.header.PackageHeader;
- import com.reandroid.arsc.list.OverlayableList;
- import com.reandroid.arsc.list.StagedAliasList;
- import com.reandroid.arsc.pool.SpecStringPool;
- import com.reandroid.arsc.pool.TypeStringPool;
- import com.reandroid.arsc.value.Entry;
- import com.reandroid.arsc.value.LibraryInfo;
- import com.reandroid.arsc.value.ResConfig;
- import com.reandroid.arsc.value.StagedAliasEntry;
- import com.reandroid.json.JSONArray;
- import com.reandroid.json.JSONConvert;
- import com.reandroid.json.JSONObject;
+import com.reandroid.arsc.BuildInfo;
+import com.reandroid.arsc.array.LibraryInfoArray;
+import com.reandroid.arsc.array.SpecTypePairArray;
+import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.container.BlockList;
+import com.reandroid.arsc.container.PackageBody;
+import com.reandroid.arsc.container.SpecTypePair;
+import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.header.PackageHeader;
+import com.reandroid.arsc.list.OverlayableList;
+import com.reandroid.arsc.list.StagedAliasList;
+import com.reandroid.arsc.pool.SpecStringPool;
+import com.reandroid.arsc.pool.TypeStringPool;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.LibraryInfo;
+import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.arsc.value.StagedAliasEntry;
+import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONConvert;
+import com.reandroid.json.JSONObject;
 
- import java.util.*;
+import java.util.*;
 
 
- public class PackageBlock extends Chunk<PackageHeader>
+public class PackageBlock extends Chunk<PackageHeader>
         implements ParentChunk,
-         JSONConvert<JSONObject>,
-         Comparable<PackageBlock> {
+        JSONConvert<JSONObject>,
+        Comparable<PackageBlock> {
 
     private final TypeStringPool mTypeStringPool;
     private final SpecStringPool mSpecStringPool;
@@ -50,6 +50,7 @@ package com.reandroid.arsc.chunk;
     private final PackageBody mBody;
 
     private final Map<Integer, EntryGroup> mEntriesGroup;
+    private boolean disableEntryGroupMap;
 
     public PackageBlock() {
         super(new PackageHeader(), 3);
@@ -103,7 +104,7 @@ package com.reandroid.arsc.chunk;
         return getHeaderBlock().getTypeIdOffset();
     }
     public BlockList<UnknownChunk> getUnknownChunkList(){
-         return mBody.getUnknownChunkList();
+        return mBody.getUnknownChunkList();
     }
 
     public StagedAliasEntry searchByStagedResId(int stagedResId){
@@ -142,8 +143,8 @@ package com.reandroid.arsc.chunk;
         return getHeaderBlock().getPackageId().get();
     }
     public void setId(byte id){
-         setId(0xff & id);
-     }
+        setId(0xff & id);
+    }
     public void setId(int id){
         getHeaderBlock().getPackageId().set(id);
     }
@@ -175,7 +176,7 @@ package com.reandroid.arsc.chunk;
         return getTableBlock();
     }
     public PackageBody getPackageBody() {
-         return mBody;
+        return mBody;
     }
     public SpecTypePairArray getSpecTypePairArray(){
         return mBody.getSpecTypePairArray();
@@ -213,6 +214,13 @@ package com.reandroid.arsc.chunk;
     public TypeBlock getTypeBlock(byte typeId, String qualifiers){
         return getSpecTypePairArray().getTypeBlock(typeId, qualifiers);
     }
+
+    public boolean isDisableEntryGroupMap() {
+        return disableEntryGroupMap;
+    }
+    public void setDisableEntryGroupMap(boolean disable) {
+        this.disableEntryGroupMap = disable;
+    }
     public Map<Integer, EntryGroup> getEntriesGroupMap(){
         return mEntriesGroup;
     }
@@ -240,35 +248,36 @@ package com.reandroid.arsc.chunk;
         return null;
     }
     public void updateEntry(Entry entry){
-        if(entry ==null|| entry.isNull()){
+        if(isDisableEntryGroupMap()){
             return;
         }
-        updateEntryGroup(entry);
-    }
-    public void removeEntryGroup(Entry entry){
-        if(entry ==null){
+        if(entry == null || entry.isNull()){
             return;
         }
-        int id= entry.getResourceId();
-        EntryGroup group=getEntriesGroupMap().get(id);
-        if(group==null){
-            return;
-        }
-        group.remove(entry);
-        if(group.size()==0){
-            getEntriesGroupMap().remove(id);
-        }
-    }
-    private void updateEntryGroup(Entry entry){
-        int resId= entry.getResourceId();
-        EntryGroup group=getEntriesGroupMap().get(resId);
-        if(group==null){
-            group=new EntryGroup(resId);
-            getEntriesGroupMap().put(resId, group);
+        int resourceId = entry.getResourceId();
+        Map<Integer, EntryGroup> map = getEntriesGroupMap();
+        EntryGroup group = map.get(resourceId);
+        if(group == null){
+            group = new EntryGroup(resourceId);
+            map.put(resourceId, group);
         }
         group.add(entry);
     }
-
+    public void removeEntryGroup(Entry entry){
+        if(entry == null){
+            return;
+        }
+        int resourceId = entry.getResourceId();
+        Map<Integer, EntryGroup> map = getEntriesGroupMap();
+        EntryGroup group = map.get(resourceId);
+        if(group == null){
+            return;
+        }
+        group.remove(entry);
+        if(group.size() == 0){
+            map.remove(resourceId);
+        }
+    }
     public List<Entry> listEntries(byte typeId, int entryId){
         List<Entry> results=new ArrayList<>();
         for(SpecTypePair pair:listSpecTypePair(typeId)){
