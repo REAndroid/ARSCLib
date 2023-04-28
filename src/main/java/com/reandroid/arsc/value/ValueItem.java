@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@ import com.reandroid.arsc.item.ReferenceBlock;
 import com.reandroid.arsc.item.ReferenceItem;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.pool.StringPool;
+import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
@@ -38,6 +39,10 @@ import java.util.Objects;
          this.sizeOffset = sizeOffset;
          
          writeSize();
+     }
+
+     void linkTableStrings(TableStringPool tableStringPool){
+         linkStringReference(tableStringPool);
      }
      public void onRemoved(){
          unLinkStringReference();
@@ -78,7 +83,7 @@ import java.util.Objects;
          int size = countBytes() - offset;
          putShort(getBytesInternal(), offset + OFFSET_SIZE, (short) size);
      }
-     private void onDataLoaded(){
+     protected void onDataLoaded(){
          if(getValueType() == ValueType.STRING){
              linkStringReference();
          }else {
@@ -136,8 +141,16 @@ import java.util.Objects;
          }
      }
      private void linkStringReference(){
-         StringItem tableString = getDataAsPoolString();
-         if(tableString==null){
+         StringPool<?> stringPool = getStringPool();
+         if(stringPool == null || stringPool.isStringLinkLocked()){
+             return;
+         }
+         linkStringReference(stringPool);
+     }
+     private void linkStringReference(StringPool<?> stringPool){
+         StringItem tableString = stringPool.get(getData());
+         if(tableString == null){
+             unLinkStringReference();
              return;
          }
          ReferenceItem stringReference = mStringReference;
@@ -181,7 +194,6 @@ import java.util.Objects;
              setBytesLength(this.sizeOffset + 8, false);
              writeSize();
          }
-         onDataLoaded();
      }
      private int initializeBytes(BlockReader reader) throws IOException {
          int position = reader.getPosition();

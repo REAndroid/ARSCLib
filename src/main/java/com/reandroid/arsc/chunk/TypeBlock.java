@@ -24,6 +24,8 @@ import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
+import com.reandroid.arsc.pool.SpecStringPool;
+import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
@@ -58,6 +60,14 @@ public class TypeBlock extends Chunk<TypeHeader>
 
         addChild(entryOffsets);
         addChild(mEntryArray);
+    }
+    public void linkTableStringsInternal(TableStringPool tableStringPool){
+        EntryArray entryArray = getEntryArray();
+        entryArray.linkTableStringsInternal(tableStringPool);
+    }
+    public void linkSpecStringsInternal(SpecStringPool specStringPool){
+        EntryArray entryArray = getEntryArray();
+        entryArray.linkSpecStringsInternal(specStringPool);
     }
     public boolean isSparse(){
         return getHeaderBlock().isSparse();

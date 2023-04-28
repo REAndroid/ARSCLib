@@ -33,12 +33,14 @@ import java.util.*;
 
 
 public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolHeader> implements BlockLoad, JSONConvert<JSONArray>, Comparator<String> {
+    private final Object mLock = new Object();
     private final StringArray<T> mArrayStrings;
     private final StyleArray mArrayStyles;
 
     private final Map<String, StringGroup<T>> mUniqueMap;
+    private boolean stringLinkLocked;
 
-    StringPool(boolean is_utf8){
+    StringPool(boolean is_utf8, boolean stringLinkLocked){
         super(new StringPoolHeader(), 4);
 
         OffsetArray offsetStrings = new OffsetArray();
@@ -68,7 +70,30 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         header.getFlagUtf8().setBlockLoad(this);
 
         mUniqueMap = new HashMap<>();
+        this.stringLinkLocked = stringLinkLocked;
     }
+    StringPool(boolean is_utf8){
+        this(is_utf8, true);
+    }
+
+    public boolean isStringLinkLocked(){
+        return stringLinkLocked;
+    }
+    public void ensureStringLinkUnlockedInternal(){
+        if(!stringLinkLocked){
+            return;
+        }
+        synchronized (mLock){
+            if(!stringLinkLocked){
+                return;
+            }
+            stringLinkLocked = false;
+            linkStrings();
+        }
+    }
+    void linkStrings(){
+    }
+
     public void removeString(T item){
         getStringsArray().remove(item);
     }

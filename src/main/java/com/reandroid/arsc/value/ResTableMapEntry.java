@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.array.ResValueMapArray;
+import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.json.JSONObject;
 
 public class ResTableMapEntry extends TableEntry<EntryHeaderMap, ResValueMapArray> {
@@ -40,6 +41,12 @@ public class ResTableMapEntry extends TableEntry<EntryHeaderMap, ResValueMapArra
     public void setValuesCount(int valuesCount){
         getHeader().setValuesCount(valuesCount);
         getValue().setChildesCount(valuesCount);
+    }
+    @Override
+    void linkTableStringsInternal(TableStringPool tableStringPool){
+        for(ResValueMap resValueMap : listResValueMap()){
+            resValueMap.linkTableStrings(tableStringPool);
+        }
     }
     @Override
     void onHeaderLoaded(ValueHeader valueHeader){

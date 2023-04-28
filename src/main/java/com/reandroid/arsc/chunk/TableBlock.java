@@ -53,6 +53,11 @@ public class TableBlock extends Chunk<TableHeader>
         addChild(mPackageArray);
     }
 
+    public void linkTableStringsInternal(TableStringPool tableStringPool){
+        for(PackageBlock packageBlock : listPackages()){
+            packageBlock.linkTableStringsInternal(tableStringPool);
+        }
+    }
     public List<Entry> resolveReference(int referenceId){
         return resolveReference(referenceId, null);
     }

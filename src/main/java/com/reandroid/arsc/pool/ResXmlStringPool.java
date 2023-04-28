@@ -25,7 +25,7 @@ import java.util.Objects;
 
 public class ResXmlStringPool extends StringPool<ResXmlString> {
     public ResXmlStringPool(boolean is_utf8) {
-        super(is_utf8);
+        super(is_utf8, false);
     }
     @Override
     public ResXmlString removeReference(ReferenceItem referenceItem){

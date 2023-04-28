@@ -27,6 +27,8 @@ import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
+import com.reandroid.arsc.pool.SpecStringPool;
+import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
@@ -41,6 +43,15 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         super();
     }
 
+    public void linkTableStringsInternal(TableStringPool tableStringPool){
+        TableEntry<?, ?> tableEntry = getTableEntry();
+        tableEntry.linkTableStringsInternal(tableStringPool);
+    }
+    public void linkSpecStringsInternal(SpecStringPool specStringPool){
+        TableEntry<?, ?> tableEntry = getTableEntry();
+        ValueHeader header = tableEntry.getHeader();
+        header.linkSpecStringsInternal(specStringPool);
+    }
     public ResValue getResValue(){
         TableEntry<?, ?> tableEntry = getTableEntry();
         if(tableEntry instanceof ResTableEntry){

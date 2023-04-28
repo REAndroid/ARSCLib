@@ -34,4 +34,12 @@ public class SpecStringPool extends StringPool<SpecString> {
     public PackageBlock getPackageBlock(){
         return getParent(PackageBlock.class);
     }
+
+    @Override
+    void linkStrings(){
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock != null){
+            packageBlock.linkSpecStringsInternal(this);
+        }
+    }
 }

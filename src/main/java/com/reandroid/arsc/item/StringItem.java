@@ -49,10 +49,18 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         mReferencedList.clear();
     }
     public boolean hasReference(){
+        ensureStringLinkUnlocked();
         return mReferencedList.size()>0;
     }
     public Collection<ReferenceItem> getReferencedList(){
+        ensureStringLinkUnlocked();
         return mReferencedList;
+    }
+    void ensureStringLinkUnlocked(){
+        StringPool<?> stringPool = getParentInstance(StringPool.class);
+        if(stringPool != null){
+            stringPool.ensureStringLinkUnlockedInternal();
+        }
     }
     public void addReference(ReferenceItem ref){
         if(ref!=null){
@@ -265,11 +273,11 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
     }
     @Override
     public String toString(){
-        String str=getHtml();
-        if(str==null){
+        String str = getHtml();
+        if(str == null){
             return "NULL";
         }
-        return "USED BY="+getReferencedList().size()+"{"+str+"}";
+        return "USED BY=" + mReferencedList.size() + "{" + str + "}";
     }
 
     private static int[] decodeUtf8StringByteLength(byte[] lengthBytes) {

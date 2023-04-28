@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,8 @@
 package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.pool.SpecStringPool;
+import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
@@ -27,6 +29,20 @@ import java.util.Iterator;
 public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<JSONArray> {
     public EntryArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart){
         super(offsets, itemCount, itemStart);
+    }
+    public void linkTableStringsInternal(TableStringPool tableStringPool){
+        Iterator<Entry> itr = iterator(true);
+        while (itr.hasNext()){
+            Entry entry = itr.next();
+            entry.linkTableStringsInternal(tableStringPool);
+        }
+    }
+    public void linkSpecStringsInternal(SpecStringPool specStringPool){
+        Iterator<Entry> itr = iterator(true);
+        while (itr.hasNext()){
+            Entry entry = itr.next();
+            entry.linkSpecStringsInternal(specStringPool);
+        }
     }
     public int getHighestEntryId(){
         if(isSparse()){

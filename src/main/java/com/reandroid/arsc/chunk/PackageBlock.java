@@ -27,6 +27,7 @@ import com.reandroid.arsc.header.PackageHeader;
 import com.reandroid.arsc.list.OverlayableList;
 import com.reandroid.arsc.list.StagedAliasList;
 import com.reandroid.arsc.pool.SpecStringPool;
+import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.LibraryInfo;
@@ -67,6 +68,16 @@ public class PackageBlock extends Chunk<PackageHeader>
         addChild(mTypeStringPool);
         addChild(mSpecStringPool);
         addChild(mBody);
+    }
+    public void linkTableStringsInternal(TableStringPool tableStringPool){
+        for(SpecTypePair specTypePair : listAllSpecTypePair()){
+            specTypePair.linkTableStringsInternal(tableStringPool);
+        }
+    }
+    public void linkSpecStringsInternal(SpecStringPool specStringPool){
+        for(SpecTypePair specTypePair : listAllSpecTypePair()){
+            specTypePair.linkSpecStringsInternal(specStringPool);
+        }
     }
     public void destroy(){
         getEntriesGroupMap().clear();
@@ -221,6 +232,7 @@ public class PackageBlock extends Chunk<PackageHeader>
             if(!this.entryGroupMapLocked){
                 return;
             }
+            entryGroupMapLocked = false;
             Map<Integer, EntryGroup> map = this.mEntriesGroup;
             map.clear();
             createEntryGroupMap(map);

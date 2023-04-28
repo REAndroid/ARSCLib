@@ -25,6 +25,8 @@ import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
+import com.reandroid.arsc.pool.SpecStringPool;
+import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.json.JSONConvert;
@@ -55,6 +57,16 @@ public class SpecTypePair extends BlockContainer<Block>
         this(new SpecBlock(), new TypeBlockArray());
     }
 
+    public void linkTableStringsInternal(TableStringPool tableStringPool){
+        for(TypeBlock typeBlock:listTypeBlocks()){
+            typeBlock.linkTableStringsInternal(tableStringPool);
+        }
+    }
+    public void linkSpecStringsInternal(SpecStringPool specStringPool){
+        for(TypeBlock typeBlock:listTypeBlocks()){
+            typeBlock.linkSpecStringsInternal(specStringPool);
+        }
+    }
     public Map<Integer, EntryGroup> createEntryGroups(){
         Map<Integer, EntryGroup> map = new HashMap<>();
         for(TypeBlock typeBlock:listTypeBlocks()){

@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@ package com.reandroid.arsc.value;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
@@ -96,6 +97,7 @@ public abstract class TableEntry<HEADER extends ValueHeader, VALUE extends Block
     }
     abstract void onRemoved();
     abstract boolean shouldMerge(TableEntry<?, ?> tableEntry);
+    abstract void linkTableStringsInternal(TableStringPool tableStringPool);
 
     public abstract void merge(TableEntry<?, ?> tableEntry);
     @Override

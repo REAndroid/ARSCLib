@@ -19,11 +19,11 @@ import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.array.TableStringArray;
 import com.reandroid.arsc.chunk.ChunkType;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.UnknownChunk;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.TableHeader;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.TableString;
 
@@ -35,6 +35,13 @@ public class TableStringPool extends StringPool<TableString> {
         super(is_utf8);
     }
 
+    @Override
+    void linkStrings(){
+        TableBlock tableBlock = getParentInstance(TableBlock.class);
+        if(tableBlock != null){
+            tableBlock.linkTableStringsInternal(this);
+        }
+    }
     @Override
     StringArray<TableString> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         return new TableStringArray(offsets, itemCount, itemStart, is_utf8);

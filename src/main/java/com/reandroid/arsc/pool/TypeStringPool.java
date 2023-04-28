@@ -27,7 +27,7 @@ import com.reandroid.arsc.item.TypeString;
 public class TypeStringPool extends StringPool<TypeString> {
     private final IntegerItem mTypeIdOffset;
     public TypeStringPool(boolean is_utf8, IntegerItem typeIdOffset) {
-        super(is_utf8);
+        super(is_utf8, false);
         this.mTypeIdOffset = typeIdOffset;
     }
     public int idOf(String typeName){

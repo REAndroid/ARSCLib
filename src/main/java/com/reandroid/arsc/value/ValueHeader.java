@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.ParentChunk;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
+import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
@@ -31,6 +32,21 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         super(size);
         writeSize();
         putInteger(getBytesInternal(), OFFSET_SPEC_REFERENCE, -1);
+    }
+
+    void linkSpecStringsInternal(SpecStringPool specStringPool){
+        int key = getKey();
+        SpecString specString = specStringPool.get(key);
+        if(specString == null){
+            mStringReference = null;
+            return;
+        }
+        if(mStringReference != null){
+            specString.removeReference(mStringReference);
+        }
+        ReferenceItem stringReference = new ReferenceBlock<>(this, OFFSET_SPEC_REFERENCE);
+        mStringReference = stringReference;
+        specString.addReference(stringReference);
     }
     public void onRemoved(){
         unLinkStringReference();
@@ -116,7 +132,11 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
     }
 
     private void linkStringReference(){
-        linkStringReference(getNameString());
+        StringPool<?> specStringPool = getSpecStringPool();
+        if(specStringPool == null || specStringPool.isStringLinkLocked()){
+            return;
+        }
+        linkStringReference(specStringPool.get(getKey()));
     }
     private void linkStringReference(StringItem stringItem){
         unLinkStringReference();
@@ -167,7 +187,6 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         int size = reader.readUnsignedShort();
         setBytesLength(size, false);
         reader.readFully(getBytesInternal());
-        linkStringReference();
     }
     private void setName(String name){
         if(name==null){
