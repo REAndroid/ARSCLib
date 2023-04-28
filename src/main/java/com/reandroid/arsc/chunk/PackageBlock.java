@@ -216,20 +216,14 @@ public class PackageBlock extends Chunk<PackageHeader>
         return getSpecTypePairArray().getTypeBlock(typeId, qualifiers);
     }
 
-    public boolean isEntryGroupMapLocked() {
-        return entryGroupMapLocked;
-    }
     private void unlockEntryGroup() {
         synchronized (this){
             if(!this.entryGroupMapLocked){
                 return;
             }
-            System.err.println("\nUnlocking EntryGroupMap ...");
-            this.entryGroupMapLocked = false;
             Map<Integer, EntryGroup> map = this.mEntriesGroup;
             map.clear();
             createEntryGroupMap(map);
-            System.err.println("\nEntryGroupMap unlocked!");
         }
     }
     private void createEntryGroupMap(Map<Integer, EntryGroup> map){
@@ -266,7 +260,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         return null;
     }
     public void updateEntry(Entry entry){
-        if(isEntryGroupMapLocked()){
+        if(this.entryGroupMapLocked){
             return;
         }
         if(entry == null || entry.isNull()){
