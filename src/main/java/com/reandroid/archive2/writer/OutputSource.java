@@ -59,7 +59,7 @@ class OutputSource {
     }
     private EntryBuffer writeBuffer(BufferFileInput input, BufferFileOutput output) throws IOException {
         long offset = output.position();
-        onWriteBuffer(output);
+        writeBufferFile(output);
         long length = output.position() - offset;
         return new EntryBuffer(input, offset, length);
     }
@@ -96,7 +96,7 @@ class OutputSource {
         }
         dataDescriptor.writeBytes(apkWriter.getOutputStream());
     }
-    void onWriteBuffer(BufferFileOutput output) throws IOException {
+    private void writeBufferFile(BufferFileOutput output) throws IOException {
         LocalFileHeader lfh = getLocalFileHeader();
 
         InputSource inputSource = getInputSource();
@@ -130,6 +130,8 @@ class OutputSource {
             lfh.setMethod(ZipEntry.STORED);
             lfh.setCrc(rawCounter.getCrc());
         }
+
+        inputSource.disposeInputSource();
     }
 
     InputSource getInputSource() {
