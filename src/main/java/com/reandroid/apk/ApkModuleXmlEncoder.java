@@ -45,14 +45,14 @@ public class ApkModuleXmlEncoder {
         restoreSignatures(mainDirectory);
     }
     private void restoreSignatures(File dir) throws IOException {
-        File file = new File(dir, ApkUtil.SIGNATURE_FILE_NAME);
-        if(!file.isFile()){
+        File sigDir = new File(dir, ApkUtil.SIGNATURE_DIR_NAME);
+        if(!sigDir.isFile()){
             return;
         }
         ApkModule apkModule = getApkModule();
-        apkModule.logMessage("Loading signature: " + file.getName());
+        apkModule.logMessage("Loading signatures ...");
         ApkSignatureBlock signatureBlock = new ApkSignatureBlock();
-        signatureBlock.read(file);
+        signatureBlock.scanSplitFiles(sigDir);
         apkModule.setApkSignatureBlock(signatureBlock);
     }
     private void restorePathMap(File dir) throws IOException{

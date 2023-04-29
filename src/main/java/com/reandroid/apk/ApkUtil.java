@@ -194,6 +194,7 @@ public class ApkUtil {
     public static final String TAG_INTEGER_ARRAY = "integer-array";
 
     public static final String SIGNATURE_FILE_NAME = "signatures" + ApkSignatureBlock.FILE_EXT;
+    public static final String SIGNATURE_DIR_NAME = "signatures";
 
     private static final int MAX_FILE_NAME_LENGTH = 50;
 }

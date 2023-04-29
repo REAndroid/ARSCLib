@@ -101,9 +101,9 @@ import java.util.*;
         if(signatureBlock == null){
             return;
         }
-        logMessage("Dumping signatures: " + ApkUtil.SIGNATURE_FILE_NAME);
-        File file = new File(outDir, ApkUtil.SIGNATURE_FILE_NAME);
-        signatureBlock.writeRaw(file);
+        logMessage("Dumping signatures ...");
+        File dir = new File(outDir, ApkUtil.SIGNATURE_DIR_NAME);
+        signatureBlock.writeSplitRawToDirectory(dir);
     }
     private void writePathMap(File dir) throws IOException {
         PathMap pathMap = new PathMap();

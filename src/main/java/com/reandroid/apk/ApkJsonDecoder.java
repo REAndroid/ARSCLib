@@ -62,9 +62,9 @@ public class ApkJsonDecoder {
         if(signatureBlock == null){
             return;
         }
-        apkModule.logMessage("Dumping signatures: " + ApkUtil.SIGNATURE_FILE_NAME);
-        File file = toSignatureFile(outDir);
-        signatureBlock.writeRaw(file);
+        apkModule.logMessage("Dumping signatures ...");
+        File dir = toSignatureDir(outDir);
+        signatureBlock.writeSplitRawToDirectory(dir);
     }
     private void writePathMap(File dir) throws IOException {
         PathMap pathMap = new PathMap();
@@ -200,9 +200,9 @@ public class ApkJsonDecoder {
         String name = "public.xml";
         return new File(file, name);
     }
-    private File toSignatureFile(File dir){
-        File file = new File(dir, apkModule.getModuleName());
-        return new File(file, ApkUtil.SIGNATURE_FILE_NAME);
+    private File toSignatureDir(File dir){
+        dir = new File(dir, apkModule.getModuleName());
+        return new File(dir, ApkUtil.SIGNATURE_DIR_NAME);
     }
     private File toPathMapJsonFile(File dir){
         File file = new File(dir, apkModule.getModuleName());

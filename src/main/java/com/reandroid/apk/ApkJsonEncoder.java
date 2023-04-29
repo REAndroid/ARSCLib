@@ -50,14 +50,14 @@ public class ApkJsonEncoder {
         return module;
     }
     private void restoreSignatures(File dir, ApkModule apkModule){
-        File file = new File(dir, ApkUtil.SIGNATURE_FILE_NAME);
-        if(!file.isFile()){
+        File sigDir = new File(dir, ApkUtil.SIGNATURE_DIR_NAME);
+        if(!sigDir.isFile()){
             return;
         }
-        logMessage("Loading signature: " + file.getName());
+        logMessage("Loading signatures ...");
         ApkSignatureBlock signatureBlock = new ApkSignatureBlock();
         try {
-            signatureBlock.read(file);
+            signatureBlock.scanSplitFiles(sigDir);
             apkModule.setApkSignatureBlock(signatureBlock);
         } catch (IOException exception){
             logError("Failed to load signatures: ", exception);
