@@ -51,7 +51,7 @@ public class ApkJsonEncoder {
     }
     private void restoreSignatures(File dir, ApkModule apkModule){
         File sigDir = new File(dir, ApkUtil.SIGNATURE_DIR_NAME);
-        if(!sigDir.isFile()){
+        if(!sigDir.isDirectory()){
             return;
         }
         logMessage("Loading signatures ...");

@@ -46,7 +46,7 @@ public class ApkModuleXmlEncoder {
     }
     private void restoreSignatures(File dir) throws IOException {
         File sigDir = new File(dir, ApkUtil.SIGNATURE_DIR_NAME);
-        if(!sigDir.isFile()){
+        if(!sigDir.isDirectory()){
             return;
         }
         ApkModule apkModule = getApkModule();
