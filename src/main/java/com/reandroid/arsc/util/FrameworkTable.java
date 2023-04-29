@@ -413,7 +413,7 @@ public class FrameworkTable extends TableBlock {
         if(headerBlock.getChunkType()!= ChunkType.TABLE){
             return super.toString();
         }
-        if(!isOptimized()){
+        if(!mOptimized){
             return "Unoptimized: "+super.toString();
         }
         return getFrameworkName()+'-'+getVersionCode();
