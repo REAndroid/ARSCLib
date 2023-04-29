@@ -16,7 +16,6 @@
 package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.chunk.ChunkType;
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
@@ -32,16 +31,28 @@ import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
 
 import java.io.IOException;
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class TypeBlockArray extends BlockArray<TypeBlock>
         implements JSONConvert<JSONArray>, Comparator<TypeBlock> {
     private byte mTypeId;
+    private Boolean mHasComplexEntry;
+
     public TypeBlockArray(){
         super();
+    }
+
+    public Boolean hasComplexEntry(){
+        if(mHasComplexEntry != null){
+            return mHasComplexEntry;
+        }
+        for(TypeBlock typeBlock : listItems(true)){
+            Boolean hasComplex = typeBlock.getEntryArray().hasComplexEntry();
+            if(hasComplex != null){
+                mHasComplexEntry = hasComplex;
+            }
+        }
+        return mHasComplexEntry;
     }
     public void destroy(){
         for(TypeBlock typeBlock:listItems()){

@@ -19,6 +19,8 @@ import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResValue;
+import com.reandroid.arsc.value.ValueType;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
@@ -75,12 +77,22 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         }
         clearChildes();
     }
-    public boolean hasComplexEntry(){
-        Entry first = iterator(true).next();
-        if(first==null){
+    public Boolean hasComplexEntry(){
+        Iterator<Entry> itr = iterator(true);
+        while (itr.hasNext()){
+            Entry entry = itr.next();
+            if(entry.isComplex()){
+                return true;
+            }
+            ResValue resValue = entry.getResValue();
+            ValueType valueType = resValue.getValueType();
+            if(valueType == null || valueType == ValueType.REFERENCE
+                    || valueType == ValueType.NULL){
+                continue;
+            }
             return false;
         }
-        return first.isComplex();
+        return null;
     }
     public boolean isEmpty(){
         return !iterator(true).hasNext();

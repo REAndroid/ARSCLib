@@ -57,6 +57,9 @@ public class SpecTypePair extends BlockContainer<Block>
         this(new SpecBlock(), new TypeBlockArray());
     }
 
+    public Boolean hasComplexEntry(){
+        return getTypeBlockArray().hasComplexEntry();
+    }
     public void linkTableStringsInternal(TableStringPool tableStringPool){
         for(TypeBlock typeBlock:listTypeBlocks()){
             typeBlock.linkTableStringsInternal(tableStringPool);

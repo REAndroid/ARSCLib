@@ -18,12 +18,8 @@ package com.reandroid.arsc.chunk;
 import com.reandroid.arsc.array.EntryArray;
 import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.array.SparseOffsetsArray;
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.header.TypeHeader;
-import com.reandroid.arsc.io.BlockLoad;
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
@@ -199,7 +195,10 @@ public class TypeBlock extends Chunk<TypeHeader>
                 .getSpecStringPool().getOrCreate(name);
         entry = getOrCreateEntry((short) id);
         if(entry.isNull()){
-            entry.ensureComplex(getEntryArray().hasComplexEntry());
+            Boolean hasComplex = hasComplexEntry();
+            if(hasComplex != null){
+                entry.ensureComplex(hasComplex);
+            }
         }
         entry.setSpecReference(specString.getIndex());
         return entry;
@@ -215,6 +214,13 @@ public class TypeBlock extends Chunk<TypeHeader>
      */
     public Entry getEntry(String entryName){
         return getEntryArray().getEntry(entryName);
+    }
+    public Boolean hasComplexEntry(){
+        SpecTypePair specTypePair = getParentSpecTypePair();
+        if(specTypePair != null){
+            return specTypePair.hasComplexEntry();
+        }
+        return null;
     }
     public ResConfig getResConfig(){
         return getHeaderBlock().getConfig();
