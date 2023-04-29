@@ -310,7 +310,7 @@ import java.util.*;
 
         packageBlock.sortTypes();
 
-        for(SpecTypePair specTypePair: packageBlock.listAllSpecTypePair()){
+        for(SpecTypePair specTypePair: packageBlock.listSpecTypePairs()){
             for(TypeBlock typeBlock:specTypePair.listTypeBlocks()){
                 decodeValues(entryStore, outDir, typeBlock);
             }

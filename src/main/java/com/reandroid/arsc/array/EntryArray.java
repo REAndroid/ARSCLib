@@ -121,6 +121,22 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         int index = getEntryIndex(entryId);
         return super.get(index);
     }
+    /**
+     * It is allowed to have duplicate entry name therefore it is not recommend to use this.
+     */
+    public Entry getEntry(String entryName){
+        if(entryName == null){
+            return null;
+        }
+        Iterator<Entry> itr = iterator(true);
+        while (itr.hasNext()){
+            Entry entry = itr.next();
+            if(entryName.equals(entry.getName())){
+                return entry;
+            }
+        }
+        return null;
+    }
     @Override
     public Entry newInstance() {
         return new Entry();
@@ -131,20 +147,11 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
     }
 
     /**
-     * It is allowed to have duplicate entry name therefore it is not recommend to use this.
-     * Lets depreciate to warn developer
+     * To be removed, use getEntry(String entryName)
      */
     @Deprecated
     public Entry searchByEntryName(String entryName){
-        if(entryName==null){
-            return null;
-        }
-        for(Entry entry:listItems()){
-            if(entryName.equals(entry.getName())){
-                return entry;
-            }
-        }
-        return null;
+        return getEntry(entryName);
     }
     @Override
     public JSONArray toJson() {

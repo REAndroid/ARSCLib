@@ -70,12 +70,12 @@ public class PackageBlock extends Chunk<PackageHeader>
         addChild(mBody);
     }
     public void linkTableStringsInternal(TableStringPool tableStringPool){
-        for(SpecTypePair specTypePair : listAllSpecTypePair()){
+        for(SpecTypePair specTypePair : listSpecTypePairs()){
             specTypePair.linkTableStringsInternal(tableStringPool);
         }
     }
     public void linkSpecStringsInternal(SpecStringPool specStringPool){
-        for(SpecTypePair specTypePair : listAllSpecTypePair()){
+        for(SpecTypePair specTypePair : listSpecTypePairs()){
             specTypePair.linkSpecStringsInternal(specStringPool);
         }
     }
@@ -87,29 +87,39 @@ public class PackageBlock extends Chunk<PackageHeader>
         setId(0);
         setName("");
     }
+    public Entry getEntry(String qualifiers, String type, String name){
+        return getSpecTypePairArray().getEntry(qualifiers, type, name);
+    }
+    public Entry getEntry(ResConfig resConfig, String type, String name){
+        return getSpecTypePairArray().getEntry(resConfig, type, name);
+    }
     public Entry getOrCreate(String qualifiers, String type, String name){
         ResConfig resConfig = new ResConfig();
         resConfig.parseQualifiers(qualifiers);
         return getOrCreate(resConfig, type, name);
     }
-    public Entry getOrCreate(ResConfig resConfig, String type, String name){
-        SpecTypePair specTypePair = getOrCreateSpecType(type);
+    public Entry getOrCreate(ResConfig resConfig, String typeName, String name){
+        SpecTypePair specTypePair = getOrCreateSpecTypePair(typeName);
         TypeBlock typeBlock = specTypePair.getOrCreateTypeBlock(resConfig);
         return typeBlock.getOrCreateEntry(name);
     }
-    public SpecTypePair getOrCreateSpecType(String type){
+    public SpecTypePair getOrCreateSpecTypePair(String typeName){
+        return getSpecTypePairArray().getOrCreate(typeName);
+    }
+    /**
+     * TOBEREMOVED
+     *
+     * use getOrCreateSpecTypePair(typeName)
+     * */
+    @Deprecated
+    public SpecTypePair getOrCreateSpecType(String typeName){
         int last = 0;
-        for(SpecTypePair specTypePair:listAllSpecTypePair()){
-            if(type.equals(specTypePair.getTypeName())){
-                return specTypePair;
-            }
-            int id = specTypePair.getId();
-            if(id>last){
-                last=id;
-            }
+        SpecTypePair specTypePair = getSpecTypePairArray().getSpecTypePair(typeName);
+        if(specTypePair != null){
+            return specTypePair;
         }
         last++;
-        getTypeStringPool().getOrCreate(last, type);
+        getTypeStringPool().getOrCreate(last, typeName);
         return getSpecTypePairArray().getOrCreate((byte) last);
     }
     public int getTypeIdOffset(){
@@ -240,7 +250,7 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     private void createEntryGroupMap(Map<Integer, EntryGroup> map){
         map.clear();
-        for(SpecTypePair specTypePair:listAllSpecTypePair()){
+        for(SpecTypePair specTypePair : listSpecTypePairs()){
             map.putAll(specTypePair.createEntryGroups(true));
         }
     }
@@ -310,16 +320,29 @@ public class PackageBlock extends Chunk<PackageHeader>
         return results;
     }
     public List<SpecTypePair> listSpecTypePair(byte typeId){
-        List<SpecTypePair> results=new ArrayList<>();
-        for(SpecTypePair pair:listAllSpecTypePair()){
-            if(typeId==pair.getTypeId()){
-                results.add(pair);
+        List<SpecTypePair> results = new ArrayList<>();
+        for(SpecTypePair specTypePair : listSpecTypePairs()){
+            if(typeId == specTypePair.getTypeId()){
+                results.add(specTypePair);
             }
         }
         return results;
     }
-    public Collection<SpecTypePair> listAllSpecTypePair(){
+    public SpecTypePair getSpecTypePair(String typeName){
+        return getSpecTypePairArray().getSpecTypePair(typeName);
+    }
+    public EntryGroup getEntryGroup(String typeName, String entryName){
+        return getSpecTypePairArray().getEntryGroup(typeName, entryName);
+    }
+    public Collection<SpecTypePair> listSpecTypePairs(){
         return getSpecTypePairArray().listItems();
+    }
+    /**
+     * Use listSpecTypePairs()
+     * */
+    @Deprecated
+    public Collection<SpecTypePair> listAllSpecTypePair(){
+        return listSpecTypePairs();
     }
 
     private void refreshTypeStringPoolOffset(){

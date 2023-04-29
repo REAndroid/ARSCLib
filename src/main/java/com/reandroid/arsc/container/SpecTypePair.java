@@ -104,18 +104,35 @@ public class SpecTypePair extends BlockContainer<Block>
         }
         return entryGroup;
     }
+    public EntryGroup getEntryGroup(String entryName){
+        EntryGroup entryGroup = null;
+        for(TypeBlock typeBlock:listTypeBlocks()){
+            Entry entry = typeBlock.getEntry(entryName);
+            if(entry == null){
+                continue;
+            }
+            if(entryGroup == null){
+                entryGroup = new EntryGroup(entry.getResourceId());
+            }
+            entryGroup.add(entry);
+        }
+        return entryGroup;
+    }
     public void destroy(){
         getSpecBlock().destroy();
         getTypeBlockArray().destroy();
     }
     public Entry getAnyEntry(String name){
-        for(TypeBlock typeBlock:listTypeBlocks()){
-            Entry entry =typeBlock.searchByEntryName(name);
-            if(entry !=null){
+        for(TypeBlock typeBlock : listTypeBlocks()){
+            Entry entry = typeBlock.getEntry(name);
+            if(entry != null){
                 return entry;
             }
         }
         return null;
+    }
+    public Entry getEntry(ResConfig resConfig, String entryName){
+        return getTypeBlockArray().getEntry(resConfig, entryName);
     }
     public void sortTypes(){
         getTypeBlockArray().sort();
@@ -174,7 +191,12 @@ public class SpecTypePair extends BlockContainer<Block>
         }
         return null;
     }
+    public boolean isEqualTypeName(String typeName){
+        return TypeBlock.isEqualTypeName(getTypeName(), typeName);
+    }
     /**
+     * TOBEREMOVED
+     *
      * It is allowed to have duplicate entry name therefore it is not recommend to use this.
      * Lets depreciate to warn developer
      */
@@ -201,6 +223,18 @@ public class SpecTypePair extends BlockContainer<Block>
                 continue;
             }
             results.add(entry);
+        }
+        return results;
+    }
+    public List<Entry> listEntries(String entryName){
+        List<Entry> results = new ArrayList<>();
+        Iterator<TypeBlock> itr = mTypeBlockArray.iterator(true);
+        while (itr.hasNext()){
+            TypeBlock typeBlock = itr.next();
+            Entry entry = typeBlock.getEntry(entryName);
+            if(entry != null){
+                results.add(entry);
+            }
         }
         return results;
     }

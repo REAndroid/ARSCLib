@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -130,7 +130,7 @@ public class FrameworkTable extends TableBlock {
         for(PackageBlock packageBlock:listPackages()){
             SpecTypePair specTypePair = packageBlock.searchByTypeName(typeName);
             if(specTypePair!=null){
-                return specTypePair.searchByEntryName(entryName);
+                return specTypePair.getAnyEntry(entryName);
             }
         }
         return null;
@@ -191,7 +191,7 @@ public class FrameworkTable extends TableBlock {
         }
     }
     private void ensureTypeBlockNonNullEntries(PackageBlock packageBlock){
-        for(SpecTypePair specTypePair:packageBlock.listAllSpecTypePair()){
+        for(SpecTypePair specTypePair:packageBlock.listSpecTypePairs()){
             ensureTypeBlockNonNullEntries(specTypePair);
         }
     }

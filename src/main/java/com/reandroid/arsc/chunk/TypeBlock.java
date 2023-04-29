@@ -20,6 +20,7 @@ import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.array.SparseOffsetsArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.SpecTypePair;
+import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
@@ -39,7 +40,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class TypeBlock extends Chunk<TypeHeader>
-        implements BlockLoad, JSONConvert<JSONObject>, Comparable<TypeBlock> {
+        implements JSONConvert<JSONObject>, Comparable<TypeBlock> {
 
     private final EntryArray mEntryArray;
     private TypeString mTypeString;
@@ -55,8 +56,6 @@ public class TypeBlock extends Chunk<TypeHeader>
         }
         this.mEntryArray = new EntryArray(entryOffsets,
                 header.getCount(), header.getEntriesStart());
-
-        header.getFlags().setBlockLoad(this);
 
         addChild(entryOffsets);
         addChild(mEntryArray);
@@ -184,22 +183,21 @@ public class TypeBlock extends Chunk<TypeHeader>
         entry.setNull(true);
     }
     public Entry getOrCreateEntry(String name){
-        for(Entry entry : getEntryArray().listItems()){
-            if(name.equals(entry.getName())){
-                return entry;
-            }
+        Entry entry = getEntryArray().getEntry(name);
+        if(entry != null){
+            return entry;
         }
         SpecTypePair specTypePair = getParentSpecTypePair();
-        Entry exist=specTypePair.getAnyEntry(name);
+        Entry exist = specTypePair.getAnyEntry(name);
         int id;
         if(exist!=null){
-            id=exist.getIndex();
+            id = exist.getId();
         }else {
             id = specTypePair.getHighestEntryCount();
         }
         SpecString specString = getPackageBlock()
                 .getSpecStringPool().getOrCreate(name);
-        Entry entry = getOrCreateEntry((short) id);
+        entry = getOrCreateEntry((short) id);
         if(entry.isNull()){
             entry.ensureComplex(getEntryArray().hasComplexEntry());
         }
@@ -211,6 +209,12 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     public Entry getEntry(short entryId){
         return getEntryArray().getEntry(entryId);
+    }
+    /**
+     * It is allowed to have duplicate entry name therefore it is not recommend to use this.
+     */
+    public Entry getEntry(String entryName){
+        return getEntryArray().getEntry(entryName);
     }
     public ResConfig getResConfig(){
         return getHeaderBlock().getConfig();
@@ -308,21 +312,16 @@ public class TypeBlock extends Chunk<TypeHeader>
                 + typeBlock.getResConfig().getQualifiers();
         return q1.compareTo(q2);
     }
+    public boolean isEqualTypeName(String typeName){
+        return isEqualTypeName(getTypeName(), typeName);
+    }
+
     /**
-     * It is allowed to have duplicate entry name therefore it is not recommend to use this.
-     * Lets depreciate to warn developer
+     * To be removed, use getEntry(String entryName)
      */
     @Deprecated
     public Entry searchByEntryName(String entryName){
-        return getEntryArray().searchByEntryName(entryName);
-    }
-    @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender==getHeaderBlock().getFlags()){
-            if(getHeaderBlock().getFlags().unsignedInt()==0x1){
-                //ResTable_sparseTypeEntry ?
-            }
-        }
+        return getEntryArray().getEntry(entryName);
     }
     @Override
     public String toString(){
@@ -332,6 +331,35 @@ public class TypeBlock extends Chunk<TypeHeader>
         builder.append(getHeaderBlock());
         builder.append('}');
         return builder.toString();
+    }
+
+    public static boolean isEqualTypeName(String name1, String name2){
+        if(name1 == null){
+            return name2 == null;
+        }
+        if(name2 == null){
+            return false;
+        }
+        if(name1.equals(name2)){
+            return true;
+        }
+        return trimTypeName(name1).equals(trimTypeName(name2));
+    }
+    private static String trimTypeName(String typeName){
+        while (typeName.length() > 0 && isWildTypeNamePrefix(typeName.charAt(0))){
+            typeName = typeName.substring(1);
+        }
+        return typeName;
+    }
+    private static boolean isWildTypeNamePrefix(char ch){
+        switch (ch){
+            case '^':
+            case '*':
+            case '+':
+                return true;
+            default:
+                return false;
+        }
     }
 
     public static final String NAME_name = "name";

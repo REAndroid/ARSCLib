@@ -16,9 +16,12 @@
 package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.base.BlockArray;
+import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
+import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.json.JSONConvert;
@@ -98,6 +101,31 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         pair.setTypeId(typeId);
         return pair;
     }
+    public SpecTypePair getOrCreate(String typeName){
+        SpecTypePair specTypePair = getSpecTypePair(typeName);
+        if(specTypePair != null){
+            return specTypePair;
+        }
+        byte id = (byte) (getHighestTypeId() + 1);
+        specTypePair = createNext();
+        specTypePair.setTypeId(id);
+        setTypeName(id, typeName);
+        return specTypePair;
+    }
+    public TypeBlock getOrCreateTypeBlock(String typeName, ResConfig resConfig){
+        return getOrCreate(typeName).getOrCreateTypeBlock(resConfig);
+    }
+    public TypeBlock getOrCreateTypeBlock(String typeName, String qualifiers){
+        return getOrCreate(typeName).getOrCreateTypeBlock(qualifiers);
+    }
+    private void setTypeName(byte id, String typeName){
+        PackageBlock packageBlock = getParent(PackageBlock.class);
+        if(packageBlock == null){
+            return;
+        }
+        TypeStringPool typeStringPool = packageBlock.getTypeStringPool();
+        typeStringPool.getOrCreate(id, typeName);
+    }
     public SpecTypePair getPair(byte typeId){
         SpecTypePair[] items=getChildes();
         if(items==null){
@@ -112,6 +140,45 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
             if(pair.getTypeId()==typeId){
                 return pair;
             }
+        }
+        return null;
+    }
+    public SpecTypePair getSpecTypePair(String typeName){
+        if(typeName == null){
+            return null;
+        }
+        Iterator<SpecTypePair> itr = iterator(true);
+        while (itr.hasNext()){
+            SpecTypePair specTypePair = itr.next();
+            if(specTypePair.isEqualTypeName(typeName)){
+                return specTypePair;
+            }
+        }
+        return null;
+    }
+    public Entry getAnyEntry(String typeName, String entryName){
+        SpecTypePair specTypePair = getSpecTypePair(typeName);
+        if(specTypePair != null){
+            return specTypePair.getAnyEntry(entryName);
+        }
+        return null;
+    }
+    public Entry getEntry(String qualifiers, String typeName, String entryName){
+        ResConfig resConfig = new ResConfig();
+        resConfig.parseQualifiers(qualifiers);
+        return getEntry(resConfig, typeName, entryName);
+    }
+    public Entry getEntry(ResConfig resConfig, String typeName, String entryName){
+        SpecTypePair specTypePair = getSpecTypePair(typeName);
+        if(specTypePair != null){
+            return specTypePair.getEntry(resConfig, entryName);
+        }
+        return null;
+    }
+    public EntryGroup getEntryGroup(String typeName, String entryName){
+        SpecTypePair specTypePair = getSpecTypePair(typeName);
+        if(specTypePair != null){
+            return specTypePair.getEntryGroup(entryName);
         }
         return null;
     }

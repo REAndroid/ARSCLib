@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,7 @@ public class TableBlockJson {
 
         writePackageJson(pkgDir, packageBlock);
 
-        for(SpecTypePair specTypePair: packageBlock.listAllSpecTypePair()){
+        for(SpecTypePair specTypePair: packageBlock.listSpecTypePairs()){
             for(TypeBlock typeBlock:specTypePair.getTypeBlockArray().listItems()){
                 writeTypeJsonFiles(pkgDir, typeBlock);
             }

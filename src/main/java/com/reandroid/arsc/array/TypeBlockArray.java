@@ -94,6 +94,13 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         }
         return typeBlock.getEntry(entryId);
     }
+    public Entry getEntry(ResConfig resConfig, String entryName){
+        TypeBlock typeBlock = getTypeBlock(resConfig);
+        if(typeBlock != null){
+            return typeBlock.getEntry(entryName);
+        }
+        return null;
+    }
     public TypeBlock getOrCreate(ResConfig resConfig){
         return getOrCreate(resConfig, false);
     }
@@ -170,27 +177,33 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     public byte getTypeId(){
         SpecBlock specBlock=getSpecBlock();
-        if(specBlock!=null){
-            return specBlock.getTypeId();
+        if(specBlock != null){
+            byte id = specBlock.getTypeId();
+            if(id != 0){
+                return id;
+            }
         }
         if(mTypeId != 0){
             return mTypeId;
         }
-        TypeBlock[] allChildes=getChildes();
-        if(allChildes==null){
+        TypeBlock[] childes = getChildes();
+        if(childes == null){
             return 0;
         }
-        int max=allChildes.length;
-        for(int i=0;i<max;i++){
-            TypeBlock typeBlock = allChildes[i];
-            byte id=typeBlock.getTypeId();
-            if(id==0){
+        int length = childes.length;
+        for(int i=0; i < length; i++){
+            TypeBlock typeBlock = childes[i];
+            if(typeBlock == null){
                 continue;
             }
-            if(specBlock!=null){
+            byte id = typeBlock.getTypeId();
+            if(id == 0){
+                continue;
+            }
+            if(specBlock != null){
                 specBlock.setTypeId(id);
             }
-            mTypeId=id;
+            mTypeId = id;
             return id;
         }
         return 0;
@@ -339,8 +352,10 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         }
     }
     /**
-     * It is allowed to have duplicate entry name therefore it is not recommend to use this.
-     * Lets depreciate to warn developer
+     * TOBEREMOVED
+     *
+     * It's mistake to have this method
+     *
      */
     @Deprecated
     public Entry searchByEntryName(String entryName){
@@ -351,7 +366,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         if(childes==null || childes.length==0){
             return null;
         }
-        return childes[0].searchByEntryName(entryName);
+        return childes[0].getEntry(entryName);
     }
     @Override
     public int compare(TypeBlock typeBlock1, TypeBlock typeBlock2) {
