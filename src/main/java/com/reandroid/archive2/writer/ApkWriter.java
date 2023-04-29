@@ -18,6 +18,7 @@ package com.reandroid.archive2.writer;
 import com.reandroid.apk.APKLogger;
 import com.reandroid.apk.RenamedInputSource;
 import com.reandroid.archive.InputSource;
+import com.reandroid.archive.WriteProgress;
 import com.reandroid.archive2.ZipSignature;
 import com.reandroid.archive2.block.ApkSignatureBlock;
 import com.reandroid.archive2.block.EndRecord;
@@ -37,6 +38,7 @@ public class ApkWriter extends ZipFileOutput {
     private ZipAligner zipAligner;
     private ApkSignatureBlock apkSignatureBlock;
     private APKLogger apkLogger;
+    private WriteProgress writeProgress;
 
     public ApkWriter(File file, Collection<? extends InputSource> sourceList) throws IOException {
         super(file);
@@ -113,6 +115,10 @@ public class ApkWriter extends ZipFileOutput {
         BufferFileOutput output = new BufferFileOutput(bufferFile);
         BufferFileInput input = new BufferFileInput(bufferFile);
         for(OutputSource outputSource:outputList){
+            InputSource inputSource = outputSource.getInputSource();
+            onCompressFileProgress(inputSource.getAlias(),
+                    inputSource.getMethod(),
+                    output.position());
             outputSource.makeBuffer(input, output);
         }
         output.close();
@@ -161,6 +167,15 @@ public class ApkWriter extends ZipFileOutput {
             }
         }
         return new OutputSource(inputSource);
+    }
+
+    public void setWriteProgress(WriteProgress writeProgress){
+        this.writeProgress = writeProgress;
+    }
+    private void onCompressFileProgress(String path, int mode, long writtenBytes) {
+        if(writeProgress!=null){
+            writeProgress.onCompressFile(path, mode, writtenBytes);
+        }
     }
 
     APKLogger getApkLogger(){
