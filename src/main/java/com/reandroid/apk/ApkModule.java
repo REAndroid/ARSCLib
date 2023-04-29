@@ -325,6 +325,7 @@ public class ApkModule implements ApkFile {
         }
         ApkWriter apkWriter = new ApkWriter(file, archive.listInputSources());
         apkWriter.setAPKLogger(getApkLogger());
+        apkWriter.setWriteProgress(progress);
         apkWriter.setApkSignatureBlock(getApkSignatureBlock());
         apkWriter.write();
         apkWriter.close();
