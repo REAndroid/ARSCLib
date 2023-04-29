@@ -148,13 +148,7 @@ public class ApkSignatureBlock extends LengthPrefixedList<SignatureInfo>
     }
     @Override
     public int compare(SignatureInfo info1, SignatureInfo info2) {
-        if(SignatureId.PADDING.equals(info1.getId())){
-            return 0;
-        }
-        if(SignatureId.PADDING.equals(info2.getId())){
-            return 1;
-        }
-        return 0;
+        return info1.getId().compareTo(info2.getId());
     }
 
     public static final String FILE_EXT = ".sig";
