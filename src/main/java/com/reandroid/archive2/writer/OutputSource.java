@@ -140,6 +140,7 @@ class OutputSource {
     LocalFileHeader getLocalFileHeader(){
         if(lfh == null){
             lfh = createLocalFileHeader();
+            lfh.setFileName(getInputSource().getAlias());
             clearAlignment(lfh);
         }
         return lfh;
