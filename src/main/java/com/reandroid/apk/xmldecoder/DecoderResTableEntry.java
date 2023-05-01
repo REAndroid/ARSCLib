@@ -32,8 +32,13 @@ public class DecoderResTableEntry<OUTPUT> extends DecoderTableEntry<ResTableEntr
         String tag = XmlHelper.toXMLTagName(entry.getTypeName());
         writer.startTag(tag);
         writer.attribute("name", entry.getName());
-        writeText(writer, entry.getPackageBlock(), tableEntry.getValue());
+        if(!isId(tag)){
+            writeText(writer, entry.getPackageBlock(), tableEntry.getValue());
+        }
         return writer.endTag(tag);
     }
 
+    private boolean isId(String tag){
+        return "id".equals(tag);
+    }
 }
