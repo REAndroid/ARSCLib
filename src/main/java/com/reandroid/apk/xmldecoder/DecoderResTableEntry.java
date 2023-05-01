@@ -31,6 +31,7 @@ public class DecoderResTableEntry<OUTPUT> extends DecoderTableEntry<ResTableEntr
         Entry entry = tableEntry.getParentEntry();
         String tag = XmlHelper.toXMLTagName(entry.getTypeName());
         writer.startTag(tag);
+        writer.attribute("name", entry.getName());
         writeText(writer, entry.getPackageBlock(), tableEntry.getValue());
         return writer.endTag(tag);
     }

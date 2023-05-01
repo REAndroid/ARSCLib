@@ -21,7 +21,6 @@ import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.arsc.value.attribute.AttributeBagItem;
 import com.reandroid.common.EntryStore;
-import com.reandroid.xml.XMLElement;
 
 import java.io.IOException;
 
