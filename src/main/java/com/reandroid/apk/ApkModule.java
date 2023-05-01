@@ -120,14 +120,7 @@ public class ApkModule implements ApkFile {
         }
         return getAndroidManifestBlock().getSplit();
     }
-    public FrameworkApk initializeAndroidFramework() throws IOException {
-        if(!hasTableBlock()){
-            return null;
-        }
-        Integer version = getAndroidFrameworkVersion();
-        return initializeAndroidFramework(getTableBlock(false), version);
-    }
-    private FrameworkApk initializeAndroidFramework(TableBlock tableBlock, Integer version) throws IOException {
+    public FrameworkApk initializeAndroidFramework(TableBlock tableBlock, Integer version) throws IOException {
         if(tableBlock == null || isAndroid(tableBlock)){
             return null;
         }

@@ -32,6 +32,7 @@ import com.reandroid.json.JSONObject;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Predicate;
 
 public class TypeBlockArray extends BlockArray<TypeBlock>
         implements JSONConvert<JSONArray>, Comparator<TypeBlock> {
@@ -236,6 +237,27 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
             }
         };
     }
+    public Iterator<TypeBlock> iteratorNonEmpty(){
+        return super.iterator(NON_EMPTY_TESTER);
+    }
+    public boolean hasDuplicateResConfig(boolean ignoreEmpty){
+        Set<Integer> uniqueHashSet = new HashSet<>();
+        Iterator<TypeBlock> itr;
+        if(ignoreEmpty){
+            itr = iteratorNonEmpty();
+        }else {
+            itr = iterator(true);
+        }
+        while (itr.hasNext()){
+            Integer hash = itr.next()
+                    .getResConfig().hashCode();
+            if(uniqueHashSet.contains(hash)){
+                return true;
+            }
+            uniqueHashSet.add(hash);
+        }
+        return false;
+    }
     private SpecBlock getSpecBlock(){
         SpecTypePair parent = getParent(SpecTypePair.class);
         if(parent != null){
@@ -383,4 +405,14 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     public int compare(TypeBlock typeBlock1, TypeBlock typeBlock2) {
         return typeBlock1.compareTo(typeBlock2);
     }
+
+    private static final Predicate<TypeBlock> NON_EMPTY_TESTER = new Predicate<TypeBlock>() {
+        @Override
+        public boolean test(TypeBlock typeBlock) {
+            if(typeBlock == null || typeBlock.isNull()){
+                return false;
+            }
+            return !typeBlock.isEmpty();
+        }
+    };
 }

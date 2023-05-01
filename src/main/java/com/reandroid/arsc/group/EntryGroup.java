@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,6 +31,23 @@ public class EntryGroup extends ItemGroup<Entry> {
     public EntryGroup(int resId) {
         super(ARRAY_CREATOR, String.valueOf(resId));
         this.resourceId=resId;
+    }
+    public Entry getEntry(ResConfig resConfig){
+        Entry[] items = getItems();
+        if(items == null || resConfig == null){
+            return null;
+        }
+        int length = items.length;
+        for(int i=0; i<length; i++){
+            Entry entry = items[i];
+            if(entry == null || entry.isNull()){
+                continue;
+            }
+            if(resConfig.equals(entry.getResConfig())){
+                return entry;
+            }
+        }
+        return null;
     }
     public int getResourceId(){
         return resourceId;

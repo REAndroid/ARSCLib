@@ -1,21 +1,22 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.base;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 
 public abstract class BlockArray<T extends Block> extends BlockContainer<T> implements BlockArrayCreator<T>  {
@@ -273,6 +274,9 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
     public Iterator<T> iterator(boolean skipNullBlock) {
         return new BlockIterator(skipNullBlock);
     }
+    public Iterator<T> iterator(Predicate<T> tester) {
+        return new PredicateIterator(tester);
+    }
     public boolean contains(Object block){
         T[] items=elementData;
         if(block==null || items==null){
@@ -437,14 +441,62 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
             if(!mSkipNullBlock || isFinished()){
                 return;
             }
-            T item=BlockArray.this.get(mCursor);
-            while (item==null||item.isNull()){
+            T item = BlockArray.this.get(mCursor);
+            while (item == null || item.isNull()){
                 mCursor++;
-                item=BlockArray.this.get(mCursor);
+                item = BlockArray.this.get(mCursor);
                 if(mCursor>=mMaxSize){
                     break;
                 }
             }
+        }
+    }
+
+
+    private class PredicateIterator implements Iterator<T> {
+        private int mCursor;
+        private final int mMaxSize;
+        private final Predicate<T> mTester;
+        PredicateIterator(Predicate<T> tester){
+            this.mTester = tester;
+            mCursor = 0;
+            mMaxSize = BlockArray.this.childesCount();
+        }
+        @Override
+        public boolean hasNext() {
+            checkCursor();
+            return hasItems();
+        }
+        @Override
+        public T next() {
+            if(hasItems()){
+                T item=BlockArray.this.get(mCursor);
+                mCursor++;
+                checkCursor();
+                return item;
+            }
+            return null;
+        }
+        private boolean hasItems(){
+            return mCursor < mMaxSize;
+        }
+        private void checkCursor(){
+            if(mTester == null){
+                return;
+            }
+            while (hasItems() && !test(BlockArray.this.get(getCursor()))){
+                mCursor++;
+            }
+        }
+        private int getCursor(){
+            return mCursor;
+        }
+        private boolean test(T item){
+            Predicate<T> tester = mTester;
+            if(tester != null){
+                return tester.test(item);
+            }
+            return true;
         }
     }
 }

@@ -74,11 +74,11 @@ public class SpecTypePair extends BlockContainer<Block>
         return createEntryGroups(false);
     }
     public Map<Integer, EntryGroup> createEntryGroups(boolean skipNullEntries){
-        Map<Integer, EntryGroup> map = new HashMap<>();
-        for(TypeBlock typeBlock:listTypeBlocks()){
+        Map<Integer, EntryGroup> map = new LinkedHashMap<>();
+        for(TypeBlock typeBlock : listTypeBlocks()){
             EntryArray entryArray = typeBlock.getEntryArray();
-            for(Entry entry:entryArray.listItems(skipNullEntries)){
-                if(entry==null){
+            for(Entry entry : entryArray.listItems(skipNullEntries)){
+                if(entry == null){
                     continue;
                 }
                 int id = entry.getResourceId();
@@ -175,6 +175,13 @@ public class SpecTypePair extends BlockContainer<Block>
     }
     public List<ResConfig> listResConfig(){
         return mTypeBlockArray.listResConfig();
+    }
+
+    public Iterator<TypeBlock> iteratorNonEmpty(){
+        return mTypeBlockArray.iteratorNonEmpty();
+    }
+    public boolean hasDuplicateResConfig(boolean ignoreEmpty){
+        return mTypeBlockArray.hasDuplicateResConfig(ignoreEmpty);
     }
 
     public byte getTypeId(){

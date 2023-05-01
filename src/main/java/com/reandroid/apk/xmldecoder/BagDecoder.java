@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,14 +19,9 @@ import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.common.EntryStore;
 import com.reandroid.xml.XMLElement;
 
-abstract class BagDecoder {
-    private final EntryStore entryStore;
+abstract class BagDecoder<OUTPUT> extends DecoderTableEntry<ResTableMapEntry, OUTPUT> {
     public BagDecoder(EntryStore entryStore){
-        this.entryStore=entryStore;
+        super(entryStore);
     }
-    EntryStore getEntryStore(){
-        return entryStore;
-    }
-    public abstract void decode(ResTableMapEntry mapEntry, XMLElement parentElement);
     public abstract boolean canDecode(ResTableMapEntry mapEntry);
 }

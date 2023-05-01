@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,36 +15,25 @@
   */
 package com.reandroid.apk.xmldecoder;
 
-import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.common.EntryStore;
 import com.reandroid.xml.XMLElement;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
 
+@Deprecated
 public class XMLBagDecoder {
-    private final EntryStore entryStore;
-    private final List<BagDecoder> decoderList;
-    private final XMLCommonBagDecoder commonBagDecoder;
+    private final DecoderResTableEntryMap<XMLElement> mDocumentDecoder;
+    private final EntryWriterElement mWriter;
     public XMLBagDecoder(EntryStore entryStore){
-        this.entryStore=entryStore;
-        this.decoderList=new ArrayList<>();
-        this.decoderList.add(new XMLAttrDecoder(entryStore));
-        this.decoderList.add(new XMLPluralsDecoder(entryStore));
-        this.decoderList.add(new XMLArrayDecoder(entryStore));
-        this.commonBagDecoder = new XMLCommonBagDecoder(entryStore);
+        mDocumentDecoder = new DecoderResTableEntryMap<>(entryStore);
+        mWriter = new EntryWriterElement();
     }
     public void decode(ResTableMapEntry mapEntry, XMLElement parentElement){
-        BagDecoder bagDecoder=getFor(mapEntry);
-        bagDecoder.decode(mapEntry, parentElement);
-    }
-    private BagDecoder getFor(ResTableMapEntry mapEntry){
-        for(BagDecoder bagDecoder:decoderList){
-            if(bagDecoder.canDecode(mapEntry)){
-                return bagDecoder;
-            }
+        try {
+            XMLElement child = mDocumentDecoder.decode(mapEntry, mWriter);
+            parentElement.addChild(child);
+        } catch (IOException exception) {
         }
-        return commonBagDecoder;
     }
 }

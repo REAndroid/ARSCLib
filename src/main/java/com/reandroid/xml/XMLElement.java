@@ -160,7 +160,7 @@ public class XMLElement extends XMLNode{
         }
         this.mEndPrefix = pfx;
     }
-    void setIndentScale(float scale){
+    public void setIndentScale(float scale){
         mIndentScale=scale;
     }
     private float getIndentScale(){

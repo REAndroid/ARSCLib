@@ -118,7 +118,7 @@ public class PathMap implements JSONConvert<JSONArray> {
         }
         add(archive.listInputSources());
     }
-    public void add(Collection<InputSource> sources){
+    public void add(Collection<? extends InputSource> sources){
         if(sources==null){
             return;
         }

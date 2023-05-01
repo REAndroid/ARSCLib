@@ -41,7 +41,7 @@ public class ApkJsonDecoder {
         this(apkModule, false);
     }
     public void sanitizeFilePaths(){
-        PathSanitizer sanitizer = new PathSanitizer(apkModule);
+        PathSanitizer sanitizer = PathSanitizer.create(apkModule);
         sanitizer.sanitize();
     }
     public File writeToDirectory(File dir) throws IOException {
