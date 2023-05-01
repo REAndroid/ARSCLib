@@ -39,11 +39,14 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
             if(id!=0){
                 item.setName(id);
                 String value = child.getTextContent();
-                if(ValueDecoder.isReference(value)){
+                ValueDecoder.EncodeResult encodeResult = ValueDecoder.encodeNullReference(value);
+                if(encodeResult!=null){
+                    item.setTypeAndData(encodeResult.valueType, encodeResult.value);
+                }else if(ValueDecoder.isReference(value)){
                     item.setTypeAndData(ValueType.REFERENCE,
                             getMaterials().resolveReference(value));
                 }else {
-                    ValueDecoder.EncodeResult encodeResult = ValueDecoder.encodeGuessAny(value);
+                    encodeResult = ValueDecoder.encodeGuessAny(value);
                     if(encodeResult!=null){
                         item.setTypeAndData(encodeResult.valueType, encodeResult.value);
                     }else {
@@ -86,6 +89,11 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
             bagItem.setTypeAndData(encodeEnumFlag.valueType, encodeEnumFlag.value);
             return;
         }
+        ValueDecoder.EncodeResult encodeResult = ValueDecoder.encodeNullReference(valueText);
+        if(encodeResult!=null){
+            bagItem.setTypeAndData(encodeResult.valueType, encodeResult.value);
+            return;
+        }
         if(ValueDecoder.isReference(valueText)){
             if(valueText.startsWith("?")){
                 bagItem.setValueType(ValueType.ATTRIBUTE);
@@ -99,7 +107,7 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
         }else if(EncodeUtil.isEmpty(valueText)) {
             bagItem.setTypeAndData(ValueType.NULL, 0);
         }else{
-            ValueDecoder.EncodeResult encodeResult = ValueDecoder.encodeGuessAny(valueText);
+            encodeResult = ValueDecoder.encodeGuessAny(valueText);
             if(encodeResult!=null){
                 bagItem.setTypeAndData(encodeResult.valueType,
                         encodeResult.value);

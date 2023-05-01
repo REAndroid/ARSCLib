@@ -63,16 +63,11 @@ public class ValueDecoder {
         if(txt==null){
             return null;
         }
-        if("@empty".equals(txt)){
-            return new EncodeResult(ValueType.NULL, 1);
+        EncodeResult result = encodeNullReference(txt);
+        if(result != null){
+            return result;
         }
-        if("@null".equals(txt)){
-            return new EncodeResult(ValueType.REFERENCE, 0);
-        }
-        if("?null".equals(txt)){
-            return new EncodeResult(ValueType.ATTRIBUTE, 0);
-        }
-        EncodeResult result=encodeColor(txt);
+        result=encodeColor(txt);
         if(result!=null){
             return result;
         }
@@ -96,6 +91,21 @@ public class ValueDecoder {
         }
         if(txt.equals("false")){
             return new EncodeResult(ValueType.INT_BOOLEAN, 0);
+        }
+        return null;
+    }
+    public static EncodeResult encodeNullReference(String txt){
+        if(txt==null){
+            return null;
+        }
+        if("@empty".equals(txt)){
+            return new EncodeResult(ValueType.NULL, 1);
+        }
+        if("@null".equals(txt)){
+            return new EncodeResult(ValueType.REFERENCE, 0);
+        }
+        if("?null".equals(txt)){
+            return new EncodeResult(ValueType.ATTRIBUTE, 0);
         }
         return null;
     }

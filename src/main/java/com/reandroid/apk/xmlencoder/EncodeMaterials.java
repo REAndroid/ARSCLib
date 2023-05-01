@@ -84,6 +84,10 @@
              if(ref!=null){
                  return ref.value;
              }
+             ref = ValueDecoder.encodeNullReference(refString);
+             if(ref!=null){
+                 return ref.value;
+             }
              throw new EncodeException(
                      "Not proper reference string: '"+refString+"'");
          }
