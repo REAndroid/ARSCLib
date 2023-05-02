@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 package com.reandroid.xml;
 
 import android.content.res.XmlResourceParser;
+import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
@@ -24,10 +25,18 @@ import java.io.IOException;
 public class XmlParserToSerializer {
     private final XmlSerializer serializer;
     private final XmlResourceParser parser;
+    private boolean enableIndent;
+
     public XmlParserToSerializer(XmlResourceParser parser, XmlSerializer serializer){
         this.parser = parser;
         this.serializer = serializer;
+        this.enableIndent = true;
     }
+
+    public void setEnableIndent(boolean enableIndent) {
+        this.enableIndent = enableIndent;
+    }
+
     public void write() throws IOException, XmlPullParserException {
         XmlResourceParser parser = this.parser;
         int event = parser.next();
@@ -71,17 +80,24 @@ public class XmlParserToSerializer {
     private void onStartTag() throws IOException, XmlPullParserException {
         XmlResourceParser parser = this.parser;
         XmlSerializer serializer = this.serializer;
-        serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
-        int nsCount = parser.getNamespaceCount(parser.getDepth());
-        for(int i=0; i<nsCount; i++){
-            String prefix = parser.getNamespacePrefix(i);
-            String namespace = parser.getNamespaceUri(i);
-            serializer.setPrefix(prefix, namespace);
+        boolean processNamespace = parser.getFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES);
+        boolean reportNamespaceAttrs = parser.getFeature(XmlPullParser.FEATURE_REPORT_NAMESPACE_ATTRIBUTES);
+        serializer.setFeature(FEATURE_INDENT_OUTPUT, enableIndent);
+        if(!reportNamespaceAttrs){
+            int nsCount = parser.getNamespaceCount(parser.getDepth());
+            for(int i=0; i<nsCount; i++){
+                String prefix = parser.getNamespacePrefix(i);
+                String namespace = parser.getNamespaceUri(i);
+                serializer.setPrefix(prefix, namespace);
+            }
         }
         serializer.startTag(parser.getNamespace(), parser.getName());
         int attrCount = parser.getAttributeCount();
         for(int i=0; i<attrCount; i++){
-            serializer.attribute(parser.getAttributeNamespace(i),
+            String namespace = processNamespace ?
+                    parser.getAttributeNamespace(i) : null;
+
+            serializer.attribute(namespace,
                     parser.getAttributeName(i),
                     parser.getAttributeValue(i));
         }
@@ -98,4 +114,6 @@ public class XmlParserToSerializer {
     private void onEndDocument() throws IOException{
         serializer.endDocument();
     }
+
+    private static final String FEATURE_INDENT_OUTPUT = "http://xmlpull.org/v1/doc/features.html#indent-output";
 }

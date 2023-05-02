@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,9 +34,13 @@ public class ResXmlPullParser implements XmlResourceParser {
     private ResXmlDocument mDocument;
     private boolean mDocumentCreatedHere;
     private DocumentLoadedListener documentLoadedListener;
+    private boolean processNamespaces;
+    private boolean reportNamespaceAttrs;
 
     public ResXmlPullParser(Decoder decoder){
         this.mDecoder = decoder;
+        this.processNamespaces = true;
+        this.reportNamespaceAttrs = true;
     }
     public ResXmlPullParser(){
         this(null);
@@ -54,6 +58,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     public synchronized void setResXmlDocument(ResXmlDocument xmlDocument){
         closeDocument();
         this.mDocument = xmlDocument;
+        initDefaultFeatures();
         initializeDecoder(xmlDocument);
         xmlDocument.addEvents(mEventList);
     }
@@ -109,17 +114,33 @@ public class ResXmlPullParser implements XmlResourceParser {
     @Override
     public int getAttributeCount() {
         ResXmlElement element = getCurrentElement();
-        if(element!=null){
-            return element.getAttributeCount();
+        if(element == null){
+            return 0;
         }
-        return 0;
+        int count = element.getAttributeCount();
+        if(reportNamespaceAttrs){
+            count += element.getNamespaceCount();
+        }
+        return count;
     }
     @Override
     public String getAttributeName(int index) {
+        if(reportNamespaceAttrs){
+            int nsCount = getNamespaceCountInternal();
+            if(index < nsCount){
+                return getNamespaceAttributeName(index);
+            }
+        }
         return decodeAttributeName(getResXmlAttributeAt(index));
     }
     @Override
     public String getAttributeValue(int index) {
+        if(reportNamespaceAttrs){
+            int nsCount = getNamespaceCountInternal();
+            if(index < nsCount){
+                return getNamespaceAttributeValue(index);
+            }
+        }
         return decodeAttributeValue(getResXmlAttributeAt(index));
     }
     @Override
@@ -324,9 +345,22 @@ public class ResXmlPullParser implements XmlResourceParser {
 
     @Override
     public void setFeature(String name, boolean state) throws XmlPullParserException {
+        if(FEATURE_PROCESS_NAMESPACES.equals(name)) {
+            processNamespaces = state;
+        }else if(FEATURE_REPORT_NAMESPACE_ATTRIBUTES.equals(name)) {
+            reportNamespaceAttrs = state;
+        }else {
+            throw new XmlPullParserException("Unsupported feature: " + name);
+        }
     }
+
     @Override
     public boolean getFeature(String name) {
+        if(FEATURE_PROCESS_NAMESPACES.equals(name)) {
+            return processNamespaces;
+        }else if(FEATURE_REPORT_NAMESPACE_ATTRIBUTES.equals(name)) {
+            return reportNamespaceAttrs;
+        }
         return false;
     }
     @Override
@@ -358,12 +392,15 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public int getNamespaceCount(int depth) throws XmlPullParserException {
+        if(reportNamespaceAttrs){
+            return 0;
+        }
         ResXmlElement element = getCurrentElement();
         while(element!=null && element.getDepth()>depth){
             element=element.getParentResXmlElement();
         }
         if(element!=null){
-            return element.getStartNamespaceList().size();
+            return element.getNamespaceCount();
         }
         return 0;
     }
@@ -371,7 +408,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     public String getNamespacePrefix(int pos) throws XmlPullParserException {
         ResXmlElement element = getCurrentElement();
         if(element!=null){
-            return element.getStartNamespaceList().get(pos).getPrefix();
+            return element.getNamespace(pos).getPrefix();
         }
         return null;
     }
@@ -379,7 +416,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     public String getNamespaceUri(int pos) throws XmlPullParserException {
         ResXmlElement element = getCurrentElement();
         if(element!=null){
-            return element.getStartNamespaceList().get(pos).getUri();
+            return element.getNamespace(pos).getUri();
         }
         return null;
     }
@@ -466,10 +503,13 @@ public class ResXmlPullParser implements XmlResourceParser {
         if(element!=null){
             return element.countResXmlNodes() == 0 && element.getAttributeCount()==0;
         }
-        return false;
+        return true;
     }
     @Override
     public String getAttributeNamespace(int index) {
+        if(processNamespaces){
+            return null;
+        }
         ResXmlAttribute attribute = getResXmlAttributeAt(index);
         if(attribute != null){
             return attribute.getUri();
@@ -478,6 +518,9 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public String getAttributePrefix(int index) {
+        if(processNamespaces){
+            return null;
+        }
         ResXmlAttribute attribute = getResXmlAttributeAt(index);
         if(attribute != null){
             return attribute.getNamePrefix();
@@ -493,7 +536,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         return false;
     }
     private String decodeAttributeName(ResXmlAttribute attribute){
-        if(attribute==null){
+        if(attribute == null){
             return null;
         }
         String name;
@@ -502,6 +545,9 @@ public class ResXmlPullParser implements XmlResourceParser {
             name = attribute.getName();
         }else {
             name = mDecoder.decodeResourceName(attribute.getNameResourceID(), true);
+            if(processNamespaces){
+                name = attribute.getNamePrefix() + ":" + name;
+            }
         }
         return name;
     }
@@ -512,6 +558,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         return mDecoder.decodeAttributeValue(attribute);
     }
     public ResXmlAttribute getResXmlAttributeAt(int index){
+        index = getRealAttributeIndex(index);
         ResXmlElement element = getCurrentElement();
         if(element == null){
             return null;
@@ -545,6 +592,33 @@ public class ResXmlPullParser implements XmlResourceParser {
         }
         return null;
     }
+    private int getRealAttributeIndex(int index){
+        if(reportNamespaceAttrs){
+            index = index - getNamespaceCountInternal();
+        }
+        return index;
+    }
+    private int getNamespaceCountInternal(){
+        ResXmlElement element = getCurrentElement();
+        if(element != null){
+            return element.getNamespaceCount();
+        }
+        return 0;
+    }
+    private String getNamespaceAttributeName(int index){
+        ResXmlStartNamespace namespace = getCurrentElement()
+                .getNamespace(index);
+        String prefix = namespace.getPrefix();
+        if(processNamespaces){
+            prefix = "xmlns:" + prefix;
+        }
+        return prefix;
+    }
+    private String getNamespaceAttributeValue(int index){
+        ResXmlStartNamespace namespace = getCurrentElement()
+                .getNamespace(index);
+        return namespace.getUri();
+    }
     @Override
     public int getEventType() throws XmlPullParserException {
         return mEventList.getType();
@@ -552,6 +626,10 @@ public class ResXmlPullParser implements XmlResourceParser {
     @Override
     public int next() throws XmlPullParserException, IOException {
         mEventList.next();
+        int type = mEventList.getType();
+        if(type == START_TAG){
+            onStartTag();
+        }
         return mEventList.getType();
     }
     @Override
@@ -628,6 +706,13 @@ public class ResXmlPullParser implements XmlResourceParser {
             setResXmlDocument(xmlDocument);
             this.mDocumentCreatedHere = true;
         }
+    }
+    private void initDefaultFeatures(){
+        processNamespaces = true;
+        reportNamespaceAttrs = true;
+    }
+    private void onStartTag(){
+
     }
 
     public static interface DocumentLoadedListener{

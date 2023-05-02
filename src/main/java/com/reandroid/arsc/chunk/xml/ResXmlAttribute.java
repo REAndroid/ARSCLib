@@ -123,12 +123,13 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
         startNamespace.addAttributeReference(this);
     }
     private void unLinkStartNameSpace(){
-        ResXmlElement xmlElement=getParentResXmlElement();
-        if(xmlElement==null){
+        ResXmlElement xmlElement = getParentResXmlElement();
+        if(xmlElement == null){
             return;
         }
-        ResXmlStartNamespace startNamespace=xmlElement.getStartNamespaceByUriRef(getNamespaceReference());
-        if(startNamespace==null){
+        ResXmlStartNamespace startNamespace =
+                xmlElement.getStartNamespaceByUriRef(getNamespaceReference());
+        if(startNamespace == null){
             return;
         }
         startNamespace.removeAttributeReference(this);
