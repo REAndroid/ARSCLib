@@ -1,3 +1,18 @@
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.pool;
 
 import com.reandroid.arsc.array.StringArray;
@@ -88,15 +103,21 @@ class JsonStringPoolHelper<T extends StringItem> {
         }
         static List<StyledString> fromJson(JSONArray jsonArray){
             int length = jsonArray.length();
-            List<StyledString> results=new ArrayList<>();
-            for(int i=0;i<length;i++){
-                StyledString styledString=fromJson(jsonArray.getJSONObject(i));
-                results.add(styledString);
+            List<StyledString> results = new ArrayList<>(length);
+            for(int i=0; i < length; i++){
+                StyledString styledString =
+                        fromJson(jsonArray.getJSONObject(i));
+                if(styledString != null){
+                    results.add(styledString);
+                }
             }
             return results;
         }
-        static StyledString fromJson(JSONObject jsonObject){
-            String text= jsonObject.getString(StringItem.NAME_string);
+        private static StyledString fromJson(JSONObject jsonObject){
+            if(!jsonObject.has(StringItem.NAME_style)){
+                return null;
+            }
+            String text = jsonObject.getString(StringItem.NAME_string);
             JSONObject style=jsonObject.getJSONObject(StringItem.NAME_style);
             JSONArray spansArray=style.getJSONArray(StyleItem.NAME_spans);
             List<StyleSpanInfo> spanInfoList = toSpanInfoList(spansArray);
@@ -107,7 +128,7 @@ class JsonStringPoolHelper<T extends StringItem> {
             List<StyleSpanInfo> results=new ArrayList<>(length);
             for(int i=0;i<length;i++){
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
-                StyleSpanInfo spanInfo=new StyleSpanInfo(null, 0,0);
+                StyleSpanInfo spanInfo = new StyleSpanInfo(null, 0,0);
                 spanInfo.fromJson(jsonObject);
                 results.add(spanInfo);
             }

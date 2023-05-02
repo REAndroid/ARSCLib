@@ -254,15 +254,17 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         if(isNull()){
             return null;
         }
+        StyleItem styleItem=getStyle();
+        if(styleItem == null){
+            return null;
+        }
         JSONObject jsonObject=new JSONObject();
         jsonObject.put(NAME_string, get());
-        StyleItem styleItem=getStyle();
-        if(styleItem!=null){
-            JSONObject styleJson=styleItem.toJson();
-            if(styleJson!=null){
-                jsonObject.put(NAME_style, styleJson);
-            }
+        JSONObject styleJson = styleItem.toJson();
+        if(styleJson == null){
+            return null;
         }
+        jsonObject.put(NAME_style, styleJson);
         return jsonObject;
     }
     @Override

@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,22 +52,22 @@ public class SingleJsonTableInputSource extends InputSource {
         return outputStream.getCrcValue();
     }
     public TableBlock getTableBlock() throws IOException{
-        if(mCache!=null){
+        if(mCache != null){
             return mCache;
         }
-        logMessage("Building resources table: "+inputSource.getAlias());
+        logMessage("Building resources table: " + inputSource.getAlias());
         TableBlock tableBlock=newInstance();
-        InputStream inputStream=inputSource.openStream();
+        InputStream inputStream = inputSource.openStream();
         try{
-            StringPoolBuilder poolBuilder=new StringPoolBuilder();
-            JSONObject jsonObject=new JSONObject(inputStream);
+            StringPoolBuilder poolBuilder = new StringPoolBuilder();
+            JSONObject jsonObject = new JSONObject(inputStream);
             poolBuilder.build(jsonObject);
             poolBuilder.apply(tableBlock);
             tableBlock.fromJson(jsonObject);
         }catch (JSONException ex){
-            throw new IOException(inputSource.getAlias()+": "+ex.getMessage());
+            throw new IOException(inputSource.getAlias(), ex);
         }
-        mCache=tableBlock;
+        mCache = tableBlock;
         return tableBlock;
     }
     TableBlock newInstance(){
