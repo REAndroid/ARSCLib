@@ -89,7 +89,7 @@ public class AttributeBagItem {
         if(valueType == null || getItemType()!=AttributeItemType.FORMAT){
             return false;
         }
-        int value = 0xff & valueType.getByte();
+        int value = 0xff & valueType.sumValues();
         int dataLow = 0xffff & getBagItem().getData();
         return (dataLow & value) == value;
     }
@@ -97,7 +97,7 @@ public class AttributeBagItem {
         if(valueType == null || getItemType()!=AttributeItemType.FORMAT){
             return false;
         }
-        int value = 0xff & valueType.getByte();
+        int value = 0xff & valueType.sumValues();
         int dataLow = 0xffff & getBagItem().getData();
         return (dataLow  == value);
     }

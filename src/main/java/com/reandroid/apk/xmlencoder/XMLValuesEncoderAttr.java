@@ -63,8 +63,7 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
         AttributeValueType[] valueTypes = AttributeValueType
                 .valuesOf(parentElement.getAttributeValue("formats"));
 
-        formatItem.setDataLow((short) (0xffff &
-                AttributeValueType.getByte(valueTypes)));
+        formatItem.setDataLow((short) (0xff & AttributeValueType.sumValues(valueTypes)));
 
         bagIndex++;
 

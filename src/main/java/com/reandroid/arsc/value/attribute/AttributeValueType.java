@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +34,7 @@ import java.util.*;
     AttributeValueType(byte b) {
         this.mByte=b;
     }
-    public byte getByte(){
+    public byte sumValues(){
         return mByte;
     }
     @Override
@@ -65,18 +65,18 @@ import java.util.*;
         }
         return builder.toString();
     }
-    public static byte getByte(AttributeValueType[] valueTypes){
+    public static int sumValues(AttributeValueType[] valueTypes){
         if(valueTypes==null){
             return 0;
         }
-        int i=0;
+        int result = 0;
         for(AttributeValueType vt:valueTypes){
-            if(vt==null){
+            if(vt == null){
                 continue;
             }
-            i=i|(0xff & vt.mByte);
+            result = result | (0xff & vt.mByte);
         }
-        return (byte) (0xff & i);
+        return result;
     }
     public static AttributeValueType valueOf(byte b){
         AttributeValueType[] all=values();
