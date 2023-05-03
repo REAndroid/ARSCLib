@@ -173,6 +173,9 @@ public class SpecTypePair extends BlockContainer<Block>
     public TypeBlock getTypeBlock(String qualifiers){
         return getTypeBlockArray().getTypeBlock(qualifiers);
     }
+    public TypeBlock getTypeBlock(ResConfig resConfig){
+        return getTypeBlockArray().getTypeBlock(resConfig);
+    }
     public List<ResConfig> listResConfig(){
         return mTypeBlockArray.listResConfig();
     }
