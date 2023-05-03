@@ -45,12 +45,6 @@ abstract class DecoderTableEntry<INPUT extends TableEntry<?, ?>, OUTPUT> {
                     packageBlock,
                     valueItem.getValueType(),
                     valueItem.getData());
-
-            value = XMLDecodeHelper.escapeXmlChars(value);
-            if(value == null){
-                System.err.println("\nNULL: " + valueItem);
-            }
-
             writer.text(value);
         }
     }

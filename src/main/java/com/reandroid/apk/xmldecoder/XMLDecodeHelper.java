@@ -15,6 +15,7 @@
  */
 package com.reandroid.apk.xmldecoder;
 
+import com.reandroid.arsc.decoder.ValueDecoder;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.xml.*;
 import com.reandroid.xml.parser.XMLSpanParser;
@@ -28,7 +29,7 @@ public class XMLDecodeHelper {
             return;
         }
         if(!stringItem.hasStyle()){
-            writer.text(escapeXmlChars(stringItem.get()));
+            writer.text(ValueDecoder.escapeSpecialCharacter(stringItem.get()));
         }else {
             String xml = stringItem.getXml();
             XMLElement element = parseSpanSafe(xml);
@@ -43,11 +44,13 @@ public class XMLDecodeHelper {
     public static void writeElement(EntryWriter<?> writer, XMLElement element) throws IOException {
         writer.startTag(element.getTagName());
         for(XMLAttribute xmlAttribute : element.listAttributes()){
-            writer.attribute(xmlAttribute.getName(), xmlAttribute.getValue());
+            writer.attribute(xmlAttribute.getName(),
+                    ValueDecoder.escapeSpecialCharacter(xmlAttribute.getValue()));
         }
         for(XMLNode xmlNode : element.getChildNodes()){
             if(xmlNode instanceof XMLText){
-                writer.text(((XMLText)xmlNode).getText(false));
+                String text = ((XMLText)xmlNode).getText(false);
+                writer.text(ValueDecoder.escapeSpecialCharacter(text));
             }else if(xmlNode instanceof XMLElement){
                 writeElement(writer, (XMLElement) xmlNode);
             }
@@ -64,21 +67,6 @@ public class XMLDecodeHelper {
         } catch (XMLException ignored) {
             return null;
         }
-    }
-    public static String escapeXmlChars(String str){
-        if(str == null){
-            return null;
-        }
-        if(str.indexOf('&') < 0 && str.indexOf('<') < 0 && str.indexOf('>') < 0){
-            return str;
-        }
-        str=str.replaceAll("&amp;", "&");
-        str=str.replaceAll("&lt;", "<");
-        str=str.replaceAll("&gt;", ">");
-        str=str.replaceAll("&", "&amp;");
-        str=str.replaceAll("<", "&lt;");
-        str=str.replaceAll(">", "&gt;");
-        return str;
     }
 
 }
