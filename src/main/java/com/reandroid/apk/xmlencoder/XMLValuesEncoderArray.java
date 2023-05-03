@@ -46,8 +46,16 @@ class XMLValuesEncoderArray extends XMLValuesEncoderBag{
             bagItem.setNameLow((short) (i+1));
 
             String valueText=child.getTextContent();
-
-            if(force_string){
+            if(ValueDecoder.isReference(valueText)){
+                ValueType valueType;
+                if(valueText.charAt(0) == '?'){
+                    valueType = ValueType.ATTRIBUTE;
+                }else {
+                    valueType = ValueType.REFERENCE;
+                }
+                bagItem.setTypeAndData(valueType,
+                        getMaterials().resolveReference(valueText));
+            }else if(force_string){
                 bagItem.setValueAsString(ValueDecoder
                         .unEscapeSpecialCharacter(valueText));
             }else if(force_integer){
@@ -59,9 +67,6 @@ class XMLValuesEncoderArray extends XMLValuesEncoderBag{
                 }
                 bagItem.setTypeAndData(ValueType.INT_DEC,
                         ValueDecoder.parseInteger(valueText));
-            }else if(ValueDecoder.isReference(valueText)){
-                bagItem.setTypeAndData(ValueType.REFERENCE,
-                        getMaterials().resolveReference(valueText));
             }else if(EncodeUtil.isEmpty(valueText)) {
                 bagItem.setTypeAndData(ValueType.NULL, 0);
             }else {

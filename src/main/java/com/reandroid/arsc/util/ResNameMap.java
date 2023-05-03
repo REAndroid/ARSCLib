@@ -47,7 +47,7 @@ public class ResNameMap<VALUE> {
                 valueMap=new HashMap<>();
                 mainMap.put(type, valueMap);
             }
-            valueMap.put(name, value);
+            valueMap.putIfAbsent(name, value);
         }
     }
     public void clear(){

@@ -134,6 +134,20 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
         }
         return 0;
     }
+    private boolean isFlag(XMLElement parent){
+        if(parent.getChildesCount()==0){
+            return false;
+        }
+        String tagName=parent.getChildAt(0).getTagName();
+        return "flag".equals(tagName);
+    }
+    private boolean isEnum(XMLElement parent){
+        if(parent.getChildesCount()==0){
+            return false;
+        }
+        String tagName=parent.getChildAt(0).getTagName();
+        return "enum".equals(tagName);
+    }
     private int decodeUnknownAttributeHex(String name){
         if(name.length()==0||name.charAt(0)!='@'){
             return 0;

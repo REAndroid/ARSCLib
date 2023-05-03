@@ -165,21 +165,7 @@ public class ValueDecoder {
         return false;
     }
     public static EncodeResult encodeColor(String value){
-        if(value==null){
-            return null;
-        }
-        Matcher matcher = PATTERN_COLOR.matcher(value);
-        if(!matcher.find()){
-            return null;
-        }
-        value=matcher.group(1);
-        ValueType valueType;
-        if(value.length()==6){
-            valueType=ValueType.INT_COLOR_RGB8;
-        }else {
-            valueType=ValueType.INT_COLOR_ARGB8;
-        }
-        return new EncodeResult(valueType, parseHex(value));
+        return ColorUtil.encode(value);
     }
     public static EncodeResult encodeHexOrInt(String numString){
         if(numString==null){
@@ -468,14 +454,13 @@ public class ValueDecoder {
         if(valueType==null){
             return null;
         }
+        String hexColor = ColorUtil.decode(valueType, data);
+        if(hexColor != null){
+            return hexColor;
+        }
         switch (valueType){
             case INT_BOOLEAN:
                 return decodeBoolean(data);
-            case INT_COLOR_ARGB4:
-            case INT_COLOR_ARGB8:
-            case INT_COLOR_RGB4:
-            case INT_COLOR_RGB8:
-                return decodeColor(data);
             case DIMENSION:
             case FLOAT:
             case FRACTION:
@@ -739,13 +724,6 @@ public class ValueDecoder {
         return "false";
     }
 
-    private static String decodeColor(int rawVal){
-        String hex=String.format("%x", rawVal);
-        if(hex.length()<=6){
-            return String.format("#%06x", rawVal);
-        }
-        return String.format("#%08x", rawVal);
-    }
     private static String decodeDimensionOrFloat(ValueType valueType, int rawVal){
         if(valueType==ValueType.FLOAT){
             float f=Float.intBitsToFloat(rawVal);
@@ -836,7 +814,6 @@ public class ValueDecoder {
         }
     }
 
-    public static final Pattern PATTERN_COLOR = Pattern.compile("^#([0-9a-fA-F]{6,8})$");
     public static final Pattern PATTERN_DIMEN = Pattern.compile("^([+\\-]?[0-9]+(\\.[0-9]+(E\\+?-?[0-9]+)?)?)(px|di?p|sp|pt|in|mm|%p?)$");
     private static final Pattern PATTERN_INTEGER = Pattern.compile("^(-?)([0-9]+)$");
     private static final Pattern PATTERN_HEX = Pattern.compile("^0x[0-9a-fA-F]+$");

@@ -84,7 +84,13 @@ class XMLValuesEncoder {
     }
     void encodeReferenceValue(Entry entry, String value){
         int resourceId = getMaterials().resolveReference(value);
-        entry.setValueAsReference(resourceId);
+        ValueType valueType;
+        if(value.charAt(0) == '?'){
+            valueType = ValueType.ATTRIBUTE;
+        }else{
+            valueType = ValueType.REFERENCE;
+        }
+        entry.setValueAsRaw(valueType, resourceId);
     }
     void encodeStringValue(Entry entry, String value){
 

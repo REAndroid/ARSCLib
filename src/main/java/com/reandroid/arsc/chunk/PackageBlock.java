@@ -331,6 +331,9 @@ public class PackageBlock extends Chunk<PackageHeader>
     public SpecTypePair getSpecTypePair(String typeName){
         return getSpecTypePairArray().getSpecTypePair(typeName);
     }
+    public SpecTypePair getSpecTypePair(int typeId){
+        return getSpecTypePairArray().getPair((byte) typeId);
+    }
     public EntryGroup getEntryGroup(String typeName, String entryName){
         return getSpecTypePairArray().getEntryGroup(typeName, entryName);
     }

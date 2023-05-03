@@ -229,6 +229,9 @@ import java.util.Objects;
                  && Objects.equals(str, getValueAsString())){
              return;
          }
+         if(str == null){
+             str = "";
+         }
          StringItem stringItem = getStringPool().getOrCreate(str);
          setData(stringItem.getIndex());
          setValueType(ValueType.STRING);
