@@ -147,20 +147,27 @@ public class ComplexUtil {
             this.multiplier = multiplier;
         }
         public String formatFloat(boolean scale, float value){
-            if(this.flag == 0){
-                if(scale){
-                    value = value * 100.0f;
-                }
-                return String.format("%.1f", value);
+            boolean neg = value < 0;
+            if(neg){
+                value = -value;
             }
-            String result = String.format("%.6f", value);
-            // To trim ending zeros
-            value = Float.parseFloat(result);
+            int multiplier = 1;
+            for(int i=0; i<flag+1;i++){
+                multiplier = multiplier * 10;
+            }
+            float f = value * multiplier;
+            int i = (int) f;
+            if((f - i) >= 0.5f){
+                i = i + 1;
+            }
+            value = ((float) i)/multiplier;
+            if(neg){
+                value = -value;
+            }
             if(scale){
                 value = value * 100.0f;
             }
-            result = Float.toString(value);
-            return result;
+            return Float.toString(value);
         }
         public static Radix forFlag(int flag){
             if(flag == 0){
