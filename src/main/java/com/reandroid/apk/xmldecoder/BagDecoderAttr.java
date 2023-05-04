@@ -16,6 +16,7 @@
 package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.apk.XmlHelper;
+import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.ValueType;
@@ -58,7 +59,7 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
             int rawVal = item.getData();
             String value;
             if(item.getBagItem().getValueType() == ValueType.INT_HEX){
-                value = String.format("0x%08x", rawVal);
+                value = HexUtil.toHex8(rawVal);
             }else {
                 value = String.valueOf(rawVal);
             }

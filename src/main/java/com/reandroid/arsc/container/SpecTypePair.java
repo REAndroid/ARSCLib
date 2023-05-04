@@ -27,6 +27,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
+import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.json.JSONConvert;
@@ -338,7 +339,7 @@ public class SpecTypePair extends BlockContainer<Block>
     @Override
     public String toString(){
         StringBuilder builder=new StringBuilder();
-        builder.append(String.format("0x%02x", getTypeId()));
+        builder.append(HexUtil.toHex2(getTypeId()));
         builder.append(" (");
         TypeString ts = getTypeString();
         if(ts!=null){

@@ -29,6 +29,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
+import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
@@ -429,7 +430,7 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
     @Override
     public String toString(){
         StringBuilder builder = new StringBuilder();
-        builder.append(String.format("0x%08x", getResourceId()));
+        builder.append(HexUtil.toHex8(getResourceId()));
         builder.append(' ');
         ResConfig resConfig = getResConfig();
         if(resConfig!=null){

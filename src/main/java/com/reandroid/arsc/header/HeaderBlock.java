@@ -1,18 +1,18 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.header;
 
 import com.reandroid.arsc.base.BlockContainer;
@@ -27,11 +27,12 @@ import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ShortItem;
 import com.reandroid.arsc.util.HexBytesWriter;
+import com.reandroid.arsc.util.HexUtil;
 
 import java.io.*;
 import java.util.List;
 
- public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
+public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
     private final ShortItem mType;
     private final ShortItem mHeaderSize;
     private final IntegerItem mChunkSize;
@@ -57,7 +58,7 @@ import java.util.List;
         return countBytes();
     }
     public ByteArray getExtraBytes() {
-         return extraBytes;
+        return extraBytes;
     }
     public void setHeaderLoaded(HeaderLoaded headerLoaded){
         this.mHeaderLoaded=headerLoaded;
@@ -111,9 +112,9 @@ import java.util.List;
     }
     /**Non buffering reader*/
     public int readBytes(InputStream inputStream) throws IOException{
-         int result = onReadBytes(inputStream);
-         super.notifyBlockLoad();
-         return result;
+        int result = onReadBytes(inputStream);
+        super.notifyBlockLoad();
+        return result;
     }
     private int onReadBytes(InputStream inputStream) throws IOException {
         int readCount = readBytes(inputStream, this);
@@ -218,7 +219,7 @@ import java.util.List;
             builder.append(type.toString());
         }else {
             builder.append("Unknown type=");
-            builder.append(String.format("0x%02x", (0xffff & t)));
+            builder.append(HexUtil.toHex4(t));
         }
         builder.append("{ValueHeader=");
         builder.append(getHeaderSize());

@@ -16,6 +16,7 @@
 package com.reandroid.archive2.block;
 
 import com.reandroid.archive2.ZipSignature;
+import com.reandroid.arsc.util.HexUtil;
 
 public class DataDescriptor extends ZipHeader{
     public DataDescriptor() {
@@ -44,7 +45,7 @@ public class DataDescriptor extends ZipHeader{
     public String toString(){
         StringBuilder builder = new StringBuilder();
         builder.append(getSignature());
-        builder.append(", crc=").append(String.format("0x%08x", getCrc()));
+        builder.append(", crc=").append(HexUtil.toHex8(getCrc()));
         builder.append(", compressed=").append(getCompressedSize());
         builder.append(", size=").append(getSize());
         return builder.toString();

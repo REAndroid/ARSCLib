@@ -106,7 +106,7 @@ public class HexBytesWriter {
         }
     }
     private void writeHex(Writer writer, byte b) throws IOException {
-        String hex = String.format("%02x", (0xff & b)).toUpperCase();
+        String hex = HexUtil.toHex(null, (0xff & b), 2).toUpperCase();
         writer.write(hex);
     }
     private void writeString(Writer writer, int width, int position) throws IOException {

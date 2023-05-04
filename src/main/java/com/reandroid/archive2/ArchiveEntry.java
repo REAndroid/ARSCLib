@@ -17,6 +17,7 @@ package com.reandroid.archive2;
 
 import com.reandroid.archive2.block.CentralEntryHeader;
 import com.reandroid.archive2.block.LocalFileHeader;
+import com.reandroid.arsc.util.HexUtil;
 
 import java.util.zip.ZipEntry;
 
@@ -116,6 +117,7 @@ public class ArchiveEntry extends ZipEntry {
 
     @Override
     public String toString(){
-        return "["+ getFileOffset()+"] "+getName()+getComment()+String.format(" 0x%08x", getCrc());
+        return "["+ getFileOffset()+"] " + getName() + getComment()
+                + HexUtil.toHex(" 0x", getCrc(), 8);
     }
 }

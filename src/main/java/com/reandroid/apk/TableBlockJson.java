@@ -21,6 +21,7 @@ import com.reandroid.arsc.chunk.StagedAlias;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
+import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.json.JSONObject;
 
 import java.io.File;
@@ -73,7 +74,7 @@ public class TableBlockJson {
     private String getFileName(TypeBlock typeBlock){
         StringBuilder builder=new StringBuilder();
         builder.append(String.format("%03d-", typeBlock.getIndex()));
-        builder.append(String.format("0x%02x", typeBlock.getTypeId()));
+        builder.append(HexUtil.toHex2(typeBlock.getTypeId()));
         String name= typeBlock.getTypeName();
         builder.append('-').append(name);
         builder.append(typeBlock.getResConfig().getQualifiers());
@@ -81,7 +82,7 @@ public class TableBlockJson {
     }
     private String getDirName(PackageBlock packageBlock){
         StringBuilder builder=new StringBuilder();
-        builder.append(String.format("0x%02x", packageBlock.getId()));
+        builder.append(HexUtil.toHex2((byte) packageBlock.getId()));
         builder.append("-");
         builder.append(packageBlock.getIndex());
         String name= ApkUtil.sanitizeForFileName(packageBlock.getName());

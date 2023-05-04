@@ -18,6 +18,7 @@
  import com.reandroid.arsc.chunk.TableBlock;
  import com.reandroid.arsc.item.StringItem;
  import com.reandroid.arsc.item.TableString;
+ import com.reandroid.arsc.util.HexUtil;
  import com.reandroid.arsc.value.*;
  import com.reandroid.arsc.value.bag.BagItem;
 
@@ -83,7 +84,7 @@
      }
 
      private String formattedRefValue() {
-         return String.format("@0x%08x", getValue());
+         return HexUtil.toHex8("@0x", getValue());
      }
 
      @Override

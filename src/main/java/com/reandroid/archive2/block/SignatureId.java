@@ -16,6 +16,7 @@
 package com.reandroid.archive2.block;
 
 import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.util.HexUtil;
 
 import java.util.Objects;
 
@@ -39,7 +40,7 @@ public class SignatureId implements Comparable<SignatureId>{
         if (this.name != null) {
             return name + FILE_EXT_RAW;
         }
-        return String.format("0x%08x", id) + FILE_EXT_RAW;
+        return HexUtil.toHex8(id) + FILE_EXT_RAW;
     }
     @Override
     public boolean equals(Object obj) {
@@ -66,7 +67,7 @@ public class SignatureId implements Comparable<SignatureId>{
         if (name != null) {
             return name;
         }
-        return "UNKNOWN(" + String.format("0x%08x", id) + ")";
+        return "UNKNOWN(" + HexUtil.toHex8(id) + ")";
     }
     public static SignatureId valueOf(String name) {
         if (name == null) {

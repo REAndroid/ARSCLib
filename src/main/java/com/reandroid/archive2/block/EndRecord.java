@@ -16,6 +16,7 @@
 package com.reandroid.archive2.block;
 
 import com.reandroid.archive2.ZipSignature;
+import com.reandroid.arsc.util.HexUtil;
 
 public class EndRecord extends ZipHeader{
     public EndRecord() {
@@ -78,7 +79,7 @@ public class EndRecord extends ZipHeader{
         builder.append(", total dirs=").append(getTotalNumberOfDirectories());
         builder.append(", length=").append(getLengthOfCentralDirectory());
         builder.append(", offset=").append(getOffsetOfCentralDirectory());
-        builder.append(", last=").append(String.format("0x%08x", getLastShort()));
+        builder.append(", last=").append(HexUtil.toHex8(getLastShort()));
         return builder.toString();
     }
 

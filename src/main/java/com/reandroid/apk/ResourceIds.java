@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.pool.SpecStringPool;
+import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.util.ResNameMap;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
@@ -379,7 +380,7 @@ import java.util.*;
                 type.add(entry);
             }
             public String getHexId(){
-                return String.format("0x%02x", id);
+                return HexUtil.toHex2(id);
             }
             public JSONObject toJson(){
                 JSONObject jsonObject=new JSONObject();
@@ -575,7 +576,7 @@ import java.util.*;
                     return entryMap.get(entryId);
                 }
                 public String getHexId(){
-                    return String.format("0x%02x", id);
+                    return HexUtil.toHex2(id);
                 }
                 public void add(Entry entry){
                     if(entry==null){
@@ -733,7 +734,7 @@ import java.util.*;
                                 | (getEntryId() & 0xffff);
                     }
                     public String getHexId(){
-                        return String.format("0x%08x", getResourceId());
+                        return HexUtil.toHex8(getResourceId());
                     }
 
                     public void writeXml(String indent, Writer writer) throws IOException{

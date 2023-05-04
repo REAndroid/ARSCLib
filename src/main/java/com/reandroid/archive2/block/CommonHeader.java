@@ -16,6 +16,7 @@
 package com.reandroid.archive2.block;
 
 import com.reandroid.archive2.ZipSignature;
+import com.reandroid.arsc.util.HexUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -287,12 +288,12 @@ public abstract class CommonHeader extends ZipHeader {
             builder.append(", ");
         }
         builder.append("SIG=").append(getSignature());
-        builder.append(", versionMadeBy=").append(String.format("0x%04x", getVersionMadeBy()));
-        builder.append(", platform=").append(String.format("0x%02x", getPlatform()));
+        builder.append(", versionMadeBy=").append(HexUtil.toHex4((short) getVersionMadeBy()));
+        builder.append(", platform=").append(HexUtil.toHex2((byte) getPlatform()));
         builder.append(", GP={").append(getGeneralPurposeFlag()).append("}");
         builder.append(", method=").append(getMethod());
         builder.append(", date=").append(getDate());
-        builder.append(", crc=").append(String.format("0x%08x", getCrc()));
+        builder.append(", crc=").append(HexUtil.toHex8(getCrc()));
         builder.append(", cSize=").append(getCompressedSize());
         builder.append(", size=").append(getSize());
         builder.append(", fileNameLength=").append(getFileNameLength());

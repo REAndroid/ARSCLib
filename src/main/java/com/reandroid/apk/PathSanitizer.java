@@ -16,6 +16,7 @@
 package com.reandroid.apk;
 
 import com.reandroid.archive.InputSource;
+import com.reandroid.arsc.util.HexUtil;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -148,7 +149,7 @@ public class PathSanitizer {
     }
     private static String createUniqueName(String name){
         int hash = name.hashCode();
-        return String.format("alias_%08x", hash).toLowerCase();
+        return "alias_" + HexUtil.toHexNoPrefix8(hash);
     }
     private static boolean isGoodSimpleName(String name){
         if(name==null){

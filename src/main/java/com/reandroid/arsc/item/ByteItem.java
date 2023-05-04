@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,9 @@
 package com.reandroid.arsc.item;
 
 
-public class ByteItem extends BlockItem {
+ import com.reandroid.arsc.util.HexUtil;
+
+ public class ByteItem extends BlockItem {
     public ByteItem() {
         super(1);
     }
@@ -47,7 +49,7 @@ public class ByteItem extends BlockItem {
         return 0xff & get();
     }
     public String toHex(){
-        return String.format("0x%02x", unsignedInt());
+        return HexUtil.toHex2(get());
     }
     @Override
     public String toString(){

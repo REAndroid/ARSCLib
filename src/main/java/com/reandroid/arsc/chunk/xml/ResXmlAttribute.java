@@ -21,6 +21,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.pool.StringPool;
+import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.AttributeValue;
 import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.arsc.value.ValueType;
@@ -419,10 +420,10 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
             if(group==null){
                 //Lets ignore such error until XML encoder implemented
                 //throw new XMLException("Failed to decode attribute name: "
-                //+ String.format("@0x%08x", resourceId));
-                name=String.format("@0x%08x", resourceId);
+                //HexUtil.toHex8("@0x", resourceId));
+                name = HexUtil.toHex8("@0x", resourceId);
             }else {
-                name=group.getSpecName();
+                name = group.getSpecName();
             }
         }
         String prefix = getNamePrefix();
@@ -445,7 +446,7 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
         if(fullName!=null ){
             int id=getNameResourceID();
             if(id!=0){
-                fullName=fullName+"(@"+String.format("0x%08x",id)+")";
+                fullName=fullName+"(@"+ HexUtil.toHex8(id)+")";
             }
             String valStr;
             ValueType valueType=getValueType();
@@ -456,7 +457,7 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
             }else if (valueType==ValueType.INT_DEC){
                 valStr = String.valueOf(getData());
             }else {
-                valStr = "["+valueType+"] " + String.format("0x%08x",getData());
+                valStr = "["+valueType+"] " + HexUtil.toHex8(getData());
             }
             if(valStr!=null){
                 return fullName+"=\""+valStr+"\"";

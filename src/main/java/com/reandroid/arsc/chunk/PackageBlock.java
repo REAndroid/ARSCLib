@@ -29,6 +29,7 @@ import com.reandroid.arsc.list.StagedAliasList;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
+import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.LibraryInfo;
 import com.reandroid.arsc.value.ResConfig;
@@ -466,7 +467,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         StringBuilder builder=new StringBuilder();
         builder.append(super.toString());
         builder.append(", id=");
-        builder.append(String.format("0x%02x", getId()));
+        builder.append(HexUtil.toHex2((byte) getId()));
         builder.append(", name=");
         builder.append(getName());
         int libCount=getLibraryBlock().getLibraryCount();

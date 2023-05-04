@@ -15,6 +15,7 @@
  */
 package com.reandroid.arsc.decoder;
 
+import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.ValueType;
 
 import java.util.regex.Matcher;
@@ -43,7 +44,7 @@ public class ColorUtil {
             default:
                 return null;
         }
-        String hex = String.format("%08x", data);
+        String hex = HexUtil.toHexNoPrefix8(data);
         return "#" + hex.substring(index);
     }
     public static ValueDecoder.EncodeResult encode(String hexColor){

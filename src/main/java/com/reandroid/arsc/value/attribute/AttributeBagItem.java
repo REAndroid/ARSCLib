@@ -1,22 +1,23 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.value.attribute;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.common.EntryStore;
@@ -36,7 +37,7 @@ public class AttributeBagItem {
     public String getNameOrHex(EntryStore entryStore){
         String name=getName(entryStore);
         if(name==null){
-            name=String.format("@0x%08x", getBagItem().getName());
+            name=HexUtil.toHex8("@0x", getBagItem().getName());
         }
         return name;
     }
@@ -162,7 +163,7 @@ public class AttributeBagItem {
         }
         ResValueMap item=getBagItem();
         builder.append(getNameOrHex());
-        builder.append("=").append(String.format("0x%x", item.getData()));
+        builder.append("=").append(HexUtil.toHex8(item.getData()));
         return builder.toString();
     }
 
@@ -214,6 +215,4 @@ public class AttributeBagItem {
         }
         return null;
     }
-
-
 }

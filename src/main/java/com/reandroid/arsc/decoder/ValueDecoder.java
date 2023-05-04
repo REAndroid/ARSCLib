@@ -20,6 +20,7 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
+import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.common.EntryStore;
@@ -265,11 +266,11 @@ public class ValueDecoder {
     public static String decodeAttributeName(EntryStore store, PackageBlock currentPackage, int resourceId){
         EntryGroup entryGroup=searchEntryGroup(store, currentPackage, resourceId);
         if(entryGroup==null){
-            return String.format("@0x%08x", resourceId);
+            return HexUtil.toHex8("@0x", resourceId);
         }
-        Entry entry =entryGroup.pickOne();
-        if(entry ==null){
-            return String.format("@0x%08x", resourceId);
+        Entry entry = entryGroup.pickOne();
+        if(entry == null){
+            return HexUtil.toHex8("@0x", resourceId);
         }
         String prefix=null;
         if(currentPackage!=null){
@@ -705,7 +706,7 @@ public class ValueDecoder {
     }
 
     private static String decodeHex(int rawVal){
-        return String.format("0x%x", rawVal);
+        return HexUtil.toHex(rawVal, 1);
     }
     private static String decodeInt(int rawVal){
         return String.valueOf(rawVal);
@@ -786,7 +787,7 @@ public class ValueDecoder {
         return entry1;
     }
     private static String toHexResourceId(int resourceId){
-        return String.format("0x%08x", resourceId);
+        return HexUtil.toHex8(resourceId);
     }
     private static boolean isEqualString(String str1, String str2){
         if(isEmpty(str1)){
@@ -810,7 +811,7 @@ public class ValueDecoder {
         }
         @Override
         public String toString(){
-            return valueType+": "+String.format("0x%08x", value);
+            return valueType+": "+HexUtil.toHex8(value);
         }
     }
 

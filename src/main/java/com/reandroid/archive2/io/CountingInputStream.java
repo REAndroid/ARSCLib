@@ -15,6 +15,8 @@
  */
 package com.reandroid.archive2.io;
 
+import com.reandroid.arsc.util.HexUtil;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.CRC32;
@@ -124,6 +126,6 @@ public class CountingInputStream<T extends InputStream> extends InputStream {
         if(!mFinished || crc==null){
             return "[" + size + "]: " + inputStream.getClass().getSimpleName();
         }
-        return "[size=" + size +", crc=" + String.format("0x%08x", mCheckSum) + "]: " + inputStream.getClass().getSimpleName();
+        return "[size=" + size +", crc=" + HexUtil.toHex8(mCheckSum) + "]: " + inputStream.getClass().getSimpleName();
     }
 }

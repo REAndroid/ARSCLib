@@ -17,6 +17,7 @@ package com.reandroid.arsc.item;
 
 
 import com.reandroid.arsc.pool.TypeStringPool;
+import com.reandroid.arsc.util.HexUtil;
 
 public class TypeString extends StringItem {
     public TypeString(boolean utf8) {
@@ -40,6 +41,6 @@ public class TypeString extends StringItem {
     }
     @Override
     public String toString(){
-        return String.format("0x%02x", getId())+':'+get();
+        return HexUtil.toHex2((byte) getId())+':'+get();
     }
 }
