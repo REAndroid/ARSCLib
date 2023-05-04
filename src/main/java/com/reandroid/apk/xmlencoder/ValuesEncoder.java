@@ -71,7 +71,11 @@ class ValuesEncoder {
         type=getType(xmlDocument, type);
         XMLValuesEncoder encoder;
         if(isBag(xmlDocument, type)){
-            encoder=getBagEncoder(type);
+            if("array".equals(type) && hasNameAttributes(xmlDocument)){
+                encoder = getBagEncoder("style");
+            }else{
+                encoder = getBagEncoder(type);
+            }
         }else{
             encoder=getEncoder(type);
         }
@@ -99,9 +103,23 @@ class ValuesEncoder {
         XMLElement documentElement=xmlDocument.getDocumentElement();
         int count=documentElement.getChildesCount();
         for(int i=0;i<count;i++){
-            XMLElement element=documentElement.getChildAt(0);
+            XMLElement element=documentElement.getChildAt(i);
             if(element.getChildesCount()>0){
                 return true;
+            }
+        }
+        return false;
+    }
+    private boolean hasNameAttributes(XMLDocument xmlDocument){
+        XMLElement documentElement=xmlDocument.getDocumentElement();
+        int count=documentElement.getChildesCount();
+        for(int i=0;i<count;i++){
+            XMLElement element=documentElement.getChildAt(i);
+            if(element.getChildesCount()>0){
+                XMLElement child = element.getChildAt(0);
+                if(child.getAttributeValue("name") != null){
+                    return true;
+                }
             }
         }
         return false;

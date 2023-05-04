@@ -35,15 +35,21 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
             XMLElement child=parentElement.getChildAt(i);
             ResValueMap item = itemArray.get(i);
             String name=child.getAttributeValue("name");
-            int id=decodeUnknownAttributeHex(name);
-            if(id!=0){
+            Integer id = decodeUnknownAttributeHex(name);
+            if(id != null){
                 item.setName(id);
                 String value = child.getTextContent();
                 ValueDecoder.EncodeResult encodeResult = ValueDecoder.encodeNullReference(value);
                 if(encodeResult!=null){
                     item.setTypeAndData(encodeResult.valueType, encodeResult.value);
                 }else if(ValueDecoder.isReference(value)){
-                    item.setTypeAndData(ValueType.REFERENCE,
+                    ValueType valueType;
+                    if(value.charAt(0) == '?'){
+                        valueType = ValueType.ATTRIBUTE;
+                    }else {
+                        valueType = ValueType.REFERENCE;
+                    }
+                    item.setTypeAndData(valueType,
                             getMaterials().resolveReference(value));
                 }else {
                     encodeResult = ValueDecoder.encodeGuessAny(value);
@@ -65,13 +71,13 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
             encodeChild(child, attributeEntry, item);
         }
     }
-    private int decodeUnknownAttributeHex(String name){
-        if(name.length()==0||name.charAt(0)!='@'){
-            return 0;
+    private Integer decodeUnknownAttributeHex(String name){
+        if(name.length()==0||(name.charAt(0)!='@' && name.charAt(0)!='?')){
+            return null;
         }
         name=name.substring(1);
         if(!ValueDecoder.isHex(name)){
-            return 0;
+            return null;
         }
         return ValueDecoder.parseHex(name);
     }
