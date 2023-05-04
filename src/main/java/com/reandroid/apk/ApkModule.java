@@ -57,6 +57,7 @@ public class ApkModule implements ApkFile {
     private Decoder mDecoder;
     private ApkType mApkType;
     private ApkSignatureBlock apkSignatureBlock;
+    private Integer preferredFramework;
 
     public ApkModule(String moduleName, APKArchive apkArchive){
         this.moduleName=moduleName;
@@ -209,17 +210,37 @@ public class ApkModule implements ApkFile {
         }
         return null;
     }
+
+    public void setPreferredFramework(Integer version) throws IOException {
+        if(version!=null && version.equals(preferredFramework)){
+            return;
+        }
+        this.preferredFramework = version;
+        if(version == null || mTableBlock==null){
+            return;
+        }
+        logMessage("Initializing preferred framework: " + version);
+        mTableBlock.clearFrameworks();
+        FrameworkApk frameworkApk = AndroidFrameworks.getBestMatch(version);
+        AndroidFrameworks.setCurrent(frameworkApk);
+        mTableBlock.addFramework(frameworkApk.getTableBlock());
+        logMessage("Initialized framework: " + frameworkApk.getVersionCode());
+    }
+
     public Integer getAndroidFrameworkVersion(){
+        if(preferredFramework != null){
+            return preferredFramework;
+        }
         if(!hasAndroidManifestBlock()){
             return null;
         }
         AndroidManifestBlock manifestBlock = getAndroidManifestBlock();
-        Integer version = manifestBlock.getTargetSdkVersion();
+        Integer version = manifestBlock.getCompileSdkVersion();
         if(version == null){
             version = manifestBlock.getPlatformBuildVersionCode();
         }
         if(version == null){
-            version = manifestBlock.getCompileSdkVersion();
+            version = manifestBlock.getTargetSdkVersion();
         }
         return version;
     }
