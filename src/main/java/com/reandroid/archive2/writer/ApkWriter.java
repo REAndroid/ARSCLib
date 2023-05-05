@@ -24,6 +24,7 @@ import com.reandroid.archive2.block.ApkSignatureBlock;
 import com.reandroid.archive2.block.EndRecord;
 import com.reandroid.archive2.io.ArchiveEntrySource;
 import com.reandroid.archive2.io.ZipFileOutput;
+import com.reandroid.arsc.chunk.TableBlock;
 
 import java.io.File;
 import java.io.IOException;
@@ -114,12 +115,20 @@ public class ApkWriter extends ZipFileOutput {
         File bufferFile = getBufferFile();
         BufferFileOutput output = new BufferFileOutput(bufferFile);
         BufferFileInput input = new BufferFileInput(bufferFile);
+        OutputSource tableSource = null;
         for(OutputSource outputSource:outputList){
             InputSource inputSource = outputSource.getInputSource();
+            if(tableSource == null && TableBlock.FILE_NAME.equals(inputSource.getAlias())){
+                tableSource = outputSource;
+                continue;
+            }
             onCompressFileProgress(inputSource.getAlias(),
                     inputSource.getMethod(),
                     output.position());
             outputSource.makeBuffer(input, output);
+        }
+        if(tableSource != null){
+            tableSource.makeBuffer(input, output);
         }
         output.close();
         return input;
