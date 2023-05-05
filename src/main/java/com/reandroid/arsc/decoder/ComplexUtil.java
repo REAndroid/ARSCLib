@@ -152,7 +152,8 @@ public class ComplexUtil {
                 value = -value;
             }
             int multiplier = 1;
-            for(int i=0; i<flag+1;i++){
+            int decimalPlaces = flag * 2;
+            for(int i = 0; i < decimalPlaces; i++){
                 multiplier = multiplier * 10;
             }
             float f = value * multiplier;
