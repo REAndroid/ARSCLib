@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -70,16 +70,6 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
             }
             encodeChild(child, attributeEntry, item);
         }
-    }
-    private Integer decodeUnknownAttributeHex(String name){
-        if(name.length()==0||(name.charAt(0)!='@' && name.charAt(0)!='?')){
-            return null;
-        }
-        name=name.substring(1);
-        if(!ValueDecoder.isHex(name)){
-            return null;
-        }
-        return ValueDecoder.parseHex(name);
     }
     private void encodeChild(XMLElement child, Entry attributeEntry, ResValueMap bagItem){
 

@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,12 +38,27 @@ class XMLValuesEncoderArray extends XMLValuesEncoderBag{
         }else if(ApkUtil.TAG_INTEGER_ARRAY.equals(tagName)){
             force_integer = true;
         }
+        EncodeMaterials materials = getMaterials();
         ResValueMapArray itemArray = mapEntry.getValue();
         for(int i=0;i<count;i++){
             XMLElement child=parentElement.getChildAt(i);
+
             ResValueMap bagItem = itemArray.get(i);
-            bagItem.setNameHigh((short) 0x0100);
-            bagItem.setNameLow((short) (i+1));
+            String name = child.getAttributeValue("name");
+            if(name == null){
+                bagItem.setNameHigh((short) 0x0100);
+                bagItem.setNameLow((short) (i+1));
+            }else {
+                Integer unknown = decodeUnknownAttributeHex(name);
+                int resourceId;
+                if(unknown == null){
+                    resourceId = materials.resolveLocalResourceId("id", name);
+                }else {
+                    resourceId = unknown;
+                }
+                bagItem.setName(resourceId);
+            }
+
 
             String valueText=child.getTextContent();
             if(ValueDecoder.isReference(valueText)){

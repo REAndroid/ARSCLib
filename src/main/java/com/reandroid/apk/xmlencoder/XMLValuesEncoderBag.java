@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +15,7 @@
   */
 package com.reandroid.apk.xmlencoder;
 
+import com.reandroid.arsc.decoder.ValueDecoder;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.xml.XMLElement;
@@ -48,5 +49,16 @@ class XMLValuesEncoderBag extends XMLValuesEncoder{
     @Override
     void encodeNullValue(Entry entry){
         // Nothing to do
+    }
+
+    Integer decodeUnknownAttributeHex(String name){
+        if(name.length() == 0 || (name.charAt(0) !='@' && name.charAt(0) != '?')){
+            return null;
+        }
+        name = name.substring(1);
+        if(!ValueDecoder.isHex(name)){
+            return null;
+        }
+        return ValueDecoder.parseHex(name);
     }
 }

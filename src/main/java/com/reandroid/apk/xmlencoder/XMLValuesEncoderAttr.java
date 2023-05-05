@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -102,10 +102,13 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
             XMLElement child=element.getChildAt(i);
 
             String name = child.getAttributeValue("name");
-            int resourceId = decodeUnknownAttributeHex(name);
-            if(resourceId==0){
-                resourceId=materials.resolveLocalResourceId("id",
+            Integer unknown = decodeUnknownAttributeHex(name);
+            int resourceId;
+            if(unknown == null){
+                resourceId = materials.resolveLocalResourceId("id",
                         name);
+            }else {
+                resourceId = unknown;
             }
 
             ValueDecoder.EncodeResult encodeResult =
@@ -147,15 +150,5 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
         }
         String tagName=parent.getChildAt(0).getTagName();
         return "enum".equals(tagName);
-    }
-    private int decodeUnknownAttributeHex(String name){
-        if(name.length()==0||name.charAt(0)!='@'){
-            return 0;
-        }
-        name=name.substring(1);
-        if(!ValueDecoder.isHex(name)){
-            return 0;
-        }
-        return ValueDecoder.parseHex(name);
     }
 }

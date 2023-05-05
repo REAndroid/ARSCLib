@@ -21,7 +21,6 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.decoder.ValueDecoder;
 import com.reandroid.arsc.value.*;
 import com.reandroid.common.EntryStore;
-import com.reandroid.xml.XMLElement;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -40,11 +39,18 @@ class BagDecoderArray<OUTPUT> extends BagDecoder<OUTPUT>{
         writer.attribute("name", entry.getName());
 
         PackageBlock packageBlock = entry.getPackageBlock();
+        EntryStore entryStore = getEntryStore();
         ResValueMap[] resValueMaps = mapEntry.listResValueMap();
+        boolean zero_name = isZeroNameArray(resValueMaps);
         for(int i = 0; i < resValueMaps.length; i++){
             ResValueMap valueMap = resValueMaps[i];
             String childTag = "item";
             writer.startTag(childTag);
+            if(zero_name){
+                String name = ValueDecoder.decodeAttributeName(
+                        entryStore, packageBlock, valueMap.getName());
+                writer.attribute("name", name);
+            }
             writeText(writer, packageBlock, valueMap);
             writer.endTag(childTag);
         }
@@ -73,14 +79,20 @@ class BagDecoderArray<OUTPUT> extends BagDecoder<OUTPUT>{
         if(parentId!=0){
             return false;
         }
-        ResValueMap[] bagItems = mapEntry.listResValueMap();
-        if(bagItems==null||bagItems.length==0){
+        ResValueMap[] valueMapList = mapEntry.listResValueMap();
+        if(valueMapList == null || valueMapList.length == 0){
             return false;
         }
-        int len=bagItems.length;
-        for(int i=0;i<len;i++){
-            ResValueMap item=bagItems[i];
-            int name = item.getName();
+        if(isIndexedArray(valueMapList)){
+            return true;
+        }
+        return isZeroNameArray(valueMapList);
+    }
+    private static boolean isIndexedArray(ResValueMap[] resValueMapList){
+        int length = resValueMapList.length;
+        for(int i = 0; i < length; i++){
+            ResValueMap valueMap = resValueMapList[i];
+            int name = valueMap.getName();
             int high = (name >> 16) & 0xffff;
             if(high!=0x0100 && high!=0x0200){
                 return false;
@@ -92,5 +104,17 @@ class BagDecoderArray<OUTPUT> extends BagDecoder<OUTPUT>{
             }
         }
         return true;
+    }
+    private static boolean isZeroNameArray(ResValueMap[] resValueMapList){
+        int length = resValueMapList.length;
+        for(int i = 0; i < length; i++){
+            if(!isZeroName(resValueMapList[i])){
+                return false;
+            }
+        }
+        return true;
+    }
+    private static boolean isZeroName(ResValueMap resValueMap){
+        return resValueMap.getName() == 0;
     }
 }

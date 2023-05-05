@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -71,11 +71,7 @@ class ValuesEncoder {
         type=getType(xmlDocument, type);
         XMLValuesEncoder encoder;
         if(isBag(xmlDocument, type)){
-            if("array".equals(type) && hasNameAttributes(xmlDocument)){
-                encoder = getBagEncoder("style");
-            }else{
-                encoder = getBagEncoder(type);
-            }
+            encoder = getBagEncoder(type);
         }else{
             encoder=getEncoder(type);
         }
