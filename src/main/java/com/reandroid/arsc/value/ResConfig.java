@@ -2126,12 +2126,13 @@
                  return false;
              }
              Matcher matcher = PATTERN_REGION.matcher(qualifier);
-             if(!matcher.matches()){
+             if(!matcher.matches() && !isRegionNumber(qualifier)){
                  return false;
              }
              this.mConfig.setRegion(qualifier);
              return true;
          }
+
 
          private boolean isEmpty(){
              if(!mEmpty){
@@ -2171,6 +2172,25 @@
                  return null;
              }
              return qualifier.split("-");
+         }
+         private static boolean isRegionNumber(String qualifier){
+             if(qualifier==null || qualifier.length()==0){
+                 return false;
+             }
+             return qualifier.length() == 3 && isAllDigit(qualifier);
+         }
+         private static boolean isAllDigit(String qualifier){
+             if(qualifier == null || qualifier.length()==0){
+                 return false;
+             }
+             char[] chars = qualifier.toCharArray();
+             for(int i = 0; i < chars.length; i++){
+                 char ch = chars[i];
+                 if(ch > '9' || ch < '0'){
+                     return false;
+                 }
+             }
+             return true;
          }
 
          private static final Pattern PATTERN_PREFIX_NUMBER = Pattern.compile("^([mcnv]+)([0-9]+)$");
