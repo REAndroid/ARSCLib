@@ -35,6 +35,7 @@ class BagDecoderArray<OUTPUT> extends BagDecoder<OUTPUT>{
     public OUTPUT decode(ResTableMapEntry mapEntry, EntryWriter<OUTPUT> writer) throws IOException {
         Entry entry = mapEntry.getParentEntry();
         String tag = getTagName(mapEntry);
+        writer.enableIndent(true);
         writer.startTag(tag);
         writer.attribute("name", entry.getName());
 
@@ -45,6 +46,7 @@ class BagDecoderArray<OUTPUT> extends BagDecoder<OUTPUT>{
         for(int i = 0; i < resValueMaps.length; i++){
             ResValueMap valueMap = resValueMaps[i];
             String childTag = "item";
+            writer.enableIndent(true);
             writer.startTag(childTag);
             if(zero_name){
                 String name = ValueDecoder.decodeAttributeName(

@@ -25,4 +25,5 @@ public interface EntryWriter<T>{
     T text(String text) throws IOException;
     void comment(String comment) throws IOException;
     void flush() throws IOException;
+    void enableIndent(boolean enable);
 }

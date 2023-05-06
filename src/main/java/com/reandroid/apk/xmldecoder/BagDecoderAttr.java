@@ -35,6 +35,7 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
     public OUTPUT decode(ResTableMapEntry mapEntry, EntryWriter<OUTPUT> writer) throws IOException {
         Entry entry = mapEntry.getParentEntry();
         String tag = XmlHelper.toXMLTagName(entry.getTypeName());
+        writer.enableIndent(true);
         writer.startTag(tag);
         writer.attribute("name", entry.getName());
         AttributeBag attributeBag = AttributeBag.create(mapEntry.getValue());
@@ -52,6 +53,7 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
             if(item.isType()){
                 continue;
             }
+            writer.enableIndent(true);
             writer.startTag(childTag);
 
             String name = item.getNameOrHex(entryStore);

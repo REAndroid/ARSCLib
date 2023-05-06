@@ -34,14 +34,26 @@ public class XMLDecodeHelper {
             String xml = stringItem.getXml();
             XMLElement element = parseSpanSafe(xml);
             if(element != null){
-                writeElement(writer, element);
+                writeParsedSpannable(writer, element);
             }else {
                 // TODO: throw or investigate the reason
                 writer.text(xml);
             }
         }
     }
-    public static void writeElement(EntryWriter<?> writer, XMLElement element) throws IOException {
+    public static void writeParsedSpannable(EntryWriter<?> writer, XMLElement spannableParent) throws IOException {
+        for(XMLNode xmlNode : spannableParent.getChildNodes()){
+            if(xmlNode instanceof XMLText){
+                String text = ((XMLText)xmlNode).getText(false);
+                writer.enableIndent(false);
+                writer.text(ValueDecoder.escapeSpecialCharacter(text));
+            }else if(xmlNode instanceof XMLElement){
+                writeElement(writer, (XMLElement) xmlNode);
+            }
+        }
+    }
+    private static void writeElement(EntryWriter<?> writer, XMLElement element) throws IOException {
+        writer.enableIndent(false);
         writer.startTag(element.getTagName());
         for(XMLAttribute xmlAttribute : element.listAttributes()){
             writer.attribute(xmlAttribute.getName(),

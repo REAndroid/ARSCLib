@@ -31,11 +31,15 @@ public class EntryWriterSerializer implements EntryWriter<XmlSerializer> {
 
     @Override
     public void setFeature(String name, Object value) {
+        if(value == null){
+            value = false;
+        }else if(!(value instanceof Boolean)){
+            return;
+        }
         xmlSerializer.setFeature(name, (Boolean)value);
     }
     @Override
     public XmlSerializer startTag(String name) throws IOException {
-        xmlSerializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
         return xmlSerializer.startTag(null, name);
     }
     @Override
@@ -58,4 +62,10 @@ public class EntryWriterSerializer implements EntryWriter<XmlSerializer> {
     public void flush() throws IOException {
         xmlSerializer.flush();
     }
+    @Override
+    public void enableIndent(boolean enable){
+        setFeature(FEATURE_INDENT, enable);
+    }
+
+    private static final String FEATURE_INDENT = "http://xmlpull.org/v1/doc/features.html#indent-output";
 }

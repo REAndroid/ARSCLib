@@ -30,6 +30,7 @@ public class DecoderResTableEntry<OUTPUT> extends DecoderTableEntry<ResTableEntr
     public OUTPUT decode(ResTableEntry tableEntry, EntryWriter<OUTPUT> writer) throws IOException{
         Entry entry = tableEntry.getParentEntry();
         String tag = XmlHelper.toXMLTagName(entry.getTypeName());
+        writer.enableIndent(true);
         writer.startTag(tag);
         writer.attribute("name", entry.getName());
         if(!isId(tag)){

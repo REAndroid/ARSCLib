@@ -23,6 +23,7 @@ import java.io.IOException;
 public class EntryWriterElement implements EntryWriter<XMLElement> {
     private XMLElement mCurrentElement;
     private XMLElement mResult;
+    private boolean mEnableIndent;
 
     public EntryWriterElement(){
     }
@@ -32,6 +33,14 @@ public class EntryWriterElement implements EntryWriter<XMLElement> {
     }
     @Override
     public void setFeature(String name, Object value) {
+        if(!FEATURE_INDENT.equals(name)){
+            return;
+        }
+        boolean state = false;
+        if(value instanceof Boolean){
+            state = (Boolean)value;
+        }
+        mEnableIndent = state;
     }
     @Override
     public XMLElement startTag(String name) throws IOException {
@@ -43,6 +52,13 @@ public class EntryWriterElement implements EntryWriter<XMLElement> {
             mResult = null;
         }
         mCurrentElement = xmlElement;
+        if(mEnableIndent){
+            xmlElement.setIndent(2);
+            xmlElement.setIndentScale(1.0f);
+        }else {
+            xmlElement.setIndent(0);
+            xmlElement.setIndentScale(0.0f);
+        }
         return xmlElement;
     }
     @Override
@@ -83,4 +99,10 @@ public class EntryWriterElement implements EntryWriter<XMLElement> {
     @Override
     public void flush() throws IOException {
     }
+    @Override
+    public void enableIndent(boolean enable){
+        setFeature(FEATURE_INDENT, enable);
+    }
+
+    private static final String FEATURE_INDENT = "http://xmlpull.org/v1/doc/features.html#indent-output";
 }

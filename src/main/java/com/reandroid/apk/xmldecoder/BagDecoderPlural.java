@@ -34,6 +34,7 @@ class BagDecoderPlural<OUTPUT> extends BagDecoder<OUTPUT>{
     public OUTPUT decode(ResTableMapEntry mapEntry, EntryWriter<OUTPUT> writer) throws IOException {
         Entry entry = mapEntry.getParentEntry();
         String tag = XmlHelper.toXMLTagName(entry.getTypeName());
+        writer.enableIndent(true);
         writer.startTag(tag);
         writer.attribute("name", entry.getName());
 
@@ -42,6 +43,7 @@ class BagDecoderPlural<OUTPUT> extends BagDecoder<OUTPUT>{
         for(int i=0; i < resValueMaps.length; i++){
             ResValueMap valueMap = resValueMaps[i];
             String childTag = "item";
+            writer.enableIndent(true);
             writer.startTag(childTag);
 
             PluralsQuantity quantity =
