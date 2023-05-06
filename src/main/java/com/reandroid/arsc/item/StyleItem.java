@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@ package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.model.StyleSpanInfo;
+import com.reandroid.arsc.model.StyledStringBuilder;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
@@ -268,84 +269,10 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
     }
 
     public String applyHtml(String str, boolean xml){
-        if(str==null){
+        if(str == null){
             return null;
         }
-        List<StyleSpanInfo> spanInfoList = getSpanInfoList();
-        if(isEmpty(spanInfoList)){
-            return str;
-        }
-        StringBuilder builder=new StringBuilder();
-        char[] allChars=str.toCharArray();
-        int max=allChars.length;
-        for(int i=0;i<max;i++){
-            char ch=allChars[i];
-            boolean lastAppend=false;
-            for(StyleSpanInfo info:spanInfoList){
-                if(info==null){
-                    continue;
-                }
-                boolean isLast=(info.getLast()==i);
-                if(info.getFirst()==i || isLast){
-                    if(isLast){
-                        builder.append(info.getEndTag());
-                    }
-                    if(isLast && !lastAppend){
-                        builder.append(ch);
-                        lastAppend=true;
-                    }
-                    if(!isLast) {
-                        builder.append(info.getStartTag(xml));
-                    }
-                }
-            }
-            if(!lastAppend){
-                if(xml){
-                    if(isWildXml(ch) && !isEntity(allChars, i)){
-                        if(ch=='>'){
-                            builder.append("&gt;");
-                        }else if(ch=='<'){
-                            builder.append("&lt;");
-                        }else if(ch=='&'){
-                            builder.append("&amp;");
-                        }
-                        continue;
-                    }
-                }
-                builder.append(ch);
-            }
-        }
-        return builder.toString();
-    }
-    private boolean isWildXml(char ch){
-        switch (ch){
-            case '&':
-            case '<':
-            case '>':
-                return true;
-            default:
-                return false;
-        }
-    }
-    private boolean isEntity(char[] chars, int offset){
-        if((offset+4)>=chars.length){
-            return false;
-        }
-        return chars[offset]=='a'
-                && chars[offset+1]=='m'
-                && chars[offset+2]=='p'
-                && chars[offset+3]==';';
-    }
-    private boolean isEmpty(List<StyleSpanInfo> spanInfoList){
-        if(spanInfoList.size()==0){
-            return true;
-        }
-        for(StyleSpanInfo spanInfo:spanInfoList){
-            if(spanInfo!=null){
-                return false;
-            }
-        }
-        return true;
+        return StyledStringBuilder.build(str, getSpanInfoList(), xml);
     }
     @Override
     public void setNull(boolean is_null){
