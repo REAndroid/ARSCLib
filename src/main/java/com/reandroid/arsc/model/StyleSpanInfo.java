@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -85,6 +85,9 @@ public class StyleSpanInfo implements JSONConvert<JSONObject> {
 
     public String getEndTag(){
         int i= mTag.indexOf(';');
+        if(i < 0){
+            i = mTag.indexOf(' ');
+        }
         StringBuilder builder=new StringBuilder();
         builder.append('<');
         builder.append('/');
