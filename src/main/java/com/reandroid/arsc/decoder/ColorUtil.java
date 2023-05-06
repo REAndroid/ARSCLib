@@ -15,7 +15,6 @@
  */
 package com.reandroid.arsc.decoder;
 
-import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.ValueType;
 
 public class ColorUtil {
@@ -24,25 +23,42 @@ public class ColorUtil {
         if(valueType == null){
             return null;
         }
-        int index;
+        StringBuilder builder = new StringBuilder();
+        builder.append('#');
         switch (valueType){
             case INT_COLOR_RGB4:
-                index = 5;
+                builder.append(byteToHex(data >> 16));
+                builder.append(byteToHex(data >> 8));
+                builder.append(byteToHex(data));
                 break;
             case INT_COLOR_ARGB4:
-                index = 4;
+                builder.append(byteToHex(data >> 24));
+                builder.append(byteToHex(data >> 16));
+                builder.append(byteToHex(data >> 8));
+                builder.append(byteToHex(data));
                 break;
             case INT_COLOR_RGB8:
-                index = 2;
+                builder.append(byteToHex(data >> 20));
+                builder.append(byteToHex(data >> 16));
+                builder.append(byteToHex(data >> 12));
+                builder.append(byteToHex(data >> 8));
+                builder.append(byteToHex(data >> 4));
+                builder.append(byteToHex(data));
                 break;
             case INT_COLOR_ARGB8:
-                index = 0;
+                builder.append(byteToHex(data >> 28));
+                builder.append(byteToHex(data >> 24));
+                builder.append(byteToHex(data >> 20));
+                builder.append(byteToHex(data >> 16));
+                builder.append(byteToHex(data >> 12));
+                builder.append(byteToHex(data >> 8));
+                builder.append(byteToHex(data >> 4));
+                builder.append(byteToHex(data));
                 break;
             default:
                 return null;
         }
-        String hex = HexUtil.toHexNoPrefix8(data);
-        return "#" + hex.substring(index);
+        return builder.toString();
     }
     public static ValueDecoder.EncodeResult encode(String hexColor){
         int[] values = hexToIntegers(hexColor);
@@ -56,11 +72,11 @@ public class ColorUtil {
         if (len == 4) {
             valueType = ValueType.INT_COLOR_RGB4;
             color |= 0xFF000000;
-            color |= values[1] << 20;
-            color |= values[1] << 16;
-            color |= values[2] << 12;
-            color |= values[2] << 8;
-            color |= values[3] << 4;
+            color |= (values[1] << 20);
+            color |= (values[1] << 16);
+            color |= (values[2] << 12);
+            color |= (values[2] << 8);
+            color |= (values[3] << 4);
             color |= values[3];
         } else if (len == 5) {
             valueType = ValueType.INT_COLOR_ARGB4;
@@ -95,6 +111,14 @@ public class ColorUtil {
             return null;
         }
         return new ValueDecoder.EncodeResult(valueType, color);
+    }
+    private static char byteToHex(int i){
+        i = i & 0xf;
+        if(i < 0xa){
+            return (char) ('0' + i);
+        }
+        i = i - 0xa;
+        return (char) ('a' + i);
     }
     private static int[] hexToIntegers(String hexColor){
         if(hexColor == null){
