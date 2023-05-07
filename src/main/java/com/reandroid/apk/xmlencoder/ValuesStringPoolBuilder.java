@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -158,7 +158,9 @@ import java.util.*;
             addStyleElement(element);
         }else {
             String text = ValueDecoder
-                    .unEscapeSpecialCharacter(element.getTextContent());
+                    .unQuoteWhitespace(element.getTextContent());
+            text = ValueDecoder
+                    .unEscapeSpecialCharacter(text);
             addString(text);
         }
     }

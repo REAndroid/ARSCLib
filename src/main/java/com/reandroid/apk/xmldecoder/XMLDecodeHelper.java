@@ -29,7 +29,10 @@ public class XMLDecodeHelper {
             return;
         }
         if(!stringItem.hasStyle()){
-            writer.text(ValueDecoder.escapeSpecialCharacter(stringItem.get()));
+            String text = stringItem.get();
+            text = ValueDecoder.escapeSpecialCharacter(text);
+            text = ValueDecoder.quoteWhitespace(text);
+            writer.text(text);
         }else {
             String xml = stringItem.getXml();
             XMLElement element = parseSpanSafe(xml);

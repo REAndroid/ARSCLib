@@ -25,7 +25,6 @@ class XMLValuesEncoderString extends XMLValuesEncoder{
         super(materials);
     }
 
-
     @Override
     void encodeValue(Entry entry, XMLElement element){
         if(!element.hasChildElements()){
@@ -36,7 +35,9 @@ class XMLValuesEncoderString extends XMLValuesEncoder{
     }
     @Override
     void encodeStringValue(Entry entry, String value){
-        entry.setValueAsString(ValueDecoder.unEscapeSpecialCharacter(value));
+        value = ValueDecoder.unQuoteWhitespace(value);
+        value = ValueDecoder.unEscapeSpecialCharacter(value);
+        entry.setValueAsString(value);
     }
     @Override
     void encodeNullValue(Entry entry){

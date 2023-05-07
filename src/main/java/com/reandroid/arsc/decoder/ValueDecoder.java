@@ -50,6 +50,48 @@ public class ValueDecoder {
         }
         return text.substring(1);
     }
+    public static String quoteWhitespace(String text){
+        if(!isWhiteSpace(text)){
+            return text;
+        }
+        return "\"" + text + "\"";
+    }
+    public static String unQuoteWhitespace(String text){
+        if(text == null || text.length() < 3){
+            return text;
+        }
+        if(text.charAt(0) != '"' || text.charAt(text.length()-1) != '"'){
+            return text;
+        }
+        String unQuoted = text.substring(1, text.length()-1);
+        if(!isWhiteSpace(unQuoted)){
+            return text;
+        }
+        return unQuoted;
+    }
+    private static boolean isWhiteSpace(String text){
+        if(text == null || text.length() == 0){
+            return false;
+        }
+        char[] chars = text.toCharArray();
+        for(int i = 0; i < chars.length; i++){
+            if(!isWhiteSpace(chars[i])){
+                return false;
+            }
+        }
+        return true;
+    }
+    private static boolean isWhiteSpace(char ch){
+        switch (ch){
+            case ' ':
+            case '\n':
+            case '\r':
+            case '\t':
+                return true;
+            default:
+                return false;
+        }
+    }
     private static boolean isSpecialCharacter(char ch){
         switch (ch){
             case '@':
