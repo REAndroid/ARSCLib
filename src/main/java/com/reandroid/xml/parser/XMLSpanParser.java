@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,7 +45,7 @@ public class XMLSpanParser {
         StringReader reader=new StringReader(text);
         this.mParser.setInput(reader);
         int type;
-        while ((type=mParser.nextToken()) !=XmlPullParser.END_DOCUMENT){
+        while ((type=mParser.next()) !=XmlPullParser.END_DOCUMENT){
             event(type);
         }
     }
@@ -57,6 +57,10 @@ public class XMLSpanParser {
         }else if (type == XmlPullParser.END_TAG){
             onEndTag();
         }else if (type == XmlPullParser.TEXT){
+            onText();
+        }else if (type == XmlPullParser.ENTITY_REF){
+            onEntityRef();
+        }else if (type == XmlPullParser.IGNORABLE_WHITESPACE){
             onText();
         }
     }
@@ -94,6 +98,22 @@ public class XMLSpanParser {
         if(text!=null && text.length()>0){
             mCurrentElement.addText(new XMLText(text));
         }
+    }
+    private void onEntityRef() {
+        String text = getEntity(mParser.getName());
+        mCurrentElement.addText(new XMLText(text));
+    }
+    private String getEntity(String name){
+        if("amp".equals(name)){
+            return "&";
+        }
+        if("lt".equals(name)){
+            return "<";
+        }
+        if("gt".equals(name)){
+            return ">";
+        }
+        return name;
     }
     private void onStartDocument() {
         this.mCurrentElement=null;

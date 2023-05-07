@@ -47,7 +47,7 @@ public class XMLDecodeHelper {
     public static void writeParsedSpannable(EntryWriter<?> writer, XMLElement spannableParent) throws IOException {
         for(XMLNode xmlNode : spannableParent.getChildNodes()){
             if(xmlNode instanceof XMLText){
-                String text = ((XMLText)xmlNode).getText(false);
+                String text = ((XMLText)xmlNode).getText(true);
                 writer.enableIndent(false);
                 writer.text(ValueDecoder.escapeSpecialCharacter(text));
             }else if(xmlNode instanceof XMLElement){
@@ -59,13 +59,12 @@ public class XMLDecodeHelper {
         writer.enableIndent(false);
         writer.startTag(element.getTagName());
         for(XMLAttribute xmlAttribute : element.listAttributes()){
-            writer.attribute(xmlAttribute.getName(),
-                    ValueDecoder.escapeSpecialCharacter(xmlAttribute.getValue()));
+            writer.attribute(xmlAttribute.getName(), xmlAttribute.getValue());
         }
         for(XMLNode xmlNode : element.getChildNodes()){
             if(xmlNode instanceof XMLText){
-                String text = ((XMLText)xmlNode).getText(false);
-                writer.text(ValueDecoder.escapeSpecialCharacter(text));
+                String text = ((XMLText)xmlNode).getText(true);
+                writer.text(text);
             }else if(xmlNode instanceof XMLElement){
                 writeElement(writer, (XMLElement) xmlNode);
             }
