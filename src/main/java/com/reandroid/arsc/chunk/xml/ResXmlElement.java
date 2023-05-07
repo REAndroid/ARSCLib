@@ -110,7 +110,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         return null;
     }
-    public String getEndComment(){
+    String getEndComment(){
         ResXmlEndElement end = getEndElement();
         if(end!=null){
             return end.getComment();
@@ -143,36 +143,30 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public ResXmlAttribute newAttribute(){
         return getStartElement().newAttribute();
     }
+    @Override
     void onRemoved(){
         for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
             startNamespace.onRemoved();
         }
         ResXmlStartElement start = getStartElement();
-        if(start!=null){
+        if(start != null){
             start.onRemoved();
         }
-        ResXmlText resXmlText=getResXmlText();
-        if(resXmlText!=null){
-            resXmlText.onRemoved();
-        }
-        for(ResXmlElement child:listElements()){
-            child.onRemoved();
+        for(ResXmlNode xmlNode : listXmlNodes()){
+            xmlNode.onRemoved();
         }
     }
+    @Override
     void linkStringReferences(){
         for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
             startNamespace.linkStringReferences();
         }
         ResXmlStartElement start = getStartElement();
-        if(start!=null){
+        if(start != null){
             start.linkStringReferences();
         }
-        ResXmlText resXmlText=getResXmlText();
-        if(resXmlText!=null){
-            resXmlText.linkStringReferences();
-        }
-        for(ResXmlElement child:listElements()){
-            child.linkStringReferences();
+        for(ResXmlNode xmlNode : getXmlNodes()){
+            xmlNode.linkStringReferences();
         }
     }
     public ResXmlElement createChildElement(){
@@ -355,13 +349,11 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
 
     @Override
     public int getDepth(){
-        int depth = 0;
         ResXmlElement parent = getParentResXmlElement();
-        while (parent!=null){
-            depth++;
-            parent = parent.getParentResXmlElement();
+        if(parent != null){
+            return parent.getDepth() + 1;
         }
-        return depth;
+        return 0;
     }
     @Override
     void addEvents(ParserEventList parserEventList){
@@ -423,7 +415,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             if(xmlNode==null){
                 continue;
             }
-            xmlNode.onRemove();
+            xmlNode.onRemoved();
             mBody.remove(xmlNode);
         }
     }
@@ -432,6 +424,22 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     }
     public int countResXmlNodes(){
         return mBody.size();
+    }
+    public boolean hasText(){
+        for(ResXmlNode xmlNode : getXmlNodes()){
+            if(xmlNode instanceof ResXmlTextNode){
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean hasElement(){
+        for(ResXmlNode xmlNode : getXmlNodes()){
+            if(xmlNode instanceof ResXmlElement){
+                return true;
+            }
+        }
+        return false;
     }
     public List<ResXmlNode> listXmlNodes(){
         return new ArrayList<>(getXmlNodes());
@@ -479,8 +487,8 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return results;
     }
     public ResXmlElement getRootResXmlElement(){
-        ResXmlElement parent=getParentResXmlElement();
-        if(parent!=null){
+        ResXmlElement parent = getParentResXmlElement();
+        if(parent != null){
             return parent.getRootResXmlElement();
         }
         return this;
@@ -503,13 +511,31 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         return null;
     }
+    public ResXmlStartNamespace getNamespace(String uri, String prefix){
+        if(uri == null || prefix == null){
+            return null;
+        }
+        for(ResXmlStartNamespace ns : mStartNamespaceList.getChildes()){
+            if(uri.equals(ns.getUri()) && prefix.equals(ns.getPrefix())){
+                return ns;
+            }
+        }
+        ResXmlElement xmlElement = getParentResXmlElement();
+        if(xmlElement != null){
+            return xmlElement.getNamespace(uri, prefix);
+        }
+        return null;
+    }
     public ResXmlStartNamespace getOrCreateNamespace(String uri, String prefix){
-        ResXmlStartNamespace exist=getStartNamespaceByUri(uri);
-        if(exist!=null){
+        ResXmlStartNamespace exist = getNamespace(uri, prefix);
+        if(exist != null){
             return exist;
         }
-        ResXmlStartNamespace startNamespace=new ResXmlStartNamespace();
-        ResXmlEndNamespace endNamespace=new ResXmlEndNamespace();
+        return getRootResXmlElement().createNamespace(uri, prefix);
+    }
+    public ResXmlStartNamespace createNamespace(String uri, String prefix){
+        ResXmlStartNamespace startNamespace = new ResXmlStartNamespace();
+        ResXmlEndNamespace endNamespace = new ResXmlEndNamespace();
         startNamespace.setEnd(endNamespace);
 
         addStartNamespace(startNamespace);
@@ -562,7 +588,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public void addStartNamespace(ResXmlStartNamespace item){
         mStartNamespaceList.add(item);
     }
-    public List<ResXmlEndNamespace> getEndNamespaceList(){
+    private List<ResXmlEndNamespace> getEndNamespaceList(){
         return mEndNamespaceList.getChildes();
     }
     public void addEndNamespace(ResXmlEndNamespace item){
@@ -596,26 +622,17 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public ResXmlStartElement getStartElement(){
         return mStartElementContainer.getItem();
     }
-    public void setStartElement(ResXmlStartElement item){
+    private void setStartElement(ResXmlStartElement item){
         mStartElementContainer.setItem(item);
     }
 
-    public ResXmlEndElement getEndElement(){
+    private ResXmlEndElement getEndElement(){
         return mEndElementContainer.getItem();
     }
-    public void setEndElement(ResXmlEndElement item){
+    private void setEndElement(ResXmlEndElement item){
         mEndElementContainer.setItem(item);
     }
 
-    // Use listXmlText() instead to be removed on next version
-    @Deprecated
-    public ResXmlText getResXmlText(){
-        List<ResXmlText> xmlTextList=listXmlText();
-        if(xmlTextList.size()==0){
-            return null;
-        }
-        return xmlTextList.get(0);
-    }
     public void addResXmlTextNode(ResXmlTextNode xmlTextNode){
         mBody.add(xmlTextNode);
     }
@@ -623,16 +640,6 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(xmlText!=null){
             addResXmlTextNode(new ResXmlTextNode(xmlText));
         }
-    }
-    // Use addResXmlText()
-    @Deprecated
-    public void setResXmlText(ResXmlText xmlText){
-        addResXmlText(xmlText);
-    }
-    @Deprecated
-    public void setResXmlText(String text){
-        clearChildes();
-        addResXmlText(text);
     }
     public void addResXmlText(String text){
         if(text==null){
@@ -995,13 +1002,14 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public String toString(){
         ResXmlStartElement start = getStartElement();
         if(start!=null){
-            ResXmlText text=getResXmlText();
             StringBuilder builder=new StringBuilder();
             builder.append("<");
             builder.append(start.toString());
-            if(text!=null){
+            if(hasText() && !hasElement()){
                 builder.append(">");
-                builder.append(text.toString());
+                for(ResXmlText xmlText : listXmlText()){
+                    builder.append(xmlText.getText());
+                }
                 builder.append("</");
                 builder.append(start.getTagName());
                 builder.append(">");

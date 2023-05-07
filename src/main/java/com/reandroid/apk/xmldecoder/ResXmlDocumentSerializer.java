@@ -121,8 +121,7 @@ public class ResXmlDocumentSerializer implements ResXmlPullParser.DocumentLoaded
         if(!validateXmlNamespace){
             return resXmlDocument;
         }
-        XMLNamespaceValidator namespaceValidator = new XMLNamespaceValidator(resXmlDocument);
-        namespaceValidator.validate();
+        XMLNamespaceValidator.validateNamespaces(resXmlDocument);
         return resXmlDocument;
     }
     private IOException getError(Exception exception){

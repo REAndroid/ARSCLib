@@ -211,8 +211,7 @@ public class ApkModuleXmlDecoder extends ApkDecoder implements Predicate<Entry> 
     }
     private void serializeXml(int currentPackageId, ResXmlDocument document, File outFile)
             throws IOException {
-        XMLNamespaceValidator namespaceValidator = new XMLNamespaceValidator(document);
-        namespaceValidator.validate();
+        XMLNamespaceValidator.validateNamespaces(document);
         ResXmlDocumentSerializer serializer = getDocumentSerializer();
         if(currentPackageId != 0){
             serializer.getDecoder().setCurrentPackageId(currentPackageId);

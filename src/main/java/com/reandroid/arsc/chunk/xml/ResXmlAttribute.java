@@ -184,6 +184,18 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
     int getNamespaceReference(){
         return getInteger(getBytesInternal(), OFFSET_NS);
     }
+    public void setNamespace(String uri, String prefix){
+        if(uri == null || prefix == null){
+            setNamespaceReference(-1);
+            return;
+        }
+        ResXmlElement parentElement = getParentResXmlElement();
+        if(parentElement == null){
+            return;
+        }
+        ResXmlStartNamespace ns = parentElement.getOrCreateNamespace(uri, prefix);
+        setNamespaceReference(ns.getUriReference());
+    }
     public void setNamespaceReference(int ref){
         if(ref == getNamespaceReference()){
             return;
