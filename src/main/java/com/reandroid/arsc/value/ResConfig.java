@@ -97,8 +97,11 @@ public class ResConfig extends FixedBlockContainer
      * */
     public String[] parseQualifiers(String qualifiers){
         QualifierParser parser = new QualifierParser(this, qualifiers);
-        parser.parse();
-        return parser.getErrors();
+        String[] errors = parser.getErrors();
+        if(errors != null){
+            trimToSize(SIZE_48);
+        }
+        return errors;
     }
     public void setConfigSize(int size){
         if(!isValidSize(size)){
