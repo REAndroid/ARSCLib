@@ -429,11 +429,11 @@ public class ValueDecoder {
             return null;
         }
         TableEntry<?, ?> tableEntry = entry.getTableEntry();
-        if(tableEntry == null || (tableEntry instanceof ResTableMapEntry)){
+        if(tableEntry == null || (tableEntry instanceof CompoundEntry)){
             return null;
         }
-        ResValue resValue =(ResValue) tableEntry.getValue();
-        int resourceId= resValue.getData();
+        ResValue resValue = (ResValue) tableEntry.getValue();
+        int resourceId = resValue.getData();
         ValueType valueType= resValue.getValueType();
         return buildReferenceValue(store, entry, valueType, resourceId);
     }

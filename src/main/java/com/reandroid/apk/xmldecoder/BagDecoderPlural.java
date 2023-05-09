@@ -17,11 +17,9 @@ package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.apk.XmlHelper;
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.decoder.ValueDecoder;
 import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.plurals.PluralsQuantity;
 import com.reandroid.common.EntryStore;
-import com.reandroid.xml.XMLElement;
 
 import java.io.IOException;
 
@@ -46,12 +44,11 @@ class BagDecoderPlural<OUTPUT> extends BagDecoder<OUTPUT>{
             writer.enableIndent(true);
             writer.startTag(childTag);
 
-            PluralsQuantity quantity =
-                    PluralsQuantity.valueOf((short) (valueMap.getName() & 0xffff));
-            if(quantity == null){
+            AttributeType quantity = valueMap.getAttributeType();
+            if(quantity == null || !quantity.isPlural()){
                 throw new IOException("Unknown plural quantity: " + valueMap);
             }
-            writer.attribute("quantity", quantity.toString());
+            writer.attribute("quantity", quantity.getName());
 
             writeText(writer, packageBlock, valueMap);
 

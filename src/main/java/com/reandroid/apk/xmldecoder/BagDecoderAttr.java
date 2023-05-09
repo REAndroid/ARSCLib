@@ -16,10 +16,9 @@
 package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.apk.XmlHelper;
+import com.reandroid.arsc.array.CompoundItemArray;
 import com.reandroid.arsc.util.HexUtil;
-import com.reandroid.arsc.value.Entry;
-import com.reandroid.arsc.value.ResTableMapEntry;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.arsc.value.attribute.AttributeBagItem;
 import com.reandroid.common.EntryStore;
@@ -39,16 +38,18 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
         writer.startTag(tag);
         writer.attribute("name", entry.getName());
         AttributeBag attributeBag = AttributeBag.create(mapEntry.getValue());
-        writeParentAttributes(writer, attributeBag);
+        writeParentAttributes(writer, mapEntry.getValue());
+        ResValueMap formatsMap = mapEntry.getByType(AttributeType.FORMATS);
 
-        boolean is_flag = attributeBag.isFlag();
+        boolean is_flag = AttributeTypeFormat.FLAG.matches(formatsMap.getData());
+
         String childTag = is_flag ? "flag" : "enum";
 
         AttributeBagItem[] bagItems = attributeBag.getBagItems();
 
         EntryStore entryStore = getEntryStore();
 
-        for(int i=0;i< bagItems.length;i++){
+        for(int i = 0; i < bagItems.length; i++){
             AttributeBagItem item = bagItems[i];
             if(item.isType()){
                 continue;
@@ -63,7 +64,7 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
             if(item.getBagItem().getValueType() == ValueType.INT_HEX){
                 value = HexUtil.toHex8(rawVal);
             }else {
-                value = String.valueOf(rawVal);
+                value = Integer.toString(rawVal);
             }
             writer.text(value);
 
@@ -72,6 +73,24 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
         return writer.endTag(tag);
     }
 
+    private void writeParentAttributes(EntryWriter<OUTPUT> writer, CompoundItemArray<? extends ResValueMap> itemArray) throws IOException {
+        String formats =  AttributeTypeFormat.toString(itemArray.getFormats());
+        if(formats!=null){
+            writer.attribute(AttributeType.FORMATS.getName(), formats);
+        }
+        ResValueMap item = itemArray.getByType(AttributeType.MIN);
+        if(item != null){
+            writer.attribute(AttributeType.MIN.getName(), Integer.toString(item.getData()));
+        }
+        item = itemArray.getByType(AttributeType.MAX);
+        if(item != null){
+            writer.attribute(AttributeType.MAX.getName(), Integer.toString(item.getData()));
+        }
+        item = itemArray.getByType(AttributeType.L10N);;
+        if(item != null){
+            writer.attribute(AttributeType.L10N.getName(), Integer.toString(item.getData()));
+        }
+    }
     private void writeParentAttributes(EntryWriter<OUTPUT> writer, AttributeBag attributeBag) throws IOException {
         String formats=  attributeBag.decodeValueType();
         if(formats!=null){

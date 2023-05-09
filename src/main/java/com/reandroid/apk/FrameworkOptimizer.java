@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -258,7 +258,7 @@ import java.util.zip.ZipEntry;
             return false;
         }
         TableEntry<?, ?> tableEntry = entry.getTableEntry();
-        if(tableEntry instanceof ResTableMapEntry){
+        if(tableEntry instanceof CompoundEntry){
             return false;
         }
         if(!(tableEntry instanceof ResTableEntry)){

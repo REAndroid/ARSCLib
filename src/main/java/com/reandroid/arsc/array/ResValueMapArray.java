@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,23 +15,11 @@
   */
 package com.reandroid.arsc.array;
 
-import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.value.ResValueMap;
-import com.reandroid.json.JSONConvert;
-import com.reandroid.json.JSONArray;
 
-public class ResValueMapArray extends BlockArray<ResValueMap> implements JSONConvert<JSONArray> {
+public class ResValueMapArray extends CompoundItemArray<ResValueMap> {
     public ResValueMapArray(){
         super();
-    }
-
-    public ResValueMap getByName(int name){
-        for(ResValueMap resValueMap:listItems()){
-            if(resValueMap != null &&name == resValueMap.getName()){
-                return resValueMap;
-            }
-        }
-        return null;
     }
     @Override
     public ResValueMap newInstance() {
@@ -41,56 +29,5 @@ public class ResValueMapArray extends BlockArray<ResValueMap> implements JSONCon
     @Override
     public ResValueMap[] newInstance(int len) {
         return new ResValueMap[len];
-    }
-
-    @Override
-    protected void onRefreshed() {
-    }
-    public void onRemoved(){
-        for(ResValueMap resValueMap:listItems()){
-            resValueMap.onRemoved();
-        }
-    }
-    @Override
-    public void clearChildes(){
-        this.onRemoved();
-        super.clearChildes();
-    }
-    @Override
-    public JSONArray toJson() {
-        JSONArray jsonArray=new JSONArray();
-        if(isNull()){
-            return jsonArray;
-        }
-        ResValueMap[] childes = getChildes();
-        for(int i=0;i<childes.length;i++){
-            jsonArray.put(i, childes[i].toJson());
-        }
-        return jsonArray;
-    }
-    @Override
-    public void fromJson(JSONArray json){
-        clearChildes();
-        if(json==null){
-            return;
-        }
-        int count=json.length();
-        ensureSize(count);
-        for(int i=0;i<count;i++){
-            get(i).fromJson(json.getJSONObject(i));
-        }
-    }
-    public void merge(ResValueMapArray bagItemArray){
-        if(bagItemArray==null||bagItemArray==this){
-            return;
-        }
-        clearChildes();
-        int count=bagItemArray.childesCount();
-        ensureSize(count);
-        for(int i=0;i<count;i++){
-            ResValueMap coming=bagItemArray.get(i);
-            ResValueMap exist=get(i);
-            exist.merge(coming);
-        }
     }
 }

@@ -302,7 +302,7 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
     }
 
     public boolean isComplex(){
-        return getTableEntry() instanceof ResTableMapEntry;
+        return getTableEntry() instanceof CompoundEntry;
     }
     public void setTableEntry(TableEntry<?, ?> tableEntry){
         if(tableEntry==this.mTableEntry){

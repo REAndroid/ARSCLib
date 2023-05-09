@@ -16,47 +16,10 @@
 package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.array.ResValueMapArray;
-import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.json.JSONObject;
 
-public class ResTableMapEntry extends TableEntry<EntryHeaderMap, ResValueMapArray> {
+public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArray> {
     public ResTableMapEntry(){
-        super(new EntryHeaderMap(), new ResValueMapArray());
-    }
-    public void refresh(){
-        getHeader().setValuesCount(getValue().childesCount());
-    }
-    public ResValueMap[] listResValueMap(){
-        return getValue().getChildes();
-    }
-    public int getParentId(){
-        return getHeader().getParentId();
-    }
-    public void setParentId(int parentId){
-        getHeader().setParentId(parentId);
-    }
-    public int getValuesCount(){
-        return getHeader().getValuesCount();
-    }
-    public void setValuesCount(int valuesCount){
-        getHeader().setValuesCount(valuesCount);
-        getValue().setChildesCount(valuesCount);
-    }
-    @Override
-    void linkTableStringsInternal(TableStringPool tableStringPool){
-        for(ResValueMap resValueMap : listResValueMap()){
-            resValueMap.linkTableStrings(tableStringPool);
-        }
-    }
-    @Override
-    void onHeaderLoaded(ValueHeader valueHeader){
-        getValue().setChildesCount(getValuesCount());
-    }
-
-    @Override
-    void onRemoved(){
-        getHeader().onRemoved();
-        getValue().onRemoved();
+        super(new ResValueMapArray());
     }
     @Override
     boolean shouldMerge(TableEntry<?, ?> tableEntry){
@@ -80,42 +43,4 @@ public class ResTableMapEntry extends TableEntry<EntryHeaderMap, ResValueMapArra
         getValue().merge(coming.getValue());
         refresh();
     }
-    @Override
-    public JSONObject toJson() {
-        JSONObject jsonObject = new JSONObject();
-        getHeader().toJson(jsonObject);
-        jsonObject.put(NAME_values, getValue().toJson());
-        return jsonObject;
-    }
-    @Override
-    public void fromJson(JSONObject json) {
-        getHeader().fromJson(json);
-        getValue().fromJson(json.optJSONArray(NAME_values));
-        refresh();
-    }
-
-    @Override
-    public String toString(){
-        StringBuilder builder = new StringBuilder();
-        builder.append(getHeader());
-        ResValueMap[] valueMaps = listResValueMap();
-        int len = valueMaps.length;
-        int max = len;
-        if(max>4){
-            max = 4;
-        }
-        for(int i=0;i<max;i++){
-            builder.append("\n    ");
-            builder.append(valueMaps[i]);
-        }
-        if(len>0){
-            if(max!=len){
-                builder.append("\n    ...");
-            }
-            builder.append("\n   ");
-        }
-        return builder.toString();
-    }
-
-    public static final String NAME_values = "values";
 }

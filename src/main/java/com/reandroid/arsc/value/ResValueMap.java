@@ -26,6 +26,22 @@ public class ResValueMap extends ValueItem implements AttributeValue{
         super(12, OFFSET_SIZE);
     }
 
+    public AttributeType getAttributeType(){
+        return AttributeType.valueOf(getNameResourceID());
+    }
+    public void setAttributeType(AttributeType attributeType){
+        setNameResourceID(attributeType.getId());
+    }
+    public AttributeTypeFormat[] getAttributeTypeFormats(){
+        AttributeType attributeType = getAttributeType();
+        if(attributeType != AttributeType.FORMATS){
+            return null;
+        }
+        return AttributeTypeFormat.valuesOf(getData());
+    }
+    public void setAttributeTypeFormats(AttributeTypeFormat[] formats){
+        setData(AttributeTypeFormat.sum(formats));
+    }
     public Entry getEntry(){
         return getParent(Entry.class);
     }
