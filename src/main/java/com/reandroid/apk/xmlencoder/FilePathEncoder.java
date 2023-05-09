@@ -1,35 +1,35 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.apk.xmlencoder;
 
- import com.reandroid.archive.APKArchive;
- import com.reandroid.archive.FileInputSource;
- import com.reandroid.archive.InputSource;
- import com.reandroid.apk.ApkUtil;
- import com.reandroid.apk.UncompressedFiles;
- import com.reandroid.arsc.chunk.PackageBlock;
- import com.reandroid.arsc.chunk.TypeBlock;
- import com.reandroid.arsc.value.Entry;
- import com.reandroid.xml.source.XMLFileSource;
- import com.reandroid.xml.source.XMLSource;
+import com.reandroid.archive.APKArchive;
+import com.reandroid.archive.FileInputSource;
+import com.reandroid.archive.InputSource;
+import com.reandroid.apk.ApkUtil;
+import com.reandroid.apk.UncompressedFiles;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TypeBlock;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.xml.source.XMLFileSource;
+import com.reandroid.xml.source.XMLSource;
 
- import java.io.File;
- import java.util.List;
+import java.io.File;
+import java.util.List;
 
- public class FilePathEncoder {
+public class FilePathEncoder {
     private final EncodeMaterials materials;
     private APKArchive apkArchive;
     private UncompressedFiles uncompressedFiles;
@@ -78,6 +78,9 @@ package com.reandroid.apk.xmlencoder;
         entry.setValueAsString(path);
         entry.setSpecReference(materials.getSpecString(name));
         InputSource inputSource=createInputSource(path, resFile);
+        if(inputSource instanceof XMLEncodeSource){
+            ((XMLEncodeSource)inputSource).setEntry(entry);
+        }
         addInputSource(inputSource);
         return inputSource;
     }

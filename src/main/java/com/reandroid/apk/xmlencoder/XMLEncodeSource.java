@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,9 @@ package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.archive.ByteInputSource;
 import com.reandroid.apk.CrcOutputStream;
+import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.xml.XMLException;
 import com.reandroid.xml.source.XMLSource;
 
@@ -28,11 +30,27 @@ public class XMLEncodeSource extends ByteInputSource {
     private final EncodeMaterials encodeMaterials;
     private final XMLSource xmlSource;
     private ResXmlDocument resXmlDocument;
-    public XMLEncodeSource(EncodeMaterials encodeMaterials, XMLSource xmlSource){
+    private Entry mEntry;
+    public XMLEncodeSource(EncodeMaterials encodeMaterials, XMLSource xmlSource, Entry entry){
         super(new byte[0], xmlSource.getPath());
-        this.encodeMaterials=encodeMaterials;
-        this.xmlSource=xmlSource;
+        this.encodeMaterials = encodeMaterials;
+        this.xmlSource = xmlSource;
+        this.mEntry = entry;
     }
+    public XMLEncodeSource(EncodeMaterials encodeMaterials, XMLSource xmlSource){
+        this(encodeMaterials, xmlSource, null);
+    }
+
+    public XMLSource getXmlSource() {
+        return xmlSource;
+    }
+    public Entry getEntry(){
+        return mEntry;
+    }
+    public void setEntry(Entry entry) {
+        this.mEntry = entry;
+    }
+
     @Override
     public long getLength() throws IOException{
         return getResXmlBlock().countBytes();
@@ -64,13 +82,26 @@ public class XMLEncodeSource extends ByteInputSource {
         try {
             XMLFileEncoder xmlFileEncoder=new XMLFileEncoder(encodeMaterials);
             xmlFileEncoder.setCurrentPath(xmlSource.getPath());
-            encodeMaterials.logVerbose("Encoding xml: "+xmlSource.getPath());
+            EncodeMaterials encodeMaterials = this.encodeMaterials;
+            encodeMaterials.logVerbose("Encoding xml: " + xmlSource.getPath());
+            PackageBlock currentPackage = encodeMaterials.getCurrentPackage();
+            PackageBlock packageBlock = getEntryPackageBlock();
+            if(packageBlock != null && packageBlock != currentPackage){
+                encodeMaterials.setCurrentPackage(packageBlock);
+            }
             resXmlDocument = xmlFileEncoder.encode(xmlSource.getXMLDocument());
         } catch (XMLException ex) {
             throw new EncodeException("XMLException on: '"+xmlSource.getPath()
                     +"'\n         '"+ex.getMessage()+"'");
         }
         return resXmlDocument;
+    }
+    private PackageBlock getEntryPackageBlock(){
+        Entry entry = getEntry();
+        if(entry != null){
+            return entry.getPackageBlock();
+        }
+        return null;
     }
     @Override
     public void disposeInputSource(){
