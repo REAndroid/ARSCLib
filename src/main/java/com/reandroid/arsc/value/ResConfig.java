@@ -1757,7 +1757,7 @@ public class ResConfig extends FixedBlockContainer
             if(width == 0 && height == 0){
                 return;
             }
-            mBuilder.append(width).append('x').append(height);
+            mBuilder.append('-').append(width).append('x').append(height);
         }
         private void appendLanguageAndRegion(){
             ResConfig resConfig = this.mConfig;
