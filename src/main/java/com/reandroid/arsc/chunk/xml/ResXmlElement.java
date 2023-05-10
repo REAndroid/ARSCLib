@@ -21,6 +21,7 @@ import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.common.EntryStore;
 import com.reandroid.json.JSONConvert;
@@ -540,8 +541,9 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
 
         addStartNamespace(startNamespace);
         addEndNamespace(endNamespace);
-
-        startNamespace.setUri(uri);
+        ResXmlStringPool stringPool = getStringPool();
+        ResXmlString xmlString = stringPool.createNew(uri);
+        startNamespace.setUriReference(xmlString.getIndex());
         startNamespace.setPrefix(prefix);
 
         return startNamespace;

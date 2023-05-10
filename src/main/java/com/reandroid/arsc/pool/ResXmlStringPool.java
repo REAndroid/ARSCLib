@@ -58,6 +58,12 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
     public ResXmlString getOrCreate(String str){
         return getOrCreateAttribute(0, str);
     }
+    public ResXmlString createNew(String str){
+        StringArray<ResXmlString> stringsArray = getStringsArray();
+        ResXmlString xmlString = stringsArray.createNext();
+        xmlString.set(str);
+        return xmlString;
+    }
     public ResXmlString getOrCreateAttribute(int resourceId, String str){
         ResXmlIDMap resXmlIDMap = getResXmlIDMap();
         if(resXmlIDMap == null){
