@@ -111,7 +111,8 @@ public class XMLFileEncoder {
                 if(entry !=null){
                     resourceId= entry.getResourceId();
                 }else if(attribute.getNamePrefix()!=null){
-                    throw new EncodeException("No resource found for: "+attribute.getName()+": "+mCurrentPath);
+                    throw new EncodeException("No resource found for attribute: "
+                            + attribute.getName() + ", at file "+mCurrentPath);
                 }
             }
             ResXmlAttribute xmlAttribute =
