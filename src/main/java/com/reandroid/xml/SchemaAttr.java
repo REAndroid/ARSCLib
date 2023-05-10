@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -110,8 +110,7 @@ public class SchemaAttr extends XMLAttribute {
         if(value==null || !name.startsWith("xmlns:")){
             return false;
         }
-        Matcher matcher = PATTERN_URI.matcher(value);
-        return matcher.matches();
+        return true;
     }
     public static String getPrefix(String xmlnsName){
         String start="xmlns:";
