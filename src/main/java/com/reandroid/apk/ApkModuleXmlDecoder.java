@@ -260,8 +260,7 @@ public class ApkModuleXmlDecoder extends ApkDecoder implements Predicate<Entry> 
     }
     private void decodeValues(File outDir, PackageBlock packageBlock) throws IOException {
         logMessage("Decoding values: "
-                +packageBlock.getIndex()
-                +"-"+packageBlock.getName());
+                + getPackageDirName(packageBlock));
 
         packageBlock.sortTypes();
 
@@ -280,7 +279,15 @@ public class ApkModuleXmlDecoder extends ApkDecoder implements Predicate<Entry> 
         if(name==null){
             name="package";
         }
-        return packageBlock.getIndex()+"-"+name;
+        TableBlock tableBlock = packageBlock.getTableBlock();
+        int index = packageBlock.getIndex();
+        String prefix;
+        if(index < 10 && tableBlock.countPackages() > 10){
+            prefix = "0" + index;
+        }else {
+            prefix = Integer.toString(index);
+        }
+        return prefix + "-" + name;
     }
     private void extractRootFiles(File outDir) throws IOException {
         logMessage("Extracting root files");
