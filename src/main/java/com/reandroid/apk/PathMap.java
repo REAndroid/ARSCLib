@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +34,7 @@ public class PathMap implements JSONConvert<JSONArray> {
     }
 
     public void restore(ApkModule apkModule){
-        restoreResFile(apkModule.listResFiles());
+        restoreResFile(apkModule.getResFiles());
         restore(apkModule.getApkArchive().listInputSources());
     }
     public List<String> restoreResFile(Collection<ResFile> files){

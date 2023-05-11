@@ -58,6 +58,8 @@ public class ApkModule implements ApkFile {
     private ApkType mApkType;
     private ApkSignatureBlock apkSignatureBlock;
     private Integer preferredFramework;
+    private List<ResFile> mResFileList;
+    private int mFilesCountAtResFileLoad;
 
     public ApkModule(String moduleName, APKArchive apkArchive){
         this.moduleName=moduleName;
@@ -318,25 +320,9 @@ public class ApkModule implements ApkFile {
         writeApk(file, progress, null);
     }
     public void writeApk(File file, WriteProgress progress, WriteInterceptor interceptor) throws IOException {
-        uncompressNonXmlResFiles();
-        APKArchive archive=getApkArchive();
-        InputSource table=archive.getInputSource(TableBlock.FILE_NAME);
-        if(table!=null){
-            table.setMethod(ZipEntry.STORED);
-        }
-        UncompressedFiles uf=getUncompressedFiles();
+        APKArchive archive = getApkArchive();
+        UncompressedFiles uf = getUncompressedFiles();
         uf.apply(archive);
-        int i=1;
-        for(InputSource inputSource:archive.listInputSources()){
-            if(inputSource.getSort()==0){
-                inputSource.setSort(i);
-                i++;
-            }
-        }
-        InputSource manifest=archive.getInputSource(AndroidManifestBlock.FILE_NAME);
-        if(manifest!=null){
-            manifest.setSort(0);
-        }
         ApkWriter apkWriter = new ApkWriter(file, archive.listInputSources());
         apkWriter.setAPKLogger(getApkLogger());
         apkWriter.setWriteProgress(progress);
@@ -344,8 +330,8 @@ public class ApkModule implements ApkFile {
         apkWriter.write();
         apkWriter.close();
     }
-    private void uncompressNonXmlResFiles() {
-        for(ResFile resFile:listResFiles()){
+    public void uncompressNonXmlResFiles() {
+        for(ResFile resFile:getResFiles()){
             if(resFile.isBinaryXml()){
                 continue;
             }
@@ -359,7 +345,7 @@ public class ApkModule implements ApkFile {
         getApkArchive().removeDir(dirName);
     }
     public void validateResourcesDir() {
-        List<ResFile> resFileList = listResFiles();
+        List<ResFile> resFileList = getResFiles();
         Set<String> existPaths=new HashSet<>();
         List<InputSource> sourceList = getApkArchive().listInputSources();
         for(InputSource inputSource:sourceList){
@@ -387,7 +373,7 @@ public class ApkModule implements ApkFile {
         getTableBlock().refresh();
     }
     public void setResourcesRootDir(String dirName) {
-        List<ResFile> resFileList = listResFiles();
+        List<ResFile> resFileList = getResFiles();
         Set<String> existPaths=new HashSet<>();
         List<InputSource> sourceList = getApkArchive().listInputSources();
         for(InputSource inputSource:sourceList){
@@ -411,8 +397,19 @@ public class ApkModule implements ApkFile {
         stringPool.refreshUniqueIdMap();
         getTableBlock().refresh();
     }
+    public List<ResFile> getResFiles() {
+        List<ResFile> resFileList = this.mResFileList;
+        if(resFileList == null || mFilesCountAtResFileLoad != getApkArchive().size()){
+            resFileList = listResFiles();
+        }
+        return resFileList;
+    }
     public List<ResFile> listResFiles() {
-        return listResFiles(0, null);
+        logMessage("Searching res files ...");
+        mResFileList = listResFiles(0, null);
+        mFilesCountAtResFileLoad = getApkArchive().size();
+        logMessage("Res files = " + mResFileList.size());
+        return mResFileList;
     }
     public List<ResFile> listResFiles(int resourceId, ResConfig resConfig) {
         List<ResFile> results=new ArrayList<>();

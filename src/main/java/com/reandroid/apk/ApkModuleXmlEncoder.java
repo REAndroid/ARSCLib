@@ -18,11 +18,8 @@ package com.reandroid.apk;
 import com.reandroid.archive.APKArchive;
 import com.reandroid.archive.FileInputSource;
 import com.reandroid.apk.xmlencoder.RESEncoder;
-import com.reandroid.archive.InputSource;
-import com.reandroid.archive.InputSourceUtil;
 import com.reandroid.archive2.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.TableBlock;
-import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.json.JSONArray;
 import com.reandroid.xml.XMLException;
 
@@ -84,24 +81,10 @@ public class ApkModuleXmlEncoder {
         }
     }
     private void sortFiles(){
-        APKArchive archive=getApkModule().getApkArchive();
-        int i = 1;
-        for(InputSource inputSource:archive.listInputSources()){
-            if(inputSource.getSort() == 0){
-                inputSource.setSort(i);
-                i++;
-            }
-        }
-        InputSource manifest = archive.getInputSource(AndroidManifestBlock.FILE_NAME);
-        if(manifest != null){
-            manifest.setSort(0);
-        }
-        List<InputSource> sourceList = archive.listInputSources();
-        InputSourceUtil.sort(sourceList);
-        archive.clear();
-        archive.addAll(sourceList);
+        APKArchive archive = getApkModule().getApkArchive();
+        archive.autoSortApkFiles();
     }
-    private void loadUncompressedFiles(File mainDirectory) throws IOException, XMLException {
+    private void loadUncompressedFiles(File mainDirectory) throws IOException {
         File file=new File(mainDirectory, UncompressedFiles.JSON_FILE);
         UncompressedFiles uncompressedFiles = getApkModule().getUncompressedFiles();
         uncompressedFiles.fromJson(file);

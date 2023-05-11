@@ -72,7 +72,7 @@ public class ApkModuleXmlDecoder extends ApkDecoder implements Predicate<Entry> 
         decodeTableBlock(outDir, tableBlock);
 
         logMessage("Decoding resource files ...");
-        List<ResFile> resFileList = apkModule.listResFiles();
+        List<ResFile> resFileList = apkModule.getResFiles();
         for(ResFile resFile:resFileList){
             decodeResFile(outDir, resFile);
         }

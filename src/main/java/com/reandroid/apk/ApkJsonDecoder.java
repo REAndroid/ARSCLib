@@ -80,7 +80,7 @@ public class ApkJsonDecoder {
         uncompressedFiles.toJson().write(file);
     }
     private void writeResources(File dir) throws IOException {
-        for(ResFile resFile:apkModule.listResFiles()){
+        for(ResFile resFile:apkModule.getResFiles()){
             writeResource(dir, resFile);
         }
     }

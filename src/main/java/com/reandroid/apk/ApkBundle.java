@@ -71,7 +71,7 @@ public class ApkBundle {
             tableBlock.sortPackages();
             tableBlock.refresh();
         }
-        result.getApkArchive().sortApkFiles();
+        result.getApkArchive().autoSortApkFiles();
         return result;
     }
     private void mergeStringPools(ApkModule mergedModule) throws IOException {
