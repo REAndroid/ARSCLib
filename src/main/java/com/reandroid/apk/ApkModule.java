@@ -405,10 +405,8 @@ public class ApkModule implements ApkFile {
         return resFileList;
     }
     public List<ResFile> listResFiles() {
-        logMessage("Searching res files ...");
         mResFileList = listResFiles(0, null);
         mFilesCountAtResFileLoad = getApkArchive().size();
-        logMessage("Res files = " + mResFileList.size());
         return mResFileList;
     }
     public List<ResFile> listResFiles(int resourceId, ResConfig resConfig) {
