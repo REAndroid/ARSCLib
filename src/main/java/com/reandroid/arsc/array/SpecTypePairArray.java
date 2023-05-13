@@ -21,6 +21,8 @@ import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.group.StringGroup;
+import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
@@ -106,10 +108,10 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         if(specTypePair != null){
             return specTypePair;
         }
-        byte id = (byte) (getHighestTypeId() + 1);
+        TypeString typeString = getOrCreateTypeString(typeName);
+        byte id = (byte) typeString.getId();
         specTypePair = createNext();
         specTypePair.setTypeId(id);
-        setTypeName(id, typeName);
         return specTypePair;
     }
     public TypeBlock getOrCreateTypeBlock(String typeName, ResConfig resConfig){
@@ -117,14 +119,6 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
     }
     public TypeBlock getOrCreateTypeBlock(String typeName, String qualifiers){
         return getOrCreate(typeName).getOrCreateTypeBlock(qualifiers);
-    }
-    private void setTypeName(byte id, String typeName){
-        PackageBlock packageBlock = getParent(PackageBlock.class);
-        if(packageBlock == null){
-            return;
-        }
-        TypeStringPool typeStringPool = packageBlock.getTypeStringPool();
-        typeStringPool.getOrCreate(id, typeName);
     }
     public SpecTypePair getPair(byte typeId){
         SpecTypePair[] items=getChildes();
@@ -262,6 +256,28 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
             }
         }
         return result;
+    }
+    private TypeString getOrCreateTypeString(String typeName){
+        TypeStringPool typeStringPool = getTypeStringPool();
+        if(typeStringPool == null){
+            return null;
+        }
+        StringGroup<TypeString> group = typeStringPool.get(typeName);
+        if(group != null){
+            return group.get(0);
+        }
+        int id = typeStringPool.getLastId() + 1;
+        return typeStringPool.getOrCreate(id, typeName);
+    }
+    private TypeStringPool getTypeStringPool(){
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock != null){
+            return packageBlock.getTypeStringPool();
+        }
+        return null;
+    }
+    private PackageBlock getPackageBlock(){
+        return getParentInstance(PackageBlock.class);
     }
     @Override
     public JSONArray toJson() {

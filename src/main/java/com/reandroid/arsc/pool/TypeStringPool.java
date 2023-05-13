@@ -30,6 +30,13 @@ public class TypeStringPool extends StringPool<TypeString> {
         super(is_utf8, false);
         this.mTypeIdOffset = typeIdOffset;
     }
+    public int getLastId(){
+        int count = countStrings();
+        if(count == 0){
+            return 0;
+        }
+        return get(count - 1).getId();
+    }
     public int idOf(String typeName){
         return idOf(getByName(typeName));
     }

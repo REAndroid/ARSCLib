@@ -29,7 +29,7 @@ public abstract class CompoundItemArray<T extends ResValueMap> extends BlockArra
     public AttributeTypeFormat[] getFormats(){
         ResValueMap formatsMap = getByType(AttributeType.FORMATS);
         if(formatsMap != null){
-            return AttributeTypeFormat.valuesOf(formatsMap.getData());
+            return AttributeTypeFormat.decodeValueTypes(formatsMap.getData());
         }
         return null;
     }

@@ -95,33 +95,23 @@ public class PackageBlock extends Chunk<PackageHeader>
         return getSpecTypePairArray().getEntry(resConfig, type, name);
     }
     public Entry getOrCreate(String qualifiers, String type, String name){
-        ResConfig resConfig = new ResConfig();
-        resConfig.parseQualifiers(qualifiers);
-        return getOrCreate(resConfig, type, name);
+        return getOrCreate(ResConfig.parse(qualifiers), type, name);
     }
     public Entry getOrCreate(ResConfig resConfig, String typeName, String name){
         SpecTypePair specTypePair = getOrCreateSpecTypePair(typeName);
         TypeBlock typeBlock = specTypePair.getOrCreateTypeBlock(resConfig);
         return typeBlock.getOrCreateEntry(name);
     }
+    public TypeBlock getOrCreateTypeBlock(String qualifiers, String typeName){
+        SpecTypePair specTypePair = getOrCreateSpecTypePair(typeName);
+        return specTypePair.getOrCreateTypeBlock(qualifiers);
+    }
+    public TypeBlock getOrCreateTypeBlock(ResConfig resConfig, String typeName){
+        SpecTypePair specTypePair = getOrCreateSpecTypePair(typeName);
+        return specTypePair.getOrCreateTypeBlock(resConfig);
+    }
     public SpecTypePair getOrCreateSpecTypePair(String typeName){
         return getSpecTypePairArray().getOrCreate(typeName);
-    }
-    /**
-     * TOBEREMOVED
-     *
-     * use getOrCreateSpecTypePair(typeName)
-     * */
-    @Deprecated
-    public SpecTypePair getOrCreateSpecType(String typeName){
-        int last = 0;
-        SpecTypePair specTypePair = getSpecTypePairArray().getSpecTypePair(typeName);
-        if(specTypePair != null){
-            return specTypePair;
-        }
-        last++;
-        getTypeStringPool().getOrCreate(last, typeName);
-        return getSpecTypePairArray().getOrCreate((byte) last);
     }
     public int getTypeIdOffset(){
         return getHeaderBlock().getTypeIdOffset();

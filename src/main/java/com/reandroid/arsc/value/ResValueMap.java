@@ -37,10 +37,21 @@ public class ResValueMap extends ValueItem implements AttributeValue{
         if(attributeType != AttributeType.FORMATS){
             return null;
         }
-        return AttributeTypeFormat.valuesOf(getData());
+        return AttributeTypeFormat.decodeValueTypes(getData());
     }
-    public void setAttributeTypeFormats(AttributeTypeFormat[] formats){
-        setData(AttributeTypeFormat.sum(formats));
+    public void addAttributeTypeFormats(AttributeTypeFormat[] formats){
+        if(formats == null){
+            return;
+        }
+        int data = getData() | AttributeTypeFormat.sum(formats);
+        setData(data);
+    }
+    public void addAttributeTypeFormat(AttributeTypeFormat format){
+        if(format == null){
+            return;
+        }
+        int data = getData() | format.getMask();
+        setData(data);
     }
     public Entry getEntry(){
         return getParent(Entry.class);

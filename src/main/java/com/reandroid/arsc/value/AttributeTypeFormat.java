@@ -108,8 +108,8 @@ public enum AttributeTypeFormat {
         return builder.toString();
     }
 
-    public static String toString(int typeValue){
-        return toString(valuesOf(typeValue));
+    public static String toStringValueTypes(int data){
+        return toString(decodeValueTypes(data));
     }
     public static String toString(AttributeTypeFormat[] typeValues){
         if(typeValues == null || typeValues.length == 0){
@@ -153,18 +153,18 @@ public enum AttributeTypeFormat {
         return result;
     }
 
-    public static AttributeTypeFormat[] valuesOf(int value){
-        AttributeTypeFormat[] tmp = new AttributeTypeFormat[VALUES.length];
+    public static AttributeTypeFormat[] decodeValueTypes(int data){
+        AttributeTypeFormat[] tmp = new AttributeTypeFormat[VALUE_TYPES.length];
         int length = 0;
-        for(AttributeTypeFormat typeValue : VALUES){
+        for(AttributeTypeFormat typeValue : VALUE_TYPES){
             int mask = typeValue.getMask();
-            if(mask == value){
+            if(mask == data){
                 return new AttributeTypeFormat[]{typeValue};
             }
             if(typeValue == ANY){
                 continue;
             }
-            if((value & mask) == mask){
+            if((data & mask) == mask){
                 tmp[length] = typeValue;
                 length++;
             }
@@ -176,16 +176,16 @@ public enum AttributeTypeFormat {
         System.arraycopy(tmp, 0, results, 0, length);
         return results;
     }
-    public static AttributeTypeFormat[] valuesOf(String valuesString){
-        if(valuesString == null){
+    public static AttributeTypeFormat[] parseValueTypes(String valuesTypes){
+        if(valuesTypes == null){
             return null;
         }
-        valuesString = valuesString.trim();
-        String[] valueNames = valuesString.split("\\s*\\|\\s*");
-        AttributeTypeFormat[] tmp = new AttributeTypeFormat[VALUES.length];
+        valuesTypes = valuesTypes.trim();
+        String[] valueNames = valuesTypes.split("\\s*\\|\\s*");
+        AttributeTypeFormat[] tmp = new AttributeTypeFormat[VALUE_TYPES.length];
         int length = 0;
         for(String name:valueNames){
-            AttributeTypeFormat typeValue = fromName(name);
+            AttributeTypeFormat typeValue = fromValueTypeName(name);
             if(typeValue!=null){
                 tmp[length] = typeValue;
                 length++;
@@ -199,40 +199,47 @@ public enum AttributeTypeFormat {
         return results;
     }
     public static AttributeTypeFormat valueOf(int mask){
-        for(AttributeTypeFormat typeValue:VALUES){
+        for(AttributeTypeFormat typeValue : VALUE_TYPES){
             if(typeValue.getMask() == mask){
                 return typeValue;
             }
         }
         return null;
     }
-    public static AttributeTypeFormat typeOf(int mask){
-        for(AttributeTypeFormat typeValue:TYPES){
-            if(typeValue.matches(mask)){
+    public static AttributeTypeFormat typeOfBag(int data){
+        for(AttributeTypeFormat typeValue : BAG_TYPES){
+            if(typeValue.matches(data)){
                 return typeValue;
             }
         }
         return null;
     }
-    public static AttributeTypeFormat fromName(String name){
-        if(name==null){
+    public static AttributeTypeFormat fromValueTypeName(String name){
+        if(name == null){
             return null;
         }
         name = name.trim().toUpperCase();
-        for(AttributeTypeFormat typeValue:VALUES){
+        for(AttributeTypeFormat typeValue : VALUE_TYPES){
             if(name.equals(typeValue.name())){
                 return typeValue;
             }
         }
-        for(AttributeTypeFormat typeValue:TYPES){
-            if(name.equals(typeValue.name())){
+        return null;
+    }
+    public static AttributeTypeFormat fromBagTypeName(String bagTypeName){
+        if(bagTypeName == null){
+            return null;
+        }
+        bagTypeName = bagTypeName.trim().toUpperCase();
+        for(AttributeTypeFormat typeValue: BAG_TYPES){
+            if(bagTypeName.equals(typeValue.name())){
                 return typeValue;
             }
         }
         return null;
     }
 
-    private static final AttributeTypeFormat[] VALUES = new AttributeTypeFormat[]{
+    private static final AttributeTypeFormat[] VALUE_TYPES = new AttributeTypeFormat[]{
             REFERENCE,
             STRING,
             INTEGER,
@@ -244,7 +251,7 @@ public enum AttributeTypeFormat {
             ANY
     };
 
-    private static final AttributeTypeFormat[] TYPES = new AttributeTypeFormat[]{
+    private static final AttributeTypeFormat[] BAG_TYPES = new AttributeTypeFormat[]{
             ENUM,
             FLAG
     };
