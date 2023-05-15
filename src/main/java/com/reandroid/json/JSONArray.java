@@ -5,9 +5,7 @@
 */
 package com.reandroid.json;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -101,7 +99,7 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
         }
     }
 
-    public JSONArray(Object array) throws JSONException {
+    JSONArray(Object array) throws JSONException {
         this();
         if (!array.getClass().isArray()) {
             throw new JSONException(
@@ -116,6 +114,13 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
                     "JSONArray initial capacity cannot be negative.");
     	}
     	this.myArrayList = new ArrayList<Object>(initialCapacity);
+    }
+
+    public JSONArray(File file) throws FileNotFoundException {
+        this(new FileInputStream(file));
+    }
+    public JSONArray(Reader reader){
+        this(new JSONTokener(reader));
     }
     public JSONArray(InputStream inputStream) throws JSONException {
         this(new JSONTokener(inputStream));

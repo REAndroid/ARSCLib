@@ -141,21 +141,9 @@ public class JSONObject extends JSONItem {
         }
     }
 
-    public JSONObject(Object bean) {
+    private JSONObject(Object bean) {
         this();
         this.populateMap(bean);
-    }
-
-    public JSONObject(Object object, String ... names) {
-        this(names.length);
-        Class<?> c = object.getClass();
-        for (int i = 0; i < names.length; i += 1) {
-            String name = names[i];
-            try {
-                this.putOpt(name, c.getField(name).get(object));
-            } catch (Exception ignore) {
-            }
-        }
     }
 
     public JSONObject(String source) throws JSONException {
@@ -201,6 +189,12 @@ public class JSONObject extends JSONItem {
     }
 
 
+    public JSONObject(File file) throws FileNotFoundException {
+        this(new FileInputStream(file));
+    }
+    public JSONObject(Reader reader){
+        this(new JSONTokener(reader));
+    }
     public JSONObject(InputStream inputStream) throws JSONException {
         this(new JSONTokener(inputStream));
         try {
