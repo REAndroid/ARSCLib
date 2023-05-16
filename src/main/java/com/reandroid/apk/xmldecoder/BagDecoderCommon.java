@@ -66,7 +66,7 @@ class BagDecoderCommon<OUTPUT> extends BagDecoder<OUTPUT>{
                     entryStore, packageBlock, valueMap.getName());
             writer.attribute("name", name);
 
-            writeText(writer, packageBlock, valueMap);
+            writeText(writer, valueMap);
 
             writer.endTag(childTag);
         }

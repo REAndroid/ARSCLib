@@ -17,6 +17,7 @@ package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.value.AttributeType;
 import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.ValueType;
@@ -34,14 +35,13 @@ class XMLValuesEncoderPlurals extends XMLValuesEncoderBag{
         for(int i=0;i<count;i++){
             XMLElement child=parentElement.getChildAt(i);
             ResValueMap bagItem = itemArray.get(i);
-            PluralsQuantity quantity = PluralsQuantity
-                    .value(child.getAttributeValue("quantity"));
+            AttributeType quantity = AttributeType
+                    .fromName(child.getAttributeValue("quantity"));
             if(quantity==null){
                 throw new EncodeException("Unknown plurals quantity: "
-                        +child.toText());
+                        + child.toText());
             }
-            bagItem.setNameHigh((short) 0x0100);
-            bagItem.setNameLow(quantity.getId());
+            bagItem.setName(quantity.getId());
 
             String valueText=child.getTextContent();
 
@@ -49,8 +49,7 @@ class XMLValuesEncoderPlurals extends XMLValuesEncoderBag{
                 bagItem.setValueType(ValueType.REFERENCE);
                 bagItem.setData(getMaterials().resolveReference(valueText));
             }else if(EncodeUtil.isEmpty(valueText)) {
-                bagItem.setValueType(ValueType.NULL);
-                bagItem.setData(0);
+                bagItem.setValueAsString("");
             }else{
                 bagItem.setValueAsString(ValueDecoder
                         .unEscapeSpecialCharacter(valueText));

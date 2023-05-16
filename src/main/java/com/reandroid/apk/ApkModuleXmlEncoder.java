@@ -20,6 +20,7 @@ import com.reandroid.archive.FileInputSource;
 import com.reandroid.apk.xmlencoder.RESEncoder;
 import com.reandroid.archive2.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.json.JSONArray;
 import com.reandroid.xml.XMLException;
 
@@ -44,6 +45,8 @@ public class ApkModuleXmlEncoder {
         restorePathMap(mainDirectory);
         restoreSignatures(mainDirectory);
         sortFiles();
+        TableStringPool tableStringPool = getApkModule().getTableBlock().getTableStringPool();
+        tableStringPool.removeUnusedStrings();
     }
     private void restoreSignatures(File dir) throws IOException {
         File sigDir = new File(dir, ApkUtil.SIGNATURE_DIR_NAME);
@@ -62,8 +65,7 @@ public class ApkModuleXmlEncoder {
             return;
         }
         PathMap pathMap = new PathMap();
-        FileInputStream inputStream = new FileInputStream(file);
-        JSONArray jsonArray = new JSONArray(inputStream);
+        JSONArray jsonArray = new JSONArray(file);
         pathMap.fromJson(jsonArray);
         pathMap.restore(getApkModule());
     }

@@ -17,7 +17,7 @@ package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.value.AttributeType;
-import com.reandroid.arsc.value.AttributeTypeFormat;
+import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
@@ -26,10 +26,10 @@ public abstract class CompoundItemArray<T extends ResValueMap> extends BlockArra
     public CompoundItemArray(){
         super();
     }
-    public AttributeTypeFormat[] getFormats(){
+    public AttributeDataFormat[] getFormats(){
         ResValueMap formatsMap = getByType(AttributeType.FORMATS);
         if(formatsMap != null){
-            return AttributeTypeFormat.decodeValueTypes(formatsMap.getData());
+            return AttributeDataFormat.decodeValueTypes(formatsMap.getData());
         }
         return null;
     }

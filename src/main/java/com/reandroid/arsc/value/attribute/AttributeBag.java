@@ -17,9 +17,7 @@ package com.reandroid.arsc.value.attribute;
 
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.Entry;
-import com.reandroid.arsc.value.ResTableMapEntry;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.*;
 import com.reandroid.common.EntryStore;
 
 
@@ -29,10 +27,10 @@ public class AttributeBag {
         this.mBagItems=bagItems;
     }
 
-    public boolean contains(AttributeValueType valueType){
+    public boolean contains(AttributeDataFormat valueType){
         return getFormat().contains(valueType);
     }
-    public boolean isEqualType(AttributeValueType valueType){
+    public boolean isEqualType(AttributeDataFormat valueType){
         return getFormat().isEqualType(valueType);
     }
     public ValueDecoder.EncodeResult encodeEnumOrFlagValue(String valueString){
@@ -60,9 +58,6 @@ public class AttributeBag {
         AttributeBagItem[] bagItems=searchValue(attrValue);
         return AttributeBagItem.toString(entryStore, bagItems);
     }
-    public String decodeValueType(){
-        return AttributeValueType.toString(getValueTypes());
-    }
     public AttributeBagItem searchByName(String entryName){
         AttributeBagItem[] bagItems= getBagItems();
         for(AttributeBagItem item:bagItems){
@@ -79,8 +74,8 @@ public class AttributeBag {
         if(isFlag()){
             return searchFlagValue(attrValue);
         }
-        AttributeBagItem item=searchEnumValue(attrValue);
-        if(item!=null){
+        AttributeBagItem item = searchEnumValue(attrValue);
+        if(item != null){
             return new AttributeBagItem[]{item};
         }
         return null;
@@ -108,15 +103,15 @@ public class AttributeBag {
             if(item.isType()){
                 continue;
             }
-            int data=item.getData();
+            int data = item.getData();
             if ((attrValue & data) != data) {
                 continue;
             }
-            if(attrValue==data){
+            if(attrValue == data){
                 return new AttributeBagItem[]{item};
             }
-            int index=indexOf(foundBags, data);
-            if (index>=0) {
+            int index = indexOf(foundBags, data);
+            if (index >= 0) {
                 foundBags[index] = item;
             }
         }
@@ -176,32 +171,27 @@ public class AttributeBag {
     public AttributeBagItem[] getBagItems(){
         return mBagItems;
     }
-    public AttributeValueType[] getValueTypes(){
-        AttributeBagItem format = getFormat();
-        return format.getValueTypes();
-    }
+
     public AttributeBagItem getFormat(){
-        AttributeBagItem item = find(AttributeItemType.FORMAT);
-        if(item==null){
-            item= getBagItems()[0];
+        AttributeBagItem item = find(AttributeType.FORMATS);
+        if(item == null){
+            item = getBagItems()[0];
         }
         return item;
     }
     public AttributeBagItem getMin(){
-        return find(AttributeItemType.MIN);
+        return find(AttributeType.MIN);
     }
     public AttributeBagItem getMax(){
-        return find(AttributeItemType.MAX);
+        return find(AttributeType.MAX);
     }
     public AttributeBagItem getL10N(){
-        return find(AttributeItemType.L10N);
+        return find(AttributeType.L10N);
     }
-    private AttributeBagItem find(AttributeItemType itemType){
-        AttributeBagItem[] bagItems = getBagItems();
-        for(int i=0;i<bagItems.length;i++){
-            AttributeBagItem item=bagItems[i];
-            if(itemType==item.getItemType()){
-                return item;
+    private AttributeBagItem find(AttributeType attributeType){
+        for(AttributeBagItem bagItem : getBagItems()){
+            if(bagItem.getType() == attributeType){
+                return bagItem;
             }
         }
         return null;
@@ -228,7 +218,7 @@ public class AttributeBag {
         int len=bagItems.length;
         builder.append(", childes=").append(len);
         for(int i=0;i<len;i++){
-            AttributeBagItem item=bagItems[i];
+            AttributeBagItem item = bagItems[i];
             builder.append("\n    [").append((i+1)).append("]  ");
             builder.append(item.toString());
         }

@@ -79,8 +79,7 @@
      }
 
      private void setIndex(ResValueMap valueMap, int index) {
-         valueMap.setNameHigh((short) 0x0100);
-         valueMap.setNameLow((short) (index + 1));
+         valueMap.setName(0x01000001 + index);
      }
 
      @Override

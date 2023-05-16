@@ -19,6 +19,7 @@ import com.reandroid.archive.InputSource;
 import com.reandroid.apk.xmlencoder.XMLEncodeSource;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
+import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.value.*;
 import com.reandroid.json.JSONObject;
 
@@ -114,16 +115,14 @@ public class ResFile {
         if(mBinXmlChecked){
             return mBinXml;
         }
-        mBinXmlChecked=true;
-        InputSource inputSource=getInputSource();
+        mBinXmlChecked = true;
+        InputSource inputSource = getInputSource();
         if((inputSource instanceof XMLEncodeSource)
                 || (inputSource instanceof JsonXmlInputSource)){
             mBinXml=true;
         }else{
             try {
-                InputStream inputStream=getInputSource().openStream();
-                mBinXml= ResXmlDocument.isResXmlBlock(inputStream);
-                inputStream.close();
+                mBinXml = ResXmlDocument.isResXmlBlock(inputSource.getBytes(InfoHeader.INFO_MIN_SIZE));
             } catch (IOException ignored) {
             }
         }

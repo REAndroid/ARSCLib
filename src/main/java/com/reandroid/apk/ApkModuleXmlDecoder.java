@@ -23,6 +23,7 @@ import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.value.*;
+import com.reandroid.identifiers.PackageIdentifier;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLDocument;
 import org.xmlpull.v1.XmlPullParserException;
@@ -72,7 +73,7 @@ public class ApkModuleXmlDecoder extends ApkDecoder implements Predicate<Entry> 
         decodeTableBlock(outDir, tableBlock);
 
         logMessage("Decoding resource files ...");
-        List<ResFile> resFileList = apkModule.getResFiles();
+        List<ResFile> resFileList = apkModule.listResFiles();
         for(ResFile resFile:resFileList){
             decodeResFile(outDir, resFile);
         }
@@ -193,9 +194,9 @@ public class ApkModuleXmlDecoder extends ApkDecoder implements Predicate<Entry> 
         file=new File(file, ApkUtil.RES_DIR_NAME);
         file=new File(file, "values");
         file=new File(file, ApkUtil.FILE_NAME_PUBLIC_XML);
-        ResourceIds resourceIds=new ResourceIds();
-        resourceIds.loadPackageBlock(packageBlock);
-        resourceIds.writeXml(file);
+        PackageIdentifier packageIdentifier = new PackageIdentifier();
+        packageIdentifier.load(packageBlock);
+        packageIdentifier.writePublicXml(file);
     }
     private void decodeAndroidManifest(File outDir, AndroidManifestBlock manifestBlock)
             throws IOException {

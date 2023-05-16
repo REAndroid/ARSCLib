@@ -15,6 +15,8 @@
  */
 package com.reandroid.archive2.io;
 
+import com.reandroid.common.FileChannelInputStream;
+
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;

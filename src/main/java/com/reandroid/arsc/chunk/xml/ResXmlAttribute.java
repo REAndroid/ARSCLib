@@ -23,6 +23,7 @@ import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.AttributeValue;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.common.EntryStore;
@@ -98,6 +99,11 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
         ResXmlID xmlID = xmlIDMap.getOrCreate(resourceId);
         setNameReference(xmlID.getIndex());
     }
+    @Override
+    public Entry resolveName(){
+        return resolve(getNameResourceID());
+    }
+
     public void setName(String name, int resourceId){
         if(Objects.equals(name, getName()) && resourceId==getNameResourceID()){
             return;

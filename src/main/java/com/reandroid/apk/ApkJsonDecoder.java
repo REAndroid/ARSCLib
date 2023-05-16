@@ -49,7 +49,7 @@ public class ApkJsonDecoder {
         writeUncompressed(dir);
         writeManifest(dir);
         writeTable(dir);
-        writeResourceIds(dir);
+        //writeResourceIds(dir);
         //writePublicXml(dir);
         writeResources(dir);
         writeRootFiles(dir);
@@ -80,7 +80,7 @@ public class ApkJsonDecoder {
         uncompressedFiles.toJson().write(file);
     }
     private void writeResources(File dir) throws IOException {
-        for(ResFile resFile:apkModule.getResFiles()){
+        for(ResFile resFile:apkModule.listResFiles()){
             writeResource(dir, resFile);
         }
     }
@@ -192,7 +192,7 @@ public class ApkJsonDecoder {
     }
     private File toResourceIds(File dir){
         File file=new File(dir, apkModule.getModuleName());
-        String name = ResourceIds.JSON_FILE_NAME;
+        String name = "resource-ids.json";
         return new File(file, name);
     }
     private File toResourceIdsXml(File dir){

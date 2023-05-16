@@ -21,9 +21,11 @@ import com.reandroid.archive2.block.LocalFileHeader;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
+import java.util.zip.ZipEntry;
 
 public class ArchiveEntrySource extends InputSource {
     private final ZipInput zipInput;
@@ -34,6 +36,19 @@ public class ArchiveEntrySource extends InputSource {
         this.archiveEntry = archiveEntry;
         setMethod(archiveEntry.getMethod());
     }
+
+    @Override
+    public byte[] getBytes(int length) throws IOException {
+        if(getMethod() != ZipEntry.STORED){
+            return super.getBytes(length);
+        }
+        FileChannel fileChannel = getFileChannel();
+        byte[] bytes = new byte[length];
+        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+        fileChannel.read(byteBuffer);
+        return bytes;
+    }
+
     public FileChannel getFileChannel() throws IOException {
         FileChannel fileChannel = getZipSource().getFileChannel();
         fileChannel.position(getFileOffset());

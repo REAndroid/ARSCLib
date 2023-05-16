@@ -20,10 +20,17 @@ import com.reandroid.archive.APKArchive;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
-import com.reandroid.xml.XMLDocument;
+import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.identifiers.PackageIdentifier;
+import com.reandroid.identifiers.ResourceIdentifier;
+import com.reandroid.identifiers.TableIdentifier;
 import com.reandroid.xml.XMLException;
+import com.reandroid.xml.XMLParserFactory;
 import com.reandroid.xml.source.XMLFileSource;
 import com.reandroid.xml.source.XMLSource;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,11 +50,11 @@ public class RESEncoder {
         this.apkModule = module;
         this.tableBlock = block;
         if(!module.hasTableBlock()){
-            BlockInputSource<TableBlock> inputSource=
+            module.setLoadDefaultFramework(false);
+            BlockInputSource<TableBlock> inputSource =
                     new BlockInputSource<>(TableBlock.FILE_NAME, block);
             inputSource.setMethod(ZipEntry.STORED);
-            this.apkModule.getUncompressedFiles().addPath(inputSource);
-            this.apkModule.getApkArchive().add(inputSource);
+            this.apkModule.setTableBlock(tableBlock);
         }
     }
     public TableBlock getTableBlock(){
@@ -66,73 +73,23 @@ public class RESEncoder {
                     + ApkUtil.FILE_NAME_PUBLIC_XML+"  file found in '"+mainDir);
         }
         preloadStringPool(pubXmlFileList);
+        EncodeMaterials encodeMaterials = new EncodeMaterials();
+        encodeMaterials.setAPKLogger(apkLogger);
 
-        EncodeMaterials encodeMaterials=new EncodeMaterials();
+        TableIdentifier tableIdentifier = encodeMaterials.getTableIdentifier();
+        tableIdentifier.loadPublicXml(pubXmlFileList);
+        tableIdentifier.initialize(this.tableBlock);
 
-        Map<File, ResourceIds.Table.Package> map =
-                initializeEncodeMaterials(pubXmlFileList, encodeMaterials);
+        excludeIds(pubXmlFileList);
+        File manifestFile = initializeFrameworkFromManifest(encodeMaterials, pubXmlFileList);
 
-        Map<File, PackageBlock> packageBlockMap=new HashMap<>();
+        encodeAttrs(encodeMaterials, pubXmlFileList);
 
-        for(File pubXmlFile:pubXmlFileList){
-            ResourceIds.Table.Package pkgResourceIds = map.get(pubXmlFile);
-            if(pkgResourceIds==null){
-                continue;
-            }
-            addParsedFiles(pubXmlFile);
+        encodeValues(encodeMaterials, pubXmlFileList);
 
-            PackageBlock packageBlock = createPackage(pkgResourceIds, pubXmlFile);
-            encodeMaterials.setCurrentPackage(packageBlock);
-            encodeMaterials.setCurrentLocalPackage(pkgResourceIds);
-            packageBlockMap.put(pubXmlFile, packageBlock);
-
-            ValuesEncoder valuesEncoder = new ValuesEncoder(encodeMaterials);
-            File fileIds = toId(pubXmlFile);
-            if(fileIds.isFile()){
-                valuesEncoder.encodeValuesXml(fileIds);
-                packageBlock.sortTypes();
-                packageBlock.refresh();
-                addParsedFiles(fileIds);
-            }
-            File fileAttrs = toAttr(pubXmlFile);
-            if(fileAttrs.isFile()){
-                valuesEncoder.encodeValuesXml(fileAttrs);
-                packageBlock.sortTypes();
-                packageBlock.refresh();
-                addParsedFiles(fileAttrs);
-            }
-        }
-        File manifestFile = null;
-        for(File pubXmlFile:pubXmlFileList){
-            ResourceIds.Table.Package pkgResourceIds = map.get(pubXmlFile);
-            if(pkgResourceIds==null){
-                continue;
-            }
-            addParsedFiles(pubXmlFile);
-            if(manifestFile == null){
-                manifestFile = toAndroidManifest(pubXmlFile);
-            }
-
-            PackageBlock packageBlock=packageBlockMap.get(pubXmlFile);
-
-            if(packageBlock==null){
-                packageBlock = createPackage(pkgResourceIds, pubXmlFile);
-            }
-            encodeMaterials.setCurrentPackage(packageBlock);
-            encodeMaterials.setCurrentLocalPackage(pkgResourceIds);
-
-            File resDir=toResDirectory(pubXmlFile);
-            encodeResDir(encodeMaterials, resDir);
-            FilePathEncoder filePathEncoder = new FilePathEncoder(encodeMaterials);
-            filePathEncoder.setApkArchive(getApkModule().getApkArchive());
-            filePathEncoder.setUncompressedFiles(getApkModule().getUncompressedFiles());
-            filePathEncoder.encodeResDir(resDir);
-
-            packageBlock.sortTypes();
-            packageBlock.refresh();
-        }
         tableBlock.refresh();
-        PackageBlock packageBlock = tableBlock.pickOne();
+
+        PackageBlock packageBlock = encodeMaterials.pickMainPackageBlock(this.tableBlock);
         if(manifestFile != null){
             if(packageBlock != null){
                 encodeMaterials.setCurrentPackage(packageBlock);
@@ -144,13 +101,118 @@ public class RESEncoder {
             getApkModule().getApkArchive().add(xmlEncodeSource);
         }
     }
-    private PackageBlock createPackage(ResourceIds.Table.Package pkgResourceIds
-            , File pubXmlFile){
-        PackageCreator packageCreator = new PackageCreator();
-        packageCreator.setPackageName(pkgResourceIds.name);
-        packageCreator.setAPKLogger(apkLogger);
-        packageCreator.setPackageDirectory(toPackageDirectory(pubXmlFile));
-        return packageCreator.createNew(this.tableBlock, pkgResourceIds);
+    private File initializeFrameworkFromManifest(EncodeMaterials encodeMaterials, List<File> pubXmlFileList) throws  IOException {
+         for(File pubXmlFile:pubXmlFileList){
+            addParsedFiles(pubXmlFile);
+            File manifestFile = toAndroidManifest(pubXmlFile);
+            if(!manifestFile.isFile()){
+                continue;
+            }
+            initializeFrameworkFromManifest(encodeMaterials, manifestFile);
+            return manifestFile;
+        }
+        return null;
+    }
+    private void encodeValues(EncodeMaterials encodeMaterials, List<File> pubXmlFileList) throws XMLException, IOException {
+        logMessage("Encoding values ...");
+        TableIdentifier tableIdentifier = encodeMaterials.getTableIdentifier();
+
+        for(File pubXmlFile:pubXmlFileList){
+            addParsedFiles(pubXmlFile);
+            PackageIdentifier packageIdentifier = tableIdentifier.getByTag(pubXmlFile);
+
+            PackageBlock packageBlock = packageIdentifier.getPackageBlock();
+
+            encodeMaterials.setCurrentPackage(packageBlock);
+
+            File resDir=toResDirectory(pubXmlFile);
+            encodeResDir(encodeMaterials, resDir);
+            FilePathEncoder filePathEncoder = new FilePathEncoder(encodeMaterials);
+            filePathEncoder.setApkArchive(getApkModule().getApkArchive());
+            filePathEncoder.setUncompressedFiles(getApkModule().getUncompressedFiles());
+            filePathEncoder.encodeResDir(resDir);
+
+            packageBlock.sortTypes();
+            packageBlock.refresh();
+        }
+    }
+    private void encodeAttrs(EncodeMaterials encodeMaterials, List<File> pubXmlFileList) throws XMLException {
+        logMessage("Encoding attrs ...");
+        TableIdentifier tableIdentifier = encodeMaterials.getTableIdentifier();
+
+        for(File pubXmlFile:pubXmlFileList){
+            addParsedFiles(pubXmlFile);
+            PackageIdentifier packageIdentifier = tableIdentifier.getByTag(pubXmlFile);
+
+            PackageBlock packageBlock = packageIdentifier.getPackageBlock();
+            encodeMaterials.setCurrentPackage(packageBlock);
+
+            ValuesEncoder valuesEncoder = new ValuesEncoder(encodeMaterials);
+            File fileAttrs = toAttr(pubXmlFile);
+            if(fileAttrs.isFile()){
+                valuesEncoder.encodeValuesXml(fileAttrs);
+                packageBlock.sortTypes();
+                packageBlock.refresh();
+                addParsedFiles(fileAttrs);
+            }
+        }
+    }
+    private void excludeIds(List<File> pubXmlFileList){
+        for(File pubXmlFile:pubXmlFileList){
+            addParsedFiles(pubXmlFile);
+            File fileIds = toId(pubXmlFile);
+            if(fileIds.isFile()){
+                addParsedFiles(fileIds);
+            }
+        }
+    }
+    private void initializeFrameworkFromManifest(EncodeMaterials encodeMaterials, File manifestFile) throws IOException {
+        XmlPullParser parser;
+        try {
+            parser = XMLParserFactory.newPullParser(manifestFile);
+        } catch (XmlPullParserException ex) {
+            throw new IOException(ex);
+        }
+        FrameworkApk frameworkApk = getApkModule().initializeAndroidFramework(parser);
+        encodeMaterials.addFramework(frameworkApk);
+        initializeMainPackageId(encodeMaterials, parser);
+        XmlHelper.closeSilent(parser);
+    }
+    private void initializeMainPackageId(EncodeMaterials encodeMaterials, XmlPullParser parser) throws IOException {
+        Map<String, String> applicationAttributes;
+        try {
+            applicationAttributes = XmlHelper.readAttributes(parser, AndroidManifestBlock.TAG_application);
+        } catch (XmlPullParserException ex) {
+            throw new IOException(ex);
+        }
+        if(applicationAttributes == null){
+            return;
+        }
+        String iconReference = applicationAttributes.get(AndroidManifestBlock.NAME_icon);
+        if(iconReference == null){
+            return;
+        }
+        logMessage("Set main package id from manifest: " + iconReference);
+        ValueDecoder.ReferenceString ref = ValueDecoder.parseReference(iconReference);
+        if(ref == null){
+            logMessage("Something wrong on : " + AndroidManifestBlock.NAME_icon);
+            return;
+        }
+        TableIdentifier tableIdentifier = encodeMaterials.getTableIdentifier();
+        ResourceIdentifier resourceIdentifier;
+        if(ref.packageName != null){
+            resourceIdentifier = tableIdentifier.get(ref.packageName, ref.type, ref.name);
+        }else {
+            resourceIdentifier = tableIdentifier.get(ref.type, ref.name);
+        }
+        if(resourceIdentifier == null){
+            logMessage("WARN: failed to resolve: " + ref);
+            return;
+        }
+        int packageId = resourceIdentifier.getPackageId();
+        encodeMaterials.setMainPackageId(packageId);
+        logMessage("Main package id initialized: id = "
+                + HexUtil.toHex2((byte)packageId) + ", from: " + ref );
     }
     private void preloadStringPool(List<File> pubXmlFileList){
         logMessage("Loading string pool ...");
@@ -166,46 +228,6 @@ public class RESEncoder {
         poolBuilder.addTo(tableBlock.getTableStringPool());
     }
 
-    private Map<File, ResourceIds.Table.Package> initializeEncodeMaterials(
-            List<File> pubXmlFileList, EncodeMaterials encodeMaterials)
-            throws IOException, XMLException {
-
-        encodeMaterials.setAPKLogger(apkLogger);
-
-        Map<File, ResourceIds.Table.Package> results = new HashMap<>();
-
-        String packageName=null;
-        for(File pubXmlFile:pubXmlFileList){
-            if(packageName==null){
-                File manifestFile = toAndroidManifest(pubXmlFile);
-                packageName=readManifestPackageName(manifestFile);
-                FrameworkApk frameworkApk = getApkModule()
-                        .initializeAndroidFramework(XMLDocument.load(manifestFile));
-                encodeMaterials.addFramework(frameworkApk);
-            }
-            ResourceIds resourceIds=new ResourceIds();
-            resourceIds.fromXml(pubXmlFile);
-            List<ResourceIds.Table.Package> pkgList = resourceIds.getTable()
-                    .listPackages();
-            if(pkgList.size()==0){
-                continue;
-            }
-            ResourceIds.Table.Package pkg = pkgList.get(0);
-            if(pkg.name==null){
-                pkg.name=packageName;
-            }
-            encodeMaterials.addPackageIds(pkg);
-            results.put(pubXmlFile, pkg);
-        }
-
-        encodeMaterials.setAPKLogger(apkLogger);
-        return results;
-    }
-    private String readManifestPackageName(File manifestFile) throws XMLException {
-        XMLDocument manifestDocument = XMLDocument.load(manifestFile);
-        return manifestDocument
-                .getDocumentElement().getAttributeValue("package");
-    }
     private void encodeResDir(EncodeMaterials materials, File resDir) throws XMLException {
 
         List<File> valuesDirList = listValuesDir(resDir);

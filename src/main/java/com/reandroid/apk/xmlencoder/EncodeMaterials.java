@@ -17,7 +17,6 @@ package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.apk.APKLogger;
 import com.reandroid.apk.FrameworkApk;
-import com.reandroid.apk.ResourceIds;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
@@ -29,21 +28,43 @@ import com.reandroid.arsc.util.FrameworkTable;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.util.ResNameMap;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.identifiers.PackageIdentifier;
+import com.reandroid.identifiers.ResourceIdentifier;
+import com.reandroid.identifiers.TableIdentifier;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 
 public class EncodeMaterials {
-    private final Set<ResourceIds.Table.Package> packageIdSet = new HashSet<>();
     private PackageBlock currentPackage;
-    private ResourceIds.Table.Package currentLocalPackage;
     private final Set<FrameworkTable> frameworkTables = new HashSet<>();
     private APKLogger apkLogger;
     private boolean mForceCreateNamespaces = true;
     private Set<String> mFrameworkPackageNames;
     private final ResNameMap<Entry> mLocalResNameMap = new ResNameMap<>();
+    private final TableIdentifier tableIdentifier = new TableIdentifier();
+    private PackageIdentifier currentPackageIdentifier;
+    private Integer mMainPackageId;
     public EncodeMaterials(){
+    }
+    public void setMainPackageId(Integer mainPackageId){
+        this.mMainPackageId = mainPackageId;
+    }
+    public PackageBlock pickMainPackageBlock(TableBlock tableBlock){
+        if(mMainPackageId != null){
+            return tableBlock.pickOne(mMainPackageId);
+        }
+        return tableBlock.pickOne();
+    }
+    public TableIdentifier getTableIdentifier(){
+        return tableIdentifier;
+    }
+    public void setEntryName(Entry entry, String name){
+        PackageBlock packageBlock = entry.getPackageBlock();
+        SpecString specString = packageBlock
+                .getSpecStringPool().getOrCreate(name);
+        entry.setSpecReference(specString);
     }
     public SpecString getSpecString(String name){
         return currentPackage.getSpecStringPool()
@@ -111,10 +132,9 @@ public class EncodeMaterials {
         return resolveFrameworkResourceId(packageName, type, name);
     }
     private int resolveLocalResourceId(String packageName, String type, String name){
-        ResourceIds.Table.Package pkg = getLocalPackage(packageName);
-        Integer resourceId = pkg.getResourceId(type, name);
-        if(resourceId != null){
-            return resourceId;
+        ResourceIdentifier ri = tableIdentifier.get(packageName, type, name);
+        if(ri != null){
+            return ri.getResourceId();
         }
         EntryGroup entryGroup=getLocalEntryGroup(type, name);
         if(entryGroup!=null){
@@ -126,18 +146,11 @@ public class EncodeMaterials {
                 ", name=" + name);
     }
     public int resolveLocalResourceId(String type, String name){
-        ResourceIds.Table.Package current = this.currentLocalPackage;
-        if(current != null){
-            Integer resId = current.getResourceId(type, name);
-            if(resId != null){
-                return resId;
-            }
-        }else {
-            for(ResourceIds.Table.Package pkg:packageIdSet){
-                Integer resId = pkg.getResourceId(type, name);
-                if(resId!=null){
-                    return resId;
-                }
+        PackageIdentifier pi = this.currentPackageIdentifier;
+        if(pi != null){
+            ResourceIdentifier ri = pi.getResourceIdentifier(type, name);
+            if(ri != null){
+                return ri.getResourceId();
             }
         }
         EntryGroup entryGroup=getLocalEntryGroup(type, name);
@@ -208,7 +221,7 @@ public class EncodeMaterials {
                 return entryGroup.pickOne();
             }
         }
-        SpecTypePair specTypePair=currentPackage.searchByTypeName(type);
+        SpecTypePair specTypePair=currentPackage.getSpecTypePair(type);
         if(specTypePair!=null){
             for(TypeBlock typeBlock:specTypePair.listTypeBlocks()){
                 for(Entry entry :typeBlock.listEntries(true)){
@@ -223,7 +236,7 @@ public class EncodeMaterials {
             if(packageBlock==currentPackage){
                 continue;
             }
-            specTypePair=packageBlock.searchByTypeName(type);
+            specTypePair=packageBlock.getSpecTypePair(type);
             if(specTypePair!=null){
                 for(TypeBlock typeBlock:specTypePair.listTypeBlocks()){
                     for(Entry entry :typeBlock.listEntries(true)){
@@ -240,7 +253,7 @@ public class EncodeMaterials {
     private void loadLocalEntryMap(String type){
         ResNameMap<Entry> localMap = mLocalResNameMap;
         for(PackageBlock packageBlock:currentPackage.getTableBlock().listPackages()){
-            SpecTypePair specTypePair=packageBlock.searchByTypeName(type);
+            SpecTypePair specTypePair=packageBlock.getSpecTypePair(type);
             if(specTypePair!=null){
                 for(TypeBlock typeBlock:specTypePair.listTypeBlocks()){
                     for(Entry entry :typeBlock.listEntries(true)){
@@ -306,61 +319,30 @@ public class EncodeMaterials {
         this.mForceCreateNamespaces = force;
         return this;
     }
-    public EncodeMaterials addPackageIds(ResourceIds.Table.Package packageIds) {
-        packageIds.loadEntryMap();
-        this.packageIdSet.add(packageIds);
-        return this;
-    }
     public EncodeMaterials setCurrentPackage(PackageBlock currentPackage) {
         this.currentPackage = currentPackage;
         onCurrentPackageChanged(currentPackage);
         return this;
     }
-    public EncodeMaterials setCurrentLocalPackage(ResourceIds.Table.Package currentLocalPackage) {
-        this.currentLocalPackage = currentLocalPackage;
+    public EncodeMaterials setCurrentLocalPackage(PackageIdentifier packageIdentifier) {
+        this.currentPackageIdentifier = packageIdentifier;
         return this;
     }
     private void onCurrentPackageChanged(PackageBlock currentPackage){
         if(currentPackage == null){
             return;
         }
-        ResourceIds.Table.Package current = null;
-        if(isUniquePackageIds()){
-            current = getLocalPackage(currentPackage.getId());
+        PackageIdentifier pi = tableIdentifier.getByPackage(currentPackage);
+        if(pi != null){
+            this.currentPackageIdentifier = pi;
         }
-        if(current == null && isUniquePackageNames()){
-            current = getLocalPackage(currentPackage.getName());
-        }
-        if(current != null){
-            this.currentLocalPackage = current;
-        }
-    }
-    private ResourceIds.Table.Package getLocalPackage(int packageId){
-        byte id = (byte) packageId;
-        for(ResourceIds.Table.Package pkg : packageIdSet){
-            if(id == pkg.id){
-                return pkg;
-            }
-        }
-        return null;
-    }
-    private ResourceIds.Table.Package getLocalPackage(String name){
-        if(name == null){
-            return null;
-        }
-        for(ResourceIds.Table.Package pkg : packageIdSet){
-            if(name.equals(pkg.name)){
-                return pkg;
-            }
-        }
-        return null;
     }
     private boolean isLocalPackageName(String packageName){
         if(packageName == null){
             return false;
         }
-        for(ResourceIds.Table.Package pkg : packageIdSet){
-            if(packageName.equals(pkg.name)){
+        for(PackageIdentifier pi : tableIdentifier.getPackages()){
+            if(packageName.equals(pi.getName())){
                 return true;
             }
         }
@@ -368,17 +350,17 @@ public class EncodeMaterials {
     }
     private boolean isUniquePackageNames(){
         Set<String> names = new HashSet<>();
-        for(ResourceIds.Table.Package pkg : packageIdSet){
-            names.add(pkg.name);
+        for(PackageIdentifier pi : tableIdentifier.getPackages()){
+            names.add(pi.getName());
         }
-        return names.size() == packageIdSet.size();
+        return names.size() == tableIdentifier.getPackages().size();
     }
     private boolean isUniquePackageIds(){
-        Set<Byte> ids = new HashSet<>();
-        for(ResourceIds.Table.Package pkg : packageIdSet){
-            ids.add(pkg.id);
+        Set<Integer> ids = new HashSet<>();
+        for(PackageIdentifier pi : tableIdentifier.getPackages()){
+            ids.add(pi.getId());
         }
-        return ids.size() == packageIdSet.size();
+        return ids.size() == tableIdentifier.getPackages().size();
     }
     public EncodeMaterials addFramework(FrameworkApk frameworkApk) {
         if(frameworkApk!=null){
@@ -434,13 +416,12 @@ public class EncodeMaterials {
         return create(packageBlock);
     }
     public static EncodeMaterials create(PackageBlock packageBlock){
-        ResourceIds resourceIds = new ResourceIds();
-        resourceIds.loadPackageBlock(packageBlock);
-        ResourceIds.Table.Package packageId = resourceIds.getTable().listPackages().get(0);
-        EncodeMaterials encodeMaterials = new EncodeMaterials()
-                .addPackageIds(packageId)
-                .setCurrentPackage(packageBlock);
+        EncodeMaterials encodeMaterials = new EncodeMaterials();
+
         TableBlock tableBlock = packageBlock.getTableBlock();
+        encodeMaterials.getTableIdentifier().load(tableBlock);
+        encodeMaterials.setCurrentPackage(packageBlock);
+
         for(TableBlock frameworkTable:tableBlock.getFrameWorks()){
             if(frameworkTable instanceof FrameworkTable){
                 encodeMaterials.addFramework((FrameworkTable) frameworkTable);

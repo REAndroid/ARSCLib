@@ -17,9 +17,7 @@ package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.TableEntry;
-import com.reandroid.arsc.value.ValueItem;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.*;
 import com.reandroid.common.EntryStore;
 
 import java.io.IOException;
@@ -45,6 +43,17 @@ abstract class DecoderTableEntry<INPUT extends TableEntry<?, ?>, OUTPUT> {
                     packageBlock,
                     valueItem.getValueType(),
                     valueItem.getData());
+            writer.text(value);
+        }
+    }
+    void writeText(EntryWriter<?> writer, ResValueMap attributeValue)
+            throws IOException {
+        if(attributeValue.getValueType() == ValueType.STRING){
+            XMLDecodeHelper.writeTextContent(writer, attributeValue.getDataAsPoolString());
+        }else {
+            String value = ValueDecoder.decode(getEntryStore(),
+                    attributeValue.getPackageBlock().getId(),
+                    attributeValue);
             writer.text(value);
         }
     }

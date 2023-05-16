@@ -30,6 +30,7 @@ import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.common.FileChannelInputStream;
 
 import java.io.*;
 import java.util.*;
@@ -128,7 +129,7 @@ public class FrameworkTable extends TableBlock {
      */
     public Entry searchEntryFromTable(String typeName, String entryName){
         for(PackageBlock packageBlock:listPackages()){
-            SpecTypePair specTypePair = packageBlock.searchByTypeName(typeName);
+            SpecTypePair specTypePair = packageBlock.getSpecTypePair(typeName);
             if(specTypePair!=null){
                 return specTypePair.getAnyEntry(entryName);
             }
@@ -419,7 +420,7 @@ public class FrameworkTable extends TableBlock {
         return getFrameworkName()+'-'+getVersionCode();
     }
     public static FrameworkTable load(File file) throws IOException{
-        return load(new FileInputStream(file));
+        return load(new FileChannelInputStream(file));
     }
     public static FrameworkTable load(InputStream inputStream) throws IOException{
         FrameworkTable frameworkTable=new FrameworkTable();

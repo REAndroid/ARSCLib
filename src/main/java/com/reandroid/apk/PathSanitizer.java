@@ -211,7 +211,7 @@ public class PathSanitizer {
         PathSanitizer pathSanitizer = new PathSanitizer(
                 apkModule.getApkArchive().listInputSources());
         pathSanitizer.setApkLogger(apkModule.getApkLogger());
-        pathSanitizer.setResourceFileList(apkModule.getResFiles());
+        pathSanitizer.setResourceFileList(apkModule.listResFiles());
         return pathSanitizer;
     }
 

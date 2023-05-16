@@ -844,6 +844,63 @@ public class ValueDecoder {
         str=str.trim();
         return str.length()==0;
     }
+
+    public static ReferenceString parseReference(String ref){
+        if(ref == null || ref.length() < 2){
+            return null;
+        }
+        char first = ref.charAt(0);
+        if(first != '@' && first != '?'){
+            return null;
+        }
+        Matcher matcher = PATTERN_REFERENCE.matcher(ref);
+        if(!matcher.find()){
+            return null;
+        }
+        String prefix = matcher.group(1);
+        String packageName = matcher.group(2);
+        if(packageName != null){
+            if(packageName.endsWith(":")){
+                packageName = packageName.substring(0, packageName.length()-1);
+            }
+            if(packageName.length() == 0){
+                packageName = null;
+            }
+        }
+        String type = matcher.group(4);
+        String name = matcher.group(5);
+        return new ReferenceString(prefix, packageName, type, name);
+    }
+    public static class ReferenceString{
+        public final String prefix;
+        public final String packageName;
+        public final String type;
+        public final String name;
+        public ReferenceString(String prefix, String packageName, String type, String name){
+            this.prefix = prefix;
+            this.packageName = packageName;
+            this.type = type;
+            this.name = name;
+        }
+        @Override
+        public String toString(){
+            StringBuilder builder = new StringBuilder();
+            if(prefix != null){
+                builder.append(prefix);
+            }
+            if(packageName != null){
+                builder.append(packageName);
+                builder.append(':');
+            }
+            if(type != null){
+                builder.append(type);
+                builder.append('/');
+            }
+            builder.append(name);
+            return builder.toString();
+        }
+
+    }
     public static class EncodeResult{
         public final ValueType valueType;
         public final int value;

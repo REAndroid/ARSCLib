@@ -5,6 +5,8 @@
 */
 package com.reandroid.json;
 
+import com.reandroid.common.FileChannelInputStream;
+
 import java.io.*;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
@@ -116,8 +118,8 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
     	this.myArrayList = new ArrayList<Object>(initialCapacity);
     }
 
-    public JSONArray(File file) throws FileNotFoundException {
-        this(new FileInputStream(file));
+    public JSONArray(File file) throws IOException {
+        this(new FileChannelInputStream(file));
     }
     public JSONArray(Reader reader){
         this(new JSONTokener(reader));

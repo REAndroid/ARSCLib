@@ -26,11 +26,12 @@ import com.reandroid.arsc.value.Entry;
 
     @Override
     void encodeStringValue(Entry entry, String value){
-        entry.setValueAsString(ValueDecoder.unEscapeSpecialCharacter(value));
+        entry.setValueAsBoolean(false);
+        setVisibility(entry);
     }
     @Override
     void encodeNullValue(Entry entry){
-        entry.setValueAsString("");
+        entry.setValueAsBoolean(false);
         setVisibility(entry);
     }
     @Override

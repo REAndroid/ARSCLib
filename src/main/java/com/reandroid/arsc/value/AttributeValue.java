@@ -18,4 +18,5 @@ package com.reandroid.arsc.value;
 public interface AttributeValue extends Value{
     int getNameResourceID();
     void setNameResourceID(int resourceId);
+    Entry resolveName();
 }

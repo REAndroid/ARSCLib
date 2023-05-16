@@ -25,17 +25,32 @@ class XMLValuesEncoderBag extends XMLValuesEncoder{
         super(materials);
     }
     @Override
-    void encodeValue(Entry entry, XMLElement element){
-        ResTableMapEntry tableMapEntry = new ResTableMapEntry();
-        entry.setTableEntry(tableMapEntry);
-        String parent=element.getAttributeValue("parent");
-        if(!EncodeUtil.isEmpty(parent)){
-            int parentId=getMaterials().resolveReference(parent);
-            tableMapEntry.getHeader().setParentId(parentId);
+    final void encodeValue(Entry entry, XMLElement element){
+        if(encodeIfReference(entry, element)){
+            return;
         }
-        tableMapEntry.getValue().setChildesCount(getChildesCount(element));
+        entry.ensureComplex(true);
+        ResTableMapEntry tableMapEntry = (ResTableMapEntry) entry.getTableEntry();
+        String parent = element.getAttributeValue("parent");
+        if(!EncodeUtil.isEmpty(parent)){
+            int parentId = getMaterials().resolveReference(parent);
+            tableMapEntry.setParentId(parentId);
+        }
+        tableMapEntry.setValuesCount(getChildesCount(element));
         encodeChildes(element, tableMapEntry);
-        tableMapEntry.refresh();
+    }
+    private boolean encodeIfReference(Entry entry, XMLElement element){
+        if(element.hasChildElements()
+                || !element.hasTextContent()
+                || element.getAttributeCount() > 1){
+            return false;
+        }
+        String text = element.getTextContent();
+        if(!ValueDecoder.isReference(text)){
+            return false;
+        }
+        encodeReferenceValue(entry, text);
+        return true;
     }
     void encodeChildes(XMLElement element, ResTableMapEntry mapEntry){
         throw new EncodeException("Unimplemented bag type encoder: "

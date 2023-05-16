@@ -5,6 +5,8 @@
 */
 package com.reandroid.json;
 
+import com.reandroid.common.FileChannelInputStream;
+
 import java.io.*;
 
 import java.lang.annotation.Annotation;
@@ -189,8 +191,8 @@ public class JSONObject extends JSONItem {
     }
 
 
-    public JSONObject(File file) throws FileNotFoundException {
-        this(new FileInputStream(file));
+    public JSONObject(File file) throws IOException {
+        this(new FileChannelInputStream(file));
     }
     public JSONObject(Reader reader){
         this(new JSONTokener(reader));

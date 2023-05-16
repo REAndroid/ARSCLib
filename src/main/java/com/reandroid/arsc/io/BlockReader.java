@@ -1,18 +1,18 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.io;
 
 import com.reandroid.arsc.header.InfoHeader;
@@ -22,7 +22,7 @@ import com.reandroid.arsc.header.TypeHeader;
 import java.io.*;
 
 
- public class BlockReader extends InputStream {
+public class BlockReader extends InputStream {
     private final Object mLock=new Object();
     private byte[] BUFFER;
     private final int mStart;
@@ -58,16 +58,16 @@ import java.io.*;
         seek(pos);
         return toShort(bts, 0);
     }
-     public SpecHeader readSpecHeader() throws IOException{
-         SpecHeader specHeader = new SpecHeader();
-         if(available() < specHeader.countBytes()){
-             return null;
-         }
-         int pos = getPosition();
-         specHeader.readBytes(this);
-         seek(pos);
-         return specHeader;
-     }
+    public SpecHeader readSpecHeader() throws IOException{
+        SpecHeader specHeader = new SpecHeader();
+        if(available() < specHeader.countBytes()){
+            return null;
+        }
+        int pos = getPosition();
+        specHeader.readBytes(this);
+        seek(pos);
+        return specHeader;
+    }
     public TypeHeader readTypeHeader() throws IOException{
         TypeHeader typeHeader = new TypeHeader(false);
         if(available() < typeHeader.getMinimumSize()){
@@ -112,8 +112,8 @@ import java.io.*;
                 (bts[offset+3] & 0xff) << 24;
     }
     private short toShort(byte[] bts, int offset){
-         return (short) (bts[offset] & 0xff |
-                          (bts[offset+1] & 0xff) << 8);
+        return (short) (bts[offset] & 0xff |
+                (bts[offset+1] & 0xff) << 8);
     }
     public byte[] getBytes(){
         int len = length();
@@ -334,4 +334,9 @@ import java.io.*;
     public static InfoHeader readHeaderBlock(InputStream inputStream) throws IOException{
         return InfoHeader.readHeaderBlock(inputStream);
     }
+    public static InfoHeader readHeaderBlock(byte[] bytes) throws IOException{
+        return InfoHeader.readHeaderBlock(bytes);
+    }
+
+    private static final int MAX_FILE_SIZE = 1024 * 1000 * 40;
 }

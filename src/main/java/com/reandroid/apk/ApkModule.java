@@ -37,6 +37,8 @@ import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLException;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -58,8 +60,6 @@ public class ApkModule implements ApkFile {
     private ApkType mApkType;
     private ApkSignatureBlock apkSignatureBlock;
     private Integer preferredFramework;
-    private List<ResFile> mResFileList;
-    private int mFilesCountAtResFileLoad;
 
     public ApkModule(String moduleName, APKArchive apkArchive){
         this.moduleName=moduleName;
@@ -159,6 +159,43 @@ public class ApkModule implements ApkFile {
         return false;
     }
 
+    public FrameworkApk initializeAndroidFramework(XmlPullParser parser) throws IOException {
+        Map<String, String> manifestAttributes;
+        try {
+            manifestAttributes = XmlHelper.readAttributes(parser, AndroidManifestBlock.TAG_manifest);
+        } catch (XmlPullParserException ex) {
+            throw new IOException(ex);
+        }
+        if(manifestAttributes == null){
+            throw new IOException("Invalid AndroidManifest, missing element: '"
+                    + AndroidManifestBlock.TAG_manifest + "'");
+        }
+        return initializeAndroidFramework(manifestAttributes);
+    }
+    public FrameworkApk initializeAndroidFramework(Map<String, String> manifestAttributes) throws IOException {
+        String coreApp = manifestAttributes.get(AndroidManifestBlock.NAME_coreApp);
+        String packageName = manifestAttributes.get(AndroidManifestBlock.NAME_PACKAGE);
+        if("true".equals(coreApp) && "android".equals(packageName)){
+            logMessage("Looks framework itself, skip loading frameworks");
+            return null;
+        }
+        String compileSdkVersion = manifestAttributes.get(AndroidManifestBlock.NAME_compileSdkVersion);
+        if(compileSdkVersion == null){
+            logMessage("Missing attribute: '" + AndroidManifestBlock.NAME_compileSdkVersion + "', skip loading frameworks");
+            return null;
+        }
+        int version;
+        try{
+            version = Integer.parseInt(compileSdkVersion);
+        }catch (NumberFormatException exception){
+            logMessage("NumberFormatException on reading: '"
+                    + AndroidManifestBlock.NAME_compileSdkVersion + "=\""
+                    + compileSdkVersion +"\"' : " + exception.getMessage());
+            return null;
+        }
+        TableBlock tableBlock = getTableBlock(false);
+        return initializeAndroidFramework(tableBlock, version);
+    }
     public FrameworkApk initializeAndroidFramework(XMLDocument xmlDocument) throws IOException {
         TableBlock tableBlock = getTableBlock(false);
         if(isAndroidCoreApp(xmlDocument)){
@@ -331,7 +368,7 @@ public class ApkModule implements ApkFile {
         apkWriter.close();
     }
     public void uncompressNonXmlResFiles() {
-        for(ResFile resFile:getResFiles()){
+        for(ResFile resFile:listResFiles()){
             if(resFile.isBinaryXml()){
                 continue;
             }
@@ -345,7 +382,7 @@ public class ApkModule implements ApkFile {
         getApkArchive().removeDir(dirName);
     }
     public void validateResourcesDir() {
-        List<ResFile> resFileList = getResFiles();
+        List<ResFile> resFileList = listResFiles();
         Set<String> existPaths=new HashSet<>();
         List<InputSource> sourceList = getApkArchive().listInputSources();
         for(InputSource inputSource:sourceList){
@@ -373,7 +410,7 @@ public class ApkModule implements ApkFile {
         getTableBlock().refresh();
     }
     public void setResourcesRootDir(String dirName) {
-        List<ResFile> resFileList = getResFiles();
+        List<ResFile> resFileList = listResFiles();
         Set<String> existPaths=new HashSet<>();
         List<InputSource> sourceList = getApkArchive().listInputSources();
         for(InputSource inputSource:sourceList){
@@ -397,17 +434,8 @@ public class ApkModule implements ApkFile {
         stringPool.refreshUniqueIdMap();
         getTableBlock().refresh();
     }
-    public List<ResFile> getResFiles() {
-        List<ResFile> resFileList = this.mResFileList;
-        if(resFileList == null || mFilesCountAtResFileLoad != getApkArchive().size()){
-            resFileList = listResFiles();
-        }
-        return resFileList;
-    }
     public List<ResFile> listResFiles() {
-        mResFileList = listResFiles(0, null);
-        mFilesCountAtResFileLoad = getApkArchive().size();
-        return mResFileList;
+        return listResFiles(0, null);
     }
     public List<ResFile> listResFiles(int resourceId, ResConfig resConfig) {
         List<ResFile> results=new ArrayList<>();
@@ -526,7 +554,7 @@ public class ApkModule implements ApkFile {
     }
     public void setTableBlock(TableBlock tableBlock){
         APKArchive archive = getApkArchive();
-        if(tableBlock==null){
+        if(tableBlock == null){
             mTableBlock = null;
             archive.remove(TableBlock.FILE_NAME);
             return;
@@ -535,6 +563,8 @@ public class ApkModule implements ApkFile {
         BlockInputSource<TableBlock> source =
                 new BlockInputSource<>(TableBlock.FILE_NAME, tableBlock);
         archive.add(source);
+        source.setMethod(ZipEntry.STORED);
+        getUncompressedFiles().addPath(source);
         mTableBlock = tableBlock;
     }
     @Override
@@ -557,6 +587,15 @@ public class ApkModule implements ApkFile {
             blockInputSource.setMethod(inputSource.getMethod());
             archive.add(blockInputSource);
             manifestBlock.setApkFile(this);
+            TableBlock tableBlock = this.mTableBlock;
+            if(tableBlock != null){
+                int packageId = manifestBlock.guessCurrentPackageId();
+                if(packageId != 0){
+                    manifestBlock.setPackageBlock(tableBlock.pickOne(packageId));
+                }else {
+                    manifestBlock.setPackageBlock(tableBlock.pickOne());
+                }
+            }
             mManifestBlock = manifestBlock;
             onManifestBlockLoaded(manifestBlock);
         } catch (IOException exception) {

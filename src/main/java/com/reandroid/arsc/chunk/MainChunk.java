@@ -7,4 +7,5 @@ public interface MainChunk {
     StringPool<?> getStringPool();
     ApkFile getApkFile();
     void setApkFile(ApkFile apkFile);
+    TableBlock getTableBlock();
 }

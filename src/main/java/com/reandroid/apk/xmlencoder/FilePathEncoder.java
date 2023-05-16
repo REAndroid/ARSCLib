@@ -71,12 +71,12 @@ public class FilePathEncoder {
         String name = EncodeUtil.getEntryNameFromResFile(resFile);
         int resourceId=materials.resolveLocalResourceId(type, name);
 
-        Entry entry =typeBlock
+        Entry entry = typeBlock
                 .getOrCreateEntry((short) (0xffff & resourceId));
 
-        String path=EncodeUtil.getEntryPathFromResFile(resFile);
+        String path = EncodeUtil.getEntryPathFromResFile(resFile);
         entry.setValueAsString(path);
-        entry.setSpecReference(materials.getSpecString(name));
+        materials.setEntryName(entry, name);
         InputSource inputSource=createInputSource(path, resFile);
         if(inputSource instanceof XMLEncodeSource){
             ((XMLEncodeSource)inputSource).setEntry(entry);

@@ -68,10 +68,15 @@ public class TypeStringPool extends StringPool<TypeString> {
         return super.get(index);
     }
     public TypeString getOrCreate(int typeId, String typeName){
-        int size=typeId-mTypeIdOffset.get();
-        getStringsArray().ensureSize(size);
-        TypeString typeString=getById(typeId);
+        StringArray<TypeString> stringsArray = getStringsArray();
+        int old = stringsArray.childesCount();
+        int size = typeId - mTypeIdOffset.get();
+        stringsArray.ensureSize(size);
+        TypeString typeString = getById(typeId);
         typeString.set(typeName);
+        if(old != stringsArray.childesCount()){
+            updateUniqueIdMap(typeString);
+        }
         return typeString;
     }
     /**

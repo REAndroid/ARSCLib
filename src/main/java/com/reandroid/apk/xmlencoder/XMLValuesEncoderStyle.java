@@ -19,7 +19,6 @@ import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.decoder.ValueDecoder;
 import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.attribute.AttributeBag;
-import com.reandroid.arsc.value.attribute.AttributeValueType;
 import com.reandroid.xml.XMLElement;
 
 
@@ -97,7 +96,7 @@ class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
                 bagItem.setValueType(ValueType.REFERENCE);
             }
             bagItem.setData(getMaterials().resolveReference(valueText));
-        }else if(attributeBag.isEqualType(AttributeValueType.STRING)) {
+        }else if(attributeBag.isEqualType(AttributeDataFormat.STRING)) {
             bagItem.setValueAsString(ValueDecoder
                     .unEscapeSpecialCharacter(valueText));
         }else if(EncodeUtil.isEmpty(valueText)) {

@@ -111,6 +111,11 @@ public class TableBlock extends Chunk<TableHeader>
     public void setApkFile(ApkFile apkFile){
         this.mApkFile = apkFile;
     }
+    @Override
+    public TableBlock getTableBlock() {
+        return this;
+    }
+
     public TableStringPool getTableStringPool(){
         return mTableStringPool;
     }
@@ -182,6 +187,40 @@ public class TableBlock extends Chunk<TableHeader>
         return length;
     }
 
+    public Entry getAnyEntry(int resourceId){
+        if(resourceId == 0 || ((resourceId >> 16) & 0xff) == 0){
+            return null;
+        }
+        Entry result = null;
+        for(PackageBlock packageBlock : listPackages()){
+            Entry entry = packageBlock.getAnyEntry(resourceId);
+            if(entry == null){
+                continue;
+            }
+            if(!entry.isNull()){
+                return entry;
+            }
+            if(result == null){
+                result = entry;
+            }
+        }
+        if(result != null){
+            return result;
+        }
+        for(TableBlock tableBlock : getFrameWorks()){
+            Entry entry = tableBlock.getAnyEntry(resourceId);
+            if(entry == null){
+                continue;
+            }
+            if(!entry.isNull()){
+                return entry;
+            }
+            if(result == null){
+                result = entry;
+            }
+        }
+        return result;
+    }
     public EntryGroup search(int resourceId){
         if(resourceId==0){
             return null;

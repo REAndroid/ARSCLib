@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,10 +18,10 @@ package com.reandroid.apk.xmlencoder;
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.chunk.xml.*;
 import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.arsc.value.attribute.AttributeBag;
-import com.reandroid.arsc.value.attribute.AttributeValueType;
 import com.reandroid.xml.*;
 
 import java.io.File;
@@ -65,7 +65,8 @@ public class XMLFileEncoder {
         return null;
     }
     public ResXmlDocument encode(XMLDocument xmlDocument){
-        resXmlDocument =new ResXmlDocument();
+        resXmlDocument = new ResXmlDocument();
+        resXmlDocument.setPackageBlock(materials.getCurrentPackage());
         buildIdMap(xmlDocument);
         buildElement(xmlDocument);
         resXmlDocument.refresh();
@@ -153,7 +154,7 @@ public class XMLFileEncoder {
                     xmlAttribute.setData(encodeResult.value);
                     continue;
                 }
-                if(attributeBag.isEqualType(AttributeValueType.STRING)) {
+                if(attributeBag.isEqualType(AttributeDataFormat.STRING)) {
                     xmlAttribute.setValueAsString(ValueDecoder
                             .unEscapeSpecialCharacter(valueText));
                     continue;
@@ -243,14 +244,14 @@ public class XMLFileEncoder {
         }
         int pkgId = (resourceId>>24) & 0xff;
         String uri;
-        if(pkgId==materials.getCurrentPackageId()){
-            uri=EncodeUtil.URI_APP;
+        if(pkgId == 1){
+            uri = EncodeUtil.URI_ANDROID;
         }else {
-            uri=EncodeUtil.URI_ANDROID;
+            uri=EncodeUtil.URI_APP;
         }
-        ResXmlElement root=resXmlElement.getRootResXmlElement();
-        ResXmlStartNamespace ns=root.getOrCreateNamespace(uri, prefix);
-        materials.logMessage("Force created ns: "+prefix+":"+uri);
+        ResXmlElement root = resXmlElement.getRootResXmlElement();
+        ResXmlStartNamespace ns = root.getOrCreateNamespace(uri, prefix);
+        materials.logVerbose("Force created ns: "+prefix+":"+uri);
         return ns;
     }
 }

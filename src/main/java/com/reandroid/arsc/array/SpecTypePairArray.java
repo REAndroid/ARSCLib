@@ -84,7 +84,7 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         return pair.getOrCreateTypeBlock(qualifiers);
     }
     public TypeBlock getTypeBlock(byte typeId, String qualifiers){
-        SpecTypePair pair=getPair(typeId);
+        SpecTypePair pair= getSpecTypePair(typeId);
         if(pair==null){
             return null;
         }
@@ -95,7 +95,7 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         return pair.getTypeBlockArray().getOrCreate(resConfig);
     }
     public SpecTypePair getOrCreate(byte typeId){
-        SpecTypePair pair = getPair(typeId);
+        SpecTypePair pair = getSpecTypePair(typeId);
         if(pair!=null){
             return pair;
         }
@@ -120,19 +120,19 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
     public TypeBlock getOrCreateTypeBlock(String typeName, String qualifiers){
         return getOrCreate(typeName).getOrCreateTypeBlock(qualifiers);
     }
-    public SpecTypePair getPair(byte typeId){
-        SpecTypePair[] items=getChildes();
-        if(items==null){
+    public SpecTypePair getSpecTypePair(int typeId){
+        return getSpecTypePair((byte) typeId);
+    }
+    public SpecTypePair getSpecTypePair(byte typeId){
+        SpecTypePair[] items = getChildes();
+        if(items == null){
             return null;
         }
-        int max=items.length;
-        for(int i=0;i<max;i++){
-            SpecTypePair pair=items[i];
-            if(pair==null){
-                continue;
-            }
-            if(pair.getTypeId()==typeId){
-                return pair;
+        int length = items.length;
+        for(int i = 0; i < length; i++){
+            SpecTypePair specTypePair = items[i];
+            if(specTypePair != null && specTypePair.getTypeId() == typeId){
+                return specTypePair;
             }
         }
         return null;
@@ -147,6 +147,16 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
             if(specTypePair.isEqualTypeName(typeName)){
                 return specTypePair;
             }
+        }
+        return null;
+    }
+    public Entry getAnyEntry(byte typeId, short entryId){
+        if(typeId == 0){
+            return null;
+        }
+        SpecTypePair specTypePair = getSpecTypePair(typeId);
+        if(specTypePair != null){
+            return specTypePair.getAnyEntry(entryId);
         }
         return null;
     }
@@ -198,7 +208,7 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         for(Map.Entry<Byte, Integer> entry:entryCountMap.entrySet()){
             byte id=entry.getKey();
             int count=entry.getValue();
-            SpecTypePair pair=getPair(id);
+            SpecTypePair pair= getSpecTypePair(id);
             pair.getSpecBlock().setEntryCount(count);
             pair.getTypeBlockArray().setEntryCount(count);
         }

@@ -46,8 +46,7 @@ class XMLValuesEncoderArray extends XMLValuesEncoderBag{
             ResValueMap bagItem = itemArray.get(i);
             String name = child.getAttributeValue("name");
             if(name == null){
-                bagItem.setNameHigh((short) 0x0100);
-                bagItem.setNameLow((short) (i+1));
+                bagItem.setName(0x01000001 + i);
             }else {
                 Integer unknown = decodeUnknownAttributeHex(name);
                 int resourceId;

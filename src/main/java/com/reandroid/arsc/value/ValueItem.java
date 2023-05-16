@@ -17,6 +17,9 @@ package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.MainChunk;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.ParentChunk;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.arsc.item.ReferenceBlock;
@@ -40,6 +43,60 @@ public abstract class ValueItem extends BlockItem implements Value,
         this.sizeOffset = sizeOffset;
 
         writeSize();
+    }
+    public Entry resolve(int resourceId){
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return null;
+        }
+        Entry entry = packageBlock.getAnyEntry(resourceId);
+        if(entry != null){
+            return entry;
+        }
+        TableBlock tableBlock = packageBlock.getTableBlock();
+        if(tableBlock == null){
+            return null;
+        }
+        return tableBlock.getAnyEntry(resourceId);
+    }
+
+    public String buildReference(Entry entry, ValueType referenceType, boolean addType){
+        if(entry == null){
+            return null;
+        }
+        PackageBlock packageBlock = entry.getPackageBlock();
+        PackageBlock myPackageBlock = getPackageBlock();
+        StringBuilder builder = new StringBuilder();
+        if(referenceType == ValueType.REFERENCE
+                || referenceType == ValueType.DYNAMIC_REFERENCE){
+            builder.append('@');
+        }else if(referenceType == ValueType.ATTRIBUTE
+                || referenceType == ValueType.DYNAMIC_ATTRIBUTE){
+            builder.append('?');
+        }
+        if(packageBlock != myPackageBlock && packageBlock != null && myPackageBlock != null){
+            String packageName = packageBlock.getName();
+
+            if(!packageName.equals(myPackageBlock.getName())
+                    || packageBlock.getId() != myPackageBlock.getId()){
+                builder.append(packageName);
+                builder.append(':');
+            }
+
+        }
+        if(addType){
+            builder.append(entry.getTypeName());
+            builder.append('/');
+        }
+        builder.append(entry.getName());
+        return builder.toString();
+    }
+    public PackageBlock getPackageBlock(){
+        ParentChunk parentChunk = getParentChunk();
+        if(parentChunk != null){
+            return parentChunk.getPackageBlock();
+        }
+        return null;
     }
 
     void linkTableStrings(TableStringPool tableStringPool){

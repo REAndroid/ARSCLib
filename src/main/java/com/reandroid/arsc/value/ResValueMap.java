@@ -15,8 +15,8 @@
  */
 package com.reandroid.arsc.value;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.decoder.ValueDecoder;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.json.JSONObject;
 
@@ -26,27 +26,65 @@ public class ResValueMap extends ValueItem implements AttributeValue{
         super(12, OFFSET_SIZE);
     }
 
+    public String decodeData(){
+        String value = decodeDataAsAttrFormats();
+        if(value != null){
+            return value;
+        }
+        ValueType valueType = getValueType();
+        if(valueType == ValueType.STRING){
+            return getValueAsString();
+        }
+        int data = getData();
+        if(AttributeDataFormat.REFERENCE.contains(valueType)){
+            Entry entry = resolve(data);
+            if(entry == null){
+                return HexUtil.toHex8("@0x", data);
+            }
+            return buildReference(entry, valueType, true);
+        }
+        return ValueDecoder.decode(valueType, data);
+    }
+    private String decodeDataAsAttrFormats(){
+        AttributeType attributeType = getAttributeType();
+        if(attributeType != AttributeType.FORMATS){
+            return null;
+        }
+        return AttributeDataFormat.toString(AttributeDataFormat.decodeValueTypes(getData()));
+    }
+    public String decodeName(){
+        AttributeType attributeType = getAttributeType();
+        if(attributeType != null){
+            return attributeType.getName();
+        }
+        Entry entry = resolveName();
+        return buildReference(entry, null, false);
+    }
+    @Override
+    public Entry resolveName(){
+        return resolve(getNameResourceID());
+    }
     public AttributeType getAttributeType(){
         return AttributeType.valueOf(getNameResourceID());
     }
     public void setAttributeType(AttributeType attributeType){
         setNameResourceID(attributeType.getId());
     }
-    public AttributeTypeFormat[] getAttributeTypeFormats(){
+    public AttributeDataFormat[] getAttributeTypeFormats(){
         AttributeType attributeType = getAttributeType();
         if(attributeType != AttributeType.FORMATS){
             return null;
         }
-        return AttributeTypeFormat.decodeValueTypes(getData());
+        return AttributeDataFormat.decodeValueTypes(getData());
     }
-    public void addAttributeTypeFormats(AttributeTypeFormat[] formats){
+    public void addAttributeTypeFormats(AttributeDataFormat[] formats){
         if(formats == null){
             return;
         }
-        int data = getData() | AttributeTypeFormat.sum(formats);
+        int data = getData() | AttributeDataFormat.sum(formats);
         setData(data);
     }
-    public void addAttributeTypeFormat(AttributeTypeFormat format){
+    public void addAttributeTypeFormat(AttributeDataFormat format){
         if(format == null){
             return;
         }
@@ -66,14 +104,7 @@ public class ResValueMap extends ValueItem implements AttributeValue{
     }
 
     public ResTableMapEntry getParentMapEntry(){
-        Block parent=getParent();
-        while(parent!=null){
-            if(parent instanceof ResTableMapEntry){
-                return (ResTableMapEntry) parent;
-            }
-            parent=parent.getParent();
-        }
-        return null;
+        return getParentInstance(ResTableMapEntry.class);
     }
 
     public int getName(){
@@ -138,6 +169,11 @@ public class ResValueMap extends ValueItem implements AttributeValue{
     }
     @Override
     public String toString(){
+        String name = decodeName();
+        String data = decodeData();
+        if(name != null && data != null){
+            return name + "=\"" + data + "\"";
+        }
         return "name=" + HexUtil.toHex8(getName())
                 +", "+super.toString();
     }

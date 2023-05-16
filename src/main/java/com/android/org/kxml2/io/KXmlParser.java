@@ -176,7 +176,6 @@ public class KXmlParser implements XmlPullParser, Closeable {
 
     private boolean unresolved;
 
-    public final LibCoreStringPool stringPool = new LibCoreStringPool();
 
     /**
      * Retains namespace attributes like {@code xmlns="http://foo"} or {@code xmlns:foo="http:foo"}
@@ -504,7 +503,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
         if (!returnText) {
             return null;
         } else if (result == null) {
-            return stringPool.get(buffer, start, end - start);
+            return new String(buffer, start, end - start);
         } else {
             result.append(buffer, start, end - start);
             return result.toString();
@@ -1427,7 +1426,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
         }
 
         if (result == null) {
-            return stringPool.get(buffer, start, position - start);
+            return new String(buffer, start, position - start);
         } else {
             result.append(buffer, start, position - start);
             return result.toString();
@@ -1579,7 +1578,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
 
             // we encountered a non-name character. done!
             if (result == null) {
-                return stringPool.get(buffer, start, position - start);
+                return new String(buffer, start, position - start);
             } else {
                 result.append(buffer, start, position - start);
                 return result.toString();

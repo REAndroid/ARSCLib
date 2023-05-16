@@ -17,13 +17,8 @@ package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.value.EntryHeaderMap;
-import com.reandroid.arsc.value.ResTableMapEntry;
-import com.reandroid.arsc.value.ResValueMap;
-import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.attribute.AttributeBag;
-import com.reandroid.arsc.value.attribute.AttributeItemType;
-import com.reandroid.arsc.value.attribute.AttributeValueType;
 import com.reandroid.xml.XMLAttribute;
 import com.reandroid.xml.XMLElement;
 
@@ -51,19 +46,19 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
     private void encodeAttributes(XMLElement parentElement, ResTableMapEntry mapEntry){
         ResValueMapArray mapArray = mapEntry.getValue();
 
-        int bagIndex=0;
-
+        int bagIndex = 0;
         ResValueMap formatItem = mapArray.get(bagIndex);
-
-        formatItem.setNameHigh((short) 0x0100);
-        formatItem.setNameLow(AttributeItemType.FORMAT.getValue());
         formatItem.setValueType(ValueType.INT_DEC);
-        formatItem.setDataHigh(getChildTypes(parentElement));
 
-        AttributeValueType[] valueTypes = AttributeValueType
-                .valuesOf(parentElement.getAttributeValue("formats"));
+        AttributeType typeFormats = AttributeType.FORMATS;
+        formatItem.setAttributeType(typeFormats);
 
-        formatItem.setDataLow((short) (0xff & AttributeValueType.sumValues(valueTypes)));
+        formatItem.addAttributeTypeFormat(getFlagEnum(parentElement));
+
+        AttributeDataFormat[] formats = AttributeDataFormat.parseValueTypes(
+                parentElement.getAttributeValue(typeFormats.getName()));
+
+        formatItem.addAttributeTypeFormats(formats);
 
         bagIndex++;
 
@@ -72,22 +67,80 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
             if("name".equals(name) || "formats".equals(name)){
                 continue;
             }
-            AttributeItemType itemType = AttributeItemType.fromName(name);
-            if(itemType==null){
+            AttributeType attributeType = AttributeType.fromName(name);
+            if(attributeType == null){
                 throw new EncodeException("Unknown attribute: '"+name
-                        +"', on attribute: "+attribute.toString());
+                        +"', on attribute: " + attribute.toString() + ", element = "
+                        + parentElement.getAttributeValue("name"));
             }
             ResValueMap bagItem = mapArray.get(bagIndex);
-            bagItem.setNameHigh((short) 0x0100);
-            bagItem.setNameLow(itemType.getValue());
-            bagItem.setValueType(ValueType.INT_DEC);
-            bagItem.setData(ValueDecoder.parseInteger(attribute.getValue()));
+            bagItem.setAttributeType(attributeType);
+            String valueString = attribute.getValue();
+            if(!ValueDecoder.isHex(valueString) && !ValueDecoder.isInteger(valueString)){
+                throw new EncodeException("Expecting hex or integer value: '" + valueString
+                        +"', on attribute: " + name + ", element: "
+                        + parentElement.getAttributeValue("name"));
+            }
+            ValueDecoder.EncodeResult encodeResult =
+                    ValueDecoder.encodeHexOrInt(attribute.getValue());
+            bagItem.setTypeAndData(encodeResult.valueType, encodeResult.value);
             bagIndex++;
         }
     }
     private void encodeEnumOrFlag(XMLElement element, ResTableMapEntry mapEntry){
-        int count=element.getChildesCount();
-        if(count==0){
+        int count = element.getChildesCount();
+        if(count == 0){
+            return;
+        }
+        ResValueMapArray mapArray = mapEntry.getValue();
+
+        int offset = element.getAttributeCount();
+        if(element.getAttribute(AttributeType.FORMATS.getName()) != null){
+            offset = offset - 1;
+        }
+        ResValueMap formatItem = mapArray.get(0);
+
+        AttributeDataFormat lastBagFormat = AttributeDataFormat.typeOfBag(
+                formatItem.getData());
+
+        for(int i = 0; i < count; i++){
+            XMLElement child = element.getChildAt(i);
+            AttributeDataFormat bagFormat = AttributeDataFormat.fromBagTypeName(child.getTagName());
+            if(bagFormat != lastBagFormat){
+                formatItem.addAttributeTypeFormat(bagFormat);
+                lastBagFormat = bagFormat;
+            }
+            String name = child.getAttributeValue("name");
+            int resourceId =  decodeNameResourceId(name);
+
+            ResValueMap valueMap = mapArray.get(i + offset);
+            valueMap.setName(resourceId);
+
+            String valueString = child.getTextContent();
+
+            if(!ValueDecoder.isHex(valueString) && !ValueDecoder.isInteger(valueString)){
+                throw new EncodeException("Expecting hex or integer value: '" + valueString
+                        +"', on element: " + child.toText());
+            }
+            ValueDecoder.EncodeResult encodeResult =
+                    ValueDecoder.encodeHexOrInt(child.getTextContent());
+
+            valueMap.setTypeAndData(encodeResult.valueType, encodeResult.value);
+        }
+    }
+    private int decodeNameResourceId(String name){
+        Integer unknown = decodeUnknownAttributeHex(name);
+        int resourceId;
+        if(unknown == null){
+            resourceId = getMaterials().resolveLocalResourceId("id", name);
+        }else {
+            resourceId = unknown;
+        }
+        return resourceId;
+    }
+    private void encodeEnumOrFlagOld(XMLElement element, ResTableMapEntry mapEntry){
+        int count = element.getChildesCount();
+        if(count == 0){
             return;
         }
         int offset = element.getAttributeCount();
@@ -123,6 +176,13 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
             bagItem.setValueType(encodeResult.valueType);
             bagItem.setData(encodeResult.value);
         }
+    }
+    private AttributeDataFormat getFlagEnum(XMLElement parent){
+        if(parent.getChildesCount() == 0){
+            return null;
+        }
+        return AttributeDataFormat.fromBagTypeName(
+                parent.getChildAt(0).getTagName());
     }
     private short getChildTypes(XMLElement parent){
         if(parent.getChildesCount()==0){

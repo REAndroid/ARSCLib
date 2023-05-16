@@ -126,8 +126,34 @@ public class SpecTypePair extends BlockContainer<Block>
         getSpecBlock().destroy();
         getTypeBlockArray().destroy();
     }
+    public Entry getAnyEntry(short entryId){
+        Entry result = null;
+        TypeBlock[] types = getTypeBlockArray().getChildes();
+        for(int i = 0; i < types.length; i++){
+            TypeBlock typeBlock = types[i];
+            if(typeBlock == null){
+                continue;
+            }
+            Entry entry = typeBlock.getEntry(entryId);
+            if(entry == null){
+                continue;
+            }
+            if(!entry.isNull()){
+                return entry;
+            }
+            if(result == null){
+                result = entry;
+            }
+        }
+        return result;
+    }
     public Entry getAnyEntry(String name){
-        for(TypeBlock typeBlock : listTypeBlocks()){
+        TypeBlock[] types = getTypeBlockArray().getChildes();
+        for(int i = 0; i < types.length; i++){
+            TypeBlock typeBlock = types[i];
+            if(typeBlock == null){
+                continue;
+            }
             Entry entry = typeBlock.getEntry(name);
             if(entry != null){
                 return entry;

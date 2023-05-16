@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.archive2.io;
+package com.reandroid.common;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
 
 public class FileChannelInputStream extends InputStream {
     private final FileChannel fileChannel;
@@ -29,10 +31,15 @@ public class FileChannelInputStream extends InputStream {
     private final byte[] buffer;
     private int bufferPosition;
     private int bufferLength;
+    private boolean mAutoClosable;
+    private boolean mIsClosed;
 
     public FileChannelInputStream(FileChannel fileChannel, long length, int bufferSize) throws IOException {
         this.fileChannel = fileChannel;
         this.totalLength = length;
+        if(bufferSize <= 0){
+            bufferSize = 8;
+        }
         if(length < bufferSize){
             bufferSize = (int) length;
         }
@@ -43,6 +50,14 @@ public class FileChannelInputStream extends InputStream {
     }
     public FileChannelInputStream(FileChannel fileChannel, long length) throws IOException {
         this(fileChannel, length, DEFAULT_BUFFER_SIZE);
+    }
+    public FileChannelInputStream(File file, long length, int bufferSize) throws IOException {
+        this(FileChannel.open(file.toPath(), StandardOpenOption.READ), length, bufferSize);
+        this.mAutoClosable = true;
+    }
+    public FileChannelInputStream(File file) throws IOException {
+        this(FileChannel.open(file.toPath(), StandardOpenOption.READ), file.length());
+        this.mAutoClosable = true;
     }
 
     @Override
@@ -93,15 +108,24 @@ public class FileChannelInputStream extends InputStream {
         }
         int length = buffer.length;
         long available = totalLength - position;
+        boolean is_last = false;
         if(length > available){
             length = (int) available;
+            is_last = true;
         }
         ByteBuffer byteBuffer = ByteBuffer.wrap(buffer, 0, length);
         bufferLength = fileChannel.read(byteBuffer);
         bufferPosition = 0;
+        if(is_last){
+            closeAuto();
+        }
     }
-    private boolean isFinished(){
-        return position >= totalLength;
+    private boolean isFinished() throws IOException {
+        boolean finished = position >= totalLength;
+        if(finished){
+            closeAuto();
+        }
+        return finished;
     }
     @Override
     public int read() throws IOException {
@@ -160,6 +184,24 @@ public class FileChannelInputStream extends InputStream {
         position += availableBuffer;
         return availableBuffer;
     }
+    public FileChannel getFileChannel() {
+        return fileChannel;
+    }
+
+    public void setAutoClosable(boolean autoClosable) {
+        this.mAutoClosable = autoClosable;
+    }
+    private void closeAuto() throws IOException {
+        if(mAutoClosable && !mIsClosed){
+            mIsClosed = true;
+            fileChannel.close();
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        closeAuto();
+    }
     @Override
     public void reset() throws IOException {
         position = 0;
@@ -184,6 +226,13 @@ public class FileChannelInputStream extends InputStream {
     @Override
     public String toString(){
         return position + " / " + totalLength;
+    }
+
+    public static byte[] read(File file, int length) throws IOException{
+        FileChannelInputStream inputStream = new FileChannelInputStream(file,length, length);
+        inputStream.loadBuffer();
+        inputStream.closeAuto();
+        return inputStream.buffer;
     }
 
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 100;

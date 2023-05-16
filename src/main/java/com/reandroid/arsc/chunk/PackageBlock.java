@@ -188,6 +188,10 @@ public class PackageBlock extends Chunk<PackageHeader>
     public TableBlock getMainChunk(){
         return getTableBlock();
     }
+    @Override
+    public PackageBlock getPackageBlock(){
+        return this;
+    }
     public PackageBody getPackageBody() {
         return mBody;
     }
@@ -217,6 +221,16 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     public Entry getOrCreateEntry(byte typeId, short entryId, String qualifiers){
         return getSpecTypePairArray().getOrCreateEntry(typeId, entryId, qualifiers);
+    }
+
+    public Entry getAnyEntry(int resourceId){
+        int packageId = (resourceId >> 24) & 0xff;
+        if(packageId != getId()){
+            return null;
+        }
+        byte typeId = (byte) ((resourceId >> 16) & 0xff);
+        short entryId = (short) (resourceId & 0xffff);
+        return getSpecTypePairArray().getAnyEntry(typeId, entryId);
     }
     public Entry getEntry(byte typeId, short entryId, String qualifiers){
         return getSpecTypePairArray().getEntry(typeId, entryId, qualifiers);
@@ -323,7 +337,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         return getSpecTypePairArray().getSpecTypePair(typeName);
     }
     public SpecTypePair getSpecTypePair(int typeId){
-        return getSpecTypePairArray().getPair((byte) typeId);
+        return getSpecTypePairArray().getSpecTypePair((byte) typeId);
     }
     public EntryGroup getEntryGroup(String typeName, String entryName){
         return getSpecTypePairArray().getEntryGroup(typeName, entryName);
@@ -440,14 +454,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         this.getSpecStringPool().addStrings(
                 coming.getSpecStringPool().toStringList());
     }
-    /**
-     * It is allowed to have duplicate type name therefore it is not recommend to use this.
-     * Lets depreciate to warn developer
-     */
-    @Deprecated
-    public SpecTypePair searchByTypeName(String typeName){
-        return getSpecTypePairArray().searchByTypeName(typeName);
-    }
+
     @Override
     public int compareTo(PackageBlock pkg) {
         return Integer.compare(getId(), pkg.getId());

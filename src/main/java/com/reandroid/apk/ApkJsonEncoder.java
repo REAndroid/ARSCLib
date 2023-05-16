@@ -44,7 +44,7 @@ public class ApkJsonEncoder {
         module.setLoadDefaultFramework(false);
         module.setAPKLogger(apkLogger);
         loadUncompressed(module, moduleDir);
-        applyResourceId(module, moduleDir);
+        //applyResourceId(module, moduleDir);
         restorePathMap(moduleDir, module);
         restoreSignatures(moduleDir, module);
         return module;

@@ -15,6 +15,8 @@
   */
 package com.reandroid.apk.xmlencoder;
 
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLException;
@@ -23,7 +25,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-class ValuesEncoder {
+public class ValuesEncoder {
     private final EncodeMaterials materials;
     private final Map<String, XMLValuesEncoder> xmlEncodersMap;
     private final Map<String, XMLValuesEncoderBag> xmlBagEncodersMap;
@@ -67,6 +69,54 @@ class ValuesEncoder {
         XMLDocument xmlDocument = XMLDocument.load(valuesXmlFile);
         encodeValuesXml(type, qualifiers, xmlDocument);
     }
+    public void encodeValue(String qualifiers, XMLElement element){
+        String type = getType(element, null);
+        if(type == null){
+            throw new EncodeException("Can not determine type: " + element);
+        }
+        encodeValue(type, qualifiers, element);
+    }
+    public void encodeValue(String type, String qualifiers, XMLElement element){
+        boolean is_bag = isBag(element);
+        encodeValue(is_bag, type, qualifiers, element);
+    }
+    public void encodeValue(boolean is_bag, String type, String qualifiers, XMLElement element){
+        PackageBlock packageBlock = getEncodeMaterials().getCurrentPackage();
+        Entry entry = packageBlock
+                .getOrCreate(qualifiers, type, element.getAttributeValue("name"));
+        encodeValue(is_bag, entry, element);
+    }
+    public void encodeValue(Entry entry, XMLElement element){
+        boolean is_bag = isBag(element);
+        encodeValue(is_bag, entry, element);
+    }
+    public void encodeValue(boolean is_bag, Entry entry, XMLElement element){
+        XMLValuesEncoder encoder;
+        String type = entry.getTypeName();
+        if(is_bag){
+            encoder = getBagEncoder(type);
+        }else{
+            encoder = getEncoder(type);
+        }
+        encoder.encodeValue(entry, element);
+    }
+    public void encodeValues(String type, String qualifiers, XMLDocument xmlDocument){
+        type = getType(xmlDocument, type);
+        boolean is_bag = isBag(xmlDocument, type);
+        encodeValues(is_bag, type, qualifiers, xmlDocument);
+    }
+    public void encodeValues(boolean is_bag, String type, String qualifiers, XMLDocument xmlDocument){
+        XMLValuesEncoder encoder;
+        if(is_bag){
+            encoder = getBagEncoder(type);
+        }else{
+            encoder = getEncoder(type);
+        }
+        encoder.encode(type, qualifiers, xmlDocument);
+    }
+    public EncodeMaterials getEncodeMaterials(){
+        return materials;
+    }
     private void encodeValuesXml(String type, String qualifiers, XMLDocument xmlDocument) {
         type=getType(xmlDocument, type);
         XMLValuesEncoder encoder;
@@ -76,6 +126,12 @@ class ValuesEncoder {
             encoder=getEncoder(type);
         }
         encoder.encode(type, qualifiers, xmlDocument);
+    }
+    private boolean isBag(XMLElement element){
+        if(element.hasChildElements()){
+            return true;
+        }
+        return element.getAttributeCount() > 1;
     }
     private boolean isBag(XMLDocument xmlDocument, String type){
         if(type.startsWith("attr")){
@@ -131,6 +187,25 @@ class ValuesEncoder {
             type=first.getTagName();
         }
         if(type==null){
+            return def;
+        }
+        if(type.endsWith("-array")){
+            return "array";
+        }
+        if(type.startsWith("attr-private")){
+            return "^attr-private";
+        }
+        if(type.equals("item")){
+            return def;
+        }
+        return type;
+    }
+    private String getType(XMLElement first, String def){
+        String type = first.getAttributeValue("type");
+        if(type == null){
+            type = first.getTagName();
+        }
+        if(type == null){
             return def;
         }
         if(type.endsWith("-array")){

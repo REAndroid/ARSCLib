@@ -17,8 +17,49 @@ package com.reandroid.apk;
 
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.xml.*;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class XmlHelper {
+
+    public static Map<String, String> readAttributes(XmlPullParser parser, String elementName) throws IOException, XmlPullParserException {
+        if(!findElement(parser, elementName)){
+            return null;
+        }
+        return mapAttributes(parser);
+    }
+    public static Map<String, String> mapAttributes(XmlPullParser parser){
+        Map<String, String> map = new HashMap<>();
+        int count = parser.getAttributeCount();
+        for(int i = 0; i < count; i++){
+            String name = parser.getAttributeName(i);
+            int index = name.indexOf(':');
+            if(index > 0 && index < name.length() && !name.startsWith("xmlns:")){
+                index++;
+                name = name.substring(index);
+            }
+            map.put(name,
+                    parser.getAttributeValue(i));
+        }
+        return map;
+    }
+    private static boolean findElement(XmlPullParser parser, String elementName) throws IOException, XmlPullParserException {
+        int event;
+        while ((event = parser.next()) != XmlPullParser.END_DOCUMENT){
+            if(event != XmlPullParser.START_TAG){
+                continue;
+            }
+            if(elementName.equals(parser.getName())){
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static void setTextContent(XMLElement element, StringItem stringItem){
         if(stringItem==null){
@@ -37,6 +78,17 @@ public class XmlHelper {
             typeName = typeName.substring(1);
         }
         return typeName;
+    }
+
+    public static void closeSilent(Object obj){
+        if(!(obj instanceof Closeable)){
+            return;
+        }
+        Closeable closeable = (Closeable) obj;
+        try {
+            closeable.close();
+        } catch (IOException ignored) {
+        }
     }
 
     public static final String RESOURCES_TAG = "resources";

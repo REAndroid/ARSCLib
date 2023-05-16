@@ -18,6 +18,8 @@ package com.reandroid.arsc.value.attribute;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.arsc.value.AttributeType;
+import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.common.EntryStore;
@@ -48,7 +50,7 @@ public class AttributeBagItem {
         if(isType()){
             return null;
         }
-        ResValueMap item=getBagItem();
+        ResValueMap item = getBagItem();
         int id=item.getName();
         Entry parentEntry=item.getEntry();
         if(parentEntry!=null){
@@ -74,93 +76,48 @@ public class AttributeBagItem {
     public ResValueMap getBagItem() {
         return mBagItem;
     }
-    public AttributeItemType getItemType(){
-        if(!isType()){
-            return null;
-        }
-        ResValueMap item=getBagItem();
-        int low = item.getName() & 0xffff;
-        return AttributeItemType.valueOf((short) low);
+    public AttributeType getType(){
+        return getBagItem().getAttributeType();
+    }
+    public boolean isFormats(){
+        return getType() == AttributeType.FORMATS;
     }
     public boolean isType(){
-        ResValueMap item=getBagItem();
-        return ((item.getName()>>16) & 0xffff)==0x0100;
+        return getType() != null;
     }
-    public boolean contains(AttributeValueType valueType){
-        if(valueType == null || getItemType()!=AttributeItemType.FORMAT){
+    public boolean contains(AttributeDataFormat dataFormat){
+        if(dataFormat == null || !isFormats()){
             return false;
         }
-        int value = 0xff & valueType.sumValues();
-        int dataLow = 0xffff & getBagItem().getData();
-        return (dataLow & value) == value;
+        return dataFormat.matches(getBagItem().getData());
     }
-    public boolean isEqualType(AttributeValueType valueType){
-        if(valueType == null || getItemType()!=AttributeItemType.FORMAT){
+    public boolean isEqualType(AttributeDataFormat typeFormat){
+        if(typeFormat == null || !isFormats()){
             return false;
         }
-        int value = 0xff & valueType.sumValues();
-        int dataLow = 0xffff & getBagItem().getData();
-        return (dataLow  == value);
+        return typeFormat.getMask() == getBagItem().getData();
     }
-    public AttributeValueType[] getValueTypes(){
-        AttributeItemType type=getItemType();
-        if(type!=AttributeItemType.FORMAT){
+    public AttributeDataFormat[] getTypeFormats(){
+        if(!isFormats()){
             return null;
         }
-        ResValueMap item=getBagItem();
-        short low = (short) (item.getData() & 0xffff);
-        return AttributeValueType.valuesOf(low);
-    }
-    public Integer getBound(){
-        AttributeItemType type=getItemType();
-        if(type==null || type==AttributeItemType.FORMAT){
-            return null;
-        }
-        ResValueMap item=getBagItem();
-        return item.getData();
+        return AttributeDataFormat.decodeValueTypes(getBagItem().getData());
     }
     public boolean isEnum(){
-        AttributeItemType type=getItemType();
-        if(type!=AttributeItemType.FORMAT){
+        if(!isFormats()){
             return false;
         }
-        ResValueMap item=getBagItem();
-        int high = (item.getData() >> 16) & 0xffff;
-        return high==AttributeBag.TYPE_ENUM;
+        return AttributeDataFormat.ENUM.matches(getBagItem().getData());
     }
     public boolean isFlag(){
-        AttributeItemType type=getItemType();
-        if(type!=AttributeItemType.FORMAT){
+        if(!isFormats()){
             return false;
         }
-        ResValueMap item=getBagItem();
-        int high = (item.getData() >> 16) & 0xffff;
-        return high==AttributeBag.TYPE_FLAG;
+        return AttributeDataFormat.FLAG.matches(getBagItem().getData());
     }
     @Override
     public String toString(){
         StringBuilder builder=new StringBuilder();
-        AttributeItemType type=getItemType();
-        if(type!=null){
-            builder.append(type.toString());
-            if(type==AttributeItemType.FORMAT){
-                if(isEnum()){
-                    builder.append("(enum)");
-                }else if(isFlag()){
-                    builder.append("(flag)");
-                }
-                String value=AttributeValueType.toString(getValueTypes());
-                if(value!=null){
-                    builder.append("=");
-                    builder.append(value);
-                }
-                return builder.toString();
-            }
-            Integer bound=getBound();
-            builder.append("=");
-            builder.append(bound);
-            return builder.toString();
-        }
         ResValueMap item=getBagItem();
         builder.append(getNameOrHex());
         builder.append("=").append(HexUtil.toHex8(item.getData()));
@@ -178,7 +135,7 @@ public class AttributeBagItem {
         StringBuilder builder = new StringBuilder();
         boolean appendOnce=false;
         for (int i = 0; i < len; i++) {
-            AttributeBagItem item=bagItems[i];
+            AttributeBagItem item = bagItems[i];
             if(item==null){
                 continue;
             }
@@ -205,8 +162,8 @@ public class AttributeBagItem {
             AttributeBagItem item=new AttributeBagItem(resValueMaps[i]);
             bagItems[i]=item;
             if(format==null){
-                if(AttributeItemType.FORMAT==item.getItemType()){
-                    format=item;
+                if(AttributeType.FORMATS == item.getType()){
+                    format = item;
                 }
             }
         }

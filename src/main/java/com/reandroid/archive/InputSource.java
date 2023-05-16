@@ -32,6 +32,13 @@ public abstract class InputSource {
         this.name = name;
         this.alias = InputSourceUtil.sanitize(name);
     }
+    public byte[] getBytes(int length) throws IOException{
+        InputStream inputStream = openStream();
+        byte[] bytes = new byte[length];
+        inputStream.read(bytes, 0, length);
+        close(inputStream);
+        return bytes;
+    }
     public void disposeInputSource(){
     }
     public int getSort() {

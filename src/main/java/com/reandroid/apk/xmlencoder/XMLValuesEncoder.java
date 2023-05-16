@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +17,7 @@ package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
-import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.decoder.ValueDecoder;
-import com.reandroid.arsc.item.SpecString;
-import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.xml.XMLDocument;
@@ -53,8 +50,7 @@ class XMLValuesEncoder {
 
         encodeValue(entry, element);
 
-        SpecString specString = getMaterials().getSpecString(name);
-        entry.setSpecReference(specString);
+        getMaterials().setEntryName(entry, name);
     }
     void encodeValue(Entry entry, XMLElement element){
         String value = getValue(element);
@@ -97,15 +93,7 @@ class XMLValuesEncoder {
     }
     private TypeBlock getTypeBlock(String type, String qualifiers){
         PackageBlock packageBlock = getMaterials().getCurrentPackage();
-        TypeStringPool typeStringPool = packageBlock.getTypeStringPool();
-        byte typeId = (byte) typeStringPool.idOf(type);
-        SpecTypePair specTypePair
-                = packageBlock.getSpecTypePairArray().getOrCreate(typeId);
-        int highest = specTypePair.getHighestEntryCount();
-        TypeBlock typeBlock = specTypePair
-                .getOrCreateTypeBlock(qualifiers);
-        typeBlock.getEntryArray().ensureSize(highest);
-        return typeBlock;
+        return packageBlock.getOrCreateTypeBlock(qualifiers, type);
     }
     EncodeMaterials getMaterials() {
         return materials;

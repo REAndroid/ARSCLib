@@ -29,6 +29,8 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+/**Use {@link com.reandroid.identifiers.TableIdentifier} */
+@Deprecated
  public class ResourceIds {
     private final Table mTable;
     public ResourceIds(Table table){

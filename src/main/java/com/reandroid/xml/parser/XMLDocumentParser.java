@@ -16,6 +16,7 @@
 package com.reandroid.xml.parser;
 
 import com.android.org.kxml2.io.KXmlParser;
+import com.reandroid.common.FileChannelInputStream;
 import com.reandroid.xml.*;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -349,9 +350,9 @@ public class XMLDocumentParser {
         }
         InputStream in;
         try {
-            in=new FileInputStream(file);
+            in=new FileChannelInputStream(file);
             return createParser(in);
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             throw new XMLParseException(e.getMessage());
         }
     }

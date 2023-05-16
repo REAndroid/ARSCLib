@@ -24,7 +24,7 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
         super(new EntryHeaderMap(), mapArray);
     }
     // Valid for type attr
-    public AttributeTypeFormat[] getAttributeTypeFormats(){
+    public AttributeDataFormat[] getAttributeTypeFormats(){
         ITEM item = getByType(AttributeType.FORMATS);
         if(item != null){
             return item.getAttributeTypeFormats();

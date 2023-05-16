@@ -37,76 +37,56 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
         writer.enableIndent(true);
         writer.startTag(tag);
         writer.attribute("name", entry.getName());
-        AttributeBag attributeBag = AttributeBag.create(mapEntry.getValue());
         writeParentAttributes(writer, mapEntry.getValue());
         ResValueMap formatsMap = mapEntry.getByType(AttributeType.FORMATS);
 
-        boolean is_flag = AttributeTypeFormat.FLAG.matches(formatsMap.getData());
+        AttributeDataFormat bagType = AttributeDataFormat.typeOfBag(formatsMap.getData());
 
-        String childTag = is_flag ? "flag" : "enum";
+        ResValueMap[] bagItems = mapEntry.listResValueMap();
 
-        AttributeBagItem[] bagItems = attributeBag.getBagItems();
-
-        EntryStore entryStore = getEntryStore();
 
         for(int i = 0; i < bagItems.length; i++){
-            AttributeBagItem item = bagItems[i];
-            if(item.isType()){
+            ResValueMap item = bagItems[i];
+            AttributeType attributeType = item.getAttributeType();
+            if(attributeType != null){
                 continue;
             }
             writer.enableIndent(true);
-            writer.startTag(childTag);
+            writer.startTag(bagType.getName());
 
-            String name = item.getNameOrHex(entryStore);
+            String name = item.decodeName();
             writer.attribute("name", name);
             int rawVal = item.getData();
             String value;
-            if(item.getBagItem().getValueType() == ValueType.INT_HEX){
+            if(item.getValueType() == ValueType.INT_HEX){
                 value = HexUtil.toHex8(rawVal);
             }else {
                 value = Integer.toString(rawVal);
             }
             writer.text(value);
 
-            writer.endTag(childTag);
+            writer.endTag(bagType.getName());
         }
         return writer.endTag(tag);
     }
 
     private void writeParentAttributes(EntryWriter<OUTPUT> writer, CompoundItemArray<? extends ResValueMap> itemArray) throws IOException {
-        String formats =  AttributeTypeFormat.toString(itemArray.getFormats());
-        if(formats!=null){
-            writer.attribute(AttributeType.FORMATS.getName(), formats);
-        }
-        ResValueMap item = itemArray.getByType(AttributeType.MIN);
-        if(item != null){
-            writer.attribute(AttributeType.MIN.getName(), Integer.toString(item.getData()));
-        }
-        item = itemArray.getByType(AttributeType.MAX);
-        if(item != null){
-            writer.attribute(AttributeType.MAX.getName(), Integer.toString(item.getData()));
-        }
-        item = itemArray.getByType(AttributeType.L10N);;
-        if(item != null){
-            writer.attribute(AttributeType.L10N.getName(), Integer.toString(item.getData()));
-        }
-    }
-    private void writeParentAttributes(EntryWriter<OUTPUT> writer, AttributeBag attributeBag) throws IOException {
-        String formats=  attributeBag.decodeValueType();
-        if(formats!=null){
-            writer.attribute("formats", formats);
-        }
-        AttributeBagItem item = attributeBag.getMin();
-        if(item != null){
-            writer.attribute("min", item.getBound().toString());
-        }
-        item = attributeBag.getMax();
-        if(item!=null){
-            writer.attribute("max", item.getBound().toString());
-        }
-        item = attributeBag.getL10N();
-        if(item!=null){
-            writer.attribute("l10n", item.getBound().toString());
+        for(ResValueMap valueMap : itemArray.getChildes()){
+            AttributeType type = valueMap.getAttributeType();
+            if(type == null){
+                continue;
+            }
+            String value;
+            if(type == AttributeType.FORMATS){
+                value = AttributeDataFormat.toString(
+                        AttributeDataFormat.decodeValueTypes(valueMap.getData()));
+            }else {
+                value = Integer.toString(valueMap.getData());
+            }
+            if(value == null){
+                continue;
+            }
+            writer.attribute(type.getName(), value);
         }
     }
     @Override

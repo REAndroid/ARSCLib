@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@ package com.reandroid.arsc.chunk;
 import com.reandroid.arsc.pool.StringPool;
 
 public interface ParentChunk {
-    public StringPool<?> getSpecStringPool();
-    public MainChunk getMainChunk();
+    StringPool<?> getSpecStringPool();
+    MainChunk getMainChunk();
+    PackageBlock getPackageBlock();
 }
