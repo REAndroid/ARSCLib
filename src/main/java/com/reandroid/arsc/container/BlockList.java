@@ -40,6 +40,7 @@ public class BlockList<T extends Block> extends Block {
     }
     public void sort(Comparator<T> comparator){
         mItems.sort(comparator);
+        updateIndex();
     }
     public boolean remove(T item){
         if(item!=null){
@@ -47,6 +48,22 @@ public class BlockList<T extends Block> extends Block {
             item.setIndex(-1);
         }
         return mItems.remove(item);
+    }
+    public void add(int index, T item){
+        if(item == null){
+            return;
+        }
+        item.setIndex(index);
+        item.setParent(this);
+        mItems.add(index, item);
+        updateIndex();
+    }
+    private void updateIndex(){
+        int index = 0;
+        for(T item : mItems){
+            item.setIndex(index);
+            index++;
+        }
     }
     public void add(T item){
         if(item==null){

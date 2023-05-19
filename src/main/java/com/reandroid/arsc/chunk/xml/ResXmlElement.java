@@ -540,7 +540,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         startNamespace.setEnd(endNamespace);
 
         addStartNamespace(startNamespace);
-        addEndNamespace(endNamespace);
+        addEndNamespace(endNamespace, true);
         ResXmlStringPool stringPool = getStringPool();
         ResXmlString xmlString = stringPool.createNew(uri);
         startNamespace.setUriReference(xmlString.getIndex());
@@ -593,8 +593,12 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     private List<ResXmlEndNamespace> getEndNamespaceList(){
         return mEndNamespaceList.getChildes();
     }
-    public void addEndNamespace(ResXmlEndNamespace item){
-        mEndNamespaceList.add(item);
+    private void addEndNamespace(ResXmlEndNamespace item, boolean at_first){
+        if(at_first){
+            mEndNamespaceList.add(0, item);
+        }else {
+            mEndNamespaceList.add(item);
+        }
     }
     void removeNamespace(ResXmlStartNamespace startNamespace){
         if(startNamespace == null){
@@ -806,7 +810,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     }
     private void onEndNamespace(BlockReader reader) throws IOException{
         ResXmlEndNamespace endNamespace=new ResXmlEndNamespace();
-        addEndNamespace(endNamespace);
+        addEndNamespace(endNamespace, false);
         endNamespace.readBytes(reader);
     }
     private void onXmlText(BlockReader reader) throws IOException{
