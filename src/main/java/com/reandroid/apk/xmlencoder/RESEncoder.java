@@ -20,7 +20,7 @@ import com.reandroid.archive.APKArchive;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.ReferenceString;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.identifiers.PackageIdentifier;
 import com.reandroid.identifiers.ResourceIdentifier;
@@ -140,29 +140,32 @@ public class RESEncoder {
         logMessage("Encoding attrs ...");
         TableIdentifier tableIdentifier = encodeMaterials.getTableIdentifier();
 
-        for(File pubXmlFile:pubXmlFileList){
+        for(File pubXmlFile : pubXmlFileList){
             addParsedFiles(pubXmlFile);
             PackageIdentifier packageIdentifier = tableIdentifier.getByTag(pubXmlFile);
 
             PackageBlock packageBlock = packageIdentifier.getPackageBlock();
             encodeMaterials.setCurrentPackage(packageBlock);
 
-            ValuesEncoder valuesEncoder = new ValuesEncoder(encodeMaterials);
-            File fileAttrs = toAttr(pubXmlFile);
-            if(fileAttrs.isFile()){
-                valuesEncoder.encodeValuesXml(fileAttrs);
-                packageBlock.sortTypes();
-                packageBlock.refresh();
-                addParsedFiles(fileAttrs);
+            ResourceValuesEncoder valuesEncoder = new ResourceValuesEncoder(encodeMaterials);
+            List<File> attrFiles = listAttrs(pubXmlFile);
+            if(attrFiles.size() == 0){
+                continue;
             }
+            for(File file : attrFiles){
+                valuesEncoder.encodeValuesXml(file);
+                addParsedFiles(file);
+            }
+            packageBlock.sortTypes();
         }
     }
     private void excludeIds(List<File> pubXmlFileList){
-        for(File pubXmlFile:pubXmlFileList){
+        for(File pubXmlFile : pubXmlFileList){
             addParsedFiles(pubXmlFile);
-            File fileIds = toId(pubXmlFile);
-            if(fileIds.isFile()){
-                addParsedFiles(fileIds);
+            File valuesDir = pubXmlFile.getParentFile();
+            File file = new File(valuesDir, "ids.xml");
+            if(file.isFile()){
+                addParsedFiles(file);
             }
         }
     }
@@ -193,7 +196,7 @@ public class RESEncoder {
             return;
         }
         logMessage("Set main package id from manifest: " + iconReference);
-        ValueDecoder.ReferenceString ref = ValueDecoder.parseReference(iconReference);
+        ReferenceString ref = ReferenceString.parseReference(iconReference);
         if(ref == null){
             logMessage("Something wrong on : " + AndroidManifestBlock.NAME_icon);
             return;
@@ -236,7 +239,7 @@ public class RESEncoder {
         }
     }
     private void encodeValuesDir(EncodeMaterials materials, File valuesDir) throws XMLException {
-        ValuesEncoder valuesEncoder = new ValuesEncoder(materials);
+        ResourceValuesEncoder valuesEncoder = new ResourceValuesEncoder(materials);
         List<File> xmlFiles = ApkUtil.listFiles(valuesDir, ".xml");
         EncodeUtil.sortValuesXml(xmlFiles);
         for(File file:xmlFiles){
@@ -253,27 +256,47 @@ public class RESEncoder {
         File root = packageDirectory.getParentFile();
         return new File(root, AndroidManifestBlock.FILE_NAME);
     }
-    private File toPackageDirectory(File pubXmlFile){
-        return toResDirectory(pubXmlFile)
-                .getParentFile();
-    }
     private File toResDirectory(File pubXmlFile){
         return pubXmlFile
                 .getParentFile()
                 .getParentFile();
     }
-    private File toId(File pubXmlFile){
-        return new File(pubXmlFile.getParentFile(), "ids.xml");
+    private List<File> listAttrs(File pubXmlFile){
+        return listValuesXml(pubXmlFile, "attr");
     }
-    private File toAttr(File pubXmlFile){
-        return new File(pubXmlFile.getParentFile(), "attrs.xml");
+    private List<File> listValuesXml(File pubXmlFile, String type){
+        List<File> results = new ArrayList<>();
+        File resDir = toResDirectory(pubXmlFile);
+        for(File valuesDir : listValuesDir(resDir)){
+            results.addAll(findValuesXml(valuesDir, type));
+        }
+        return results;
+    }
+    private List<File> findValuesXml(File valuesDir, String type){
+        List<File> results = new ArrayList<>();
+        File[] xmlFiles = valuesDir.listFiles();
+        if(xmlFiles == null){
+            return results;
+        }
+        for(File file : xmlFiles){
+            if(!file.isFile()){
+                continue;
+            }
+            String name = file.getName();
+            if(name.startsWith(type) && name.endsWith(".xml")){
+                results.add(file);
+            }
+        }
+        return results;
     }
     private List<File> listValuesDir(File resDir){
         List<File> results=new ArrayList<>();
-        File def=new File(resDir, "values");
-        results.add(def);
+        File def = new File(resDir, "values");
+        if(def.isDirectory()){
+            results.add(def);
+        }
         File[] dirList=resDir.listFiles();
-        if(dirList!=null){
+        if(dirList != null){
             for(File dir:dirList){
                 if(def.equals(dir) || !dir.isDirectory()){
                     continue;
@@ -314,6 +337,13 @@ public class RESEncoder {
     }
     private void addParsedFiles(File file){
         parsedFiles.add(file);
+    }
+
+    public APKLogger getAPKLogger() {
+        if(apkLogger == null){
+            apkLogger = apkModule.getApkLogger();
+        }
+        return apkLogger;
     }
     public void setAPKLogger(APKLogger logger) {
         this.apkLogger = logger;

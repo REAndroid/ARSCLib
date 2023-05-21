@@ -13,7 +13,7 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-package com.reandroid.arsc.decoder;
+package com.reandroid.arsc.coder;
 
 public class ComplexUtil {
 
@@ -24,17 +24,22 @@ public class ComplexUtil {
         int mantissa = (complex_value & ( COMPLEX_MANTISSA_MASK <<COMPLEX_MANTISSA_SHIFT));
         float value = mantissa * radix.getMultiplier();
 
-        int unit_type = (complex_value >> COMPLEX_UNIT_SHIFT) & COMPLEX_UNIT_MASK;
-        Unit unit = Unit.fromFlag(fraction, unit_type);
-        return radix.formatFloat(fraction, value) + unit.getSymbol();
+        int unit_flag = (complex_value >> COMPLEX_UNIT_SHIFT) & COMPLEX_UNIT_MASK;
+        ComplexUnit unit;
+        if(fraction){
+            unit = UnitFraction.valueOf(unit_flag);
+        }else {
+            unit = UnitDimension.valueOf(unit_flag);
+        }
+        return radix.formatFloat(fraction, value) + unit;
     }
-    public static int encodeComplex(float value, String unit){
-        return encodeComplex(value, Unit.fromSymbol(unit));
-    }
-    public static int encodeComplex(float value, Unit unit){
+    public static int encodeComplex(float value, ComplexUnit unit){
         boolean neg = value < 0;
         if (neg) {
             value = -value;
+        }
+        if(unit.isFraction()){
+            value = value / 100.0f;
         }
         long bits = (long)(value*(1<<23) + 0.5f);
 
@@ -51,87 +56,6 @@ public class ComplexUtil {
         return result;
     }
 
-    public enum Unit {
-        PX(0, "px"),
-        DP(1, "dp"),
-        DIP(1, "dip"),
-        SP(2, "sp"),
-        PT(3, "pt"),
-        IN(4, "in"),
-        MM(5, "mm"),
-        FRACTION(0, "%"),
-        FRACTION_PARENT(1, "%p");
-
-        private final int flag;
-        private final String symbol;
-        Unit(int flag, String symbol) {
-            this.flag = flag;
-            this.symbol = symbol;
-        }
-        public int getFlag() {
-            return flag;
-        }
-        public String getSymbol(){
-            return symbol;
-        }
-        @Override
-        public String toString(){
-            return getSymbol();
-        }
-        public static Unit fromFlag(boolean fraction, int flag){
-            Unit unit;
-            if(fraction){
-                unit = fromFlag(FRACTIONS, flag);
-            }else {
-                unit = fromFlag(DIMENSIONS, flag);
-            }
-            if(unit!=null){
-                return unit;
-            }
-            throw new NumberFormatException("Unknown unit flag = "+flag
-                    +" for"+(fraction?"fraction":"dimension"));
-        }
-        private static Unit fromFlag(Unit[] units, int flag){
-            for(Unit unit: units){
-                if(flag == unit.getFlag()){
-                    return unit;
-                }
-            }
-            return null;
-        }
-        public static Unit fromSymbol(String symbol){
-            if(symbol == null){
-                return null;
-            }
-            Unit unit = fromSymbol(DIMENSIONS, symbol);
-            if(unit == null){
-                unit = fromSymbol(FRACTIONS, symbol);
-            }
-            return unit;
-        }
-        private static Unit fromSymbol(Unit[] units, String symbol){
-            for(Unit unit: units){
-                if(unit.getSymbol().equals(symbol)){
-                    return unit;
-                }
-            }
-            return null;
-        }
-
-        private static final Unit[] DIMENSIONS = new Unit[]{
-                PX,
-                DP,
-                DIP,
-                SP,
-                PT,
-                IN,
-                MM
-        };
-        private static final Unit[] FRACTIONS = new Unit[]{
-                FRACTION,
-                FRACTION_PARENT
-        };
-    }
     public enum Radix{
         RADIX_23p0(0, 23, MANTISSA_MULT),
         RADIX_16p7(1, 16, 1.0f/(1<<7) * MANTISSA_MULT),

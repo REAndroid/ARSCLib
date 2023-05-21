@@ -16,16 +16,18 @@
 package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.array.ResValueMapArray;
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.CommonType;
+import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.value.*;
-import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.xml.XMLAttribute;
 import com.reandroid.xml.XMLElement;
 
-class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
-    XMLValuesEncoderAttr(EncodeMaterials materials) {
+public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
+    public XMLValuesEncoderAttr(EncodeMaterials materials) {
         super(materials);
     }
+
     @Override
     int getChildesCount(XMLElement element){
         int count = element.getChildesCount() + element.getAttributeCount();
@@ -35,7 +37,7 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
         return count;
     }
     @Override
-    void encodeChildes(XMLElement parentElement, ResTableMapEntry mapEntry){
+    protected void encodeChildes(XMLElement parentElement, ResTableMapEntry mapEntry){
         encodeAttributes(parentElement, mapEntry);
         encodeEnumOrFlag(parentElement, mapEntry);
         EntryHeaderMap header = mapEntry.getHeader();
@@ -76,13 +78,13 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
             ResValueMap bagItem = mapArray.get(bagIndex);
             bagItem.setAttributeType(attributeType);
             String valueString = attribute.getValue();
-            if(!ValueDecoder.isHex(valueString) && !ValueDecoder.isInteger(valueString)){
+            EncodeResult encodeResult =
+                    ValueCoder.encode(valueString, CommonType.INTEGER.valueTypes());
+            if(encodeResult == null){
                 throw new EncodeException("Expecting hex or integer value: '" + valueString
                         +"', on attribute: " + name + ", element: "
                         + parentElement.getAttributeValue("name"));
             }
-            ValueDecoder.EncodeResult encodeResult =
-                    ValueDecoder.encodeHexOrInt(attribute.getValue());
             bagItem.setTypeAndData(encodeResult.valueType, encodeResult.value);
             bagIndex++;
         }
@@ -117,98 +119,30 @@ class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
             valueMap.setName(resourceId);
 
             String valueString = child.getTextContent();
-
-            if(!ValueDecoder.isHex(valueString) && !ValueDecoder.isInteger(valueString)){
+            EncodeResult encodeResult = ValueCoder.encode(valueString, bagFormat.valueTypes());
+            if(encodeResult == null){
                 throw new EncodeException("Expecting hex or integer value: '" + valueString
                         +"', on element: " + child.toText());
             }
-            ValueDecoder.EncodeResult encodeResult =
-                    ValueDecoder.encodeHexOrInt(child.getTextContent());
-
             valueMap.setTypeAndData(encodeResult.valueType, encodeResult.value);
         }
     }
     private int decodeNameResourceId(String name){
-        Integer unknown = decodeUnknownAttributeHex(name);
+        EncodeResult unknown = ValueCoder.encodeUnknownResourceId(name);
         int resourceId;
         if(unknown == null){
             resourceId = getMaterials().resolveLocalResourceId("id", name);
         }else {
-            resourceId = unknown;
+            resourceId = unknown.value;
         }
         return resourceId;
     }
-    private void encodeEnumOrFlagOld(XMLElement element, ResTableMapEntry mapEntry){
-        int count = element.getChildesCount();
-        if(count == 0){
-            return;
-        }
-        int offset = element.getAttributeCount();
-        if(element.getAttribute("formats")!=null){
-            offset = offset-1;
-        }
 
-        EncodeMaterials materials = getMaterials();
-        ResValueMapArray mapArray = mapEntry.getValue();
-
-        for(int i=0;i<count;i++){
-            XMLElement child=element.getChildAt(i);
-
-            String name = child.getAttributeValue("name");
-            Integer unknown = decodeUnknownAttributeHex(name);
-            int resourceId;
-            if(unknown == null){
-                resourceId = materials.resolveLocalResourceId("id",
-                        name);
-            }else {
-                resourceId = unknown;
-            }
-
-            ValueDecoder.EncodeResult encodeResult =
-                    ValueDecoder.encodeHexOrInt(child.getTextContent());
-
-            if(encodeResult == null){
-                throw new EncodeException("Unknown value for element '"+child.toText()+"'");
-            }
-
-            ResValueMap bagItem = mapArray.get(i+offset);
-            bagItem.setName(resourceId);
-            bagItem.setValueType(encodeResult.valueType);
-            bagItem.setData(encodeResult.value);
-        }
-    }
     private AttributeDataFormat getFlagEnum(XMLElement parent){
         if(parent.getChildesCount() == 0){
             return null;
         }
         return AttributeDataFormat.fromBagTypeName(
                 parent.getChildAt(0).getTagName());
-    }
-    private short getChildTypes(XMLElement parent){
-        if(parent.getChildesCount()==0){
-            return 0;
-        }
-        String tagName=parent.getChildAt(0).getTagName();
-        if("enum".equals(tagName)){
-            return AttributeBag.TYPE_ENUM;
-        }
-        if("flag".equals(tagName)){
-            return AttributeBag.TYPE_FLAG;
-        }
-        return 0;
-    }
-    private boolean isFlag(XMLElement parent){
-        if(parent.getChildesCount()==0){
-            return false;
-        }
-        String tagName=parent.getChildAt(0).getTagName();
-        return "flag".equals(tagName);
-    }
-    private boolean isEnum(XMLElement parent){
-        if(parent.getChildesCount()==0){
-            return false;
-        }
-        String tagName=parent.getChildAt(0).getTagName();
-        return "enum".equals(tagName);
     }
 }

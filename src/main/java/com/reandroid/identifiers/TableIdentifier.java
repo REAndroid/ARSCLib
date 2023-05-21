@@ -142,6 +142,32 @@ public class TableIdentifier{
         }
         return null;
     }
+    public PackageIdentifier get(int packageId){
+        for(PackageIdentifier pi : getPackages()){
+            if(packageId == pi.getId()){
+                return pi;
+            }
+        }
+        return null;
+    }
+    public List<PackageIdentifier> getAll(String packageName){
+        List<PackageIdentifier> results = new ArrayList<>();
+        for(PackageIdentifier pi : getPackages()){
+            if(Objects.equals(packageName, pi.getName())){
+                results.add(pi);
+            }
+        }
+        return results;
+    }
+    public List<PackageIdentifier> getAll(int packageId){
+        List<PackageIdentifier> results = new ArrayList<>();
+        for(PackageIdentifier pi : getPackages()){
+            if(packageId == pi.getId()){
+                results.add(pi);
+            }
+        }
+        return results;
+    }
     public void clear(){
         for(PackageIdentifier identifier : getPackages()){
             identifier.clear();

@@ -15,7 +15,7 @@
   */
 package com.reandroid.arsc.item;
 
-import com.reandroid.arsc.decoder.ThreeByteCharsetDecoder;
+import com.reandroid.arsc.coder.ThreeByteCharsetDecoder;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONConvert;

@@ -16,7 +16,7 @@
 package com.reandroid.arsc.value.attribute;
 
 import com.reandroid.arsc.array.ResValueMapArray;
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.value.*;
 import com.reandroid.common.EntryStore;
 
@@ -33,7 +33,7 @@ public class AttributeBag {
     public boolean isEqualType(AttributeDataFormat valueType){
         return getFormat().isEqualType(valueType);
     }
-    public ValueDecoder.EncodeResult encodeEnumOrFlagValue(String valueString){
+    public EncodeResult encodeEnumOrFlagValue(String valueString){
         if(valueString==null || !isEnumOrFlag()){
             return null;
         }
@@ -52,7 +52,7 @@ public class AttributeBag {
             return null;
         }
         ValueType valueType = isFlag()?ValueType.INT_HEX:ValueType.INT_DEC;
-        return new ValueDecoder.EncodeResult(valueType, value);
+        return new EncodeResult(valueType, value);
     }
     public String decodeAttributeValue(EntryStore entryStore, int attrValue){
         AttributeBagItem[] bagItems=searchValue(attrValue);
@@ -172,6 +172,9 @@ public class AttributeBag {
         return mBagItems;
     }
 
+    public AttributeDataFormat[] getFormats(){
+        return getFormat().getDataFormats();
+    }
     public AttributeBagItem getFormat(){
         AttributeBagItem item = find(AttributeType.FORMATS);
         if(item == null){
@@ -179,16 +182,7 @@ public class AttributeBag {
         }
         return item;
     }
-    public AttributeBagItem getMin(){
-        return find(AttributeType.MIN);
-    }
-    public AttributeBagItem getMax(){
-        return find(AttributeType.MAX);
-    }
-    public AttributeBagItem getL10N(){
-        return find(AttributeType.L10N);
-    }
-    private AttributeBagItem find(AttributeType attributeType){
+    public AttributeBagItem find(AttributeType attributeType){
         for(AttributeBagItem bagItem : getBagItems()){
             if(bagItem.getType() == attributeType){
                 return bagItem;

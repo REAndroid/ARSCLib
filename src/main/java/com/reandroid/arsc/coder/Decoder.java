@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.arsc.decoder;
+package com.reandroid.arsc.coder;
 
 import com.reandroid.apk.AndroidFrameworks;
 import com.reandroid.apk.FrameworkApk;
@@ -25,7 +25,6 @@ import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.util.FrameworkTable;
-import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.AttributeValue;
 import com.reandroid.arsc.value.Value;
 import com.reandroid.arsc.value.ValueType;
@@ -58,7 +57,7 @@ public class Decoder {
         return null;
     }
     private String hexResourceName(int resourceId){
-        return HexUtil.toHex8("@0x", resourceId);
+        return ValueCoder.decodeUnknownResourceId(false, resourceId);
     }
     public String decodeValue(Value value){
         if(value==null){

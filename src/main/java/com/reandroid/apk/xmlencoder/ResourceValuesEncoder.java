@@ -25,35 +25,31 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ValuesEncoder {
+public class ResourceValuesEncoder {
     private final EncodeMaterials materials;
     private final Map<String, XMLValuesEncoder> xmlEncodersMap;
     private final Map<String, XMLValuesEncoderBag> xmlBagEncodersMap;
-    private final XMLValuesEncoderCommon commonEncoder;
+    private final XMLValuesEncoder commonEncoder;
     private final XMLValuesEncoderBag bagCommonEncoder;
-    public ValuesEncoder(EncodeMaterials materials){
-        this.materials=materials;
+
+    public ResourceValuesEncoder(EncodeMaterials materials){
+        this.materials = materials;
+        this.commonEncoder = new XMLValuesEncoder(materials);
         Map<String, XMLValuesEncoder> map = new HashMap<>();
         map.put("id", new XMLValuesEncoderId(materials));
         map.put("string", new XMLValuesEncoderString(materials));
-        XMLValuesEncoderDimen encoderDimen=new XMLValuesEncoderDimen(materials);
-        map.put("dimen", encoderDimen);
-        map.put("fraction", encoderDimen);
-        map.put("color", new XMLValuesEncoderColor(materials));
-        map.put("integer", new XMLValuesEncoderInteger(materials));
 
-        this.xmlEncodersMap=map;
-        this.commonEncoder=new XMLValuesEncoderCommon(materials);
+        this.xmlEncodersMap = map;
 
-        Map<String, XMLValuesEncoderBag> mapBag=new HashMap<>();
+        Map<String, XMLValuesEncoderBag> mapBag = new HashMap<>();
         XMLValuesEncoderAttr encoderAttr = new XMLValuesEncoderAttr(materials);
         mapBag.put("attr", encoderAttr);
         mapBag.put("^attr-private", encoderAttr);
         mapBag.put("plurals", new XMLValuesEncoderPlurals(materials));
         mapBag.put("array", new XMLValuesEncoderArray(materials));
         mapBag.put("style", new XMLValuesEncoderStyle(materials));
-        this.xmlBagEncodersMap=mapBag;
-        this.bagCommonEncoder=new XMLValuesEncoderBag(materials);
+        this.xmlBagEncodersMap = mapBag;
+        this.bagCommonEncoder = new XMLValuesEncoderStyle(materials);
 
     }
     public void encodeValuesXml(File valuesXmlFile) throws XMLException {
@@ -131,22 +127,11 @@ public class ValuesEncoder {
         if(element.hasChildElements()){
             return true;
         }
-        return element.getAttributeCount() > 1;
+        String type = getType(element, element.getTagName());
+        return isBagTypeName(type);
     }
     private boolean isBag(XMLDocument xmlDocument, String type){
-        if(type.startsWith("attr")){
-            return true;
-        }
-        if(type.startsWith("^attr")){
-            return true;
-        }
-        if(type.startsWith("style")){
-            return true;
-        }
-        if(type.startsWith("plurals")){
-            return true;
-        }
-        if(type.startsWith("array")){
+        if(isBagTypeName(type)){
             return true;
         }
         if(type.startsWith("string")){
@@ -162,17 +147,21 @@ public class ValuesEncoder {
         }
         return false;
     }
-    private boolean hasNameAttributes(XMLDocument xmlDocument){
-        XMLElement documentElement=xmlDocument.getDocumentElement();
-        int count=documentElement.getChildesCount();
-        for(int i=0;i<count;i++){
-            XMLElement element=documentElement.getChildAt(i);
-            if(element.getChildesCount()>0){
-                XMLElement child = element.getChildAt(0);
-                if(child.getAttributeValue("name") != null){
-                    return true;
-                }
-            }
+    private boolean isBagTypeName(String type){
+        if(type.startsWith("attr")){
+            return true;
+        }
+        if(type.startsWith("^attr")){
+            return true;
+        }
+        if(type.startsWith("style")){
+            return true;
+        }
+        if(type.startsWith("plurals")){
+            return true;
+        }
+        if(type.startsWith("array")){
+            return true;
         }
         return false;
     }
@@ -182,10 +171,7 @@ public class ValuesEncoder {
             return def;
         }
         XMLElement first=documentElement.getChildAt(0);
-        String type=first.getAttributeValue("type");
-        if(type==null){
-            type=first.getTagName();
-        }
+        String type=first.getTagName();
         if(type==null){
             return def;
         }
@@ -200,11 +186,8 @@ public class ValuesEncoder {
         }
         return type;
     }
-    private String getType(XMLElement first, String def){
-        String type = first.getAttributeValue("type");
-        if(type == null){
-            type = first.getTagName();
-        }
+    private String getType(XMLElement element, String def){
+        String type = element.getTagName();
         if(type == null){
             return def;
         }
@@ -219,17 +202,17 @@ public class ValuesEncoder {
         }
         return type;
     }
-    private XMLValuesEncoder getEncoder(String type){
+    public XMLValuesEncoder getEncoder(String type){
         type=EncodeUtil.sanitizeType(type);
-        XMLValuesEncoder encoder=xmlEncodersMap.get(type);
-        if(encoder!=null){
+        XMLValuesEncoder encoder = xmlEncodersMap.get(type);
+        if(encoder != null){
             return encoder;
         }
         return commonEncoder;
     }
-    private XMLValuesEncoderBag getBagEncoder(String type){
-        type=EncodeUtil.sanitizeType(type);
-        XMLValuesEncoderBag encoder=xmlBagEncodersMap.get(type);
+    public XMLValuesEncoderBag getBagEncoder(String type){
+        type = EncodeUtil.sanitizeType(type);
+        XMLValuesEncoderBag encoder = xmlBagEncodersMap.get(type);
         if(encoder!=null){
             return encoder;
         }

@@ -354,10 +354,12 @@ public class TableBlock extends Chunk<TableHeader>
     @Override
     public String toString(){
         StringBuilder builder=new StringBuilder();
-        builder.append(super.toString());
-        builder.append(", packages=");
-        int pkgCount=mPackageArray.childesCount();
-        builder.append(pkgCount);
+        builder.append(getClass().getSimpleName());
+        builder.append(": packages = ");
+        builder.append(mPackageArray.childesCount());
+        builder.append(", size = ");
+        builder.append(getHeaderBlock().getChunkSize());
+        builder.append(" bytes");
         return builder.toString();
     }
 

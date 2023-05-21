@@ -15,7 +15,8 @@
  */
 package com.reandroid.arsc.value.style;
 
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.coder.ValueDecoder;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.util.HexUtil;
@@ -169,7 +170,7 @@ public class StyleBagItem extends BagItem {
     public static StyleBagItem attribute(int resourceId) {
         return new StyleBagItem(ValueType.ATTRIBUTE, resourceId);
     }
-    public static StyleBagItem encoded(ValueDecoder.EncodeResult encodeResult) {
+    public static StyleBagItem encoded(EncodeResult encodeResult) {
         if (encodeResult == null) {
             return null;
         }

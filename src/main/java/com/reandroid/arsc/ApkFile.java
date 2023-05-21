@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@ package com.reandroid.arsc;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
-import com.reandroid.arsc.decoder.Decoder;
+import com.reandroid.arsc.coder.Decoder;
 
 import java.io.IOException;
 

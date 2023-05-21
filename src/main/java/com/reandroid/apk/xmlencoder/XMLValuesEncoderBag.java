@@ -15,17 +15,17 @@
   */
 package com.reandroid.apk.xmlencoder;
 
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.xml.XMLElement;
 
-class XMLValuesEncoderBag extends XMLValuesEncoder{
-    XMLValuesEncoderBag(EncodeMaterials materials) {
+public abstract class XMLValuesEncoderBag extends XMLValuesEncoder{
+    public XMLValuesEncoderBag(EncodeMaterials materials) {
         super(materials);
     }
     @Override
-    final void encodeValue(Entry entry, XMLElement element){
+    public final void encodeValue(Entry entry, XMLElement element){
         if(encodeIfReference(entry, element)){
             return;
         }
@@ -46,34 +46,17 @@ class XMLValuesEncoderBag extends XMLValuesEncoder{
             return false;
         }
         String text = element.getTextContent();
-        if(!ValueDecoder.isReference(text)){
-            return false;
+        EncodeResult encodeResult = getMaterials().encodeReference(text);
+        if(encodeResult != null){
+            entry.setValueAsRaw(encodeResult.valueType, encodeResult.value);
+            return true;
         }
-        encodeReferenceValue(entry, text);
-        return true;
+        return false;
     }
-    void encodeChildes(XMLElement element, ResTableMapEntry mapEntry){
-        throw new EncodeException("Unimplemented bag type encoder: "
-                +element.getTagName());
+    protected abstract void encodeChildes(XMLElement element, ResTableMapEntry mapEntry);
 
-    }
     int getChildesCount(XMLElement element){
         return element.getChildesCount();
     }
 
-    @Override
-    void encodeNullValue(Entry entry){
-        // Nothing to do
-    }
-
-    Integer decodeUnknownAttributeHex(String name){
-        if(name.length() == 0 || (name.charAt(0) !='@' && name.charAt(0) != '?')){
-            return null;
-        }
-        name = name.substring(1);
-        if(!ValueDecoder.isHex(name)){
-            return null;
-        }
-        return ValueDecoder.parseHex(name);
-    }
 }

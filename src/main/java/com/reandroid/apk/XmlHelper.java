@@ -19,6 +19,7 @@ import com.reandroid.arsc.item.StringItem;
 import com.reandroid.xml.*;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -91,5 +92,16 @@ public class XmlHelper {
         }
     }
 
+    public static void setIndent(XmlSerializer serializer, boolean state){
+        setFeatureSafe(serializer, FEATURE_INDENT, state);
+    }
+    public static void setFeatureSafe(XmlSerializer serializer, String name, boolean state){
+        try {
+            serializer.setFeature(name, state);
+        } catch (Throwable ignored) {
+        }
+    }
+
     public static final String RESOURCES_TAG = "resources";
+    public static final String FEATURE_INDENT = "http://xmlpull.org/v1/doc/features.html#indent-output";
 }

@@ -27,7 +27,7 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.decoder.Decoder;
+import com.reandroid.arsc.coder.Decoder;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
@@ -801,7 +801,7 @@ public class ApkModule implements ApkFile {
             }
         }
     }
-    APKLogger getApkLogger(){
+    public APKLogger getApkLogger(){
         return apkLogger;
     }
     public void setAPKLogger(APKLogger logger) {

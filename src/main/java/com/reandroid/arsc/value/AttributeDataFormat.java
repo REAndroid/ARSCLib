@@ -25,9 +25,6 @@ public enum AttributeDataFormat {
                     ValueType.DYNAMIC_ATTRIBUTE,
                     ValueType.NULL,
     }),
-    STRING(1<<1, new ValueType[]{
-            ValueType.STRING
-    }),
     INTEGER(1<<2, new ValueType[]{
             ValueType.INT_DEC,
             ValueType.INT_HEX
@@ -36,10 +33,10 @@ public enum AttributeDataFormat {
             ValueType.INT_BOOLEAN
     }),
     COLOR(1<<4, new ValueType[]{
-            ValueType.INT_COLOR_RGB4,
-            ValueType.INT_COLOR_ARGB4,
+            ValueType.INT_COLOR_ARGB8,
             ValueType.INT_COLOR_RGB8,
-            ValueType.INT_COLOR_ARGB8
+            ValueType.INT_COLOR_RGB4,
+            ValueType.INT_COLOR_ARGB4
     }),
     FLOAT(1<<5, new ValueType[]{
             ValueType.FLOAT
@@ -59,6 +56,9 @@ public enum AttributeDataFormat {
     FLAG(1<<17, new ValueType[]{
             ValueType.INT_HEX,
             ValueType.INT_DEC
+    }),
+    STRING(1<<1, new ValueType[]{
+            ValueType.STRING
     });
 
     private final int mask;
@@ -77,6 +77,9 @@ public enum AttributeDataFormat {
         return (value & mask) == mask;
     }
 
+    public ValueType[] valueTypes() {
+        return valueTypes;
+    }
     public ValueType[] getValueTypes() {
         return valueTypes.clone();
     }
@@ -235,6 +238,14 @@ public enum AttributeDataFormat {
             if(bagTypeName.equals(typeValue.name())){
                 return typeValue;
             }
+        }
+        return null;
+    }
+
+    public static ValueType[] getExpectedValueTypes(String typeName){
+        AttributeDataFormat dataFormat = fromValueTypeName(typeName);
+        if(dataFormat != null){
+            return dataFormat.valueTypes();
         }
         return null;
     }

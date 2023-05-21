@@ -16,7 +16,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.ValueDecoder;
 
 import java.util.ArrayList;
 import java.util.Iterator;

@@ -15,37 +15,24 @@
  */
 package com.reandroid.apk.xmlencoder;
 
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.CommonType;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLSpannable;
 
-class XMLValuesEncoderString extends XMLValuesEncoder{
+public class XMLValuesEncoderString extends XMLValuesEncoder{
     XMLValuesEncoderString(EncodeMaterials materials) {
         super(materials);
     }
 
     @Override
-    void encodeValue(Entry entry, XMLElement element){
+    public void encodeValue(Entry entry, XMLElement element){
         if(!element.hasChildElements()){
-            super.encodeValue(entry, element);
+            String text = getValue(element);
+            super.encodeValue(entry, CommonType.STRING.valueTypes(), text);
             return;
         }
         encodeStyledString(entry, element);
-    }
-    @Override
-    void encodeStringValue(Entry entry, String value){
-        value = ValueDecoder.unQuoteWhitespace(value);
-        value = ValueDecoder.unEscapeSpecialCharacter(value);
-        entry.setValueAsString(value);
-    }
-    @Override
-    void encodeNullValue(Entry entry){
-        entry.setValueAsString("");
-    }
-    @Override
-    void encodeBooleanValue(Entry entry, String value){
-        entry.setValueAsString(value);
     }
     private void encodeStyledString(Entry entry, XMLElement element){
         XMLSpannable xmlSpannable = new XMLSpannable(element);

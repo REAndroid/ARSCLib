@@ -16,7 +16,7 @@
 package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.ValueDecoder;
 import com.reandroid.arsc.value.*;
 import com.reandroid.common.EntryStore;
 
@@ -57,4 +57,7 @@ abstract class DecoderTableEntry<INPUT extends TableEntry<?, ?>, OUTPUT> {
             writer.text(value);
         }
     }
+
+    static final int INDENT_ENTRY = 2;
+    static final int INDENT_BAG = 4;
 }

@@ -29,14 +29,15 @@ class IdentifierMap<CHILD extends Identifier> extends Identifier
         this.nameMap = new HashMap<>();
     }
     public List<CHILD> listDuplicates(){
-        List<CHILD> results = new ArrayList<>(getItems());
-        Set<String> uniques = new HashSet<>();
+        List<CHILD> results = new ArrayList<>();
+        Map<String, CHILD> uniques = new HashMap<>();
         for(CHILD item : getItems()){
             String name = item.getName();
-            if(uniques.contains(name)){
+            if(uniques.containsKey(name)){
                 results.add(item);
+                results.add(uniques.get(name));
             }else {
-                uniques.add(name);
+                uniques.put(name, item);
             }
         }
         results.sort(this);
@@ -127,6 +128,14 @@ class IdentifierMap<CHILD extends Identifier> extends Identifier
             this.idMap.put(entryId, child);
             addNameMap(child);
             return child;
+        }
+    }
+    public void reloadNameMap(){
+        synchronized (mLock){
+            this.nameMap.clear();
+            for(CHILD child : idMap.values()){
+                addNameMap(child);
+            }
         }
     }
     private void addNameMap(CHILD child){

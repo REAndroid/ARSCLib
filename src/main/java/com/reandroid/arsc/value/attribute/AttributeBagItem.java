@@ -16,6 +16,7 @@
 package com.reandroid.arsc.value.attribute;
 
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.AttributeType;
@@ -37,9 +38,10 @@ public class AttributeBagItem {
         return getNameOrHex(null);
     }
     public String getNameOrHex(EntryStore entryStore){
-        String name=getName(entryStore);
-        if(name==null){
-            name=HexUtil.toHex8("@0x", getBagItem().getName());
+        String name = getName(entryStore);
+        if(name == null){
+            name = ValueCoder.decodeUnknownResourceId(false,
+                    getBagItem().getNameResourceID());
         }
         return name;
     }
@@ -97,7 +99,7 @@ public class AttributeBagItem {
         }
         return typeFormat.getMask() == getBagItem().getData();
     }
-    public AttributeDataFormat[] getTypeFormats(){
+    public AttributeDataFormat[] getDataFormats(){
         if(!isFormats()){
             return null;
         }

@@ -15,6 +15,7 @@
  */
 package com.reandroid.apk.xmldecoder;
 
+import com.reandroid.apk.XmlHelper;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
@@ -36,7 +37,7 @@ public class EntryWriterSerializer implements EntryWriter<XmlSerializer> {
         }else if(!(value instanceof Boolean)){
             return;
         }
-        xmlSerializer.setFeature(name, (Boolean)value);
+        XmlHelper.setFeatureSafe(xmlSerializer, name, (Boolean)value);
     }
     @Override
     public XmlSerializer startTag(String name) throws IOException {
@@ -64,8 +65,18 @@ public class EntryWriterSerializer implements EntryWriter<XmlSerializer> {
     }
     @Override
     public void enableIndent(boolean enable){
-        setFeature(FEATURE_INDENT, enable);
+        setFeature(XmlHelper.FEATURE_INDENT, enable);
     }
-
-    private static final String FEATURE_INDENT = "http://xmlpull.org/v1/doc/features.html#indent-output";
+    @Override
+    public void writeTagIndent(int level) throws IOException {
+        if(level < 0){
+            return;
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append('\n');
+        for(int i = 0; i < level; i++){
+            builder.append(' ');
+        }
+        text(builder.toString());
+    }
 }

@@ -21,20 +21,21 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.*;
 import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.util.FrameworkTable;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.util.ResNameMap;
+import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.identifiers.PackageIdentifier;
 import com.reandroid.identifiers.ResourceIdentifier;
 import com.reandroid.identifiers.TableIdentifier;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
 
 public class EncodeMaterials {
     private PackageBlock currentPackage;
@@ -66,11 +67,6 @@ public class EncodeMaterials {
                 .getSpecStringPool().getOrCreate(name);
         entry.setSpecReference(specString);
     }
-    public SpecString getSpecString(String name){
-        return currentPackage.getSpecStringPool()
-                .get(name)
-                .get(0);
-    }
     public Entry getAttributeBlock(String refString){
         String type = "attr";
         Entry entry = getAttributeBlock(type, refString);
@@ -96,35 +92,57 @@ public class EncodeMaterials {
         }
         return getFrameworkEntry(type, name);
     }
-    public int resolveReference(String refString){
-        if("@null".equals(refString)){
-            return 0;
+
+    ResourceIdentifier getLocalResourceIdentifier(String packageName, String type, String name){
+        if(packageName == null){
+            return getLocalResourceIdentifier(type, name);
         }
-        Matcher matcher = ValueDecoder.PATTERN_REFERENCE.matcher(refString);
-        if(!matcher.find()){
-            ValueDecoder.EncodeResult ref = ValueDecoder.encodeHexReference(refString);
-            if(ref!=null){
-                return ref.value;
-            }
-            ref = ValueDecoder.encodeNullReference(refString);
-            if(ref!=null){
+        TableIdentifier tableIdentifier = getTableIdentifier();
+        return tableIdentifier.get(packageName, type, name);
+    }
+    ResourceIdentifier getLocalResourceIdentifier(String type, String name){
+        PackageIdentifier identifier = getOrLoadCurrentPackageIdentifier();
+        if(identifier == null){
+            return null;
+        }
+        return identifier.getResourceIdentifier(type, name);
+    }
+    public EncodeResult encodeReference(String value){
+        if(value == null || value.length() < 3){
+            return null;
+        }
+        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(value);
+        if(encodeResult != null){
+            return encodeResult;
+        }
+        ReferenceString referenceString = ReferenceString.parseReference(value);
+        if(referenceString != null){
+            int resourceId = resolveReference(referenceString);
+            return new EncodeResult(referenceString.getValueType(), resourceId);
+        }
+        return null;
+    }
+    public int resolveReference(String refString){
+        ReferenceString referenceString = ReferenceString.parseReference(refString);
+        if(referenceString == null){
+            EncodeResult ref = ValueCoder.encodeUnknownResourceId(refString);
+            if(ref != null){
                 return ref.value;
             }
             throw new EncodeException(
                     "Not proper reference string: '"+refString+"'");
         }
-        String prefix=matcher.group(1);
-        String packageName = matcher.group(2);
-        if(packageName!=null && packageName.endsWith(":")){
-            packageName=packageName.substring(0, packageName.length()-1);
-        }
-        String type = matcher.group(4);
-        String name = matcher.group(5);
+        return resolveReference(referenceString);
+    }
+
+    public int resolveReference(ReferenceString referenceString){
+        String packageName = referenceString.packageName;
+        String type = referenceString.type;
+        String name = referenceString.name;
         if(isLocalPackageName(packageName)){
             return resolveLocalResourceId(packageName, type, name);
         }
-
-        if(EncodeUtil.isEmpty(packageName)
+        if(packageName == null
                 || packageName.equals(getCurrentPackageName())
                 || !isFrameworkPackageName(packageName)){
             return resolveLocalResourceId(type, name);
@@ -168,16 +186,6 @@ public class EncodeMaterials {
         }
         throw new EncodeException("Framework entry not found: " +
                 "package="+packageName+
-                ", type="+type+
-                ", name="+name);
-    }
-    public int resolveFrameworkResourceId(int packageId, String type, String name){
-        Entry entry = getFrameworkEntry(packageId, type, name);
-        if(entry !=null){
-            return entry.getResourceId();
-        }
-        throw new EncodeException("Framework entry not found: " +
-                "packageId=" + HexUtil.toHex2((byte) packageId)+
                 ", type="+type+
                 ", name="+name);
     }
@@ -327,6 +335,21 @@ public class EncodeMaterials {
     public EncodeMaterials setCurrentLocalPackage(PackageIdentifier packageIdentifier) {
         this.currentPackageIdentifier = packageIdentifier;
         return this;
+    }
+    private PackageIdentifier getOrLoadCurrentPackageIdentifier(){
+        PackageIdentifier identifier = this.currentPackageIdentifier;
+        if(identifier != null){
+            return identifier;
+        }
+        PackageBlock packageBlock = getCurrentPackage();
+        if(packageBlock == null){
+            logMessage("Current package not set");
+            return null;
+        }
+        logMessage("Loading identifiers from package: " + packageBlock.getName());
+        identifier = getTableIdentifier().load(packageBlock);
+        this.currentPackageIdentifier = identifier;
+        return identifier;
     }
     private void onCurrentPackageChanged(PackageBlock currentPackage){
         if(currentPackage == null){

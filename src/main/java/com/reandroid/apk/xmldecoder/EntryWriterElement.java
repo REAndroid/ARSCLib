@@ -103,6 +103,10 @@ public class EntryWriterElement implements EntryWriter<XMLElement> {
     public void enableIndent(boolean enable){
         setFeature(FEATURE_INDENT, enable);
     }
+    @Override
+    public void writeTagIndent(int level) throws IOException {
+        mCurrentElement.setIndent(level);
+    }
 
     private static final String FEATURE_INDENT = "http://xmlpull.org/v1/doc/features.html#indent-output";
 }

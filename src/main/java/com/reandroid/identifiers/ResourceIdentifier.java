@@ -122,6 +122,13 @@ public class ResourceIdentifier extends Identifier{
         ti.addTag(tag, this);
         super.setTag(tag);
     }
+    public String generateUniqueName(){
+        String type = getTypeName();
+        if(type == null){
+            type = "res";
+        }
+        return type +"_"+ getHexId();
+    }
     @Override
     public String toString(){
         return getHexId() + " " + getResourceName();

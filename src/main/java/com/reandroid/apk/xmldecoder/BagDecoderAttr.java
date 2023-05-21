@@ -20,7 +20,6 @@ import com.reandroid.arsc.array.CompoundItemArray;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.attribute.AttributeBag;
-import com.reandroid.arsc.value.attribute.AttributeBagItem;
 import com.reandroid.common.EntryStore;
 
 import java.io.IOException;
@@ -34,7 +33,7 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
     public OUTPUT decode(ResTableMapEntry mapEntry, EntryWriter<OUTPUT> writer) throws IOException {
         Entry entry = mapEntry.getParentEntry();
         String tag = XmlHelper.toXMLTagName(entry.getTypeName());
-        writer.enableIndent(true);
+        writer.writeTagIndent(INDENT_ENTRY);
         writer.startTag(tag);
         writer.attribute("name", entry.getName());
         writeParentAttributes(writer, mapEntry.getValue());
@@ -44,6 +43,7 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
 
         ResValueMap[] bagItems = mapEntry.listResValueMap();
 
+        boolean hasBags = false;
 
         for(int i = 0; i < bagItems.length; i++){
             ResValueMap item = bagItems[i];
@@ -51,7 +51,7 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
             if(attributeType != null){
                 continue;
             }
-            writer.enableIndent(true);
+            writer.writeTagIndent(INDENT_BAG);
             writer.startTag(bagType.getName());
 
             String name = item.decodeName();
@@ -66,6 +66,10 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
             writer.text(value);
 
             writer.endTag(bagType.getName());
+            hasBags = true;
+        }
+        if(hasBags){
+            writer.writeTagIndent(INDENT_ENTRY);
         }
         return writer.endTag(tag);
     }

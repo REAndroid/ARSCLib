@@ -16,7 +16,7 @@
 package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.ValueDecoder;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.json.JSONObject;
 

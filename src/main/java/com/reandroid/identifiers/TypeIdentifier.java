@@ -18,7 +18,9 @@ package com.reandroid.identifiers;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TypeIdentifier extends IdentifierMap<ResourceIdentifier> {
@@ -31,6 +33,19 @@ public class TypeIdentifier extends IdentifierMap<ResourceIdentifier> {
         this(0, null);
     }
 
+
+    public List<ResourceIdentifier> ensureUniqueResourceNames(){
+        List<ResourceIdentifier> results = new ArrayList<>();
+        for(ResourceIdentifier ri : listDuplicates()){
+            String name = ri.generateUniqueName();
+            ri.setName(name);
+            results.add(ri);
+        }
+        if(results.size() > 0){
+            reloadNameMap();
+        }
+        return results;
+    }
 
     public void write(XmlSerializer serializer) throws IOException {
         for(ResourceIdentifier resourceIdentifier : list()){

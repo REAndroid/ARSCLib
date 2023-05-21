@@ -32,16 +32,19 @@ class BagDecoderPlural<OUTPUT> extends BagDecoder<OUTPUT>{
     public OUTPUT decode(ResTableMapEntry mapEntry, EntryWriter<OUTPUT> writer) throws IOException {
         Entry entry = mapEntry.getParentEntry();
         String tag = XmlHelper.toXMLTagName(entry.getTypeName());
-        writer.enableIndent(true);
+        writer.writeTagIndent(INDENT_ENTRY);
         writer.startTag(tag);
         writer.attribute("name", entry.getName());
 
         ResValueMap[] resValueMaps = mapEntry.listResValueMap();
         PackageBlock packageBlock = entry.getPackageBlock();
+
+        boolean hasBags = false;
+
         for(int i=0; i < resValueMaps.length; i++){
             ResValueMap valueMap = resValueMaps[i];
             String childTag = "item";
-            writer.enableIndent(true);
+            writer.writeTagIndent(INDENT_BAG);
             writer.startTag(childTag);
 
             AttributeType quantity = valueMap.getAttributeType();
@@ -53,6 +56,10 @@ class BagDecoderPlural<OUTPUT> extends BagDecoder<OUTPUT>{
             writeText(writer, packageBlock, valueMap);
 
             writer.endTag(childTag);
+            hasBags = true;
+        }
+        if(hasBags){
+            writer.writeTagIndent(INDENT_ENTRY);
         }
         return writer.endTag(tag);
     }

@@ -17,7 +17,7 @@ package com.reandroid.arsc.chunk.xml;
 
 import android.content.res.XmlResourceParser;
 import com.reandroid.arsc.ApkFile;
-import com.reandroid.arsc.decoder.Decoder;
+import com.reandroid.arsc.coder.Decoder;
 import com.reandroid.arsc.value.ValueType;
 import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;

@@ -115,6 +115,7 @@ public class XMLEntryDecoderSerializer extends XMLEntryDecoder<XmlSerializer> im
         if(!mStart){
             XmlSerializer xmlSerializer = getXmlSerializer();
             xmlSerializer.startDocument("utf-8", null);
+            XmlHelper.setIndent(xmlSerializer, true);
             xmlSerializer.startTag(null, XmlHelper.RESOURCES_TAG);
             mStart = true;
         }
@@ -122,6 +123,7 @@ public class XMLEntryDecoderSerializer extends XMLEntryDecoder<XmlSerializer> im
     private void end() throws IOException {
         if(mStart){
             XmlSerializer xmlSerializer = getXmlSerializer();
+            XmlHelper.setIndent(xmlSerializer, true);
             xmlSerializer.endTag(null, XmlHelper.RESOURCES_TAG);
             xmlSerializer.endDocument();
             xmlSerializer.flush();

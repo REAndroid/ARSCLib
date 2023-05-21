@@ -15,7 +15,7 @@
  */
 package com.reandroid.apk.xmldecoder;
 
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.ValueDecoder;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.xml.*;
 import com.reandroid.xml.parser.XMLSpanParser;
@@ -24,15 +24,16 @@ import java.io.IOException;
 
 public class XMLDecodeHelper {
 
-    public static void writeTextContent(EntryWriter<?> writer, StringItem stringItem) throws IOException {
+    public static boolean writeTextContent(EntryWriter<?> writer, StringItem stringItem) throws IOException {
         if(stringItem == null){
-            return;
+            return false;
         }
         if(!stringItem.hasStyle()){
             String text = stringItem.get();
             text = ValueDecoder.escapeSpecialCharacter(text);
             text = ValueDecoder.quoteWhitespace(text);
             writer.text(text);
+            return false;
         }else {
             String xml = stringItem.getXml();
             XMLElement element = parseSpanSafe(xml);
@@ -42,6 +43,7 @@ public class XMLDecodeHelper {
                 // TODO: throw or investigate the reason
                 writer.text(xml);
             }
+            return true;
         }
     }
     public static void writeParsedSpannable(EntryWriter<?> writer, XMLElement spannableParent) throws IOException {

@@ -266,6 +266,9 @@ public class PackageBlock extends Chunk<PackageHeader>
     public Collection<EntryGroup> listEntryGroup(){
         return getEntriesGroupMap().values();
     }
+    public int getEntryGroupCount(){
+        return getEntriesGroupMap().size();
+    }
 
     /**
      * Searches entries by resource id from local map, then if not find

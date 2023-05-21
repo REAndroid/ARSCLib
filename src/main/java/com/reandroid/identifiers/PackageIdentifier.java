@@ -20,7 +20,6 @@ import com.android.org.kxml2.io.KXmlSerializer;
 import com.reandroid.arsc.array.EntryArray;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
-import com.reandroid.arsc.decoder.ValueDecoder;
 import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.pool.SpecStringPool;
@@ -37,10 +36,10 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
 
 public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
     private PackageBlock mPackageBlock;
+    private int mPackageLoadStamp;
     public PackageIdentifier(int id, String name){
         super(id, name);
     }
@@ -63,6 +62,7 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
             initializeIds(packageBlock);
         }
         initializePackageJson(packageBlock);
+        this.mPackageLoadStamp = packageBlock.getEntryGroupCount();
         setPackageBlock(packageBlock);
     }
     private void initializeTypeName(TypeStringPool typeStringPool){
@@ -160,22 +160,37 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         }
         return false;
     }
+    public List<ResourceIdentifier> ensureUniqueResourceNames(){
+        List<ResourceIdentifier> results = new ArrayList<>();
+        for(TypeIdentifier typeIdentifier : list()){
+            results.addAll(typeIdentifier.ensureUniqueResourceNames());
+        }
+        return results;
+    }
+    public void setResourceNamesToPackage(){
+        setResourceNamesToPackage(getPackageBlock());
+    }
+    public void setResourceNamesToPackage(PackageBlock packageBlock){
+        if(packageBlock == null){
+            return;
+        }
+        for(EntryGroup entryGroup : packageBlock.listEntryGroup()){
+            setResourceNamesToEntry(entryGroup);
+        }
+    }
+    public void setResourceNamesToEntry(EntryGroup entryGroup){
+        ResourceIdentifier ri = getResourceIdentifier(entryGroup.getResourceId());
+        if(ri == null){
+            return;
+        }
+        entryGroup.renameSpec(ri.getName());
+    }
     public ResourceIdentifier getResourceIdentifier(int resourceId){
         TypeIdentifier typeIdentifier = get((resourceId >> 16) & 0xff);
         if(typeIdentifier != null){
             return typeIdentifier.get(resourceId & 0xffff);
         }
         return null;
-    }
-    public ResourceIdentifier getResourceIdentifier(String referenceString){
-        if(referenceString == null){
-            return null;
-        }
-        Matcher matcher = ValueDecoder.PATTERN_REFERENCE.matcher(referenceString);
-        if(!matcher.find()){
-            return null;
-        }
-        return getResourceIdentifier(matcher.group(4), matcher.group(5));
     }
     public ResourceIdentifier getResourceIdentifier(String type, String name){
         TypeIdentifier typeIdentifier = get(type);
@@ -207,6 +222,7 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         write(serializer);
     }
     public void write(XmlSerializer serializer) throws IOException {
+        updateChangedPackageBlock();
         serializer.startDocument("utf-8", null);
         serializer.text("\n");
         serializer.startTag(null, XML_TAG_RESOURCES);
@@ -235,10 +251,24 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
     public void load(PackageBlock packageBlock){
         setId(packageBlock.getId());
         setName(packageBlock.getName());
+        loadEntryGroups(packageBlock);
+        setPackageBlock(packageBlock);
+    }
+    private void updateChangedPackageBlock(){
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return;
+        }
+        if(packageBlock.getEntryGroupCount() == this.mPackageLoadStamp){
+            return;
+        }
+        loadEntryGroups(packageBlock);
+    }
+    private void loadEntryGroups(PackageBlock packageBlock){
         for(EntryGroup entryGroup : packageBlock.listEntryGroup()){
             add(entryGroup);
         }
-        setTag(packageBlock);
+        this.mPackageLoadStamp = packageBlock.getEntryGroupCount();
     }
     public void loadPublicXml(File file) throws IOException, XmlPullParserException {
         FileInputStream fileInputStream = new FileInputStream(file);
@@ -373,7 +403,7 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         ResourceIdentifier resourceIdentifier = new ResourceIdentifier(entry.getId(), entry.getName());
         typeIdentifier.add(resourceIdentifier);
     }
-    public TypeIdentifier getOrCreate(int typeId, String typeName){
+    private TypeIdentifier getOrCreate(int typeId, String typeName){
         TypeIdentifier identifier = get(typeId);
         if(identifier == null){
             return super.add(new TypeIdentifier(typeId, typeName));

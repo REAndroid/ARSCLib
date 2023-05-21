@@ -20,7 +20,7 @@ import com.reandroid.apk.ApkModule;
 import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlPullParser;
-import com.reandroid.arsc.decoder.Decoder;
+import com.reandroid.arsc.coder.Decoder;
 import com.reandroid.xml.XmlParserToSerializer;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;

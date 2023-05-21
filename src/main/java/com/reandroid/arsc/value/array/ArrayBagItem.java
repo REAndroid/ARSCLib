@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.value.array;
 
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.util.HexUtil;
@@ -72,7 +72,7 @@ public class ArrayBagItem extends BagItem {
         }
     }
 
-    public static ArrayBagItem encoded(ValueDecoder.EncodeResult encodeResult) {
+    public static ArrayBagItem encoded(EncodeResult encodeResult) {
         if (encodeResult == null) {
             return null;
         }

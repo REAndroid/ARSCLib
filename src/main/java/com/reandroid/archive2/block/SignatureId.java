@@ -15,7 +15,9 @@
  */
 package com.reandroid.archive2.block;
 
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.CoderHex;
+import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.coder.ValueDecoder;
 import com.reandroid.arsc.util.HexUtil;
 
 import java.util.Objects;
@@ -82,8 +84,9 @@ public class SignatureId implements Comparable<SignatureId>{
                 return signatureId;
             }
         }
-        if (ValueDecoder.isHex(name)) {
-            return new SignatureId(null, ValueDecoder.parseHex(name), 99);
+        EncodeResult hex = CoderHex.INS.encode(name);
+        if (hex != null) {
+            return new SignatureId(null, hex.value, 99);
         }
         return null;
     }

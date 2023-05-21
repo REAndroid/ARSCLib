@@ -15,7 +15,8 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.coder.ValueDecoder;
 import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
@@ -29,7 +30,6 @@ import com.reandroid.arsc.value.ValueType;
 import com.reandroid.common.EntryStore;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLAttribute;
-import com.reandroid.xml.XMLException;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -159,6 +159,17 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
         super.setSize(eight);
     }
     private String getString(int ref){
+        StringPool<?> stringPool = getStringPool();
+        if(stringPool == null){
+            return null;
+        }
+        StringItem stringItem = getStringItem(ref);
+        if(stringItem == null){
+            return null;
+        }
+        return stringItem.getHtml();
+    }
+    private StringItem getStringItem(int ref){
         if(ref<0){
             return null;
         }
@@ -166,11 +177,7 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
         if(stringPool == null){
             return null;
         }
-        StringItem stringItem = stringPool.get(ref);
-        if(stringItem == null){
-            return null;
-        }
-        return stringItem.getHtml();
+        return stringPool.get(ref);
     }
     private ResXmlID getResXmlID(){
         ResXmlIDMap xmlIDMap = getResXmlIDMap();
@@ -206,8 +213,11 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
         if(ref == getNamespaceReference()){
             return;
         }
-        unlink(mNSReference);
+        StringItem stringItem = getStringItem(getNamespaceReference());
         putInteger(getBytesInternal(), OFFSET_NS, ref);
+        if(stringItem != null){
+            stringItem.removeReference(mNSReference);
+        }
         mNSReference = link(OFFSET_NS);
         linkStartNameSpace();
     }
@@ -428,7 +438,7 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
             setData(json.getInt(NAME_data));
         }
     }
-    public XMLAttribute decodeToXml(EntryStore entryStore, int currentPackageId) throws XMLException {
+    public XMLAttribute decodeToXml(EntryStore entryStore, int currentPackageId) {
         int resourceId=getNameResourceID();
         String name;
         if(resourceId==0){
@@ -438,8 +448,8 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
             if(group==null){
                 //Lets ignore such error until XML encoder implemented
                 //throw new XMLException("Failed to decode attribute name: "
-                //HexUtil.toHex8("@0x", resourceId));
-                name = HexUtil.toHex8("@0x", resourceId);
+                // resourceId);
+                name = ValueCoder.decodeUnknownResourceId(false, resourceId);
             }else {
                 name = group.getSpecName();
             }

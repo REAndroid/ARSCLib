@@ -17,13 +17,16 @@ package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.*;
+import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 
-class XMLValuesEncoder {
+public class XMLValuesEncoder {
     private final EncodeMaterials materials;
     XMLValuesEncoder(EncodeMaterials materials){
         this.materials=materials;
@@ -41,7 +44,7 @@ class XMLValuesEncoder {
             encode(typeBlock, element);
         }
     }
-    private void encode(TypeBlock typeBlock, XMLElement element){
+    public Entry encode(TypeBlock typeBlock, XMLElement element){
         String name = element.getAttributeValue("name");
         int resourceId = getMaterials()
                 .resolveLocalResourceId(typeBlock.getTypeName(), name);
@@ -51,74 +54,65 @@ class XMLValuesEncoder {
         encodeValue(entry, element);
 
         getMaterials().setEntryName(entry, name);
-    }
-    void encodeValue(Entry entry, XMLElement element){
-        String value = getValue(element);
-        encodeValue(entry, value);
-    }
-    void encodeValue(Entry entry, String value){
-        if(EncodeUtil.isEmpty(value)){
-            encodeNullValue(entry);
-        }else if(isLiteralEmpty(value)){
-            encodeLiteralEmptyValue(entry, value);
-        }else if(isBoolean(value)){
-            encodeBooleanValue(entry, value);
-        }else if(ValueDecoder.isReference(value)){
-            encodeReferenceValue(entry, value);
-        }else {
-            encodeStringValue(entry, value);
-        }
-    }
-    void encodeNullValue(Entry entry){
-        entry.setValueAsString("");
-    }
-    void encodeLiteralEmptyValue(Entry entry, String value){
-        entry.setValueAsRaw(ValueType.NULL, 0);
-    }
-    void encodeBooleanValue(Entry entry, String value){
-        entry.setValueAsBoolean("true".equals(value.toLowerCase()));
-    }
-    void encodeReferenceValue(Entry entry, String value){
-        int resourceId = getMaterials().resolveReference(value);
-        ValueType valueType;
-        if(value.charAt(0) == '?'){
-            valueType = ValueType.ATTRIBUTE;
-        }else{
-            valueType = ValueType.REFERENCE;
-        }
-        entry.setValueAsRaw(valueType, resourceId);
-    }
-    void encodeStringValue(Entry entry, String value){
 
+        return entry;
+    }
+    public void encodeValue(Entry entry, XMLElement element){
+        String value = getValue(element);
+        EncodeResult encodeResult = getMaterials()
+                .encodeReference(value);
+        if(encodeResult != null){
+            entry.setValueAsRaw(encodeResult.valueType, encodeResult.value);
+            return;
+        }
+        ValueType[] expectedTypes = AttributeDataFormat
+                .getExpectedValueTypes(element.getAttributeValue("type"));
+        if(expectedTypes == null){
+            expectedTypes = CommonType.getExpectedTypes(entry.getTypeName());
+        }
+        encodeValue(entry, expectedTypes, value);
+    }
+    public void encodeValue(Entry entry, String text){
+        ValueType[] expectedTypes = CommonType.getExpectedTypes(entry.getTypeName());
+        encodeValue(entry, expectedTypes, text);
+    }
+    public void encodeValue(Entry entry, ValueType[] expectedTypes, String text){
+        EncodeResult encodeResult = getMaterials()
+                .encodeReference(text);
+        if(encodeResult == null){
+            encodeResult = ValueCoder.encode(text, expectedTypes);
+        }
+        if(encodeResult != null){
+            entry.setValueAsRaw(encodeResult.valueType, encodeResult.value);
+        }else {
+            // TODO: should check expectedTypes contains ValueType.STRING ?
+            text = ValueDecoder.unEscapeUnQuote(text);
+            entry.setValueAsString(text);
+        }
     }
     private TypeBlock getTypeBlock(String type, String qualifiers){
         PackageBlock packageBlock = getMaterials().getCurrentPackage();
         return packageBlock.getOrCreateTypeBlock(qualifiers, type);
     }
+    void encodeAny(ValueItem value, String text){
+        EncodeResult encodeResult = getMaterials().encodeReference(text);
+        if(encodeResult == null){
+            encodeResult = ValueCoder.encode(text);
+        }
+        if(encodeResult != null){
+            value.setTypeAndData(encodeResult.valueType, encodeResult.value);
+            return;
+        }
+        value.setValueAsString(text);
+    }
     EncodeMaterials getMaterials() {
         return materials;
     }
-
-
     static String getValue(XMLElement element){
-        String value=element.getTextContent();
-        if(value!=null){
+        String value = element.getTextContent();
+        if(value != null){
             return value;
         }
         return element.getAttributeValue("value");
-    }
-    static boolean isLiteralEmpty(String value){
-        if(value==null){
-            return false;
-        }
-        value=value.trim().toLowerCase();
-        return value.equals("@empty");
-    }
-    static boolean isBoolean(String value){
-        if(value==null){
-            return false;
-        }
-        value=value.trim().toLowerCase();
-        return value.equals("true")||value.equals("false");
     }
 }

@@ -17,7 +17,9 @@ package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.chunk.xml.*;
-import com.reandroid.arsc.decoder.ValueDecoder;
+import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.coder.ValueDecoder;
 import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ValueType;
@@ -104,78 +106,69 @@ public class XMLFileEncoder {
             if(SchemaAttr.looksSchema(attribute.getName(), attribute.getValue())){
                 continue;
             }
-            String name=attribute.getNameWoPrefix();
-            int resourceId=decodeUnknownAttributeHex(name);
-            Entry entry =null;
-            if(resourceId==0){
-                entry =getAttributeBlock(attribute);
-                if(entry !=null){
-                    resourceId= entry.getResourceId();
-                }else if(attribute.getNamePrefix()!=null){
+            String name = attribute.getNameWoPrefix();
+            String prefix = attribute.getNamePrefix();
+            EncodeResult unknownId = ValueCoder.encodeUnknownResourceId(name);
+            int resourceId;
+            Entry entry = null;
+            if(unknownId == null && prefix != null){
+                entry = getAttributeBlock(attribute);
+                if(entry == null){
                     throw new EncodeException("No resource found for attribute: "
                             + attribute.getName() + ", at file "+mCurrentPath);
                 }
+                resourceId = entry.getResourceId();
+            }else if(unknownId != null){
+                resourceId = unknownId.value;
+            }else {
+                resourceId = 0;
             }
-            ResXmlAttribute xmlAttribute =
-                    resXmlElement.createAttribute(name, resourceId);
-            String prefix=attribute.getNamePrefix();
-            if(prefix!=null){
+            ResXmlAttribute xmlAttribute = resXmlElement.createAttribute(name, resourceId);
+            if(prefix != null){
                 ResXmlStartNamespace ns = resXmlElement.getStartNamespaceByPrefix(prefix);
-                if(ns==null){
-                    ns=forceCreateNamespace(resXmlElement, resourceId, prefix);
+                if(ns == null){
+                    ns = forceCreateNamespace(resXmlElement, resourceId, prefix);
                 }
-                if(ns==null){
+                if(ns == null){
                     throw new EncodeException("Namespace not found: "
-                            +attribute.toString()
-                            +", path="+mCurrentPath);
+                            + attribute.toString()
+                            + ", path=" + mCurrentPath);
                 }
                 xmlAttribute.setNamespaceReference(ns.getUriReference());
             }
-
-            String valueText=attribute.getValue();
-
-            if(ValueDecoder.isReference(valueText)){
-                if(valueText.startsWith("?")){
-                    xmlAttribute.setValueType(ValueType.ATTRIBUTE);
-                }else {
-                    xmlAttribute.setValueType(ValueType.REFERENCE);
-                }
-                xmlAttribute.setData(materials.resolveReference(valueText));
+            String valueText = attribute.getValue();
+            EncodeResult encodeResult = materials.encodeReference(valueText);
+            if(encodeResult != null){
+                xmlAttribute.setTypeAndData(encodeResult.valueType, encodeResult.value);
                 continue;
             }
-            if(entry !=null){
-                AttributeBag attributeBag=AttributeBag
+            if(entry != null){
+                AttributeBag attributeBag = AttributeBag
                         .create((ResValueMapArray) entry.getTableEntry().getValue());
 
-                ValueDecoder.EncodeResult encodeResult =
+                encodeResult =
                         attributeBag.encodeEnumOrFlagValue(valueText);
-                if(encodeResult!=null){
-                    xmlAttribute.setValueType(encodeResult.valueType);
-                    xmlAttribute.setData(encodeResult.value);
+                if(encodeResult == null){
+                    AttributeDataFormat[] formats = attributeBag.getFormats();
+                    encodeResult = ValueCoder.encode(valueText, formats);
+                }
+                if(encodeResult != null){
+                    xmlAttribute.setTypeAndData(encodeResult.valueType, encodeResult.value);
                     continue;
                 }
                 if(attributeBag.isEqualType(AttributeDataFormat.STRING)) {
                     xmlAttribute.setValueAsString(ValueDecoder
-                            .unEscapeSpecialCharacter(valueText));
+                            .unEscapeUnQuote(valueText));
                     continue;
                 }
+                // TODO: should throw here ?
             }
-
-            if(EncodeUtil.isEmpty(valueText)) {
-                if(valueText == null){
-                    valueText = "";
-                }
-                xmlAttribute.setValueAsString(valueText);
-            }else{
-                ValueDecoder.EncodeResult encodeResult =
-                        ValueDecoder.encodeGuessAny(valueText);
-                if(encodeResult!=null){
-                    xmlAttribute.setValueType(encodeResult.valueType);
-                    xmlAttribute.setData(encodeResult.value);
-                }else {
-                    xmlAttribute.setValueAsString(ValueDecoder
-                            .unEscapeSpecialCharacter(valueText));
-                }
+            encodeResult = ValueCoder.encode(valueText);
+            if(encodeResult != null){
+                xmlAttribute.setTypeAndData(encodeResult.valueType, encodeResult.value);
+            }else {
+                xmlAttribute.setValueAsString(ValueDecoder
+                        .unEscapeUnQuote(valueText));
             }
         }
         resXmlElement.calculatePositions();
@@ -206,26 +199,16 @@ public class XMLFileEncoder {
         }
     }
     private void addResourceId(ResIdBuilder idBuilder, XMLAttribute attribute){
-        String name=attribute.getNameWoPrefix();
-        int id=decodeUnknownAttributeHex(name);
-        if(id!=0){
-            idBuilder.add(id, name);
+        String name = attribute.getNameWoPrefix();
+        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(name);
+        if(encodeResult != null){
+            idBuilder.add(encodeResult.value, name);
             return;
         }
         Entry entry = getAttributeBlock(attribute);
         if(entry !=null){
             idBuilder.add(entry.getResourceId(), entry.getName());
         }
-    }
-    private int decodeUnknownAttributeHex(String name){
-        if(name.length()==0||name.charAt(0)!='@'){
-            return 0;
-        }
-        name=name.substring(1);
-        if(!ValueDecoder.isHex(name)){
-            return 0;
-        }
-        return ValueDecoder.parseHex(name);
     }
     private Entry getAttributeBlock(XMLAttribute attribute){
         if(attribute instanceof SchemaAttr){

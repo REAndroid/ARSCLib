@@ -24,6 +24,8 @@ import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.value.*;
 import com.reandroid.identifiers.PackageIdentifier;
+import com.reandroid.identifiers.ResourceIdentifier;
+import com.reandroid.identifiers.TypeIdentifier;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLDocument;
 import org.xmlpull.v1.XmlPullParserException;
@@ -52,10 +54,28 @@ public class ApkModuleXmlDecoder extends ApkDecoder implements Predicate<Entry> 
         PathSanitizer sanitizer = PathSanitizer.create(apkModule);
         sanitizer.sanitize();
     }
+    public void validateResourceNames(){
+        logMessage("Validating resource names ...");
+        TableBlock tableBlock = apkModule.getTableBlock();
+        for(PackageBlock packageBlock : tableBlock.listPackages()){
+            validateResourceNames(packageBlock);
+        }
+    }
+    public void validateResourceNames(PackageBlock packageBlock){
+        PackageIdentifier packageIdentifier = new PackageIdentifier();
+        packageIdentifier.load(packageBlock);
+        if(!packageIdentifier.hasDuplicateResources()){
+            return;
+        }
+        logMessage("Renaming duplicate resources ... ");
+        packageIdentifier.ensureUniqueResourceNames();
+        packageIdentifier.setResourceNamesToPackage(packageBlock);
+    }
     @Override
     void onDecodeTo(File outDir) throws IOException{
         this.decodedEntries.clear();
         logMessage("Decoding ...");
+        validateResourceNames();
 
         if(!apkModule.hasTableBlock()){
             logOrThrow(null, new IOException("Don't have resource table"));

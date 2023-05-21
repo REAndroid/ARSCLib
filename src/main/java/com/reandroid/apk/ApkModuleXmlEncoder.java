@@ -19,6 +19,7 @@ import com.reandroid.archive.APKArchive;
 import com.reandroid.archive.FileInputSource;
 import com.reandroid.apk.xmlencoder.RESEncoder;
 import com.reandroid.archive2.block.ApkSignatureBlock;
+import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.json.JSONArray;
@@ -37,16 +38,34 @@ public class ApkModuleXmlEncoder {
     public ApkModuleXmlEncoder(ApkModule module, TableBlock tableBlock){
         this.resEncoder = new RESEncoder(module, tableBlock);
     }
+
     public void scanDirectory(File mainDirectory) throws IOException, XMLException {
+        logMessage("Scanning: " + mainDirectory.getName());
         loadUncompressedFiles(mainDirectory);
         resEncoder.scanDirectory(mainDirectory);
-        File rootDir=new File(mainDirectory, "root");
+        File rootDir = new File(mainDirectory, "root");
         scanRootDir(rootDir);
         restorePathMap(mainDirectory);
         restoreSignatures(mainDirectory);
         sortFiles();
-        TableStringPool tableStringPool = getApkModule().getTableBlock().getTableStringPool();
-        tableStringPool.removeUnusedStrings();
+        refreshTable();
+    }
+    private void refreshTable(){
+        logMessage("Refreshing resource table ...");
+        TableBlock tableBlock = getApkModule().getTableBlock();
+        TableStringPool tableStringPool = tableBlock.getTableStringPool();
+        int removed = tableStringPool.removeUnusedStrings().size();
+        if(removed > 0){
+            logMessage("Cleared duplicate table strings: " + removed);
+        }
+        for(PackageBlock packageBlock : tableBlock.listPackages()){
+            removed = packageBlock.getSpecStringPool().removeUnusedStrings().size();
+            if(removed > 0){
+                logMessage(packageBlock.getName() + " : cleared duplicate spec strings: " + removed);
+            }
+        }
+        tableBlock.refresh();
+        logMessage("Built resource table : " + tableBlock.toString());
     }
     private void restoreSignatures(File dir) throws IOException {
         File sigDir = new File(dir, ApkUtil.SIGNATURE_DIR_NAME);
@@ -64,6 +83,7 @@ public class ApkModuleXmlEncoder {
         if(!file.isFile()){
             return;
         }
+        logMessage("Restoring original file paths ...");
         PathMap pathMap = new PathMap();
         JSONArray jsonArray = new JSONArray(file);
         pathMap.fromJson(jsonArray);
@@ -83,6 +103,7 @@ public class ApkModuleXmlEncoder {
         }
     }
     private void sortFiles(){
+        logMessage("Sorting files ...");
         APKArchive archive = getApkModule().getApkArchive();
         archive.autoSortApkFiles();
     }
@@ -93,5 +114,26 @@ public class ApkModuleXmlEncoder {
     }
     public void setApkLogger(APKLogger apkLogger) {
         this.resEncoder.setAPKLogger(apkLogger);
+    }
+    public APKLogger getApkLogger(){
+        return resEncoder.getAPKLogger();
+    }
+    private void logMessage(String msg) {
+        APKLogger apkLogger = getApkLogger();
+        if(apkLogger != null){
+            apkLogger.logMessage(msg);
+        }
+    }
+    private void logError(String msg, Throwable tr) {
+        APKLogger apkLogger = getApkLogger();
+        if(apkLogger != null){
+            apkLogger.logError(msg, tr);
+        }
+    }
+    private void logVerbose(String msg) {
+        APKLogger apkLogger = getApkLogger();
+        if(apkLogger != null){
+            apkLogger.logVerbose(msg);
+        }
     }
 }

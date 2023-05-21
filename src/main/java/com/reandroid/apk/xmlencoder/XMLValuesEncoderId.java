@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,28 +15,21 @@
   */
 package com.reandroid.apk.xmlencoder;
 
-import com.reandroid.arsc.decoder.ValueDecoder;
 import com.reandroid.arsc.value.ValueHeader;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.xml.XMLElement;
 
- class XMLValuesEncoderId extends XMLValuesEncoder{
+public class XMLValuesEncoderId extends XMLValuesEncoder{
     public XMLValuesEncoderId(EncodeMaterials materials) {
         super(materials);
     }
 
     @Override
-    void encodeStringValue(Entry entry, String value){
+    public void encodeValue(Entry entry, XMLElement element){
+        if(element.hasChildElements()){
+            throw new IllegalArgumentException("Can not encode as ID : " + element);
+        }
         entry.setValueAsBoolean(false);
-        setVisibility(entry);
-    }
-    @Override
-    void encodeNullValue(Entry entry){
-        entry.setValueAsBoolean(false);
-        setVisibility(entry);
-    }
-    @Override
-    void encodeBooleanValue(Entry entry, String value){
-        super.encodeBooleanValue(entry, value);
         setVisibility(entry);
     }
     private void setVisibility(Entry entry){
