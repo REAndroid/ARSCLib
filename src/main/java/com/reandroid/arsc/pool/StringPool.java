@@ -119,7 +119,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         for(String key:keySet){
             uniqueSet.remove(key);
         }
-        List<String> sortedList=new ArrayList<>(stringList);
+        List<String> sortedList=new ArrayList<>(uniqueSet);
         sortedList.sort(this);
         insertStringList(sortedList);
     }
