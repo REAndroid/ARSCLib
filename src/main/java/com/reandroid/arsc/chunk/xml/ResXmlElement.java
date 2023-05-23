@@ -189,10 +189,10 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return getOrCreateAttribute(NS_ANDROID_URI, NS_ANDROID_PREFIX, name, resourceId);
     }
     public ResXmlAttribute getOrCreateAttribute(String uri, String prefix, String name, int resourceId){
-        ResXmlAttribute attribute=searchAttribute(name, resourceId);
-        if(attribute==null){
+        ResXmlAttribute attribute = searchAttribute(name, resourceId);
+        if(attribute == null){
             attribute = createAttribute(name, resourceId);
-            if(uri!=null){
+            if(uri != null && resourceId != 0){
                 ResXmlElement root = getRootResXmlElement();
                 ResXmlStartNamespace ns = root.getOrCreateNamespace(uri, prefix);
                 attribute.setNamespaceReference(ns.getUriReference());
