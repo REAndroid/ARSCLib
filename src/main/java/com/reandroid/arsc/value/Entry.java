@@ -39,6 +39,7 @@ import java.io.OutputStream;
 
 public class Entry extends Block implements JSONConvert<JSONObject> {
     private TableEntry<?, ?> mTableEntry;
+    private IntegerItem mNullSpecReference;
 
     public Entry(){
         super();
@@ -140,12 +141,72 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         }
         tableEntry.getHeader().setKey(specReference);
     }
+    public void setSpecReference(SpecString specString){
+        TableEntry<?, ?> tableEntry = getTableEntry();
+        if(tableEntry != null){
+            tableEntry.getHeader().setKey(specString);
+            unlinkNullSpecString();
+            return;
+        }
+        linkNullSpecString(specString);
+    }
     public void setSpecReference(int ref){
         TableEntry<?, ?> tableEntry = getTableEntry();
         if(tableEntry == null){
+            linkNullSpecString(ref);
             return;
         }
+        unlinkNullSpecString();
         tableEntry.getHeader().setKey(ref);
+    }
+    private void linkNullSpecString(int ref){
+        if(ref < 0){
+            unlinkNullSpecString();
+            return;
+        }
+        SpecStringPool specStringPool = getSpecStringPool();
+        if(specStringPool == null){
+            unlinkNullSpecString();
+            return;
+        }
+        linkNullSpecString(specStringPool.get(ref));
+    }
+    private void linkNullSpecString(SpecString specString){
+        if(specString == null){
+            unlinkNullSpecString();
+            return;
+        }
+        IntegerItem nullReference = this.mNullSpecReference;
+        if(nullReference != null && nullReference.get() == specString.getIndex()){
+            return;
+        }
+        unlinkNullSpecString();
+        nullReference = new IntegerItem();
+        nullReference.setParent(this);
+        nullReference.setIndex(1);
+        nullReference.set(specString.getIndex());
+        specString.addReference(nullReference);
+        this.mNullSpecReference = nullReference;
+    }
+    private void unlinkNullSpecString(){
+        IntegerItem nullReference = this.mNullSpecReference;
+        if(nullReference == null){
+            return;
+        }
+        SpecStringPool specStringPool = getSpecStringPool();
+        if(specStringPool != null){
+            specStringPool.removeReference(nullReference);
+        }
+        nullReference.setParent(null);
+        nullReference.setIndex(-1);
+        this.mNullSpecReference = null;
+    }
+    private SpecStringPool getSpecStringPool(){
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock != null){
+            return packageBlock.getSpecStringPool();
+        }
+        return null;
     }
     private Entry searchEntry(int resourceId){
         if(resourceId==getResourceId()){
@@ -186,15 +247,25 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
     }
     public SpecString getSpecString(){
         TableEntry<?, ?> tableEntry = getTableEntry();
+        int ref;
         if(tableEntry == null){
+            IntegerItem nullSpecReference = this.mNullSpecReference;
+            if(nullSpecReference == null){
+                return null;
+            }
+            ref = nullSpecReference.get();
+        }else {
+            ref = tableEntry.getHeader().getKey();
+        }
+        SpecStringPool specStringPool = getSpecStringPool();
+        if(specStringPool == null){
             return null;
         }
         PackageBlock packageBlock = getPackageBlock();
         if(packageBlock == null){
             return null;
         }
-        return packageBlock.getSpecStringPool()
-                .get(tableEntry.getHeader().getKey());
+        return specStringPool.get(ref);
     }
     public ResConfig getResConfig(){
         TypeBlock typeBlock = getTypeBlock();
@@ -305,7 +376,7 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         return getTableEntry() instanceof CompoundEntry;
     }
     public void setTableEntry(TableEntry<?, ?> tableEntry){
-        if(tableEntry==this.mTableEntry){
+        if(tableEntry == this.mTableEntry){
             return;
         }
         onTableEntryRemoved();
@@ -315,7 +386,20 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         tableEntry.setIndex(0);
         tableEntry.setParent(this);
         this.mTableEntry = tableEntry;
+        transferSpecReference(tableEntry);
         onTableEntryAdded();
+    }
+    private void transferSpecReference(TableEntry<?, ?> tableEntry){
+        IntegerItem nullSpecReference = this.mNullSpecReference;
+        if(nullSpecReference == null){
+            return;
+        }
+        int ref = nullSpecReference.get();
+        unlinkNullSpecString();
+        ValueHeader valueHeader = tableEntry.getHeader();
+        if(valueHeader.getKey() < 0){
+            valueHeader.setKey(ref);
+        }
     }
     private void onTableEntryAdded(){
         PackageBlock packageBlock = getPackageBlock();
@@ -443,8 +527,7 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
             builder.append(' ');
         }
         if(isNull()){
-            builder.append("NULL");
-            return builder.toString();
+            builder.append("NULL ");
         }
         builder.append('@');
         builder.append(getTypeName());

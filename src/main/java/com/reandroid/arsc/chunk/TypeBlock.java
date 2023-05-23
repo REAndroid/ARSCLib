@@ -191,16 +191,12 @@ public class TypeBlock extends Chunk<TypeHeader>
         }else {
             id = specTypePair.getHighestEntryCount();
         }
-        SpecString specString = getPackageBlock()
-                .getSpecStringPool().getOrCreate(name);
+
+        SpecStringPool stringPool = getPackageBlock()
+                .getSpecStringPool();
+        SpecString specString = stringPool.getOrCreate(name);
         entry = getOrCreateEntry((short) id);
-        if(entry.isNull()){
-            Boolean hasComplex = hasComplexEntry();
-            if(hasComplex != null){
-                entry.ensureComplex(hasComplex);
-            }
-        }
-        entry.setSpecReference(specString.getIndex());
+        entry.setSpecReference(specString);
         return entry;
     }
     public Entry getOrCreateEntry(short entryId){
