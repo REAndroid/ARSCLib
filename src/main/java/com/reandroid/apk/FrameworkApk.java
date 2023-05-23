@@ -53,6 +53,7 @@ public class FrameworkApk extends ApkModule{
         this("framework", apkArchive);
     }
 
+    @Override
     public void destroy(){
         synchronized (mLock){
             this.versionCode = -1;
@@ -106,7 +107,7 @@ public class FrameworkApk extends ApkModule{
         if(hasAndroidManifestBlock()){
             AndroidManifestBlock manifest = getAndroidManifestBlock();
             Integer code = manifest.getVersionCode();
-            if(code!=null){
+            if(code != null){
                 this.versionCode = code;
             }
             if(this.versionName == null){
@@ -118,7 +119,7 @@ public class FrameworkApk extends ApkModule{
         }
         if(hasTableBlock()){
             FrameworkTable table = getTableBlock();
-            if(this.versionCode == 0 && table.isOptimized()){
+            if(table.isOptimized() && this.versionCode == 0){
                 int version = table.getVersionCode();
                 if(version!=0){
                     versionCode = version;
@@ -186,11 +187,13 @@ public class FrameworkApk extends ApkModule{
             FrameworkTable frameworkTable = getTableBlock();
             if(frameworkTable.isOptimized()){
                 mOptimizing = false;
+                initValues();
                 return;
             }
             FrameworkOptimizer optimizer = new FrameworkOptimizer(this);
             optimizer.optimize();
             mOptimizing = false;
+            initValues();
         }
     }
     public String getName(){
@@ -268,6 +271,7 @@ public class FrameworkApk extends ApkModule{
         }
         frameworkApk.setManifest(manifestBlock);
         archive.addAll(inputSourceMap.values());
+        frameworkApk.initValues();
         return frameworkApk;
     }
     public static void optimize(File in, File out, APKLogger apkLogger) throws IOException{
