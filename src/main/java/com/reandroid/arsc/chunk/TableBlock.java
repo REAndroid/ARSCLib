@@ -122,6 +122,12 @@ public class TableBlock extends Chunk<TableHeader>
     public PackageBlock getPackageBlockById(int pkgId){
         return getPackageArray().getPackageBlockById(pkgId);
     }
+    public PackageBlock newPackage(int id, String name){
+        PackageBlock packageBlock = getPackageArray().createNext();
+        packageBlock.setId(id);
+        packageBlock.setName(name);
+        return packageBlock;
+    }
     public PackageArray getPackageArray(){
         return mPackageArray;
     }

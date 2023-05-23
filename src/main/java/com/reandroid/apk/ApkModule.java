@@ -720,6 +720,9 @@ public class ApkModule implements ApkFile {
         tableBlock.setApkFile(this);
         return tableBlock;
     }
+    public void add(InputSource inputSource){
+        getApkArchive().add(inputSource);
+    }
     public APKArchive getApkArchive() {
         return apkArchive;
     }
