@@ -16,13 +16,13 @@ This library is developed based on AOSP structure of androidfw/ResourceTypes.h ,
 
 ##### _NOTES:_
 
-  _1- Decoding resources to XML requires all source names should be un-obfuscated and valid_
+_1- Decoding resources to XML requires all source names should be un-obfuscated and valid_
 
-  _2- User of this lib is assumed to have good knowledge of android source XML syntax, thus
-  during encoding/building it does not validate or throw XML syntax errors as often as aapt/aapt2. For
-  example, you are allowed to set wrong values on some places and doesn't prevent from
-  successful building. On AndroidManifest.xml you can set  ``` package="Wrong 😂 (package) name!" ``` 
-  then you have to know such values are acceptable by android devices._
+_2- User of this lib is assumed to have good knowledge of android source XML syntax, thus
+during encoding/building it does not validate or throw XML syntax errors as often as aapt/aapt2. For
+example, you are allowed to set wrong values on some places and doesn't prevent from
+successful building. On AndroidManifest.xml you can set  ``` package="Wrong 😂 (package) name!" ```
+then you have to know such values are acceptable by android devices._
 
 
 #### Example application
@@ -59,116 +59,84 @@ cd ARSCLib
 
 <details><summary> <code><b>See java example</b></code></summary>
 
-```java
-import com.reandroid.arsc.chunk.TableBlock;
-import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
-import com.reandroid.arsc.chunk.xml.ResXmlElement;
-import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
-
-public static void exampleManifest()throws IOException{
-        File inFile=new File("AndroidManifest.xml");
-
-        // *** Loading AndroidManifest ***
-        AndroidManifestBlock manifestBlock=AndroidManifestBlock.load(inFile);
-
-        System.out.println("Package name: "+manifestBlock.getPackageName());
-
-        List<String> usesPermissionList=manifestBlock.getUsesPermissions();
-        for(String usesPermission:usesPermissionList){
-        System.out.println("Uses permission: "+usesPermission);
-        }
-
-        // *** Modifying AndroidManifest ***
-        // Change package name
-        manifestBlock.setPackageName("com.new.package-name");
-        // Add uses-permission
-        manifestBlock.addUsesPermission("android.permission.WRITE_EXTERNAL_STORAGE");
-        // Modify version code
-        manifestBlock.setVersionCode(904);
-        // Modify version name
-        manifestBlock.setVersionName("9.0.4");
-
-        // Modify xml attribute
-        List<ResXmlElement> activityList=manifestBlock.listActivities();
-        for(ResXmlElement activityElement:activityList){
-        ResXmlAttribute attributeName=activityElement.searchAttributeByResourceId(AndroidManifestBlock.ID_name);
-        System.out.println("Old activity name: "+attributeName.getValueAsString());
-        attributeName.setValueAsString("com.app.MyActivity");
-        System.out.println("New activity name: "+attributeName.getValueAsString());
-        break;
-        }
-
-        // Refresh to re-calculate offsets
-        manifestBlock.refresh();
-        // Save
-        File outFile=new File("AndroidManifest_out.xml");
-        manifestBlock.writeBytes(outFile);
-
-        System.out.println("Saved: "+outFile);
-        }
-
-```
-
-
-
-```java
-    public static void exampleResourceTable() throws IOException{
-        File inFile=new File("resources.arsc");
-
-        // *** Loading resource table ***
-        TableBlock tableBlock=TableBlock.load(inFile);
-
-        Collection<PackageBlock> packageBlockList=tableBlock.listPackages();
-        System.out.println("Packages count = "+packageBlockList.size());
-        for(PackageBlock packageBlock:packageBlockList){
-        System.out.println("Package id = "+packageBlock.getId()
-        +", name = "+packageBlock.getName());
-        }
-
-        // *** Modify resource table
-        // Change package name
-        for(PackageBlock packageBlock:packageBlockList){
-        String name = packageBlock.getName();
-        String newName = name + ".new-name";
-        packageBlock.setName(newName);
-        }
-
-        // Refresh to re-calculate offsets
-        tableBlock.refresh();
-        // Save
-        File outFile=new File("resources_out.arsc");
-        tableBlock.writeBytes(outFile);
-
-        System.out.println("Saved: "+outFile);
-        }
-
-```
-
 ```java   
-    public static void exampleLoadApk() throws IOException{
-        File inFile=new File("test.apk");
-        File outDir=new File("test_out");
+import com.reandroid.apk.AndroidFrameworks;
+import com.reandroid.apk.ApkModule;
+import com.reandroid.apk.FrameworkApk;
+import com.reandroid.archive.APKArchive;
+import com.reandroid.archive.ByteInputSource;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
+import com.reandroid.arsc.chunk.xml.ResXmlElement;
+import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.value.Entry;
 
-        ApkModule apkModule=ApkModule.loadApkFile(inFile);
+import java.io.File;
+import java.io.IOException;
 
-        ApkJsonDecoder decoder=new ApkJsonDecoder(apkModule);
-        outDir=decoder.writeToDirectory(outDir);
-        System.out.println("Decoded to: "+outDir);
+public class ARSCLibExample {
 
-        // You can do any logical modification on any json files here
+    public static void createNewApk() throws IOException {
+  
+        ApkModule apkModule = new ApkModule("base", new APKArchive());
 
-        // To convert back json to apk
+        TableBlock tableBlock = new TableBlock();
+        AndroidManifestBlock manifest = new AndroidManifestBlock();
 
-        ApkJsonEncoder encoder=new ApkJsonEncoder();
-        ApkModule encodedModule=encoder.scanDirectory(outDir);
+        apkModule.setTableBlock(tableBlock);
+        apkModule.setManifest(manifest);
 
-        File outApk=new File("test_out_re-encoded.apk");
-        encodedModule.writeApk(outApk);
+        FrameworkApk framework = apkModule.initializeAndroidFramework(
+                AndroidFrameworks.getLatest().getVersionCode());
 
-        System.out.println("Created apk: "+outApk);
+        PackageBlock packageBlock = tableBlock.newPackage(0x7f, "com.example");
+
+        Entry appIcon = packageBlock.getOrCreate("", "drawable", "ic_launcher");
+
+        EncodeResult color = ValueCoder.encode("#006400");
+        appIcon.setValueAsRaw(color.valueType, color.value);
+
+        Entry appNameDefault = packageBlock.getOrCreate("", "string", "app_name");
+        appNameDefault.setValueAsString("My Application");
+
+        Entry appNameDe = packageBlock.getOrCreate("-de", "string", "app_name");
+        appNameDe.setValueAsString("Meine Bewerbung");
+
+        Entry appNameRu = packageBlock.getOrCreate("-ru-rRU", "string", "app_name");
+        appNameRu.setValueAsString("Мое заявление");
+
+        manifest.setPackageName("com.example");
+        manifest.setVersionCode(100);
+        manifest.setVersionName("1.0.0");
+        manifest.setIconResourceId(appIcon.getResourceId());
+        manifest.setCompileSdkVersion(framework.getVersionCode());
+        manifest.setCompileSdkVersionCodename(framework.getVersionName());
+        manifest.setPlatformBuildVersionCode(framework.getVersionCode());
+        manifest.setPlatformBuildVersionName(framework.getVersionName());
+
+        manifest.addUsesPermission("android.permission.INTERNET");
+        manifest.addUsesPermission("android.permission.READ_EXTERNAL_STORAGE");
+
+        //all appName entries created above have the same resource ids
+        manifest.setApplicationLabel(appNameDefault.getResourceId());
+
+        ResXmlElement mainActivity = manifest.getOrCreateMainActivity("android.app.Activity");
+        ResXmlAttribute labelAttribute = mainActivity
+                .getOrCreateAndroidAttribute(AndroidManifestBlock.NAME_label, AndroidManifestBlock.ID_label);
+        labelAttribute.setValueAsString("Hello World");
+
+        //Android os requires at least one dex file on base apk
+        ByteInputSource dummyDex = new ByteInputSource(new byte[0], "classes.dex");
+        apkModule.add(dummyDex);
+
+        File outFile = new File("test_out.apk");
+        apkModule.writeApk(outFile);
+        //Sign and install
     }
-    
+}
 ```
 </details>
 
