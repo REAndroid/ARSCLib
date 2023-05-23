@@ -123,6 +123,10 @@ public class ApkModule implements ApkFile {
         }
         return getAndroidManifestBlock().getSplit();
     }
+    public FrameworkApk initializeAndroidFramework(Integer version) throws IOException {
+        TableBlock tableBlock = getTableBlock(false);
+        return initializeAndroidFramework(tableBlock, version);
+    }
     public FrameworkApk initializeAndroidFramework(TableBlock tableBlock, Integer version) throws IOException {
         if(tableBlock == null || isAndroid(tableBlock)){
             return null;
@@ -131,10 +135,13 @@ public class ApkModule implements ApkFile {
         for(TableBlock frameWork:frameWorkList){
             if(isAndroid(frameWork)){
                 ApkFile apkFile = frameWork.getApkFile();
-                if(apkFile instanceof FrameworkApk){
-                    return (FrameworkApk) apkFile;
+                if(!(apkFile instanceof FrameworkApk)){
+                    continue;
                 }
-                return null;
+                FrameworkApk frameworkApk = (FrameworkApk) apkFile;
+                if(frameworkApk.getVersionCode() == version){
+                    return frameworkApk;
+                }
             }
         }
         logMessage("Initializing android framework ...");
@@ -148,7 +155,8 @@ public class ApkModule implements ApkFile {
         }
         FrameworkTable frameworkTable = frameworkApk.getTableBlock();
         tableBlock.addFramework(frameworkTable);
-        logMessage("Initialized framework: "+frameworkApk.getName());
+        logMessage("Initialized framework: " + frameworkApk.getName()
+                + " (" + frameworkApk.getVersionName() + ")");
         return frameworkApk;
     }
     private boolean isAndroid(TableBlock tableBlock){

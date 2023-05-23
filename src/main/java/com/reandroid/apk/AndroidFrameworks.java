@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,7 +53,11 @@ public class AndroidFrameworks {
             if(path == null){
                 throw new IOException("Could not get latest framework");
             }
-            return loadResource(latest);
+            FrameworkApk frameworkApk = loadResource(latest);
+            if(current == null){
+                setCurrent(frameworkApk);
+            }
+            return frameworkApk;
         }
     }
     public static FrameworkApk getBestMatch(int version) throws IOException {
@@ -145,14 +149,16 @@ public class AndroidFrameworks {
     }
     private static Map<Integer, String> scanAvailableResourcePaths(){
         Map<Integer, String> results = new HashMap<>();
-        int maxSearch = 50;
-        for(int version=20; version<maxSearch; version++){
+        int maxSearch = 33;
+        for(int version = 21; version < maxSearch; version++){
             String path = toResourcePath(version);
             if(!isAvailable(path)){
                 continue;
             }
             results.put(version, path);
-            maxSearch = version + 20;
+            if((version + 1) == maxSearch){
+                maxSearch++;
+            }
         }
         return results;
     }
