@@ -26,17 +26,17 @@ public enum AttributeDataFormat {
                     ValueType.NULL,
     }),
     INTEGER(1<<2, new ValueType[]{
-            ValueType.INT_DEC,
-            ValueType.INT_HEX
+            ValueType.DEC,
+            ValueType.HEX
     }),
     BOOL(1<<3, new ValueType[]{
-            ValueType.INT_BOOLEAN
+            ValueType.BOOLEAN
     }),
     COLOR(1<<4, new ValueType[]{
-            ValueType.INT_COLOR_ARGB8,
-            ValueType.INT_COLOR_RGB8,
-            ValueType.INT_COLOR_RGB4,
-            ValueType.INT_COLOR_ARGB4
+            ValueType.COLOR_ARGB8,
+            ValueType.COLOR_RGB8,
+            ValueType.COLOR_RGB4,
+            ValueType.COLOR_ARGB4
     }),
     FLOAT(1<<5, new ValueType[]{
             ValueType.FLOAT
@@ -50,12 +50,12 @@ public enum AttributeDataFormat {
     ANY(0x0000FFFF, ValueType.values().clone()),
 
     ENUM(1<<16, new ValueType[]{
-            ValueType.INT_DEC,
-            ValueType.INT_HEX
+            ValueType.DEC,
+            ValueType.HEX
     }),
     FLAG(1<<17, new ValueType[]{
-            ValueType.INT_HEX,
-            ValueType.INT_DEC
+            ValueType.HEX,
+            ValueType.DEC
     }),
     STRING(1<<1, new ValueType[]{
             ValueType.STRING

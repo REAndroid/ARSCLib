@@ -298,7 +298,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         return getData()!=0;
     }
     public void setValueAsBoolean(boolean val){
-        setValueType(ValueType.INT_BOOLEAN);
+        setValueType(ValueType.BOOLEAN);
         int data=val?0xffffffff:0;
         setData(data);
     }
@@ -328,7 +328,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         jsonObject.put(NAME_value_type, valueType.name());
         if(valueType==ValueType.STRING){
             jsonObject.put(NAME_data, getValueAsString());
-        }else if(valueType==ValueType.INT_BOOLEAN){
+        }else if(valueType==ValueType.BOOLEAN){
             jsonObject.put(NAME_data, getValueAsBoolean());
         }else {
             jsonObject.put(NAME_data, getData());
@@ -340,7 +340,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         ValueType valueType = ValueType.fromName(json.getString(NAME_value_type));
         if(valueType==ValueType.STRING){
             setValueAsString(json.optString(NAME_data, ""));
-        }else if(valueType==ValueType.INT_BOOLEAN){
+        }else if(valueType==ValueType.BOOLEAN){
             setValueAsBoolean(json.getBoolean(NAME_data));
         }else {
             setValueType(valueType);

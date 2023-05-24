@@ -71,7 +71,7 @@ public class StyleBagItem extends BagItem {
     }
     public boolean hasIntValue() {
         ValueType valueType = getValueType();
-        return valueType == ValueType.INT_DEC || valueType == ValueType.INT_HEX;
+        return valueType == ValueType.DEC || valueType == ValueType.HEX;
     }
 
     public String getValueAsReference() {
@@ -154,7 +154,7 @@ public class StyleBagItem extends BagItem {
     }
 
     public static StyleBagItem integer(int n) {
-        return new StyleBagItem(ValueType.INT_DEC, n);
+        return new StyleBagItem(ValueType.DEC, n);
     }
 
     public static StyleBagItem string(TableString str) {

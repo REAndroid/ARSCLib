@@ -50,7 +50,7 @@ public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
 
         int bagIndex = 0;
         ResValueMap formatItem = mapArray.get(bagIndex);
-        formatItem.setValueType(ValueType.INT_DEC);
+        formatItem.setValueType(ValueType.DEC);
 
         AttributeType typeFormats = AttributeType.FORMATS;
         formatItem.setAttributeType(typeFormats);

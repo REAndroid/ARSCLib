@@ -29,7 +29,7 @@ public class CoderInteger extends Coder {
         if(integer == null){
             return null;
         }
-        return new EncodeResult(ValueType.INT_DEC, integer);
+        return new EncodeResult(ValueType.DEC, integer);
     }
     @Override
     public String decode(int data) {
@@ -37,7 +37,7 @@ public class CoderInteger extends Coder {
     }
     @Override
     public ValueType getValueType() {
-        return ValueType.INT_DEC;
+        return ValueType.DEC;
     }
 
     @Override

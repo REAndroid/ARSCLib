@@ -29,7 +29,7 @@ public class CoderBoolean extends Coder {
         }else {
             return null;
         }
-        return new EncodeResult(ValueType.INT_BOOLEAN, value);
+        return new EncodeResult(ValueType.BOOLEAN, value);
     }
     @Override
     public String decode(int data) {
@@ -38,7 +38,7 @@ public class CoderBoolean extends Coder {
 
     @Override
     public ValueType getValueType() {
-        return ValueType.INT_BOOLEAN;
+        return ValueType.BOOLEAN;
     }
     @Override
     boolean canStartWith(char first) {

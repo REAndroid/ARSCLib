@@ -234,7 +234,7 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
     }
     public ResValue setValueAsBoolean(boolean val){
         int data = val?0xffffffff:0;
-        return setValueAsRaw(ValueType.INT_BOOLEAN, data);
+        return setValueAsRaw(ValueType.BOOLEAN, data);
     }
     public ResValue setValueAsReference(int resourceId){
         return setValueAsRaw(ValueType.REFERENCE, resourceId);

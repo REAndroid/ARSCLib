@@ -80,7 +80,7 @@ public class ArrayBagItem extends BagItem {
     }
 
     public static ArrayBagItem integer(int n) {
-        return create(ValueType.INT_DEC, n);
+        return create(ValueType.DEC, n);
     }
 
     public static ArrayBagItem string(TableString str) {

@@ -57,15 +57,15 @@ public class CommonType {
         map.put(type.name, type);
         ANIMATOR = type;
         type  = new CommonType("bool", new ValueType[]{
-                ValueType.INT_BOOLEAN
+                ValueType.BOOLEAN
         });
         map.put(type.name, type);
         BOOL = type;
         type  = new CommonType("color", new ValueType[]{
-                ValueType.INT_COLOR_ARGB8,
-                ValueType.INT_COLOR_RGB8,
-                ValueType.INT_COLOR_RGB4,
-                ValueType.INT_COLOR_ARGB4
+                ValueType.COLOR_ARGB8,
+                ValueType.COLOR_RGB8,
+                ValueType.COLOR_RGB4,
+                ValueType.COLOR_ARGB4
         });
         map.put(type.name, type);
         COLOR = type;
@@ -73,15 +73,15 @@ public class CommonType {
                 ValueType.DIMENSION,
                 ValueType.FRACTION,
                 ValueType.FLOAT,
-                ValueType.INT_DEC
+                ValueType.DEC
         });
         map.put(type.name, type);
         DIMEN = type;
         type  = new CommonType("drawable", new ValueType[]{
-                ValueType.INT_COLOR_ARGB8,
-                ValueType.INT_COLOR_RGB8,
-                ValueType.INT_COLOR_RGB4,
-                ValueType.INT_COLOR_ARGB4,
+                ValueType.COLOR_ARGB8,
+                ValueType.COLOR_RGB8,
+                ValueType.COLOR_RGB4,
+                ValueType.COLOR_ARGB4,
                 ValueType.STRING
         });
         map.put(type.name, type);
@@ -92,14 +92,14 @@ public class CommonType {
         map.put(type.name, type);
         FRACTION = type;
         type  = new CommonType("id", new ValueType[]{
-                ValueType.INT_BOOLEAN,
+                ValueType.BOOLEAN,
                 ValueType.STRING
         });
         map.put(type.name, type);
         ID = type;
         type  = new CommonType("integer", new ValueType[]{
-                ValueType.INT_DEC,
-                ValueType.INT_HEX
+                ValueType.DEC,
+                ValueType.HEX
         });
         map.put(type.name, type);
         INTEGER = type;
@@ -119,10 +119,10 @@ public class CommonType {
         map.put(type.name, type);
         MENU = type;
         type  = new CommonType("mipmap", new ValueType[]{
-                ValueType.INT_COLOR_ARGB8,
-                ValueType.INT_COLOR_RGB8,
-                ValueType.INT_COLOR_RGB4,
-                ValueType.INT_COLOR_ARGB4,
+                ValueType.COLOR_ARGB8,
+                ValueType.COLOR_RGB8,
+                ValueType.COLOR_RGB4,
+                ValueType.COLOR_ARGB4,
                 ValueType.STRING
         });
         map.put(type.name, type);

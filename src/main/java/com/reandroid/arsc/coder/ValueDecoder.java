@@ -211,7 +211,7 @@ public class ValueDecoder {
                     valueType, currentPackageName,
                     data);
         }
-        if(valueType==ValueType.INT_DEC || valueType==ValueType.INT_HEX){
+        if(valueType==ValueType.DEC || valueType==ValueType.HEX){
             String result = decodeAttribute(entryStore,
                     attributeValue.getNameResourceID(),
                     attributeValue.getData());

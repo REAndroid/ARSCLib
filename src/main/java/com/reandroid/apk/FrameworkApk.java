@@ -245,7 +245,7 @@ public class FrameworkApk extends ApkModule{
         ResXmlElement root = manifestBlock.getManifestElement();
         ResXmlAttribute attribute = root.getStartElement()
                 .searchAttributeByName(AndroidManifestBlock.NAME_coreApp);
-        if(attribute==null || attribute.getValueType()!= ValueType.INT_BOOLEAN){
+        if(attribute==null || attribute.getValueType()!= ValueType.BOOLEAN){
             return false;
         }
         return attribute.getValueAsBoolean();

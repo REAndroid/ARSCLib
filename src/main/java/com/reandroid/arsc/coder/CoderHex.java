@@ -32,7 +32,7 @@ public class CoderHex extends Coder {
         if(value == null){
             return null;
         }
-        return new EncodeResult(ValueType.INT_HEX, value);
+        return new EncodeResult(ValueType.HEX, value);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class CoderHex extends Coder {
     }
     @Override
     public ValueType getValueType() {
-        return ValueType.INT_HEX;
+        return ValueType.HEX;
     }
     @Override
     boolean canStartWith(char first) {

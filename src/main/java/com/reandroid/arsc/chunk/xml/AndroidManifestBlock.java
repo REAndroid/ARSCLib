@@ -53,7 +53,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
         if(attribute == null){
             return null;
         }
-        if(attribute.getValueType() != ValueType.INT_BOOLEAN){
+        if(attribute.getValueType() != ValueType.BOOLEAN){
             return null;
         }
         return attribute.getValueAsBoolean();
@@ -344,7 +344,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
             return null;
         }
         ResXmlAttribute attribute = manifest.searchAttributeByName(NAME_platformBuildVersionCode);
-        if(attribute == null || attribute.getValueType() != ValueType.INT_DEC){
+        if(attribute == null || attribute.getValueType() != ValueType.DEC){
             return null;
         }
         return attribute.getData();
@@ -376,7 +376,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
             return null;
         }
         ResXmlAttribute attribute = usesSdk.searchAttributeByResourceId(ID_targetSdkVersion);
-        if(attribute==null || attribute.getValueType()!=ValueType.INT_DEC){
+        if(attribute==null || attribute.getValueType()!=ValueType.DEC){
             return null;
         }
         return attribute.getData();
@@ -427,7 +427,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
         ResXmlElement manifestElement=getOrCreateManifestElement();
         ResXmlAttribute attribute = manifestElement
                 .getOrCreateAndroidAttribute(attributeName, resourceId);
-        attribute.setTypeAndData(ValueType.INT_DEC, value);
+        attribute.setTypeAndData(ValueType.DEC, value);
     }
     private Integer getManifestAttributeInt(int resourceId){
         ResXmlElement manifestElement=getManifestElement();
@@ -435,7 +435,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
             return null;
         }
         ResXmlAttribute attribute= manifestElement.searchAttributeByResourceId(resourceId);
-        if(attribute==null || attribute.getValueType()!=ValueType.INT_DEC){
+        if(attribute==null || attribute.getValueType()!=ValueType.DEC){
             return null;
         }
         return attribute.getData();

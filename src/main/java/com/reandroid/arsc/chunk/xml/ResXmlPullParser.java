@@ -177,7 +177,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     @Override
     public boolean getAttributeBooleanValue(String namespace, String attribute, boolean defaultValue) {
         ResXmlAttribute xmlAttribute = getAttribute(namespace, attribute);
-        if(xmlAttribute == null || xmlAttribute.getValueType() != ValueType.INT_BOOLEAN){
+        if(xmlAttribute == null || xmlAttribute.getValueType() != ValueType.BOOLEAN){
             return defaultValue;
         }
         return xmlAttribute.getValueAsBoolean();
@@ -204,8 +204,8 @@ public class ResXmlPullParser implements XmlResourceParser {
             return 0;
         }
         ValueType valueType=xmlAttribute.getValueType();
-        if(valueType==ValueType.INT_DEC
-                ||valueType==ValueType.INT_HEX){
+        if(valueType==ValueType.DEC
+                ||valueType==ValueType.HEX){
             return xmlAttribute.getData();
         }
         return defaultValue;
@@ -217,7 +217,7 @@ public class ResXmlPullParser implements XmlResourceParser {
             return 0;
         }
         ValueType valueType=xmlAttribute.getValueType();
-        if(valueType==ValueType.INT_DEC){
+        if(valueType==ValueType.DEC){
             return xmlAttribute.getData();
         }
         return defaultValue;
@@ -251,7 +251,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     @Override
     public boolean getAttributeBooleanValue(int index, boolean defaultValue) {
         ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
-        if(xmlAttribute == null || xmlAttribute.getValueType() != ValueType.INT_BOOLEAN){
+        if(xmlAttribute == null || xmlAttribute.getValueType() != ValueType.BOOLEAN){
             return defaultValue;
         }
         return xmlAttribute.getValueAsBoolean();

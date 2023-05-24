@@ -58,7 +58,7 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
             writer.attribute("name", name);
             int rawVal = item.getData();
             String value;
-            if(item.getValueType() == ValueType.INT_HEX){
+            if(item.getValueType() == ValueType.HEX){
                 value = HexUtil.toHex8(rawVal);
             }else {
                 value = Integer.toString(rawVal);

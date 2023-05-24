@@ -51,7 +51,7 @@ public class AttributeBag {
         if(!foundOnce){
             return null;
         }
-        ValueType valueType = isFlag()?ValueType.INT_HEX:ValueType.INT_DEC;
+        ValueType valueType = isFlag()?ValueType.HEX :ValueType.DEC;
         return new EncodeResult(valueType, value);
     }
     public String decodeAttributeValue(EntryStore entryStore, int attrValue){

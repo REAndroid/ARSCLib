@@ -407,7 +407,7 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
         jsonObject.put(NAME_value_type, valueType.name());
         if(valueType==ValueType.STRING){
             jsonObject.put(NAME_data, getValueAsString());
-        }else if(valueType==ValueType.INT_BOOLEAN){
+        }else if(valueType==ValueType.BOOLEAN){
             jsonObject.put(NAME_data, getValueAsBoolean());
         }else {
             jsonObject.put(NAME_data, getData());
@@ -431,7 +431,7 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
         ValueType valueType=ValueType.fromName(json.getString(NAME_value_type));
         if(valueType==ValueType.STRING){
             setValueAsString(json.optString(NAME_data, ""));
-        }else if(valueType==ValueType.INT_BOOLEAN){
+        }else if(valueType==ValueType.BOOLEAN){
             setValueAsBoolean(json.getBoolean(NAME_data));
         }else {
             setValueType(valueType);
@@ -480,9 +480,9 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
             ValueType valueType=getValueType();
             if(valueType==ValueType.STRING){
                 valStr=getValueAsString();
-            }else if (valueType==ValueType.INT_BOOLEAN){
+            }else if (valueType==ValueType.BOOLEAN){
                 valStr = String.valueOf(getValueAsBoolean());
-            }else if (valueType==ValueType.INT_DEC){
+            }else if (valueType==ValueType.DEC){
                 valStr = String.valueOf(getData());
             }else {
                 valStr = "["+valueType+"] " + HexUtil.toHex8(getData());

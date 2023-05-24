@@ -24,7 +24,7 @@ public class CoderColorARGB4 extends CoderColor{
 
     @Override
     public ValueType getValueType() {
-        return ValueType.INT_COLOR_ARGB4;
+        return ValueType.COLOR_ARGB4;
     }
     public static final CoderColorARGB4 INS = new CoderColorARGB4();
 }

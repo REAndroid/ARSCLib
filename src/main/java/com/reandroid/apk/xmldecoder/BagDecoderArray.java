@@ -74,7 +74,7 @@ class BagDecoderArray<OUTPUT> extends BagDecoder<OUTPUT>{
         if(valueTypes.contains(ValueType.STRING)){
             return ApkUtil.TAG_STRING_ARRAY;
         }
-        if(valueTypes.size() == 1 && valueTypes.contains(ValueType.INT_DEC)){
+        if(valueTypes.size() == 1 && valueTypes.contains(ValueType.DEC)){
             return ApkUtil.TAG_INTEGER_ARRAY;
         }
         return XmlHelper.toXMLTagName(mapEntry.getParentEntry().getTypeName());
