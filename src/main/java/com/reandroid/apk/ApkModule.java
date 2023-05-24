@@ -34,6 +34,7 @@ import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.util.FrameworkTable;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.identifiers.PackageIdentifier;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLException;
@@ -68,6 +69,26 @@ public class ApkModule implements ApkFile {
         this.mUncompressedFiles.addPath(apkArchive);
     }
 
+    public void validateResourceNames(){
+        if(!hasTableBlock()){
+            return;
+        }
+        logMessage("Validating resource names ...");
+        TableBlock tableBlock = getTableBlock();
+        for(PackageBlock packageBlock : tableBlock.listPackages()){
+            validateResourceNames(packageBlock);
+        }
+    }
+    public void validateResourceNames(PackageBlock packageBlock){
+        PackageIdentifier packageIdentifier = new PackageIdentifier();
+        packageIdentifier.load(packageBlock);
+        if(!packageIdentifier.hasDuplicateResources()){
+            return;
+        }
+        logMessage("Renaming duplicate resources ... ");
+        packageIdentifier.ensureUniqueResourceNames();
+        packageIdentifier.setResourceNamesToPackage(packageBlock);
+    }
     public ApkSignatureBlock getApkSignatureBlock() {
         return apkSignatureBlock;
     }

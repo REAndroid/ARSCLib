@@ -46,6 +46,22 @@ public enum ValueType {
     public String getTypeName() {
         return typeName;
     }
+    public boolean isColor(){
+        return this == COLOR_ARGB8
+                || this == COLOR_RGB8
+                || this == COLOR_ARGB4
+                || this == COLOR_RGB4;
+    }
+    public boolean isInteger(){
+        return this == DEC
+                || this == HEX;
+    }
+    public boolean isReference(){
+        return this == REFERENCE
+                || this == ATTRIBUTE
+                || this == DYNAMIC_REFERENCE
+                || this == DYNAMIC_ATTRIBUTE;
+    }
 
     public static ValueType valueOf(byte b){
         ValueType[] all=values();
