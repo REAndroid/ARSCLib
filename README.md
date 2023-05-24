@@ -57,7 +57,8 @@ cd ARSCLib
 # Built jar will be placed ./build/libs/ARSCLib-x.x.x.jar
 ```
 
-<details><summary> <code><b>See java example</b></code></summary>
+#### Examples
+<details><summary> <code><b>Java example</b></code></summary>
 
 ```java   
 import com.reandroid.apk.AndroidFrameworks;
