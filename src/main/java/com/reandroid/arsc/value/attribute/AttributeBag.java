@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,7 +56,7 @@ public class AttributeBag {
     }
     public String decodeAttributeValue(EntryStore entryStore, int attrValue){
         AttributeBagItem[] bagItems=searchValue(attrValue);
-        return AttributeBagItem.toString(entryStore, bagItems);
+        return AttributeBagItem.toString(entryStore, bagItems, false);
     }
     public AttributeBagItem searchByName(String entryName){
         AttributeBagItem[] bagItems= getBagItems();

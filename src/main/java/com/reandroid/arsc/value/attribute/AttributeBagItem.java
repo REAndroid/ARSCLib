@@ -127,6 +127,9 @@ public class AttributeBagItem {
     }
 
     public static String toString(EntryStore entryStore, AttributeBagItem[] bagItems)  {
+        return toString(entryStore, bagItems, false);
+    }
+    public static String toString(EntryStore entryStore, AttributeBagItem[] bagItems, boolean use_hex)  {
         if(bagItems==null){
             return null;
         }
@@ -144,7 +147,15 @@ public class AttributeBagItem {
             if(appendOnce){
                 builder.append("|");
             }
-            String name=item.getNameOrHex(entryStore);
+            String name;
+            if(use_hex){
+                name = item.getNameOrHex(entryStore);
+            }else {
+                name = item.getName(entryStore);
+            }
+            if(name == null){
+                return null;
+            }
             builder.append(name);
             appendOnce=true;
         }
