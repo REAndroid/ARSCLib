@@ -370,13 +370,6 @@ public class PackageBlock extends Chunk<PackageHeader>
     private void refreshSpecStringCount(){
         getHeaderBlock().getSpecStringPoolCount().set(mSpecStringPool.countStrings());
     }
-    private void refreshTypeIdOffset(){
-        // TODO: find solution
-        //int largest=getSpecTypePairArray().getHighestTypeId();
-        //int count=getTypeStringPool().countStrings();
-        //getHeaderBlock().getTypeIdOffset().set(count-largest);
-        getHeaderBlock().getTypeIdOffsetItem().set(0);
-    }
     public void onEntryAdded(Entry entry){
         updateEntry(entry);
     }
@@ -390,7 +383,6 @@ public class PackageBlock extends Chunk<PackageHeader>
         refreshTypeStringPoolCount();
         refreshSpecStringPoolOffset();
         refreshSpecStringCount();
-        refreshTypeIdOffset();
     }
 
     @Override

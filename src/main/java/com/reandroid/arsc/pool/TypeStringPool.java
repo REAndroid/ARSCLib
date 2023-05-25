@@ -32,10 +32,7 @@ public class TypeStringPool extends StringPool<TypeString> {
     }
     public int getLastId(){
         int count = countStrings();
-        if(count == 0){
-            return 0;
-        }
-        return get(count - 1).getId();
+        return toTypeId(count - 1);
     }
     public int idOf(String typeName){
         return idOf(getByName(typeName));
@@ -45,10 +42,10 @@ public class TypeStringPool extends StringPool<TypeString> {
      * Not recommend to use unless unless you are sure of proper pool
      **/
     public int idOf(TypeString typeString){
-        if(typeString==null){
-            return 0;
+        if(typeString == null){
+            return toTypeId(0);
         }
-        return (typeString.getIndex()+mTypeIdOffset.get()+1);
+        return (toTypeId(typeString.getIndex()));
     }
     /**
      * Searches string entry {@link TypeBlock}
@@ -64,13 +61,12 @@ public class TypeStringPool extends StringPool<TypeString> {
         return null;
     }
     public TypeString getById(int id){
-        int index=id-mTypeIdOffset.get()-1;
-        return super.get(index);
+        return super.get(toIndex(id));
     }
     public TypeString getOrCreate(int typeId, String typeName){
         StringArray<TypeString> stringsArray = getStringsArray();
         int old = stringsArray.childesCount();
-        int size = typeId - mTypeIdOffset.get();
+        int size = toIndex(typeId) + 1;
         stringsArray.ensureSize(size);
         TypeString typeString = getById(typeId);
         typeString.set(typeName);
@@ -78,6 +74,12 @@ public class TypeStringPool extends StringPool<TypeString> {
             updateUniqueIdMap(typeString);
         }
         return typeString;
+    }
+    private int toIndex(int typeId){
+        return typeId - 1 - mTypeIdOffset.get();
+    }
+    private int toTypeId(int index){
+        return index + 1 + mTypeIdOffset.get();
     }
     /**
      * Use getOrCreate(typeId, typeName)}
