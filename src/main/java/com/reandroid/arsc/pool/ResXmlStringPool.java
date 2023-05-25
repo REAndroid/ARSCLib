@@ -159,7 +159,7 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
             return;
         }
         String msg="Not expecting ResXmlStringPool to have styles count="
-                +styleArrayCount+",\n please create issue along with this apk/file on https://github.com/REAndroid/ARSCEditor";
+                +styleArrayCount+",\n please create issue along with this apk/file on https://github.com/REAndroid/ARSCLib";
         System.err.println(msg);
         HAS_STYLE_NOTIFIED=true;
     }
