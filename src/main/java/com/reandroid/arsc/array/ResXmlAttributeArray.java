@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,9 @@ import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         implements Comparator<ResXmlAttribute>, JSONConvert<JSONArray> {
@@ -42,6 +44,23 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         this.mAttributeStart=attributeStart;
         this.mAttributeCount=attributeCount;
         this.mAttributesUnitSize=attributesUnitSize;
+    }
+
+    public int removeUndefinedAttributes(){
+        List<ResXmlAttribute> undefinedAttributes = listUndefined();
+        super.remove(undefinedAttributes);
+        return undefinedAttributes.size();
+    }
+    public List<ResXmlAttribute> listUndefined(){
+        List<ResXmlAttribute> results = new ArrayList<>();
+        ResXmlAttribute[] attributes = getChildes();
+        for(int i = 0; i < attributes.length; i++){
+            ResXmlAttribute attribute = attributes[i];
+            if(attribute != null && attribute.isUndefined()){
+                results.add(attribute);
+            }
+        }
+        return results;
     }
     public void setAttributesUnitSize(int size){
         ResXmlAttribute[] attributes=getChildes();

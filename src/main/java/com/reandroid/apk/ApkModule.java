@@ -69,6 +69,20 @@ public class ApkModule implements ApkFile {
         this.mUncompressedFiles.addPath(apkArchive);
     }
 
+    public String refreshTable(){
+        TableBlock tableBlock = this.mTableBlock;
+        if(tableBlock != null){
+            return tableBlock.refreshFull();
+        }
+        return null;
+    }
+    public String refreshManifest(){
+        AndroidManifestBlock manifestBlock = this.mManifestBlock;
+        if(manifestBlock != null){
+            return manifestBlock.refreshFull();
+        }
+        return null;
+    }
     public void validateResourceNames(){
         if(!hasTableBlock()){
             return;

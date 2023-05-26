@@ -54,6 +54,20 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         addChild(3, mEndElementContainer);
         addChild(4, mEndNamespaceList);
     }
+
+    public int removeUndefinedAttributes(){
+        int count = 0;
+        ResXmlStartElement start = getStartElement();
+        if(start != null){
+            count += start.removeUndefinedAttributes();
+        }
+        for(ResXmlNode xmlNode : getXmlNodes()){
+            if(xmlNode instanceof ResXmlElement){
+                count += ((ResXmlElement)xmlNode).removeUndefinedAttributes();
+            }
+        }
+        return count;
+    }
     public void changeIndex(ResXmlElement element, int index){
         int i = 0;
         for(ResXmlNode xmlNode:mBody.getChildes()){

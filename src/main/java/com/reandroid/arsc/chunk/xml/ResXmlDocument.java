@@ -58,6 +58,47 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         addChild(mResXmlIDMap);
         addChild(mResXmlElementContainer);
     }
+
+    public String refreshFull(){
+        int sizeOld = getHeaderBlock().getChunkSize();
+        StringBuilder message = new StringBuilder();
+        boolean appendOnce = false;
+        ResXmlElement root = getResXmlElement();
+        int count;
+        if(root != null){
+            count = root.removeUndefinedAttributes();
+            if(count != 0){
+                message.append("Removed undefined attributes = ");
+                message.append(count);
+                appendOnce = true;
+            }
+        }
+        count = getStringPool().removeUnusedStrings().size();
+        if(count != 0){
+            if(appendOnce){
+                message.append("\n");
+            }
+            message.append("Removed xml strings = ");
+            message.append(count);
+            appendOnce = true;
+        }
+        refresh();
+        int sizeNew = getHeaderBlock().getChunkSize();
+        if(sizeOld != sizeNew){
+            if(appendOnce){
+                message.append("\n");
+            }
+            message.append("Xml size changed = ");
+            message.append(sizeOld);
+            message.append(", ");
+            message.append(sizeNew);
+            appendOnce = true;
+        }
+        if(appendOnce){
+            return message.toString();
+        }
+        return null;
+    }
     public void destroy(){
         ResXmlElement root = getResXmlElement();
         if(root!=null){

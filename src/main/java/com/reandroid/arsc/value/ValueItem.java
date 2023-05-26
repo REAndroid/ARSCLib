@@ -44,6 +44,9 @@ public abstract class ValueItem extends BlockItem implements Value,
 
         writeSize();
     }
+    public boolean isUndefined(){
+        return getValueType() == ValueType.NULL && getData() == 0;
+    }
     public Entry resolve(int resourceId){
         PackageBlock packageBlock = getPackageBlock();
         if(packageBlock == null){

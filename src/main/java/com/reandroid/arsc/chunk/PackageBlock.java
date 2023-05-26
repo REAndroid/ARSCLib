@@ -70,6 +70,43 @@ public class PackageBlock extends Chunk<PackageHeader>
         addChild(mSpecStringPool);
         addChild(mBody);
     }
+    public String refreshFull(){
+        return refreshFull(true);
+    }
+    public String refreshFull(boolean elementsRefresh){
+        int sizeOld = getHeaderBlock().getChunkSize();
+        StringBuilder message = new StringBuilder();
+        boolean appendOnce = false;
+        int count = getSpecStringPool().removeUnusedStrings().size();
+        if(count != 0){
+            message.append("Removed unused spec strings = ");
+            message.append(count);
+            appendOnce = true;
+        }
+        sortTypes();
+        if(!elementsRefresh){
+            if(appendOnce){
+                return message.toString();
+            }
+            return null;
+        }
+        refresh();
+        int sizeNew = getHeaderBlock().getChunkSize();
+        if(sizeOld != sizeNew){
+            if(appendOnce){
+                message.append("\n");
+            }
+            message.append("Package size changed = ");
+            message.append(sizeOld);
+            message.append(", ");
+            message.append(sizeNew);
+            appendOnce = true;
+        }
+        if(appendOnce){
+            return message.toString();
+        }
+        return null;
+    }
     public void linkTableStringsInternal(TableStringPool tableStringPool){
         for(SpecTypePair specTypePair : listSpecTypePairs()){
             specTypePair.linkTableStringsInternal(tableStringPool);

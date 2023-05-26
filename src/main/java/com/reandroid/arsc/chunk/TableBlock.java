@@ -53,6 +53,48 @@ public class TableBlock extends Chunk<TableHeader>
         addChild(mPackageArray);
     }
 
+    public String refreshFull(){
+        int sizeOld = getHeaderBlock().getChunkSize();
+        StringBuilder message = new StringBuilder();
+        boolean appendOnce = false;
+        int count = getTableStringPool().removeUnusedStrings().size();
+        if(count != 0){
+            message.append("Removed unused table strings = ");
+            message.append(count);
+            appendOnce = true;
+        }
+        for(PackageBlock packageBlock : listPackages()){
+            String packageMessage = packageBlock.refreshFull(false);
+            if(packageMessage == null){
+                continue;
+            }
+            if(appendOnce){
+                message.append("\n");
+            }
+            message.append("Package: ");
+            message.append(packageBlock.getName());
+            message.append("\n  ");
+            packageMessage = packageMessage.replaceAll("\n", "\n  ");
+            message.append(packageMessage);
+            appendOnce = true;
+        }
+        refresh();
+        int sizeNew = getHeaderBlock().getChunkSize();
+        if(sizeOld != sizeNew){
+            if(appendOnce){
+                message.append("\n");
+            }
+            message.append("Table size changed = ");
+            message.append(sizeOld);
+            message.append(", ");
+            message.append(sizeNew);
+            appendOnce = true;
+        }
+        if(appendOnce){
+            return message.toString();
+        }
+        return null;
+    }
     public void linkTableStringsInternal(TableStringPool tableStringPool){
         for(PackageBlock packageBlock : listPackages()){
             packageBlock.linkTableStringsInternal(tableStringPool);

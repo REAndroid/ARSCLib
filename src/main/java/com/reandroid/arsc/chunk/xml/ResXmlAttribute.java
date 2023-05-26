@@ -50,6 +50,10 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
         this(20);
     }
 
+    @Override
+    public boolean isUndefined(){
+        return getNameReference() < 0;
+    }
     public String getUri(){
         return getString(getNamespaceReference());
     }
