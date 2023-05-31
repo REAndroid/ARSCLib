@@ -643,7 +643,7 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
 
             if (length == 1) {
                 try {
-                    JSONObject.writeValue(writer, this.myArrayList.get(0),
+                    writeValue(writer, this.myArrayList.get(0),
                             indentFactor, indent);
                 } catch (Exception e) {
                     throw new JSONException("Unable to write JSONArray value at index: 0", e);
@@ -660,7 +660,7 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
                     }
                     JSONObject.indent(writer, newIndent);
                     try {
-                        JSONObject.writeValue(writer, this.myArrayList.get(i),
+                        writeValue(writer, this.myArrayList.get(i),
                                 indentFactor, newIndent);
                     } catch (Exception e) {
                         throw new JSONException("Unable to write JSONArray value at index: " + i, e);

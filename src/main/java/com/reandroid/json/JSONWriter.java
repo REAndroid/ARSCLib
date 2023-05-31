@@ -10,24 +10,29 @@ import java.util.Collection;
 import java.util.Map;
 
 public class JSONWriter {
-    private static final int maxdepth = 200;
-
-    private boolean comma;
-
+    protected final Appendable writer;
     protected char mode;
-
-    private final JSONObject stack[];
-
+    private boolean comma;
+    private final JSONObject[] stack;
     private int top;
-
-    protected Appendable writer;
-
+    private int indentFactor;
     public JSONWriter(Appendable w) {
         this.comma = false;
         this.mode = 'i';
-        this.stack = new JSONObject[maxdepth];
+        this.stack = new JSONObject[MAX_DEPTH];
         this.top = 0;
         this.writer = w;
+        this.indentFactor = DEFAULT_INDENT_FACTOR;
+    }
+
+    /**
+     * indentFactor == 0, only new line
+     * indentFactor < 0, off
+     * indentFactor > 0, length of tab (left spaces) is indentFactor + depth
+     * default = INDENT_FACTOR
+     * */
+    public void setIndentFactor(int indentFactor) {
+        this.indentFactor = indentFactor;
     }
 
     private JSONWriter append(String string) throws JSONException {
@@ -38,12 +43,10 @@ public class JSONWriter {
             try {
                 if (this.comma && this.mode == 'a') {
                     this.writer.append(',');
+                    writeIndent();
                 }
                 this.writer.append(string);
             } catch (IOException e) {
-            	// Android as of API 25 does not support this exception constructor
-            	// however we won't worry about it. If an exception is happening here
-            	// it will just throw a "Method not found" exception instead.
                 throw new JSONException(e);
             }
             if (this.mode == 'o') {
@@ -56,10 +59,12 @@ public class JSONWriter {
     }
 
     public JSONWriter array() throws JSONException {
+        writeIndent();
         if (this.mode == 'i' || this.mode == 'o' || this.mode == 'a') {
             this.push(null);
             this.append("[");
             this.comma = false;
+            writeIndent();
             return this;
         }
         throw new JSONException("Misplaced array.");
@@ -73,11 +78,9 @@ public class JSONWriter {
         }
         this.pop(m);
         try {
+            writeIndent();
             this.writer.append(c);
         } catch (IOException e) {
-        	// Android as of API 25 does not support this exception constructor
-        	// however we won't worry about it. If an exception is happening here
-        	// it will just throw a "Method not found" exception instead.
             throw new JSONException(e);
         }
         this.comma = true;
@@ -106,6 +109,7 @@ public class JSONWriter {
                 topObject.put(string, true);
                 if (this.comma) {
                     this.writer.append(',');
+                    writeIndent();
                 }
                 this.writer.append(JSONObject.quote(string));
                 this.writer.append(':');
@@ -113,9 +117,6 @@ public class JSONWriter {
                 this.mode = 'o';
                 return this;
             } catch (IOException e) {
-            	// Android as of API 25 does not support this exception constructor
-            	// however we won't worry about it. If an exception is happening here
-            	// it will just throw a "Method not found" exception instead.
                 throw new JSONException(e);
             }
         }
@@ -129,6 +130,7 @@ public class JSONWriter {
             this.append("{");
             this.push(new JSONObject());
             this.comma = false;
+            writeIndent();
             return this;
         }
         throw new JSONException("Misplaced object.");
@@ -151,12 +153,41 @@ public class JSONWriter {
     }
 
     private void push(JSONObject jo) throws JSONException {
-        if (this.top >= maxdepth) {
+        if (this.top >= MAX_DEPTH) {
             throw new JSONException("Nesting too deep.");
         }
         this.stack[this.top] = jo;
         this.mode = jo == null ? 'a' : 'k';
         this.top += 1;
+    }
+    public JSONWriter value(boolean b) throws JSONException {
+        return this.append(b ? "true" : "false");
+    }
+
+    public JSONWriter value(double d) throws JSONException {
+        return this.value(Double.valueOf(d));
+    }
+
+    public JSONWriter value(long l) throws JSONException {
+        return this.append(Long.toString(l));
+    }
+    public JSONWriter value(Object object) throws JSONException {
+        return this.append(valueToString(object));
+    }
+    private void writeIndent() throws JSONException {
+        if(this.indentFactor < 0 || this.mode == 'i'){
+            return;
+        }
+        try{
+            Appendable appendable = this.writer;
+            appendable.append('\n');
+            int level = this.top * this.indentFactor;
+            for(int i = 0; i < level ; i++){
+                appendable.append(' ');
+            }
+        }catch (IOException ex){
+            throw new JSONException(ex);
+        }
     }
 
     public static String valueToString(Object value) throws JSONException {
@@ -176,15 +207,7 @@ public class JSONWriter {
             throw new JSONException("Bad value from toJSONString: " + object);
         }
         if (value instanceof Number) {
-            // not all Numbers may match actual JSON Numbers. i.e. Fractions or Complex
-            final String numberAsString = JSONObject.numberToString((Number) value);
-            if(JSONObject.NUMBER_PATTERN.matcher(numberAsString).matches()) {
-                // Close enough to a JSON number that we will return it unquoted
-                return numberAsString;
-            }
-            // The Number value is not a valid JSON number.
-            // Instead we will quote it as a string
-            return JSONObject.quote(numberAsString);
+            return JSONItem.numberToString((Number) value);
         }
         if (value instanceof Boolean || value instanceof JSONObject
                 || value instanceof JSONArray) {
@@ -207,18 +230,6 @@ public class JSONWriter {
         return JSONObject.quote(value.toString());
     }
 
-    public JSONWriter value(boolean b) throws JSONException {
-        return this.append(b ? "true" : "false");
-    }
-
-    public JSONWriter value(double d) throws JSONException {
-        return this.value(Double.valueOf(d));
-    }
-
-    public JSONWriter value(long l) throws JSONException {
-        return this.append(Long.toString(l));
-    }
-    public JSONWriter value(Object object) throws JSONException {
-        return this.append(valueToString(object));
-    }
+    private static final int MAX_DEPTH = 200;
+    private static final int DEFAULT_INDENT_FACTOR = 1;
 }
