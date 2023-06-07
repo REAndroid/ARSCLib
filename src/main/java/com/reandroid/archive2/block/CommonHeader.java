@@ -37,6 +37,8 @@ public abstract class CommonHeader extends ZipHeader {
         this.offsetFileName = offsetFileName;
         this.offsetGeneralPurpose = offsetGeneralPurpose;
         this.generalPurposeFlag = new GeneralPurposeFlag(this, offsetGeneralPurpose);
+        this.generalPurposeFlag.setUtf8(true, false);
+        setDosTime(35719201);
     }
     public long getFileOffset() {
         return mFileOffset;
@@ -120,8 +122,6 @@ public abstract class CommonHeader extends ZipHeader {
     }
     public void setMethod(int value){
         putShort(offsetGeneralPurpose + 2, value);
-        GeneralPurposeFlag gpf = getGeneralPurposeFlag();
-        //gpf.setHasDataDescriptor(value != ZipEntry.STORED);
     }
     public long getDosTime(){
         return getIntegerUnsigned(offsetGeneralPurpose + 4);
@@ -214,12 +214,8 @@ public abstract class CommonHeader extends ZipHeader {
         if(fileName==null){
             fileName="";
         }
-        byte[] nameBytes;
-        if(getGeneralPurposeFlag().getUtf8()){
-            nameBytes = fileName.getBytes(StandardCharsets.UTF_8);
-        }else {
-            nameBytes = fileName.getBytes();
-        }
+        byte[] nameBytes = fileName.getBytes(StandardCharsets.UTF_8);
+        getGeneralPurposeFlag().setUtf8(true, false);
         int length = nameBytes.length;
         setFileNameLength(length);
         if(length==0){
@@ -247,8 +243,7 @@ public abstract class CommonHeader extends ZipHeader {
         if(length>max){
             length = max;
         }
-        return ZipStringEncoding.decode(getGeneralPurposeFlag().getUtf8(),
-                getBytesInternal(), offset, length);
+        return new String(bytes, offset, length, StandardCharsets.UTF_8);
     }
     public String decodeComment(){
         int length = getExtraLength();
@@ -261,8 +256,7 @@ public abstract class CommonHeader extends ZipHeader {
         if(length>max){
             length = max;
         }
-        return ZipStringEncoding.decode(getGeneralPurposeFlag().getUtf8(),
-                getBytesInternal(), offset, length);
+        return new String(bytes, offset, length, StandardCharsets.UTF_8);
     }
     void onUtf8Changed(boolean oldValue){
         String str = mFileName;

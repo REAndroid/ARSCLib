@@ -20,6 +20,7 @@ import com.reandroid.arsc.util.HexUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 public class CentralEntryHeader extends CommonHeader {
@@ -66,7 +67,7 @@ public class CentralEntryHeader extends CommonHeader {
         if(comment==null){
             comment="";
         }
-        byte[] strBytes = ZipStringEncoding.encodeString(isUtf8(), comment);
+        byte[] strBytes = comment.getBytes(StandardCharsets.UTF_8);
         int length = strBytes.length;
         setCommentLength(length);
         if(length==0){
@@ -93,6 +94,19 @@ public class CentralEntryHeader extends CommonHeader {
     }
     public void setLocalRelativeOffset(long offset){
         putInteger(OFFSET_localRelativeOffset, offset);
+    }
+
+    public int getInternalFileAttributes(){
+        return getShortUnsigned(OFFSET_internalFileAttributes);
+    }
+    public void setInternalFileAttributes(int value){
+        putShort(OFFSET_internalFileAttributes, value);
+    }
+    public int getExternalFileAttributes(){
+        return getShortUnsigned(OFFSET_externalFileAttributes);
+    }
+    public void setExternalFileAttributes(int value){
+        putShort(OFFSET_externalFileAttributes, value);
     }
     @Override
     void onUtf8Changed(boolean oldValue){
@@ -147,6 +161,8 @@ public class CentralEntryHeader extends CommonHeader {
         builder.append(", extraLength=").append(getExtraLength());
         builder.append(", commentLength=").append(getCommentLength());
         builder.append(", offset=").append(getLocalRelativeOffset());
+        builder.append(", internalFileAttributes=").append(getInternalFileAttributes());
+        builder.append(", externalFileAttributes=").append(getExternalFileAttributes());
         return builder.toString();
     }
 
