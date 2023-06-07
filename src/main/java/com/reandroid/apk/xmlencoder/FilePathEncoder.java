@@ -43,13 +43,13 @@ public class FilePathEncoder {
     public void setUncompressedFiles(UncompressedFiles uncompressedFiles){
         this.uncompressedFiles=uncompressedFiles;
     }
-    public void encodeResDir(File resDir){
-        materials.logVerbose("Scanning file list: "
-                +resDir.getParentFile().getName()
-                +File.separator+resDir.getName());
+    public void encodePackageResDir(File resDir){
+        materials.logMessage("Scan: "
+                + resDir.getParentFile().getName()
+                + File.separator + resDir.getName());
         List<File> dirList = ApkUtil.listDirectories(resDir);
         for(File dir:dirList){
-            if(dir.getName().startsWith("values")){
+            if(ApkUtil.isValuesDirectoryName(dir.getName(), true)){
                 continue;
             }
             encodeTypeDir(dir);
@@ -58,10 +58,10 @@ public class FilePathEncoder {
     public void encodeTypeDir(File dir){
         List<File> fileList = ApkUtil.listFiles(dir, null);
         for(File file:fileList){
-            encodeFileEntry(file);
+            encodeTypeFileEntry(file);
         }
     }
-    public InputSource encodeFileEntry(File resFile){
+    public InputSource encodeTypeFileEntry(File resFile){
         String type = EncodeUtil.getTypeNameFromResFile(resFile);
         PackageBlock packageBlock = materials.getCurrentPackage();
         int typeId=packageBlock

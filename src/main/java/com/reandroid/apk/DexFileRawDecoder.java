@@ -15,16 +15,18 @@
  */
 package com.reandroid.apk;
 
-/**
- * Renamed, use com.reandroid.apk.ApkModuleJsonDecoder
- * */
-@Deprecated
-public class ApkJsonDecoder extends ApkModuleJsonDecoder{
-    public ApkJsonDecoder(ApkModule apkModule, boolean splitTypes){
-        super(apkModule, splitTypes);
-    }
-    public ApkJsonDecoder(ApkModule apkModule){
-        super(apkModule);
+import java.io.File;
+import java.io.IOException;
+
+public class DexFileRawDecoder implements DexDecoder{
+    public DexFileRawDecoder(){
     }
 
+    @Override
+    public boolean decodeDex(DexFileInputSource dexFileInputSource, File mainDirectory) throws IOException {
+        File file = new File(mainDirectory, DEX_DIRECTORY_NAME);
+        file = dexFileInputSource.toFile(file);
+        dexFileInputSource.write(file);
+        return true;
+    }
 }

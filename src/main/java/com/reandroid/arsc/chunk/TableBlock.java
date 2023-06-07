@@ -53,6 +53,13 @@ public class TableBlock extends Chunk<TableHeader>
         addChild(mPackageArray);
     }
 
+    public int removeUnusedSpecs(){
+        int result = 0;
+        for(PackageBlock packageBlock : listPackages()){
+            result += packageBlock.removeUnusedSpecs();
+        }
+        return result;
+    }
     public String refreshFull(){
         int sizeOld = getHeaderBlock().getChunkSize();
         StringBuilder message = new StringBuilder();
@@ -463,8 +470,15 @@ public class TableBlock extends Chunk<TableHeader>
         ChunkType chunkType=headerBlock.getChunkType();
         return chunkType==ChunkType.TABLE;
     }
-    public static final String FILE_NAME="resources.arsc";
+    public static final String FILE_NAME = "resources.arsc";
+    public static final String FILE_NAME_JSON = "resources.arsc.json";
 
-    private static final String NAME_packages="packages";
-    public static final String NAME_styled_strings="styled_strings";
+    private static final String NAME_packages = "packages";
+    public static final String NAME_styled_strings = "styled_strings";
+
+    public static final String JSON_FILE_NAME = "resources.arsc.json";
+    public static final String DIRECTORY_NAME = "resources";
+
+    public static final String RES_JSON_DIRECTORY_NAME = "res-json";
+    public static final String RES_FILES_DIRECTORY_NAME = "res-files";
 }

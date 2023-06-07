@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,12 +21,12 @@ import com.reandroid.arsc.chunk.TableBlock;
 import java.io.*;
 
 public class SplitJsonTableInputSource extends InputSource {
-    private final File dir;
+    private final File resourcesDirectory;
     private TableBlock mCache;
     private APKLogger apkLogger;
-    public SplitJsonTableInputSource(File dir) {
+    public SplitJsonTableInputSource(File resourcesDirectory) {
         super(TableBlock.FILE_NAME);
-        this.dir=dir;
+        this.resourcesDirectory =resourcesDirectory;
     }
     @Override
     public long write(OutputStream outputStream) throws IOException {
@@ -52,12 +52,12 @@ public class SplitJsonTableInputSource extends InputSource {
         if(mCache!=null){
             return mCache;
         }
-        TableBlockJsonBuilder builder=new TableBlockJsonBuilder();
-        TableBlock tableBlock=builder.scanDirectory(dir);
-        mCache=tableBlock;
+        TableBlockJsonBuilder builder = new TableBlockJsonBuilder();
+        TableBlock tableBlock = builder.scanDirectory(resourcesDirectory);
+        mCache = tableBlock;
         return tableBlock;
     }
-    void setAPKLogger(APKLogger logger) {
+    public void setApkLogger(APKLogger logger) {
         this.apkLogger = logger;
     }
     void logMessage(String msg) {

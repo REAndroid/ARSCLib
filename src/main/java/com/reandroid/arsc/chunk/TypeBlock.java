@@ -18,12 +18,15 @@ package com.reandroid.arsc.chunk;
 import com.reandroid.arsc.array.EntryArray;
 import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.array.SparseOffsetsArray;
+import com.reandroid.arsc.array.SpecTypePairArray;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
+import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.arsc.util.StringsUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.json.JSONConvert;
@@ -55,6 +58,14 @@ public class TypeBlock extends Chunk<TypeHeader>
 
         addChild(entryOffsets);
         addChild(mEntryArray);
+    }
+    public String buildUniqueDirectoryName(){
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock != null && packageBlock.hasValidTypeNames()){
+            return getTypeName() + getResConfig().getQualifiers();
+        }
+        return "type_" + HexUtil.toHex2(getTypeId())
+                + getResConfig().getQualifiers();
     }
     public void linkTableStringsInternal(TableStringPool tableStringPool){
         EntryArray entryArray = getEntryArray();

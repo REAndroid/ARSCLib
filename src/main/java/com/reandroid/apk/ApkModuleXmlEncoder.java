@@ -15,125 +15,129 @@
  */
 package com.reandroid.apk;
 
-import com.reandroid.archive.APKArchive;
+import com.reandroid.apk.xmlencoder.EncodeMaterials;
+import com.reandroid.apk.xmlencoder.XMLEncodeSource;
+import com.reandroid.apk.xmlencoder.XMLTableBlockEncoder;
 import com.reandroid.archive.FileInputSource;
-import com.reandroid.apk.xmlencoder.RESEncoder;
-import com.reandroid.archive2.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
-import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.json.JSONArray;
-import com.reandroid.xml.XMLException;
+import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.xml.source.XMLFileSource;
+import com.reandroid.xml.source.XMLSource;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
-public class ApkModuleXmlEncoder {
-    private final RESEncoder resEncoder;
+public class ApkModuleXmlEncoder extends ApkModuleEncoder{
+    private final XMLTableBlockEncoder tableBlockEncoder;
+    private EncodeMaterials mEncodeMaterials;
     public ApkModuleXmlEncoder(){
-        this.resEncoder = new RESEncoder();
+        this.tableBlockEncoder = new XMLTableBlockEncoder();
     }
     public ApkModuleXmlEncoder(ApkModule module, TableBlock tableBlock){
-        this.resEncoder = new RESEncoder(module, tableBlock);
+        this.tableBlockEncoder = new XMLTableBlockEncoder(module, tableBlock);
     }
 
-    public void scanDirectory(File mainDirectory) throws IOException, XMLException {
-        logMessage("Scanning: " + mainDirectory.getName());
-        loadUncompressedFiles(mainDirectory);
-        resEncoder.scanDirectory(mainDirectory);
-        File rootDir = new File(mainDirectory, "root");
-        scanRootDir(rootDir);
-        restorePathMap(mainDirectory);
-        restoreSignatures(mainDirectory);
-        sortFiles();
-        refreshTable();
+    @Override
+    public void buildResources(File mainDirectory) throws IOException{
+        encodeManifestBinary(mainDirectory);
+        buildTableBlock(mainDirectory);
+        encodeManifestXml(mainDirectory);
+        scanResFilesDirectory(mainDirectory);
     }
-    private void refreshTable(){
-        logMessage("Refreshing resource table ...");
-        TableBlock tableBlock = getApkModule().getTableBlock();
-        TableStringPool tableStringPool = tableBlock.getTableStringPool();
-        int removed = tableStringPool.removeUnusedStrings().size();
-        if(removed > 0){
-            logMessage("Cleared duplicate table strings: " + removed);
-        }
-        for(PackageBlock packageBlock : tableBlock.listPackages()){
-            removed = packageBlock.getSpecStringPool().removeUnusedStrings().size();
-            if(removed > 0){
-                logMessage(packageBlock.getName() + " : cleared duplicate spec strings: " + removed);
-            }
-        }
-        tableBlock.refresh();
-        logMessage("Built resource table : " + tableBlock.toString());
+    @Override
+    public ApkModule getApkModule(){
+        return tableBlockEncoder.getApkModule();
     }
-    private void restoreSignatures(File dir) throws IOException {
-        File sigDir = new File(dir, ApkUtil.SIGNATURE_DIR_NAME);
-        if(!sigDir.isDirectory()){
-            return;
-        }
-        ApkModule apkModule = getApkModule();
-        apkModule.logMessage("Loading signatures ...");
-        ApkSignatureBlock signatureBlock = new ApkSignatureBlock();
-        signatureBlock.scanSplitFiles(sigDir);
-        apkModule.setApkSignatureBlock(signatureBlock);
+
+    private void buildTableBlock(File mainDirectory) throws IOException {
+        XMLTableBlockEncoder tableBlockEncoder = this.tableBlockEncoder;
+        tableBlockEncoder.setEncodeMaterials(getEncodeMaterials());
+        tableBlockEncoder.scanMainDirectory(mainDirectory);
     }
-    private void restorePathMap(File dir) throws IOException{
-        File file = new File(dir, PathMap.JSON_FILE);
+    private void encodeManifestBinary(File mainDirectory) {
+        File file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME_BIN);
         if(!file.isFile()){
             return;
         }
-        logMessage("Restoring original file paths ...");
-        PathMap pathMap = new PathMap();
-        JSONArray jsonArray = new JSONArray(file);
-        pathMap.fromJson(jsonArray);
-        pathMap.restore(getApkModule());
+        logMessage("Encode binary manifest: " + file.getName());
+        FileInputSource inputSource =
+                new FileInputSource(file, AndroidManifestBlock.FILE_NAME_BIN);
+        getApkModule().add(inputSource);
     }
-    public ApkModule getApkModule(){
-        return resEncoder.getApkModule();
+    private void encodeManifestXml(File mainDirectory) {
+        if(mainDirectory == null){
+            return;
+        }
+        File file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME);
+        if(!file.isFile()){
+            return;
+        }
+        logMessage("Encode manifest: " + file.getName());
+        EncodeMaterials encodeMaterials = getEncodeMaterials();
+        TableBlock tableBlock = getApkModule().getTableBlock();
+        PackageBlock packageBlock = encodeMaterials.pickMainPackageBlock(tableBlock);
+        if(packageBlock != null){
+            encodeMaterials.setCurrentPackage(packageBlock);
+        }
+        XMLSource xmlSource =
+                new XMLFileSource(AndroidManifestBlock.FILE_NAME, file);
+        XMLEncodeSource xmlEncodeSource =
+                new XMLEncodeSource(encodeMaterials, xmlSource);
+        getApkModule().add(xmlEncodeSource);
     }
-
-    private void scanRootDir(File rootDir){
-        APKArchive archive=getApkModule().getApkArchive();
-        List<File> rootFileList=ApkUtil.recursiveFiles(rootDir);
-        for(File file:rootFileList){
-            String path=ApkUtil.toArchivePath(rootDir, file);
-            FileInputSource inputSource=new FileInputSource(file, path);
-            archive.add(inputSource);
+    private void scanResFilesDirectory(File mainDirectory) {
+        File resFilesDirectory = new File(mainDirectory, TableBlock.RES_FILES_DIRECTORY_NAME);
+        if(!resFilesDirectory.isDirectory()){
+            return;
+        }
+        logMessage("Searching files: " + resFilesDirectory.getName());
+        List<File> fileList = ApkUtil.recursiveFiles(resFilesDirectory);
+        for(File file : fileList){
+            encodeResFile(resFilesDirectory, file);
         }
     }
-    private void sortFiles(){
-        logMessage("Sorting files ...");
-        APKArchive archive = getApkModule().getApkArchive();
-        archive.autoSortApkFiles();
+    private void encodeResFile(File resFilesDirectory, File file){
+        String path = ApkUtil.toArchivePath(resFilesDirectory, file);
+        logVerbose(path);
+        Entry entry = getEntry(path);
+        EncodeMaterials encodeMaterials = getEncodeMaterials();
+        if(file.getName().endsWith(".xml")){
+            XMLSource xmlSource =
+                    new XMLFileSource(path, file);
+            XMLEncodeSource xmlEncodeSource =
+                    new XMLEncodeSource(encodeMaterials, xmlSource);
+            xmlEncodeSource.setEntry(entry);
+            getApkModule().add(xmlEncodeSource);
+        }else {
+            FileInputSource inputSource = new FileInputSource(file, path);
+            getApkModule().add(inputSource);
+        }
     }
-    private void loadUncompressedFiles(File mainDirectory) throws IOException {
-        File file=new File(mainDirectory, UncompressedFiles.JSON_FILE);
-        UncompressedFiles uncompressedFiles = getApkModule().getUncompressedFiles();
-        uncompressedFiles.fromJson(file);
+    private Entry getEntry(String path){
+        List<Entry> entryList = getApkModule().listReferencedEntries(path);
+        if(entryList.size() > 0){
+            return entryList.get(0);
+        }
+        return null;
     }
+    public EncodeMaterials getEncodeMaterials(){
+        EncodeMaterials materials = this.mEncodeMaterials;
+        if(materials == null){
+            materials = new EncodeMaterials();
+            materials.setAPKLogger(getApkLogger());
+            this.mEncodeMaterials = materials;
+        }
+        return materials;
+    }
+    public void setEncodeMaterials(EncodeMaterials encodeMaterials){
+        this.mEncodeMaterials = encodeMaterials;
+    }
+    @Override
     public void setApkLogger(APKLogger apkLogger) {
-        this.resEncoder.setAPKLogger(apkLogger);
-    }
-    public APKLogger getApkLogger(){
-        return resEncoder.getAPKLogger();
-    }
-    private void logMessage(String msg) {
-        APKLogger apkLogger = getApkLogger();
-        if(apkLogger != null){
-            apkLogger.logMessage(msg);
-        }
-    }
-    private void logError(String msg, Throwable tr) {
-        APKLogger apkLogger = getApkLogger();
-        if(apkLogger != null){
-            apkLogger.logError(msg, tr);
-        }
-    }
-    private void logVerbose(String msg) {
-        APKLogger apkLogger = getApkLogger();
-        if(apkLogger != null){
-            apkLogger.logVerbose(msg);
-        }
+        super.setApkLogger(apkLogger);
+        this.tableBlockEncoder.setApkLogger(apkLogger);
     }
 }

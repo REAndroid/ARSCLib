@@ -22,17 +22,23 @@ class IdentifierMap<CHILD extends Identifier> extends Identifier
     private final Object mLock = new Object();
     private final Map<Integer, CHILD> idMap;
     private final Map<String, CHILD> nameMap;
+    private boolean mCaseInsensitive;
 
     public IdentifierMap(int id, String name){
         super(id, name);
         this.idMap = new HashMap<>();
         this.nameMap = new HashMap<>();
+        this.mCaseInsensitive = CASE_INSENSITIVE_FS;
     }
+
     public List<CHILD> listDuplicates(){
         List<CHILD> results = new ArrayList<>();
         Map<String, CHILD> uniques = new HashMap<>();
         for(CHILD item : getItems()){
             String name = item.getName();
+            if(isCaseInsensitive()){
+                name = name.toLowerCase();
+            }
             if(uniques.containsKey(name)){
                 results.add(item);
                 results.add(uniques.get(name));
@@ -148,6 +154,12 @@ class IdentifierMap<CHILD extends Identifier> extends Identifier
             return;
         }
         this.nameMap.put(childName, child);
+    }
+    private boolean isCaseInsensitive(){
+        return mCaseInsensitive;
+    }
+    void setCaseInsensitive(boolean caseInsensitive){
+        mCaseInsensitive = caseInsensitive;
     }
     @Override
     public int compare(CHILD child1, CHILD child2) {

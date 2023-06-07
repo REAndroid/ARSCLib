@@ -15,12 +15,16 @@
  */
 package com.reandroid.identifiers;
 
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.util.HexUtil;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class ResourceIdentifier extends Identifier{
+    private Boolean mHasGoodName;
     public ResourceIdentifier(int id, String name){
         super(id, name);
     }
@@ -105,6 +109,11 @@ public class ResourceIdentifier extends Identifier{
         return buildResourceName(prefix, packageName, typeName, getName());
     }
     @Override
+    public void setName(String name) {
+        super.setName(name);
+        mHasGoodName = null;
+    }
+    @Override
     long getUniqueId(){
         return 0x00000000ffffffffL & this.getResourceId();
     }
@@ -127,7 +136,59 @@ public class ResourceIdentifier extends Identifier{
         if(type == null){
             type = "res";
         }
-        return type +"_"+ getHexId();
+        return type + "_" + getHexId();
+    }
+    public boolean isGeneratedName(){
+        String name = getName();
+        if(name == null){
+            return false;
+        }
+        if(!name.contains("_0x")){
+            return false;
+        }
+        return generateUniqueName().equals(name);
+    }
+    public boolean renameSpecGenerated(){
+        setName(generateUniqueName());
+        return renameSpec();
+    }
+    public boolean renameBadSpec(){
+        if(hasGoodName()){
+            return false;
+        }
+        setName(generateUniqueName());
+        return renameSpec();
+    }
+    public boolean renameSpec(){
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return false;
+        }
+        EntryGroup entryGroup = packageBlock.getEntryGroup(getResourceId());
+        if(entryGroup == null){
+            return false;
+        }
+        String name = getName();
+        if(name == null){
+            return false;
+        }
+        if(name.equals(entryGroup.getSpecName())){
+            return false;
+        }
+        return entryGroup.renameSpec(name);
+    }
+    private PackageBlock getPackageBlock(){
+        PackageIdentifier pi = getPackageIdentifier();
+        if(pi != null){
+            return pi.getPackageBlock();
+        }
+        return null;
+    }
+    public boolean hasGoodName(){
+        if(mHasGoodName == null){
+            mHasGoodName = isGoodName(getName());
+        }
+        return mHasGoodName;
     }
     @Override
     public String toString(){
@@ -150,5 +211,49 @@ public class ResourceIdentifier extends Identifier{
         builder.append(entry);
         return builder.toString();
     }
+    public static boolean isGoodName(String name){
+        if(name == null){
+            return false;
+        }
+        int length = name.length();
+        if(length < NAME_LENGTH_MIN || length > NAME_LENGTH_MAX){
+            return false;
+        }
+        char[] chars = name.toCharArray();
+        if(!isGoodFirstChar(chars[0])){
+            return false;
+        }
+        length = chars.length;
+        for(int i = 1; i < length; i++){
+            if(!isGoodNameChar(chars[i])){
+                return false;
+            }
+        }
+        return true;
+    }
+    private static boolean isGoodNameChar(char ch){
+        return isAtoZ(ch)
+                || isDigits(ch)
+                || ch == '_'
+                || ch == '.';
+    }
+    private static boolean isGoodFirstChar(char ch){
+        return isAtoZ(ch) ||
+                ch == '_'
+                || ch == '$';
+    }
+    private static boolean isAtoZ(char ch){
+        if(ch >= 'A' && ch <= 'Z'){
+            return true;
+        }
+        return ch >= 'a' && ch <= 'z';
+    }
+    private static boolean isDigits(char ch){
+        return ch >= '0' && ch <= '9';
+    }
+
+
+    public static final int NAME_LENGTH_MIN = 2;
+    public static final int NAME_LENGTH_MAX = 100;
 
 }

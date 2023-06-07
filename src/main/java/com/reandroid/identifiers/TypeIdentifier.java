@@ -73,6 +73,46 @@ public class TypeIdentifier extends IdentifierMap<ResourceIdentifier> {
         return 0;
     }
 
+    public int renameSpecs(){
+        int result = 0;
+        for(ResourceIdentifier ri : getItems()){
+            boolean renamed = ri.renameSpec();
+            if(renamed){
+                result++;
+            }
+        }
+        if(result != 0){
+            reloadNameMap();
+        }
+        return result;
+    }
+    public int renameDuplicateSpecs(){
+        int result = 0;
+        for(ResourceIdentifier ri : listDuplicates()){
+            boolean renamed = ri.renameSpecGenerated();
+            if(renamed){
+                result++;
+            }
+        }
+        if(result != 0){
+            reloadNameMap();
+        }
+        return result;
+    }
+    public int renameBadSpecs(){
+        int result = 0;
+        for(ResourceIdentifier ri : getItems()){
+            boolean renamed = ri.renameBadSpec();
+            if(renamed){
+                result++;
+            }
+        }
+        if(result != 0){
+            reloadNameMap();
+        }
+        return result;
+    }
+
     @Override
     public ResourceIdentifier getByTag(Object tag){
         ResourceIdentifier ri = this.tagMap.get(tag);

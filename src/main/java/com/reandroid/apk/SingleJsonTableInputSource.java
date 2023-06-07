@@ -59,7 +59,7 @@ public class SingleJsonTableInputSource extends InputSource {
         TableBlock tableBlock=newInstance();
         InputStream inputStream = inputSource.openStream();
         try{
-            StringPoolBuilder poolBuilder = new StringPoolBuilder();
+            JsonStringPoolBuilder poolBuilder = new JsonStringPoolBuilder();
             JSONObject jsonObject = new JSONObject(inputStream);
             poolBuilder.build(jsonObject);
             poolBuilder.apply(tableBlock);
@@ -74,11 +74,11 @@ public class SingleJsonTableInputSource extends InputSource {
         return new TableBlock();
     }
     public static SingleJsonTableInputSource fromFile(File rootDir, File jsonFile){
-        String path=ApkUtil.toArchiveResourcePath(rootDir, jsonFile);
+        String path = ApkUtil.jsonToArchiveResourcePath(rootDir, jsonFile);
         FileInputSource fileInputSource=new FileInputSource(jsonFile, path);
         return new SingleJsonTableInputSource(fileInputSource);
     }
-    void setAPKLogger(APKLogger logger) {
+    void setApkLogger(APKLogger logger) {
         this.apkLogger = logger;
     }
     private void logMessage(String msg) {

@@ -16,7 +16,11 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.ApkFile;
+import com.reandroid.arsc.chunk.ChunkType;
+import com.reandroid.arsc.header.InfoHeader;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.value.ValueType;
+import com.reandroid.common.FileChannelInputStream;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -521,10 +525,12 @@ public class AndroidManifestBlock extends ResXmlDocument {
         return TAG_manifest.equals(root.getTag());
     }
     public static AndroidManifestBlock load(File file) throws IOException {
-        return load(new FileInputStream(file));
+        AndroidManifestBlock manifestBlock = new AndroidManifestBlock();
+        manifestBlock.readBytes(new BlockReader(file));
+        return manifestBlock;
     }
     public static AndroidManifestBlock load(InputStream inputStream) throws IOException {
-        AndroidManifestBlock manifestBlock=new AndroidManifestBlock();
+        AndroidManifestBlock manifestBlock = new AndroidManifestBlock();
         manifestBlock.readBytes(inputStream);
         return manifestBlock;
     }
@@ -557,6 +563,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
     public static final String NAME_platformBuildVersionName = "platformBuildVersionName";
     public static final String NAME_versionCode = "versionCode";
     public static final String NAME_versionName = "versionName";
+    public static final String NAME_targetSdkVersion = "targetSdkVersion";
     public static final String NAME_name = "name";
     public static final String NAME_extractNativeLibs = "extractNativeLibs";
     public static final String NAME_isSplitRequired = "isSplitRequired";
@@ -590,5 +597,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
 
     public static final String VALUE_android_intent_action_MAIN = "android.intent.action.MAIN";
 
-    public static final String FILE_NAME="AndroidManifest.xml";
+    public static final String FILE_NAME = "AndroidManifest.xml";
+    public static final String FILE_NAME_BIN = "AndroidManifest.xml.bin";
+    public static final String FILE_NAME_JSON = "AndroidManifest.xml.json";
 }

@@ -79,7 +79,7 @@ public class JsonXmlInputSource extends InputSource {
     }
 
     public static JsonXmlInputSource fromFile(File rootDir, File jsonFile){
-        String path=ApkUtil.toArchiveResourcePath(rootDir, jsonFile);
+        String path=ApkUtil.jsonToArchiveResourcePath(rootDir, jsonFile);
         FileInputSource fileInputSource=new FileInputSource(jsonFile, path);
         return new JsonXmlInputSource(fileInputSource);
     }

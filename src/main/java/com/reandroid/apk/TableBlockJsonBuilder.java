@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,62 +24,59 @@ import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
 public class TableBlockJsonBuilder {
-    private final StringPoolBuilder poolBuilder;
+    private final JsonStringPoolBuilder poolBuilder;
     public TableBlockJsonBuilder(){
-        poolBuilder=new StringPoolBuilder();
+        poolBuilder = new JsonStringPoolBuilder();
     }
     public TableBlock scanDirectory(File resourcesDir) throws IOException {
         if(!resourcesDir.isDirectory()){
             throw new IOException("No such directory: "+resourcesDir);
         }
-        List<File> pkgDirList=ApkUtil.listDirectories(resourcesDir);
-        if(pkgDirList.size()==0){
+        List<File> packageDirectories = ApkUtil.listPackageDirectories(resourcesDir);
+        if(packageDirectories.size() == 0){
             throw new IOException("No package sub directory found in : "+resourcesDir);
         }
-        TableBlock tableBlock=new TableBlock();
+        TableBlock tableBlock = new TableBlock();
         poolBuilder.scanDirectory(resourcesDir);
         poolBuilder.apply(tableBlock);
-        for(File pkgDir:pkgDirList){
-            scanPackageDirectory(tableBlock, pkgDir);
+        for(File packageDir : packageDirectories){
+            scanPackageDirectory(tableBlock, packageDir);
         }
         tableBlock.sortPackages();
         tableBlock.refresh();
         return tableBlock;
     }
-    private void scanPackageDirectory(TableBlock tableBlock, File pkgDir) throws IOException{
-        File pkgFile=new File(pkgDir, PackageBlock.JSON_FILE_NAME);
-        if(!pkgFile.isFile()){
-            throw new IOException("Invalid package directory! Package file missing: "+pkgFile);
+    private void scanPackageDirectory(TableBlock tableBlock, File packageDir) throws IOException{
+        File packageJsonFile = new File(packageDir, PackageBlock.JSON_FILE_NAME);
+        if(!packageJsonFile.isFile()){
+            throw new IOException("Invalid package directory! Package file missing: "
+                    + packageJsonFile);
         }
-        FileInputStream inputStream=new FileInputStream(pkgFile);
-        JSONObject jsonObject=new JSONObject(inputStream);
-        PackageBlock pkg=tableBlock.getPackageArray()
+        JSONObject jsonObject = new JSONObject(packageJsonFile);
+        PackageBlock packageBlock = tableBlock.getPackageArray()
                 .getOrCreate(jsonObject.getInt(PackageBlock.NAME_package_id));
-        pkg.setName(jsonObject.optString(PackageBlock.NAME_package_name));
+        packageBlock.setName(jsonObject.optString(PackageBlock.NAME_package_name));
         if(jsonObject.has(PackageBlock.NAME_staged_aliases)){
             JSONArray stagedJson = jsonObject.getJSONArray(PackageBlock.NAME_staged_aliases);
             StagedAlias stagedAlias = new StagedAlias();
             stagedAlias.getStagedAliasEntryArray().fromJson(stagedJson);
-            pkg.getStagedAliasList().add(stagedAlias);
+            packageBlock.getStagedAliasList().add(stagedAlias);
         }
-        List<File> typeFileList = ApkUtil.listFiles(pkgDir, ApkUtil.JSON_FILE_EXTENSION);
-        typeFileList.remove(pkgFile);
+        List<File> typeFileList = ApkUtil.listFiles(packageDir, ApkUtil.JSON_FILE_EXTENSION);
+        typeFileList.remove(packageJsonFile);
         for(File typeFile:typeFileList){
-            loadType(pkg, typeFile);
+            loadType(packageBlock, typeFile);
         }
-        pkg.sortTypes();
+        packageBlock.sortTypes();
     }
     private void loadType(PackageBlock packageBlock, File typeJsonFile) throws IOException{
-        FileInputStream inputStream=new FileInputStream(typeJsonFile);
-        JSONObject jsonObject=new JSONObject(inputStream);
-        JSONObject configObj=jsonObject.getJSONObject(TypeBlock.NAME_config);
-        ResConfig resConfig=new ResConfig();
-        resConfig.fromJson(configObj);
+        JSONObject jsonObject = new JSONObject(typeJsonFile);
+        ResConfig resConfig = new ResConfig();
+        resConfig.fromJson(jsonObject.getJSONObject(TypeBlock.NAME_config));
         TypeBlock typeBlock=packageBlock.getSpecTypePairArray()
                 .getOrCreate(
                         ((byte)(0xff & jsonObject.getInt(TypeBlock.NAME_id)))

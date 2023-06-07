@@ -30,6 +30,7 @@ public class CommonType {
     public static final CommonType DIMEN;
     public static final CommonType DRAWABLE;
     public static final CommonType FRACTION;
+    public static final CommonType FONT;
     public static final CommonType ID;
     public static final CommonType INTEGER;
     public static final CommonType INTERPOLATOR;
@@ -42,6 +43,7 @@ public class CommonType {
     public static final CommonType XML;
 
     private static final CommonType[] VALUES;
+    private static final String[] COMPLEX_TYPES;
 
     static {
         Map<String, CommonType> map = new HashMap<>();
@@ -91,6 +93,11 @@ public class CommonType {
         });
         map.put(type.name, type);
         FRACTION = type;
+        type  = new CommonType("font", new ValueType[]{
+                ValueType.STRING
+        });
+        map.put(type.name, type);
+        FONT = type;
         type  = new CommonType("id", new ValueType[]{
                 ValueType.BOOLEAN,
                 ValueType.STRING
@@ -156,6 +163,7 @@ public class CommonType {
                 DIMEN,
                 DRAWABLE,
                 FRACTION,
+                FONT,
                 ID,
                 INTEGER,
                 INTERPOLATOR,
@@ -166,6 +174,13 @@ public class CommonType {
                 STRING,
                 TRANSITION,
                 XML,
+        };
+
+        COMPLEX_TYPES = new String[]{
+                "attr",
+                "array",
+                "plurals",
+                "style"
         };
     }
 
@@ -232,5 +247,17 @@ public class CommonType {
             return commonType.valueTypes();
         }
         return null;
+    }
+    public static boolean isCommonTypeName(String typeName){
+        return TYPE_MAP.containsKey(typeName)
+                || isComplexTypeName(typeName);
+    }
+    public static boolean isComplexTypeName(String typeName){
+        for(String complex : COMPLEX_TYPES){
+            if(complex.equals(typeName)){
+                return true;
+            }
+        }
+        return false;
     }
 }

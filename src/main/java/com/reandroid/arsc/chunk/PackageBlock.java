@@ -19,6 +19,7 @@ import com.reandroid.arsc.BuildInfo;
 import com.reandroid.arsc.array.LibraryInfoArray;
 import com.reandroid.arsc.array.SpecTypePairArray;
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.coder.CommonType;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.PackageBody;
 import com.reandroid.arsc.container.SpecTypePair;
@@ -30,6 +31,7 @@ import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.arsc.util.StringsUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.LibraryInfo;
 import com.reandroid.arsc.value.ResConfig;
@@ -70,6 +72,28 @@ public class PackageBlock extends Chunk<PackageHeader>
         addChild(mSpecStringPool);
         addChild(mBody);
     }
+    public String buildDecodeDirectoryName(){
+        int count = 0;
+        TableBlock tableBlock = getTableBlock();
+        if(tableBlock != null){
+            count = tableBlock.countPackages();
+        }
+        return DIRECTORY_NAME_PREFIX + StringsUtil.formatNumber(getIndex() + 1, count);
+    }
+    public boolean hasValidTypeNames(){
+        Set<String> unique = new HashSet<>();
+        for(SpecTypePair specTypePair : listSpecTypePairs()){
+            String typeName = specTypePair.getTypeName();
+            if(!CommonType.isCommonTypeName(typeName) || unique.contains(typeName)){
+                return false;
+            }
+            unique.add(typeName);
+        }
+        return true;
+    }
+    public int removeUnusedSpecs(){
+        return getSpecStringPool().removeUnusedStrings().size();
+    }
     public String refreshFull(){
         return refreshFull(true);
     }
@@ -77,7 +101,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         int sizeOld = getHeaderBlock().getChunkSize();
         StringBuilder message = new StringBuilder();
         boolean appendOnce = false;
-        int count = getSpecStringPool().removeUnusedStrings().size();
+        int count = removeUnusedSpecs();
         if(count != 0){
             message.append("Removed unused spec strings = ");
             message.append(count);
@@ -509,9 +533,14 @@ public class PackageBlock extends Chunk<PackageHeader>
 
     public static final String NAME_package_id = "package_id";
     public static final String NAME_package_name = "package_name";
-    public static final String JSON_FILE_NAME = "package.json";
     private static final String NAME_specs = "specs";
     public static final String NAME_libraries = "libraries";
     public static final String NAME_staged_aliases = "staged_aliases";
     public static final String NAME_overlaybles = "overlaybles";
+
+    public static final String JSON_FILE_NAME = "package.json";
+    public static final String DIRECTORY_NAME_PREFIX = "package_";
+    public static final String RES_DIRECTORY_NAME = "res";
+    public static final String VALUES_DIRECTORY_NAME = "values";
+    public static final String PUBLIC_XML = "public.xml";
 }

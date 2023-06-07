@@ -17,10 +17,9 @@ package com.reandroid.apk;
 
 import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.identifiers.Identifier;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class PathSanitizer {
     private final Collection<? extends InputSource> sourceList;
@@ -28,10 +27,13 @@ public class PathSanitizer {
     private Collection<ResFile> resFileList;
     private APKLogger apkLogger;
     private final Set<String> mSanitizedPaths;
+    private boolean mCaseInsensitive;
+    private int mUniqueName;
     public PathSanitizer(Collection<? extends InputSource> sourceList, boolean sanitizeResourceFiles){
         this.sourceList = sourceList;
         this.mSanitizedPaths = new HashSet<>();
         this.sanitizeResourceFiles = sanitizeResourceFiles;
+        this.mCaseInsensitive = Identifier.CASE_INSENSITIVE_FS;
     }
     public PathSanitizer(Collection<? extends InputSource> sourceList){
         this(sourceList, false);
@@ -39,14 +41,59 @@ public class PathSanitizer {
     public void sanitize(){
         mSanitizedPaths.clear();
         logMessage("Sanitizing paths ...");
+        sanitizeCaseInsensitiveOs();
         sanitizeResFiles();
         for(InputSource inputSource:sourceList){
             sanitize(inputSource, 1, false);
         }
-        logMessage("DONE = "+mSanitizedPaths.size());
     }
     public void setResourceFileList(Collection<ResFile> resFileList){
         this.resFileList = resFileList;
+    }
+
+    public boolean isCaseInsensitive(){
+        return mCaseInsensitive;
+    }
+    public void setCaseInsensitive(boolean caseInsensitive){
+        mCaseInsensitive = caseInsensitive;
+    }
+    private void sanitizeCaseInsensitiveOs(){
+        if(!Identifier.CASE_INSENSITIVE_FS){
+            return;
+        }
+        logMessage("[WIN/MAC] Checking duplicate case insensitive paths ...");
+        mUniqueName = 0;
+        Map<String, InputSource> uniqueMap = new HashMap<>();
+        for(InputSource inputSource : sourceList){
+            String path = inputSource.getAlias().toLowerCase();
+            InputSource exist = uniqueMap.get(path);
+            if(exist == null){
+                uniqueMap.put(path, inputSource);
+                continue;
+            }
+            sanitizeCaseInsensitiveOs(inputSource);
+            sanitizeCaseInsensitiveOs(exist);
+            uniqueMap.remove(path);
+        }
+    }
+    private void sanitizeCaseInsensitiveOs(InputSource inputSource){
+        String path = inputSource.getAlias();
+        mUniqueName++;
+        String uniqueName = createUniqueName(mUniqueName + path);
+        String alias;
+        int i = path.lastIndexOf('/');
+        if(i > 0){
+            alias = path.substring(0, i) + "/" + uniqueName;
+        }else {
+            alias = uniqueName;
+        }
+        inputSource.setAlias(alias);
+        String msg = "'" + path + "' -> '" + alias + "'";
+        if(mUniqueName < 10){
+            logMessage("Case sensitive path renamed: " + msg);
+        }else {
+            logVerbose(msg);
+        }
     }
     private void sanitizeResFiles(){
         Collection<ResFile> resFileList = this.resFileList;
@@ -89,7 +136,10 @@ public class PathSanitizer {
             return null;
         }
         inputSource.setAlias(replace);
-        logVerbose("REN: '"+alias+"' -> '"+replace+"'");
+        if(alias.length() > 20){
+            alias = ".. " + alias.substring(alias.length()-20);
+        }
+        logVerbose("'" + alias + "' -> '" + replace + "'");
         return replace;
     }
 

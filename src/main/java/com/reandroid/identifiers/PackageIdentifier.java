@@ -421,4 +421,45 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         }
         super.clear();
     }
+
+    public int renameSpecs(){
+        int result = 0;
+        for(TypeIdentifier ti : getItems()){
+            int renamed = ti.renameSpecs();
+            result = result + renamed;
+        }
+        return result;
+    }
+    public int renameDuplicateSpecs(){
+        int result = 0;
+        for(TypeIdentifier ti : getItems()){
+            int renamed = ti.renameDuplicateSpecs();
+            result = result + renamed;
+        }
+        return result;
+    }
+    public int renameBadSpecs(){
+        int result = 0;
+        for(TypeIdentifier ti : getItems()){
+            int renamed = ti.renameBadSpecs();
+            result = result + renamed;
+        }
+        return result;
+    }
+    public String validateSpecNames(){
+        int duplicates = renameDuplicateSpecs();
+        int bad = renameBadSpecs();
+        if(duplicates == 0 && bad == 0){
+            return null;
+        }
+        return "Spec names validated, duplicates = " + duplicates
+                + ", bad = " + bad;
+    }
+    @Override
+    void setCaseInsensitive(boolean caseInsensitive){
+        super.setCaseInsensitive(caseInsensitive);
+        for(TypeIdentifier ti : getItems()){
+            ti.setCaseInsensitive(caseInsensitive);
+        }
+    }
 }

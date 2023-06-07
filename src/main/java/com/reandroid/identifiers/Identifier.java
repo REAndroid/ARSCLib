@@ -17,6 +17,8 @@ package com.reandroid.identifiers;
 
 import com.reandroid.arsc.util.HexUtil;
 
+import java.io.File;
+
 public class Identifier implements Comparable<Identifier>{
     private int id;
     private String name;
@@ -94,4 +96,8 @@ public class Identifier implements Comparable<Identifier>{
     static final String XML_ATTRIBUTE_NAME = "name";
     static final String XML_ATTRIBUTE_PACKAGE = "package";
     static final String XML_ATTRIBUTE_TYPE = "type";
+
+    public static final boolean CASE_INSENSITIVE_FS = new File("ABC")
+            .equals(new File("abc"));
+
 }

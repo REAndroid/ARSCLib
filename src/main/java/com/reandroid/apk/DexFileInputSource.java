@@ -17,12 +17,15 @@ package com.reandroid.apk;
 
 import com.reandroid.archive.InputSource;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
 
-public class DexFileInputSource extends RenamedInputSource<InputSource> implements Comparable<DexFileInputSource>{
+ public class DexFileInputSource extends RenamedInputSource<InputSource> implements Comparable<DexFileInputSource>{
     public DexFileInputSource(String name, InputSource inputSource){
         super(name, inputSource);
     }
@@ -33,6 +36,7 @@ public class DexFileInputSource extends RenamedInputSource<InputSource> implemen
     public int compareTo(DexFileInputSource source) {
         return Integer.compare(getDexNumber(), source.getDexNumber());
     }
+
     public static void sort(List<DexFileInputSource> sourceList){
         sourceList.sort(new Comparator<DexFileInputSource>() {
             @Override
@@ -41,6 +45,41 @@ public class DexFileInputSource extends RenamedInputSource<InputSource> implemen
             }
         });
     }
+
+    public static void sortDexFiles(List<File> fileList){
+        fileList.sort(new Comparator<File>() {
+            @Override
+            public int compare(File file1, File file2) {
+                int i1 = getDexNumber(file1.getName());
+                int i2 = getDexNumber(file2.getName());
+                if(i1 == i2){
+                    return 0;
+                }
+                if(i1 < 0 || i1 < i2){
+                    return -1;
+                }
+                return 1;
+            }
+        });
+    }
+    public static List<File> listDexFiles(File dir){
+        List<File> results = new ArrayList<>();
+        if(!dir.isDirectory()){
+            return results;
+        }
+        File[] files = dir.listFiles();
+        if(files == null){
+            return results;
+        }
+        for(File file : files){
+            if(file.isFile() && isDexName(file.getName())){
+                results.add(file);
+            }
+        }
+        sortDexFiles(results);
+        return results;
+    }
+
     public static boolean isDexName(String name){
         return getDexNumber(name)>=0;
     }
@@ -51,16 +90,21 @@ public class DexFileInputSource extends RenamedInputSource<InputSource> implemen
         return "classes"+i+".dex";
     }
     static int getDexNumber(String name){
-        Matcher matcher=PATTERN.matcher(name);
-        if(!matcher.find()){
-            return -1;
-        }
-        String num=matcher.group(1);
-        if(num.length()==0){
+        if(name.equals("classes.dex")){
             return 0;
         }
-        return Integer.parseInt(num);
+        String prefix = "classes";
+        String ext = ".dex";
+        if(!name.startsWith(prefix) || !name.endsWith(ext)){
+            return -1;
+        }
+        String num = name.substring(prefix.length(), name.length() - ext.length());
+        try {
+            return Integer.parseInt(num);
+        }catch (NumberFormatException ignored){
+            return -1;
+        }
     }
-    private static final Pattern PATTERN=Pattern.compile("^classes([0-9]*)\\.dex$");
 
+    public static final String DEX_DIRECTORY_NAME = "dex";
 }

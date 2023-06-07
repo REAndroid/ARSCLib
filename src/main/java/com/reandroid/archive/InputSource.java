@@ -1,23 +1,21 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.archive;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 
@@ -65,6 +63,20 @@ public abstract class InputSource {
     }
     public void close(InputStream inputStream) throws IOException {
         inputStream.close();
+    }
+    public File toFile(File dir){
+        String path = getAlias();
+        path = path.replace('/', File.separatorChar);
+        return new File(dir, path);
+    }
+    public void write(File file) throws IOException {
+        File dir=file.getParentFile();
+        if(!dir.exists()){
+            dir.mkdirs();
+        }
+        FileOutputStream outputStream = new FileOutputStream(file);
+        write(outputStream);
+        outputStream.close();
     }
     public long write(OutputStream outputStream) throws IOException {
         return write(outputStream, openStream());

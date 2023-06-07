@@ -24,210 +24,218 @@ import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.value.*;
 import com.reandroid.identifiers.PackageIdentifier;
-import com.reandroid.identifiers.ResourceIdentifier;
-import com.reandroid.identifiers.TypeIdentifier;
 import com.reandroid.json.JSONObject;
-import com.reandroid.xml.XMLDocument;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class ApkModuleXmlDecoder extends ApkDecoder implements Predicate<Entry> {
-    private final ApkModule apkModule;
+public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<Entry> {
     private final Map<Integer, Set<ResConfig>> decodedEntries;
-
     private ResXmlDocumentSerializer documentSerializer;
     private XMLEntryDecoderSerializer entrySerializer;
-
+    private boolean keepResPath;
 
     public ApkModuleXmlDecoder(ApkModule apkModule){
-        super();
-        this.apkModule = apkModule;
+        super(apkModule);
         this.decodedEntries = new HashMap<>();
-        super.setApkLogger(apkModule.getApkLogger());
     }
-    public void sanitizeFilePaths(){
-        PathSanitizer sanitizer = PathSanitizer.create(apkModule);
-        sanitizer.sanitize();
+    public void setKeepResPath(boolean keepResPath){
+        this.keepResPath = keepResPath;
     }
-    public void validateResourceNames(){
-        logMessage("Validating resource names ...");
-        TableBlock tableBlock = apkModule.getTableBlock();
-        for(PackageBlock packageBlock : tableBlock.listPackages()){
-            validateResourceNames(packageBlock);
-        }
+    public boolean keepResPath() {
+        return keepResPath;
     }
-    public void validateResourceNames(PackageBlock packageBlock){
-        PackageIdentifier packageIdentifier = new PackageIdentifier();
-        packageIdentifier.load(packageBlock);
-        if(!packageIdentifier.hasDuplicateResources()){
-            return;
-        }
-        logMessage("Renaming duplicate resources ... ");
-        packageIdentifier.ensureUniqueResourceNames();
-        packageIdentifier.setResourceNamesToPackage(packageBlock);
+
+    @Override
+    void initialize(){
+        super.initialize();
+        validateResourceNames();
     }
     @Override
-    void onDecodeTo(File outDir) throws IOException{
-        this.decodedEntries.clear();
-        logMessage("Decoding ...");
-        validateResourceNames();
-
-        if(!apkModule.hasTableBlock()){
-            logOrThrow(null, new IOException("Don't have resource table"));
-            return;
-        }
-
-        decodeUncompressedFiles(outDir);
-
-        TableBlock tableBlock = apkModule.getTableBlock();
-
-        this.entrySerializer = new XMLEntryDecoderSerializer(tableBlock);
-        this.entrySerializer.setDecodedEntries(this);
-
-        decodeAndroidManifest(outDir, apkModule.getAndroidManifestBlock());
-        decodeTableBlock(outDir, tableBlock);
-
-        logMessage("Decoding resource files ...");
-        List<ResFile> resFileList = apkModule.listResFiles();
-        for(ResFile resFile:resFileList){
-            decodeResFile(outDir, resFile);
-        }
-        decodeValues(outDir, tableBlock);
-
-        extractRootFiles(outDir);
-
-        writePathMap(outDir, apkModule.getApkArchive().listInputSources());
-
-        dumpSignatures(outDir, apkModule.getApkSignatureBlock());
+    public void decodeResourceTable(File mainDirectory) throws IOException{
+        TableBlock tableBlock = getApkModule().getTableBlock();
+        decodeTableBlock(mainDirectory, tableBlock);
+        decodeResFiles(mainDirectory);
+        decodeValues(mainDirectory, tableBlock);
     }
-    private void decodeTableBlock(File outDir, TableBlock tableBlock) throws IOException {
+    private void decodeTableBlock(File mainDirectory, TableBlock tableBlock) throws IOException {
         try{
-            decodePackageInfo(outDir, tableBlock);
-            decodePublicXml(tableBlock, outDir);
+            decodePackageInfo(mainDirectory, tableBlock);
+            decodePublicXml(mainDirectory, tableBlock);
             addDecodedPath(TableBlock.FILE_NAME);
         }catch (IOException exception){
             logOrThrow("Error decoding resource table", exception);
         }
     }
-    private void decodePackageInfo(File outDir, TableBlock tableBlock) throws IOException {
+    private void decodePackageInfo(File mainDirectory, TableBlock tableBlock) throws IOException {
         for(PackageBlock packageBlock:tableBlock.listPackages()){
-            decodePackageInfo(outDir, packageBlock);
+            decodePackageInfo(mainDirectory, packageBlock);
         }
     }
-    private void decodePackageInfo(File outDir, PackageBlock packageBlock) throws IOException {
-        File pkgDir = new File(outDir, getPackageDirName(packageBlock));
-        File packageJsonFile = new File(pkgDir, PackageBlock.JSON_FILE_NAME);
+    private void decodePackageInfo(File mainDirectory, PackageBlock packageBlock) throws IOException {
+        File packageDirectory = toPackageDirectory(mainDirectory, packageBlock);
+        File packageJsonFile = new File(packageDirectory, PackageBlock.JSON_FILE_NAME);
         JSONObject jsonObject = packageBlock.toJson(false);
         jsonObject.write(packageJsonFile);
     }
-    private void decodeUncompressedFiles(File outDir)
-            throws IOException {
-        File file=new File(outDir, UncompressedFiles.JSON_FILE);
-        UncompressedFiles uncompressedFiles = apkModule.getUncompressedFiles();
-        uncompressedFiles.toJson().write(file);
+    private void decodeResFiles(File mainDirectory) throws IOException{
+        if(keepResPath()){
+            logMessage("Res files: " + TableBlock.RES_FILES_DIRECTORY_NAME);
+        }else {
+            logMessage("Res files: " + TableBlock.DIRECTORY_NAME);
+        }
+        List<ResFile> resFileList = getApkModule().listResFiles();
+        for(ResFile resFile:resFileList){
+            decodeResFile(mainDirectory, resFile);
+        }
     }
-    private void decodeResFile(File outDir, ResFile resFile)
+    private void decodeResFile(File mainDirectory, ResFile resFile)
             throws IOException{
         if(resFile.isBinaryXml()){
-            decodeResXml(outDir, resFile);
-        }else {
-            decodeResRaw(outDir, resFile);
+            try{
+                decodeResXml(mainDirectory, resFile);
+            }catch (Exception ex){
+                logOrThrow("Failed to decode: "
+                        + resFile.getFilePath(), ex);
+            }
+            return;
         }
-        addDecodedPath(resFile.getFilePath());
+        String path = resFile.getFilePath();
+        if(path.endsWith(".xml")){
+            logMessage("Ignore non bin xml: " + path);
+            return;
+        }
+        decodeResRaw(mainDirectory, resFile);
     }
-    private void decodeResRaw(File outDir, ResFile resFile)
+    private void decodeResRaw(File mainDirectory, ResFile resFile)
             throws IOException {
         Entry entry = resFile.pickOne();
-        PackageBlock packageBlock= entry.getPackageBlock();
+        PackageBlock packageBlock = entry.getPackageBlock();
 
-        File pkgDir=new File(outDir, getPackageDirName(packageBlock));
-        String alias = resFile.buildPath(ApkUtil.RES_DIR_NAME);
-        String path = alias.replace('/', File.separatorChar);
-        File file=new File(pkgDir, path);
-        File dir=file.getParentFile();
-        if(!dir.exists()){
-            dir.mkdirs();
+        File file = toDecodeResFile(mainDirectory, resFile, packageBlock);
+        InputSource inputSource = resFile.getInputSource();
+        logVerbose(inputSource.getAlias());
+        inputSource.write(file);
+        if(!keepResPath()){
+            addDecodedEntry(entry);
         }
-        FileOutputStream outputStream=new FileOutputStream(file);
-        resFile.getInputSource().write(outputStream);
-        outputStream.close();
-        resFile.setFilePath(alias);
-
-        addDecodedEntry(entry);
+        addDecodedPath(inputSource.getAlias());
     }
-    private void decodeResXml(File outDir, ResFile resFile)
+    private void decodeResXml(File mainDirectory, ResFile resFile)
             throws IOException{
         Entry entry = resFile.pickOne();
         PackageBlock packageBlock = entry.getPackageBlock();
 
-        File pkgDir = new File(outDir, getPackageDirName(packageBlock));
-        String alias = resFile.buildPath(ApkUtil.RES_DIR_NAME);
-        String path = alias.replace('/', File.separatorChar);
-        path = path.replace('/', File.separatorChar);
-        File file = new File(pkgDir, path);
+        File file = toDecodeResFile(mainDirectory, resFile, packageBlock);
+        InputSource inputSource = resFile.getInputSource();
 
-        logVerbose("Decoding: " + path);
+        logVerbose(inputSource.getAlias());
         serializeXml(packageBlock.getId(), resFile.getInputSource(), file);
 
-        resFile.setFilePath(alias);
-        addDecodedEntry(entry);
+        if(!keepResPath()){
+            addDecodedEntry(entry);
+        }
+        addDecodedPath(inputSource.getAlias());
+    }
+    private File toDecodeResFile(File mainDirectory, ResFile resFile, PackageBlock packageBlock){
+        String path;
+        File dir;
+        if(keepResPath()){
+            path = resFile.getInputSource().getAlias();
+            dir = new File(mainDirectory, TableBlock.RES_FILES_DIRECTORY_NAME);
+        }else {
+            path = resFile.buildPath(PackageBlock.RES_DIRECTORY_NAME);
+            dir = toPackageDirectory(mainDirectory, packageBlock);
+            resFile.setFilePath(path);
+        }
+        path = path.replace('/', File.separatorChar);
+        return new File(dir, path);
     }
     private ResXmlDocumentSerializer getDocumentSerializer(){
         if(documentSerializer == null){
-            documentSerializer = new ResXmlDocumentSerializer(apkModule);
+            documentSerializer = new ResXmlDocumentSerializer(getApkModule());
             documentSerializer.setValidateXmlNamespace(true);
         }
         return documentSerializer;
     }
-    private void decodePublicXml(TableBlock tableBlock, File outDir)
+    private void decodePublicXml(File mainDirectory, TableBlock tableBlock)
             throws IOException{
         for(PackageBlock packageBlock:tableBlock.listPackages()){
-            decodePublicXml(packageBlock, outDir);
+            decodePublicXml(mainDirectory, packageBlock);
         }
-        if(tableBlock.getPackageArray().childesCount()==0){
-            decodeEmptyTable(outDir);
+        if(tableBlock.countPackages() == 0){
+            decodeEmptyTable(mainDirectory);
         }
     }
-    private void decodeEmptyTable(File outDir) throws IOException {
-        logMessage("Decoding empty table ...");
-        String pkgName = apkModule.getPackageName();
-        if(pkgName==null){
-            return;
-        }
-        File pkgDir = new File(outDir, "0-"+pkgName);
-        File resDir = new File(pkgDir, ApkUtil.RES_DIR_NAME);
-        File values = new File(resDir, "values");
-        File pubXml = new File(values, ApkUtil.FILE_NAME_PUBLIC_XML);
-        XMLDocument xmlDocument = new XMLDocument("resources");
-        xmlDocument.save(pubXml, false);
-    }
-    private void decodePublicXml(PackageBlock packageBlock, File outDir)
+    private void decodePublicXml(File mainDirectory, PackageBlock packageBlock)
             throws IOException {
-        String packageDirName=getPackageDirName(packageBlock);
-        logMessage("Decoding public.xml: "+packageDirName);
-        File file=new File(outDir, packageDirName);
-        file=new File(file, ApkUtil.RES_DIR_NAME);
-        file=new File(file, "values");
-        file=new File(file, ApkUtil.FILE_NAME_PUBLIC_XML);
+        File packageDirectory = toPackageDirectory(mainDirectory, packageBlock);
+        logMessage("public.xml: "
+                + packageBlock.getName() + " -> " + packageDirectory.getName());
+        File file = new File(packageDirectory, PackageBlock.RES_DIRECTORY_NAME);
+        file = new File(file, PackageBlock.VALUES_DIRECTORY_NAME);
+        file = new File(file, PackageBlock.PUBLIC_XML);
+
         PackageIdentifier packageIdentifier = new PackageIdentifier();
         packageIdentifier.load(packageBlock);
         packageIdentifier.writePublicXml(file);
+
     }
-    private void decodeAndroidManifest(File outDir, AndroidManifestBlock manifestBlock)
+    private void decodeEmptyTable(File mainDirectory) throws IOException {
+        logMessage("Decoding empty table ...");
+        String pkgName = getApkModule().getPackageName();
+        if(pkgName == null){
+            return;
+        }
+        File packageDirectory = new File(mainDirectory, TableBlock.DIRECTORY_NAME);
+        packageDirectory = new File(packageDirectory, PackageBlock.DIRECTORY_NAME_PREFIX + "1");
+        logMessage("Empty public.xml: "
+                + packageDirectory.getName());
+        File file = new File(packageDirectory, ApkUtil.RES_DIR_NAME);
+        file = new File(file, ApkUtil.VALUES_DIRECTORY_NAME);
+        file = new File(file, PackageBlock.PUBLIC_XML);
+
+        PackageIdentifier packageIdentifier = new PackageIdentifier();
+        packageIdentifier.writePublicXml(file);
+    }
+    @Override
+    public void decodeAndroidManifest(File mainDirectory)
             throws IOException {
-        if(!apkModule.hasAndroidManifestBlock()){
+        if(containsDecodedPath(AndroidManifestBlock.FILE_NAME)){
+            return;
+        }
+        if(!getApkModule().hasAndroidManifestBlock()){
             logMessage("Don't have: "+ AndroidManifestBlock.FILE_NAME);
             return;
         }
-        File file=new File(outDir, AndroidManifestBlock.FILE_NAME);
-        logMessage("Decoding: "+file.getName());
+        if(isExcluded(AndroidManifestBlock.FILE_NAME)){
+            decodeAndroidManifestBin(mainDirectory);
+        }else {
+            decodeAndroidManifestXml(mainDirectory);
+        }
+    }
+    private void decodeAndroidManifestXml(File mainDirectory)
+            throws IOException {
+        AndroidManifestBlock manifestBlock = getApkModule().getAndroidManifestBlock();
+        File file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME);
+        logMessage("Decoding: " + file.getName());
         int currentPackageId = manifestBlock.guessCurrentPackageId();
         serializeXml(currentPackageId, manifestBlock, file);
+        addDecodedPath(AndroidManifestBlock.FILE_NAME);
+    }
+    private void decodeAndroidManifestBin(File mainDirectory)
+            throws IOException {
+        File file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME_BIN);
+        logMessage("Decode manifest binary: " + file.getName());
+        ApkModule apkModule = getApkModule();
+        InputSource inputSource = apkModule.getManifestOriginalSource();
+        if(inputSource == null){
+            inputSource = apkModule.getInputSource(AndroidManifestBlock.FILE_NAME);
+        }
+        inputSource.write(file);
         addDecodedPath(AndroidManifestBlock.FILE_NAME);
     }
     private void serializeXml(int currentPackageId, ResXmlDocument document, File outFile)
@@ -260,7 +268,7 @@ public class ApkModuleXmlDecoder extends ApkDecoder implements Predicate<Entry> 
             return;
         }
         int resourceId= entry.getResourceId();
-        Set<ResConfig> resConfigSet=decodedEntries.get(resourceId);
+        Set<ResConfig> resConfigSet = decodedEntries.get(resourceId);
         if(resConfigSet==null){
             resConfigSet=new HashSet<>();
             decodedEntries.put(resourceId, resConfigSet);
@@ -268,70 +276,38 @@ public class ApkModuleXmlDecoder extends ApkDecoder implements Predicate<Entry> 
         resConfigSet.add(entry.getResConfig());
     }
     private boolean containsDecodedEntry(Entry entry){
-        Set<ResConfig> resConfigSet=decodedEntries.get(entry.getResourceId());
-        if(resConfigSet==null){
+        Set<ResConfig> resConfigSet = decodedEntries.get(entry.getResourceId());
+        if(resConfigSet == null){
             return false;
         }
         return resConfigSet.contains(entry.getResConfig());
     }
-    private void decodeValues(File outDir, TableBlock tableBlock) throws IOException {
+    private void decodeValues(File mainDirectory, TableBlock tableBlock) throws IOException {
         for(PackageBlock packageBlock:tableBlock.listPackages()){
-            decodeValues(outDir, packageBlock);
+            decodeValues(mainDirectory, packageBlock);
         }
     }
-    private void decodeValues(File outDir, PackageBlock packageBlock) throws IOException {
-        logMessage("Decoding values: "
-                + getPackageDirName(packageBlock));
+    private void decodeValues(File mainDirectory, PackageBlock packageBlock) throws IOException {
+        File packageDir = toPackageDirectory(mainDirectory, packageBlock);
+        logVerbose("Values: "+ packageDir.getName());
 
         packageBlock.sortTypes();
 
-        File pkgDir = new File(outDir, getPackageDirName(packageBlock));
-        File resDir = new File(pkgDir, ApkUtil.RES_DIR_NAME);
+        File resDir = new File(packageDir, ApkUtil.RES_DIR_NAME);
 
         for(SpecTypePair specTypePair : packageBlock.listSpecTypePairs()){
             decodeValues(resDir, specTypePair);
         }
     }
-    private void decodeValues(File outDir, SpecTypePair specTypePair) throws IOException {
-        entrySerializer.decode(outDir, specTypePair);
+    private void decodeValues(File resDir, SpecTypePair specTypePair) throws IOException {
+        getEntrySerializer().decode(resDir, specTypePair);
     }
-    private String getPackageDirName(PackageBlock packageBlock){
-        String name = ApkUtil.sanitizeForFileName(packageBlock.getName());
-        if(name==null){
-            name="package";
+    private XMLEntryDecoderSerializer getEntrySerializer(){
+        if(this.entrySerializer == null){
+            this.entrySerializer = new XMLEntryDecoderSerializer(getApkModule().getTableBlock());
+            this.entrySerializer.setDecodedEntries(this);
         }
-        TableBlock tableBlock = packageBlock.getTableBlock();
-        int index = packageBlock.getIndex();
-        String prefix;
-        if(index < 10 && tableBlock.countPackages() > 10){
-            prefix = "0" + index;
-        }else {
-            prefix = Integer.toString(index);
-        }
-        return prefix + "-" + name;
-    }
-    private void extractRootFiles(File outDir) throws IOException {
-        logMessage("Extracting root files");
-        File rootDir = new File(outDir, "root");
-        for(InputSource inputSource:apkModule.getApkArchive().listInputSources()){
-            if(containsDecodedPath(inputSource.getAlias())){
-                continue;
-            }
-            extractRootFiles(rootDir, inputSource);
-            addDecodedPath(inputSource.getAlias());
-        }
-    }
-    private void extractRootFiles(File rootDir, InputSource inputSource) throws IOException {
-        String path=inputSource.getAlias();
-        path=path.replace(File.separatorChar, '/');
-        File file=new File(rootDir, path);
-        File dir=file.getParentFile();
-        if(!dir.exists()){
-            dir.mkdirs();
-        }
-        FileOutputStream outputStream=new FileOutputStream(file);
-        inputSource.write(outputStream);
-        outputStream.close();
+        return entrySerializer;
     }
     @Override
     public boolean test(Entry entry) {

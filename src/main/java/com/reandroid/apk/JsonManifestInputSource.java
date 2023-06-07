@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,8 +29,8 @@ public class JsonManifestInputSource extends JsonXmlInputSource {
         return new AndroidManifestBlock();
     }
     public static JsonManifestInputSource fromFile(File rootDir, File jsonFile){
-        String path=ApkUtil.toArchiveResourcePath(rootDir, jsonFile);
-        FileInputSource fileInputSource=new FileInputSource(jsonFile, path);
+        String path = ApkUtil.jsonToArchiveResourcePath(rootDir, jsonFile);
+        FileInputSource fileInputSource = new FileInputSource(jsonFile, path);
         return new JsonManifestInputSource(fileInputSource);
     }
 }

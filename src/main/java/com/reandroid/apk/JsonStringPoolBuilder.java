@@ -30,12 +30,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 
-public class StringPoolBuilder {
+public class JsonStringPoolBuilder {
     private final Map<Integer, Set<String>> mSpecNameMap;
     private final Set<String> mTableStrings;
     private int mCurrentPackageId;
     private JSONArray mStyledStrings;
-    public StringPoolBuilder(){
+    public JsonStringPoolBuilder(){
         this.mSpecNameMap = new HashMap<>();
         this.mTableStrings = new HashSet<>();
     }
@@ -57,14 +57,14 @@ public class StringPoolBuilder {
         stringPool.refresh();
     }
     public void scanDirectory(File resourcesDir) throws IOException {
-        mCurrentPackageId=0;
-        List<File> pkgDirList=ApkUtil.listDirectories(resourcesDir);
-        for(File dir:pkgDirList){
-            File pkgFile=new File(dir, PackageBlock.JSON_FILE_NAME);
-            scanFile(pkgFile);
-            List<File> jsonFileList=ApkUtil.recursiveFiles(dir, ".json");
+        mCurrentPackageId = 0;
+        List<File> packageDirectories = ApkUtil.listPackageDirectories(resourcesDir);
+        for(File dir : packageDirectories){
+            File packageFile = new File(dir, PackageBlock.JSON_FILE_NAME);
+            scanFile(packageFile);
+            List<File> jsonFileList = ApkUtil.recursiveFiles(dir, ApkUtil.JSON_FILE_EXTENSION);
             for(File file:jsonFileList){
-                if(file.equals(pkgFile)){
+                if(file.equals(packageFile)){
                     continue;
                 }
                 scanFile(file);
@@ -73,8 +73,7 @@ public class StringPoolBuilder {
     }
     public void scanFile(File jsonFile) throws IOException {
         try{
-            FileInputStream inputStream=new FileInputStream(jsonFile);
-            JSONObject jsonObject=new JSONObject(inputStream);
+            JSONObject jsonObject = new JSONObject(jsonFile);
             build(jsonObject);
         }catch (JSONException ex){
             throw new IOException(jsonFile+": "+ex.getMessage());

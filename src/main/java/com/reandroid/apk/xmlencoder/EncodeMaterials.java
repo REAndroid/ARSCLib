@@ -79,10 +79,16 @@ public class EncodeMaterials {
     private Entry getAttributeBlock(String type, String refString){
         String packageName = null;
         String name = refString;
-        int i=refString.lastIndexOf(':');
+        int i = refString.lastIndexOf(':');
         if(i>=0){
             packageName=refString.substring(0, i);
             name=refString.substring(i+1);
+        }
+        if(!EncodeUtil.isEmpty(packageName) &&  !isFrameworkPackageName(packageName)){
+            Entry entry = getLocalEntry(packageName, type, name);
+            if(entry != null){
+                return entry;
+            }
         }
         if(EncodeUtil.isEmpty(packageName)
                 || packageName.equals(getCurrentPackageName())
@@ -93,20 +99,6 @@ public class EncodeMaterials {
         return getFrameworkEntry(type, name);
     }
 
-    ResourceIdentifier getLocalResourceIdentifier(String packageName, String type, String name){
-        if(packageName == null){
-            return getLocalResourceIdentifier(type, name);
-        }
-        TableIdentifier tableIdentifier = getTableIdentifier();
-        return tableIdentifier.get(packageName, type, name);
-    }
-    ResourceIdentifier getLocalResourceIdentifier(String type, String name){
-        PackageIdentifier identifier = getOrLoadCurrentPackageIdentifier();
-        if(identifier == null){
-            return null;
-        }
-        return identifier.getResourceIdentifier(type, name);
-    }
     public EncodeResult encodeReference(String value){
         if(value == null || value.length() < 3){
             return null;
@@ -142,9 +134,12 @@ public class EncodeMaterials {
         if(isLocalPackageName(packageName)){
             return resolveLocalResourceId(packageName, type, name);
         }
-        if(packageName == null
-                || packageName.equals(getCurrentPackageName())
-                || !isFrameworkPackageName(packageName)){
+        if(packageName != null
+                && (packageName.equals(getCurrentPackageName())
+                || !isFrameworkPackageName(packageName))){
+            return resolveLocalResourceId(packageName, type, name);
+        }
+        if(packageName == null){
             return resolveLocalResourceId(type, name);
         }
         return resolveFrameworkResourceId(packageName, type, name);
@@ -159,9 +154,8 @@ public class EncodeMaterials {
             return entryGroup.getResourceId();
         }
         throw new EncodeException("Local entry not found: " +
-                "package=" + packageName +
-                ", type=" + type +
-                ", name=" + name);
+                "@" + packageName + ":" + type + "/" + name
+                + ", " + getFrameworkInfo());
     }
     public int resolveLocalResourceId(String type, String name){
         PackageIdentifier pi = this.currentPackageIdentifier;
@@ -171,13 +165,22 @@ public class EncodeMaterials {
                 return ri.getResourceId();
             }
         }
-        EntryGroup entryGroup=getLocalEntryGroup(type, name);
-        if(entryGroup!=null){
+        for(PackageIdentifier packageIdentifier : tableIdentifier.getPackages()){
+            if(packageIdentifier == pi){
+                continue;
+            }
+            ResourceIdentifier ri = packageIdentifier
+                    .getResourceIdentifier(type, name);
+            if(ri != null){
+                return ri.getResourceId();
+            }
+        }
+        EntryGroup entryGroup = getLocalEntryGroup(type, name);
+        if(entryGroup != null){
             return entryGroup.getResourceId();
         }
         throw new EncodeException("Local entry not found: " +
-                "type="+type+
-                ", name="+name);
+                "@" + type + "/" + name + ", " + getFrameworkInfo());
     }
     public int resolveFrameworkResourceId(String packageName, String type, String name){
         Entry entry = getFrameworkEntry(packageName, type, name);
@@ -185,9 +188,8 @@ public class EncodeMaterials {
             return entry.getResourceId();
         }
         throw new EncodeException("Framework entry not found: " +
-                "package="+packageName+
-                ", type="+type+
-                ", name="+name);
+                "@" + packageName + ":" + type + "/" + name
+                + ", " + getFrameworkInfo());
     }
     public EntryGroup getLocalEntryGroup(String type, String name){
         for(EntryGroup entryGroup : currentPackage.listEntryGroup()){
@@ -206,18 +208,33 @@ public class EncodeMaterials {
         }
         return null;
     }
+    public Entry getLocalEntry(String packageName, String type, String name){
+        if(currentPackage == null){
+            return null;
+        }
+        ResourceIdentifier ri = tableIdentifier.get(packageName, type, name);
+        if(ri == null){
+            return null;
+        }
+        EntryGroup entryGroup = currentPackage.getTableBlock()
+                .getEntryGroup(ri.getResourceId());
+        if(entryGroup == null){
+            return null;
+        }
+        return entryGroup.pickOne();
+    }
     public Entry getLocalEntry(String type, String name){
-        Entry entry =mLocalResNameMap.get(type, name);
-        if(entry !=null){
+        Entry entry = mLocalResNameMap.get(type, name);
+        if(entry != null){
             return entry;
         }
         loadLocalEntryMap(type);
-        entry =mLocalResNameMap.get(type, name);
+        entry = mLocalResNameMap.get(type, name);
         if(entry !=null){
             return entry;
         }
         entry = searchLocalEntry(type, name);
-        if(entry !=null){
+        if(entry != null){
             mLocalResNameMap.add(type, name, entry);
         }
         return entry;
@@ -332,33 +349,19 @@ public class EncodeMaterials {
         onCurrentPackageChanged(currentPackage);
         return this;
     }
-    public EncodeMaterials setCurrentLocalPackage(PackageIdentifier packageIdentifier) {
+    public EncodeMaterials setCurrentPackageIdentifier(PackageIdentifier packageIdentifier) {
         this.currentPackageIdentifier = packageIdentifier;
         return this;
-    }
-    private PackageIdentifier getOrLoadCurrentPackageIdentifier(){
-        PackageIdentifier identifier = this.currentPackageIdentifier;
-        if(identifier != null){
-            return identifier;
-        }
-        PackageBlock packageBlock = getCurrentPackage();
-        if(packageBlock == null){
-            logMessage("Current package not set");
-            return null;
-        }
-        logMessage("Loading identifiers from package: " + packageBlock.getName());
-        identifier = getTableIdentifier().load(packageBlock);
-        this.currentPackageIdentifier = identifier;
-        return identifier;
     }
     private void onCurrentPackageChanged(PackageBlock currentPackage){
         if(currentPackage == null){
             return;
         }
         PackageIdentifier pi = tableIdentifier.getByPackage(currentPackage);
-        if(pi != null){
-            this.currentPackageIdentifier = pi;
+        if(pi == null){
+            pi = tableIdentifier.load(currentPackage);
         }
+        this.currentPackageIdentifier = pi;
     }
     private boolean isLocalPackageName(String packageName){
         if(packageName == null){
@@ -371,19 +374,26 @@ public class EncodeMaterials {
         }
         return false;
     }
-    private boolean isUniquePackageNames(){
-        Set<String> names = new HashSet<>();
-        for(PackageIdentifier pi : tableIdentifier.getPackages()){
-            names.add(pi.getName());
+    private String getFrameworkInfo(){
+        if(frameworkTables.size() == 0){
+            return "Frameworks = No frameworks found";
         }
-        return names.size() == tableIdentifier.getPackages().size();
-    }
-    private boolean isUniquePackageIds(){
-        Set<Integer> ids = new HashSet<>();
-        for(PackageIdentifier pi : tableIdentifier.getPackages()){
-            ids.add(pi.getId());
+        StringBuilder builder = new StringBuilder();
+        builder.append("Frameworks = ").append(frameworkTables.size());
+        builder.append(" [");
+        boolean appendOnce = false;
+        for(FrameworkTable frameworkTable : frameworkTables){
+            if(appendOnce){
+                builder.append(", ");
+            }
+            builder.append(frameworkTable.getVersionCode());
+            builder.append('(')
+                    .append(frameworkTable.getFrameworkName())
+                    .append(')');
+            appendOnce = true;
         }
-        return ids.size() == tableIdentifier.getPackages().size();
+        builder.append(']');
+        return builder.toString();
     }
     public EncodeMaterials addFramework(FrameworkApk frameworkApk) {
         if(frameworkApk!=null){

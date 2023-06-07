@@ -19,10 +19,12 @@ import com.reandroid.archive.InputSource;
 import com.reandroid.archive2.ArchiveEntry;
 import com.reandroid.archive2.block.LocalFileHeader;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipEntry;
@@ -63,6 +65,28 @@ public class ArchiveEntrySource extends InputSource {
     public long getFileOffset(){
         return getArchiveEntry().getFileOffset();
     }
+
+    @Override
+    public void write(File file) throws IOException {
+        if(getMethod() != ZipEntry.STORED){
+            super.write(file);
+            return;
+        }
+        File dir = file.getParentFile();
+        if(dir != null && !dir.exists()){
+            dir.mkdirs();
+        }
+        if(file.isFile()){
+            file.delete();
+        }
+        file.createNewFile();
+        StandardOpenOption openOption = StandardOpenOption.WRITE;
+        FileChannel outputChannel = FileChannel.open(file.toPath(), openOption);
+        FileChannel fileChannel = getFileChannel();
+        outputChannel.transferFrom(fileChannel, 0, getLength());
+        outputChannel.close();
+    }
+
     @Override
     public long getLength() throws IOException{
         return getArchiveEntry().getDataSize();

@@ -18,6 +18,7 @@ package com.reandroid.identifiers;
 import com.reandroid.arsc.array.PackageArray;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.util.StringsUtil;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -27,9 +28,11 @@ import java.util.*;
 public class TableIdentifier{
     private final List<PackageIdentifier> mPackages;
     private final Map<String, PackageIdentifier> mNameMap;
+    private boolean mCaseInsensitive;
     public TableIdentifier() {
         this.mPackages = new ArrayList<>();
         this.mNameMap = new HashMap<>();
+        this.mCaseInsensitive = Identifier.CASE_INSENSITIVE_FS;
     }
 
     public void initialize(TableBlock tableBlock){
@@ -54,6 +57,40 @@ public class TableIdentifier{
         add(packageIdentifier);
         mNameMap.put(packageIdentifier.getName(), packageIdentifier);
         return packageIdentifier;
+    }
+    public void setTableBlock(TableBlock tableBlock){
+        for(PackageBlock packageBlock : tableBlock.listPackages()){
+            int id = packageBlock.getId();
+            for(PackageIdentifier pi : getPackages()){
+                if(pi.getId() == id){
+                    pi.setPackageBlock(packageBlock);
+                }
+            }
+        }
+    }
+    public void writeAllPublicXml(File resourcesDirectory) throws IOException {
+        List<PackageIdentifier> packageList = getPackages();
+        int index = 0;
+        for(PackageIdentifier pi : getPackages()){
+            index ++;
+            String packageDir;
+            PackageBlock packageBlock = pi.getPackageBlock();
+            if(packageBlock != null){
+                packageDir = packageBlock.buildDecodeDirectoryName();
+            }else {
+                packageDir = PackageBlock.DIRECTORY_NAME_PREFIX
+                        + StringsUtil.formatNumber(index, packageList.size());
+            }
+            File file = toPublicXmlFile(resourcesDirectory, packageDir);
+            pi.writePublicXml(file);
+        }
+    }
+    private File toPublicXmlFile(File resourcesDirectory, String packageDir){
+        File file = new File(resourcesDirectory, packageDir);
+        file = new File(file, PackageBlock.RES_DIRECTORY_NAME);
+        file = new File(file, PackageBlock.VALUES_DIRECTORY_NAME);
+        file = new File(file, PackageBlock.PUBLIC_XML);
+        return file;
     }
     public void loadPublicXml(Collection<File> pubXmlFileList) throws IOException {
         for(File file : pubXmlFileList){
@@ -121,6 +158,7 @@ public class TableIdentifier{
     public void add(PackageIdentifier packageIdentifier){
         if(packageIdentifier != null){
             mPackages.add(packageIdentifier);
+            packageIdentifier.setCaseInsensitive(isCaseInsensitive());
         }
     }
     public List<PackageIdentifier> getPackages() {
@@ -174,6 +212,52 @@ public class TableIdentifier{
         }
         mPackages.clear();
         mNameMap.clear();
+    }
+    public int renameSpecs(){
+        int result = 0;
+        for(PackageIdentifier pi : getPackages()){
+            int renamed = pi.renameSpecs();
+            result = result + renamed;
+        }
+        return result;
+    }
+    public int renameDuplicateSpecs(){
+        updateCaseInsensitive(isCaseInsensitive());
+        int result = 0;
+        for(PackageIdentifier pi : getPackages()){
+            int renamed = pi.renameDuplicateSpecs();
+            result = result + renamed;
+        }
+        return result;
+    }
+    public int renameBadSpecs(){
+        int result = 0;
+        for(PackageIdentifier pi : getPackages()){
+            int renamed = pi.renameBadSpecs();
+            result = result + renamed;
+        }
+        return result;
+    }
+    public String validateSpecNames(){
+        int duplicates = renameDuplicateSpecs();
+        int bad = renameBadSpecs();
+        if(duplicates == 0 && bad == 0){
+            return null;
+        }
+        return "Spec names validated, duplicates = " + duplicates
+                + ", bad = " + bad;
+    }
+    public boolean isCaseInsensitive(){
+        return mCaseInsensitive;
+    }
+    public void setCaseInsensitive(boolean caseInsensitive){
+        mCaseInsensitive = caseInsensitive;
+        updateCaseInsensitive(caseInsensitive);
+    }
+    private void updateCaseInsensitive(boolean caseInsensitive){
+        for(PackageIdentifier pi : getPackages()){
+            pi.setCaseInsensitive(caseInsensitive);
+        }
     }
 
     @Override

@@ -54,7 +54,9 @@ public class ApkModule implements ApkFile {
     private boolean loadDefaultFramework = true;
     private boolean mDisableLoadFramework = false;
     private TableBlock mTableBlock;
+    private InputSource mTableOriginalSource;
     private AndroidManifestBlock mManifestBlock;
+    private InputSource mManifestOriginalSource;
     private final UncompressedFiles mUncompressedFiles;
     private APKLogger apkLogger;
     private Decoder mDecoder;
@@ -67,6 +69,9 @@ public class ApkModule implements ApkFile {
         this.apkArchive=apkArchive;
         this.mUncompressedFiles=new UncompressedFiles();
         this.mUncompressedFiles.addPath(apkArchive);
+    }
+    public ApkModule(){
+        this("base", new APKArchive());
     }
 
     public String refreshTable(){
@@ -158,30 +163,60 @@ public class ApkModule implements ApkFile {
         }
         return getAndroidManifestBlock().getSplit();
     }
+    public List<TableBlock> getLoadedFrameworks(){
+        List<TableBlock> results = new ArrayList<>();
+        if(!hasTableBlock()){
+            return results;
+        }
+        TableBlock tableBlock = getTableBlock(false);
+        results.addAll(tableBlock.getFrameWorks());
+        return results;
+    }
+    public boolean isFrameworkVersionLoaded(Integer version){
+        if(version == null){
+            return false;
+        }
+        for(TableBlock tableBlock : getLoadedFrameworks()){
+            if(!(tableBlock instanceof FrameworkTable)){
+                continue;
+            }
+            FrameworkTable frame = (FrameworkTable) tableBlock;
+            if(version.equals(frame.getVersionCode())){
+                return true;
+            }
+        }
+        return false;
+    }
+    public FrameworkApk getLoadedFramework(Integer version, boolean onlyAndroid){
+        for(TableBlock tableBlock : getLoadedFrameworks()){
+            if(!(tableBlock instanceof FrameworkTable)){
+                continue;
+            }
+            FrameworkTable frame = (FrameworkTable) tableBlock;
+            if(onlyAndroid && !isAndroid(frame)){
+                continue;
+            }
+            if(version == null || version.equals(frame.getVersionCode())){
+                return (FrameworkApk) frame.getApkFile();
+            }
+        }
+        return null;
+    }
     public FrameworkApk initializeAndroidFramework(Integer version) throws IOException {
         TableBlock tableBlock = getTableBlock(false);
         return initializeAndroidFramework(tableBlock, version);
     }
     public FrameworkApk initializeAndroidFramework(TableBlock tableBlock, Integer version) throws IOException {
-        if(tableBlock == null || isAndroid(tableBlock)){
+        if(mDisableLoadFramework || tableBlock == null || isAndroid(tableBlock)){
             return null;
         }
-        List<TableBlock> frameWorkList = tableBlock.getFrameWorks();
-        for(TableBlock frameWork:frameWorkList){
-            if(isAndroid(frameWork)){
-                ApkFile apkFile = frameWork.getApkFile();
-                if(!(apkFile instanceof FrameworkApk)){
-                    continue;
-                }
-                FrameworkApk frameworkApk = (FrameworkApk) apkFile;
-                if(frameworkApk.getVersionCode() == version){
-                    return frameworkApk;
-                }
-            }
+        FrameworkApk exist = getLoadedFramework(version, true);
+        if(exist != null){
+            return exist;
         }
         logMessage("Initializing android framework ...");
         FrameworkApk frameworkApk;
-        if(version==null){
+        if(version == null){
             logMessage("Can not read framework version, loading latest");
             frameworkApk = AndroidFrameworks.getLatest();
         }else {
@@ -194,6 +229,32 @@ public class ApkModule implements ApkFile {
                 + " (" + frameworkApk.getVersionName() + ")");
         return frameworkApk;
     }
+    public FrameworkApk initializeAndroidFramework(XmlPullParser parser) throws IOException {
+        if(this.preferredFramework != null){
+            return initializeAndroidFramework(preferredFramework);
+        }
+        Integer androidCore = -1;
+        Integer version = readVersionCode(parser, androidCore);
+        if(androidCore.equals(version)){
+            return null;
+        }
+        if(version == null){
+            logMessage("Failed to determine framework version from manifest");
+            return null;
+        }
+        return initializeAndroidFramework(version);
+    }
+    public FrameworkApk initializeAndroidFramework(XMLDocument xmlDocument) throws IOException {
+        if(this.preferredFramework != null){
+            return initializeAndroidFramework(preferredFramework);
+        }
+        if(isAndroidCoreApp(xmlDocument)){
+            logMessage("Looks framework itself, skip loading frameworks");
+            return null;
+        }
+        Integer version = readCompileVersionCode(xmlDocument);
+        return initializeAndroidFramework(version);
+    }
     private boolean isAndroid(TableBlock tableBlock){
         if(tableBlock instanceof FrameworkTable){
             FrameworkTable frameworkTable = (FrameworkTable) tableBlock;
@@ -201,8 +262,7 @@ public class ApkModule implements ApkFile {
         }
         return false;
     }
-
-    public FrameworkApk initializeAndroidFramework(XmlPullParser parser) throws IOException {
+    private Integer readVersionCode(XmlPullParser parser, Integer androidCore) throws IOException {
         Map<String, String> manifestAttributes;
         try {
             manifestAttributes = XmlHelper.readAttributes(parser, AndroidManifestBlock.TAG_manifest);
@@ -213,40 +273,52 @@ public class ApkModule implements ApkFile {
             throw new IOException("Invalid AndroidManifest, missing element: '"
                     + AndroidManifestBlock.TAG_manifest + "'");
         }
-        return initializeAndroidFramework(manifestAttributes);
+        if(androidCore != null && isAndroidCoreApp(manifestAttributes)){
+            logMessage("Looks framework itself, skip loading frameworks");
+            return androidCore;
+        }
+        Integer version = readVersionCode(manifestAttributes);
+        if(version == null){
+            try {
+                manifestAttributes = XmlHelper.readAttributes(parser, AndroidManifestBlock.TAG_uses_sdk);
+            } catch (XmlPullParserException ex) {
+                throw new IOException(ex);
+            }
+            version = readVersionCode(manifestAttributes);
+        }
+        return version;
     }
-    public FrameworkApk initializeAndroidFramework(Map<String, String> manifestAttributes) throws IOException {
+    private Integer readVersionCode(Map<String, String> manifestAttributes){
+        if(manifestAttributes == null){
+            return null;
+        }
+        String attr = AndroidManifestBlock.NAME_compileSdkVersion;
+        String version = manifestAttributes.get(attr);
+        if(version == null){
+            attr = AndroidManifestBlock.NAME_platformBuildVersionCode;
+            version = manifestAttributes.get(attr);
+        }
+        if(version == null){
+            attr = AndroidManifestBlock.NAME_targetSdkVersion;
+            version = manifestAttributes.get(attr);
+        }
+        if(version == null){
+            return null;
+        }
+        logMessage("Found framework version on manifest "
+                + attr + "=\"" + version + "\"");
+        try{
+            return Integer.parseInt(version);
+        }catch (NumberFormatException exception){
+            logMessage("NumberFormatException on reading manifest attribute: '"
+                    + attr + "=\"" + version +"\"' : " + exception.getMessage());
+            return null;
+        }
+    }
+    private boolean isAndroidCoreApp(Map<String, String> manifestAttributes) {
         String coreApp = manifestAttributes.get(AndroidManifestBlock.NAME_coreApp);
         String packageName = manifestAttributes.get(AndroidManifestBlock.NAME_PACKAGE);
-        if("true".equals(coreApp) && "android".equals(packageName)){
-            logMessage("Looks framework itself, skip loading frameworks");
-            return null;
-        }
-        String compileSdkVersion = manifestAttributes.get(AndroidManifestBlock.NAME_compileSdkVersion);
-        if(compileSdkVersion == null){
-            logMessage("Missing attribute: '" + AndroidManifestBlock.NAME_compileSdkVersion + "', skip loading frameworks");
-            return null;
-        }
-        int version;
-        try{
-            version = Integer.parseInt(compileSdkVersion);
-        }catch (NumberFormatException exception){
-            logMessage("NumberFormatException on reading: '"
-                    + AndroidManifestBlock.NAME_compileSdkVersion + "=\""
-                    + compileSdkVersion +"\"' : " + exception.getMessage());
-            return null;
-        }
-        TableBlock tableBlock = getTableBlock(false);
-        return initializeAndroidFramework(tableBlock, version);
-    }
-    public FrameworkApk initializeAndroidFramework(XMLDocument xmlDocument) throws IOException {
-        TableBlock tableBlock = getTableBlock(false);
-        if(isAndroidCoreApp(xmlDocument)){
-            logMessage("Looks framework itself, skip loading frameworks");
-            return null;
-        }
-        Integer version = readCompileVersionCode(xmlDocument);
-        return initializeAndroidFramework(tableBlock, version);
+        return "true".equals(coreApp) && "android".equals(packageName);
     }
     private boolean isAndroidCoreApp(XMLDocument manifestDocument){
         XMLElement root = manifestDocument.getDocumentElement();
@@ -294,11 +366,14 @@ public class ApkModule implements ApkFile {
     }
 
     public void setPreferredFramework(Integer version) throws IOException {
-        if(version!=null && version.equals(preferredFramework)){
+        if(version != null && version.equals(preferredFramework)){
             return;
         }
         this.preferredFramework = version;
-        if(version == null || mTableBlock==null){
+        if(version == null || mTableBlock == null){
+            return;
+        }
+        if(isFrameworkVersionLoaded(version)){
             return;
         }
         logMessage("Initializing preferred framework: " + version);
@@ -505,6 +580,20 @@ public class ApkModule implements ApkFile {
         }
         return results;
     }
+
+    public List<Entry> listReferencedEntries(String path) {
+        TableBlock tableBlock = getTableBlock();
+        if (tableBlock == null){
+            return new ArrayList<>();
+        }
+        TableStringPool stringPool = tableBlock.getStringPool();
+        StringGroup<TableString> stringGroup = stringPool.get(path);
+        if(stringGroup == null){
+            return new ArrayList<>();
+        }
+        TableString tableString = stringPool.get(0);
+        return tableString.listReferencedResValueEntries();
+    }
     private List<Entry> filterResFileEntries(List<Entry> entryList, int resourceId, ResConfig resConfig){
         if(resourceId == 0 && resConfig == null || entryList.size()==0){
             return entryList;
@@ -615,11 +704,12 @@ public class ApkModule implements ApkFile {
         if(mManifestBlock!=null){
             return mManifestBlock;
         }
-        APKArchive archive=getApkArchive();
+        APKArchive archive = getApkArchive();
         InputSource inputSource = archive.getInputSource(AndroidManifestBlock.FILE_NAME);
-        if(inputSource==null){
+        if(inputSource == null){
             return null;
         }
+        setManifestOriginalSource(inputSource);
         InputStream inputStream = null;
         try {
             inputStream = inputSource.openStream();
@@ -665,6 +755,34 @@ public class ApkModule implements ApkFile {
             }
         }
         return mTableBlock;
+    }
+    public InputSource getManifestOriginalSource(){
+        InputSource inputSource = this.mManifestOriginalSource;
+        if(inputSource == null){
+            inputSource = getInputSource(AndroidManifestBlock.FILE_NAME);
+            mManifestOriginalSource = inputSource;
+        }
+        return inputSource;
+    }
+    private void setManifestOriginalSource(InputSource inputSource){
+        if(mManifestOriginalSource == null
+                && !(inputSource instanceof BlockInputSource)){
+            mManifestOriginalSource = inputSource;
+        }
+    }
+    public InputSource getTableOriginalSource(){
+        InputSource inputSource = this.mTableOriginalSource;
+        if(inputSource == null){
+            inputSource = getInputSource(TableBlock.FILE_NAME);
+            mTableOriginalSource = inputSource;
+        }
+        return inputSource;
+    }
+    private void setTableOriginalSource(InputSource inputSource){
+        if(mTableOriginalSource == null
+                && !(inputSource instanceof BlockInputSource)){
+            mTableOriginalSource = inputSource;
+        }
     }
     @Override
     public TableBlock getTableBlock() {
@@ -752,6 +870,7 @@ public class ApkModule implements ApkFile {
             Chunk<?> block = ((BlockInputSource<?>) inputSource).getBlock();
             tableBlock = (TableBlock) block;
         }else {
+            setTableOriginalSource(inputSource);
             InputStream inputStream = inputSource.openStream();
             tableBlock = TableBlock.load(inputStream);
             inputStream.close();
@@ -763,8 +882,39 @@ public class ApkModule implements ApkFile {
         tableBlock.setApkFile(this);
         return tableBlock;
     }
+    public void addAll(Collection<? extends InputSource> inputSources){
+        if(inputSources == null){
+            return;
+        }
+        for(InputSource inputSource : inputSources){
+            add(inputSource);
+        }
+    }
     public void add(InputSource inputSource){
+        if(inputSource == null){
+            return;
+        }
+        String path = inputSource.getAlias();
+        if(AndroidManifestBlock.FILE_NAME.equals(path)){
+            InputSource manifestSource = getManifestOriginalSource();
+            if(manifestSource != inputSource){
+                mManifestBlock = null;
+            }
+            setManifestOriginalSource(inputSource);
+        }else if(TableBlock.FILE_NAME.equals(path)){
+            InputSource table = getTableOriginalSource();
+            if(inputSource != table){
+                mTableBlock = null;
+            }
+            setTableOriginalSource(inputSource);
+        }
         getApkArchive().add(inputSource);
+    }
+    public InputSource getInputSource(String path){
+        return getApkArchive().getInputSource(path);
+    }
+    public List<InputSource> listInputSources(){
+        return getApkArchive().listInputSources();
     }
     public APKArchive getApkArchive() {
         return apkArchive;

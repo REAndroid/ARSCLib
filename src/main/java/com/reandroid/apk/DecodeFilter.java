@@ -15,16 +15,20 @@
  */
 package com.reandroid.apk;
 
-/**
- * Renamed, use com.reandroid.apk.ApkModuleJsonDecoder
- * */
-@Deprecated
-public class ApkJsonDecoder extends ApkModuleJsonDecoder{
-    public ApkJsonDecoder(ApkModule apkModule, boolean splitTypes){
-        super(apkModule, splitTypes);
-    }
-    public ApkJsonDecoder(ApkModule apkModule){
-        super(apkModule);
-    }
+import java.util.HashSet;
+import java.util.Set;
 
+public class DecodeFilter {
+    private final Set<String> mExcludePaths;
+    public DecodeFilter(){
+        mExcludePaths = new HashSet<>();
+    }
+    public void addExclude(String path){
+        if(path != null){
+            mExcludePaths.add(path);
+        }
+    }
+    public boolean isExcluded(String path){
+        return mExcludePaths.contains(path);
+    }
 }
