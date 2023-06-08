@@ -41,14 +41,11 @@ import com.reandroid.xml.XMLException;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 import java.util.zip.ZipEntry;
 
-public class ApkModule implements ApkFile {
+public class ApkModule implements ApkFile, Closeable {
     private final String moduleName;
     private final APKArchive apkArchive;
     private boolean loadDefaultFramework = true;
@@ -63,6 +60,7 @@ public class ApkModule implements ApkFile {
     private ApkType mApkType;
     private ApkSignatureBlock apkSignatureBlock;
     private Integer preferredFramework;
+    private Closeable mCloseable;
 
     public ApkModule(String moduleName, APKArchive apkArchive){
         this.moduleName=moduleName;
@@ -670,6 +668,10 @@ public class ApkModule implements ApkFile {
             tableBlock.destroy();
             this.mTableBlock = null;
         }
+        try {
+            close();
+        } catch (IOException ignored) {
+        }
     }
     public void setManifest(AndroidManifestBlock manifestBlock){
         APKArchive archive = getApkArchive();
@@ -1018,6 +1020,16 @@ public class ApkModule implements ApkFile {
             apkLogger.logVerbose(msg);
         }
     }
+    public void setCloseable(Closeable closeable){
+        this.mCloseable = closeable;
+    }
+    @Override
+    public void close() throws IOException {
+        Closeable closeable = this.mCloseable;
+        if(closeable != null){
+            closeable.close();
+        }
+    }
     @Override
     public String toString(){
         return getModuleName();
@@ -1029,6 +1041,7 @@ public class ApkModule implements ApkFile {
         Archive archive = new Archive(apkFile);
         ApkModule apkModule = new ApkModule(moduleName, archive.createAPKArchive());
         apkModule.setApkSignatureBlock(archive.getApkSignatureBlock());
+        apkModule.setCloseable(archive);
         return apkModule;
     }
 }

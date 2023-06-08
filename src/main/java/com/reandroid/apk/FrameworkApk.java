@@ -228,12 +228,16 @@ public class FrameworkApk extends ApkModule{
     public static FrameworkApk loadApkFile(File apkFile) throws IOException {
         Archive archive = new Archive(apkFile);
         APKArchive apkArchive = new APKArchive(archive.mapEntrySource());
-        return new FrameworkApk(apkArchive);
+        FrameworkApk frameworkApk = new FrameworkApk(apkArchive);
+        frameworkApk.setCloseable(archive);
+        return frameworkApk;
     }
     public static FrameworkApk loadApkFile(File apkFile, String moduleName) throws IOException {
         Archive archive = new Archive(apkFile);
         APKArchive apkArchive = new APKArchive(archive.mapEntrySource());
-        return new FrameworkApk(moduleName, apkArchive);
+        FrameworkApk frameworkApk = new FrameworkApk(moduleName, apkArchive);
+        frameworkApk.setCloseable(archive);
+        return frameworkApk;
     }
     public static boolean isFramework(ApkModule apkModule) {
         if(!apkModule.hasAndroidManifestBlock()){

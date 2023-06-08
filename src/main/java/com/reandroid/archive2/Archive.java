@@ -24,10 +24,9 @@ import com.reandroid.archive2.io.ArchiveUtil;
 import com.reandroid.archive2.io.ZipInput;
 import com.reandroid.archive2.model.LocalFileDirectory;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,7 +35,7 @@ import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipEntry;
 
-public class Archive {
+public class Archive implements Closeable {
     private final ZipInput zipInput;
     private final List<ArchiveEntry> entryList;
     private final EndRecord endRecord;
@@ -103,27 +102,47 @@ public class Archive {
         return endRecord;
     }
 
-    // for test
-    public void extract(File dir) throws IOException {
+    public void extractAll(File dir) throws IOException {
         for(ArchiveEntry archiveEntry:getEntryList()){
             if(archiveEntry.isDirectory()){
                 continue;
             }
-            extract(dir, archiveEntry);
+            extract(toFile(dir, archiveEntry), archiveEntry);
         }
     }
-    private void extract(File dir, ArchiveEntry archiveEntry) throws IOException{
-        File out = toFile(dir, archiveEntry);
-        File parent = out.getParentFile();
-        if(!parent.exists()){
+    public void extract(File file, ArchiveEntry archiveEntry) throws IOException{
+        File parent = file.getParentFile();
+        if(parent != null && !parent.exists()){
             parent.mkdirs();
         }
-        FileOutputStream outputStream = new FileOutputStream(out);
+        if(archiveEntry.getMethod() != ZipEntry.STORED){
+            extractCompressed(file, archiveEntry);
+        }else {
+            extractStored(file, archiveEntry);
+        }
+    }
+    private void extractStored(File file, ArchiveEntry archiveEntry) throws IOException {
+        if(file.isFile()){
+            file.delete();
+        }
+        file.createNewFile();
+        StandardOpenOption openOption = StandardOpenOption.WRITE;
+        FileChannel outputChannel = FileChannel.open(file.toPath(), openOption);
+        FileChannel fileChannel = zipInput.getFileChannel();
+        outputChannel.transferFrom(fileChannel, 0, archiveEntry.getDataSize());
+        outputChannel.close();
+    }
+    private void extractCompressed(File file, ArchiveEntry archiveEntry) throws IOException {
+        FileOutputStream outputStream = new FileOutputStream(file);
         ArchiveUtil.writeAll(openInputStream(archiveEntry), outputStream);
         outputStream.close();
     }
     private File toFile(File dir, ArchiveEntry archiveEntry){
         String name = archiveEntry.getName().replace('/', File.separatorChar);
         return new File(dir, name);
+    }
+    @Override
+    public void close() throws IOException {
+        this.zipInput.close();
     }
 }
