@@ -129,6 +129,7 @@ public class Archive implements Closeable {
         StandardOpenOption openOption = StandardOpenOption.WRITE;
         FileChannel outputChannel = FileChannel.open(file.toPath(), openOption);
         FileChannel fileChannel = zipInput.getFileChannel();
+        fileChannel.position(archiveEntry.getFileOffset());
         outputChannel.transferFrom(fileChannel, 0, archiveEntry.getDataSize());
         outputChannel.close();
     }
