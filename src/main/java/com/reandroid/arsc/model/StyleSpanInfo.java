@@ -28,7 +28,7 @@ public class StyleSpanInfo implements JSONConvert<JSONObject> {
         this.mLast = last;
     }
     public boolean isValid(){
-        return mFirst < mLast;
+        return mFirst < mLast && mTag != null;
     }
     public int getFirst() {
         return mFirst;
@@ -50,6 +50,9 @@ public class StyleSpanInfo implements JSONConvert<JSONObject> {
     }
 
     public String getStartTag(boolean xml){
+        if(mTag == null){
+            return null;
+        }
         int i= mTag.indexOf(';');
         StringBuilder builder=new StringBuilder();
         builder.append('<');
@@ -84,6 +87,9 @@ public class StyleSpanInfo implements JSONConvert<JSONObject> {
     }
 
     public String getEndTag(){
+        if(mTag == null){
+            return null;
+        }
         int i= mTag.indexOf(';');
         if(i < 0){
             i = mTag.indexOf(' ');
