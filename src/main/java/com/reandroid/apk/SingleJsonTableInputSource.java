@@ -28,8 +28,8 @@ public class SingleJsonTableInputSource extends InputSource {
     private TableBlock mCache;
     private APKLogger apkLogger;
     public SingleJsonTableInputSource(InputSource inputSource) {
-        super(inputSource.getAlias());
-        this.inputSource=inputSource;
+        super(TableBlock.FILE_NAME);
+        this.inputSource = inputSource;
     }
     @Override
     public long write(OutputStream outputStream) throws IOException {
@@ -75,7 +75,7 @@ public class SingleJsonTableInputSource extends InputSource {
     }
     public static SingleJsonTableInputSource fromFile(File rootDir, File jsonFile){
         String path = ApkUtil.jsonToArchiveResourcePath(rootDir, jsonFile);
-        FileInputSource fileInputSource=new FileInputSource(jsonFile, path);
+        FileInputSource fileInputSource = new FileInputSource(jsonFile, path);
         return new SingleJsonTableInputSource(fileInputSource);
     }
     void setApkLogger(APKLogger logger) {

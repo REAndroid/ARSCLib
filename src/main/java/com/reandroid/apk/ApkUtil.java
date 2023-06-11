@@ -89,9 +89,13 @@ public class ApkUtil {
     }
     public static String jsonToArchiveResourcePath(File dir, File jsonFile){
         String path = toArchivePath(dir, jsonFile);
-        if(path.endsWith(ApkUtil.JSON_FILE_EXTENSION)){
-            int i2 = path.length() - ApkUtil.JSON_FILE_EXTENSION.length();
-            path = path.substring(0, i2);
+        String ext = ApkUtil.JSON_FILE_EXTENSION;
+        if(path.endsWith(ext)){
+            int i2 = path.length() - ext.length();
+            String tmp = path.substring(0, i2);
+            if(tmp.indexOf('.') > 0){
+                path = tmp;
+            }
         }
         return path;
     }

@@ -19,6 +19,7 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class ApkModuleJsonEncoder extends ApkModuleEncoder{
@@ -28,7 +29,7 @@ public class ApkModuleJsonEncoder extends ApkModuleEncoder{
     }
 
     @Override
-    public void buildResources(File mainDirectory){
+    public void buildResources(File mainDirectory) throws IOException {
         scanManifest(mainDirectory);
         scanTable(mainDirectory);
         scanResJsonDirs(mainDirectory);
@@ -63,12 +64,24 @@ public class ApkModuleJsonEncoder extends ApkModuleEncoder{
         inputSource.setAPKLogger(getApkLogger());
         getApkModule().add(inputSource);
     }
-    private void scanTable(File mainDirectory) {
-        boolean splitFound = scanTableSplitJson(mainDirectory);
-        if(splitFound){
+    private void scanTable(File mainDirectory) throws IOException{
+        boolean singleFound = scanTableSingleJson(mainDirectory);
+        if(singleFound){
+            logMessage("Building as single json");
             return;
         }
-        scanTableSingleJson(mainDirectory);
+        boolean splitFound = scanTableSplitJson(mainDirectory);
+        if(splitFound){
+            logMessage("Building as split json");
+            return;
+        }
+        if(getApkModule().hasTableBlock()){
+            logMessage("WARN: Can not determine json type! " +
+                    "Ignore building resource table");
+            return;
+        }
+        throw new IOException("Can not determine json type! main directory '" +
+                mainDirectory.getAbsolutePath() + "'");
     }
     private boolean scanTableSplitJson(File mainDirectory) {
         File resourcesDir = new File(mainDirectory, TableBlock.DIRECTORY_NAME);
@@ -80,16 +93,17 @@ public class ApkModuleJsonEncoder extends ApkModuleEncoder{
         getApkModule().add(inputSource);
         return true;
     }
-    private void scanTableSingleJson(File mainDirectory) {
-        File file = new File(mainDirectory, TableBlock.DIRECTORY_NAME);
-        file = new File(file, TableBlock.JSON_FILE_NAME);
+    private boolean scanTableSingleJson(File mainDirectory) {
+        File resourcesDir = new File(mainDirectory, TableBlock.DIRECTORY_NAME);
+        File file = new File(resourcesDir, TableBlock.JSON_FILE_NAME);
         if(!file.isFile()){
-            return;
+            return false;
         }
         SingleJsonTableInputSource inputSource = SingleJsonTableInputSource
-                .fromFile(mainDirectory, file);
+                .fromFile(resourcesDir, file);
         inputSource.setApkLogger(getApkLogger());
         getApkModule().add(inputSource);
+        return true;
     }
 
 }
