@@ -112,7 +112,7 @@ public class Archive implements Closeable {
                 new FilterIterator<ArchiveEntry>(getEntryList().iterator(), filter){
                     @Override
                     public boolean test(ArchiveEntry archiveEntry){
-                        return archiveEntry != null && archiveEntry.isDirectory();
+                        return archiveEntry != null && !archiveEntry.isDirectory();
                     }
                 };
         while (iterator.hasNext()){
