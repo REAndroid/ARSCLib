@@ -22,6 +22,16 @@ public class DataDescriptor extends ZipHeader{
     public DataDescriptor() {
         super(MIN_LENGTH, ZipSignature.DATA_DESCRIPTOR);
     }
+
+    public DataDescriptor copy(){
+        DataDescriptor dd = new DataDescriptor();
+        dd.setSignature(ZipSignature.DATA_DESCRIPTOR);
+        dd.setCrc(getCrc());
+        dd.setCompressedSize(getCompressedSize());
+        dd.setSize(getSize());
+        return dd;
+    }
+
     public long getCrc(){
         return getIntegerUnsigned(OFFSET_crc);
     }
