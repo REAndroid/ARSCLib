@@ -46,8 +46,9 @@ public class ArchiveOutputSource extends OutputSource{
                 lfh.getDataSize());
     }
     @Override
-    public LocalFileHeader createLocalFileHeader(){
+    LocalFileHeader createLocalFileHeader(){
         ArchiveEntrySource source = getArchiveSource();
-        return source.getArchiveEntry().getLocalFileHeader();
+        LocalFileHeader lfh = source.getArchiveEntry().getLocalFileHeader();
+        return lfh.copy();
     }
 }

@@ -29,6 +29,25 @@ public class LocalFileHeader extends CommonHeader {
         this();
         setFileName(name);
     }
+    public LocalFileHeader copy(){
+        LocalFileHeader lfh = new LocalFileHeader();
+        lfh.setSignature(ZipSignature.LOCAL_FILE);
+        lfh.setFileName(getFileName());
+        lfh.getGeneralPurposeFlag().setValue(getGeneralPurposeFlag().getValue());
+        lfh.setCompressedSize(getCompressedSize());
+        lfh.setSize(getSize());
+        lfh.setCrc(getCrc());
+        lfh.setExtraLength(getExtraLength());
+        DataDescriptor dd = getDataDescriptor();
+        if(dd != null){
+            lfh.setDataDescriptor(dd.copy());
+        }
+        lfh.setDosTime(getDosTime());
+        lfh.setPlatform(getPlatform());
+        lfh.setVersionMadeBy(getVersionMadeBy());
+        lfh.setMethod(getMethod());
+        return lfh;
+    }
 
     public void mergeZeroValues(CentralEntryHeader ceh){
         if(getCrc()==0){
