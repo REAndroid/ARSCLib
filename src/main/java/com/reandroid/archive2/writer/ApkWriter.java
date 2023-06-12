@@ -60,7 +60,6 @@ public class ApkWriter extends ZipFileOutput {
 
             writeCEH(outputList);
             this.close();
-            logMessage("Written to: " + getFile().getName());
         }
     }
     public void setApkSignatureBlock(ApkSignatureBlock apkSignatureBlock) {
@@ -74,7 +73,6 @@ public class ApkWriter extends ZipFileOutput {
     }
 
     private void writeCEH(List<OutputSource> outputList) throws IOException{
-        logMessage("Writing CEH ...");
         EndRecord endRecord = new EndRecord();
         endRecord.setSignature(ZipSignature.END_RECORD);
         long offset = position();
@@ -107,7 +105,6 @@ public class ApkWriter extends ZipFileOutput {
         if(filesPadding > 0){
             outputStream.write(new byte[filesPadding]);
         }
-        logMessage("files padding = " + filesPadding);
         signatureBlock.updatePadding();
         signatureBlock.writeBytes(outputStream);
     }

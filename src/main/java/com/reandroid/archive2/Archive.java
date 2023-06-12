@@ -23,6 +23,7 @@ import com.reandroid.archive2.io.ZipFileInput;
 import com.reandroid.archive2.io.ArchiveUtil;
 import com.reandroid.archive2.io.ZipInput;
 import com.reandroid.archive2.model.LocalFileDirectory;
+import com.reandroid.arsc.util.FilterIterator;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipEntry;
@@ -103,10 +105,18 @@ public class Archive implements Closeable {
     }
 
     public void extractAll(File dir) throws IOException {
-        for(ArchiveEntry archiveEntry:getEntryList()){
-            if(archiveEntry.isDirectory()){
-                continue;
-            }
+        extractAll(dir, null);
+    }
+    public void extractAll(File dir, Predicate<ArchiveEntry> filter) throws IOException {
+        FilterIterator<ArchiveEntry> iterator =
+                new FilterIterator<ArchiveEntry>(getEntryList().iterator(), filter){
+                    @Override
+                    public boolean test(ArchiveEntry archiveEntry){
+                        return archiveEntry != null && archiveEntry.isDirectory();
+                    }
+                };
+        while (iterator.hasNext()){
+            ArchiveEntry archiveEntry = iterator.next();
             extract(toFile(dir, archiveEntry), archiveEntry);
         }
     }
