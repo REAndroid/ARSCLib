@@ -23,6 +23,10 @@ public class SpecStringArray extends StringArray<SpecString> {
         super(offsets, itemCount, itemStart, is_utf8);
     }
     @Override
+    protected boolean isFlexible(){
+        return true;
+    }
+    @Override
     public SpecString newInstance() {
         return new SpecString(isUtf8());
     }

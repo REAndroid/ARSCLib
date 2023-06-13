@@ -15,6 +15,7 @@
  */
 package com.reandroid.arsc.item;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.util.HexUtil;
 
@@ -45,6 +46,10 @@ public class IntegerItem extends BlockItem implements ReferenceItem{
     @Override
     public int get(){
         return mCache;
+    }
+    @Override
+    public <T1 extends Block> T1 getReferredParent(Class<T1> parentClass){
+        return getParentInstance(parentClass);
     }
     public long unsignedLong(){
         return get() & 0x00000000ffffffffL;

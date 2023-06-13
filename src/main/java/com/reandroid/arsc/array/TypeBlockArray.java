@@ -91,6 +91,10 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         TypeBlock typeBlock=getOrCreate(qualifiers);
         return typeBlock.getOrCreateEntry(entryId);
     }
+    public Entry getOrCreateEntry(short entryId, ResConfig resConfig){
+        TypeBlock typeBlock = getOrCreate(resConfig);
+        return typeBlock.getOrCreateEntry(entryId);
+    }
     public boolean isEmpty(){
         for(TypeBlock typeBlock:listItems()){
             if(typeBlock!=null && !typeBlock.isEmpty()){
@@ -133,7 +137,9 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         if(typeBlock!=null){
             return typeBlock;
         }
-        typeBlock=createNext();
+        int count = getHighestEntryCount();
+        typeBlock = createNext();
+        typeBlock.ensureEntriesCount(count);
         ResConfig config=typeBlock.getResConfig();
         config.parseQualifiers(qualifiers);
         return typeBlock;
@@ -321,12 +327,22 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         typeBlock.readBytes(reader);
         return reader.getPosition()>pos;
     }
-    public int getHighestEntryCount(){
-        int result=0;
+    public int getHighestEntryId(){
+        int result = -1;
         for(TypeBlock typeBlock:getChildes()){
             int high = typeBlock.getEntryArray().getHighestEntryId();
             if(high > result){
                 result = high;
+            }
+        }
+        return result;
+    }
+    public int getHighestEntryCount(){
+        int result = 0;
+        for(TypeBlock typeBlock:getChildes()){
+            int count = typeBlock.getEntryArray().childesCount();
+            if(count > result){
+                result = count;
             }
         }
         return result;

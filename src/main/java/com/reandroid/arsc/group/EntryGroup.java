@@ -21,6 +21,7 @@ import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.pool.SpecStringPool;
+import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 
@@ -29,7 +30,7 @@ import java.util.Iterator;
 public class EntryGroup extends ItemGroup<Entry> {
     private final int resourceId;
     public EntryGroup(int resId) {
-        super(ARRAY_CREATOR, String.valueOf(resId));
+        super(ARRAY_CREATOR, HexUtil.toHex8(resId));
         this.resourceId=resId;
     }
     public Entry getEntry(ResConfig resConfig){
@@ -74,13 +75,15 @@ public class EntryGroup extends ItemGroup<Entry> {
         return (short) (getResourceId() & 0xffff);
     }
     private boolean isAllSameSpec(){
-        Entry first=null;
-        for(Entry entry :listItems()){
-            if(first==null){
-                first= entry;
+        Iterator<Entry> iterator = iterator();
+        int firstSpec = -2;
+        while (iterator.hasNext()){
+            Entry entry = iterator.next();
+            if(firstSpec == -2){
+                firstSpec = entry.getSpecReference();
                 continue;
             }
-            if(first.getSpecReference()!= entry.getSpecReference()){
+            if(firstSpec != entry.getSpecReference()){
                 return false;
             }
         }

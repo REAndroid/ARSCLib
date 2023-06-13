@@ -21,17 +21,21 @@ import com.reandroid.arsc.array.TypeBlockArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockContainer;
 import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.group.ResourceEntry;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
+import com.reandroid.arsc.util.ComputeIterator;
+import com.reandroid.arsc.util.EmptyIterator;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.*;
@@ -58,6 +62,64 @@ public class SpecTypePair extends BlockContainer<Block>
         this(new SpecBlock(), new TypeBlockArray());
     }
 
+    public ResourceEntry getResource(int entryId){
+        if(entryId < 0 || entryId > getHighestEntryId()){
+            return null;
+        }
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return null;
+        }
+        int resourceId = packageBlock.getId() << 24;
+        resourceId |= getId() << 16;
+        resourceId |= entryId;
+        return new ResourceEntry(packageBlock, resourceId);
+    }
+    public ResourceEntry getResource(String name){
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return null;
+        }
+        Entry entry = getAnyEntry(name);
+        if(entry != null){
+            return new ResourceEntry(packageBlock, entry.getResourceId());
+        }
+        return null;
+    }
+    public Iterator<ResourceEntry> getResources(){
+        final PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return EmptyIterator.of();
+        }
+        return new ComputeIterator<Entry, ResourceEntry>(listDefaultEntries()) {
+            @Override
+            public ResourceEntry apply(Entry element) {
+                return new ResourceEntry(packageBlock, element.getResourceId());
+            }
+        };
+    }
+    private Iterator<Entry> listDefaultEntries(){
+        Iterator<TypeBlock> iterator = getTypeBlockArray().iterator(true);
+        if(!iterator.hasNext()){
+            return EmptyIterator.of();
+        }
+        return iterator.next().getEntries();
+    }
+    public Iterator<Entry> getEntries(int entryId){
+        return getEntries(entryId, false);
+    }
+    public Iterator<Entry> getEntries(int entryId, boolean skipNull){
+        return new ComputeIterator<TypeBlock, Entry>(getTypeBlockArray().iterator(false)) {
+            @Override
+            public Entry apply(TypeBlock element) {
+                Entry entry = element.getEntry(entryId);
+                if(entry == null || (skipNull && entry.isNull())){
+                    return null;
+                }
+                return entry;
+            }
+        };
+    }
     public Boolean hasComplexEntry(){
         return getTypeBlockArray().hasComplexEntry();
     }
@@ -187,6 +249,9 @@ public class SpecTypePair extends BlockContainer<Block>
     }
     public Entry getOrCreateEntry(short entryId, String qualifiers){
         return getTypeBlockArray().getOrCreateEntry(entryId, qualifiers);
+    }
+    public Entry getOrCreateEntry(short entryId, ResConfig resConfig){
+        return getTypeBlockArray().getOrCreateEntry(entryId, resConfig);
     }
     public Entry getEntry(short entryId, String qualifiers){
         return getTypeBlockArray().getEntry(entryId, qualifiers);
@@ -322,6 +387,9 @@ public class SpecTypePair extends BlockContainer<Block>
     public int getHighestEntryCount(){
         return getTypeBlockArray().getHighestEntryCount();
     }
+    public int getHighestEntryId(){
+        return getTypeBlockArray().getHighestEntryId();
+    }
     public TypeString getTypeString(){
         PackageBlock packageBlock = getPackageBlock();
         if(packageBlock!=null){
@@ -330,6 +398,21 @@ public class SpecTypePair extends BlockContainer<Block>
         return null;
     }
 
+    public void serializePublicXml(XmlSerializer serializer) throws IOException {
+        ResourceEntry last = getResource(getHighestEntryId());
+        boolean lastWritten = false;
+        if(last != null){
+            lastWritten = last.serializePublicXml(serializer);
+        }
+        Iterator<ResourceEntry> itr = getResources();
+        while (itr.hasNext()){
+            ResourceEntry resourceEntry = itr.next();
+            if(lastWritten && resourceEntry.equals(last)){
+                continue;
+            }
+            resourceEntry.serializePublicXml(serializer);
+        }
+    }
     @Override
     public JSONObject toJson() {
         return toJson(false);

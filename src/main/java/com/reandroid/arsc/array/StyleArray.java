@@ -29,6 +29,16 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
         super(offsets, itemCount, itemStart);
         setEndBytes(END_BYTE);
     }
+    protected void onStringShifted(int index){
+        StyleItem styleItem = get(index);
+        if(styleItem == null || styleItem.getIndex() == index){
+            return;
+        }
+        styleItem = newInstance();
+        setItem(index, styleItem);
+        styleItem.setNull(true);
+        styleItem.onDataLoaded();
+    }
     @Override
     public void clearChildes(){
         for(StyleItem styleItem:listItems()){

@@ -17,6 +17,7 @@ package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.StringItem;
+import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
@@ -33,6 +34,28 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         this.mUtf8=is_utf8;
         setEndBytes((byte)0x00);
     }
+    @Override
+    protected void onPreShifting(){
+        StringPool<?> stringPool = getParentInstance(StringPool.class);
+        if(stringPool != null){
+            stringPool.ensureStringLinkUnlockedInternal();
+        }
+    }
+    @Override
+    protected void onPostShift(int index){
+        StringPool<?> stringPool = getParentInstance(StringPool.class);
+        if(stringPool != null){
+            stringPool.getStyleArray().onStringShifted(index);
+        }
+    }
+    @Override
+    protected void onPreRefreshRefresh(){
+        if(isFlexible()){
+            trimAllocatedFreeSpace();
+        }
+        super.onPreRefreshRefresh();
+    }
+
     public List<String> toStringList(){
         return new AbstractList<String>() {
             @Override

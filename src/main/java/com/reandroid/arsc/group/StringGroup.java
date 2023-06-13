@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,5 +21,8 @@ import com.reandroid.arsc.item.StringItem;
 public class StringGroup<T extends StringItem> extends ItemGroup<T>{
     public StringGroup(BlockArrayCreator<T> blockArrayCreator, String name){
         super(blockArrayCreator, name);
+    }
+    public StringGroup(BlockArrayCreator<T> blockArrayCreator, String name, T firstItem){
+        super(blockArrayCreator, name, firstItem);
     }
 }

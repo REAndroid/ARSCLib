@@ -20,7 +20,30 @@ import java.util.List;
 
 public class StringsUtil {
 
-
+    public static String toLowercase(String str){
+        char[] chars = str.toCharArray();
+        boolean changed = false;
+        for(int i = 0; i < chars.length; i++){
+            char ch = chars[i];
+            char lower = toLowercase(ch);
+            if(ch == lower){
+                continue;
+            }
+            chars[i] = lower;
+            changed = true;
+        }
+        if(!changed){
+            return str;
+        }
+        return new String(chars);
+    }
+    public static char toLowercase(char ch){
+        if(ch > 'Z' || ch < 'A'){
+            return ch;
+        }
+        int i = ch - 'A';
+        return (char) (i + 'a');
+    }
     public static void toStringSort(List<?> itemList){
         if(itemList == null || itemList.size() < 2){
             return;

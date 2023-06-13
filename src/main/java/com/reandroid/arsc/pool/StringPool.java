@@ -31,7 +31,6 @@ import com.reandroid.json.JSONConvert;
 import java.io.IOException;
 import java.util.*;
 
-
 public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolHeader> implements BlockLoad, JSONConvert<JSONArray>, Comparator<String> {
     private final Object mLock = new Object();
     private final StringArray<T> mArrayStrings;
@@ -157,28 +156,42 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     public void refreshUniqueIdMap(){
         mUniqueMap.clear();
         T[] stringsArray = getStrings();
-        if(stringsArray==null){
+        if(stringsArray == null){
             return;
         }
-        for(int i=0;i<stringsArray.length;i++){
-            T item=stringsArray[i];
-            if(item==null){
+        for(int i=0; i < stringsArray.length; i++){
+            T item = stringsArray[i];
+            if(item == null){
                 continue;
             }
-            String str=item.getHtml();
-            if(str==null){
+            String str = item.getHtml();
+            if(str == null){
                 continue;
             }
-            StringGroup<T> group= getOrCreateGroup(str);
-            group.add(item);
+            StringGroup<T> group = mUniqueMap.get(str);
+            if(group == null){
+                group = new StringGroup<>(mArrayStrings, str, item);
+                mUniqueMap.put(str, group);
+            }else {
+                group.add(item);
+            }
         }
     }
     void updateUniqueIdMap(T item){
-        if(item==null){
+        if(item == null){
             return;
         }
-        StringGroup<T> group = getOrCreateGroup(item.getHtml());
-        group.add(item);
+        String str = item.getHtml();
+        if(str == null){
+            str = "";
+        }
+        StringGroup<T> group = mUniqueMap.get(str);
+        if(group == null){
+            group = new StringGroup<>(mArrayStrings, str, item);
+            mUniqueMap.put(str, group);
+        }else {
+            group.add(item);
+        }
     }
     public List<T> removeUnusedStrings(){
         return getStringsArray().removeUnusedStrings();
@@ -242,28 +255,27 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         return mUniqueMap.get(str);
     }
     public T getOrCreate(String str){
-        StringGroup<T> group=getOrCreateGroup(str);
-        T[] items=group.getItems();
-        if(items.length==0){
-            T t=createNewString(str);
-            group.add(t);
-            items=group.getItems();
+        if(str == null){
+            str = "";
         }
-        return items[0];
-    }
-    private StringGroup<T> getOrCreateGroup(String str){
-        StringGroup<T> group=get(str);
-        if(group!=null){
-            return group;
+        StringGroup<T> group = mUniqueMap.get(str);
+        T item;
+        if(group == null){
+            item = createNewString(str);
+            group = new StringGroup<>(mArrayStrings, str, item);
+            mUniqueMap.put(str, group);
+        }else if(group.size() == 0){
+            item = createNewString(str);
+            group.add(item);
+        }else {
+            item = group.get(0);
         }
-        group=new StringGroup<>(mArrayStrings, str);
-        mUniqueMap.put(str, group);
-        return group;
+        return item;
     }
     private T createNewString(String str){
-        T item=mArrayStrings.createNext();
+        T item = mArrayStrings.createNext();
         item.set(str);
-        getHeaderBlock().getCountStrings().set(mArrayStrings.childesCount());
+        //getHeaderBlock().getCountStrings().set(mArrayStrings.childesCount());
         return item;
     }
     public final StyleItem getStyle(int index){

@@ -36,6 +36,8 @@ import com.reandroid.json.JSONObject;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class Entry extends Block implements JSONConvert<JSONObject> {
     private TableEntry<?, ?> mTableEntry;
@@ -86,6 +88,62 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         }
         return id;
     }
+    /**
+     * renames this entry and all configuration on this package
+     * */
+    public SpecString reName(String name){
+        TypeBlock typeBlock = getTypeBlock();
+        if(typeBlock == null){
+            return null;
+        }
+        SpecTypePair specTypePair = typeBlock.getParentSpecTypePair();
+        if(specTypePair == null){
+            return null;
+        }
+        SpecString specString = null;
+        Iterator<Entry> iterator = specTypePair.getEntries(getId(), false);
+        while (iterator.hasNext()){
+            Entry entry = iterator.next();
+            if(specString == null){
+                specString = entry.setName(name);
+            }else {
+                entry.updateSpecReference(specString);
+            }
+        }
+        return specString;
+    }
+    public SpecString setName(String name){
+        return setName(name, false);
+    }
+    /**
+     * Sets resource entry name
+     * */
+    public SpecString setName(String name, boolean holdIfNull){
+        if(name == null){
+            unlinkNullSpecString();
+            TableEntry<?, ?> tableEntry = getTableEntry();
+            if(tableEntry != null){
+                tableEntry.getHeader().setKey(null);
+            }
+            return null;
+        }
+        if(!holdIfNull && isNull()){
+            return null;
+        }
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return null;
+        }
+        SpecStringPool specStringPool = packageBlock.getSpecStringPool();
+        int ref = getSpecReference();
+        SpecString specString = specStringPool.get(ref);
+        if(specString != null && name.equals(specString.get())){
+            return null;
+        }
+        specString = specStringPool.getOrCreate(name);
+        setSpecReference(specString);
+        return specString;
+    }
     public String getName(){
         SpecString specString = getSpecString();
         if(specString!=null){
@@ -100,13 +158,20 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         }
         return null;
     }
-    public int getResourceId(){
-        PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock==null){
-            return 0;
+    public int getTypeId(){
+        TypeBlock typeBlock = getTypeBlock();
+        if(typeBlock != null){
+            return typeBlock.getId();
         }
+        return 0;
+    }
+    public int getResourceId(){
         TypeBlock typeBlock = getTypeBlock();
         if(typeBlock==null){
+            return 0;
+        }
+        PackageBlock packageBlock = typeBlock.getPackageBlock();
+        if(packageBlock == null){
             return 0;
         }
         return (packageBlock.getId()<<24)
@@ -114,11 +179,15 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
                 | getId();
     }
     public int getSpecReference(){
-        TableEntry<?, ?> tableEntry = getTableEntry();
-        if(tableEntry == null){
-            return 0;
+        IntegerItem nullReference = this.mNullSpecReference;
+        if(nullReference != null){
+            return nullReference.get();
         }
-        return tableEntry.getHeader().getKey();
+        TableEntry<?, ?> tableEntry = getTableEntry();
+        if(tableEntry != null){
+            return tableEntry.getHeader().getKey();
+        }
+        return -1;
     }
     public TypeString getTypeString(){
         TypeBlock typeBlock = getTypeBlock();
@@ -134,14 +203,10 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         }
         return false;
     }
-    public void setSpecReference(StringItem specReference){
-        TableEntry<?, ?> tableEntry = getTableEntry();
-        if(tableEntry == null){
+    public void setSpecReference(SpecString specString){
+        if(isSameSpecString(specString)){
             return;
         }
-        tableEntry.getHeader().setKey(specReference);
-    }
-    public void setSpecReference(SpecString specString){
         TableEntry<?, ?> tableEntry = getTableEntry();
         if(tableEntry != null){
             tableEntry.getHeader().setKey(specString);
@@ -150,7 +215,25 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         }
         linkNullSpecString(specString);
     }
+    public void updateSpecReference(SpecString specString){
+        if(isSameSpecString(specString)){
+            return;
+        }
+        TableEntry<?, ?> tableEntry = getTableEntry();
+        if(tableEntry != null){
+            tableEntry.getHeader().setKey(specString);
+            unlinkNullSpecString();
+            return;
+        }else if(mNullSpecReference != null){
+            linkNullSpecString(specString);
+        }else if(specString == null){
+            unlinkNullSpecString();
+        }
+    }
     public void setSpecReference(int ref){
+        if(ref == getSpecReference()){
+            return;
+        }
         TableEntry<?, ?> tableEntry = getTableEntry();
         if(tableEntry == null){
             linkNullSpecString(ref);
@@ -158,6 +241,17 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         }
         unlinkNullSpecString();
         tableEntry.getHeader().setKey(ref);
+    }
+    private boolean isSameSpecString(SpecString specString){
+        int ref = getSpecReference();
+        if(specString == null){
+            return ref < 0;
+        }
+        if(ref != specString.getIndex()){
+            return false;
+        }
+        return mNullSpecReference == null
+                || getTableEntry() == null;
     }
     private void linkNullSpecString(int ref){
         if(ref < 0){
@@ -246,25 +340,15 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         return resValue;
     }
     public SpecString getSpecString(){
-        TableEntry<?, ?> tableEntry = getTableEntry();
-        int ref;
-        if(tableEntry == null){
-            IntegerItem nullSpecReference = this.mNullSpecReference;
-            if(nullSpecReference == null){
-                return null;
-            }
-            ref = nullSpecReference.get();
-        }else {
-            ref = tableEntry.getHeader().getKey();
-        }
-        SpecStringPool specStringPool = getSpecStringPool();
-        if(specStringPool == null){
+        int ref = getSpecReference();
+        if(ref < 0){
             return null;
         }
         PackageBlock packageBlock = getPackageBlock();
         if(packageBlock == null){
             return null;
         }
+        SpecStringPool specStringPool = packageBlock.getSpecStringPool();
         return specStringPool.get(ref);
     }
     public ResConfig getResConfig(){
@@ -374,6 +458,9 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
 
     public boolean isComplex(){
         return getTableEntry() instanceof CompoundEntry;
+    }
+    public boolean isScalar(){
+        return getTableEntry() instanceof ResTableEntry;
     }
     public void setTableEntry(TableEntry<?, ?> tableEntry){
         if(tableEntry == this.mTableEntry){

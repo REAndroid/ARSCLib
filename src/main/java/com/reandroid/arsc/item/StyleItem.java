@@ -15,6 +15,8 @@
   */
 package com.reandroid.arsc.item;
 
+import com.reandroid.arsc.array.StyleArray;
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.model.StyleSpanInfo;
 import com.reandroid.arsc.model.StyledStringBuilder;
@@ -29,16 +31,19 @@ import java.util.*;
 public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
     private List<StyleSpanInfo> mSpanInfoList;
     private final Set<StyleItemReference> mReferences;
+    private StyleIndexReference indexReference;
     public StyleItem() {
         super();
         this.mReferences = new HashSet<>();
     }
     public void onRemoved(){
+        unLinkIndexReference();
         setStylePieceCount(0);
         mSpanInfoList = null;
         setParent(null);
     }
     public void onDataLoaded(){
+        linkIndexReference();
         linkAll();
     }
     private void setEndValue(int negOne){
@@ -113,6 +118,30 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         }
         stringItem.removeReference(itemReference);
     }
+    private void linkIndexReference(){
+        StringItem stringItem = getStringItem(getIndex());
+        unLinkIndexReference(stringItem);
+        if(stringItem == null){
+            return;
+        }
+        StyleIndexReference reference = new StyleIndexReference(this);
+        stringItem.addReference(reference);
+        this.indexReference = reference;
+    }
+    private void unLinkIndexReference(){
+        unLinkIndexReference(getStringItem(getIndex()));
+    }
+    private void unLinkIndexReference(StringItem stringItem){
+        StyleIndexReference reference = this.indexReference;
+        if(reference == null){
+            return;
+        }
+        this.indexReference = null;
+        if(stringItem == null){
+            return;
+        }
+        stringItem.removeReference(reference);
+    }
     final Integer getFirstChar(int index){
         int i=index * INTEGERS_COUNT + INDEX_CHAR_FIRST;
         return super.get(i);
@@ -182,14 +211,14 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
             count=0;
         }
         int cur = getStylePieceCount();
-        if(count==cur){
+        if(count == cur && size() != 0){
             return;
         }
         if(count == 0){
             unlinkAll();
         }
-        int max=count * INTEGERS_COUNT + 1;
-        if(size()==0 || count==0){
+        int max = count * INTEGERS_COUNT + 1;
+        if(count == 0 || size()==0){
             super.setSize(max);
             setEndValue(END_VALUE);
             return;
@@ -352,6 +381,33 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
     public String toString(){
         return "Spans count = "+getSpanInfoList().size();
     }
+
+    static final class StyleIndexReference implements ReferenceItem{
+        private final StyleItem styleItem;
+        StyleIndexReference(StyleItem styleItem){
+            this.styleItem = styleItem;
+        }
+        @Override
+        public void set(int val) {
+            StyleArray styleArray = styleItem.getParentInstance(StyleArray.class);
+            if(styleArray != null){
+                styleArray.setItem(val, styleItem);
+            }
+        }
+
+        @Override
+        public int get() {
+            return styleItem.getIndex();
+        }
+        @Override
+        public <T1 extends Block> T1 getReferredParent(Class<T1> parentClass) {
+            if(parentClass.isInstance(styleItem)){
+                return (T1) styleItem;
+            }
+            return null;
+        }
+    }
+
     private static final int INDEX_STRING_REF = 0;
     private static final int INDEX_CHAR_FIRST = 1;
     private static final int INDEX_CHAR_LAST = 2;

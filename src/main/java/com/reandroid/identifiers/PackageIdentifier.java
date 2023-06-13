@@ -20,7 +20,9 @@ import com.android.org.kxml2.io.KXmlSerializer;
 import com.reandroid.arsc.array.EntryArray;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
+import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.group.ResourceEntry;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
@@ -35,6 +37,7 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
@@ -61,6 +64,7 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         if(initialize_ids){
             initializeIds(packageBlock);
         }
+        initializeEntries(packageBlock);
         initializePackageJson(packageBlock);
         this.mPackageLoadStamp = packageBlock.getEntryGroupCount();
         setPackageBlock(packageBlock);
@@ -75,7 +79,7 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         for(TypeIdentifier ti : list()){
             nameList.addAll(ti.listNames());
         }
-        specStringPool.addStrings(nameList);
+        //specStringPool.addStrings(nameList);
     }
     private void initializeIds(PackageBlock packageBlock){
         TypeIdentifier identifierID = get("id");
@@ -97,6 +101,26 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
             entry.setValueAsBoolean(false);
             entry.setSpecReference(specString);
             setIdEntryVisibility(entry);
+        }
+    }
+    private void initializeEntries(PackageBlock packageBlock){
+        for(TypeIdentifier ti : list()){
+
+            TypeBlock typeBlock = packageBlock
+                    .getOrCreateTypeBlock("", ti.getName());
+            int size = ti.size();
+            int idMax = ti.getMaxId();
+            int count;
+            if(size > idMax){
+                count = size;
+            }else {
+                count = idMax + 1;
+            }
+            typeBlock.ensureEntriesCount(count);
+            for(ResourceIdentifier ri : ti.list()){
+                Entry entry = typeBlock.getOrCreateEntry((short) ri.getId());
+                entry.setName(ri.getName(), true);
+            }
         }
     }
     private void setIdEntryVisibility(Entry entry){
@@ -265,8 +289,11 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         loadEntryGroups(packageBlock);
     }
     private void loadEntryGroups(PackageBlock packageBlock){
-        for(EntryGroup entryGroup : packageBlock.listEntryGroup()){
-            add(entryGroup);
+        for(SpecTypePair specTypePair:packageBlock.listSpecTypePairs()){
+            Iterator<ResourceEntry> itr = specTypePair.getResources();
+            while (itr.hasNext()){
+                add(itr.next());
+            }
         }
         this.mPackageLoadStamp = packageBlock.getEntryGroupCount();
     }
@@ -393,6 +420,9 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
 
     public void add(EntryGroup entryGroup){
         add(entryGroup.pickOne());
+    }
+    public void add(ResourceEntry resourceEntry){
+        add(resourceEntry.get());
     }
     public void add(Entry entry){
         if(entry == null || entry.isNull()){

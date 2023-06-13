@@ -15,35 +15,34 @@
   */
 package com.reandroid.arsc.item;
 
-import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.util.CollectionUtil;
 import com.reandroid.arsc.value.Entry;
-import com.reandroid.arsc.value.ResValue;
-import com.reandroid.arsc.value.ResValueMap;
-import com.reandroid.arsc.value.ValueItem;
 
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class TableString extends StringItem {
     public TableString(boolean utf8) {
         super(utf8);
     }
+
+    public Iterator<Entry> getEntries(boolean complex) {
+        return super.getUsers(Entry.class, new Predicate<Entry>() {
+            @Override
+            public boolean test(Entry item) {
+                if(complex){
+                    return item.isComplex();
+                }
+                return item.isScalar();
+            }
+        });
+    }
+    public Iterator<Entry> getEntries(Predicate<Entry> tester) {
+        return super.getUsers(Entry.class, tester);
+    }
+
     public List<Entry> listReferencedResValueEntries(){
-        List<Entry> results=new ArrayList<>();
-        for(ReferenceItem ref:getReferencedList()){
-            if(!(ref instanceof ReferenceBlock)){
-                continue;
-            }
-            Block block = ((ReferenceBlock<?>)ref).getBlock();
-            if(block ==null){
-                continue;
-            }
-            if(!(block instanceof ResValue)){
-                continue;
-            }
-            ResValue resValue = (ResValue) block;
-            results.add(resValue.getEntry());
-        }
-        return results;
+        return CollectionUtil.toList(getEntries(false));
     }
 }

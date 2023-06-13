@@ -23,7 +23,6 @@ import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.value.*;
-import com.reandroid.identifiers.PackageIdentifier;
 import com.reandroid.json.JSONObject;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -178,11 +177,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         File file = new File(packageDirectory, PackageBlock.RES_DIRECTORY_NAME);
         file = new File(file, PackageBlock.VALUES_DIRECTORY_NAME);
         file = new File(file, PackageBlock.PUBLIC_XML);
-
-        PackageIdentifier packageIdentifier = new PackageIdentifier();
-        packageIdentifier.load(packageBlock);
-        packageIdentifier.writePublicXml(file);
-
+        packageBlock.serializePublicXml(file);
     }
     private void decodeEmptyTable(File mainDirectory) throws IOException {
         logMessage("Decoding empty table ...");
@@ -197,9 +192,8 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         File file = new File(packageDirectory, ApkUtil.RES_DIR_NAME);
         file = new File(file, ApkUtil.VALUES_DIRECTORY_NAME);
         file = new File(file, PackageBlock.PUBLIC_XML);
-
-        PackageIdentifier packageIdentifier = new PackageIdentifier();
-        packageIdentifier.writePublicXml(file);
+        PackageBlock packageBlock = new PackageBlock();
+        packageBlock.serializePublicXml(file);
     }
     @Override
     public void decodeAndroidManifest(File mainDirectory)

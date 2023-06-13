@@ -40,7 +40,6 @@ public class FrameworkTable extends TableBlock {
     private String frameworkName;
     private int versionCode;
     private int mainPackageId;
-    private ResNameMap<EntryGroup> mNameGroupMap;
     private boolean mOptimized;
     private boolean mOptimizeChecked;
     public FrameworkTable(){
@@ -65,76 +64,10 @@ public class FrameworkTable extends TableBlock {
 
     @Override
     public void destroy(){
-        clearResourceNameMap();
         this.frameworkName = null;
         this.versionCode = 0;
         this.mainPackageId = 0;
         super.destroy();
-    }
-    public int resolveResourceId(String typeName, String entryName){
-        Entry entry = searchEntry(typeName, entryName);
-        if(entry !=null){
-            return entry.getResourceId();
-        }
-        return 0;
-    }
-    /**
-     * Loads all resource name map to memory for faster use
-     * Call this if you plan to search entries frequently
-     */
-    public void loadResourceNameMap(){
-        ResNameMap<EntryGroup> resNameMap = mNameGroupMap;
-        if(resNameMap == null){
-            resNameMap = new ResNameMap<>();
-            for(PackageBlock packageBlock:listPackages()){
-                for(EntryGroup group:packageBlock.listEntryGroup()){
-                    resNameMap.add(group.getTypeName(),
-                            group.getSpecName(),
-                            group);
-                }
-            }
-            mNameGroupMap = resNameMap;
-        }
-    }
-    /**
-     * Clears resource name map from memory
-     */
-    public void clearResourceNameMap(){
-        if(mNameGroupMap!=null){
-            mNameGroupMap.clear();
-            mNameGroupMap =null;
-        }
-    }
-    private boolean hasResourceGroupMap(){
-        return mNameGroupMap!=null;
-    }
-    private Entry searchEntryFromMap(String typeName, String entryName){
-        if(mNameGroupMap ==null){
-            return null;
-        }
-        EntryGroup entryGroup = mNameGroupMap.get(typeName, entryName);
-        if(entryGroup!=null){
-            return entryGroup.pickOne();
-        }
-        return null;
-    }
-    public Entry searchEntry(String typeName, String entryName){
-        if(hasResourceGroupMap()){
-            return searchEntryFromMap(typeName, entryName);
-        }
-        return searchEntryFromTable(typeName, entryName);
-    }
-    /**
-     * Since this is framework, we are sure of proper names.
-     */
-    public Entry searchEntryFromTable(String typeName, String entryName){
-        for(PackageBlock packageBlock:listPackages()){
-            SpecTypePair specTypePair = packageBlock.getSpecTypePair(typeName);
-            if(specTypePair!=null){
-                return specTypePair.getAnyEntry(entryName);
-            }
-        }
-        return null;
     }
     public int getVersionCode(){
         if(versionCode == 0 && isOptimized()){
@@ -430,6 +363,5 @@ public class FrameworkTable extends TableBlock {
 
     private static final String PROP_NAME = "NAME";
     private static final String PROP_VERSION_CODE = "VERSION_CODE";
-    private static final String PROP_VERSION_NAME = "VERSION_NAME";
     private static final int PROP_COUNT=10;
 }

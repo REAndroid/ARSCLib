@@ -31,6 +31,8 @@ import com.reandroid.arsc.coder.Decoder;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
+import com.reandroid.arsc.util.CollectionUtil;
+import com.reandroid.arsc.util.EmptyList;
 import com.reandroid.arsc.util.FrameworkTable;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
@@ -43,6 +45,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 
 public class ApkModule implements ApkFile, Closeable {
@@ -568,7 +571,7 @@ public class ApkModule implements ApkFile, Closeable {
             }
             for(TableString tableString:groupTableString.listItems()){
                 List<Entry> entryList = filterResFileEntries(
-                        tableString.listReferencedResValueEntries(), resourceId, resConfig);
+                        tableString, resourceId, resConfig);
                 if(entryList.size()==0){
                     continue;
                 }
@@ -587,29 +590,25 @@ public class ApkModule implements ApkFile, Closeable {
         TableStringPool stringPool = tableBlock.getStringPool();
         StringGroup<TableString> stringGroup = stringPool.get(path);
         if(stringGroup == null){
-            return new ArrayList<>();
+            return EmptyList.of();
         }
         TableString tableString = stringPool.get(0);
         return tableString.listReferencedResValueEntries();
     }
-    private List<Entry> filterResFileEntries(List<Entry> entryList, int resourceId, ResConfig resConfig){
-        if(resourceId == 0 && resConfig == null || entryList.size()==0){
-            return entryList;
-        }
-        List<Entry> results = new ArrayList<>();
-        for(Entry entry:entryList){
-            if(entry==null || entry.isNull()){
-                continue;
+    private List<Entry> filterResFileEntries(TableString tableString, int resourceId, ResConfig resConfig){
+        Iterator<Entry> itr = tableString.getEntries(new Predicate<Entry>() {
+            @Override
+            public boolean test(Entry item) {
+                if(!item.isScalar()){
+                    return false;
+                }
+                if(resourceId != 0 && resourceId != item.getResourceId()){
+                    return false;
+                }
+                return resConfig == null || resConfig.equals(item.getResConfig());
             }
-            if(resourceId!=0 && resourceId!=entry.getResourceId()){
-                continue;
-            }
-            if(resConfig!=null && !resConfig.equals(entry.getResConfig())){
-                continue;
-            }
-            results.add(entry);
-        }
-        return results;
+        });
+        return CollectionUtil.toList(itr);
     }
     public String getPackageName(){
         if(hasAndroidManifestBlock()){

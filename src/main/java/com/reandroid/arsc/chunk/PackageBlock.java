@@ -15,31 +15,41 @@
  */
 package com.reandroid.arsc.chunk;
 
+import com.android.org.kxml2.io.KXmlSerializer;
 import com.reandroid.arsc.BuildInfo;
 import com.reandroid.arsc.array.LibraryInfoArray;
 import com.reandroid.arsc.array.SpecTypePairArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.coder.CommonType;
+import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.PackageBody;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.group.ResourceEntry;
 import com.reandroid.arsc.header.PackageHeader;
+import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.list.OverlayableList;
 import com.reandroid.arsc.list.StagedAliasList;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
-import com.reandroid.arsc.util.HexUtil;
-import com.reandroid.arsc.util.StringsUtil;
-import com.reandroid.arsc.value.Entry;
-import com.reandroid.arsc.value.LibraryInfo;
-import com.reandroid.arsc.value.ResConfig;
-import com.reandroid.arsc.value.StagedAliasEntry;
+import com.reandroid.arsc.util.*;
+import com.reandroid.arsc.value.*;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.xml.XMLUtil;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 
@@ -56,6 +66,8 @@ public class PackageBlock extends Chunk<PackageHeader>
     private final Map<Integer, EntryGroup> mEntriesGroup;
     private boolean entryGroupMapLocked;
 
+    private Object mTag;
+
     public PackageBlock() {
         super(new PackageHeader(), 3);
         PackageHeader header = getHeaderBlock();
@@ -71,6 +83,40 @@ public class PackageBlock extends Chunk<PackageHeader>
         addChild(mTypeStringPool);
         addChild(mSpecStringPool);
         addChild(mBody);
+    }
+    public Object getTag(){
+        return mTag;
+    }
+    public void setTag(Object tag){
+        this.mTag = tag;
+    }
+    public ResourceEntry getResource(int typeId, int entryId){
+        SpecTypePair specTypePair =
+                getSpecTypePair(typeId);
+        if(specTypePair == null){
+            return null;
+        }
+        Entry entry = specTypePair.getAnyEntry((short) entryId);
+        if(entry == null){
+            return null;
+        }
+        return new ResourceEntry(this, entry.getResourceId());
+    }
+    public ResourceEntry getResource(String type, String name){
+        SpecTypePair specTypePair =
+                getSpecTypePair(type);
+        if(specTypePair != null){
+            return specTypePair.getResource(name);
+        }
+        return null;
+    }
+    public Iterator<ResourceEntry> getResources(){
+        return new IterableIterator<SpecTypePair, ResourceEntry>(listSpecTypePairs().iterator()) {
+            @Override
+            public Iterator<ResourceEntry> iterator(SpecTypePair element) {
+                return element.getResources();
+            }
+        };
     }
     public String buildDecodeDirectoryName(){
         int count = 0;
@@ -148,6 +194,52 @@ public class PackageBlock extends Chunk<PackageHeader>
         getSpecStringPool().destroy();
         setId(0);
         setName("");
+    }
+    public int resolveResourceId(String type, String name){
+        return getSpecStringPool().resolveResourceId(type, name);
+    }
+    public int resolveResourceId(int typeId, String name){
+        return getSpecStringPool().resolveResourceId(typeId, name);
+    }
+    public Entry getEntry(String type, String name){
+        Iterator<Entry> iterator = getEntries(type, name);
+        Entry result = null;
+        while (iterator.hasNext()){
+            Entry entry = iterator.next();
+            if(!entry.isNull()){
+                return entry;
+            }
+            if(result == null){
+                result = entry;
+            }
+        }
+        return result;
+    }
+    public Iterator<Entry> getEntries(String type, String name){
+        return getSpecStringPool().getEntries(type, name);
+    }
+    public Iterator<Entry> getEntries(int typeId, String name){
+        return getSpecStringPool().getEntries(typeId, name);
+    }
+    public Iterator<Entry> getEntries(int resourceId){
+        return getEntries(resourceId, true);
+    }
+    public Iterator<Entry> getEntries(int resourceId, boolean skipNull){
+        int packageId = (resourceId >> 24) & 0xff;
+        if(packageId != getId()){
+            return EmptyIterator.of();
+        }
+        return getEntries((resourceId >> 16) & 0xff, resourceId & 0xffff, skipNull);
+    }
+    public Iterator<Entry> getEntries(int typeId, int entryId){
+        return getEntries(typeId, entryId, true);
+    }
+    public Iterator<Entry> getEntries(int typeId, int entryId, boolean skipNull){
+        SpecTypePair specTypePair = getSpecTypePair(typeId);
+        if(specTypePair != null){
+            return specTypePair.getEntries(entryId, skipNull);
+        }
+        return EmptyIterator.of();
     }
     public Entry getEntry(String qualifiers, String type, String name){
         return getSpecTypePairArray().getEntry(qualifiers, type, name);
@@ -238,6 +330,19 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return null;
     }
+    public String typeNameOf(int typeId){
+        TypeString typeString = getTypeStringPool().getById(typeId);
+        if(typeString != null){
+            return typeString.get();
+        }
+        return null;
+    }
+    public int typeIdOf(String typeName){
+        return getTypeStringPool().idOf(typeName);
+    }
+    public TypeString getOrCreateTypeString(int typeId, String typeName){
+        return getTypeStringPool().getOrCreate(typeId, typeName);
+    }
     public TypeStringPool getTypeStringPool(){
         return mTypeStringPool;
     }
@@ -282,6 +387,9 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     public Entry getOrCreateEntry(byte typeId, short entryId, String qualifiers){
         return getSpecTypePairArray().getOrCreateEntry(typeId, entryId, qualifiers);
+    }
+    public Entry getOrCreateEntry(byte typeId, short entryId, ResConfig resConfig){
+        return getSpecTypePairArray().getOrCreateEntry(typeId, entryId, resConfig);
     }
 
     public Entry getAnyEntry(int resourceId){
@@ -446,6 +554,143 @@ public class PackageBlock extends Chunk<PackageHeader>
         refreshSpecStringCount();
     }
 
+    public void serializePublicXml(File file) throws IOException {
+        File dir = file.getParentFile();
+        if(dir != null && !dir.exists()){
+            dir.mkdirs();
+        }
+        XmlSerializer serializer = new KXmlSerializer();
+        OutputStream outputStream = new FileOutputStream(file);
+        serializer.setOutput(outputStream, StandardCharsets.UTF_8.name());
+        serializePublicXml(serializer);
+        IOUtil.close(serializer);
+        outputStream.close();
+    }
+    public void serializePublicXml(XmlSerializer serializer) throws IOException {
+        serializePublicXml(serializer, true);
+    }
+    public void serializePublicXml(XmlSerializer serializer, boolean fullDocument) throws IOException {
+        if(fullDocument){
+            serializer.startDocument("utf-8", null);
+            serializer.text("\n");
+            serializer.startTag(null, TAG_resources);
+            writePackageInfo(serializer);
+        }
+        serializePublicXmlTypes(serializer);
+        if(fullDocument){
+            serializer.text("\n");
+            serializer.endTag(null, TAG_resources);
+            serializer.endDocument();
+            IOUtil.close(serializer);
+        }
+    }
+    private void serializePublicXmlTypes(XmlSerializer serializer) throws IOException {
+        for(SpecTypePair specTypePair : listSpecTypePairs()){
+            specTypePair.serializePublicXml(serializer);
+        }
+    }
+    private void writePackageInfo(XmlSerializer serializer) throws IOException {
+        String name = getName();
+        if(name != null){
+            serializer.attribute(null, ATTR_package, name);
+        }
+        int id = getId();
+        if(id != 0){
+            serializer.attribute(null, ATTR_id, HexUtil.toHex2((byte)id));
+        }
+    }
+
+    public void parsePublicXml(XmlPullParser parser) throws IOException,
+            XmlPullParserException {
+        int event = XMLUtil.findStartTag(parser);
+        if(event == XmlPullParser.END_DOCUMENT){
+            return;
+        }
+        if(TAG_resources.equals(parser.getName())){
+            setName(readPackageName(parser, getName()));
+            setId(readPackageId(parser, getId()));
+            parser.nextToken();
+            event = XMLUtil.findStartTag(parser);
+        }
+        while (event == XmlPullParser.START_TAG){
+            boolean parseOk = parsePublicTag(parser);
+            if(!parseOk){
+                return;
+            }
+            parser.nextToken();
+            event = XMLUtil.findStartTag(parser);
+        }
+        if(event == XmlPullParser.END_DOCUMENT){
+            IOUtil.close(parser);
+        }
+    }
+    private boolean parsePublicTag(XmlPullParser parser) throws XmlPullParserException {
+        if(!TAG_public.equals(parser.getName())){
+            return false;
+        }
+        int count = parser.getAttributeCount();
+        String id = null;
+        String type = null;
+        String name = null;
+        for(int i = 0; i < count; i++){
+            String attr = parser.getAttributeName(i);
+            String value = parser.getAttributeValue(i);
+            if(ATTR_id.equals(attr)){
+                id = value;
+            }else if(ATTR_type.equals(attr)){
+                type = value;
+            }else if(ATTR_name.equals(attr)){
+                name = value;
+            }
+        }
+        if(id == null){
+            throw new XmlPullParserException("Missing attribute: '" + ATTR_id + "', "
+                    + parser.getPositionDescription());
+        }
+        if(type == null){
+            throw new XmlPullParserException("Missing attribute: '" + ATTR_type + "', "
+                    + parser.getPositionDescription());
+        }
+        if(name == null){
+            throw new XmlPullParserException("Missing attribute: '" + ATTR_name + "', "
+                    + parser.getPositionDescription());
+        }
+        int resourceId = HexUtil.parseHex(id.trim());
+        int packageId = (resourceId >> 24) & 0xff;
+        int i = getId();
+        if(i == 0){
+            setId(packageId);
+        }else if(i != packageId){
+            return false;
+        }
+        int typeId = (resourceId >> 16) & 0xff;
+        if(typeId == 0){
+            throw new XmlPullParserException("Type id is zero: '" + id + "', "
+                    + parser.getPositionDescription());
+        }
+        TypeString typeString = getOrCreateTypeString(typeId, type);
+        typeId = typeString.getId();
+        TypeBlock typeBlock = getOrCreateTypeBlock((byte) typeId, "");
+        int entryId = resourceId & 0xffff;
+        Entry entry = typeBlock.getOrCreateEntry((short) entryId);
+        entry.setName(name, true);
+        return true;
+    }
+    private void parsePublicXmlAttributes(XmlPullParser parser) {
+        int count = parser.getAttributeCount();
+        for(int i = 0; i < count; i++){
+            onPublicXmlResourceAttributes(
+                    parser.getAttributeName(i), parser.getAttributeValue(i));
+        }
+    }
+    private void onPublicXmlResourceAttributes(String name, String value){
+        if(ATTR_package.equals(name)){
+            setName(value);
+        }else if(ATTR_id.equals(name)){
+            setId(Integer.decode(value));
+        }
+    }
+
     @Override
     public JSONObject toJson() {
         return toJson(true);
@@ -530,6 +775,50 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return builder.toString();
     }
+    static String readPackageName(XmlPullParser parser, String def) throws XmlPullParserException {
+        if(parser.getEventType() != XmlPullParser.START_TAG){
+            return def;
+        }
+        if(!TAG_resources.equals(parser.getName())){
+            return def;
+        }
+        int count = parser.getAttributeCount();
+        for(int i = 0; i < count; i++){
+            if(!ATTR_package.equals(parser.getAttributeName(i))){
+                continue;
+            }
+            return parser.getAttributeValue(i);
+        }
+        return def;
+    }
+    static int readPackageId(XmlPullParser parser, int def) throws XmlPullParserException {
+        if(parser.getEventType() != XmlPullParser.START_TAG){
+            return def;
+        }
+        String name = parser.getName();
+        boolean pubType = TAG_public.equals(name);
+        if(!TAG_resources.equals(name) && !pubType){
+            return def;
+        }
+        int count = parser.getAttributeCount();
+        for(int i = 0; i < count; i++){
+            if(!ATTR_id.equals(parser.getAttributeName(i))){
+                continue;
+            }
+            EncodeResult encodeResult = ValueCoder
+                    .encode(parser.getAttributeValue(i), AttributeDataFormat.INTEGER);
+            if(encodeResult == null){
+                throw new XmlPullParserException("Invalid id value: '" + parser.getAttributeValue(i) + "' "
+                        + parser.getPositionDescription());
+            }
+            int id = encodeResult.value;
+            if(pubType){
+                id = (id >> 24) & 0xff;
+            }
+            return id;
+        }
+        return def;
+    }
 
     public static final String NAME_package_id = "package_id";
     public static final String NAME_package_name = "package_name";
@@ -542,5 +831,13 @@ public class PackageBlock extends Chunk<PackageHeader>
     public static final String DIRECTORY_NAME_PREFIX = "package_";
     public static final String RES_DIRECTORY_NAME = "res";
     public static final String VALUES_DIRECTORY_NAME = "values";
+
     public static final String PUBLIC_XML = "public.xml";
+
+    public static final String TAG_public = "public";
+    public static final String TAG_resources = "resources";
+    public static final String ATTR_package = "package";
+    public static final String ATTR_id = "id";
+    public static final String ATTR_type = "type";
+    public static final String ATTR_name = "name";
 }

@@ -1,24 +1,36 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.xml;
 
-import java.util.regex.Pattern;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
 
 public class XMLUtil {
     public static String NEW_LINE="\n";
+
+    public static int findStartTag(XmlPullParser parser)
+            throws IOException, XmlPullParserException {
+        int event = parser.getEventType();
+        while (event != XmlPullParser.START_TAG && event != XmlPullParser.END_DOCUMENT){
+            event = parser.nextToken();
+        }
+        return event;
+    }
     public static boolean isEmpty(String s){
         if(s==null){
             return true;
@@ -87,8 +99,5 @@ public class XMLUtil {
         }
         return tmp.substring(1,end);
     }
-
-
-    private static final Pattern PATTERN_ESCAPE = Pattern.compile("^.*[><&].*$");
 
 }

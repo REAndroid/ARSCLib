@@ -18,7 +18,6 @@ package com.reandroid.arsc.array;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
@@ -29,6 +28,7 @@ import com.reandroid.json.JSONObject;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Objects;
 
 public class PackageArray extends BlockArray<PackageBlock>
         implements BlockLoad, JSONConvert<JSONArray>, Comparator<PackageBlock> {
@@ -102,6 +102,16 @@ public class PackageArray extends BlockArray<PackageBlock>
         while (itr.hasNext()){
             PackageBlock packageBlock=itr.next();
             if(packageBlock.getId()==pkgId){
+                return packageBlock;
+            }
+        }
+        return null;
+    }
+    public PackageBlock getPackageBlockByName(String name){
+        Iterator<PackageBlock> itr=iterator(true);
+        while (itr.hasNext()){
+            PackageBlock packageBlock = itr.next();
+            if(Objects.equals(name, packageBlock.getName())){
                 return packageBlock;
             }
         }

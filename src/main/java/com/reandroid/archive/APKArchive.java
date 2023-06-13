@@ -15,6 +15,8 @@
  */
 package com.reandroid.archive;
 
+import com.reandroid.arsc.util.StringsUtil;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -104,7 +106,7 @@ public class APKArchive extends ZipArchive {
         }else {
             builder.append("7 ");
         }
-        builder.append(name.toLowerCase());
+        builder.append(StringsUtil.toLowercase(name));
         return builder.toString();
     }
 }

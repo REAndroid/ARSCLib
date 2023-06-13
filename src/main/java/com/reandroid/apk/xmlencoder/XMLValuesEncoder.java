@@ -46,15 +46,12 @@ public class XMLValuesEncoder {
     }
     public Entry encode(TypeBlock typeBlock, XMLElement element){
         String name = element.getAttributeValue("name");
-        int resourceId = getMaterials()
-                .resolveLocalResourceId(typeBlock.getTypeName(), name);
-        Entry entry = typeBlock
-                .getOrCreateEntry((short) (0xffff & resourceId));
-
+        Entry entry = typeBlock.getOrCreateDefinedEntry(name);
+        if(entry == null){
+            throw new EncodeException("Undefined entry name: '"
+                    + name + "', element = " + element);
+        }
         encodeValue(entry, element);
-
-        getMaterials().setEntryName(entry, name);
-
         return entry;
     }
     public void encodeValue(Entry entry, XMLElement element){

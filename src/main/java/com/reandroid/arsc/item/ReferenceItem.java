@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,10 @@
   */
 package com.reandroid.arsc.item;
 
+import com.reandroid.arsc.base.Block;
+
 public interface ReferenceItem {
     void set(int val);
     int get();
+    <T1 extends Block> T1 getReferredParent(Class<T1> parentClass);
 }

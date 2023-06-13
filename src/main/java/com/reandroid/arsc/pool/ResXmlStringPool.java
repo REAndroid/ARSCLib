@@ -21,6 +21,7 @@ import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.*;
 
+import java.util.Iterator;
 import java.util.Objects;
 
 public class ResXmlStringPool extends StringPool<ResXmlString> {
@@ -103,7 +104,9 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
         }
         StringGroup<ResXmlString> group = get(str);
         if(group!=null){
-            for(ResXmlString xmlString:group.listItems()){
+            Iterator<ResXmlString> itr = group.iterator();
+            while (itr.hasNext()){
+                ResXmlString xmlString = itr.next();
                 int index = xmlString.getIndex();
                 if(index > position || (position==0 && position == index)){
                     return xmlString;
@@ -128,10 +131,12 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
         }
         return null;
     }
-    public ResXmlString getOrCreateAttributeName(int idMapCount, String str){
+    private ResXmlString getOrCreateAttributeName(int idMapCount, String str){
         StringGroup<ResXmlString> group = get(str);
         if(group!=null){
-            for(ResXmlString xmlString:group.listItems()){
+            Iterator<ResXmlString> itr = group.iterator();
+            while (itr.hasNext()){
+                ResXmlString xmlString = itr.next();
                 if(xmlString.getIndex()>idMapCount){
                     return xmlString;
                 }

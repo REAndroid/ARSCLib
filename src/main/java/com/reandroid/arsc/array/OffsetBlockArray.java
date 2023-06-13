@@ -119,7 +119,7 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         refreshCount();
         refreshStart();
     }
-    void refreshCount(){
+    public void refreshCount(){
         mItemCount.set(childesCount());
     }
     private void refreshStart(){

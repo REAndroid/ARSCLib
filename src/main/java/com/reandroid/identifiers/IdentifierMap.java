@@ -23,6 +23,7 @@ class IdentifierMap<CHILD extends Identifier> extends Identifier
     private final Map<Integer, CHILD> idMap;
     private final Map<String, CHILD> nameMap;
     private boolean mCaseInsensitive;
+    private int maxId;
 
     public IdentifierMap(int id, String name){
         super(id, name);
@@ -31,6 +32,9 @@ class IdentifierMap<CHILD extends Identifier> extends Identifier
         this.mCaseInsensitive = CASE_INSENSITIVE_FS;
     }
 
+    public int getMaxId(){
+        return maxId;
+    }
     public List<CHILD> listDuplicates(){
         List<CHILD> results = new ArrayList<>();
         Map<String, CHILD> uniques = new HashMap<>();
@@ -132,6 +136,9 @@ class IdentifierMap<CHILD extends Identifier> extends Identifier
                 return exist;
             }
             this.idMap.put(entryId, child);
+            if(entryId > maxId){
+                maxId = entryId;
+            }
             addNameMap(child);
             return child;
         }

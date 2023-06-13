@@ -15,6 +15,9 @@
   */
 package com.reandroid.arsc.array;
 
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TypeBlock;
+import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
@@ -50,7 +53,7 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         if(isSparse()){
             return ((SparseOffsetsArray) getOffsetArray()).getHighestId();
         }
-        return childesCount();
+        return childesCount() - 1;
     }
     public int getEntryId(int index){
         OffsetArray offsetArray = getOffsetArray();
@@ -111,13 +114,13 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         }else {
             count = id + 1;
         }
-        ensureSize(count);
+        updateHighestCount(count);
         if(!sparse){
             refreshCount();
             return super.get(id);
         }
         SparseOffsetsArray offsetsArray = (SparseOffsetsArray) getOffsetArray();
-        offsetsArray.ensureArraySize(count);
+        offsetsArray.ensureArraySize(childesCount());
         int index = count - 1;
         offsetsArray.setIdx(index, id);
         refreshCount();
@@ -140,10 +143,19 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         if(entryName == null){
             return null;
         }
-        Iterator<Entry> itr = iterator(true);
-        while (itr.hasNext()){
-            Entry entry = itr.next();
-            if(entryName.equals(entry.getName())){
+        TypeBlock typeBlock = getParentInstance(TypeBlock.class);
+        if(typeBlock == null){
+            return null;
+        }
+        PackageBlock packageBlock = typeBlock.getPackageBlock();
+        if(packageBlock == null){
+            return null;
+        }
+        Iterator<Entry> iterator = packageBlock.getEntries(
+                typeBlock.getTypeName(), entryName);
+        while (iterator.hasNext()){
+            Entry entry = iterator.next();
+            if(entry.getParentInstance(EntryArray.class) == this){
                 return entry;
             }
         }
@@ -158,13 +170,6 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         return new Entry[len];
     }
 
-    /**
-     * To be removed, use getEntry(String entryName)
-     */
-    @Deprecated
-    public Entry searchByEntryName(String entryName){
-        return getEntry(entryName);
-    }
     @Override
     public JSONArray toJson() {
         JSONArray jsonArray=new JSONArray();
@@ -252,6 +257,18 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
             Entry existingBlock = super.get(comingBlock.getIndex());
             existingBlock.merge(comingBlock);
         }
+    }
+    private void updateHighestCount(int count){
+        SpecTypePair specTypePair = getParentInstance(SpecTypePair.class);
+        if(specTypePair == null){
+            ensureSize(count);
+            return;
+        }
+        int maxCount = specTypePair.getHighestEntryCount();
+        if(count > maxCount){
+            maxCount = count;
+        }
+        ensureSize(maxCount);
     }
     @Override
     public String toString(){

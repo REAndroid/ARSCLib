@@ -21,6 +21,8 @@ import java.util.function.Predicate;
 
 public abstract class BlockArray<T extends Block> extends BlockContainer<T> implements BlockArrayCreator<T>  {
     private T[] elementData;
+    private int mFreeSpace;
+    private int mAllocateStep;
     public BlockArray(){
         elementData= newInstance(0);
     }
@@ -87,6 +89,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         return listItems(false);
     }
     public Collection<T> listItems(boolean skipNullBlocks){
+        trimAllocatedFreeSpace();
         return new AbstractCollection<T>() {
             @Override
             public Iterator<T> iterator(){
@@ -107,7 +110,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         return elementData;
     }
     public void ensureSize(int size){
-        if(size<= childesCount()){
+        if(size <= childesCount()){
             return;
         }
         setChildesCount(size);
@@ -204,24 +207,103 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         item.setIndex(index);
     }
     public void setItem(int index, T item){
-        ensureSize(index+1);
-        elementData[index]=item;
-        item.setIndex(index);
-        item.setParent(this);
+        ensureSize(index + 1);
+        elementData[index] = item;
+        if(item != null){
+            item.setIndex(index);
+            item.setParent(this);
+        }
+    }
+    public void addInternal(int index, T block){
+        if(isFlexible()){
+            allocateIfFull();
+        }else {
+            ensureSize(index + 1);
+        }
+        addAt(index, block);
+    }
+    private void addAt(int index, T block){
+        onPreShifting();
+        T[] elementData = this.elementData;
+        int start = elementData.length - 1;
+        for(int i = start; i > index; i--){
+            int left = i - 1;
+            T exist = elementData[left];
+            elementData[left] = null;
+            elementData[i] = exist;
+            if(exist != null){
+                exist.setIndex(i);
+            }
+        }
+        elementData[index] = block;
+        if(block != null){
+            block.setIndex(index);
+            block.setParent(this);
+        }
+        onPostShift(index);
+        if(isFlexible()){
+            mFreeSpace--;
+        }
+    }
+    protected void onPreShifting(){
+    }
+    protected void onPostShift(int index){
     }
     public void add(T block){
         if(block==null){
             return;
         }
+        if(isFlexible()){
+            addAtNull(block);
+            return;
+        }
         T[] old=elementData;
         int index=old.length;
-        elementData= newInstance(index+1);
+        elementData = newInstance(index+1);
         if(index>0){
             System.arraycopy(old, 0, elementData, 0, index);
         }
         elementData[index]=block;
         block.setIndex(index);
         block.setParent(this);
+    }
+    private void addAtNull(T block){
+        allocateIfFull();
+        T[] elementData = this.elementData;
+        int index = elementData.length - mFreeSpace;
+        elementData[index]=block;
+        block.setIndex(index);
+        block.setParent(this);
+        mFreeSpace --;
+    }
+    private int calculateAllocate(){
+        mAllocateStep++;
+        int amount = childesCount() / 4;
+        if(amount < 10){
+            amount = 10;
+        }else if(amount > 100){
+            amount = 100;
+        }
+        amount = amount * mAllocateStep;
+        if(amount > 8000){
+            amount = 8000;
+        }
+        return amount;
+    }
+    protected boolean isFlexible(){
+        return false;
+    }
+    protected void trimAllocatedFreeSpace(){
+        if(mFreeSpace <= 0){
+            return;
+        }
+        int length = elementData.length - mFreeSpace;
+        T[] update = newInstance(length);
+        if (length > 0) {
+            System.arraycopy(elementData, 0, update, 0, length);
+        }
+        elementData = update;
+        mFreeSpace = 0;
     }
     public final int countNonNull(){
         return countNonNull(true);
@@ -336,6 +418,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         return found;
     }
     protected void trimNullBlocks(){
+        mFreeSpace = 0;
         T[] items=elementData;
         if(items==null){
             return;
@@ -377,7 +460,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         T[] old=elementData;
         int index=old.length;
         int size=index+amount;
-        T[] update= newInstance(size);
+        T[] update = newInstance(size);
         int end;
         if(index>size){
             end=size;
@@ -394,6 +477,28 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
             item.setParent(this);
         }
         elementData=update;
+    }
+    private void allocateIfFull(){
+        if(mFreeSpace > 0){
+            return;
+        }
+        allocate(calculateAllocate());
+    }
+    private void allocate(int amount){
+        if(amount <= 0 || mFreeSpace > 0){
+            return;
+        }
+        mFreeSpace = amount;
+        T[] old = elementData;
+        int index = old.length;
+        int size = index + amount;
+        T[] update = newInstance(size);
+        if(index == 0){
+            elementData = update;
+            return;
+        }
+        System.arraycopy(old, 0, update, 0, index);
+        elementData = update;
     }
 
     @Override

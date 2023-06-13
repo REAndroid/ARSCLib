@@ -20,8 +20,7 @@ import com.reandroid.archive.FileInputSource;
 import com.reandroid.archive.InputSource;
 import com.reandroid.apk.ApkUtil;
 import com.reandroid.apk.UncompressedFiles;
-import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.chunk.TypeBlock;
+import com.reandroid.arsc.group.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.xml.source.XMLFileSource;
 import com.reandroid.xml.source.XMLSource;
@@ -63,20 +62,18 @@ public class FilePathEncoder {
     }
     public InputSource encodeTypeFileEntry(File resFile){
         String type = EncodeUtil.getTypeNameFromResFile(resFile);
-        PackageBlock packageBlock = materials.getCurrentPackage();
-        int typeId=packageBlock
-                .getTypeStringPool().idOf(type);
         String qualifiers = EncodeUtil.getQualifiersFromResFile(resFile);
-        TypeBlock typeBlock = packageBlock.getOrCreateTypeBlock((byte)typeId, qualifiers);
         String name = EncodeUtil.getEntryNameFromResFile(resFile);
-        int resourceId=materials.resolveLocalResourceId(type, name);
-
-        Entry entry = typeBlock
-                .getOrCreateEntry((short) (0xffff & resourceId));
-
         String path = EncodeUtil.getEntryPathFromResFile(resFile);
+
+        ResourceEntry resourceEntry = materials
+                .getLocalResourceEntry(type, name);
+        if(resourceEntry == null){
+            throw new EncodeException("Local resource not defined: @" + type + "/" + name
+                    + ", for path: " + path);
+        }
+        Entry entry = resourceEntry.getOrCreate(qualifiers);
         entry.setValueAsString(path);
-        materials.setEntryName(entry, name);
         InputSource inputSource=createInputSource(path, resFile);
         if(inputSource instanceof XMLEncodeSource){
             ((XMLEncodeSource)inputSource).setEntry(entry);

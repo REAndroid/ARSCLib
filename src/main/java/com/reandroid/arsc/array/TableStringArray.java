@@ -23,6 +23,10 @@ public class TableStringArray extends StringArray<TableString> {
         super(offsets, itemCount, itemStart, is_utf8);
     }
     @Override
+    protected boolean isFlexible(){
+        return true;
+    }
+    @Override
     public TableString newInstance() {
         return new TableString(isUtf8());
     }

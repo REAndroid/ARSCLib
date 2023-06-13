@@ -15,9 +15,12 @@
   */
 package com.reandroid.arsc.item;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.coder.ThreeByteCharsetDecoder;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.StringPool;
+import com.reandroid.arsc.util.ComputeIterator;
+import com.reandroid.arsc.util.EmptyIterator;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
@@ -29,6 +32,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Predicate;
 
 public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
     private String mCache;
@@ -39,6 +43,32 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         this.mUtf8=utf8;
         this.mReferencedList = new HashSet<>();
     }
+    public<T extends Block> Iterator<T> getUsers(Class<T> parentClass){
+        return getUsers(parentClass, null, null);
+    }
+    public<T extends Block> Iterator<T> getUsers(Class<T> parentClass, Predicate<T> resultFilter){
+        return getUsers(parentClass, null, resultFilter);
+    }
+    public<T extends Block> Iterator<T> getUsers(Class<T> parentClass,
+                                                 Predicate<ReferenceItem> referenceFilter,
+                                                 Predicate<T> resultFilter){
+
+        Collection<ReferenceItem> referencedList = getReferencedList();
+        if(referencedList.size() == 0){
+            return EmptyIterator.of();
+        }
+
+        return new ComputeIterator<ReferenceItem, T>(
+                referencedList.iterator(),
+                referenceFilter,
+                resultFilter) {
+            @Override
+            public T apply(ReferenceItem referenceItem) {
+                return referenceItem.getReferredParent(parentClass);
+            }
+        };
+    }
+
     public boolean removeReference(ReferenceItem ref){
         return mReferencedList.remove(ref);
     }

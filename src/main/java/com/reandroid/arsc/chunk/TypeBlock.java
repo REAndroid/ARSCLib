@@ -18,7 +18,6 @@ package com.reandroid.arsc.chunk;
 import com.reandroid.arsc.array.EntryArray;
 import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.array.SparseOffsetsArray;
-import com.reandroid.arsc.array.SpecTypePairArray;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.item.*;
@@ -26,7 +25,6 @@ import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.util.HexUtil;
-import com.reandroid.arsc.util.StringsUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.json.JSONConvert;
@@ -189,22 +187,43 @@ public class TypeBlock extends Chunk<TypeHeader>
         }
         entry.setNull(true);
     }
-    public Entry getOrCreateEntry(String name){
-        Entry entry = getEntryArray().getEntry(name);
+    public Entry getOrCreateDefinedEntry(String name){
+        Entry entry = getEntry(name);
         if(entry != null){
             return entry;
         }
-        SpecTypePair specTypePair = getParentSpecTypePair();
-        Entry exist = specTypePair.getAnyEntry(name);
-        int id;
-        if(exist!=null){
-            id = exist.getId();
-        }else {
-            id = specTypePair.getHighestEntryCount();
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return null;
+        }
+        int id = packageBlock.resolveResourceId(getId(), name);
+        if(id == 0){
+            return null;
+        }
+        SpecStringPool stringPool = packageBlock.getSpecStringPool();
+        SpecString specString = stringPool.getOrCreate(name);
+        id = id & 0xffff;
+        entry = getOrCreateEntry((short) id);
+        entry.setSpecReference(specString);
+        return entry;
+    }
+    public Entry getOrCreateEntry(String name){
+        Entry entry = getEntry(name);
+        if(entry != null){
+            return entry;
+        }
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return null;
+        }
+        int id = packageBlock.resolveResourceId(getId(), name);
+        if(id != 0){
+            id = id & 0xffff;
+        } else {
+            id = getParentSpecTypePair().getHighestEntryId() + 1;
         }
 
-        SpecStringPool stringPool = getPackageBlock()
-                .getSpecStringPool();
+        SpecStringPool stringPool = packageBlock.getSpecStringPool();
         SpecString specString = stringPool.getOrCreate(name);
         entry = getOrCreateEntry((short) id);
         entry.setSpecReference(specString);
@@ -215,6 +234,9 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     public Entry getEntry(short entryId){
         return getEntryArray().getEntry(entryId);
+    }
+    public Iterator<Entry> getEntries(){
+        return getEntryArray().iterator(false);
     }
     /**
      * It is allowed to have duplicate entry name therefore it is not recommend to use this.
@@ -235,6 +257,11 @@ public class TypeBlock extends Chunk<TypeHeader>
     public EntryArray getEntryArray(){
         return mEntryArray;
     }
+    public void ensureEntriesCount(int count){
+        EntryArray entryArray = getEntryArray();
+        entryArray.ensureSize(count);
+        entryArray.refreshCount();
+    }
     public List<Entry> listEntries(){
         return listEntries(false);
     }
@@ -248,7 +275,7 @@ public class TypeBlock extends Chunk<TypeHeader>
         return results;
     }
     public Entry getEntry(int entryId){
-        return getEntryArray().get(entryId);
+        return getEntryArray().getEntry(entryId);
     }
 
     private void onSetEntryCount(int count) {

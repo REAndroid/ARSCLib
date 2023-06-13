@@ -1,42 +1,72 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.group;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockArrayCreator;
+import com.reandroid.arsc.util.ArrayIterator;
+import com.reandroid.arsc.util.EmptyIterator;
 
 import java.util.AbstractList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
+import java.util.function.Predicate;
 
- public class ItemGroup<T extends Block> {
+public class ItemGroup<T extends Block> {
     private final BlockArrayCreator<T> mBlockArrayCreator;
     private final String name;
     private T[] items;
-    public ItemGroup(BlockArrayCreator<T> blockArrayCreator, String name){
-        this.mBlockArrayCreator=blockArrayCreator;
-        this.name=name;
-        this.items=blockArrayCreator.newInstance(0);
+    public ItemGroup(BlockArrayCreator<T> blockArrayCreator, String name, T firstItem){
+        this.mBlockArrayCreator = blockArrayCreator;
+        this.name = name;
+        T[] items;
+        if(firstItem != null){
+            items = blockArrayCreator.newInstance(1);
+            items[0] = firstItem;
+        }else {
+            items = blockArrayCreator.newInstance(0);
+        }
+        this.items = items;
     }
+    public ItemGroup(BlockArrayCreator<T> blockArrayCreator, String name){
+        this(blockArrayCreator, name, null);
+    }
+
     public Iterator<T> iterator(){
         return iterator(false);
     }
     public Iterator<T> iterator(boolean skipNullBlock){
-        return new GroupIterator(skipNullBlock);
+        if(size() == 0){
+            return EmptyIterator.of();
+        }
+        if(!skipNullBlock){
+            return new ArrayIterator<>(this.items);
+        }
+        return new ArrayIterator<>(this.items, new Predicate<T>() {
+            @Override
+            public boolean test(T item) {
+                return !item.isNull();
+            }
+        });
+    }
+    public Iterator<T> iterator(Predicate<T> tester){
+        if(size() == 0){
+            return EmptyIterator.of();
+        }
+        return new ArrayIterator<>(this.items, tester);
     }
     public List<T> listItems(){
         return new AbstractList<T>() {
@@ -148,49 +178,6 @@ import java.util.Objects;
     }
     @Override
     public String toString(){
-        return items.length+"{"+name+"}";
-    }
-
-
-    private class GroupIterator implements Iterator<T> {
-        private int mCursor;
-        private final int mMaxSize;
-        private final boolean mSkipNullBlock;
-        GroupIterator(boolean skipNullBlock){
-            mSkipNullBlock=skipNullBlock;
-            mCursor=0;
-            mMaxSize=ItemGroup.this.size();
-        }
-        @Override
-        public boolean hasNext() {
-            checkCursor();
-            return !isFinished();
-        }
-        @Override
-        public T next() {
-            if(!isFinished()){
-                T item=ItemGroup.this.get(mCursor);
-                mCursor++;
-                checkCursor();
-                return item;
-            }
-            return null;
-        }
-        private boolean isFinished(){
-            return mCursor>=mMaxSize;
-        }
-        private void checkCursor(){
-            if(!mSkipNullBlock || isFinished()){
-                return;
-            }
-            T item=ItemGroup.this.get(mCursor);
-            while (item==null||item.isNull()){
-                mCursor++;
-                item=ItemGroup.this.get(mCursor);
-                if(mCursor>=mMaxSize){
-                    break;
-                }
-            }
-        }
+        return size()+"{"+name+"}";
     }
 }

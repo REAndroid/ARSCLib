@@ -15,29 +15,27 @@
  */
 package com.reandroid.apk.xmlencoder;
 
+import com.android.org.kxml2.io.KXmlParser;
 import com.reandroid.apk.*;
 import com.reandroid.archive.APKArchive;
-import com.reandroid.archive.FileInputSource;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
-import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.coder.ReferenceString;
+import com.reandroid.arsc.container.SpecTypePair;
+import com.reandroid.arsc.group.ResourceEntry;
 import com.reandroid.arsc.util.FrameworkTable;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.Entry;
-import com.reandroid.identifiers.PackageIdentifier;
-import com.reandroid.identifiers.ResourceIdentifier;
-import com.reandroid.identifiers.TableIdentifier;
+import com.reandroid.common.FileChannelInputStream;
 import com.reandroid.xml.XMLException;
 import com.reandroid.xml.XMLParserFactory;
-import com.reandroid.xml.source.XMLFileSource;
-import com.reandroid.xml.source.XMLSource;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.zip.ZipEntry;
 
@@ -101,11 +99,8 @@ public class XMLTableBlockEncoder {
                     + "  file found in '" +resourcesDirectory + "'");
         }
         preloadStringPool(pubXmlFileList);
-        EncodeMaterials encodeMaterials = getEncodeMaterials();
 
-        TableIdentifier tableIdentifier = encodeMaterials.getTableIdentifier();
-        tableIdentifier.loadPublicXml(pubXmlFileList);
-        tableIdentifier.initialize(this.tableBlock);
+        loadPublicXmlFiles(pubXmlFileList);
 
         excludeIds(pubXmlFileList);
         initializeFrameworkFromManifest(pubXmlFileList);
@@ -117,6 +112,44 @@ public class XMLTableBlockEncoder {
         tableBlock.refresh();
 
     }
+    private void loadPublicXmlFiles(List<File> pubXmlFileList) throws IOException {
+        for(File pubXmlFile:pubXmlFileList){
+            loadPublicXmlFile(pubXmlFile);
+        }
+    }
+    private void loadPublicXmlFile(File pubXmlFile) throws IOException {
+        XmlPullParser parser = new KXmlParser();
+        try {
+            parser.setInput(new FileChannelInputStream(pubXmlFile), StandardCharsets.UTF_8.name());
+            PackageBlock packageBlock = tableBlock.parsePublicXml(parser);
+            packageBlock.setTag(pubXmlFile);
+            initializeIds(packageBlock);
+        } catch (XmlPullParserException ex) {
+           throw new IOException(ex);
+        }
+    }
+    private void initializeIds(PackageBlock packageBlock){
+        int typeId = packageBlock.typeIdOf("id");
+        SpecTypePair specTypePair = packageBlock.getSpecTypePair(typeId);
+        if(specTypePair == null){
+            return;
+        }
+        Iterator<ResourceEntry> itr = specTypePair.getResources();
+        while (itr.hasNext()){
+            Iterator<Entry> entryIterator = itr.next()
+                    .iterator(false);
+            while (entryIterator.hasNext()){
+                Entry entry = entryIterator.next();
+                if(!entry.isNull()){
+                    continue;
+                }
+                if(entry.getSpecReference() < 0){
+                    continue;
+                }
+                entry.setValueAsBoolean(false);
+            }
+        }
+    }
     private void initializeFrameworkFromManifest(List<File> pubXmlFileList) throws  IOException {
         for(File pubXmlFile:pubXmlFileList){
             File manifestFile = toAndroidManifest(pubXmlFile);
@@ -127,19 +160,15 @@ public class XMLTableBlockEncoder {
             return;
         }
     }
-    private void encodeValues(List<File> pubXmlFileList) throws XMLException, IOException {
+    private void encodeValues(List<File> pubXmlFileList) throws XMLException {
         logMessage("Encoding values ...");
         EncodeMaterials encodeMaterials = getEncodeMaterials();
-        TableIdentifier tableIdentifier = encodeMaterials.getTableIdentifier();
+        TableBlock tableBlock = getTableBlock();
 
         for(File pubXmlFile:pubXmlFileList){
             addParsedFiles(pubXmlFile);
-            PackageIdentifier packageIdentifier = tableIdentifier.getByTag(pubXmlFile);
-
-            PackageBlock packageBlock = packageIdentifier.getPackageBlock();
-
+            PackageBlock packageBlock = tableBlock.getPackageBlockByTag(pubXmlFile);
             encodeMaterials.setCurrentPackage(packageBlock);
-
             File resDir = toResDirectory(pubXmlFile);
             encodeResDir(resDir);
             FilePathEncoder filePathEncoder = new FilePathEncoder(encodeMaterials);
@@ -155,13 +184,12 @@ public class XMLTableBlockEncoder {
         logMessage("Encoding attrs ...");
 
         EncodeMaterials encodeMaterials = getEncodeMaterials();
-        TableIdentifier tableIdentifier = encodeMaterials.getTableIdentifier();
+        TableBlock tableBlock = getTableBlock();
 
         for(File pubXmlFile : pubXmlFileList){
             addParsedFiles(pubXmlFile);
-            PackageIdentifier packageIdentifier = tableIdentifier.getByTag(pubXmlFile);
 
-            PackageBlock packageBlock = packageIdentifier.getPackageBlock();
+            PackageBlock packageBlock = tableBlock.getPackageBlockByTag(pubXmlFile);
             encodeMaterials.setCurrentPackage(packageBlock);
 
             ResourceValuesEncoder valuesEncoder = new ResourceValuesEncoder(encodeMaterials);
@@ -241,18 +269,13 @@ public class XMLTableBlockEncoder {
             logMessage("Something wrong on : " + AndroidManifestBlock.NAME_icon);
             return;
         }
-        TableIdentifier tableIdentifier = encodeMaterials.getTableIdentifier();
-        ResourceIdentifier resourceIdentifier;
-        if(ref.packageName != null){
-            resourceIdentifier = tableIdentifier.get(ref.packageName, ref.type, ref.name);
-        }else {
-            resourceIdentifier = tableIdentifier.get(ref.type, ref.name);
-        }
-        if(resourceIdentifier == null){
+        TableBlock tableBlock = getTableBlock();
+        int resourceId = tableBlock.resolveResourceId(ref.packageName, ref.type, ref.name);
+        if(resourceId == 0){
             logMessage("WARN: failed to resolve: " + ref);
             return;
         }
-        int packageId = resourceIdentifier.getPackageId();
+        int packageId = (resourceId >> 24 ) & 0xff;
         encodeMaterials.setMainPackageId(packageId);
         logMessage("Main package id initialized: id = "
                 + HexUtil.toHex2((byte)packageId) + ", from: " + ref );

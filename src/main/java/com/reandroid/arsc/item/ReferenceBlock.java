@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,6 +34,14 @@ public class ReferenceBlock<T extends Block> implements ReferenceItem{
     @Override
     public int get() {
         return BlockItem.getInteger(this.block.getBytes(), this.offset);
+    }
+    @Override
+    public <T1 extends Block> T1 getReferredParent(Class<T1> parentClass){
+        T block = getBlock();
+        if(parentClass.isInstance(block)){
+            return (T1) block;
+        }
+        return getBlock().getParentInstance(parentClass);
     }
     @Override
     public String toString(){
