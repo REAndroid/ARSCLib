@@ -87,6 +87,13 @@ public class ResourceEntry implements Iterable<Entry>, Predicate<Entry> {
         }
         return result;
     }
+    public Entry any(){
+        Iterator<Entry> iterator = iterator(true);
+        if(iterator.hasNext()){
+            return iterator.next();
+        }
+        return null;
+    }
     public boolean isEmpty() {
         return !iterator(true).hasNext();
     }
