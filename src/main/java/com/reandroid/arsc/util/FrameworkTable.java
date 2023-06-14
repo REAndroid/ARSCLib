@@ -21,9 +21,8 @@ import com.reandroid.arsc.array.TypeBlockArray;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
-import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.group.ResourceEntry;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.item.ReferenceItem;
 import com.reandroid.arsc.item.TableString;
@@ -119,50 +118,28 @@ public class FrameworkTable extends TableBlock {
         setFrameworkName(name);
         refresh();
     }
+
     private void ensureTypeBlockNonNullEntries(){
-        for(PackageBlock packageBlock:listPackages()){
-            ensureTypeBlockNonNullEntries(packageBlock);
+        Iterator<ResourceEntry> iterator = getResources();
+        while (iterator.hasNext()){
+            ensureNonNullDefaultEntry(iterator.next());
         }
     }
-    private void ensureTypeBlockNonNullEntries(PackageBlock packageBlock){
-        for(SpecTypePair specTypePair:packageBlock.listSpecTypePairs()){
-            ensureTypeBlockNonNullEntries(specTypePair);
-        }
-    }
-    private void ensureTypeBlockNonNullEntries(SpecTypePair specTypePair){
-        Map<Integer, EntryGroup> map = specTypePair.createEntryGroups();
-        for(EntryGroup entryGroup:map.values()){
-            ensureNonNullDefaultEntry(entryGroup);
-        }
-    }
-    private void ensureNonNullDefaultEntry(EntryGroup entryGroup){
-        Entry defEntry = entryGroup.getDefault(false);
-        Entry entry;
-        if(defEntry==null){
-            entry = entryGroup.pickOne();
-            if(entry == null){
-                return;
-            }
-            SpecTypePair specTypePair = entry.getTypeBlock().getParentSpecTypePair();
-            TypeBlock type = specTypePair.getOrCreateTypeBlock(new ResConfig());
-            defEntry = type.getOrCreateEntry((short) (entry.getId() & 0xffff));
-        }
+    private void ensureNonNullDefaultEntry(ResourceEntry resourceEntry){
+        ResConfig resConfig = ResConfig.getDefault();
+        Entry defEntry = resourceEntry.getOrCreate(resConfig);
         if(!defEntry.isNull()){
             return;
         }
-        entry = entryGroup.pickOne();
-        if(entry.isNull()){
+        Entry entry = resourceEntry.any();
+        if(entry == null){
             return;
         }
         defEntry.merge(entry);
-        defEntry.isDefault();
+        entry.setNull(true);
     }
     private void optimizeEntries(){
-        Map<Integer, EntryGroup> groupMap=scanAllEntryGroups();
-        for(EntryGroup group:groupMap.values()){
-            List<Entry> entryList = getEntriesToRemove(group);
-            removeEntries(entryList);
-        }
+        removeExtraConfigEntries();
         for(PackageBlock pkg:listPackages()){
             removeEmptyBlocks(pkg);
         }
@@ -174,6 +151,7 @@ public class FrameworkTable extends TableBlock {
     private void removeEmptyBlocks(PackageBlock pkg){
         SpecTypePairArray specTypePairArray = pkg.getSpecTypePairArray();
         specTypePairArray.sort();
+
         List<SpecTypePair> specTypePairList=new ArrayList<>(specTypePairArray.listItems());
         for(SpecTypePair specTypePair:specTypePairList){
             removeEmptyBlocks(specTypePair);
@@ -218,53 +196,25 @@ public class FrameworkTable extends TableBlock {
         }
         zero.addReference(allRef);
     }
-    private void removeEntries(List<Entry> removeList){
-        for(Entry entry :removeList){
-            removeEntry(entry);
+    private void removeExtraConfigEntries(){
+        Iterator<ResourceEntry> iterator = getResources();
+        while (iterator.hasNext()){
+            removeExtraConfigEntries(iterator.next());
         }
     }
-    private void removeEntry(Entry entry){
-        TypeBlock typeBlock= entry.getTypeBlock();
-        if(typeBlock==null){
+    private void removeExtraConfigEntries(ResourceEntry resourceEntry){
+        Entry mainEntry = resourceEntry.get();
+        if(mainEntry == null){
             return;
         }
-        typeBlock.removeEntry(entry);
-
-    }
-    private List<Entry> getEntriesToRemove(EntryGroup group){
-        List<Entry> results=new ArrayList<>();
-        Entry mainEntry=group.pickOne();
-        if(mainEntry==null){
-            return results;
-        }
-        Iterator<Entry> itr = group.iterator(true);
+        Iterator<Entry> itr = resourceEntry.iterator(true);
         while (itr.hasNext()){
-            Entry entry =itr.next();
-            if(entry ==mainEntry){
+            Entry entry = itr.next();
+            if(entry == mainEntry){
                 continue;
             }
-            results.add(entry);
+            entry.setNull(true);
         }
-        return results;
-    }
-    private Map<Integer, EntryGroup> scanAllEntryGroups(){
-        Map<Integer, EntryGroup> results=new HashMap<>();
-        for(PackageBlock packageBlock:listPackages()){
-            Map<Integer, EntryGroup> map=packageBlock.getEntriesGroupMap();
-            for(Map.Entry<Integer, EntryGroup> entry:map.entrySet()){
-                int id=entry.getKey();
-                EntryGroup group=entry.getValue();
-                EntryGroup exist=results.get(id);
-                if(exist!=null && exist.getDefault()!=null){
-                    if(exist.getDefault()!=null){
-                        continue;
-                    }
-                    results.remove(id);
-                }
-                results.put(id, group);
-            }
-        }
-        return results;
     }
     private TableString writeProperty(String name, String value){
         if(!name.endsWith(":")){
