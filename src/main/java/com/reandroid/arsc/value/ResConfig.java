@@ -39,9 +39,12 @@ public class ResConfig extends FixedBlockContainer
     private int mQualifiersStamp;
 
     public ResConfig(){
+        this(SIZE_64);
+    }
+    private ResConfig(int size){
         super(2);
-        this.configSize = new IntegerItem(SIZE_64);
-        this.mValuesContainer = new ByteArray(SIZE_64 - 4);
+        this.configSize = new IntegerItem(size);
+        this.mValuesContainer = new ByteArray(size - 4);
         addChild(0, configSize);
         addChild(1, mValuesContainer);
         this.configSize.setBlockLoad(this);
@@ -913,6 +916,15 @@ public class ResConfig extends FixedBlockContainer
     public static ResConfig parse(String qualifiers){
         ResConfig resConfig = new ResConfig();
         resConfig.parseQualifiers(qualifiers);
+        return resConfig;
+    }
+    public static ResConfig getDefault(){
+        ResConfig resConfig = DEFAULT_INSTANCE;
+        if(resConfig.isDefault()){
+            return resConfig;
+        }
+        resConfig.mValuesContainer.fill((byte) 0);
+        resConfig.setConfigSize(SIZE_16);
         return resConfig;
     }
     public static int nearestSize(int size){
@@ -2319,4 +2331,5 @@ public class ResConfig extends FixedBlockContainer
 
     private static final char POSTFIX_locale = '#';
 
+    private static final ResConfig DEFAULT_INSTANCE = new ResConfig(SIZE_16);
 }
