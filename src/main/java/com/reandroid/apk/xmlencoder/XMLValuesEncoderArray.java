@@ -20,7 +20,7 @@ import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.coder.CoderInteger;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
-import com.reandroid.arsc.coder.ValueDecoder;
+import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.xml.XMLElement;
@@ -67,7 +67,7 @@ public class XMLValuesEncoderArray extends XMLValuesEncoderBag{
                 continue;
             }
             if(force_string){
-                bagItem.setValueAsString(ValueDecoder
+                bagItem.setValueAsString(XmlSanitizer
                         .unEscapeUnQuote(valueText));
             }else if(force_integer){
                 valueText = trimText(valueText);
@@ -86,7 +86,7 @@ public class XMLValuesEncoderArray extends XMLValuesEncoderBag{
                     bagItem.setTypeAndData(encodeResult.valueType,
                             encodeResult.value);
                 }else {
-                    bagItem.setValueAsString(ValueDecoder
+                    bagItem.setValueAsString(XmlSanitizer
                             .unEscapeUnQuote(valueText));
                 }
             }

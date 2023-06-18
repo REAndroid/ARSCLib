@@ -17,7 +17,6 @@ package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.apk.XmlHelper;
 import com.reandroid.arsc.value.Entry;
-import com.reandroid.common.EntryStore;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 
@@ -26,8 +25,8 @@ import java.util.Collection;
 
 public class XMLEntryDecoderDocument extends XMLEntryDecoder<XMLElement>{
     private final EntryWriterElement entryWriterElement;
-    public XMLEntryDecoderDocument(EntryStore entryStore) {
-        super(entryStore);
+    public XMLEntryDecoderDocument() {
+        super();
         this.entryWriterElement = new EntryWriterElement();
     }
 

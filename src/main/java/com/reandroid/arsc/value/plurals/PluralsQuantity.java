@@ -18,6 +18,10 @@ package com.reandroid.arsc.value.plurals;
 
  import com.reandroid.arsc.value.ResValueMap;
 
+ /**
+  * Replaced by com.reandroid.arsc.value.AttributeType
+  * */
+ @Deprecated
  public enum PluralsQuantity {
     OTHER((short) 0x0004),
     ZERO((short) 0x0005),

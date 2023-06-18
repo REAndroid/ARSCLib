@@ -19,10 +19,19 @@ import com.reandroid.arsc.array.CompoundItemArray;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.json.JSONObject;
 
-public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends CompoundItemArray<ITEM>> extends TableEntry<EntryHeaderMap, ARRAY> {
+import java.util.Iterator;
+
+public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends CompoundItemArray<ITEM>>
+        extends TableEntry<EntryHeaderMap, ARRAY> implements Iterable<ITEM>{
     public CompoundEntry(ARRAY mapArray){
         super(new EntryHeaderMap(), mapArray);
     }
+
+    @Override
+    public Iterator<ITEM> iterator(){
+        return getValue().iterator();
+    }
+
     // Valid for type attr
     public AttributeDataFormat[] getAttributeTypeFormats(){
         ITEM item = getByType(AttributeType.FORMATS);

@@ -18,17 +18,15 @@ package com.reandroid.apk.xmldecoder;
 import com.reandroid.apk.ApkUtil;
 import com.reandroid.apk.XmlHelper;
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.coder.ValueDecoder;
 import com.reandroid.arsc.value.*;
-import com.reandroid.common.EntryStore;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
 class BagDecoderArray<OUTPUT> extends BagDecoder<OUTPUT>{
-    public BagDecoderArray(EntryStore entryStore) {
-        super(entryStore);
+    public BagDecoderArray() {
+        super();
     }
 
     @Override
@@ -40,7 +38,6 @@ class BagDecoderArray<OUTPUT> extends BagDecoder<OUTPUT>{
         writer.attribute("name", entry.getName());
 
         PackageBlock packageBlock = entry.getPackageBlock();
-        EntryStore entryStore = getEntryStore();
         ResValueMap[] resValueMaps = mapEntry.listResValueMap();
         boolean zero_name = isZeroNameArray(resValueMaps);
 
@@ -52,8 +49,7 @@ class BagDecoderArray<OUTPUT> extends BagDecoder<OUTPUT>{
             writer.writeTagIndent(INDENT_BAG);
             writer.startTag(childTag);
             if(zero_name){
-                String name = ValueDecoder.decodeAttributeName(
-                        entryStore, packageBlock, valueMap.getName());
+                String name = valueMap.decodeName();
                 writer.attribute("name", name);
             }
             writeText(writer, packageBlock, valueMap);

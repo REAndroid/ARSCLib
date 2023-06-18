@@ -16,12 +16,11 @@
 package com.reandroid.identifiers;
 
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.util.HexUtil;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public class ResourceIdentifier extends Identifier{
     private Boolean mHasGoodName;
@@ -164,18 +163,19 @@ public class ResourceIdentifier extends Identifier{
         if(packageBlock == null){
             return false;
         }
-        EntryGroup entryGroup = packageBlock.getEntryGroup(getResourceId());
-        if(entryGroup == null){
+        ResourceEntry resourceEntry = packageBlock.getResource(getResourceId());
+        if(resourceEntry == null){
             return false;
         }
         String name = getName();
         if(name == null){
             return false;
         }
-        if(name.equals(entryGroup.getSpecName())){
+        if(name.equals(resourceEntry.getName())){
             return false;
         }
-        return entryGroup.renameSpec(name);
+        resourceEntry.setName(name);
+        return true;
     }
     private PackageBlock getPackageBlock(){
         PackageIdentifier pi = getPackageIdentifier();

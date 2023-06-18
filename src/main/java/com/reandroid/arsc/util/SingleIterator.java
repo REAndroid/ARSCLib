@@ -13,18 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.apk;
+package com.reandroid.arsc.util;
 
-/**
- * Renamed, use com.reandroid.apk.ApkModuleJsonDecoder
- * */
-@Deprecated
-public class ApkJsonDecoder extends ApkModuleJsonDecoder{
-    public ApkJsonDecoder(ApkModule apkModule, boolean splitTypes){
-        super(apkModule, splitTypes);
+import java.util.Iterator;
+
+public class SingleIterator<T> implements Iterator<T> {
+    private T mItem;
+    public SingleIterator(T item){
+        this.mItem = item;
     }
-    public ApkJsonDecoder(ApkModule apkModule){
-        super(apkModule);
+    @Override
+    public boolean hasNext() {
+        return this.mItem != null;
+    }
+    @Override
+    public T next() {
+        T item = this.mItem;
+        this.mItem = null;
+        return item;
     }
 
+    public static<T1> Iterator<T1> of(T1 item){
+        if(item == null){
+            return EmptyIterator.of();
+        }
+        return new SingleIterator<>(item);
+    }
 }

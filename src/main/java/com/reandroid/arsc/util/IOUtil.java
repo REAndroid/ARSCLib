@@ -16,9 +16,26 @@
 package com.reandroid.arsc.util;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 
 public class IOUtil {
+    public static String shortPath(File file, int depth){
+        File tmp = file;
+        while (depth > 0){
+            File dir = tmp.getParentFile();
+            if(dir == null){
+                break;
+            }
+            tmp = dir;
+            depth --;
+        }
+        if(file == tmp){
+            return file.getName();
+        }
+        int i = tmp.getAbsolutePath().length() + 1;
+        return file.getAbsolutePath().substring(i);
+    }
     public static void close(Object obj) throws IOException {
         if(obj instanceof Closeable){
             ((Closeable)obj).close();

@@ -16,7 +16,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 
-import com.reandroid.arsc.coder.ValueDecoder;
+import com.reandroid.arsc.coder.XmlSanitizer;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -49,7 +49,7 @@ public class ParserEventList implements Iterator<ParserEvent> {
             if(text == null){
                 text = "";
             }
-            return ValueDecoder.escapeSpecialCharacter(text);
+            return XmlSanitizer.escapeSpecialCharacter(text);
         }
         return null;
     }

@@ -81,6 +81,7 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
         PackageBlock packageBlock = encodeMaterials.pickMainPackageBlock(tableBlock);
         if(packageBlock != null){
             encodeMaterials.setCurrentPackage(packageBlock);
+            tableBlock.setCurrentPackage(packageBlock);
         }
         XMLSource xmlSource =
                 new XMLFileSource(AndroidManifestBlock.FILE_NAME, file);

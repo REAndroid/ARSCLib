@@ -18,9 +18,10 @@ package com.reandroid.apk.xmldecoder;
 import com.android.org.kxml2.io.KXmlSerializer;
 import com.reandroid.apk.ApkModule;
 import com.reandroid.archive.InputSource;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlPullParser;
-import com.reandroid.arsc.coder.Decoder;
 import com.reandroid.xml.XmlParserToSerializer;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -33,7 +34,7 @@ public class ResXmlDocumentSerializer implements ResXmlPullParser.DocumentLoaded
     private final ResXmlPullParser parser;
     private final XmlSerializer serializer;
     private final XmlParserToSerializer parserToSerializer;
-    private boolean validateXmlNamespace;
+    private boolean fixAttributesNamespace;
     private String mCurrentPath;
     public ResXmlDocumentSerializer(ResXmlPullParser parser){
         this.parser = parser;
@@ -41,11 +42,14 @@ public class ResXmlDocumentSerializer implements ResXmlPullParser.DocumentLoaded
         this.parserToSerializer = new XmlParserToSerializer(parser, serializer);
         this.parser.setDocumentLoadedListener(this);
     }
-    public ResXmlDocumentSerializer(Decoder decoder){
-        this(new ResXmlPullParser(decoder));
+    public ResXmlDocumentSerializer(PackageBlock currentPackage){
+        this(new ResXmlPullParser(currentPackage));
     }
     public ResXmlDocumentSerializer(ApkModule apkModule){
-        this(createDecoder(apkModule));
+        this(pickPackage(apkModule));
+    }
+    public void setCurrentPackage(PackageBlock packageBlock){
+        this.parser.setCurrentPackage(packageBlock);
     }
 
     public void write(InputSource inputSource, File file)
@@ -109,19 +113,15 @@ public class ResXmlDocumentSerializer implements ResXmlPullParser.DocumentLoaded
             writer.flush();
         }
     }
-    public Decoder getDecoder(){
-        return parser.getDecoder();
-    }
 
-    public void setValidateXmlNamespace(boolean validateXmlNamespace) {
-        this.validateXmlNamespace = validateXmlNamespace;
+    public void setFixAttributesNamespace(boolean fixAttributesNamespace) {
+        this.fixAttributesNamespace = fixAttributesNamespace;
     }
     @Override
     public ResXmlDocument onDocumentLoaded(ResXmlDocument resXmlDocument) {
-        if(!validateXmlNamespace){
-            return resXmlDocument;
+        if(fixAttributesNamespace){
+            resXmlDocument.autoSetAttributeNamespaces();
         }
-        XMLNamespaceValidator.validateNamespaces(resXmlDocument);
         return resXmlDocument;
     }
     private IOException getError(Exception exception){
@@ -146,9 +146,16 @@ public class ResXmlDocumentSerializer implements ResXmlPullParser.DocumentLoaded
         return otherException;
     }
 
-    private static Decoder createDecoder(ApkModule apkModule){
-        Decoder decoder = Decoder.create(apkModule.getTableBlock());
-        decoder.setApkFile(apkModule);
-        return decoder;
+    private static PackageBlock pickPackage(ApkModule apkModule){
+        TableBlock tableBlock = apkModule.getTableBlock();
+        if(tableBlock == null){
+            throw new NullPointerException("Does not have resource table");
+        }
+        if(tableBlock.countPackages() == 0){
+            // Empty resource table, create dummy package
+            tableBlock = new TableBlock();
+            return tableBlock.newPackage(0, null);
+        }
+        return tableBlock.pickOne();
     }
 }

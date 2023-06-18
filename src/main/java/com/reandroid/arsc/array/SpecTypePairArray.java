@@ -20,7 +20,6 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.pool.TypeStringPool;
@@ -184,13 +183,6 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         SpecTypePair specTypePair = getSpecTypePair(typeName);
         if(specTypePair != null){
             return specTypePair.getEntry(resConfig, entryName);
-        }
-        return null;
-    }
-    public EntryGroup getEntryGroup(String typeName, String entryName){
-        SpecTypePair specTypePair = getSpecTypePair(typeName);
-        if(specTypePair != null){
-            return specTypePair.getEntryGroup(entryName);
         }
         return null;
     }

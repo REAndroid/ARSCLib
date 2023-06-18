@@ -43,7 +43,7 @@ public class TypeStringPool extends StringPool<TypeString> {
      **/
     public int idOf(TypeString typeString){
         if(typeString == null){
-            return toTypeId(0);
+            return 0;
         }
         return (toTypeId(typeString.getIndex()));
     }

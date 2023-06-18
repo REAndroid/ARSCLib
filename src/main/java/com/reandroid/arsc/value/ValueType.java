@@ -15,6 +15,11 @@
   */
 package com.reandroid.arsc.value;
 
+import com.reandroid.arsc.util.StringsUtil;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public enum ValueType {
 
     NULL((byte) 0x00, ""),
@@ -64,25 +69,49 @@ public enum ValueType {
     }
 
     public static ValueType valueOf(byte b){
-        ValueType[] all=values();
-        for(ValueType vt:all){
-            if(vt.mByte==b){
-                return vt;
-            }
+        return valueOf((b & 0x00ff));
+    }
+    public static ValueType valueOf(int i){
+        if(i < 0){
+            return null;
+        }
+        ValueType[] sorted = getSortedValues();
+        if(i < sorted.length){
+            return sorted[i];
         }
         return null;
     }
     public static ValueType fromName(String name){
-        if(name==null){
-            return null;
-        }
-        name=name.toUpperCase();
-        ValueType[] all=values();
-        for(ValueType vt:all){
-            if(name.equals(vt.name())){
-                return vt;
-            }
-        }
-        return null;
+        return getValueTypeMap().get(StringsUtil.toUpperCase(name));
     }
+    private static ValueType[] getSortedValues(){
+        if(sortedValues != null){
+            return sortedValues;
+        }
+        synchronized (ValueType.class){
+            ValueType[] sorted = new ValueType[0x1f + 1];
+            ValueType[] values = values();
+            for(ValueType valueType : values){
+                sorted[valueType.getByte() & 0xff] = valueType;
+            }
+            sortedValues = sorted;
+            return sorted;
+        }
+    }
+    private static Map<String, ValueType> getValueTypeMap(){
+        if(valueTypeMap != null){
+            return valueTypeMap;
+        }
+        synchronized (ValueType.class){
+            Map<String, ValueType> map = new HashMap<>();
+            ValueType[] values = values();
+            for(ValueType valueType : values){
+                map.put(valueType.name(), valueType);
+            }
+            valueTypeMap = map;
+            return map;
+        }
+    }
+    private static ValueType[] sortedValues;
+    private static Map<String, ValueType> valueTypeMap;
 }

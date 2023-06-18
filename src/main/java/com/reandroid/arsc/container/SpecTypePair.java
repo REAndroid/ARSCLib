@@ -15,13 +15,11 @@
   */
 package com.reandroid.arsc.container;
 
-import com.reandroid.arsc.array.EntryArray;
 import com.reandroid.arsc.chunk.*;
 import com.reandroid.arsc.array.TypeBlockArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockContainer;
-import com.reandroid.arsc.group.EntryGroup;
-import com.reandroid.arsc.group.ResourceEntry;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.io.BlockReader;
@@ -39,6 +37,7 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Predicate;
 
 public class SpecTypePair extends BlockContainer<Block>
         implements JSONConvert<JSONObject>, Comparable<SpecTypePair>{
@@ -91,6 +90,31 @@ public class SpecTypePair extends BlockContainer<Block>
         if(packageBlock == null){
             return EmptyIterator.of();
         }
+        final int end = getHighestEntryId();
+        final int id = (packageBlock.getId() << 24) | (getId() << 16);
+        return new Iterator<ResourceEntry>() {
+            private int mIndex;
+            @Override
+            public boolean hasNext() {
+                return mIndex <= end;
+            }
+            @Override
+            public ResourceEntry next() {
+                if(mIndex > end){
+                    throw new NoSuchElementException();
+                }
+                int resourceId = id | mIndex;
+                mIndex++;
+                return new ResourceEntry(packageBlock, resourceId);
+            }
+        };
+    }
+    public Iterator<ResourceEntry> getResourcesOld(){
+        final PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return EmptyIterator.of();
+        }
+
         return new ComputeIterator<Entry, ResourceEntry>(listDefaultEntries()) {
             @Override
             public ResourceEntry apply(Entry element) {
@@ -99,7 +123,7 @@ public class SpecTypePair extends BlockContainer<Block>
         };
     }
     private Iterator<Entry> listDefaultEntries(){
-        Iterator<TypeBlock> iterator = getTypeBlockArray().iterator(true);
+        Iterator<TypeBlock> iterator = getTypeBlockArray().iterator(false);
         if(!iterator.hasNext()){
             return EmptyIterator.of();
         }
@@ -120,6 +144,15 @@ public class SpecTypePair extends BlockContainer<Block>
             }
         };
     }
+    public Iterator<TypeBlock> getTypeBlocks(){
+        return getTypeBlockArray().iterator();
+    }
+    public Iterator<TypeBlock> getTypeBlocks(Predicate<TypeBlock> filter){
+        return getTypeBlockArray().iterator(filter);
+    }
+    public Iterator<TypeBlock> getTypeBlocks(ResConfig resConfig){
+        return getTypeBlockArray().iterator(resConfig);
+    }
     public Boolean hasComplexEntry(){
         return getTypeBlockArray().hasComplexEntry();
     }
@@ -132,57 +165,6 @@ public class SpecTypePair extends BlockContainer<Block>
         for(TypeBlock typeBlock:listTypeBlocks()){
             typeBlock.linkSpecStringsInternal(specStringPool);
         }
-    }
-    public Map<Integer, EntryGroup> createEntryGroups(){
-        return createEntryGroups(false);
-    }
-    public Map<Integer, EntryGroup> createEntryGroups(boolean skipNullEntries){
-        Map<Integer, EntryGroup> map = new LinkedHashMap<>();
-        for(TypeBlock typeBlock : listTypeBlocks()){
-            EntryArray entryArray = typeBlock.getEntryArray();
-            for(Entry entry : entryArray.listItems(skipNullEntries)){
-                if(entry == null){
-                    continue;
-                }
-                int id = entry.getResourceId();
-                EntryGroup entryGroup = map.get(id);
-                if(entryGroup == null){
-                    entryGroup = new EntryGroup(id);
-                    map.put(id, entryGroup);
-                }
-                entryGroup.add(entry);
-            }
-        }
-        return map;
-    }
-    public EntryGroup createEntryGroup(int id){
-        id = 0xffff & id;
-        EntryGroup entryGroup = null;
-        for(TypeBlock typeBlock:listTypeBlocks()){
-            Entry entry = typeBlock.getEntry(id);
-            if(entry == null){
-                continue;
-            }
-            if(entryGroup == null){
-                entryGroup = new EntryGroup(entry.getResourceId());
-            }
-            entryGroup.add(entry);
-        }
-        return entryGroup;
-    }
-    public EntryGroup getEntryGroup(String entryName){
-        EntryGroup entryGroup = null;
-        for(TypeBlock typeBlock:listTypeBlocks()){
-            Entry entry = typeBlock.getEntry(entryName);
-            if(entry == null){
-                continue;
-            }
-            if(entryGroup == null){
-                entryGroup = new EntryGroup(entry.getResourceId());
-            }
-            entryGroup.add(entry);
-        }
-        return entryGroup;
     }
     public void destroy(){
         getSpecBlock().destroy();
@@ -268,7 +250,7 @@ public class SpecTypePair extends BlockContainer<Block>
     public TypeBlock getTypeBlock(ResConfig resConfig){
         return getTypeBlockArray().getTypeBlock(resConfig);
     }
-    public List<ResConfig> listResConfig(){
+    public Set<ResConfig> listResConfig(){
         return mTypeBlockArray.listResConfig();
     }
 

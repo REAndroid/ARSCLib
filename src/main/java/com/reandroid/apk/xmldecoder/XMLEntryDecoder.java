@@ -16,9 +16,9 @@
 package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.arsc.chunk.TypeBlock;
-import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.container.SpecTypePair;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.*;
-import com.reandroid.common.EntryStore;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,9 +32,9 @@ public class XMLEntryDecoder<OUTPUT>{
     private final DecoderResTableEntryMap<OUTPUT> decoderEntryMap;
     private Predicate<Entry> mDecodedEntries;
 
-    public XMLEntryDecoder(EntryStore entryStore){
-        this.decoderEntry = new DecoderResTableEntry<>(entryStore);
-        this.decoderEntryMap = new DecoderResTableEntryMap<>(entryStore);
+    public XMLEntryDecoder(){
+        this.decoderEntry = new DecoderResTableEntry<>();
+        this.decoderEntryMap = new DecoderResTableEntryMap<>();
     }
 
     public void setDecodedEntries(Predicate<Entry> decodedEntries) {
@@ -73,22 +73,17 @@ public class XMLEntryDecoder<OUTPUT>{
         }
         return count;
     }
-    public int decode(EntryWriter<OUTPUT> writer, ResConfig resConfig, Collection<EntryGroup> entryGroupList) throws IOException {
-        int count = 0;
-        for(EntryGroup entryGroup : entryGroupList){
-            OUTPUT output = decode(writer, entryGroup.getEntry(resConfig));
-            if(output != null){
-                count ++;
-            }
-        }
-        return count;
-    }
     public int decode(EntryWriter<OUTPUT> writer, TypeBlock typeBlock) throws IOException {
-        Iterator<Entry> iterator = typeBlock.getEntryArray()
-                .iterator(true);
+        SpecTypePair specTypePair = typeBlock.getParentSpecTypePair();
+        ResConfig resConfig = typeBlock.getResConfig();
+        Iterator<ResourceEntry> resources = specTypePair.getResources();
         int count = 0;
-        while (iterator.hasNext()){
-            Entry entry = iterator.next();
+        while (resources.hasNext()){
+            ResourceEntry resourceEntry = resources.next();
+            Entry entry = resourceEntry.get(resConfig);
+            if(entry == null){
+                continue;
+            }
             OUTPUT output = decode(writer, entry);
             if(output != null){
                 count++;

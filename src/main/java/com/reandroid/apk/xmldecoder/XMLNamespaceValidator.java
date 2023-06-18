@@ -15,10 +15,19 @@
   */
 package com.reandroid.apk.xmldecoder;
 
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
+/**
+ * Redundant class, use {@link ResXmlAttribute#autoSetNamespace()}
+ * or use  {@link ResXmlDocument#autoSetAttributeNamespaces()}
+ * */
+@Deprecated
 public class XMLNamespaceValidator {
     private static final String URI_ANDROID = "http://schemas.android.com/apk/res/android";
     private static final String URI_APP = "http://schemas.android.com/apk/res-auto";
@@ -29,10 +38,21 @@ public class XMLNamespaceValidator {
         this.xmlBlock=xmlBlock;
     }
     public void validate(){
-        validateNamespaces(xmlBlock);
+        validateNamespaces(xmlBlock.getResXmlElement());
+        List<String> post = listPackagePostfixes();
+        post.size();
+    }
+    private List<String> listPackagePostfixes(){
+        TableBlock tableBlock = xmlBlock.getPackageBlock().getTableBlock();
+        List<String> results = new ArrayList<>();
+        for(PackageBlock packageBlock : tableBlock.listPackages()){
+            String name = packageBlock.getPrefix();
+            results.add(name);
+        }
+        return results;
     }
 
-    public static boolean isValid(ResXmlAttribute attribute){
+    public  boolean isValid(ResXmlAttribute attribute){
         int resourceId = attribute.getNameResourceID();
         if(resourceId == 0){
             return attribute.getUri() == null;
@@ -44,21 +64,22 @@ public class XMLNamespaceValidator {
         }
     }
     public static void validateNamespaces(ResXmlDocument resXmlDocument){
-        validateNamespaces(resXmlDocument.getResXmlElement());
+        XMLNamespaceValidator validator = new XMLNamespaceValidator(resXmlDocument);
+        validator.validate();
     }
-    public static void validateNamespaces(ResXmlElement element){
+    public  void validateNamespaces(ResXmlElement element){
         validateNamespaces(element.listAttributes());
         for(ResXmlElement child : element.listElements()){
             validateNamespaces(child);
         }
     }
 
-    private static void validateNamespaces(Collection<ResXmlAttribute> attributeList){
+    private void validateNamespaces(Collection<ResXmlAttribute> attributeList){
         for(ResXmlAttribute attribute : attributeList){
             validateNamespace(attribute);
         }
     }
-    private static void validateNamespace(ResXmlAttribute attribute){
+    private void validateNamespace(ResXmlAttribute attribute){
         int resourceId = attribute.getNameResourceID();
         if(resourceId == 0){
             attribute.setNamespaceReference(-1);
@@ -75,7 +96,7 @@ public class XMLNamespaceValidator {
         }
     }
 
-    private static boolean isValidAppNamespace(ResXmlAttribute attribute){
+    private boolean isValidAppNamespace(ResXmlAttribute attribute){
         String uri = attribute.getUri();
         String prefix = attribute.getNamePrefix();
         if(URI_ANDROID.equals(uri) || PREFIX_ANDROID.equals(prefix)){

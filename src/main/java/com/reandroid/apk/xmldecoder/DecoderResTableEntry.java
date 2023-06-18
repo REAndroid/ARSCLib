@@ -21,13 +21,12 @@ import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResTableEntry;
 import com.reandroid.arsc.value.ResValue;
 import com.reandroid.arsc.value.ValueType;
-import com.reandroid.common.EntryStore;
 
 import java.io.IOException;
 
 public class DecoderResTableEntry<OUTPUT> extends DecoderTableEntry<ResTableEntry, OUTPUT> {
-    public DecoderResTableEntry(EntryStore entryStore){
-        super(entryStore);
+    public DecoderResTableEntry(){
+        super();
     }
     @Override
     public OUTPUT decode(ResTableEntry tableEntry, EntryWriter<OUTPUT> writer) throws IOException{
@@ -39,11 +38,9 @@ public class DecoderResTableEntry<OUTPUT> extends DecoderTableEntry<ResTableEntr
         ResValue value = tableEntry.getValue();
         ValueType valueType = value.getValueType();
 
-        if(!isReference(valueType)){
-            CommonType commonType = CommonType.valueOf(tag);
-            if(commonType != null && !commonType.contains(valueType)){
-                writer.attribute("type", valueType.getTypeName());
-            }
+        CommonType commonType = CommonType.valueOf(tag);
+        if(commonType != null && commonType.isDifferent(valueType)){
+            writer.attribute("type", valueType.getTypeName());
         }
         if(!isId(tag)){
             writeText(writer, entry.getPackageBlock(), tableEntry.getValue());

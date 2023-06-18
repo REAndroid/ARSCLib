@@ -15,19 +15,16 @@
  */
 package com.reandroid.apk.xmlencoder;
 
-import com.android.org.kxml2.io.KXmlParser;
 import com.reandroid.apk.*;
 import com.reandroid.archive.APKArchive;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.coder.ReferenceString;
-import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.group.ResourceEntry;
 import com.reandroid.arsc.util.FrameworkTable;
 import com.reandroid.arsc.util.HexUtil;
-import com.reandroid.arsc.value.Entry;
-import com.reandroid.common.FileChannelInputStream;
+import com.reandroid.arsc.util.IOUtil;
+import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLException;
 import com.reandroid.xml.XMLParserFactory;
 import org.xmlpull.v1.XmlPullParser;
@@ -35,7 +32,6 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.zip.ZipEntry;
 
@@ -118,37 +114,45 @@ public class XMLTableBlockEncoder {
         }
     }
     private void loadPublicXmlFile(File pubXmlFile) throws IOException {
-        XmlPullParser parser = new KXmlParser();
+        PackageBlock packageBlock = tableBlock.newPackage(0, null);
+        loadPackageJson(packageBlock, pubXmlFile);
         try {
-            parser.setInput(new FileChannelInputStream(pubXmlFile), StandardCharsets.UTF_8.name());
-            PackageBlock packageBlock = tableBlock.parsePublicXml(parser);
+            XmlPullParser parser = XMLParserFactory.newPullParser(pubXmlFile);
             packageBlock.setTag(pubXmlFile);
-            initializeIds(packageBlock);
+            packageBlock.parsePublicXml(parser);
+            packageBlock.initializeDefinedTypeIds();
+            IOUtil.close(parser);
         } catch (XmlPullParserException ex) {
            throw new IOException(ex);
         }
     }
-    private void initializeIds(PackageBlock packageBlock){
-        int typeId = packageBlock.typeIdOf("id");
-        SpecTypePair specTypePair = packageBlock.getSpecTypePair(typeId);
-        if(specTypePair == null){
+    private void loadPackageJson(PackageBlock packageBlock, File publicXml) throws IOException {
+        File json = toPackageJson(publicXml);
+        if(json == null){
             return;
         }
-        Iterator<ResourceEntry> itr = specTypePair.getResources();
-        while (itr.hasNext()){
-            Iterator<Entry> entryIterator = itr.next()
-                    .iterator(false);
-            while (entryIterator.hasNext()){
-                Entry entry = entryIterator.next();
-                if(!entry.isNull()){
-                    continue;
-                }
-                if(entry.getSpecReference() < 0){
-                    continue;
-                }
-                entry.setValueAsBoolean(false);
-            }
+        packageBlock.fromJson(new JSONObject(json));
+    }
+    private File toPackageJson(File publicXml){
+        File dir = publicXml.getParentFile();
+        //values
+        if(dir == null || !"values".equals(dir.getName())){
+            return null;
         }
+        dir = dir.getParentFile();
+        //res
+        if(dir == null){
+            return null;
+        }
+        dir = dir.getParentFile();
+        if(dir == null){
+            return null;
+        }
+        File json = new File(dir, "package.json");
+        if(!json.isFile()){
+            return null;
+        }
+        return json;
     }
     private void initializeFrameworkFromManifest(List<File> pubXmlFileList) throws  IOException {
         for(File pubXmlFile:pubXmlFileList){
@@ -191,6 +195,7 @@ public class XMLTableBlockEncoder {
 
             PackageBlock packageBlock = tableBlock.getPackageBlockByTag(pubXmlFile);
             encodeMaterials.setCurrentPackage(packageBlock);
+            tableBlock.setCurrentPackage(packageBlock);
 
             ResourceValuesEncoder valuesEncoder = new ResourceValuesEncoder(encodeMaterials);
             List<File> attrFiles = listAttrs(pubXmlFile);

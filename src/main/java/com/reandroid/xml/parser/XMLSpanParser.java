@@ -20,12 +20,15 @@ import com.reandroid.xml.*;
 import java.io.IOException;
 import java.io.StringReader;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
 public class XMLSpanParser {
     private final Object mLock = new Object();
     private final XmlPullParser mParser;
     private XMLElement mCurrentElement;
     public XMLSpanParser(){
-        this.mParser = new MXParserNonValidating();
+        this.mParser = XMLParserFactory.newPullParser();
     }
     public XMLElement parse(String text) throws XMLException {
         synchronized (mLock){

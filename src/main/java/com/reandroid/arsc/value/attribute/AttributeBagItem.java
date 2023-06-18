@@ -15,15 +15,12 @@
  */
 package com.reandroid.arsc.value.attribute;
 
-import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.coder.ValueCoder;
-import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.AttributeType;
 import com.reandroid.arsc.value.AttributeDataFormat;
-import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResValueMap;
-import com.reandroid.common.EntryStore;
 
 
 public class AttributeBagItem {
@@ -35,10 +32,7 @@ public class AttributeBagItem {
         return getBagItem().getData();
     }
     public String getNameOrHex(){
-        return getNameOrHex(null);
-    }
-    public String getNameOrHex(EntryStore entryStore){
-        String name = getName(entryStore);
+        String name = getName();
         if(name == null){
             name = ValueCoder.decodeUnknownResourceId(false,
                     getBagItem().getNameResourceID());
@@ -46,32 +40,12 @@ public class AttributeBagItem {
         return name;
     }
     public String getName(){
-        return getName(null);
-    }
-    public String getName(EntryStore entryStore){
         if(isType()){
             return null;
         }
-        ResValueMap item = getBagItem();
-        int id=item.getName();
-        Entry parentEntry=item.getEntry();
-        if(parentEntry!=null){
-            PackageBlock packageBlock=parentEntry.getPackageBlock();
-            if(packageBlock!=null){
-                EntryGroup entryGroup=packageBlock.getEntryGroup(id);
-                if(entryGroup!=null){
-                    String name=entryGroup.getSpecName();
-                    if(name!=null){
-                        return name;
-                    }
-                }
-            }
-        }
-        if(entryStore!=null){
-            EntryGroup entryGroup=entryStore.getEntryGroup(id);
-            if(entryGroup!=null){
-                return entryGroup.getSpecName();
-            }
+        ResourceEntry resourceEntry = getBagItem().resolveName();
+        if(resourceEntry != null){
+            return resourceEntry.getName();
         }
         return null;
     }
@@ -126,10 +100,10 @@ public class AttributeBagItem {
         return builder.toString();
     }
 
-    public static String toString(EntryStore entryStore, AttributeBagItem[] bagItems)  {
-        return toString(entryStore, bagItems, false);
+    public static String toString(AttributeBagItem[] bagItems)  {
+        return toString(bagItems, false);
     }
-    public static String toString(EntryStore entryStore, AttributeBagItem[] bagItems, boolean use_hex)  {
+    public static String toString(AttributeBagItem[] bagItems, boolean use_hex)  {
         if(bagItems==null){
             return null;
         }
@@ -149,9 +123,9 @@ public class AttributeBagItem {
             }
             String name;
             if(use_hex){
-                name = item.getNameOrHex(entryStore);
+                name = item.getNameOrHex();
             }else {
-                name = item.getName(entryStore);
+                name = item.getName();
             }
             if(name == null){
                 return null;

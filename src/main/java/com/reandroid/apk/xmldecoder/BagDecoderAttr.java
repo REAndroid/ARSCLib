@@ -17,18 +17,14 @@ package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.apk.XmlHelper;
 import com.reandroid.arsc.array.CompoundItemArray;
-import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.coder.ValueDecoder;
-import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.attribute.AttributeBag;
-import com.reandroid.common.EntryStore;
 
 import java.io.IOException;
 
 class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
-    public BagDecoderAttr(EntryStore entryStore){
-        super(entryStore);
+    public BagDecoderAttr(){
+        super();
     }
 
     @Override
@@ -45,9 +41,6 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
 
         ResValueMap[] bagItems = mapEntry.listResValueMap();
 
-        EntryStore entryStore = getEntryStore();
-        PackageBlock packageBlock = entry.getPackageBlock();
-
         boolean hasBags = false;
 
         for(int i = 0; i < bagItems.length; i++){
@@ -58,17 +51,8 @@ class BagDecoderAttr<OUTPUT> extends BagDecoder<OUTPUT>{
             }
             writer.writeTagIndent(INDENT_BAG);
             writer.startTag(bagType.getName());
-            String name = ValueDecoder.decodeAttributeName(
-                    entryStore, packageBlock, valueMap.getName());
-            writer.attribute("name", name);
-            int rawVal = valueMap.getData();
-            String value;
-            if(valueMap.getValueType() == ValueType.HEX){
-                value = HexUtil.toHex8(rawVal);
-            }else {
-                value = Integer.toString(rawVal);
-            }
-            writer.text(value);
+            writer.attribute("name", valueMap.decodeName());
+            writer.text(valueMap.decodeValue());
 
             writer.endTag(bagType.getName());
             hasBags = true;

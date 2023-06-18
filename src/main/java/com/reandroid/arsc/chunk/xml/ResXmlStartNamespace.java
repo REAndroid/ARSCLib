@@ -20,19 +20,31 @@ import com.reandroid.xml.SchemaAttr;
 import com.reandroid.xml.XMLAttribute;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
-public class ResXmlStartNamespace extends ResXmlNamespace {
+public class ResXmlStartNamespace extends ResXmlNamespaceChunk {
     private final Set<ResXmlAttribute> mReferencedAttributes;
+    private final Set<ResXmlStartElement> mReferencedElements;
 
     public ResXmlStartNamespace() {
         super(ChunkType.XML_START_NAMESPACE);
         this.mReferencedAttributes = new HashSet<>();
+        this.mReferencedElements = new HashSet<>();
     }
-    public ResXmlEndNamespace getEnd(){
+    @Override
+    void onUriReferenceChanged(int old, int uriReference){
+        for(ResXmlAttribute attribute : mReferencedAttributes){
+            attribute.setUriReference(uriReference);
+        }
+        for(ResXmlStartElement element : mReferencedElements){
+            element.setNamespaceReference(uriReference);
+        }
+    }
+    ResXmlEndNamespace getEnd(){
         return (ResXmlEndNamespace) getPair();
     }
-    public void setEnd(ResXmlEndNamespace namespace){
+    void setEnd(ResXmlEndNamespace namespace){
         setPair(namespace);
     }
     @Override
@@ -50,25 +62,45 @@ public class ResXmlStartNamespace extends ResXmlNamespace {
             end.onRemoved();
         }
         mReferencedAttributes.clear();
+        mReferencedElements.clear();
     }
-    public boolean hasReferencedAttributes(){
-        return mReferencedAttributes.size()>0;
+    public boolean hasReferences(){
+        return mReferencedAttributes.size() > 0
+                || mReferencedElements.size() > 0;
     }
-    public void clearReferencedAttributes(){
-        mReferencedAttributes.clear();
-    }
-    public Set<ResXmlAttribute> getReferencedAttributes(){
-        return mReferencedAttributes;
+    public Iterator<ResXmlAttribute> getReferencedAttributes(){
+        return mReferencedAttributes.iterator();
     }
     void addAttributeReference(ResXmlAttribute attribute){
-        if(attribute!=null){
+        if(attribute != null){
             mReferencedAttributes.add(attribute);
         }
     }
     void removeAttributeReference(ResXmlAttribute attribute){
-        if(attribute!=null){
+        if(attribute != null){
             mReferencedAttributes.remove(attribute);
         }
+    }
+    void addElementReference(ResXmlStartElement element){
+        if(element != null){
+            mReferencedElements.add(element);
+        }
+    }
+    void removeElementReference(ResXmlStartElement element){
+        if(element != null){
+            mReferencedElements.remove(element);
+        }
+    }
+    boolean removeIfNoReference(){
+        if(hasReferences()){
+            return false;
+        }
+        ResXmlElement parent = getParentResXmlElement();
+        if(parent != null){
+            parent.removeNamespace(this);
+            return true;
+        }
+        return false;
     }
     public XMLAttribute decodeToXml(){
         String uri=getUri();

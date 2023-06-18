@@ -19,50 +19,27 @@ import com.android.org.kxml2.io.KXmlSerializer;
 import com.reandroid.apk.XmlHelper;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.group.EntryGroup;
-import com.reandroid.arsc.value.ResConfig;
-import com.reandroid.common.EntryStore;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 public class XMLEntryDecoderSerializer extends XMLEntryDecoder<XmlSerializer> implements Closeable {
     private final EntryWriterSerializer entryWriterSerializer;
     private Closeable mClosable;
     private boolean mStart;
 
-    public XMLEntryDecoderSerializer(EntryStore entryStore, XmlSerializer serializer) {
-        super(entryStore);
+    public XMLEntryDecoderSerializer(XmlSerializer serializer) {
+        super();
         this.entryWriterSerializer = new EntryWriterSerializer(serializer);
     }
-    public XMLEntryDecoderSerializer(EntryStore entryStore) {
-        this(entryStore, new KXmlSerializer());
+    public XMLEntryDecoderSerializer() {
+        this(new KXmlSerializer());
     }
 
     public int decode(File resDirectory, SpecTypePair specTypePair) throws IOException {
-        int count;
-        if(specTypePair.hasDuplicateResConfig(true)){
-            count = decodeDuplicateConfigs(resDirectory, specTypePair);
-        }else {
-            count = decodeUniqueConfigs(resDirectory, specTypePair);
-        }
-        return count;
-    }
-    private int decodeDuplicateConfigs(File resDirectory, SpecTypePair specTypePair) throws IOException {
-        List<ResConfig> resConfigList = specTypePair.listResConfig();
-        Collection<EntryGroup> entryGroupList = specTypePair
-                .createEntryGroups(true).values();
-        int total = 0;
-        for(ResConfig resConfig : resConfigList){
-            TypeBlock typeBlock = resConfig.getParentInstance(TypeBlock.class);
-            File outXml = toOutXmlFile(resDirectory, typeBlock);
-            total += decode(outXml, resConfig, entryGroupList);
-        }
-        return total;
+        return decodeUniqueConfigs(resDirectory, specTypePair);
     }
     private int decodeUniqueConfigs(File resDirectory, SpecTypePair specTypePair) throws IOException {
         int total = 0;
@@ -74,13 +51,6 @@ public class XMLEntryDecoderSerializer extends XMLEntryDecoder<XmlSerializer> im
         }
         return total;
     }
-    public int decode(File outXmlFile, ResConfig resConfig, Collection<EntryGroup> entryGroupList) throws IOException {
-        setOutput(outXmlFile);
-        int count = decode(resConfig, entryGroupList);
-        close();
-        deleteIfZero(count, outXmlFile);
-        return count;
-    }
     public int decode(File outXmlFile, TypeBlock typeBlock) throws IOException {
         setOutput(outXmlFile);
         int count = super.decode(entryWriterSerializer, typeBlock);
@@ -88,8 +58,8 @@ public class XMLEntryDecoderSerializer extends XMLEntryDecoder<XmlSerializer> im
         deleteIfZero(count, outXmlFile);
         return count;
     }
-    public int decode(ResConfig resConfig, Collection<EntryGroup> entryGroupList) throws IOException {
-        return super.decode(entryWriterSerializer, resConfig, entryGroupList);
+    public int decode(TypeBlock typeBlock) throws IOException {
+        return super.decode(entryWriterSerializer, typeBlock);
     }
     public void setOutput(File file) throws IOException {
         File dir = file.getParentFile();

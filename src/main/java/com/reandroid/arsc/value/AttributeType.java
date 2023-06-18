@@ -52,6 +52,9 @@ public enum AttributeType {
     }
 
     public static AttributeType valueOf(int value){
+        if(value == 0){
+            return null;
+        }
         for(AttributeType type:VALUES){
             if(type.getId() == value){
                 return type;

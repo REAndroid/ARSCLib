@@ -17,11 +17,9 @@ package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.array.ResXmlAttributeArray;
-import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.item.ShortItem;
 
 import java.util.Collection;
-import java.util.Set;
 
 public class ResXmlStartElement extends BaseXmlChunk {
     private final ShortItem mAttributeStart;
@@ -76,15 +74,17 @@ public class ResXmlStartElement extends BaseXmlChunk {
     void linkStringReferences(){
         super.linkStringReferences();
         ResXmlEndElement end = getResXmlEndElement();
-        if(end!=null){
+        if(end != null){
             end.linkStringReferences();
         }
+        linkNamespace();
     }
     @Override
     void onRemoved(){
         super.onRemoved();
+        unlinkNamespace();
         ResXmlEndElement end = getResXmlEndElement();
-        if(end!=null){
+        if(end != null){
             end.onRemoved();
         }
         for(ResXmlAttribute attr:listResXmlAttributes()){
@@ -94,6 +94,18 @@ public class ResXmlStartElement extends BaseXmlChunk {
     @Override
     protected void onPreRefreshRefresh(){
         sortAttributes();
+    }
+    void unlinkNamespace(){
+        ResXmlStartNamespace namespace = getResXmlStartNamespace();
+        if(namespace != null){
+            namespace.removeElementReference(this);
+        }
+    }
+    void linkNamespace(){
+        ResXmlStartNamespace namespace = getResXmlStartNamespace();
+        if(namespace != null){
+            namespace.addElementReference(this);
+        }
     }
     private void sortAttributes(){
         ResXmlAttributeArray array = getResXmlAttributeArray();
@@ -196,12 +208,17 @@ public class ResXmlStartElement extends BaseXmlChunk {
         return null;
     }
     public String getTagName(){
-        String prefix=getPrefix();
-        String name=getName();
-        if(prefix==null){
-            return name;
+        return getTagName(true);
+    }
+    public String getTagName(boolean includePrefix){
+        String name = getName();
+        if(includePrefix){
+            String prefix = getPrefix();
+            if(prefix != null){
+                name = prefix + ":" + name;
+            }
         }
-        return prefix+":"+name;
+        return name;
     }
     public void setName(String name){
         setString(name);
@@ -218,26 +235,39 @@ public class ResXmlStartElement extends BaseXmlChunk {
     }
 
     public String getUri(){
-        int uriRef=getNamespaceReference();
-        if(uriRef<0){
-            return null;
-        }
-        ResXmlElement parentElement=getParentResXmlElement();
-        ResXmlStartNamespace startNamespace=parentElement.getStartNamespaceByUriRef(uriRef);
-        if(startNamespace!=null){
+        ResXmlStartNamespace startNamespace = getResXmlStartNamespace();
+        if(startNamespace != null){
             return startNamespace.getUri();
         }
         return null;
     }
     public String getPrefix(){
-        int uriRef=getNamespaceReference();
-        if(uriRef<0){
+        ResXmlStartNamespace startNamespace = getResXmlStartNamespace();
+        if(startNamespace != null){
+            return startNamespace.getPrefix();
+        }
+        return null;
+    }
+    public void setTagNamespace(String uri, String prefix){
+        unlinkNamespace();
+        if(uri == null || prefix == null){
+            return;
+        }
+        ResXmlElement parentElement = getParentResXmlElement();
+        if(parentElement == null){
+            return;
+        }
+        ResXmlStartNamespace ns = parentElement.getOrCreateXmlStartNamespace(uri, prefix);
+        setNamespaceReference(ns.getUriReference());
+    }
+    private ResXmlStartNamespace getResXmlStartNamespace(){
+        int uriRef = getNamespaceReference();
+        if(uriRef < 0){
             return null;
         }
-        ResXmlElement parentElement=getParentResXmlElement();
-        ResXmlStartNamespace startNamespace=parentElement.getStartNamespaceByUriRef(uriRef);
-        if(startNamespace!=null){
-            return startNamespace.getPrefix();
+        ResXmlElement parentElement = getParentResXmlElement();
+        if(parentElement != null){
+            return parentElement.getStartNamespaceByUriRef(uriRef);
         }
         return null;
     }

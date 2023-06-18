@@ -17,7 +17,7 @@ package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.array.StyleArray;
-import com.reandroid.arsc.coder.ValueDecoder;
+import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.item.StyleItem;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
@@ -157,7 +157,7 @@ public class ValuesStringPoolBuilder {
         if(element.hasChildElements()){
             addStyleElement(element);
         }else {
-            String text = ValueDecoder
+            String text = XmlSanitizer
                     .unEscapeUnQuote(element.getTextContent());
             addString(text);
         }

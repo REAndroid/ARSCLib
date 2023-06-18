@@ -15,7 +15,6 @@
  */
 package com.reandroid.identifiers;
 
-import com.reandroid.arsc.array.PackageArray;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.util.StringsUtil;
@@ -33,17 +32,6 @@ public class TableIdentifier{
         this.mPackages = new ArrayList<>();
         this.mNameMap = new HashMap<>();
         this.mCaseInsensitive = Identifier.CASE_INSENSITIVE_FS;
-    }
-
-    public void initialize(TableBlock tableBlock){
-        initialize(tableBlock, true);
-    }
-    public void initialize(TableBlock tableBlock, boolean initialize_ids){
-        PackageArray packageArray = tableBlock.getPackageArray();
-        for(PackageIdentifier pi : getPackages()){
-            PackageBlock packageBlock = packageArray.createNext();
-            pi.initialize(packageBlock, initialize_ids);
-        }
     }
 
     public void load(TableBlock tableBlock){

@@ -18,7 +18,6 @@ package com.reandroid.arsc;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
-import com.reandroid.arsc.coder.Decoder;
 
 import java.io.IOException;
 
@@ -26,8 +25,6 @@ public interface ApkFile {
     AndroidManifestBlock getAndroidManifestBlock();
     TableBlock getTableBlock();
     ResXmlDocument loadResXmlDocument(String path) throws IOException;
-    Decoder getDecoder();
-    void setDecoder(Decoder decoder);
 
     enum ApkType {
         BASE,

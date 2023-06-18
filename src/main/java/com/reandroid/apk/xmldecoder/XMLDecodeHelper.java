@@ -15,7 +15,7 @@
  */
 package com.reandroid.apk.xmldecoder;
 
-import com.reandroid.arsc.coder.ValueDecoder;
+import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.xml.*;
 import com.reandroid.xml.parser.XMLSpanParser;
@@ -30,8 +30,8 @@ public class XMLDecodeHelper {
         }
         if(!stringItem.hasStyle()){
             String text = stringItem.get();
-            text = ValueDecoder.escapeSpecialCharacter(text);
-            text = ValueDecoder.quoteWhitespace(text);
+            text = XmlSanitizer.escapeSpecialCharacter(text);
+            text = XmlSanitizer.quoteWhitespace(text);
             writer.text(text);
             return false;
         }else {
@@ -51,7 +51,7 @@ public class XMLDecodeHelper {
             if(xmlNode instanceof XMLText){
                 String text = ((XMLText)xmlNode).getText(true);
                 writer.enableIndent(false);
-                writer.text(ValueDecoder.escapeSpecialCharacter(text));
+                writer.text(XmlSanitizer.escapeSpecialCharacter(text));
             }else if(xmlNode instanceof XMLElement){
                 writeElement(writer, (XMLElement) xmlNode);
             }

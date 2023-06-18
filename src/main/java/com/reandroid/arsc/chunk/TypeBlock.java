@@ -171,21 +171,11 @@ public class TypeBlock extends Chunk<TypeHeader>
         return getParent(SpecTypePair.class);
     }
     public void cleanEntries(){
-        PackageBlock packageBlock=getPackageBlock();
-        List<Entry> allEntries=listEntries(true);
-        for(Entry entry :allEntries){
-            if(packageBlock!=null){
-                packageBlock.removeEntryGroup(entry);
-            }
+        Iterator<Entry> iterator = getEntries();
+        while (iterator.hasNext()){
+            Entry entry = iterator.next();
             entry.setNull(true);
         }
-    }
-    public void removeEntry(Entry entry){
-        PackageBlock packageBlock=getPackageBlock();
-        if(packageBlock!=null){
-            packageBlock.removeEntryGroup(entry);
-        }
-        entry.setNull(true);
     }
     public Entry getOrCreateDefinedEntry(String name){
         Entry entry = getEntry(name);
@@ -261,9 +251,6 @@ public class TypeBlock extends Chunk<TypeHeader>
         EntryArray entryArray = getEntryArray();
         entryArray.ensureSize(count);
         entryArray.refreshCount();
-    }
-    public List<Entry> listEntries(){
-        return listEntries(false);
     }
     public List<Entry> listEntries(boolean skipNullBlock){
         List<Entry> results=new ArrayList<>();

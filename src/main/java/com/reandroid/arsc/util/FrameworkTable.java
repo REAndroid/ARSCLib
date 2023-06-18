@@ -22,7 +22,7 @@ import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.group.ResourceEntry;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.item.ReferenceItem;
 import com.reandroid.arsc.item.TableString;

@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
-import com.reandroid.arsc.coder.ValueDecoder;
+import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLText;
 
@@ -102,7 +102,7 @@ public class ResXmlTextNode extends ResXmlNode {
         setText(json.optString(NAME_text, null));
     }
     public XMLText decodeToXml() {
-        XMLText xmlText=new XMLText(ValueDecoder.escapeSpecialCharacter(getText()));
+        XMLText xmlText=new XMLText(XmlSanitizer.escapeSpecialCharacter(getText()));
         xmlText.setLineNumber(getLineNumber());
         return xmlText;
     }

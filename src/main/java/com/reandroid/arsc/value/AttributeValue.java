@@ -15,8 +15,45 @@
  */
 package com.reandroid.arsc.value;
 
-public interface AttributeValue extends Value{
-    int getNameResourceID();
-    void setNameResourceID(int resourceId);
-    Entry resolveName();
+import com.reandroid.arsc.model.ResourceEntry;
+
+public abstract class AttributeValue extends ValueItem{
+    public AttributeValue(int bytesLength, int sizeOffset) {
+        super(bytesLength, sizeOffset);
+    }
+    public abstract int getNameResourceID();
+    public abstract void setNameResourceID(int resourceId);
+    public abstract String decodePrefix();
+    public abstract String decodeName(boolean includePrefix);
+
+    public String decodeName(){
+        return decodeName(true);
+    }
+    public ResourceEntry resolveName(){
+        return resolve(getNameResourceID());
+    }
+    @Override
+    public String decodeValue(){
+        if(AttributeDataFormat.INTEGER.contains(getValueType())){
+            String value = decodeDataAsAttrFormats();
+            if(value == null){
+                value = decodeDataAsAttr();
+            }
+            if(value != null){
+                return value;
+            }
+        }
+        return super.decodeValue();
+    }
+    private String decodeDataAsAttr(){
+        ResourceEntry attr = resolveName();
+        if(attr != null){
+            return attr.decodeAttributeData(getData());
+        }
+        return null;
+    }
+    String decodeDataAsAttrFormats(){
+        return null;
+    }
+
 }

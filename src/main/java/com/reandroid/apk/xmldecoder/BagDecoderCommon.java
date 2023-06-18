@@ -16,19 +16,14 @@
 package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.apk.XmlHelper;
-import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.coder.ValueDecoder;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.ResValueMap;
-import com.reandroid.arsc.value.ValueType;
-import com.reandroid.common.EntryStore;
-
 import java.io.IOException;
 
 class BagDecoderCommon<OUTPUT> extends BagDecoder<OUTPUT>{
-    public BagDecoderCommon(EntryStore entryStore) {
-        super(entryStore);
+    public BagDecoderCommon() {
+        super();
     }
 
     @Override
@@ -39,21 +34,10 @@ class BagDecoderCommon<OUTPUT> extends BagDecoder<OUTPUT>{
         writer.startTag(tag);
         writer.attribute("name", entry.getName());
 
-        PackageBlock packageBlock = entry.getPackageBlock();
-
-        int parentId = mapEntry.getParentId();
-        String parent;
-        if(parentId != 0){
-            parent = ValueDecoder.decodeEntryValue(getEntryStore(),
-                    packageBlock, ValueType.REFERENCE, parentId);
-        }else {
-            parent = null;
-        }
+        String parent = mapEntry.decodeParentId();
         if(parent != null){
             writer.attribute("parent", parent);
         }
-
-        EntryStore entryStore = getEntryStore();
         ResValueMap[] resValueMaps = mapEntry.listResValueMap();
 
         boolean hasBags = false;
@@ -64,8 +48,7 @@ class BagDecoderCommon<OUTPUT> extends BagDecoder<OUTPUT>{
             writer.writeTagIndent(INDENT_BAG);
             writer.startTag(childTag);
 
-            String name = ValueDecoder.decodeAttributeName(
-                    entryStore, packageBlock, valueMap.getName());
+            String name = valueMap.decodeName();
             writer.attribute("name", name);
 
             writeText(writer, valueMap);

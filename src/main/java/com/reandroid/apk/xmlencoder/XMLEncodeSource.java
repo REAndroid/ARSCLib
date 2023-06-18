@@ -88,6 +88,7 @@ public class XMLEncodeSource extends ByteInputSource {
             PackageBlock packageBlock = getEntryPackageBlock();
             if(packageBlock != null && packageBlock != currentPackage){
                 encodeMaterials.setCurrentPackage(packageBlock);
+                currentPackage.getTableBlock().setCurrentPackage(currentPackage);
             }
             resXmlDocument = xmlFileEncoder.encode(xmlSource.getXMLDocument());
         } catch (XMLException ex) {

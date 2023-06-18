@@ -26,17 +26,18 @@ import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.PackageBody;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.group.EntryGroup;
-import com.reandroid.arsc.group.ResourceEntry;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.header.PackageHeader;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.list.OverlayableList;
 import com.reandroid.arsc.list.StagedAliasList;
+import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.util.*;
 import com.reandroid.arsc.value.*;
+import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
@@ -56,15 +57,16 @@ import java.util.*;
 public class PackageBlock extends Chunk<PackageHeader>
         implements ParentChunk,
         JSONConvert<JSONObject>,
-        Comparable<PackageBlock> {
+        Comparable<PackageBlock>,
+        ResourceLibrary {
 
     private final TypeStringPool mTypeStringPool;
     private final SpecStringPool mSpecStringPool;
 
     private final PackageBody mBody;
 
-    private final Map<Integer, EntryGroup> mEntriesGroup;
-    private boolean entryGroupMapLocked;
+    private String mPrefix;
+    private boolean mHasValidPrefix;
 
     private Object mTag;
 
@@ -77,9 +79,6 @@ public class PackageBlock extends Chunk<PackageHeader>
 
         this.mBody = new PackageBody();
 
-        this.mEntriesGroup = new HashMap<>();
-        this.entryGroupMapLocked = true;
-
         addChild(mTypeStringPool);
         addChild(mSpecStringPool);
         addChild(mBody);
@@ -89,6 +88,35 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     public void setTag(Object tag){
         this.mTag = tag;
+    }
+    public ResourceEntry getResource(int resourceId){
+        int packageId = (resourceId >> 24 ) & 0xff;
+        if(packageId == 0){
+            return null;
+        }
+        if(packageId == getId()){
+            int typeId = (resourceId >> 16 ) & 0xff;
+            int entryId = resourceId & 0xffff;
+            ResourceEntry resourceEntry = getResource(typeId, entryId);
+            if(resourceEntry != null){
+                return resourceEntry;
+            }
+        }
+        StagedAliasEntry aliasEntry = searchByStagedResId(resourceId);
+        if(aliasEntry == null){
+            return null;
+        }
+        int alias = aliasEntry.getFinalizedResId();
+        if(alias == 0 || alias == resourceId){
+            return null;
+        }
+        packageId = (alias >> 24 ) & 0xff;
+        if(packageId != getId()){
+            return null;
+        }
+        int typeId = (alias >> 16 ) & 0xff;
+        int entryId = alias & 0xffff;
+        return getResource(typeId, entryId);
     }
     public ResourceEntry getResource(int typeId, int entryId){
         SpecTypePair specTypePair =
@@ -188,7 +216,6 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
     }
     public void destroy(){
-        getEntriesGroupMap().clear();
         getPackageBody().destroy();
         getTypeStringPool().destroy();
         getSpecStringPool().destroy();
@@ -274,11 +301,10 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
 
     public StagedAliasEntry searchByStagedResId(int stagedResId){
-        for(StagedAlias stagedAlias:getStagedAliasList().getChildes()){
-            StagedAliasEntry entry=stagedAlias.getStagedAliasEntryArray()
-                    .searchByStagedResId(stagedResId);
-            if(entry!=null){
-                return entry;
+        for(StagedAlias stagedAlias:listStagedAlias()){
+            StagedAliasEntry aliasEntry = stagedAlias.searchByStagedResId(stagedResId);
+            if(aliasEntry != null){
+                return aliasEntry;
             }
         }
         return null;
@@ -305,6 +331,7 @@ public class PackageBlock extends Chunk<PackageHeader>
     public boolean isEmpty(){
         return getSpecTypePairArray().isEmpty();
     }
+    @Override
     public int getId(){
         return getHeaderBlock().getPackageId().get();
     }
@@ -313,12 +340,61 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     public void setId(int id){
         getHeaderBlock().getPackageId().set(id);
+        mPrefix = null;
+        mHasValidPrefix = false;
     }
+    @Override
     public String getName(){
         return getHeaderBlock().getPackageName().get();
     }
     public void setName(String name){
         getHeaderBlock().getPackageName().set(name);
+        mPrefix = null;
+        mHasValidPrefix = false;
+    }
+    @Override
+    public String getPrefix(){
+        if(mPrefix != null){
+            return mPrefix;
+        }
+        boolean hasValidPrefix;
+        String prefix;
+        if(getId() == 0x01){
+            prefix = ResourceLibrary.PREFIX_ANDROID;
+            hasValidPrefix = ResourceLibrary.PREFIX_ANDROID.equals(getName());
+        }else {
+            prefix = ResourceLibrary.toPrefix(getName());
+            hasValidPrefix = Namespace.isValidPrefix(prefix);
+            if(!hasValidPrefix){
+                prefix = ResourceLibrary.PREFIX_APP;
+            }
+        }
+        mPrefix = prefix;
+        mHasValidPrefix = hasValidPrefix;
+        return prefix;
+    }
+    @Override
+    public String getUri(){
+        if(isAndroid()){
+            return ResourceLibrary.URI_ANDROID;
+        }
+        return ResourceLibrary.URI_RES_AUTO;
+    }
+    @Override
+    public boolean packageNameMatches(String packageName){
+        if(packageName == null){
+            return false;
+        }
+        if(packageName.equals(getName())){
+            return true;
+        }
+        if(mHasValidPrefix && packageName.equals(getPrefix())){
+            return true;
+        }
+        return getLibraryBlock().containsLibraryInfo(packageName);
+    }
+    private boolean isAndroid(){
+        return getId() == 0x01 && ResourceLibrary.PREFIX_ANDROID.equals(getName());
     }
     public TableBlock getTableBlock(){
         Block parent=getParent();
@@ -382,9 +458,6 @@ public class PackageBlock extends Chunk<PackageHeader>
     public LibraryBlock getLibraryBlock(){
         return mBody.getLibraryBlock();
     }
-    public Set<Integer> listResourceIds(){
-        return getEntriesGroupMap().keySet();
-    }
     public Entry getOrCreateEntry(byte typeId, short entryId, String qualifiers){
         return getSpecTypePairArray().getOrCreateEntry(typeId, entryId, qualifiers);
     }
@@ -411,118 +484,15 @@ public class PackageBlock extends Chunk<PackageHeader>
         return getSpecTypePairArray().getTypeBlock(typeId, qualifiers);
     }
 
-    private void unlockEntryGroup() {
-        synchronized (this){
-            if(!this.entryGroupMapLocked){
-                return;
-            }
-            entryGroupMapLocked = false;
-            Map<Integer, EntryGroup> map = this.mEntriesGroup;
-            map.clear();
-            createEntryGroupMap(map);
-        }
-    }
-    private void createEntryGroupMap(Map<Integer, EntryGroup> map){
-        map.clear();
-        for(SpecTypePair specTypePair : listSpecTypePairs()){
-            map.putAll(specTypePair.createEntryGroups(true));
-        }
-    }
-    public Map<Integer, EntryGroup> getEntriesGroupMap(){
-        unlockEntryGroup();
-        return mEntriesGroup;
-    }
-    public Collection<EntryGroup> listEntryGroup(){
-        return getEntriesGroupMap().values();
-    }
-    public int getEntryGroupCount(){
-        return getEntriesGroupMap().size();
-    }
-
-    /**
-     * Searches entries by resource id from local map, then if not find
-     * search by alias resource id
-     * */
-    public EntryGroup getEntryGroup(int resourceId){
-        if(resourceId==0){
-            return null;
-        }
-        EntryGroup entryGroup=getEntriesGroupMap().get(resourceId);
-        if(entryGroup!=null){
-            return entryGroup;
-        }
-        StagedAliasEntry stagedAliasEntry = searchByStagedResId(resourceId);
-        if(stagedAliasEntry!=null){
-            return getEntriesGroupMap()
-                    .get(stagedAliasEntry.getFinalizedResId());
-        }
-        return null;
-    }
-    public void updateEntry(Entry entry){
-        if(this.entryGroupMapLocked){
-            return;
-        }
-        if(entry == null || entry.isNull()){
-            return;
-        }
-        int resourceId = entry.getResourceId();
-        Map<Integer, EntryGroup> map = getEntriesGroupMap();
-        EntryGroup group = map.get(resourceId);
-        if(group == null){
-            group = new EntryGroup(resourceId);
-            map.put(resourceId, group);
-        }
-        group.add(entry);
-    }
-    public void removeEntryGroup(Entry entry){
-        if(entry == null){
-            return;
-        }
-        int resourceId = entry.getResourceId();
-        Map<Integer, EntryGroup> map = getEntriesGroupMap();
-        EntryGroup group = map.get(resourceId);
-        if(group == null){
-            return;
-        }
-        group.remove(entry);
-        if(group.size() == 0){
-            map.remove(resourceId);
-        }
-    }
-    public List<Entry> listEntries(byte typeId, int entryId){
-        List<Entry> results=new ArrayList<>();
-        for(SpecTypePair pair:listSpecTypePair(typeId)){
-            results.addAll(pair.listEntries(entryId));
-        }
-        return results;
-    }
-    public List<SpecTypePair> listSpecTypePair(byte typeId){
-        List<SpecTypePair> results = new ArrayList<>();
-        for(SpecTypePair specTypePair : listSpecTypePairs()){
-            if(typeId == specTypePair.getTypeId()){
-                results.add(specTypePair);
-            }
-        }
-        return results;
-    }
     public SpecTypePair getSpecTypePair(String typeName){
-        return getSpecTypePairArray().getSpecTypePair(typeName);
+        return getSpecTypePair(typeIdOf(typeName));
     }
     public SpecTypePair getSpecTypePair(int typeId){
         return getSpecTypePairArray().getSpecTypePair((byte) typeId);
     }
-    public EntryGroup getEntryGroup(String typeName, String entryName){
-        return getSpecTypePairArray().getEntryGroup(typeName, entryName);
-    }
+
     public Collection<SpecTypePair> listSpecTypePairs(){
         return getSpecTypePairArray().listItems();
-    }
-    /**
-     * Use listSpecTypePairs()
-     * */
-    @Deprecated
-    public Collection<SpecTypePair> listAllSpecTypePair(){
-        return listSpecTypePairs();
     }
 
     private void refreshTypeStringPoolOffset(){
@@ -538,9 +508,6 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     private void refreshSpecStringCount(){
         getHeaderBlock().getSpecStringPoolCount().set(mSpecStringPool.countStrings());
-    }
-    public void onEntryAdded(Entry entry){
-        updateEntry(entry);
     }
     @Override
     public void onChunkLoaded() {
@@ -676,18 +643,25 @@ public class PackageBlock extends Chunk<PackageHeader>
         entry.setName(name, true);
         return true;
     }
-    private void parsePublicXmlAttributes(XmlPullParser parser) {
-        int count = parser.getAttributeCount();
-        for(int i = 0; i < count; i++){
-            onPublicXmlResourceAttributes(
-                    parser.getAttributeName(i), parser.getAttributeValue(i));
+    public void initializeDefinedTypeIds(){
+        SpecTypePair specTypePair = getSpecTypePair("id");
+        if(specTypePair == null){
+            return;
         }
-    }
-    private void onPublicXmlResourceAttributes(String name, String value){
-        if(ATTR_package.equals(name)){
-            setName(value);
-        }else if(ATTR_id.equals(name)){
-            setId(Integer.decode(value));
+        Iterator<ResourceEntry> itr = specTypePair.getResources();
+        while (itr.hasNext()){
+            Iterator<Entry> entryIterator = itr.next()
+                    .iterator(false);
+            while (entryIterator.hasNext()){
+                Entry entry = entryIterator.next();
+                if(!entry.isNull() || entry.getSpecReference() < 0){
+                    continue;
+                }
+                entry.setValueAsBoolean(false);
+                ValueHeader valueHeader = entry.getHeader();
+                valueHeader.setWeak(true);
+                valueHeader.setPublic(true);
+            }
         }
     }
 
@@ -819,6 +793,13 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return def;
     }
+    public static boolean isResourceId(int resourceId){
+        if(resourceId == 0){
+            return false;
+        }
+        return (resourceId & 0x00ff0000) != 0
+                && (resourceId & 0xff000000) != 0;
+    }
 
     public static final String NAME_package_id = "package_id";
     public static final String NAME_package_name = "package_name";
@@ -840,4 +821,5 @@ public class PackageBlock extends Chunk<PackageHeader>
     public static final String ATTR_id = "id";
     public static final String ATTR_type = "type";
     public static final String ATTR_name = "name";
+
 }

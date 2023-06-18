@@ -16,10 +16,91 @@
 package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.array.ResValueMapArray;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.model.ResourceEntry;
 
 public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArray> {
     public ResTableMapEntry(){
         super(new ResValueMapArray());
+    }
+
+    public String decodeParentId(){
+        ResourceEntry resourceEntry = resolveParentId();
+        if(resourceEntry == null){
+            return null;
+        }
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return null;
+        }
+        return resourceEntry.buildReference(packageBlock, ValueType.REFERENCE);
+    }
+    public ResourceEntry resolveParentId(){
+        int id = getParentId();
+        if(id == 0){
+            return null;
+        }
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return null;
+        }
+        TableBlock tableBlock = packageBlock.getTableBlock();
+        if(tableBlock == null){
+            return null;
+        }
+        return tableBlock.getResource(packageBlock, id);
+    }
+    private PackageBlock getPackageBlock(){
+        Entry entry = getParentEntry();
+        if(entry != null){
+            return entry.getPackageBlock();
+        }
+        return null;
+    }
+    public boolean isAttr(){
+        boolean hasFormats = false;
+        for(ResValueMap valueMap : this){
+            AttributeType attributeType = valueMap.getAttributeType();
+            if(attributeType == null || attributeType.isPlural()){
+                return false;
+            }
+            if(attributeType == AttributeType.FORMATS){
+                if(hasFormats){
+                    return false;
+                }
+                hasFormats = true;
+            }
+        }
+        return hasFormats;
+    }
+    public boolean isPlural(){
+        for(ResValueMap valueMap : this){
+            AttributeType attributeType = valueMap.getAttributeType();
+            if(attributeType == null || !attributeType.isPlural()){
+                return false;
+            }
+        }
+        return false;
+    }
+    public boolean isArray(){
+        int size = getValue().childesCount();
+        for(ResValueMap valueMap : this){
+            int id = valueMap.getNameResourceID();
+            if(id >= 0 && id <= size){
+                continue;
+            }
+            return false;
+        }
+        if(size != 0){
+            return true;
+        }
+        Entry entry = getParentEntry();
+        if(entry == null){
+            return false;
+        }
+        String type = entry.getTypeName();
+        return type != null && type.contains("array");
     }
     @Override
     boolean shouldMerge(TableEntry<?, ?> tableEntry){

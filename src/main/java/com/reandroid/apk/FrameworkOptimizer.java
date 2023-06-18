@@ -22,7 +22,7 @@ import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
 import com.reandroid.arsc.chunk.xml.ResXmlElement;
 import com.reandroid.arsc.chunk.xml.ResXmlNode;
-import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.util.FrameworkTable;
@@ -228,8 +228,8 @@ import java.util.zip.ZipEntry;
             return null;
         }
         circularReference.add(resourceId);
-        EntryGroup entryGroup = tableBlock.getEntryGroup(resourceId);
-        Entry entry = entryGroup.pickOne();
+        ResourceEntry entryGroup = tableBlock.getResource(resourceId);
+        Entry entry = entryGroup.get();
         if(entry==null){
             return null;
         }

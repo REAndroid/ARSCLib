@@ -24,14 +24,11 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.arsc.value.ValueType;
-import com.reandroid.common.EntryStore;
-import com.reandroid.common.FileChannelInputStream;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
-import com.reandroid.xml.XMLException;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -47,6 +44,8 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     private final SingleBlockContainer<ResXmlElement> mResXmlElementContainer;
     private ApkFile mApkFile;
     private PackageBlock mPackageBlock;
+    private boolean mDestroyed;
+
     public ResXmlDocument() {
         super(new HeaderBlock(ChunkType.XML),3);
         this.mResXmlStringPool=new ResXmlStringPool(true);
@@ -59,6 +58,20 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         addChild(mResXmlElementContainer);
     }
 
+    public void autoSetAttributeNamespaces(){
+        ResXmlElement root = getResXmlElement();
+        if(root != null){
+            root.autoSetAttributeNamespaces();
+        }
+        removeUnusedNamespaces();
+    }
+    public int removeUnusedNamespaces(){
+        ResXmlElement root = getResXmlElement();
+        if(root != null){
+            return root.removeUnusedNamespaces();
+        }
+        return 0;
+    }
     public String refreshFull(){
         int sizeOld = getHeaderBlock().getChunkSize();
         StringBuilder message = new StringBuilder();
@@ -72,6 +85,15 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
                 message.append(count);
                 appendOnce = true;
             }
+        }
+        count = removeUnusedNamespaces();
+        if(count != 0){
+            if(appendOnce){
+                message.append("\n");
+            }
+            message.append("Removed unused namespaces = ");
+            message.append(count);
+            appendOnce = true;
         }
         count = getStringPool().removeUnusedStrings().size();
         if(count != 0){
@@ -100,14 +122,20 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         return null;
     }
     public void destroy(){
-        ResXmlElement root = getResXmlElement();
-        if(root!=null){
-            root.clearChildes();
-            setResXmlElement(null);
+        synchronized (this){
+            if(mDestroyed){
+                return;
+            }
+            mDestroyed = true;
+            ResXmlElement root = getResXmlElement();
+            if(root != null){
+                root.clearChildes();
+                setResXmlElement(null);
+            }
+            getResXmlIDMap().destroy();
+            getStringPool().destroy();
+            refresh();
         }
-        getResXmlIDMap().destroy();
-        getStringPool().destroy();
-        refresh();
     }
     public void setAttributesUnitSize(int size, boolean setToAll){
         ResXmlElement root = getResXmlElement();
@@ -320,28 +348,10 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         xmlElement.fromJson(json.optJSONObject(ResXmlDocument.NAME_element));
         refresh();
     }
-    public XMLDocument decodeToXml() throws XMLException {
-        ApkFile apkFile = getApkFile();
-        if(apkFile == null){
-            throw new XMLException("Null parent apk file");
-        }
-        int currentPackageId = 0;
-        AndroidManifestBlock manifestBlock;
-        if(this instanceof AndroidManifestBlock){
-            manifestBlock = ((AndroidManifestBlock)this);
-        }else {
-            manifestBlock = apkFile.getAndroidManifestBlock();
-        }
-        if(manifestBlock!=null){
-            currentPackageId = manifestBlock.guessCurrentPackageId();
-        }
-        TableBlock tableBlock = apkFile.getTableBlock();
-        return decodeToXml(tableBlock, currentPackageId);
-    }
-    public XMLDocument decodeToXml(EntryStore entryStore, int currentPackageId) throws XMLException {
+    public XMLDocument decodeToXml() {
         XMLDocument xmlDocument = new XMLDocument();
         XMLElement xmlElement = getResXmlElement()
-                .decodeToXml(entryStore, currentPackageId);
+                .decodeToXml();
         xmlDocument.setDocumentElement(xmlElement);
         return xmlDocument;
     }

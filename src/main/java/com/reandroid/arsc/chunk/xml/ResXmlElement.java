@@ -17,13 +17,13 @@ package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.pool.ResXmlStringPool;
-import com.reandroid.common.EntryStore;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
@@ -54,7 +54,75 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         addChild(3, mEndElementContainer);
         addChild(4, mEndNamespaceList);
     }
-
+    public ResXmlAttribute getIdAttribute(){
+        ResXmlStartElement startElement = getStartElement();
+        if(startElement != null){
+            return startElement.getIdAttribute();
+        }
+        return null;
+    }
+    public ResXmlAttribute getClassAttribute(){
+        ResXmlStartElement startElement = getStartElement();
+        if(startElement != null){
+            return startElement.getClassAttribute();
+        }
+        return null;
+    }
+    public ResXmlAttribute getStyleAttribute(){
+        ResXmlStartElement startElement = getStartElement();
+        if(startElement != null){
+            return startElement.getStyleAttribute();
+        }
+        return null;
+    }
+    public ResXmlNamespace getNamespaceAt(int i){
+        return mStartNamespaceList.get(i);
+    }
+    public int getNamespaceCount(){
+        return mStartNamespaceList.size();
+    }
+    public ResXmlNamespace getNamespace(String uri, String prefix){
+        return getXmlStartNamespace(uri, prefix);
+    }
+    public ResXmlNamespace getOrCreateNamespace(String uri, String prefix){
+        return getOrCreateXmlStartNamespace(uri, prefix);
+    }
+    public ResXmlNamespace newNamespace(String uri, String prefix){
+        return createXmlStartNamespace(uri, prefix);
+    }
+    public ResXmlNamespace getNamespaceByUri(String uri){
+        return getStartNamespaceByUri(uri);
+    }
+    public ResXmlNamespace getNamespaceByPrefix(String prefix){
+        return getStartNamespaceByPrefix(prefix);
+    }
+    public void autoSetAttributeNamespaces(){
+        for(ResXmlAttribute attribute : listAttributes()){
+            attribute.autoSetNamespace();
+        }
+        for(ResXmlNode child : getXmlNodes()){
+            if(child instanceof ResXmlElement){
+                ((ResXmlElement)child).autoSetAttributeNamespaces();
+            }
+        }
+    }
+    int removeUnusedNamespaces(){
+        int count = 0;
+        List<ResXmlStartNamespace> nsList = new ArrayList<>(getStartNamespaceList());
+        for(ResXmlStartNamespace ns : nsList){
+            boolean removed = ns.removeIfNoReference();
+            if(removed){
+                count ++;
+            }
+        }
+        for(ResXmlNode node : getXmlNodes()){
+            if(node instanceof ResXmlElement){
+                ResXmlElement child = (ResXmlElement) node;
+                count += child.removeUnusedNamespaces();
+            }
+        }
+        return count;
+    }
     public int removeUndefinedAttributes(){
         int count = 0;
         ResXmlStartElement start = getStartElement();
@@ -149,7 +217,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public void setComment(String comment){
         getStartElement().setComment(comment);
     }
-    public void calculatePositions(){
+    void calculatePositions(){
         ResXmlStartElement start = getStartElement();
         if(start!=null){
             start.calculatePositions();
@@ -200,16 +268,18 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return resXmlElement;
     }
     public ResXmlAttribute getOrCreateAndroidAttribute(String name, int resourceId){
-        return getOrCreateAttribute(NS_ANDROID_URI, NS_ANDROID_PREFIX, name, resourceId);
+        return getOrCreateAttribute(
+                ResourceLibrary.URI_ANDROID,
+                ResourceLibrary.PREFIX_ANDROID,
+                name,
+                resourceId);
     }
     public ResXmlAttribute getOrCreateAttribute(String uri, String prefix, String name, int resourceId){
         ResXmlAttribute attribute = searchAttribute(name, resourceId);
         if(attribute == null){
             attribute = createAttribute(name, resourceId);
             if(uri != null && resourceId != 0){
-                ResXmlElement root = getRootResXmlElement();
-                ResXmlStartNamespace ns = root.getOrCreateNamespace(uri, prefix);
-                attribute.setNamespaceReference(ns.getUriReference());
+                attribute.setNamespace(uri, prefix);
             }
         }
         return attribute;
@@ -223,7 +293,8 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     }
     public ResXmlAttribute createAndroidAttribute(String name, int resourceId){
         ResXmlAttribute attribute=createAttribute(name, resourceId);
-        ResXmlStartNamespace ns = getOrCreateNamespace(NS_ANDROID_URI, NS_ANDROID_PREFIX);
+        ResXmlStartNamespace ns = getOrCreateXmlStartNamespace(ResourceLibrary.URI_ANDROID,
+                ResourceLibrary.PREFIX_ANDROID);
         attribute.setNamespaceReference(ns.getUriReference());
         return attribute;
     }
@@ -311,11 +382,17 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return null;
     }
     public String getTagPrefix(){
-        ResXmlStartElement startElement=getStartElement();
-        if(startElement!=null){
+        ResXmlStartElement startElement = getStartElement();
+        if(startElement != null){
             return startElement.getPrefix();
         }
         return null;
+    }
+    public void setTagNamespace(String uri, String prefix){
+        ResXmlStartElement startElement = getStartElement();
+        if(startElement != null){
+            startElement.setTagNamespace(uri, prefix);
+        }
     }
     public int getAttributeCount() {
         ResXmlStartElement startElement=getStartElement();
@@ -511,7 +588,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public ResXmlElement getParentResXmlElement(){
         return getParentInstance(ResXmlElement.class);
     }
-    public ResXmlStartNamespace getStartNamespaceByUriRef(int uriRef){
+    ResXmlStartNamespace getStartNamespaceByUriRef(int uriRef){
         if(uriRef<0){
             return null;
         }
@@ -526,7 +603,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         return null;
     }
-    public ResXmlStartNamespace getNamespace(String uri, String prefix){
+    ResXmlStartNamespace getXmlStartNamespace(String uri, String prefix){
         if(uri == null || prefix == null){
             return null;
         }
@@ -537,18 +614,18 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         ResXmlElement xmlElement = getParentResXmlElement();
         if(xmlElement != null){
-            return xmlElement.getNamespace(uri, prefix);
+            return xmlElement.getXmlStartNamespace(uri, prefix);
         }
         return null;
     }
-    public ResXmlStartNamespace getOrCreateNamespace(String uri, String prefix){
-        ResXmlStartNamespace exist = getNamespace(uri, prefix);
+    public ResXmlStartNamespace getOrCreateXmlStartNamespace(String uri, String prefix){
+        ResXmlStartNamespace exist = getXmlStartNamespace(uri, prefix);
         if(exist != null){
             return exist;
         }
-        return getRootResXmlElement().createNamespace(uri, prefix);
+        return getRootResXmlElement().createXmlStartNamespace(uri, prefix);
     }
-    public ResXmlStartNamespace createNamespace(String uri, String prefix){
+    private ResXmlStartNamespace createXmlStartNamespace(String uri, String prefix){
         ResXmlStartNamespace startNamespace = new ResXmlStartNamespace();
         ResXmlEndNamespace endNamespace = new ResXmlEndNamespace();
         startNamespace.setEnd(endNamespace);
@@ -562,7 +639,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
 
         return startNamespace;
     }
-    public ResXmlStartNamespace getStartNamespaceByUri(String uri){
+    ResXmlStartNamespace getStartNamespaceByUri(String uri){
         if(uri==null){
             return null;
         }
@@ -577,8 +654,8 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         return null;
     }
-    public ResXmlStartNamespace getStartNamespaceByPrefix(String prefix){
-        if(prefix==null){
+    private ResXmlStartNamespace getStartNamespaceByPrefix(String prefix){
+        if(prefix == null){
             return null;
         }
         for(ResXmlStartNamespace ns:mStartNamespaceList.getChildes()){
@@ -586,26 +663,17 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
                 return ns;
             }
         }
-        ResXmlElement xmlElement=getParentResXmlElement();
-        if(xmlElement!=null){
+        ResXmlElement xmlElement = getParentResXmlElement();
+        if(xmlElement != null){
             return xmlElement.getStartNamespaceByPrefix(prefix);
         }
         return null;
     }
-    public List<ResXmlStartNamespace> getStartNamespaceList(){
+    private List<ResXmlStartNamespace> getStartNamespaceList(){
         return mStartNamespaceList.getChildes();
     }
-    public int getNamespaceCount(){
-        return mStartNamespaceList.size();
-    }
-    public ResXmlStartNamespace getNamespace(int index){
-        return mStartNamespaceList.get(index);
-    }
-    public void addStartNamespace(ResXmlStartNamespace item){
+    private void addStartNamespace(ResXmlStartNamespace item){
         mStartNamespaceList.add(item);
-    }
-    private List<ResXmlEndNamespace> getEndNamespaceList(){
-        return mEndNamespaceList.getChildes();
     }
     private void addEndNamespace(ResXmlEndNamespace item, boolean at_first){
         if(at_first){
@@ -639,7 +707,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return startElement;
     }
 
-    public ResXmlStartElement getStartElement(){
+    private ResXmlStartElement getStartElement(){
         return mStartElementContainer.getItem();
     }
     private void setStartElement(ResXmlStartElement item){
@@ -653,7 +721,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         mEndElementContainer.setItem(item);
     }
 
-    public void addResXmlTextNode(ResXmlTextNode xmlTextNode){
+    private void addResXmlTextNode(ResXmlTextNode xmlTextNode){
         mBody.add(xmlTextNode);
     }
     public void addResXmlText(ResXmlText xmlText){
@@ -924,7 +992,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
                 JSONObject nsObject=nsArray.getJSONObject(i);
                 String uri=nsObject.optString(NAME_namespace_uri, "");
                 String prefix=nsObject.optString(NAME_namespace_prefix, "");
-                getOrCreateNamespace(uri,prefix);
+                getOrCreateXmlStartNamespace(uri,prefix);
             }
         }
         setTag(json.getString(NAME_name));
@@ -975,13 +1043,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return childObject.has(NAME_text);
     }
 
-    /**
-     * Decodes binary {@link ResXmlElement} to readable {@link XMLElement}
-     * @param entryStore : used for decoding attribute name and values
-     * @param currentPackageId : is id of current package defining this xml, used for
-     *                         decoding reference names e.g @{package.name}:string/entry_name
-     * */
-    public XMLElement decodeToXml(EntryStore entryStore, int currentPackageId) throws XMLException {
+    public XMLElement decodeToXml() {
         XMLElement xmlElement = new XMLElement(getTagName());
         xmlElement.setLineNumber(getStartElement().getLineNumber());
         for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
@@ -989,7 +1051,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         for(ResXmlAttribute resXmlAttribute:listAttributes()){
             XMLAttribute xmlAttribute =
-                    resXmlAttribute.decodeToXml(entryStore, currentPackageId);
+                    resXmlAttribute.decodeToXml();
             xmlElement.addAttribute(xmlAttribute);
         }
         String comment=getStartComment();
@@ -1004,7 +1066,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             if(xmlNode instanceof ResXmlElement){
                 ResXmlElement childResXmlElement=(ResXmlElement)xmlNode;
                 XMLElement childXMLElement =
-                        childResXmlElement.decodeToXml(entryStore, currentPackageId);
+                        childResXmlElement.decodeToXml();
                 xmlElement.addChild(childXMLElement);
             }else if(xmlNode instanceof ResXmlTextNode){
                 ResXmlTextNode childResXmlTextNode=(ResXmlTextNode)xmlNode;
@@ -1039,15 +1101,6 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             return builder.toString();
         }
         return "NULL";
-    }
-    static ResXmlElement newResXmlElement(String tag){
-        ResXmlElement resXmlElement=new ResXmlElement();
-        ResXmlStartElement startElement=new ResXmlStartElement();
-        resXmlElement.setStartElement(startElement);
-        ResXmlEndElement endElement=new ResXmlEndElement();
-        resXmlElement.setEndElement(endElement);
-        resXmlElement.setTag(tag);
-        return resXmlElement;
     }
 
     public static final String NS_ANDROID_URI = "http://schemas.android.com/apk/res/android";

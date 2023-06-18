@@ -13,20 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.arsc.group;
+package com.reandroid.arsc.model;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.item.SpecString;
+import com.reandroid.arsc.util.ComputeIterator;
+import com.reandroid.arsc.util.FilterIterator;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.attribute.AttributeBag;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class ResourceEntry implements Iterable<Entry>, Predicate<Entry> {
+public class ResourceEntry implements Iterable<Entry>{
     private final int resourceId;
     private final PackageBlock packageBlock;
 
@@ -97,11 +101,17 @@ public class ResourceEntry implements Iterable<Entry>, Predicate<Entry> {
     public boolean isEmpty() {
         return !iterator(true).hasNext();
     }
+    public boolean isDeclared() {
+        return getName() != null;
+    }
+    public PackageBlock getPackageBlock(){
+        return packageBlock;
+    }
     public int getResourceId() {
         return resourceId;
     }
-    public String getPackage(){
-        return packageBlock.getPackageBlock().getName();
+    public String getPackageName(){
+        return getPackageBlock().getName();
     }
     public String getType(){
         return packageBlock.typeNameOf((getResourceId() >> 16) & 0xff);
@@ -143,25 +153,53 @@ public class ResourceEntry implements Iterable<Entry>, Predicate<Entry> {
     public Iterator<Entry> iterator(){
         return iterator(true);
     }
-    @Override
-    public boolean test(Entry entry) {
-        return entry != null && !entry.isNull();
-    }
     public Iterator<Entry> iterator(boolean skipNull){
         return packageBlock.getEntries(getResourceId(), skipNull);
+    }
+    public Iterator<Entry> iterator(Predicate<Entry> filter){
+        return new FilterIterator<>(packageBlock.getEntries(getResourceId()), filter);
+    }
+    public Iterator<ResConfig> getConfigs(){
+        return new ComputeIterator<Entry, ResConfig>(iterator(false)) {
+            @Override
+            public ResConfig apply(Entry element) {
+                return element.getResConfig();
+            }
+        };
     }
     public String getHexId(){
         return HexUtil.toHex8(getResourceId());
     }
-    public int count(){
-        int result = 0;
-        Iterator<Entry> itr = iterator(true);
-        while (itr.hasNext()){
-            if(!itr.next().isNull()){
-                result ++;
-            }
+
+    public String buildReference(PackageBlock context, ValueType referenceType){
+        if(!referenceType.isReference()){
+            throw new IllegalArgumentException("Not reference: " + referenceType);
         }
-        return result;
+        StringBuilder builder = new StringBuilder();
+        if(referenceType == ValueType.REFERENCE){
+            builder.append('@');
+        }else {
+            builder.append('?');
+        }
+        if(context != getPackageBlock()){
+            builder.append(getPackageName());
+            builder.append(':');
+        }
+        builder.append(getType());
+        builder.append('/');
+        builder.append(getName());
+        return builder.toString();
+    }
+    public String decodeAttributeData(int data){
+        Entry entry = get();
+        if(entry == null){
+            return null;
+        }
+        AttributeBag attributeBag = AttributeBag.create(entry.getResValueMapArray());
+        if(attributeBag != null){
+            return attributeBag.decodeAttributeValue(data);
+        }
+        return null;
     }
 
     public boolean serializePublicXml(XmlSerializer serializer) throws IOException {
@@ -195,7 +233,7 @@ public class ResourceEntry implements Iterable<Entry>, Predicate<Entry> {
 
     @Override
     public String toString(){
-        return getHexId() + " @" + getPackage()
+        return getHexId() + " @" + getPackageName()
                 + ":" + getType() + "/" + getName();
     }
 

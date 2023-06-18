@@ -247,8 +247,7 @@ public class FrameworkApk extends ApkModule{
     }
     public static boolean isFramework(AndroidManifestBlock manifestBlock){
         ResXmlElement root = manifestBlock.getManifestElement();
-        ResXmlAttribute attribute = root.getStartElement()
-                .searchAttributeByName(AndroidManifestBlock.NAME_coreApp);
+        ResXmlAttribute attribute = root.searchAttributeByName(AndroidManifestBlock.NAME_coreApp);
         if(attribute==null || attribute.getValueType()!= ValueType.BOOLEAN){
             return false;
         }

@@ -15,30 +15,29 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
+import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.coder.ValueCoder;
-import com.reandroid.arsc.coder.ValueDecoder;
-import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.AttributeValue;
-import com.reandroid.arsc.value.Entry;
-import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.arsc.value.ValueType;
-import com.reandroid.common.EntryStore;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLAttribute;
 
 import java.io.IOException;
 import java.util.Objects;
 
-public class ResXmlAttribute extends ValueItem implements AttributeValue, Comparable<ResXmlAttribute>{
+public class ResXmlAttribute extends AttributeValue implements Comparable<ResXmlAttribute>{
     private ReferenceItem mNSReference;
     private ReferenceItem mNameReference;
     private ReferenceItem mNameIdReference;
     private ReferenceItem mValueStringReference;
+    private ResXmlStartNamespace mLinkedNamespace;
+
     public ResXmlAttribute(int attributeUnitSize) {
         super(attributeUnitSize, OFFSET_SIZE);
         byte[] bts = getBytesInternal();
@@ -50,6 +49,18 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
         this(20);
     }
 
+    public void autoSetNamespace(){
+        if(getNameResourceID() == 0){
+            setNamespace(null, null);
+            return;
+        }
+        ResourceEntry nameEntry = resolveName();
+        if(nameEntry == null){
+            return;
+        }
+        PackageBlock packageBlock = nameEntry.getPackageBlock();
+        setNamespace(packageBlock.getUri(), packageBlock.getPrefix());
+    }
     @Override
     public boolean isUndefined(){
         return getNameReference() < 0;
@@ -71,16 +82,46 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
     public String getName(){
         return getString(getNameReference());
     }
+    @Override
+    public String decodePrefix(){
+        int resourceId = getNameResourceID();
+        if(resourceId == 0){
+            return null;
+        }
+        return getNamePrefix();
+    }
+    @Override
+    public String decodeName(boolean includePrefix){
+        int resourceId = getNameResourceID();
+        if(resourceId == 0){
+            return getName();
+        }
+        ResourceEntry resourceEntry = resolveName();
+        if(resourceEntry == null || !resourceEntry.isDeclared()){
+            String name = ValueCoder.decodeUnknownResourceId(false, resourceId);
+            if(includePrefix){
+                String prefix = getNamePrefix();
+                if(prefix != null){
+                    name = prefix + ":" + name;
+                }
+            }
+            return name;
+        }
+        String name = resourceEntry.getName();
+        if(includePrefix && name != null){
+            String prefix = getNamePrefix();
+            if(prefix != null){
+                name = prefix + ":" + name;
+            }
+        }
+        return name;
+    }
     public String getNamePrefix(){
-        ResXmlElement xmlElement=getParentResXmlElement();
-        if(xmlElement==null){
-            return null;
+        ResXmlStartNamespace namespace = getStartNamespace();
+        if(namespace != null){
+            return namespace.getPrefix();
         }
-        ResXmlStartNamespace startNamespace=xmlElement.getStartNamespaceByUriRef(getNamespaceReference());
-        if(startNamespace==null){
-            return null;
-        }
-        return startNamespace.getPrefix();
+        return null;
     }
     // WARN! Careful this is not real value
     public String getValueString(){
@@ -103,11 +144,6 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
         ResXmlID xmlID = xmlIDMap.getOrCreate(resourceId);
         setNameReference(xmlID.getIndex());
     }
-    @Override
-    public Entry resolveName(){
-        return resolve(getNameResourceID());
-    }
-
     public void setName(String name, int resourceId){
         if(Objects.equals(name, getName()) && resourceId==getNameResourceID()){
             return;
@@ -123,27 +159,36 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
         linkNameId();
     }
     private void linkStartNameSpace(){
-        ResXmlElement xmlElement=getParentResXmlElement();
-        if(xmlElement==null){
-            return;
-        }
-        ResXmlStartNamespace startNamespace=xmlElement.getStartNamespaceByUriRef(getNamespaceReference());
-        if(startNamespace==null){
-            return;
-        }
-        startNamespace.addAttributeReference(this);
-    }
-    private void unLinkStartNameSpace(){
-        ResXmlElement xmlElement = getParentResXmlElement();
-        if(xmlElement == null){
-            return;
-        }
-        ResXmlStartNamespace startNamespace =
-                xmlElement.getStartNamespaceByUriRef(getNamespaceReference());
+        unLinkStartNameSpace();
+        ResXmlStartNamespace startNamespace = getStartNamespace();
         if(startNamespace == null){
             return;
         }
-        startNamespace.removeAttributeReference(this);
+        mLinkedNamespace = startNamespace;
+        startNamespace.addAttributeReference(this);
+    }
+    private void unLinkStartNameSpace(){
+        ResXmlStartNamespace namespace = mLinkedNamespace;
+        if(namespace == null){
+            return;
+        }
+        this.mLinkedNamespace = null;
+        namespace.removeAttributeReference(this);
+    }
+    private ResXmlStartNamespace getStartNamespace(){
+        int uriRef = getNamespaceReference();
+        if(uriRef < 0){
+            return null;
+        }
+        ResXmlStartNamespace namespace = mLinkedNamespace;
+        if(namespace != null && namespace.getUriReference() == uriRef){
+            return namespace;
+        }
+        ResXmlElement parentElement = getParentResXmlElement();
+        if(parentElement != null){
+            return parentElement.getStartNamespaceByUriRef(uriRef);
+        }
+        return null;
     }
     private ResXmlString getOrCreateAttributeName(String name, int resourceId){
         ResXmlStringPool stringPool = getStringPool();
@@ -210,20 +255,23 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
         if(parentElement == null){
             return;
         }
-        ResXmlStartNamespace ns = parentElement.getOrCreateNamespace(uri, prefix);
+        ResXmlStartNamespace ns = parentElement.getOrCreateXmlStartNamespace(uri, prefix);
         setNamespaceReference(ns.getUriReference());
     }
     public void setNamespaceReference(int ref){
         if(ref == getNamespaceReference()){
             return;
         }
+        setUriReference(ref);
+        linkStartNameSpace();
+    }
+    void setUriReference(int ref){
         StringItem stringItem = getStringItem(getNamespaceReference());
         putInteger(getBytesInternal(), OFFSET_NS, ref);
         if(stringItem != null){
             stringItem.removeReference(mNSReference);
         }
         mNSReference = link(OFFSET_NS);
-        linkStartNameSpace();
     }
     int getNameReference(){
         return getInteger(getBytesInternal(), OFFSET_NAME);
@@ -428,7 +476,7 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
             ResXmlStartNamespace ns = getParentResXmlElement().getStartNamespaceByUri(uri);
             if(ns==null){
                 ns = getParentResXmlElement().getRootResXmlElement()
-                        .getOrCreateNamespace(uri, "");
+                        .getOrCreateXmlStartNamespace(uri, "");
             }
             setNamespaceReference(ns.getUriReference());
         }
@@ -442,35 +490,10 @@ public class ResXmlAttribute extends ValueItem implements AttributeValue, Compar
             setData(json.getInt(NAME_data));
         }
     }
-    public XMLAttribute decodeToXml(EntryStore entryStore, int currentPackageId) {
-        int resourceId=getNameResourceID();
-        String name;
-        if(resourceId==0){
-            name=getName();
-        }else {
-            EntryGroup group = entryStore.getEntryGroup(resourceId);
-            if(group==null){
-                //Lets ignore such error until XML encoder implemented
-                //throw new XMLException("Failed to decode attribute name: "
-                // resourceId);
-                name = ValueCoder.decodeUnknownResourceId(false, resourceId);
-            }else {
-                name = group.getSpecName();
-            }
-        }
-        String prefix = getNamePrefix();
-        if(prefix!=null){
-            name=prefix+":"+name;
-        }
-        ValueType valueType = getValueType();
-        int raw = getData();
-        String value = ValueDecoder.decode(entryStore, currentPackageId, (AttributeValue) this);
-        XMLAttribute attribute = new XMLAttribute(name, value);
-        attribute.setNameId(resourceId);
-        if(valueType==ValueType.REFERENCE||valueType==ValueType.ATTRIBUTE){
-            attribute.setValueId(raw);
-        }
-        return attribute;
+    public XMLAttribute decodeToXml() {
+        return new XMLAttribute(
+                decodeName(true),
+                decodeValue());
     }
     @Override
     public String toString(){

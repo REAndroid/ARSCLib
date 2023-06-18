@@ -17,6 +17,7 @@ package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockCounter;
+import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.FixedLengthString;
 import com.reandroid.arsc.item.IntegerItem;
@@ -27,7 +28,7 @@ import com.reandroid.json.JSONObject;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class LibraryInfo extends Block implements JSONConvert<JSONObject> {
+public class LibraryInfo extends Block implements JSONConvert<JSONObject>, ResourceLibrary {
     private final IntegerItem mPackageId;
     private final FixedLengthString mPackageName;
 
@@ -41,17 +42,34 @@ public class LibraryInfo extends Block implements JSONConvert<JSONObject> {
         mPackageName.setParent(this);
     }
 
-    public int getPackageId(){
+    @Override
+    public int getId(){
         return mPackageId.get();
     }
-    public void setPackageId(int id){
+    public void setId(int id){
         mPackageId.set(id);
     }
-    public String getPackageName(){
+    @Override
+    public String getName(){
         return mPackageName.get();
     }
-    public void setPackageName(String packageName){
+    public void setName(String packageName){
         mPackageName.set(packageName);
+    }
+    @Override
+    public String getPrefix(){
+        return ResourceLibrary.toPrefix(getName());
+    }
+    @Override
+    public String getUri(){
+        if(getId() == 0x01 && ResourceLibrary.PREFIX_ANDROID.equals(getName())){
+            return ResourceLibrary.URI_ANDROID;
+        }
+        return ResourceLibrary.URI_RES_AUTO;
+    }
+    @Override
+    public boolean packageNameMatches(String packageName) {
+        return ResourceLibrary.packageNameMatches(this, packageName);
     }
 
     @Override
@@ -95,32 +113,32 @@ public class LibraryInfo extends Block implements JSONConvert<JSONObject> {
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
-        jsonObject.put("id", getPackageId());
-        jsonObject.put("name", getPackageName());
+        jsonObject.put("id", getId());
+        jsonObject.put("name", getName());
         return jsonObject;
     }
     @Override
     public void fromJson(JSONObject json) {
-        setPackageId(json.getInt("id"));
-        setPackageName(json.getString("name"));
+        setId(json.getInt("id"));
+        setName(json.getString("name"));
     }
     public void merge(LibraryInfo info){
         if(info==null||info==this){
             return;
         }
-        if(getPackageId()!=info.getPackageId()){
+        if(getId()!=info.getId()){
             throw new IllegalArgumentException("Can not add different id libraries: "
-                    +getPackageId()+"!="+info.getPackageId());
+                    + getId()+"!="+info.getId());
         }
-        setPackageName(info.getPackageName());
+        setName(info.getName());
     }
     @Override
     public String toString(){
         StringBuilder builder=new StringBuilder();
         builder.append("LIBRARY{");
-        builder.append(HexUtil.toHex2((byte) getPackageId()));
+        builder.append(HexUtil.toHex2((byte) getId()));
         builder.append(':');
-        String name=getPackageName();
+        String name= getName();
         if(name==null){
             name="NULL";
         }

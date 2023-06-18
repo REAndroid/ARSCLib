@@ -16,19 +16,12 @@
 package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.coder.ValueDecoder;
 import com.reandroid.arsc.value.*;
-import com.reandroid.common.EntryStore;
 
 import java.io.IOException;
 
 abstract class DecoderTableEntry<INPUT extends TableEntry<?, ?>, OUTPUT> {
-    private final EntryStore entryStore;
-    public DecoderTableEntry(EntryStore entryStore){
-        this.entryStore = entryStore;
-    }
-    public EntryStore getEntryStore() {
-        return entryStore;
+    public DecoderTableEntry(){
     }
     public abstract OUTPUT decode(INPUT tableEntry, EntryWriter<OUTPUT> writer) throws IOException;
 
@@ -38,11 +31,7 @@ abstract class DecoderTableEntry<INPUT extends TableEntry<?, ?>, OUTPUT> {
         if(valueItem.getValueType() == ValueType.STRING){
             XMLDecodeHelper.writeTextContent(writer, valueItem.getDataAsPoolString());
         }else {
-            String value = ValueDecoder.decodeEntryValue(
-                    getEntryStore(),
-                    packageBlock,
-                    valueItem.getValueType(),
-                    valueItem.getData());
+            String value = valueItem.decodeValue();
             writer.text(value);
         }
     }
@@ -51,10 +40,7 @@ abstract class DecoderTableEntry<INPUT extends TableEntry<?, ?>, OUTPUT> {
         if(attributeValue.getValueType() == ValueType.STRING){
             XMLDecodeHelper.writeTextContent(writer, attributeValue.getDataAsPoolString());
         }else {
-            String value = ValueDecoder.decode(getEntryStore(),
-                    attributeValue.getPackageBlock().getId(),
-                    attributeValue);
-            writer.text(value);
+            writer.text(attributeValue.decodeValue());
         }
     }
 

@@ -20,6 +20,8 @@ import com.reandroid.arsc.chunk.MainChunk;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.ParentChunk;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.arsc.item.ReferenceBlock;
@@ -41,58 +43,21 @@ public abstract class ValueItem extends BlockItem implements Value,
     public ValueItem(int bytesLength, int sizeOffset) {
         super(bytesLength);
         this.sizeOffset = sizeOffset;
-
         writeSize();
     }
     public boolean isUndefined(){
         return getValueType() == ValueType.NULL && getData() == 0;
     }
-    public Entry resolve(int resourceId){
-        PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null){
+    public ResourceEntry resolve(int resourceId){
+        PackageBlock context = getPackageBlock();
+        if(context == null){
             return null;
         }
-        Entry entry = packageBlock.getAnyEntry(resourceId);
-        if(entry != null){
-            return entry;
-        }
-        TableBlock tableBlock = packageBlock.getTableBlock();
+        TableBlock tableBlock = context.getTableBlock();
         if(tableBlock == null){
             return null;
         }
-        return tableBlock.getAnyEntry(resourceId);
-    }
-
-    public String buildReference(Entry entry, ValueType referenceType, boolean addType){
-        if(entry == null){
-            return null;
-        }
-        PackageBlock packageBlock = entry.getPackageBlock();
-        PackageBlock myPackageBlock = getPackageBlock();
-        StringBuilder builder = new StringBuilder();
-        if(referenceType == ValueType.REFERENCE
-                || referenceType == ValueType.DYNAMIC_REFERENCE){
-            builder.append('@');
-        }else if(referenceType == ValueType.ATTRIBUTE
-                || referenceType == ValueType.DYNAMIC_ATTRIBUTE){
-            builder.append('?');
-        }
-        if(packageBlock != myPackageBlock && packageBlock != null && myPackageBlock != null){
-            String packageName = packageBlock.getName();
-
-            if(!packageName.equals(myPackageBlock.getName())
-                    || packageBlock.getId() != myPackageBlock.getId()){
-                builder.append(packageName);
-                builder.append(':');
-            }
-
-        }
-        if(addType){
-            builder.append(entry.getTypeName());
-            builder.append('/');
-        }
-        builder.append(entry.getName());
-        return builder.toString();
+        return tableBlock.getResource(context, resourceId);
     }
     public PackageBlock getPackageBlock(){
         ParentChunk parentChunk = getParentChunk();
@@ -321,6 +286,41 @@ public abstract class ValueItem extends BlockItem implements Value,
             setTypeAndData(coming, valueItem.getData());
         }
     }
+    public String decodeValue(){
+        ValueType valueType = getValueType();
+        if(valueType == null){
+            return null;
+        }
+        if(valueType.isReference()){
+            return decodeAsReferenceString(valueType);
+        }
+        if(valueType == ValueType.STRING){
+            return getValueAsString();
+        }
+        return ValueCoder.decode(valueType, getData());
+    }
+    private String decodeAsReferenceString(ValueType valueType){
+        int data = getData();
+        if(data == 0){
+            if(valueType == ValueType.ATTRIBUTE){
+                return "?null";
+            }
+            return "@null";
+        }
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            throw new NullPointerException("Parent package block is null");
+        }
+        TableBlock tableBlock = packageBlock.getTableBlock();
+        if(tableBlock == null){
+            throw new NullPointerException("Parent table block is null");
+        }
+        ResourceEntry resourceEntry = tableBlock.getResource(packageBlock, data);
+        if(resourceEntry == null || !resourceEntry.isDeclared()){
+            return ValueCoder.decodeUnknownResourceId(valueType.isReference(), data);
+        }
+        return resourceEntry.buildReference(packageBlock, valueType);
+    }
     @Override
     public JSONObject toJson() {
         if(isNull()){
@@ -353,6 +353,9 @@ public abstract class ValueItem extends BlockItem implements Value,
 
     @Override
     public String toString(){
+        if(getPackageBlock() != null){
+            return decodeValue();
+        }
         StringBuilder builder = new StringBuilder();
         int size = getSize();
         if(size!=8){

@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,18 +19,27 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockContainer;
 import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.util.FilterIterator;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class BlockList<T extends Block> extends Block {
     private final List<T> mItems;
     public BlockList(){
         super();
         mItems=new ArrayList<>();
+    }
+    public Iterator<T> iterator(){
+        return mItems.iterator();
+    }
+    public Iterator<T> iterator(Predicate<T> filter){
+        return new FilterIterator<>(mItems.iterator(), filter);
     }
     public void clearChildes(){
         ArrayList<T> childList = new ArrayList<>(getChildes());

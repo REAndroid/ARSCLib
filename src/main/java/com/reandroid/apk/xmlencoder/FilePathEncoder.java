@@ -20,7 +20,7 @@ import com.reandroid.archive.FileInputSource;
 import com.reandroid.archive.InputSource;
 import com.reandroid.apk.ApkUtil;
 import com.reandroid.apk.UncompressedFiles;
-import com.reandroid.arsc.group.ResourceEntry;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.xml.source.XMLFileSource;
 import com.reandroid.xml.source.XMLSource;

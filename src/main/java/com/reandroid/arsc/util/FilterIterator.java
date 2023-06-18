@@ -68,4 +68,29 @@ public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
         return mSecondTester == null
                 || mSecondTester.test(item);
     }
+
+    public static final class Except<T1> extends FilterIterator<T1>{
+        private final T1 excludeItem;
+        private final boolean useEquals;
+
+        public Except(Iterator<? extends T1> iterator, T1 excludeItem, boolean useEquals) {
+            super(iterator);
+            this.excludeItem = excludeItem;
+            this.useEquals = useEquals;
+        }
+        public Except(Iterator<? extends T1> iterator, T1 excludeItem) {
+            this(iterator, excludeItem, false);
+        }
+
+        @Override
+        public boolean test(T1 item){
+            if(item == null || item == excludeItem){
+                return false;
+            }
+            if(!useEquals){
+                return true;
+            }
+            return item.equals(excludeItem);
+        }
+    }
 }

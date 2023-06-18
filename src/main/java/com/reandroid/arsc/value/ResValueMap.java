@@ -16,53 +16,54 @@
 package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.coder.ValueDecoder;
+import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.json.JSONObject;
 
-public class ResValueMap extends ValueItem implements AttributeValue{
+public class ResValueMap extends AttributeValue{
 
     public ResValueMap() {
         super(12, OFFSET_SIZE);
     }
-
-    public String decodeData(){
-        String value = decodeDataAsAttrFormats();
-        if(value != null){
-            return value;
-        }
-        ValueType valueType = getValueType();
-        if(valueType == ValueType.STRING){
-            return getValueAsString();
-        }
-        int data = getData();
-        if(AttributeDataFormat.REFERENCE.contains(valueType)){
-            Entry entry = resolve(data);
-            if(entry == null){
-                return HexUtil.toHex8("@0x", data);
+    @Override
+    public String decodeName(boolean includePrefix){
+        int resourceId = getNameResourceID();
+        if(!PackageBlock.isResourceId(resourceId)){
+            AttributeType attributeType = getAttributeType();
+            if(attributeType != null){
+                return attributeType.getName();
             }
-            return buildReference(entry, valueType, true);
+            return null;
         }
-        return ValueDecoder.decode(valueType, data);
+        ResourceEntry resourceEntry = resolve(resourceId);
+        if(resourceEntry == null || !resourceEntry.isDeclared()){
+            return ValueCoder.decodeUnknownResourceId(false, resourceId);
+        }
+        String name = resourceEntry.getName();
+        if(includePrefix && resourceEntry.getPackageBlock() != getPackageBlock()){
+            String prefix = resourceEntry.getPackageName();
+            if(prefix != null){
+                name = prefix + ":" + name;
+            }
+        }
+        return name;
     }
-    private String decodeDataAsAttrFormats(){
+    @Override
+    String decodeDataAsAttrFormats(){
         AttributeType attributeType = getAttributeType();
         if(attributeType != AttributeType.FORMATS){
             return null;
         }
         return AttributeDataFormat.toString(AttributeDataFormat.decodeValueTypes(getData()));
     }
-    public String decodeName(){
-        AttributeType attributeType = getAttributeType();
-        if(attributeType != null){
-            return attributeType.getName();
-        }
-        Entry entry = resolveName();
-        return buildReference(entry, null, false);
-    }
     @Override
-    public Entry resolveName(){
-        return resolve(getNameResourceID());
+    public String decodePrefix(){
+        ResourceEntry resourceEntry = resolveName();
+        if(resourceEntry == null || getPackageBlock() == resourceEntry.getPackageBlock()){
+            return null;
+        }
+        return resourceEntry.getPackageName();
     }
     public AttributeType getAttributeType(){
         return AttributeType.valueOf(getNameResourceID());
@@ -105,6 +106,9 @@ public class ResValueMap extends ValueItem implements AttributeValue{
 
     public ResTableMapEntry getParentMapEntry(){
         return getParentInstance(ResTableMapEntry.class);
+    }
+    public Entry getParentEntry(){
+        return getParentInstance(Entry.class);
     }
 
     public int getName(){
@@ -170,12 +174,12 @@ public class ResValueMap extends ValueItem implements AttributeValue{
     @Override
     public String toString(){
         String name = decodeName();
-        String data = decodeData();
+        String data = decodeValue();
         if(name != null && data != null){
             return name + "=\"" + data + "\"";
         }
         return "name=" + HexUtil.toHex8(getName())
-                +", "+super.toString();
+                +", " + super.toString();
     }
 
     private static final int OFFSET_NAME = 0;

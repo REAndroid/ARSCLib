@@ -15,6 +15,8 @@
  */
 package com.reandroid.arsc.coder;
 
+import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.ValueType;
 
 public class ReferenceString {
@@ -28,6 +30,13 @@ public class ReferenceString {
         this.packageName = packageName;
         this.type = type;
         this.name = name;
+    }
+    public EncodeResult encode(TableBlock tableBlock){
+        ResourceEntry resourceEntry = tableBlock.getResource(packageName, type, name);
+        if(resourceEntry != null){
+            return new EncodeResult(getValueType(), resourceEntry.getResourceId());
+        }
+        return null;
     }
     public ValueType getValueType(){
         if("?".equals(prefix)){

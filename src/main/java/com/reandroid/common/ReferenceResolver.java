@@ -1,21 +1,22 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.common;
 
-import com.reandroid.arsc.group.EntryGroup;
+import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ResValue;
@@ -25,11 +26,11 @@ import java.util.*;
 import java.util.function.Predicate;
 
 public class ReferenceResolver{
-    private final EntryStore entryStore;
+    private final TableBlock entryStore;
     private final List<Entry> results;
     private final Set<Integer> resolvedIds;
     private int limit;
-    public ReferenceResolver(EntryStore entryStore){
+    public ReferenceResolver(TableBlock entryStore){
         this.entryStore = entryStore;
         this.results = new ArrayList<>();
         this.resolvedIds = new HashSet<>();
@@ -104,11 +105,11 @@ public class ReferenceResolver{
     }
     private List<Entry> listNonNullEntries(int resourceId){
         List<Entry> results = new ArrayList<>();
-        EntryGroup entryGroup = this.entryStore.getEntryGroup(resourceId);
-        if(entryGroup==null){
+        ResourceEntry resourceEntry = this.entryStore.getResource(resourceId);
+        if(resourceEntry == null){
             return results;
         }
-        Iterator<Entry> itr = entryGroup.iterator(true);
+        Iterator<Entry> itr = resourceEntry.iterator(true);
         while (itr.hasNext()){
             results.add(itr.next());
         }
@@ -131,7 +132,7 @@ public class ReferenceResolver{
         @Override
         public int compare(Entry entry1, Entry entry2) {
             ResConfig config1 = entry1.getResConfig();
-            ResConfig config2 = entry1.getResConfig();
+            ResConfig config2 = entry2.getResConfig();
             if (config.equals(config1)){
                 return -1;
             }

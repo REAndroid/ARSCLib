@@ -226,25 +226,23 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         }
         return 0;
     }
-    public List<ResConfig> listResConfig(){
-        return new AbstractList<ResConfig>() {
-            @Override
-            public ResConfig get(int i) {
-                TypeBlock typeBlock=TypeBlockArray.this.get(i);
-                if(typeBlock!=null){
-                    return typeBlock.getResConfig();
-                }
-                return null;
-            }
-
-            @Override
-            public int size() {
-                return TypeBlockArray.this.childesCount();
-            }
-        };
+    public Set<ResConfig> listResConfig(){
+        Set<ResConfig> unique = new HashSet<>();
+        for(TypeBlock typeBlock : getChildes()){
+            unique.add(typeBlock.getResConfig());
+        }
+        return unique;
     }
     public Iterator<TypeBlock> iteratorNonEmpty(){
         return super.iterator(NON_EMPTY_TESTER);
+    }
+    public Iterator<TypeBlock> iterator(ResConfig resConfig){
+        return iterator(new Predicate<TypeBlock>() {
+            @Override
+            public boolean test(TypeBlock typeBlock) {
+                return typeBlock.getResConfig().equals(resConfig);
+            }
+        });
     }
     public boolean hasDuplicateResConfig(boolean ignoreEmpty){
         Set<Integer> uniqueHashSet = new HashSet<>();

@@ -63,14 +63,14 @@ public class PackageArray extends BlockArray<PackageBlock>
             if(packageBlock == null){
                 continue;
             }
-            if(packageId!=0 && packageId!=packageBlock.getId()){
+            if(packageId !=0 && packageId != packageBlock.getId()){
                 continue;
             }
-            if(largest==null){
-                largest=packageBlock;
-            }else if(packageBlock.getEntriesGroupMap().size() >
-                    largest.getEntriesGroupMap().size()){
-                largest=packageBlock;
+            if(largest == null){
+                largest = packageBlock;
+            }else if(packageBlock.getHeaderBlock().getChunkSize() >
+                    largest.getHeaderBlock().getChunkSize()){
+                largest = packageBlock;
             }
         }
         return largest;

@@ -18,8 +18,6 @@ package com.reandroid.arsc.value.attribute;
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.value.*;
-import com.reandroid.common.EntryStore;
-
 
 public class AttributeBag {
     private final AttributeBagItem[] mBagItems;
@@ -54,9 +52,9 @@ public class AttributeBag {
         ValueType valueType = isFlag()?ValueType.HEX :ValueType.DEC;
         return new EncodeResult(valueType, value);
     }
-    public String decodeAttributeValue(EntryStore entryStore, int attrValue){
+    public String decodeAttributeValue(int attrValue){
         AttributeBagItem[] bagItems=searchValue(attrValue);
-        return AttributeBagItem.toString(entryStore, bagItems, false);
+        return AttributeBagItem.toString(bagItems, false);
     }
     public AttributeBagItem searchByName(String entryName){
         AttributeBagItem[] bagItems= getBagItems();

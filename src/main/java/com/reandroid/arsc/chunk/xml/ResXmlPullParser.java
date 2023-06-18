@@ -16,8 +16,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 import android.content.res.XmlResourceParser;
-import com.reandroid.arsc.ApkFile;
-import com.reandroid.arsc.coder.Decoder;
+import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.value.ValueType;
 import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
@@ -29,7 +28,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class ResXmlPullParser implements XmlResourceParser {
-    private Decoder mDecoder;
+    private PackageBlock mCurrentPackage;
     private final ParserEventList mEventList = new ParserEventList();
     private ResXmlDocument mDocument;
     private boolean mDocumentCreatedHere;
@@ -38,17 +37,26 @@ public class ResXmlPullParser implements XmlResourceParser {
     private boolean reportNamespaceAttrs;
     private boolean mIsTagStared;
 
-    public ResXmlPullParser(Decoder decoder){
-        this.mDecoder = decoder;
+    public ResXmlPullParser(PackageBlock packageBlock){
+        this.mCurrentPackage = packageBlock;
         this.processNamespaces = false;
         this.reportNamespaceAttrs = false;
     }
     public ResXmlPullParser(){
         this(null);
     }
+    public PackageBlock getCurrentPackage(){
+        return mCurrentPackage;
+    }
+    public void setCurrentPackage(PackageBlock packageBlock){
+        this.mCurrentPackage = packageBlock;
+        if(mDocument != null){
+            mDocument.setPackageBlock(packageBlock);
+        }
+    }
     public synchronized ResXmlPullParser getParser(){
         if(isBusy()){
-            return new ResXmlPullParser(getDecoder());
+            return new ResXmlPullParser(getCurrentPackage());
         }
         closeDocument();
         return this;
@@ -59,39 +67,16 @@ public class ResXmlPullParser implements XmlResourceParser {
     public synchronized void setResXmlDocument(ResXmlDocument xmlDocument){
         closeDocument();
         this.mDocument = xmlDocument;
+        PackageBlock packageBlock = xmlDocument.getPackageBlock();
+        if(packageBlock == null){
+            xmlDocument.setPackageBlock(getCurrentPackage());
+        }
         initDefaultFeatures();
-        initializeDecoder(xmlDocument);
         xmlDocument.addEvents(mEventList);
     }
     public ResXmlDocument getResXmlDocument() {
         return mDocument;
     }
-
-    public void setDecoder(Decoder decoder) {
-        this.mDecoder = decoder;
-    }
-    public Decoder getDecoder(){
-        return mDecoder;
-    }
-    private void initializeDecoder(ResXmlDocument xmlDocument){
-        Decoder decoder = this.mDecoder;
-        if(decoder!=null){
-            if(decoder.getApkFile()==null){
-                decoder.setApkFile(xmlDocument.getApkFile());
-            }
-            return;
-        }
-        ApkFile apkFile = xmlDocument.getApkFile();
-        if(apkFile!=null){
-            decoder = apkFile.getDecoder();
-            if(decoder!=null){
-                this.mDecoder = decoder;
-                return;
-            }
-        }
-        mDecoder = Decoder.create(xmlDocument);
-    }
-
     public void closeDocument(){
         mEventList.clear();
         mIsTagStared = false;
@@ -302,10 +287,10 @@ public class ResXmlPullParser implements XmlResourceParser {
 
     @Override
     public String getIdAttribute() {
-        ResXmlStartElement startElement = getResXmlStartElement();
-        if(startElement!=null){
-            ResXmlAttribute attribute = startElement.getIdAttribute();
-            if(attribute!=null){
+        ResXmlElement currentElement = getCurrentElement();
+        if(currentElement != null){
+            ResXmlAttribute attribute = currentElement.getIdAttribute();
+            if(attribute != null){
                 return attribute.getName();
             }
         }
@@ -313,10 +298,10 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public String getClassAttribute() {
-        ResXmlStartElement startElement = getResXmlStartElement();
-        if(startElement!=null){
-            ResXmlAttribute attribute = startElement.getClassAttribute();
-            if(attribute!=null){
+        ResXmlElement currentElement = getCurrentElement();
+        if(currentElement!=null){
+            ResXmlAttribute attribute = currentElement.getClassAttribute();
+            if(attribute != null){
                 return attribute.getName();
             }
         }
@@ -324,10 +309,10 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public int getIdAttributeResourceValue(int defaultValue) {
-        ResXmlStartElement startElement = getResXmlStartElement();
-        if(startElement!=null){
-            ResXmlAttribute attribute = startElement.getIdAttribute();
-            if(attribute!=null){
+        ResXmlElement currentElement = getCurrentElement();
+        if(currentElement != null){
+            ResXmlAttribute attribute = currentElement.getIdAttribute();
+            if(attribute != null){
                 return attribute.getNameResourceID();
             }
         }
@@ -335,10 +320,10 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public int getStyleAttribute() {
-        ResXmlStartElement startElement = getResXmlStartElement();
-        if(startElement!=null){
-            ResXmlAttribute attribute = startElement.getStyleAttribute();
-            if(attribute!=null){
+        ResXmlElement currentElement = getCurrentElement();
+        if(currentElement != null){
+            ResXmlAttribute attribute = currentElement.getStyleAttribute();
+            if(attribute != null){
                 return attribute.getNameResourceID();
             }
         }
@@ -417,7 +402,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     public String getNamespacePrefix(int pos) throws XmlPullParserException {
         ResXmlElement element = getCurrentElement();
         if(element!=null){
-            return element.getNamespace(pos).getPrefix();
+            return element.getNamespaceAt(pos).getPrefix();
         }
         return null;
     }
@@ -425,17 +410,17 @@ public class ResXmlPullParser implements XmlResourceParser {
     public String getNamespaceUri(int pos) throws XmlPullParserException {
         ResXmlElement element = getCurrentElement();
         if(element!=null){
-            return element.getNamespace(pos).getUri();
+            return element.getNamespaceAt(pos).getUri();
         }
         return null;
     }
     @Override
     public String getNamespace(String prefix) {
         ResXmlElement element = getCurrentElement();
-        if(element!=null){
-            ResXmlStartNamespace startNamespace = element.getStartNamespaceByPrefix(prefix);
-            if(startNamespace!=null){
-                return startNamespace.getUri();
+        if(element != null){
+            ResXmlNamespace namespace = element.getNamespaceByPrefix(prefix);
+            if(namespace != null){
+                return namespace.getUri();
             }
         }
         return null;
@@ -545,26 +530,16 @@ public class ResXmlPullParser implements XmlResourceParser {
         return false;
     }
     private String decodeAttributeName(ResXmlAttribute attribute){
-        if(attribute == null){
-            return null;
+        if(attribute != null){
+            return attribute.decodeName(processNamespaces);
         }
-        String name;
-        int resourceId = attribute.getNameResourceID();
-        if(resourceId == 0 || mDecoder==null){
-            name = attribute.getName();
-        }else {
-            name = mDecoder.decodeResourceName(attribute.getNameResourceID(), true);
-            if(processNamespaces){
-                name = attribute.getNamePrefix() + ":" + name;
-            }
-        }
-        return name;
+        return null;
     }
     private String decodeAttributeValue(ResXmlAttribute attribute){
-        if(attribute==null){
-            return null;
+        if(attribute != null){
+            return attribute.decodeValue();
         }
-        return mDecoder.decodeAttributeValue(attribute);
+        return null;
     }
     public ResXmlAttribute getResXmlAttributeAt(int index){
         index = getRealAttributeIndex(index);
@@ -584,13 +559,6 @@ public class ResXmlPullParser implements XmlResourceParser {
                     && Objects.equals(name, attribute.getName())){
                 return attribute;
             }
-        }
-        return null;
-    }
-    private ResXmlStartElement getResXmlStartElement(){
-        ResXmlElement element = getCurrentElement();
-        if(element!=null){
-            return element.getStartElement();
         }
         return null;
     }
@@ -618,17 +586,13 @@ public class ResXmlPullParser implements XmlResourceParser {
         return processNamespaces & reportNamespaceAttrs;
     }
     private String getNamespaceAttributeName(int index){
-        ResXmlStartNamespace namespace = getCurrentElement()
-                .getNamespace(index);
-        String prefix = namespace.getPrefix();
-        if(processNamespaces){
-            prefix = "xmlns:" + prefix;
-        }
-        return prefix;
+        ResXmlNamespace namespace = getCurrentElement()
+                .getNamespaceAt(index);
+        return "xmlns:" + namespace.getPrefix();
     }
     private String getNamespaceAttributeValue(int index){
-        ResXmlStartNamespace namespace = getCurrentElement()
-                .getNamespace(index);
+        ResXmlNamespace namespace = getCurrentElement()
+                .getNamespaceAt(index);
         return namespace.getUri();
     }
     @Override
@@ -706,6 +670,7 @@ public class ResXmlPullParser implements XmlResourceParser {
             ResXmlDocument xmlDocument = new ResXmlDocument();
             try {
                 xmlDocument.readBytes(inputStream);
+                xmlDocument.setPackageBlock(getCurrentPackage());
             } catch (IOException exception) {
                 XmlPullParserException pullParserException = new XmlPullParserException(exception.getMessage());
                 pullParserException.initCause(exception);

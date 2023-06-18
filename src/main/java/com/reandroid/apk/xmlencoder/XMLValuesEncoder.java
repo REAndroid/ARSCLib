@@ -83,7 +83,7 @@ public class XMLValuesEncoder {
             entry.setValueAsRaw(encodeResult.valueType, encodeResult.value);
         }else {
             // TODO: should check expectedTypes contains ValueType.STRING ?
-            text = ValueDecoder.unEscapeUnQuote(text);
+            text = XmlSanitizer.unEscapeUnQuote(text);
             entry.setValueAsString(text);
         }
     }

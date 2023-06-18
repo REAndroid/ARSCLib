@@ -16,12 +16,10 @@
 package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.arsc.value.ResTableMapEntry;
-import com.reandroid.common.EntryStore;
-import com.reandroid.xml.XMLElement;
 
 abstract class BagDecoder<OUTPUT> extends DecoderTableEntry<ResTableMapEntry, OUTPUT> {
-    public BagDecoder(EntryStore entryStore){
-        super(entryStore);
+    public BagDecoder(){
+        super();
     }
     public abstract boolean canDecode(ResTableMapEntry mapEntry);
 }

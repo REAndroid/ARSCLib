@@ -1,18 +1,18 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.base.BlockArray;
@@ -30,6 +30,16 @@ public class LibraryInfoArray extends BlockArray<LibraryInfo> implements JSONCon
     public LibraryInfoArray(IntegerItem infoCount){
         this.mInfoCount=infoCount;
     }
+
+    public boolean containsLibraryInfo(String packageName){
+        for(LibraryInfo info : getChildes()){
+            if(info.packageNameMatches(packageName)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public LibraryInfo getOrCreate(int pkgId){
         LibraryInfo info=getById(pkgId);
         if(info!=null){
@@ -38,12 +48,12 @@ public class LibraryInfoArray extends BlockArray<LibraryInfo> implements JSONCon
         int index=childesCount();
         ensureSize(index+1);
         info=get(index);
-        info.setPackageId(pkgId);
+        info.setId(pkgId);
         return info;
     }
     public LibraryInfo getById(int pkgId){
         for(LibraryInfo info:listItems()){
-            if(pkgId==info.getPackageId()){
+            if(info !=null && pkgId==info.getId()){
                 return info;
             }
         }
@@ -100,7 +110,7 @@ public class LibraryInfoArray extends BlockArray<LibraryInfo> implements JSONCon
             return;
         }
         for(LibraryInfo info:infoArray.listItems()){
-            LibraryInfo exist=getOrCreate(info.getPackageId());
+            LibraryInfo exist=getOrCreate(info.getId());
             exist.merge(info);
         }
     }

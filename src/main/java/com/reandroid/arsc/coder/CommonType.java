@@ -203,6 +203,14 @@ public class CommonType {
     public ValueType[] valueTypes() {
         return valueTypes;
     }
+    public boolean isDifferent(ValueType valueType){
+        if(valueType == null
+                || valueType == ValueType.NULL
+                || valueType.isReference()){
+            return false;
+        }
+        return !contains(valueType);
+    }
     public boolean contains(ValueType valueType){
         for(ValueType vt : this.valueTypes){
             if(vt == valueType){

@@ -16,7 +16,6 @@
 package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.arsc.value.ResTableMapEntry;
-import com.reandroid.common.EntryStore;
 
 import java.io.IOException;
 
@@ -24,15 +23,15 @@ class DecoderResTableEntryMap<OUTPUT> extends DecoderTableEntry<ResTableMapEntry
     private final Object[] decoderList;
     private final BagDecoderCommon<OUTPUT> bagDecoderCommon;
 
-    public DecoderResTableEntryMap(EntryStore entryStore) {
-        super(entryStore);
+    public DecoderResTableEntryMap() {
+        super();
         this.decoderList = new Object[] {
-                new BagDecoderAttr<>(entryStore),
-                new BagDecoderPlural<>(entryStore),
-                new BagDecoderArray<>(entryStore)
+                new BagDecoderAttr<>(),
+                new BagDecoderPlural<>(),
+                new BagDecoderArray<>()
         };
 
-        this.bagDecoderCommon = new BagDecoderCommon<>(entryStore);
+        this.bagDecoderCommon = new BagDecoderCommon<>();
     }
 
     @Override

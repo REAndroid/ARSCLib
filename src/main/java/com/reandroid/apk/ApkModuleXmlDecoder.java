@@ -132,7 +132,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         InputSource inputSource = resFile.getInputSource();
 
         logVerbose(inputSource.getAlias());
-        serializeXml(packageBlock.getId(), resFile.getInputSource(), file);
+        serializeXml(packageBlock, resFile.getInputSource(), file);
 
         if(!keepResPath()){
             addDecodedEntry(entry);
@@ -156,7 +156,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
     private ResXmlDocumentSerializer getDocumentSerializer(){
         if(documentSerializer == null){
             documentSerializer = new ResXmlDocumentSerializer(getApkModule());
-            documentSerializer.setValidateXmlNamespace(true);
+            documentSerializer.setFixAttributesNamespace(true);
         }
         return documentSerializer;
     }
@@ -216,8 +216,16 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         AndroidManifestBlock manifestBlock = getApkModule().getAndroidManifestBlock();
         File file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME);
         logMessage("Decoding: " + file.getName());
-        int currentPackageId = manifestBlock.guessCurrentPackageId();
-        serializeXml(currentPackageId, manifestBlock, file);
+        PackageBlock packageBlock = manifestBlock.getPackageBlock();
+        if(packageBlock == null){
+            int packageId = manifestBlock.guessCurrentPackageId();
+            TableBlock tableBlock = getApkModule().getTableBlock();
+            packageBlock = tableBlock.pickOne(packageId);
+            if(packageBlock == null){
+                packageBlock = tableBlock.pickOne();
+            }
+        }
+        serializeXml(packageBlock, manifestBlock, file);
         addDecodedPath(AndroidManifestBlock.FILE_NAME);
     }
     private void decodeAndroidManifestBin(File mainDirectory)
@@ -232,29 +240,28 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         inputSource.write(file);
         addDecodedPath(AndroidManifestBlock.FILE_NAME);
     }
-    private void serializeXml(int currentPackageId, ResXmlDocument document, File outFile)
+    private void serializeXml(PackageBlock packageBlock, ResXmlDocument document, File outFile)
             throws IOException {
-        XMLNamespaceValidator.validateNamespaces(document);
         ResXmlDocumentSerializer serializer = getDocumentSerializer();
-        if(currentPackageId != 0){
-            serializer.getDecoder().setCurrentPackageId(currentPackageId);
+        if(packageBlock != null){
+            document.setPackageBlock(packageBlock);
+            serializer.setCurrentPackage(packageBlock);
         }
+        document.autoSetAttributeNamespaces();
         try {
             serializer.write(document, outFile);
         } catch (XmlPullParserException ex) {
             throw new IOException("Error: "+outFile.getName(), ex);
         }
     }
-    private void serializeXml(int currentPackageId, InputSource inputSource, File outFile)
+    private void serializeXml(PackageBlock packageBlock, InputSource inputSource, File outFile)
             throws IOException {
         ResXmlDocumentSerializer serializer = getDocumentSerializer();
-        if(currentPackageId != 0){
-            serializer.getDecoder().setCurrentPackageId(currentPackageId);
-        }
+        serializer.setCurrentPackage(packageBlock);
         try {
             serializer.write(inputSource, outFile);
         } catch (XmlPullParserException ex) {
-            throw new IOException("Error: "+outFile.getName(), ex);
+            throw new IOException("Error: " + outFile.getName(), ex);
         }
     }
     private void addDecodedEntry(Entry entry){
@@ -298,7 +305,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
     }
     private XMLEntryDecoderSerializer getEntrySerializer(){
         if(this.entrySerializer == null){
-            this.entrySerializer = new XMLEntryDecoderSerializer(getApkModule().getTableBlock());
+            this.entrySerializer = new XMLEntryDecoderSerializer();
             this.entrySerializer.setDecodedEntries(this);
         }
         return entrySerializer;

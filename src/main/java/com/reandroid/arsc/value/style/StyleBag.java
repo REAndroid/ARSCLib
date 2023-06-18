@@ -16,7 +16,9 @@
  package com.reandroid.arsc.value.style;
 
  import com.reandroid.apk.xmlencoder.EncodeMaterials;
+ import com.reandroid.arsc.chunk.PackageBlock;
  import com.reandroid.arsc.chunk.TableBlock;
+ import com.reandroid.arsc.value.ResTableMapEntry;
  import com.reandroid.arsc.value.ResValueMap;
  import com.reandroid.arsc.value.bag.MapBag;
 
@@ -34,7 +36,11 @@
          if (entry == null) {
              return null;
          }
-         return entry.buildResourceName(id, '@', true);
+         ResTableMapEntry tableMapEntry = entry.getResTableMapEntry();
+         if(tableMapEntry != null){
+             return tableMapEntry.decodeParentId();
+         }
+         return null;
      }
 
      public int getParentId() {
@@ -123,7 +129,7 @@
          }
 
          for (ResValueMap item : items) {
-             if (item == null || tableBlock.search(item.getNameResourceID()) == null) {
+             if (item == null || tableBlock.getResource(item.getNameResourceID()) == null) {
                  return false;
              }
          }

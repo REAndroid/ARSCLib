@@ -17,18 +17,12 @@ package com.reandroid.identifiers;
 
 import com.android.org.kxml2.io.KXmlParser;
 import com.android.org.kxml2.io.KXmlSerializer;
-import com.reandroid.arsc.array.EntryArray;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.group.EntryGroup;
-import com.reandroid.arsc.group.ResourceEntry;
-import com.reandroid.arsc.item.SpecString;
-import com.reandroid.arsc.pool.SpecStringPool;
-import com.reandroid.arsc.pool.TypeStringPool;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.Entry;
-import com.reandroid.arsc.value.ValueHeader;
 import com.reandroid.json.JSONObject;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -50,84 +44,6 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         this(0, null);
     }
 
-    public void initialize(PackageBlock packageBlock){
-        initialize(packageBlock, true);
-    }
-    public void initialize(PackageBlock packageBlock, boolean initialize_ids){
-        packageBlock.setId(getId());
-        String name = getName();
-        if(name != null){
-            packageBlock.setName(name);
-        }
-        initializeTypeName(packageBlock.getTypeStringPool());
-        initializeSpecNames(packageBlock.getSpecStringPool());
-        if(initialize_ids){
-            initializeIds(packageBlock);
-        }
-        initializeEntries(packageBlock);
-        initializePackageJson(packageBlock);
-        this.mPackageLoadStamp = packageBlock.getEntryGroupCount();
-        setPackageBlock(packageBlock);
-    }
-    private void initializeTypeName(TypeStringPool typeStringPool){
-        for(TypeIdentifier ti : list()){
-            typeStringPool.getOrCreate(ti.getId(), ti.getName());
-        }
-    }
-    private void initializeSpecNames(SpecStringPool specStringPool){
-        List<String> nameList = new ArrayList<>(getResourcesCount());
-        for(TypeIdentifier ti : list()){
-            nameList.addAll(ti.listNames());
-        }
-        //specStringPool.addStrings(nameList);
-    }
-    private void initializeIds(PackageBlock packageBlock){
-        TypeIdentifier identifierID = get("id");
-        if(identifierID == null){
-            return;
-        }
-        TypeBlock typeBlock = packageBlock
-                .getOrCreateTypeBlock("", "id");
-        EntryArray entryArray = typeBlock.getEntryArray();
-        entryArray.ensureSize(identifierID.size());
-        SpecStringPool specStringPool = packageBlock.getSpecStringPool();
-        for(ResourceIdentifier ri : identifierID.list()){
-            Entry entry = entryArray.getOrCreate((short) ri.getId());
-            SpecString specString = specStringPool.getOrCreate(ri.getName());
-            if(!entry.isNull() && !entry.isComplex()){
-                entry.setSpecReference(specString);
-                continue;
-            }
-            entry.setValueAsBoolean(false);
-            entry.setSpecReference(specString);
-            setIdEntryVisibility(entry);
-        }
-    }
-    private void initializeEntries(PackageBlock packageBlock){
-        for(TypeIdentifier ti : list()){
-
-            TypeBlock typeBlock = packageBlock
-                    .getOrCreateTypeBlock("", ti.getName());
-            int size = ti.size();
-            int idMax = ti.getMaxId();
-            int count;
-            if(size > idMax){
-                count = size;
-            }else {
-                count = idMax + 1;
-            }
-            typeBlock.ensureEntriesCount(count);
-            for(ResourceIdentifier ri : ti.list()){
-                Entry entry = typeBlock.getOrCreateEntry((short) ri.getId());
-                entry.setName(ri.getName(), true);
-            }
-        }
-    }
-    private void setIdEntryVisibility(Entry entry){
-        ValueHeader valueHeader = entry.getHeader();
-        valueHeader.setWeak(true);
-        valueHeader.setPublic(true);
-    }
     private void initializePackageJson(PackageBlock packageBlock){
         File jsonFile = searchPackageJsonFromTag();
         if(jsonFile == null){
@@ -198,16 +114,19 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         if(packageBlock == null){
             return;
         }
-        for(EntryGroup entryGroup : packageBlock.listEntryGroup()){
-            setResourceNamesToEntry(entryGroup);
+        for(SpecTypePair specTypePair:packageBlock.listSpecTypePairs()){
+            Iterator<ResourceEntry> itr = specTypePair.getResources();
+            while (itr.hasNext()){
+                setResourceNamesToEntry(itr.next());
+            }
         }
     }
-    public void setResourceNamesToEntry(EntryGroup entryGroup){
-        ResourceIdentifier ri = getResourceIdentifier(entryGroup.getResourceId());
+    public void setResourceNamesToEntry(ResourceEntry resourceEntry){
+        ResourceIdentifier ri = getResourceIdentifier(resourceEntry.getResourceId());
         if(ri == null){
             return;
         }
-        entryGroup.renameSpec(ri.getName());
+        resourceEntry.setName(ri.getName());
     }
     public ResourceIdentifier getResourceIdentifier(int resourceId){
         TypeIdentifier typeIdentifier = get((resourceId >> 16) & 0xff);
@@ -246,7 +165,6 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         write(serializer);
     }
     public void write(XmlSerializer serializer) throws IOException {
-        updateChangedPackageBlock();
         serializer.startDocument("utf-8", null);
         serializer.text("\n");
         serializer.startTag(null, XML_TAG_RESOURCES);
@@ -278,16 +196,6 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         loadEntryGroups(packageBlock);
         setPackageBlock(packageBlock);
     }
-    private void updateChangedPackageBlock(){
-        PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null){
-            return;
-        }
-        if(packageBlock.getEntryGroupCount() == this.mPackageLoadStamp){
-            return;
-        }
-        loadEntryGroups(packageBlock);
-    }
     private void loadEntryGroups(PackageBlock packageBlock){
         for(SpecTypePair specTypePair:packageBlock.listSpecTypePairs()){
             Iterator<ResourceEntry> itr = specTypePair.getResources();
@@ -295,7 +203,6 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
                 add(itr.next());
             }
         }
-        this.mPackageLoadStamp = packageBlock.getEntryGroupCount();
     }
     public void loadPublicXml(File file) throws IOException, XmlPullParserException {
         FileInputStream fileInputStream = new FileInputStream(file);
@@ -418,9 +325,6 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         this.mPackageBlock = packageBlock;
     }
 
-    public void add(EntryGroup entryGroup){
-        add(entryGroup.pickOne());
-    }
     public void add(ResourceEntry resourceEntry){
         add(resourceEntry.get());
     }

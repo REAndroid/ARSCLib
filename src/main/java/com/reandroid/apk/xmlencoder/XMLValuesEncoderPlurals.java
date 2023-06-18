@@ -17,11 +17,10 @@ package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.coder.EncodeResult;
-import com.reandroid.arsc.coder.ValueDecoder;
+import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.value.AttributeType;
 import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.ResValueMap;
-import com.reandroid.arsc.value.ValueType;
 import com.reandroid.xml.XMLElement;
 
 class XMLValuesEncoderPlurals extends XMLValuesEncoderBag{
@@ -51,7 +50,7 @@ class XMLValuesEncoderPlurals extends XMLValuesEncoderBag{
                 bagItem.setTypeAndData(encodeResult.valueType, encodeResult.value);
                 continue;
             }
-            bagItem.setValueAsString(ValueDecoder
+            bagItem.setValueAsString(XmlSanitizer
                     .unEscapeUnQuote(valueText));
         }
     }

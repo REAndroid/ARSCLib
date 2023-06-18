@@ -21,10 +21,8 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.SpecBlock;
-import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.group.EntryGroup;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.SpecStringPool;
@@ -33,11 +31,9 @@ import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 public class Entry extends Block implements JSONConvert<JSONObject> {
     private TableEntry<?, ?> mTableEntry;
@@ -64,9 +60,16 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         return null;
     }
     public ResValueMapArray getResValueMapArray(){
+        ResTableMapEntry resTableMapEntry = getResTableMapEntry();
+        if(resTableMapEntry != null){
+            return resTableMapEntry.getValue();
+        }
+        return null;
+    }
+    public ResTableMapEntry getResTableMapEntry(){
         TableEntry<?, ?> tableEntry = getTableEntry();
         if(tableEntry instanceof ResTableMapEntry){
-            return ((ResTableMapEntry)tableEntry).getValue();
+            return ((ResTableMapEntry)tableEntry);
         }
         return null;
     }
@@ -223,7 +226,6 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         if(tableEntry != null){
             tableEntry.getHeader().setKey(specString);
             unlinkNullSpecString();
-            return;
         }else if(mNullSpecReference != null){
             linkNullSpecString(specString);
         }else if(specString == null){
@@ -299,24 +301,6 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         PackageBlock packageBlock = getPackageBlock();
         if(packageBlock != null){
             return packageBlock.getSpecStringPool();
-        }
-        return null;
-    }
-    private Entry searchEntry(int resourceId){
-        if(resourceId==getResourceId()){
-            return this;
-        }
-        PackageBlock packageBlock= getPackageBlock();
-        if(packageBlock==null){
-            return null;
-        }
-        TableBlock tableBlock = packageBlock.getTableBlock();
-        if(tableBlock==null){
-            return null;
-        }
-        EntryGroup entryGroup = tableBlock.search(resourceId);
-        if(entryGroup!=null){
-            return entryGroup.pickOne();
         }
         return null;
     }
@@ -474,7 +458,6 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         tableEntry.setParent(this);
         this.mTableEntry = tableEntry;
         transferSpecReference(tableEntry);
-        onTableEntryAdded();
     }
     private void transferSpecReference(TableEntry<?, ?> tableEntry){
         IntegerItem nullSpecReference = this.mNullSpecReference;
@@ -488,20 +471,10 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
             valueHeader.setKey(ref);
         }
     }
-    private void onTableEntryAdded(){
-        PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock!=null){
-            packageBlock.onEntryAdded(this);
-        }
-    }
     private void onTableEntryRemoved(){
         TableEntry<?, ?> exist = this.mTableEntry;
         if(exist == null){
             return;
-        }
-        PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock!=null){
-            packageBlock.removeEntryGroup(this);
         }
         exist.onRemoved();
         exist.setIndex(-1);
@@ -559,45 +532,6 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         }
         return getTableEntry().shouldMerge(coming.getTableEntry());
     }
-
-    public String buildResourceName(int resourceId, char prefix, boolean includeType){
-        if(resourceId==0){
-            return null;
-        }
-        Entry entry=searchEntry(resourceId);
-        return buildResourceName(entry, prefix, includeType);
-    }
-    public String buildResourceName(Entry entry, char prefix, boolean includeType){
-        if(entry==null){
-            return null;
-        }
-        String pkgName=entry.getPackageName();
-        if(getResourceId()==entry.getResourceId()){
-            pkgName=null;
-        }else if(pkgName!=null){
-            if(pkgName.equals(this.getPackageName())){
-                pkgName=null;
-            }
-        }
-        String type=null;
-        if(includeType){
-            type=entry.getTypeName();
-        }
-        String name=entry.getName();
-        return buildResourceName(prefix, pkgName, type, name);
-    }
-    public String getResourceName(){
-        return buildResourceName('@',null, getTypeName(), getName());
-    }
-    public String getResourceName(char prefix){
-        return getResourceName(prefix, false, true);
-    }
-    public String getResourceName(char prefix, boolean includePackage, boolean includeType){
-        String pkg=includePackage?getPackageName():null;
-        String type=includeType?getTypeName():null;
-        return buildResourceName(prefix,pkg, type, getName());
-    }
-
     @Override
     public String toString(){
         StringBuilder builder = new StringBuilder();
@@ -622,26 +556,5 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         builder.append(getName());
         return builder.toString();
     }
-
-    public static String buildResourceName(char prefix, String packageName, String type, String name){
-        if(name==null){
-            return null;
-        }
-        StringBuilder builder=new StringBuilder();
-        if(prefix!=0){
-            builder.append(prefix);
-        }
-        if(packageName!=null){
-            builder.append(packageName);
-            builder.append(':');
-        }
-        if(type!=null){
-            builder.append(type);
-            builder.append('/');
-        }
-        builder.append(name);
-        return builder.toString();
-    }
-
     public static final String NAME_id = "id";
 }

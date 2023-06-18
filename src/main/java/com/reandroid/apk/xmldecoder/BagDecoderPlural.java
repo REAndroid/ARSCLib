@@ -18,14 +18,12 @@ package com.reandroid.apk.xmldecoder;
 import com.reandroid.apk.XmlHelper;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.value.*;
-import com.reandroid.arsc.value.plurals.PluralsQuantity;
-import com.reandroid.common.EntryStore;
 
 import java.io.IOException;
 
 class BagDecoderPlural<OUTPUT> extends BagDecoder<OUTPUT>{
-    public BagDecoderPlural(EntryStore entryStore) {
-        super(entryStore);
+    public BagDecoderPlural() {
+        super();
     }
 
     @Override
@@ -81,14 +79,8 @@ class BagDecoderPlural<OUTPUT> extends BagDecoder<OUTPUT>{
         int len=bagItems.length;
         for(int i=0;i<len;i++){
             ResValueMap item=bagItems[i];
-            int name = item.getName();
-            int high = (name >> 16) & 0xffff;
-            if(high!=0x0100){
-                return false;
-            }
-            int low = name & 0xffff;
-            PluralsQuantity pq=PluralsQuantity.valueOf((short) low);
-            if(pq==null){
+            AttributeType attributeType = item.getAttributeType();
+            if(attributeType == null || !attributeType.isPlural()){
                 return false;
             }
         }

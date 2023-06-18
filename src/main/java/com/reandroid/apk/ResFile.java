@@ -74,20 +74,38 @@ public class ResFile {
     }
     private Entry selectOne(){
         List<Entry> entryList = this.entryList;
-        if(entryList.size()==0){
+        if(entryList.size() == 0){
             return null;
         }
-        for(Entry entry :entryList){
+        if(entryList.size() == 1){
+            String p1 = entryList.get(0).getResValue().getValueAsString();
+            String p2 = getInputSource().getName();
+            if(p1.equals(p2)){
+                return entryList.get(entryList.size()-1);
+            }
+            return entryList.get(0);
+        }
+        String path = getInputSource().getName();
+        for(Entry entry : entryList){
+            ResValue resValue = entry.getResValue();
+            if(resValue == null || resValue.getValueType() != ValueType.STRING){
+                continue;
+            }
+            if(path.equals(resValue.getValueAsString())){
+                return entry;
+            }
+        }
+        for(Entry entry : entryList){
             if(!entry.isNull() && entry.isDefault()){
                 return entry;
             }
         }
-        for(Entry entry :entryList){
+        for(Entry entry : entryList){
             if(!entry.isNull()){
                 return entry;
             }
         }
-        for(Entry entry :entryList){
+        for(Entry entry : entryList){
             if(entry.isDefault()){
                 return entry;
             }

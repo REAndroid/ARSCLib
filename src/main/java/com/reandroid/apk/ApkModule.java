@@ -27,7 +27,6 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.coder.Decoder;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
@@ -39,7 +38,6 @@ import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.identifiers.PackageIdentifier;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
-import com.reandroid.xml.XMLException;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -59,7 +57,6 @@ public class ApkModule implements ApkFile, Closeable {
     private InputSource mManifestOriginalSource;
     private final UncompressedFiles mUncompressedFiles;
     private APKLogger apkLogger;
-    private Decoder mDecoder;
     private ApkType mApkType;
     private ApkSignatureBlock apkSignatureBlock;
     private Integer preferredFramework;
@@ -438,11 +435,17 @@ public class ApkModule implements ApkFile, Closeable {
         }
         return results;
     }
-    public XMLDocument decodeXMLFile(String path) throws IOException, XMLException {
+    public XMLDocument decodeXMLFile(String path) throws IOException {
         ResXmlDocument resXmlDocument = loadResXmlDocument(path);
         AndroidManifestBlock manifestBlock = getAndroidManifestBlock();
         int pkgId = manifestBlock.guessCurrentPackageId();
-        return resXmlDocument.decodeToXml(getTableBlock(), pkgId);
+        if(pkgId != 0 && hasTableBlock()){
+            PackageBlock packageBlock = getTableBlock().pickOne(pkgId);
+            if(packageBlock != null){
+                resXmlDocument.setPackageBlock(packageBlock);
+            }
+        }
+        return resXmlDocument.decodeToXml();
     }
     public List<DexFileInputSource> listDexFiles(){
         List<DexFileInputSource> results=new ArrayList<>();
@@ -801,15 +804,11 @@ public class ApkModule implements ApkFile, Closeable {
         ResXmlDocument resXmlDocument = new ResXmlDocument();
         resXmlDocument.setApkFile(this);
         resXmlDocument.readBytes(inputSource.openStream());
+        TableBlock tableBlock = getTableBlock();
+        if(tableBlock != null){
+            resXmlDocument.setPackageBlock(tableBlock.pickOne());
+        }
         return resXmlDocument;
-    }
-    @Override
-    public Decoder getDecoder(){
-        return mDecoder;
-    }
-    @Override
-    public void setDecoder(Decoder decoder){
-        this.mDecoder = decoder;
     }
     public ApkType getApkType(){
         if(mApkType!=null){

@@ -15,8 +15,9 @@
  */
 package com.reandroid.arsc.value.style;
 
+import com.reandroid.arsc.coder.CommonType;
 import com.reandroid.arsc.coder.EncodeResult;
-import com.reandroid.arsc.coder.ValueDecoder;
+import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.util.HexUtil;
@@ -26,7 +27,6 @@ import com.reandroid.arsc.value.bag.BagItem;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.ValueType;
-import com.reandroid.common.EntryStore;
 
 public class StyleBagItem extends BagItem {
     private StyleBagItem(ResValueMap bagItem) {
@@ -45,18 +45,13 @@ public class StyleBagItem extends BagItem {
         if (mBagItem == null) {
             return null;
         }
-        Entry block = mBagItem.getEntry();
-        if (block == null) {
-            return null;
-        }
-        char prefix = 0;
-        return block.buildResourceName(mBagItem.getName(), prefix, false);
+        return mBagItem.decodeName(true);
     }
-    public Entry getAttributeEntry(EntryStore entryStore) {
+    public Entry getAttributeEntry() {
         if (mBagItem == null) {
             return null;
         }
-        return entryStore.getEntryGroup(mBagItem.getName()).pickOne();
+        return mBagItem.resolveName().get();
     }
 
     public int getNameId() {
@@ -79,24 +74,13 @@ public class StyleBagItem extends BagItem {
         if (valueType != ValueType.REFERENCE && valueType != ValueType.ATTRIBUTE) {
             throw new IllegalArgumentException("Not REF ValueType=" + valueType);
         }
-        Entry entry = getBagItem().getEntry();
-        if (entry == null) {
-            return null;
-        }
-        char prefix = '@';
-        boolean includeType = true;
-        if (valueType == ValueType.ATTRIBUTE) {
-            prefix = '?';
-            includeType = false;
-        }
-        int id = getValue();
-        return entry.buildResourceName(id, prefix, includeType);
+        return getBagItem().decodeValue();
     }
-    public String decodeAttributeValue(AttributeBag attr, EntryStore entryStore) {
+    public String decodeAttributeValue(AttributeBag attr) {
         if (!hasIntValue()) {
             return null;
         }
-        return attr.decodeAttributeValue(entryStore, getValue());
+        return attr.decodeAttributeValue(getValue());
     }
     public AttributeBagItem[] getFlagsOrEnum(AttributeBag attr) {
         if (!hasIntValue()) {
@@ -177,10 +161,15 @@ public class StyleBagItem extends BagItem {
         return create(encodeResult.valueType, encodeResult.value);
     }
     public static StyleBagItem color(String color) {
-        return encoded(ValueDecoder.encodeColor(color));
+        EncodeResult encodeResult = ValueCoder.encode(color, CommonType.COLOR.valueTypes());
+        return encoded(encodeResult);
     }
     public static StyleBagItem dimensionOrFraction(String str) {
-        return encoded(ValueDecoder.encodeDimensionOrFraction(str));
+        EncodeResult encodeResult = ValueCoder.encode(str, ValueType.DIMENSION);
+        if(encodeResult == null){
+            encodeResult = ValueCoder.encode(str, ValueType.FRACTION);
+        }
+        return encoded(encodeResult);
     }
     public static StyleBagItem createFloat(float n) {
         return new StyleBagItem(ValueType.FLOAT, Float.floatToIntBits(n));

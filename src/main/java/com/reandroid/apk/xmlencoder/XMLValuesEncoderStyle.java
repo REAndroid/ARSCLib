@@ -18,7 +18,7 @@ package com.reandroid.apk.xmlencoder;
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
-import com.reandroid.arsc.coder.ValueDecoder;
+import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.xml.XMLElement;
@@ -69,7 +69,7 @@ public class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
             return;
         }
         if(attributeBag.isEqualType(AttributeDataFormat.STRING)) {
-            bagItem.setValueAsString(ValueDecoder
+            bagItem.setValueAsString(XmlSanitizer
                     .unEscapeUnQuote(valueText));
         }else{
             encodeResult = ValueCoder.encode(valueText);
@@ -77,7 +77,7 @@ public class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
                 bagItem.setTypeAndData(encodeResult.valueType,
                         encodeResult.value);
             }else {
-                bagItem.setValueAsString(ValueDecoder.unEscapeUnQuote(valueText));
+                bagItem.setValueAsString(XmlSanitizer.unEscapeUnQuote(valueText));
             }
         }
     }

@@ -16,6 +16,7 @@
 package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.util.IOUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
@@ -56,9 +57,7 @@ public class ResourceValuesEncoder {
         if(valuesXmlFile.getName().equals("public.xml")){
             return;
         }
-        String simpleName = valuesXmlFile.getParentFile().getName()
-                +File.separator+valuesXmlFile.getName();
-        materials.logVerbose("Encoding: "+simpleName);
+        materials.logVerbose("Encoding: " + IOUtil.shortPath(valuesXmlFile, 4));
 
         String type = EncodeUtil.getTypeNameFromValuesXml(valuesXmlFile);
         String qualifiers = EncodeUtil.getQualifiersFromValuesXml(valuesXmlFile);
