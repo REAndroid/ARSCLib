@@ -22,6 +22,7 @@ import com.reandroid.arsc.chunk.ParentChunk;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.BlockItem;
@@ -299,7 +300,9 @@ public abstract class ValueItem extends BlockItem implements Value,
             return decodeAsReferenceString(valueType);
         }
         if(valueType == ValueType.STRING){
-            return getValueAsString();
+            String value = XmlSanitizer.escapeSpecialCharacter(getValueAsString());
+            value = XmlSanitizer.quoteWhitespace(value);
+            return value;
         }
         return ValueCoder.decode(valueType, getData());
     }
