@@ -16,18 +16,22 @@
 package com.reandroid.arsc.model;
 
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.util.ComputeIterator;
 import com.reandroid.arsc.util.FilterIterator;
 import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.arsc.value.ResValue;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public class ResourceEntry implements Iterable<Entry>{
@@ -37,6 +41,52 @@ public class ResourceEntry implements Iterable<Entry>{
     public ResourceEntry(PackageBlock packageBlock, int resourceId){
         this.resourceId = resourceId;
         this.packageBlock = packageBlock;
+    }
+
+    public ResourceEntry resolveReference(){
+        Set<Integer> processedIds = new HashSet<>();
+        processedIds.add(0);
+        processedIds.add(getResourceId());
+        ResourceEntry resolved = resolveReference(processedIds);
+        if(resolved != null){
+            return resolved;
+        }
+        return this;
+    }
+    private ResourceEntry resolveReference(Set<Integer> processedIds){
+        Entry entry = get();
+        if(entry == null){
+            return this;
+        }
+        ResValue resValue = entry.getResValue();
+        if(resValue == null){
+            return this;
+        }
+        ValueType valueType = resValue.getValueType();
+        if(valueType == null || !valueType.isReference()){
+            return this;
+        }
+        int id = resValue.getData();
+        if(id == 0 || processedIds.contains(id)){
+            return null;
+        }
+        processedIds.add(id);
+        ResourceEntry resourceEntry = getResourceEntry(id);
+        if(resourceEntry != null){
+            ResourceEntry resolved = resourceEntry.resolveReference(processedIds);
+            if(resolved != null){
+                resourceEntry = resolved;
+            }
+        }
+        return resourceEntry;
+    }
+    private ResourceEntry getResourceEntry(int id){
+        PackageBlock packageBlock = getPackageBlock();
+        TableBlock tableBlock = packageBlock.getTableBlock();
+        if(tableBlock == null){
+            return null;
+        }
+        return tableBlock.getResource(packageBlock, id);
     }
 
     public Entry getOrCreate(String qualifiers){

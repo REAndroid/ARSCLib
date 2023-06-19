@@ -61,6 +61,14 @@ public class SpecTypePair extends BlockContainer<Block>
         this(new SpecBlock(), new TypeBlockArray());
     }
 
+    public boolean isAttr(){
+        // TODO: find better way
+        String name = getTypeName();
+        if(name == null){
+            return false;
+        }
+        return name.contains("attr");
+    }
     public ResourceEntry getResource(int entryId){
         if(entryId < 0 || entryId > getHighestEntryId()){
             return null;
@@ -79,11 +87,13 @@ public class SpecTypePair extends BlockContainer<Block>
         if(packageBlock == null){
             return null;
         }
-        Entry entry = getAnyEntry(name);
-        if(entry != null){
-            return new ResourceEntry(packageBlock, entry.getResourceId());
+        SpecStringPool specStringPool = packageBlock.getSpecStringPool();
+        int resourceId = specStringPool
+                .resolveResourceId(this, name);
+        if(resourceId == 0){
+            return null;
         }
-        return null;
+        return new ResourceEntry(packageBlock, resourceId);
     }
     public Iterator<ResourceEntry> getResources(){
         final PackageBlock packageBlock = getPackageBlock();

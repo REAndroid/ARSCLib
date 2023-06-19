@@ -188,7 +188,7 @@ public class AttributeBag {
         }
         return null;
     }
-    private boolean isEnumOrFlag(){
+    public boolean isEnumOrFlag(){
         return isFlag() || isEnum();
     }
     public boolean isFlag(){
@@ -217,6 +217,12 @@ public class AttributeBag {
         return builder.toString();
     }
 
+    public static AttributeBag create(Entry entry){
+        if(entry != null){
+            return create(entry.getResValueMapArray());
+        }
+        return null;
+    }
     public static AttributeBag create(ResValueMapArray resValueMapArray){
         if(resValueMapArray==null){
             return null;

@@ -250,6 +250,18 @@ public enum AttributeDataFormat {
         return null;
     }
 
+    public static boolean contains(AttributeDataFormat[] formats, ValueType valueType){
+        if(formats == null || valueType == null){
+            return false;
+        }
+        for(AttributeDataFormat dataFormat : formats){
+            if(dataFormat != null && dataFormat.contains(valueType)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static final AttributeDataFormat[] VALUE_TYPES = new AttributeDataFormat[]{
             REFERENCE,
             STRING,

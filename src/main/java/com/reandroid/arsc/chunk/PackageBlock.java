@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Predicate;
 
 
 public class PackageBlock extends Chunk<PackageHeader>
@@ -135,6 +136,17 @@ public class PackageBlock extends Chunk<PackageHeader>
                 getSpecTypePair(type);
         if(specTypePair != null){
             return specTypePair.getResource(name);
+        }
+        return null;
+    }
+    public ResourceEntry getAttrResource(String name){
+        Iterator<SpecTypePair> itr = getAttrSpecs();
+        while (itr.hasNext()){
+            ResourceEntry resourceEntry = itr.next()
+                    .getResource(name);
+            if(resourceEntry != null){
+                return resourceEntry;
+            }
         }
         return null;
     }
@@ -484,6 +496,14 @@ public class PackageBlock extends Chunk<PackageHeader>
         return getSpecTypePairArray().getTypeBlock(typeId, qualifiers);
     }
 
+    private Iterator<SpecTypePair> getAttrSpecs(){
+        return getSpecTypePairArray().iterator(new Predicate<SpecTypePair>() {
+            @Override
+            public boolean test(SpecTypePair specTypePair) {
+                return specTypePair != null && specTypePair.isAttr();
+            }
+        });
+    }
     public SpecTypePair getSpecTypePair(String typeName){
         return getSpecTypePair(typeIdOf(typeName));
     }

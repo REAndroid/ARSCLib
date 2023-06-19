@@ -18,6 +18,7 @@ package com.reandroid.arsc.pool;
 import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.array.SpecStringArray;
 import com.reandroid.arsc.array.StringArray;
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.IntegerItem;
@@ -46,6 +47,13 @@ public class SpecStringPool extends StringPool<SpecString> {
         }
         return 0;
     }
+    public int resolveResourceId(Block parentContext, String name){
+        Iterator<Entry> itr = getEntries(parentContext, name);
+        if(itr.hasNext()){
+            return itr.next().getResourceId();
+        }
+        return 0;
+    }
     public Iterator<Entry> getEntries(int typeId, String name){
         StringGroup<SpecString> group = get(name);
         if(group == null){
@@ -59,6 +67,13 @@ public class SpecStringPool extends StringPool<SpecString> {
             return EmptyIterator.of();
         }
         return group.get(0).getEntries(type);
+    }
+    public Iterator<Entry> getEntries(Block parentContext, String name){
+        StringGroup<SpecString> group = get(name);
+        if(group == null){
+            return EmptyIterator.of();
+        }
+        return group.get(0).getEntries(parentContext);
     }
     @Override
     StringArray<SpecString> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
