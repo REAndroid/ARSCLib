@@ -17,6 +17,7 @@ package com.reandroid.arsc.chunk.xml;
 
 import android.content.res.XmlResourceParser;
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.value.ValueType;
 import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
@@ -537,7 +538,11 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     private String decodeAttributeValue(ResXmlAttribute attribute){
         if(attribute != null){
-            return attribute.decodeValue();
+            String value = attribute.decodeValue();
+            if(attribute.getValueType() == ValueType.STRING){
+                value = XmlSanitizer.escapeSpecialCharacter(value);
+            }
+            return value;
         }
         return null;
     }
