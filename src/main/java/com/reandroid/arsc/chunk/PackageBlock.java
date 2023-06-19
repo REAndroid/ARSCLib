@@ -400,7 +400,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         if(packageName.equals(getName())){
             return true;
         }
-        if(mHasValidPrefix && packageName.equals(getPrefix())){
+        if(packageName.equals(getPrefix()) && mHasValidPrefix){
             return true;
         }
         return getLibraryBlock().containsLibraryInfo(packageName);
