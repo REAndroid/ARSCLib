@@ -17,14 +17,10 @@ package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
-import com.reandroid.arsc.coder.EncodeResult;
-import com.reandroid.arsc.coder.ReferenceString;
-import com.reandroid.arsc.coder.ValueCoder;
-import com.reandroid.arsc.coder.XmlSanitizer;
+import com.reandroid.arsc.coder.*;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.model.ResourceLibrary;
-import com.reandroid.arsc.value.AttributeDataFormat;
-import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import org.xmlpull.v1.XmlSerializer;
 
@@ -37,8 +33,21 @@ public class ResXmlPullSerializer implements XmlSerializer {
     private ResXmlDocument mDocument;
     private ResXmlElement mCurrentElement;
     private boolean mEndDocument;
+    private StringBuilder mCurrentText;
+    private boolean mValidateValues;
     public ResXmlPullSerializer(){
 
+    }
+
+    public ResXmlDocument getResultDocument() {
+        return mDocument;
+    }
+
+    public void setValidateValues(boolean validateValues) {
+        this.mValidateValues = validateValues;
+    }
+    public boolean isValidateValues() {
+        return mValidateValues;
     }
     public PackageBlock getCurrentPackage(){
         return mCurrentPackage;
@@ -49,10 +58,6 @@ public class ResXmlPullSerializer implements XmlSerializer {
             mDocument.setPackageBlock(packageBlock);
         }
     }
-    public ResXmlDocument getDocument() {
-        return mDocument;
-    }
-
     public void setDocument(ResXmlDocument document) {
         this.mDocument = document;
         if(document == null){
@@ -200,13 +205,19 @@ public class ResXmlPullSerializer implements XmlSerializer {
     }
 
     @Override
-    public XmlSerializer startTag(String namespace, String name) throws IOException, IllegalArgumentException, IllegalStateException {
+    public ResXmlPullSerializer startTag(String namespace, String name) throws IOException, IllegalArgumentException, IllegalStateException {
+        flushText();
         ResXmlElement element = getCurrentElement();
         String prefix = null;
         int i = name.indexOf(':');
         if(i > 0){
             prefix = name.substring(0, i);
             name = name.substring(i + 1);
+        }else {
+            ResXmlNamespace xmlNamespace = element.getNamespaceByUri(namespace);
+            if(xmlNamespace != null){
+                prefix = xmlNamespace.getPrefix();
+            }
         }
         if(element.getTag() == null){
             element.setTag(name);
@@ -220,7 +231,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
     }
 
     @Override
-    public XmlSerializer attribute(String namespace, String name, String value) throws IOException, IllegalArgumentException, IllegalStateException {
+    public ResXmlPullSerializer attribute(String namespace, String name, String value) throws IOException, IllegalArgumentException, IllegalStateException {
         ResXmlElement element = mCurrentElement;
         String prefix = null;
         int i = name.indexOf(':');
@@ -240,21 +251,21 @@ public class ResXmlPullSerializer implements XmlSerializer {
     }
 
     @Override
-    public XmlSerializer endTag(String namespace, String name) throws IOException, IllegalArgumentException, IllegalStateException {
+    public ResXmlPullSerializer endTag(String namespace, String name) throws IOException, IllegalArgumentException, IllegalStateException {
+        flushText();
         mCurrentElement.calculatePositions();
         mCurrentElement = mCurrentElement.getParentResXmlElement();
         return this;
     }
 
     @Override
-    public XmlSerializer text(String text) throws IOException, IllegalArgumentException, IllegalStateException {
-        ResXmlElement element = mCurrentElement;
-        element.addResXmlText(text);
+    public ResXmlPullSerializer text(String text) throws IOException, IllegalArgumentException, IllegalStateException {
+        appendText(text);
         return this;
     }
 
     @Override
-    public XmlSerializer text(char[] buf, int start, int len) throws IOException, IllegalArgumentException, IllegalStateException {
+    public ResXmlPullSerializer text(char[] buf, int start, int len) throws IOException, IllegalArgumentException, IllegalStateException {
         return text(new String(buf, start, len));
     }
 
@@ -265,7 +276,17 @@ public class ResXmlPullSerializer implements XmlSerializer {
 
     @Override
     public void entityRef(String text) throws IOException, IllegalArgumentException, IllegalStateException {
-
+        String decoded;
+        if("lt".equals(text)){
+            decoded = "<";
+        }else if("gt".equals(text)){
+            decoded = ">";
+        }else if("amp".equals(text)){
+            decoded = "&";
+        }else {
+            decoded = text;
+        }
+        appendText(decoded);
     }
 
     @Override
@@ -275,7 +296,8 @@ public class ResXmlPullSerializer implements XmlSerializer {
 
     @Override
     public void comment(String text) throws IOException, IllegalArgumentException, IllegalStateException {
-
+        ResXmlElement current = getCurrentElement();
+        current.setComment(text);
     }
 
     @Override
@@ -293,54 +315,99 @@ public class ResXmlPullSerializer implements XmlSerializer {
 
     }
 
-    private void encode(ResXmlAttribute attribute, String uri, String prefix, String name, String value){
+    private void flushText(){
+        if(mCurrentText == null){
+            return;
+        }
+        String text = mCurrentText.toString();
+        mCurrentText = null;
+        if(isIndent(text)){
+            return;
+        }
+        ResXmlElement element = getCurrentElement();
+        element.addResXmlText(text);
+    }
+    private void appendText(String text){
+        if(text == null){
+            return;
+        }
+        StringBuilder builder = mCurrentText;
+        if(builder == null){
+            builder = new StringBuilder();
+            mCurrentText = builder;
+        }
+        builder.append(text);
+    }
+    private void encode(ResXmlAttribute attribute, String uri, String prefix, String name, String value) throws IOException {
         attribute.setNamespace(uri, prefix);
-        Entry attrEntry = null;
-        if(prefix != null){
-            ResourceEntry resourceEntry = getAttributeName(prefix, name);
-            if(resourceEntry == null){
-                throw new ResourceEncodeException("Unknown attribute '" + prefix + ":" + name);
+        ResourceEntry attrResource = null;
+        Entry attrEntry;
+        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(name);
+        if(encodeResult != null){
+            attribute.setName(name, encodeResult.value);
+        }else if(prefix != null){
+            attrResource = getTableBlock().getAttrResource(prefix, name);
+            if(attrResource == null){
+                throw new IOException("Unknown attribute name '" + prefix + ":" + name + "'");
             }
-            attribute.setName(resourceEntry.getName(), resourceEntry.getResourceId());
+            attribute.setName(attrResource.getName(), attrResource.getResourceId());
             attribute.setNamespace(uri, prefix);
-            attrEntry = resourceEntry.get();
         }else {
             attribute.setName(name, 0);
         }
-        EncodeResult encodeResult = encodeReference(value);
+        encodeResult = encodeReference(value);
         if(encodeResult != null){
-            attribute.setTypeAndData(encodeResult.valueType, encodeResult.value);
+            attribute.setValue(encodeResult);
             return;
         }
-        if(attrEntry != null){
-            AttributeBag attributeBag = AttributeBag.create(attrEntry.getResValueMapArray());
+        AttributeDataFormat[] formats = null;
+        if(attrResource != null){
+            attrResource = attrResource.resolveReference();
+            attrEntry = attrResource.get();
+            AttributeBag attributeBag = AttributeBag.create(attrEntry);
             if(attributeBag != null){
-                encodeResult = attributeBag.encodeEnumOrFlagValue(value);
-                if(encodeResult!=null){
-                    attribute.setTypeAndData(encodeResult.valueType, encodeResult.value);
-                    return;
+                formats = attributeBag.getFormats();
+                if(attributeBag.isEnumOrFlag()){
+                    encodeResult = attributeBag.encodeEnumOrFlagValue(value);
+                    if(encodeResult == null){
+                        // Could be decoded as hex or integer
+                        encodeResult = ValueCoder.encode(value, CommonType.INTEGER.valueTypes());
+                    }
+                    if(encodeResult == null && formats != null){
+                        encodeResult = ValueCoder.encode(value, formats);
+                    }
+                    if(encodeResult == null){
+                        if(isValidateValues()){
+                            String msg = "Invalid attribute enum/flag/value '" + name + "=\"" + value + "\"'";
+                            throw new IOException(msg);
+                        }
+                        encodeResult = ValueCoder.encode(value);
+                    }
+                    if(encodeResult != null){
+                        attribute.setValue(encodeResult);
+                        return;
+                    }
                 }
             }
         }
-        if(attrEntry != null){
-            AttributeDataFormat[] formats = attrEntry.getResTableMapEntry().getAttributeTypeFormats();
+        boolean allowString = attrResource == null;
+        if(formats != null){
             encodeResult = ValueCoder.encode(value, formats);
+            if(encodeResult == null){
+                allowString = AttributeDataFormat.contains(formats, ValueType.STRING);
+            }
         }
         if(encodeResult != null){
-            attribute.setTypeAndData(encodeResult.valueType, encodeResult.value);
+            attribute.setValue(encodeResult);
             return;
+        }
+        if(!allowString && isValidateValues()){
+            throw new IOException("Invalid attribute value "
+                    + name + "=\"" + value + "\"");
         }
         attribute.setValueAsString(XmlSanitizer.unEscapeUnQuote(value));
     }
-    private ResourceEntry getAttributeName(String prefix, String name){
-        TableBlock tableBlock = getTableBlock();
-        ResourceEntry resourceEntry = tableBlock.getResource(prefix, "attr", name);
-        if(resourceEntry == null){
-            resourceEntry = tableBlock.getResource(null, "attr", name);
-        }
-        return resourceEntry;
-    }
-    private EncodeResult encodeReference(String text){
+    private EncodeResult encodeReference(String text) throws IOException {
         EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(text);
         if(encodeResult != null){
             return encodeResult;
@@ -351,7 +418,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
         }
         encodeResult = referenceString.encode(getTableBlock());
         if(encodeResult == null){
-            throw new ResourceEncodeException("Unknown reference: " + text);
+            throw new IOException("Unknown reference: " + text);
         }
         return encodeResult;
     }
@@ -359,10 +426,19 @@ public class ResXmlPullSerializer implements XmlSerializer {
         PackageBlock packageBlock = getCurrentPackage();
         return packageBlock.getTableBlock();
     }
-
-    public static class ResourceEncodeException extends IllegalArgumentException{
-        public ResourceEncodeException(String msg){
-            super(msg);
+    private static boolean isIndent(String text){
+        if(text.length() == 0){
+            return true;
         }
+        char[] chars = text.toCharArray();
+        if(chars[0] != '\n'){
+            return false;
+        }
+        for(int i = 1; i < chars.length; i++){
+            if(chars[i] != ' '){
+                return false;
+            }
+        }
+        return true;
     }
 }

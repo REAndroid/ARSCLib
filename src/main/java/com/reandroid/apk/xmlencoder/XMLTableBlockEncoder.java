@@ -176,6 +176,7 @@ public class XMLTableBlockEncoder {
             File resDir = toResDirectory(pubXmlFile);
             encodeResDir(resDir);
             FilePathEncoder filePathEncoder = new FilePathEncoder(encodeMaterials);
+            filePathEncoder.setApkLogger(getApkLogger());
             filePathEncoder.setApkArchive(getApkModule().getApkArchive());
             filePathEncoder.setUncompressedFiles(getApkModule().getUncompressedFiles());
             filePathEncoder.encodePackageResDir(resDir);

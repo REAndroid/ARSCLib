@@ -15,6 +15,7 @@
  */
 package com.reandroid.apk.xmlencoder;
 
+import com.reandroid.apk.APKLogger;
 import com.reandroid.archive.APKArchive;
 import com.reandroid.archive.FileInputSource;
 import com.reandroid.archive.InputSource;
@@ -22,8 +23,8 @@ import com.reandroid.apk.ApkUtil;
 import com.reandroid.apk.UncompressedFiles;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
-import com.reandroid.xml.source.XMLFileSource;
-import com.reandroid.xml.source.XMLSource;
+import com.reandroid.xml.source.XMLFileParserSource;
+import com.reandroid.xml.source.XMLParserSource;
 
 import java.io.File;
 import java.util.List;
@@ -32,6 +33,7 @@ public class FilePathEncoder {
     private final EncodeMaterials materials;
     private APKArchive apkArchive;
     private UncompressedFiles uncompressedFiles;
+    private APKLogger mLogger;
     public FilePathEncoder(EncodeMaterials encodeMaterials){
         this.materials =encodeMaterials;
     }
@@ -92,8 +94,10 @@ public class FilePathEncoder {
         return new FileInputSource(resFile, path);
     }
     private InputSource createXMLEncodeInputSource(String path, File resFile){
-        XMLSource xmlSource = new XMLFileSource(path, resFile);
-        return new XMLEncodeSource(materials, xmlSource);
+        XMLParserSource xmlSource = new XMLFileParserSource(path, resFile);
+        XMLParseEncodeSource encodeSource = new XMLParseEncodeSource(materials.getCurrentPackage(), xmlSource);
+        encodeSource.setApkLogger(mLogger);
+        return encodeSource;
     }
     private boolean isXmlFile(File resFile){
         String name=resFile.getName();
@@ -112,5 +116,8 @@ public class FilePathEncoder {
         if(uncompressedFiles!=null){
             uncompressedFiles.addPath(path);
         }
+    }
+    public void setApkLogger(APKLogger logger){
+        this.mLogger = logger;
     }
 }

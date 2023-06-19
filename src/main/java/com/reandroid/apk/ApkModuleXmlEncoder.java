@@ -16,15 +16,15 @@
 package com.reandroid.apk;
 
 import com.reandroid.apk.xmlencoder.EncodeMaterials;
-import com.reandroid.apk.xmlencoder.XMLEncodeSource;
+import com.reandroid.apk.xmlencoder.XMLParseEncodeSource;
 import com.reandroid.apk.xmlencoder.XMLTableBlockEncoder;
 import com.reandroid.archive.FileInputSource;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.value.Entry;
-import com.reandroid.xml.source.XMLFileSource;
-import com.reandroid.xml.source.XMLSource;
+import com.reandroid.xml.source.XMLFileParserSource;
+import com.reandroid.xml.source.XMLParserSource;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,10 +83,11 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
             encodeMaterials.setCurrentPackage(packageBlock);
             tableBlock.setCurrentPackage(packageBlock);
         }
-        XMLSource xmlSource =
-                new XMLFileSource(AndroidManifestBlock.FILE_NAME, file);
-        XMLEncodeSource xmlEncodeSource =
-                new XMLEncodeSource(encodeMaterials, xmlSource);
+        XMLParserSource xmlSource =
+                new XMLFileParserSource(AndroidManifestBlock.FILE_NAME, file);
+        XMLParseEncodeSource xmlEncodeSource =
+                new XMLParseEncodeSource(tableBlock.pickOne(), xmlSource);
+        xmlEncodeSource.setApkLogger(getApkLogger());
         getApkModule().add(xmlEncodeSource);
     }
     private void scanResFilesDirectory(File mainDirectory) {
@@ -104,13 +105,16 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
         String path = ApkUtil.toArchivePath(resFilesDirectory, file);
         logVerbose(path);
         Entry entry = getEntry(path);
-        EncodeMaterials encodeMaterials = getEncodeMaterials();
+        if(entry == null){
+            logMessage("Un registered file: " + file);
+            return;
+        }
         if(file.getName().endsWith(".xml")){
-            XMLSource xmlSource =
-                    new XMLFileSource(path, file);
-            XMLEncodeSource xmlEncodeSource =
-                    new XMLEncodeSource(encodeMaterials, xmlSource);
-            xmlEncodeSource.setEntry(entry);
+            XMLParserSource xmlSource =
+                    new XMLFileParserSource(path, file);
+            XMLParseEncodeSource xmlEncodeSource =
+                    new XMLParseEncodeSource(entry.getPackageBlock(), xmlSource);
+            xmlEncodeSource.setApkLogger(getApkLogger());
             getApkModule().add(xmlEncodeSource);
         }else {
             FileInputSource inputSource = new FileInputSource(file, path);
