@@ -20,6 +20,7 @@ import com.reandroid.arsc.chunk.MainChunk;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.ParentChunk;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.io.BlockReader;
@@ -269,6 +270,9 @@ public abstract class ValueItem extends BlockItem implements Value,
         setValueType(ValueType.BOOLEAN);
         int data=val?0xffffffff:0;
         setData(data);
+    }
+    public void setValue(EncodeResult encodeResult){
+        setTypeAndData(encodeResult.valueType, encodeResult.value);
     }
     public void setTypeAndData(ValueType valueType, int data){
         setData(data);
