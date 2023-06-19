@@ -259,6 +259,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
         }
         ResXmlStartNamespace ns = parentElement.getOrCreateXmlStartNamespace(uri, prefix);
         setNamespaceReference(ns.getUriReference());
+        linkNamespace();
     }
     private ResXmlStartNamespace getResXmlStartNamespace(){
         int uriRef = getNamespaceReference();
