@@ -40,7 +40,11 @@ public class ResXmlPullSerializer implements XmlSerializer {
     }
 
     public ResXmlDocument getResultDocument() {
-        return mDocument;
+        ResXmlDocument document = mDocument;
+        if(document != null){
+            document.refreshFull();
+        }
+        return document;
     }
 
     public void setValidateValues(boolean validateValues) {
