@@ -16,53 +16,141 @@
 package com.reandroid.arsc.coder;
 
 public class XmlSanitizer {
-    public static String escapeSpecialCharacter(String text){
-        if(text==null || text.length()==0){
-            return text;
-        }
-        if(isSpecialCharacter(text.charAt(0))){
-            return '\\' +text;
-        }
+
+    public static String escapeQuote(String text){
+        text = quoteWhitespace(text);
+        text = escapeSpecialCharacter(text);
         return text;
     }
     public static String unEscapeUnQuote(String text){
-        if(text==null || text.length()<2){
+        if(text == null || text.length() < 2){
             return text;
         }
         char first = text.charAt(0);
         if(first == '"'){
             return unQuoteWhitespace(text);
         }
-        if(first != '\\' || !isSpecialCharacter(text.charAt(1))){
-            return text;
+        return unEscapeSpecialCharacter(text);
+    }
+    public static String escapeSpecialCharacter(String text){
+        if(shouldEscape(text)){
+            text = '\\' + text;
         }
-        return text.substring(1);
+        return text;
+    }
+    public static String unEscapeSpecialCharacter(String text){
+        if(shouldUnEscape(text)){
+            text = text.substring(1);
+        }
+        return text;
     }
     public static String quoteWhitespace(String text){
-        if(!isWhiteSpace(text)){
+        if(!shouldQuote(text)){
             return text;
         }
         return "\"" + text + "\"";
     }
     public static String unQuoteWhitespace(String text){
-        if(text == null || text.length() < 3){
+        if(!shouldUnQuote(text)){
             return text;
         }
-        if(text.charAt(0) != '"' || text.charAt(text.length()-1) != '"'){
-            return text;
-        }
-        String unQuoted = text.substring(1, text.length()-1);
-        if(!isWhiteSpace(unQuoted)){
-            return text;
-        }
-        return unQuoted;
+        return text.substring(1, text.length()-1);
     }
-    private static boolean isWhiteSpace(String text){
+
+    private static boolean shouldUnEscape(String text){
+        if(text == null || text.length() < 2){
+            return false;
+        }
+        if(text.charAt(0) != '\\'){
+            return false;
+        }
+        return isAlreadyEscaped(text, 1)
+                || looksNumber(text, 1)
+                || startsWithSpecialCharacter(text, 1);
+    }
+    private static boolean shouldEscape(String text){
         if(text == null || text.length() == 0){
             return false;
         }
+        return isAlreadyEscaped(text, 0)
+                || looksNumber(text, 0)
+                || startsWithSpecialCharacter(text, 0);
+    }
+    private static boolean isAlreadyEscaped(String text, int offset){
+        int len = text.length();
+        if(len <= offset){
+            return false;
+        }
+        return text.charAt(offset) == '\\';
+    }
+    private static boolean looksNumber(String text, int offset){
+        int len = text.length();
+        if(len <= offset || len > 14){
+            return false;
+        }
+        char ch = text.charAt(offset);
+        if(isNumber(ch)){
+            return true;
+        }
+        offset ++;
+        if(len == offset || ch != '-'){
+            return false;
+        }
+        ch = text.charAt(offset);
+        return isNumber(ch);
+    }
+    private static boolean isNumber(char ch){
+        return ch <= '9' && ch >= '0';
+    }
+    private static boolean startsWithSpecialCharacter(String text, int offset){
+        if(text.length() < offset + 2){
+            return false;
+        }
+        return isSpecialCharacter(text.charAt(offset));
+    }
+    private static boolean shouldUnQuote(String text){
+        if(text == null || text.length() < 3){
+            return false;
+        }
+        if(text.charAt(0) != '"' || text.charAt(text.length() -1) != '"'){
+            return false;
+        }
+        return isWhiteSpace(text, 1) || isQuotedWhiteSpace(text, 1);
+    }
+    private static boolean shouldQuote(String text){
+        if(text == null){
+            return false;
+        }
+        return isWhiteSpace(text, 0) || isQuotedWhiteSpace(text, 0);
+    }
+    private static boolean isQuotedWhiteSpace(String text, int offset){
+        if(text == null){
+            return false;
+        }
+        int len = text.length();
+        if(len <= offset){
+            return false;
+        }
+        len = len - offset - 1;
+        if(text.charAt(offset) != '"'){
+            return false;
+        }
+        if(text.charAt(len) != '"'){
+            return false;
+        }
+        return isWhiteSpace(text, offset + 1);
+    }
+    private static boolean isWhiteSpace(String text, int offset){
+        if(text == null){
+            return false;
+        }
+        int len = text.length() - 1;
+        if(len <= offset){
+            return false;
+        }
         char[] chars = text.toCharArray();
-        for(int i = 0; i < chars.length; i++){
+        len = chars.length - offset;
+        for(int i = offset; i < len; i++){
             if(!isWhiteSpace(chars[i])){
                 return false;
             }
@@ -90,4 +178,5 @@ public class XmlSanitizer {
                 return false;
         }
     }
+
 }

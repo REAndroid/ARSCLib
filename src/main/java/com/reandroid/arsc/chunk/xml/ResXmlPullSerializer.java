@@ -409,7 +409,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
             throw new IOException("Invalid attribute value "
                     + name + "=\"" + value + "\"");
         }
-        attribute.setValueAsString(XmlSanitizer.unEscapeUnQuote(value));
+        attribute.setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
     }
     private EncodeResult encodeReference(String text) throws IOException {
         EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(text);
