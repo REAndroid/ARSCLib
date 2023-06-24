@@ -17,6 +17,10 @@ package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.coder.*;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.SingleBlockContainer;
@@ -24,10 +28,18 @@ import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.pool.ResXmlStringPool;
+import com.reandroid.arsc.util.EmptyIterator;
+import com.reandroid.arsc.value.AttributeDataFormat;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ValueType;
+import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.*;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
 
 
 import java.io.IOException;
@@ -94,7 +106,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return getStartNamespaceByUri(uri);
     }
     public ResXmlNamespace getNamespaceByPrefix(String prefix){
-        return getStartNamespaceByPrefix(prefix);
+        return getStartNamespaceByPrefix(prefix, null);
     }
     public void autoSetAttributeNamespaces(){
         for(ResXmlAttribute attribute : listAttributes()){
@@ -104,6 +116,20 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             if(child instanceof ResXmlElement){
                 ((ResXmlElement)child).autoSetAttributeNamespaces();
             }
+        }
+    }
+    public void clearNullNodes(){
+        clearNullNodes(true);
+    }
+    private void clearNullNodes(boolean recursive){
+        for(ResXmlNode node:listXmlNodes()){
+            if(node.isNull()){
+                removeNode(node);
+            }
+            if(!recursive || !(node instanceof ResXmlElement)){
+                continue;
+            }
+            ((ResXmlElement)node).clearNullNodes(true);
         }
     }
     int removeUnusedNamespaces(){
@@ -213,6 +239,18 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             return end.getLineNumber();
         }
         return 0;
+    }
+    public void setStartLineNumber(int lineNumber){
+        ResXmlStartElement start = getStartElement();
+        if(start!=null){
+            start.setLineNumber(lineNumber);
+        }
+    }
+    public void setEndLineNumber(int lineNumber){
+        ResXmlEndElement end = getEndElement();
+        if(end != null){
+            end.setLineNumber(lineNumber);
+        }
     }
     public void setComment(String comment){
         getStartElement().setComment(comment);
@@ -355,7 +393,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             name=tag.substring(i);
         }
         start.setName(name);
-        ResXmlStartNamespace ns = getStartNamespaceByPrefix(prefix);
+        ResXmlStartNamespace ns = getStartNamespaceByPrefix(prefix, null);
         if(ns!=null){
             start.setNamespaceReference(ns.getUriReference());
         }
@@ -654,20 +692,25 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         return null;
     }
-    private ResXmlStartNamespace getStartNamespaceByPrefix(String prefix){
+    private ResXmlStartNamespace getStartNamespaceByPrefix(String prefix, ResXmlStartNamespace result){
         if(prefix == null){
-            return null;
+            return result;
         }
-        for(ResXmlStartNamespace ns:mStartNamespaceList.getChildes()){
-            if(prefix.equals(ns.getPrefix())){
+        for(ResXmlStartNamespace ns:getStartNamespaceList()){
+            if(!prefix.equals(ns.getPrefix())){
+                continue;
+            }
+            String uri = ns.getUri();
+            if(uri != null && uri.length() != 0){
                 return ns;
             }
+            result = ns;
         }
         ResXmlElement xmlElement = getParentResXmlElement();
         if(xmlElement != null){
-            return xmlElement.getStartNamespaceByPrefix(prefix);
+            return xmlElement.getStartNamespaceByPrefix(prefix, result);
         }
-        return null;
+        return result;
     }
     private List<ResXmlStartNamespace> getStartNamespaceList(){
         return mStartNamespaceList.getChildes();
@@ -733,9 +776,20 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(text==null){
             return;
         }
-        ResXmlTextNode xmlTextNode=new ResXmlTextNode();
-        addResXmlTextNode(xmlTextNode);
+        ResXmlTextNode xmlTextNode = createResXmlText();
         xmlTextNode.setText(text);
+    }
+    private ResXmlTextNode getOrCreateResXmlText(){
+        ResXmlNode last = getResXmlNode(countResXmlNodes() - 1);
+        if(last instanceof ResXmlTextNode){
+            return (ResXmlTextNode) last;
+        }
+        return createResXmlText();
+    }
+    private ResXmlTextNode createResXmlText(){
+        ResXmlTextNode xmlTextNode = new ResXmlTextNode();
+        addResXmlTextNode(xmlTextNode);
+        return xmlTextNode;
     }
 
     private boolean isBalanced(){
@@ -937,6 +991,139 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
     }
     @Override
+    public void serialize(XmlSerializer serializer) throws IOException {
+        int count = getNamespaceCount();
+        for(int i = 0; i < count; i++){
+            ResXmlNamespace namespace = getNamespaceAt(i);
+            serializer.setPrefix(namespace.getPrefix(),
+                    namespace.getUri());
+        }
+        String comment = getStartComment();
+        if(comment != null){
+            serializer.comment(comment);
+        }
+        boolean indent = getFeatureSafe(serializer, FEATURE_INDENT_OUTPUT);
+        setIndent(serializer, indent);
+        boolean indentChanged = indent;
+        serializer.startTag(getTagUri(), getTag());
+        count = getAttributeCount();
+        for(int i = 0; i < count; i++){
+            ResXmlAttribute attribute = getAttributeAt(i);
+            attribute.serialize(serializer);
+        }
+        for(ResXmlNode xmlNode : getXmlNodes()){
+            if(indentChanged && xmlNode instanceof ResXmlTextNode){
+                indentChanged = false;
+                setIndent(serializer, false);
+            }
+            xmlNode.serialize(serializer);
+        }
+        serializer.endTag(getTagUri(), getTag());
+        if(indent != indentChanged){
+            setIndent(serializer, true);
+        }
+    }
+    @Override
+    public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+        if(parser.getEventType() != XmlPullParser.START_TAG){
+            throw new XmlPullParserException("Invalid state START_TAG != "
+                    + parser.getEventType());
+        }
+        setStartLineNumber(parser.getLineNumber());
+
+        String name = parser.getName();
+        String prefix = splitPrefix(name);
+        name = splitName(name);
+        setTag(name);
+        String uri = parser.getNamespace();
+        if(prefix == null){
+            prefix = parser.getPrefix();
+        }
+        parseNamespaces(parser);
+        parseAttributes(parser);
+        parseChildes(parser);
+        if(prefix != null){
+            if(uri == null || uri.length() == 0){
+                ResXmlNamespace ns = getNamespaceByPrefix(prefix);
+                if(ns != null){
+                    uri = ns.getUri();
+                }
+            }
+            setTagNamespace(uri, prefix);
+        }
+        setEndLineNumber(parser.getLineNumber());
+        clearNullNodes(false);
+    }
+    private void parseChildes(XmlPullParser parser) throws IOException, XmlPullParserException {
+        ResXmlElement currentElement = this;
+        int event = parser.next();
+        while (event != XmlPullParser.END_TAG && event != XmlPullParser.END_DOCUMENT){
+            if(event == XmlPullParser.START_TAG){
+                ResXmlElement element = createChildElement();
+                element.parse(parser);
+                currentElement = element;
+            }else if(ResXmlTextNode.isTextEvent(event)){
+                ResXmlTextNode textNode = getOrCreateResXmlText();
+                textNode.parse(parser);
+            }else if(event == XmlPullParser.COMMENT){
+                currentElement.setComment(parser.getText());
+            }
+            event = parser.next();
+        }
+    }
+    private void parseNamespaces(XmlPullParser parser) throws XmlPullParserException {
+        int count = parser.getNamespaceCount(parser.getDepth());
+        for(int i = 0; i < count; i++){
+            ResXmlStartNamespace namespace = createXmlStartNamespace(
+                    parser.getNamespaceUri(i),
+                    parser.getNamespacePrefix(i));
+            namespace.setLineNumber(parser.getLineNumber());
+        }
+        count = parser.getAttributeCount();
+        for(int i = 0; i < count; i++){
+            String name = parser.getAttributeName(i);
+            String prefix = splitPrefix(name);
+            name = splitName(name);
+            String value = parser.getAttributeValue(i);
+            if(looksNamespace(value, prefix)){
+                getOrCreateNamespace(value, name);
+            }
+        }
+    }
+    private void parseAttributes(XmlPullParser parser) throws IOException {
+        int count = parser.getAttributeCount();
+        for(int i = 0; i < count; i++){
+            String name = parser.getAttributeName(i);
+            String prefix = splitPrefix(name);
+            name = splitName(name);
+            String value = parser.getAttributeValue(i);
+            if(looksNamespace(value, prefix)){
+                continue;
+            }
+            if(prefix == null){
+                prefix = parser.getAttributePrefix(i);
+                if(prefix != null && prefix.length() == 0){
+                    prefix = null;
+                }
+            }
+            String uri;
+            if(prefix != null){
+                uri = parser.getAttributeNamespace(i);
+                if(uri.length() == 0){
+                    ResXmlNamespace ns = getNamespaceByPrefix(prefix);
+                    if(ns != null){
+                        uri = ns.getUri();
+                    }
+                }
+            }else {
+                uri = null;
+            }
+            ResXmlAttribute attribute = newAttribute();
+            attribute.encode(uri, prefix, name, value);
+        }
+    }
+
+    @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
         jsonObject.put(NAME_node_type, NAME_element);
@@ -1103,8 +1290,39 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return "NULL";
     }
 
-    public static final String NS_ANDROID_URI = "http://schemas.android.com/apk/res/android";
-    public static final String NS_ANDROID_PREFIX = "android";
+    private static boolean looksNamespace(String uri, String prefix){
+        return uri.length() != 0 && "xmlns".equals(prefix);
+    }
+    private static boolean getFeatureSafe(XmlSerializer serializer, String name){
+        try{
+            return serializer.getFeature(name);
+        }catch (Throwable ignored){
+            return false;
+        }
+    }
+    private static String splitPrefix(String name){
+        int i = name.indexOf(':');
+        if(i >= 0){
+            return name.substring(0, i);
+        }
+        return null;
+    }
+    private static String splitName(String name){
+        int i = name.indexOf(':');
+        if(i >= 0){
+            return name.substring(i + 1);
+        }
+        return name;
+    }
+    static void setIndent(XmlSerializer serializer, boolean state){
+        setFeatureSafe(serializer, FEATURE_INDENT_OUTPUT, state);
+    }
+    private static void setFeatureSafe(XmlSerializer serializer, String name, boolean state){
+        try{
+            serializer.setFeature(name, state);
+        }catch (Throwable ignored){
+        }
+    }
 
     static final String NAME_element = "element";
     static final String NAME_name = "name";
@@ -1116,4 +1334,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     private static final String NAME_line = "line";
     static final String NAME_attributes = "attributes";
     static final String NAME_childes = "childes";
+
+    private static final String FEATURE_INDENT_OUTPUT = "http://xmlpull.org/v1/doc/features.html#indent-output";
+
 }

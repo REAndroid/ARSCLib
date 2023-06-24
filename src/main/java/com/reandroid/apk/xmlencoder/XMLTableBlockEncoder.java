@@ -26,7 +26,7 @@ import com.reandroid.arsc.util.HexUtil;
 import com.reandroid.arsc.util.IOUtil;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLException;
-import com.reandroid.xml.XMLParserFactory;
+import com.reandroid.xml.XMLFactory;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -117,7 +117,7 @@ public class XMLTableBlockEncoder {
         PackageBlock packageBlock = tableBlock.newPackage(0, null);
         loadPackageJson(packageBlock, pubXmlFile);
         try {
-            XmlPullParser parser = XMLParserFactory.newPullParser(pubXmlFile);
+            XmlPullParser parser = XMLFactory.newPullParser(pubXmlFile);
             packageBlock.setTag(pubXmlFile);
             packageBlock.parsePublicXml(parser);
             packageBlock.initializeDefinedTypeIds();
@@ -227,7 +227,7 @@ public class XMLTableBlockEncoder {
         }
         XmlPullParser parser;
         try {
-            parser = XMLParserFactory.newPullParser(manifestFile);
+            parser = XMLFactory.newPullParser(manifestFile);
         } catch (XmlPullParserException ex) {
             throw new IOException(ex);
         }

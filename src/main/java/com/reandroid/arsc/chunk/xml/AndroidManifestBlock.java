@@ -16,14 +16,13 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.ApkFile;
-import com.reandroid.arsc.chunk.ChunkType;
-import com.reandroid.arsc.header.InfoHeader;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.ValueType;
-import com.reandroid.common.FileChannelInputStream;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -102,6 +101,18 @@ public class AndroidManifestBlock extends ResXmlDocument {
             mGuessedPackageId = ((getIconResourceId()>>24) & 0xff);
         }
         return mGuessedPackageId;
+    }
+    @Override
+    PackageBlock selectPackageBlock(TableBlock tableBlock){
+        ResourceEntry resourceEntry = tableBlock.getResource(getIconResourceId());
+        if(resourceEntry == null){
+            return super.selectPackageBlock(tableBlock);
+        }
+        PackageBlock packageBlock = resourceEntry.getPackageBlock();
+        if(packageBlock.getTableBlock() != tableBlock){
+            return super.selectPackageBlock(tableBlock);
+        }
+        return packageBlock;
     }
     public int getIconResourceId(){
         ResXmlElement applicationElement = getApplicationElement();

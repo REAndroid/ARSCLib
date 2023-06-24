@@ -28,10 +28,7 @@ import com.reandroid.arsc.util.FilterIterator;
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
@@ -81,6 +78,66 @@ public class Archive implements Closeable {
             map.put(entrySource.getAlias(), entrySource);
         }
         return map;
+    }
+    public ArchiveEntrySource getEntrySource(String path){
+        if(path == null){
+            return null;
+        }
+        ZipInput zipInput = this.zipInput;
+        List<ArchiveEntry> entryList = this.entryList;
+        for(int i=0; i<entryList.size(); i++){
+            ArchiveEntry entry = entryList.get(i);
+            if(path.equals(entry.getName())){
+                return new ArchiveEntrySource(zipInput, entry);
+            }
+        }
+        return null;
+    }
+    public List<String> listFilePaths(){
+        List<ArchiveEntry> entryList = this.entryList;
+        List<String> results = new ArrayList<>(entryList.size());
+        for(int i=0; i<entryList.size(); i++){
+            ArchiveEntry entry = entryList.get(i);
+            if(entry.isDirectory()){
+                continue;
+            }
+            results.add(entry.getName());
+        }
+        return results;
+    }
+
+    public boolean removeEntry(String path){
+        if(path == null){
+            return false;
+        }
+        List<ArchiveEntry> entryList = this.entryList;
+        int index = -1;
+        for(int i=0; i<entryList.size(); i++){
+            ArchiveEntry entry = entryList.get(i);
+            if(path.equals(entry.getName())){
+                index = i;
+                break;
+            }
+        }
+        if(index != -1){
+            entryList.remove(index);
+            return true;
+        }
+        return false;
+    }
+    public void removeEntries(Collection<String> pathList){
+        if(pathList == null){
+            return;
+        }
+        List<ArchiveEntry> copy = new ArrayList<>(this.entryList);
+        for(int i=0; i < copy.size(); i++){
+            ArchiveEntry entry = copy.get(i);
+            String path = entry.getName();
+            if(pathList.contains(path)){
+                pathList.remove(path);
+                this.entryList.remove(entry);
+            }
+        }
     }
     public InputStream openRawInputStream(ArchiveEntry archiveEntry) throws IOException {
         return zipInput.getInputStream(archiveEntry.getFileOffset(), archiveEntry.getDataSize());

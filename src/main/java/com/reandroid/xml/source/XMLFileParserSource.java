@@ -15,7 +15,7 @@
  */
 package com.reandroid.xml.source;
 
-import com.reandroid.xml.XMLParserFactory;
+import com.reandroid.xml.XMLFactory;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -32,7 +32,7 @@ public class XMLFileParserSource implements XMLParserSource{
 
     @Override
     public XmlPullParser getParser() throws XmlPullParserException {
-        return XMLParserFactory.newPullParser(getFile());
+        return XMLFactory.newPullParser(getFile());
     }
     @Override
     public String getPath() {

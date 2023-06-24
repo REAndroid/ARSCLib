@@ -112,4 +112,7 @@ public class XMLValuesEncoder {
         }
         return element.getAttributeValue("value");
     }
+    static AttributeDataFormat getType(XMLElement element){
+        return AttributeDataFormat.fromValueTypeName(element.getAttributeValue("type"));
+    }
 }

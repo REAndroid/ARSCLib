@@ -95,6 +95,17 @@ abstract class ResXmlNamespaceChunk extends BaseXmlChunk implements ResXmlNamesp
         }
     }
     @Override
+    public void setLineNumber(int lineNumber){
+        if(lineNumber == getLineNumber()){
+            return;
+        }
+        super.setLineNumber(lineNumber);
+        ResXmlNamespaceChunk pair = getPair();
+        if(pair != null){
+            pair.setLineNumber(lineNumber);
+        }
+    }
+    @Override
     public String toString(){
         String uri=getUri();
         if(uri==null){

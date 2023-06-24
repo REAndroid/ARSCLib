@@ -37,6 +37,7 @@ public class CommonType {
     public static final CommonType LAYOUT;
     public static final CommonType MENU;
     public static final CommonType MIPMAP;
+    public static final CommonType NAVIGATION;
     public static final CommonType RAW;
     public static final CommonType STRING;
     public static final CommonType TRANSITION;
@@ -134,6 +135,11 @@ public class CommonType {
         });
         map.put(type.name, type);
         MIPMAP = type;
+        type  = new CommonType("navigation", new ValueType[]{
+                ValueType.STRING
+        });
+        map.put(type.name, type);
+        NAVIGATION = type;
         type  = new CommonType("raw", new ValueType[]{
                 ValueType.STRING
         });
@@ -170,6 +176,7 @@ public class CommonType {
                 LAYOUT,
                 MENU,
                 MIPMAP,
+                NAVIGATION,
                 RAW,
                 STRING,
                 TRANSITION,

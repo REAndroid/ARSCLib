@@ -18,9 +18,15 @@ package com.reandroid.arsc.chunk.xml;
 import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLText;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
+
+import java.io.IOException;
 
 public class ResXmlTextNode extends ResXmlNode {
     private final ResXmlText resXmlText;
+    private String mIndentText;
     public ResXmlTextNode(ResXmlText resXmlText) {
         super(1);
         this.resXmlText = resXmlText;
@@ -29,7 +35,7 @@ public class ResXmlTextNode extends ResXmlNode {
     public ResXmlTextNode() {
         this(new ResXmlText());
     }
-    public ResXmlText getResXmlText() {
+    ResXmlText getResXmlText() {
         return resXmlText;
     }
     public int getLineNumber(){
@@ -67,13 +73,28 @@ public class ResXmlTextNode extends ResXmlNode {
     }
     public void setText(String text){
         getResXmlText().setText(text);
+        mIndentText = null;
     }
-    public int getTextReference(){
-        return getResXmlText().getTextReference();
+    public void append(String text){
+        String exist = getText();
+        if(exist == null || exist.length() == 0){
+            exist = mIndentText;
+        }
+        if(exist == null && isIndent(text)){
+            mIndentText = text;
+            return;
+        }
+        if(exist != null){
+            text = exist + text;
+        }
+        setText(text);
     }
-    public void setTextReference(int ref){
-        getResXmlText().setTextReference(ref);
+
+    @Override
+    public boolean isNull() {
+        return getResXmlText().isNull();
     }
+
     @Override
     void onRemoved(){
         getResXmlText().onRemoved();
@@ -83,13 +104,29 @@ public class ResXmlTextNode extends ResXmlNode {
         getResXmlText().linkStringReferences();
     }
     @Override
-    public String toString(){
-        String txt=getText();
-        if(txt!=null){
-            return txt;
+    public void serialize(XmlSerializer serializer) throws IOException {
+        if(isNull()){
+            return;
         }
-        return super.toString();
+        serializer.text(getText());
     }
+    @Override
+    public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+        setLineNumber(parser.getLineNumber());
+        String text;
+        int event = parser.getEventType();
+        if(event == XmlPullParser.ENTITY_REF){
+            text = decodeEntityRef(parser.getText());
+        }else if(event == XmlPullParser.TEXT){
+            text = parser.getText();
+            text = XmlSanitizer.unEscapeUnQuote(text);
+        }else {
+            throw new XmlPullParserException("Invalid text event: "
+                    + event + ", " + parser.getPositionDescription());
+        }
+        append(text);
+    }
+
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
@@ -105,6 +142,48 @@ public class ResXmlTextNode extends ResXmlNode {
         XMLText xmlText=new XMLText(XmlSanitizer.escapeSpecialCharacter(getText()));
         xmlText.setLineNumber(getLineNumber());
         return xmlText;
+    }
+    @Override
+    public String toString(){
+        return "line = " + getLineNumber() + ", \"" + getText() + "\"";
+    }
+
+    private static String decodeEntityRef(String entityRef) {
+        if(entityRef == null){
+            return "";
+        }
+        String decode;
+        if(entityRef.equals("lt")){
+            decode = "<";
+        }else if(entityRef.equals("gt")){
+            decode = ">";
+        }else if(entityRef.equals("amp")){
+            decode = "&";
+        }else if(entityRef.equals("quote")){
+            decode = "\"";
+        }else {
+            decode = "&" + entityRef + ";";
+        }
+        return decode;
+    }
+    static boolean isTextEvent(int event){
+        return event == XmlPullParser.TEXT
+                || event == XmlPullParser.ENTITY_REF;
+    }
+    private static boolean isIndent(String text){
+        if(text.length() == 0){
+            return true;
+        }
+        char[] chars = text.toCharArray();
+        if(chars[0] != '\n'){
+            return false;
+        }
+        for(int i = 1; i < chars.length; i++){
+            if(chars[i] != ' '){
+                return false;
+            }
+        }
+        return true;
     }
 
     public static final String NAME_text="text";

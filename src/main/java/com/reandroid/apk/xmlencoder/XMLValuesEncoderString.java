@@ -15,7 +15,7 @@
  */
 package com.reandroid.apk.xmlencoder;
 
-import com.reandroid.arsc.coder.CommonType;
+import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLSpannable;
@@ -29,7 +29,11 @@ public class XMLValuesEncoderString extends XMLValuesEncoder{
     public void encodeValue(Entry entry, XMLElement element){
         if(!element.hasChildElements()){
             String text = getValue(element);
-            super.encodeValue(entry, CommonType.STRING.valueTypes(), text);
+            AttributeDataFormat dataFormat = getType(element);
+            if(dataFormat == null){
+                dataFormat = AttributeDataFormat.STRING;
+            }
+            super.encodeValue(entry, dataFormat.valueTypes(), text);
             return;
         }
         encodeStyledString(entry, element);

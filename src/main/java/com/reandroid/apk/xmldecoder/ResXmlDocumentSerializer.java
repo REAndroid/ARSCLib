@@ -15,13 +15,13 @@
   */
 package com.reandroid.apk.xmldecoder;
 
-import com.android.org.kxml2.io.KXmlSerializer;
 import com.reandroid.apk.ApkModule;
 import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlPullParser;
+import com.reandroid.xml.XMLFactory;
 import com.reandroid.xml.XmlParserToSerializer;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -38,7 +38,7 @@ public class ResXmlDocumentSerializer implements ResXmlPullParser.DocumentLoaded
     private String mCurrentPath;
     public ResXmlDocumentSerializer(ResXmlPullParser parser){
         this.parser = parser;
-        this.serializer = new KXmlSerializer();
+        this.serializer = XMLFactory.newSerializer();
         this.parserToSerializer = new XmlParserToSerializer(parser, serializer);
         this.parser.setDocumentLoadedListener(this);
     }

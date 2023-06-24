@@ -5,9 +5,7 @@ import com.reandroid.apk.CrcOutputStream;
 import com.reandroid.archive.ByteInputSource;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
-import com.reandroid.arsc.chunk.xml.ResXmlPullSerializer;
 import com.reandroid.arsc.util.IOUtil;
-import com.reandroid.xml.XmlParserToSerializer;
 import com.reandroid.xml.source.XMLParserSource;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -74,12 +72,11 @@ public class XMLParseEncodeSource extends ByteInputSource {
     private ResXmlDocument encode() throws XmlPullParserException, IOException {
         logVerbose("Encoding: " + getParserSource().getPath());
         XmlPullParser parser = getParserSource().getParser();
-        ResXmlPullSerializer serializer = new ResXmlPullSerializer();
-        serializer.setCurrentPackage(getPackageBlock());
-        XmlParserToSerializer parserToSerializer = new XmlParserToSerializer(parser, serializer);
-        parserToSerializer.write();
+        ResXmlDocument resXmlDocument = new ResXmlDocument();
+        resXmlDocument.setPackageBlock(getPackageBlock());
+        resXmlDocument.parse(parser);
         IOUtil.close(parser);
-        return serializer.getResultDocument();
+        return resXmlDocument;
     }
     public void setApkLogger(APKLogger logger){
         this.mLogger = logger;

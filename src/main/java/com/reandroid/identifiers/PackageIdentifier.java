@@ -15,15 +15,15 @@
  */
 package com.reandroid.identifiers;
 
-import com.android.org.kxml2.io.KXmlParser;
-import com.android.org.kxml2.io.KXmlSerializer;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.arsc.util.IOUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.json.JSONObject;
+import com.reandroid.xml.XMLFactory;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -151,16 +151,12 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
     }
 
     public void writePublicXml(File file) throws IOException {
-        File dir = file.getParentFile();
-        if(dir != null && !dir.exists()){
-            dir.mkdirs();
-        }
-        FileOutputStream outputStream = new FileOutputStream(file);
-        writePublicXml(outputStream);
-        outputStream.close();
+        XmlSerializer serializer = XMLFactory.newSerializer(file);
+        write(serializer);
+        IOUtil.close(serializer);
     }
     public void writePublicXml(OutputStream outputStream) throws IOException {
-        XmlSerializer serializer = new KXmlSerializer();
+        XmlSerializer serializer = XMLFactory.newSerializer(outputStream);
         serializer.setOutput(outputStream, StandardCharsets.UTF_8.name());
         write(serializer);
     }
@@ -205,18 +201,15 @@ public class PackageIdentifier extends IdentifierMap<TypeIdentifier>{
         }
     }
     public void loadPublicXml(File file) throws IOException, XmlPullParserException {
-        FileInputStream fileInputStream = new FileInputStream(file);
-        loadPublicXml(fileInputStream);
-        fileInputStream.close();
+        XmlPullParser parser = XMLFactory.newPullParser(file);
+        loadPublicXml(parser);
     }
     public void loadPublicXml(InputStream inputStream) throws IOException, XmlPullParserException {
-        XmlPullParser parser = new KXmlParser();
-        parser.setInput(inputStream, StandardCharsets.UTF_8.name());
+        XmlPullParser parser = XMLFactory.newPullParser(inputStream);
         loadPublicXml(parser);
     }
     public void loadPublicXml(Reader reader) throws IOException, XmlPullParserException {
-        XmlPullParser parser = new KXmlParser();
-        parser.setInput(reader);
+        XmlPullParser parser = XMLFactory.newPullParser(reader);
         loadPublicXml(parser);
     }
     public void loadPublicXml(XmlPullParser parser) throws IOException, XmlPullParserException {

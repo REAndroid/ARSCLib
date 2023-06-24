@@ -61,17 +61,43 @@ public class ApkModule implements ApkFile, Closeable {
     private ApkSignatureBlock apkSignatureBlock;
     private Integer preferredFramework;
     private Closeable mCloseable;
+    private final List<TableBlock> mExternalFrameworks;
 
     public ApkModule(String moduleName, APKArchive apkArchive){
         this.moduleName=moduleName;
         this.apkArchive=apkArchive;
         this.mUncompressedFiles=new UncompressedFiles();
         this.mUncompressedFiles.addPath(apkArchive);
+        this.mExternalFrameworks = new ArrayList<>();
     }
     public ApkModule(){
         this("base", new APKArchive());
     }
 
+    public void addExternalFramework(File frameworkFile) throws IOException {
+        if(frameworkFile == null){
+            return;
+        }
+        logMessage("Loading external framework: " + frameworkFile);
+        FrameworkApk framework = FrameworkApk.loadTableBlock(frameworkFile);
+        framework.setAPKLogger(getApkLogger());
+        addExternalFramework(framework);
+    }
+    public void addExternalFramework(ApkModule apkModule){
+        if(apkModule == null || apkModule == this || !apkModule.hasTableBlock()){
+            return;
+        }
+        addExternalFramework(apkModule.getTableBlock());
+    }
+    public void addExternalFramework(TableBlock tableBlock){
+        if(tableBlock == null
+                || tableBlock.getApkFile() == this
+                || mExternalFrameworks.contains(tableBlock)){
+            return;
+        }
+        mExternalFrameworks.add(tableBlock);
+        updateExternalFramework();
+    }
     public String refreshTable(){
         TableBlock tableBlock = this.mTableBlock;
         if(tableBlock != null){
@@ -230,6 +256,9 @@ public class ApkModule implements ApkFile, Closeable {
     public FrameworkApk initializeAndroidFramework(XmlPullParser parser) throws IOException {
         if(this.preferredFramework != null){
             return initializeAndroidFramework(preferredFramework);
+        }
+        if(this.mExternalFrameworks.size() > 0){
+            return null;
         }
         Integer androidCore = -1;
         Integer version = readVersionCode(parser, androidCore);
@@ -667,6 +696,7 @@ public class ApkModule implements ApkFile, Closeable {
         }
         TableBlock tableBlock = this.mTableBlock;
         if(tableBlock!=null){
+            mExternalFrameworks.clear();
             tableBlock.destroy();
             this.mTableBlock = null;
         }
@@ -702,6 +732,7 @@ public class ApkModule implements ApkFile, Closeable {
         source.setMethod(ZipEntry.STORED);
         getUncompressedFiles().addPath(source);
         mTableBlock = tableBlock;
+        updateExternalFramework();
     }
     @Override
     public AndroidManifestBlock getAndroidManifestBlock() {
@@ -754,11 +785,21 @@ public class ApkModule implements ApkFile, Closeable {
                     Integer version = getAndroidFrameworkVersion();
                     initializeAndroidFramework(mTableBlock, version);
                 }
+                updateExternalFramework();
             } catch (IOException exception) {
                 throw new IllegalArgumentException(exception);
             }
         }
         return mTableBlock;
+    }
+    private void updateExternalFramework(){
+        TableBlock tableBlock = mTableBlock;
+        if(tableBlock == null){
+            return;
+        }
+        for(TableBlock framework : mExternalFrameworks){
+            tableBlock.addFramework(framework);
+        }
     }
     public InputSource getManifestOriginalSource(){
         InputSource inputSource = this.mManifestOriginalSource;
@@ -790,7 +831,43 @@ public class ApkModule implements ApkFile, Closeable {
     }
     @Override
     public TableBlock getTableBlock() {
+        if(mTableBlock != null){
+            return mTableBlock;
+        }
+        checkExternalFramework();
+        checkSelfFramework();
         return getTableBlock(!mDisableLoadFramework);
+    }
+    @Override
+    public TableBlock getLoadedTableBlock(){
+        return mTableBlock;
+    }
+    private void checkExternalFramework(){
+        if(mDisableLoadFramework || preferredFramework != null){
+            return;
+        }
+        if(mExternalFrameworks.size() == 0){
+            return;
+        }
+        mDisableLoadFramework = true;
+    }
+    private void checkSelfFramework(){
+        if(mDisableLoadFramework || preferredFramework != null){
+            return;
+        }
+        AndroidManifestBlock manifestBlock = getAndroidManifestBlock();
+        if(manifestBlock == null){
+            return;
+        }
+        if(manifestBlock.isCoreApp() == null
+                || !"android".equals(manifestBlock.getPackageName())){
+            return;
+        }
+        if(manifestBlock.guessCurrentPackageId() != 0x01){
+            return;
+        }
+        logMessage("Looks like framework apk, skip loading framework");
+        mDisableLoadFramework = true;
     }
     @Override
     public ResXmlDocument loadResXmlDocument(String path) throws IOException{
@@ -1040,6 +1117,29 @@ public class ApkModule implements ApkFile, Closeable {
         ApkModule apkModule = new ApkModule(moduleName, archive.createAPKArchive());
         apkModule.setApkSignatureBlock(archive.getApkSignatureBlock());
         apkModule.setCloseable(archive);
+        return apkModule;
+    }
+    public static ApkModule loadApkFile(File apkFile, File ... externalFrameworks) throws IOException {
+        return loadApkFile(null, apkFile, externalFrameworks);
+    }
+    public static ApkModule loadApkFile(APKLogger logger, File apkFile, File ... externalFrameworks) throws IOException {
+        Archive archive = new Archive(apkFile);
+        ApkModule apkModule = new ApkModule(ApkUtil.DEF_MODULE_NAME, archive.createAPKArchive());
+        apkModule.setAPKLogger(logger);
+        apkModule.setApkSignatureBlock(archive.getApkSignatureBlock());
+        apkModule.setCloseable(archive);
+        if(externalFrameworks == null || externalFrameworks.length == 0){
+            return apkModule;
+        }
+        for(File frameworkFile : externalFrameworks){
+            if(frameworkFile == null){
+                continue;
+            }
+            if(apkFile.equals(frameworkFile)){
+                throw new IOException("External framework should be different: " + apkFile);
+            }
+            apkModule.addExternalFramework(frameworkFile);
+        }
         return apkModule;
     }
 }

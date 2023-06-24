@@ -22,9 +22,11 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.container.SpecTypePair;
+import com.reandroid.arsc.util.IOUtil;
 import com.reandroid.arsc.value.*;
 import com.reandroid.json.JSONObject;
-import org.xmlpull.v1.XmlPullParserException;
+import com.reandroid.xml.XMLFactory;
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.File;
 import java.io.IOException;
@@ -242,27 +244,19 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
     }
     private void serializeXml(PackageBlock packageBlock, ResXmlDocument document, File outFile)
             throws IOException {
-        ResXmlDocumentSerializer serializer = getDocumentSerializer();
-        if(packageBlock != null){
+        if(packageBlock != null && document.getPackageBlock() == null){
             document.setPackageBlock(packageBlock);
-            serializer.setCurrentPackage(packageBlock);
         }
-        document.autoSetAttributeNamespaces();
-        try {
-            serializer.write(document, outFile);
-        } catch (XmlPullParserException ex) {
-            throw new IOException("Error: "+outFile.getName(), ex);
-        }
+        XmlSerializer serializer = XMLFactory.newSerializer(outFile);
+        document.serialize(serializer);
+        IOUtil.close(serializer);
     }
     private void serializeXml(PackageBlock packageBlock, InputSource inputSource, File outFile)
             throws IOException {
-        ResXmlDocumentSerializer serializer = getDocumentSerializer();
-        serializer.setCurrentPackage(packageBlock);
-        try {
-            serializer.write(inputSource, outFile);
-        } catch (XmlPullParserException ex) {
-            throw new IOException("Error: " + outFile.getName(), ex);
-        }
+        ResXmlDocument document = new ResXmlDocument();
+        document.readBytes(inputSource.openStream());
+        document.setPackageBlock(packageBlock);
+        serializeXml(packageBlock, document, outFile);
     }
     private void addDecodedEntry(Entry entry){
         if(entry.isNull()){

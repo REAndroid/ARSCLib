@@ -15,23 +15,34 @@
  */
 package com.reandroid.xml;
 
-import com.android.org.kxml2.io.KXmlParser;
 import com.reandroid.common.FileChannelInputStream;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
-public class XMLParserFactory {
+public class XMLFactory {
 
+    public static XmlPullParser newPullParser(String xmlContent) throws XmlPullParserException {
+        XmlPullParser parser = newPullParser();
+        StringReader reader = new StringReader(xmlContent);
+        parser.setInput(reader);
+        return parser;
+    }
     public static XmlPullParser newPullParser(File file) throws XmlPullParserException {
         XmlPullParser parser = newPullParser();
         try {
             parser.setInput(new FileChannelInputStream(file), StandardCharsets.UTF_8.name());
         } catch (IOException ex) {
-            throw new XmlPullParserException(ex.getMessage() + ", file = " + file);
+            throw new XmlPullParserException(ex.getMessage());
         }
+        return parser;
+    }
+    public static XmlPullParser newPullParser(Reader reader) throws XmlPullParserException {
+        XmlPullParser parser = newPullParser();
+        parser.setInput(reader);
         return parser;
     }
     public static XmlPullParser newPullParser(InputStream inputStream) throws XmlPullParserException {
@@ -40,6 +51,27 @@ public class XMLParserFactory {
         return parser;
     }
     public static XmlPullParser newPullParser(){
-        return new KXmlParser();
+        return new CloseableParser();
+    }
+
+    public static XmlSerializer newSerializer(Writer writer) throws IOException{
+        XmlSerializer serializer = newSerializer();
+        serializer.setOutput(writer);
+        return serializer;
+    }
+    public static XmlSerializer newSerializer(File file) throws IOException{
+        File dir = file.getParentFile();
+        if(dir != null && !dir.exists()){
+            dir.mkdirs();
+        }
+        return newSerializer(new FileOutputStream(file));
+    }
+    public static XmlSerializer newSerializer(OutputStream outputStream) throws IOException{
+        XmlSerializer serializer = newSerializer();
+        serializer.setOutput(outputStream, StandardCharsets.UTF_8.name());
+        return serializer;
+    }
+    public static XmlSerializer newSerializer(){
+        return new CloseableSerializer();
     }
 }

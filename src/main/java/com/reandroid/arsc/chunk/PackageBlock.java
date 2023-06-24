@@ -15,7 +15,6 @@
  */
 package com.reandroid.arsc.chunk;
 
-import com.android.org.kxml2.io.KXmlSerializer;
 import com.reandroid.arsc.BuildInfo;
 import com.reandroid.arsc.array.LibraryInfoArray;
 import com.reandroid.arsc.array.SpecTypePairArray;
@@ -41,16 +40,14 @@ import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.xml.XMLFactory;
 import com.reandroid.xml.XMLUtil;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -376,7 +373,8 @@ public class PackageBlock extends Chunk<PackageHeader>
             hasValidPrefix = ResourceLibrary.PREFIX_ANDROID.equals(getName());
         }else {
             prefix = ResourceLibrary.toPrefix(getName());
-            hasValidPrefix = Namespace.isValidPrefix(prefix);
+            hasValidPrefix = Namespace.isValidPrefix(prefix)
+                    && !ResourceLibrary.PREFIX_ANDROID.equals(prefix);
             if(!hasValidPrefix){
                 prefix = ResourceLibrary.PREFIX_APP;
             }
@@ -542,16 +540,9 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
 
     public void serializePublicXml(File file) throws IOException {
-        File dir = file.getParentFile();
-        if(dir != null && !dir.exists()){
-            dir.mkdirs();
-        }
-        XmlSerializer serializer = new KXmlSerializer();
-        OutputStream outputStream = new FileOutputStream(file);
-        serializer.setOutput(outputStream, StandardCharsets.UTF_8.name());
+        XmlSerializer serializer = XMLFactory.newSerializer(file);
         serializePublicXml(serializer);
         IOUtil.close(serializer);
-        outputStream.close();
     }
     public void serializePublicXml(XmlSerializer serializer) throws IOException {
         serializePublicXml(serializer, true);

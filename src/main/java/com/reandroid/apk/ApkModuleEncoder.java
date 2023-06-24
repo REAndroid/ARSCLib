@@ -60,12 +60,8 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
 
     private void refreshTable(){
         logMessage("Refreshing resource table ...");
-        String msg = getApkModule().refreshTable();
-        if(msg != null){
-            logMessage(msg);
-        }
-        logMessage("Built resource table : "
-                + getApkModule().getTableBlock().toString());
+        getApkModule().refreshTable();
+        logMessage(getApkModule().getTableBlock().toString());
     }
     private void sortFiles(){
         logMessage("Sorting files ...");

@@ -29,6 +29,9 @@ import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -142,6 +145,15 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         if(root!=null){
             root.setAttributesUnitSize(size, setToAll);
         }
+    }
+    public ResXmlElement getOrCreateElement(String tag){
+        ResXmlElement element = getResXmlElement();
+        if(element == null){
+            element = createRootElement(tag);
+        }else if(tag != null){
+            element.setTag(tag);
+        }
+        return element;
     }
     public ResXmlElement createRootElement(String tag){
         int lineNo=1;
@@ -264,14 +276,18 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         if(apkFile == null || packageBlock != null){
             return packageBlock;
         }
-        TableBlock tableBlock = apkFile.getTableBlock();
+        TableBlock tableBlock = apkFile.getLoadedTableBlock();
         if(tableBlock != null){
-            return tableBlock.pickOne();
+            packageBlock = selectPackageBlock(tableBlock);
+            mPackageBlock = packageBlock;
         }
-        return null;
+        return packageBlock;
     }
     public void setPackageBlock(PackageBlock packageBlock) {
         this.mPackageBlock = packageBlock;
+    }
+    PackageBlock selectPackageBlock(TableBlock tableBlock){
+        return tableBlock.pickOne();
     }
     @Override
     public TableBlock getTableBlock(){
@@ -284,7 +300,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         }
         ApkFile apkFile = getApkFile();
         if(apkFile != null){
-            return apkFile.getTableBlock();
+            return apkFile.getLoadedTableBlock();
         }
         return null;
     }
@@ -330,6 +346,49 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         int length = super.writeBytes(outputStream);
         outputStream.close();
         return length;
+    }
+    public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+        if(mDestroyed){
+            throw new IOException("Destroyed document");
+        }
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            throw new IOException("Can not decode without package");
+        }
+        setPackageBlock(packageBlock);
+        int event = parser.getEventType();
+        if(event == XmlPullParser.START_DOCUMENT){
+            setResXmlElement(null);
+            event = parser.next();
+        }
+        while (event != XmlPullParser.START_TAG && event != XmlPullParser.END_DOCUMENT){
+            event = parser.next();
+        }
+        if(event == XmlPullParser.START_TAG){
+            ResXmlElement element = getOrCreateElement(null);
+            if(element != null){
+                element.parse(parser);
+            }
+        }
+        refreshFull();
+    }
+    public void serialize(XmlSerializer serializer) throws IOException {
+        if(mDestroyed){
+            throw new IOException("Destroyed document");
+        }
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            throw new IOException("Can not decode without package");
+        }
+        ResXmlElement.setIndent(serializer, true);
+        setPackageBlock(packageBlock);
+        serializer.startDocument("utf-8", null);
+        ResXmlElement element = getResXmlElement();
+        if(element != null){
+            autoSetAttributeNamespaces();
+            element.serialize(serializer);
+        }
+        serializer.endDocument();
     }
     @Override
     public JSONObject toJson() {

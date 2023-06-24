@@ -131,6 +131,11 @@ public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
         EncodeResult unknown = ValueCoder.encodeUnknownResourceId(name);
         int resourceId;
         if(unknown == null){
+            int i = name.indexOf(':');
+            if(i>0){
+                name=name.substring(i+1);
+            }
+            //TODO: include package name
             resourceId = getMaterials().resolveLocalResourceId("id", name);
         }else {
             resourceId = unknown.value;

@@ -33,7 +33,13 @@ public class XmlSanitizer {
         return unEscapeSpecialCharacter(text);
     }
     public static String escapeSpecialCharacter(String text){
-        if(shouldEscape(text)){
+        if(shouldEscapeSpecial(text)){
+            text = '\\' + text;
+        }
+        return text;
+    }
+    public static String escapeDecodedValue(String text){
+        if(shouldEscapeDecoded(text) || shouldEscapeSpecial(text)){
             text = '\\' + text;
         }
         return text;
@@ -65,16 +71,21 @@ public class XmlSanitizer {
             return false;
         }
         return isAlreadyEscaped(text, 1)
-                || looksNumber(text, 1)
+                || looksDecoded(text, 1)
                 || startsWithSpecialCharacter(text, 1);
     }
-    private static boolean shouldEscape(String text){
+    private static boolean shouldEscapeSpecial(String text){
         if(text == null || text.length() == 0){
             return false;
         }
         return isAlreadyEscaped(text, 0)
-                || looksNumber(text, 0)
                 || startsWithSpecialCharacter(text, 0);
+    }
+    private static boolean shouldEscapeDecoded(String text){
+        if(text == null || text.length() == 0){
+            return false;
+        }
+        return looksDecoded(text, 0);
     }
     private static boolean isAlreadyEscaped(String text, int offset){
         int len = text.length();
@@ -83,17 +94,25 @@ public class XmlSanitizer {
         }
         return text.charAt(offset) == '\\';
     }
-    private static boolean looksNumber(String text, int offset){
+    private static boolean looksDecoded(String text, int offset){
         int len = text.length();
         if(len <= offset || len > 14){
             return false;
         }
+        if(looksNumber(text, offset)){
+            return true;
+        }
+        text = text.substring(offset);
+        return "true".equals(text)
+                || "false".equals(text);
+    }
+    private static boolean looksNumber(String text, int offset){
         char ch = text.charAt(offset);
         if(isNumber(ch)){
             return true;
         }
         offset ++;
-        if(len == offset || ch != '-'){
+        if(offset == text.length() || ch != '-'){
             return false;
         }
         ch = text.charAt(offset);

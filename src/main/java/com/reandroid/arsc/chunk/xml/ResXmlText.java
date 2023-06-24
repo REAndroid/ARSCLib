@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,6 +50,12 @@ public class ResXmlText extends BaseXmlChunk {
         int ref=resXmlString.getIndex();
         setTextReference(ref);
     }
+    @Override
+    public boolean isNull() {
+        return getText() == null
+                || super.isNull();
+    }
+
     @Override
     public String toString(){
         String txt=getText();

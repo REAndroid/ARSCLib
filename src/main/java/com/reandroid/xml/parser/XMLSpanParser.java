@@ -28,7 +28,7 @@ public class XMLSpanParser {
     private final XmlPullParser mParser;
     private XMLElement mCurrentElement;
     public XMLSpanParser(){
-        this.mParser = XMLParserFactory.newPullParser();
+        this.mParser = XMLFactory.newPullParser();
     }
     public XMLElement parse(String text) throws XMLException {
         synchronized (mLock){

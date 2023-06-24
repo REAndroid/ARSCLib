@@ -31,6 +31,7 @@ import com.reandroid.arsc.value.ValueType;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -159,6 +160,10 @@ public class FrameworkApk extends ApkModule{
         return (FrameworkTable) super.getTableBlock();
     }
     @Override
+    public FrameworkTable getLoadedTableBlock() {
+        return (FrameworkTable) super.getLoadedTableBlock();
+    }
+    @Override
     FrameworkTable loadTableBlock() throws IOException {
         APKArchive archive=getApkArchive();
         InputSource inputSource = archive.getInputSource(TableBlock.FILE_NAME);
@@ -226,8 +231,26 @@ public class FrameworkApk extends ApkModule{
         return getName();
     }
     public static FrameworkApk loadApkFile(File apkFile) throws IOException {
+        return loadApkFile(apkFile, true);
+    }
+    public static FrameworkApk loadTableBlock(File apkFile) throws IOException {
+        return loadApkFile(apkFile, false);
+    }
+    private static FrameworkApk loadApkFile(File apkFile, boolean addManifest) throws IOException {
         Archive archive = new Archive(apkFile);
-        APKArchive apkArchive = new APKArchive(archive.mapEntrySource());
+        InputSource table = archive.getEntrySource(TableBlock.FILE_NAME);
+        if(table == null){
+            throw new IOException("Missing " + TableBlock.FILE_NAME + ", on " + apkFile);
+        }
+        List<String> removeList = archive.listFilePaths();
+        removeList.remove(TableBlock.FILE_NAME);
+        APKArchive apkArchive = new APKArchive();
+        apkArchive.add(table);
+        if(addManifest){
+            apkArchive.add(archive.getEntrySource(AndroidManifestBlock.FILE_NAME));
+            removeList.remove(AndroidManifestBlock.FILE_NAME);
+        }
+        archive.removeEntries(removeList);
         FrameworkApk frameworkApk = new FrameworkApk(apkArchive);
         frameworkApk.setCloseable(archive);
         return frameworkApk;

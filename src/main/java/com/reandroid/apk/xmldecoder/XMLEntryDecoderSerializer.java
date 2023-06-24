@@ -15,10 +15,10 @@
  */
 package com.reandroid.apk.xmldecoder;
 
-import com.android.org.kxml2.io.KXmlSerializer;
 import com.reandroid.apk.XmlHelper;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
+import com.reandroid.xml.XMLFactory;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.*;
@@ -35,7 +35,7 @@ public class XMLEntryDecoderSerializer extends XMLEntryDecoder<XmlSerializer> im
         this.entryWriterSerializer = new EntryWriterSerializer(serializer);
     }
     public XMLEntryDecoderSerializer() {
-        this(new KXmlSerializer());
+        this(XMLFactory.newSerializer());
     }
 
     public int decode(File resDirectory, SpecTypePair specTypePair) throws IOException {

@@ -24,6 +24,7 @@ import java.io.IOException;
 public interface ApkFile {
     AndroidManifestBlock getAndroidManifestBlock();
     TableBlock getTableBlock();
+    TableBlock getLoadedTableBlock();
     ResXmlDocument loadResXmlDocument(String path) throws IOException;
 
     enum ApkType {
