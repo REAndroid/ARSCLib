@@ -251,6 +251,9 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     public final T get(int index){
         return mArrayStrings.get(index);
     }
+    public final T getLast(){
+        return mArrayStrings.getLast();
+    }
     public final StringGroup<T> get(String str){
         return mUniqueMap.get(str);
     }

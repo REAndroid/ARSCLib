@@ -322,6 +322,9 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         }
         return elementData[i];
     }
+    public final T getLast(){
+        return get(childesCount() - mFreeSpace - 1);
+    }
     public int indexOf(Object block){
         T[] items=elementData;
         if(items==null){
@@ -354,9 +357,11 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         return iterator(false);
     }
     public Iterator<T> iterator(boolean skipNullBlock) {
+        trimAllocatedFreeSpace();
         return new BlockIterator(skipNullBlock);
     }
     public Iterator<T> iterator(Predicate<T> tester) {
+        trimAllocatedFreeSpace();
         return new PredicateIterator(tester);
     }
     public boolean contains(Object block){
@@ -457,6 +462,8 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         return result;
     }
     private void changeSize(int amount){
+        mFreeSpace = 0;
+        mAllocateStep = 0;
         T[] old=elementData;
         int index=old.length;
         int size=index+amount;

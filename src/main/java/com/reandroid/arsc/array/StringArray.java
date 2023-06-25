@@ -24,6 +24,7 @@ import com.reandroid.json.JSONObject;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public abstract class StringArray<T extends StringItem> extends OffsetBlockArray<T> implements JSONConvert<JSONArray> {
@@ -51,7 +52,7 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     @Override
     protected void onPreRefreshRefresh(){
         if(isFlexible()){
-            trimAllocatedFreeSpace();
+            trimNullBlocks();
         }
         super.onPreRefreshRefresh();
     }
@@ -85,8 +86,10 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     }
     public List<T> listUnusedStrings(){
         List<T> results=new ArrayList<>();
-        for(T item:listItems()){
-            if(!item.hasReference()){
+        T[] childes = getChildes();
+        for(int i = 0; i < childes.length; i++){
+            T item = childes[i];
+            if(item != null && !item.hasReference()){
                 results.add(item);
             }
         }
@@ -96,12 +99,15 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         if(mUtf8==is_utf8){
             return;
         }
-        mUtf8=is_utf8;
-        T[] childes=getChildes();
+        mUtf8 = is_utf8;
+        T[] childes = getChildes();
         if(childes!=null){
-            int max=childes.length;
-            for(int i=0;i<max;i++){
-                childes[i].setUtf8(is_utf8);
+            int length = childes.length;
+            for(int i=0; i<length; i++){
+                T item = childes[i];
+                if(item != null){
+                    item.setUtf8(is_utf8);
+                }
             }
         }
     }
@@ -124,10 +130,9 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         }
         JSONArray jsonArray=new JSONArray();
         int i=0;
-        for(T item:listItems()){
-            if(item.isNull()){
-                continue;
-            }
+        Iterator<T> itr = iterator(true);
+        while (itr.hasNext()){
+            T item = itr.next();
             if(styledOnly && !item.hasStyle()){
                 continue;
             }
