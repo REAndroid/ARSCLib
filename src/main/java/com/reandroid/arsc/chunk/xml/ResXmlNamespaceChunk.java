@@ -41,9 +41,11 @@ abstract class ResXmlNamespaceChunk extends BaseXmlChunk implements ResXmlNamesp
         }
         setUriReference(xmlString.getIndex());
     }
+    @Override
     public String getPrefix(){
         return getString(getPrefixReference());
     }
+    @Override
     public void setPrefix(String prefix){
         if(prefix == null){
             setPrefixReference(-1);
@@ -55,6 +57,7 @@ abstract class ResXmlNamespaceChunk extends BaseXmlChunk implements ResXmlNamesp
         }
         setPrefixReference(xmlString.getIndex());
     }
+    @Override
     public int getUriReference(){
         return getStringReference();
     }

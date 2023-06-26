@@ -475,7 +475,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
         if(manifestElement==null){
             return null;
         }
-        if(!TAG_manifest.equals(manifestElement.getTag())){
+        if(!TAG_manifest.equals(manifestElement.getName())){
             return null;
         }
         return manifestElement;
@@ -495,8 +495,8 @@ public class AndroidManifestBlock extends ResXmlDocument {
         if(manifestElement==null){
             manifestElement=createRootElement(TAG_manifest);
         }
-        if(!TAG_manifest.equals(manifestElement.getTag())){
-            manifestElement.setTag(TAG_manifest);
+        if(!TAG_manifest.equals(manifestElement.getName())){
+            manifestElement.setName(TAG_manifest);
         }
         return manifestElement;
     }
@@ -533,7 +533,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
         if(root==null){
             return false;
         }
-        return TAG_manifest.equals(root.getTag());
+        return TAG_manifest.equals(root.getName());
     }
     public static AndroidManifestBlock load(File file) throws IOException {
         AndroidManifestBlock manifestBlock = new AndroidManifestBlock();

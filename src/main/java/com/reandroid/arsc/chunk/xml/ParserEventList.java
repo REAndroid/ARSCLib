@@ -42,7 +42,7 @@ public class ParserEventList implements Iterator<ParserEvent> {
             return mCurrent.getComment();
         }
         if(type == ParserEvent.START_TAG || type == ParserEvent.END_TAG){
-            return getElement().getTag();
+            return getElement().getName();
         }
         if(type == ParserEvent.TEXT){
             String text = ((ResXmlTextNode)getXmlNode()).getText();

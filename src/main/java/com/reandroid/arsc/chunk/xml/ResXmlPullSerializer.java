@@ -195,7 +195,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
     public String getNamespace() {
         ResXmlElement element = mCurrentElement;
         if(element != null){
-            return element.getTagUri();
+            return element.getUri();
         }
         return null;
     }
@@ -203,7 +203,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
     public String getName() {
         ResXmlElement element = mCurrentElement;
         if(element != null){
-            return element.getTag();
+            return element.getName();
         }
         return null;
     }
@@ -223,8 +223,8 @@ public class ResXmlPullSerializer implements XmlSerializer {
                 prefix = xmlNamespace.getPrefix();
             }
         }
-        if(element.getTag() == null){
-            element.setTag(name);
+        if(element.getName() == null){
+            element.setName(name);
         }else {
             element = element.createChildElement(name);
             mCurrentElement = element;

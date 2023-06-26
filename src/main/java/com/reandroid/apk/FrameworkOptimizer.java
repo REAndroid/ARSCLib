@@ -156,7 +156,7 @@ import java.util.zip.ZipEntry;
                 continue;
             }
             ResXmlElement element = (ResXmlElement)node;
-            if(AndroidManifestBlock.TAG_application.equals(element.getTag())){
+            if(AndroidManifestBlock.TAG_application.equals(element.getName())){
                 continue;
             }
             results.add(element);

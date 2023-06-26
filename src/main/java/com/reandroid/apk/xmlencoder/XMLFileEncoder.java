@@ -83,7 +83,7 @@ public class XMLFileEncoder {
     }
     private void buildElement(XMLElement element, ResXmlElement resXmlElement){
         ensureNamespaces(element, resXmlElement);
-        resXmlElement.setTag(element.getTagName());
+        resXmlElement.setName(element.getTagName());
         buildAttributes(element, resXmlElement);
         for(XMLNode node:element.getChildNodes()){
             if(node instanceof XMLText){

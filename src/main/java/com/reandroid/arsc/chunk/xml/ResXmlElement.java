@@ -15,12 +15,10 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
+import com.reandroid.arsc.array.ResXmlAttributeArray;
+import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.chunk.TableBlock;
-import com.reandroid.arsc.coder.*;
-import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.SingleBlockContainer;
@@ -28,11 +26,6 @@ import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.pool.ResXmlStringPool;
-import com.reandroid.arsc.util.EmptyIterator;
-import com.reandroid.arsc.value.AttributeDataFormat;
-import com.reandroid.arsc.value.Entry;
-import com.reandroid.arsc.value.ValueType;
-import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
@@ -40,7 +33,6 @@ import com.reandroid.xml.*;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
-
 
 import java.io.IOException;
 import java.util.*;
@@ -108,15 +100,62 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public ResXmlNamespace getNamespaceByPrefix(String prefix){
         return getStartNamespaceByPrefix(prefix, null);
     }
-    public void autoSetAttributeNamespaces(){
+    public ResXmlNamespace getOrCreateNamespaceByPrefix(String prefix){
+        if(prefix == null || prefix.trim().length() == 0){
+            return null;
+        }
+        ResXmlNamespace namespace = getNamespaceByPrefix(prefix);
+        if(namespace != null){
+            return namespace;
+        }
+        String uri;
+        if(ResourceLibrary.PREFIX_ANDROID.equals(prefix)){
+            uri = ResourceLibrary.URI_ANDROID;
+        }else {
+            uri = ResourceLibrary.URI_RES_AUTO;
+        }
+        return getOrCreateNamespace(uri, prefix);
+    }
+    public int autoSetAttributeNamespaces(){
+        int changedCount = 0;
         for(ResXmlAttribute attribute : listAttributes()){
-            attribute.autoSetNamespace();
+            boolean changed = attribute.autoSetNamespace();
+            if(changed){
+                changedCount ++;
+            }
         }
         for(ResXmlNode child : getXmlNodes()){
             if(child instanceof ResXmlElement){
-                ((ResXmlElement)child).autoSetAttributeNamespaces();
+                changedCount += ((ResXmlElement)child).autoSetAttributeNamespaces();
             }
         }
+        return changedCount;
+    }
+    public int autoSetAttributeNames(){
+        int changedCount = 0;
+        for(ResXmlAttribute attribute : listAttributes()){
+            boolean changed = attribute.autoSetName();
+            if(changed){
+                changedCount ++;
+            }
+        }
+        for(ResXmlNode child : getXmlNodes()){
+            if(child instanceof ResXmlElement){
+                changedCount += ((ResXmlElement)child).autoSetAttributeNames();
+            }
+        }
+        return changedCount;
+    }
+    public void autoSetLineNumber(){
+        int startLineNumber = calculateLineNumber(true);
+        setStartLineNumber(startLineNumber);
+        for(ResXmlStartNamespace startNamespace : getStartNamespaceList()){
+            startNamespace.setLineNumber(startLineNumber);
+        }
+        for(ResXmlNode child : getXmlNodes()){
+            child.autoSetLineNumber();
+        }
+        setEndLineNumber(calculateLineNumber(false));
     }
     public void clearNullNodes(){
         clearNullNodes(true);
@@ -226,6 +265,43 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         return null;
     }
+    private int calculateLineNumber(boolean startLine){
+        ResXmlElement root = getRootResXmlElement();
+        BlockCounter counter = new BlockCounter(this);
+        root.calculateLineNumber(counter, startLine);
+        return counter.getCount();
+    }
+    @Override
+    void calculateLineNumber(BlockCounter counter, boolean startLine){
+        if(counter.FOUND){
+            return;
+        }
+        counter.addCount(1);
+        if(counter.END == this && startLine){
+            counter.FOUND = true;
+            return;
+        }
+        int attrCount = getAttributeCount() + getNamespaceCount();
+        if(attrCount != 0){
+            counter.addCount(attrCount - 1);
+        }
+        boolean haveElement = false;
+        for(ResXmlNode xmlNode : getXmlNodes()){
+            if(counter.FOUND){
+                return;
+            }
+            xmlNode.calculateLineNumber(counter, startLine);
+            if(xmlNode instanceof ResXmlElement){
+                haveElement = true;
+            }
+        }
+        if(haveElement){
+            counter.addCount(1);
+        }
+        if(counter.END == this){
+            counter.FOUND = true;
+        }
+    }
     public int getStartLineNumber(){
         ResXmlStartElement start = getStartElement();
         if(start!=null){
@@ -293,15 +369,15 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public ResXmlElement createChildElement(){
         return createChildElement(null);
     }
-    public ResXmlElement createChildElement(String tag){
-        int lineNo=getStartElement().getLineNumber()+1;
+    public ResXmlElement createChildElement(String name){
+        int lineNo = getStartElement().getLineNumber()+1;
         ResXmlElement resXmlElement=new ResXmlElement();
         resXmlElement.newStartElement(lineNo);
 
         addElement(resXmlElement);
 
-        if(tag!=null){
-            resXmlElement.setTag(tag);
+        if(name != null){
+            resXmlElement.setName(name);
         }
         return resXmlElement;
     }
@@ -350,7 +426,8 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             return null;
         }
         for(ResXmlElement child:listElements()){
-            if(name.equals(child.getTag())||name.equals(child.getTagName())){
+            if(name.equals(child.getName())
+                    || name.equals(child.getName(true))){
                 return child;
             }
         }
@@ -377,54 +454,95 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         return null;
     }
-    public void setTag(String tag){
-        ResXmlStringPool pool = getStringPool();
-        if(pool==null){
+    public String getName(){
+        return getName(false);
+    }
+    public String getName(boolean includePrefix){
+        ResXmlStartElement startElement = getStartElement();
+        if(startElement != null){
+            return startElement.getTagName(includePrefix);
+        }
+        return null;
+    }
+    public void setName(String uri, String prefix, String name){
+        setName(name);
+        setTagNamespace(uri, prefix);
+    }
+    public void setName(String name){
+        ResXmlStringPool stringPool = getStringPool();
+        if(stringPool == null){
             return;
         }
         ensureStartEndElement();
-        ResXmlStartElement start=getStartElement();
-        String prefix=null;
-        String name=tag;
-        int i=tag.lastIndexOf(':');
-        if(i>=0){
-            prefix=tag.substring(0,i);
+        ResXmlStartElement startElement = getStartElement();
+        if(name == null){
+            startElement.setName(null);
+            return;
+        }
+        String prefix = null;
+        int i = name.lastIndexOf(':');
+        if(i >= 0){
+            prefix = name.substring(0, i);
             i++;
-            name=tag.substring(i);
+            name = name.substring(i);
         }
-        start.setName(name);
-        ResXmlStartNamespace ns = getStartNamespaceByPrefix(prefix, null);
-        if(ns!=null){
-            start.setNamespaceReference(ns.getUriReference());
+        startElement.setName(name);
+        if(prefix == null){
+            return;
+        }
+        ResXmlNamespace namespace = getOrCreateNamespaceByPrefix(prefix);
+        if(namespace != null){
+            startElement.setNamespaceReference(namespace.getUriReference());
         }
     }
-    public String getTagName(){
-        ResXmlStartElement startElement=getStartElement();
-        if(startElement!=null){
-            return startElement.getTagName();
-        }
-        return null;
-    }
-    public String getTag(){
-        ResXmlStartElement startElement=getStartElement();
-        if(startElement!=null){
-            return startElement.getName();
-        }
-        return null;
-    }
-    public String getTagUri(){
-        ResXmlStartElement startElement=getStartElement();
-        if(startElement!=null){
+    public String getUri(){
+        ResXmlStartElement startElement = getStartElement();
+        if(startElement != null){
             return startElement.getUri();
         }
         return null;
     }
-    public String getTagPrefix(){
+    public String getPrefix(){
         ResXmlStartElement startElement = getStartElement();
         if(startElement != null){
             return startElement.getPrefix();
         }
         return null;
+    }
+    /**
+     * Use setName(String)
+     * */
+    @Deprecated
+    public void setTag(String tag){
+        setName(tag);
+    }
+    /**
+     * Use getName(true)
+     * */
+    @Deprecated
+    public String getTagName(){
+        return getName(true);
+    }
+    /**
+     * Use getName()
+     * */
+    @Deprecated
+    public String getTag(){
+        return getName();
+    }
+    /**
+     * Use getUri()
+     * */
+    @Deprecated
+    public String getTagUri(){
+        return getUri();
+    }
+    /**
+     * Use getPrefix()
+     * */
+    @Deprecated
+    public String getTagPrefix(){
+        return getPrefix();
     }
     public void setTagNamespace(String uri, String prefix){
         ResXmlStartElement startElement = getStartElement();
@@ -610,7 +728,8 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             return results;
         }
         for(ResXmlElement element:listElements()){
-            if(name.equals(element.getTag())||name.equals(element.getTagName())){
+            if(name.equals(element.getName(false))
+                    || name.equals(element.getName(true))){
                 results.add(element);
             }
         }
@@ -748,6 +867,13 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         endElement.setLineNumber(lineNo);
 
         return startElement;
+    }
+    private ResXmlAttributeArray getAttributeArray(){
+        ResXmlStartElement startElement = getStartElement();
+        if(startElement != null){
+            return startElement.getResXmlAttributeArray();
+        }
+        return null;
     }
 
     private ResXmlStartElement getStartElement(){
@@ -1005,7 +1131,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         boolean indent = getFeatureSafe(serializer, FEATURE_INDENT_OUTPUT);
         setIndent(serializer, indent);
         boolean indentChanged = indent;
-        serializer.startTag(getTagUri(), getTag());
+        serializer.startTag(getUri(), getName());
         count = getAttributeCount();
         for(int i = 0; i < count; i++){
             ResXmlAttribute attribute = getAttributeAt(i);
@@ -1018,10 +1144,11 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             }
             xmlNode.serialize(serializer);
         }
-        serializer.endTag(getTagUri(), getTag());
+        serializer.endTag(getUri(), getName());
         if(indent != indentChanged){
             setIndent(serializer, true);
         }
+        serializer.flush();
     }
     @Override
     public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
@@ -1034,7 +1161,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         String name = parser.getName();
         String prefix = splitPrefix(name);
         name = splitName(name);
-        setTag(name);
+        setName(name);
         String uri = parser.getNamespace();
         if(prefix == null){
             prefix = parser.getPrefix();
@@ -1127,96 +1254,87 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
         jsonObject.put(NAME_node_type, NAME_element);
-        ResXmlStartElement start = getStartElement();
-        jsonObject.put(NAME_line, start.getLineNumber());
-        int i=0;
-        JSONArray nsList=new JSONArray();
-        for(ResXmlStartNamespace namespace:getStartNamespaceList()){
+        jsonObject.put(NAME_name, getName(false));
+        jsonObject.put(NAME_namespace_uri, getUri());
+        jsonObject.put(NAME_namespace_prefix, getPrefix());
+        int lineStart = getStartLineNumber();
+        int lineEnd = getEndLineNumber();
+        jsonObject.put(NAME_line, lineStart);
+        if(lineStart != lineEnd){
+            jsonObject.put(NAME_line_end, lineEnd);
+        }
+        JSONArray nsList = new JSONArray();
+        for(ResXmlStartNamespace namespace : getStartNamespaceList()){
             JSONObject ns=new JSONObject();
             ns.put(NAME_namespace_uri, namespace.getUri());
             ns.put(NAME_namespace_prefix, namespace.getPrefix());
-            nsList.put(i, ns);
-            i++;
+            nsList.put(ns);
         }
-        if(i>0){
+        if(!nsList.isEmpty()){
             jsonObject.put(NAME_namespaces, nsList);
         }
-        jsonObject.put(NAME_name, start.getName());
-        String comment=start.getComment();
-        if(comment!=null){
-            jsonObject.put(NAME_comment, comment);
+        jsonObject.put(NAME_comment, getStartComment());
+        ResXmlAttributeArray attributeArray = getAttributeArray();
+        if(attributeArray != null){
+            JSONArray attrArray = attributeArray.toJson();
+            if(!attrArray.isEmpty()){
+                jsonObject.put(NAME_attributes, attrArray);
+            }
         }
-        String uri=start.getUri();
-        if(uri!=null){
-            jsonObject.put(NAME_namespace_uri, uri);
+        JSONArray childes = new JSONArray();
+        for(ResXmlNode xmlNode : getXmlNodes()){
+            childes.put(xmlNode.toJson());
         }
-        JSONArray attrArray=start.getResXmlAttributeArray().toJson();
-        jsonObject.put(NAME_attributes, attrArray);
-        i=0;
-        JSONArray childes=new JSONArray();
-        for(ResXmlNode xmlNode: getXmlNodes()){
-            childes.put(i, xmlNode.toJson());
-            i++;
-        }
-        if(i>0){
+        if(!childes.isEmpty()){
             jsonObject.put(NAME_childes, childes);
         }
         return jsonObject;
     }
     @Override
     public void fromJson(JSONObject json) {
-        ResXmlStartElement start = getStartElement();
-        int lineNo=json.optInt(NAME_line, 1);
-        if(start==null){
-            start = newStartElement(lineNo);
-        }else {
-            start.setLineNumber(lineNo);
+        ensureStartEndElement();
+        int startLineNumber = json.optInt(NAME_line, 0);
+        int endLineNo = json.optInt(NAME_line_end, 0);
+        if(endLineNo == 0 && startLineNumber != 0){
+            endLineNo = startLineNumber;
+        }
+        setStartLineNumber(startLineNumber);
+        setEndLineNumber(endLineNo);
+        for(ResXmlStartNamespace startNamespace : getStartNamespaceList()){
+            startNamespace.setLineNumber(startLineNumber);
         }
         JSONArray nsArray = json.optJSONArray(NAME_namespaces);
-        if(nsArray!=null){
-            int length=nsArray.length();
-            for(int i=0;i<length;i++){
-                JSONObject nsObject=nsArray.getJSONObject(i);
-                String uri=nsObject.optString(NAME_namespace_uri, "");
-                String prefix=nsObject.optString(NAME_namespace_prefix, "");
-                getOrCreateXmlStartNamespace(uri,prefix);
+        if(nsArray != null){
+            int length = nsArray.length();
+            for(int i=0; i<length; i++){
+                JSONObject nsObject = nsArray.getJSONObject(i);
+                String uri = nsObject.optString(NAME_namespace_uri, "");
+                String prefix = nsObject.optString(NAME_namespace_prefix, "");
+                newNamespace(uri, prefix);
             }
         }
-        setTag(json.getString(NAME_name));
-        start.setComment(json.optString(NAME_comment, null));
-        String text= json.optString(NAME_text, null);
-        if(text!=null){
-            addResXmlText(text);
+        setName(json.getString(NAME_name));
+        setTagNamespace(json.optString(NAME_namespace_uri, null),
+                json.optString(NAME_namespace_prefix, null));
+        setComment(json.optString(NAME_comment));
+        addResXmlText(json.optString(NAME_text, null));
+        ResXmlAttributeArray attributeArray = getAttributeArray();
+        if(attributeArray != null){
+            attributeArray.fromJson(json.optJSONArray(NAME_attributes));
         }
-        String uri = json.optString(NAME_namespace_uri, null);
-        if(uri!=null){
-            ResXmlStartNamespace ns = getStartNamespaceByUri(uri);
-            if(ns==null){
-                throw new IllegalArgumentException("Undefined uri: "
-                        +uri+", must be defined in array: "+NAME_namespaces);
-            }
-            start.setNamespaceReference(ns.getUriReference());
-        }
-        JSONArray attributes = json.optJSONArray(NAME_attributes);
-        if(attributes!=null){
-            start.getResXmlAttributeArray().fromJson(attributes);
-        }
-        JSONArray childArray= json.optJSONArray(NAME_childes);
-        if(childArray!=null){
-            int length=childArray.length();
-            for(int i=0;i<length;i++){
-                JSONObject childObject=childArray.getJSONObject(i);
+        JSONArray childArray = json.optJSONArray(NAME_childes);
+        if(childArray != null){
+            int length = childArray.length();
+            for(int i = 0; i < length; i++){
+                JSONObject childObject = childArray.getJSONObject(i);
                 if(isTextNode(childObject)){
-                    ResXmlTextNode xmlTextNode=new ResXmlTextNode();
-                    addResXmlTextNode(xmlTextNode);
-                    xmlTextNode.fromJson(childObject);
+                    createResXmlText().fromJson(childObject);
                 }else {
-                    ResXmlElement childElement = createChildElement();
-                    childElement.fromJson(childObject);
+                    createChildElement().fromJson(childObject);
                 }
             }
         }
-        start.calculatePositions();
+        getStartElement().calculatePositions();
     }
     private boolean isTextNode(JSONObject childObject){
         String type=childObject.optString(NAME_node_type, null);
@@ -1231,7 +1349,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     }
 
     public XMLElement decodeToXml() {
-        XMLElement xmlElement = new XMLElement(getTagName());
+        XMLElement xmlElement = new XMLElement(getName(true));
         xmlElement.setLineNumber(getStartElement().getLineNumber());
         for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
             xmlElement.addAttribute(startNamespace.decodeToXml());
@@ -1332,6 +1450,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     static final String NAME_namespace_uri = "namespace_uri";
     static final String NAME_namespace_prefix = "namespace_prefix";
     private static final String NAME_line = "line";
+    private static final String NAME_line_end = "line_end";
     static final String NAME_attributes = "attributes";
     static final String NAME_childes = "childes";
 

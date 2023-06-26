@@ -220,10 +220,24 @@ public class ResXmlStartElement extends BaseXmlChunk {
         }
         return name;
     }
+    public String getName(boolean includePrefix){
+        String name = super.getName();
+        if(includePrefix){
+            String prefix = getPrefix();
+            if(prefix != null){
+                name = prefix + ":" + name;
+            }
+        }
+        return name;
+    }
     public void setName(String name){
-        setString(name);
+        if(name == null){
+            setStringReference(-1);
+        }else {
+            setString(name);
+        }
         ResXmlEndElement endElement = getResXmlEndElement();
-        if(endElement!=null){
+        if(endElement != null){
             endElement.setString(name);
         }
     }
@@ -251,13 +265,14 @@ public class ResXmlStartElement extends BaseXmlChunk {
     public void setTagNamespace(String uri, String prefix){
         unlinkNamespace();
         if(uri == null || prefix == null){
+            setNamespaceReference(-1);
             return;
         }
         ResXmlElement parentElement = getParentResXmlElement();
         if(parentElement == null){
             return;
         }
-        ResXmlStartNamespace ns = parentElement.getOrCreateXmlStartNamespace(uri, prefix);
+        ResXmlNamespace ns = parentElement.getOrCreateNamespace(uri, prefix);
         setNamespaceReference(ns.getUriReference());
         linkNamespace();
     }

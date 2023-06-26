@@ -20,4 +20,5 @@ import com.reandroid.common.Namespace;
 public interface ResXmlNamespace extends Namespace {
     void setUri(String uri);
     void setPrefix(String uri);
+    int getUriReference();
 }

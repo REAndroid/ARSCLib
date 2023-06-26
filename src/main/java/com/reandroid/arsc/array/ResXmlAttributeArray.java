@@ -150,11 +150,14 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
     @Override
     public void fromJson(JSONArray json) {
         clearChildes();
-        int length= json.length();
+        if(json == null){
+            return;
+        }
+        int length = json.length();
         ensureSize(length);
-        for(int i=0;i<length;i++){
-            ResXmlAttribute attribute=get(i);
-            JSONObject jsonObject= json.getJSONObject(i);
+        for(int i = 0; i < length; i++){
+            ResXmlAttribute attribute = get(i);
+            JSONObject jsonObject = json.getJSONObject(i);
             attribute.fromJson(jsonObject);
         }
     }

@@ -472,7 +472,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     public String getNamespace() {
         ResXmlElement element = getCurrentElement();
         if(element!=null){
-            return element.getTagUri();
+            return element.getUri();
         }
         return null;
     }
@@ -480,7 +480,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     public String getName() {
         ResXmlElement element = getCurrentElement();
         if(element!=null){
-            return element.getTag();
+            return element.getName();
         }
         return null;
     }
@@ -488,7 +488,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     public String getPrefix() {
         ResXmlElement element = getCurrentElement();
         if(element!=null){
-            return element.getTagPrefix();
+            return element.getPrefix();
         }
         return null;
     }

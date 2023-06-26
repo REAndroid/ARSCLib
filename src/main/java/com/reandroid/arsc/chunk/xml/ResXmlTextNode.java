@@ -15,6 +15,7 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
+import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLText;
@@ -40,6 +41,42 @@ public class ResXmlTextNode extends ResXmlNode {
     }
     public int getLineNumber(){
         return getResXmlText().getLineNumber();
+    }
+
+    public void autoSetLineNumber(){
+        ResXmlElement root = getParentResXmlElement();
+        if(root == null){
+            return;
+        }
+        root = root.getRootResXmlElement();
+        BlockCounter counter = new BlockCounter(this);
+        root.calculateLineNumber(counter, true);
+        setLineNumber(counter.getCount());
+    }
+    @Override
+    void calculateLineNumber(BlockCounter counter, boolean startLine){
+        if(counter.FOUND){
+            return;
+        }
+        if(startLine && counter.END == this){
+            counter.FOUND = true;
+            return;
+        }
+        String text = getText();
+        if(text == null){
+            return;
+        }
+        int result = 1;
+        char[] chars = text.toCharArray();
+        for(char ch : chars){
+            if(ch == '\n'){
+                result ++;
+            }
+        }
+        counter.addCount(result);
+        if(counter.END == this){
+            counter.FOUND = true;
+        }
     }
     public String getComment() {
         return getResXmlText().getComment();
@@ -137,6 +174,7 @@ public class ResXmlTextNode extends ResXmlNode {
     @Override
     public void fromJson(JSONObject json) {
         setText(json.optString(NAME_text, null));
+        setLineNumber(getParentResXmlElement().getStartLineNumber());
     }
     public XMLText decodeToXml() {
         XMLText xmlText=new XMLText(XmlSanitizer.escapeSpecialCharacter(getText()));

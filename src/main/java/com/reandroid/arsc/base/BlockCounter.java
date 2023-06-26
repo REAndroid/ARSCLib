@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@ public class BlockCounter {
     public final Block END;
     public boolean FOUND;
     int COUNT;
-    BlockCounter(Block end){
+    public BlockCounter(Block end){
         this.END=end;
     }
     public void addCount(int val){
@@ -28,6 +28,10 @@ public class BlockCounter {
         }
         COUNT+=val;
     }
+    public int getCount() {
+        return COUNT;
+    }
+
     @Override
     public String toString(){
         if(FOUND){

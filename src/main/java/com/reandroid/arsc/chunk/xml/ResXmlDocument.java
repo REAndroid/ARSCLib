@@ -29,6 +29,7 @@ import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
+import com.reandroid.xml.XMLFactory;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -61,12 +62,36 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         addChild(mResXmlElementContainer);
     }
 
-    public void autoSetAttributeNamespaces(){
+    public int autoSetAttributeNamespaces(){
         ResXmlElement root = getResXmlElement();
-        if(root != null){
-            root.autoSetAttributeNamespaces();
+        if(root == null){
+            return 0;
         }
-        removeUnusedNamespaces();
+        int changedCount = root.autoSetAttributeNamespaces();
+        if(changedCount > 0){
+            removeUnusedNamespaces();
+            getStringPool().removeUnusedStrings();
+        }
+        return changedCount;
+    }
+    public int autoSetAttributeNames(){
+        ResXmlElement root = getResXmlElement();
+        if(root == null){
+            return 0;
+        }
+        int changedCount = root.autoSetAttributeNames();
+        if(changedCount > 0){
+            removeUnusedNamespaces();
+            getStringPool().removeUnusedStrings();
+        }
+        return changedCount;
+    }
+    public void autoSetLineNumber(){
+        ResXmlElement root = getResXmlElement();
+        if(root == null){
+            return;
+        }
+        root.autoSetLineNumber();
     }
     public int removeUnusedNamespaces(){
         ResXmlElement root = getResXmlElement();
@@ -151,7 +176,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         if(element == null){
             element = createRootElement(tag);
         }else if(tag != null){
-            element.setTag(tag);
+            element.setName(tag);
         }
         return element;
     }
@@ -162,8 +187,8 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
 
         setResXmlElement(resXmlElement);
 
-        if(tag!=null){
-            resXmlElement.setTag(tag);
+        if(tag != null){
+            resXmlElement.setName(tag);
         }
         return resXmlElement;
     }
