@@ -33,6 +33,9 @@ public class DexFileRawEncoder implements DexEncoder {
     public List<InputSource> buildDexFiles(ApkModuleEncoder encoder, File mainDirectory) throws IOException {
         File dexDir = new File(mainDirectory,
                 DexFileInputSource.DEX_DIRECTORY_NAME);
+        if(!dexDir.isDirectory()){
+            return new ArrayList<>();
+        }
         List<File> dexFileList = DexFileInputSource.listDexFiles(dexDir);
         List<InputSource> results = new ArrayList<>(dexFileList.size());
         if(dexFileList.size() == 0){

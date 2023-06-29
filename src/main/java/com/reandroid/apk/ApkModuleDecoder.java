@@ -85,7 +85,6 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
     }
     public void decodeDexFile(DexFileInputSource dexFileInputSource, File mainDir) throws IOException {
         String path = dexFileInputSource.getAlias();
-        logVerbose(path);
         DexDecoder dexDecoder = getDexDecoder();
         boolean decoded = dexDecoder.decodeDex(dexFileInputSource, mainDir);
         if(decoded){
@@ -98,7 +97,9 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
     }
     public DexDecoder getDexDecoder() {
         if(mDexDecoder == null){
-            mDexDecoder = new DexFileRawDecoder();
+            DexFileRawDecoder rawDecoder = new DexFileRawDecoder();
+            rawDecoder.setApkLogger(getApkLogger());
+            mDexDecoder = rawDecoder;
         }
         return mDexDecoder;
     }

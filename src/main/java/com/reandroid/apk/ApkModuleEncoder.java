@@ -103,18 +103,23 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
     }
     public void encodeDexFiles(File mainDirectory) throws IOException {
         logMessage("Building dex ...");
-        DexEncoder dexEncoder = getDexEncoder();
-        List<InputSource> dexList = dexEncoder.buildDexFiles(this, mainDirectory);
+        List<InputSource> dexList = getRawDexEncoder()
+                .buildDexFiles(this, mainDirectory);
         ApkModule apkModule = getApkModule();
         apkModule.addAll(dexList);
+        DexEncoder dexEncoder = getDexEncoder();
+        if(dexEncoder != null){
+            dexList = dexEncoder.buildDexFiles(this, mainDirectory);
+            apkModule.addAll(dexList);
+        }
     }
 
+    public DexEncoder getRawDexEncoder() {
+        DexFileRawEncoder dexFileRawEncoder = new DexFileRawEncoder();
+        dexFileRawEncoder.setApkLogger(getApkLogger());
+        return dexFileRawEncoder;
+    }
     public DexEncoder getDexEncoder() {
-        if(mDexEncoder == null){
-            DexFileRawEncoder dexFileRawEncoder = new DexFileRawEncoder();
-            dexFileRawEncoder.setApkLogger(getApkLogger());
-            mDexEncoder = dexFileRawEncoder;
-        }
         return mDexEncoder;
     }
     public void setDexEncoder(DexEncoder dexEncoder) {

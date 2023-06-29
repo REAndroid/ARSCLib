@@ -38,7 +38,7 @@ public abstract class CommonHeader extends ZipHeader {
         this.offsetGeneralPurpose = offsetGeneralPurpose;
         this.generalPurposeFlag = new GeneralPurposeFlag(this, offsetGeneralPurpose);
         this.generalPurposeFlag.setUtf8(true, false);
-        setDosTime(35719201);
+        setDosTime(0x2210820);
     }
     public long getFileOffset() {
         return mFileOffset;

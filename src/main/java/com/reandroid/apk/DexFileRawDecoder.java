@@ -19,14 +19,26 @@ import java.io.File;
 import java.io.IOException;
 
 public class DexFileRawDecoder implements DexDecoder{
+    private APKLogger apkLogger;
     public DexFileRawDecoder(){
     }
 
     @Override
     public boolean decodeDex(DexFileInputSource dexFileInputSource, File mainDirectory) throws IOException {
+        logVerbose(dexFileInputSource.getAlias());
         File file = new File(mainDirectory, DEX_DIRECTORY_NAME);
         file = dexFileInputSource.toFile(file);
         dexFileInputSource.write(file);
         return true;
+    }
+
+    public void setApkLogger(APKLogger apkLogger) {
+        this.apkLogger = apkLogger;
+    }
+    private void logVerbose(String msg){
+        APKLogger apkLogger = this.apkLogger;
+        if(apkLogger != null){
+            apkLogger.logVerbose(msg);
+        }
     }
 }
