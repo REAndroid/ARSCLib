@@ -1180,6 +1180,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         setEndLineNumber(parser.getLineNumber());
         clearNullNodes(false);
+        calculatePositions();
     }
     private void parseChildes(XmlPullParser parser) throws IOException, XmlPullParserException {
         ResXmlElement currentElement = this;
