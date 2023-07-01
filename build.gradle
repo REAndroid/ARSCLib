@@ -22,7 +22,7 @@ repositories {
 }
 
 dependencies {
-    //No dependency
+    testImplementation 'junit:junit:4.12'
 }
 
 
