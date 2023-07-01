@@ -27,7 +27,7 @@ public class CoderNullReference extends Coder{
     }
     @Override
     public String decode(int data) {
-        return data == 0 ? "?null" : null;
+        return data == 0 ? "@null" : null;
     }
     @Override
     public ValueType getValueType() {
