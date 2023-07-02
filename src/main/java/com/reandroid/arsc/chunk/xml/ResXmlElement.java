@@ -695,15 +695,6 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     private List<ResXmlNode> getXmlNodes(){
         return mBody.getChildes();
     }
-    public List<ResXmlText> listXmlText(){
-        List<ResXmlText> results=new ArrayList<>();
-        for(ResXmlNode xmlNode: getXmlNodes()){
-            if(xmlNode instanceof ResXmlTextNode){
-                results.add(((ResXmlTextNode) xmlNode).getResXmlText());
-            }
-        }
-        return results;
-    }
     public List<ResXmlTextNode> listXmlTextNodes(){
         List<ResXmlTextNode> results=new ArrayList<>();
         for(ResXmlNode xmlNode: getXmlNodes()){
@@ -1395,8 +1386,8 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             builder.append(start.toString());
             if(hasText() && !hasElement()){
                 builder.append(">");
-                for(ResXmlText xmlText : listXmlText()){
-                    builder.append(xmlText.getText());
+                for(ResXmlTextNode textNode : listXmlTextNodes()){
+                    builder.append(textNode.getText());
                 }
                 builder.append("</");
                 builder.append(start.getTagName());
