@@ -2,6 +2,7 @@ package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.apk.AndroidFrameworks;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.xml.XMLFactory;
 import org.junit.Assert;
 import org.junit.Test;
@@ -14,6 +15,45 @@ import java.io.StringWriter;
 
 public class ResXmlDocumentTest {
     @Test
+    public void testXmlNodes(){
+        ResXmlDocument document = new ResXmlDocument();
+        ResXmlElement root = document.getOrCreateElement("manifest");
+        ResXmlElement child = root.createChildElement("child");
+        child.setTagNamespace(ResourceLibrary.URI_RES_AUTO, "prefix");
+
+        Assert.assertEquals("prefix:child", child.getName(true));
+
+        child.setTagNamespace(null, null);
+
+        Assert.assertEquals("child", child.getName(true));
+
+        String text = "Xml text node";
+        child.addResXmlText(text);
+
+        Assert.assertEquals(1, child.listXmlTextNodes().size());
+        Assert.assertEquals(text, child.listXmlTextNodes().get(0).getText());
+
+        child.removeNode(child.listXmlTextNodes().get(0));
+
+        Assert.assertEquals(0, child.listXmlTextNodes().size());
+        Assert.assertEquals(0, child.listXmlNodes().size());
+
+        root.createChildElement("child");
+        root.createChildElement("child-2");
+
+        Assert.assertEquals(3, root.listElements().size());
+        Assert.assertEquals(2, root.listElements("child").size());
+        Assert.assertEquals(1, root.listElements("child-2").size());
+        Assert.assertEquals(0, root.listElements("child-3").size());
+        Assert.assertEquals(3, root.listXmlNodes().size());
+
+        Assert.assertNotNull("Element not found <child>", root.getElementByTagName("child"));
+        root.removeNode(root.getElementByTagName("child"));
+        Assert.assertEquals(1, root.listElements("child").size());
+        root.clearChildes();
+        Assert.assertEquals("Child nodes cleared", 0, root.listXmlNodes().size());
+    }
+    @Test
     public void testAddAttribute(){
         ResXmlDocument document = new ResXmlDocument();
         ResXmlElement root = document.getOrCreateElement("manifest");
@@ -23,6 +63,14 @@ public class ResXmlDocumentTest {
                         "package", 0);
         attribute.setValueAsString("com.example.package");
         Assert.assertNotNull(root.searchAttributeByName("package"));
+
+        attribute = root.getOrCreateAttribute(
+                ResourceLibrary.URI_RES_AUTO,
+                ResourceLibrary.PREFIX_APP,
+                "attr_1", 0x7f010000);
+        attribute.setValueAsBoolean(true);
+
+        Assert.assertNotNull(root.searchAttributeByResourceId(0x7f010000));
     }
     @Test
     public void testRemoveAttribute(){
@@ -34,7 +82,35 @@ public class ResXmlDocumentTest {
                 "package", 0);
         attribute.setValueAsString("com.example.package");
         root.removeAttribute(attribute);
+
         Assert.assertNull(root.searchAttributeByName("package"));
+
+        attribute = root.getOrCreateAttribute(
+                ResourceLibrary.URI_RES_AUTO,
+                ResourceLibrary.PREFIX_APP,
+                "attr_1", 0x7f010000);
+        attribute.setValueAsBoolean(true);
+
+        root.removeAttribute(attribute);
+
+        Assert.assertNull(root.searchAttributeByResourceId(0x7f010000));
+
+        attribute = root.getOrCreateAttribute(
+                ResourceLibrary.URI_ANDROID,
+                ResourceLibrary.PREFIX_ANDROID,
+                "attr_1", 0x7f010000);
+        attribute.setValueAsBoolean(true);
+
+        attribute = root.getOrCreateAttribute(
+                ResourceLibrary.URI_RES_AUTO,
+                ResourceLibrary.PREFIX_APP,
+                "attr_2", 0x7f010000);
+        attribute.setValueAsBoolean(true);
+
+        attribute = root.searchAttributeByResourceId(0x7f010000);
+
+        root.removeAttribute(attribute);
+        Assert.assertEquals("Attribute count", 0, root.getAttributeCount());
     }
     @Test
     public void testEncodeDecodeXml() throws XmlPullParserException, IOException {
