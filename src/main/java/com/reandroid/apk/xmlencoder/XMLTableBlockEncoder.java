@@ -166,20 +166,19 @@ public class XMLTableBlockEncoder {
     }
     private void encodeValues(List<File> pubXmlFileList) throws XMLException {
         logMessage("Encoding values ...");
-        EncodeMaterials encodeMaterials = getEncodeMaterials();
+        FilePathEncoder filePathEncoder = new FilePathEncoder(getApkModule());
         TableBlock tableBlock = getTableBlock();
 
         for(File pubXmlFile:pubXmlFileList){
             addParsedFiles(pubXmlFile);
             PackageBlock packageBlock = tableBlock.getPackageBlockByTag(pubXmlFile);
-            encodeMaterials.setCurrentPackage(packageBlock);
+            tableBlock.setCurrentPackage(packageBlock);
+
             File resDir = toResDirectory(pubXmlFile);
             encodeResDir(resDir);
-            FilePathEncoder filePathEncoder = new FilePathEncoder(encodeMaterials);
+
             filePathEncoder.setApkLogger(getApkLogger());
-            filePathEncoder.setApkArchive(getApkModule().getApkArchive());
-            filePathEncoder.setUncompressedFiles(getApkModule().getUncompressedFiles());
-            filePathEncoder.encodePackageResDir(resDir);
+            filePathEncoder.encodePackageResDir(packageBlock, resDir);
 
             packageBlock.sortTypes();
             packageBlock.refresh();

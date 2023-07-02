@@ -75,7 +75,7 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
         if(!file.isFile()){
             return;
         }
-        logMessage("Encode manifest: " + file.getName());
+        logMessage("Add manifest: " + file.getName());
         EncodeMaterials encodeMaterials = getEncodeMaterials();
         TableBlock tableBlock = getApkModule().getTableBlock();
         PackageBlock packageBlock = encodeMaterials.pickMainPackageBlock(tableBlock);

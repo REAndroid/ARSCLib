@@ -397,6 +397,14 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         }
         refreshFull();
     }
+    public String serializeToXml() throws IOException {
+        StringWriter writer = new StringWriter();
+        XmlSerializer serializer = XMLFactory.newSerializer(writer);
+        serialize(serializer);
+        writer.close();
+        writer.flush();
+        return writer.toString();
+    }
     public void serialize(XmlSerializer serializer) throws IOException {
         if(mDestroyed){
             throw new IOException("Destroyed document");
