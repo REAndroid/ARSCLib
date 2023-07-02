@@ -114,6 +114,15 @@ public class ResourceEntry implements Iterable<Entry>{
         }
         return null;
     }
+    public int getConfigsCount(){
+        int count = 0;
+        Iterator<Entry> iterator = iterator(true);
+        while (iterator.hasNext()){
+            iterator.next();
+            count ++;
+        }
+        return count;
+    }
     public Entry getEqualsOrMoreSpecific(ResConfig resConfig){
         Entry result = null;
         for(Entry entry : this){

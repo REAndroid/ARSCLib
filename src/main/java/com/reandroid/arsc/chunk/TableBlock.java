@@ -142,6 +142,45 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return null;
     }
+    public ResourceEntry getLocalResource(int resourceId){
+        return getLocalResource( null, resourceId);
+    }
+    public ResourceEntry getLocalResource(PackageBlock context, int resourceId){
+        Iterator<PackageBlock> iterator = getPackages(context);
+        while (iterator.hasNext()){
+            PackageBlock packageBlock = iterator.next();
+            ResourceEntry resourceEntry = packageBlock.getResource(resourceId);
+            if(resourceEntry != null){
+                return resourceEntry;
+            }
+        }
+        return null;
+    }
+    public ResourceEntry getLocalResource(PackageBlock context, String type, String name){
+        Iterator<PackageBlock> iterator = getPackages(context);
+        while (iterator.hasNext()){
+            PackageBlock packageBlock = iterator.next();
+            ResourceEntry resourceEntry = packageBlock.getResource(type, name);
+            if(resourceEntry != null){
+                return resourceEntry;
+            }
+        }
+        return null;
+    }
+    public ResourceEntry getLocalResource(String type, String name){
+        return getLocalResource((String) null, type, name);
+    }
+    public ResourceEntry getLocalResource(String packageName, String type, String name){
+        Iterator<PackageBlock> iterator = getPackages(packageName);
+        while (iterator.hasNext()){
+            PackageBlock packageBlock = iterator.next();
+            ResourceEntry resourceEntry = packageBlock.getResource(type, name);
+            if(resourceEntry != null){
+                return resourceEntry;
+            }
+        }
+        return null;
+    }
     public ResourceEntry getAttrResource(String prefix, String name){
         Iterator<PackageBlock> iterator = getAllPackages(prefix);
         while (iterator.hasNext()){
