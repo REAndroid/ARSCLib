@@ -715,6 +715,7 @@ public class ApkModule implements ApkFile, Closeable {
         manifestBlock.setApkFile(this);
         BlockInputSource<AndroidManifestBlock> source =
                 new BlockInputSource<>(AndroidManifestBlock.FILE_NAME, manifestBlock);
+        source.setMethod(ZipEntry.STORED);
         archive.add(source);
         mManifestBlock = manifestBlock;
     }
