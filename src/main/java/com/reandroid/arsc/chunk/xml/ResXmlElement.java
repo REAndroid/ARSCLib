@@ -766,7 +766,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         return null;
     }
-    public ResXmlStartNamespace getOrCreateXmlStartNamespace(String uri, String prefix){
+    private ResXmlStartNamespace getOrCreateXmlStartNamespace(String uri, String prefix){
         ResXmlStartNamespace exist = getXmlStartNamespace(uri, prefix);
         if(exist != null){
             return exist;

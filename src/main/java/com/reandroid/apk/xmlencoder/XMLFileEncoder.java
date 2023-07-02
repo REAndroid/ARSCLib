@@ -231,7 +231,7 @@ public class XMLFileEncoder {
             uri=EncodeUtil.URI_APP;
         }
         ResXmlElement root = resXmlElement.getRootResXmlElement();
-        ResXmlNamespace ns = root.getOrCreateXmlStartNamespace(uri, prefix);
+        ResXmlNamespace ns = root.getOrCreateNamespace(uri, prefix);
         materials.logVerbose("Force created ns: "+prefix+":"+uri);
         return ns;
     }

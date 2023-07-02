@@ -276,7 +276,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         if(parentElement == null){
             return false;
         }
-        ResXmlStartNamespace ns = parentElement.getOrCreateXmlStartNamespace(uri, prefix);
+        ResXmlNamespace ns = parentElement.getOrCreateNamespace(uri, prefix);
         return setNamespaceReference(ns.getUriReference());
     }
     public boolean setNamespaceReference(int ref){
@@ -605,10 +605,10 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         setName(name, id);
         String uri= json.optString(NAME_namespace_uri, null);
         if(uri!=null){
-            ResXmlStartNamespace ns = getParentResXmlElement().getStartNamespaceByUri(uri);
+            ResXmlNamespace ns = getParentResXmlElement().getStartNamespaceByUri(uri);
             if(ns==null){
                 ns = getParentResXmlElement().getRootResXmlElement()
-                        .getOrCreateXmlStartNamespace(uri, "");
+                        .getOrCreateNamespace(uri, "");
             }
             setNamespaceReference(ns.getUriReference());
         }
