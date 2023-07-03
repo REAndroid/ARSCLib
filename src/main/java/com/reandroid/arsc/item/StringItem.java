@@ -32,6 +32,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
@@ -44,29 +45,26 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         this.mReferencedList = new HashSet<>();
     }
     public<T extends Block> Iterator<T> getUsers(Class<T> parentClass){
-        return getUsers(parentClass, null, null);
-    }
-    public<T extends Block> Iterator<T> getUsers(Class<T> parentClass, Predicate<T> resultFilter){
-        return getUsers(parentClass, null, resultFilter);
+        return getUsers(parentClass, null);
     }
     public<T extends Block> Iterator<T> getUsers(Class<T> parentClass,
-                                                 Predicate<ReferenceItem> referenceFilter,
                                                  Predicate<T> resultFilter){
 
         Collection<ReferenceItem> referencedList = getReferencedList();
         if(referencedList.size() == 0){
             return EmptyIterator.of();
         }
-
-        return new ComputeIterator<ReferenceItem, T>(
-                referencedList.iterator(),
-                referenceFilter,
-                resultFilter) {
+        return new ComputeIterator<>(referencedList.iterator(), new Function<ReferenceItem, T>() {
             @Override
             public T apply(ReferenceItem referenceItem) {
-                return referenceItem.getReferredParent(parentClass);
+                T result = referenceItem.getReferredParent(parentClass);
+                if (resultFilter != null && !resultFilter.test(result)) {
+                    result = null;
+                }
+                return result;
             }
-        };
+        });
+
     }
 
     public boolean removeReference(ReferenceItem ref){

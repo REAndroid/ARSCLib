@@ -37,6 +37,7 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class SpecTypePair extends BlockContainer<Block>
@@ -119,19 +120,6 @@ public class SpecTypePair extends BlockContainer<Block>
             }
         };
     }
-    public Iterator<ResourceEntry> getResourcesOld(){
-        final PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null){
-            return EmptyIterator.of();
-        }
-
-        return new ComputeIterator<Entry, ResourceEntry>(listDefaultEntries()) {
-            @Override
-            public ResourceEntry apply(Entry element) {
-                return new ResourceEntry(packageBlock, element.getResourceId());
-            }
-        };
-    }
     private Iterator<Entry> listDefaultEntries(){
         Iterator<TypeBlock> iterator = getTypeBlockArray().iterator(false);
         if(!iterator.hasNext()){
@@ -143,16 +131,16 @@ public class SpecTypePair extends BlockContainer<Block>
         return getEntries(entryId, false);
     }
     public Iterator<Entry> getEntries(int entryId, boolean skipNull){
-        return new ComputeIterator<TypeBlock, Entry>(getTypeBlockArray().iterator(false)) {
+        return new ComputeIterator<TypeBlock, Entry>(getTypeBlocks(), new Function<TypeBlock, Entry>() {
             @Override
-            public Entry apply(TypeBlock element) {
-                Entry entry = element.getEntry(entryId);
+            public Entry apply(TypeBlock typeBlock) {
+                Entry entry = typeBlock.getEntry(entryId);
                 if(entry == null || (skipNull && entry.isNull())){
                     return null;
                 }
                 return entry;
             }
-        };
+        });
     }
     public Iterator<TypeBlock> getTypeBlocks(){
         return getTypeBlockArray().iterator();

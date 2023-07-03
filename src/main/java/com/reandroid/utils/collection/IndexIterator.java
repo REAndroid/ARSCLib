@@ -20,11 +20,11 @@ import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 
 public class IndexIterator<T> implements Iterator<T> {
-    private final Predicate<T> mFilter;
-    private SizedSupplier<T> mSupplier;
+    private final Predicate<? super T> mFilter;
+    private final SizedSupplier<T> mSupplier;
     private int mIndex;
     private T mNext;
-    public IndexIterator(SizedSupplier<T> supplier, Predicate<T> filter){
+    public IndexIterator(SizedSupplier<T> supplier, Predicate<? super T> filter){
         this.mSupplier = supplier;
         this.mFilter = filter;
     }
