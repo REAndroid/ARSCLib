@@ -7,7 +7,7 @@ import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.model.ResourceEntry;
-import com.reandroid.arsc.util.FileUtil;
+import com.reandroid.utils.io.FileUtil;
 import com.reandroid.arsc.value.Entry;
 import org.junit.Assert;
 import org.junit.Test;

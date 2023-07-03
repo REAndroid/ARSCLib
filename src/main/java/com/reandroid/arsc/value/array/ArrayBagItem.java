@@ -18,7 +18,7 @@ package com.reandroid.arsc.value.array;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.item.TableString;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.arsc.value.bag.BagItem;
 import com.reandroid.arsc.value.ResValueMap;

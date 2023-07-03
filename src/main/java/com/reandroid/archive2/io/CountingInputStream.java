@@ -15,7 +15,7 @@
  */
 package com.reandroid.archive2.io;
 
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 import java.io.InputStream;

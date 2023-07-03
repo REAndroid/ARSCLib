@@ -18,7 +18,7 @@ package com.reandroid.arsc.value;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.model.ResourceEntry;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONObject;
 
 public class ResValueMap extends AttributeValue{

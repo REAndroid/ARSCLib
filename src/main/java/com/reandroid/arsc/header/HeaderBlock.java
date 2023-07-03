@@ -26,8 +26,8 @@ import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ShortItem;
-import com.reandroid.arsc.util.HexBytesWriter;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexBytesWriter;
+import com.reandroid.utils.HexUtil;
 
 import java.io.*;
 import java.util.List;

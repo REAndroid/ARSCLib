@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.chunk;
 
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 
 public enum ChunkType {
     NULL((short)0x0000),

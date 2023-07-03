@@ -25,7 +25,7 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
 import com.reandroid.arsc.chunk.xml.ResXmlElement;
-import com.reandroid.arsc.util.FrameworkTable;
+import com.reandroid.arsc.model.FrameworkTable;
 import com.reandroid.arsc.value.ValueType;
 
 import java.io.File;

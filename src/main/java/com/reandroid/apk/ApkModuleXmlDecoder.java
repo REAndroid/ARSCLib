@@ -22,7 +22,7 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.util.IOUtil;
+import com.reandroid.utils.io.IOUtil;
 import com.reandroid.arsc.value.*;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLFactory;

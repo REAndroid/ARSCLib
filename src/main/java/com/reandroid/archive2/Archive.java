@@ -23,7 +23,7 @@ import com.reandroid.archive2.io.ZipFileInput;
 import com.reandroid.archive2.io.ArchiveUtil;
 import com.reandroid.archive2.io.ZipInput;
 import com.reandroid.archive2.model.LocalFileDirectory;
-import com.reandroid.arsc.util.FilterIterator;
+import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.*;
 import java.nio.channels.FileChannel;

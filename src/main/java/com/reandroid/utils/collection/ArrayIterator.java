@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.arsc.util;
+package com.reandroid.utils.collection;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -33,22 +33,6 @@ public class ArrayIterator<T> implements Iterator<T> {
         this(elements, null);
     }
 
-    public void resetIndex(int index){
-        if(index == this.index){
-            return;
-        }
-        if(index < 0){
-            index = 0;
-        }
-        this.index = index;
-        mNext = null;
-    }
-    public int length(){
-        if(elements != null){
-            return elements.length;
-        }
-        return 0;
-    }
     @Override
     public boolean hasNext() {
         return getNext() != null;
@@ -64,7 +48,7 @@ public class ArrayIterator<T> implements Iterator<T> {
     }
     private T getNext(){
         T[] elements = this.elements;
-        if(mNext == null) {
+        if(mNext == null && elements != null) {
             while (index < elements.length) {
                 T item = elements[index];
                 index ++;

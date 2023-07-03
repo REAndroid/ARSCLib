@@ -17,7 +17,7 @@ package com.reandroid.identifiers;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.model.ResourceEntry;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;

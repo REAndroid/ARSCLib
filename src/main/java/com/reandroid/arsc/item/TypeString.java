@@ -17,7 +17,7 @@ package com.reandroid.arsc.item;
 
 
 import com.reandroid.arsc.pool.TypeStringPool;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 
 public class TypeString extends StringItem {
     public TypeString(boolean utf8) {

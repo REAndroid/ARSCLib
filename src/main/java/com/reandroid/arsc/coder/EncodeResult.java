@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.coder;
 
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.ValueType;
 
 import java.util.Objects;

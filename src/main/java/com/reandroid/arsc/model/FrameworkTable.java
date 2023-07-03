@@ -13,7 +13,7 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-package com.reandroid.arsc.util;
+package com.reandroid.arsc.model;
 
 import com.reandroid.arsc.BuildInfo;
 import com.reandroid.arsc.array.SpecTypePairArray;
@@ -22,7 +22,6 @@ import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.item.ReferenceItem;
 import com.reandroid.arsc.item.TableString;

@@ -15,7 +15,7 @@
   */
 package com.reandroid.arsc.value;
 
-import com.reandroid.arsc.util.StringsUtil;
+import com.reandroid.utils.StringsUtil;
 
 import java.util.HashMap;
 import java.util.Map;

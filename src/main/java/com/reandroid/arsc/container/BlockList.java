@@ -19,7 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockContainer;
 import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.util.FilterIterator;
+import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
 import java.io.OutputStream;

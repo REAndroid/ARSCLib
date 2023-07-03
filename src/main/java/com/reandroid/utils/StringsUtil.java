@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.arsc.util;
+package com.reandroid.utils;
 
 import java.util.Comparator;
 import java.util.List;

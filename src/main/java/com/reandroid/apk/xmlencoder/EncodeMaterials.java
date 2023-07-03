@@ -21,7 +21,7 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.coder.*;
 import com.reandroid.arsc.model.ResourceEntry;
-import com.reandroid.arsc.util.FrameworkTable;
+import com.reandroid.arsc.model.FrameworkTable;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.value.Entry;
 

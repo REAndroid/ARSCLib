@@ -22,7 +22,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.pool.StringPool;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.AttributeValue;
 import com.reandroid.arsc.value.Entry;

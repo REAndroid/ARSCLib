@@ -18,8 +18,7 @@ package com.reandroid.apk;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive2.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.chunk.TableBlock;
-import com.reandroid.arsc.util.StringsUtil;
+import com.reandroid.utils.StringsUtil;
 
 import java.io.File;
 import java.util.*;

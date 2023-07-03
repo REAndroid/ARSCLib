@@ -19,7 +19,7 @@ import com.reandroid.arsc.array.TypeBlockArray;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.header.SpecHeader;
 import com.reandroid.arsc.item.*;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 

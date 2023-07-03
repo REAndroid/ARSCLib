@@ -13,35 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.arsc.item;
+package com.reandroid.utils;
 
-import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.collection.EmptyIterator;
 
-public class LongItem extends BlockItem{
-    private long mCache;
-    public LongItem() {
-        super(8);
+import java.util.Iterator;
+
+public class SingleIterator<T> implements Iterator<T> {
+    private T mItem;
+    public SingleIterator(T item){
+        this.mItem = item;
     }
-    public void set(long value){
-        if(value == mCache){
-            return;
+    @Override
+    public boolean hasNext() {
+        return this.mItem != null;
+    }
+    @Override
+    public T next() {
+        T item = this.mItem;
+        this.mItem = null;
+        return item;
+    }
+
+    public static<T1> Iterator<T1> of(T1 item){
+        if(item == null){
+            return EmptyIterator.of();
         }
-        mCache = value;
-        putLong(getBytesInternal(), 0, value);
-    }
-    public long get(){
-        return mCache;
-    }
-    public String toHex(){
-        return HexUtil.toHex(get(), 16);
-    }
-
-    @Override
-    protected void onBytesChanged() {
-        mCache = getLong(getBytesInternal(), 0);
-    }
-    @Override
-    public String toString(){
-        return String.valueOf(get());
+        return new SingleIterator<>(item);
     }
 }

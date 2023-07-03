@@ -5,7 +5,7 @@ import com.reandroid.apk.CrcOutputStream;
 import com.reandroid.archive.ByteInputSource;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
-import com.reandroid.arsc.util.IOUtil;
+import com.reandroid.utils.io.IOUtil;
 import com.reandroid.xml.source.XMLParserSource;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;

@@ -17,7 +17,7 @@ package com.reandroid.archive2.block;
 
 import com.reandroid.arsc.coder.CoderHex;
 import com.reandroid.arsc.coder.EncodeResult;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 
 import java.util.Objects;
 

@@ -19,8 +19,8 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.coder.ThreeByteCharsetDecoder;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.StringPool;
-import com.reandroid.arsc.util.ComputeIterator;
-import com.reandroid.arsc.util.EmptyIterator;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 

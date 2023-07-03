@@ -20,7 +20,7 @@ import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.item.TableString;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.arsc.value.attribute.AttributeBagItem;
 import com.reandroid.arsc.value.bag.BagItem;

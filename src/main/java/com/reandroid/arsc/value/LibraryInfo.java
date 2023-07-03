@@ -21,7 +21,7 @@ import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.FixedLengthString;
 import com.reandroid.arsc.item.IntegerItem;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 

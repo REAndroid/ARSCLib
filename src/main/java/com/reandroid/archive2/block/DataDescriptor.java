@@ -16,7 +16,7 @@
 package com.reandroid.archive2.block;
 
 import com.reandroid.archive2.ZipSignature;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 
 public class DataDescriptor extends ZipHeader{
     public DataDescriptor() {

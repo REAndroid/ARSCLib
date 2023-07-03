@@ -17,7 +17,7 @@ package com.reandroid.arsc.value.attribute;
 
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.model.ResourceEntry;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.AttributeType;
 import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.ResValueMap;

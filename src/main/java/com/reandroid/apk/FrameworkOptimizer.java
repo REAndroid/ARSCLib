@@ -25,7 +25,7 @@ import com.reandroid.arsc.chunk.xml.ResXmlNode;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.ResXmlStringPool;
-import com.reandroid.arsc.util.FrameworkTable;
+import com.reandroid.arsc.model.FrameworkTable;
 import com.reandroid.arsc.value.*;
 
 import java.io.IOException;

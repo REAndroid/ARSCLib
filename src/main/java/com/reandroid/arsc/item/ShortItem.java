@@ -16,7 +16,7 @@
 package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 import java.io.InputStream;

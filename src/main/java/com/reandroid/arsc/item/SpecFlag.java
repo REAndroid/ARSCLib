@@ -16,7 +16,7 @@
 package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.chunk.SpecBlock;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 
 public class SpecFlag extends IndirectItem<SpecFlagsArray> {
     public SpecFlag(SpecFlagsArray specFlagsArray, int offset) {

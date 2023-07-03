@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.value;
 
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONObject;
 
 public class EntryHeaderMap extends ValueHeader {

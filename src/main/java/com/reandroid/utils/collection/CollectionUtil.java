@@ -13,7 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.arsc.util;
+package com.reandroid.utils.collection;
 
-public interface EmptyItem {
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+public class CollectionUtil {
+
+    public static<T> List<T> toList(Iterator<? extends T> iterator){
+        if(!iterator.hasNext()){
+            return EmptyList.of();
+        }
+        List<T> results = new ArrayList<>(2);
+        while (iterator.hasNext()){
+            results.add(iterator.next());
+        }
+        return results;
+    }
 }

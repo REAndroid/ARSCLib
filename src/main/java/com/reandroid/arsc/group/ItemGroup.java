@@ -17,8 +17,8 @@ package com.reandroid.arsc.group;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockArrayCreator;
-import com.reandroid.arsc.util.ArrayIterator;
-import com.reandroid.arsc.util.EmptyIterator;
+import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.util.AbstractList;
 import java.util.Iterator;

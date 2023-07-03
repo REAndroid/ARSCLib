@@ -16,7 +16,7 @@
 package com.reandroid.arsc.item;
 
 
- import com.reandroid.arsc.util.HexUtil;
+ import com.reandroid.utils.HexUtil;
 
  public class ByteItem extends BlockItem {
     public ByteItem() {

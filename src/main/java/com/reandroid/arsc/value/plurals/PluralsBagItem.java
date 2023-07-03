@@ -18,7 +18,7 @@ package com.reandroid.arsc.value.plurals;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.item.TableString;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.bag.BagItem;
 

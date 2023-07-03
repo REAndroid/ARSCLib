@@ -1,4 +1,4 @@
-package com.reandroid.arsc.util;
+package com.reandroid.utils.collection;
 
 import java.util.Collection;
 import java.util.Iterator;

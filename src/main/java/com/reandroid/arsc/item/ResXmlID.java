@@ -17,7 +17,7 @@ package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.pool.ResXmlStringPool;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 
 import java.util.ArrayList;
 import java.util.List;

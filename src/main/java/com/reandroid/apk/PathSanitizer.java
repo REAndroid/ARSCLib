@@ -16,7 +16,7 @@
 package com.reandroid.apk;
 
 import com.reandroid.archive.InputSource;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.identifiers.Identifier;
 
 import java.util.*;

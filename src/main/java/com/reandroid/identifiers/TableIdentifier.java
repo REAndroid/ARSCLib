@@ -17,7 +17,7 @@ package com.reandroid.identifiers;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
-import com.reandroid.arsc.util.StringsUtil;
+import com.reandroid.utils.StringsUtil;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 

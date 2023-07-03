@@ -17,7 +17,7 @@ package com.reandroid.archive2;
 
 import com.reandroid.archive2.block.CentralEntryHeader;
 import com.reandroid.archive2.block.LocalFileHeader;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 
 import java.util.zip.ZipEntry;
 

@@ -15,7 +15,7 @@
   */
 package com.reandroid.arsc.item;
 
-import com.reandroid.arsc.util.CollectionUtil;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.arsc.value.Entry;
 
 import java.util.Iterator;

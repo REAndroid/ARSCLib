@@ -1,7 +1,7 @@
 package com.reandroid.apk;
 
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
-import com.reandroid.arsc.util.FileUtil;
+import com.reandroid.utils.io.FileUtil;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;

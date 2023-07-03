@@ -30,7 +30,7 @@ import com.reandroid.arsc.item.ReferenceItem;
 import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.arsc.util.HexUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 

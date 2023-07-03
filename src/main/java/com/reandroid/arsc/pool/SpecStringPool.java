@@ -23,7 +23,7 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.SpecString;
-import com.reandroid.arsc.util.EmptyIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.arsc.value.Entry;
 
 import java.util.Iterator;
