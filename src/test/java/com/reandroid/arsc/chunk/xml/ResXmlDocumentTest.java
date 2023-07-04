@@ -123,8 +123,8 @@ public class ResXmlDocumentTest {
         ResXmlElement root = document.getResXmlElement();
         Assert.assertNotNull(root);
         Assert.assertEquals(3, root.countElements());
-        Assert.assertEquals(1, root.getNamespaceCount());
-        Assert.assertEquals(8, root.getAttributeCount());
+        Assert.assertEquals(2, root.getNamespaceCount());
+        Assert.assertEquals(10, root.getAttributeCount());
 
         ResXmlAttribute attribute = root.searchAttributeByName("style");
         Assert.assertNotNull(attribute);
@@ -152,10 +152,14 @@ public class ResXmlDocumentTest {
             "          android:versionName=\"1.0\"\n" +
             "          android:compileSdkVersion=\"32\"\n" +
             "          android:compileSdkVersionCodename=\"12\"\n" +
+            "          app:UNK_ATTR0x7f0501ab=\"0x00000005\"\n" +
             "          package=\"com.example.package\"\n" +
             "          platformBuildVersionCode=\"32\"\n" +
             "          platformBuildVersionName=\"12\"\n" +
-            "          style=\"@android:style/Widget\" xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
+            "          platformBuildVersionName=\"duplicate\"\n" +
+            "          style=\"@android:style/Widget\"" +
+            "          xmlns:app=\"http://schemas.android.com/apk/res-auto\""+
+            "          xmlns:android=\"http://schemas.android.com/apk/res/android\">\n" +
             "  <uses-sdk android:minSdkVersion=\"21\"\n" +
             "            android:targetSdkVersion=\"32\" />\n" +
             "  <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"\n" +
