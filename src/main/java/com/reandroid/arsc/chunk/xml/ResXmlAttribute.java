@@ -494,6 +494,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(name);
         if(encodeResult != null){
             setName(name, encodeResult.value);
+            encodeResult = ValueCoder.encode(value);
         }else if(prefix != null){
             attrResource = packageBlock.getTableBlock().getAttrResource(prefix, name);
             if(attrResource == null){
