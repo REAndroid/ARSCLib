@@ -161,7 +161,7 @@ public class FileChannelInputStream extends InputStream {
             return amount;
         }
         long remaining = amount;
-        remaining = remaining - skipBuffer((int) remaining);
+        remaining = remaining - skipBuffer(remaining);
         if(remaining == 0){
             return amount;
         }
@@ -175,10 +175,10 @@ public class FileChannelInputStream extends InputStream {
         fileChannel.position(fileChannel.position() + availableChannel);
         return amount;
     }
-    private int skipBuffer(int amount){
+    private int skipBuffer(long amount){
         int availableBuffer = bufferLength - bufferPosition;
         if(availableBuffer > amount){
-            availableBuffer = amount;
+            availableBuffer = (int) amount;
         }
         bufferPosition += availableBuffer;
         position += availableBuffer;
