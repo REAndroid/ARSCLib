@@ -104,7 +104,7 @@ class BagDecoderArray<OUTPUT> extends BagDecoder<OUTPUT>{
             }
             int low = name & 0xffff;
             int id = low - 1;
-            if(id!=i){
+            if(id != i && low != i){
                 return false;
             }
         }
