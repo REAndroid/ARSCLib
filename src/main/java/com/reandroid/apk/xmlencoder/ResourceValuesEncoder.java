@@ -16,14 +16,17 @@
 package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
-import com.reandroid.xml.XMLException;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class ResourceValuesEncoder {
@@ -53,7 +56,7 @@ public class ResourceValuesEncoder {
         this.bagCommonEncoder = new XMLValuesEncoderStyle(materials);
 
     }
-    public void encodeValuesXml(File valuesXmlFile) throws XMLException {
+    public void encodeValuesXml(File valuesXmlFile) throws IOException, XmlPullParserException {
         if(valuesXmlFile.getName().equals("public.xml")){
             return;
         }
@@ -126,7 +129,7 @@ public class ResourceValuesEncoder {
         if(element.hasChildElements()){
             return true;
         }
-        String type = getType(element, element.getTagName());
+        String type = getType(element, element.getName());
         return isBagTypeName(type);
     }
     private boolean isBag(XMLDocument xmlDocument, String type){
@@ -136,11 +139,11 @@ public class ResourceValuesEncoder {
         if(type.startsWith("string")){
             return false;
         }
-        XMLElement documentElement=xmlDocument.getDocumentElement();
-        int count=documentElement.getChildesCount();
-        for(int i=0;i<count;i++){
-            XMLElement element=documentElement.getChildAt(i);
-            if(element.getChildesCount()>0){
+        XMLElement documentElement = xmlDocument.getDocumentElement();
+        Iterator<? extends XMLElement> childElements = documentElement.getElements();
+        while (childElements.hasNext()){
+            XMLElement element = childElements.next();
+            if(element.getChildElementsCount()>0){
                 return true;
             }
         }
@@ -165,12 +168,12 @@ public class ResourceValuesEncoder {
         return false;
     }
     private String getType(XMLDocument xmlDocument, String def){
-        XMLElement documentElement=xmlDocument.getDocumentElement();
-        if(documentElement.getChildesCount()==0){
+        XMLElement documentElement = xmlDocument.getDocumentElement();
+        XMLElement first = CollectionUtil.getFirst(documentElement.getElements());
+        if(first == null){
             return def;
         }
-        XMLElement first=documentElement.getChildAt(0);
-        String type=first.getTagName();
+        String type = first.getName();
         if(type==null){
             return def;
         }
@@ -186,7 +189,7 @@ public class ResourceValuesEncoder {
         return type;
     }
     private String getType(XMLElement element, String def){
-        String type = element.getTagName();
+        String type = element.getName();
         if(type == null){
             return def;
         }

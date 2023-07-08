@@ -47,7 +47,7 @@ public class XMLEntryDecoderDocument extends XMLEntryDecoder<XMLElement>{
             xmlDocument.setDocumentElement(docElement);
         }
         for(Entry entry : entryList){
-            docElement.addChild(decode(entry));
+            docElement.add(decode(entry));
         }
         return xmlDocument;
     }

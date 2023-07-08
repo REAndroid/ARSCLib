@@ -23,16 +23,20 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.SpecString;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.arsc.value.Entry;
 
 import java.util.Iterator;
 
-public class SpecStringPool extends StringPool<SpecString> {
+public class SpecStringPool extends StringPool<SpecString>{
     public SpecStringPool(boolean is_utf8){
         super(is_utf8);
     }
 
+    public void sort(){
+        super.sort(CompareUtil.getComparableComparator());
+    }
     public int resolveResourceId(int typeId, String name){
         Iterator<Entry> itr = getEntries(typeId, name);
         if(itr.hasNext()){

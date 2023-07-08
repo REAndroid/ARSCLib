@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,15 +15,35 @@
   */
 package com.reandroid.xml;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
+
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class XMLNode {
+    private XMLNode mParent;
     private int mLineNumber;
     private int mColumnNumber;
-    private final List<XMLNode> mChildNodes = new ArrayList<>();
+    public XMLNode(){
+
+    }
+    int getLength(){
+        return 0;
+    }
+    abstract XMLNode clone(XMLNode parent);
+    public XMLNode getParent(){
+        return mParent;
+    }
+    void setParent(XMLNode parent){
+        if(parent != this){
+            this.mParent = parent;
+        }
+    }
 
     public int getColumnNumber() {
         return mColumnNumber;
@@ -38,51 +58,8 @@ public abstract class XMLNode {
         this.mLineNumber = lineNumber;
     }
 
-    public void addChildNode(XMLNode xmlNode){
-        boolean addOk=addChildNodeInternal(xmlNode);
-        if(addOk){
-            onChildAdded(xmlNode);
-        }
-    }
-    boolean addChildNodeInternal(XMLNode xmlNode){
-        if(xmlNode!=null && canAdd(xmlNode)){
-            return mChildNodes.add(xmlNode);
-        }
-        return false;
-    }
-    void onChildAdded(XMLNode xmlNode){
-
-    }
-    boolean canAdd(XMLNode xmlNode){
-        return xmlNode!=null;
-    }
-    boolean contains(XMLNode xmlNode){
-        return mChildNodes.contains(xmlNode);
-    }
-    void removeChildNode(XMLNode xmlNode){
-        int i = mChildNodes.indexOf(xmlNode);
-        while (i>=0){
-            i = mChildNodes.indexOf(xmlNode);
-        }
-        mChildNodes.remove(xmlNode);
-    }
-    public void clearChildNodes(){
-        clearChildNodesInternal();
-    }
-    void clearChildNodesInternal(){
-        mChildNodes.clear();
-    }
-    public List<XMLNode> getChildNodes() {
-        return mChildNodes;
-    }
-    boolean hasChildNodes(){
-        return mChildNodes.size()>0;
-    }
-    void buildTextContent(Writer writer, boolean unEscape) throws IOException{
-
-    }
-    public boolean write(Writer writer) throws IOException {
-        return write(writer, false);
+    public abstract void serialize(XmlSerializer serializer) throws IOException;
+    public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
     }
     public String toText(){
         return toText(1, false);
@@ -90,6 +67,29 @@ public abstract class XMLNode {
     public String toText(boolean newLineAttributes){
         return toText(1, newLineAttributes);
     }
-    public abstract boolean write(Writer writer, boolean newLineAttributes) throws IOException;
-    public abstract String toText(int indent, boolean newLineAttributes);
+    void write(Appendable writer, boolean xml) throws IOException{
+        write(writer);
+    }
+    abstract void write(Appendable appendable) throws IOException;
+    public String toText(int indent, boolean newLineAttributes){
+        StringWriter writer = new StringWriter();
+        try {
+            write(writer);
+            writer.flush();
+            writer.close();
+        } catch (IOException ignored) {
+        }
+        return writer.toString();
+    }
+    @Override
+    public String toString(){
+        StringWriter writer = new StringWriter();
+        try {
+            write(writer, false);
+            writer.flush();
+            writer.close();
+        } catch (IOException ignored) {
+        }
+        return writer.toString();
+    }
 }

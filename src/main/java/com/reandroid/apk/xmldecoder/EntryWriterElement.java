@@ -47,18 +47,11 @@ public class EntryWriterElement implements EntryWriter<XMLElement> {
         XMLElement xmlElement = new XMLElement(name);
         XMLElement current = mCurrentElement;
         if(current != null){
-            current.addChild(xmlElement);
+            current.add(xmlElement);
         }else {
             mResult = null;
         }
         mCurrentElement = xmlElement;
-        if(mEnableIndent){
-            xmlElement.setIndent(2);
-            xmlElement.setIndentScale(1.0f);
-        }else {
-            xmlElement.setIndent(0);
-            xmlElement.setIndentScale(0.0f);
-        }
         return xmlElement;
     }
     @Override
@@ -67,11 +60,11 @@ public class EntryWriterElement implements EntryWriter<XMLElement> {
         if(current == null){
             throw new IOException("endTag called before startTag");
         }
-        if(!name.equals(current.getTagName())){
+        if(!name.equals(current.getName())){
             throw new IOException("Mismatch endTag = "
-                    + name + ", expect = " + current.getTagName());
+                    + name + ", expect = " + current.getName());
         }
-        XMLElement parent = current.getParent();
+        XMLElement parent = current.getParentElement();
         if(parent == null){
             mResult = current;
         }else {
@@ -93,7 +86,7 @@ public class EntryWriterElement implements EntryWriter<XMLElement> {
     @Override
     public void comment(String comment) throws IOException {
         if(comment != null){
-            mCurrentElement.addComment(new XMLComment(comment));
+            mCurrentElement.add(new XMLComment(comment));
         }
     }
     @Override
@@ -105,7 +98,7 @@ public class EntryWriterElement implements EntryWriter<XMLElement> {
     }
     @Override
     public void writeTagIndent(int level) throws IOException {
-        mCurrentElement.setIndent(level);
+
     }
 
     private static final String FEATURE_INDENT = "http://xmlpull.org/v1/doc/features.html#indent-output";

@@ -91,6 +91,7 @@ public class LibraryInfo extends Block implements JSONConvert<JSONObject>, Resou
         if(counter.FOUND){
             return;
         }
+        counter.setCurrent(this);
         if(counter.END==this){
             counter.FOUND=true;
             return;

@@ -27,11 +27,13 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
+import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 import java.util.*;
 
-public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolHeader> implements BlockLoad, JSONConvert<JSONArray>, Comparator<String> {
+public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolHeader> implements BlockLoad, JSONConvert<JSONArray> {
     private final Object mLock = new Object();
     private final StringArray<T> mArrayStrings;
     private final StyleArray mArrayStyles;
@@ -75,6 +77,10 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         this(is_utf8, true);
     }
 
+    void sort(Comparator<T> comparator){
+        ensureStringLinkUnlockedInternal();
+        getStringsArray().sort(comparator);
+    }
     public boolean isStringLinkLocked(){
         return stringLinkLocked;
     }
@@ -119,7 +125,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
             uniqueSet.remove(key);
         }
         List<String> sortedList=new ArrayList<>(uniqueSet);
-        sortedList.sort(this);
+        sortedList.sort(CompareUtil.STRING_COMPARATOR);
         insertStringList(sortedList);
     }
     private void insertStringList(List<String> stringList){
@@ -296,6 +302,9 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     public final StyleItem[] getStyles(){
         return mArrayStyles.getChildes();
     }
+    public boolean isUtf8(){
+        return getHeaderBlock().isUtf8();
+    }
     public void setUtf8(boolean is_utf8){
         setUtf8(is_utf8, true);
     }
@@ -356,10 +365,6 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         JsonStringPoolHelper<T> helper=new JsonStringPoolHelper<>(this);
         helper.loadStyledStrings(json);
         refresh();
-    }
-    @Override
-    public int compare(String s1, String s2) {
-        return s1.compareTo(s2);
     }
 
 }

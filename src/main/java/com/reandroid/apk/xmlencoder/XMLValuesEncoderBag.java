@@ -56,7 +56,7 @@ public abstract class XMLValuesEncoderBag extends XMLValuesEncoder{
     protected abstract void encodeChildes(XMLElement element, ResTableMapEntry mapEntry);
 
     int getChildesCount(XMLElement element){
-        return element.getChildesCount();
+        return element.getChildElementsCount();
     }
 
 }

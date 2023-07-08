@@ -20,7 +20,6 @@ import com.reandroid.apk.CrcOutputStream;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.value.Entry;
-import com.reandroid.xml.XMLException;
 import com.reandroid.xml.source.XMLSource;
 
 import java.io.IOException;
@@ -91,7 +90,7 @@ public class XMLEncodeSource extends ByteInputSource {
                 currentPackage.getTableBlock().setCurrentPackage(currentPackage);
             }
             resXmlDocument = xmlFileEncoder.encode(xmlSource.getXMLDocument());
-        } catch (XMLException ex) {
+        } catch (IOException ex) {
             throw new EncodeException("XMLException on: '"+xmlSource.getPath()
                     +"'\n         '"+ex.getMessage()+"'");
         }

@@ -23,6 +23,31 @@ import java.io.IOException;
 public class XMLUtil {
     public static String NEW_LINE="\n";
 
+    public static String splitName(String name){
+        if(name == null){
+            return null;
+        }
+        int i = name.lastIndexOf(':');
+        if(i >= 0){
+            i++;
+            name = name.substring(i);
+        }
+        name = name.trim();
+        if(name.length() == 0){
+            return null;
+        }
+        return name;
+    }
+    public static String splitPrefix(String name){
+        if(name == null){
+            return null;
+        }
+        int i = name.indexOf(':');
+        if(i > 0){
+            return name.substring(0, i);
+        }
+        return null;
+    }
     public static int findStartTag(XmlPullParser parser)
             throws IOException, XmlPullParserException {
         int event = parser.getEventType();

@@ -18,6 +18,7 @@ package com.reandroid.arsc.model;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.item.SpecString;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.FilterIterator;
 import com.reandroid.utils.HexUtil;
@@ -116,13 +117,7 @@ public class ResourceEntry implements Iterable<Entry>{
         return null;
     }
     public int getConfigsCount(){
-        int count = 0;
-        Iterator<Entry> iterator = iterator(true);
-        while (iterator.hasNext()){
-            iterator.next();
-            count ++;
-        }
-        return count;
+        return CollectionUtil.count(iterator(true));
     }
     public Entry getEqualsOrMoreSpecific(ResConfig resConfig){
         Entry result = null;
@@ -159,7 +154,7 @@ public class ResourceEntry implements Iterable<Entry>{
         return null;
     }
     public boolean isEmpty() {
-        return !iterator(true).hasNext();
+        return CollectionUtil.isEmpty(iterator(true));
     }
     public boolean isDeclared() {
         return getName() != null;

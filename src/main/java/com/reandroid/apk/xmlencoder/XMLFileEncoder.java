@@ -27,6 +27,7 @@ import com.reandroid.xml.*;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Iterator;
 
 public class XMLFileEncoder {
     private final EncodeMaterials materials;
@@ -43,7 +44,7 @@ public class XMLFileEncoder {
     public ResXmlDocument encode(String xmlString){
         try {
             return encode(XMLDocument.load(xmlString));
-        } catch (XMLException ex) {
+        } catch (Exception ex) {
             materials.logMessage(ex.getMessage());
         }
         return null;
@@ -51,7 +52,7 @@ public class XMLFileEncoder {
     public ResXmlDocument encode(InputStream inputStream){
         try {
             return encode(XMLDocument.load(inputStream));
-        } catch (XMLException ex) {
+        } catch (Exception ex) {
             materials.logMessage(ex.getMessage());
         }
         return null;
@@ -60,7 +61,7 @@ public class XMLFileEncoder {
         setCurrentPath(xmlFile.getAbsolutePath());
         try {
             return encode(XMLDocument.load(xmlFile));
-        } catch (XMLException ex) {
+        } catch (Exception ex) {
             materials.logMessage(ex.getMessage());
         }
         return null;
@@ -78,18 +79,18 @@ public class XMLFileEncoder {
     }
     private void buildElement(XMLDocument xmlDocument){
         XMLElement element = xmlDocument.getDocumentElement();
-        ResXmlElement resXmlElement = resXmlDocument.createRootElement(element.getTagName());
+        ResXmlElement resXmlElement = resXmlDocument.createRootElement(element.getName());
         buildElement(element, resXmlElement);
     }
     private void buildElement(XMLElement element, ResXmlElement resXmlElement){
         ensureNamespaces(element, resXmlElement);
-        resXmlElement.setName(element.getTagName());
+        resXmlElement.setName(element.getName());
         buildAttributes(element, resXmlElement);
         for(XMLNode node:element.getChildNodes()){
             if(node instanceof XMLText){
                 resXmlElement.addResXmlText(((XMLText)node).getText(true));
             }else if(node instanceof XMLComment){
-                resXmlElement.setComment(((XMLComment)node).getCommentText());
+                resXmlElement.setComment(((XMLComment)node).getText());
             }else if(node instanceof XMLElement){
                 XMLElement child=(XMLElement) node;
                 ResXmlElement childXml=resXmlElement.createChildElement();
@@ -99,14 +100,8 @@ public class XMLFileEncoder {
     }
     private void buildAttributes(XMLElement element, ResXmlElement resXmlElement){
         for(XMLAttribute attribute:element.listAttributes()){
-            if(attribute instanceof SchemaAttr){
-                continue;
-            }
-            if(SchemaAttr.looksSchema(attribute.getName(), attribute.getValue())){
-                continue;
-            }
-            String name = attribute.getNameWoPrefix();
-            String prefix = attribute.getNamePrefix();
+            String name = attribute.getName(false);
+            String prefix = attribute.getPrefix();
             EncodeResult unknownId = ValueCoder.encodeUnknownResourceId(name);
             int resourceId;
             Entry entry = null;
@@ -172,13 +167,10 @@ public class XMLFileEncoder {
         }
     }
     private void ensureNamespaces(XMLElement element, ResXmlElement resXmlElement){
-        for(XMLAttribute attribute:element.listAttributes()){
-            String prefix = SchemaAttr.getPrefix(attribute.getName());
-            if(prefix==null){
-                continue;
-            }
-            String uri=attribute.getValue();
-            resXmlElement.getOrCreateNamespace(uri, prefix);
+        int count = element.getNamespaceCount();
+        for(int i = 0; i < count; i++){
+            XMLNamespace namespace = element.getNamespaceAt(i);
+            resXmlElement.getOrCreateNamespace(namespace.getUri(), namespace.getPrefix());
         }
     }
     private void buildIdMap(XMLDocument xmlDocument){
@@ -191,13 +183,13 @@ public class XMLFileEncoder {
         for(XMLAttribute attribute : element.listAttributes()){
             addResourceId(idBuilder, attribute);
         }
-        int count=element.getChildesCount();
-        for(int i=0;i<count;i++){
-            searchResIds(idBuilder, element.getChildAt(i));
+        Iterator<? extends XMLElement> iterator = element.getElements();
+        while (iterator.hasNext()){
+            searchResIds(idBuilder, iterator.next());
         }
     }
     private void addResourceId(ResIdBuilder idBuilder, XMLAttribute attribute){
-        String name = attribute.getNameWoPrefix();
+        String name = attribute.getName(false);
         EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(name);
         if(encodeResult != null){
             idBuilder.add(encodeResult.value, name);
@@ -209,14 +201,10 @@ public class XMLFileEncoder {
         }
     }
     private Entry getAttributeBlock(XMLAttribute attribute){
-        if(attribute instanceof SchemaAttr){
+        if(attribute.getPrefix() == null){
             return null;
         }
-        String name=attribute.getName();
-        if(name.indexOf(':')<0){
-            return null;
-        }
-        return materials.getAttributeBlock(name);
+        return materials.getAttributeBlock(attribute.getName(true));
     }
     private ResXmlNamespace forceCreateNamespace(ResXmlElement resXmlElement,
                                                       int resourceId, String prefix){

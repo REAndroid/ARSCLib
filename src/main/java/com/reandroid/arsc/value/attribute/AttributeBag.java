@@ -39,8 +39,12 @@ public class AttributeBag {
         boolean foundOnce=false;
         String[] names=valueString.split("[\\s|]+");
         for(String name:names){
-            AttributeBagItem item=searchByName(name);
-            if(item==null){
+            name = name.trim();
+            AttributeBagItem item = searchByName(name);
+            if(item == null){
+                if(name.length() != 0){
+                    return null;
+                }
                 continue;
             }
             value|=item.getBagItem().getData();

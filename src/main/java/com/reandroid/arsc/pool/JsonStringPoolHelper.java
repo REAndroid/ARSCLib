@@ -22,6 +22,7 @@ import com.reandroid.arsc.item.StyleItem;
 import com.reandroid.arsc.model.StyleSpanInfo;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.CompareUtil;
 
 import java.util.*;
 
@@ -55,7 +56,7 @@ class JsonStringPoolHelper<T extends StringItem> {
     private Map<String, Integer> loadStyleTags(List<StyledString> styledStringList) {
         Map<String, Integer> indexMap=new HashMap<>();
         List<String> tagList=new ArrayList<>(getStyleTags(styledStringList));
-        tagList.sort(stringPool);
+        tagList.sort(CompareUtil.STRING_COMPARATOR);
         StringArray<T> stringsArray = stringPool.getStringsArray();
         int tagsSize = tagList.size();
         int initialSize = stringsArray.childesCount();

@@ -70,6 +70,9 @@ public class ResValueMap extends AttributeValue{
     }
     public void setAttributeType(AttributeType attributeType){
         setNameResourceID(attributeType.getId());
+        if(attributeType == AttributeType.FORMATS && getValueType() == ValueType.NULL){
+            setValueType(ValueType.DEC);
+        }
     }
     public AttributeDataFormat[] getAttributeTypeFormats(){
         AttributeType attributeType = getAttributeType();
@@ -78,12 +81,15 @@ public class ResValueMap extends AttributeValue{
         }
         return AttributeDataFormat.decodeValueTypes(getData());
     }
-    public void addAttributeTypeFormats(AttributeDataFormat[] formats){
+    public void addAttributeTypeFormats(AttributeDataFormat... formats){
         if(formats == null){
             return;
         }
         int data = getData() | AttributeDataFormat.sum(formats);
         setData(data);
+        if(getValueType() == ValueType.NULL){
+            setValueType(ValueType.DEC);
+        }
     }
     public void addAttributeTypeFormat(AttributeDataFormat format){
         if(format == null){

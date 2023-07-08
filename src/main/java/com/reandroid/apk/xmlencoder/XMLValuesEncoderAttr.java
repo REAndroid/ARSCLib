@@ -20,8 +20,12 @@ import com.reandroid.arsc.coder.CommonType;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.value.*;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.xml.XMLAttribute;
 import com.reandroid.xml.XMLElement;
+
+import java.util.Iterator;
+import java.util.List;
 
 public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
     public XMLValuesEncoderAttr(EncodeMaterials materials) {
@@ -30,7 +34,7 @@ public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
 
     @Override
     int getChildesCount(XMLElement element){
-        int count = element.getChildesCount() + element.getAttributeCount();
+        int count = element.getChildElementsCount() + element.getAttributeCount();
         if(element.getAttribute("formats")!=null){
             count = count-1;
         }
@@ -64,7 +68,9 @@ public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
 
         bagIndex++;
 
-        for(XMLAttribute attribute : parentElement.listAttributes()){
+        Iterator<? extends XMLAttribute> iterator = parentElement.getAttributes();
+        while (iterator.hasNext()){
+            XMLAttribute attribute = iterator.next();
             String name = attribute.getName();
             if("name".equals(name) || "formats".equals(name)){
                 continue;
@@ -90,7 +96,8 @@ public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
         }
     }
     private void encodeEnumOrFlag(XMLElement element, ResTableMapEntry mapEntry){
-        int count = element.getChildesCount();
+        List<XMLElement> childElements = CollectionUtil.toList(element.getElements());
+        int count = childElements.size();
         if(count == 0){
             return;
         }
@@ -106,8 +113,8 @@ public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
                 formatItem.getData());
 
         for(int i = 0; i < count; i++){
-            XMLElement child = element.getChildAt(i);
-            AttributeDataFormat bagFormat = AttributeDataFormat.fromBagTypeName(child.getTagName());
+            XMLElement child = childElements.get(i);
+            AttributeDataFormat bagFormat = AttributeDataFormat.fromBagTypeName(child.getName());
             if(bagFormat != lastBagFormat){
                 formatItem.addAttributeTypeFormat(bagFormat);
                 lastBagFormat = bagFormat;
@@ -144,10 +151,10 @@ public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
     }
 
     private AttributeDataFormat getFlagEnum(XMLElement parent){
-        if(parent.getChildesCount() == 0){
+        XMLElement first = CollectionUtil.getFirst(parent.getElements());
+        if(first == null){
             return null;
         }
-        return AttributeDataFormat.fromBagTypeName(
-                parent.getChildAt(0).getTagName());
+        return AttributeDataFormat.fromBagTypeName(first.getName());
     }
 }

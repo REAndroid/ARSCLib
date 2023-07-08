@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,22 +15,36 @@
   */
 package com.reandroid.xml;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
+
 import java.io.IOException;
 import java.io.Writer;
 
 public class XMLText extends XMLNode{
     private String text;
     public XMLText(String text){
-        this.text=XMLUtil.escapeXmlChars(text);
+        this.text = text;
     }
     public XMLText(){
         this(null);
     }
 
     @Override
-    public void addChildNode(XMLNode xmlNode){
-        throw new IllegalArgumentException("Can not add xml node on text: "+xmlNode);
+    XMLNode clone(XMLNode parent) {
+        XMLText xmlText;
+        if(parent instanceof XMLNodeTree){
+            XMLNodeTree nodeTree =  (XMLNodeTree) parent;
+            xmlText = nodeTree.newText();
+            xmlText.setText(this.text);
+            nodeTree.add(xmlText);
+        }else {
+            xmlText = new XMLText(this.text);
+        }
+        return xmlText;
     }
+
     public String getText(){
         return getText(true);
     }
@@ -41,26 +55,95 @@ public class XMLText extends XMLNode{
         return text;
     }
     public void setText(String text){
-        this.text=XMLUtil.escapeXmlChars(text);
+        this.text = text;
+    }
+
+    public void appendText(String text) {
+        if(text == null){
+            return;
+        }
+        if(this.text == null || this.text.length() == 0){
+            this.text = text;
+            return;
+        }
+        this.text = this.text + text;
+    }
+    private void appendEntityRef(String entityRef) {
+        if(entityRef == null){
+            return;
+        }
+        String decode;
+        if(entityRef.equals("lt")){
+            decode = "<";
+        }else if(entityRef.equals("gt")){
+            decode = ">";
+        }else if(entityRef.equals("amp")){
+            decode = "&";
+        }else if(entityRef.equals("quote")){
+            decode = "\"";
+        }else {
+            return;
+        }
+        appendText(decode);
     }
     @Override
-    void buildTextContent(Writer writer, boolean unEscape) throws IOException{
-        writer.write(getText(unEscape));
+    public void serialize(XmlSerializer serializer) throws IOException {
+        serializer.text(getText());
     }
     @Override
-    public boolean write(Writer writer, boolean newLineAttributes) throws IOException {
-        if(!XMLUtil.isEmpty(this.text)){
-            writer.write(this.text);
+    public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
+        int event = parser.getEventType();
+        if(!isTextEvent(event)){
+            throw new XmlPullParserException("Not text event");
+        }
+        while (isTextEvent(event)){
+            if(event == XmlPullParser.TEXT){
+                appendText(parser.getText());
+            }else if(event == XmlPullParser.ENTITY_REF){
+                appendEntityRef(parser.getName());
+            }
+            event = parser.next();
+        }
+    }
+    @Override
+    void write(Appendable appendable, boolean xml) throws IOException {
+        String text = getText();
+        if(text != null){
+            if(xml){
+                text = XMLUtil.escapeXmlChars(text);
+            }
+            appendable.append(text);
+        }
+    }
+    @Override
+    void write(Appendable appendable) throws IOException {
+        String text = getText();
+        if(text != null){
+            appendable.append(text);
+        }
+    }
+
+    boolean isIndent(){
+        return isIndentText(getText());
+    }
+
+    static boolean isTextEvent(int event){
+        return event == XmlPullParser.TEXT
+                || event == XmlPullParser.ENTITY_REF;
+    }
+    private static boolean isIndentText(String text){
+        if(text == null || text.length() == 0){
             return true;
         }
-        return false;
-    }
-    @Override
-    public String toText(int indent, boolean newLineAttributes) {
-        return getText(false);
-    }
-    @Override
-    public String toString(){
-        return getText();
+        if(text.charAt(0) != '\n'){
+            return false;
+        }
+        char[] chars = text.toCharArray();
+        for(int i = 1; i < chars.length; i++){
+            if(chars[i] != ' ' && chars[i] != '\n'){
+                return false;
+            }
+        }
+        return true;
     }
 }

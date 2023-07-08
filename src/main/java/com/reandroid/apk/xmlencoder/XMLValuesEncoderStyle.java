@@ -23,16 +23,19 @@ import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.xml.XMLElement;
 
+import java.util.List;
+
 public class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
     public XMLValuesEncoderStyle(EncodeMaterials materials) {
         super(materials);
     }
     @Override
     protected void encodeChildes(XMLElement parentElement, ResTableMapEntry resValueBag){
-        int count = parentElement.getChildesCount();
+        List<XMLElement> childElementList = parentElement.getChildElementList();
+        int count = childElementList.size();
         ResValueMapArray itemArray = resValueBag.getValue();
         for(int i=0;i<count;i++){
-            XMLElement child=parentElement.getChildAt(i);
+            XMLElement child = childElementList.get(i);
             ResValueMap item = itemArray.get(i);
             String name=child.getAttributeValue("name");
             EncodeResult id = ValueCoder.encodeUnknownResourceId(name);

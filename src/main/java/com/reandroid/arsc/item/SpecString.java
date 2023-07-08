@@ -17,11 +17,12 @@ package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.utils.StringsUtil;
 
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class SpecString extends StringItem {
+public class SpecString extends StringItem implements Comparable<SpecString>{
     public SpecString(boolean utf8) {
         super(utf8);
     }
@@ -67,5 +68,12 @@ public class SpecString extends StringItem {
     public StyleItem getStyle(){
         // Spec (resource name) don't have style unless to obfuscate/confuse other decompilers
         return null;
+    }
+    @Override
+    public int compareTo(SpecString specString) {
+        if(specString == null){
+            return -1;
+        }
+        return StringsUtil.compareStrings(this.get(), specString.get());
     }
 }

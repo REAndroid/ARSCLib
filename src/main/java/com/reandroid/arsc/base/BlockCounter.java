@@ -18,7 +18,7 @@ package com.reandroid.arsc.base;
 public class BlockCounter {
     public final Block END;
     public boolean FOUND;
-    int COUNT;
+    private int COUNT;
     public BlockCounter(Block end){
         this.END=end;
     }
@@ -32,6 +32,8 @@ public class BlockCounter {
         return COUNT;
     }
 
+    public void setCurrent(Block current){
+    }
     @Override
     public String toString(){
         if(FOUND){

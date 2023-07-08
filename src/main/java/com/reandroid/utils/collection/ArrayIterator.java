@@ -19,7 +19,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 
-public class ArrayIterator<T> implements Iterator<T> {
+public class ArrayIterator<T> implements Iterator<T>, SizedItem{
     private final T[] elements;
     private final Predicate<T> mTester;
     private int index;
@@ -33,6 +33,13 @@ public class ArrayIterator<T> implements Iterator<T> {
         this(elements, null);
     }
 
+    @Override
+    public int size(){
+        if(elements != null){
+            return elements.length;
+        }
+        return 0;
+    }
     @Override
     public boolean hasNext() {
         return getNext() != null;

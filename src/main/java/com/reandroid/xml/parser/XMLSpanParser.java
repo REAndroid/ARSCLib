@@ -30,13 +30,13 @@ public class XMLSpanParser {
     public XMLSpanParser(){
         this.mParser = XMLFactory.newPullParser();
     }
-    public XMLElement parse(String text) throws XMLException {
+    public XMLElement parse(String text) throws IOException {
         synchronized (mLock){
             try {
                 text="<spannable-parser>"+text+"</spannable-parser>";
                 parseString(text);
-            } catch (XmlPullParserException|IOException ex) {
-                throw new XMLException(ex.getMessage());
+            } catch (XmlPullParserException ex) {
+                throw new IOException(ex.getMessage());
             }
             XMLElement element=mCurrentElement;
             mCurrentElement=null;
@@ -86,12 +86,14 @@ public class XMLSpanParser {
         if(mCurrentElement==null){
             mCurrentElement=new XMLElement(name);
         }else {
-            mCurrentElement=mCurrentElement.createElement(name);
+            XMLElement element = new XMLElement(name);
+            mCurrentElement.add(element);
+            mCurrentElement=element;
         }
         loadAttributes();
     }
     private void onEndTag() {
-        XMLElement parent=mCurrentElement.getParent();
+        XMLElement parent=mCurrentElement.getParentElement();
         if(parent!=null){
             mCurrentElement=parent;
         }
@@ -99,12 +101,12 @@ public class XMLSpanParser {
     private void onText() {
         String text=mParser.getText();
         if(text!=null && text.length()>0){
-            mCurrentElement.addText(new XMLText(text));
+            mCurrentElement.addText(text);
         }
     }
     private void onEntityRef() {
         String text = getEntity(mParser.getName());
-        mCurrentElement.addText(new XMLText(text));
+        mCurrentElement.addText(text);
     }
     private String getEntity(String name){
         if("amp".equals(name)){

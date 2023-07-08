@@ -16,8 +16,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.ChunkType;
-import com.reandroid.xml.SchemaAttr;
-import com.reandroid.xml.XMLAttribute;
+import com.reandroid.xml.XMLNamespace;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -102,15 +101,13 @@ public class ResXmlStartNamespace extends ResXmlNamespaceChunk {
         }
         return false;
     }
-    public XMLAttribute decodeToXml(){
+    public XMLNamespace decodeToXml(){
         String uri=getUri();
         String prefix=getPrefix();
         if(isEmpty(uri) || isEmpty(prefix)){
             return null;
         }
-        SchemaAttr schemaAttr=new SchemaAttr(prefix, uri);
-        schemaAttr.setLineNumber(getLineNumber());
-        return schemaAttr;
+        return new XMLNamespace(uri, prefix);
     }
     private boolean isEmpty(String txt){
         if(txt==null){

@@ -15,6 +15,7 @@
   */
 package com.reandroid.arsc.item;
 
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.arsc.value.Entry;
 
@@ -22,7 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class TableString extends StringItem {
+public class TableString extends StringItem implements Comparable<TableString> {
     public TableString(boolean utf8) {
         super(utf8);
     }
@@ -44,5 +45,21 @@ public class TableString extends StringItem {
 
     public List<Entry> listReferencedResValueEntries(){
         return CollectionUtil.toList(getEntries(false));
+    }
+
+    @Override
+    public int compareTo(TableString tableString) {
+        if(tableString == null){
+            return -1;
+        }
+        boolean hasStyle1 = this.hasStyle();
+        boolean hasStyle2 = tableString.hasStyle();
+        if(hasStyle1 && !hasStyle2){
+            return -1;
+        }
+        if(!hasStyle1 && hasStyle2){
+            return 1;
+        }
+        return StringsUtil.compareStrings(this.getXml(), tableString.getXml());
     }
 }

@@ -23,17 +23,21 @@ import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.xml.XMLElement;
 
+import java.util.Iterator;
+import java.util.List;
+
 class XMLValuesEncoderPlurals extends XMLValuesEncoderBag{
     XMLValuesEncoderPlurals(EncodeMaterials materials) {
         super(materials);
     }
     @Override
     protected void encodeChildes(XMLElement parentElement, ResTableMapEntry resValueBag){
-        int count = parentElement.getChildesCount();
+        List<XMLElement> childElementList = parentElement.getChildElementList();
+        int count = childElementList.size();
         ResValueMapArray itemArray = resValueBag.getValue();
         EncodeMaterials materials = getMaterials();
         for(int i=0;i<count;i++){
-            XMLElement child = parentElement.getChildAt(i);
+            XMLElement child = childElementList.get(i);
             ResValueMap bagItem = itemArray.get(i);
             AttributeType quantity = AttributeType
                     .fromName(child.getAttributeValue("quantity"));

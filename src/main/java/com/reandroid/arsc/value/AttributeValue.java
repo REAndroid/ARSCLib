@@ -15,6 +15,9 @@
  */
 package com.reandroid.arsc.value;
 
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.model.ResourceEntry;
 
 public abstract class AttributeValue extends ValueItem{
@@ -31,6 +34,26 @@ public abstract class AttributeValue extends ValueItem{
     }
     public ResourceEntry resolveName(){
         return resolve(getNameResourceID());
+    }
+    public ResourceEntry encodeAttrName(String prefix, String name){
+        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(name);
+        if(encodeResult != null){
+            setName(name, encodeResult.value);
+            return new ResourceEntry(getPackageBlock(), encodeResult.value);
+        }
+        if(prefix == null){
+            return null;
+        }
+        PackageBlock packageBlock = getPackageBlock();
+        ResourceEntry resourceEntry = packageBlock.getTableBlock()
+                .getAttrResource(prefix, name);
+        if(resourceEntry != null){
+            setName(name, resourceEntry.getResourceId());
+        }
+        return resourceEntry;
+    }
+    public void setName(String name, int nameId){
+        setNameResourceID(nameId);
     }
     @Override
     public String decodeValue(){

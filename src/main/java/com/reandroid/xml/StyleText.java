@@ -13,14 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.xml.source;
-
-import com.reandroid.xml.XMLDocument;
+package com.reandroid.xml;
 
 import java.io.IOException;
 
-public interface XMLSource {
-    public void disposeXml();
-    public String getPath();
-    public XMLDocument getXMLDocument() throws IOException;
+public class StyleText extends XMLText{
+    public StyleText(String text){
+        super(text);
+    }
+    public StyleText(){
+        this("");
+    }
+    void writeStyledText(Appendable appendable) throws IOException {
+        appendable.append(getText());
+    }
+    @Override
+    public int getLength(){
+        String text = getText();
+        if(text != null){
+            return text.length();
+        }
+        return 0;
+    }
 }

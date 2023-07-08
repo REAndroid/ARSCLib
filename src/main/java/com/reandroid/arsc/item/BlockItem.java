@@ -94,6 +94,7 @@ public abstract class BlockItem extends Block {
             return;
         }
         counter.addCount(countBytes());
+        counter.setCurrent(this);
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{

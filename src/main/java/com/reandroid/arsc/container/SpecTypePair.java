@@ -62,6 +62,14 @@ public class SpecTypePair extends BlockContainer<Block>
         this(new SpecBlock(), new TypeBlockArray());
     }
 
+
+    public void trimConfigSizes(int resConfigSize){
+        Iterator<TypeBlock> iterator = getTypeBlocks();
+        while (iterator.hasNext()){
+            ResConfig resConfig = iterator.next().getResConfig();
+            resConfig.trimToSize(resConfigSize);
+        }
+    }
     public boolean isAttr(){
         // TODO: find better way
         String name = getTypeName();

@@ -147,6 +147,28 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return null;
     }
+    public ResourceEntry getResource(PackageBlock context, String type, String name){
+        Iterator<PackageBlock> iterator = getAllPackages(context);
+        while (iterator.hasNext()){
+            PackageBlock packageBlock = iterator.next();
+            ResourceEntry resourceEntry = packageBlock.getResource(type, name);
+            if(resourceEntry != null){
+                return resourceEntry;
+            }
+        }
+        return null;
+    }
+    public ResourceEntry getResource(PackageBlock context, String packageName, String type, String name){
+        Iterator<PackageBlock> iterator = getAllPackages(context, packageName);
+        while (iterator.hasNext()){
+            PackageBlock packageBlock = iterator.next();
+            ResourceEntry resourceEntry = packageBlock.getResource(type, name);
+            if(resourceEntry != null){
+                return resourceEntry;
+            }
+        }
+        return null;
+    }
     public ResourceEntry getLocalResource(int resourceId){
         return getLocalResource( null, resourceId);
     }
@@ -299,6 +321,17 @@ public class TableBlock extends Chunk<TableHeader>
     }
     public Iterator<PackageBlock> getAllPackages(){
         return getAllPackages((PackageBlock) null);
+    }
+    public Iterator<PackageBlock> getAllPackages(PackageBlock context, String packageName){
+        return new  FilterIterator<PackageBlock>(getAllPackages(context)) {
+            @Override
+            public boolean test(PackageBlock packageBlock){
+                if(packageName != null){
+                    return packageBlock.packageNameMatches(packageName);
+                }
+                return TableBlock.this == packageBlock.getTableBlock();
+            }
+        };
     }
     public Iterator<PackageBlock> getAllPackages(PackageBlock context){
         return new CombiningIterator<>(getPackages(context),
@@ -476,6 +509,11 @@ public class TableBlock extends Chunk<TableHeader>
     }
     public PackageArray getPackageArray(){
         return mPackageArray;
+    }
+    public void trimConfigSizes(int resConfigSize){
+        for(PackageBlock packageBlock : listPackages()){
+            packageBlock.trimConfigSizes(resConfigSize);
+        }
     }
 
     private void refreshPackageCount(){

@@ -131,16 +131,16 @@ public class ValuesStringPoolBuilder {
         if(documentElement==null){
             return;
         }
-        int count = documentElement.getChildesCount();
-        for(int i=0;i<count;i++){
-            XMLElement child=documentElement.getChildAt(i);
-            int childCount=child.getChildesCount();
-            for(int j=0;j<childCount;j++){
-                addStrings(child.getChildAt(i));
+        Iterator<? extends XMLElement> iterator = documentElement.getElements();
+        while (iterator.hasNext()){
+            XMLElement child = iterator.next();
+            Iterator<? extends XMLElement> childIterator = child.getElements();
+            while (childIterator.hasNext()){
+                addStrings(childIterator.next());
             }
         }
     }
-    private void addStrings(XMLDocument xmlDocument){
+    public void addStrings(XMLDocument xmlDocument){
         if(xmlDocument == null){
             return;
         }
@@ -148,9 +148,9 @@ public class ValuesStringPoolBuilder {
         if(documentElement==null){
             return;
         }
-        int count = documentElement.getChildesCount();
-        for(int i=0;i<count;i++){
-            addStrings(documentElement.getChildAt(i));
+        Iterator<? extends XMLElement> iterator = documentElement.getElements();
+        while (iterator.hasNext()){
+            addStrings(iterator.next());
         }
     }
     private void addStrings(XMLElement element){
@@ -168,7 +168,7 @@ public class ValuesStringPoolBuilder {
         }
     }
     private void addStyleElement(XMLElement element){
-        styleList.add(element.buildTextContent(false));
+        styleList.add(element.getTextContent());
     }
 
 }

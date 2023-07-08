@@ -37,6 +37,13 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         super();
     }
 
+
+    public void trimConfigSizes(int resConfigSize){
+        Iterator<SpecTypePair> iterator = iterator(true);
+        while (iterator.hasNext()){
+            iterator.next().trimConfigSizes(resConfigSize);
+        }
+    }
     public void sort(){
         for(SpecTypePair specTypePair:listItems()){
             specTypePair.sortTypes();

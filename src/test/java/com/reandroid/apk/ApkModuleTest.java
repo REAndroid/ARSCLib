@@ -1,14 +1,21 @@
 package com.reandroid.apk;
 
+import com.reandroid.apk.xmlencoder.ValuesStringPoolBuilder;
 import com.reandroid.archive.ByteInputSource;
+import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.model.StyledStringBuilder;
+import com.reandroid.arsc.pool.TableStringPool;
+import com.reandroid.arsc.pool.builder.StyleBuilder;
+import com.reandroid.arsc.value.*;
 import com.reandroid.utils.io.FileUtil;
-import com.reandroid.arsc.value.Entry;
+import com.reandroid.xml.*;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -59,6 +66,19 @@ public class ApkModuleTest {
         TableBlock tableBlock = new TableBlock();
         PackageBlock packageBlock = tableBlock.newPackage(
                 0x7f, manifestBlock.getPackageName());
+        StyleDocument xmlDocument = new StyleDocument();
+        xmlDocument.add(new StyleText("The quick"));
+        StyleElement element = new StyleElement();
+        xmlDocument.add(element);
+        element.setName("br");
+        element.addText("brown fox");
+        xmlDocument.add(new StyleText("jumps over lazy dog"));
+        TableStringPool pool = tableBlock.getStringPool();
+        TableString tableString = pool.getOrCreate(xmlDocument);
+        Entry someStyle = packageBlock.getOrCreate("", "string", "some_style");
+
+        someStyle.setValueAsRaw(ValueType.STRING, tableString.getIndex());
+
         String app_name = "ARSCLib Test";
         Entry appName = packageBlock.getOrCreate("", "string", "app_name");
         appName.setValueAsString(app_name);
@@ -69,7 +89,7 @@ public class ApkModuleTest {
                 packageBlock.getName(),
                 appName.getTypeName(), appName.getName()));
         Assert.assertNotNull("Table search by name (no package)", tableBlock.getResource(
-                null,
+                (String) null,
                 appName.getTypeName(), appName.getName()));
         Assert.assertNotNull("Package search by name", packageBlock.getResource(
                 appName.getTypeName(), appName.getName()));
@@ -104,7 +124,7 @@ public class ApkModuleTest {
         Assert.assertNull("Table search by error id",
                 tableBlock.getResource(appName.getResourceId() + 1));
         Assert.assertNull("Table search by error name: ",
-                tableBlock.getResource(null, "string", "app_name_error"));
+                tableBlock.getResource((String) null, "string", "app_name_error"));
 
 
         manifestBlock.setApplicationLabel(appName.getResourceId());
@@ -115,9 +135,31 @@ public class ApkModuleTest {
 
         manifestBlock.setIconResourceId(appIcon.getResourceId());
 
+
+        createAttrEntry(packageBlock);
+
         tableBlock.refreshFull();
 
         return tableBlock;
+    }
+    private void createAttrEntry(PackageBlock packageBlock){
+        Entry entry = packageBlock
+                .getOrCreate("", "attr", "attrWidth");
+        entry.ensureComplex(true);
+
+        ResValueMapArray mapArray = entry.getResValueMapArray();
+
+        entry.getResTableMapEntry().getHeader().setPublic(true);
+
+        ResValueMap valueMap = mapArray.createNext();
+        valueMap.setAttributeType(AttributeType.FORMATS);
+
+        valueMap.addAttributeTypeFormats(AttributeDataFormat.REFERENCE,
+                AttributeDataFormat.DIMENSION,
+                AttributeDataFormat.COLOR);
+
+        mapArray.refresh();
+
     }
     private AndroidManifestBlock createManifest() throws IOException {
         FrameworkApk frameworkApk = AndroidFrameworks.getLatest();

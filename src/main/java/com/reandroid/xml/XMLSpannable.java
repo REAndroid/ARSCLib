@@ -51,7 +51,7 @@ public class XMLSpannable implements Comparable<XMLSpannable>{
     }
     private void appendXml(StringBuilder builder, XMLElement element){
         builder.append('<');
-        builder.append(element.getTagName());
+        builder.append(element.getName());
         appendXmlAttributes(builder, element);
         builder.append('>');
         for(XMLNode xmlNode: element.getChildNodes()){
@@ -63,7 +63,7 @@ public class XMLSpannable implements Comparable<XMLSpannable>{
         }
         builder.append('<');
         builder.append('/');
-        builder.append(element.getTagName());
+        builder.append(element.getName());
         builder.append('>');
     }
     private void appendXmlAttributes(StringBuilder builder, XMLElement element){

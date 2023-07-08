@@ -193,6 +193,7 @@ public class PackageBlock extends Chunk<PackageHeader>
             message.append(count);
             appendOnce = true;
         }
+        getSpecStringPool().sort();
         sortTypes();
         if(!elementsRefresh){
             if(appendOnce){
@@ -452,6 +453,9 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     public SpecTypePairArray getSpecTypePairArray(){
         return mBody.getSpecTypePairArray();
+    }
+    public void trimConfigSizes(int resConfigSize){
+        getSpecTypePairArray().trimConfigSizes(resConfigSize);
     }
     public Collection<LibraryInfo> listLibraryInfo(){
         return getLibraryBlock().listLibraryInfo();

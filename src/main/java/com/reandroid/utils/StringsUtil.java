@@ -20,6 +20,15 @@ import java.util.List;
 
 public class StringsUtil {
 
+    public static String emptyToNull(String text){
+        if(isEmpty(text)){
+            return null;
+        }
+        return text;
+    }
+    public static boolean isEmpty(String text){
+        return text == null || text.length() == 0;
+    }
     public static String toUpperCase(String str){
         if(str == null || str.length() == 0){
             return str;
@@ -118,4 +127,28 @@ public class StringsUtil {
         }
         return builder.toString();
     }
+    public static int compareToString(Object obj1, Object obj2) {
+        return compareStrings(obj1 == null ? null : obj1.toString(),
+                obj2 == null ? null : obj2.toString());
+    }
+    public static int compareStrings(String s1, String s2) {
+        if(s1 == null && s2 == null){
+            return 0;
+        }
+        if(s1 == null){
+            return 1;
+        }
+        if(s2 == null){
+            return -1;
+        }
+        int i = s1.compareTo(s2);
+        if(i == 0){
+            return 0;
+        }
+        if(i > 0){
+            return 1;
+        }
+        return -1;
+    }
+
 }

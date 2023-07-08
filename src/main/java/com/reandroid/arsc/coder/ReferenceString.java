@@ -15,9 +15,12 @@
  */
 package com.reandroid.arsc.coder;
 
+import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.ValueType;
+
+import java.io.IOException;
 
 public class ReferenceString {
     public final String prefix;
@@ -33,6 +36,14 @@ public class ReferenceString {
     }
     public EncodeResult encode(TableBlock tableBlock){
         ResourceEntry resourceEntry = tableBlock.getResource(packageName, type, name);
+        if(resourceEntry != null){
+            return new EncodeResult(getValueType(), resourceEntry.getResourceId());
+        }
+        return null;
+    }
+    public EncodeResult encode(PackageBlock packageBlock){
+        ResourceEntry resourceEntry = packageBlock.getTableBlock()
+                .getResource(packageBlock, packageName, type, name);
         if(resourceEntry != null){
             return new EncodeResult(getValueType(), resourceEntry.getResourceId());
         }
@@ -63,6 +74,28 @@ public class ReferenceString {
         return builder.toString();
     }
 
+    public static EncodeResult encodeReference(PackageBlock packageBlock, String text) throws IOException {
+        return encodeReference(packageBlock, text, null);
+    }
+
+    public static EncodeResult encodeReference(PackageBlock packageBlock, String text, EncodeResult errorResult) throws IOException {
+        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(text);
+        if(encodeResult != null){
+            return encodeResult;
+        }
+        ReferenceString referenceString = ReferenceString.parseReference(text);
+        if(referenceString == null){
+            return null;
+        }
+        encodeResult = referenceString.encode(packageBlock.getTableBlock());
+        if(encodeResult == null){
+            if(errorResult != null){
+                return errorResult;
+            }
+            throw new IOException("Unknown reference: " + text);
+        }
+        return encodeResult;
+    }
 
     public static ReferenceString parseReference(String ref){
         if(ref == null || ref.length() < 2 || ref.indexOf('/') < 0 || ref.indexOf(' ') > 0){

@@ -311,7 +311,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
     public final int childesCount(){
         return elementData.length;
     }
-    public final T createNext(){
+    public T createNext(){
         T block=newInstance();
         add(block);
         return block;

@@ -381,12 +381,13 @@ public class ApkModule implements ApkFile, Closeable {
         if(versionString!=null){
             return versionString;
         }
-        for(XMLElement element:manifestRoot.listChildElements()){
-            if(AndroidManifestBlock.TAG_uses_sdk.equals(element.getTagName())){
-                versionString = element.getAttributeValue("android:targetSdkVersion");
-                if(versionString!=null){
-                    return versionString;
-                }
+        Iterator<XMLElement> iterator = manifestRoot
+                .getElements(AndroidManifestBlock.TAG_uses_sdk);
+        while (iterator.hasNext()){
+            XMLElement element = iterator.next();
+            versionString = element.getAttributeValue("android:targetSdkVersion");
+            if(versionString != null){
+                return versionString;
             }
         }
         return null;

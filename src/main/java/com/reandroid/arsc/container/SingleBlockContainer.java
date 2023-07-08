@@ -79,6 +79,7 @@ public class SingleBlockContainer<T extends Block> extends BlockContainer<T> {
         if(counter.FOUND){
             return;
         }
+        counter.setCurrent(this);
         if(counter.END==this){
             counter.FOUND=true;
             return;

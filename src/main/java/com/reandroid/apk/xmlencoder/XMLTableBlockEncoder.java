@@ -25,7 +25,6 @@ import com.reandroid.arsc.model.FrameworkTable;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.json.JSONObject;
-import com.reandroid.xml.XMLException;
 import com.reandroid.xml.XMLFactory;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -83,11 +82,11 @@ public class XMLTableBlockEncoder {
     public void scanResourcesDirectory(File resourcesDirectory) throws IOException {
         try {
             scanResourceFiles(resourcesDirectory);
-        } catch (XMLException ex) {
+        } catch (XmlPullParserException ex) {
             throw new IOException(ex);
         }
     }
-    private void scanResourceFiles(File resourcesDirectory) throws IOException, XMLException {
+    private void scanResourceFiles(File resourcesDirectory) throws IOException, XmlPullParserException {
         List<File> pubXmlFileList = ApkUtil.listPublicXmlFiles(resourcesDirectory);
         if(pubXmlFileList.size() == 0){
             throw new IOException("No .*/values/"
@@ -164,7 +163,7 @@ public class XMLTableBlockEncoder {
             return;
         }
     }
-    private void encodeValues(List<File> pubXmlFileList) throws XMLException {
+    private void encodeValues(List<File> pubXmlFileList) throws IOException, XmlPullParserException {
         logMessage("Encoding values ...");
         FilePathEncoder filePathEncoder = new FilePathEncoder(getApkModule());
         TableBlock tableBlock = getTableBlock();
@@ -184,7 +183,7 @@ public class XMLTableBlockEncoder {
             packageBlock.refresh();
         }
     }
-    private void encodeAttrs(List<File> pubXmlFileList) throws XMLException {
+    private void encodeAttrs(List<File> pubXmlFileList) throws IOException, XmlPullParserException {
         logMessage("Encoding attrs ...");
 
         EncodeMaterials encodeMaterials = getEncodeMaterials();
@@ -299,13 +298,13 @@ public class XMLTableBlockEncoder {
         poolBuilder.addTo(tableBlock.getTableStringPool());
     }
 
-    private void encodeResDir(File resDir) throws XMLException {
+    private void encodeResDir(File resDir) throws IOException, XmlPullParserException {
         List<File> valuesDirList = ApkUtil.listValuesDirectory(resDir);
         for(File valuesDir : valuesDirList){
             encodeValuesDir(valuesDir);
         }
     }
-    private void encodeValuesDir(File valuesDir) throws XMLException {
+    private void encodeValuesDir(File valuesDir) throws IOException, XmlPullParserException {
         EncodeMaterials materials = getEncodeMaterials();
         ResourceValuesEncoder valuesEncoder = new ResourceValuesEncoder(materials);
         List<File> xmlFiles = ApkUtil.listFiles(valuesDir, ".xml");

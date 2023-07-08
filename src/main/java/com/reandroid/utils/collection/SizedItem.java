@@ -13,14 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.xml.source;
+package com.reandroid.utils.collection;
 
-import com.reandroid.xml.XMLDocument;
-
-import java.io.IOException;
-
-public interface XMLSource {
-    public void disposeXml();
-    public String getPath();
-    public XMLDocument getXMLDocument() throws IOException;
+public interface SizedItem {
+    int size();
 }

@@ -29,10 +29,12 @@ import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.xml.XMLAttribute;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class ResXmlAttribute extends AttributeValue implements Comparable<ResXmlAttribute>{
@@ -79,8 +81,9 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         }
         PackageBlock packageBlock = nameEntry.getPackageBlock();
         boolean nsChanged = setNamespace(packageBlock.getUri(), packageBlock.getPrefix());
-        boolean nameChanged = setName(name, resourceId);
-        return nsChanged | nameChanged;
+        String nameOld = getName();
+        setName(name, resourceId);
+        return nsChanged | Objects.equals(nameOld, name);
     }
     @Override
     public boolean isUndefined(){
@@ -165,20 +168,20 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         ResXmlID xmlID = xmlIDMap.getOrCreate(resourceId);
         setNameReference(xmlID.getIndex());
     }
-    public boolean setName(String name, int resourceId){
+    public void setName(String name, int resourceId){
         if(Objects.equals(name, getName()) && resourceId==getNameResourceID()){
-            return false;
+            return;
         }
         unlink(mNameReference);
         unLinkNameId(getResXmlID());
         ResXmlString xmlString = getOrCreateAttributeName(name, resourceId);
         if(xmlString==null){
-            return false;
+            return;
         }
         setNameReference(xmlString.getIndex());
         mNameReference = link(OFFSET_NAME);
         linkNameId();
-        return true;
+        return;
     }
     private void linkStartNameSpace(){
         unLinkStartNameSpace();
@@ -269,15 +272,28 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         return getInteger(getBytesInternal(), OFFSET_NS);
     }
     public boolean setNamespace(String uri, String prefix){
-        if(uri == null || prefix == null){
+        uri = StringsUtil.emptyToNull(uri);
+        prefix = StringsUtil.emptyToNull(prefix);
+        if(uri == null && prefix == null){
             return setNamespaceReference(-1);
         }
         ResXmlElement parentElement = getParentResXmlElement();
         if(parentElement == null){
             return false;
         }
-        ResXmlNamespace ns = parentElement.getOrCreateNamespace(uri, prefix);
-        return setNamespaceReference(ns.getUriReference());
+        ResXmlNamespace namespace;
+        if(uri != null && prefix != null){
+            namespace = parentElement.getOrCreateNamespace(uri, prefix);
+        }else if(uri != null){
+            namespace = parentElement.getStartNamespaceByUri(uri);
+        }else{
+            namespace = parentElement.getNamespaceByPrefix(prefix);
+        }
+        if(namespace == null){
+            // TODO: should throw ?
+            return false;
+        }
+        return setNamespaceReference(namespace.getUriReference());
     }
     public boolean setNamespaceReference(int ref){
         if(ref == getNamespaceReference()){
@@ -483,105 +499,80 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         }
         serializer.attribute(getUri(), decodeName(false), value);
     }
+    public ResourceEntry encodeName(String uri, String prefix, String name) throws IOException {
+        setNamespace(uri, prefix);
+        ResourceEntry resourceEntry = super.encodeAttrName(prefix, name);
+        if(resourceEntry != null){
+            return resourceEntry;
+        }
+        prefix = StringsUtil.emptyToNull(prefix);
+        if(prefix == null){
+            setName(name, 0);
+            return null;
+        }
+        throw new IOException("Unknown attribute name '" + prefix + ":" + name + "'");
+    }
     public void encode(String uri, String prefix, String name, String value) throws IOException {
         encode(uri, prefix, name, value, false);
     }
     public void encode(String uri, String prefix, String name, String value, boolean validate) throws IOException {
-        setNamespace(uri, prefix);
+        ResourceEntry attrResource = encodeName(uri, prefix, name);
         PackageBlock packageBlock = getPackageBlock();
-        ResourceEntry attrResource = null;
-        Entry attrEntry;
-        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(name);
-        if(encodeResult != null){
-            setName(name, encodeResult.value);
-            encodeResult = ValueCoder.encode(value);
-        }else if(prefix != null){
-            attrResource = packageBlock.getTableBlock().getAttrResource(prefix, name);
-            if(attrResource == null){
-                throw new IOException("Unknown attribute name '" + prefix + ":" + name + "'");
-            }
-            setName(attrResource.getName(), attrResource.getResourceId());
-            if(uri == null || uri.length() == 0){
-                ResXmlNamespace ns = getParentResXmlElement()
-                        .getNamespaceByPrefix(prefix);
-                if(ns != null){
-                    uri = ns.getUri();
-                }
-            }
-            setNamespace(uri, prefix);
-        }else {
-            encodeResult = ValueCoder.encode(value);
-            setName(name, 0);
-        }
-        if(encodeResult == null){
-            encodeResult = encodeReference(value);
-        }
+        EncodeResult encodeResult = ReferenceString.encodeReference(packageBlock, value);
         if(encodeResult != null){
             setValue(encodeResult);
             return;
         }
-        AttributeDataFormat[] formats = null;
         if(attrResource != null){
             attrResource = attrResource.resolveReference();
-            attrEntry = attrResource.get();
-            AttributeBag attributeBag = AttributeBag.create(attrEntry);
-            if(attributeBag != null){
-                formats = attributeBag.getFormats();
-                if(attributeBag.isEnumOrFlag()){
-                    encodeResult = attributeBag.encodeEnumOrFlagValue(value);
-                    if(encodeResult == null){
-                        // Could be decoded as hex or integer
-                        encodeResult = ValueCoder.encode(value, CommonType.INTEGER.valueTypes());
-                    }
-                    if(encodeResult == null && formats != null){
-                        encodeResult = ValueCoder.encode(value, formats);
-                    }
-                    if(encodeResult == null){
-                        if(validate){
-                            String msg = "Invalid attribute enum/flag/value '" + name + "=\"" + value + "\"'";
-                            throw new IOException(msg);
-                        }
-                        encodeResult = ValueCoder.encode(value);
-                    }
-                    if(encodeResult != null){
-                        setValue(encodeResult);
-                        return;
-                    }
-                }
-            }
         }
-        boolean allowString = attrResource == null;
-        if(formats != null){
-            encodeResult = ValueCoder.encode(value, formats);
-            if(encodeResult == null){
-                allowString = AttributeDataFormat.contains(formats, ValueType.STRING);
+        if(attrResource == null || attrResource.isEmpty()){
+            encodeResult = ValueCoder.encode(value);
+            if(encodeResult != null){
+                setValue(encodeResult);
+            }else {
+                setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
             }
-        }
-        if(encodeResult != null){
-            setValue(encodeResult);
             return;
         }
-        if(!allowString && validate){
-            throw new IOException("Incompatible attribute value "
-                    + name + "=\"" + value + "\"");
+        AttributeBag attributeBag = AttributeBag.create(attrResource.get());
+        AttributeDataFormat[] formats = attributeBag.getFormats();
+        if(attributeBag.isEnumOrFlag()){
+            encodeResult = attributeBag.encodeEnumOrFlagValue(value);
+            if(encodeResult == null){
+                // Could be decoded as hex or integer
+                encodeResult = ValueCoder.encode(value, CommonType.INTEGER.valueTypes());
+            }
+            if(encodeResult == null && formats != null){
+                encodeResult = ValueCoder.encode(value, formats);
+            }
+            if(encodeResult == null){
+                if(validate && !AttributeDataFormat.contains(formats, ValueType.STRING)){
+                    String msg = "Invalid attribute enum/flag/value '" + name + "=\"" + value + "\"'";
+                    throw new IOException(msg);
+                }
+            }else {
+                setValue(encodeResult);
+                return;
+            }
+        }
+        if(formats != null){
+            encodeResult = ValueCoder.encode(value, formats);
+            if(encodeResult != null){
+                setValue(encodeResult);
+                return;
+            }
+            if(!AttributeDataFormat.contains(formats, ValueType.STRING)){
+                if(prefix != null){
+                    name = prefix + ":" + name;
+                }
+                throw new IOException("Incompatible attribute value "
+                        + name + "=\"" + value + "\"" + ", expected types: " + AttributeDataFormat.toString(formats));
+            }
         }
         setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
     }
-    private EncodeResult encodeReference(String text) throws IOException {
-        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(text);
-        if(encodeResult != null){
-            return encodeResult;
-        }
-        ReferenceString referenceString = ReferenceString.parseReference(text);
-        if(referenceString == null){
-            return null;
-        }
-        encodeResult = referenceString.encode(getPackageBlock().getTableBlock());
-        if(encodeResult == null){
-            throw new IOException("Unknown reference: " + text);
-        }
-        return encodeResult;
-    }
+
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject= new JSONObject();

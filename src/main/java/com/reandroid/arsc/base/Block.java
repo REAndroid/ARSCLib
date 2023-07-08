@@ -31,7 +31,12 @@ public abstract class Block {
     public final int countUpTo(Block block){
         BlockCounter counter=new BlockCounter(block);
         onCountUpTo(counter);
-        return counter.COUNT;
+        return counter.getCount();
+    }
+    public final Block locateBlock(int bytePosition){
+        BlockLocator locator = new BlockLocator(bytePosition);
+        onCountUpTo(locator);
+        return locator.getResult();
     }
     public abstract void onCountUpTo(BlockCounter counter);
     public final void readBytes(BlockReader reader) throws IOException{

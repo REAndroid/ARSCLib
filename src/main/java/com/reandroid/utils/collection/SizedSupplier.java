@@ -15,7 +15,6 @@
  */
 package com.reandroid.utils.collection;
 
-public interface SizedSupplier<T>{
-    int size();
+public interface SizedSupplier<T> extends SizedItem{
     T get(int index);
 }

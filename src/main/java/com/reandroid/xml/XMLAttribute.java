@@ -1,146 +1,194 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.xml;
 
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.util.Objects;
 
-public class XMLAttribute extends XMLNode{
-    private int mNameId;
-    private int mValueId;
+public class XMLAttribute extends XMLNode {
     private String mName;
     private String mValue;
-    private XMLElement mParent;
-    public XMLAttribute(String name, String val){
-        mName=name;
-        mValue= XMLUtil.escapeXmlChars(val);
+    private XMLNamespace mNamespace;
+    public XMLAttribute(){
+        super();
     }
+    public XMLAttribute(String name, String value){
+        this();
+        mName = name;
+        mValue = value;
+    }
+    @Override
+    XMLAttribute clone(XMLNode parent){
+        XMLAttribute attribute = new XMLAttribute();
+        attribute.setParent(parent);
+        attribute.setName(getUri(), getPrefix(), getName(false));
+        if(parent instanceof XMLElement){
+            ((XMLElement)parent).addAttribute(attribute);
+        }
+        return attribute;
+    }
+    @Override
     public XMLElement getParent(){
-        return mParent;
+        return (XMLElement) super.getParent();
     }
-    void setParent(XMLElement parent){
-        this.mParent = parent;
-    }
-    public void setNameId(int id){
-        mNameId=id;
-    }
-    public void setValueId(int id){
-        mValueId=id;
-    }
-    public int getNameId(){
-        return mNameId;
-    }
-    public int getValueId(){
-        return mValueId;
-    }
-    public XMLAttribute cloneAttr(){
-        XMLAttribute baseAttr=new XMLAttribute(getName(),getValue());
-        baseAttr.setNameId(getNameId());
-        baseAttr.setValueId(getValueId());
-        return baseAttr;
+    public boolean equalsName(String name){
+        if(name == null){
+            return getName() == null;
+        }
+        String prefix = XMLUtil.splitPrefix(name);
+        if(prefix != null && !prefix.equals(getPrefix())){
+            return false;
+        }
+        return name.equals(getName());
     }
     public String getName(){
-        return mName;
+        return getName(false);
     }
-    public String getNamePrefix(){
-        int i=mName.indexOf(":");
-        if(i>0){
-            return mName.substring(0,i);
+    public String getName(boolean includePrefix){
+        String name = mName;
+        if(!includePrefix || name == null){
+            return name;
+        }
+        String prefix = getPrefix();
+        if(prefix != null){
+            name = prefix + ":" + name;
+        }
+        return name;
+    }
+    public XMLNamespace getNamespace(){
+        return mNamespace;
+    }
+    public void setNamespace(XMLNamespace namespace){
+        this.mNamespace = namespace;
+    }
+    public void setNamespace(String uri, String prefix){
+        XMLElement element = getParent();
+        if(element == null){
+            throw new IllegalArgumentException("Parent element is null");
+        }
+        setNamespace(element.getOrCreateXMLNamespace(uri, prefix));
+    }
+    public String getUri(){
+        XMLNamespace namespace = getNamespace();
+        if(namespace != null){
+            return namespace.getUri();
         }
         return null;
     }
-    public String getNameWoPrefix(){
-        int i=mName.indexOf(":");
-        if(i>0){
-            return mName.substring(i+1);
+    public String getPrefix(){
+        XMLNamespace namespace = getNamespace();
+        if(namespace != null){
+            return namespace.getPrefix();
         }
-        return mName;
+        return null;
     }
     public String getValue(){
-        if(mValue==null){
-            mValue="";
+        if(mValue == null){
+            mValue = "";
         }
         return mValue;
     }
-    public int getValueInt(){
-        long l=Long.decode(getValue());
-        return (int)l;
-    }
-    public boolean getValueBool(){
-        String str=getValue().toLowerCase();
-        if("true".equals(str)){
-            return true;
-        }
-        return false;
-    }
-    public boolean isValueBool(){
-        String str=getValue().toLowerCase();
-        if("true".equals(str)){
-            return true;
-        }
-        return "false".equals(str);
+    XMLAttribute set(String name, String value){
+        this.mName = name;
+        this.mValue = value;
+        return this;
     }
     public void setName(String name){
-        mName=name;
+        setName(null, null, name);
     }
-    public void setValue(String val){
-        mValue= XMLUtil.escapeXmlChars(val);
+    public void setName(String uri, String name){
+        setName(uri, null, name);
+    }
+    public void setName(String uri, String prefix, String name){
+        mName = XMLUtil.splitName(name);
+        if(XMLUtil.isEmpty(prefix)){
+            prefix = XMLUtil.splitPrefix(name);
+        }
+        if(XMLUtil.isEmpty(uri)){
+            uri = null;
+        }
+        XMLElement element = getParent();
+        if(element == null){
+            throw new IllegalArgumentException("Parent element is null");
+        }
+        XMLNamespace namespace = null;
+        if(uri != null && prefix != null){
+            namespace = element.getOrCreateXMLNamespace(uri, prefix);
+        }else if(uri != null){
+            namespace = element.getXMLNamespaceByUri(uri);
+            if(namespace == null){
+                throw new IllegalArgumentException("Namespace not found for uri: " + uri);
+            }
+        }else if(prefix != null){
+            namespace = element.getXMLNamespaceByPrefix(prefix);
+            if(namespace == null){
+                throw new IllegalArgumentException("Namespace not found for prefix: " + prefix);
+            }
+        }
+        if(namespace != null){
+            setNamespace(namespace);
+        }
+        mName = name;
+    }
+    public void setValue(String value){
+        mValue = value;
+    }
+    public void setPrefix(String prefix){
+        if(Objects.equals(prefix, getPrefix())){
+            return;
+        }
+        XMLElement element = getParent();
+        if(element == null){
+            throw new IllegalArgumentException("Parent element is null");
+        }
+        setNamespace(element.getXMLNamespaceByPrefix(prefix));
     }
 
     @Override
-    public boolean write(Writer writer, boolean newLineAttributes) throws IOException {
-        writer.write(getName());
-        writer.write("=\"");
-        String val= XMLUtil.trimQuote(getValue());
-        val= XMLUtil.escapeXmlChars(val);
-        val= XMLUtil.escapeQuote(val);
-        writer.write(val);
-        writer.write('"');
-        return true;
+    public void serialize(XmlSerializer serializer) throws IOException {
+        serializer.attribute(getUri(), getName(), getValue());
     }
     @Override
-    public String toText(int indent, boolean newLineAttributes) {
-        StringWriter writer=new StringWriter();
-        try {
-            write(writer);
-        } catch (IOException ignored) {
-        }
-        writer.flush();
-        return writer.toString();
+    void write(Appendable appendable) throws IOException {
+        appendable.append(' ');
+        appendable.append(getName(true));
+        appendable.append('=');
+        appendable.append('"');
+        appendable.append(XMLUtil.escapeXmlChars(getValue()));
+        appendable.append('"');
     }
     @Override
     public int hashCode(){
-        String name=getName();
-        if(name==null){
-            name="";
+        String name = getName(false);
+        if(name == null){
+            name = "";
         }
         return name.hashCode();
     }
     @Override
     public boolean equals(Object obj){
+        if(obj == this){
+            return true;
+        }
         if(obj instanceof XMLAttribute){
-            XMLAttribute attr=(XMLAttribute)obj;
-            return getName().equals(attr.getName());
+            XMLAttribute attribute = (XMLAttribute)obj;
+            return Objects.equals(getName(false), attribute.getName(false));
         }
         return false;
-    }
-    @Override
-    public String toString(){
-        return toText();
     }
 }

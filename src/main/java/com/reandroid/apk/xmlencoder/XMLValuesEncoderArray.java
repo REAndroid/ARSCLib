@@ -25,14 +25,16 @@ import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.xml.XMLElement;
 
+import java.util.Iterator;
+
 public class XMLValuesEncoderArray extends XMLValuesEncoderBag{
     public XMLValuesEncoderArray(EncodeMaterials materials) {
         super(materials);
     }
     @Override
     protected void encodeChildes(XMLElement parentElement, ResTableMapEntry mapEntry){
-        int count = parentElement.getChildesCount();
-        String tagName = parentElement.getTagName();
+        int count = parentElement.getChildElementsCount();
+        String tagName = parentElement.getName();
         boolean force_string = false;
         boolean force_integer = false;
         if(ApkUtil.TAG_STRING_ARRAY.equals(tagName)){
@@ -42,9 +44,12 @@ public class XMLValuesEncoderArray extends XMLValuesEncoderBag{
         }
         EncodeMaterials materials = getMaterials();
         ResValueMapArray itemArray = mapEntry.getValue();
-        for(int i=0;i<count;i++){
-            XMLElement child=parentElement.getChildAt(i);
-
+        Iterator<? extends XMLElement> iterator = parentElement.getElements();
+        int i = -1;
+        //TODO: -1 ?
+        while (iterator.hasNext()){
+            i++;
+            XMLElement child = iterator.next();
             ResValueMap bagItem = itemArray.get(i);
             String name = child.getAttributeValue("name");
             if(name == null){

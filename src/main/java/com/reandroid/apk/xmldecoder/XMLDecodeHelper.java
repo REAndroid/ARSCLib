@@ -47,6 +47,7 @@ public class XMLDecodeHelper {
         }
     }
     public static void writeParsedSpannable(EntryWriter<?> writer, XMLElement spannableParent) throws IOException {
+
         for(XMLNode xmlNode : spannableParent.getChildNodes()){
             if(xmlNode instanceof XMLText){
                 String text = ((XMLText)xmlNode).getText(true);
@@ -59,7 +60,7 @@ public class XMLDecodeHelper {
     }
     private static void writeElement(EntryWriter<?> writer, XMLElement element) throws IOException {
         writer.enableIndent(false);
-        writer.startTag(element.getTagName());
+        writer.startTag(element.getName());
         for(XMLAttribute xmlAttribute : element.listAttributes()){
             writer.attribute(xmlAttribute.getName(), xmlAttribute.getValue());
         }
@@ -71,7 +72,7 @@ public class XMLDecodeHelper {
                 writeElement(writer, (XMLElement) xmlNode);
             }
         }
-        writer.endTag(element.getTagName());
+        writer.endTag(element.getName());
     }
     private static XMLElement parseSpanSafe(String spanText){
         if(spanText==null){
@@ -80,7 +81,7 @@ public class XMLDecodeHelper {
         try {
             XMLSpanParser spanParser = new XMLSpanParser();
             return spanParser.parse(spanText);
-        } catch (XMLException ignored) {
+        } catch (IOException ignored) {
             return null;
         }
     }

@@ -15,8 +15,6 @@
   */
 package com.reandroid.apk;
 
-import com.reandroid.arsc.item.StringItem;
-import com.reandroid.xml.*;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -60,18 +58,6 @@ public class XmlHelper {
             }
         }
         return false;
-    }
-
-    public static void setTextContent(XMLElement element, StringItem stringItem){
-        if(stringItem==null){
-            element.clearChildNodes();
-            return;
-        }
-        if(!stringItem.hasStyle()){
-            element.setTextContent(stringItem.get());
-        }else {
-            element.setSpannableText(stringItem.getXml());
-        }
     }
     public static String toXMLTagName(String typeName){
         // e.g ^attr-private

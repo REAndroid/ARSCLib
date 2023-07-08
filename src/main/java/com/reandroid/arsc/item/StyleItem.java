@@ -24,6 +24,8 @@ import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
+import com.reandroid.xml.StyleDocument;
+import com.reandroid.xml.StyleElement;
 
 import java.io.IOException;
 import java.util.*;
@@ -35,6 +37,19 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
     public StyleItem() {
         super();
         this.mReferences = new HashSet<>();
+    }
+    public void parse(StyleDocument document){
+        Iterator<StyleElement> iterator = document.getElements();
+        while (iterator.hasNext()){
+            parse(iterator.next());
+        }
+    }
+    public void parse(StyleElement element){
+        addStylePiece(element.getStyleableTag(), element.getStart(), element.getEnd());
+        Iterator<StyleElement> iterator = element.getElements();
+        while (iterator.hasNext()){
+            parse(iterator.next());
+        }
     }
     public void onRemoved(){
         unLinkIndexReference();

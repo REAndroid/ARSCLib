@@ -69,6 +69,7 @@ public abstract class TableEntry<HEADER extends ValueHeader, VALUE extends Block
         if(counter.FOUND){
             return;
         }
+        counter.setCurrent(this);
         if(counter.END==this){
             counter.FOUND=true;
             return;

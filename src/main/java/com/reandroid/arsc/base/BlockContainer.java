@@ -59,6 +59,7 @@ public abstract class BlockContainer<T extends Block> extends Block{
         if(counter.FOUND){
             return;
         }
+        counter.setCurrent(this);
         if(counter.END==this){
             counter.FOUND=true;
             return;

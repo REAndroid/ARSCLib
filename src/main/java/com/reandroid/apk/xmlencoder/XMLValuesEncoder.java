@@ -26,6 +26,8 @@ import com.reandroid.arsc.value.ValueType;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 
+import java.util.Iterator;
+
 public class XMLValuesEncoder {
     private final EncodeMaterials materials;
     XMLValuesEncoder(EncodeMaterials materials){
@@ -35,13 +37,13 @@ public class XMLValuesEncoder {
         XMLElement documentElement = xmlDocument.getDocumentElement();
         TypeBlock typeBlock = getTypeBlock(type, qualifiers);
 
-        int count = documentElement.getChildesCount();
+        int count = documentElement.getChildElementsCount();
 
         typeBlock.getEntryArray().ensureSize(count);
 
-        for(int i=0;i<count;i++){
-            XMLElement element = documentElement.getChildAt(i);
-            encode(typeBlock, element);
+        Iterator<? extends XMLElement> iterator = documentElement.getElements();
+        while (iterator.hasNext()){
+            encode(typeBlock, iterator.next());
         }
     }
     public Entry encode(TypeBlock typeBlock, XMLElement element){

@@ -22,6 +22,7 @@ public class InstanceFunction<T> implements Function<Object, T> {
     public InstanceFunction(Class<T> instanceClass){
         this.instanceClass = instanceClass;
     }
+    @SuppressWarnings("unchecked")
     @Override
     public T apply(Object obj) {
         if(instanceClass.isInstance(obj)){
