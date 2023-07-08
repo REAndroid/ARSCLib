@@ -223,7 +223,7 @@ public class XMLElement extends XMLNodeTree{
         int count = getAttributeCount();
         for(int i = 0; i < count; i++){
             XMLAttribute attribute = getAttributeAt(i);
-            if (attribute.equalsName(attribute.getName())){
+            if (attribute.equalsName(name)){
                 return attribute;
             }
         }
