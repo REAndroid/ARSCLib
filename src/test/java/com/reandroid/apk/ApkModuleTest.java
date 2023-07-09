@@ -1,7 +1,7 @@
 package com.reandroid.apk;
 
-import com.reandroid.apk.xmlencoder.ValuesStringPoolBuilder;
 import com.reandroid.archive.ByteInputSource;
+import com.reandroid.archive.InputSourceUtil;
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
@@ -10,23 +10,26 @@ import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.model.ResourceEntry;
-import com.reandroid.arsc.model.StyledStringBuilder;
 import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.arsc.pool.builder.StyleBuilder;
 import com.reandroid.arsc.value.*;
 import com.reandroid.utils.io.FileUtil;
 import com.reandroid.xml.*;
 import org.junit.Assert;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ApkModuleTest {
     private static ApkModule last_apkModule;
     @Test
-    public void testApkModule() throws IOException {
+    public void a_testApkModule() throws IOException {
 
         if(last_apkModule != null){
             return;
@@ -39,6 +42,20 @@ public class ApkModuleTest {
         ApkModuleXmlDecoder decoder = new ApkModuleXmlDecoder(apkModule);
         File dir = FileUtil.getTempDir();
         decoder.decode(dir);
+    }
+    @Test
+    public void b_testTypeIdOffset() throws IOException {
+        InputStream inputStream = ApkModuleTest.class
+                .getResourceAsStream("/type_id_offset.apk");
+        Map<String, ByteInputSource> map = InputSourceUtil.mapInputStreamAsBuffer(inputStream);
+
+        ApkModule apkModule = new ApkModule();
+        apkModule.addAll(map.values());
+        TableBlock tableBlock = apkModule.getTableBlock();
+        PackageBlock packageBlock = tableBlock.pickOne();
+
+        Assert.assertNotEquals(0, packageBlock.getTypeIdOffset());
+
     }
     public ApkModule createApkModule() throws IOException {
 
