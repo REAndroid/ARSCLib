@@ -25,6 +25,8 @@ import com.reandroid.arsc.model.FrameworkTable;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.json.JSONObject;
+import com.reandroid.xml.XMLDocument;
+import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLFactory;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -223,14 +225,14 @@ public class XMLTableBlockEncoder {
             initializeFrameworkFromBinaryManifest();
             return;
         }
-        XmlPullParser parser;
+        XMLDocument xmlDocument;
         try {
-            parser = XMLFactory.newPullParser(manifestFile);
+            xmlDocument = XMLDocument.load(manifestFile);
         } catch (XmlPullParserException ex) {
             throw new IOException(ex);
         }
         EncodeMaterials encodeMaterials = getEncodeMaterials();
-        FrameworkApk frameworkApk = getApkModule().initializeAndroidFramework(parser);
+        FrameworkApk frameworkApk = getApkModule().initializeAndroidFramework(xmlDocument);
         if(frameworkApk == null){
             for(TableBlock frame : getApkModule().getLoadedFrameworks()){
                 if(frame instanceof FrameworkTable){
@@ -240,8 +242,7 @@ public class XMLTableBlockEncoder {
         }else {
             encodeMaterials.addFramework(frameworkApk);
         }
-        initializeMainPackageId(encodeMaterials, parser);
-        XmlHelper.closeSilent(parser);
+        initializeMainPackageId(encodeMaterials, xmlDocument);
     }
     private void initializeFrameworkFromBinaryManifest() throws IOException {
         ApkModule apkModule = getApkModule();
@@ -253,17 +254,17 @@ public class XMLTableBlockEncoder {
                 apkModule.getAndroidFrameworkVersion());
         getEncodeMaterials().addFramework(frameworkApk);
     }
-    private void initializeMainPackageId(EncodeMaterials encodeMaterials, XmlPullParser parser) throws IOException {
-        Map<String, String> applicationAttributes;
-        try {
-            applicationAttributes = XmlHelper.readAttributes(parser, AndroidManifestBlock.TAG_application);
-        } catch (XmlPullParserException ex) {
-            throw new IOException(ex);
-        }
-        if(applicationAttributes == null){
+    private void initializeMainPackageId(EncodeMaterials encodeMaterials, XMLDocument xmlDocument) throws IOException {
+        XMLElement manifestRoot = xmlDocument.getDocumentElement();
+        if(manifestRoot == null){
             return;
         }
-        String iconReference = applicationAttributes.get(AndroidManifestBlock.NAME_icon);
+        XMLElement application = manifestRoot.getElement(AndroidManifestBlock.TAG_application);
+        if(application == null){
+            return;
+        }
+
+        String iconReference = application.getAttributeValue(AndroidManifestBlock.NAME_icon);
         if(iconReference == null){
             return;
         }

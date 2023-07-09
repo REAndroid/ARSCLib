@@ -197,6 +197,9 @@ public class XMLElement extends XMLNodeTree{
     public List<XMLElement> getChildElementList(){
         return CollectionUtil.toList(iterator(XMLElement.class));
     }
+    public XMLElement getElement(String name){
+        return CollectionUtil.getFirst(getElements(name));
+    }
     public Iterator<? extends XMLElement> getElements(){
         return iterator(XMLElement.class);
     }

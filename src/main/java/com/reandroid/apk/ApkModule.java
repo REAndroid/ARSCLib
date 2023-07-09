@@ -38,8 +38,6 @@ import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.identifiers.PackageIdentifier;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.*;
 import java.util.*;
@@ -253,24 +251,6 @@ public class ApkModule implements ApkFile, Closeable {
                 + " (" + frameworkApk.getVersionName() + ")");
         return frameworkApk;
     }
-    public FrameworkApk initializeAndroidFramework(XmlPullParser parser) throws IOException {
-        if(this.preferredFramework != null){
-            return initializeAndroidFramework(preferredFramework);
-        }
-        if(this.mExternalFrameworks.size() > 0){
-            return null;
-        }
-        Integer androidCore = -1;
-        Integer version = readVersionCode(parser, androidCore);
-        if(androidCore.equals(version)){
-            return null;
-        }
-        if(version == null){
-            logMessage("Failed to determine framework version from manifest");
-            return null;
-        }
-        return initializeAndroidFramework(version);
-    }
     public FrameworkApk initializeAndroidFramework(XMLDocument xmlDocument) throws IOException {
         if(this.preferredFramework != null){
             return initializeAndroidFramework(preferredFramework);
@@ -279,7 +259,7 @@ public class ApkModule implements ApkFile, Closeable {
             logMessage("Looks framework itself, skip loading frameworks");
             return null;
         }
-        Integer version = readCompileVersionCode(xmlDocument);
+        Integer version = readVersionCode(xmlDocument);
         return initializeAndroidFramework(version);
     }
     private boolean isAndroid(TableBlock tableBlock){
@@ -288,65 +268,6 @@ public class ApkModule implements ApkFile, Closeable {
             return frameworkTable.isAndroid();
         }
         return false;
-    }
-    private Integer readVersionCode(XmlPullParser parser, Integer androidCore) throws IOException {
-        Map<String, String> manifestAttributes;
-        try {
-            manifestAttributes = XmlHelper.readAttributes(parser, AndroidManifestBlock.TAG_manifest);
-        } catch (XmlPullParserException ex) {
-            throw new IOException(ex);
-        }
-        if(manifestAttributes == null){
-            throw new IOException("Invalid AndroidManifest, missing element: '"
-                    + AndroidManifestBlock.TAG_manifest + "'");
-        }
-        if(androidCore != null && isAndroidCoreApp(manifestAttributes)){
-            logMessage("Looks framework itself, skip loading frameworks");
-            return androidCore;
-        }
-        Integer version = readVersionCode(manifestAttributes);
-        try {
-            manifestAttributes = XmlHelper.readAttributes(parser, AndroidManifestBlock.TAG_uses_sdk);
-        } catch (XmlPullParserException ex) {
-            throw new IOException(ex);
-        }
-        Integer target = readVersionCode(manifestAttributes);
-        if(version == null){
-            version = target;
-        }else if(target != null && target > version){
-            version = target;
-        }
-        return version;
-    }
-    private Integer readVersionCode(Map<String, String> manifestAttributes){
-        if(manifestAttributes == null){
-            return null;
-        }
-        String attr = AndroidManifestBlock.NAME_compileSdkVersion;
-        String version = manifestAttributes.get(attr);
-        if(version == null){
-            attr = AndroidManifestBlock.NAME_platformBuildVersionCode;
-            version = manifestAttributes.get(attr);
-        }
-        if(version == null){
-            attr = AndroidManifestBlock.NAME_targetSdkVersion;
-            version = manifestAttributes.get(attr);
-        }
-        if(version == null){
-            return null;
-        }
-        try{
-            return Integer.parseInt(version);
-        }catch (NumberFormatException exception){
-            logMessage("NumberFormatException on reading manifest attribute: '"
-                    + attr + "=\"" + version +"\"' : " + exception.getMessage());
-            return null;
-        }
-    }
-    private boolean isAndroidCoreApp(Map<String, String> manifestAttributes) {
-        String coreApp = manifestAttributes.get(AndroidManifestBlock.NAME_coreApp);
-        String packageName = manifestAttributes.get(AndroidManifestBlock.NAME_PACKAGE);
-        return "true".equals(coreApp) && "android".equals(packageName);
     }
     private boolean isAndroidCoreApp(XMLDocument manifestDocument){
         XMLElement root = manifestDocument.getDocumentElement();
@@ -359,12 +280,44 @@ public class ApkModule implements ApkFile, Closeable {
         String coreApp = root.getAttributeValue("coreApp");
         return "true".equals(coreApp);
     }
-    private Integer readCompileVersionCode(XMLDocument manifestDocument) {
-        XMLElement root = manifestDocument.getDocumentElement();
-        String versionString = readVersionCodeString(root);
-        if(versionString==null){
+    private Integer readVersionCode(XMLDocument xmlDocument){
+        if(xmlDocument == null){
             return null;
         }
+        XMLElement manifestRoot = xmlDocument.getDocumentElement();
+        if(manifestRoot == null){
+            logMessage("WARN: Manifest root not found");
+            return null;
+        }
+        String versionString = manifestRoot.getAttributeValue("android:compileSdkVersion");
+        Integer version = null;
+        if(versionString!=null){
+            version = safeParseInteger(versionString);
+        }
+        if(version == null){
+            versionString = manifestRoot.getAttributeValue("platformBuildVersionCode");
+            if(versionString!=null){
+                version = safeParseInteger(versionString);
+            }
+        }
+        Integer target = null;
+        Iterator<XMLElement> iterator = manifestRoot
+                .getElements(AndroidManifestBlock.TAG_uses_sdk);
+        while (iterator.hasNext()){
+            XMLElement element = iterator.next();
+            versionString = element.getAttributeValue("android:targetSdkVersion");
+            if(versionString != null){
+                target = safeParseInteger(versionString);
+            }
+        }
+        if(version == null){
+            version = target;
+        }else if(target != null && target > version){
+            version = target;
+        }
+        return version;
+    }
+    private Integer safeParseInteger(String versionString) {
         try{
             return Integer.parseInt(versionString);
         }catch (NumberFormatException exception){
@@ -372,26 +325,6 @@ public class ApkModule implements ApkFile, Closeable {
                     +versionString+"': "+exception.getMessage());
             return null;
         }
-    }
-    private String readVersionCodeString(XMLElement manifestRoot){
-        String versionString = manifestRoot.getAttributeValue("android:compileSdkVersion");
-        if(versionString!=null){
-            return versionString;
-        }
-        versionString = manifestRoot.getAttributeValue("platformBuildVersionCode");
-        if(versionString!=null){
-            return versionString;
-        }
-        Iterator<XMLElement> iterator = manifestRoot
-                .getElements(AndroidManifestBlock.TAG_uses_sdk);
-        while (iterator.hasNext()){
-            XMLElement element = iterator.next();
-            versionString = element.getAttributeValue("android:targetSdkVersion");
-            if(versionString != null){
-                return versionString;
-            }
-        }
-        return null;
     }
 
     public void setPreferredFramework(Integer version) throws IOException {
