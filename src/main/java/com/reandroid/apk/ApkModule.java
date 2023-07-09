@@ -305,13 +305,16 @@ public class ApkModule implements ApkFile, Closeable {
             return androidCore;
         }
         Integer version = readVersionCode(manifestAttributes);
+        try {
+            manifestAttributes = XmlHelper.readAttributes(parser, AndroidManifestBlock.TAG_uses_sdk);
+        } catch (XmlPullParserException ex) {
+            throw new IOException(ex);
+        }
+        Integer target = readVersionCode(manifestAttributes);
         if(version == null){
-            try {
-                manifestAttributes = XmlHelper.readAttributes(parser, AndroidManifestBlock.TAG_uses_sdk);
-            } catch (XmlPullParserException ex) {
-                throw new IOException(ex);
-            }
-            version = readVersionCode(manifestAttributes);
+            version = target;
+        }else if(target != null && target > version){
+            version = target;
         }
         return version;
     }
@@ -332,8 +335,6 @@ public class ApkModule implements ApkFile, Closeable {
         if(version == null){
             return null;
         }
-        logMessage("Found framework version on manifest "
-                + attr + "=\"" + version + "\"");
         try{
             return Integer.parseInt(version);
         }catch (NumberFormatException exception){
