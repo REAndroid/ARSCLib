@@ -563,11 +563,19 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
                 return;
             }
             if(!AttributeDataFormat.contains(formats, ValueType.STRING)){
-                if(prefix != null){
-                    name = prefix + ":" + name;
+                if(validate){
+                    if(prefix != null){
+                        name = prefix + ":" + name;
+                    }
+                    throw new IOException("Incompatible attribute value "
+                            + name + "=\"" + value + "\"" + ", expected types: "
+                            + AttributeDataFormat.toString(formats));
                 }
-                throw new IOException("Incompatible attribute value "
-                        + name + "=\"" + value + "\"" + ", expected types: " + AttributeDataFormat.toString(formats));
+                encodeResult = ValueCoder.encode(value);
+                if(encodeResult != null){
+                    setValue(encodeResult);
+                    return;
+                }
             }
         }
         setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
