@@ -15,6 +15,7 @@
  */
 package com.reandroid.archive2;
 
+import com.reandroid.apk.APKLogger;
 import com.reandroid.archive.APKArchive;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive2.block.*;
@@ -24,6 +25,7 @@ import com.reandroid.archive2.io.ArchiveUtil;
 import com.reandroid.archive2.io.ZipInput;
 import com.reandroid.archive2.model.LocalFileDirectory;
 import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.io.FileUtil;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
@@ -162,9 +164,15 @@ public class Archive implements Closeable {
     }
 
     public void extractAll(File dir) throws IOException {
-        extractAll(dir, null);
+        extractAll(dir, null, null);
+    }
+    public void extractAll(File dir, APKLogger logger) throws IOException {
+        extractAll(dir, null, logger);
     }
     public void extractAll(File dir, Predicate<ArchiveEntry> filter) throws IOException {
+        extractAll(dir, filter, null);
+    }
+    public void extractAll(File dir, Predicate<ArchiveEntry> filter, APKLogger logger) throws IOException {
         FilterIterator<ArchiveEntry> iterator =
                 new FilterIterator<ArchiveEntry>(getEntryList().iterator(), filter){
                     @Override
@@ -174,13 +182,23 @@ public class Archive implements Closeable {
                 };
         while (iterator.hasNext()){
             ArchiveEntry archiveEntry = iterator.next();
-            extract(toFile(dir, archiveEntry), archiveEntry);
+            extract(toFile(dir, archiveEntry), archiveEntry, logger);
         }
     }
     public void extract(File file, ArchiveEntry archiveEntry) throws IOException{
+        extract(file, archiveEntry, null);
+    }
+    public void extract(File file, ArchiveEntry archiveEntry, APKLogger logger) throws IOException{
         File parent = file.getParentFile();
         if(parent != null && !parent.exists()){
             parent.mkdirs();
+        }
+        if(logger != null){
+            long size = archiveEntry.getDataSize();
+            if(size > LOG_LARGE_FILE_SIZE){
+                logger.logVerbose("Extracting ["
+                        + FileUtil.toReadableFileSize(size) + "] "+ archiveEntry.getName());
+            }
         }
         if(archiveEntry.getMethod() != ZipEntry.STORED){
             extractCompressed(file, archiveEntry);
@@ -213,4 +231,5 @@ public class Archive implements Closeable {
     public void close() throws IOException {
         this.zipInput.close();
     }
+    private static final long LOG_LARGE_FILE_SIZE = 1024 * 1000 * 20;
 }

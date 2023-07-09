@@ -15,12 +15,14 @@
  */
 package com.reandroid.archive2.writer;
 
+import com.reandroid.apk.APKLogger;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive2.ZipSignature;
 import com.reandroid.archive2.block.CentralEntryHeader;
 import com.reandroid.archive2.block.DataDescriptor;
 import com.reandroid.archive2.block.LocalFileHeader;
 import com.reandroid.archive2.io.CountingOutputStream;
+import com.reandroid.utils.io.FileUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -33,6 +35,7 @@ class OutputSource {
     private final InputSource inputSource;
     private LocalFileHeader lfh;
     private EntryBuffer entryBuffer;
+    private APKLogger apkLogger;
 
     OutputSource(InputSource inputSource){
         this.inputSource = inputSource;
@@ -68,6 +71,7 @@ class OutputSource {
     }
 
     void writeApk(ApkWriter apkWriter) throws IOException{
+        logLargeFileWrite();
         EntryBuffer entryBuffer = this.entryBuffer;
         FileChannel input = entryBuffer.getZipFileInput().getFileChannel();
         input.position(entryBuffer.getOffset());
@@ -159,4 +163,35 @@ class OutputSource {
         lfh.setDataDescriptor(null);
         lfh.setExtra(null);
     }
+    private void logLargeFileWrite(){
+        APKLogger logger =  this.apkLogger;
+        if(logger == null){
+            return;
+        }
+        long size = getLocalFileHeader().getDataSize();
+        if(size < LOG_LARGE_FILE_SIZE){
+            return;
+        }
+        logFileWrite();
+    }
+    void logFileWrite(){
+        APKLogger logger =  this.apkLogger;
+        if(logger == null){
+            return;
+        }
+        long size = getLocalFileHeader().getDataSize();
+        logVerbose("Write [" + FileUtil.toReadableFileSize(size) + "] " +
+                getInputSource().getAlias());
+    }
+
+    void setAPKLogger(APKLogger logger) {
+        this.apkLogger = logger;
+    }
+    private void logVerbose(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logVerbose(msg);
+        }
+    }
+    private static final long LOG_LARGE_FILE_SIZE = 20L * 1000 * 1000 * 1024;
+
 }

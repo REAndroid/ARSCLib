@@ -88,8 +88,14 @@ public class ApkWriter extends ZipFileOutput {
     }
     private void writeApk(List<OutputSource> outputList) throws IOException{
         logMessage("Writing files: " + outputList.size());
-        for(OutputSource outputSource:outputList){
+        APKLogger logger = this.apkLogger;
+        for(int i = 0; i < outputList.size(); i++){
+            OutputSource outputSource = outputList.get(i);
+            outputSource.setAPKLogger(logger);
             outputSource.writeApk( this);
+            if(i % 100 == 0){
+                outputSource.logFileWrite();
+            }
         }
     }
     private void writeSignatureBlock() throws IOException {
@@ -113,7 +119,8 @@ public class ApkWriter extends ZipFileOutput {
         BufferFileOutput output = new BufferFileOutput(bufferFile);
         BufferFileInput input = new BufferFileInput(bufferFile);
         OutputSource tableSource = null;
-        for(OutputSource outputSource:outputList){
+        for(int i = 0; i < outputList.size(); i++){
+            OutputSource outputSource = outputList.get(i);
             InputSource inputSource = outputSource.getInputSource();
             if(tableSource == null && TableBlock.FILE_NAME.equals(inputSource.getAlias())){
                 tableSource = outputSource;
@@ -178,6 +185,7 @@ public class ApkWriter extends ZipFileOutput {
     public void setWriteProgress(WriteProgress writeProgress){
         this.writeProgress = writeProgress;
     }
+
     private void onCompressFileProgress(String path, int mode, long writtenBytes) {
         if(writeProgress!=null){
             writeProgress.onCompressFile(path, mode, writtenBytes);

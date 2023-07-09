@@ -25,6 +25,34 @@ import java.util.Objects;
 
 public class FileUtil {
 
+    public static String toReadableFileSize(long size){
+        if(size < 0){
+            return Long.toString(size);
+        }
+        String[] sizeUnits = FILE_SIZE_UNITS;
+        String unit = "";
+        long result = size;
+        long dec = 0;
+        for(int i = 0; i < sizeUnits.length; i++){
+            long div;
+            if(i == 0){
+                div = 1024;
+            }else {
+                div = 1000;
+            }
+            unit = sizeUnits[i];
+            size = size / div;
+            if(size == 0){
+                break;
+            }
+            dec = (result - (size * div));
+            result = size;
+        }
+        if(dec == 0){
+            return result + unit;
+        }
+        return result + "." + dec + unit;
+    }
     public static void deleteDirectory(File dir){
         if(dir.isFile()){
             dir.delete();
@@ -118,4 +146,12 @@ public class FileUtil {
     private static String def_prefix;
 
     private static final Map<String, File> TEMP_DIRS = new HashMap<>();
+
+    private static final String[] FILE_SIZE_UNITS = new String[]{
+            " bytes",
+            " Kb",
+            " Mb",
+            " Gb",
+            " Pb"
+    };
 }
