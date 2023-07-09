@@ -50,6 +50,7 @@ public class XMLValuesEncoder {
         String name = element.getAttributeValue("name");
         Entry entry = typeBlock.getOrCreateDefinedEntry(name);
         if(entry == null){
+            entry = typeBlock.getOrCreateDefinedEntry(name);
             throw new EncodeException("Undefined entry name: '"
                     + name + "', element = " + element);
         }
@@ -90,7 +91,8 @@ public class XMLValuesEncoder {
         }
     }
     private TypeBlock getTypeBlock(String type, String qualifiers){
-        PackageBlock packageBlock = getMaterials().getCurrentPackage();
+        PackageBlock packageBlock = getMaterials().getCurrentPackage()
+                .getTableBlock().getCurrentPackage();
         return packageBlock.getOrCreateTypeBlock(qualifiers, type);
     }
     void encodeAny(ValueItem value, String text){

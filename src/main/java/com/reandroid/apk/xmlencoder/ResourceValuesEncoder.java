@@ -79,7 +79,8 @@ public class ResourceValuesEncoder {
         encodeValue(is_bag, type, qualifiers, element);
     }
     public void encodeValue(boolean is_bag, String type, String qualifiers, XMLElement element){
-        PackageBlock packageBlock = getEncodeMaterials().getCurrentPackage();
+        PackageBlock packageBlock = getEncodeMaterials()
+                .getCurrentPackage().getTableBlock().getCurrentPackage();
         Entry entry = packageBlock
                 .getOrCreate(qualifiers, type, element.getAttributeValue("name"));
         encodeValue(is_bag, entry, element);
