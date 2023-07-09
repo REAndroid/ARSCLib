@@ -424,8 +424,11 @@ public class ApkModule implements ApkFile, Closeable {
         if(version == null){
             version = manifestBlock.getPlatformBuildVersionCode();
         }
+        Integer target = manifestBlock.getTargetSdkVersion();
         if(version == null){
-            version = manifestBlock.getTargetSdkVersion();
+            version = target;
+        }else if(target != null && target > version){
+            version = target;
         }
         return version;
     }
