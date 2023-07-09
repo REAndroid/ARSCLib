@@ -163,16 +163,16 @@ public class Archive implements Closeable {
         return endRecord;
     }
 
-    public void extractAll(File dir) throws IOException {
-        extractAll(dir, null, null);
+    public int extractAll(File dir) throws IOException {
+        return extractAll(dir, null, null);
     }
-    public void extractAll(File dir, APKLogger logger) throws IOException {
-        extractAll(dir, null, logger);
+    public int extractAll(File dir, APKLogger logger) throws IOException {
+        return extractAll(dir, null, logger);
     }
-    public void extractAll(File dir, Predicate<ArchiveEntry> filter) throws IOException {
-        extractAll(dir, filter, null);
+    public int extractAll(File dir, Predicate<ArchiveEntry> filter) throws IOException {
+        return extractAll(dir, filter, null);
     }
-    public void extractAll(File dir, Predicate<ArchiveEntry> filter, APKLogger logger) throws IOException {
+    public int extractAll(File dir, Predicate<ArchiveEntry> filter, APKLogger logger) throws IOException {
         FilterIterator<ArchiveEntry> iterator =
                 new FilterIterator<ArchiveEntry>(getEntryList().iterator(), filter){
                     @Override
@@ -180,10 +180,13 @@ public class Archive implements Closeable {
                         return archiveEntry != null && !archiveEntry.isDirectory();
                     }
                 };
+        int result = 0;
         while (iterator.hasNext()){
             ArchiveEntry archiveEntry = iterator.next();
             extract(toFile(dir, archiveEntry), archiveEntry, logger);
+            result ++;
         }
+        return result;
     }
     public void extract(File file, ArchiveEntry archiveEntry) throws IOException{
         extract(file, archiveEntry, null);
