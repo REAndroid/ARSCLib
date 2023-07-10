@@ -16,6 +16,8 @@
 package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.array.ResValueMapArray;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.value.AttributeType;
@@ -23,19 +25,18 @@ import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.xml.XMLElement;
 
-import java.util.Iterator;
 import java.util.List;
 
 class XMLValuesEncoderPlurals extends XMLValuesEncoderBag{
-    XMLValuesEncoderPlurals(EncodeMaterials materials) {
-        super(materials);
+    XMLValuesEncoderPlurals(TableBlock tableBlock) {
+        super(tableBlock);
     }
     @Override
     protected void encodeChildes(XMLElement parentElement, ResTableMapEntry resValueBag){
+        PackageBlock packageBlock = resValueBag.getParentEntry().getPackageBlock();
         List<XMLElement> childElementList = parentElement.getChildElementList();
         int count = childElementList.size();
         ResValueMapArray itemArray = resValueBag.getValue();
-        EncodeMaterials materials = getMaterials();
         for(int i=0;i<count;i++){
             XMLElement child = childElementList.get(i);
             ResValueMap bagItem = itemArray.get(i);
@@ -49,7 +50,7 @@ class XMLValuesEncoderPlurals extends XMLValuesEncoderBag{
             bagItem.setName(quantity.getId());
 
             String valueText = child.getTextContent();
-            EncodeResult encodeResult = materials.encodeReference(valueText);
+            EncodeResult encodeResult = encodeReference(packageBlock, valueText);
             if(encodeResult != null){
                 bagItem.setTypeAndData(encodeResult.valueType, encodeResult.value);
                 continue;

@@ -35,19 +35,25 @@ public class ReferenceString {
         this.name = name;
     }
     public EncodeResult encode(TableBlock tableBlock){
+        return encode(tableBlock, null);
+    }
+    public EncodeResult encode(TableBlock tableBlock, EncodeResult notFound){
         ResourceEntry resourceEntry = tableBlock.getResource(packageName, type, name);
         if(resourceEntry != null){
             return new EncodeResult(getValueType(), resourceEntry.getResourceId());
         }
-        return null;
+        return notFound;
     }
     public EncodeResult encode(PackageBlock packageBlock){
+        return encode(packageBlock, null);
+    }
+    public EncodeResult encode(PackageBlock packageBlock, EncodeResult notFound){
         ResourceEntry resourceEntry = packageBlock.getTableBlock()
                 .getResource(packageBlock, packageName, type, name);
         if(resourceEntry != null){
             return new EncodeResult(getValueType(), resourceEntry.getResourceId());
         }
-        return null;
+        return notFound;
     }
     public ValueType getValueType(){
         if("?".equals(prefix)){

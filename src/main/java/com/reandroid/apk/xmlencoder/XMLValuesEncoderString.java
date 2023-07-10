@@ -15,14 +15,15 @@
  */
 package com.reandroid.apk.xmlencoder;
 
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLSpannable;
 
 public class XMLValuesEncoderString extends XMLValuesEncoder{
-    XMLValuesEncoderString(EncodeMaterials materials) {
-        super(materials);
+    XMLValuesEncoderString(TableBlock tableBlock) {
+        super(tableBlock);
     }
 
     @Override

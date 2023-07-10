@@ -28,6 +28,7 @@ import com.reandroid.arsc.value.Entry;
 import java.util.HashSet;
 import java.util.Set;
 
+@Deprecated
 public class EncodeMaterials {
     private PackageBlock currentPackage;
     private final Set<FrameworkTable> frameworkTables = new HashSet<>();

@@ -17,6 +17,7 @@ package com.reandroid.arsc.value.attribute;
 
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.value.*;
 
 public class AttributeBag {
@@ -31,14 +32,44 @@ public class AttributeBag {
     public boolean isEqualType(AttributeDataFormat valueType){
         return getFormat().isEqualType(valueType);
     }
-    public EncodeResult encodeEnumOrFlagValue(String valueString){
-        if(valueString==null || !isEnumOrFlag()){
+    public boolean isCompatible(ValueType valueType){
+        return AttributeDataFormat.contains(getFormats(), valueType);
+    }
+    public EncodeResult encode(String valueString){
+        EncodeResult encodeResult = encodeEnumOrFlagValue(valueString);
+        if(encodeResult != null){
+            return encodeResult;
+        }
+        AttributeDataFormat[] formats = getFormats();
+        if(formats != null){
+            encodeResult = ValueCoder.encode(valueString, formats);
+            if(encodeResult != null){
+                return encodeResult;
+            }
+        }
+        if(isCompatible(ValueType.STRING)){
             return null;
         }
-        int value=0;
-        boolean foundOnce=false;
-        String[] names=valueString.split("[\\s|]+");
-        for(String name:names){
+        if(isEnumOrFlag()){
+            return new EncodeResult("Invalid attribute enum/flag/value");
+        }
+        return new EncodeResult("Incompatible attribute value, expected formats "
+                + AttributeDataFormat.toString(formats));
+    }
+    public EncodeResult encodeEnumOrFlagValue(String valueString){
+        if(valueString == null || !isEnumOrFlag()){
+            return null;
+        }
+        EncodeResult encodeResult = ValueCoder
+                .encode(valueString, AttributeDataFormat.INTEGER);
+        if(encodeResult != null){
+            // Could be decoded as hex or integer
+            return encodeResult;
+        }
+        int value = 0;
+        boolean foundOnce = false;
+        String[] splitNames = valueString.split("[\\s|]+");
+        for(String name : splitNames){
             name = name.trim();
             AttributeBagItem item = searchByName(name);
             if(item == null){
@@ -47,13 +78,13 @@ public class AttributeBag {
                 }
                 continue;
             }
-            value|=item.getBagItem().getData();
-            foundOnce=true;
+            value |= item.getBagItem().getData();
+            foundOnce = true;
         }
         if(!foundOnce){
             return null;
         }
-        ValueType valueType = isFlag()?ValueType.HEX :ValueType.DEC;
+        ValueType valueType = isFlag() ? ValueType.HEX : ValueType.DEC;
         return new EncodeResult(valueType, value);
     }
     public String decodeAttributeValue(int attrValue){

@@ -17,6 +17,8 @@ package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.apk.ApkUtil;
 import com.reandroid.arsc.array.ResValueMapArray;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.coder.CoderInteger;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
@@ -28,11 +30,14 @@ import com.reandroid.xml.XMLElement;
 import java.util.Iterator;
 
 public class XMLValuesEncoderArray extends XMLValuesEncoderBag{
-    public XMLValuesEncoderArray(EncodeMaterials materials) {
-        super(materials);
+    public XMLValuesEncoderArray(TableBlock tableBlock) {
+        super(tableBlock);
     }
     @Override
     protected void encodeChildes(XMLElement parentElement, ResTableMapEntry mapEntry){
+        PackageBlock packageBlock = mapEntry.getParentEntry()
+                .getPackageBlock();
+        TableBlock tableBlock = packageBlock.getTableBlock();
         int count = parentElement.getChildElementsCount();
         String tagName = parentElement.getName();
         boolean force_string = false;
@@ -42,7 +47,6 @@ public class XMLValuesEncoderArray extends XMLValuesEncoderBag{
         }else if(ApkUtil.TAG_INTEGER_ARRAY.equals(tagName)){
             force_integer = true;
         }
-        EncodeMaterials materials = getMaterials();
         ResValueMapArray itemArray = mapEntry.getValue();
         Iterator<? extends XMLElement> iterator = parentElement.getElements();
         int i = -1;
@@ -58,7 +62,7 @@ public class XMLValuesEncoderArray extends XMLValuesEncoderBag{
                 EncodeResult unknown = ValueCoder.encodeUnknownResourceId(name);
                 int resourceId;
                 if(unknown == null){
-                    resourceId = materials.resolveLocalResourceId("id", name);
+                    resourceId = resolveLocalResourceId(packageBlock, "id", name);
                 }else {
                     resourceId = unknown.value;
                 }
@@ -66,7 +70,7 @@ public class XMLValuesEncoderArray extends XMLValuesEncoderBag{
             }
 
             String valueText = child.getTextContent();
-            EncodeResult encodeResult = getMaterials().encodeReference(valueText);
+            EncodeResult encodeResult = encodeReference(packageBlock, valueText);
             if(encodeResult != null){
                 bagItem.setTypeAndData(encodeResult.valueType, encodeResult.value);
                 continue;

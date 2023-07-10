@@ -15,7 +15,6 @@
  */
 package com.reandroid.apk;
 
-import com.reandroid.apk.xmlencoder.EncodeMaterials;
 import com.reandroid.apk.xmlencoder.XMLParseEncodeSource;
 import com.reandroid.apk.xmlencoder.XMLTableBlockEncoder;
 import com.reandroid.archive.FileInputSource;
@@ -32,7 +31,6 @@ import java.util.List;
 
 public class ApkModuleXmlEncoder extends ApkModuleEncoder{
     private final XMLTableBlockEncoder tableBlockEncoder;
-    private EncodeMaterials mEncodeMaterials;
     public ApkModuleXmlEncoder(){
         this.tableBlockEncoder = new XMLTableBlockEncoder();
     }
@@ -54,7 +52,6 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
 
     private void buildTableBlock(File mainDirectory) throws IOException {
         XMLTableBlockEncoder tableBlockEncoder = this.tableBlockEncoder;
-        tableBlockEncoder.setEncodeMaterials(getEncodeMaterials());
         tableBlockEncoder.scanMainDirectory(mainDirectory);
     }
     private void encodeManifestBinary(File mainDirectory) {
@@ -76,11 +73,15 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
             return;
         }
         logMessage("Add manifest: " + file.getName());
-        EncodeMaterials encodeMaterials = getEncodeMaterials();
         TableBlock tableBlock = getApkModule().getTableBlock();
-        PackageBlock packageBlock = encodeMaterials.pickMainPackageBlock(tableBlock);
+        PackageBlock packageBlock;
+        Integer packageId = this.tableBlockEncoder.getMainPackageId();
+        if(packageId != null){
+            packageBlock = tableBlock.pickOne(packageId);
+        }else {
+            packageBlock = tableBlock.pickOne();
+        }
         if(packageBlock != null){
-            encodeMaterials.setCurrentPackage(packageBlock);
             tableBlock.setCurrentPackage(packageBlock);
         }
         XMLParserSource xmlSource =
@@ -127,18 +128,6 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
             return entryList.get(0);
         }
         return null;
-    }
-    public EncodeMaterials getEncodeMaterials(){
-        EncodeMaterials materials = this.mEncodeMaterials;
-        if(materials == null){
-            materials = new EncodeMaterials();
-            materials.setAPKLogger(getApkLogger());
-            this.mEncodeMaterials = materials;
-        }
-        return materials;
-    }
-    public void setEncodeMaterials(EncodeMaterials encodeMaterials){
-        this.mEncodeMaterials = encodeMaterials;
     }
     @Override
     public void setApkLogger(APKLogger apkLogger) {

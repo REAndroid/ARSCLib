@@ -23,10 +23,24 @@ import java.util.Objects;
 public class EncodeResult {
     public final ValueType valueType;
     public final int value;
+    private final String error;
 
-    public EncodeResult(ValueType valueType, int value) {
+    public EncodeResult(ValueType valueType, int value, String error) {
         this.valueType = valueType;
         this.value = value;
+        this.error = error;
+    }
+    public EncodeResult(ValueType valueType, int value) {
+        this(valueType, value, null);
+    }
+    public EncodeResult(String error) {
+        this(ValueType.NULL, -1, error);
+    }
+    public String getError() {
+        return error;
+    }
+    public boolean isError(){
+        return getError() != null;
     }
     @Override
     public boolean equals(Object obj) {
@@ -37,14 +51,27 @@ public class EncodeResult {
             return false;
         }
         EncodeResult other = (EncodeResult) obj;
+        String error = getError();
+        if(error != null){
+            return error.equals(other.getError());
+        }
+        if(other.getError() != null){
+            return false;
+        }
         return value == other.value && valueType == other.valueType;
     }
     @Override
     public int hashCode() {
-        return Objects.hash(valueType, value);
+        return Objects.hash(valueType, value, getError());
     }
     @Override
     public String toString() {
+        String error = getError();
+        if(error != null){
+            return error;
+        }
         return valueType + ": " + HexUtil.toHex8(value);
     }
+
+    public static final EncodeResult RESOURCE_NOT_FOUND = new EncodeResult("RESOURCE NOT FOUND");
 }

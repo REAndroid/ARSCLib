@@ -272,6 +272,13 @@ public abstract class ValueItem extends BlockItem implements Value,
         setData(data);
     }
     public void setValue(EncodeResult encodeResult){
+        if(encodeResult == null){
+            throw new NullPointerException();
+        }
+        if(encodeResult.isError()){
+            throw new IllegalArgumentException("Can not set error value: "
+                    + encodeResult.getError());
+        }
         setTypeAndData(encodeResult.valueType, encodeResult.value);
     }
     public void setTypeAndData(ValueType valueType, int data){

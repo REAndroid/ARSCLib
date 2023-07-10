@@ -15,11 +15,69 @@
  */
 package com.reandroid.utils;
 
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 public class StringsUtil {
 
+    public static String toString(Collection<?> collection){
+        return toString(collection, MAX_STRING_APPEND);
+    }
+    public static String toString(Collection<?> collection, int max){
+        if(collection == null){
+            return "null";
+        }
+        if(max < 0){
+            max = collection.size();
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append("size=");
+        builder.append(collection.size());
+        builder.append(" [");
+        int count = 0;
+        Iterator<?> iterator = collection.iterator();
+        while (iterator.hasNext() && count < max){
+            if(count != 0){
+                builder.append(", ");
+            }
+            builder.append(iterator.next());
+            count ++;
+        }
+        if(count < collection.size()){
+            builder.append(" ... ");
+        }
+        builder.append(']');
+        return builder.toString();
+    }
+    public static String toString(Object[] elements){
+        return toString(elements, MAX_STRING_APPEND);
+    }
+    public static String toString(Object[] elements, int max){
+        if(elements == null){
+            return "null";
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append("length=");
+        builder.append(elements.length);
+        builder.append(" [");
+        if(max < 0 || max > elements.length){
+            max = elements.length;
+        }
+        int count;
+        for (count = 0; count < max; count++){
+            if(count != 0){
+                builder.append(", ");
+            }
+            builder.append(elements[count]);
+        }
+        if(count < elements.length){
+            builder.append(" ... ");
+        }
+        builder.append(']');
+        return builder.toString();
+    }
     public static String emptyToNull(String text){
         if(isEmpty(text)){
             return null;
@@ -151,4 +209,5 @@ public class StringsUtil {
         return -1;
     }
 
+    private static final int MAX_STRING_APPEND = 5;
 }

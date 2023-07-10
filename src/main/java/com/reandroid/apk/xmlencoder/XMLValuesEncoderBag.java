@@ -15,14 +15,15 @@
   */
 package com.reandroid.apk.xmlencoder;
 
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.xml.XMLElement;
 
 public abstract class XMLValuesEncoderBag extends XMLValuesEncoder{
-    public XMLValuesEncoderBag(EncodeMaterials materials) {
-        super(materials);
+    public XMLValuesEncoderBag(TableBlock tableBlock) {
+        super(tableBlock);
     }
     @Override
     public final void encodeValue(Entry entry, XMLElement element){
@@ -33,8 +34,11 @@ public abstract class XMLValuesEncoderBag extends XMLValuesEncoder{
         ResTableMapEntry tableMapEntry = (ResTableMapEntry) entry.getTableEntry();
         String parent = element.getAttributeValue("parent");
         if(!EncodeUtil.isEmpty(parent)){
-            int parentId = getMaterials().resolveReference(parent);
-            tableMapEntry.setParentId(parentId);
+            EncodeResult parentId = resolveReference(entry.getPackageBlock(), parent);
+            if(parentId == null){
+                throw new EncodeException("Resource not found: " + parent);
+            }
+            tableMapEntry.setParentId(parentId.value);
         }
         tableMapEntry.setValuesCount(getChildesCount(element));
         encodeChildes(element, tableMapEntry);
@@ -46,7 +50,7 @@ public abstract class XMLValuesEncoderBag extends XMLValuesEncoder{
             return false;
         }
         String text = element.getTextContent();
-        EncodeResult encodeResult = getMaterials().encodeReference(text);
+        EncodeResult encodeResult = encodeReference(entry.getPackageBlock(), text);
         if(encodeResult != null){
             entry.setValueAsRaw(encodeResult.valueType, encodeResult.value);
             return true;

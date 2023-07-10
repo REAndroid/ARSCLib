@@ -46,7 +46,6 @@ public class ResXmlPullSerializer implements XmlSerializer {
         }
         return document;
     }
-
     public void setValidateValues(boolean validateValues) {
         this.mValidateValues = validateValues;
     }
@@ -250,7 +249,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
             }
         }
         ResXmlAttribute resXmlAttribute = element.newAttribute();
-        encode(resXmlAttribute, namespace, prefix, name, value);
+        resXmlAttribute.encode(namespace, prefix, name, value, isValidateValues());
         return this;
     }
 
@@ -341,94 +340,6 @@ public class ResXmlPullSerializer implements XmlSerializer {
             mCurrentText = builder;
         }
         builder.append(text);
-    }
-    private void encode(ResXmlAttribute attribute, String uri, String prefix, String name, String value) throws IOException {
-        attribute.setNamespace(uri, prefix);
-        ResourceEntry attrResource = null;
-        Entry attrEntry;
-        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(name);
-        if(encodeResult != null){
-            attribute.setName(name, encodeResult.value);
-        }else if(prefix != null){
-            attrResource = getTableBlock().getAttrResource(prefix, name);
-            if(attrResource == null){
-                throw new IOException("Unknown attribute name '" + prefix + ":" + name + "'");
-            }
-            attribute.setName(attrResource.getName(), attrResource.getResourceId());
-            attribute.setNamespace(uri, prefix);
-        }else {
-            attribute.setName(name, 0);
-        }
-        encodeResult = encodeReference(value);
-        if(encodeResult != null){
-            attribute.setValue(encodeResult);
-            return;
-        }
-        AttributeDataFormat[] formats = null;
-        if(attrResource != null){
-            attrResource = attrResource.resolveReference();
-            attrEntry = attrResource.get();
-            AttributeBag attributeBag = AttributeBag.create(attrEntry);
-            if(attributeBag != null){
-                formats = attributeBag.getFormats();
-                if(attributeBag.isEnumOrFlag()){
-                    encodeResult = attributeBag.encodeEnumOrFlagValue(value);
-                    if(encodeResult == null){
-                        // Could be decoded as hex or integer
-                        encodeResult = ValueCoder.encode(value, CommonType.INTEGER.valueTypes());
-                    }
-                    if(encodeResult == null && formats != null){
-                        encodeResult = ValueCoder.encode(value, formats);
-                    }
-                    if(encodeResult == null){
-                        if(isValidateValues()){
-                            String msg = "Invalid attribute enum/flag/value '" + name + "=\"" + value + "\"'";
-                            throw new IOException(msg);
-                        }
-                        encodeResult = ValueCoder.encode(value);
-                    }
-                    if(encodeResult != null){
-                        attribute.setValue(encodeResult);
-                        return;
-                    }
-                }
-            }
-        }
-        boolean allowString = attrResource == null;
-        if(formats != null){
-            encodeResult = ValueCoder.encode(value, formats);
-            if(encodeResult == null){
-                allowString = AttributeDataFormat.contains(formats, ValueType.STRING);
-            }
-        }
-        if(encodeResult != null){
-            attribute.setValue(encodeResult);
-            return;
-        }
-        if(!allowString && isValidateValues()){
-            throw new IOException("Invalid attribute value "
-                    + name + "=\"" + value + "\"");
-        }
-        attribute.setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
-    }
-    private EncodeResult encodeReference(String text) throws IOException {
-        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(text);
-        if(encodeResult != null){
-            return encodeResult;
-        }
-        ReferenceString referenceString = ReferenceString.parseReference(text);
-        if(referenceString == null){
-            return null;
-        }
-        encodeResult = referenceString.encode(getTableBlock());
-        if(encodeResult == null){
-            throw new IOException("Unknown reference: " + text);
-        }
-        return encodeResult;
-    }
-    private TableBlock getTableBlock(){
-        PackageBlock packageBlock = getCurrentPackage();
-        return packageBlock.getTableBlock();
     }
     private static boolean isIndent(String text){
         if(text.length() == 0){

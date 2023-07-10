@@ -31,6 +31,7 @@ import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.xml.XMLAttribute;
+import com.reandroid.xml.XMLUtil;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
@@ -92,16 +93,33 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     public String getUri(){
         return getString(getNamespaceReference());
     }
+    /**
+     * Use getName(true)
+     * */
+    @Deprecated
     public String getFullName(){
-        String name=getName();
-        if(name==null){
-            return null;
+        return getName(true);
+    }
+    public boolean equalsName(String name){
+        if(name == null){
+            return getName() == null;
         }
-        String prefix=getNamePrefix();
-        if(prefix==null){
+        String prefix = XMLUtil.splitPrefix(name);
+        if(prefix != null && !prefix.equals(getNamePrefix())){
+            return false;
+        }
+        return name.equals(getName());
+    }
+    public String getName(boolean includePrefix){
+        String name = getName();
+        if(name == null || !includePrefix){
             return name;
         }
-        return prefix+":"+name;
+        String prefix = getNamePrefix();
+        if(prefix == null){
+            return name;
+        }
+        return prefix + ":" + name;
     }
     public String getName(){
         return getString(getNameReference());
@@ -517,9 +535,13 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     }
     public void encode(String uri, String prefix, String name, String value, boolean validate) throws IOException {
         ResourceEntry attrResource = encodeName(uri, prefix, name);
-        PackageBlock packageBlock = getPackageBlock();
-        EncodeResult encodeResult = ReferenceString.encodeReference(packageBlock, value);
+        EncodeResult encodeResult = ValueCoder
+                .encodeReference(getPackageBlock(), value);
         if(encodeResult != null){
+            if(encodeResult.isError()){
+                throw new IOException(buildErrorMessage(
+                        encodeResult.getError(), value));
+            }
             setValue(encodeResult);
             return;
         }
@@ -536,49 +558,33 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
             return;
         }
         AttributeBag attributeBag = AttributeBag.create(attrResource.get());
-        AttributeDataFormat[] formats = attributeBag.getFormats();
-        if(attributeBag.isEnumOrFlag()){
-            encodeResult = attributeBag.encodeEnumOrFlagValue(value);
-            if(encodeResult == null){
-                // Could be decoded as hex or integer
-                encodeResult = ValueCoder.encode(value, CommonType.INTEGER.valueTypes());
-            }
-            if(encodeResult == null && formats != null){
-                encodeResult = ValueCoder.encode(value, formats);
-            }
-            if(encodeResult == null){
-                if(validate && !AttributeDataFormat.contains(formats, ValueType.STRING)){
-                    String msg = "Invalid attribute enum/flag/value '" + name + "=\"" + value + "\"'";
-                    throw new IOException(msg);
+        encodeResult = attributeBag.encode(value);
+        if(encodeResult != null){
+            if(encodeResult.isError()){
+                if(validate){
+                    throw new IOException(buildErrorMessage(
+                            encodeResult.getError(), value));
                 }
+                logEncodeError(encodeResult, value);
             }else {
                 setValue(encodeResult);
                 return;
             }
         }
-        if(formats != null){
-            encodeResult = ValueCoder.encode(value, formats);
-            if(encodeResult != null){
-                setValue(encodeResult);
-                return;
-            }
-            if(!AttributeDataFormat.contains(formats, ValueType.STRING)){
-                if(validate){
-                    if(prefix != null){
-                        name = prefix + ":" + name;
-                    }
-                    throw new IOException("Incompatible attribute value "
-                            + name + "=\"" + value + "\"" + ", expected types: "
-                            + AttributeDataFormat.toString(formats));
-                }
-                encodeResult = ValueCoder.encode(value);
-                if(encodeResult != null){
-                    setValue(encodeResult);
-                    return;
-                }
-            }
+        encodeResult = ValueCoder.encode(value);
+        if(encodeResult != null){
+            setValue(encodeResult);
+            return;
         }
         setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
+    }
+    private void logEncodeError(EncodeResult error, String value){
+        System.out.println(buildErrorMessage(error.getError(), value));
+    }
+    private String buildErrorMessage(String msg, String value){
+        ResXmlElement parent = getParentResXmlElement();
+        return msg + ", at line = " + parent.getStartLineNumber() +", <"+ parent.getName(true) + " "
+                + getName(true) + "=\"" + value + "\"";
     }
 
     @Override
@@ -629,7 +635,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     }
     @Override
     public String toString(){
-        String fullName = getFullName();
+        String fullName = getName(true);
         if(fullName!=null ){
             int id=getNameResourceID();
             if(id!=0){

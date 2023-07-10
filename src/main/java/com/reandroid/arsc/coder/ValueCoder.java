@@ -15,15 +15,69 @@
  */
 package com.reandroid.arsc.coder;
 
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.ValueType;
+import com.reandroid.utils.StringsUtil;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class ValueCoder {
 
+    public static EncodeResult encodeReference(PackageBlock packageBlock, String value){
+        if(value == null || value.length() < 3){
+            return null;
+        }
+        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(value);
+        if(encodeResult != null){
+            return encodeResult;
+        }
+        ReferenceString referenceString = ReferenceString.parseReference(value);
+        if(referenceString != null){
+            encodeResult = referenceString.encode(packageBlock, EncodeResult.RESOURCE_NOT_FOUND);
+            if(encodeResult.isError()){
+                encodeResult = new EncodeResult(
+                        buildResourceNotFoundMessage(packageBlock, value));
+            }
+            return encodeResult;
+        }
+        return null;
+    }
+    public static EncodeResult encodeReference(TableBlock tableBlock, String value){
+        if(value == null || value.length() < 3){
+            return null;
+        }
+        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(value);
+        if(encodeResult != null){
+            return encodeResult;
+        }
+        ReferenceString referenceString = ReferenceString.parseReference(value);
+        if(referenceString != null){
+            encodeResult = referenceString.encode(tableBlock, EncodeResult.RESOURCE_NOT_FOUND);
+            if(encodeResult.isError()){
+                encodeResult = new EncodeResult(
+                        buildResourceNotFoundMessage(tableBlock, value));
+            }
+            return encodeResult;
+        }
+        return null;
+    }
+    private static String buildResourceNotFoundMessage(PackageBlock packageBlock, String value){
+        TableBlock tableBlock = packageBlock.getTableBlock();
+        if(tableBlock == null){
+            return "Resource not found for: '" + value +
+                    "', package " + packageBlock + ", parent table = null";
+        }
+        return buildResourceNotFoundMessage(tableBlock, value);
+    }
+    private static String buildResourceNotFoundMessage(TableBlock tableBlock, String value){
+        return "Resource not found for: '" + value +
+                "', frameworks " +
+                StringsUtil.toString(tableBlock.getFrameWorks());
+    }
     public static String decodeUnknownResourceId(boolean is_reference, int referenceId){
         String prefix;
         if(is_reference){

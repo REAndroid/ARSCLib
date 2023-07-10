@@ -172,8 +172,8 @@ public class ResXmlStartElement extends BaseXmlChunk {
             return null;
         }
         for(ResXmlAttribute attribute:listResXmlAttributes()){
-            if(name.equals(attribute.getName())||name.equals(attribute.getFullName())){
-                if(uri!=null){
+            if(attribute.equalsName(name)){
+                if(uri != null){
                     if(uri.equals(attribute.getUri())){
                         return attribute;
                     }
@@ -186,22 +186,27 @@ public class ResXmlStartElement extends BaseXmlChunk {
     }
     // Searches attribute with resource id = 0
     public ResXmlAttribute searchAttributeByName(String name){
-        if(name==null){
+        if(name == null){
             return null;
         }
+        ResXmlAttribute withIdAttribute = null;
         for(ResXmlAttribute attribute:listResXmlAttributes()){
-            if(name.equals(attribute.getName()) || name.equals(attribute.getFullName())){
+            if(attribute.equalsName(name)){
+                if(attribute.getNameResourceID() != 0){
+                    withIdAttribute = attribute;
+                    continue;
+                }
                 return attribute;
             }
         }
-        return null;
+        return withIdAttribute;
     }
     public ResXmlAttribute searchAttributeByResourceId(int resourceId){
-        if(resourceId==0){
+        if(resourceId == 0){
             return null;
         }
         for(ResXmlAttribute attribute:listResXmlAttributes()){
-            if(resourceId==attribute.getNameResourceID()){
+            if(resourceId == attribute.getNameResourceID()){
                 return attribute;
             }
         }

@@ -21,7 +21,6 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.coder.ReferenceString;
-import com.reandroid.arsc.model.FrameworkTable;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.json.JSONObject;
@@ -41,7 +40,7 @@ public class XMLTableBlockEncoder {
     private final TableBlock tableBlock;
     private final Set<File> parsedFiles = new HashSet<>();
     private final ApkModule apkModule;
-    private EncodeMaterials mEncodeMaterials;
+    private Integer mMainPackageId;
 
     public XMLTableBlockEncoder(ApkModule apkModule, TableBlock tableBlock){
         this.apkModule = apkModule;
@@ -59,18 +58,11 @@ public class XMLTableBlockEncoder {
         this(new ApkModule("encoded",
                 new APKArchive()), new TableBlock());
     }
-    public EncodeMaterials getEncodeMaterials(){
-        EncodeMaterials materials = this.mEncodeMaterials;
-        if(materials == null){
-            materials = new EncodeMaterials();
-            materials.setAPKLogger(getApkLogger());
-            this.mEncodeMaterials = materials;
-        }
-        return materials;
+
+    public Integer getMainPackageId() {
+        return mMainPackageId;
     }
-    public void setEncodeMaterials(EncodeMaterials encodeMaterials){
-        this.mEncodeMaterials = encodeMaterials;
-    }
+
     public TableBlock getTableBlock(){
         return tableBlock;
     }
@@ -188,17 +180,15 @@ public class XMLTableBlockEncoder {
     private void encodeAttrs(List<File> pubXmlFileList) throws IOException, XmlPullParserException {
         logMessage("Encoding attrs ...");
 
-        EncodeMaterials encodeMaterials = getEncodeMaterials();
         TableBlock tableBlock = getTableBlock();
 
         for(File pubXmlFile : pubXmlFileList){
             addParsedFiles(pubXmlFile);
 
             PackageBlock packageBlock = tableBlock.getPackageBlockByTag(pubXmlFile);
-            encodeMaterials.setCurrentPackage(packageBlock);
             tableBlock.setCurrentPackage(packageBlock);
 
-            ResourceValuesEncoder valuesEncoder = new ResourceValuesEncoder(encodeMaterials);
+            ResourceValuesEncoder valuesEncoder = new ResourceValuesEncoder(tableBlock);
             List<File> attrFiles = listAttrs(pubXmlFile);
             if(attrFiles.size() == 0){
                 continue;
@@ -231,18 +221,12 @@ public class XMLTableBlockEncoder {
         } catch (XmlPullParserException ex) {
             throw new IOException(ex);
         }
-        EncodeMaterials encodeMaterials = getEncodeMaterials();
+        TableBlock tableBlock = getTableBlock();
         FrameworkApk frameworkApk = getApkModule().initializeAndroidFramework(xmlDocument);
-        if(frameworkApk == null){
-            for(TableBlock frame : getApkModule().getLoadedFrameworks()){
-                if(frame instanceof FrameworkTable){
-                    encodeMaterials.addFramework((FrameworkTable) frame);
-                }
-            }
-        }else {
-            encodeMaterials.addFramework(frameworkApk);
+        if(frameworkApk != null){
+            tableBlock.addFramework(frameworkApk.getTableBlock());
         }
-        initializeMainPackageId(encodeMaterials, xmlDocument);
+        initializeMainPackageId(xmlDocument);
     }
     private void initializeFrameworkFromBinaryManifest() throws IOException {
         ApkModule apkModule = getApkModule();
@@ -252,9 +236,9 @@ public class XMLTableBlockEncoder {
         logMessage("Initialize framework from binary manifest ...");
         FrameworkApk frameworkApk = apkModule.initializeAndroidFramework(
                 apkModule.getAndroidFrameworkVersion());
-        getEncodeMaterials().addFramework(frameworkApk);
+        getTableBlock().addFramework(frameworkApk.getTableBlock());
     }
-    private void initializeMainPackageId(EncodeMaterials encodeMaterials, XMLDocument xmlDocument) throws IOException {
+    private void initializeMainPackageId(XMLDocument xmlDocument) {
         XMLElement manifestRoot = xmlDocument.getDocumentElement();
         if(manifestRoot == null){
             return;
@@ -281,7 +265,7 @@ public class XMLTableBlockEncoder {
             return;
         }
         int packageId = (resourceId >> 24 ) & 0xff;
-        encodeMaterials.setMainPackageId(packageId);
+        this.mMainPackageId = packageId;
         logMessage("Main package id initialized: id = "
                 + HexUtil.toHex2((byte)packageId) + ", from: " + ref );
     }
@@ -306,8 +290,7 @@ public class XMLTableBlockEncoder {
         }
     }
     private void encodeValuesDir(File valuesDir) throws IOException, XmlPullParserException {
-        EncodeMaterials materials = getEncodeMaterials();
-        ResourceValuesEncoder valuesEncoder = new ResourceValuesEncoder(materials);
+        ResourceValuesEncoder valuesEncoder = new ResourceValuesEncoder(getTableBlock());
         List<File> xmlFiles = ApkUtil.listFiles(valuesDir, ".xml");
         EncodeUtil.sortValuesXml(xmlFiles);
         for(File file:xmlFiles){
@@ -387,12 +370,6 @@ public class XMLTableBlockEncoder {
         APKLogger apkLogger = getApkLogger();
         if(apkLogger!=null){
             apkLogger.logMessage(msg);
-        }
-    }
-    private void logError(String msg, Throwable tr) {
-        APKLogger apkLogger = getApkLogger();
-        if(apkLogger!=null){
-            apkLogger.logError(msg, tr);
         }
     }
     private void logVerbose(String msg) {

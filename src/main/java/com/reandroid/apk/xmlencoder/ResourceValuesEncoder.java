@@ -15,7 +15,9 @@
   */
 package com.reandroid.apk.xmlencoder;
 
+import com.reandroid.apk.APKLogger;
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.arsc.value.Entry;
@@ -30,37 +32,38 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class ResourceValuesEncoder {
-    private final EncodeMaterials materials;
+    private final TableBlock tableBlock;
     private final Map<String, XMLValuesEncoder> xmlEncodersMap;
     private final Map<String, XMLValuesEncoderBag> xmlBagEncodersMap;
     private final XMLValuesEncoder commonEncoder;
     private final XMLValuesEncoderBag bagCommonEncoder;
+    private APKLogger apkLogger;
 
-    public ResourceValuesEncoder(EncodeMaterials materials){
-        this.materials = materials;
-        this.commonEncoder = new XMLValuesEncoder(materials);
+    public ResourceValuesEncoder(TableBlock tableBlock){
+        this.tableBlock = tableBlock;
+        this.commonEncoder = new XMLValuesEncoder(tableBlock);
         Map<String, XMLValuesEncoder> map = new HashMap<>();
-        map.put("id", new XMLValuesEncoderId(materials));
-        map.put("string", new XMLValuesEncoderString(materials));
+        map.put("id", new XMLValuesEncoderId(tableBlock));
+        map.put("string", new XMLValuesEncoderString(tableBlock));
 
         this.xmlEncodersMap = map;
 
         Map<String, XMLValuesEncoderBag> mapBag = new HashMap<>();
-        XMLValuesEncoderAttr encoderAttr = new XMLValuesEncoderAttr(materials);
+        XMLValuesEncoderAttr encoderAttr = new XMLValuesEncoderAttr(tableBlock);
         mapBag.put("attr", encoderAttr);
         mapBag.put("^attr-private", encoderAttr);
-        mapBag.put("plurals", new XMLValuesEncoderPlurals(materials));
-        mapBag.put("array", new XMLValuesEncoderArray(materials));
-        mapBag.put("style", new XMLValuesEncoderStyle(materials));
+        mapBag.put("plurals", new XMLValuesEncoderPlurals(tableBlock));
+        mapBag.put("array", new XMLValuesEncoderArray(tableBlock));
+        mapBag.put("style", new XMLValuesEncoderStyle(tableBlock));
         this.xmlBagEncodersMap = mapBag;
-        this.bagCommonEncoder = new XMLValuesEncoderStyle(materials);
+        this.bagCommonEncoder = new XMLValuesEncoderStyle(tableBlock);
 
     }
     public void encodeValuesXml(File valuesXmlFile) throws IOException, XmlPullParserException {
         if(valuesXmlFile.getName().equals("public.xml")){
             return;
         }
-        materials.logVerbose("Encoding: " + IOUtil.shortPath(valuesXmlFile, 4));
+        logVerbose("Encoding: " + IOUtil.shortPath(valuesXmlFile, 4));
 
         String type = EncodeUtil.getTypeNameFromValuesXml(valuesXmlFile);
         String qualifiers = EncodeUtil.getQualifiersFromValuesXml(valuesXmlFile);
@@ -79,7 +82,7 @@ public class ResourceValuesEncoder {
         encodeValue(is_bag, type, qualifiers, element);
     }
     public void encodeValue(boolean is_bag, String type, String qualifiers, XMLElement element){
-        PackageBlock packageBlock = getEncodeMaterials()
+        PackageBlock packageBlock = getTableBlock()
                 .getCurrentPackage().getTableBlock().getCurrentPackage();
         Entry entry = packageBlock
                 .getOrCreate(qualifiers, type, element.getAttributeValue("name"));
@@ -113,8 +116,8 @@ public class ResourceValuesEncoder {
         }
         encoder.encode(type, qualifiers, xmlDocument);
     }
-    public EncodeMaterials getEncodeMaterials(){
-        return materials;
+    public TableBlock getTableBlock(){
+        return tableBlock;
     }
     private void encodeValuesXml(String type, String qualifiers, XMLDocument xmlDocument) {
         type=getType(xmlDocument, type);
@@ -220,5 +223,23 @@ public class ResourceValuesEncoder {
             return encoder;
         }
         return bagCommonEncoder;
+    }
+    public void setAPKLogger(APKLogger logger) {
+        this.apkLogger = logger;
+    }
+    public void logMessage(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logMessage(msg);
+        }
+    }
+    public void logError(String msg, Throwable tr) {
+        if(apkLogger!=null){
+            apkLogger.logError(msg, tr);
+        }
+    }
+    public void logVerbose(String msg) {
+        if(apkLogger!=null){
+            apkLogger.logVerbose(msg);
+        }
     }
 }

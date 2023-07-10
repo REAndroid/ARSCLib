@@ -24,7 +24,8 @@ import com.reandroid.xml.source.XMLSource;
 
 import java.io.IOException;
 import java.io.OutputStream;
-
+// Use XMLParseEncodeSource
+@Deprecated
 public class XMLEncodeSource extends ByteInputSource {
     private final EncodeMaterials encodeMaterials;
     private final XMLSource xmlSource;
@@ -79,7 +80,7 @@ public class XMLEncodeSource extends ByteInputSource {
             return resXmlDocument;
         }
         try {
-            XMLFileEncoder xmlFileEncoder=new XMLFileEncoder(encodeMaterials);
+            XMLFileEncoder xmlFileEncoder=new XMLFileEncoder(this.encodeMaterials);
             xmlFileEncoder.setCurrentPath(xmlSource.getPath());
             EncodeMaterials encodeMaterials = this.encodeMaterials;
             encodeMaterials.logVerbose("Encoding xml: " + xmlSource.getPath());

@@ -16,22 +16,25 @@
 package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.coder.*;
 import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.arsc.value.ValueType;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 
 import java.util.Iterator;
 
 public class XMLValuesEncoder {
-    private final EncodeMaterials materials;
-    XMLValuesEncoder(EncodeMaterials materials){
-        this.materials=materials;
+    private final TableBlock tableBlock;
+    XMLValuesEncoder(TableBlock tableBlock){
+        this.tableBlock = tableBlock;
     }
     public void encode(String type, String qualifiers, XMLDocument xmlDocument){
         XMLElement documentElement = xmlDocument.getDocumentElement();
@@ -50,7 +53,6 @@ public class XMLValuesEncoder {
         String name = element.getAttributeValue("name");
         Entry entry = typeBlock.getOrCreateDefinedEntry(name);
         if(entry == null){
-            entry = typeBlock.getOrCreateDefinedEntry(name);
             throw new EncodeException("Undefined entry name: '"
                     + name + "', element = " + element);
         }
@@ -59,8 +61,8 @@ public class XMLValuesEncoder {
     }
     public void encodeValue(Entry entry, XMLElement element){
         String value = getValue(element);
-        EncodeResult encodeResult = getMaterials()
-                .encodeReference(value);
+        EncodeResult encodeResult = resolveReference(
+                entry.getPackageBlock(), value);
         if(encodeResult != null){
             entry.setValueAsRaw(encodeResult.valueType, encodeResult.value);
             return;
@@ -72,13 +74,19 @@ public class XMLValuesEncoder {
         }
         encodeValue(entry, expectedTypes, value);
     }
+    EncodeResult resolveReference(PackageBlock packageBlock, String value){
+        EncodeResult encodeResult = ValueCoder.encodeReference(packageBlock, value);
+        if(encodeResult == null || !encodeResult.isError()){
+            return encodeResult;
+        }
+        throw new EncodeException(encodeResult.getError());
+    }
     public void encodeValue(Entry entry, String text){
         ValueType[] expectedTypes = CommonType.getExpectedTypes(entry.getTypeName());
         encodeValue(entry, expectedTypes, text);
     }
     public void encodeValue(Entry entry, ValueType[] expectedTypes, String text){
-        EncodeResult encodeResult = getMaterials()
-                .encodeReference(text);
+        EncodeResult encodeResult = resolveReference(entry.getPackageBlock(), text);
         if(encodeResult == null){
             encodeResult = ValueCoder.encode(text, expectedTypes);
         }
@@ -91,12 +99,11 @@ public class XMLValuesEncoder {
         }
     }
     private TypeBlock getTypeBlock(String type, String qualifiers){
-        PackageBlock packageBlock = getMaterials().getCurrentPackage()
-                .getTableBlock().getCurrentPackage();
+        PackageBlock packageBlock = getTableBlock().getCurrentPackage();
         return packageBlock.getOrCreateTypeBlock(qualifiers, type);
     }
-    void encodeAny(ValueItem value, String text){
-        EncodeResult encodeResult = getMaterials().encodeReference(text);
+    void encodeAny(PackageBlock packageBlock, ValueItem value, String text){
+        EncodeResult encodeResult = encodeReference(packageBlock, text);
         if(encodeResult == null){
             encodeResult = ValueCoder.encode(text);
         }
@@ -106,8 +113,25 @@ public class XMLValuesEncoder {
         }
         value.setValueAsString(text);
     }
-    EncodeMaterials getMaterials() {
-        return materials;
+    EncodeResult encodeReference(PackageBlock packageBlock, String text){
+        EncodeResult encodeResult = ValueCoder.encodeReference(packageBlock, text);
+        if(encodeResult != null && encodeResult.isError()){
+            throw new EncodeException(encodeResult.getError());
+        }
+        return encodeResult;
+    }
+    TableBlock getTableBlock(){
+        return this.tableBlock;
+    }
+    int resolveLocalResourceId(PackageBlock packageBlock, String type, String name){
+        com.reandroid.arsc.chunk.TableBlock tableBlock = packageBlock.getTableBlock();
+        ResourceEntry resourceEntry = tableBlock.getLocalResource(packageBlock, type, name);
+        if(resourceEntry != null){
+            return resourceEntry.getResourceId();
+        }
+        throw new EncodeException("Local entry not found: " +
+                "@" + type + "/" + name + ", frameworks "
+                + StringsUtil.toString(tableBlock.getFrameWorks()));
     }
     static String getValue(XMLElement element){
         String value = element.getTextContent();

@@ -16,6 +16,8 @@
 package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.arsc.array.ResValueMapArray;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.coder.CommonType;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
@@ -28,8 +30,8 @@ import java.util.Iterator;
 import java.util.List;
 
 public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
-    public XMLValuesEncoderAttr(EncodeMaterials materials) {
-        super(materials);
+    public XMLValuesEncoderAttr(TableBlock tableBlock) {
+        super(tableBlock);
     }
 
     @Override
@@ -112,6 +114,7 @@ public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
         AttributeDataFormat lastBagFormat = AttributeDataFormat.typeOfBag(
                 formatItem.getData());
 
+        PackageBlock packageBlock = mapEntry.getParentEntry().getPackageBlock();
         for(int i = 0; i < count; i++){
             XMLElement child = childElements.get(i);
             AttributeDataFormat bagFormat = AttributeDataFormat.fromBagTypeName(child.getName());
@@ -120,7 +123,7 @@ public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
                 lastBagFormat = bagFormat;
             }
             String name = child.getAttributeValue("name");
-            int resourceId =  decodeNameResourceId(name);
+            int resourceId =  decodeNameResourceId(packageBlock, name);
 
             ResValueMap valueMap = mapArray.get(i + offset);
             valueMap.setName(resourceId);
@@ -134,7 +137,7 @@ public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
             valueMap.setTypeAndData(encodeResult.valueType, encodeResult.value);
         }
     }
-    private int decodeNameResourceId(String name){
+    private int decodeNameResourceId(PackageBlock packageBlock, String name){
         EncodeResult unknown = ValueCoder.encodeUnknownResourceId(name);
         int resourceId;
         if(unknown == null){
@@ -143,7 +146,7 @@ public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
                 name=name.substring(i+1);
             }
             //TODO: include package name
-            resourceId = getMaterials().resolveLocalResourceId("id", name);
+            resourceId = resolveLocalResourceId(packageBlock, "id", name);
         }else {
             resourceId = unknown.value;
         }
