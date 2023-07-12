@@ -16,12 +16,85 @@
 package com.reandroid.archive2.block;
 
 import com.reandroid.archive2.ZipSignature;
+import com.reandroid.archive2.io.ZipInput;
 import com.reandroid.utils.HexUtil;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 public class EndRecord extends ZipHeader{
+    private Zip64Locator zip64Locator;
+    private Zip64Record zip64Record;
     public EndRecord() {
         super(MIN_LENGTH, ZipSignature.END_RECORD);
     }
+
+    private boolean isZip64Value(){
+        return getInteger(OFFSET_offsetOfCentralDirectory) == 0xffffffff;
+    }
+    public Zip64Locator getZip64Locator(){
+        return zip64Locator;
+    }
+    public void setZip64Locator(Zip64Locator zip64Locator){
+        this.zip64Locator = zip64Locator;
+    }
+    public Zip64Record getZip64Record(){
+        return zip64Record;
+    }
+    public void setZip64Record(Zip64Record zip64Record){
+        this.zip64Record = zip64Record;
+    }
+    public void findEndRecord(ZipInput zipInput) throws IOException {
+        byte[] footer = zipInput.getFooter(SignatureFooter.MIN_SIZE + EndRecord.MAX_LENGTH);
+        findEndRecord(footer);
+        Zip64Locator zip64Locator = getZip64Locator();
+        if(zip64Locator == null){
+            return;
+        }
+        Zip64Record zip64Record = new Zip64Record();
+        InputStream inputStream = zipInput.getInputStream(zip64Locator.getOffsetZip64Record(),
+                Zip64Record.MAX_LENGTH);
+        zip64Record.readBytes(inputStream);
+        if(!zip64Record.isValidSignature()){
+            throw new IOException("Invalid " + ZipSignature.ZIP64_RECORD + ": "
+                    + HexUtil.toHex8(zip64Record.getSignatureValue()));
+        }
+        setZip64Record(zip64Record);
+    }
+    public void findEndRecord(byte[] footer) throws IOException {
+        int length = footer.length;
+        int minLength = EndRecord.MIN_LENGTH;
+        int start = length - minLength;
+        int offset = 0;
+        for(offset = start; offset >= 0; offset--){
+            putBytes(footer, offset, 0, minLength);
+            if(isValidSignature()){
+                break;
+            }
+        }
+        if(!isValidSignature()){
+            throw new IOException("Failed to find end record");
+        }
+        if(!isZip64Value()){
+            return;
+        }
+        Zip64Locator zip64Locator = new Zip64Locator();
+        minLength = Zip64Locator.MIN_LENGTH;
+        offset = offset - minLength;
+        while (offset >= 0){
+            zip64Locator.putBytes(footer, offset, 0, minLength);
+            if(zip64Locator.isValidSignature()){
+                break;
+            }
+            offset--;
+        }
+        if(!zip64Locator.isValidSignature()){
+            throw new IOException("Failed to find zip64 locator");
+        }
+        setZip64Locator(zip64Locator);
+    }
+
+
     public int getNumberOfDisk(){
         return getShortUnsigned(OFFSET_numberOfDisk);
     }
@@ -39,24 +112,57 @@ public class EndRecord extends ZipHeader{
     }
     public void setNumberOfDirectories(int value){
         putShort(OFFSET_numberOfDirectories, value);
+        Zip64Record zip64Record = getZip64Record();
+        if(zip64Record != null){
+            zip64Record.setNumberOfCDRecords(value);
+        }
     }
     public int getTotalNumberOfDirectories(){
         return getShortUnsigned(OFFSET_totalNumberOfDirectories);
     }
     public void setTotalNumberOfDirectories(int value){
         putShort(OFFSET_totalNumberOfDirectories, value);
+        Zip64Record zip64Record = getZip64Record();
+        if(zip64Record != null){
+            zip64Record.setTotalCDRecords(value);
+        }
     }
     public long getLengthOfCentralDirectory(){
         return getIntegerUnsigned(OFFSET_lengthOfCentralDirectory);
     }
     public void setLengthOfCentralDirectory(long value){
         putInteger(OFFSET_lengthOfCentralDirectory, value);
+        Zip64Record zip64Record = getZip64Record();
+        if(zip64Record != null){
+            zip64Record.setSizeOfCD(value);
+        }
     }
     public long getOffsetOfCentralDirectory(){
+        Zip64Record zip64Record = getZip64Record();
+        if(zip64Record != null){
+            return zip64Record.getOffsetOfCentralDirectory();
+        }
         return getIntegerUnsigned(OFFSET_offsetOfCentralDirectory);
     }
-    public void setOffsetOfCentralDirectory(int value){
-        putInteger(OFFSET_offsetOfCentralDirectory, value);
+    public void setOffsetOfCentralDirectory(long value){
+        if((value & 0xffffffff00000000L) == 0){
+            putInteger(OFFSET_offsetOfCentralDirectory, value);
+            this.zip64Locator = null;
+            this.zip64Record = null;
+        }else {
+            Zip64Record zip64Record = this.zip64Record;
+            if(zip64Record == null){
+                zip64Record = Zip64Record.newZip64Record();
+                this.zip64Record = zip64Record;
+            }
+            putInteger(OFFSET_offsetOfCentralDirectory, -1);
+            zip64Record.setOffsetOfCentralDirectory(value);
+            Zip64Locator zip64Locator = this.zip64Locator;
+            if(zip64Locator == null){
+                zip64Locator = Zip64Locator.newZip64Locator();
+                this.zip64Locator = zip64Locator;
+            }
+        }
     }
     public int getLastShort(){
         return getShortUnsigned(OFFSET_lastShort);
@@ -73,6 +179,9 @@ public class EndRecord extends ZipHeader{
         }
         StringBuilder builder = new StringBuilder();
         builder.append(getSignature());
+        if(isZip64Value()){
+            builder.append(", ZIP64");
+        }
         builder.append(", disks=").append(getNumberOfDisk());
         builder.append(", start disk=").append(getCentralDirectoryStartDisk());
         builder.append(", dirs=").append(getNumberOfDirectories());

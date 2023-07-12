@@ -34,6 +34,17 @@ public class CentralEntryHeader extends CommonHeader {
     }
 
     @Override
+    boolean isZip64Value(){
+        return isZip64Value(getInteger(OFFSET_localRelativeOffset));
+    }
+    @Override
+    int getZip64BytesLength(){
+        return 12;
+    }
+    private int getOffsetZip64LocalRelativeOffset(){
+        return getOffsetZip64FieldLength() + 2;
+    }
+    @Override
     int readComment(InputStream inputStream) throws IOException {
         int commentLength = getCommentLength();
         if(commentLength==0){
@@ -90,10 +101,19 @@ public class CentralEntryHeader extends CommonHeader {
         putShort(OFFSET_commentLength, value);
     }
     public long getLocalRelativeOffset(){
+        if(isZip64()){
+            return getLong(getOffsetZip64LocalRelativeOffset());
+        }
         return getIntegerUnsigned(OFFSET_localRelativeOffset);
     }
     public void setLocalRelativeOffset(long offset){
-        putInteger(OFFSET_localRelativeOffset, offset);
+        if(isZip64Value() || isZip64Value(offset)){
+            ensureZip64();
+            putInteger(OFFSET_localRelativeOffset, -1);
+            putLong(getOffsetZip64LocalRelativeOffset(), offset);
+        }else {
+            putInteger(OFFSET_localRelativeOffset, offset);
+        }
     }
 
     public int getInternalFileAttributes(){
@@ -180,7 +200,6 @@ public class CentralEntryHeader extends CommonHeader {
         ceh.setCompressedSize(lfh.getCompressedSize());
         ceh.setSize(lfh.getSize());
         ceh.setFileName(lfh.getFileName());
-        ceh.setExtra(lfh.getExtra());
         return ceh;
     }
     private static final int OFFSET_signature = 0;

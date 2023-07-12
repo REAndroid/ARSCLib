@@ -37,7 +37,6 @@ public class LocalFileHeader extends CommonHeader {
         lfh.setCompressedSize(getCompressedSize());
         lfh.setSize(getSize());
         lfh.setCrc(getCrc());
-        lfh.setExtraLength(getExtraLength());
         DataDescriptor dd = getDataDescriptor();
         if(dd != null){
             lfh.setDataDescriptor(dd.copy());
@@ -64,6 +63,42 @@ public class LocalFileHeader extends CommonHeader {
         }
     }
 
+    @Override
+    public long getCompressedSize(){
+        if(isZip64()){
+            return getZip64CompressedSize();
+        }
+        return getIntegerUnsigned(getOffsetCompressedSize());
+    }
+    @Override
+    public void setCompressedSize(long value){
+        if(isZip64Value() || isZip64Value(value)){
+            ensureZip64();
+            putInteger(getOffsetCompressedSize(), -1);
+            setZip64CompressedSize(value);
+        }else {
+            putInteger(getOffsetCompressedSize(), value);
+        }
+    }
+
+    @Override
+    public long getSize(){
+        if(isZip64()){
+            return getZip64Size();
+        }
+        return getIntegerUnsigned(getOffsetSize());
+    }
+    @Override
+    public void setSize(long value){
+        if(isZip64Value() || isZip64Value(value)){
+            ensureZip64();
+            putInteger(getOffsetSize(), -1);
+            setZip64CompressedSize(value);
+        }else {
+            putInteger(getOffsetSize(), value);
+        }
+    }
+
     public DataDescriptor getDataDescriptor() {
         return dataDescriptor;
     }
@@ -83,7 +118,6 @@ public class LocalFileHeader extends CommonHeader {
         lfh.setCompressedSize(ceh.getCompressedSize());
         lfh.setSize(ceh.getSize());
         lfh.setFileName(ceh.getFileName());
-        lfh.setExtra(ceh.getExtra());
         return lfh;
     }
 

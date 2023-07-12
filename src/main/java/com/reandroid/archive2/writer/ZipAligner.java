@@ -61,7 +61,7 @@ public class ZipAligner {
         mCurrentOffset = 0;
     }
     void align(InputSource inputSource, LocalFileHeader lfh){
-        lfh.setExtra(null);
+        lfh.setZipAlign(0);
         int padding;
         if(inputSource.getMethod() != ZipEntry.STORED){
             padding = 0;
@@ -71,7 +71,7 @@ public class ZipAligner {
             long dataOffset = mCurrentOffset + lfh.countBytes();
             padding = (int) ((alignment - (dataOffset % alignment)) % alignment);
         }
-        lfh.setExtra(new byte[padding]);
+        lfh.setZipAlign(padding);
         mCurrentOffset += lfh.getDataSize() + lfh.countBytes();
         DataDescriptor dataDescriptor = lfh.getDataDescriptor();
         if(dataDescriptor!=null){

@@ -145,16 +145,22 @@ public abstract class CommonHeader extends ZipHeader {
         putInteger(offsetGeneralPurpose + 8, value);
     }
     public long getCompressedSize(){
-        return getIntegerUnsigned(offsetGeneralPurpose + 12);
+        return getIntegerUnsigned(getOffsetCompressedSize());
     }
     public void setCompressedSize(long value){
-        putInteger(offsetGeneralPurpose + 12, value);
+        putInteger(getOffsetCompressedSize(), -1);
+    }
+    int getOffsetCompressedSize(){
+        return offsetGeneralPurpose + 12;
     }
     public long getSize(){
-        return getIntegerUnsigned(offsetGeneralPurpose + 16);
+        return getIntegerUnsigned(getOffsetSize());
     }
     public void setSize(long value){
-        putInteger(offsetGeneralPurpose + 16, value);
+        putInteger(getOffsetSize(), value);
+    }
+    int getOffsetSize(){
+        return offsetGeneralPurpose + 16;
     }
     public int getFileNameLength(){
         return getShortUnsigned(offsetGeneralPurpose + 20);
@@ -171,6 +177,13 @@ public abstract class CommonHeader extends ZipHeader {
         int length = offsetFileName + getFileNameLength() + value + getCommentLength();
         super.setBytesLength(length, false);
         putShort(offsetGeneralPurpose + 22, value);
+    }
+    public void setZipAlign(int value){
+        int length = value;
+        if(isZip64()){
+            length = getZip64BytesLength() + value;
+        }
+        setExtraLength(length);
     }
     public byte[] getExtra(){
         int length = getExtraLength();
@@ -197,8 +210,69 @@ public abstract class CommonHeader extends ZipHeader {
     public int getCommentLength(){
         return 0;
     }
+
+
+    void ensureZip64(){
+        if(getExtraLength() >= getZip64BytesLength()){
+            return;
+        }
+        setExtraLength(getZip64BytesLength());
+    }
+
+    boolean isZip64(){
+        return isZip64Value() && getExtraLength() >= getZip64BytesLength();
+    }
+    boolean isZip64Value(){
+        return isZip64Value(getInteger(getOffsetCompressedSize()))
+                || isZip64Value(getInteger(getOffsetCompressedSize()));
+    }
+
+    public long getZip64CompressedSize(){
+        return getLong(getOffsetZip64CompressedSize());
+    }
+    public void setZip64CompressedSize(long value){
+        putLong(getOffsetZip64CompressedSize(), value);
+    }
+    public long getZip64Size(){
+        return getLong(getOffsetZip64Size());
+    }
+    void setZip64Size(long value){
+        putLong(getOffsetZip64Size(), value);
+    }
+    int getZip64FieldLength(){
+        return getShortUnsigned(getOffsetZip64FieldLength());
+    }
+    void setZip64FieldLength(int value){
+        putShort(getOffsetZip64FieldLength(), value);
+    }
+    int getZip64FieldHeader(){
+        return getShortUnsigned(getOffsetZip64FieldHeader());
+    }
+    void setZip64FieldHeader(int value){
+        putShort(getOffsetZip64FieldHeader(), value);
+    }
+
+
+    int getOffsetZip64CompressedSize(){
+        return getOffsetExtra() + 8;
+    }
+    private int getOffsetZip64Size(){
+        return getOffsetZip64FieldLength() + 2;
+    }
+    int getOffsetZip64FieldLength(){
+        return getOffsetZip64FieldHeader() + 2;
+    }
+    private int getOffsetZip64FieldHeader(){
+        return getOffsetZip64();
+    }
+    private int getOffsetZip64(){
+        return getOffsetExtra();
+    }
+    int getZip64BytesLength(){
+        return 20;
+    }
     int getOffsetComment(){
-        return offsetFileName + getFileNameLength() + getExtraLength();
+        return getOffsetExtra() + getExtraLength();
     }
     private int getOffsetExtra(){
         return offsetFileName + getFileNameLength();
@@ -324,6 +398,13 @@ public abstract class CommonHeader extends ZipHeader {
             time = (cal.get(Calendar.HOUR_OF_DAY) << 11) | time;
         }
         return ((long) date << 16) | time;
+    }
+
+    static boolean isZip64Value(long value){
+        return value == 0xffffffffL || (value & 0xffffffff00000000L) != 0;
+    }
+    static boolean isZip64Value(int value){
+        return value == 0xffffffff;
     }
 
     public static class GeneralPurposeFlag {

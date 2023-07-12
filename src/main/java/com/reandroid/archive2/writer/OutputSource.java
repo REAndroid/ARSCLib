@@ -43,7 +43,7 @@ class OutputSource {
     void align(ZipAligner aligner){
         LocalFileHeader lfh = getLocalFileHeader();
         if(aligner == null){
-            lfh.setExtra(null);
+            lfh.setZipAlign(0);
         }else {
             aligner.align(getInputSource(), lfh);
         }
@@ -161,7 +161,7 @@ class OutputSource {
     private void clearAlignment(LocalFileHeader lfh){
         lfh.getGeneralPurposeFlag().setHasDataDescriptor(false);
         lfh.setDataDescriptor(null);
-        lfh.setExtra(null);
+        lfh.setZipAlign(0);
     }
     private void logLargeFileWrite(){
         APKLogger logger =  this.apkLogger;

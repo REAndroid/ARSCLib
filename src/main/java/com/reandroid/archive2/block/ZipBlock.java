@@ -31,7 +31,9 @@ public abstract class ZipBlock extends BlockItem {
             return;
         }
         int size = putOffset + length;
-        setBytesLength(size, false);
+        if(size > countBytes()){
+            setBytesLength(size, false);
+        }
         System.arraycopy(bytes, offset, getBytesInternal(), putOffset, length);
     }
     @Override

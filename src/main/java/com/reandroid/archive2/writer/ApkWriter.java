@@ -22,6 +22,8 @@ import com.reandroid.archive.WriteProgress;
 import com.reandroid.archive2.ZipSignature;
 import com.reandroid.archive2.block.ApkSignatureBlock;
 import com.reandroid.archive2.block.EndRecord;
+import com.reandroid.archive2.block.Zip64Locator;
+import com.reandroid.archive2.block.Zip64Record;
 import com.reandroid.archive2.io.ArchiveEntrySource;
 import com.reandroid.archive2.io.ZipFileOutput;
 import com.reandroid.arsc.chunk.TableBlock;
@@ -76,7 +78,7 @@ public class ApkWriter extends ZipFileOutput {
         EndRecord endRecord = new EndRecord();
         endRecord.setSignature(ZipSignature.END_RECORD);
         long offset = position();
-        endRecord.setOffsetOfCentralDirectory((int) offset);
+        endRecord.setOffsetOfCentralDirectory(offset);
         endRecord.setNumberOfDirectories(outputList.size());
         endRecord.setTotalNumberOfDirectories(outputList.size());
         for(OutputSource outputSource:outputList){
@@ -84,6 +86,17 @@ public class ApkWriter extends ZipFileOutput {
         }
         long len = position() - offset;
         endRecord.setLengthOfCentralDirectory(len);
+        OutputStream outputStream = getOutputStream();
+        Zip64Record zip64Record = endRecord.getZip64Record();
+        if(zip64Record != null){
+            long offsetOfRecord = position();
+            logMessage("ZIP64: " + zip64Record);
+            zip64Record.writeBytes(outputStream);
+            Zip64Locator zip64Locator = endRecord.getZip64Locator();
+            zip64Locator.setOffsetZip64Record(offsetOfRecord);
+            logMessage("ZIP64: " + zip64Locator);
+            zip64Locator.writeBytes(outputStream);
+        }
         endRecord.writeBytes(getOutputStream());
     }
     private void writeApk(List<OutputSource> outputList) throws IOException{
