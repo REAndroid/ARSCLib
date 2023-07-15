@@ -148,7 +148,7 @@ public abstract class CommonHeader extends ZipHeader {
         return getIntegerUnsigned(getOffsetCompressedSize());
     }
     public void setCompressedSize(long value){
-        putInteger(getOffsetCompressedSize(), -1);
+        putInteger(getOffsetCompressedSize(), value);
     }
     int getOffsetCompressedSize(){
         return offsetGeneralPurpose + 12;
