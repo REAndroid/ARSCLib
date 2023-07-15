@@ -19,6 +19,7 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.xml.XMLUtil;
 
 public abstract class AttributeValue extends ValueItem{
     public AttributeValue(int bytesLength, int sizeOffset) {
@@ -35,22 +36,43 @@ public abstract class AttributeValue extends ValueItem{
     public ResourceEntry resolveName(){
         return resolve(getNameResourceID());
     }
+    public EncodeResult encodeStyleValue(ResourceEntry nameEntry, String value){
+        return encodeStyleValue(false, nameEntry, value);
+    }
+    public EncodeResult encodeStyleValue(boolean validate, ResourceEntry name, String value){
+        return ValueCoder.encodeAttributeValue(validate, this, name, value);
+    }
+    public ResourceEntry encodeAttrName(String name){
+        return encodeAttrName(XMLUtil.splitPrefix(name), XMLUtil.splitName(name));
+    }
     public ResourceEntry encodeAttrName(String prefix, String name){
+        if(name == null){
+            return null;
+        }
+        if(prefix == null){
+            prefix = XMLUtil.splitPrefix(name);
+        }
+        name = XMLUtil.splitName(name);
         EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(name);
         if(encodeResult != null){
             setName(name, encodeResult.value);
             return new ResourceEntry(getPackageBlock(), encodeResult.value);
         }
         if(prefix == null){
-            return null;
+            if(!allowNullPrefixEncode()){
+                return null;
+            }
         }
         PackageBlock packageBlock = getPackageBlock();
         ResourceEntry resourceEntry = packageBlock.getTableBlock()
-                .getAttrResource(prefix, name);
+                .getAttrResource(packageBlock, prefix, name);
         if(resourceEntry != null){
             setName(name, resourceEntry.getResourceId());
         }
         return resourceEntry;
+    }
+    boolean allowNullPrefixEncode(){
+        return false;
     }
     public void setName(String name, int nameId){
         setNameResourceID(nameId);

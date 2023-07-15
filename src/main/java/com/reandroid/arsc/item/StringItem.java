@@ -78,7 +78,14 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
     }
     public boolean hasReference(){
         ensureStringLinkUnlocked();
-        return mReferencedList.size()>0;
+        if(mReferencedList.size() == 0){
+            return false;
+        }
+        if(mReferencedList.size() != 1){
+            return true;
+        }
+        ReferenceItem referenceItem = mReferencedList.iterator().next();
+        return !(referenceItem instanceof StyleItem.StyleIndexReference);
     }
     public Collection<ReferenceItem> getReferencedList(){
         ensureStringLinkUnlocked();
@@ -128,26 +135,29 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         reUpdateReferences(newIndex);
     }
     public String getHtml(){
-        String str=get();
-        if(str==null){
+        String text = get();
+        if(text == null){
             return null;
         }
-        StyleItem styleItem=getStyle();
-        if(styleItem==null){
-            return str;
+        StyleItem styleItem = getStyle();
+        if(styleItem == null){
+            return text;
         }
-        return styleItem.applyHtml(str, false);
+        return styleItem.applyStyle(text, false, false);
     }
     public String getXml(){
-        String str=get();
-        if(str==null){
+        return getXml(false);
+    }
+    public String getXml(boolean escapeXmlText){
+        String text = get();
+        if(text == null){
             return null;
         }
-        StyleItem styleItem=getStyle();
-        if(styleItem==null){
-            return str;
+        StyleItem styleItem = getStyle();
+        if(styleItem == null){
+            return text;
         }
-        return styleItem.applyHtml(str, true);
+        return styleItem.applyStyle(text, true, escapeXmlText);
     }
     public String get(){
         return mCache;
@@ -164,7 +174,7 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         if(str==null){
             StyleItem styleItem = getStyle();
             if(styleItem!=null){
-                styleItem.onRemoved();
+                styleItem.clearStyle();
             }
         }
         byte[] bts=encodeString(str);
@@ -303,7 +313,7 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
     }
     @Override
     public String toString(){
-        String str = getHtml();
+        String str = getXml();
         if(str == null){
             return "NULL";
         }

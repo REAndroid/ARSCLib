@@ -20,10 +20,9 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
-import java.io.Writer;
 
 public class XMLComment extends XMLNode {
-    private String mText;
+    private String text;
     public XMLComment(String text){
         this();
         setText(text);
@@ -40,15 +39,22 @@ public class XMLComment extends XMLNode {
     }
 
     public void setText(String text){
-        mText = text;
+        this.text = text;
     }
     public String getText(){
-        return mText;
+        return getText(false);
+    }
+    public String getText(boolean escapeXmlText){
+        String text = this.text;
+        if(escapeXmlText){
+            return XMLUtil.escapeXmlChars(text);
+        }
+        return text;
     }
 
     @Override
     public void serialize(XmlSerializer serializer) throws IOException {
-        serializer.comment(getText());
+        serializer.comment(getText(false));
     }
     @Override
     public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
@@ -60,13 +66,21 @@ public class XMLComment extends XMLNode {
         parser.next();
     }
     @Override
-    void write(Appendable appendable) throws IOException {
+    void write(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
         appendable.append("<!-- ");
-        appendable.append(getText());
+        appendable.append(getText(escapeXmlText));
         appendable.append(" -->");
     }
     @Override
-    public String toText(int indent, boolean newLineAttributes) {
-        return null;
+    int appendDebugText(Appendable appendable, int limit, int length) throws IOException {
+        if(length >= limit){
+            return length;
+        }
+        String text = getText();
+        if(text != null){
+            appendable.append(text);
+            length = length + text.length();
+        }
+        return length;
     }
 }

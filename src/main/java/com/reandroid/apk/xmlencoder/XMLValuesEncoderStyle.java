@@ -21,11 +21,9 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.coder.XmlSanitizer;
-import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.*;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.xml.XMLElement;
-import com.reandroid.xml.XMLUtil;
 
 import java.util.List;
 
@@ -35,33 +33,18 @@ public class XMLValuesEncoderStyle extends XMLValuesEncoderBag{
     }
     @Override
     protected void encodeChildes(XMLElement parentElement, ResTableMapEntry resValueBag){
-        PackageBlock packageBlock = resValueBag.getParentEntry().getPackageBlock();
         List<XMLElement> childElementList = parentElement.getChildElementList();
         int count = childElementList.size();
         ResValueMapArray itemArray = resValueBag.getValue();
         for(int i=0;i<count;i++){
             XMLElement child = childElementList.get(i);
             ResValueMap item = itemArray.get(i);
-            String name = child.getAttributeValue("name");
             assert item != null;
-            String prefix = XMLUtil.splitPrefix(name);
-            name = XMLUtil.splitName(name);
-            ResourceEntry nameEntry = item.encodeAttrName(prefix,
-                    XMLUtil.splitName(name));
-            if(nameEntry == null){
-                nameEntry = getTableBlock().getAttrResource(prefix, name);
-            }
-            if(nameEntry == null){
-                throw new EncodeException("Unknown attribute name: '"+child.toText()
+            EncodeResult encodeResult = item.encodeStyle(child);
+            if(encodeResult.isError()){
+                throw new EncodeException(encodeResult.getError() + " '"+child.getDebugText()
                         +"', for style: "+parentElement.getAttributeValue("name"));
             }
-            Entry attributeEntry = nameEntry.get();
-            if(attributeEntry == null){
-                // could be unknown resource id
-                encodeAny(packageBlock, item, child.getTextContent());
-                continue;
-            }
-            encodeChild(child, nameEntry.get(), item);
         }
     }
     private void encodeChild(XMLElement child, Entry attributeEntry, ResValueMap bagItem){

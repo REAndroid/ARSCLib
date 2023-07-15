@@ -75,10 +75,10 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     }
     public List<T> removeUnusedStrings(){
         List<T> unusedList = listUnusedStringsToRemove();
-        remove(unusedList);
         for(T item:unusedList){
             item.onRemoved();
         }
+        remove(unusedList);
         return unusedList;
     }
     List<T> listUnusedStringsToRemove(){

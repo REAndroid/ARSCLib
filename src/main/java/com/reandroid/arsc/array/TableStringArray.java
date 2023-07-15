@@ -32,6 +32,10 @@ public class TableStringArray extends StringArray<TableString> {
     }
     @Override
     public TableString[] newInstance(int len) {
+        if(len == 0){
+            return EMPTY;
+        }
         return new TableString[len];
     }
+    private static final TableString[] EMPTY = new TableString[0];
 }

@@ -18,6 +18,8 @@ package com.reandroid.arsc.item;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.xml.StyleDocument;
+import com.reandroid.xml.StyleText;
 
 import java.util.Iterator;
 import java.util.List;
@@ -28,6 +30,13 @@ public class TableString extends StringItem implements Comparable<TableString> {
         super(utf8);
     }
 
+    public StyleDocument getStyleDocument(){
+        StyleItem styleItem = getStyle();
+        if(styleItem == null){
+            return null;
+        }
+        return styleItem.build(get());
+    }
     public Iterator<Entry> getEntries(boolean complex) {
         return super.getUsers(Entry.class, new Predicate<Entry>() {
             @Override

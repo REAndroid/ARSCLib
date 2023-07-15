@@ -24,7 +24,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
     private int mFreeSpace;
     private int mAllocateStep;
     public BlockArray(){
-        elementData= newInstance(0);
+        elementData = newInstance(0);
     }
 
     public void removeAllNull(int start){
@@ -34,41 +34,38 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         removeAll(start, false);
     }
     private void removeAll(int start, boolean check_null){
-        List<T> removeList = subList(start);
-        if(removeList.size()==0 || (check_null && !isAllNull(removeList))){
+        T[] removeList = subArray(start);
+        if(removeList.length == 0 || (check_null && !isAllNull(removeList))){
             return;
         }
-        T[] itemArray = this.elementData;
+        T[] elementData = this.elementData;
         for(T item:removeList){
-            if(item==null){
+            if(item == null){
                 continue;
             }
             if(!item.isNull()){
                 item.setNull(true);
             }
             int index = item.getIndex();
-            if(index>=0 && itemArray[index]==item){
+            if(index>=0 && elementData[index]==item){
                 item.setIndex(-1);
                 item.setParent(null);
-                itemArray[index] = null;
+                elementData[index] = null;
             }
         }
         setChildesCount(start);
     }
-    public List<T> subList(int start){
-        return subList(start, -1);
+    private T[] subArray(int start){
+        return subArray(start, -1);
     }
-    public List<T> subList(int start, int count){
+    private T[] subArray(int start, int count){
         T[] items = this.elementData;
-        if(items==null){
-            return new ArrayList<>();
-        }
         int length = items.length;
-        if(start>=length){
-            return new ArrayList<>();
-        }
         if(start < 0){
-            start=0;
+            start = 0;
+        }
+        if(start >= length){
+            return newInstance(0);
         }
         int end = count;
         if(end < 0){
@@ -79,9 +76,11 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
                 end=length;
             }
         }
-        List<T> results = new ArrayList<>(end - start);
-        for(int i=start; i<end; i++){
-            results.add(items[i]);
+        T[] results = newInstance(end - start);
+        int index = 0;
+        for(int i = start; i < end; i++){
+            results[index] = items[i];
+            index ++;
         }
         return results;
     }
@@ -130,61 +129,61 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         changeSize(diff);
     }
     public void clearChildes(){
-        T[] allChildes=elementData;
-        if(allChildes==null || allChildes.length==0){
+        T[] elementData = this.elementData;
+        int length = elementData.length;
+        if(length == 0){
             return;
         }
-        int max=allChildes.length;
-        for(int i=0;i<max;i++){
-            T block=allChildes[i];
-            if(block==null){
+        for(int i = 0; i < length; i++){
+            T block = elementData[i];
+            if(block == null){
                 continue;
             }
             block.setIndex(-1);
             block.setParent(null);
-            allChildes[i]=null;
+            elementData[i]=null;
         }
-        elementData=newInstance(0);
+        this.elementData = newInstance(0);
     }
     public void addAll(T[] blocks){
-        if(blocks==null||blocks.length==0){
+        if(blocks == null || blocks.length == 0){
             return;
         }
-        T[] old=elementData;
-        if(old==null){
-            old=newInstance(0);
+        T[] old = elementData;
+        int oldLength = 0;
+        if(old != null){
+            oldLength = old.length;
         }
-        int oldLen=old.length;
-        int len=blocks.length;
-        T[] update= newInstance(oldLen+len);
-        if(oldLen>0){
-            System.arraycopy(old, 0, update, 0, oldLen);
+        int len = blocks.length;
+        T[] update = newInstance(oldLength + len);
+        if(oldLength > 0){
+            System.arraycopy(old, 0, update, 0, oldLength);
         }
         boolean foundNull=false;
-        for(int i=0;i<len;i++){
-            T item=blocks[i];
-            if(item==null){
+        for(int i=0; i < len; i++){
+            T item = blocks[i];
+            if(item == null){
                 foundNull=true;
                 continue;
             }
-            int index=oldLen + i;
+            int index = oldLength + i;
             update[index]=item;
             item.setParent(this);
             item.setIndex(index);
         }
-        elementData=update;
+        elementData = update;
         if(foundNull){
             trimNullBlocks();
         }
     }
     public void sort(Comparator<T> comparator){
-        T[] data=this.elementData;
-        if(comparator==null || data==null || data.length<2){
+        T[] elementData = this.elementData;
+        if(comparator == null || elementData.length < 2){
             return;
         }
-        Arrays.sort(data, 0, data.length, comparator);
-        for(int i=0;i<data.length;i++){
-            data[i].setIndex(i);
+        Arrays.sort(elementData, 0, elementData.length, comparator);
+        for(int i=0 ; i <elementData.length; i++){
+            elementData[i].setIndex(i);
         }
     }
     public void insertItem(int index, T item){
@@ -365,39 +364,41 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         return new PredicateIterator(tester);
     }
     public boolean contains(Object block){
-        T[] items=elementData;
-        if(block==null || items==null){
+        T[] items = elementData;
+        if(block == null || items==null){
             return false;
         }
-        int len=items.length;
-        for(int i=0;i<len;i++){
-            if(isEqual(items[i], block)){
+        int length = items.length;
+        for(int i = 0; i < length; i++){
+            if(items[i] == block){
                 return true;
             }
         }
         return false;
     }
-    protected boolean isEqual(T item, Object obj){
-        return obj == item;
-    }
     public void remove(Collection<T> blockList){
-        T[] items=elementData;
-        if(items==null || items.length==0){
+        T[] items = elementData;
+        if(items == null || blockList == null){
             return;
         }
-        int len=items.length;
-        for(T block:blockList){
-            if(block==null){
+        int length = items.length;
+        if(length == 0){
+            return;
+        }
+        Iterator<T> iterator = blockList.iterator();
+        while (iterator.hasNext()){
+            T block = iterator.next();
+            if(block == null){
                 continue;
             }
-            int i=block.getIndex();
-            if(i<0 || i>=len){
+            int index = block.getIndex();
+            if(index < 0 || index >= length){
                 continue;
             }
-            if(items[i]!=block){
+            if(items[index] != block){
                 continue;
             }
-            items[i]=null;
+            items[index] = null;
         }
         trimNullBlocks();
     }
@@ -465,8 +466,11 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         mFreeSpace = 0;
         mAllocateStep = 0;
         T[] old=elementData;
-        int index=old.length;
-        int size=index+amount;
+        int index = 0;
+        if(old != null){
+            index = old.length;
+        }
+        int size = index + amount;
         T[] update = newInstance(size);
         int end;
         if(index>size){
@@ -513,8 +517,9 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         return "count="+ childesCount();
     }
 
-    public static boolean isAllNull(Collection<? extends Block> itemsList){
-        for(Block item:itemsList){
+    private static boolean isAllNull(Block[] itemsList){
+
+        for(Block item : itemsList){
             if(item!=null && !item.isNull()){
                 return false;
             }

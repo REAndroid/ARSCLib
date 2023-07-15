@@ -21,28 +21,14 @@ import java.io.IOException;
 
 public class StyleAttribute extends XMLAttribute {
 
+    public StyleAttribute(XMLAttribute xmlAttribute){
+        super(xmlAttribute.getName(true), xmlAttribute.getValue(false));
+    }
     public StyleAttribute(String name, String value){
         super(name, value);
     }
     public StyleAttribute(){
         super();
-    }
-    @Override
-    public void write(Appendable appendable, boolean xml) throws IOException {
-        if(xml){
-            appendable.append(' ');
-        }else {
-            appendable.append(';');
-        }
-        appendable.append(getName());
-        appendable.append('=');
-        if(xml){
-            appendable.append('"');
-        }
-        appendable.append(getValue());
-        if(xml){
-            appendable.append('"');
-        }
     }
     @Override
     public void serialize(XmlSerializer serializer) throws IOException {

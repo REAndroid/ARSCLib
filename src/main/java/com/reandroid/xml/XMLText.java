@@ -46,11 +46,11 @@ public class XMLText extends XMLNode{
     }
 
     public String getText(){
-        return getText(true);
+        return getText(false);
     }
-    public String getText(boolean unEscape){
-        if(unEscape){
-            return XMLUtil.unEscapeXmlChars(text);
+    public String getText(boolean escapeXmlChars){
+        if(escapeXmlChars){
+            return XMLUtil.escapeXmlChars(text);
         }
         return text;
     }
@@ -58,6 +58,12 @@ public class XMLText extends XMLNode{
         this.text = text;
     }
 
+    public void appendText(char ch) {
+        if(ch == 0){
+            return;
+        }
+        appendText(String.valueOf(ch));
+    }
     public void appendText(String text) {
         if(text == null){
             return;
@@ -106,21 +112,23 @@ public class XMLText extends XMLNode{
         }
     }
     @Override
-    void write(Appendable appendable, boolean xml) throws IOException {
-        String text = getText();
+    void write(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
+        String text = getText(escapeXmlText);
         if(text != null){
-            if(xml){
-                text = XMLUtil.escapeXmlChars(text);
-            }
             appendable.append(text);
         }
     }
     @Override
-    void write(Appendable appendable) throws IOException {
+    int appendDebugText(Appendable appendable, int limit, int length) throws IOException {
+        if(length >= limit){
+            return length;
+        }
         String text = getText();
         if(text != null){
             appendable.append(text);
+            length = length + text.length();
         }
+        return length;
     }
 
     boolean isIndent(){

@@ -91,6 +91,9 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
     }
     @Override
     public ResXmlAttribute[] newInstance(int len) {
+        if(len == 0){
+            return EMPTY;
+        }
         return new ResXmlAttribute[len];
     }
     @Override
@@ -161,4 +164,6 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
             attribute.fromJson(jsonObject);
         }
     }
+
+    private static final ResXmlAttribute[] EMPTY = new ResXmlAttribute[0];
 }

@@ -28,7 +28,6 @@ import com.reandroid.arsc.item.*;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 import java.util.*;
@@ -97,6 +96,17 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         }
     }
     void linkStrings(){
+        linkStyles();
+    }
+    private void linkStyles(){
+        StyleArray styleArray = getStyleArray();
+        if(styleArray == null){
+            return;
+        }
+        StyleItem[] styles = styleArray.getChildes();
+        for(StyleItem styleItem : styles){
+            styleItem.linkIfRequiredInternal();
+        }
     }
 
     public void removeString(T item){
@@ -170,7 +180,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
             if(item == null){
                 continue;
             }
-            String str = item.getHtml();
+            String str = item.getXml();
             if(str == null){
                 continue;
             }
@@ -187,7 +197,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         if(item == null){
             return;
         }
-        String str = item.getHtml();
+        String str = item.getXml();
         if(str == null){
             str = "";
         }
@@ -214,14 +224,6 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     public StringArray<T> getStringsArray(){
         return mArrayStrings;
     }
-    public void removeReferences(Collection<ReferenceItem> referenceList){
-        if(referenceList==null){
-            return;
-        }
-        for(ReferenceItem ref:referenceList){
-            removeReference(ref);
-        }
-    }
     public T removeReference(ReferenceItem ref){
         if(ref==null){
             return null;
@@ -240,14 +242,6 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         T item=get(ref.get());
         if(item!=null){
             item.addReference(ref);
-        }
-    }
-    public void addReferences(Collection<ReferenceItem> referenceList){
-        if(referenceList==null){
-            return;
-        }
-        for(ReferenceItem ref:referenceList){
-            addReference(ref);
         }
     }
 

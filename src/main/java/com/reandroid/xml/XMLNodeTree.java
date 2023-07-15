@@ -25,15 +25,19 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public abstract class XMLNodeTree extends XMLNode implements Iterable<XMLNode>, SizedSupplier<XMLNode> {
-    private final ArrayList<XMLNode> mChildes;
+    private ArrayList<XMLNode> mChildes;
     private int lastTrimSize;
     public XMLNodeTree(){
         super();
-        this.mChildes = new ArrayList<>(1);
+        this.mChildes = EMPTY;
     }
 
-    public List<XMLNode> getChildNodes() {
-        return new ArrayList<>(mChildes);
+    public XMLNode getLast(){
+        int size = size();
+        if(size == 0){
+            return null;
+        }
+        return mChildes.get(size - 1);
     }
     public void clear(){
         if(size() == 0){
@@ -80,6 +84,9 @@ public abstract class XMLNodeTree extends XMLNode implements Iterable<XMLNode>, 
             return;
         }
         synchronized (this){
+            if(mChildes == EMPTY){
+                mChildes = new ArrayList<>();
+            }
             mChildes.add(xmlNode);
             xmlNode.setParent(this);
             if(mChildes.size() - lastTrimSize > TRIM_INTERVAL){
@@ -126,4 +133,5 @@ public abstract class XMLNodeTree extends XMLNode implements Iterable<XMLNode>, 
     }
 
     private static final int TRIM_INTERVAL = 1000;
+    private static final ArrayList<XMLNode> EMPTY = new ArrayList<>(1);
 }

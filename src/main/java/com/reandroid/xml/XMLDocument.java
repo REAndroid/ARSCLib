@@ -88,7 +88,11 @@ public class XMLDocument extends XMLNodeTree{
         if(event != XmlPullParser.START_TAG){
             throw new XmlPullParserException("Invalid document event: " + event);
         }
-        event = parser.next();
+        parser.next();
+        parseAll(parser);
+    }
+    private void parseAll(XmlPullParser parser) throws XmlPullParserException, IOException {
+        int event = parser.getEventType();
         while (event != XmlPullParser.END_TAG && event != XmlPullParser.END_DOCUMENT){
             XMLNode node = createChildNode(event);
             if(node != null){
@@ -119,19 +123,19 @@ public class XMLDocument extends XMLNodeTree{
         appendable.append("'?>");
     }
     @Override
-    void write(Appendable writer) throws IOException{
+    void write(Appendable writer, boolean xml, boolean escapeXmlText) throws IOException{
 
     }
     @Override
-    public String toText(int indent, boolean newLineAttributes){
-        StringWriter writer=new StringWriter();
-        try {
-            write(writer, newLineAttributes);
-            writer.flush();
-            writer.close();
-        } catch (IOException ignored) {
+    int appendDebugText(Appendable appendable, int limit, int length) throws IOException {
+        if(length > limit){
+            return length;
         }
-        return writer.toString();
+        Iterator<XMLNode> iterator = iterator();
+        while (iterator.hasNext() && length < limit){
+            length = iterator.next().appendDebugText(appendable, limit, length);
+        }
+        return length;
     }
     public static XMLDocument load(String text) throws XmlPullParserException, IOException {
         XMLDocument document = new XMLDocument();

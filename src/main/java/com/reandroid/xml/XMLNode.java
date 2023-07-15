@@ -21,9 +21,6 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class XMLNode {
     private XMLNode mParent;
@@ -61,35 +58,37 @@ public abstract class XMLNode {
     public abstract void serialize(XmlSerializer serializer) throws IOException;
     public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
     }
+    abstract void write(Appendable writer, boolean xml, boolean escapeXmlText) throws IOException;
     public String toText(){
-        return toText(1, false);
+        return toText(true, false);
     }
-    public String toText(boolean newLineAttributes){
-        return toText(1, newLineAttributes);
-    }
-    void write(Appendable writer, boolean xml) throws IOException{
-        write(writer);
-    }
-    abstract void write(Appendable appendable) throws IOException;
-    public String toText(int indent, boolean newLineAttributes){
+    public String toText(boolean xml, boolean escapeXmlText){
         StringWriter writer = new StringWriter();
         try {
-            write(writer);
+            write(writer, xml, escapeXmlText);
             writer.flush();
             writer.close();
         } catch (IOException ignored) {
         }
         return writer.toString();
+    }
+    public String getDebugText(){
+        StringWriter writer = new StringWriter();
+        try {
+            appendDebugText(writer, DEBUG_STRING_LENGTH, 0);
+            writer.flush();
+            writer.close();
+        } catch (IOException ignored) {
+        }
+        return writer.toString();
+    }
+    int appendDebugText(Appendable appendable, int limit, int length) throws IOException {
+        return 0;
     }
     @Override
     public String toString(){
-        StringWriter writer = new StringWriter();
-        try {
-            write(writer, false);
-            writer.flush();
-            writer.close();
-        } catch (IOException ignored) {
-        }
-        return writer.toString();
+        return getDebugText();
     }
+
+    private static final int DEBUG_STRING_LENGTH = 250;
 }

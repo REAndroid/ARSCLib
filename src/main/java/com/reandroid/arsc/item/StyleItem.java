@@ -34,9 +34,15 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
     private List<StyleSpanInfo> mSpanInfoList;
     private final Set<StyleItemReference> mReferences;
     private StyleIndexReference indexReference;
+    private StringItem mStringItem;
     public StyleItem() {
         super();
         this.mReferences = new HashSet<>();
+    }
+    public StyleDocument build(String text){
+        StyledStringBuilder builder = new StyledStringBuilder(text, getSpanInfoElements());
+        StyleDocument styleDocument = builder.build();
+        return styleDocument;
     }
     public void parse(StyleDocument document){
         Iterator<StyleElement> iterator = document.getElements();
@@ -51,11 +57,28 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
             parse(iterator.next());
         }
     }
+    protected void clearStyle(){
+        if(getParent() == null){
+            return;
+        }
+        setStylePieceCount(0);
+        mSpanInfoList = null;
+    }
     public void onRemoved(){
         unLinkIndexReference();
         setStylePieceCount(0);
         mSpanInfoList = null;
+        StyleArray parentArray = getParentInstance(StyleArray.class);
         setParent(null);
+        if(parentArray != null){
+            parentArray.remove(this);
+        }
+    }
+    public void linkIfRequiredInternal(){
+        if(this.indexReference == null){
+            linkIndexReference();
+            linkAll();
+        }
     }
     public void onDataLoaded(){
         linkIndexReference();
@@ -135,18 +158,20 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
     }
     private void linkIndexReference(){
         StringItem stringItem = getStringItem(getIndex());
-        unLinkIndexReference(stringItem);
+        unLinkIndexReference(mStringItem);
         if(stringItem == null){
             return;
         }
         StyleIndexReference reference = new StyleIndexReference(this);
         stringItem.addReference(reference);
         this.indexReference = reference;
+        this.mStringItem = stringItem;
     }
     private void unLinkIndexReference(){
-        unLinkIndexReference(getStringItem(getIndex()));
+        unLinkIndexReference(mStringItem);
     }
     private void unLinkIndexReference(StringItem stringItem){
+        this.mStringItem = null;
         StyleIndexReference reference = this.indexReference;
         if(reference == null){
             return;
@@ -267,6 +292,33 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
             }
         };
     }
+    public StyleSpanInfo[] getSpanInfoElements(){
+        int count = getStylePieceCount();
+        StyleSpanInfo[] results = new StyleSpanInfo[count];
+        for(int i = 0; i < count; i++){
+            int ref = getStringRef(i);
+            results[i] = new StyleSpanInfo(
+                    getStringFromPool(ref),
+                    getFirstChar(i),
+                    getLastChar(i));
+        }
+        return results;
+    }
+    private int getSpanInfoMax(){
+        int result = 0;
+        int count = getStylePieceCount();
+        for(int i = 0; i < count; i++){
+            Integer position = getFirstChar(i);
+            if(position != null && position > result){
+                result = position;
+            }
+            position = getLastChar(i);
+            if(position != null && position > result){
+                result = position;
+            }
+        }
+        return result;
+    }
     public final List<StyleSpanInfo> getSpanInfoList(){
         if(mSpanInfoList!=null){
             return mSpanInfoList;
@@ -312,11 +364,18 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         return getParentInstance(StringPool.class);
     }
 
-    public String applyHtml(String str, boolean xml){
-        if(str == null){
+    public String applyStyle(String text, boolean xml){
+        return applyStyle(text, xml, false);
+    }
+    public String applyStyle(String text, boolean xml, boolean escapeXmlText){
+        if(text == null){
             return null;
         }
-        return StyledStringBuilder.build(str, getSpanInfoList(), xml);
+        StyleDocument styleDocument = build(text);
+        if(styleDocument == null){
+            return text;
+        }
+        return styleDocument.getText(xml, escapeXmlText);
     }
     @Override
     public void setNull(boolean is_null){
@@ -397,6 +456,7 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         return "Spans count = "+getSpanInfoList().size();
     }
 
+    @SuppressWarnings("unchecked")
     static final class StyleIndexReference implements ReferenceItem{
         private final StyleItem styleItem;
         StyleIndexReference(StyleItem styleItem){

@@ -44,7 +44,7 @@ class XMLValuesEncoderPlurals extends XMLValuesEncoderBag{
                     .fromName(child.getAttributeValue("quantity"));
             if(quantity == null){
                 throw new EncodeException("Unknown plurals quantity: "
-                        + child.toText());
+                        + child.getDebugText());
             }
 
             bagItem.setName(quantity.getId());

@@ -13,20 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.arsc.value;
+package com.reandroid.xml;
 
-import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.chunk.ParentChunk;
-import com.reandroid.arsc.coder.EncodeResult;
-
-public interface Value {
-    void setValue(EncodeResult encodeResult);
-    void setValueType(ValueType valueType);
-    ValueType getValueType();
-    int getData();
-    void setData(int data);
-    String getValueAsString();
-    void setValueAsString(String value);
-    PackageBlock getPackageBlock();
-    ParentChunk getParentChunk();
+public interface StyleNode {
+    void appendChar(char ch);
+    StyleNode getParentStyle();
+    void addStyleNode(StyleNode styleNode);
 }

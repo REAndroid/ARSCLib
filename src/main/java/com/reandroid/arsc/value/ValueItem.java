@@ -22,17 +22,15 @@ import com.reandroid.arsc.chunk.ParentChunk;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.BlockItem;
-import com.reandroid.arsc.item.ReferenceBlock;
-import com.reandroid.arsc.item.ReferenceItem;
-import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.xml.StyleDocument;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -243,13 +241,35 @@ public abstract class ValueItem extends BlockItem implements Value,
     public String getValueAsString(){
         StringItem stringItem = getDataAsPoolString();
         if(stringItem!=null){
-            String value = stringItem.getHtml();
+            String value = stringItem.getXml();
             if(value == null){
                 value = "";
             }
             return value;
         }
         return null;
+    }
+    public StyleDocument getValueAsStyleDocument(){
+        StringItem stringItem = getDataAsPoolString();
+        if(!(stringItem instanceof TableString)){
+            return null;
+        }
+        return ((TableString)stringItem).getStyleDocument();
+    }
+    public void setValueAsString(StyleDocument styledString){
+        if(styledString == null){
+            setValueAsString("");
+            return;
+        }
+        StringPool<?> stringPool = getStringPool();
+        if(!styledString.hasElements() || !(stringPool instanceof TableStringPool)){
+            setValueAsString(styledString.getXml(false));
+            return;
+        }
+        TableStringPool tableStringPool = (TableStringPool) stringPool;
+        StringItem stringItem = tableStringPool.getOrCreate(styledString);
+        setData(stringItem.getIndex());
+        setValueType(ValueType.STRING);
     }
     public void setValueAsString(String str){
         if(getValueType() == ValueType.STRING
@@ -271,6 +291,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         int data=val?0xffffffff:0;
         setData(data);
     }
+    @Override
     public void setValue(EncodeResult encodeResult){
         if(encodeResult == null){
             throw new NullPointerException();
@@ -365,7 +386,7 @@ public abstract class ValueItem extends BlockItem implements Value,
     @Override
     public String toString(){
         if(getPackageBlock() != null){
-            return decodeValue();
+            return getValueType() + ":" + HexUtil.toHex8(getData()) + " " + decodeValue();
         }
         StringBuilder builder = new StringBuilder();
         int size = getSize();

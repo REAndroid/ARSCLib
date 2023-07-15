@@ -1238,7 +1238,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
                 uri = null;
             }
             ResXmlAttribute attribute = newAttribute();
-            attribute.encode(uri, prefix, name, value);
+            attribute.encode(false, uri, prefix, name, value);
         }
     }
 

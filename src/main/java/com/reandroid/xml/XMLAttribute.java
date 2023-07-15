@@ -18,6 +18,7 @@ package com.reandroid.xml;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Objects;
 
 public class XMLAttribute extends XMLNode {
@@ -98,10 +99,18 @@ public class XMLAttribute extends XMLNode {
         return null;
     }
     public String getValue(){
-        if(mValue == null){
-            mValue = "";
+        return getValue(false);
+    }
+    public String getValue(boolean escapeXmlText){
+        String value = this.mValue;
+        if(value == null){
+            value = "";
+            this.mValue = value;
         }
-        return mValue;
+        if(escapeXmlText){
+            return XMLUtil.escapeXmlChars(value);
+        }
+        return value;
     }
     XMLAttribute set(String name, String value){
         this.mName = name;
@@ -161,16 +170,41 @@ public class XMLAttribute extends XMLNode {
 
     @Override
     public void serialize(XmlSerializer serializer) throws IOException {
-        serializer.attribute(getUri(), getName(), getValue());
+        serializer.attribute(getUri(), getName(), getValue(false));
     }
     @Override
-    void write(Appendable appendable) throws IOException {
-        appendable.append(' ');
+    void write(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
         appendable.append(getName(true));
         appendable.append('=');
+        if(xml){
+            appendable.append('"');
+        }
+        appendable.append(getValue(escapeXmlText));
+        if(xml){
+            appendable.append('"');
+        }
+    }
+    @Override
+    int appendDebugText(Appendable appendable, int limit, int length) throws IOException {
+        if(length >= limit){
+            return length;
+        }
+        String name = getName(true);
+        if(name == null){
+            name = "null";
+        }
+        appendable.append(name);
+        length += name.length();
+        appendable.append('=');
         appendable.append('"');
-        appendable.append(XMLUtil.escapeXmlChars(getValue()));
+        String value = XMLUtil.escapeXmlChars(getValue());
+        if(value == null){
+            value = "null";
+        }
+        appendable.append(value);
         appendable.append('"');
+        length += value.length() + 3;
+        return length;
     }
     @Override
     public int hashCode(){

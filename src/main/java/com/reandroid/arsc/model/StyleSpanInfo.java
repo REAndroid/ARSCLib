@@ -17,6 +17,8 @@ package com.reandroid.arsc.model;
 
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.xml.StyleAttribute;
+import com.reandroid.xml.StyleElement;
 
 public class StyleSpanInfo implements JSONConvert<JSONObject> {
     private String mTag;
@@ -90,7 +92,7 @@ public class StyleSpanInfo implements JSONConvert<JSONObject> {
         if(mTag == null){
             return null;
         }
-        int i= mTag.indexOf(';');
+        int i = mTag.indexOf(';');
         if(i < 0){
             i = mTag.indexOf(' ');
         }
@@ -104,6 +106,49 @@ public class StyleSpanInfo implements JSONConvert<JSONObject> {
         }
         builder.append('>');
         return builder.toString();
+    }
+    public StyleElement getStart(){
+        StyleElement element = new StyleElement(getName());
+        serializeAttributes(element);
+        return element;
+    }
+    public void serializeAttributes(StyleElement styleElement){
+        String tag = mTag;
+        if(tag == null){
+            return;
+        }
+        int i = tag.indexOf(';');
+        if(i < 0){
+            i = tag.indexOf(' ');
+        }
+        if(i < 0){
+            return;
+        }
+        String[] split = tag.substring(i + 1).split("(\\s*;\\s*)");
+        for(String attr : split){
+            i = attr.indexOf('=');
+            if(i < 0){
+                // TODO: should not happen ?
+                continue;
+            }
+            styleElement.addAttribute(new StyleAttribute(
+                    attr.substring(0, i),
+                    attr.substring(i + 1)));
+        }
+    }
+    public String getName(){
+        String tag = mTag;
+        if(tag == null){
+            return null;
+        }
+        int i = tag.indexOf(';');
+        if(i < 0){
+            i = tag.indexOf(' ');
+        }
+        if(i < 0){
+            return tag;
+        }
+        return tag.substring(0, i);
     }
     @Override
     public JSONObject toJson() {

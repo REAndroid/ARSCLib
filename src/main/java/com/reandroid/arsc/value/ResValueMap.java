@@ -16,15 +16,52 @@
 package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONObject;
+import com.reandroid.xml.XMLAttribute;
+import com.reandroid.xml.XMLElement;
+import com.reandroid.xml.XMLUtil;
 
 public class ResValueMap extends AttributeValue{
 
     public ResValueMap() {
         super(12, OFFSET_SIZE);
+    }
+
+    public EncodeResult encodeStyle(XMLElement xmlElement){
+        return encodeStyle(false, xmlElement);
+    }
+    public EncodeResult encodeStyle(boolean validate, XMLElement xmlElement){
+        XMLAttribute xmlAttribute = xmlElement.getAttribute("name");
+        if(xmlAttribute == null){
+            return new EncodeResult("Missing attribute name");
+        }
+        return encodeStyle(validate, xmlAttribute.getPrefix(),
+                xmlAttribute.getValue(),
+                xmlElement.getTextContent());
+    }
+    public EncodeResult encodeStyle(boolean validate, String name, String value){
+        return encodeStyle(validate, XMLUtil.splitPrefix(name), XMLUtil.splitName(name), value);
+    }
+    public EncodeResult encodeStyle(String name, String value){
+        return encodeStyle(false, XMLUtil.splitPrefix(name), XMLUtil.splitName(name), value);
+    }
+    public EncodeResult encodeStyle(String prefix, String name, String value){
+        return encodeStyle(false, prefix, name, value);
+    }
+    public EncodeResult encodeStyle(boolean validate, String prefix, String name, String value){
+        ResourceEntry nameEntry = super.encodeAttrName(prefix, name);
+        if(nameEntry == null){
+            return new EncodeResult("Unknown attribute name");
+        }
+        return super.encodeStyleValue(validate, nameEntry, value);
+    }
+    @Override
+    boolean allowNullPrefixEncode(){
+        return true;
     }
     @Override
     public String decodeName(boolean includePrefix){

@@ -18,26 +18,24 @@ package com.reandroid.xml;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.IndexIterator;
 import com.reandroid.utils.collection.SizedSupplier;
-import com.reandroid.xml.parser.XMLSpanParser;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.util.*;
 import java.util.function.Predicate;
 
 public class XMLElement extends XMLNodeTree{
-    private final ArrayList<XMLAttribute> mAttributes;
+    private ArrayList<XMLAttribute> mAttributes;
     private String mName;
     private XMLNamespace mNamespace;
-    private final ArrayList<XMLNamespace> mNamespaceList;
+    private ArrayList<XMLNamespace> mNamespaceList;
     public XMLElement(){
         super();
-        mAttributes = new ArrayList<>();
-        mNamespaceList = new ArrayList<>();
+        mAttributes = EMPTY_ATTRIBUTES;
+        mNamespaceList = EMPTY_NAMESPACES;
     }
     public XMLElement(String tagName){
         this();
@@ -122,6 +120,11 @@ public class XMLElement extends XMLNodeTree{
     }
     public void addNamespace(XMLNamespace namespace){
         if(namespace != null && !mNamespaceList.contains(namespace)){
+            if(mNamespaceList == EMPTY_NAMESPACES){
+                mNamespaceList = new ArrayList<>(2);
+            }else if(mNamespaceList.contains(namespace)){
+                return;
+            }
             mNamespaceList.add(namespace);
         }
     }
@@ -309,6 +312,9 @@ public class XMLElement extends XMLNodeTree{
         if(xmlAttribute == null){
             return;
         }
+        if(mAttributes == EMPTY_ATTRIBUTES){
+            mAttributes = new ArrayList<>(1);
+        }
         mAttributes.add(xmlAttribute);
         xmlAttribute.setParent(this);
     }
@@ -357,7 +363,7 @@ public class XMLElement extends XMLNodeTree{
         return mName;
     }
     public String getName(boolean includePrefix){
-        String name = mName;
+        String name = getName();
         if(!includePrefix){
             return name;
         }
@@ -399,23 +405,21 @@ public class XMLElement extends XMLNodeTree{
         setNamespace(namespace);
     }
     public String getTextContent(){
-        boolean hasText = false;
+        return getTextContent(false);
+    }
+    public String getTextContent(boolean escapeXmlText){
         StringWriter writer = new StringWriter();
         try {
             Iterator<XMLNode> iterator = iterator();
             while (iterator.hasNext()){
-                XMLNode xmlNode = iterator.next();
-                xmlNode.write(writer, true);
-                hasText = hasText | xmlNode instanceof XMLText;
+                XMLNode child = iterator.next();
+                child.write(writer, true, escapeXmlText);
             }
             writer.flush();
             writer.close();
-            if(hasText){
-                return writer.toString();
-            }
-        } catch (IOException ignored) {
+        }catch (IOException ignored){
         }
-        return null;
+        return writer.toString();
     }
     public boolean hasChildElements(){
         return !CollectionUtil.isEmpty(getElements());
@@ -520,18 +524,18 @@ public class XMLElement extends XMLNodeTree{
         }
     }
     @Override
-    void write(Appendable appendable) throws IOException {
+    void write(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
         appendable.append('<');
         appendable.append(getName());
-        appendAttributes(appendable);
+        appendAttributes(appendable, xml, escapeXmlText);
         boolean haveChildes = false;
-        Iterator<XMLNode> itr = iterator();
-        while (itr.hasNext()){
+        Iterator<XMLNode> iterator = iterator();
+        while (iterator.hasNext()){
             if(!haveChildes){
                 appendable.append(">");
             }
-            XMLNode child = itr.next();
-            child.write(appendable);
+            XMLNode child = iterator.next();
+            child.write(appendable, xml, escapeXmlText);
             haveChildes = true;
         }
         if(haveChildes){
@@ -542,15 +546,74 @@ public class XMLElement extends XMLNodeTree{
             appendable.append("/>");
         }
     }
-    private void appendAttributes(Appendable appendable) throws IOException {
-        Iterator<? extends XMLAttribute> itr = getAttributes();
-        while (itr.hasNext()){
-            itr.next().write(appendable);
+    void appendAttributes(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
+        char separator;
+        if(xml){
+            separator = ' ';
+        }else {
+            separator = ';';
+        }
+        boolean appendFirst = false;
+        Iterator<? extends XMLAttribute> iterator = getAttributes();
+        while (iterator.hasNext()){
+            if(!appendFirst){
+                appendable.append(' ');
+            }else {
+                appendable.append(separator);
+            }
+            appendFirst = true;
+            iterator.next().write(appendable, xml, escapeXmlText);
         }
     }
+
+    @Override
+    int appendDebugText(Appendable appendable, int limit, int length) throws IOException {
+        if(length >= limit){
+            return length;
+        }
+        appendable.append('<');
+        length ++;
+        String name = getName(true);
+        if(name == null){
+            name = "null";
+        }
+        appendable.append(name);
+        length += name.length();
+        Iterator<? extends XMLAttribute> attributes = getAttributes();
+        while (attributes.hasNext() && length < limit){
+            appendable.append(' ');
+            length ++;
+            length = attributes.next()
+                    .appendDebugText(appendable, limit, length);
+        }
+        boolean hasChildes = false;
+        Iterator<XMLNode> iterator = iterator();
+        while (iterator.hasNext() && length < limit){
+            if(!hasChildes){
+                appendable.append("/>");
+                length += 2;
+            }
+            length = iterator.next().appendDebugText(appendable, limit, length);
+            hasChildes = true;
+        }
+        if(hasChildes){
+            appendable.append("</");
+            appendable.append(name);
+            length += name.length();
+            appendable.append('>');
+            length += 3;
+        }else {
+            appendable.append("/>");
+            length += 2;
+        }
+        return length;
+    }
+
     protected List<XMLNode> listSpannable(){
         List<XMLNode> results = new ArrayList<>();
-        for(XMLNode child:getChildNodes()){
+        Iterator<XMLNode> iterator = iterator();
+        while (iterator.hasNext()){
+            XMLNode child = iterator.next();
             if((child instanceof XMLElement) || (child instanceof XMLText)){
                 results.add(child);
             }
@@ -561,21 +624,12 @@ public class XMLElement extends XMLNodeTree{
         StringBuilder builder = new StringBuilder();
         builder.append(getName());
         for(XMLAttribute attribute:listAttributes()){
-            builder.append(' ');
-            builder.append(attribute.toText(0, false));
+            //builder.append(' ');
+            builder.append(attribute.toText());
         }
         return builder.toString();
     }
 
-    private static XMLElement parseSpanSafe(String spanText){
-        if(spanText==null){
-            return null;
-        }
-        try {
-            XMLSpanParser spanParser = new XMLSpanParser();
-            return spanParser.parse(spanText);
-        } catch (IOException ignored) {
-            return null;
-        }
-    }
+    private static final ArrayList<XMLAttribute> EMPTY_ATTRIBUTES = new ArrayList<>();
+    private static final ArrayList<XMLNamespace> EMPTY_NAMESPACES = new ArrayList<>();
 }

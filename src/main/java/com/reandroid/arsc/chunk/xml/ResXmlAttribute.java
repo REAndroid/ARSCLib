@@ -23,9 +23,7 @@ import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.utils.HexUtil;
-import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.AttributeValue;
-import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.json.JSONObject;
@@ -35,7 +33,6 @@ import com.reandroid.xml.XMLUtil;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Objects;
 
 public class ResXmlAttribute extends AttributeValue implements Comparable<ResXmlAttribute>{
@@ -517,7 +514,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         }
         serializer.attribute(getUri(), decodeName(false), value);
     }
-    public ResourceEntry encodeName(String uri, String prefix, String name) throws IOException {
+    public ResourceEntry encodeAttributeName(String uri, String prefix, String name) throws IOException {
         setNamespace(uri, prefix);
         ResourceEntry resourceEntry = super.encodeAttrName(prefix, name);
         if(resourceEntry != null){
@@ -530,11 +527,15 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         }
         throw new IOException("Unknown attribute name '" + prefix + ":" + name + "'");
     }
-    public void encode(String uri, String prefix, String name, String value) throws IOException {
-        encode(uri, prefix, name, value, false);
+    public void encode(boolean validate, String uri, String prefix, String name, String value) throws IOException {
+        ResourceEntry nameResource = encodeAttributeName(uri, prefix, name);
+        EncodeResult encodeResult = super.encodeStyleValue(validate, nameResource, value);
+        if(encodeResult.isError()){
+            throw new IOException(buildErrorMessage(encodeResult.getError(), value));
+        }
     }
     public void encode(String uri, String prefix, String name, String value, boolean validate) throws IOException {
-        ResourceEntry attrResource = encodeName(uri, prefix, name);
+        ResourceEntry attrResource = encodeAttributeName(uri, prefix, name);
         EncodeResult encodeResult = ValueCoder
                 .encodeReference(getPackageBlock(), value);
         if(encodeResult != null){

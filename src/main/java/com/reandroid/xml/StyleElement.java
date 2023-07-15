@@ -27,14 +27,35 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class StyleElement extends XMLElement {
-    private String mName;
+public class StyleElement extends XMLElement implements StyleNode{
     public StyleElement(String name){
-        super();
-        this.mName = name;
+        super(name);
     }
     public StyleElement(){
         this("");
+    }
+    public StyleElement getParentElement(){
+        return (StyleElement) super.getParentElement();
+    }
+    void copyFrom(XMLElement xmlElement){
+        setName(xmlElement.getName());
+        Iterator<? extends XMLAttribute> attributes = xmlElement.getAttributes();
+        while (attributes.hasNext()){
+            addAttribute(new StyleAttribute(attributes.next()));
+        }
+        Iterator<XMLNode> iterator = xmlElement.iterator();
+        while (iterator.hasNext()){
+            XMLNode xmlNode = iterator.next();
+            if(xmlNode instanceof XMLElement){
+                StyleElement styleElement = newElement();
+                add(styleElement);
+                styleElement.copyFrom((XMLElement) xmlNode);
+            }else if(xmlNode instanceof XMLText){
+                XMLText xmlText = (XMLText)xmlNode;
+                StyleText styleText = new StyleText(xmlText.getText());
+                add(styleText);
+            }
+        }
     }
     @Override
     public StyleAttribute getAttributeAt(int i){
@@ -68,18 +89,13 @@ public class StyleElement extends XMLElement {
         });
     }
 
-    public String getName() {
-        return mName;
-    }
-    public void setName(String mName) {
-        this.mName = mName;
-    }
     public String getStyleableTag(){
         StringWriter writer = new StringWriter();
         writer.write(getName());
         try {
-            appendAttributes(writer, false);
+            appendAttributes(writer, false, false);
             writer.flush();
+            writer.close();
         } catch (IOException ignored) {
         }
         return writer.toString();
@@ -113,6 +129,9 @@ public class StyleElement extends XMLElement {
             }
             result += child.getLength();
         }
+        if(result >= start){
+            result = result - 1;
+        }
         return result;
     }
     @Override
@@ -139,33 +158,27 @@ public class StyleElement extends XMLElement {
         }
     }
     @Override
-    public void write(Appendable appendable, boolean xml) throws IOException {
-        appendable.append('<');
-        appendable.append(getName());
-        appendAttributes(appendable, xml);
-        boolean haveChildes = false;
-        Iterator<XMLNode> itr = iterator();
-        while (itr.hasNext()){
-            if(!haveChildes){
-                appendable.append(">");
-            }
-            XMLNode child = itr.next();
-            child.write(appendable, xml);
-            haveChildes = true;
+    public void appendChar(char ch) {
+        if(ch == 0){
+            return;
         }
-        if(haveChildes){
-            appendable.append("</");
-            appendable.append(getName());
-            appendable.append('>');
+        XMLNode xmlNode = getLast();
+        StyleText styleText;
+        if(xmlNode instanceof StyleText){
+            styleText = (StyleText) xmlNode;
         }else {
-            appendable.append("/>");
+            styleText = new StyleText();
+            add(styleText);
         }
+        styleText.appendChar(ch);
     }
-    private void appendAttributes(Appendable appendable, boolean xml) throws IOException {
-        Iterator<StyleAttribute> itr = getAttributes();
-        while (itr.hasNext()){
-            itr.next().write(appendable, xml);
-        }
+    @Override
+    public StyleNode getParentStyle() {
+        return (StyleNode) getParent();
+    }
+    @Override
+    public void addStyleNode(StyleNode styleNode){
+        add((XMLNode) styleNode);
     }
     @Override
     void startSerialize(XmlSerializer serializer) throws IOException {

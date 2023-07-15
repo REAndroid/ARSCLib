@@ -86,9 +86,11 @@ public class XMLFileEncoder {
         ensureNamespaces(element, resXmlElement);
         resXmlElement.setName(element.getName());
         buildAttributes(element, resXmlElement);
-        for(XMLNode node:element.getChildNodes()){
+        Iterator<XMLNode> iterator = element.iterator();
+        while (iterator.hasNext()){
+            Object node = iterator.next();
             if(node instanceof XMLText){
-                resXmlElement.addResXmlText(((XMLText)node).getText(true));
+                resXmlElement.addResXmlText(((XMLText)node).getText());
             }else if(node instanceof XMLComment){
                 resXmlElement.setComment(((XMLComment)node).getText());
             }else if(node instanceof XMLElement){

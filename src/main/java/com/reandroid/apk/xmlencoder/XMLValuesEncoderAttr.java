@@ -132,7 +132,7 @@ public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
             EncodeResult encodeResult = ValueCoder.encode(valueString, bagFormat.valueTypes());
             if(encodeResult == null){
                 throw new EncodeException("Expecting hex or integer value: '" + valueString
-                        +"', on element: " + child.toText());
+                        +"', on element: " + child.getDebugText());
             }
             valueMap.setTypeAndData(encodeResult.valueType, encodeResult.value);
         }

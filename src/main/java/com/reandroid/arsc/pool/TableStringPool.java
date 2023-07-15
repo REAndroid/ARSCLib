@@ -41,12 +41,16 @@ public class TableStringPool extends StringPool<TableString> {
         super(is_utf8);
     }
 
+    public TableString getOrCreateStyled(String xmlString) throws IOException, XmlPullParserException {
+        StyleDocument document = StyleDocument.parseStyledString(xmlString);
+        return getOrCreate(document);
+    }
     public TableString getOrCreate(XmlPullParser parser) throws IOException, XmlPullParserException {
         StyleDocument document = StyleDocument.parseNext(parser);
         return getOrCreate(document);
     }
     public TableString getOrCreate(StyleDocument document){
-        String text = document.getText(true);
+        String text = document.getXml();
         if(!document.hasElements()){
             return super.getOrCreate(text);
         }
@@ -55,10 +59,11 @@ public class TableStringPool extends StringPool<TableString> {
             return group.get(0);
         }
         TableString tableString = createStyled();
-        tableString.set(document.getStyledText());
+        tableString.set(document.getStyledString());
         StyleItem styleItem = tableString.getStyle();
         styleItem.parse(document);
         updateUniqueIdMap(tableString);
+        styleItem.linkIfRequiredInternal();
         return tableString;
     }
     private TableString createStyled(){
@@ -74,6 +79,7 @@ public class TableStringPool extends StringPool<TableString> {
     }
     @Override
     void linkStrings(){
+        super.linkStrings();
         TableBlock tableBlock = getParentInstance(TableBlock.class);
         if(tableBlock != null){
             tableBlock.linkTableStringsInternal(this);

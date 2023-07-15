@@ -87,7 +87,7 @@ public class XMLTableBlockEncoder {
                     + PackageBlock.PUBLIC_XML
                     + "  file found in '" +resourcesDirectory + "'");
         }
-        preloadStringPool(pubXmlFileList);
+        //preloadStringPool(pubXmlFileList);
 
         loadPublicXmlFiles(pubXmlFileList);
 
@@ -269,20 +269,6 @@ public class XMLTableBlockEncoder {
         logMessage("Main package id initialized: id = "
                 + HexUtil.toHex2((byte)packageId) + ", from: " + ref );
     }
-    private void preloadStringPool(List<File> pubXmlFileList){
-        logMessage("Loading string pool ...");
-        ValuesStringPoolBuilder poolBuilder=new ValuesStringPoolBuilder();
-        for(File pubXml : pubXmlFileList){
-            File resDir = toResDirectory(pubXml);
-            List<File> valuesDirList = ApkUtil.listValuesDirectory(resDir);
-            for(File dir : valuesDirList){
-                logVerbose(poolBuilder.size() + " building pool: " + dir.getName());
-                poolBuilder.scanValuesDirectory(dir);
-            }
-        }
-        poolBuilder.addTo(tableBlock.getTableStringPool());
-    }
-
     private void encodeResDir(File resDir) throws IOException, XmlPullParserException {
         List<File> valuesDirList = ApkUtil.listValuesDirectory(resDir);
         for(File valuesDir : valuesDirList){

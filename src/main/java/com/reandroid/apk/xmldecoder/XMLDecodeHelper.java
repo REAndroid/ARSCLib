@@ -17,10 +17,11 @@ package com.reandroid.apk.xmldecoder;
 
 import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.item.StringItem;
+import com.reandroid.arsc.item.TableString;
 import com.reandroid.xml.*;
-import com.reandroid.xml.parser.XMLSpanParser;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class XMLDecodeHelper {
 
@@ -35,10 +36,11 @@ public class XMLDecodeHelper {
             writer.text(text);
             return false;
         }else {
+            TableString tableString= (TableString) stringItem;
+            StyleDocument styleDocument = tableString.getStyleDocument();
             String xml = stringItem.getXml();
-            XMLElement element = parseSpanSafe(xml);
-            if(element != null){
-                writeParsedSpannable(writer, element);
+            if(styleDocument != null){
+                writeParsedSpannable(writer, styleDocument);
             }else {
                 // TODO: throw or investigate the reason
                 writer.text(xml);
@@ -46,11 +48,13 @@ public class XMLDecodeHelper {
             return true;
         }
     }
-    public static void writeParsedSpannable(EntryWriter<?> writer, XMLElement spannableParent) throws IOException {
+    public static void writeParsedSpannable(EntryWriter<?> writer, StyleDocument spannableParent) throws IOException {
 
-        for(XMLNode xmlNode : spannableParent.getChildNodes()){
+        Iterator<XMLNode> iterator = spannableParent.iterator();
+        while (iterator.hasNext()){
+            Object xmlNode = iterator.next();
             if(xmlNode instanceof XMLText){
-                String text = ((XMLText)xmlNode).getText(true);
+                String text = ((XMLText)xmlNode).getText();
                 writer.enableIndent(false);
                 writer.text(XmlSanitizer.escapeSpecialCharacter(text));
             }else if(xmlNode instanceof XMLElement){
@@ -64,26 +68,17 @@ public class XMLDecodeHelper {
         for(XMLAttribute xmlAttribute : element.listAttributes()){
             writer.attribute(xmlAttribute.getName(), xmlAttribute.getValue());
         }
-        for(XMLNode xmlNode : element.getChildNodes()){
+        Iterator<XMLNode> iterator = element.iterator();
+        while (iterator.hasNext()){
+            Object xmlNode = iterator.next();
             if(xmlNode instanceof XMLText){
-                String text = ((XMLText)xmlNode).getText(true);
+                String text = ((XMLText)xmlNode).getText();
                 writer.text(text);
             }else if(xmlNode instanceof XMLElement){
                 writeElement(writer, (XMLElement) xmlNode);
             }
         }
         writer.endTag(element.getName());
-    }
-    private static XMLElement parseSpanSafe(String spanText){
-        if(spanText==null){
-            return null;
-        }
-        try {
-            XMLSpanParser spanParser = new XMLSpanParser();
-            return spanParser.parse(spanText);
-        } catch (IOException ignored) {
-            return null;
-        }
     }
 
 }

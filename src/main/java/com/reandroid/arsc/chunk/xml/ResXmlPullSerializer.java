@@ -249,7 +249,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
             }
         }
         ResXmlAttribute resXmlAttribute = element.newAttribute();
-        resXmlAttribute.encode(namespace, prefix, name, value, isValidateValues());
+        resXmlAttribute.encode(isValidateValues(), namespace, prefix, name, value);
         return this;
     }
 

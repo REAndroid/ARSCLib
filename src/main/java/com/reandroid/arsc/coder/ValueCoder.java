@@ -17,6 +17,9 @@ package com.reandroid.arsc.coder;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.value.Value;
+import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.ValueType;
@@ -27,6 +30,41 @@ import java.util.Map;
 
 public class ValueCoder {
 
+    public static EncodeResult encodeAttributeValue(boolean validate, Value output, ResourceEntry name, String value){
+        PackageBlock context = output.getPackageBlock();
+        EncodeResult encodeResult = encodeReference(context, value);
+        if(encodeResult != null){
+            if(encodeResult.isError()){
+                return encodeResult;
+            }
+            output.setValue(encodeResult);
+            return encodeResult;
+        }
+        if(name != null){
+            name = name.resolveReference();
+            AttributeBag attributeBag = AttributeBag.create(name.get());
+            if(attributeBag != null){
+                encodeResult = attributeBag.encode(value);
+                if(encodeResult != null){
+                    if(encodeResult.isError()){
+                        if(validate){
+                            return encodeResult;
+                        }
+                        encodeResult = null;
+                    }
+                }
+            }
+        }
+        if(encodeResult == null){
+            encodeResult = ValueCoder.encode(value);
+        }
+        if(encodeResult != null){
+            output.setValue(encodeResult);
+            return encodeResult;
+        }
+        output.setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
+        return new EncodeResult(ValueType.STRING, output.getData());
+    }
     public static EncodeResult encodeReference(PackageBlock packageBlock, String value){
         if(value == null || value.length() < 3){
             return null;

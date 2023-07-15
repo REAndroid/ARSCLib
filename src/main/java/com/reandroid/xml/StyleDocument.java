@@ -15,14 +15,17 @@
  */
 package com.reandroid.xml;
 
+import com.reandroid.utils.io.IOUtil;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Comparator;
 import java.util.Iterator;
 
-public class StyleDocument extends XMLDocument{
+public class StyleDocument extends XMLDocument implements StyleNode, Comparable<StyleDocument>{
     public StyleDocument(){
         super();
     }
@@ -33,18 +36,43 @@ public class StyleDocument extends XMLDocument{
         return iterator(StyleElement.class);
     }
 
-
-    public String getText(boolean xml){
-        StringWriter writer = new StringWriter();
-        try {
-            write(writer, xml);
-            writer.flush();
-            writer.close();
-        } catch (IOException ignored) {
+    @Override
+    public void appendChar(char ch) {
+        if(ch == 0){
+            return;
         }
-        return writer.toString();
+        XMLNode xmlNode = getLast();
+        StyleText styleText;
+        if(xmlNode instanceof StyleText){
+            styleText = (StyleText) xmlNode;
+        }else {
+            styleText = new StyleText();
+            add(styleText);
+        }
+        styleText.appendChar(ch);
     }
-    public String getStyledText(){
+    @Override
+    public StyleNode getParentStyle() {
+        return null;
+    }
+    @Override
+    public void addStyleNode(StyleNode styleNode){
+        add((XMLNode) styleNode);
+    }
+
+    public String getXml(){
+        return toText(true, false);
+    }
+    public String getXml(boolean escapeXmlText){
+        return toText(true, escapeXmlText);
+    }
+    public String getHtml(){
+        return getText(false, false);
+    }
+    public String getText(boolean xml, boolean escapeXmlText){
+        return toText(xml, escapeXmlText);
+    }
+    public String getStyledString(){
         StringWriter writer = new StringWriter();
         try {
             writeStyledText(writer);
@@ -67,16 +95,45 @@ public class StyleDocument extends XMLDocument{
             }
         }
     }
-    @Override
-    void write(Appendable appendable, boolean xml) throws IOException {
-        appendDocument(appendable, xml);
-        appendChildes(iterator(), appendable, xml);
+    public void parseString(String xmlString) throws XmlPullParserException, IOException {
+        xmlString = "<parser>" + xmlString + "</parser>";
+        XmlPullParser parser = PARSER;
+        parser.setInput(new StringReader(xmlString));
+        parseInner(parser);
+        IOUtil.close(parser);
     }
-    private void appendChildes(Iterator<XMLNode> iterator, Appendable appendable, boolean xml) throws IOException {
+    @Override
+    void write(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
+        appendDocument(appendable, xml);
+        appendChildes(iterator(), appendable, xml, escapeXmlText);
+    }
+    private void appendChildes(Iterator<XMLNode> iterator, Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
         while (iterator.hasNext()){
-            iterator.next().write(appendable, xml);
+            iterator.next().write(appendable, xml, escapeXmlText);
         }
     }
+    @Override
+    public int compareTo(StyleDocument document) {
+        if(document == null){
+            return 0;
+        }
+        return getStyledString().compareTo(document.getStyledString());
+    }
+    @Override
+    public int hashCode(){
+        return getXml().hashCode();
+    }
+    @Override
+    public boolean equals(Object obj){
+        if(obj == this){
+            return true;
+        }
+        if(!(obj instanceof StyleDocument)){
+            return false;
+        }
+        return getXml().equals(((StyleDocument)obj).getXml());
+    }
+
     @Override
     StyleElement newElement(){
         return new StyleElement();
@@ -99,4 +156,38 @@ public class StyleDocument extends XMLDocument{
         styleDocument.parseInner(parser);
         return styleDocument;
     }
+    public static StyleDocument copyInner(XMLElement xmlElement){
+        StyleDocument styleDocument = new StyleDocument();
+        Iterator<XMLNode> iterator = xmlElement.iterator();
+        while (iterator.hasNext()){
+            XMLNode xmlNode = iterator.next();
+            if(xmlNode instanceof XMLElement){
+                StyleElement styleElement = new StyleElement();
+                styleDocument.add(styleElement);
+                styleElement.copyFrom((XMLElement) xmlNode);
+            }else if(xmlNode instanceof XMLText){
+                XMLText xmlText = (XMLText)xmlNode;
+                StyleText styleText = new StyleText(xmlText.getText());
+                styleDocument.add(styleText);
+            }
+        }
+        return styleDocument;
+    }
+
+    public static StyleDocument parseStyledString(String xmlStyledString) throws XmlPullParserException, IOException {
+        StyleDocument styleDocument = new StyleDocument();
+        styleDocument.parseString(xmlStyledString);
+        return styleDocument;
+    }
+
+    public static final Comparator<StyleDocument> COMPARATOR = (document1, document2) -> {
+        if(document1 == null && document2 == null){
+            return 0;
+        }
+        if(document1 == null){
+            return 1;
+        }
+        return document1.compareTo(document2);
+    };
+    private static final XmlPullParser PARSER = XMLFactory.newPullParser();
 }

@@ -17,7 +17,7 @@ package com.reandroid.xml;
 
 import java.io.IOException;
 
-public class StyleText extends XMLText{
+public class StyleText extends XMLText implements StyleNode{
     public StyleText(String text){
         super(text);
     }
@@ -25,7 +25,7 @@ public class StyleText extends XMLText{
         this("");
     }
     void writeStyledText(Appendable appendable) throws IOException {
-        appendable.append(getText());
+        appendable.append(getText(false));
     }
     @Override
     public int getLength(){
@@ -34,5 +34,24 @@ public class StyleText extends XMLText{
             return text.length();
         }
         return 0;
+    }
+    @Override
+    public void appendChar(char ch) {
+        if(ch == 0){
+            return;
+        }
+        appendText(ch);
+    }
+    @Override
+    public StyleNode getParentStyle() {
+        return (StyleNode) getParent();
+    }
+    @Override
+    public void addStyleNode(StyleNode styleNode){
+        throw new IllegalArgumentException("Text can't add node");
+    }
+    @Override
+    boolean isIndent(){
+        return false;
     }
 }

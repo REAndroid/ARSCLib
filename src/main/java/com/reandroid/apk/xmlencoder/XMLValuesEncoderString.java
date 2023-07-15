@@ -18,8 +18,8 @@ package com.reandroid.apk.xmlencoder;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.value.AttributeDataFormat;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.xml.StyleDocument;
 import com.reandroid.xml.XMLElement;
-import com.reandroid.xml.XMLSpannable;
 
 public class XMLValuesEncoderString extends XMLValuesEncoder{
     XMLValuesEncoderString(TableBlock tableBlock) {
@@ -40,7 +40,6 @@ public class XMLValuesEncoderString extends XMLValuesEncoder{
         encodeStyledString(entry, element);
     }
     private void encodeStyledString(Entry entry, XMLElement element){
-        XMLSpannable xmlSpannable = new XMLSpannable(element);
-        entry.setValueAsString(xmlSpannable.getXml());
+        entry.setValueAsString(StyleDocument.copyInner(element));
     }
 }

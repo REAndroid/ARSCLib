@@ -30,6 +30,7 @@ import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.xml.StyleDocument;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -316,6 +317,12 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
     }
     public ResValue setValueAsReference(int resourceId){
         return setValueAsRaw(ValueType.REFERENCE, resourceId);
+    }
+    public ResValue setValueAsString(StyleDocument styledString){
+        TableEntry<?, ?> tableEntry = ensureTableEntry(false);
+        ResValue resValue = (ResValue) tableEntry.getValue();
+        resValue.setValueAsString(styledString);
+        return resValue;
     }
     public ResValue setValueAsString(String str){
         TableEntry<?, ?> tableEntry = ensureTableEntry(false);
