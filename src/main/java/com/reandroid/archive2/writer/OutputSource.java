@@ -40,14 +40,6 @@ class OutputSource {
     OutputSource(InputSource inputSource){
         this.inputSource = inputSource;
     }
-    void align(ZipAligner aligner){
-        LocalFileHeader lfh = getLocalFileHeader();
-        if(aligner == null){
-            lfh.setZipAlign(0);
-        }else {
-            aligner.align(getInputSource(), lfh);
-        }
-    }
     void makeBuffer(BufferFileInput input, BufferFileOutput output) throws IOException {
         EntryBuffer entryBuffer = this.entryBuffer;
         if(entryBuffer != null){
@@ -86,6 +78,10 @@ class OutputSource {
         ceh.writeBytes(apkWriter.getOutputStream());
     }
     private void writeLFH(LocalFileHeader lfh, ApkWriter apkWriter) throws IOException{
+        ZipAligner aligner = apkWriter.getZipAligner();
+        if(aligner != null){
+            aligner.align(apkWriter.position(), lfh);
+        }
         lfh.writeBytes(apkWriter.getOutputStream());
     }
     private void writeData(FileChannel input, long length, ApkWriter apkWriter) throws IOException{
@@ -192,6 +188,6 @@ class OutputSource {
             apkLogger.logVerbose(msg);
         }
     }
-    private static final long LOG_LARGE_FILE_SIZE = 20L * 1000 * 1000 * 1024;
+    private static final long LOG_LARGE_FILE_SIZE = 2L * 1000 * 1000 * 1024;
 
 }

@@ -29,6 +29,18 @@ public class EndRecord extends ZipHeader{
         super(MIN_LENGTH, ZipSignature.END_RECORD);
     }
 
+    public int getTotalBytesCount(){
+        int count = countBytes();
+        ZipHeader zipHeader = getZip64Locator();
+        if(zipHeader != null){
+            count += zip64Locator.countBytes();
+        }
+        zipHeader = getZip64Record();
+        if(zipHeader != null){
+            count += zip64Locator.countBytes();
+        }
+        return count;
+    }
     private boolean isZip64Value(){
         return getInteger(OFFSET_offsetOfCentralDirectory) == 0xffffffff;
     }

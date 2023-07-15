@@ -77,11 +77,7 @@ public class CentralFileDirectory {
                 endRecord.getLengthOfCentralDirectory());
         this.endRecord = endRecord;
         loadCentralFileHeaders(inputStream);
-        //this.signatureFooter = tryFindSignatureFooter(footer, endRecord);
-    }
-    private void loadCentralFileHeaders(byte[] footer, int offset, int length) throws IOException {
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(footer, offset, length);
-        loadCentralFileHeaders(inputStream);
+        this.signatureFooter = tryFindSignatureFooter(zipInput, endRecord);
     }
     private void loadCentralFileHeaders(InputStream inputStream) throws IOException {
         List<CentralEntryHeader> headerList = this.headerList;
@@ -94,17 +90,18 @@ public class CentralFileDirectory {
         }
         inputStream.close();
     }
-    private SignatureFooter tryFindSignatureFooter(byte[] footer, EndRecord endRecord) throws IOException {
-        int lenCd = (int) endRecord.getLengthOfCentralDirectory();
-        int endLength = endRecord.countBytes();
+    private SignatureFooter tryFindSignatureFooter(ZipInput zipInput, EndRecord endRecord) throws IOException {
+        long lenCd = endRecord.getLengthOfCentralDirectory();
+        int endLength = endRecord.getTotalBytesCount();
         int length = SignatureFooter.MIN_SIZE;
-        int offset = footer.length - endLength - lenCd - length;
+        long offset = zipInput.getLength() - endLength - lenCd - length;
         if(offset < 0){
             return null;
         }
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(footer, offset, length);
+        InputStream inputStream = zipInput.getInputStream(offset, length);
         SignatureFooter signatureFooter = new SignatureFooter();
         signatureFooter.readBytes(inputStream);
+        inputStream.close();
         if(signatureFooter.isValid()){
             return signatureFooter;
         }

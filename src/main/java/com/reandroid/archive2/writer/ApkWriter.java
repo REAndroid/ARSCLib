@@ -20,10 +20,7 @@ import com.reandroid.apk.RenamedInputSource;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.WriteProgress;
 import com.reandroid.archive2.ZipSignature;
-import com.reandroid.archive2.block.ApkSignatureBlock;
-import com.reandroid.archive2.block.EndRecord;
-import com.reandroid.archive2.block.Zip64Locator;
-import com.reandroid.archive2.block.Zip64Record;
+import com.reandroid.archive2.block.*;
 import com.reandroid.archive2.io.ArchiveEntrySource;
 import com.reandroid.archive2.io.ZipFileOutput;
 import com.reandroid.arsc.chunk.TableBlock;
@@ -54,7 +51,9 @@ public class ApkWriter extends ZipFileOutput {
             logMessage("Buffering compress changed files ...");
             BufferFileInput buffer = writeBuffer(outputList);
             buffer.unlock();
-            align(outputList);
+            if(getZipAligner() != null){
+                logMessage("Zip align ON");
+            }
             writeApk(outputList);
             buffer.close();
 
@@ -118,6 +117,10 @@ public class ApkWriter extends ZipFileOutput {
         }
         logMessage("Writing signature block ...");
         long offset = position();
+        if(ZipHeader.isZip64Length(offset)){
+            logMessage("ZIP64 mode, skip writing signature block!");
+            return;
+        }
         int alignment = 4096;
         int filesPadding = (int) ((alignment - (offset % alignment)) % alignment);
         OutputStream outputStream = getOutputStream();
@@ -149,16 +152,6 @@ public class ApkWriter extends ZipFileOutput {
         }
         output.close();
         return input;
-    }
-    private void align(List<OutputSource> outputList){
-        ZipAligner aligner = getZipAligner();
-        if(aligner!=null){
-            aligner.reset();
-            logMessage("Zip align ...");
-        }
-        for(OutputSource outputSource:outputList){
-            outputSource.align(aligner);
-        }
     }
     private File getBufferFile(){
         File file = getFile();

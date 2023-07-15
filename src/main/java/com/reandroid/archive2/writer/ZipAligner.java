@@ -15,9 +15,9 @@
  */
 package com.reandroid.archive2.writer;
 
-import com.reandroid.archive.InputSource;
 import com.reandroid.archive2.block.DataDescriptor;
 import com.reandroid.archive2.block.LocalFileHeader;
+import com.reandroid.archive2.block.ZipHeader;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +29,6 @@ public class ZipAligner {
     private final Map<Pattern, Integer> alignmentMap;
     private int defaultAlignment;
     private boolean enableDataDescriptor;
-    private long mCurrentOffset;
 
     public ZipAligner(){
         alignmentMap = new HashMap<>();
@@ -57,26 +56,21 @@ public class ZipAligner {
         this.enableDataDescriptor = enableDataDescriptor;
     }
 
-    void reset(){
-        mCurrentOffset = 0;
-    }
-    void align(InputSource inputSource, LocalFileHeader lfh){
+    public void align(long offset, LocalFileHeader lfh){
+        if(ZipHeader.isZip64Length(offset + lfh.getSize())){
+            return;
+        }
         lfh.setZipAlign(0);
         int padding;
-        if(inputSource.getMethod() != ZipEntry.STORED){
+        if(lfh.getMethod() != ZipEntry.STORED){
             padding = 0;
             createDataDescriptor(lfh);
         }else {
-            int alignment = getAlignment(inputSource.getAlias());
-            long dataOffset = mCurrentOffset + lfh.countBytes();
+            int alignment = getAlignment(lfh.getFileName());
+            long dataOffset = offset + lfh.countBytes();
             padding = (int) ((alignment - (dataOffset % alignment)) % alignment);
         }
         lfh.setZipAlign(padding);
-        mCurrentOffset += lfh.getDataSize() + lfh.countBytes();
-        DataDescriptor dataDescriptor = lfh.getDataDescriptor();
-        if(dataDescriptor!=null){
-            mCurrentOffset += dataDescriptor.countBytes();
-        }
     }
     private void createDataDescriptor(LocalFileHeader lfh){
         DataDescriptor dataDescriptor;
