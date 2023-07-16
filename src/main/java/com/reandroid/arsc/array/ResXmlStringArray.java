@@ -48,7 +48,7 @@ public class ResXmlStringArray extends StringArray<ResXmlString> {
     }
     private ResXmlIDMap getResXmlIDMap(){
         ResXmlDocument xmlDocument = getParentInstance(ResXmlDocument.class);
-        if(xmlDocument!=null){
+        if(xmlDocument != null){
             return xmlDocument.getResXmlIDMap();
         }
         return null;
@@ -58,7 +58,12 @@ public class ResXmlStringArray extends StringArray<ResXmlString> {
         return new ResXmlString(isUtf8());
     }
     @Override
-    public ResXmlString[] newInstance(int len) {
-        return new ResXmlString[len];
+    public ResXmlString[] newInstance(int length) {
+        if(length == 0){
+            return EMPTY;
+        }
+        return new ResXmlString[length];
     }
+
+    private static final ResXmlString[] EMPTY = new ResXmlString[0];
 }

@@ -22,10 +22,7 @@ import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
 
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public abstract class StringArray<T extends StringItem> extends OffsetBlockArray<T> implements JSONConvert<JSONArray> {
     private boolean mUtf8;
@@ -75,11 +72,34 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     }
     public List<T> removeUnusedStrings(){
         List<T> unusedList = listUnusedStringsToRemove();
-        for(T item:unusedList){
-            item.onRemoved();
-        }
         remove(unusedList);
         return unusedList;
+    }
+    @Override
+    protected void remove(Collection<T> blockList, Collection<T> removedList){
+        List<T> copyList = new ArrayList<>();
+        super.remove(blockList, copyList);
+        for(T item : copyList){
+            item.onRemoved();
+        }
+        if(removedList != null){
+            removedList.addAll(copyList);
+        }
+    }
+    @Override
+    public void onPreRemove(T block){
+        block.onPreRemoveInternal();
+    }
+    @Override
+    protected boolean remove(T block, boolean trim){
+        if(block == null){
+            return false;
+        }
+        boolean removed = super.remove(block, trim);
+        if(removed){
+            block.onRemoved();
+        }
+        return removed;
     }
     List<T> listUnusedStringsToRemove(){
         return listUnusedStrings();
@@ -96,18 +116,16 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         return results;
     }
     public void setUtf8(boolean is_utf8){
-        if(mUtf8==is_utf8){
+        if(mUtf8 == is_utf8){
             return;
         }
         mUtf8 = is_utf8;
         T[] childes = getChildes();
-        if(childes!=null){
-            int length = childes.length;
-            for(int i=0; i<length; i++){
-                T item = childes[i];
-                if(item != null){
-                    item.setUtf8(is_utf8);
-                }
+        int length = childes.length;
+        for(int i = 0; i < length; i++){
+            T item = childes[i];
+            if(item != null){
+                item.setUtf8(is_utf8);
             }
         }
     }
@@ -153,4 +171,14 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     public void fromJson(JSONArray json) {
         throw new IllegalArgumentException(getClass().getSimpleName()+".fromJson() NOT implemented");
     }
+
+    public static final Comparator<StringItem> COMPARATOR = (stringItem1, stringItem2) -> {
+        if(stringItem1 == stringItem2){
+            return 0;
+        }
+        if(stringItem1 == null){
+            return 1;
+        }
+        return stringItem1.compareTo(stringItem2);
+    };
 }

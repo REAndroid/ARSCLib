@@ -40,6 +40,13 @@ public class TypeString extends StringItem {
     void ensureStringLinkUnlocked(){
     }
     @Override
+    public int compareTo(StringItem stringItem){
+        if(stringItem == null){
+            return -1;
+        }
+        return Integer.compare(getIndex(), stringItem.getIndex());
+    }
+    @Override
     public String toString(){
         return HexUtil.toHex2((byte) getId())+':'+get();
     }

@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.coder.ThreeByteCharsetDecoder;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.StringPool;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.json.JSONConvert;
@@ -35,10 +36,11 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
+public class StringItem extends BlockItem implements JSONConvert<JSONObject>, Comparable<StringItem> {
     private String mCache;
     private boolean mUtf8;
     private final Set<ReferenceItem> mReferencedList;
+    private StyleItem mStyleToRemove;
     public StringItem(boolean utf8) {
         super(0);
         this.mUtf8=utf8;
@@ -116,12 +118,15 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
             ref.set(newIndex);
         }
     }
+    public void onPreRemoveInternal(){
+        mStyleToRemove = getStyle();
+    }
     public void onRemoved(){
-        StyleItem style = getStyle();
-        if(style!=null){
-            style.onRemoved();
-        }
         setParent(null);
+        StyleItem styleItem = mStyleToRemove;
+        if(styleItem != null){
+            styleItem.onRemoved();
+        }
     }
     @Override
     public void onIndexChanged(int oldIndex, int newIndex){
@@ -279,6 +284,41 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
         }
         int index=getIndex();
         return stringPool.getStyle(index);
+    }
+    public void transferReferences(StringItem source){
+        if(source == this || source == null || getParent() != source.getParent()){
+            return;
+        }
+        int index = getIndex();
+        if(index < 0 || source.getIndex() < 0){
+            return;
+        }
+        List<ReferenceItem> copyList = new ArrayList<>(source.getReferencedList());
+        for(ReferenceItem ref : copyList){
+            if(isTransferable(ref)){
+                source.removeReference(ref);
+                ref.set(index);
+                addReference(ref);
+            }
+        }
+    }
+    private boolean isTransferable(ReferenceItem referenceItem){
+        return !((referenceItem instanceof WeakStringReference));
+    }
+    @Override
+    public int compareTo(StringItem stringItem) {
+        if(stringItem == null){
+            return -1;
+        }
+        boolean has_style1 = hasStyle();
+        boolean has_style2 = stringItem.hasStyle();
+        if(has_style1 && !has_style2){
+            return -1;
+        }
+        if(!has_style1 && has_style2){
+            return 1;
+        }
+        return StringsUtil.compareStrings(getXml(), stringItem.getXml());
     }
     @Override
     public JSONObject toJson() {

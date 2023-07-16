@@ -77,6 +77,17 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
         // Not required
     }
     @Override
+    protected boolean remove(StyleItem block, boolean trim){
+        if(block == null){
+            return false;
+        }
+        boolean removed = super.remove(block, trim);
+        if(!removed && trim){
+            trimNullBlocks();
+        }
+        return removed;
+    }
+    @Override
     public StyleItem newInstance() {
         return new StyleItem();
     }

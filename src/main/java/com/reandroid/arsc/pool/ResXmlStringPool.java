@@ -88,6 +88,7 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
         idArray.setChildesCount(count);
         int index = count - 1;
         xmlID = idArray.get(index);
+        assert xmlID != null;
         xmlID.set(resourceId);
         idArray.refreshIdMap();
 
@@ -120,6 +121,7 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
         }
         stringsArray.ensureSize(count+1);
         ResXmlString xmlString = stringsArray.get(count);
+        assert xmlString != null;
         xmlString.set(str);
         super.updateUniqueIdMap(xmlString);
         return xmlString;
@@ -130,26 +132,6 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
             return resXmlDocument.getResXmlIDMap();
         }
         return null;
-    }
-    private ResXmlString getOrCreateAttributeName(int idMapCount, String str){
-        StringGroup<ResXmlString> group = get(str);
-        if(group!=null){
-            Iterator<ResXmlString> itr = group.iterator();
-            while (itr.hasNext()){
-                ResXmlString xmlString = itr.next();
-                if(xmlString.getIndex()>idMapCount){
-                    return xmlString;
-                }
-            }
-        }
-        StringArray<ResXmlString> stringsArray = getStringsArray();
-        stringsArray.ensureSize(idMapCount);
-        int i=stringsArray.childesCount();
-        stringsArray.ensureSize(i+1);
-        ResXmlString xmlString=stringsArray.get(i);
-        xmlString.set(str);
-        refreshUniqueIdMap();
-        return xmlString;
     }
     @Override
     public void onChunkLoaded() {

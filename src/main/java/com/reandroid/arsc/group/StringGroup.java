@@ -16,13 +16,66 @@
 package com.reandroid.arsc.group;
 
 import com.reandroid.arsc.base.BlockArrayCreator;
+import com.reandroid.arsc.item.ReferenceItem;
 import com.reandroid.arsc.item.StringItem;
 
-public class StringGroup<T extends StringItem> extends ItemGroup<T>{
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+
+public class StringGroup<T extends StringItem> extends ItemGroup<T>
+        implements Comparator<StringItem>{
     public StringGroup(BlockArrayCreator<T> blockArrayCreator, String name){
         super(blockArrayCreator, name);
     }
     public StringGroup(BlockArrayCreator<T> blockArrayCreator, String name, T firstItem){
         super(blockArrayCreator, name, firstItem);
+    }
+
+    public int clearDuplicates(){
+        if(!isDuplicate()){
+            return 0;
+        }
+        T[] stringItems = getItems();
+        StringItem first = stringItems[0];
+        int length = stringItems.length;
+        for(int i = 1; i < length; i++){
+            StringItem item = stringItems[i];
+            first.transferReferences(item);
+        }
+        return length - 1;
+    }
+    public boolean isDuplicate(){
+        T[] stringItems = getItems();
+        int length = stringItems.length;
+        if(length < 2){
+            return false;
+        }
+        int end = length - 1;
+        for(int i = 0; i < end; i++){
+            for(int j = i + 1; j < length; j++){
+                StringItem left = stringItems[i];
+                StringItem right = stringItems[j];
+                if(left == right){
+                    continue;
+                }
+                if(compare(left, right) == 0){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public int compare(StringItem stringItem1, StringItem stringItem2) {
+        if(stringItem1 == stringItem2){
+            return 0;
+        }
+        if(stringItem1 == null){
+            return 1;
+        }
+        return stringItem1.compareTo(stringItem2);
     }
 }

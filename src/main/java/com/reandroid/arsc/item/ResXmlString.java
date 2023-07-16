@@ -15,6 +15,9 @@
   */
 package com.reandroid.arsc.item;
 
+import com.reandroid.arsc.chunk.xml.ResXmlDocument;
+import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
+
 public class ResXmlString extends StringItem {
     public ResXmlString(boolean utf8) {
         super(utf8);
@@ -23,7 +26,44 @@ public class ResXmlString extends StringItem {
         this(utf8);
         set(value);
     }
+    public int getResourceId(){
+        ResXmlIDMap idMap = getResXmlIDMap();
+        if(idMap == null){
+            return 0;
+        }
+        ResXmlID xmlId = idMap.getResXmlID(getIndex());
+        if(xmlId == null){
+            return 0;
+        }
+        return xmlId.get();
+    }
+    private ResXmlIDMap getResXmlIDMap(){
+        ResXmlDocument resXmlDocument = getParentInstance(ResXmlDocument.class);
+        if(resXmlDocument!=null){
+            return resXmlDocument.getResXmlIDMap();
+        }
+        return null;
+    }
     @Override
     void ensureStringLinkUnlocked(){
+    }
+    @Override
+    public int compareTo(StringItem stringItem){
+        if(!(stringItem instanceof ResXmlString)){
+            return -1;
+        }
+        ResXmlString xmlString = (ResXmlString) stringItem;
+        int id1 = getResourceId();
+        int id2 = xmlString.getResourceId();
+        if(id1 != 0 && id2 !=0){
+            return Long.compare(0xffffffffL & id1, 0xffffffffL & id2);
+        }
+        if(id1 != 0){
+            return -1;
+        }
+        if(id2 != 0){
+            return 1;
+        }
+        return super.compareTo(stringItem);
     }
 }

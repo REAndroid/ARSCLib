@@ -68,6 +68,7 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         mSpanInfoList = null;
         StyleArray parentArray = getParentInstance(StyleArray.class);
         setParent(null);
+        setIndex(-1);
         if(parentArray != null){
             parentArray.remove(this);
         }
@@ -422,7 +423,7 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         return "Spans count = "+getSpanInfoList().size();
     }
 
-    static final class StyleIndexReference implements ReferenceItem{
+    static final class StyleIndexReference implements WeakStringReference{
         private final StyleItem styleItem;
         StyleIndexReference(StyleItem styleItem){
             this.styleItem = styleItem;
@@ -431,6 +432,7 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         public void set(int val) {
             StyleArray styleArray = styleItem.getParentInstance(StyleArray.class);
             if(styleArray != null){
+                styleArray.setItem(styleItem.getIndex(), null);
                 styleArray.setItem(val, styleItem);
             }
         }

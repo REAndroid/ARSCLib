@@ -22,7 +22,7 @@ import com.reandroid.utils.StringsUtil;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class SpecString extends StringItem implements Comparable<SpecString>{
+public class SpecString extends StringItem {
     public SpecString(boolean utf8) {
         super(utf8);
     }
@@ -70,10 +70,10 @@ public class SpecString extends StringItem implements Comparable<SpecString>{
         return null;
     }
     @Override
-    public int compareTo(SpecString specString) {
-        if(specString == null){
+    public int compareTo(StringItem stringItem) {
+        if(stringItem == null){
             return -1;
         }
-        return StringsUtil.compareStrings(this.get(), specString.get());
+        return StringsUtil.compareStrings(this.get(), stringItem.get());
     }
 }

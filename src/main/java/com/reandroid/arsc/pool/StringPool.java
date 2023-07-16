@@ -28,6 +28,8 @@ import com.reandroid.arsc.item.*;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
 import java.util.*;
@@ -170,13 +172,16 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     }
     // call this after modifying string values
     public void refreshUniqueIdMap(){
-        mUniqueMap.clear();
-        T[] stringsArray = getStrings();
-        if(stringsArray == null){
+        Map<String, StringGroup<T>> map = mUniqueMap;
+        map.clear();
+        StringArray<T> stringArray = this.mArrayStrings;
+        T[] stringItems = stringArray.getChildes();
+        int length = stringItems.length;
+        if(length == 0){
             return;
         }
-        for(int i=0; i < stringsArray.length; i++){
-            T item = stringsArray[i];
+        for(int i = 0; i < length; i++){
+            T item = stringItems[i];
             if(item == null){
                 continue;
             }
@@ -184,10 +189,10 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
             if(str == null){
                 continue;
             }
-            StringGroup<T> group = mUniqueMap.get(str);
+            StringGroup<T> group = map.get(str);
             if(group == null){
-                group = new StringGroup<>(mArrayStrings, str, item);
-                mUniqueMap.put(str, group);
+                group = new StringGroup<>(stringArray, str, item);
+                map.put(str, group);
             }else {
                 group.add(item);
             }
@@ -208,6 +213,20 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         }else {
             group.add(item);
         }
+    }
+    public int clearDuplicates(){
+        int results = 0;
+        Iterator<StringGroup<T>> iterator = mUniqueMap.values().iterator();
+        while (iterator.hasNext()){
+            results += iterator.next().clearDuplicates();
+        }
+        return results;
+    }
+    public Iterator<StringGroup<T>> listDuplicates(){
+        if(mUniqueMap.size() == countStrings() || countStrings() == 0){
+            return EmptyIterator.of();
+        }
+        return new FilterIterator<>(mUniqueMap.values().iterator(), StringGroup::isDuplicate);
     }
     public List<T> removeUnusedStrings(){
         return getStringsArray().removeUnusedStrings();
@@ -235,16 +254,6 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         }
         return null;
     }
-    public void addReference(ReferenceItem ref){
-        if(ref==null){
-            return;
-        }
-        T item=get(ref.get());
-        if(item!=null){
-            item.addReference(ref);
-        }
-    }
-
     public boolean contains(String str){
         return mUniqueMap.containsKey(str);
     }

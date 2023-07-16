@@ -377,6 +377,9 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         return false;
     }
     public void remove(Collection<T> blockList){
+        remove(blockList, null);
+    }
+    protected void remove(Collection<T> blockList, Collection<T> removedList){
         T[] items = elementData;
         if(items == null || blockList == null){
             return;
@@ -395,27 +398,37 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
             if(index < 0 || index >= length){
                 continue;
             }
-            if(items[index] != block){
+            T item = items[index];
+            if(item != block){
                 continue;
             }
             items[index] = null;
+            onPreRemove(item);
+            if(removedList != null){
+                removedList.add(item);
+            }
         }
         trimNullBlocks();
+    }
+    public void onPreRemove(T block){
+
     }
     public boolean remove(T block){
         return remove(block, true);
     }
     protected boolean remove(T block, boolean trim){
-        T[] items=elementData;
-        if(block==null||items==null){
+        T[] items = elementData;
+        if(block == null){
             return false;
         }
         boolean found=false;
-        int len=items.length;
-        for(int i=0;i<len;i++){
-            if(block==items[i]){
-                items[i]=null;
-                found=true;
+        int length = items.length;
+        for(int i = 0; i < length; i++){
+            T item = items[i];
+            if(block == item){
+                items[i] = null;
+                found = true;
+                onPreRemove(item);
             }
         }
         if(found && trim){

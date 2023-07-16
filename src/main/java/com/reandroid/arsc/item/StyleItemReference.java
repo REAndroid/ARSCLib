@@ -17,7 +17,7 @@ package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
 
-class StyleItemReference implements ReferenceItem{
+class StyleItemReference implements WeakStringReference{
     private final StyleItem styleItem;
     private final int stylePiece;
     StyleItemReference(StyleItem styleItem, int stylePiece){
