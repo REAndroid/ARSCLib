@@ -35,6 +35,7 @@ public class ReferenceBlock<T extends Block> implements ReferenceItem{
     public int get() {
         return BlockItem.getInteger(this.block.getBytes(), this.offset);
     }
+    @SuppressWarnings("unchecked")
     @Override
     public <T1 extends Block> T1 getReferredParent(Class<T1> parentClass){
         T block = getBlock();

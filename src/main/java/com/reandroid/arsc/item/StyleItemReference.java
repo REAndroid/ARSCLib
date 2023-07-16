@@ -26,12 +26,13 @@ class StyleItemReference implements ReferenceItem{
     }
     @Override
     public void set(int val) {
-        styleItem.setStringRef(stylePiece, val, false);
+        styleItem.setStringRef(stylePiece, val);
     }
     @Override
     public int get() {
         return styleItem.getStringRef(stylePiece);
     }
+    @SuppressWarnings("unchecked")
     @Override
     public <T1 extends Block> T1 getReferredParent(Class<T1> parentClass){
         if(parentClass.isInstance(styleItem)){

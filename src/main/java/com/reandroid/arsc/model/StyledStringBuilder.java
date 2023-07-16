@@ -15,7 +15,6 @@
  */
 package com.reandroid.arsc.model;
 
-import com.reandroid.utils.StringsUtil;
 import com.reandroid.xml.*;
 
 public class StyledStringBuilder {
@@ -78,6 +77,7 @@ public class StyledStringBuilder {
             }
             boolean spanOk = initialize(styleCharPieceArray, spanInfo);
             if(!spanOk){
+                // TODO: investigate the reason
                 return false;
             }
         }

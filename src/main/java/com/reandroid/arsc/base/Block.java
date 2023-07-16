@@ -95,6 +95,7 @@ public abstract class Block {
     public final Block getParent(){
         return mParent;
     }
+    @SuppressWarnings("unchecked")
     public final <T> T getParent(Class<T> parentClass){
         Block parent = getParent();
         while (parent!=null){
@@ -105,6 +106,7 @@ public abstract class Block {
         }
         return null;
     }
+    @SuppressWarnings("unchecked")
     public final <T> T getParentInstance(Class<T> parentClass){
         Block parent = getParent();
         while (parent!=null){

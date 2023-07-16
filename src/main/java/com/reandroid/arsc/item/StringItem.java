@@ -78,14 +78,7 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
     }
     public boolean hasReference(){
         ensureStringLinkUnlocked();
-        if(mReferencedList.size() == 0){
-            return false;
-        }
-        if(mReferencedList.size() != 1){
-            return true;
-        }
-        ReferenceItem referenceItem = mReferencedList.iterator().next();
-        return !(referenceItem instanceof StyleItem.StyleIndexReference);
+        return mReferencedList.size() > 0;
     }
     public Collection<ReferenceItem> getReferencedList(){
         ensureStringLinkUnlocked();
@@ -313,11 +306,15 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject> {
     }
     @Override
     public String toString(){
-        String str = getXml();
-        if(str == null){
-            return "NULL";
+        String xml = getXml();
+        if(xml == null){
+            return getIndex() + ": NULL";
         }
-        return "USED BY=" + mReferencedList.size() + "{" + str + "}";
+        StringPool<?> stringPool = getParentInstance(StringPool.class);
+        if(stringPool != null && !stringPool.isStringLinkLocked()){
+            return getIndex() + ": USED BY=" + mReferencedList.size() + "{" + xml + "}";
+        }
+        return getIndex() + ":" + xml;
     }
 
     private static int[] decodeUtf8StringByteLength(byte[] lengthBytes) {

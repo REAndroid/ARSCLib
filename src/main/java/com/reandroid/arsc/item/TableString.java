@@ -21,6 +21,7 @@ import com.reandroid.arsc.value.Entry;
 import com.reandroid.xml.StyleDocument;
 import com.reandroid.xml.StyleText;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -56,6 +57,18 @@ public class TableString extends StringItem implements Comparable<TableString> {
         return CollectionUtil.toList(getEntries(false));
     }
 
+    @Override
+    public boolean hasReference(){
+        if(!super.hasReference()){
+            return false;
+        }
+        Collection<?> references = getReferencedList();
+        if(references.size() > 1){
+            return true;
+        }
+        Object referenceItem = references.iterator().next();
+        return !(referenceItem instanceof StyleItem.StyleIndexReference);
+    }
     @Override
     public int compareTo(TableString tableString) {
         if(tableString == null){

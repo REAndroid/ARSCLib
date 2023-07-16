@@ -40,9 +40,7 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         this.mReferences = new HashSet<>();
     }
     public StyleDocument build(String text){
-        StyledStringBuilder builder = new StyledStringBuilder(text, getSpanInfoElements());
-        StyleDocument styleDocument = builder.build();
-        return styleDocument;
+        return new StyledStringBuilder(text, getSpanInfoElements()).build();
     }
     public void parse(StyleDocument document){
         Iterator<StyleElement> iterator = document.getElements();
@@ -95,17 +93,8 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         return super.get(i);
     }
     final void setStringRef(int index, int val){
-        setStringRef(index, val, true);
-    }
-    final void setStringRef(int index, int val, boolean link){
-        if(link){
-            unLink(index);
-        }
         int i=index * INTEGERS_COUNT + INDEX_STRING_REF;
         super.put(i, val);
-        if(link){
-            link(getStringItem(val), index);
-        }
     }
     private void linkAll(){
         int count = getStylePieceCount();
@@ -186,17 +175,9 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         int i=index * INTEGERS_COUNT + INDEX_CHAR_FIRST;
         return super.get(i);
     }
-    final void setFirstChar(int index, int val){
-        int i=index * INTEGERS_COUNT + INDEX_CHAR_FIRST;
-        super.put(i, val);
-    }
     final Integer getLastChar(int index){
         int i=index * INTEGERS_COUNT + INDEX_CHAR_LAST;
         return super.get(i);
-    }
-    final void setLastChar(int index, int val){
-        int i=index * INTEGERS_COUNT + INDEX_CHAR_LAST;
-        super.put(i, val);
     }
     public void addStylePiece(String tag, int firstChar, int lastChar){
         StringPool<?> stringPool = getStringPool();
@@ -303,21 +284,6 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
                     getLastChar(i));
         }
         return results;
-    }
-    private int getSpanInfoMax(){
-        int result = 0;
-        int count = getStylePieceCount();
-        for(int i = 0; i < count; i++){
-            Integer position = getFirstChar(i);
-            if(position != null && position > result){
-                result = position;
-            }
-            position = getLastChar(i);
-            if(position != null && position > result){
-                result = position;
-            }
-        }
-        return result;
     }
     public final List<StyleSpanInfo> getSpanInfoList(){
         if(mSpanInfoList!=null){
@@ -456,7 +422,6 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         return "Spans count = "+getSpanInfoList().size();
     }
 
-    @SuppressWarnings("unchecked")
     static final class StyleIndexReference implements ReferenceItem{
         private final StyleItem styleItem;
         StyleIndexReference(StyleItem styleItem){
@@ -474,6 +439,7 @@ public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
         public int get() {
             return styleItem.getIndex();
         }
+        @SuppressWarnings("unchecked")
         @Override
         public <T1 extends Block> T1 getReferredParent(Class<T1> parentClass) {
             if(parentClass.isInstance(styleItem)){
