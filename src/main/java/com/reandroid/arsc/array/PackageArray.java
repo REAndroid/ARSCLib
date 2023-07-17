@@ -55,7 +55,7 @@ public class PackageArray extends BlockArray<PackageBlock>
         if(items==null||items.length==0){
             return null;
         }
-        if(items.length==1){
+        if(items.length==1 && packageId==0){
             return items[0];
         }
         PackageBlock largest=null;
