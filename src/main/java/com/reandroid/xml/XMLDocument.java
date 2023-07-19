@@ -62,13 +62,13 @@ public class XMLDocument extends XMLNodeTree{
         int event = parser.getEventType();
         if(event == XmlPullParser.START_DOCUMENT){
             encoding = parser.getInputEncoding();
-            XMLUtil.findStartTag(parser);
+            XMLUtil.ensureStartTag(parser);
         }else if(event == XmlPullParser.END_TAG || event == XmlPullParser.START_TAG){
             parser.next();
         }else if(event == XmlPullParser.END_DOCUMENT){
             return;
         }
-        XMLUtil.findStartTag(parser);
+        XMLUtil.ensureStartTag(parser);
         XMLElement element = newElement();
         add(element);
         element.parse(parser);
@@ -80,7 +80,7 @@ public class XMLDocument extends XMLNodeTree{
         int event = parser.getEventType();
         if(event == XmlPullParser.START_DOCUMENT){
             encoding = parser.getInputEncoding();
-            event = XMLUtil.findStartTag(parser);
+            event = XMLUtil.ensureStartTag(parser);
         }
         if(event == XmlPullParser.END_DOCUMENT){
             return;

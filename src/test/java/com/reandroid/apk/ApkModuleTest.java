@@ -81,8 +81,10 @@ public class ApkModuleTest {
     }
     private TableBlock createTableBlock(AndroidManifestBlock manifestBlock){
         TableBlock tableBlock = new TableBlock();
+        String packageName = manifestBlock.getPackageName();
+        int packageId = 0x7f;
         PackageBlock packageBlock = tableBlock.newPackage(
-                0x7f, manifestBlock.getPackageName());
+                packageId, packageName);
         StyleDocument xmlDocument = new StyleDocument();
         xmlDocument.add(new StyleText("The quick"));
         StyleElement element = new StyleElement();
@@ -99,6 +101,16 @@ public class ApkModuleTest {
         String app_name = "ARSCLib Test";
         Entry appName = packageBlock.getOrCreate("", "string", "app_name");
         appName.setValueAsString(app_name);
+
+        Assert.assertEquals("packages count", 1, tableBlock.countPackages());
+        Assert.assertEquals("package id", packageId, packageBlock.getId());
+        Assert.assertEquals("package name", packageName, packageBlock.getName());
+
+        Assert.assertEquals("package by id", packageBlock, tableBlock.getPackageBlockById(packageId));
+        Assert.assertNull("package by id", tableBlock.getPackageBlockById(packageId - 1));
+        Assert.assertEquals("package pick one by id", packageBlock, tableBlock.pickOne(packageId));
+        Assert.assertNull("package pick one by wrong id", tableBlock.pickOne(packageId-1));
+        Assert.assertEquals("package pick one", packageBlock, tableBlock.pickOne());
 
         Assert.assertNotNull(appName.getResValue());
         Assert.assertEquals(app_name, appName.getResValue().getValueAsString());
@@ -154,10 +166,21 @@ public class ApkModuleTest {
 
 
         createAttrEntry(packageBlock);
+        createArrayEntry(packageBlock);
+        createMoreStrings(packageBlock);
 
         tableBlock.refreshFull();
 
         return tableBlock;
+    }
+    private void createMoreStrings(PackageBlock packageBlock){
+        Entry entry = packageBlock
+                .getOrCreate("", "string", "test_1");
+        entry.setValueAsString("@integer/value");
+        ResValue resValue = entry.getResValue();
+        Assert.assertNotNull("resValue", resValue);
+        Assert.assertEquals("@integer/value", resValue.getValueAsString());
+
     }
     private void createAttrEntry(PackageBlock packageBlock){
         Entry entry = packageBlock
@@ -178,14 +201,32 @@ public class ApkModuleTest {
         mapArray.refresh();
 
     }
+    private void createArrayEntry(PackageBlock packageBlock){
+        Entry entry = packageBlock
+                .getOrCreate("", "array", "array_1");
+        entry.ensureComplex(true);
+
+        ResValueMapArray mapArray = entry.getResValueMapArray();
+
+        ResValueMap valueMap = mapArray.createNext();
+        valueMap.setArrayIndex(1);
+
+        valueMap.setValueAsString("@integer/value");
+        Assert.assertEquals("@integer/value", valueMap.getValueAsString());
+
+        mapArray.refresh();
+
+    }
     private AndroidManifestBlock createManifest() throws IOException {
         FrameworkApk frameworkApk = AndroidFrameworks.getLatest();
         AndroidManifestBlock manifestBlock = new AndroidManifestBlock();
         manifestBlock.setPackageName("com.reandroid.arsc");
         manifestBlock.setVersionCode(1);
         manifestBlock.setVersionName("1.0");
+
         manifestBlock.setCompileSdkVersion(frameworkApk.getVersionCode());
         manifestBlock.setCompileSdkVersionCodename(frameworkApk.getVersionName());
+
         manifestBlock.setPlatformBuildVersionCode(frameworkApk.getVersionCode());
         manifestBlock.setPlatformBuildVersionName(frameworkApk.getVersionName());
 
@@ -195,6 +236,29 @@ public class ApkModuleTest {
         manifestBlock.getOrCreateMainActivity("android.app.Activity");
 
         manifestBlock.refresh();
+
+        Assert.assertEquals("package", "com.reandroid.arsc", manifestBlock.getPackageName());
+        Assert.assertEquals("versionCode", Integer.valueOf(1), manifestBlock.getVersionCode());
+        Assert.assertEquals("versionName", "1.0", manifestBlock.getVersionName());
+
+        Assert.assertEquals("compileSdkVersion",
+                Integer.valueOf(1), manifestBlock.getVersionCode());
+        Assert.assertEquals("compileSdkVersionCodeName",
+                "1.0", manifestBlock.getVersionName());
+
+        Assert.assertEquals("platformBuildVersionCode",
+                Integer.valueOf(frameworkApk.getVersionCode()), manifestBlock.getPlatformBuildVersionCode());
+        Assert.assertEquals("platformBuildVersionName",
+                frameworkApk.getVersionName(), manifestBlock.getPlatformBuildVersionName());
+
+        Assert.assertNotNull("android.permission.INTERNET",
+                manifestBlock.getUsesPermission("android.permission.INTERNET"));
+        Assert.assertNotNull("android.permission.READ_EXTERNAL_STORAGE",
+                manifestBlock.getUsesPermission("android.permission.READ_EXTERNAL_STORAGE"));
+
+        Assert.assertNull("android.permission.NOTHING",
+                manifestBlock.getUsesPermission("android.permission.NOTHING"));
+
         return manifestBlock;
     }
     public static ApkModule getLastApkModule(){

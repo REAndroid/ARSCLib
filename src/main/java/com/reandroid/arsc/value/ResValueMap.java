@@ -25,12 +25,27 @@ import com.reandroid.xml.XMLAttribute;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLUtil;
 
-public class ResValueMap extends AttributeValue{
+public class ResValueMap extends AttributeValue implements Comparable<ResValueMap>{
 
     public ResValueMap() {
         super(12, OFFSET_SIZE);
     }
 
+
+    public void setArrayIndex(){
+        setArrayIndex(getIndex() + 1);
+    }
+    public void setArrayIndex(int index){
+        setName(0x01000000 | index);
+    }
+    public int getArrayIndex(){
+        int name = getName();
+        int high = name & 0xffff0000;
+        if(high != 0x01000000 && high != 0x02000000){
+            return -1;
+        }
+        return name & 0xffff;
+    }
     public EncodeResult encodeStyle(XMLElement xmlElement){
         return encodeStyle(false, xmlElement);
     }
@@ -75,7 +90,7 @@ public class ResValueMap extends AttributeValue{
         }
         ResourceEntry resourceEntry = resolve(resourceId);
         if(resourceEntry == null || !resourceEntry.isDeclared()){
-            return ValueCoder.decodeUnknownResourceId(false, resourceId);
+            return ValueCoder.decodeUnknownNameId(resourceId);
         }
         String name = resourceEntry.getName();
         if(includePrefix && resourceEntry.getPackageBlock() != getPackageBlock()){
@@ -92,7 +107,12 @@ public class ResValueMap extends AttributeValue{
         if(attributeType != AttributeType.FORMATS){
             return null;
         }
-        return AttributeDataFormat.toString(AttributeDataFormat.decodeValueTypes(getData()));
+        int data = getData() & 0x00ff;
+        if(data == 0){
+            return "";
+        }
+        return AttributeDataFormat.toString(
+                AttributeDataFormat.decodeValueTypes(data));
     }
     @Override
     public String decodePrefix(){
@@ -213,6 +233,27 @@ public class ResValueMap extends AttributeValue{
         ResValueMap resValueMap = (ResValueMap) valueItem;
         super.merge(resValueMap);
         setName(resValueMap.getName());
+    }
+    @Override
+    public int compareTo(ResValueMap valueMap) {
+        if(valueMap == null){
+            return -1;
+        }
+        if(valueMap == this){
+            return 0;
+        }
+        int id1 = getNameResourceID();
+        int id2 = valueMap.getNameResourceID();
+        if(id1 == id2){
+            return 0;
+        }
+        if(id1 == 0){
+            return 1;
+        }
+        if(id2 == 0){
+            return -1;
+        }
+        return Integer.compare(id1, id2);
     }
     @Override
     public String toString(){

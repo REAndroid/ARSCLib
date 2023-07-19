@@ -15,7 +15,7 @@
  */
 package com.reandroid.apk;
 
-import com.reandroid.apk.xmlencoder.XMLParseEncodeSource;
+import com.reandroid.apk.xmlencoder.XMLEncodeSource;
 import com.reandroid.apk.xmlencoder.XMLTableBlockEncoder;
 import com.reandroid.archive.FileInputSource;
 import com.reandroid.arsc.chunk.PackageBlock;
@@ -86,8 +86,8 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
         }
         XMLParserSource xmlSource =
                 new XMLFileParserSource(AndroidManifestBlock.FILE_NAME, file);
-        XMLParseEncodeSource xmlEncodeSource =
-                new XMLParseEncodeSource(tableBlock.pickOne(), xmlSource);
+        XMLEncodeSource xmlEncodeSource =
+                new XMLEncodeSource(tableBlock.pickOne(), xmlSource);
         xmlEncodeSource.setApkLogger(getApkLogger());
         getApkModule().add(xmlEncodeSource);
     }
@@ -113,8 +113,8 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
         if(file.getName().endsWith(".xml")){
             XMLParserSource xmlSource =
                     new XMLFileParserSource(path, file);
-            XMLParseEncodeSource xmlEncodeSource =
-                    new XMLParseEncodeSource(entry.getPackageBlock(), xmlSource);
+            XMLEncodeSource xmlEncodeSource =
+                    new XMLEncodeSource(entry.getPackageBlock(), xmlSource);
             xmlEncodeSource.setApkLogger(getApkLogger());
             getApkModule().add(xmlEncodeSource);
         }else {

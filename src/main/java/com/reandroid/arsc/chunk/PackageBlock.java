@@ -22,6 +22,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.coder.CommonType;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.coder.xml.XmlEncodeException;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.PackageBody;
 import com.reandroid.arsc.container.SpecTypePair;
@@ -43,6 +44,7 @@ import com.reandroid.utils.*;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.IterableIterator;
 import com.reandroid.utils.io.IOUtil;
+import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLFactory;
 import com.reandroid.xml.XMLUtil;
 import org.xmlpull.v1.XmlPullParser;
@@ -141,6 +143,17 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     public ResourceEntry getAttrResource(String name){
         Iterator<SpecTypePair> itr = getAttrSpecs();
+        while (itr.hasNext()){
+            ResourceEntry resourceEntry = itr.next()
+                    .getResource(name);
+            if(resourceEntry != null){
+                return resourceEntry;
+            }
+        }
+        return null;
+    }
+    public ResourceEntry getIdResource(String name){
+        Iterator<SpecTypePair> itr = getIdSpecs();
         while (itr.hasNext()){
             ResourceEntry resourceEntry = itr.next()
                     .getResource(name);
@@ -505,7 +518,15 @@ public class PackageBlock extends Chunk<PackageHeader>
         return getSpecTypePairArray().iterator(new Predicate<SpecTypePair>() {
             @Override
             public boolean test(SpecTypePair specTypePair) {
-                return specTypePair != null && specTypePair.isAttr();
+                return specTypePair != null && specTypePair.isTypeAttr();
+            }
+        });
+    }
+    private Iterator<SpecTypePair> getIdSpecs(){
+        return getSpecTypePairArray().iterator(new Predicate<SpecTypePair>() {
+            @Override
+            public boolean test(SpecTypePair specTypePair) {
+                return specTypePair != null && specTypePair.isTypeId();
             }
         });
     }
@@ -584,103 +605,13 @@ public class PackageBlock extends Chunk<PackageHeader>
             serializer.attribute(null, ATTR_id, HexUtil.toHex2((byte)id));
         }
     }
-
     public void parsePublicXml(XmlPullParser parser) throws IOException,
             XmlPullParserException {
-        int event = XMLUtil.findStartTag(parser);
-        if(event == XmlPullParser.END_DOCUMENT){
-            return;
-        }
-        if(TAG_resources.equals(parser.getName())){
-            setName(readPackageName(parser, getName()));
-            setId(readPackageId(parser, getId()));
-            parser.nextToken();
-            event = XMLUtil.findStartTag(parser);
-        }
-        while (event == XmlPullParser.START_TAG){
-            boolean parseOk = parsePublicTag(parser);
-            if(!parseOk){
-                return;
-            }
-            parser.nextToken();
-            event = XMLUtil.findStartTag(parser);
-        }
-        if(event == XmlPullParser.END_DOCUMENT){
-            IOUtil.close(parser);
-        }
+        getPublicXmlParser()
+                .parse(parser);
     }
-    private boolean parsePublicTag(XmlPullParser parser) throws XmlPullParserException {
-        if(!TAG_public.equals(parser.getName())){
-            return false;
-        }
-        int count = parser.getAttributeCount();
-        String id = null;
-        String type = null;
-        String name = null;
-        for(int i = 0; i < count; i++){
-            String attr = parser.getAttributeName(i);
-            String value = parser.getAttributeValue(i);
-            if(ATTR_id.equals(attr)){
-                id = value;
-            }else if(ATTR_type.equals(attr)){
-                type = value;
-            }else if(ATTR_name.equals(attr)){
-                name = value;
-            }
-        }
-        if(id == null){
-            throw new XmlPullParserException("Missing attribute: '" + ATTR_id + "', "
-                    + parser.getPositionDescription());
-        }
-        if(type == null){
-            throw new XmlPullParserException("Missing attribute: '" + ATTR_type + "', "
-                    + parser.getPositionDescription());
-        }
-        if(name == null){
-            throw new XmlPullParserException("Missing attribute: '" + ATTR_name + "', "
-                    + parser.getPositionDescription());
-        }
-        int resourceId = HexUtil.parseHex(id.trim());
-        int packageId = (resourceId >> 24) & 0xff;
-        int i = getId();
-        if(i == 0){
-            setId(packageId);
-        }else if(i != packageId){
-            return false;
-        }
-        int typeId = (resourceId >> 16) & 0xff;
-        if(typeId == 0){
-            throw new XmlPullParserException("Type id is zero: '" + id + "', "
-                    + parser.getPositionDescription());
-        }
-        TypeString typeString = getOrCreateTypeString(typeId, type);
-        typeId = typeString.getId();
-        TypeBlock typeBlock = getOrCreateTypeBlock((byte) typeId, "");
-        int entryId = resourceId & 0xffff;
-        Entry entry = typeBlock.getOrCreateEntry((short) entryId);
-        entry.setName(name, true);
-        return true;
-    }
-    public void initializeDefinedTypeIds(){
-        SpecTypePair specTypePair = getSpecTypePair("id");
-        if(specTypePair == null){
-            return;
-        }
-        Iterator<ResourceEntry> itr = specTypePair.getResources();
-        while (itr.hasNext()){
-            Iterator<Entry> entryIterator = itr.next()
-                    .iterator(false);
-            while (entryIterator.hasNext()){
-                Entry entry = entryIterator.next();
-                if(!entry.isNull() || entry.getSpecReference() < 0){
-                    continue;
-                }
-                entry.setValueAsBoolean(false);
-                ValueHeader valueHeader = entry.getHeader();
-                valueHeader.setWeak(true);
-                valueHeader.setPublic(true);
-            }
-        }
+    public PublicXmlParser getPublicXmlParser(){
+        return new PublicXmlParser(this);
     }
 
     @Override
@@ -713,8 +644,14 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     @Override
     public void fromJson(JSONObject json) {
-        setId(json.getInt(NAME_package_id));
-        setName(json.getString(NAME_package_name));
+        int id = json.optInt(NAME_package_id, 0);
+        if(id != 0){
+            setId(id);
+        }
+        String name = json.optString(NAME_package_name, null);
+        if(name != null){
+            setName(name);
+        }
         getSpecTypePairArray().fromJson(json.optJSONArray(NAME_specs));
         LibraryInfoArray libraryInfoArray = getLibraryBlock().getLibraryInfoArray();
         libraryInfoArray.fromJson(json.optJSONArray(NAME_libraries));
@@ -767,49 +704,11 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return builder.toString();
     }
-    static String readPackageName(XmlPullParser parser, String def) throws XmlPullParserException {
-        if(parser.getEventType() != XmlPullParser.START_TAG){
-            return def;
+    public static boolean isPackageId(int packageId){
+        if(packageId == 0){
+            return false;
         }
-        if(!TAG_resources.equals(parser.getName())){
-            return def;
-        }
-        int count = parser.getAttributeCount();
-        for(int i = 0; i < count; i++){
-            if(!ATTR_package.equals(parser.getAttributeName(i))){
-                continue;
-            }
-            return parser.getAttributeValue(i);
-        }
-        return def;
-    }
-    static int readPackageId(XmlPullParser parser, int def) throws XmlPullParserException {
-        if(parser.getEventType() != XmlPullParser.START_TAG){
-            return def;
-        }
-        String name = parser.getName();
-        boolean pubType = TAG_public.equals(name);
-        if(!TAG_resources.equals(name) && !pubType){
-            return def;
-        }
-        int count = parser.getAttributeCount();
-        for(int i = 0; i < count; i++){
-            if(!ATTR_id.equals(parser.getAttributeName(i))){
-                continue;
-            }
-            EncodeResult encodeResult = ValueCoder
-                    .encode(parser.getAttributeValue(i), AttributeDataFormat.INTEGER);
-            if(encodeResult == null){
-                throw new XmlPullParserException("Invalid id value: '" + parser.getAttributeValue(i) + "' "
-                        + parser.getPositionDescription());
-            }
-            int id = encodeResult.value;
-            if(pubType){
-                id = (id >> 24) & 0xff;
-            }
-            return id;
-        }
-        return def;
+        return packageId > 0 && packageId <= 0xff;
     }
     public static boolean isResourceId(int resourceId){
         if(resourceId == 0){
@@ -817,6 +716,118 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return (resourceId & 0x00ff0000) != 0
                 && (resourceId & 0xff000000) != 0;
+    }
+
+    public static class PublicXmlParser{
+        private final PackageBlock packageBlock;
+        private boolean mInitializeIds = true;
+        private PublicXmlParser(PackageBlock packageBlock){
+            this.packageBlock = packageBlock;
+        }
+        public PublicXmlParser setInitializeIds(boolean initializeId) {
+            this.mInitializeIds = initializeId;
+            return this;
+        }
+        public PublicXmlParser parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+            parseResourcesAttributes(parser);
+            parseElements(parser);
+            IOUtil.close(parser);
+            return this;
+        }
+        private boolean isInitializeIds(){
+            return mInitializeIds;
+        }
+        private void parseElements(XmlPullParser parser) throws IOException, XmlPullParserException {
+            while (XMLUtil.ensureStartTag(parser) == XmlPullParser.START_TAG){
+                XMLElement element = XMLElement.parseElement(parser);
+                parsePublicTag(element);
+            }
+        }
+        private void parsePublicTag(XMLElement element) throws XmlEncodeException {
+            if(!PackageBlock.TAG_public.equals(element.getName())){
+                return;
+            }
+            String id = element.getAttributeValue(ATTR_id);
+            String type = element.getAttributeValue(ATTR_type);
+            String name = element.getAttributeValue(ATTR_name);
+            if(id == null){
+                throw new XmlEncodeException("Missing attribute: '" + ATTR_id + "', "
+                        + element.getDebugText());
+            }
+            if(type == null){
+                throw new XmlEncodeException("Missing attribute: '" + ATTR_type + "', "
+                        + element.getDebugText());
+            }
+            if(name == null){
+                throw new XmlEncodeException("Missing attribute: '" + ATTR_name + "', "
+                        + element.getDebugText());
+            }
+            EncodeResult encodeResult = ValueCoder.encodeHexOrInteger(id.trim());
+            if(encodeResult == null){
+                throw new XmlEncodeException("Invalid id value: " + element.getDebugText());
+            }
+            int resourceId = encodeResult.value;
+            int packageId = (resourceId >> 24) & 0xff;
+            int i = packageBlock.getId();
+            if(i == 0){
+                packageBlock.setId(packageId);
+            }else if(i != packageId){
+                return;
+            }
+            int typeId = (resourceId >> 16) & 0xff;
+            if(typeId == 0){
+                throw new XmlEncodeException("Type id is zero: '" + id + "', "
+                        + element.getDebugText());
+            }
+            TypeString typeString = packageBlock.getOrCreateTypeString(typeId, type);
+            typeId = typeString.getId();
+            TypeBlock typeBlock = packageBlock.getOrCreateTypeBlock((byte) typeId, "");
+            int entryId = resourceId & 0xffff;
+            Entry entry = typeBlock.getOrCreateEntry((short) entryId);
+            entry.setName(name, true);
+            if(isInitializeIds() && typeBlock.isTypeId()){
+                entry.setValueAsBoolean(false);
+                ValueHeader header = entry.getHeader();
+                header.setPublic(true);
+                header.setWeak(true);
+            }
+        }
+        private void parseResourcesAttributes(XmlPullParser parser) throws IOException, XmlPullParserException {
+            int event = parser.getEventType();
+            boolean documentStarted = false;
+            if(event == XmlPullParser.START_DOCUMENT){
+                documentStarted = true;
+                parser.next();
+            }
+            event = XMLUtil.ensureStartTag(parser);
+            if(event != XmlPullParser.START_TAG){
+                throw new XmlEncodeException("Expecting xml state START_TAG but found: "
+                        + XMLUtil.toEventName(parser.getEventType()));
+            }
+            if(PackageBlock.TAG_resources.equals(parser.getName())){
+                XMLElement element = new XMLElement(PackageBlock.TAG_resources);
+                element.parseAttributes(parser);
+                parseResourcesAttributes(element);
+                parser.next();
+            }else if(documentStarted){
+                throw new XmlEncodeException("Expecting <resources> tag but found: " + parser.getName());
+            }
+        }
+        private void parseResourcesAttributes(XMLElement element) throws IOException {
+            String packageName = element.getAttributeValue(PackageBlock.ATTR_package);
+            if(!StringsUtil.isWhiteSpace(packageName)){
+                packageBlock.setName(packageName);
+            }
+            String id = element.getAttributeValue(PackageBlock.ATTR_id);
+            if(!StringsUtil.isWhiteSpace(id) && packageBlock.getId() == 0){
+                EncodeResult encodeResult = ValueCoder
+                        .encodeHexOrInteger(id);
+                if(encodeResult == null || !PackageBlock.isPackageId(encodeResult.value)){
+                    throw new XmlEncodeException("Invalid id value: '" + element.getDebugText() + "'");
+                }
+                packageBlock.setId(encodeResult.value);
+            }
+        }
     }
 
     public static final String NAME_package_id = "package_id";

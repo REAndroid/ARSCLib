@@ -110,7 +110,7 @@ public class FilePathEncoder {
     }
     private InputSource createXMLEncodeInputSource(PackageBlock packageBlock, String path, File resFile){
         XMLParserSource xmlSource = new XMLFileParserSource(path, resFile);
-        XMLParseEncodeSource encodeSource = new XMLParseEncodeSource(packageBlock, xmlSource);
+        XMLEncodeSource encodeSource = new XMLEncodeSource(packageBlock, xmlSource);
         encodeSource.setApkLogger(mLogger);
         return encodeSource;
     }

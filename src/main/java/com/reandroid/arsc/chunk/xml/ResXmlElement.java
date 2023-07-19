@@ -658,7 +658,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return result;
     }
     public void clearChildes(){
-        List<ResXmlNode> copyOfNodeList=new ArrayList<>(mBody.getChildes());
+        ResXmlNode[] copyOfNodeList=mBody.getChildes().toArray(new ResXmlNode[0]);
         for(ResXmlNode xmlNode:copyOfNodeList){
             if(xmlNode==null){
                 continue;

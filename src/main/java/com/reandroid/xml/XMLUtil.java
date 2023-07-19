@@ -18,6 +18,7 @@ package com.reandroid.xml;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.File;
 import java.io.IOException;
 
 public class XMLUtil {
@@ -48,11 +49,12 @@ public class XMLUtil {
         }
         return null;
     }
-    public static int findStartTag(XmlPullParser parser)
+    public static int ensureStartTag(XmlPullParser parser)
             throws IOException, XmlPullParserException {
         int event = parser.getEventType();
-        while (event != XmlPullParser.START_TAG && event != XmlPullParser.END_DOCUMENT){
-            event = parser.nextToken();
+        while (event != XmlPullParser.START_TAG
+                && event != XmlPullParser.END_DOCUMENT){
+            event = parser.next();
         }
         return event;
     }
@@ -124,5 +126,26 @@ public class XMLUtil {
         }
         return tmp.substring(1,end);
     }
+    public static String toEventName(int eventType){
+        String[] types = EVENT_TYPES;
+        if(eventType < 0 || eventType >= types.length){
+            return String.valueOf(eventType);
+        }
+        return types[eventType];
+    }
+
+    public static String [] EVENT_TYPES = {
+            "START_DOCUMENT",
+            "END_DOCUMENT",
+            "START_TAG",
+            "END_TAG",
+            "TEXT",
+            "CDSECT",
+            "ENTITY_REF",
+            "IGNORABLE_WHITESPACE",
+            "PROCESSING_INSTRUCTION",
+            "COMMENT",
+            "DOCDECL"
+    };
 
 }

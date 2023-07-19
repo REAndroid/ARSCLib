@@ -15,26 +15,13 @@
   */
 package com.reandroid.arsc.array;
 
-import com.reandroid.arsc.value.EntryHeaderMap;
-import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.ResValueMap;
 
 public class ResValueMapArray extends CompoundItemArray<ResValueMap> {
     public ResValueMapArray(){
         super();
     }
-    @Override
-    public ResValueMap createNext(){
-        ResValueMap resValueMap = super.createNext();
-        EntryHeaderMap headerMap = getEntryHeaderMap();
-        headerMap.setValuesCount(childesCount());
-        return resValueMap;
-    }
-    private EntryHeaderMap getEntryHeaderMap(){
-        ResTableMapEntry mapEntry = getParent(ResTableMapEntry.class);
-        assert mapEntry != null;
-        return mapEntry.getHeader();
-    }
+
     @Override
     public ResValueMap newInstance() {
         return new ResValueMap();

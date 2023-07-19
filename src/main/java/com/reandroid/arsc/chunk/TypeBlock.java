@@ -57,6 +57,20 @@ public class TypeBlock extends Chunk<TypeHeader>
         addChild(entryOffsets);
         addChild(mEntryArray);
     }
+    public boolean isTypeAttr(){
+        TypeString typeString = getTypeString();
+        if(typeString != null){
+            return typeString.isTypeAttr();
+        }
+        return false;
+    }
+    public boolean isTypeId(){
+        TypeString typeString = getTypeString();
+        if(typeString != null){
+            return typeString.isTypeId();
+        }
+        return false;
+    }
     public String buildUniqueDirectoryName(){
         PackageBlock packageBlock = getPackageBlock();
         if(packageBlock != null && packageBlock.hasValidTypeNames()){

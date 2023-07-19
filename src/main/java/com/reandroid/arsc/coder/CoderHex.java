@@ -17,6 +17,7 @@ package com.reandroid.arsc.coder;
 
 import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.ValueType;
+import com.reandroid.utils.StringsUtil;
 
 public class CoderHex extends Coder {
     @Override
@@ -25,8 +26,12 @@ public class CoderHex extends Coder {
         if(length < 3 || length > 10){
             return null;
         }
-        if(text.charAt(1) != 'x'){
-            return null;
+        char x = text.charAt(1);
+        if(x != 'x'){
+            if(x != 'X'){
+                return null;
+            }
+            text = StringsUtil.toLowercase(text);
         }
         Integer value = parseHex(text);
         if(value == null){

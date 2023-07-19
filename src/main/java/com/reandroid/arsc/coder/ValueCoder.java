@@ -65,11 +65,26 @@ public class ValueCoder {
         output.setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
         return new EncodeResult(ValueType.STRING, output.getData());
     }
+    public static String decodeReference(PackageBlock packageBlock, ValueType referenceType, int resourceId){
+        if(resourceId == 0){
+            if(referenceType == ValueType.REFERENCE){
+                return CoderNullReference.INS.decode(resourceId);
+            }
+            return CoderNullAttribute.INS.decode(resourceId);
+        }
+        TableBlock tableBlock = packageBlock.getTableBlock();
+        ResourceEntry resourceEntry = tableBlock.getResource(packageBlock, resourceId);
+        if(resourceEntry != null){
+            return resourceEntry.buildReference(packageBlock, referenceType);
+        }
+        decodeUnknownResourceId(referenceType == ValueType.REFERENCE, resourceId);
+        return null;
+    }
     public static EncodeResult encodeReference(PackageBlock packageBlock, String value){
         if(value == null || value.length() < 3){
             return null;
         }
-        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(value);
+        EncodeResult encodeResult = encodeUnknownResourceId(value);
         if(encodeResult != null){
             return encodeResult;
         }
@@ -88,7 +103,7 @@ public class ValueCoder {
         if(value == null || value.length() < 3){
             return null;
         }
-        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(value);
+        EncodeResult encodeResult = encodeUnknownResourceId(value);
         if(encodeResult != null){
             return encodeResult;
         }
@@ -116,62 +131,78 @@ public class ValueCoder {
                 "', frameworks " +
                 StringsUtil.toString(tableBlock.getFrameWorks());
     }
+    public static String decodeUnknownNameId(int referenceId){
+        return CoderUnknownNameId.INS.decode(referenceId);
+    }
     public static String decodeUnknownResourceId(boolean is_reference, int referenceId){
-        String prefix;
         if(is_reference){
-            prefix = UNKNOWN_RESOURCE_ID_PREFIX_REF;
-        }else {
-            prefix = UNKNOWN_RESOURCE_ID_PREFIX_ATTR;
+            return CoderUnknownReferenceId.INS.decode(referenceId);
         }
-        return HexUtil.toHex8(prefix, referenceId);
+        return CoderUnknownAttributeId.INS.decode(referenceId);
+    }
+    public static EncodeResult encodeUnknownNameId(String text){
+        return CoderUnknownNameId.INS.encode(text);
     }
     public static EncodeResult encodeUnknownResourceId(String text){
-        if(text == null){
+        if(text == null || text.length() == 0){
             return null;
         }
         EncodeResult encodeResult = encodeNull(text);
         if(encodeResult != null){
             return encodeResult;
         }
-        int length = text.length();
-        if(length != UNKNOWN_RESOURCE_ID_LENGTH_ATTR && length != UNKNOWN_RESOURCE_ID_LENGTH_REF){
-            return null;
-        }
-        String prefix;
-        ValueType valueType;
-        if(text.startsWith(UNKNOWN_RESOURCE_ID_PREFIX_ATTR)){
-            prefix = UNKNOWN_RESOURCE_ID_PREFIX_ATTR;
-            valueType = ValueType.ATTRIBUTE;
-        }else if(text.startsWith(UNKNOWN_RESOURCE_ID_PREFIX_REF)){
-            prefix = UNKNOWN_RESOURCE_ID_PREFIX_REF;
-            valueType = ValueType.REFERENCE;
-        }else {
-            return null;
-        }
-        String hexString = text.substring(prefix.length());
-        int referenceId;
-        try{
-            referenceId = HexUtil.parseHex(hexString);
-        }catch (NumberFormatException ignored){
-            return null;
-        }
-        return new EncodeResult(valueType, referenceId);
+        return encodeUnknown(text);
     }
 
+    public static EncodeResult encodeHexOrInteger(String text){
+        if(text == null){
+            return null;
+        }
+        EncodeResult encodeResult = CoderHex.INS.encode(text);
+        if(encodeResult == null){
+            encodeResult = CoderInteger.INS.encode(text);
+        }
+        return encodeResult;
+    }
     public static EncodeResult encode(String text, AttributeDataFormat... expectedDataFormats){
-        if(expectedDataFormats == null || expectedDataFormats.length == 0){
+        if(isEmpty(expectedDataFormats)){
             return encodeAny(text);
+        }
+        if(text == null || text.length() == 0){
+            return null;
+        }
+        EncodeResult encodeResult = encodeUnknown(text);
+        if(encodeResult != null){
+            return encodeResult;
         }
         return encodeWithin(text, expectedDataFormats);
     }
     public static EncodeResult encode(String text, ValueType... expectedTypes){
-        if(expectedTypes == null || expectedTypes.length == 0){
+        if(isEmpty(expectedTypes)){
             return encodeAny(text);
+        }
+        if(text == null || text.length() == 0){
+            return null;
+        }
+        EncodeResult encodeResult = encodeUnknown(text);
+        if(encodeResult != null){
+            return encodeResult;
         }
         return encodeWithin(text, expectedTypes);
     }
     public static EncodeResult encode(String text){
         return encodeAny(text);
+    }
+    private static boolean isEmpty(Object[] objects){
+        if(objects == null || objects.length == 0){
+            return true;
+        }
+        for(Object obj : objects){
+            if(obj != null){
+                return false;
+            }
+        }
+        return true;
     }
     private static EncodeResult encodeWithin(String text, AttributeDataFormat... expectedDataFormats){
         if(text == null || text.length() == 0){
@@ -191,12 +222,6 @@ public class ValueCoder {
         }
         EncodeResult encodeResult;
         char first = text.charAt(0);
-        if(first == UNKNOWN_RESOURCE_ID_FIRST){
-            encodeResult = encodeUnknownResourceId(text);
-            if(encodeResult != null){
-                return encodeResult;
-            }
-        }
         for(ValueType valueType : expectedTypes){
             Coder coder = getCoder(valueType);
             if(coder == null){
@@ -216,14 +241,11 @@ public class ValueCoder {
         if(text == null || text.length() == 0){
             return null;
         }
-        EncodeResult encodeResult;
-        char first = text.charAt(0);
-        if(first == UNKNOWN_RESOURCE_ID_FIRST){
-            encodeResult = encodeUnknownResourceId(text);
-            if(encodeResult != null){
-                return encodeResult;
-            }
+        EncodeResult encodeResult = encodeUnknown(text);
+        if(encodeResult != null){
+            return encodeResult;
         }
+        char first = text.charAt(0);
         for(Coder coder : CODERS){
             if(!coder.canStartWith(first)){
                 continue;
@@ -232,6 +254,21 @@ public class ValueCoder {
             if(encodeResult != null){
                 return encodeResult;
             }
+        }
+        return null;
+    }
+    private static EncodeResult encodeUnknown(String text){
+        char first = text.charAt(0);
+        Coder unknown = CoderUnknownReferenceId.INS;
+        if(unknown.canStartWith(first)){
+            EncodeResult encodeResult = unknown.encode(text);
+            if(encodeResult != null){
+                return encodeResult;
+            }
+        }
+        unknown = CoderUnknownAttributeId.INS;
+        if(unknown.canStartWith(first)){
+            return unknown.encode(text);
         }
         return null;
     }
@@ -289,26 +326,12 @@ public class ValueCoder {
     }
 
 
-    private static final String UNKNOWN_RESOURCE_ID_PREFIX_ATTR;
-    private static final String UNKNOWN_RESOURCE_ID_PREFIX_REF;
-    private static final int UNKNOWN_RESOURCE_ID_LENGTH_ATTR;
-    private static final int UNKNOWN_RESOURCE_ID_LENGTH_REF;
-    private static final char UNKNOWN_RESOURCE_ID_FIRST;
 
     public static final Coder[] CODERS;
     private static final Map<ValueType, Coder> CODER_MAP;
     private static final Coder[] CODERS_NULL;
 
     static {
-        UNKNOWN_RESOURCE_ID_FIRST = 'U';
-
-        String prefix = "UNK_ATTR0x";
-        UNKNOWN_RESOURCE_ID_PREFIX_ATTR = prefix;
-        UNKNOWN_RESOURCE_ID_LENGTH_ATTR = prefix.length() + 8;
-
-        prefix = "UNK_REF0x";
-        UNKNOWN_RESOURCE_ID_PREFIX_REF = prefix;
-        UNKNOWN_RESOURCE_ID_LENGTH_REF = prefix.length() + 8;
 
         CODERS = new Coder[]{
                 CoderNull.INS,

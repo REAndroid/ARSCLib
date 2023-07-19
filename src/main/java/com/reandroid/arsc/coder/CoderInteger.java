@@ -22,6 +22,9 @@ public class CoderInteger extends Coder {
     @Override
     public EncodeResult encode(String text) {
         int i = text.indexOf('.');
+        if(i < 0){
+            i = text.indexOf('x');
+        }
         if(i >= 0){
             return null;
         }

@@ -75,9 +75,9 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return result;
     }
     public void removeEmptyBlocks(){
-        List<TypeBlock> allTypes=new ArrayList<>(listItems());
-        boolean foundEmpty=false;
-        for(TypeBlock typeBlock:allTypes){
+        TypeBlock[] typeBlocks = getChildes().clone();
+        boolean foundEmpty = false;
+        for(TypeBlock typeBlock:typeBlocks){
             if(typeBlock.isEmpty()){
                 super.remove(typeBlock, false);
                 foundEmpty=true;

@@ -15,17 +15,15 @@
   */
 package com.reandroid.apk;
 
-import com.reandroid.archive.InputSource;
 import com.reandroid.apk.xmlencoder.XMLEncodeSource;
+import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.value.*;
-import com.reandroid.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 public class ResFile {

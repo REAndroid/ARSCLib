@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.xml.source;
+package com.reandroid.arsc.coder.xml;
 
-import com.reandroid.xml.XMLDocument;
+import com.reandroid.arsc.chunk.TypeBlock;
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 
-public interface XMLSource {
-    public void disposeXml();
-    public String getPath();
-    public XMLDocument getXMLDocument() throws IOException;
+public interface ValuesSerializerFactory {
+    void onFinish(XmlSerializer serializer, int writtenEntries) throws IOException;
+    XmlSerializer createSerializer(TypeBlock typeBlock) throws IOException;
 }

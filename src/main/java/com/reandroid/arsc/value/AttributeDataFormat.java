@@ -15,6 +15,8 @@
  */
 package com.reandroid.arsc.value;
 
+import com.reandroid.utils.StringsUtil;
+
 public enum AttributeDataFormat {
 
     REFERENCE(1<<0,
@@ -221,7 +223,7 @@ public enum AttributeDataFormat {
         if(name == null){
             return null;
         }
-        name = name.trim().toUpperCase();
+        name = StringsUtil.toUpperCase(name.trim());
         for(AttributeDataFormat typeValue : VALUE_TYPES){
             if(name.equals(typeValue.name())){
                 return typeValue;
@@ -233,7 +235,7 @@ public enum AttributeDataFormat {
         if(bagTypeName == null){
             return null;
         }
-        bagTypeName = bagTypeName.trim().toUpperCase();
+        bagTypeName = StringsUtil.toUpperCase(bagTypeName.trim());
         for(AttributeDataFormat typeValue: BAG_TYPES){
             if(bagTypeName.equals(typeValue.name())){
                 return typeValue;

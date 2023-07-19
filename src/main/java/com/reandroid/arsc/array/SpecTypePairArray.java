@@ -51,9 +51,9 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         sort(this);
     }
     public void removeEmptyPairs(){
-        List<SpecTypePair> allPairs=new ArrayList<>(listItems());
-        boolean foundEmpty=false;
-        for(SpecTypePair typePair:allPairs){
+        SpecTypePair[] specTypePairs = getChildes().clone();
+        boolean foundEmpty = false;
+        for(SpecTypePair typePair:specTypePairs){
             typePair.removeEmptyTypeBlocks();
             if(typePair.isEmpty()){
                 super.remove(typePair, false);

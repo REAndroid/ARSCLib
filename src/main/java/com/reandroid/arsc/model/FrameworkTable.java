@@ -151,8 +151,8 @@ public class FrameworkTable extends TableBlock {
         SpecTypePairArray specTypePairArray = pkg.getSpecTypePairArray();
         specTypePairArray.sort();
 
-        List<SpecTypePair> specTypePairList=new ArrayList<>(specTypePairArray.listItems());
-        for(SpecTypePair specTypePair:specTypePairList){
+        SpecTypePair[] specTypePairs = specTypePairArray.getChildes().clone();
+        for(SpecTypePair specTypePair : specTypePairs){
             removeEmptyBlocks(specTypePair);
         }
     }

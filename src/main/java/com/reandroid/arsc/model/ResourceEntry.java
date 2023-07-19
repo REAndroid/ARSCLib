@@ -236,9 +236,6 @@ public class ResourceEntry implements Iterable<Entry>{
         }else {
             builder.append('?');
         }
-        if(context.getId()!=0x7f){
-            context.getId();
-        }
         if(context != getPackageBlock()){
             builder.append(getPackageName());
             builder.append(':');

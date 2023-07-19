@@ -107,13 +107,11 @@ public class XMLTableBlockEncoder {
         }
     }
     private void loadPublicXmlFile(File pubXmlFile) throws IOException {
-        PackageBlock packageBlock = tableBlock.newPackage(0, null);
-        loadPackageJson(packageBlock, pubXmlFile);
         try {
             XmlPullParser parser = XMLFactory.newPullParser(pubXmlFile);
+            PackageBlock packageBlock = tableBlock.parsePublicXml(parser);
             packageBlock.setTag(pubXmlFile);
-            packageBlock.parsePublicXml(parser);
-            packageBlock.initializeDefinedTypeIds();
+            loadPackageJson(packageBlock, pubXmlFile);
             IOUtil.close(parser);
         } catch (XmlPullParserException ex) {
            throw new IOException(ex);

@@ -15,6 +15,8 @@
  */
 package com.reandroid.arsc.value;
 
+import com.reandroid.utils.StringsUtil;
+
 public enum AttributeType {
 
     FORMATS(0x01000000),
@@ -44,7 +46,7 @@ public enum AttributeType {
     }
 
     public String getName(){
-        return name().toLowerCase();
+        return StringsUtil.toLowercase(name());
     }
     @Override
     public String toString(){

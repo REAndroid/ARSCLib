@@ -294,7 +294,7 @@ public class XMLElement extends XMLNodeTree{
             addAttribute(newAttribute().set(name,value));
         }
     }
-    public void addAttribute(String uri, String name, String value){
+    public void addAttribute(String uri, String prefix, String name, String value){
         if(XMLUtil.isEmpty(name)){
             return;
         }
@@ -304,7 +304,7 @@ public class XMLElement extends XMLNodeTree{
         }else{
             XMLAttribute attribute = new XMLAttribute();
             addAttribute(attribute);
-            attribute.setName(uri, name);
+            attribute.setName(uri, prefix, name);
             attribute.setValue(value);
         }
     }
@@ -424,8 +424,11 @@ public class XMLElement extends XMLNodeTree{
     public boolean hasChildElements(){
         return !CollectionUtil.isEmpty(getElements());
     }
-    public boolean hasTextContent() {
+    public boolean hasTextNode() {
         return !CollectionUtil.isEmpty(iterator(XMLText.class));
+    }
+    public boolean hasAttribute(String name) {
+        return getAttribute(name) != null;
     }
     public void setTextContent(String text, boolean escape){
         super.clear();
@@ -512,14 +515,15 @@ public class XMLElement extends XMLNodeTree{
             }
         }
     }
-    private void parseAttributes(XmlPullParser parser){
+    public void parseAttributes(XmlPullParser parser){
         int count = parser.getAttributeCount();
         for(int i = 0; i < count; i++){
             String name = parser.getAttributeName(i);
             String value = parser.getAttributeValue(i);
             if(!XMLNamespace.looksNamespace(name, value)){
                 String uri = parser.getAttributeNamespace(i);
-                addAttribute(uri, name, value);
+                String prefix = parser.getAttributePrefix(i);
+                addAttribute(uri, prefix, name, value);
             }
         }
     }
@@ -608,26 +612,23 @@ public class XMLElement extends XMLNodeTree{
         }
         return length;
     }
-
-    protected List<XMLNode> listSpannable(){
-        List<XMLNode> results = new ArrayList<>();
-        Iterator<XMLNode> iterator = iterator();
-        while (iterator.hasNext()){
-            XMLNode child = iterator.next();
-            if((child instanceof XMLElement) || (child instanceof XMLText)){
-                results.add(child);
-            }
-        }
-        return results;
+    public static XMLElement parseElement(XmlPullParser parser) throws IOException, XmlPullParserException {
+        XMLElement element = new XMLElement();
+        element.parse(parser);
+        return element;
     }
-    protected String getSpannableText() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(getName());
-        for(XMLAttribute attribute:listAttributes()){
-            //builder.append(' ');
-            builder.append(attribute.toText());
-        }
-        return builder.toString();
+    public static Iterator<XMLElement> iterateElements(XmlPullParser parser) throws IOException, XmlPullParserException {
+        return new Iterator<XMLElement>() {
+            @Override
+            public boolean hasNext() {
+                return false;
+            }
+
+            @Override
+            public XMLElement next() {
+                return null;
+            }
+        };
     }
 
     private static final ArrayList<XMLAttribute> EMPTY_ATTRIBUTES = new ArrayList<>();

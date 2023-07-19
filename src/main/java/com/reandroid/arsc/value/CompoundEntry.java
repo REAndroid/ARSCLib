@@ -16,6 +16,10 @@
 package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.array.CompoundItemArray;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.json.JSONObject;
 
@@ -52,6 +56,17 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
     public ITEM[] listResValueMap(){
         return getValue().getChildes();
     }
+
+    public String decodeParentId(){
+        int parentId = getParentId();
+        if(parentId == 0){
+            return null;
+        }
+        return ValueCoder.decodeReference(
+                getPackageBlock(),
+                ValueType.REFERENCE,
+                parentId);
+    }
     public int getParentId(){
         return getHeader().getParentId();
     }
@@ -64,6 +79,28 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
     public void setValuesCount(int valuesCount){
         getHeader().setValuesCount(valuesCount);
         getValue().setChildesCount(valuesCount);
+    }
+    public ResourceEntry resolveParentId(){
+        int id = getParentId();
+        if(id == 0){
+            return null;
+        }
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return null;
+        }
+        TableBlock tableBlock = packageBlock.getTableBlock();
+        if(tableBlock == null){
+            return null;
+        }
+        return tableBlock.getResource(packageBlock, id);
+    }
+    public PackageBlock getPackageBlock(){
+        Entry entry = getParentEntry();
+        if(entry != null){
+            return entry.getPackageBlock();
+        }
+        return null;
     }
     @Override
     void linkTableStringsInternal(TableStringPool tableStringPool){

@@ -176,7 +176,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
             trimNullBlocks();
         }
     }
-    public void sort(Comparator<T> comparator){
+    public void sort(Comparator<? super T> comparator){
         T[] elementData = this.elementData;
         if(comparator == null || elementData.length < 2){
             return;

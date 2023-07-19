@@ -25,44 +25,11 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
         super(new ResValueMapArray());
     }
 
-    public String decodeParentId(){
-        ResourceEntry resourceEntry = resolveParentId();
-        if(resourceEntry == null){
-            return null;
-        }
-        PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null){
-            return null;
-        }
-        return resourceEntry.buildReference(packageBlock, ValueType.REFERENCE);
-    }
-    public ResourceEntry resolveParentId(){
-        int id = getParentId();
-        if(id == 0){
-            return null;
-        }
-        PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null){
-            return null;
-        }
-        TableBlock tableBlock = packageBlock.getTableBlock();
-        if(tableBlock == null){
-            return null;
-        }
-        return tableBlock.getResource(packageBlock, id);
-    }
-    private PackageBlock getPackageBlock(){
-        Entry entry = getParentEntry();
-        if(entry != null){
-            return entry.getPackageBlock();
-        }
-        return null;
-    }
     public boolean isAttr(){
         boolean hasFormats = false;
         for(ResValueMap valueMap : this){
             AttributeType attributeType = valueMap.getAttributeType();
-            if(attributeType == null || attributeType.isPlural()){
+            if(attributeType != null && attributeType.isPlural()){
                 return false;
             }
             if(attributeType == AttributeType.FORMATS){
@@ -86,7 +53,7 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
     public boolean isArray(){
         int size = getValue().childesCount();
         for(ResValueMap valueMap : this){
-            int id = valueMap.getNameResourceID();
+            int id = valueMap.getArrayIndex();
             if(id >= 0 && id <= size){
                 continue;
             }

@@ -97,14 +97,8 @@ class BagDecoderArray<OUTPUT> extends BagDecoder<OUTPUT>{
         int length = resValueMapList.length;
         for(int i = 0; i < length; i++){
             ResValueMap valueMap = resValueMapList[i];
-            int name = valueMap.getName();
-            int high = (name >> 16) & 0xffff;
-            if(high!=0x0100 && high!=0x0200){
-                return false;
-            }
-            int low = name & 0xffff;
-            int id = low - 1;
-            if(id != i && low != i){
+            int index = valueMap.getArrayIndex() - 1;
+            if(index != i){
                 return false;
             }
         }

@@ -1,114 +1,90 @@
-/*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
 package com.reandroid.apk.xmlencoder;
 
-import com.reandroid.archive.ByteInputSource;
+import com.reandroid.apk.APKLogger;
 import com.reandroid.apk.CrcOutputStream;
+import com.reandroid.archive.ByteInputSource;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
-import com.reandroid.arsc.value.Entry;
-import com.reandroid.xml.source.XMLSource;
+import com.reandroid.utils.io.IOUtil;
+import com.reandroid.xml.source.XMLParserSource;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.OutputStream;
-// Use XMLParseEncodeSource
-@Deprecated
+
 public class XMLEncodeSource extends ByteInputSource {
-    private final EncodeMaterials encodeMaterials;
-    private final XMLSource xmlSource;
-    private ResXmlDocument resXmlDocument;
-    private Entry mEntry;
-    public XMLEncodeSource(EncodeMaterials encodeMaterials, XMLSource xmlSource, Entry entry){
-        super(new byte[0], xmlSource.getPath());
-        this.encodeMaterials = encodeMaterials;
-        this.xmlSource = xmlSource;
-        this.mEntry = entry;
-    }
-    public XMLEncodeSource(EncodeMaterials encodeMaterials, XMLSource xmlSource){
-        this(encodeMaterials, xmlSource, null);
-    }
+    private final PackageBlock packageBlock;
+    private final XMLParserSource parserSource;
+    private ResXmlDocument mResXmlDocument;
+    private APKLogger mLogger;
 
-    public XMLSource getXmlSource() {
-        return xmlSource;
+    public XMLEncodeSource(PackageBlock packageBlock, XMLParserSource parserSource) {
+        super(new byte[0], parserSource.getPath());
+        this.packageBlock = packageBlock;
+        this.parserSource = parserSource;
     }
-    public Entry getEntry(){
-        return mEntry;
-    }
-    public void setEntry(Entry entry) {
-        this.mEntry = entry;
-    }
-
     @Override
-    public long getLength() throws IOException{
-        return getResXmlBlock().countBytes();
+    public long getLength() throws IOException {
+        return getResXmlDocument().countBytes();
     }
     @Override
     public long getCrc() throws IOException{
-        ResXmlDocument resXmlDocument = getResXmlBlock();
+        ResXmlDocument resXmlDocument = getResXmlDocument();
         CrcOutputStream outputStream=new CrcOutputStream();
         resXmlDocument.writeBytes(outputStream);
         return outputStream.getCrcValue();
     }
     @Override
     public long write(OutputStream outputStream) throws IOException {
-        return getResXmlBlock().writeBytes(outputStream);
+        return getResXmlDocument().writeBytes(outputStream);
     }
     @Override
     public byte[] getBytes() {
         try {
-            return getResXmlBlock().getBytes();
+            return getResXmlDocument().getBytes();
         } catch (IOException ignored) {
         }
         //should not reach here
         return new byte[0];
     }
-    public ResXmlDocument getResXmlBlock() throws IOException{
-        if(resXmlDocument !=null){
-            return resXmlDocument;
-        }
-        try {
-            XMLFileEncoder xmlFileEncoder=new XMLFileEncoder(this.encodeMaterials);
-            xmlFileEncoder.setCurrentPath(xmlSource.getPath());
-            EncodeMaterials encodeMaterials = this.encodeMaterials;
-            encodeMaterials.logVerbose("Encoding xml: " + xmlSource.getPath());
-            PackageBlock currentPackage = encodeMaterials.getCurrentPackage();
-            PackageBlock packageBlock = getEntryPackageBlock();
-            if(packageBlock != null && packageBlock != currentPackage){
-                encodeMaterials.setCurrentPackage(packageBlock);
-                currentPackage.getTableBlock().setCurrentPackage(currentPackage);
-            }
-            resXmlDocument = xmlFileEncoder.encode(xmlSource.getXMLDocument());
-        } catch (IOException ex) {
-            throw new EncodeException("XMLException on: '"+xmlSource.getPath()
-                    +"'\n         '"+ex.getMessage()+"'");
-        }
-        return resXmlDocument;
-    }
-    private PackageBlock getEntryPackageBlock(){
-        Entry entry = getEntry();
-        if(entry != null){
-            return entry.getPackageBlock();
-        }
-        return null;
-    }
     @Override
     public void disposeInputSource(){
-        this.xmlSource.disposeXml();
-        if(this.resXmlDocument !=null){
-            resXmlDocument =null;
+        mResXmlDocument = null;
+    }
+
+    public PackageBlock getPackageBlock() {
+        return packageBlock;
+    }
+    public XMLParserSource getParserSource() {
+        return parserSource;
+    }
+    public ResXmlDocument getResXmlDocument() throws IOException{
+        if(mResXmlDocument == null){
+            try {
+                mResXmlDocument = encode();
+            } catch (XmlPullParserException ex) {
+                throw new IOException(ex.getMessage());
+            }
+        }
+        return mResXmlDocument;
+    }
+    private ResXmlDocument encode() throws XmlPullParserException, IOException {
+        logVerbose("Encoding: " + getParserSource().getPath());
+        XmlPullParser parser = getParserSource().getParser();
+        ResXmlDocument resXmlDocument = new ResXmlDocument();
+        resXmlDocument.setPackageBlock(getPackageBlock());
+        resXmlDocument.parse(parser);
+        IOUtil.close(parser);
+        return resXmlDocument;
+    }
+    public void setApkLogger(APKLogger logger){
+        this.mLogger = logger;
+    }
+    private void logVerbose(String msg){
+        APKLogger logger = this.mLogger;
+        if(logger != null){
+            logger.logVerbose(msg);
         }
     }
 }

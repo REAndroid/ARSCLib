@@ -45,7 +45,7 @@ public abstract class XMLValuesEncoderBag extends XMLValuesEncoder{
     }
     private boolean encodeIfReference(Entry entry, XMLElement element){
         if(element.hasChildElements()
-                || !element.hasTextContent()
+                || !element.hasTextNode()
                 || element.getAttributeCount() > 1){
             return false;
         }

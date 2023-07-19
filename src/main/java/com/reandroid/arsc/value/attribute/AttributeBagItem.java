@@ -34,8 +34,7 @@ public class AttributeBagItem {
     public String getNameOrHex(){
         String name = getName();
         if(name == null){
-            name = ValueCoder.decodeUnknownResourceId(false,
-                    getBagItem().getNameResourceID());
+            name = ValueCoder.decodeUnknownNameId(getBagItem().getNameResourceID());
         }
         return name;
     }

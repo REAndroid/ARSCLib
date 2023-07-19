@@ -113,7 +113,7 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject>, Co
         }
     }
     private void reUpdateReferences(int newIndex){
-        List<ReferenceItem> referenceItems=new ArrayList<>(mReferencedList);
+        ReferenceItem[] referenceItems = mReferencedList.toArray(new ReferenceItem[0]);
         for(ReferenceItem ref:referenceItems){
             ref.set(newIndex);
         }
@@ -293,7 +293,7 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject>, Co
         if(index < 0 || source.getIndex() < 0){
             return;
         }
-        List<ReferenceItem> copyList = new ArrayList<>(source.getReferencedList());
+        ReferenceItem[] copyList = source.getReferencedList().toArray(new ReferenceItem[0]);
         for(ReferenceItem ref : copyList){
             if(isTransferable(ref)){
                 source.removeReference(ref);

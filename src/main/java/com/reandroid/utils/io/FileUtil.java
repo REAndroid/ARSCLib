@@ -71,6 +71,18 @@ public class FileUtil {
         }
         dir.delete();
     }
+    public static void deleteEmptyDirectory(File dir){
+        if(dir.isFile()){
+            return;
+        }
+        if(!dir.isDirectory()){
+            return;
+        }
+        File[] files = dir.listFiles();
+        if(files == null || files.length == 0){
+            dir.delete();
+        }
+    }
     public static File getTempDir(){
         return getTempDir(getDefPrefix());
     }

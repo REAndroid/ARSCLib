@@ -21,7 +21,7 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
-import com.reandroid.arsc.container.SpecTypePair;
+import com.reandroid.arsc.coder.xml.XmlCoder;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.arsc.value.*;
 import com.reandroid.json.JSONObject;
@@ -278,34 +278,12 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         return resConfigSet.contains(entry.getResConfig());
     }
     private void decodeValues(File mainDirectory, TableBlock tableBlock) throws IOException {
-        for(PackageBlock packageBlock:tableBlock.listPackages()){
-            decodeValues(mainDirectory, packageBlock);
-        }
-    }
-    private void decodeValues(File mainDirectory, PackageBlock packageBlock) throws IOException {
-        File packageDir = toPackageDirectory(mainDirectory, packageBlock);
-        logVerbose("Values: "+ packageDir.getName());
-
-        packageBlock.sortTypes();
-
-        File resDir = new File(packageDir, ApkUtil.RES_DIR_NAME);
-
-        for(SpecTypePair specTypePair : packageBlock.listSpecTypePairs()){
-            decodeValues(resDir, specTypePair);
-        }
-    }
-    private void decodeValues(File resDir, SpecTypePair specTypePair) throws IOException {
-        getEntrySerializer().decode(resDir, specTypePair);
-    }
-    private XMLEntryDecoderSerializer getEntrySerializer(){
-        if(this.entrySerializer == null){
-            this.entrySerializer = new XMLEntryDecoderSerializer();
-            this.entrySerializer.setDecodedEntries(this);
-        }
-        return entrySerializer;
+        File resourcesDir = new File(mainDirectory, TableBlock.DIRECTORY_NAME);
+        XmlCoder xmlCoder = XmlCoder.getInstance();
+        xmlCoder.VALUES_XML.decodeTable(resourcesDir, tableBlock, this);
     }
     @Override
     public boolean test(Entry entry) {
-        return !containsDecodedEntry(entry);
+        return containsDecodedEntry(entry);
     }
 }

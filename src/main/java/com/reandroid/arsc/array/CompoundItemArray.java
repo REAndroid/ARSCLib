@@ -16,20 +16,42 @@
 package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.base.BlockArray;
-import com.reandroid.arsc.value.AttributeType;
-import com.reandroid.arsc.value.AttributeDataFormat;
-import com.reandroid.arsc.value.ResValueMap;
+import com.reandroid.arsc.value.*;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 
-public abstract class CompoundItemArray<T extends ResValueMap> extends BlockArray<T> implements JSONConvert<JSONArray> {
+import java.util.Comparator;
+
+public abstract class CompoundItemArray<T extends ResValueMap>
+        extends BlockArray<T> implements JSONConvert<JSONArray>, Comparator<ResValueMap> {
     public CompoundItemArray(){
         super();
+    }
+
+    public void sort(){
+        super.sort(this);
+        updateCountToHeader();
+    }
+    @Override
+    public T createNext(){
+        T resValueMap = super.createNext();
+        updateCountToHeader();
+        return resValueMap;
+    }
+    private void updateCountToHeader(){
+        EntryHeaderMap headerMap = getEntryHeaderMap();
+        headerMap.setValuesCount(childesCount());
+    }
+    private EntryHeaderMap getEntryHeaderMap(){
+        ResTableMapEntry mapEntry = getParent(ResTableMapEntry.class);
+        assert mapEntry != null;
+        return mapEntry.getHeader();
     }
     public AttributeDataFormat[] getFormats(){
         ResValueMap formatsMap = getByType(AttributeType.FORMATS);
         if(formatsMap != null){
-            return AttributeDataFormat.decodeValueTypes(formatsMap.getData());
+            return AttributeDataFormat.decodeValueTypes(
+                    formatsMap.getData() & 0xff);
         }
         return null;
     }
@@ -40,6 +62,17 @@ public abstract class CompoundItemArray<T extends ResValueMap> extends BlockArra
             }
         }
         return false;
+    }
+    public T getOrCreateType(AttributeType attributeType){
+        if(attributeType == null){
+            return null;
+        }
+        T valueMap = getByType(attributeType);
+        if(valueMap == null){
+            valueMap = createNext();
+            valueMap.setAttributeType(attributeType);
+        }
+        return valueMap;
     }
     public T getByType(AttributeType attributeType){
         if(attributeType == null){
@@ -109,5 +142,15 @@ public abstract class CompoundItemArray<T extends ResValueMap> extends BlockArra
             ResValueMap exist = get(i);
             exist.merge(coming);
         }
+    }
+    @Override
+    public int compare(ResValueMap valueMap1, ResValueMap valueMap2){
+        if(valueMap1 == valueMap2){
+            return 0;
+        }
+        if(valueMap1 == null){
+            return 1;
+        }
+        return valueMap1.compareTo(valueMap2);
     }
 }

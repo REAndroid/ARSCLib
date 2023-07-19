@@ -96,6 +96,11 @@ public class XMLAttribute extends XMLNode {
         if(namespace != null){
             return namespace.getPrefix();
         }
+        String name = this.mName;
+        int i = name.indexOf(':');
+        if(i > 0){
+            return name.substring(0, i);
+        }
         return null;
     }
     public String getValue(){

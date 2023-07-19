@@ -22,6 +22,7 @@ import com.reandroid.arsc.chunk.ParentChunk;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.io.BlockReader;
@@ -263,7 +264,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         StringPool<?> stringPool = getStringPool();
         if(!styledString.hasElements() || !(stringPool instanceof TableStringPool)){
-            setValueAsString(styledString.getXml(false));
+            setValueAsString(XmlSanitizer.unEscapeUnQuote(styledString.getXml(false)));
             return;
         }
         TableStringPool tableStringPool = (TableStringPool) stringPool;

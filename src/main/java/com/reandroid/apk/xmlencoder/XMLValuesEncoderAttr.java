@@ -138,7 +138,7 @@ public class XMLValuesEncoderAttr extends XMLValuesEncoderBag{
         }
     }
     private int decodeNameResourceId(PackageBlock packageBlock, String name){
-        EncodeResult unknown = ValueCoder.encodeUnknownResourceId(name);
+        EncodeResult unknown = ValueCoder.encodeUnknownNameId(name);
         int resourceId;
         if(unknown == null){
             int i = name.indexOf(':');

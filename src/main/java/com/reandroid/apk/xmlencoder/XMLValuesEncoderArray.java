@@ -25,6 +25,7 @@ import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.value.ResTableMapEntry;
 import com.reandroid.arsc.value.ResValueMap;
+import com.reandroid.xml.StyleDocument;
 import com.reandroid.xml.XMLElement;
 
 import java.util.Iterator;
@@ -37,8 +38,6 @@ public class XMLValuesEncoderArray extends XMLValuesEncoderBag{
     protected void encodeChildes(XMLElement parentElement, ResTableMapEntry mapEntry){
         PackageBlock packageBlock = mapEntry.getParentEntry()
                 .getPackageBlock();
-        TableBlock tableBlock = packageBlock.getTableBlock();
-        int count = parentElement.getChildElementsCount();
         String tagName = parentElement.getName();
         boolean force_string = false;
         boolean force_integer = false;
@@ -59,7 +58,7 @@ public class XMLValuesEncoderArray extends XMLValuesEncoderBag{
             if(name == null){
                 bagItem.setName(0x01000001 + i);
             }else {
-                EncodeResult unknown = ValueCoder.encodeUnknownResourceId(name);
+                EncodeResult unknown = ValueCoder.encodeUnknownNameId(name);
                 int resourceId;
                 if(unknown == null){
                     resourceId = resolveLocalResourceId(packageBlock, "id", name);
@@ -76,8 +75,12 @@ public class XMLValuesEncoderArray extends XMLValuesEncoderBag{
                 continue;
             }
             if(force_string){
-                bagItem.setValueAsString(XmlSanitizer
-                        .unEscapeUnQuote(valueText));
+                if(child.hasChildElements()){
+                    bagItem.setValueAsString(StyleDocument.copyInner(child));
+                }else {
+                    bagItem.setValueAsString(XmlSanitizer
+                            .unEscapeUnQuote(valueText));
+                }
             }else if(force_integer){
                 valueText = trimText(valueText);
                 encodeResult = CoderInteger.INS.encode(valueText);
@@ -94,6 +97,8 @@ public class XMLValuesEncoderArray extends XMLValuesEncoderBag{
                 if(encodeResult!=null){
                     bagItem.setTypeAndData(encodeResult.valueType,
                             encodeResult.value);
+                }else if(child.hasChildElements()){
+                    bagItem.setValueAsString(StyleDocument.copyInner(child));
                 }else {
                     bagItem.setValueAsString(XmlSanitizer
                             .unEscapeUnQuote(valueText));

@@ -137,7 +137,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         }
         ResourceEntry resourceEntry = resolveName();
         if(resourceEntry == null || !resourceEntry.isDeclared()){
-            String name = ValueCoder.decodeUnknownResourceId(false, resourceId);
+            String name = ValueCoder.decodeUnknownNameId(resourceId);
             if(includePrefix){
                 String prefix = getNamePrefix();
                 if(prefix != null){

@@ -53,7 +53,7 @@ public abstract class AttributeValue extends ValueItem{
             prefix = XMLUtil.splitPrefix(name);
         }
         name = XMLUtil.splitName(name);
-        EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(name);
+        EncodeResult encodeResult = ValueCoder.encodeUnknownNameId(name);
         if(encodeResult != null){
             setName(name, encodeResult.value);
             return new ResourceEntry(getPackageBlock(), encodeResult.value);
@@ -66,6 +66,35 @@ public abstract class AttributeValue extends ValueItem{
         PackageBlock packageBlock = getPackageBlock();
         ResourceEntry resourceEntry = packageBlock.getTableBlock()
                 .getAttrResource(packageBlock, prefix, name);
+        if(resourceEntry != null){
+            setName(name, resourceEntry.getResourceId());
+        }
+        return resourceEntry;
+    }
+    public ResourceEntry encodeIdName(String name){
+        return encodeIdName(XMLUtil.splitPrefix(name), XMLUtil.splitName(name));
+    }
+    public ResourceEntry encodeIdName(String prefix, String name){
+        if(name == null){
+            return null;
+        }
+        if(prefix == null){
+            prefix = XMLUtil.splitPrefix(name);
+        }
+        name = XMLUtil.splitName(name);
+        EncodeResult encodeResult = ValueCoder.encodeUnknownNameId(name);
+        if(encodeResult != null){
+            setName(name, encodeResult.value);
+            return new ResourceEntry(getPackageBlock(), encodeResult.value);
+        }
+        if(prefix == null){
+            if(!allowNullPrefixEncode()){
+                return null;
+            }
+        }
+        PackageBlock packageBlock = getPackageBlock();
+        ResourceEntry resourceEntry = packageBlock.getTableBlock()
+                .getIdResource(packageBlock, prefix, name);
         if(resourceEntry != null){
             setName(name, resourceEntry.getResourceId());
         }

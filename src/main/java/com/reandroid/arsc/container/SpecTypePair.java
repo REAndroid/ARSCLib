@@ -70,13 +70,21 @@ public class SpecTypePair extends BlockContainer<Block>
             resConfig.trimToSize(resConfigSize);
         }
     }
-    public boolean isAttr(){
+    public boolean isTypeAttr(){
         // TODO: find better way
-        String name = getTypeName();
-        if(name == null){
-            return false;
+        TypeString typeString = getTypeString();
+        if(typeString != null){
+            return typeString.isTypeAttr();
         }
-        return name.contains("attr");
+        return false;
+    }
+    public boolean isTypeId(){
+        // TODO: find better way
+        TypeString typeString = getTypeString();
+        if(typeString != null){
+            return typeString.isTypeId();
+        }
+        return false;
     }
     public ResourceEntry getResource(int entryId){
         if(entryId < 0 || entryId > getHighestEntryId()){

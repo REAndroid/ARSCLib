@@ -18,11 +18,15 @@ package com.reandroid.apk.xmlencoder;
 import com.reandroid.apk.APKLogger;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.chunk.TypeBlock;
+import com.reandroid.arsc.coder.xml.XmlCoder;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
+import com.reandroid.xml.XMLFactory;
+import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
@@ -64,11 +68,8 @@ public class ResourceValuesEncoder {
             return;
         }
         logVerbose("Encoding: " + IOUtil.shortPath(valuesXmlFile, 4));
-
-        String type = EncodeUtil.getTypeNameFromValuesXml(valuesXmlFile);
-        String qualifiers = EncodeUtil.getQualifiersFromValuesXml(valuesXmlFile);
-        XMLDocument xmlDocument = XMLDocument.load(valuesXmlFile);
-        encodeValuesXml(type, qualifiers, xmlDocument);
+        XmlCoder xmlCoder = XmlCoder.getInstance();
+        xmlCoder.VALUES_XML.encode(valuesXmlFile, getTableBlock().getCurrentPackage());
     }
     public void encodeValue(String qualifiers, XMLElement element){
         String type = getType(element, null);

@@ -23,6 +23,13 @@ public class TypeString extends StringItem {
     public TypeString(boolean utf8) {
         super(utf8);
     }
+
+    public boolean isTypeAttr(){
+        return isTypeAttr(get());
+    }
+    public boolean isTypeId(){
+        return isTypeId(get());
+    }
     public int getId(){
         TypeStringPool stringPool = getParent(TypeStringPool.class);
         if(stringPool!=null){
@@ -49,5 +56,18 @@ public class TypeString extends StringItem {
     @Override
     public String toString(){
         return HexUtil.toHex2((byte) getId())+':'+get();
+    }
+
+
+    public static boolean isTypeAttr(String type){
+        // TODO: find better way
+        if(type == null){
+            return false;
+        }
+        return type.contains("attr");
+    }
+    public static boolean isTypeId(String type){
+        // TODO: find better way
+        return "id".equals(type);
     }
 }

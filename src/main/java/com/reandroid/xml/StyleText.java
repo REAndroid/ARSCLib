@@ -15,6 +15,8 @@
  */
 package com.reandroid.xml;
 
+import org.xmlpull.v1.XmlSerializer;
+
 import java.io.IOException;
 
 public class StyleText extends XMLText implements StyleNode{

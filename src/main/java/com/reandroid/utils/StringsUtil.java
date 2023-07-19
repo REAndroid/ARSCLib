@@ -87,6 +87,9 @@ public class StringsUtil {
     public static boolean isEmpty(String text){
         return text == null || text.length() == 0;
     }
+    public static boolean isWhiteSpace(String text){
+        return text == null || text.trim().length() == 0;
+    }
     public static String toUpperCase(String str){
         if(str == null || str.length() == 0){
             return str;

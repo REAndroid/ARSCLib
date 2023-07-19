@@ -238,6 +238,21 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return null;
     }
+    public ResourceEntry getIdResource(PackageBlock context, String prefix, String name){
+        Iterator<PackageBlock> iterator = getAllPackages(context, prefix);
+        while (iterator.hasNext()){
+            PackageBlock packageBlock = iterator.next();
+            ResourceEntry resourceEntry = packageBlock
+                    .getIdResource(name);
+            if(resourceEntry != null){
+                return resourceEntry;
+            }
+        }
+        if(prefix != null){
+            return getAttrResource(null, name);
+        }
+        return null;
+    }
     public int resolveResourceId(String packageName, String type, String name){
         Iterator<Entry> iterator = getEntries(packageName, type, name);
         if(iterator.hasNext()){
@@ -653,18 +668,8 @@ public class TableBlock extends Chunk<TableHeader>
     }
     public PackageBlock parsePublicXml(XmlPullParser parser) throws IOException,
             XmlPullParserException {
-        int event = XMLUtil.findStartTag(parser);
-        int id = PackageBlock.readPackageId(parser, 0);
-        while (id == 0 && event == XmlPullParser.START_TAG){
-            parser.nextToken();
-            event = XMLUtil.findStartTag(parser);
-            id = PackageBlock.readPackageId(parser, 0);
-        }
-        String name = PackageBlock.readPackageName(parser, null);
-
-        PackageBlock packageBlock = newPackage(id, name);
+        PackageBlock packageBlock = newPackage(0, null);
         packageBlock.parsePublicXml(parser);
-        IOUtil.close(parser);
         return packageBlock;
     }
     @Override

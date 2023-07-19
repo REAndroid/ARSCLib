@@ -96,11 +96,7 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
      * renames this entry and all configuration on this package
      * */
     public SpecString reName(String name){
-        TypeBlock typeBlock = getTypeBlock();
-        if(typeBlock == null){
-            return null;
-        }
-        SpecTypePair specTypePair = typeBlock.getParentSpecTypePair();
+        SpecTypePair specTypePair = getSpecTypePair();
         if(specTypePair == null){
             return null;
         }
@@ -199,6 +195,9 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
             return typeBlock.getTypeString();
         }
         return null;
+    }
+    public boolean isDefined(){
+        return getSpecReference() != -1;
     }
     public boolean isDefault(){
         ResConfig resConfig = getResConfig();
@@ -350,15 +349,18 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         return null;
     }
     public SpecBlock getSpecBlock(){
+        SpecTypePair specTypePair = getSpecTypePair();
+        if(specTypePair != null){
+            return specTypePair.getSpecBlock();
+        }
+        return null;
+    }
+    private SpecTypePair getSpecTypePair(){
         TypeBlock typeBlock = getTypeBlock();
-        if(typeBlock == null){
-            return null;
+        if(typeBlock != null){
+            return typeBlock.getParentSpecTypePair();
         }
-        SpecTypePair specTypePair = typeBlock.getParentSpecTypePair();
-        if(specTypePair==null){
-            return null;
-        }
-        return specTypePair.getSpecBlock();
+        return null;
     }
     public TypeBlock getTypeBlock(){
         return getParent(TypeBlock.class);
