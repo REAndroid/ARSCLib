@@ -48,7 +48,7 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
                 return false;
             }
         }
-        return false;
+        return getValue().childesCount() > 0;
     }
     public boolean isArray(){
         int size = getValue().childesCount();

@@ -363,13 +363,10 @@ public class XmlCoder {
                 serializer.startTag(null, "item");
                 serializer.attribute(null, "quantity", attributeType.getName());
                 if(valueMap.getValueType() == ValueType.STRING){
-                    XmlDecodeUtil.attribute(serializer,
-                            attributeType.getName(),
+                    XmlDecodeUtil.text(serializer,
                             valueMap.getDataAsPoolString());
                 }else {
-                    serializer.attribute(null,
-                            attributeType.getName(),
-                            valueMap.decodeValue());
+                    serializer.text(valueMap.decodeValue());
                 }
                 serializer.endTag(null, "item");
                 childCount++;
