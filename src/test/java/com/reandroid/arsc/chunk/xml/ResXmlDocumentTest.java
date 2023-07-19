@@ -153,7 +153,7 @@ public class ResXmlDocumentTest {
             "          android:versionName=\"1.0\"\n" +
             "          android:compileSdkVersion=\"32\"\n" +
             "          android:compileSdkVersionCodename=\"12\"\n" +
-            "          app:UNK_ATTR0x7f0501ab=\"0x00000005\"\n" +
+            "          app:r0x7f0501ab=\"0x00000005\"\n" +
             "          package=\"com.example.package\"\n" +
             "          platformBuildVersionCode=\"32\"\n" +
             "          platformBuildVersionName=\"12\"\n" +
