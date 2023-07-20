@@ -82,9 +82,8 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
     public String decodeName(boolean includePrefix){
         int resourceId = getNameResourceID();
         if(!PackageBlock.isResourceId(resourceId)){
-            AttributeType attributeType = getAttributeType();
-            if(attributeType != null){
-                return attributeType.getName();
+            if(resourceId != 0 && getAttributeType() == null){
+                return ValueCoder.decodeUnknownNameId(resourceId);
             }
             return null;
         }

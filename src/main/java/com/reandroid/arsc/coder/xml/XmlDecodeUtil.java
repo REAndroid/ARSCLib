@@ -15,39 +15,12 @@
  */
 package com.reandroid.arsc.coder.xml;
 
-import com.reandroid.arsc.coder.XmlSanitizer;
-import com.reandroid.arsc.item.StringItem;
-import com.reandroid.arsc.item.TableString;
-import com.reandroid.xml.StyleDocument;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 
 public class XmlDecodeUtil {
 
-    public static String toXMLTagName(String typeName){
-        // e.g ^attr-private
-        if(typeName.length()>0 && typeName.charAt(0)=='^'){
-            typeName = typeName.substring(1);
-        }
-        return typeName;
-    }
-    public static void text(XmlSerializer serializer, StringItem stringItem) throws IOException {
-        if(stringItem.hasStyle() && stringItem instanceof TableString) {
-            TableString tableString = (TableString) stringItem;
-            StyleDocument document = tableString.getStyleDocument();
-            if(document != null){
-                document.serialize(serializer);
-                return;
-            }
-        }
-        serializer.text(XmlSanitizer.escapeSpecialCharacter(stringItem.get()));
-    }
-    public static void attribute(XmlSerializer serializer, String name, StringItem stringItem) throws IOException {
-        String text = stringItem.getXml();
-        text = XmlSanitizer.escapeSpecialCharacter(text);
-        serializer.attribute(null, name, text);
-    }
     public static void rootIndent(XmlSerializer serializer) throws IOException {
         writeTagIndent(serializer, INDENT_ROOT);
     }

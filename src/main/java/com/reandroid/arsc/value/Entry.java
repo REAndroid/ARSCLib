@@ -74,6 +74,27 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         }
         return null;
     }
+    public String getXmlTag(){
+        String tag = TypeString.toXmlTagName(getTypeName());
+        if(tag == null || !tag.contains("array")){
+            return tag;
+        }
+        ResTableMapEntry mapEntry = getResTableMapEntry();
+        if(mapEntry == null){
+            return tag;
+        }
+        ValueType allValueType = mapEntry.isAllSameValueType();
+        if(allValueType == null){
+            return tag;
+        }
+        if(allValueType == ValueType.STRING){
+            return "string-" + tag;
+        }
+        if(allValueType == ValueType.DEC){
+            return "integer-" + tag;
+        }
+        return tag;
+    }
     public SpecFlag getSpecFlag(){
         SpecBlock specBlock = getSpecBlock();
         if(specBlock == null){

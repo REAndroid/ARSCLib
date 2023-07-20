@@ -18,7 +18,9 @@ package com.reandroid.arsc.item;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.xml.StyleDocument;
+import org.xmlpull.v1.XmlSerializer;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -29,6 +31,15 @@ public class TableString extends StringItem {
         super(utf8);
     }
 
+    @Override
+    public void serializeText(XmlSerializer serializer) throws IOException {
+        StyleDocument styleDocument = getStyleDocument();
+        if(styleDocument == null){
+            super.serializeText(serializer);
+            return;
+        }
+        styleDocument.serialize(serializer);
+    }
     public StyleDocument getStyleDocument(){
         StyleItem styleItem = getStyle();
         if(styleItem == null){

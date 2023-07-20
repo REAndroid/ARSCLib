@@ -66,8 +66,36 @@ public class TypeString extends StringItem {
         }
         return type.contains("attr");
     }
+    public static boolean isTypeArray(String type){
+        // TODO: find better way
+        if(type == null){
+            return false;
+        }
+        return type.contains("array");
+    }
+    public static boolean isTypeStyle(String type){
+        // TODO: find better way
+        if(type == null){
+            return false;
+        }
+        return type.contains("style");
+    }
+    public static boolean isTypePlurals(String type){
+        // TODO: find better way
+        if(type == null){
+            return false;
+        }
+        return type.contains("plurals");
+    }
     public static boolean isTypeId(String type){
         // TODO: find better way
         return "id".equals(type);
+    }
+    public static String toXmlTagName(String typeName){
+        // e.g ^attr-private
+        if(typeName != null && typeName.length()>0 && typeName.charAt(0) == '^'){
+            typeName = typeName.substring(1);
+        }
+        return typeName;
     }
 }

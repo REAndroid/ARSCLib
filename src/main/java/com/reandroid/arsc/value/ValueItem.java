@@ -20,6 +20,7 @@ import com.reandroid.arsc.chunk.MainChunk;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.ParentChunk;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.coder.CoderUnknownStringRef;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.coder.XmlSanitizer;
@@ -31,7 +32,9 @@ import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.xml.StyleDocument;
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -283,6 +286,50 @@ public abstract class ValueItem extends BlockItem implements Value,
         StringItem stringItem = getStringPool().getOrCreate(str);
         setData(stringItem.getIndex());
         setValueType(ValueType.STRING);
+    }
+    public void serializeText(XmlSerializer serializer) throws IOException {
+        if(getValueType() == ValueType.STRING){
+            StringItem stringItem = getDataAsPoolString();
+            if(stringItem != null){
+                stringItem.serializeText(serializer);
+            }else {
+                // TODO: should throw ?
+                serializer.text(CoderUnknownStringRef.INS.decode(getData()));
+            }
+            return;
+        }
+        String value = decodeValue();
+        if(value == null){
+            // TODO: could not happen ?
+            value = "";
+        }
+        serializer.text(value);
+    }
+    public void serializeAttribute(XmlSerializer serializer, String name) throws IOException {
+        serializeAttribute(serializer, null, name, false);
+    }
+    public void serializeAttribute(XmlSerializer serializer, String name, boolean ignore_empty) throws IOException {
+        serializeAttribute(serializer, null, name, ignore_empty);
+    }
+    public void serializeAttribute(XmlSerializer serializer, String namespace, String name, boolean ignore_empty) throws IOException {
+        if(getValueType() == ValueType.STRING){
+            StringItem stringItem = getDataAsPoolString();
+            if(stringItem != null){
+                stringItem.serializeAttribute(serializer, namespace, name);
+            }else {
+                // TODO: should throw ?
+                serializer.attribute(namespace, name, CoderUnknownStringRef.INS.decode(getData()));
+            }
+            return;
+        }
+        String value = decodeValue();
+        if(ignore_empty && StringsUtil.isEmpty(value)){
+            return;
+        }
+        if(value == null){
+            value = "";
+        }
+        serializer.attribute(namespace, name, value);
     }
     public boolean getValueAsBoolean(){
         return getData()!=0;

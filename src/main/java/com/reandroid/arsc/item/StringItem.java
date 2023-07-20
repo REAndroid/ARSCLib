@@ -17,6 +17,7 @@ package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.coder.ThreeByteCharsetDecoder;
+import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.utils.StringsUtil;
@@ -24,6 +25,7 @@ import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import org.xmlpull.v1.XmlSerializer;
 
 
 import java.io.IOException;
@@ -131,6 +133,24 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject>, Co
     @Override
     public void onIndexChanged(int oldIndex, int newIndex){
         reUpdateReferences(newIndex);
+    }
+    public void serializeText(XmlSerializer serializer) throws IOException {
+        String text = get();
+        if(text == null){
+            return;
+        }
+        serializer.text(XmlSanitizer.escapeSpecialCharacter(text));
+    }
+    public void serializeAttribute(XmlSerializer serializer, String name) throws IOException {
+        serializeAttribute(serializer, null, name);
+    }
+    public void serializeAttribute(XmlSerializer serializer, String namespace, String name) throws IOException {
+        String text = get();
+        if(text == null){
+            // TODO: could happen?
+            text = "";
+        }
+        serializer.attribute(namespace, name, XmlSanitizer.escapeSpecialCharacter(text));
     }
     public String getHtml(){
         String text = get();

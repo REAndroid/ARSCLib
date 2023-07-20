@@ -16,9 +16,10 @@
 package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.array.ResValueMapArray;
-import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.chunk.TableBlock;
-import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.item.TypeString;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArray> {
     public ResTableMapEntry(){
@@ -27,7 +28,11 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
 
     public boolean isAttr(){
         boolean hasFormats = false;
-        for(ResValueMap valueMap : this){
+        ResValueMap[] childes = getValue().getChildes();
+        for(ResValueMap valueMap : childes){
+            if(valueMap == null){
+                continue;
+            }
             AttributeType attributeType = valueMap.getAttributeType();
             if(attributeType != null && attributeType.isPlural()){
                 return false;
@@ -42,17 +47,30 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
         return hasFormats;
     }
     public boolean isPlural(){
-        for(ResValueMap valueMap : this){
+        ResValueMap[] childes = getValue().getChildes();
+        Set<AttributeType> uniqueSet = new HashSet<>();
+        for(ResValueMap valueMap : childes){
+            if(valueMap == null){
+                continue;
+            }
             AttributeType attributeType = valueMap.getAttributeType();
             if(attributeType == null || !attributeType.isPlural()){
                 return false;
             }
+            if(uniqueSet.contains(attributeType)){
+                return false;
+            }
+            uniqueSet.add(attributeType);
         }
-        return getValue().childesCount() > 0;
+        return uniqueSet.size() > 0;
     }
     public boolean isArray(){
-        int size = getValue().childesCount();
-        for(ResValueMap valueMap : this){
+        ResValueMap[] childes = getValue().getChildes();
+        int size = childes.length;
+        for(ResValueMap valueMap : childes){
+            if(valueMap == null){
+                continue;
+            }
             int id = valueMap.getArrayIndex();
             if(id >= 0 && id <= size){
                 continue;
@@ -66,8 +84,30 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
         if(entry == null){
             return false;
         }
-        String type = entry.getTypeName();
-        return type != null && type.contains("array");
+        return TypeString.isTypeArray(entry.getTypeName());
+    }
+    public boolean isStyle(){
+        if(getParentId() != 0){
+            return true;
+        }
+        Entry entry = getParentEntry();
+        if(entry != null){
+            return TypeString.isTypeStyle(entry.getTypeName());
+        }
+        return false;
+    }
+    public ValueType isAllSameValueType(){
+        ValueType allValueType = null;
+        ResValueMap[] childes = getValue().getChildes();
+        for(ResValueMap valueMap : childes){
+            ValueType valueType = valueMap.getValueType();
+            if(allValueType == null){
+                allValueType = valueType;
+            }else if(valueType != allValueType){
+                return null;
+            }
+        }
+        return allValueType;
     }
     @Override
     boolean shouldMerge(TableEntry<?, ?> tableEntry){
