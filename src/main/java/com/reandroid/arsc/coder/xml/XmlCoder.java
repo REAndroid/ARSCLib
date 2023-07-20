@@ -39,6 +39,7 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -130,7 +131,7 @@ public class XmlCoder {
             return true;
         }
         private void decodeBag(XmlSerializer serializer, Entry entry) throws IOException {
-            String tag = XmlDecodeUtil.toXMLTagName(entry.getTypeName());
+            String tag = getTag(entry);
             XmlDecodeUtil.entryIndent(serializer);
             serializer.startTag(null, tag);
             serializer.attribute(null, "name", entry.getName());
@@ -140,6 +141,30 @@ public class XmlCoder {
                 XmlDecodeUtil.entryIndent(serializer);
             }
             serializer.endTag(null, tag);
+        }
+        private String getTag(Entry entry){
+            String tag = XmlDecodeUtil.toXMLTagName(entry.getTypeName());
+            if(!tag.contains("array")){
+                return tag;
+            }
+            ResValueMap[] valueMaps = entry.getResValueMapArray().getChildes();
+            if(valueMaps.length == 0){
+                return tag;
+            }
+            Set<ValueType> valueTypeSet = new HashSet<>();
+            for(ResValueMap valueMap:valueMaps){
+                valueTypeSet.add(valueMap.getValueType());
+            }
+            if(valueTypeSet.size() != 1){
+                return tag;
+            }
+            if(valueTypeSet.contains(ValueType.STRING)){
+                return "string-" + tag;
+            }
+            if(valueTypeSet.contains(ValueType.DEC)){
+                return "integer-" + tag;
+            }
+            return tag;
         }
         private void decodeScalar(XmlSerializer serializer, Entry entry) throws IOException {
             String tag = XmlDecodeUtil.toXMLTagName(entry.getTypeName());
