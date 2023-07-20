@@ -593,6 +593,9 @@ public class XmlCoder {
             ResTableMapEntry mapEntry = entry.getResTableMapEntry();
             String parent = mapEntry.decodeParentId();
             if(parent == null){
+                if(mapEntry.childesCount() == 0){
+                    serializer.attribute(null, "parent", "");
+                }
                 return;
             }
             serializer.attribute(null, "parent", parent);
