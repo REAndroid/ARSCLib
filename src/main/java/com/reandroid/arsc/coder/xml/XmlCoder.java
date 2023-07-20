@@ -171,6 +171,10 @@ public class XmlCoder {
             XmlDecodeUtil.entryIndent(serializer);
             serializer.startTag(null, tag);
             serializer.attribute(null, "name", entry.getName());
+            if(ignoreIdValue(entry)){
+                serializer.endTag(null, tag);
+                return;
+            }
 
             ResValue resValue = entry.getResValue();
             if(resValue.getValueType() == ValueType.STRING){
@@ -179,6 +183,21 @@ public class XmlCoder {
                 serializer.text(resValue.decodeValue());
             }
             serializer.endTag(null, tag);
+        }
+        private boolean ignoreIdValue(Entry entry){
+            if(!TypeString.isTypeId(entry.getTypeName())){
+                return false;
+            }
+            ResValue resValue = entry.getResValue();
+            ValueType valueType = resValue.getValueType();
+            if(valueType == ValueType.BOOLEAN){
+                return true;
+            }
+            if(valueType == ValueType.STRING){
+                String value = resValue.getValueAsString();
+                return value == null || value.length() == 0;
+            }
+            return false;
         }
         public void encode(File valuesXmlFile, PackageBlock packageBlock) throws IOException, XmlPullParserException {
             XmlPullParser parser = XMLFactory.newPullParser(valuesXmlFile);
