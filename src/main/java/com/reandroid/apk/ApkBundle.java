@@ -16,7 +16,7 @@
 package com.reandroid.apk;
 
 import com.reandroid.archive.APKArchive;
-import com.reandroid.archive2.block.ApkSignatureBlock;
+import com.reandroid.archive.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.builder.StringPoolMerger;

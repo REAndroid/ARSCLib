@@ -16,9 +16,8 @@
 package com.reandroid.apk;
 
 import com.reandroid.archive.*;
-import com.reandroid.archive2.Archive;
-import com.reandroid.archive2.block.ApkSignatureBlock;
-import com.reandroid.archive2.writer.ApkWriter;
+import com.reandroid.archive.block.ApkSignatureBlock;
+import com.reandroid.archive.writer.ApkWriter;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.array.PackageArray;
 import com.reandroid.arsc.chunk.Chunk;
@@ -1052,7 +1051,7 @@ public class ApkModule implements ApkFile, Closeable {
         return loadApkFile(apkFile, ApkUtil.DEF_MODULE_NAME);
     }
     public static ApkModule loadApkFile(File apkFile, String moduleName) throws IOException {
-        Archive archive = new Archive(apkFile);
+        ArchiveFile archive = new ArchiveFile(apkFile);
         ApkModule apkModule = new ApkModule(moduleName, archive.createAPKArchive());
         apkModule.setApkSignatureBlock(archive.getApkSignatureBlock());
         apkModule.setCloseable(archive);
@@ -1062,7 +1061,7 @@ public class ApkModule implements ApkFile, Closeable {
         return loadApkFile(null, apkFile, externalFrameworks);
     }
     public static ApkModule loadApkFile(APKLogger logger, File apkFile, File ... externalFrameworks) throws IOException {
-        Archive archive = new Archive(apkFile);
+        ArchiveFile archive = new ArchiveFile(apkFile);
         ApkModule apkModule = new ApkModule(ApkUtil.DEF_MODULE_NAME, archive.createAPKArchive());
         apkModule.setAPKLogger(logger);
         apkModule.setApkSignatureBlock(archive.getApkSignatureBlock());

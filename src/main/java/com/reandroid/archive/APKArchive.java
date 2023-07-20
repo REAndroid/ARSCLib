@@ -23,7 +23,6 @@ import java.io.OutputStream;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipFile;
 
 public class APKArchive extends ZipArchive {
     public APKArchive(Map<String, InputSource> entriesMap){
@@ -52,11 +51,8 @@ public class APKArchive extends ZipArchive {
         return serializer.writeZip(outputStream);
     }
     public static APKArchive loadZippedApk(File zipFile) throws IOException {
-        return loadZippedApk(new ZipFile(zipFile));
-    }
-    public static APKArchive loadZippedApk(ZipFile zipFile) {
-        Map<String, InputSource> entriesMap = InputSourceUtil.mapZipFileSources(zipFile);
-        return new APKArchive(entriesMap);
+        ArchiveFile archiveFile = new ArchiveFile(zipFile);
+        return new APKArchive(archiveFile.mapEntrySource());
     }
     public static void repackApk(File apkFile) throws IOException{
         APKArchive apkArchive =loadZippedApk(apkFile);

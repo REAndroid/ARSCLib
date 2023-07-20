@@ -18,7 +18,7 @@ package com.reandroid.apk;
 import com.reandroid.archive.APKArchive;
 import com.reandroid.archive.FileInputSource;
 import com.reandroid.archive.InputSource;
-import com.reandroid.archive2.block.ApkSignatureBlock;
+import com.reandroid.archive.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.json.JSONArray;
 

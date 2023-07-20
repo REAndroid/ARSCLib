@@ -16,10 +16,9 @@
 package com.reandroid.apk;
 
 import com.reandroid.archive.APKArchive;
-import com.reandroid.archive.ByteInputSource;
 import com.reandroid.archive.InputSource;
-import com.reandroid.archive.InputSourceUtil;
-import com.reandroid.archive2.Archive;
+import com.reandroid.archive.ArchiveBytes;
+import com.reandroid.archive.ArchiveFile;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
@@ -237,7 +236,7 @@ public class FrameworkApk extends ApkModule{
         return loadApkFile(apkFile, false);
     }
     private static FrameworkApk loadApkFile(File apkFile, boolean addManifest) throws IOException {
-        Archive archive = new Archive(apkFile);
+        ArchiveFile archive = new ArchiveFile(apkFile);
         InputSource table = archive.getEntrySource(TableBlock.FILE_NAME);
         if(table == null){
             throw new IOException("Missing " + TableBlock.FILE_NAME + ", on " + apkFile);
@@ -256,7 +255,7 @@ public class FrameworkApk extends ApkModule{
         return frameworkApk;
     }
     public static FrameworkApk loadApkFile(File apkFile, String moduleName) throws IOException {
-        Archive archive = new Archive(apkFile);
+        ArchiveFile archive = new ArchiveFile(apkFile);
         APKArchive apkArchive = new APKArchive(archive.mapEntrySource());
         FrameworkApk frameworkApk = new FrameworkApk(moduleName, apkArchive);
         frameworkApk.setCloseable(archive);
@@ -280,23 +279,11 @@ public class FrameworkApk extends ApkModule{
         return loadApkBuffer("framework", inputStream);
     }
     public static FrameworkApk loadApkBuffer(String moduleName, InputStream inputStream) throws IOException {
-        APKArchive archive = new APKArchive();
-        FrameworkApk frameworkApk = new FrameworkApk(moduleName, archive);
-        Map<String, ByteInputSource> inputSourceMap = InputSourceUtil.mapInputStreamAsBuffer(inputStream);
-        ByteInputSource source = inputSourceMap.get(TableBlock.FILE_NAME);
-        FrameworkTable tableBlock = new FrameworkTable();
-        if(source!=null){
-            tableBlock.readBytes(source.openStream());
-        }
-        frameworkApk.setTableBlock(tableBlock);
-
-        AndroidManifestBlock manifestBlock = new AndroidManifestBlock();
-        source = inputSourceMap.get(AndroidManifestBlock.FILE_NAME);
-        if(source!=null){
-            manifestBlock.readBytes(source.openStream());
-        }
-        frameworkApk.setManifest(manifestBlock);
-        archive.addAll(inputSourceMap.values());
+        ArchiveBytes archive = new ArchiveBytes(inputStream);
+        APKArchive apkArchive = new APKArchive();
+        FrameworkApk frameworkApk = new FrameworkApk(moduleName, apkArchive);
+        Map<String, InputSource> inputSourceMap = archive.mapEntrySource();
+        apkArchive.addAll(inputSourceMap.values());
         frameworkApk.initValues();
         return frameworkApk;
     }

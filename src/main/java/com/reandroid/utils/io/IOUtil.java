@@ -15,11 +15,29 @@
  */
 package com.reandroid.utils.io;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 
 public class IOUtil {
+
+    public static void writeAll(InputStream inputStream, OutputStream outputStream) throws IOException{
+        int bufferLength = 1024 * 1000;
+        byte[] buffer = new byte[bufferLength];
+        int read;
+        while ((read = inputStream.read(buffer, 0, bufferLength))>0){
+            outputStream.write(buffer, 0, read);
+        }
+    }
+    public static byte[] readFully(InputStream inputStream) throws IOException{
+        byte[] buffer = new byte[1024 * 1000];
+        int length;
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        while ((length = inputStream.read(buffer, 0, buffer.length)) > 0){
+            outputStream.write(buffer, 0, length);
+        }
+        outputStream.close();
+        inputStream.close();
+        return outputStream.toByteArray();
+    }
     public static String shortPath(File file, int depth){
         File tmp = file;
         while (depth > 0){

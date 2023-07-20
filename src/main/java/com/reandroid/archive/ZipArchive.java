@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.ZipFile;
 
 public class ZipArchive {
     private final Map<String, InputSource> mEntriesMap;
@@ -86,16 +85,8 @@ public class ZipArchive {
         }
         return inputSource;
     }
-    public void addArchive(File archiveFile) throws IOException {
-        ZipFile zipFile=new ZipFile(archiveFile);
-        add(zipFile);
-    }
     public void addDirectory(File dir){
         addAll(InputSourceUtil.listDirectory(dir));
-    }
-    public void add(ZipFile zipFile){
-        List<InputSource> sourceList = InputSourceUtil.listZipFileSources(zipFile);
-        this.addAll(sourceList);
     }
     public void set(Collection<? extends InputSource> inputSourceList){
         clear();

@@ -1,7 +1,8 @@
 package com.reandroid.apk;
 
 import com.reandroid.archive.ByteInputSource;
-import com.reandroid.archive.InputSourceUtil;
+import com.reandroid.archive.InputSource;
+import com.reandroid.archive.ArchiveBytes;
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
@@ -13,6 +14,7 @@ import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.*;
 import com.reandroid.utils.io.FileUtil;
+import com.reandroid.utils.io.IOUtil;
 import com.reandroid.xml.*;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -47,7 +49,8 @@ public class ApkModuleTest {
     public void b_testTypeIdOffset() throws IOException {
         InputStream inputStream = ApkModuleTest.class
                 .getResourceAsStream("/type_id_offset.apk");
-        Map<String, ByteInputSource> map = InputSourceUtil.mapInputStreamAsBuffer(inputStream);
+        ArchiveBytes archiveBytes = new ArchiveBytes(inputStream);
+        Map<String, InputSource> map = archiveBytes.mapEntrySource();
 
         ApkModule apkModule = new ApkModule();
         apkModule.addAll(map.values());
