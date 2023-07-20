@@ -15,7 +15,6 @@
  */
 package com.reandroid.apk;
 
-import com.reandroid.apk.xmldecoder.*;
 import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
@@ -35,8 +34,6 @@ import java.util.function.Predicate;
 
 public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<Entry> {
     private final Map<Integer, Set<ResConfig>> decodedEntries;
-    private ResXmlDocumentSerializer documentSerializer;
-    private XMLEntryDecoderSerializer entrySerializer;
     private boolean keepResPath;
 
     public ApkModuleXmlDecoder(ApkModule apkModule){
@@ -154,13 +151,6 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         }
         path = path.replace('/', File.separatorChar);
         return new File(dir, path);
-    }
-    private ResXmlDocumentSerializer getDocumentSerializer(){
-        if(documentSerializer == null){
-            documentSerializer = new ResXmlDocumentSerializer(getApkModule());
-            documentSerializer.setFixAttributesNamespace(true);
-        }
-        return documentSerializer;
     }
     private void decodePublicXml(File mainDirectory, TableBlock tableBlock)
             throws IOException{

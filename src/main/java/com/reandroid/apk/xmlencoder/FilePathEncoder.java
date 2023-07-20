@@ -22,12 +22,14 @@ import com.reandroid.archive.InputSource;
 import com.reandroid.apk.ApkUtil;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.coder.xml.XmlEncodeException;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.xml.source.XMLFileParserSource;
 import com.reandroid.xml.source.XMLParserSource;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.zip.ZipEntry;
 
@@ -55,7 +57,7 @@ public class FilePathEncoder {
         return mCurrentPackage;
     }
 
-    public void encodePackageResDir(PackageBlock packageBlock, File resDir){
+    public void encodePackageResDir(PackageBlock packageBlock, File resDir) throws IOException {
         this.mCurrentPackage = packageBlock;
         int count = 0;
         String simpleName = resDir.getParentFile().getName()
@@ -70,14 +72,14 @@ public class FilePathEncoder {
         }
         logMessage("Scanned " + count + " files: " + simpleName);
     }
-    public int encodeTypeDir(File dir){
+    public int encodeTypeDir(File dir) throws IOException {
         List<File> fileList = ApkUtil.listFiles(dir, null);
         for(File file:fileList){
             encodeTypeFileEntry(file);
         }
         return fileList.size();
     }
-    public InputSource encodeTypeFileEntry(File resFile){
+    public void encodeTypeFileEntry(File resFile) throws IOException {
         String type = EncodeUtil.getTypeNameFromResFile(resFile);
         String qualifiers = EncodeUtil.getQualifiersFromResFile(resFile);
         String name = EncodeUtil.getEntryNameFromResFile(resFile);
@@ -87,7 +89,7 @@ public class FilePathEncoder {
         ResourceEntry resourceEntry = packageBlock.getTableBlock()
                 .getLocalResource(packageBlock, type, name);
         if(resourceEntry == null){
-            throw new EncodeException("Local resource not defined: @" + type + "/" + name
+            throw new XmlEncodeException("Local resource not defined: @" + type + "/" + name
                     + ", for path: " + path);
         }
         Entry entry = resourceEntry.getOrCreate(qualifiers);
@@ -95,7 +97,6 @@ public class FilePathEncoder {
         InputSource inputSource = createInputSource(
                 resourceEntry.getPackageBlock(), path, resFile);
         addInputSource(inputSource);
-        return inputSource;
     }
     private InputSource createInputSource(PackageBlock packageBlock, String path, File resFile){
         if(isXmlFile(resFile)){
@@ -138,12 +139,6 @@ public class FilePathEncoder {
         APKLogger apkLogger = this.mLogger;
         if(apkLogger != null){
             apkLogger.logMessage(msg);
-        }
-    }
-    private void logVerbose(String msg){
-        APKLogger apkLogger = this.mLogger;
-        if(apkLogger != null){
-            apkLogger.logVerbose(msg);
         }
     }
 }

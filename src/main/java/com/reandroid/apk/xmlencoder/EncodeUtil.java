@@ -15,48 +15,16 @@
  */
 package com.reandroid.apk.xmlencoder;
 
-import com.reandroid.apk.ApkUtil;
-
 import java.io.File;
 import java.util.Comparator;
 import java.util.List;
 
 public class EncodeUtil {
-    public static void sortStrings(List<String> stringList){
-        Comparator<String> cmp=new Comparator<String>() {
-            @Override
-            public int compare(String s1, String s2) {
-                return s1.compareTo(s2);
-            }
-        };
-        stringList.sort(cmp);
-    }
-    public static boolean isPublicXml(File file){
-        if(!ApkUtil.FILE_NAME_PUBLIC_XML.equals(file.getName())){
-            return false;
-        }
-        File dir = file.getParentFile();
-        return dir!=null && dir.getName().equals("values");
-    }
-    public static void sortPublicXml(List<File> fileList){
-        Comparator<File> cmp=new Comparator<File>() {
-            @Override
-            public int compare(File f1, File f2) {
-                String n1=f1.getAbsolutePath();
-                String n2=f2.getAbsolutePath();
-                return n1.compareTo(n2);
-            }
-        };
-        fileList.sort(cmp);
-    }
     public static void sortValuesXml(List<File> fileList){
-        Comparator<File> cmp=new Comparator<File>() {
-            @Override
-            public int compare(File f1, File f2) {
-                String n1=getValuesXmlCompare(f1);
-                String n2=getValuesXmlCompare(f2);
-                return n1.compareTo(n2);
-            }
+        Comparator<File> cmp= (f1, f2) -> {
+            String n1=getValuesXmlCompare(f1);
+            String n2=getValuesXmlCompare(f2);
+            return n1.compareTo(n2);
         };
         fileList.sort(cmp);
     }
@@ -79,14 +47,6 @@ public class EncodeUtil {
         }
         text=text.trim();
         return text.length()==0;
-    }
-    public static String getQualifiersFromValuesXml(File valuesXml){
-        String dirName=valuesXml.getParentFile().getName();
-        int i=dirName.indexOf('-');
-        if(i>0){
-            return dirName.substring(i);
-        }
-        return "";
     }
     public static String getEntryPathFromResFile(File resFile){
         File typeDir=resFile.getParentFile();
@@ -126,14 +86,6 @@ public class EncodeUtil {
         }
         return name;
     }
-    public static String getTypeNameFromValuesXml(File valuesXml){
-        String name=valuesXml.getName();
-        name=name.substring(0, name.length()-4);
-        if(!name.equals("plurals") && name.endsWith("s")){
-            name=name.substring(0, name.length()-1);
-        }
-        return name;
-    }
     public static String sanitizeType(String type){
         if(type.length() < 2){
             return type;
@@ -158,6 +110,4 @@ public class EncodeUtil {
         return type;
     }
 
-    public static final String URI_ANDROID = "http://schemas.android.com/apk/res/android";
-    public static final String URI_APP = "http://schemas.android.com/apk/res-auto";
 }

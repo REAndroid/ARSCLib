@@ -21,6 +21,7 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.coder.ReferenceString;
+import com.reandroid.arsc.coder.xml.XmlCoder;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.json.JSONObject;
@@ -186,13 +187,14 @@ public class XMLTableBlockEncoder {
             PackageBlock packageBlock = tableBlock.getPackageBlockByTag(pubXmlFile);
             tableBlock.setCurrentPackage(packageBlock);
 
-            ResourceValuesEncoder valuesEncoder = new ResourceValuesEncoder(tableBlock);
             List<File> attrFiles = listAttrs(pubXmlFile);
             if(attrFiles.size() == 0){
                 continue;
             }
             for(File file : attrFiles){
-                valuesEncoder.encodeValuesXml(file);
+                logVerbose("Encoding: " + IOUtil.shortPath(file, 4));
+                XmlCoder xmlCoder = XmlCoder.getInstance();
+                xmlCoder.VALUES_XML.encode(file, packageBlock);
                 addParsedFiles(file);
             }
             packageBlock.sortTypes();
@@ -274,7 +276,6 @@ public class XMLTableBlockEncoder {
         }
     }
     private void encodeValuesDir(File valuesDir) throws IOException, XmlPullParserException {
-        ResourceValuesEncoder valuesEncoder = new ResourceValuesEncoder(getTableBlock());
         List<File> xmlFiles = ApkUtil.listFiles(valuesDir, ".xml");
         EncodeUtil.sortValuesXml(xmlFiles);
         for(File file:xmlFiles){
@@ -282,7 +283,9 @@ public class XMLTableBlockEncoder {
                 continue;
             }
             addParsedFiles(file);
-            valuesEncoder.encodeValuesXml(file);
+            logVerbose("Encoding: " + IOUtil.shortPath(file, 4));
+            XmlCoder xmlCoder = XmlCoder.getInstance();
+            xmlCoder.VALUES_XML.encode(file, getTableBlock().getCurrentPackage());
         }
     }
     private File toAndroidManifest(File pubXmlFile){
