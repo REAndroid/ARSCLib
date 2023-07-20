@@ -80,10 +80,11 @@ public abstract class TableEntry<HEADER extends ValueHeader, VALUE extends Block
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        ValueHeader valueHeader = getHeader();
-        valueHeader.readBytes(reader);
-        onHeaderLoaded(valueHeader);
-        getValue().readBytes(reader);
+        HEADER header = getHeader();
+        header.readBytes(reader);
+        VALUE value = getValue();
+        onHeaderLoaded(value, header);
+        value.readBytes(reader);
     }
 
     @Override
@@ -94,7 +95,7 @@ public abstract class TableEntry<HEADER extends ValueHeader, VALUE extends Block
         return result;
     }
 
-    void onHeaderLoaded(ValueHeader valueHeader){
+    void onHeaderLoaded(VALUE value, HEADER header){
     }
     abstract void onRemoved();
     abstract boolean shouldMerge(TableEntry<?, ?> tableEntry);

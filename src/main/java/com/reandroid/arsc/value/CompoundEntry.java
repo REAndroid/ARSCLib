@@ -73,8 +73,8 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
     public void setParentId(int parentId){
         getHeader().setParentId(parentId);
     }
-    public int getValuesCount(){
-        return getHeader().getValuesCount();
+    public int childesCount(){
+        return getValue().childesCount();
     }
     public void setValuesCount(int valuesCount){
         getHeader().setValuesCount(valuesCount);
@@ -109,8 +109,8 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
         }
     }
     @Override
-    void onHeaderLoaded(ValueHeader valueHeader){
-        getValue().setChildesCount(getValuesCount());
+    void onHeaderLoaded(ARRAY value, EntryHeaderMap header){
+        value.setChildesCount(header.getValuesCount());
     }
 
     @Override
