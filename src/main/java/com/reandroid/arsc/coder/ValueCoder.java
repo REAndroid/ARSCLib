@@ -260,13 +260,21 @@ public class ValueCoder {
     private static EncodeResult encodeUnknown(String text){
         char first = text.charAt(0);
         Coder unknown = CoderUnknownReferenceId.INS;
+        EncodeResult encodeResult;
         if(unknown.canStartWith(first)){
-            EncodeResult encodeResult = unknown.encode(text);
+            encodeResult = unknown.encode(text);
             if(encodeResult != null){
                 return encodeResult;
             }
         }
         unknown = CoderUnknownAttributeId.INS;
+        if(unknown.canStartWith(first)){
+            encodeResult = unknown.encode(text);
+            if(encodeResult != null){
+                return encodeResult;
+            }
+        }
+        unknown = CoderUnknownStringRef.INS;
         if(unknown.canStartWith(first)){
             return unknown.encode(text);
         }
