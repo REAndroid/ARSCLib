@@ -2,7 +2,7 @@
 apply plugin: 'java'
 
 group 'com.reandroid'
-version '1.2.2'
+version '1.2.3'
 
 java {
     sourceCompatibility JavaVersion.VERSION_1_8
