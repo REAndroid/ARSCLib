@@ -64,7 +64,6 @@ cd ARSCLib
 import com.reandroid.apk.AndroidFrameworks;
 import com.reandroid.apk.ApkModule;
 import com.reandroid.apk.FrameworkApk;
-import com.reandroid.archive.APKArchive;
 import com.reandroid.archive.ByteInputSource;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
@@ -81,8 +80,8 @@ import java.io.IOException;
 public class ARSCLibExample {
 
     public static void createNewApk() throws IOException {
-  
-        ApkModule apkModule = new ApkModule("base", new APKArchive());
+
+        ApkModule apkModule = new ApkModule();
 
         TableBlock tableBlock = new TableBlock();
         AndroidManifestBlock manifest = new AndroidManifestBlock();

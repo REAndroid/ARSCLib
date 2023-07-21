@@ -181,8 +181,8 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         packageDirectory = new File(packageDirectory, PackageBlock.DIRECTORY_NAME_PREFIX + "1");
         logMessage("Empty public.xml: "
                 + packageDirectory.getName());
-        File file = new File(packageDirectory, ApkUtil.RES_DIR_NAME);
-        file = new File(file, ApkUtil.VALUES_DIRECTORY_NAME);
+        File file = new File(packageDirectory, PackageBlock.RES_DIRECTORY_NAME);
+        file = new File(file, PackageBlock.VALUES_DIRECTORY_NAME);
         file = new File(file, PackageBlock.PUBLIC_XML);
         PackageBlock packageBlock = new PackageBlock();
         packageBlock.serializePublicXml(file);

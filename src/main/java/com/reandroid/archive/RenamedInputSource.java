@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,9 +13,7 @@
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-package com.reandroid.apk;
-
-import com.reandroid.archive.InputSource;
+package com.reandroid.archive;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +27,19 @@ public class RenamedInputSource<T extends InputSource> extends InputSource {
         this.inputSource=input;
         super.setMethod(input.getMethod());
         super.setSort(input.getSort());
+    }
+
+    @SuppressWarnings("unchecked")
+    public<T1 extends InputSource> T1 getParentInputSource(Class<T1> instance){
+        InputSource inputSource = getInputSource();
+        if(instance.isInstance(inputSource)){
+            return (T1) inputSource;
+        }
+        if(inputSource instanceof RenamedInputSource){
+            RenamedInputSource<?> parent = (RenamedInputSource<?>) inputSource;
+            return parent.getParentInputSource(instance);
+        }
+        return null;
     }
     public T getInputSource() {
         return inputSource;

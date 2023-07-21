@@ -50,10 +50,7 @@ public class ApkModuleTest {
         InputStream inputStream = ApkModuleTest.class
                 .getResourceAsStream("/type_id_offset.apk");
         ArchiveBytes archiveBytes = new ArchiveBytes(inputStream);
-        Map<String, InputSource> map = archiveBytes.mapEntrySource();
-
-        ApkModule apkModule = new ApkModule();
-        apkModule.addAll(map.values());
+        ApkModule apkModule = new ApkModule(archiveBytes.createZipEntryMap());
         TableBlock tableBlock = apkModule.getTableBlock();
         PackageBlock packageBlock = tableBlock.pickOne();
 

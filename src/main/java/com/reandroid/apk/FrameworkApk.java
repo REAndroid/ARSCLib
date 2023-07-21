@@ -15,10 +15,7 @@
  */
 package com.reandroid.apk;
 
-import com.reandroid.archive.APKArchive;
-import com.reandroid.archive.InputSource;
-import com.reandroid.archive.ArchiveBytes;
-import com.reandroid.archive.ArchiveFile;
+import com.reandroid.archive.*;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
@@ -30,8 +27,6 @@ import com.reandroid.arsc.value.ValueType;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /*
@@ -45,12 +40,12 @@ public class FrameworkApk extends ApkModule{
     private String packageName;
     private boolean mOptimizing;
     private boolean mDestroyed;
-    public FrameworkApk(String moduleName, APKArchive apkArchive) {
-        super(moduleName, apkArchive);
+    public FrameworkApk(String moduleName, ZipEntryMap zipEntryMap) {
+        super(moduleName, zipEntryMap);
         super.setLoadDefaultFramework(false);
     }
-    public FrameworkApk(APKArchive apkArchive) {
-        this("framework", apkArchive);
+    public FrameworkApk(ZipEntryMap zipEntryMap) {
+        this("framework", zipEntryMap);
     }
 
     @Override
@@ -164,7 +159,7 @@ public class FrameworkApk extends ApkModule{
     }
     @Override
     FrameworkTable loadTableBlock() throws IOException {
-        APKArchive archive=getApkArchive();
+        ZipEntryMap archive= getZipEntryMap();
         InputSource inputSource = archive.getInputSource(TableBlock.FILE_NAME);
         if(inputSource==null){
             throw new IOException("Entry not found: "+TableBlock.FILE_NAME);
@@ -241,23 +236,19 @@ public class FrameworkApk extends ApkModule{
         if(table == null){
             throw new IOException("Missing " + TableBlock.FILE_NAME + ", on " + apkFile);
         }
-        List<String> removeList = archive.listFilePaths();
-        removeList.remove(TableBlock.FILE_NAME);
-        APKArchive apkArchive = new APKArchive();
-        apkArchive.add(table);
+        ZipEntryMap zipEntryMap = new ZipEntryMap();
+        zipEntryMap.add(table);
         if(addManifest){
-            apkArchive.add(archive.getEntrySource(AndroidManifestBlock.FILE_NAME));
-            removeList.remove(AndroidManifestBlock.FILE_NAME);
+            zipEntryMap.add(archive.getEntrySource(AndroidManifestBlock.FILE_NAME));
         }
-        archive.removeEntries(removeList);
-        FrameworkApk frameworkApk = new FrameworkApk(apkArchive);
+        FrameworkApk frameworkApk = new FrameworkApk(zipEntryMap);
         frameworkApk.setCloseable(archive);
         return frameworkApk;
     }
     public static FrameworkApk loadApkFile(File apkFile, String moduleName) throws IOException {
         ArchiveFile archive = new ArchiveFile(apkFile);
-        APKArchive apkArchive = new APKArchive(archive.mapEntrySource());
-        FrameworkApk frameworkApk = new FrameworkApk(moduleName, apkArchive);
+        ZipEntryMap zipEntryMap = archive.createZipEntryMap();
+        FrameworkApk frameworkApk = new FrameworkApk(moduleName, zipEntryMap);
         frameworkApk.setCloseable(archive);
         return frameworkApk;
     }
@@ -280,10 +271,8 @@ public class FrameworkApk extends ApkModule{
     }
     public static FrameworkApk loadApkBuffer(String moduleName, InputStream inputStream) throws IOException {
         ArchiveBytes archive = new ArchiveBytes(inputStream);
-        APKArchive apkArchive = new APKArchive();
-        FrameworkApk frameworkApk = new FrameworkApk(moduleName, apkArchive);
-        Map<String, InputSource> inputSourceMap = archive.mapEntrySource();
-        apkArchive.addAll(inputSourceMap.values());
+        ZipEntryMap zipEntryMap = archive.createZipEntryMap();
+        FrameworkApk frameworkApk = new FrameworkApk(moduleName, zipEntryMap);
         frameworkApk.initValues();
         return frameworkApk;
     }

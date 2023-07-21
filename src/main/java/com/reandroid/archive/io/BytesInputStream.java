@@ -24,19 +24,39 @@ public class BytesInputStream extends InputStream {
     private final int length;
     private int position;
     public BytesInputStream(byte[] array, int offset, int length){
+        if(offset >= array.length){
+            offset = array.length - 1;
+        }
+        if(offset < 0){
+            offset = 0;
+        }
+        int available = array.length - offset;
+        if(length > available){
+            length = available;
+        }
         this.array = array;
         this.offset = offset;
         this.length = length;
     }
+    public BytesInputStream(byte[] array){
+        this(array, 0, array.length);
+    }
+    public int getOffset() {
+        return offset;
+    }
+    public int getLength() {
+        return length;
+    }
+    public byte[] getArray() {
+        return array;
+    }
+
     @Override
     public boolean markSupported() {
         return true;
     }
     @Override
     public synchronized void mark(int readLimit){
-        if(readLimit < 0){
-            readLimit = 0;
-        }
     }
     @Override
     public void close() throws IOException {
@@ -88,6 +108,7 @@ public class BytesInputStream extends InputStream {
         position++;
         return i & 0xff;
     }
+    @Override
     public int available(){
         return length - position;
     }

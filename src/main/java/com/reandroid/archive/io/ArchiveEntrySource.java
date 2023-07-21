@@ -28,7 +28,7 @@ public class ArchiveEntrySource<T extends ZipInput> extends InputSource {
     private final T zipInput;
     private final ArchiveEntry archiveEntry;
     public ArchiveEntrySource(T zipInput, ArchiveEntry archiveEntry){
-        super(archiveEntry.getName());
+        super(archiveEntry.getSanitizedName());
         this.zipInput = zipInput;
         this.archiveEntry = archiveEntry;
         setMethod(archiveEntry.getMethod());

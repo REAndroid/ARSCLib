@@ -16,7 +16,8 @@
 package com.reandroid.apk.xmlencoder;
 
 import com.reandroid.apk.*;
-import com.reandroid.archive.APKArchive;
+import com.reandroid.archive.BlockInputSource;
+import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
@@ -57,7 +58,7 @@ public class XMLTableBlockEncoder {
     }
     public XMLTableBlockEncoder(){
         this(new ApkModule("encoded",
-                new APKArchive()), new TableBlock());
+                new ZipEntryMap()), new TableBlock());
     }
 
     public Integer getMainPackageId() {

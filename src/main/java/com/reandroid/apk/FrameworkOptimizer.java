@@ -15,7 +15,7 @@
   */
 package com.reandroid.apk;
 
-import com.reandroid.archive.APKArchive;
+import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
@@ -59,28 +59,28 @@ import java.util.zip.ZipEntry;
         UncompressedFiles uncompressedFiles = frameworkApk.getUncompressedFiles();
         uncompressedFiles.clearExtensions();
         uncompressedFiles.clearPaths();
-        clearFiles(frameworkApk.getApkArchive());
+        clearFiles(frameworkApk.getZipEntryMap());
         logMessage("Optimized");
     }
-    private void clearFiles(APKArchive archive){
-        int count = archive.entriesCount();
-        if(count==2){
+    private void clearFiles(ZipEntryMap zipEntryMap){
+        int size = zipEntryMap.size();
+        if(size == 2){
             return;
         }
-        logMessage("Removing files from: "+count);
-        InputSource tableSource = archive.getInputSource(TableBlock.FILE_NAME);
-        InputSource manifestSource = archive.getInputSource(AndroidManifestBlock.FILE_NAME);
-        archive.clear();
+        logMessage("Removing files from: " + size);
+        InputSource tableSource = zipEntryMap.getInputSource(TableBlock.FILE_NAME);
+        InputSource manifestSource = zipEntryMap.getInputSource(AndroidManifestBlock.FILE_NAME);
+        zipEntryMap.clear();
         if(tableSource!=null){
             tableSource.setMethod(ZipEntry.DEFLATED);
         }
         if(manifestSource!=null){
             manifestSource.setMethod(ZipEntry.DEFLATED);
         }
-        archive.add(tableSource);
-        archive.add(manifestSource);
-        count = count - archive.entriesCount();
-        logMessage("Removed files: "+count);
+        zipEntryMap.add(tableSource);
+        zipEntryMap.add(manifestSource);
+        size = size - zipEntryMap.size();
+        logMessage("Removed files: "+size);
     }
     private void optimizeTable(FrameworkTable table, AndroidManifestBlock manifestBlock){
         if(table.isOptimized()){

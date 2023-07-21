@@ -1,33 +1,34 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.apk;
 
 import com.reandroid.archive.InputSource;
+import com.reandroid.archive.RenamedInputSource;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
- public class DexFileInputSource extends RenamedInputSource<InputSource> implements Comparable<DexFileInputSource>{
+public class DexFileInputSource extends RenamedInputSource<InputSource> implements Comparable<DexFileInputSource>{
     public DexFileInputSource(String name, InputSource inputSource){
         super(name, inputSource);
     }
     public int getDexNumber(){
-        return getDexNumber(getAlias());
+        return InputSource.getDexNumber(getAlias());
     }
     @Override
     public int compareTo(DexFileInputSource source) {
@@ -47,8 +48,8 @@ import java.util.List;
         fileList.sort(new Comparator<File>() {
             @Override
             public int compare(File file1, File file2) {
-                int i1 = getDexNumber(file1.getName());
-                int i2 = getDexNumber(file2.getName());
+                int i1 = InputSource.getDexNumber(file1.getName());
+                int i2 = InputSource.getDexNumber(file2.getName());
                 if(i1 == i2){
                     return 0;
                 }
@@ -78,29 +79,13 @@ import java.util.List;
     }
 
     public static boolean isDexName(String name){
-        return getDexNumber(name)>=0;
+        return InputSource.getDexNumber(name)>=0;
     }
     static String getDexName(int i){
         if(i==0){
             return "classes.dex";
         }
-        return "classes"+i+".dex";
-    }
-    static int getDexNumber(String name){
-        if(name.equals("classes.dex")){
-            return 0;
-        }
-        String prefix = "classes";
-        String ext = ".dex";
-        if(!name.startsWith(prefix) || !name.endsWith(ext)){
-            return -1;
-        }
-        String num = name.substring(prefix.length(), name.length() - ext.length());
-        try {
-            return Integer.parseInt(num);
-        }catch (NumberFormatException ignored){
-            return -1;
-        }
+        return "classes" + i + ".dex";
     }
 
     public static final String DEX_DIRECTORY_NAME = "dex";

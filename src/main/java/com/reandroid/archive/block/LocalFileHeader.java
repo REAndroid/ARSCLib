@@ -22,6 +22,7 @@ import java.io.InputStream;
 
 public class LocalFileHeader extends CommonHeader {
     private DataDescriptor dataDescriptor;
+    private CentralEntryHeader centralEntryHeader;
     public LocalFileHeader(){
         super(OFFSET_fileName, ZipSignature.LOCAL_FILE, OFFSET_general_purpose);
     }
@@ -29,6 +30,18 @@ public class LocalFileHeader extends CommonHeader {
         this();
         setFileName(name);
     }
+
+    public CentralEntryHeader getCentralEntryHeader() {
+        return centralEntryHeader;
+    }
+    public void setCentralEntryHeader(CentralEntryHeader ceh) {
+        this.centralEntryHeader = ceh;
+        if(ceh == null){
+            return;
+        }
+        mergeZeroValues(ceh);
+    }
+
     public LocalFileHeader copy(){
         LocalFileHeader lfh = new LocalFileHeader();
         lfh.setSignature(ZipSignature.LOCAL_FILE);
@@ -49,6 +62,9 @@ public class LocalFileHeader extends CommonHeader {
     }
 
     public void mergeZeroValues(CentralEntryHeader ceh){
+        if(getFileOffset() == 0){
+            setFileOffset(ceh.getFileOffset());
+        }
         if(getCrc()==0){
             setCrc(ceh.getCrc());
         }

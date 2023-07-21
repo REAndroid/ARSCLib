@@ -27,6 +27,16 @@ public class ZipByteInput extends ZipInput{
         this(array, 0, array.length);
     }
     public ZipByteInput(byte[] array, int offset, int length){
+        if(offset >= array.length){
+            offset = array.length - 1;
+        }
+        if(offset < 0){
+            offset = 0;
+        }
+        int available = array.length - offset;
+        if(length > available){
+            length = available;
+        }
         this.array = array;
         this.offset = offset;
         this.length = length;
@@ -49,26 +59,22 @@ public class ZipByteInput extends ZipInput{
 
     @Override
     public void close() throws IOException {
-
+        position = length;
     }
-
     @Override
     public boolean isOpen() {
         return true;
     }
-
     @Override
     public long getLength() throws IOException {
         return length;
     }
-
     @Override
     public InputStream getInputStream(long offset, long length) throws IOException {
         return new BytesInputStream(this.array, (int)(offset + this.offset), (int)length);
     }
-
     @Override
-    public byte[] getFooter(int minLength) throws IOException {
+    public byte[] getFooter(int minLength) {
         if(minLength <= 0){
             return new byte[0];
         }

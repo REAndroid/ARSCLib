@@ -15,11 +15,12 @@
   */
 package com.reandroid.apk;
 
+import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.archive.InputSource;
-import com.reandroid.archive.ZipArchive;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.StringsUtil;
 
 import java.util.*;
 
@@ -35,44 +36,28 @@ public class PathMap implements JSONConvert<JSONArray> {
 
     public void restore(ApkModule apkModule){
         restoreResFile(apkModule.listResFiles());
-        restore(apkModule.getApkArchive().listInputSources());
+        restore(apkModule.getInputSources());
     }
-    public List<String> restoreResFile(Collection<ResFile> files){
-        List<String> results = new ArrayList<>();
+    public void restoreResFile(Collection<ResFile> files){
         if(files == null){
-            return results;
+            return;
         }
         for(ResFile resFile:files){
-            String alias = restoreResFile(resFile);
-            if(alias==null){
-                continue;
-            }
-            results.add(alias);
+            restoreResFile(resFile);
         }
-        return results;
     }
-    public String restoreResFile(ResFile resFile){
+    public void restoreResFile(ResFile resFile){
         InputSource inputSource = resFile.getInputSource();
         String alias = restore(inputSource);
         if(alias==null){
-            return null;
+            return;
         }
         resFile.setFilePath(alias);
-        return alias;
     }
-    public List<String> restore(Collection<InputSource> sources){
-        List<String> results = new ArrayList<>();
-        if(sources == null){
-            return results;
-        }
+    private void restore(InputSource[] sources){
         for(InputSource inputSource:sources){
-            String alias = restore(inputSource);
-            if(alias==null){
-                continue;
-            }
-            results.add(alias);
+            restore(inputSource);
         }
-        return results;
     }
     public String restore(InputSource inputSource){
         if(inputSource==null){
@@ -112,14 +97,14 @@ public class PathMap implements JSONConvert<JSONArray> {
             mAliasNameMap.clear();
         }
     }
-    public void add(ZipArchive archive){
-        if(archive == null){
+    public void add(ZipEntryMap zipEntryMap){
+        if(zipEntryMap == null){
             return;
         }
-        add(archive.listInputSources());
+        add(zipEntryMap.toArray());
     }
-    public void add(Collection<? extends InputSource> sources){
-        if(sources==null){
+    public void add(InputSource[] sources){
+        if(sources == null){
             return;
         }
         for(InputSource inputSource:sources){
@@ -158,7 +143,8 @@ public class PathMap implements JSONConvert<JSONArray> {
     public JSONArray toJson() {
         JSONArray jsonArray = new JSONArray();
         Map<String, String> nameMap = this.mNameAliasMap;
-        List<String> nameList = toSortedList(nameMap.keySet());
+        List<String> nameList = new ArrayList<>(nameMap.keySet());
+        StringsUtil.toStringSort(nameList);
         for(String name:nameList){
             JSONObject jsonObject = new JSONObject();
             jsonObject.put(NAME_name, name);
@@ -181,23 +167,6 @@ public class PathMap implements JSONConvert<JSONArray> {
     @Override
     public String toString(){
         return "PathMap size="+size();
-    }
-
-    private static List<String> toSortedList(Collection<String> stringCollection){
-        List<String> results;
-        if(stringCollection instanceof List){
-            results = (List<String>) stringCollection;
-        }else {
-            results = new ArrayList<>(stringCollection);
-        }
-        Comparator<String> cmp = new Comparator<String>() {
-            @Override
-            public int compare(String s1, String s2) {
-                return s1.compareTo(s2);
-            }
-        };
-        results.sort(cmp);
-        return results;
     }
 
     public static final String NAME_name = "name";

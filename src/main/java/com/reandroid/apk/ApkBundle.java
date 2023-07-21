@@ -15,7 +15,8 @@
   */
 package com.reandroid.apk;
 
-import com.reandroid.archive.APKArchive;
+import com.reandroid.archive.BlockInputSource;
+import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.archive.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.pool.TableStringPool;
@@ -38,7 +39,7 @@ public class ApkBundle {
         if(moduleList.size()==0){
             throw new FileNotFoundException("Nothing to merge, empty modules");
         }
-        ApkModule result = new ApkModule(generateMergedModuleName(), new APKArchive());
+        ApkModule result = new ApkModule(generateMergedModuleName(), new ZipEntryMap());
         result.setAPKLogger(apkLogger);
         result.setLoadDefaultFramework(false);
 
@@ -71,7 +72,7 @@ public class ApkBundle {
             tableBlock.sortPackages();
             tableBlock.refresh();
         }
-        result.getApkArchive().autoSortApkFiles();
+        result.getZipEntryMap().autoSortApkFiles();
         return result;
     }
     private void mergeStringPools(ApkModule mergedModule) throws IOException {
@@ -82,7 +83,7 @@ public class ApkBundle {
         TableBlock createdTable = new TableBlock();
         BlockInputSource<TableBlock> inputSource=
                 new BlockInputSource<>(TableBlock.FILE_NAME, createdTable);
-        mergedModule.getApkArchive().add(inputSource);
+        mergedModule.getZipEntryMap().add(inputSource);
 
         StringPoolMerger poolMerger = new StringPoolMerger();
 

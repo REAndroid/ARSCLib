@@ -22,6 +22,95 @@ import java.util.List;
 
 public class StringsUtil {
 
+    public static int compare(String[] strings1, String[] strings2){
+        if(strings1 == strings2){
+            return 0;
+        }
+        if(strings1 == null){
+            return 1;
+        }
+        if(strings2 == null){
+            return -1;
+        }
+        int length1 = strings1.length;
+        int length2 = strings2.length;
+        if(length1 == 0 && length2 == 0){
+            return 0;
+        }
+        if(length1 == 0){
+            return 1;
+        }
+        if(length2 == 0){
+            return -1;
+        }
+        int length = length1;
+        if(length > length2){
+            length = length2;
+        }
+        for(int i = 0; i < length; i++){
+            String s1 = strings1[i];
+            String s2 = strings2[i];
+            int c = compareStrings(s1, s2);
+            if(c != 0){
+                return c;
+            }
+        }
+        return Integer.compare(length1, length2);
+    }
+    public static String[] split(String text, char search){
+        return split(text, search, true);
+    }
+    public static String[] split(String text, char search, boolean skipConsecutive) {
+        if(text == null || text.length() == 0){
+            return new String[0];
+        }
+        int count = countChar(text, search, skipConsecutive);
+        if(count == 0){
+            return new String[]{text};
+        }
+        String[] results = new String[count + 1];
+        int index = 0;
+        StringBuilder builder = new StringBuilder();
+        char[] chars = text.toCharArray();
+        boolean previousMatch = false;
+        for(char ch : chars){
+            if(ch == search){
+                if(!previousMatch || !skipConsecutive){
+                    previousMatch = true;
+                    results[index] = builder.toString();
+                    builder = new StringBuilder();
+                    index++;
+                }
+            }else {
+                previousMatch = false;
+                builder.append(ch);
+            }
+        }
+        if(index < results.length){
+            results[index] = builder.toString();
+        }
+        return results;
+    }
+    public static int countChar(String text, char search, boolean skipConsecutive) {
+        if(text == null || text.length() == 0){
+            return 0;
+        }
+        char[] chars = text.toCharArray();
+        int result = 0;
+        boolean previousMatch = false;
+        for(char ch : chars){
+            if(ch == search){
+                if(!previousMatch || !skipConsecutive){
+                    result ++;
+                    previousMatch = true;
+                }
+            }else {
+                previousMatch = false;
+            }
+        }
+        return result;
+    }
+
     public static String toString(Collection<?> collection){
         return toString(collection, MAX_STRING_APPEND);
     }

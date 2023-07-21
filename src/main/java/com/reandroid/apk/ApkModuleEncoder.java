@@ -15,7 +15,7 @@
  */
 package com.reandroid.apk;
 
-import com.reandroid.archive.APKArchive;
+import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.archive.FileInputSource;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.block.ApkSignatureBlock;
@@ -65,7 +65,7 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
     }
     private void sortFiles(){
         logMessage("Sorting files ...");
-        APKArchive archive = getApkModule().getApkArchive();
+        ZipEntryMap archive = getApkModule().getZipEntryMap();
         archive.autoSortApkFiles();
     }
     private void restoreSignatures(File mainDirectory) throws IOException {
@@ -93,7 +93,7 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
     private void scanRootDir(File mainDirectory){
         logMessage("Scanning root directory ...");
         File root = new File(mainDirectory, ROOT_DIRECTORY_NAME);
-        APKArchive archive = getApkModule().getApkArchive();
+        ZipEntryMap archive = getApkModule().getZipEntryMap();
         List<File> rootFileList = ApkUtil.recursiveFiles(root);
         for(File file:rootFileList){
             String path = ApkUtil.toArchivePath(root, file);

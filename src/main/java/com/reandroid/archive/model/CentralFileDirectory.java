@@ -22,39 +22,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class CentralFileDirectory {
-    private final List<CentralEntryHeader> headerList;
+    private List<CentralEntryHeader> headerList;
     private EndRecord endRecord;
     private SignatureFooter signatureFooter;
     public CentralFileDirectory(){
         this.headerList = new ArrayList<>();
-    }
-    public CentralEntryHeader get(LocalFileHeader lfh){
-        String name = lfh.getFileName();
-        CentralEntryHeader ceh = get(lfh.getIndex());
-        if(ceh!=null && Objects.equals(ceh.getFileName() , name)){
-            return ceh;
-        }
-        return get(name);
-    }
-    public CentralEntryHeader get(String name){
-        if(name == null){
-            name = "";
-        }
-        for(CentralEntryHeader ceh:getHeaderList()){
-            if(name.equals(ceh.getFileName())){
-                return ceh;
-            }
-        }
-        return null;
-    }
-    public CentralEntryHeader get(int i){
-        if(i<0 || i>=headerList.size()){
-            return null;
-        }
-        return headerList.get(i);
     }
     public int count(){
         return headerList.size();
@@ -75,11 +49,11 @@ public class CentralFileDirectory {
         InputStream inputStream = zipInput.getInputStream(endRecord.getOffsetOfCentralDirectory(),
                 endRecord.getLengthOfCentralDirectory());
         this.endRecord = endRecord;
-        loadCentralFileHeaders(inputStream);
+        this.headerList = loadCentralFileHeaders(inputStream, endRecord.getTotalNumberOfDirectories());
         this.signatureFooter = tryFindSignatureFooter(zipInput, endRecord);
     }
-    private void loadCentralFileHeaders(InputStream inputStream) throws IOException {
-        List<CentralEntryHeader> headerList = this.headerList;
+    private List<CentralEntryHeader> loadCentralFileHeaders(InputStream inputStream, int capacity) throws IOException {
+        List<CentralEntryHeader> headerList = new ArrayList<>(capacity);
         CentralEntryHeader ceh = new CentralEntryHeader();
         ceh.readBytes(inputStream);
         while (ceh.isValidSignature()){
@@ -88,6 +62,7 @@ public class CentralFileDirectory {
             ceh.readBytes(inputStream);
         }
         inputStream.close();
+        return headerList;
     }
     private SignatureFooter tryFindSignatureFooter(ZipInput zipInput, EndRecord endRecord) throws IOException {
         long lenCd = endRecord.getLengthOfCentralDirectory();

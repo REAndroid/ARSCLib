@@ -19,7 +19,6 @@ import com.reandroid.archive.InputSource;
 import com.reandroid.archive.block.LocalFileHeader;
 import com.reandroid.archive.io.ArchiveFileEntrySource;
 import com.reandroid.archive.io.ZipFileInput;
-import com.reandroid.archive.io.ZipInput;
 
 
 public class ArchiveOutputSource extends OutputSource{
@@ -33,15 +32,12 @@ public class ArchiveOutputSource extends OutputSource{
     @Override
     EntryBuffer makeFromEntry(){
         ArchiveFileEntrySource entrySource = getArchiveSource();
-        ZipInput zip = entrySource.getZipSource();
-        if(!(zip instanceof ZipFileInput)){
-            return null;
-        }
+        ZipFileInput zipFileInput = entrySource.getZipSource();
         LocalFileHeader lfh = entrySource.getArchiveEntry().getLocalFileHeader();
         if(lfh.getMethod() != getInputSource().getMethod()){
             return null;
         }
-        return new EntryBuffer((ZipFileInput) zip,
+        return new EntryBuffer(zipFileInput,
                 lfh.getFileOffset(),
                 lfh.getDataSize());
     }

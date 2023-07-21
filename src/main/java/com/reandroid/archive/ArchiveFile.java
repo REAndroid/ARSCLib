@@ -35,6 +35,7 @@ public class ArchiveFile extends Archive<ZipFileInput>{
     InputSource createInputSource(ArchiveEntry entry) {
         return new ArchiveFileEntrySource(getZipInput(), entry);
     }
+    @Override
     void extractStored(File file, ArchiveEntry archiveEntry) throws IOException {
         if(file.isFile()){
             file.delete();

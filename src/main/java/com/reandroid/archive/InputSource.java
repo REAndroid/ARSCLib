@@ -15,20 +15,25 @@
  */
 package com.reandroid.archive;
 
+import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.utils.StringsUtil;
+
 import java.io.*;
+import java.util.Comparator;
 import java.util.zip.CRC32;
-import java.util.zip.ZipEntry;
 
 public abstract class InputSource {
     private final String name;
     private String alias;
     private long mCrc;
     private long mLength;
-    private int method = ZipEntry.DEFLATED;
-    private int sort;
+    private int method = Archive.DEFLATED;
+    private int sort = -1;
+    private String[] splitAlias;
     public InputSource(String name){
         this.name = name;
-        this.alias = InputSourceUtil.sanitize(name);
+        this.alias = ArchiveUtil.sanitizePath(name);
     }
     public byte[] getBytes(int length) throws IOException{
         InputStream inputStream = openStream();
@@ -45,6 +50,16 @@ public abstract class InputSource {
     public void setSort(int sort) {
         this.sort = sort;
     }
+    public boolean isUncompressed(){
+        return getMethod() == Archive.STORED;
+    }
+    public void setUncompressed(boolean uncompressed){
+        if(uncompressed){
+            method = Archive.STORED;
+        }else {
+            method = Archive.DEFLATED;
+        }
+    }
     public int getMethod() {
         return method;
     }
@@ -60,6 +75,14 @@ public abstract class InputSource {
     }
     public void setAlias(String alias) {
         this.alias = alias;
+        this.splitAlias = null;
+    }
+    private String[] getSplitAlias(){
+        if(this.splitAlias == null){
+            String alias = StringsUtil.toLowercase(getAlias());
+            this.splitAlias = StringsUtil.split(alias, '/');
+        }
+        return this.splitAlias;
     }
     public void close(InputStream inputStream) throws IOException {
         inputStream.close();
@@ -141,4 +164,125 @@ public abstract class InputSource {
         mCrc=crc.getValue();
         mLength=length;
     }
+
+    public static int getDexNumber(String name){
+        if(name.equals("classes.dex")){
+            return 0;
+        }
+        String prefix = "classes";
+        String ext = ".dex";
+        if(!name.startsWith(prefix) || !name.endsWith(ext)){
+            return -1;
+        }
+        String num = name.substring(prefix.length(), name.length() - ext.length());
+        try {
+            return Integer.parseInt(num);
+        }catch (NumberFormatException ignored){
+            return -1;
+        }
+    }
+    private static int compareDex(String dex1, String dex2){
+        int d1 = getDexNumber(dex1);
+        int d2 = getDexNumber(dex2);
+        if(d1 == d2){
+            return 0;
+        }
+        if(d1 < 0){
+            return 1;
+        }
+        if(d2 < 0){
+            return -1;
+        }
+        return Integer.compare(d1, d2);
+    }
+    private static int getSortOrder(String[] alias){
+        int length = alias.length;
+        if(length == 0){
+            return LAST_ORDER;
+        }
+        String name = alias[0];
+        if(StringsUtil.isEmpty(name)){
+            return LAST_ORDER;
+        }
+        if(length != 1){
+            if(META_INF.equals(name)){
+                return ORDER_meta_inf;
+            }
+            if(LIB.equals(name)){
+                return ORDER_lib;
+            }
+            if(RES.equals(name)){
+                return ORDER_res;
+            }
+            if(ASSETS.equals(name)){
+                return ORDER_assets;
+            }
+            return LAST_ORDER;
+        }
+        if(ANDROID_MANIFEST.equals(name)){
+            return ORDER_android_manifest;
+        }
+        if(RESOURCES.equals(name)){
+            return ORDER_resources;
+        }
+        if(name.startsWith("classes") && name.endsWith(".dex")){
+            return ORDER_classes;
+        }
+        return LAST_ORDER;
+    }
+    private static int compareAlias(InputSource source1, InputSource source2){
+        String[] alias1 = source1.getSplitAlias();
+        String[] alias2 = source2.getSplitAlias();
+        int order1 = getSortOrder(alias1);
+        int order2 = getSortOrder(alias2);
+        if(order1 != order2){
+            return Integer.compare(order1, order2);
+        }
+        if(order1 == ORDER_classes){
+            return compareDex(alias1[0], alias2[0]);
+        }
+        return StringsUtil.compare(alias1, alias2);
+    }
+    static int compareSortOrAlias(InputSource source1, InputSource source2){
+        if(source1 == source2){
+            return 0;
+        }
+        if(source1 == null){
+            return 1;
+        }
+        if(source2 == null){
+            return -1;
+        }
+        int sort1 = source1.getSort();
+        int sort2 = source1.getSort();
+        if(sort1 == -1 && sort2 == -1){
+            return compareAlias(source1, source2);
+        }
+        if(sort1 == -1){
+            return 1;
+        }
+        if(sort2 == -1){
+            return -1;
+        }
+        return Integer.compare(sort1, sort2);
+    }
+
+    public static final Comparator<? super InputSource> ALIAS_COMPARATOR = (Comparator<InputSource>) InputSource::compareSortOrAlias;
+
+    private static final String ANDROID_MANIFEST = StringsUtil.toLowercase(AndroidManifestBlock.FILE_NAME);
+    private static final String RESOURCES = StringsUtil.toLowercase(TableBlock.FILE_NAME);
+    private static final String META_INF = "meta-inf";
+    private static final String LIB = "lib";
+    private static final String RES = "res";
+    private static final String ASSETS = "assets";
+
+    private static final int ORDER_android_manifest = 0;
+    private static final int ORDER_resources = 1;
+    private static final int ORDER_meta_inf = 2;
+    private static final int ORDER_classes = 3;
+    private static final int ORDER_lib = 4;
+    private static final int ORDER_res = 5;
+    private static final int ORDER_assets = 6;
+
+    private static final int LAST_ORDER = 10;
 }

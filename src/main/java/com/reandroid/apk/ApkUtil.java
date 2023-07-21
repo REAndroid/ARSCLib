@@ -15,8 +15,6 @@
   */
 package com.reandroid.apk;
 
-import com.reandroid.archive.InputSource;
-import com.reandroid.archive.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.utils.StringsUtil;
 
@@ -24,57 +22,6 @@ import java.io.File;
 import java.util.*;
 
 public class ApkUtil {
-    public static String sanitizeForFileName(String name){
-        if(name==null){
-            return null;
-        }
-        StringBuilder builder = new StringBuilder();
-        char[] chars = name.toCharArray();
-        boolean skipNext = true;
-        int length = 0;
-        int lengthMax = MAX_FILE_NAME_LENGTH;
-        for(int i=0;i<chars.length;i++){
-            if(length>=lengthMax){
-                break;
-            }
-            char ch = chars[i];
-            if(isGoodFileNameSymbol(ch)){
-                if(!skipNext){
-                    builder.append(ch);
-                    length++;
-                }
-                skipNext=true;
-                continue;
-            }
-            if(!isGoodFileNameChar(ch)){
-                skipNext = true;
-                continue;
-            }
-            builder.append(ch);
-            length++;
-            skipNext=false;
-        }
-        if(length==0){
-            return null;
-        }
-        return builder.toString();
-    }
-    private static boolean isGoodFileNameSymbol(char ch){
-        return ch == '.'
-                || ch == '+'
-                || ch == '-'
-                || ch == '_'
-                || ch == '#';
-    }
-    private static boolean isGoodFileNameChar(char ch){
-        return (ch >= '0' && ch <= '9')
-                || (ch >= 'A' && ch <= 'Z')
-                || (ch >= 'a' && ch <= 'z');
-    }
-    public static int parseHex(String hex){
-        long l=Long.decode(hex);
-        return (int) l;
-    }
     public static String replaceRootDir(String path, String dirName){
         int i=path.indexOf('/')+1;
         path=path.substring(i);
@@ -263,28 +210,13 @@ public class ApkUtil {
         }
         return name;
     }
-    public static Map<String, InputSource> toAliasMap(Collection<InputSource> sourceList){
-        Map<String, InputSource> results=new HashMap<>();
-        for(InputSource inputSource:sourceList){
-            results.put(inputSource.getAlias(), inputSource);
-        }
-        return results;
-    }
+
     public static final String JSON_FILE_EXTENSION=".json";
     public static final String RES_JSON_NAME = "res-json";
     public static final String ROOT_NAME = "root";
-    public static final String VALUES_DIRECTORY_NAME = PackageBlock.VALUES_DIRECTORY_NAME;
     public static final String DEF_MODULE_NAME = "base";
     public static final String NAME_value_type = "value_type";
     public static final String NAME_data = "data";
-    public static final String RES_DIR_NAME = PackageBlock.RES_DIRECTORY_NAME;
-    public static final String FILE_NAME_PUBLIC_XML = PackageBlock.PUBLIC_XML;
 
-    public static final String TAG_STRING_ARRAY = "string-array";
-    public static final String TAG_INTEGER_ARRAY = "integer-array";
-
-    public static final String SIGNATURE_FILE_NAME = "signatures" + ApkSignatureBlock.FILE_EXT;
     public static final String SIGNATURE_DIR_NAME = "signatures";
-
-    private static final int MAX_FILE_NAME_LENGTH = 50;
 }

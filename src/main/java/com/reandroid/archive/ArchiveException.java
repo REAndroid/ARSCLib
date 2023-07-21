@@ -13,18 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.archive.writer;
+package com.reandroid.archive;
 
-import com.reandroid.archive.RenamedInputSource;
-import com.reandroid.archive.io.ArchiveFileEntrySource;
+import java.io.IOException;
 
-public class RenamedArchiveSource extends ArchiveOutputSource{
-    public RenamedArchiveSource(RenamedInputSource<?> inputSource) {
-        super(inputSource);
-    }
-    @Override
-    ArchiveFileEntrySource getArchiveSource(){
-        RenamedInputSource<?> renamedInputSource = (RenamedInputSource<?>) getInputSource();
-        return renamedInputSource.getParentInputSource(ArchiveFileEntrySource.class);
+public class ArchiveException extends IOException {
+    public ArchiveException(String message){
+        super(message);
     }
 }

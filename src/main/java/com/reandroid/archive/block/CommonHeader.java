@@ -15,6 +15,7 @@
  */
 package com.reandroid.archive.block;
 
+import com.reandroid.archive.Archive;
 import com.reandroid.archive.ZipSignature;
 import com.reandroid.utils.HexUtil;
 
@@ -24,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.zip.ZipEntry;
 
 public abstract class CommonHeader extends ZipHeader {
     private final int offsetFileName;
@@ -47,13 +47,13 @@ public abstract class CommonHeader extends ZipHeader {
         this.mFileOffset = fileOffset;
     }
     public long getDataSize(){
-        if(getMethod() == ZipEntry.STORED){
+        if(getMethod() == Archive.STORED){
             return getSize();
         }
         return getCompressedSize();
     }
     public void setDataSize(long size){
-        if(getMethod() == ZipEntry.STORED){
+        if(getMethod() == Archive.STORED){
             setSize(size);
         }
         setCompressedSize(size);

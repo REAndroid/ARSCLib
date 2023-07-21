@@ -16,7 +16,7 @@
 package com.reandroid.archive.writer;
 
 import com.reandroid.apk.APKLogger;
-import com.reandroid.apk.RenamedInputSource;
+import com.reandroid.archive.RenamedInputSource;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.WriteProgress;
 import com.reandroid.archive.ZipSignature;
@@ -28,26 +28,23 @@ import com.reandroid.arsc.chunk.TableBlock;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 public class ApkWriter extends ZipFileOutput {
     private final Object mLock = new Object();
-    private final Collection<? extends InputSource> sourceList;
+    private final InputSource[] sourceList;
     private ZipAligner zipAligner;
     private ApkSignatureBlock apkSignatureBlock;
     private APKLogger apkLogger;
     private WriteProgress writeProgress;
 
-    public ApkWriter(File file, Collection<? extends InputSource> sourceList) throws IOException {
+    public ApkWriter(File file, InputSource[] sourceList) throws IOException {
         super(file);
         this.sourceList = sourceList;
         this.zipAligner = ZipAligner.apkAligner();
     }
     public void write()throws IOException {
         synchronized (mLock){
-            List<OutputSource> outputList = buildOutputEntry();
+            OutputSource[] outputList = buildOutputEntries();
             logMessage("Buffering compress changed files ...");
             BufferFileInput buffer = writeBuffer(outputList);
             buffer.unlock();
@@ -73,18 +70,20 @@ public class ApkWriter extends ZipFileOutput {
         this.zipAligner = zipAligner;
     }
 
-    private void writeCEH(List<OutputSource> outputList) throws IOException{
+    private void writeCEH(OutputSource[] outputList) throws IOException{
         EndRecord endRecord = new EndRecord();
         endRecord.setSignature(ZipSignature.END_RECORD);
         long offset = position();
         endRecord.setOffsetOfCentralDirectory(offset);
-        endRecord.setNumberOfDirectories(outputList.size());
-        endRecord.setTotalNumberOfDirectories(outputList.size());
-        for(OutputSource outputSource:outputList){
+        int count = outputList.length;
+        endRecord.setNumberOfDirectories(count);
+        endRecord.setTotalNumberOfDirectories(count);
+        for(int i = 0; i < count; i++){
+            OutputSource outputSource = outputList[i];
             outputSource.writeCEH(this);
         }
-        long len = position() - offset;
-        endRecord.setLengthOfCentralDirectory(len);
+        long cedLength = position() - offset;
+        endRecord.setLengthOfCentralDirectory(cedLength);
         OutputStream outputStream = getOutputStream();
         Zip64Record zip64Record = endRecord.getZip64Record();
         if(zip64Record != null){
@@ -98,11 +97,12 @@ public class ApkWriter extends ZipFileOutput {
         }
         endRecord.writeBytes(getOutputStream());
     }
-    private void writeApk(List<OutputSource> outputList) throws IOException{
-        logMessage("Writing files: " + outputList.size());
+    private void writeApk(OutputSource[] outputList) throws IOException{
+        int length = outputList.length;
+        logMessage("Writing files: " + length);
         APKLogger logger = this.apkLogger;
-        for(int i = 0; i < outputList.size(); i++){
-            OutputSource outputSource = outputList.get(i);
+        for(int i = 0; i < length; i++){
+            OutputSource outputSource = outputList[i];
             outputSource.setAPKLogger(logger);
             outputSource.writeApk( this);
             if(i % 100 == 0){
@@ -130,13 +130,14 @@ public class ApkWriter extends ZipFileOutput {
         signatureBlock.updatePadding();
         signatureBlock.writeBytes(outputStream);
     }
-    private BufferFileInput writeBuffer(List<OutputSource> outputList) throws IOException {
+    private BufferFileInput writeBuffer(OutputSource[] outputList) throws IOException {
         File bufferFile = getBufferFile();
         BufferFileOutput output = new BufferFileOutput(bufferFile);
         BufferFileInput input = new BufferFileInput(bufferFile);
         OutputSource tableSource = null;
-        for(int i = 0; i < outputList.size(); i++){
-            OutputSource outputSource = outputList.get(i);
+        int length = outputList.length;
+        for(int i = 0; i < length; i++){
+            OutputSource outputSource = outputList[i];
             InputSource inputSource = outputSource.getInputSource();
             if(tableSource == null && TableBlock.FILE_NAME.equals(inputSource.getAlias())){
                 tableSource = outputSource;
@@ -167,11 +168,13 @@ public class ApkWriter extends ZipFileOutput {
         bufFile.deleteOnExit();
         return bufFile;
     }
-    private List<OutputSource> buildOutputEntry(){
-        Collection<? extends InputSource> sourceList = this.sourceList;
-        List<OutputSource> results = new ArrayList<>(sourceList.size());
-        for(InputSource inputSource:sourceList){
-            results.add(toOutputSource(inputSource));
+    private OutputSource[] buildOutputEntries(){
+        InputSource[] sourceList = this.sourceList;
+        int length = sourceList.length;
+        OutputSource[] results = new OutputSource[length];
+        for(int i = 0; i < length; i++){
+            InputSource inputSource = sourceList[i];
+            results[i] = toOutputSource(inputSource);
         }
         return results;
     }
@@ -180,9 +183,9 @@ public class ApkWriter extends ZipFileOutput {
             return new ArchiveOutputSource(inputSource);
         }
         if(inputSource instanceof RenamedInputSource){
-            InputSource renamed = ((RenamedInputSource<?>) inputSource).getInputSource();
-            if(renamed instanceof ArchiveFileEntrySource){
-                return new RenamedArchiveSource((RenamedInputSource<?>) inputSource);
+            RenamedInputSource<?> renamedInputSource = ((RenamedInputSource<?>) inputSource);
+            if(renamedInputSource.getParentInputSource(ArchiveFileEntrySource.class) != null){
+                return new RenamedArchiveSource(renamedInputSource);
             }
         }
         return new OutputSource(inputSource);

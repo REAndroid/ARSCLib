@@ -1,7 +1,6 @@
 package com.reandroid.apk;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.value.ResConfig;
@@ -80,7 +79,7 @@ public class ApkModuleCoderTest {
         apk.delete();
     }
     private void compare(ApkModule module1, ApkModule module2) throws IOException {
-        Assert.assertEquals(module1.getApkArchive().size(), module2.getApkArchive().size());
+        Assert.assertEquals(module1.getZipEntryMap().size(), module2.getZipEntryMap().size());
 
         compareTableBlock(module1.getTableBlock(), module2.getTableBlock());
 

@@ -15,6 +15,7 @@
  */
 package com.reandroid.archive.writer;
 
+import com.reandroid.archive.Archive;
 import com.reandroid.archive.block.DataDescriptor;
 import com.reandroid.archive.block.LocalFileHeader;
 import com.reandroid.archive.block.ZipHeader;
@@ -23,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
 
 public class ZipAligner {
     private final Map<Pattern, Integer> alignmentMap;
@@ -62,7 +62,7 @@ public class ZipAligner {
         }
         lfh.setZipAlign(0);
         int padding;
-        if(lfh.getMethod() != ZipEntry.STORED){
+        if(lfh.getMethod() != Archive.STORED){
             padding = 0;
             createDataDescriptor(lfh);
         }else {

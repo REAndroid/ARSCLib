@@ -17,6 +17,7 @@ package com.reandroid.apk;
 
 import com.reandroid.archive.*;
 import com.reandroid.archive.block.ApkSignatureBlock;
+import com.reandroid.archive.io.ArchiveFileEntrySource;
 import com.reandroid.archive.writer.ApkWriter;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.array.PackageArray;
@@ -45,7 +46,7 @@ import java.util.zip.ZipEntry;
 
 public class ApkModule implements ApkFile, Closeable {
     private final String moduleName;
-    private final APKArchive apkArchive;
+    private final ZipEntryMap zipEntryMap;
     private boolean loadDefaultFramework = true;
     private boolean mDisableLoadFramework = false;
     private TableBlock mTableBlock;
@@ -60,15 +61,18 @@ public class ApkModule implements ApkFile, Closeable {
     private Closeable mCloseable;
     private final List<TableBlock> mExternalFrameworks;
 
-    public ApkModule(String moduleName, APKArchive apkArchive){
+    public ApkModule(String moduleName, ZipEntryMap zipEntryMap){
         this.moduleName=moduleName;
-        this.apkArchive=apkArchive;
+        this.zipEntryMap = zipEntryMap;
         this.mUncompressedFiles=new UncompressedFiles();
-        this.mUncompressedFiles.addPath(apkArchive);
+        this.mUncompressedFiles.addPath(zipEntryMap);
         this.mExternalFrameworks = new ArrayList<>();
     }
+    public ApkModule(ZipEntryMap zipEntryMap){
+        this("base", zipEntryMap);
+    }
     public ApkModule(){
-        this("base", new APKArchive());
+        this("base", new ZipEntryMap());
     }
 
     public void addExternalFramework(File frameworkFile) throws IOException {
@@ -393,11 +397,11 @@ public class ApkModule implements ApkFile, Closeable {
             return results;
         }
         List<ResFile> resFileList = listResFiles(resourceId, resConfig);
-        APKArchive archive = getApkArchive();
+        ZipEntryMap zipEntryMap = getZipEntryMap();
         for(ResFile resFile:resFileList){
             results.addAll(resFile.getEntryList());
             String path = resFile.getFilePath();
-            archive.remove(path);
+            zipEntryMap.remove(path);
         }
         return results;
     }
@@ -414,8 +418,8 @@ public class ApkModule implements ApkFile, Closeable {
         return resXmlDocument.decodeToXml();
     }
     public List<DexFileInputSource> listDexFiles(){
-        List<DexFileInputSource> results=new ArrayList<>();
-        for(InputSource source:getApkArchive().listInputSources()){
+        List<DexFileInputSource> results = new ArrayList<>();
+        for(InputSource source: getInputSources()){
             if(DexFileInputSource.isDexName(source.getAlias())){
                 results.add(new DexFileInputSource(source.getAlias(), source));
             }
@@ -442,13 +446,10 @@ public class ApkModule implements ApkFile, Closeable {
         writeApk(file, null);
     }
     public void writeApk(File file, WriteProgress progress) throws IOException {
-        writeApk(file, progress, null);
-    }
-    public void writeApk(File file, WriteProgress progress, WriteInterceptor interceptor) throws IOException {
-        APKArchive archive = getApkArchive();
+        ZipEntryMap archive = getZipEntryMap();
         UncompressedFiles uf = getUncompressedFiles();
         uf.apply(archive);
-        ApkWriter apkWriter = new ApkWriter(file, archive.listInputSources());
+        ApkWriter apkWriter = new ApkWriter(file, archive.toArray());
         apkWriter.setAPKLogger(getApkLogger());
         apkWriter.setWriteProgress(progress);
         apkWriter.setApkSignatureBlock(getApkSignatureBlock());
@@ -467,12 +468,12 @@ public class ApkModule implements ApkFile, Closeable {
         return mUncompressedFiles;
     }
     public void removeDir(String dirName){
-        getApkArchive().removeDir(dirName);
+        getZipEntryMap().removeDir(dirName);
     }
     public void validateResourcesDir() {
         List<ResFile> resFileList = listResFiles();
         Set<String> existPaths=new HashSet<>();
-        List<InputSource> sourceList = getApkArchive().listInputSources();
+        InputSource[] sourceList = getInputSources();
         for(InputSource inputSource:sourceList){
             existPaths.add(inputSource.getAlias());
         }
@@ -500,7 +501,7 @@ public class ApkModule implements ApkFile, Closeable {
     public void setResourcesRootDir(String dirName) {
         List<ResFile> resFileList = listResFiles();
         Set<String> existPaths=new HashSet<>();
-        List<InputSource> sourceList = getApkArchive().listInputSources();
+        InputSource[] sourceList = getInputSources();
         for(InputSource inputSource:sourceList){
             existPaths.add(inputSource.getAlias());
         }
@@ -532,7 +533,7 @@ public class ApkModule implements ApkFile, Closeable {
             return results;
         }
         TableStringPool stringPool= tableBlock.getStringPool();
-        for(InputSource inputSource:getApkArchive().listInputSources()){
+        for(InputSource inputSource : getInputSources()){
             String name=inputSource.getAlias();
             StringGroup<TableString> groupTableString = stringPool.get(name);
             if(groupTableString==null){
@@ -618,14 +619,14 @@ public class ApkModule implements ApkFile, Closeable {
     }
     public boolean hasAndroidManifestBlock(){
         return mManifestBlock!=null
-                || getApkArchive().getInputSource(AndroidManifestBlock.FILE_NAME)!=null;
+                || getZipEntryMap().getInputSource(AndroidManifestBlock.FILE_NAME)!=null;
     }
     public boolean hasTableBlock(){
         return mTableBlock!=null
-                || getApkArchive().getInputSource(TableBlock.FILE_NAME)!=null;
+                || getZipEntryMap().getInputSource(TableBlock.FILE_NAME)!=null;
     }
     public void destroy(){
-        getApkArchive().clear();
+        getZipEntryMap().clear();
         AndroidManifestBlock manifestBlock = this.mManifestBlock;
         if(manifestBlock!=null){
             manifestBlock.destroy();
@@ -643,7 +644,7 @@ public class ApkModule implements ApkFile, Closeable {
         }
     }
     public void setManifest(AndroidManifestBlock manifestBlock){
-        APKArchive archive = getApkArchive();
+        ZipEntryMap archive = getZipEntryMap();
         if(manifestBlock==null){
             mManifestBlock = null;
             archive.remove(AndroidManifestBlock.FILE_NAME);
@@ -657,7 +658,7 @@ public class ApkModule implements ApkFile, Closeable {
         mManifestBlock = manifestBlock;
     }
     public void setTableBlock(TableBlock tableBlock){
-        APKArchive archive = getApkArchive();
+        ZipEntryMap archive = getZipEntryMap();
         if(tableBlock == null){
             mTableBlock = null;
             archive.remove(TableBlock.FILE_NAME);
@@ -677,8 +678,7 @@ public class ApkModule implements ApkFile, Closeable {
         if(mManifestBlock!=null){
             return mManifestBlock;
         }
-        APKArchive archive = getApkArchive();
-        InputSource inputSource = archive.getInputSource(AndroidManifestBlock.FILE_NAME);
+        InputSource inputSource = getInputSource(AndroidManifestBlock.FILE_NAME);
         if(inputSource == null){
             return null;
         }
@@ -691,7 +691,7 @@ public class ApkModule implements ApkFile, Closeable {
             BlockInputSource<AndroidManifestBlock> blockInputSource=new BlockInputSource<>(inputSource.getName(),manifestBlock);
             blockInputSource.setSort(inputSource.getSort());
             blockInputSource.setMethod(inputSource.getMethod());
-            archive.add(blockInputSource);
+            addInputSource(blockInputSource);
             manifestBlock.setApkFile(this);
             TableBlock tableBlock = this.mTableBlock;
             if(tableBlock != null){
@@ -809,7 +809,7 @@ public class ApkModule implements ApkFile, Closeable {
     }
     @Override
     public ResXmlDocument loadResXmlDocument(String path) throws IOException{
-        InputSource inputSource = getApkArchive().getInputSource(path);
+        InputSource inputSource = getInputSource(path);
         if(inputSource==null){
             throw new FileNotFoundException("No such file in apk: " + path);
         }
@@ -856,12 +856,11 @@ public class ApkModule implements ApkFile, Closeable {
         if(mTableBlock!=null){
             return mTableBlock.getStringPool();
         }
-        InputSource inputSource = getApkArchive()
-                .getInputSource(TableBlock.FILE_NAME);
+        InputSource inputSource = getInputSource(TableBlock.FILE_NAME);
         if(inputSource==null){
             throw new IOException("Module don't have: "+TableBlock.FILE_NAME);
         }
-        if((inputSource instanceof ZipEntrySource)
+        if((inputSource instanceof ArchiveFileEntrySource)
                 ||(inputSource instanceof FileInputSource)){
             InputStream inputStream = inputSource.openStream();
             TableStringPool stringPool = TableStringPool.readFromTable(inputStream);
@@ -871,8 +870,7 @@ public class ApkModule implements ApkFile, Closeable {
         return getTableBlock().getStringPool();
     }
     TableBlock loadTableBlock() throws IOException {
-        APKArchive archive=getApkArchive();
-        InputSource inputSource = archive.getInputSource(TableBlock.FILE_NAME);
+        InputSource inputSource = getInputSource(TableBlock.FILE_NAME);
         if(inputSource==null){
             throw new IOException("Entry not found: "+TableBlock.FILE_NAME);
         }
@@ -893,7 +891,7 @@ public class ApkModule implements ApkFile, Closeable {
         BlockInputSource<TableBlock> blockInputSource=new BlockInputSource<>(inputSource.getName(), tableBlock);
         blockInputSource.setMethod(inputSource.getMethod());
         blockInputSource.setSort(inputSource.getSort());
-        archive.add(blockInputSource);
+        zipEntryMap.add(blockInputSource);
         tableBlock.setApkFile(this);
         return tableBlock;
     }
@@ -923,16 +921,22 @@ public class ApkModule implements ApkFile, Closeable {
             }
             setTableOriginalSource(inputSource);
         }
-        getApkArchive().add(inputSource);
+        addInputSource(inputSource);
     }
     public InputSource getInputSource(String path){
-        return getApkArchive().getInputSource(path);
+        return getZipEntryMap().getInputSource(path);
+    }
+    private void addInputSource(InputSource inputSource){
+        getZipEntryMap().add(inputSource);
     }
     public List<InputSource> listInputSources(){
-        return getApkArchive().listInputSources();
+        return getZipEntryMap().listInputSources();
     }
-    public APKArchive getApkArchive() {
-        return apkArchive;
+    public InputSource[] getInputSources(){
+        return getZipEntryMap().toArray();
+    }
+    public ZipEntryMap getZipEntryMap() {
+        return zipEntryMap;
     }
     public void setLoadDefaultFramework(boolean loadDefaultFramework) {
         this.loadDefaultFramework = loadDefaultFramework;
@@ -958,7 +962,7 @@ public class ApkModule implements ApkFile, Closeable {
         if(!hasTableBlock()){
             exist=new TableBlock();
             BlockInputSource<TableBlock> inputSource=new BlockInputSource<>(TableBlock.FILE_NAME, exist);
-            getApkArchive().add(inputSource);
+            addInputSource(inputSource);
         }else{
             exist=getTableBlock();
         }
@@ -966,30 +970,31 @@ public class ApkModule implements ApkFile, Closeable {
         exist.merge(coming);
     }
     private void mergeFiles(ApkModule module) {
-        APKArchive archiveExist = getApkArchive();
-        APKArchive archiveComing = module.getApkArchive();
-        Map<String, InputSource> comingAlias=ApkUtil.toAliasMap(archiveComing.listInputSources());
-        Map<String, InputSource> existAlias=ApkUtil.toAliasMap(archiveExist.listInputSources());
+        ZipEntryMap entryMapExist = getZipEntryMap();
+        ZipEntryMap entryMapComing = module.getZipEntryMap();
+        Map<String, InputSource> comingAlias = entryMapComing.toAliasMap();
+        Map<String, InputSource> existAlias = entryMapExist.toAliasMap();
         UncompressedFiles uncompressedFiles = module.getUncompressedFiles();
         for(InputSource inputSource:comingAlias.values()){
-            if(existAlias.containsKey(inputSource.getAlias())||existAlias.containsKey(inputSource.getName())){
+            if(existAlias.containsKey(inputSource.getAlias())
+                    || existAlias.containsKey(inputSource.getName())){
                 continue;
             }
             if(DexFileInputSource.isDexName(inputSource.getName())){
                 continue;
             }
-            if (inputSource.getAlias().startsWith("lib/")){
+            if(inputSource.getAlias().startsWith("lib/")){
                 uncompressedFiles.removePath(inputSource.getAlias());
             }
-            logVerbose("Added: "+inputSource.getAlias());
-            archiveExist.add(inputSource);
+            logVerbose("Added: " + inputSource.getAlias());
+            entryMapExist.add(inputSource);
         }
     }
     private void mergeDexFiles(ApkModule module){
-        UncompressedFiles uncompressedFiles=module.getUncompressedFiles();
-        List<DexFileInputSource> existList=listDexFiles();
-        List<DexFileInputSource> comingList=module.listDexFiles();
-        APKArchive archive=getApkArchive();
+        UncompressedFiles uncompressedFiles = module.getUncompressedFiles();
+        List<DexFileInputSource> existList = listDexFiles();
+        List<DexFileInputSource> comingList = module.listDexFiles();
+        ZipEntryMap zipEntryMap = getZipEntryMap();
         int index=0;
         if(existList.size()>0){
             index=existList.get(existList.size()-1).getDexNumber();
@@ -999,13 +1004,13 @@ public class ApkModule implements ApkFile, Closeable {
                 index++;
             }
         }
-        for(DexFileInputSource source:comingList){
+        for(DexFileInputSource source : comingList){
             uncompressedFiles.removePath(source.getAlias());
-            String name= DexFileInputSource.getDexName(index);
-            DexFileInputSource add=new DexFileInputSource(name, source.getInputSource());
-            archive.add(add);
-            logMessage("Added ["+module.getModuleName()+"] "
-                    +source.getAlias()+" -> "+name);
+            String name = DexFileInputSource.getDexName(index);
+            DexFileInputSource add = new DexFileInputSource(name, source.getInputSource());
+            zipEntryMap.add(add);
+            logMessage("Added [" + module.getModuleName() +"] "
+                    + source.getAlias() + " -> " + name);
             index++;
             if(index==1){
                 index=2;
@@ -1052,7 +1057,7 @@ public class ApkModule implements ApkFile, Closeable {
     }
     public static ApkModule loadApkFile(File apkFile, String moduleName) throws IOException {
         ArchiveFile archive = new ArchiveFile(apkFile);
-        ApkModule apkModule = new ApkModule(moduleName, archive.createAPKArchive());
+        ApkModule apkModule = new ApkModule(moduleName, archive.createZipEntryMap());
         apkModule.setApkSignatureBlock(archive.getApkSignatureBlock());
         apkModule.setCloseable(archive);
         return apkModule;
@@ -1062,7 +1067,7 @@ public class ApkModule implements ApkFile, Closeable {
     }
     public static ApkModule loadApkFile(APKLogger logger, File apkFile, File ... externalFrameworks) throws IOException {
         ArchiveFile archive = new ArchiveFile(apkFile);
-        ApkModule apkModule = new ApkModule(ApkUtil.DEF_MODULE_NAME, archive.createAPKArchive());
+        ApkModule apkModule = new ApkModule(ApkUtil.DEF_MODULE_NAME, archive.createZipEntryMap());
         apkModule.setAPKLogger(logger);
         apkModule.setApkSignatureBlock(archive.getApkSignatureBlock());
         apkModule.setCloseable(archive);

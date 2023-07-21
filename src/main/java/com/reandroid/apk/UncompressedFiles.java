@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,8 @@
   */
 package com.reandroid.apk;
 
+import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.archive.InputSource;
-import com.reandroid.archive.ZipArchive;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
@@ -26,7 +26,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.zip.ZipEntry;
 
 public class UncompressedFiles implements JSONConvert<JSONObject> {
     private final Set<String> mPathList;
@@ -39,17 +38,14 @@ public class UncompressedFiles implements JSONConvert<JSONObject> {
     public void setResRawDir(String resRawDir){
         this.mResRawDir=resRawDir;
     }
-    public void apply(ZipArchive archive){
-        for(InputSource inputSource:archive.listInputSources()){
+    public void apply(ZipEntryMap archive){
+        for(InputSource inputSource:archive.toArray()){
             apply(inputSource);
         }
     }
     public void apply(InputSource inputSource){
-        if(isUncompressed(inputSource.getAlias()) || isUncompressed(inputSource.getName())){
-            inputSource.setMethod(ZipEntry.STORED);
-        }else {
-            inputSource.setMethod(ZipEntry.DEFLATED);
-        }
+        inputSource.setUncompressed(isUncompressed(inputSource.getAlias())
+                || isUncompressed(inputSource.getName()));
     }
     public boolean isUncompressed(String path){
         if(path==null){
@@ -87,13 +83,13 @@ public class UncompressedFiles implements JSONConvert<JSONObject> {
         }
         return mPathList.contains(path);
     }
-    public void addPath(ZipArchive zipArchive){
-        for(InputSource inputSource: zipArchive.listInputSources()){
+    public void addPath(ZipEntryMap zipArchive){
+        for(InputSource inputSource: zipArchive.toArray()){
             addPath(inputSource);
         }
     }
     public void addPath(InputSource inputSource){
-        if(inputSource.getMethod()!=ZipEntry.STORED){
+        if(!inputSource.isUncompressed()){
             return;
         }
         addPath(inputSource.getAlias());

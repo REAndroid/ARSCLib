@@ -16,6 +16,7 @@
 package com.reandroid.archive.writer;
 
 import com.reandroid.apk.APKLogger;
+import com.reandroid.archive.Archive;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.ZipSignature;
 import com.reandroid.archive.block.CentralEntryHeader;
@@ -29,7 +30,6 @@ import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
-import java.util.zip.ZipEntry;
 
 class OutputSource {
     private final InputSource inputSource;
@@ -105,7 +105,7 @@ class OutputSource {
         CountingOutputStream<OutputStream> rawCounter = new CountingOutputStream<>(rawStream);
         CountingOutputStream<DeflaterOutputStream> deflateCounter = null;
 
-        if(inputSource.getMethod() != ZipEntry.STORED){
+        if(inputSource.getMethod() != Archive.STORED){
             DeflaterOutputStream deflaterInputStream =
                     new DeflaterOutputStream(rawCounter, new Deflater(Deflater.BEST_SPEED, true), true);
             deflateCounter = new CountingOutputStream<>(deflaterInputStream, false);
@@ -122,12 +122,12 @@ class OutputSource {
         lfh.setCompressedSize(rawCounter.getSize());
 
         if(deflateCounter != null){
-            lfh.setMethod(ZipEntry.DEFLATED);
+            lfh.setMethod(Archive.DEFLATED);
             lfh.setCrc(deflateCounter.getCrc());
             lfh.setSize(deflateCounter.getSize());
         }else {
             lfh.setSize(rawCounter.getSize());
-            lfh.setMethod(ZipEntry.STORED);
+            lfh.setMethod(Archive.STORED);
             lfh.setCrc(rawCounter.getCrc());
         }
 

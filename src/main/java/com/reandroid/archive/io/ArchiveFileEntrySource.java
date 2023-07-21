@@ -15,6 +15,7 @@
  */
 package com.reandroid.archive.io;
 
+import com.reandroid.archive.Archive;
 import com.reandroid.archive.ArchiveEntry;
 
 import java.io.File;
@@ -22,7 +23,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
-import java.util.zip.ZipEntry;
 
 public class ArchiveFileEntrySource extends ArchiveEntrySource<ZipFileInput> {
     public ArchiveFileEntrySource(ZipFileInput zipInput, ArchiveEntry archiveEntry){
@@ -32,7 +32,7 @@ public class ArchiveFileEntrySource extends ArchiveEntrySource<ZipFileInput> {
     @Override
     public byte[] getBytes(int length) throws IOException {
         FileChannel fileChannel = getFileChannel();
-        if(getMethod() != ZipEntry.STORED || fileChannel == null){
+        if(getMethod() != Archive.STORED || fileChannel == null){
             return super.getBytes(length);
         }
         byte[] bytes = new byte[length];
@@ -51,7 +51,7 @@ public class ArchiveFileEntrySource extends ArchiveEntrySource<ZipFileInput> {
     @Override
     public void write(File file) throws IOException {
         FileChannel fileChannel = getFileChannel();
-        if(getMethod() != ZipEntry.STORED || fileChannel == null){
+        if(getMethod() != Archive.STORED || fileChannel == null){
             super.write(file);
             return;
         }

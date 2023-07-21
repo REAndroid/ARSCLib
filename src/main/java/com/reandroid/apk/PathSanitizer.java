@@ -259,7 +259,7 @@ public class PathSanitizer {
 
     public static PathSanitizer create(ApkModule apkModule){
         PathSanitizer pathSanitizer = new PathSanitizer(
-                apkModule.getApkArchive().listInputSources());
+                apkModule.getZipEntryMap().listInputSources());
         pathSanitizer.setApkLogger(apkModule.getApkLogger());
         pathSanitizer.setResourceFileList(apkModule.listResFiles());
         return pathSanitizer;

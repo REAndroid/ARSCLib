@@ -19,87 +19,85 @@ import com.reandroid.archive.block.CentralEntryHeader;
 import com.reandroid.archive.block.LocalFileHeader;
 import com.reandroid.utils.HexUtil;
 
-import java.util.zip.ZipEntry;
-
 public class ArchiveEntry {
-    private final CentralEntryHeader centralEntryHeader;
     private final LocalFileHeader localFileHeader;
-    public ArchiveEntry(LocalFileHeader lfh, CentralEntryHeader ceh){
+    public ArchiveEntry(LocalFileHeader lfh){
         this.localFileHeader = lfh;
-        this.centralEntryHeader = ceh;
     }
-    public ArchiveEntry(String name){
-        this(new LocalFileHeader(name), new CentralEntryHeader(name));
-    }
-    public ArchiveEntry(){
-        this(new LocalFileHeader(), new CentralEntryHeader());
-    }
-
     public long getDataSize(){
-        if(getMethod() == ZipEntry.STORED){
+        if(getMethod() == Archive.STORED){
             return getSize();
         }
         return getCompressedSize();
     }
 
+    public boolean isCompressed(){
+        return getMethod() != Archive.STORED;
+    }
     public int getMethod(){
         return localFileHeader.getMethod();
     }
     public void setMethod(int method){
         localFileHeader.setMethod(method);
-        centralEntryHeader.setMethod(method);
+        getCentralEntryHeader().setMethod(method);
     }
     public long getSize() {
-        return centralEntryHeader.getSize();
+        return localFileHeader.getSize();
     }
     public void setSize(long size) {
-        centralEntryHeader.setSize(size);
         localFileHeader.setSize(size);
+        getCentralEntryHeader().setSize(size);
     }
     public long getCrc() {
-        return centralEntryHeader.getCrc();
+        return localFileHeader.getCrc();
     }
     public void setCrc(long crc) {
-        centralEntryHeader.setCrc(crc);
         localFileHeader.setCrc(crc);
+        getCentralEntryHeader().setCrc(crc);
     }
     public long getCompressedSize() {
-        return centralEntryHeader.getCompressedSize();
+        return localFileHeader.getCompressedSize();
     }
     public void setCompressedSize(long csize) {
-        centralEntryHeader.setCompressedSize(csize);
         localFileHeader.setCompressedSize(csize);
+        getCentralEntryHeader().setCompressedSize(csize);
     }
     public long getFileOffset() {
         return localFileHeader.getFileOffset();
     }
     public String getName(){
-        return centralEntryHeader.getFileName();
+        return localFileHeader.getFileName();
+    }
+    public String getSanitizedName(){
+        String name = ArchiveUtil.sanitizePath(localFileHeader.getFileName());
+        if(name == null){
+            name = ".error_file_path_" + localFileHeader.getIndex();
+        }
+        return name;
     }
     public void setName(String name){
-        centralEntryHeader.setFileName(name);
         localFileHeader.setFileName(name);
+        getCentralEntryHeader().setFileName(name);
     }
     public String getComment(){
-        return centralEntryHeader.getComment();
+        return getCentralEntryHeader().getComment();
     }
-    public void setComment(String name){
-        centralEntryHeader.setComment(name);
+    public void setComment(String comment){
+        getCentralEntryHeader().setComment(comment);
     }
     public boolean isDirectory() {
         return this.getName().endsWith("/");
     }
     public CentralEntryHeader getCentralEntryHeader(){
-        return centralEntryHeader;
+        CentralEntryHeader ceh = localFileHeader.getCentralEntryHeader();
+        if(ceh == null){
+            ceh = CentralEntryHeader.fromLocalFileHeader(localFileHeader);
+            localFileHeader.setCentralEntryHeader(ceh);
+        }
+        return ceh;
     }
     public LocalFileHeader getLocalFileHeader() {
         return localFileHeader;
-    }
-    public boolean matches(CentralEntryHeader centralEntryHeader){
-        if(centralEntryHeader==null){
-            return false;
-        }
-        return false;
     }
     public String toString(){
         return "["+ getFileOffset()+"] " + getName() + getComment()

@@ -57,7 +57,7 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
     public void extractRootFiles(File mainDirectory) throws IOException {
         logMessage("Extracting root files ...");
         File rootDir = new File(mainDirectory, ApkUtil.ROOT_NAME);
-        for(InputSource inputSource:apkModule.getApkArchive().listInputSources()){
+        for(InputSource inputSource:apkModule.getInputSources()){
             if(containsDecodedPath(inputSource.getAlias())){
                 continue;
             }
@@ -71,7 +71,7 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
         logMessage("Decode: " + file.getName());
         UncompressedFiles uncompressedFiles = new UncompressedFiles();
         uncompressedFiles.addCommonExtensions();
-        uncompressedFiles.addPath(getApkModule().getApkArchive());
+        uncompressedFiles.addPath(getApkModule().getZipEntryMap());
         uncompressedFiles.toJson().write(file);
     }
     public void decodeDexFiles(File mainDir) throws IOException {
@@ -124,7 +124,7 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
     public void decodePathMap(File mainDirectory) throws IOException {
         File file = new File(mainDirectory, PathMap.JSON_FILE);
         PathMap pathMap = new PathMap();
-        pathMap.add(getApkModule().getApkArchive());
+        pathMap.add(getApkModule().getZipEntryMap());
         pathMap.toJson().write(file);
     }
     public boolean containsDecodedPath(String path){

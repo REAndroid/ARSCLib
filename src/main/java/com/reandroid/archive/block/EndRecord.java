@@ -15,6 +15,7 @@
  */
 package com.reandroid.archive.block;
 
+import com.reandroid.archive.ArchiveException;
 import com.reandroid.archive.ZipSignature;
 import com.reandroid.archive.io.ZipInput;
 import com.reandroid.utils.HexUtil;
@@ -85,7 +86,7 @@ public class EndRecord extends ZipHeader{
             }
         }
         if(!isValidSignature()){
-            throw new IOException("Failed to find end record");
+            throw new ArchiveException("Failed to find end record");
         }
         if(!isZip64Value()){
             return;
@@ -101,7 +102,7 @@ public class EndRecord extends ZipHeader{
             offset--;
         }
         if(!zip64Locator.isValidSignature()){
-            throw new IOException("Failed to find zip64 locator");
+            throw new ArchiveException("Failed to find zip64 locator");
         }
         setZip64Locator(zip64Locator);
     }

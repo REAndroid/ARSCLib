@@ -15,6 +15,8 @@
  */
 package com.reandroid.archive.model;
 
+import com.reandroid.archive.ArchiveEntry;
+import com.reandroid.archive.ArchiveException;
 import com.reandroid.archive.block.*;
 import com.reandroid.archive.block.ApkSignatureBlock;
 import com.reandroid.archive.io.ZipInput;
@@ -31,13 +33,9 @@ public class LocalFileDirectory {
     private ApkSignatureBlock apkSignatureBlock;
     public LocalFileDirectory(CentralFileDirectory centralFileDirectory){
         this.centralFileDirectory = centralFileDirectory;
-        this.headerList = new ArrayList<>();
-    }
-    public LocalFileDirectory(){
-        this(new CentralFileDirectory());
+        this.headerList = new ArrayList<>(centralFileDirectory.count() + 2);
     }
     public void visit(ZipInput zipInput) throws IOException {
-        getCentralFileDirectory().visit(zipInput);
         visitLocalFile(zipInput);
         visitApkSigBlock(zipInput);
     }
@@ -54,14 +52,16 @@ public class LocalFileDirectory {
             offset = inputStream.skip(offset);
             LocalFileHeader lfh = LocalFileHeader.read(inputStream);
             if(lfh == null){
-                throw new IOException("Error reading LFH at "
+                throw new ArchiveException("Error reading LFH at "
                         + offset + ", for CEH = " + ceh.getFileName());
             }
             offset = offset + lfh.countBytes();
-            lfh.setFileOffset(offset);
             ceh.setFileOffset(offset);
-            lfh.mergeZeroValues(ceh);
+
+            lfh.setCentralEntryHeader(ceh);
+
             inputStream.skip(lfh.getDataSize());
+
             DataDescriptor dataDescriptor = null;
             if(lfh.hasDataDescriptor()){
                 dataDescriptor = new DataDescriptor();
@@ -72,7 +72,9 @@ public class LocalFileDirectory {
             }
             lfh.setDataDescriptor(dataDescriptor);
             lfh.setIndex(index);
+
             headerList.add(lfh);
+
             index++;
         }
     }
@@ -97,5 +99,19 @@ public class LocalFileDirectory {
     }
     public List<LocalFileHeader> getHeaderList() {
         return headerList;
+    }
+    public ArchiveEntry[] buildArchiveEntryList(){
+        List<LocalFileHeader> headerList = getHeaderList();
+        int size = headerList.size();
+        ArchiveEntry[] entryList = new ArchiveEntry[size];
+        for(int i = 0; i < size; i++){
+            LocalFileHeader lfh = headerList.get(i);
+            CentralEntryHeader ceh = lfh.getCentralEntryHeader();
+            if(ceh == null){
+                continue;
+            }
+            entryList[i] = new ArchiveEntry(lfh);
+        }
+        return entryList;
     }
 }
