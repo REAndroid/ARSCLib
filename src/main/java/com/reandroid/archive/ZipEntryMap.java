@@ -16,6 +16,7 @@
 package com.reandroid.archive;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class ZipEntryMap implements Comparator<InputSource>{
     private final Object mLock = new Object();
@@ -84,6 +85,21 @@ public class ZipEntryMap implements Comparator<InputSource>{
         synchronized (mLock){
             mSourceMap.clear();
             onChanged(true);
+        }
+    }
+    public void removeAll(Pattern pattern){
+        synchronized (mLock){
+            boolean removed = false;
+            LinkedHashMap<String, InputSource> map = this.mSourceMap;
+            for(InputSource inputSource : toArray()){
+                String name = inputSource.getAlias();
+                if(pattern.matcher(name).matches()){
+                    if(map.remove(name) != null){
+                        removed = true;
+                    }
+                }
+            }
+            onChanged(removed);
         }
     }
     public InputSource remove(String name){

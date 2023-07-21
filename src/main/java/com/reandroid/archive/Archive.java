@@ -52,6 +52,37 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
         return new ZipEntryMap(mapEntrySource());
     }
 
+    public InputSource[] getInputSources(){
+        ArchiveEntry[] entryList = this.entryList;
+        int length = entryList.length;
+        InputSource[] sources = new InputSource[length];
+        int dirCount = 0;
+        for(int i = 0; i < length; i++){
+            ArchiveEntry entry = entryList[i];
+            if(entry.isDirectory()){
+                //TODO: make InputSource for directory
+                dirCount++;
+                continue;
+            }
+            InputSource inputSource = createInputSource(entry);
+            inputSource.setSort(i);
+            sources[i] = inputSource;
+        }
+        if(dirCount == 0){
+            return sources;
+        }
+        InputSource[] filtered = new InputSource[length - dirCount];
+        int index = 0;
+        for(int i = 0; i < length; i++){
+            InputSource inputSource = sources[i];
+            if(inputSource == null){
+                continue;
+            }
+            filtered[index] = inputSource;
+            index++;
+        }
+        return filtered;
+    }
     public LinkedHashMap<String, InputSource> mapEntrySource(){
         ArchiveEntry[] entryList = this.entryList;
         int length = entryList.length;
