@@ -35,7 +35,9 @@ public class PathMap implements JSONConvert<JSONArray> {
     }
 
     public void restore(ApkModule apkModule){
-        restoreResFile(apkModule.listResFiles());
+        if(apkModule.getLoadedTableBlock() != null){
+            restoreResFile(apkModule.listResFiles());
+        }
         restore(apkModule.getInputSources());
     }
     public void restoreResFile(Collection<ResFile> files){

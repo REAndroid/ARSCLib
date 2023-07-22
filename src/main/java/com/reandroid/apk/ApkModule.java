@@ -47,7 +47,7 @@ import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 
 public class ApkModule implements ApkFile, Closeable {
-    private final String moduleName;
+    private String moduleName;
     private final ZipEntryMap zipEntryMap;
     private boolean loadDefaultFramework = true;
     private boolean mDisableLoadFramework = false;
@@ -443,6 +443,12 @@ public class ApkModule implements ApkFile, Closeable {
     }
     public String getModuleName(){
         return moduleName;
+    }
+    public void setModuleName(String moduleName){
+        if(moduleName == null){
+            throw new NullPointerException();
+        }
+        this.moduleName = moduleName;
     }
     public void writeApk(File file) throws IOException {
         writeApk(file, null);
@@ -1107,6 +1113,7 @@ public class ApkModule implements ApkFile, Closeable {
     public static ApkModule readApkBytes(byte[] bytes) throws IOException {
         ArchiveBytes archiveBytes = new ArchiveBytes(bytes);
         ApkModule apkModule = new ApkModule(archiveBytes.createZipEntryMap());
+        apkModule.setModuleName("byte_" + System.currentTimeMillis());
         return apkModule;
     }
 

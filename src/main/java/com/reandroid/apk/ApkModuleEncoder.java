@@ -58,7 +58,7 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
     public abstract ApkModule getApkModule();
 
 
-    private void refreshTable(){
+    void refreshTable(){
         logMessage("Refreshing resource table ...");
         getApkModule().refreshTable();
         logMessage(getApkModule().getTableBlock().toString());
