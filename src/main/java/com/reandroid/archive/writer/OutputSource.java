@@ -23,85 +23,27 @@ import com.reandroid.archive.block.CentralEntryHeader;
 import com.reandroid.archive.block.DataDescriptor;
 import com.reandroid.archive.block.LocalFileHeader;
 import com.reandroid.archive.io.CountingOutputStream;
+import com.reandroid.archive.io.ZipOutput;
 import com.reandroid.utils.io.FileUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.channels.FileChannel;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
 class OutputSource {
     private final InputSource inputSource;
     private LocalFileHeader lfh;
-    private EntryBuffer entryBuffer;
     private APKLogger apkLogger;
 
     OutputSource(InputSource inputSource){
         this.inputSource = inputSource;
     }
-    void makeBuffer(BufferFileInput input, BufferFileOutput output) throws IOException {
-        EntryBuffer entryBuffer = this.entryBuffer;
-        if(entryBuffer != null){
-            return;
-        }
-        entryBuffer = makeFromEntry();
-        if(entryBuffer != null){
-            this.entryBuffer = entryBuffer;
-            return;
-        }
-        this.entryBuffer = writeBuffer(input, output);
-    }
-    private EntryBuffer writeBuffer(BufferFileInput input, BufferFileOutput output) throws IOException {
-        long offset = output.position();
-        writeBufferFile(output);
-        long length = output.position() - offset;
-        return new EntryBuffer(input, offset, length);
-    }
-    EntryBuffer makeFromEntry(){
-        return null;
-    }
 
-    void writeApk(ApkWriter apkWriter) throws IOException{
-        logLargeFileWrite();
-        EntryBuffer entryBuffer = this.entryBuffer;
-        FileChannel input = entryBuffer.getZipFileInput().getFileChannel();
-        input.position(entryBuffer.getOffset());
+    void writeBuffer(ZipOutput zipOutput) throws IOException {
         LocalFileHeader lfh = getLocalFileHeader();
-        writeLFH(lfh, apkWriter);
-        writeData(input, entryBuffer.getLength(), apkWriter);
-        writeDD(lfh.getDataDescriptor(), apkWriter);
-    }
-    void writeCEH(ApkWriter apkWriter) throws IOException{
-        LocalFileHeader lfh = getLocalFileHeader();
-        CentralEntryHeader ceh = CentralEntryHeader.fromLocalFileHeader(lfh);
-        ceh.writeBytes(apkWriter.getOutputStream());
-    }
-    private void writeLFH(LocalFileHeader lfh, ApkWriter apkWriter) throws IOException{
-        ZipAligner aligner = apkWriter.getZipAligner();
-        if(aligner != null){
-            aligner.align(apkWriter.position(), lfh);
-        }
-        lfh.writeBytes(apkWriter.getOutputStream());
-    }
-    private void writeData(FileChannel input, long length, ApkWriter apkWriter) throws IOException{
-        long offset = apkWriter.position();
-        LocalFileHeader lfh = getLocalFileHeader();
-        lfh.setFileOffset(offset);
-        apkWriter.write(input, length);
-    }
-    void writeDD(DataDescriptor dataDescriptor, ApkWriter apkWriter) throws IOException{
-        if(dataDescriptor == null){
-            return;
-        }
-        dataDescriptor.writeBytes(apkWriter.getOutputStream());
-    }
-    private void writeBufferFile(BufferFileOutput output) throws IOException {
-        LocalFileHeader lfh = getLocalFileHeader();
-
         InputSource inputSource = getInputSource();
-        OutputStream rawStream = output.getOutputStream();
-
+        OutputStream rawStream = zipOutput.getOutputStream();
         CountingOutputStream<OutputStream> rawCounter = new CountingOutputStream<>(rawStream);
         CountingOutputStream<DeflaterOutputStream> deflateCounter = null;
 
@@ -130,10 +72,27 @@ class OutputSource {
             lfh.setMethod(Archive.STORED);
             lfh.setCrc(rawCounter.getCrc());
         }
-
         inputSource.disposeInputSource();
     }
-
+    void writeCEH(ZipOutput zipOutput) throws IOException{
+        LocalFileHeader lfh = getLocalFileHeader();
+        CentralEntryHeader ceh = CentralEntryHeader.fromLocalFileHeader(lfh);
+        ceh.writeBytes(zipOutput.getOutputStream());
+    }
+    void writeDD(ZipOutput apkFileWriter) throws IOException{
+        DataDescriptor dataDescriptor = getLocalFileHeader().getDataDescriptor();
+        if(dataDescriptor == null){
+            return;
+        }
+        dataDescriptor.writeBytes(apkFileWriter.getOutputStream());
+    }
+    void writeLFH(ZipOutput zipOutput, ZipAligner zipAligner) throws IOException {
+        LocalFileHeader lfh = getLocalFileHeader();
+        if(zipAligner != null){
+            zipAligner.align(zipOutput.position(), lfh);
+        }
+        lfh.writeBytes(zipOutput.getOutputStream());
+    }
     InputSource getInputSource() {
         return inputSource;
     }
@@ -159,7 +118,7 @@ class OutputSource {
         lfh.setDataDescriptor(null);
         lfh.setZipAlign(0);
     }
-    private void logLargeFileWrite(){
+    void logLargeFileWrite(){
         APKLogger logger =  this.apkLogger;
         if(logger == null){
             return;
@@ -183,11 +142,10 @@ class OutputSource {
     void setAPKLogger(APKLogger logger) {
         this.apkLogger = logger;
     }
-    private void logVerbose(String msg) {
+    void logVerbose(String msg) {
         if(apkLogger!=null){
             apkLogger.logVerbose(msg);
         }
     }
     private static final long LOG_LARGE_FILE_SIZE = 2L * 1000 * 1000 * 1024;
-
 }

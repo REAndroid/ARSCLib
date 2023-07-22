@@ -23,6 +23,7 @@ public class BytesInputStream extends InputStream {
     private final int offset;
     private final int length;
     private int position;
+    private int mark;
     public BytesInputStream(byte[] array, int offset, int length){
         if(offset >= array.length){
             offset = array.length - 1;
@@ -47,6 +48,15 @@ public class BytesInputStream extends InputStream {
     public int getLength() {
         return length;
     }
+    public byte[] toByteArray(){
+        if(offset == 0 && position == 0 && length == array.length){
+            return array;
+        }
+        int size = length - position;
+        byte[] bytes = new byte[size];
+        System.arraycopy(array, position, bytes, 0, size);
+        return bytes;
+    }
     public byte[] getArray() {
         return array;
     }
@@ -57,6 +67,7 @@ public class BytesInputStream extends InputStream {
     }
     @Override
     public synchronized void mark(int readLimit){
+        mark = readLimit;
     }
     @Override
     public void close() throws IOException {
@@ -64,7 +75,7 @@ public class BytesInputStream extends InputStream {
     }
     @Override
     public void reset() throws IOException {
-        position = 0;
+        position = mark;
     }
     @Override
     public long skip(long amount) throws IOException{

@@ -18,7 +18,9 @@ package com.reandroid.apk;
 import com.reandroid.archive.*;
 import com.reandroid.archive.block.ApkSignatureBlock;
 import com.reandroid.archive.io.ArchiveFileEntrySource;
-import com.reandroid.archive.writer.ApkWriter;
+import com.reandroid.archive.writer.ApkByteWriter;
+import com.reandroid.archive.writer.ApkFileWriter;
+import com.reandroid.archive.writer.ApkStreamWriter;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.array.PackageArray;
 import com.reandroid.arsc.chunk.Chunk;
@@ -446,15 +448,32 @@ public class ApkModule implements ApkFile, Closeable {
         writeApk(file, null);
     }
     public void writeApk(File file, WriteProgress progress) throws IOException {
-        ZipEntryMap archive = getZipEntryMap();
+        ZipEntryMap zipEntryMap = getZipEntryMap();
         UncompressedFiles uf = getUncompressedFiles();
-        uf.apply(archive);
-        ApkWriter apkWriter = new ApkWriter(file, archive.toArray());
-        apkWriter.setAPKLogger(getApkLogger());
-        apkWriter.setWriteProgress(progress);
-        apkWriter.setApkSignatureBlock(getApkSignatureBlock());
-        apkWriter.write();
-        apkWriter.close();
+        uf.apply(zipEntryMap);
+        ApkFileWriter apkFileWriter = new ApkFileWriter(file, zipEntryMap.toArray());
+        apkFileWriter.setAPKLogger(getApkLogger());
+        apkFileWriter.setWriteProgress(progress);
+        apkFileWriter.setApkSignatureBlock(getApkSignatureBlock());
+        apkFileWriter.write();
+        apkFileWriter.close();
+    }
+    public byte[] writeApkBytes() throws IOException {
+        ZipEntryMap zipEntryMap = getZipEntryMap();
+        UncompressedFiles uf = getUncompressedFiles();
+        uf.apply(zipEntryMap);
+        ApkByteWriter byteWriter = new ApkByteWriter(zipEntryMap.toArray());
+        byteWriter.write();
+        byteWriter.close();
+        return byteWriter.toByteArray();
+    }
+    public void writeApk(OutputStream outputStream) throws IOException {
+        ZipEntryMap zipEntryMap = getZipEntryMap();
+        UncompressedFiles uf = getUncompressedFiles();
+        uf.apply(zipEntryMap);
+        ApkStreamWriter streamWriter = new ApkStreamWriter(outputStream, zipEntryMap.toArray());
+        streamWriter.write();
+        streamWriter.close();
     }
     public void uncompressNonXmlResFiles() {
         for(ResFile resFile:listResFiles()){
@@ -1085,4 +1104,10 @@ public class ApkModule implements ApkFile, Closeable {
         }
         return apkModule;
     }
+    public static ApkModule readApkBytes(byte[] bytes) throws IOException {
+        ArchiveBytes archiveBytes = new ArchiveBytes(bytes);
+        ApkModule apkModule = new ApkModule(archiveBytes.createZipEntryMap());
+        return apkModule;
+    }
+
 }

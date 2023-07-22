@@ -21,7 +21,7 @@ import com.reandroid.archive.io.ArchiveFileEntrySource;
 import com.reandroid.archive.io.ZipFileInput;
 
 
-public class ArchiveOutputSource extends OutputSource{
+public class ArchiveOutputSource extends FileOutputSource {
     public ArchiveOutputSource(InputSource inputSource){
         super(inputSource);
     }

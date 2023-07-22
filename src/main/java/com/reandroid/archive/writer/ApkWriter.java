@@ -16,61 +16,63 @@
 package com.reandroid.archive.writer;
 
 import com.reandroid.apk.APKLogger;
-import com.reandroid.archive.RenamedInputSource;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.WriteProgress;
 import com.reandroid.archive.ZipSignature;
 import com.reandroid.archive.block.*;
-import com.reandroid.archive.io.ArchiveFileEntrySource;
-import com.reandroid.archive.io.ZipFileOutput;
-import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.archive.io.ZipOutput;
 
-import java.io.File;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class ApkWriter extends ZipFileOutput {
+public abstract class ApkWriter<T extends ZipOutput, OUT extends OutputSource> implements Closeable {
     private final Object mLock = new Object();
-    private final InputSource[] sourceList;
+    private final T zipOutput;
+    private final InputSource[] inputSources;
     private ZipAligner zipAligner;
     private ApkSignatureBlock apkSignatureBlock;
     private APKLogger apkLogger;
     private WriteProgress writeProgress;
 
-    public ApkWriter(File file, InputSource[] sourceList) throws IOException {
-        super(file);
-        this.sourceList = sourceList;
+    public ApkWriter(T zipOutput, InputSource[] sources){
+        this.zipOutput = zipOutput;
+        this.inputSources = sources;
         this.zipAligner = ZipAligner.apkAligner();
     }
+
     public void write()throws IOException {
         synchronized (mLock){
-            OutputSource[] outputList = buildOutputEntries();
-            logMessage("Buffering compress changed files ...");
-            BufferFileInput buffer = writeBuffer(outputList);
-            buffer.unlock();
-            if(getZipAligner() != null){
-                logMessage("Zip align ON");
-            }
-            writeApk(outputList);
-            buffer.close();
+            OUT[] outList = buildOutputEntries();
+
+            prepareOutputs(outList);
+            writeApkList(outList);
+
+            closeBuffer();
 
             writeSignatureBlock();
+            writeCEHList(outList);
 
-            writeCEH(outputList);
             this.close();
         }
     }
-    public void setApkSignatureBlock(ApkSignatureBlock apkSignatureBlock) {
-        this.apkSignatureBlock = apkSignatureBlock;
+    private void writeApkList(OUT[] outputList) throws IOException{
+        int length = outputList.length;
+        logMessage("Writing files: " + length);
+        APKLogger logger = this.getApkLogger();
+        ZipAligner zipAligner = getZipAligner();
+        for(int i = 0; i < length; i++){
+            OUT out = outputList[i];
+            out.setAPKLogger(logger);
+            writeApk(out, zipAligner);
+            if(i % 100 == 0){
+                out.logFileWrite();
+            }
+        }
     }
-    public ZipAligner getZipAligner() {
-        return zipAligner;
+    void closeBuffer() throws IOException{
     }
-    public void setZipAligner(ZipAligner zipAligner) {
-        this.zipAligner = zipAligner;
-    }
-
-    private void writeCEH(OutputSource[] outputList) throws IOException{
+    private void writeCEHList(OUT[] outputList) throws IOException{
         EndRecord endRecord = new EndRecord();
         endRecord.setSignature(ZipSignature.END_RECORD);
         long offset = position();
@@ -78,9 +80,10 @@ public class ApkWriter extends ZipFileOutput {
         int count = outputList.length;
         endRecord.setNumberOfDirectories(count);
         endRecord.setTotalNumberOfDirectories(count);
+        ZipOutput zipOutput = getZipOutput();
         for(int i = 0; i < count; i++){
-            OutputSource outputSource = outputList[i];
-            outputSource.writeCEH(this);
+            OUT outputSource = outputList[i];
+            outputSource.writeCEH(zipOutput);
         }
         long cedLength = position() - offset;
         endRecord.setLengthOfCentralDirectory(cedLength);
@@ -97,21 +100,49 @@ public class ApkWriter extends ZipFileOutput {
         }
         endRecord.writeBytes(getOutputStream());
     }
-    private void writeApk(OutputSource[] outputList) throws IOException{
-        int length = outputList.length;
-        logMessage("Writing files: " + length);
-        APKLogger logger = this.apkLogger;
+    OUT[] buildOutputEntries(){
+        InputSource[] sources = this.getInputSources();
+        int length = sources.length;
+        OUT[] results = createOutArray(length);
         for(int i = 0; i < length; i++){
-            OutputSource outputSource = outputList[i];
-            outputSource.setAPKLogger(logger);
-            outputSource.writeApk( this);
-            if(i % 100 == 0){
-                outputSource.logFileWrite();
-            }
+            InputSource inputSource = sources[i];
+            results[i] = toOutputSource(inputSource);
         }
+        return results;
     }
-    private void writeSignatureBlock() throws IOException {
-        ApkSignatureBlock signatureBlock = this.apkSignatureBlock;
+
+    abstract void writeApk(OUT outputSource, ZipAligner zipAligner) throws IOException;
+    abstract void prepareOutputs(OUT[] outList) throws IOException;
+    abstract OUT toOutputSource(InputSource inputSource);
+    abstract OUT[] createOutArray(int length);
+
+    long position() throws IOException {
+        return zipOutput.position();
+    }
+    OutputStream getOutputStream() throws IOException {
+        return zipOutput.getOutputStream();
+    }
+    T getZipOutput() {
+        return zipOutput;
+    }
+    InputSource[] getInputSources() {
+        return inputSources;
+    }
+    public ZipAligner getZipAligner(){
+        return zipAligner;
+    }
+    public void setZipAligner(ZipAligner zipAligner) {
+        this.zipAligner = zipAligner;
+    }
+
+    public void setApkSignatureBlock(ApkSignatureBlock apkSignatureBlock) {
+        this.apkSignatureBlock = apkSignatureBlock;
+    }
+    public ApkSignatureBlock getApkSignatureBlock() {
+        return apkSignatureBlock;
+    }
+    void writeSignatureBlock() throws IOException {
+        ApkSignatureBlock signatureBlock = this.getApkSignatureBlock();
         if(signatureBlock == null){
             return;
         }
@@ -130,97 +161,30 @@ public class ApkWriter extends ZipFileOutput {
         signatureBlock.updatePadding();
         signatureBlock.writeBytes(outputStream);
     }
-    private BufferFileInput writeBuffer(OutputSource[] outputList) throws IOException {
-        File bufferFile = getBufferFile();
-        BufferFileOutput output = new BufferFileOutput(bufferFile);
-        BufferFileInput input = new BufferFileInput(bufferFile);
-        OutputSource tableSource = null;
-        int length = outputList.length;
-        for(int i = 0; i < length; i++){
-            OutputSource outputSource = outputList[i];
-            InputSource inputSource = outputSource.getInputSource();
-            if(tableSource == null && TableBlock.FILE_NAME.equals(inputSource.getAlias())){
-                tableSource = outputSource;
-                continue;
-            }
-            onCompressFileProgress(inputSource.getAlias(),
-                    inputSource.getMethod(),
-                    output.position());
-            outputSource.makeBuffer(input, output);
-        }
-        if(tableSource != null){
-            tableSource.makeBuffer(input, output);
-        }
-        output.close();
-        return input;
-    }
-    private File getBufferFile(){
-        File file = getFile();
-        File dir = file.getParentFile();
-        String name = file.getAbsolutePath();
-        name = "tmp" + name.hashCode();
-        File bufFile;
-        if(dir != null){
-            bufFile = new File(dir, name);
-        }else {
-            bufFile = new File(name);
-        }
-        bufFile.deleteOnExit();
-        return bufFile;
-    }
-    private OutputSource[] buildOutputEntries(){
-        InputSource[] sourceList = this.sourceList;
-        int length = sourceList.length;
-        OutputSource[] results = new OutputSource[length];
-        for(int i = 0; i < length; i++){
-            InputSource inputSource = sourceList[i];
-            results[i] = toOutputSource(inputSource);
-        }
-        return results;
-    }
-    private OutputSource toOutputSource(InputSource inputSource){
-        if(inputSource instanceof ArchiveFileEntrySource){
-            return new ArchiveOutputSource(inputSource);
-        }
-        if(inputSource instanceof RenamedInputSource){
-            RenamedInputSource<?> renamedInputSource = ((RenamedInputSource<?>) inputSource);
-            if(renamedInputSource.getParentInputSource(ArchiveFileEntrySource.class) != null){
-                return new RenamedArchiveSource(renamedInputSource);
-            }
-        }
-        return new OutputSource(inputSource);
+
+    @Override
+    public void close() throws IOException {
+        this.zipOutput.close();
     }
 
     public void setWriteProgress(WriteProgress writeProgress){
         this.writeProgress = writeProgress;
     }
 
-    private void onCompressFileProgress(String path, int mode, long writtenBytes) {
+    void onCompressFileProgress(String path, int mode, long writtenBytes) {
         if(writeProgress!=null){
             writeProgress.onCompressFile(path, mode, writtenBytes);
         }
     }
-
     APKLogger getApkLogger(){
         return apkLogger;
     }
     public void setAPKLogger(APKLogger logger) {
         this.apkLogger = logger;
     }
-    private void logMessage(String msg) {
+    void logMessage(String msg) {
         if(apkLogger!=null){
             apkLogger.logMessage(msg);
         }
     }
-    private void logError(String msg, Throwable tr) {
-        if(apkLogger!=null){
-            apkLogger.logError(msg, tr);
-        }
-    }
-    private void logVerbose(String msg) {
-        if(apkLogger!=null){
-            apkLogger.logVerbose(msg);
-        }
-    }
-
 }

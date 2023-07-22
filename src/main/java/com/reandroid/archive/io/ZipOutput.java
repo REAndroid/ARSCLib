@@ -15,9 +15,5 @@
  */
 package com.reandroid.archive.io;
 
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-
 public abstract class ZipOutput implements WriteOnlyStream{
-    public abstract FileChannel getFileChannel() throws IOException;
 }

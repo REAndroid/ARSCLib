@@ -16,6 +16,7 @@
 package com.reandroid.archive.io;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.zip.CRC32;
 
@@ -23,6 +24,7 @@ public class CountingOutputStream<T extends OutputStream> extends OutputStream {
     private final T outputStream;
     private CRC32 crc;
     private long size;
+    private boolean mClosed;
     public CountingOutputStream(T outputStream, boolean disableCrc){
         this.outputStream = outputStream;
         CRC32 crc32;
@@ -63,6 +65,19 @@ public class CountingOutputStream<T extends OutputStream> extends OutputStream {
         }
         return 0;
     }
+    public void write(InputStream inputStream) throws IOException {
+        int bufferStep = 500;
+        int maxBuffer = 4096 * 20;
+        int length;
+        byte[] buffer = new byte[2048];
+        while ((length = inputStream.read(buffer, 0, buffer.length)) >= 0){
+            write(buffer, 0, length);
+            if(buffer.length < maxBuffer){
+                buffer = new byte[buffer.length + bufferStep];
+            }
+        }
+        inputStream.close();
+    }
     @Override
     public void write(byte[] bytes, int offset, int length) throws IOException{
         if(length == 0){
@@ -85,6 +100,10 @@ public class CountingOutputStream<T extends OutputStream> extends OutputStream {
     @Override
     public void close() throws IOException{
         outputStream.close();
+        mClosed = true;
+    }
+    public boolean isOpen(){
+        return !mClosed;
     }
     @Override
     public void flush() throws IOException {

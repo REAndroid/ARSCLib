@@ -63,8 +63,7 @@ public class ZipFileOutput extends ZipOutput{
         }
         return false;
     }
-    @Override
-    public FileChannel getFileChannel() throws IOException {
+    private FileChannel getFileChannel() throws IOException {
         FileChannel fileChannel = this.fileChannel;
         if(fileChannel != null){
             return fileChannel;
