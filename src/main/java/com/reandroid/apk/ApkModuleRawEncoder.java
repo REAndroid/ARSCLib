@@ -26,7 +26,9 @@ import java.io.File;
 public class ApkModuleRawEncoder extends ApkModuleEncoder {
     private final ApkModule apkModule;
     public ApkModuleRawEncoder(){
-        this.apkModule = new ApkModule("encoded_raw", new ZipEntryMap());
+        ZipEntryMap zipEntryMap = new ZipEntryMap();
+        String name = "encoded_raw" + String.valueOf(zipEntryMap.hashCode()).substring(1);
+        this.apkModule = new ApkModule(name, zipEntryMap);
     }
     @Override
     public void buildResources(File mainDirectory) {

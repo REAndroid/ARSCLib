@@ -679,6 +679,7 @@ public class ApkModule implements ApkFile, Closeable {
         BlockInputSource<AndroidManifestBlock> source =
                 new BlockInputSource<>(AndroidManifestBlock.FILE_NAME, manifestBlock);
         source.setMethod(ZipEntry.STORED);
+        source.setSort(0);
         archive.add(source);
         mManifestBlock = manifestBlock;
     }
@@ -694,6 +695,7 @@ public class ApkModule implements ApkFile, Closeable {
                 new BlockInputSource<>(TableBlock.FILE_NAME, tableBlock);
         archive.add(source);
         source.setMethod(ZipEntry.STORED);
+        source.setSort(1);
         getUncompressedFiles().addPath(source);
         mTableBlock = tableBlock;
         updateExternalFramework();
@@ -764,6 +766,12 @@ public class ApkModule implements ApkFile, Closeable {
             tableBlock.addFramework(framework);
         }
     }
+    public void discardManifestChanges(){
+        getZipEntryMap().add(getManifestOriginalSource());
+    }
+    public void keepManifestChanges(){
+        mManifestOriginalSource = null;
+    }
     public InputSource getManifestOriginalSource(){
         InputSource inputSource = this.mManifestOriginalSource;
         if(inputSource == null){
@@ -777,6 +785,12 @@ public class ApkModule implements ApkFile, Closeable {
                 && !(inputSource instanceof BlockInputSource)){
             mManifestOriginalSource = inputSource;
         }
+    }
+    public void discardTableBlockChanges(){
+        getZipEntryMap().add(getTableOriginalSource());
+    }
+    public void keepTableBlockChanges(){
+        mTableOriginalSource = null;
     }
     public InputSource getTableOriginalSource(){
         InputSource inputSource = this.mTableOriginalSource;

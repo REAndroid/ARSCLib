@@ -25,14 +25,16 @@ import java.io.IOException;
 public class ApkModuleRawDecoder extends ApkModuleDecoder{
     public ApkModuleRawDecoder(ApkModule apkModule) {
         super(apkModule);
+        apkModule.setLoadDefaultFramework(false);
     }
 
     @Override
     public void decodeResourceTable(File mainDirectory) throws IOException {
-        InputSource inputSource = getApkModule()
-                .getInputSource(TableBlock.FILE_NAME);
+        ApkModule apkModule = getApkModule();
+        apkModule.discardTableBlockChanges();
+        InputSource inputSource = apkModule.getTableOriginalSource();
         if(inputSource == null){
-            logMessage("File found: " + TableBlock.FILE_NAME);
+            logMessage("File NOT found: " + TableBlock.FILE_NAME);
         }else {
             File file = new File(mainDirectory, TableBlock.FILE_NAME);
             inputSource.write(file);
@@ -42,8 +44,9 @@ public class ApkModuleRawDecoder extends ApkModuleDecoder{
 
     @Override
     void decodeAndroidManifest(File mainDirectory) throws IOException {
-        InputSource inputSource = getApkModule()
-                .getInputSource(AndroidManifestBlock.FILE_NAME);
+        ApkModule apkModule = getApkModule();
+        apkModule.discardManifestChanges();
+        InputSource inputSource = apkModule.getManifestOriginalSource();
         if(inputSource == null){
             logMessage("File NOT found: " + AndroidManifestBlock.FILE_NAME);
         }else {
