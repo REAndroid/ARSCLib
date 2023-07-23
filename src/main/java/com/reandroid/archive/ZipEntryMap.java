@@ -38,6 +38,13 @@ public class ZipEntryMap implements Comparator<InputSource>{
         }
         return map;
     }
+    public InputSource[] toArray(boolean sort){
+        InputSource[] sources = toArray();
+        if(sort){
+            Arrays.sort(sources, this);
+        }
+        return sources;
+    }
     public InputSource[] toArray(){
         synchronized (mLock){
             if(sourcesArray != null){
@@ -154,8 +161,7 @@ public class ZipEntryMap implements Comparator<InputSource>{
         }
     }
     public void refresh(){
-        InputSource[] inputSourceList = toArray();
-        Arrays.sort(inputSourceList, this);
+        InputSource[] inputSourceList = toArray(true);
         set(inputSourceList);
     }
     public void autoSortApkFiles(){

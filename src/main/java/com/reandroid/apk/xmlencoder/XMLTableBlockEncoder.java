@@ -51,6 +51,7 @@ public class XMLTableBlockEncoder {
             BlockInputSource<TableBlock> inputSource =
                     new BlockInputSource<>(TableBlock.FILE_NAME, tableBlock);
             inputSource.setMethod(ZipEntry.STORED);
+            inputSource.setSort(1);
             this.apkModule.setTableBlock(this.tableBlock);
             apkModule.setLoadDefaultFramework(true);
         }

@@ -17,6 +17,7 @@ package com.reandroid.apk;
 
 import com.reandroid.apk.xmlencoder.XMLEncodeSource;
 import com.reandroid.apk.xmlencoder.XMLTableBlockEncoder;
+import com.reandroid.archive.Archive;
 import com.reandroid.archive.FileInputSource;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
@@ -62,6 +63,8 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
         logMessage("Encode binary manifest: " + file.getName());
         FileInputSource inputSource =
                 new FileInputSource(file, AndroidManifestBlock.FILE_NAME_BIN);
+        inputSource.setMethod(Archive.STORED);
+        inputSource.setSort(0);
         getApkModule().add(inputSource);
     }
     private void encodeManifestXml(File mainDirectory) {
@@ -89,6 +92,8 @@ public class ApkModuleXmlEncoder extends ApkModuleEncoder{
         XMLEncodeSource xmlEncodeSource =
                 new XMLEncodeSource(tableBlock.pickOne(), xmlSource);
         xmlEncodeSource.setApkLogger(getApkLogger());
+        xmlEncodeSource.setMethod(Archive.STORED);
+        xmlEncodeSource.setSort(0);
         getApkModule().add(xmlEncodeSource);
     }
     private void scanResFilesDirectory(File mainDirectory) {
