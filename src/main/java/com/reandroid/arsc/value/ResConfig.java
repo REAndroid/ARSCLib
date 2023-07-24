@@ -23,6 +23,7 @@ import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -110,6 +111,9 @@ public class ResConfig extends FixedBlockContainer
     public void setConfigSize(int size){
         if(!isValidSize(size)){
             throw new IllegalArgumentException("Invalid config size = " + size);
+        }
+        if(size % 4 != 0){
+            size = size + (4 - size % 4);
         }
         this.configSize.set(size);
         size = size-4;
@@ -710,40 +714,62 @@ public class ResConfig extends FixedBlockContainer
     public void setColorModeHdr(ColorModeHdr colorModeHdr){
         setColorMode(ColorModeHdr.update(colorModeHdr, getColorMode()));
     }
-    public void setLocaleNumberingSystem(byte[] bts){
+    public void setUnknownBytes(byte[] bts){
+        if(isNull(bts)){
+            return;
+        }
+        if(getConfigSize() <= SIZE_64){
+            trimToSize(SIZE_64 + bts.length);
+        }
+        mValuesContainer.putByteArray(OFFSET_unknown, bts);
+    }
+    public String getUnknownHexBytes(){
+        return getUnknownHexBytes(8);
+    }
+    public String getUnknownHexBytes(int limit){
+        byte[] bytes = getUnknownBytes();
+        if(isNull(bytes)){
+            return null;
+        }
+        String result = null;
+        if(limit < 0){
+            limit = bytes.length;
+        }
+        if(bytes.length < limit){
+            limit = bytes.length;
+        }
+        for (int i = 0; i < limit; i++) {
+            result = HexUtil.toHex2(result, bytes[i]);
+        }
+        return result;
+    }
+    public byte[] getUnknownBytes(){
         if(getConfigSize() < SIZE_64){
-            if(isNull(bts)){
-                return;
+            return null;
+        }
+        byte[] bts = mValuesContainer.getByteArray(OFFSET_unknown,
+                mValuesContainer.size() - OFFSET_unknown);
+        return trimEndingZero(bts);
+    }
+    public void setUnknownBytes(String hexBytes){
+        if(hexBytes == null || hexBytes.length() == 0){
+            return;
+        }
+        int length = hexBytes.length();
+        if(length % 2 != 0){
+            return;
+        }
+        char[] chars = hexBytes.toCharArray();
+        length = chars.length;
+        byte[] bytes = new byte[length/2];
+        try{
+            for(int i = 0; i < length; i += 2){
+                bytes[i / 2] = (byte) HexUtil.parseHex(new String(chars, i, 2));
             }
-            throw new IllegalArgumentException("Can not set localeNumberingSystem for config size ="+getConfigSize());
+        }catch (NumberFormatException ignored){
+            return;
         }
-        bts = ensureArrayLength(bts, LEN_localeNumberingSystem);
-        mValuesContainer.putByteArray(OFFSET_localeNumberingSystem, bts);
-    }
-    public String getLocaleNumberingSystem(){
-        char[] chars = getLocaleNumberingSystemChars();
-        if(isNull(chars)){
-            return null;
-        }
-        return new String(chars);
-    }
-    public char[] getLocaleNumberingSystemChars(){
-        if(getConfigSize() < SIZE_64){
-            return null;
-        }
-        byte[] bts = mValuesContainer.getByteArray(OFFSET_localeNumberingSystem, LEN_localeNumberingSystem);
-        return trimEndingZero(toCharArray(bts));
-    }
-    public void setLocaleNumberingSystem(char[] chs){
-        byte[] bts =toByteArray(chs, LEN_localeNumberingSystem);
-        setLocaleNumberingSystem(bts);
-    }
-    public void setLocaleNumberingSystem(String numberingSystem){
-        char[] chars = null;
-        if(numberingSystem!= null){
-            chars = numberingSystem.toCharArray();
-        }
-        setLocaleNumberingSystem(chars);
+        setUnknownBytes(bytes);
     }
 
     public String getQualifiers(){
@@ -752,6 +778,10 @@ public class ResConfig extends FixedBlockContainer
             mQualifiers = new QualifierBuilder(this).build();
             mQualifiersStamp = hash;
         }
+        return mQualifiers;
+    }
+    public String getQualifiersTest(){
+        mQualifiers = new QualifierBuilder(this).build();
         return mQualifiers;
     }
 
@@ -834,9 +864,10 @@ public class ResConfig extends FixedBlockContainer
         jsonObject.put(NAME_screen_layout_round, Flag.toString(getScreenLayoutRound()));
         jsonObject.put(NAME_color_mode_wide, Flag.toString(getColorModeWide()));
         jsonObject.put(NAME_color_mode_hdr, Flag.toString(getColorModeHdr()));
-        str = getLocaleNumberingSystem();
-        if(str!= null){
-            jsonObject.put(NAME_localeNumberingSystem, str);
+        str = getUnknownHexBytes(-1);
+        if(str != null){
+            jsonObject.put(NAME_unknownBytes, str);
+            jsonObject.put(NAME_config_size, getConfigSize());
         }
         return jsonObject;
     }
@@ -846,7 +877,11 @@ public class ResConfig extends FixedBlockContainer
             mValuesContainer.fill((byte) 0);
             return;
         }
-        trimToSize(SIZE_64);
+        int configSize = json.optInt(NAME_config_size, 0);
+        if(configSize == 0){
+            configSize = SIZE_64;
+        }
+        trimToSize(configSize);
 
         setMcc(json.optInt(NAME_mcc));
         setMnc(json.optInt(NAME_mnc));
@@ -876,7 +911,7 @@ public class ResConfig extends FixedBlockContainer
         setScreenLayoutRound(ScreenLayoutRound.valueOf(json.optString(NAME_screen_layout_round)));
         setColorModeWide(ColorModeWide.valueOf(json.optString(NAME_color_mode_wide)));
         setColorModeHdr(ColorModeHdr.valueOf(json.optString(NAME_color_mode_hdr)));
-        setLocaleNumberingSystem(json.optString(NAME_localeNumberingSystem));
+        setUnknownBytes(json.optString(NAME_unknownBytes));
         trimToSize(SIZE_48);
     }
     @Override
@@ -1046,6 +1081,27 @@ public class ResConfig extends FixedBlockContainer
         }
         char[] result = new char[lastNonZero];
         System.arraycopy(chars, 0, result, 0, lastNonZero);
+        return result;
+    }
+    private static byte[] trimEndingZero(byte[] bytes){
+        if(bytes == null){
+            return null;
+        }
+        int lastNonZero = -1;
+        for(int i = 0; i < bytes.length; i++){
+            if(bytes[i]!= 0){
+                lastNonZero = i;
+            }
+        }
+        if(lastNonZero==-1){
+            return null;
+        }
+        lastNonZero = lastNonZero+1;
+        if(lastNonZero== bytes.length){
+            return bytes;
+        }
+        byte[] result = new byte[lastNonZero];
+        System.arraycopy(bytes, 0, result, 0, lastNonZero);
         return result;
     }
     private static boolean isNull(char[] chs){
@@ -1716,6 +1772,7 @@ public class ResConfig extends FixedBlockContainer
     static class QualifierBuilder{
         private final ResConfig mConfig;
         private StringBuilder mBuilder;
+        private String mNumberingSystem;
         public QualifierBuilder(ResConfig resConfig){
             this.mConfig = resConfig;
         }
@@ -1758,7 +1815,8 @@ public class ResConfig extends FixedBlockContainer
             appendFlag(resConfig.getColorModeWide());
             appendFlag(resConfig.getColorModeHdr());
 
-            appendLocaleNumberingSystem();
+            //appendLocaleNumberingSystem();
+            appendUnknownBytes();
 
             return mBuilder.toString();
         }
@@ -1810,13 +1868,23 @@ public class ResConfig extends FixedBlockContainer
             }
         }
         private void appendLocaleNumberingSystem(){
-            String numberingSystem = mConfig.getLocaleNumberingSystem();
+            String numberingSystem = mNumberingSystem;
             if(numberingSystem== null){
                 return;
             }
             StringBuilder builder = mBuilder;
             builder.append("-u+nu+");
             builder.append(numberingSystem);
+        }
+        private void appendUnknownBytes(){
+            String unknownHexBytes = mConfig.getUnknownHexBytes();
+            if(unknownHexBytes == null){
+                return;
+            }
+            StringBuilder builder = mBuilder;
+            builder.append('-');
+            builder.append(ResConfig.UNKNOWN_BYTES);
+            builder.append(unknownHexBytes);
         }
         private void appendFlag(ResConfig.Flag flag){
             if(flag== null){
@@ -1877,6 +1945,7 @@ public class ResConfig extends FixedBlockContainer
             parseDp();
             parseWidthHeight();
             parseLocaleNumberingSystem();
+            parseUnknownBytes();
             if(isEmpty()){
                 onParseComplete();
                 return;
@@ -2055,6 +2124,18 @@ public class ResConfig extends FixedBlockContainer
                 }
             }
         }
+        private void parseUnknownBytes(){
+            if(isEmpty()){
+                return;
+            }
+            String[] qualifiers = this.mQualifiers;
+            for(int i = 0; i < qualifiers.length; i++){
+                if(parseUnknownBytes(qualifiers[i])){
+                    qualifiers[i] = null;
+                    return;
+                }
+            }
+        }
         private boolean parseLocaleNumberingSystem(String qualifier){
             if(qualifier == null){
                 return false;
@@ -2063,7 +2144,7 @@ public class ResConfig extends FixedBlockContainer
             if(!matcher.find()){
                 return false;
             }
-            this.mConfig.setLocaleNumberingSystem(matcher.group(1));
+            //TODO: where to set ?
             return true;
         }
         private void parseLocaleScriptVariant(){
@@ -2142,6 +2223,17 @@ public class ResConfig extends FixedBlockContainer
                 return false;
             }
             this.mConfig.setRegion(qualifier);
+            return true;
+        }
+        private boolean parseUnknownBytes(String qualifier){
+            if(qualifier == null){
+                return false;
+            }
+            if(!qualifier.startsWith(ResConfig.UNKNOWN_BYTES)){
+                return false;
+            }
+            qualifier = qualifier.substring(ResConfig.UNKNOWN_BYTES.length());
+            this.mConfig.setUnknownBytes(qualifier);
             return true;
         }
 
@@ -2286,12 +2378,11 @@ public class ResConfig extends FixedBlockContainer
     private static final int OFFSET_colorMode = 45;
     private static final int OFFSET_reservedPadding = 46;
     //SIZE=52
-    private static final int OFFSET_localeNumberingSystem = 48;
+    private static final int OFFSET_unknown = 48;
     //SIZE=60
 
     private static final int LEN_localeScript = 4;
     private static final int LEN_localeVariant = 8;
-    private static final int LEN_localeNumberingSystem = 8;
 
     private static final String NAME_mcc = "mcc";
     private static final String NAME_mnc = "mnc";
@@ -2327,9 +2418,11 @@ public class ResConfig extends FixedBlockContainer
     private static final String NAME_color_mode_wide = "color_mode_wide";
     private static final String NAME_color_mode_hdr = "color_mode_hdr";
 
-    private static final String NAME_localeNumberingSystem = "localeNumberingSystem";
+    private static final String NAME_unknownBytes = "unknown_bytes";
 
     private static final char POSTFIX_locale = '#';
+    public static final String UNKNOWN_BYTES = "unknown_bytes";
 
+    private static final String NAME_config_size = "config_size";
     private static final ResConfig DEFAULT_INSTANCE = new ResConfig(SIZE_16);
 }

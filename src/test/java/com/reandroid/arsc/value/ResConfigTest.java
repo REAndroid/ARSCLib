@@ -43,7 +43,8 @@ public class ResConfigTest {
             "-normal",
             "-night",
             "-long",
-            "-mcc10-mnc20-en-rUS-xxhdpi-480x1024-v26-long-night-sw180dp-h480dp-u+nu+1234",
+            "-mcc10-mnc20-en-rUS-xxhdpi-480x1024-v26-long-night-sw180dp-h480dp-"
+                    + ResConfig.UNKNOWN_BYTES + "001a2b34",
     };
     private static final String[] ERROR_QUALIFIERS = new String[]{
             "something",
