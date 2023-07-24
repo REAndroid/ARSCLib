@@ -24,6 +24,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.arsc.value.ValueType;
+import com.reandroid.common.BytesOutputStream;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
@@ -204,13 +205,14 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
      */
     @Override
     public byte[] getBytes(){
-        ByteArrayOutputStream os=new ByteArrayOutputStream();
+        BytesOutputStream outputStream = new BytesOutputStream(
+                getHeaderBlock().getChunkSize());
         try {
-            writeBytes(os);
-            os.close();
+            writeBytes(outputStream);
+            outputStream.close();
         } catch (IOException ignored) {
         }
-        return os.toByteArray();
+        return outputStream.toByteArray();
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {

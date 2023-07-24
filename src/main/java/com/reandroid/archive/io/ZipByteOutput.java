@@ -15,6 +15,8 @@
  */
 package com.reandroid.archive.io;
 
+import com.reandroid.common.BytesOutputStream;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -25,7 +27,7 @@ public class ZipByteOutput extends ZipOutput{
         this.bis = new BytesOutputStream();
     }
     public byte[] toByteArray(){
-        return bis.getArray();
+        return bis.toByteArray();
     }
     @Override
     public long position() throws IOException {
@@ -33,7 +35,7 @@ public class ZipByteOutput extends ZipOutput{
     }
     @Override
     public void position(long pos) throws IOException {
-        bis.position((int) pos);
+        throw new IOException("Not used");
     }
     @Override
     public void close() throws IOException {

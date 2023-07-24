@@ -15,6 +15,8 @@
  */
 package com.reandroid.archive.io;
 
+import com.reandroid.common.BytesInputStream;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -79,7 +81,10 @@ public class ZipByteInput extends ZipInput{
             return new byte[0];
         }
         if(minLength > this.length){
-            return array.clone();
+            if(this.offset == 0){
+                return array.clone();
+            }
+            minLength = this.length;
         }
         byte[] bytes = new byte[minLength];
         int offset = array.length - this.offset - minLength;

@@ -12,68 +12,68 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.zip.CRC32;
 
 public class XMLEncodeSource extends ByteInputSource {
     private final PackageBlock packageBlock;
     private final XMLParserSource parserSource;
-    private ResXmlDocument mResXmlDocument;
     private APKLogger mLogger;
+    private byte[] array;
 
     public XMLEncodeSource(PackageBlock packageBlock, XMLParserSource parserSource) {
-        super(new byte[0], parserSource.getPath());
+        super(DISPOSED, parserSource.getPath());
         this.packageBlock = packageBlock;
         this.parserSource = parserSource;
     }
     @Override
     public long getLength() throws IOException {
-        return getResXmlDocument().countBytes();
+        return getArray().length;
     }
     @Override
     public long getCrc() throws IOException{
-        ResXmlDocument resXmlDocument = getResXmlDocument();
-        CrcOutputStream outputStream=new CrcOutputStream();
-        resXmlDocument.writeBytes(outputStream);
-        return outputStream.getCrcValue();
+        CRC32 crc32 = new CRC32();
+        byte[] bytes = getArray();
+        crc32.update(bytes, 0, bytes.length);
+        return crc32.getValue();
     }
     @Override
     public long write(OutputStream outputStream) throws IOException {
-        return getResXmlDocument().writeBytes(outputStream);
+        byte[] bytes = getArray();
+        if(bytes == DISPOSED){
+            throw new IOException("Disposed source: " + getAlias());
+        }
+        outputStream.write(bytes, 0, bytes.length);
+        return bytes.length;
     }
     @Override
     public byte[] getBytes() {
         try {
-            return getResXmlDocument().getBytes();
-        } catch (IOException ignored) {
+            return getArray();
+        } catch (IOException ex) {
+            throw new IllegalArgumentException(ex);
         }
-        //should not reach here
-        return new byte[0];
     }
     @Override
     public void disposeInputSource(){
-        mResXmlDocument = null;
+        array = DISPOSED;
     }
-
-    public PackageBlock getPackageBlock() {
-        return packageBlock;
-    }
-    public XMLParserSource getParserSource() {
-        return parserSource;
-    }
-    public ResXmlDocument getResXmlDocument() throws IOException{
-        if(mResXmlDocument == null){
-            try {
-                mResXmlDocument = encode();
-            } catch (XmlPullParserException ex) {
-                throw new IOException(ex.getMessage());
-            }
+    private byte[] getArray() throws IOException{
+        if(array != null){
+            return array;
         }
-        return mResXmlDocument;
+        try {
+            array = encode().getBytes();
+        } catch (XmlPullParserException ex) {
+            throw new IOException(ex);
+        }
+        return array;
     }
     private ResXmlDocument encode() throws XmlPullParserException, IOException {
-        logVerbose("Encoding: " + getParserSource().getPath());
-        XmlPullParser parser = getParserSource().getParser();
+        XMLParserSource parserSource = this.parserSource;
+        logVerbose("Encoding: " + parserSource.getPath());
+        XmlPullParser parser = parserSource.getParser();
         ResXmlDocument resXmlDocument = new ResXmlDocument();
-        resXmlDocument.setPackageBlock(getPackageBlock());
+        resXmlDocument.setPackageBlock(this.packageBlock);
         resXmlDocument.parse(parser);
         IOUtil.close(parser);
         return resXmlDocument;
@@ -87,4 +87,5 @@ public class XMLEncodeSource extends ByteInputSource {
             logger.logVerbose(msg);
         }
     }
+    private static final byte[] DISPOSED = new byte[0];
 }

@@ -15,7 +15,7 @@
  */
 package com.reandroid.archive;
 
-import com.reandroid.archive.io.BytesInputStream;
+import com.reandroid.common.BytesInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;

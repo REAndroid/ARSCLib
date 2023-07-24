@@ -25,6 +25,7 @@ import com.reandroid.arsc.header.TableHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.*;
+import com.reandroid.common.BytesOutputStream;
 import com.reandroid.common.ReferenceResolver;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
@@ -699,6 +700,17 @@ public class TableBlock extends Chunk<TableHeader>
         }
         getPackageArray().merge(tableBlock.getPackageArray());
         refresh();
+    }
+    @Override
+    public byte[] getBytes(){
+        BytesOutputStream outputStream = new BytesOutputStream(
+                getHeaderBlock().getChunkSize());
+        try {
+            writeBytes(outputStream);
+            outputStream.close();
+        } catch (IOException ignored) {
+        }
+        return outputStream.toByteArray();
     }
     @Override
     public String toString(){
