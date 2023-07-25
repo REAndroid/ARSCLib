@@ -381,6 +381,21 @@ public class AndroidManifestBlock extends ResXmlDocument {
     public void setPlatformBuildVersionName(String buildVersionName){
         setManifestAttributeString(NAME_platformBuildVersionName, 0, buildVersionName);
     }
+    public Integer getMinSdkVersion(){
+        ResXmlElement manifest = getManifestElement();
+        if(manifest==null){
+            return null;
+        }
+        ResXmlElement usesSdk = manifest.getElementByTagName(TAG_uses_sdk);
+        if(usesSdk==null){
+            return null;
+        }
+        ResXmlAttribute attribute = usesSdk.searchAttributeByResourceId(ID_minSdkVersion);
+        if(attribute==null || attribute.getValueType()!=ValueType.DEC){
+            return null;
+        }
+        return attribute.getData();
+    }
     public Integer getTargetSdkVersion(){
         ResXmlElement manifest = getManifestElement();
         if(manifest==null){
@@ -574,6 +589,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
     public static final String NAME_platformBuildVersionName = "platformBuildVersionName";
     public static final String NAME_versionCode = "versionCode";
     public static final String NAME_versionName = "versionName";
+    public static final String NAME_MinSdkVersion = "MinSdkVersion";
     public static final String NAME_targetSdkVersion = "targetSdkVersion";
     public static final String NAME_name = "name";
     public static final String NAME_extractNativeLibs = "extractNativeLibs";
@@ -588,6 +604,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
 
     public static final int ID_name = 0x01010003;
     public static final int ID_compileSdkVersion = 0x01010572;
+    public static final int ID_minSdkVersion = 0x0101020c;
     public static final int ID_targetSdkVersion = 0x01010270;
     public static final int ID_compileSdkVersionCodename = 0x01010573;
     public static final int ID_authorities = 0x01010018;
