@@ -351,6 +351,12 @@ public class PackageBlock extends Chunk<PackageHeader>
         getSpecTypePairArray().sort();
     }
 
+
+    @Override
+    protected void onPreRefreshRefresh() {
+        removeEmpty();
+        super.onPreRefreshRefresh();
+    }
     public void removeEmpty(){
         getSpecTypePairArray().removeEmptyPairs();
     }
