@@ -589,7 +589,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
     public static final String NAME_platformBuildVersionName = "platformBuildVersionName";
     public static final String NAME_versionCode = "versionCode";
     public static final String NAME_versionName = "versionName";
-    public static final String NAME_MinSdkVersion = "MinSdkVersion";
+    public static final String NAME_minSdkVersion = "minSdkVersion";
     public static final String NAME_targetSdkVersion = "targetSdkVersion";
     public static final String NAME_name = "name";
     public static final String NAME_extractNativeLibs = "extractNativeLibs";
