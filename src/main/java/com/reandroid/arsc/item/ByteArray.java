@@ -67,18 +67,11 @@ public class ByteArray extends BlockItem {
     public final int size(){
         return getBytesLength();
     }
-    public Byte get(int index){
-        if(index<0 || index>=size()){
-            return null;
-        }
+    public byte get(int index){
         return getBytesInternal()[index];
     }
     public int getByteUnsigned(int index){
-        Byte b = get(index);
-        if(b==null){
-            return 0;
-        }
-        return 0xff & b;
+        return 0xff & get(index);
     }
     public final void putByte(int index, int byteValue){
         put(index, (byte) byteValue);
