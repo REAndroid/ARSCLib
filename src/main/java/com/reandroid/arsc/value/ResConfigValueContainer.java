@@ -56,7 +56,7 @@ class ResConfigValueContainer extends ByteArray {
     byte[] getByteArrayValue(int offset, int length){
         int size = size();
         int available = size - offset;
-        if(available < length){
+        if(available < length || available <= 0){
             return null;
         }
         return getByteArray(offset, length);
