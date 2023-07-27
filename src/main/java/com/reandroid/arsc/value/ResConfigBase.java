@@ -111,7 +111,7 @@ class ResConfigBase extends FixedBlockContainer
         if(getConfigSize() < SIZE_16){
             return new byte[2];
         }
-        return mValuesContainer.getByteArray(OFFSET_language, 2);
+        return mValuesContainer.getByteArrayValue(OFFSET_language, 2);
     }
     public void setLanguageBytes(byte[] bytes){
         mValuesContainer.setByteArrayValue(OFFSET_language, bytes, 2);
@@ -123,109 +123,46 @@ class ResConfigBase extends FixedBlockContainer
         mValuesContainer.setByteArrayValue(OFFSET_region, bytes, 2);
     }
     public void setOrientation(int orientation){
-        if(getConfigSize() < SIZE_16){
-            if(orientation == 0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set orientation for config size ="+getConfigSize());
-        }
-        mValuesContainer.putByte(OFFSET_orientation, orientation);
+        mValuesContainer.setByteValue(OFFSET_orientation, orientation);
     }
     public int getOrientationValue(){
-        if(getConfigSize() < SIZE_16){
-            return 0;
-        }
-        return mValuesContainer.getByteUnsigned(OFFSET_orientation);
+        return mValuesContainer.getByteValue(OFFSET_orientation);
     }
     public void setTouchscreen(int touchscreen){
-        if(getConfigSize() < SIZE_16){
-            if(touchscreen == 0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set touchscreen for config size ="+getConfigSize());
-        }
-        mValuesContainer.putByte(OFFSET_touchscreen, touchscreen);
+        mValuesContainer.setByteValue(OFFSET_touchscreen, touchscreen);
     }
     public int getTouchscreenValue(){
-        if(getConfigSize() < SIZE_16){
-            return 0;
-        }
-        return mValuesContainer.getByteUnsigned(OFFSET_touchscreen);
+        return mValuesContainer.getByteValue(OFFSET_touchscreen);
     }
     public void setDensity(int density){
-        if(getConfigSize() < SIZE_16){
-            if(density== 0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set density for config size ="+getConfigSize());
-        }
-        mValuesContainer.putShort(OFFSET_density, density);
+        mValuesContainer.setShortValue(OFFSET_density, density);
     }
     public int getDensityValue(){
-        if(getConfigSize() < SIZE_16){
-            return 0;
-        }
-        return mValuesContainer.getShortUnsigned(OFFSET_density);
+        return mValuesContainer.getShortValue(OFFSET_density);
     }
     public void setKeyboard(int keyboard){
-        if(getConfigSize() < SIZE_28){
-            if(keyboard== 0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set keyboard for config size ="+getConfigSize());
-        }
-        mValuesContainer.putByte(OFFSET_keyboard, keyboard);
+        mValuesContainer.setByteValue(OFFSET_keyboard, keyboard);
     }
     public int getKeyboardValue(){
-        if(getConfigSize() < SIZE_28){
-            return 0;
-        }
-        return mValuesContainer.getByteUnsigned(OFFSET_keyboard);
+        return mValuesContainer.getByteValue(OFFSET_keyboard);
     }
     public void setNavigation(int navigation){
-        if(getConfigSize() < SIZE_28){
-            if(navigation == 0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set navigation for config size ="+getConfigSize());
-        }
-        mValuesContainer.putByte(OFFSET_navigation, navigation);
+        mValuesContainer.setByteValue(OFFSET_navigation, navigation);
     }
     public int getNavigationValue(){
-        if(getConfigSize() < SIZE_28){
-            return 0;
-        }
-        return mValuesContainer.getByteUnsigned(OFFSET_navigation);
+        return mValuesContainer.getByteValue(OFFSET_navigation);
     }
     public void setInputFlags(int inputFlags){
-        if(getConfigSize() < SIZE_28){
-            if(inputFlags == 0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set inputFlags for config size ="+getConfigSize());
-        }
-        mValuesContainer.putByte(OFFSET_inputFlags, inputFlags);
+        mValuesContainer.setByteValue(OFFSET_inputFlags, inputFlags);
     }
     public int getInputFlagsValue(){
-        if(getConfigSize() < SIZE_28){
-            return 0;
-        }
-        return mValuesContainer.getByteUnsigned(OFFSET_inputFlags);
+        return mValuesContainer.getByteValue(OFFSET_inputFlags);
     }
-    public void setInputPad0(byte b){
-        if(getConfigSize() < SIZE_28){
-            if(b == 0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set inputPad0 for config size ="+getConfigSize());
-        }
-        mValuesContainer.put(OFFSET_inputPad0, b);
+    public void setInputPad0(int value){
+        mValuesContainer.setByteValue(OFFSET_inputPad0, value);
     }
     public int getInputPad0(){
-        if(getConfigSize() < SIZE_28){
-            return 0;
-        }
-        return mValuesContainer.get(OFFSET_inputPad0) & 0xff;
+        return mValuesContainer.getByteValue(OFFSET_inputPad0);
     }
     public void setScreenWidth(int value){
         mValuesContainer.setShortValue(OFFSET_screenWidth, value);
@@ -246,104 +183,43 @@ class ResConfigBase extends FixedBlockContainer
         return mValuesContainer.getShortValue(OFFSET_sdkVersion);
     }
     public void setMinorVersion(int value){
-        if(getConfigSize() < SIZE_28){
-            if(value == 0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set minorVersion for config size ="+getConfigSize());
-        }
-        mValuesContainer.putShort(OFFSET_minorVersion, value);
+        mValuesContainer.setShortValue(OFFSET_minorVersion, value);
     }
     public int getMinorVersion(){
-        if(getConfigSize() < SIZE_28){
-            return 0;
-        }
-        return mValuesContainer.getShortUnsigned(OFFSET_minorVersion);
+        return mValuesContainer.getShortValue(OFFSET_minorVersion);
     }
-    public void setScreenLayout(int layout){
-        if(getConfigSize() < SIZE_32){
-            if(layout == 0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set screenLayout for config size ="+getConfigSize());
-        }
-        mValuesContainer.putByte(OFFSET_screenLayout, layout);
+    public void setScreenLayout(int value){
+        mValuesContainer.setByteValue(OFFSET_screenLayout, value);
     }
     public int getScreenLayout(){
-        if(getConfigSize() < SIZE_32){
-            return 0;
-        }
-        return mValuesContainer.getByteUnsigned(OFFSET_screenLayout);
+        return mValuesContainer.getByteValue(OFFSET_screenLayout);
     }
     public void setUiMode(int mode){
-        if(getConfigSize() < SIZE_32){
-            if(mode == 0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set uiMode for config size ="+getConfigSize());
-        }
-        mValuesContainer.putByte(OFFSET_uiMode, mode);
+        mValuesContainer.setByteValue(OFFSET_uiMode, mode);
     }
     public int getUiMode(){
-        if(getConfigSize() < SIZE_32){
-            return 0;
-        }
-        return mValuesContainer.getByteUnsigned(OFFSET_uiMode);
+        return mValuesContainer.getByteValue(OFFSET_uiMode);
     }
     public void setSmallestScreenWidthDp(int value){
-        if(getConfigSize() < SIZE_32){
-            if(value == 0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set smallestScreenWidthDp for config size ="+getConfigSize());
-        }
-        mValuesContainer.putShort(OFFSET_smallestScreenWidthDp, value);
+        mValuesContainer.setShortValue(OFFSET_smallestScreenWidthDp, value);
     }
     public int getSmallestScreenWidthDp(){
-        if(getConfigSize() < SIZE_32){
-            return 0;
-        }
-        return mValuesContainer.getShortUnsigned(OFFSET_smallestScreenWidthDp);
+        return mValuesContainer.getShortValue(OFFSET_smallestScreenWidthDp);
     }
     public void setScreenWidthDp(int value){
-        if(getConfigSize() < SIZE_36){
-            if(value == 0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set screenWidthDp for config size ="+getConfigSize());
-        }
-        mValuesContainer.putShort(OFFSET_screenWidthDp, value);
+        mValuesContainer.setShortValue(OFFSET_screenWidthDp, value);
     }
     public int getScreenWidthDp(){
-        if(getConfigSize() < SIZE_36){
-            return 0;
-        }
-        return mValuesContainer.getShortUnsigned(OFFSET_screenWidthDp);
+        return mValuesContainer.getShortValue(OFFSET_screenWidthDp);
     }
     public void setScreenHeightDp(int value){
-        if(getConfigSize() < SIZE_36){
-            if(value == 0){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set screenHeightDp for config size ="+getConfigSize());
-        }
-        mValuesContainer.putShort(OFFSET_screenHeightDp, value);
+        mValuesContainer.setShortValue(OFFSET_screenHeightDp, value);
     }
     public int getScreenHeightDp(){
-        if(getConfigSize() < SIZE_36){
-            return 0;
-        }
-        return mValuesContainer.getShortUnsigned(OFFSET_screenHeightDp);
+        return mValuesContainer.getShortValue(OFFSET_screenHeightDp);
     }
     public void setLocaleScript(byte[] bts){
-        if(getConfigSize() < SIZE_48){
-            if(isNullBytes(bts)){
-                return;
-            }
-            throw new IllegalArgumentException("Can not set localeScript for config size ="+getConfigSize());
-        }
-        bts = ensureArrayLength(bts, LEN_localeScript);
-        mValuesContainer.putByteArray(OFFSET_localeScript, bts);
+        mValuesContainer.setByteArrayValue(OFFSET_localeScript, bts, LEN_localeScript);
     }
     public byte[] getLocaleScriptBytes(){
         return mValuesContainer.getByteArrayValue(OFFSET_localeScript, LEN_localeScript);
@@ -534,21 +410,6 @@ class ResConfigBase extends FixedBlockContainer
             }
         }
         return true;
-    }
-    static byte[] ensureArrayLength(byte[] bts, int length){
-        if(bts == null || length == 0){
-            return new byte[length];
-        }
-        if(bts.length == length){
-            return bts;
-        }
-        byte[] result = new byte[length];
-        int max = result.length;
-        if(bts.length < max){
-            max = bts.length;
-        }
-        System.arraycopy(bts, 0, result, 0, max);
-        return result;
     }
     static String ensureLength(String str, int min, char postfix){
         int length = str.length();
