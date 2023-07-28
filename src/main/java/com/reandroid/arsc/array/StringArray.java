@@ -76,15 +76,16 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         return unusedList;
     }
     @Override
-    protected void remove(Collection<T> blockList, Collection<T> removedList){
+    protected int remove(Collection<T> blockList, Collection<T> removedList){
         List<T> copyList = new ArrayList<>();
-        super.remove(blockList, copyList);
+        int count = super.remove(blockList, copyList);
         for(T item : copyList){
             item.onRemoved();
         }
         if(removedList != null){
             removedList.addAll(copyList);
         }
+        return count;
     }
     @Override
     public void onPreRemove(T block){

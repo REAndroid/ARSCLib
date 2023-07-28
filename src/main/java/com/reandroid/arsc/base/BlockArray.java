@@ -15,6 +15,8 @@
  */
 package com.reandroid.arsc.base;
 
+import com.reandroid.utils.collection.CollectionUtil;
+
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -376,17 +378,21 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         }
         return false;
     }
-    public void remove(Collection<T> blockList){
-        remove(blockList, null);
+    public int remove(Predicate<? super T> predicate){
+        return remove(CollectionUtil.toList(iterator(predicate)), null);
     }
-    protected void remove(Collection<T> blockList, Collection<T> removedList){
+    public int remove(Collection<T> blockList){
+        return remove(blockList, null);
+    }
+    protected int remove(Collection<T> blockList, Collection<T> removedList){
+        int count = 0;
         T[] items = elementData;
         if(items == null || blockList == null){
-            return;
+            return count;
         }
         int length = items.length;
         if(length == 0){
-            return;
+            return count;
         }
         Iterator<T> iterator = blockList.iterator();
         while (iterator.hasNext()){
@@ -407,8 +413,10 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
             if(removedList != null){
                 removedList.add(item);
             }
+            count ++;
         }
         trimNullBlocks();
+        return count;
     }
     public void onPreRemove(T block){
 
