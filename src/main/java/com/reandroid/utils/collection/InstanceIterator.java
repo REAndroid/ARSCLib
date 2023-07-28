@@ -69,4 +69,16 @@ public class InstanceIterator<T> implements Iterator<T> {
         mCurrent = null;
         return current;
     }
+    public static<T1> Iterator<T1> of(Iterator<?> iterator, Class<T1> instance){
+        if(!iterator.hasNext()){
+            return EmptyIterator.of();
+        }
+        return new InstanceIterator<>(iterator, instance);
+    }
+    public static<T1> Iterator<T1> of(Iterator<?> iterator, Class<T1> instance, Predicate<? super T1> filter){
+        if(!iterator.hasNext()){
+            return EmptyIterator.of();
+        }
+        return new InstanceIterator<>(iterator, instance, filter);
+    }
 }

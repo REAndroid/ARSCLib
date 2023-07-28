@@ -38,7 +38,6 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>,
@@ -142,7 +141,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
                 changedCount ++;
             }
         }
-        for(ResXmlNode child : getXmlNodes()){
+        for(ResXmlNode child : getXmlNodeList()){
             if(child instanceof ResXmlElement){
                 changedCount += ((ResXmlElement)child).autoSetAttributeNamespaces();
             }
@@ -157,7 +156,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
                 changedCount ++;
             }
         }
-        for(ResXmlNode child : getXmlNodes()){
+        for(ResXmlNode child : getXmlNodeList()){
             if(child instanceof ResXmlElement){
                 changedCount += ((ResXmlElement)child).autoSetAttributeNames();
             }
@@ -170,7 +169,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         for(ResXmlStartNamespace startNamespace : getStartNamespaceList()){
             startNamespace.setLineNumber(startLineNumber);
         }
-        for(ResXmlNode child : getXmlNodes()){
+        for(ResXmlNode child : getXmlNodeList()){
             child.autoSetLineNumber();
         }
         setEndLineNumber(calculateLineNumber(false));
@@ -198,7 +197,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
                 count ++;
             }
         }
-        for(ResXmlNode node : getXmlNodes()){
+        for(ResXmlNode node : getXmlNodeList()){
             if(node instanceof ResXmlElement){
                 ResXmlElement child = (ResXmlElement) node;
                 count += child.removeUnusedNamespaces();
@@ -212,7 +211,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(start != null){
             count += start.removeUndefinedAttributes();
         }
-        for(ResXmlNode xmlNode : getXmlNodes()){
+        for(ResXmlNode xmlNode : getXmlNodeList()){
             if(xmlNode instanceof ResXmlElement){
                 count += ((ResXmlElement)xmlNode).removeUndefinedAttributes();
             }
@@ -304,7 +303,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             counter.addCount(attrCount - 1);
         }
         boolean haveElement = false;
-        for(ResXmlNode xmlNode : getXmlNodes()){
+        for(ResXmlNode xmlNode : getXmlNodeList()){
             if(counter.FOUND){
                 return;
             }
@@ -380,7 +379,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(start != null){
             start.linkStringReferences();
         }
-        for(ResXmlNode xmlNode : getXmlNodes()){
+        for(ResXmlNode xmlNode : getXmlNodeList()){
             xmlNode.linkStringReferences();
         }
     }
@@ -573,6 +572,18 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             startElement.setTagNamespace(uri, prefix);
         }
     }
+    public int removeAttributes(Predicate<? super ResXmlAttribute> predicate){
+        List<ResXmlAttribute> removeList = CollectionUtil.toList(getAttributes(predicate));
+        Iterator<ResXmlAttribute> iterator = removeList.iterator();
+        int count = 0;
+        while (iterator.hasNext()){
+            boolean removed = removeAttribute(iterator.next());
+            if(removed){
+                count ++;
+            }
+        }
+        return count;
+    }
     public Iterator<ResXmlAttribute> getAttributes(){
         ResXmlAttributeArray attributeArray = getAttributeArray();
         if(attributeArray != null){
@@ -648,7 +659,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
                     new ParserEvent(ParserEvent.COMMENT, this, comment, false));
         }
         parserEventList.add(new ParserEvent(ParserEvent.START_TAG, this));
-        for(ResXmlNode xmlNode:getXmlNodes()){
+        for(ResXmlNode xmlNode: getXmlNodeList()){
             xmlNode.addEvents(parserEventList);
         }
         comment = getEndComment();
@@ -687,7 +698,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     }
     public int countElements(){
         int result = 0;
-        for(ResXmlNode xmlNode: getXmlNodes()){
+        for(ResXmlNode xmlNode: getXmlNodeList()){
             if(xmlNode instanceof ResXmlElement){
                 result++;
             }
@@ -711,7 +722,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return mBody.size();
     }
     public boolean hasText(){
-        for(ResXmlNode xmlNode : getXmlNodes()){
+        for(ResXmlNode xmlNode : getXmlNodeList()){
             if(xmlNode instanceof ResXmlTextNode){
                 return true;
             }
@@ -719,7 +730,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return false;
     }
     public boolean hasElement(){
-        for(ResXmlNode xmlNode : getXmlNodes()){
+        for(ResXmlNode xmlNode : getXmlNodeList()){
             if(xmlNode instanceof ResXmlElement){
                 return true;
             }
@@ -727,25 +738,52 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return false;
     }
     public List<ResXmlNode> listXmlNodes(){
-        return new ArrayList<>(getXmlNodes());
+        return new ArrayList<>(getXmlNodeList());
     }
     public Iterator<ResXmlNode> getResXmlNodes(){
         return mBody.iterator();
     }
-    private List<ResXmlNode> getXmlNodes(){
+    public Iterator<ResXmlNode> getResXmlNodes(Predicate<? super ResXmlNode> predicate){
+        return mBody.iterator(predicate);
+    }
+    private List<ResXmlNode> getXmlNodeList(){
         return mBody.getChildes();
     }
+    public int removeNodes(Predicate<? super ResXmlNode> predicate){
+        List<ResXmlNode> removeList = CollectionUtil.toList(getResXmlNodes(predicate));
+        Iterator<ResXmlNode> iterator = removeList.iterator();
+        int count = 0;
+        while (iterator.hasNext()){
+            boolean removed = removeNode(iterator.next());
+            if(removed){
+                count ++;
+            }
+        }
+        return count;
+    }
     public Iterator<ResXmlTextNode> getResXmlTextNodes(){
-        return new InstanceIterator<>(getResXmlNodes(), ResXmlTextNode.class);
+        return InstanceIterator.of(getResXmlNodes(), ResXmlTextNode.class);
     }
     public List<ResXmlTextNode> listXmlTextNodes(){
         return CollectionUtil.toList(getResXmlTextNodes());
     }
+    public int removeElements(Predicate<? super ResXmlElement> predicate){
+        List<ResXmlElement> removeList = CollectionUtil.toList(getElements(predicate));
+        Iterator<ResXmlElement> iterator = removeList.iterator();
+        int count = 0;
+        while (iterator.hasNext()){
+            boolean removed = removeElement(iterator.next());
+            if(removed){
+                count ++;
+            }
+        }
+        return count;
+    }
     public Iterator<ResXmlElement> getElements(){
-        return new InstanceIterator<>(getResXmlNodes(), ResXmlElement.class);
+        return InstanceIterator.of(getResXmlNodes(), ResXmlElement.class);
     }
     public Iterator<ResXmlElement> getElements(Predicate<? super ResXmlElement> filter){
-        return new InstanceIterator<>(getResXmlNodes(), ResXmlElement.class, filter);
+        return InstanceIterator.of(getResXmlNodes(), ResXmlElement.class, filter);
     }
     public Iterator<ResXmlElement> getElements(String name){
         return getElements(element -> element.equalsName(name));
@@ -1158,7 +1196,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             ResXmlAttribute attribute = getAttributeAt(i);
             attribute.serialize(serializer);
         }
-        for(ResXmlNode xmlNode : getXmlNodes()){
+        for(ResXmlNode xmlNode : getXmlNodeList()){
             if(indentChanged && xmlNode instanceof ResXmlTextNode){
                 indentChanged = false;
                 setIndent(serializer, false);
@@ -1304,7 +1342,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             }
         }
         JSONArray childes = new JSONArray();
-        for(ResXmlNode xmlNode : getXmlNodes()){
+        for(ResXmlNode xmlNode : getXmlNodeList()){
             childes.put(xmlNode.toJson());
         }
         if(!childes.isEmpty()){
@@ -1389,7 +1427,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(comment!=null){
             xmlElement.add(new XMLComment(comment));
         }
-        for(ResXmlNode xmlNode: getXmlNodes()){
+        for(ResXmlNode xmlNode: getXmlNodeList()){
             if(xmlNode instanceof ResXmlElement){
                 ResXmlElement childResXmlElement=(ResXmlElement)xmlNode;
                 XMLElement childXMLElement =

@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockContainer;
 import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
@@ -36,10 +37,13 @@ public class BlockList<T extends Block> extends Block {
         mItems=new ArrayList<>();
     }
     public Iterator<T> iterator(){
+        if(size() == 0){
+            return EmptyIterator.of();
+        }
         return mItems.iterator();
     }
-    public Iterator<T> iterator(Predicate<T> filter){
-        return new FilterIterator<>(mItems.iterator(), filter);
+    public Iterator<T> iterator(Predicate<? super T> filter){
+        return FilterIterator.of(this.iterator(), filter);
     }
     public void clearChildes(){
         ArrayList<T> childList = new ArrayList<>(getChildes());
