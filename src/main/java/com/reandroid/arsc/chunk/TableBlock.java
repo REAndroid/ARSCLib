@@ -31,12 +31,7 @@ import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.*;
-import com.reandroid.utils.collection.CombiningIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.FilterIterator;
-import com.reandroid.utils.collection.IterableIterator;
-import com.reandroid.utils.io.IOUtil;
-import com.reandroid.xml.XMLUtil;
+import com.reandroid.utils.collection.*;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -61,6 +56,18 @@ public class TableBlock extends Chunk<TableHeader>
         this.mFrameWorks = new ArrayList<>();
         addChild(mTableStringPool);
         addChild(mPackageArray);
+    }
+    // Experimental
+    public void changePackageId(int packageIdOld, int packageIdNew){
+        Iterator<PackageBlock> iterator = getPackageArray().iterator();
+        while (iterator.hasNext()){
+            iterator.next().changePackageId(packageIdOld, packageIdNew);
+        }
+    }
+    // Experimental
+    public Iterator<ValueItem> allValues(){
+        return new MergingIterator<>(new ComputeIterator<>(getPackages(),
+                PackageBlock::allValues));
     }
 
     public PackageBlock getCurrentPackage(){
@@ -490,6 +497,10 @@ public class TableBlock extends Chunk<TableHeader>
     }
     public Collection<PackageBlock> listPackages(){
         return getPackageArray().listItems();
+    }
+    public Iterator<ResConfig> getResConfigs(){
+        return new MergingIterator<>(new ComputeIterator<>(getPackageArray().iterator(),
+                PackageBlock::getResConfigs));
     }
     @Override
     public TableStringPool getStringPool() {

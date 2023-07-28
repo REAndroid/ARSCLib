@@ -41,8 +41,7 @@ import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.*;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLFactory;
@@ -86,6 +85,57 @@ public class PackageBlock extends Chunk<PackageHeader>
         addChild(mSpecStringPool);
         addChild(mBody);
     }
+
+    public void changePackageId(int packageIdOld, int packageIdNew){
+        Iterator<ValueItem> iterator = allValues();
+        while (iterator.hasNext()){
+            ValueItem valueItem = iterator.next();
+            if(valueItem instanceof ResValueMap){
+                changePackageIdName(packageIdOld, packageIdNew, (ResValueMap)valueItem);
+            }
+            changePackageIdValue(packageIdOld, packageIdNew, valueItem);
+        }
+        if(packageIdOld == getId()){
+            setId(packageIdNew);
+        }
+    }
+    private void changePackageIdName(int packageIdOld, int packageIdNew, ResValueMap resValueMap){
+        int resourceId = resValueMap.getNameResourceID();
+        if(!isResourceId(resourceId)){
+            return;
+        }
+        int id = (resourceId >> 24) & 0xff;
+        if(id != packageIdOld){
+            return;
+        }
+        resourceId = resourceId & 0xffffff;
+        id = packageIdNew << 24;
+        resourceId = id | resourceId;
+        resValueMap.setNameResourceID(resourceId);
+    }
+    private void changePackageIdValue(int packageIdOld, int packageIdNew, ValueItem valueItem){
+        ValueType valueType = valueItem.getValueType();
+        if(valueType == null || !valueType.isReference()){
+            return;
+        }
+        int resourceId = valueItem.getData();
+        if(!isResourceId(resourceId)){
+            return;
+        }
+        int id = (resourceId >> 24) & 0xff;
+        if(id != packageIdOld){
+            return;
+        }
+        resourceId = resourceId & 0xffffff;
+        id = packageIdNew << 24;
+        resourceId = id | resourceId;
+        valueItem.setData(resourceId);
+    }
+    public Iterator<ValueItem> allValues(){
+        return new MergingIterator<>(new ComputeIterator<>(getSpecTypePairs(),
+                SpecTypePair::allValues));
+    }
+
     public Object getTag(){
         return mTag;
     }
@@ -164,7 +214,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         return null;
     }
     public Iterator<ResourceEntry> getResources(){
-        return new IterableIterator<SpecTypePair, ResourceEntry>(listSpecTypePairs().iterator()) {
+        return new IterableIterator<SpecTypePair, ResourceEntry>(getSpecTypePairs()) {
             @Override
             public Iterator<ResourceEntry> iterator(SpecTypePair element) {
                 return element.getResources();
@@ -181,7 +231,9 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     public boolean hasValidTypeNames(){
         Set<String> unique = new HashSet<>();
-        for(SpecTypePair specTypePair : listSpecTypePairs()){
+        Iterator<SpecTypePair> iterator = getSpecTypePairs();
+        while (iterator.hasNext()){
+            SpecTypePair specTypePair = iterator.next();
             String typeName = specTypePair.getTypeName();
             if(!CommonType.isCommonTypeName(typeName) || unique.contains(typeName)){
                 return false;
@@ -232,13 +284,15 @@ public class PackageBlock extends Chunk<PackageHeader>
         return null;
     }
     public void linkTableStringsInternal(TableStringPool tableStringPool){
-        for(SpecTypePair specTypePair : listSpecTypePairs()){
-            specTypePair.linkTableStringsInternal(tableStringPool);
+        Iterator<SpecTypePair> iterator = getSpecTypePairs();
+        while (iterator.hasNext()){
+            iterator.next().linkTableStringsInternal(tableStringPool);
         }
     }
     public void linkSpecStringsInternal(SpecStringPool specStringPool){
-        for(SpecTypePair specTypePair : listSpecTypePairs()){
-            specTypePair.linkSpecStringsInternal(specStringPool);
+        Iterator<SpecTypePair> iterator = getSpecTypePairs();
+        while (iterator.hasNext()){
+            iterator.next().linkSpecStringsInternal(specStringPool);
         }
     }
     public void destroy(){
@@ -546,6 +600,13 @@ public class PackageBlock extends Chunk<PackageHeader>
     public Collection<SpecTypePair> listSpecTypePairs(){
         return getSpecTypePairArray().listItems();
     }
+    public Iterator<ResConfig> getResConfigs(){
+        return new MergingIterator<>(new ComputeIterator<>(getSpecTypePairs(),
+                SpecTypePair::getResConfigs));
+    }
+    public Iterator<SpecTypePair> getSpecTypePairs(){
+        return getSpecTypePairArray().iterator();
+    }
 
     private void refreshTypeStringPoolOffset(){
         int pos=countUpTo(mTypeStringPool);
@@ -597,8 +658,9 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
     }
     private void serializePublicXmlTypes(XmlSerializer serializer) throws IOException {
-        for(SpecTypePair specTypePair : listSpecTypePairs()){
-            specTypePair.serializePublicXml(serializer);
+        Iterator<SpecTypePair> iterator = getSpecTypePairs();
+        while (iterator.hasNext()){
+            iterator.next().serializePublicXml(serializer);
         }
     }
     private void writePackageInfo(XmlSerializer serializer) throws IOException {

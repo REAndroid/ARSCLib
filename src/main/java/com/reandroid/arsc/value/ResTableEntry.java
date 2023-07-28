@@ -17,12 +17,18 @@ package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.SingleIterator;
+import java.util.Iterator;
 
 public class ResTableEntry extends TableEntry<EntryHeader, ResValue> {
     public ResTableEntry() {
         super(new EntryHeader(), new ResValue());
     }
 
+    @Override
+    public Iterator<ValueItem> allValues(){
+        return new SingleIterator<>(getValue());
+    }
     @Override
     void linkTableStringsInternal(TableStringPool tableStringPool){
         getValue().linkTableStrings(tableStringPool);

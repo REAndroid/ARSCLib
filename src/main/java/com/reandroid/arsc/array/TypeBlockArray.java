@@ -29,6 +29,7 @@ import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
 import java.util.*;
@@ -232,6 +233,10 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
             unique.add(typeBlock.getResConfig());
         }
         return unique;
+    }
+    public Iterator<ResConfig> getResConfigs(){
+        return new ComputeIterator<>(super.iterator(true),
+                TypeBlock::getResConfig);
     }
     public Iterator<TypeBlock> iteratorNonEmpty(){
         return super.iterator(NON_EMPTY_TESTER);

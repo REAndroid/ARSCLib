@@ -24,11 +24,14 @@ import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
+import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.MergingIterator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -56,6 +59,11 @@ public class TypeBlock extends Chunk<TypeHeader>
 
         addChild(entryOffsets);
         addChild(mEntryArray);
+    }
+
+    public Iterator<ValueItem> allValues(){
+        return new MergingIterator<>( new ComputeIterator<>(getEntries(),
+                Entry::allValues));
     }
     public boolean isTypeAttr(){
         TypeString typeString = getTypeString();

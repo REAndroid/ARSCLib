@@ -28,6 +28,7 @@ import com.reandroid.common.BytesOutputStream;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLFactory;
@@ -36,10 +37,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class ResXmlDocument extends Chunk<HeaderBlock>
         implements MainChunk, ParentChunk, JSONConvert<JSONObject> {
@@ -61,6 +59,29 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         addChild(mResXmlStringPool);
         addChild(mResXmlIDMap);
         addChild(mResXmlElementContainer);
+    }
+
+    /**
+     * Iterates every attribute on root element and on child elements recursively
+     * */
+    // Experimental
+    public Iterator<ResXmlAttribute> allAttributes(){
+        ResXmlElement element = getResXmlElement();
+        if(element != null){
+            return element.allAttributes();
+        }
+        return EmptyIterator.of();
+    }
+    /**
+     * Iterates every element and child elements recursively
+     * */
+    // Experimental
+    public Iterator<ResXmlElement> allElements(){
+        ResXmlElement element = getResXmlElement();
+        if(element != null){
+            return element.allElements();
+        }
+        return EmptyIterator.of();
     }
 
     public int autoSetAttributeNamespaces(){

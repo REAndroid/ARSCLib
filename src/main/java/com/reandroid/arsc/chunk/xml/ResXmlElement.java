@@ -29,6 +29,8 @@ import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.SingleIterator;
+import com.reandroid.utils.collection.*;
 import com.reandroid.xml.*;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -36,6 +38,8 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>,
         Comparator<ResXmlNode> {
@@ -57,6 +61,20 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         addChild(2, mBody);
         addChild(3, mEndElementContainer);
         addChild(4, mEndNamespaceList);
+    }
+
+    /**
+     * Iterates every attribute on this element and on child elements recursively
+     * */
+    public Iterator<ResXmlAttribute> allAttributes(){
+        return new MergingIterator<>(new ComputeIterator<>(allElements(), ResXmlElement::getAttributes));
+    }
+    /**
+     * Iterates every element and child elements recursively
+     * */
+    public Iterator<ResXmlElement> allElements(){
+        return CombiningIterator.of(SingleIterator.of(this),
+                new ComputeIterator<>(getElements(), ResXmlElement::allElements));
     }
     public ResXmlAttribute getIdAttribute(){
         ResXmlStartElement startElement = getStartElement();
@@ -425,11 +443,9 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(name==null){
             return null;
         }
-        for(ResXmlElement child:listElements()){
-            if(name.equals(child.getName())
-                    || name.equals(child.getName(true))){
-                return child;
-            }
+        Iterator<ResXmlElement> iterator = getElements(name);
+        if(iterator.hasNext()){
+            return iterator.next();
         }
         return null;
     }
@@ -495,6 +511,13 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             startElement.setNamespaceReference(namespace.getUriReference());
         }
     }
+    public boolean equalsName(String name){
+        if(name == null){
+            return getName() == null;
+        }
+        name = XMLUtil.splitName(name);
+        return name.equals(getName(false));
+    }
     public String getUri(){
         ResXmlStartElement startElement = getStartElement();
         if(startElement != null){
@@ -549,6 +572,20 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(startElement != null){
             startElement.setTagNamespace(uri, prefix);
         }
+    }
+    public Iterator<ResXmlAttribute> getAttributes(){
+        ResXmlAttributeArray attributeArray = getAttributeArray();
+        if(attributeArray != null){
+            return attributeArray.iterator();
+        }
+        return EmptyIterator.of();
+    }
+    public Iterator<ResXmlAttribute> getAttributes(Predicate<? super ResXmlAttribute> filter){
+        ResXmlAttributeArray attributeArray = getAttributeArray();
+        if(attributeArray != null){
+            return attributeArray.iterator(filter);
+        }
+        return EmptyIterator.of();
     }
     public int getAttributeCount() {
         ResXmlStartElement startElement=getStartElement();
@@ -692,39 +729,32 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public List<ResXmlNode> listXmlNodes(){
         return new ArrayList<>(getXmlNodes());
     }
+    public Iterator<ResXmlNode> getResXmlNodes(){
+        return mBody.iterator();
+    }
     private List<ResXmlNode> getXmlNodes(){
         return mBody.getChildes();
     }
+    public Iterator<ResXmlTextNode> getResXmlTextNodes(){
+        return new InstanceIterator<>(getResXmlNodes(), ResXmlTextNode.class);
+    }
     public List<ResXmlTextNode> listXmlTextNodes(){
-        List<ResXmlTextNode> results=new ArrayList<>();
-        for(ResXmlNode xmlNode: getXmlNodes()){
-            if(xmlNode instanceof ResXmlTextNode){
-                results.add((ResXmlTextNode) xmlNode);
-            }
-        }
-        return results;
+        return CollectionUtil.toList(getResXmlTextNodes());
+    }
+    public Iterator<ResXmlElement> getElements(){
+        return new InstanceIterator<>(getResXmlNodes(), ResXmlElement.class);
+    }
+    public Iterator<ResXmlElement> getElements(Predicate<? super ResXmlElement> filter){
+        return new InstanceIterator<>(getResXmlNodes(), ResXmlElement.class, filter);
+    }
+    public Iterator<ResXmlElement> getElements(String name){
+        return getElements(element -> element.equalsName(name));
     }
     public List<ResXmlElement> listElements(){
-        List<ResXmlElement> results=new ArrayList<>();
-        for(ResXmlNode xmlNode: getXmlNodes()){
-            if(xmlNode instanceof ResXmlElement){
-                results.add((ResXmlElement) xmlNode);
-            }
-        }
-        return results;
+        return CollectionUtil.toList(getElements());
     }
     public List<ResXmlElement> listElements(String name){
-        List<ResXmlElement> results=new ArrayList<>();
-        if(name==null){
-            return results;
-        }
-        for(ResXmlElement element:listElements()){
-            if(name.equals(element.getName(false))
-                    || name.equals(element.getName(true))){
-                results.add(element);
-            }
-        }
-        return results;
+        return CollectionUtil.toList(getElements(name));
     }
     public ResXmlElement getRootResXmlElement(){
         ResXmlElement parent = getParentResXmlElement();

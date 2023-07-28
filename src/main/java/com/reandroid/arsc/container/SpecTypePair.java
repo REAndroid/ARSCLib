@@ -26,6 +26,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
+import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.HexUtil;
@@ -33,6 +34,7 @@ import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.collection.MergingIterator;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
@@ -62,7 +64,10 @@ public class SpecTypePair extends BlockContainer<Block>
         this(new SpecBlock(), new TypeBlockArray());
     }
 
-
+    public Iterator<ValueItem> allValues(){
+        return new MergingIterator<>(new ComputeIterator<>(getTypeBlocks(),
+                TypeBlock::allValues));
+    }
     public void trimConfigSizes(int resConfigSize){
         Iterator<TypeBlock> iterator = getTypeBlocks();
         while (iterator.hasNext()){
@@ -267,7 +272,9 @@ public class SpecTypePair extends BlockContainer<Block>
     public Set<ResConfig> listResConfig(){
         return mTypeBlockArray.listResConfig();
     }
-
+    public Iterator<ResConfig> getResConfigs(){
+        return mTypeBlockArray.getResConfigs();
+    }
     public Iterator<TypeBlock> iteratorNonEmpty(){
         return mTypeBlockArray.iteratorNonEmpty();
     }

@@ -19,37 +19,106 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class CombiningIterator<T> implements Iterator<T> {
-    private final Iterator<T> iterator1;
-    private final Iterator<T> iterator2;
+    private Iterator<T> iterator1;
+    private Iterator<T> iterator2;
+    private Iterator<Iterator<T>> iteratorIterator;
     private boolean mFirstFinished;
+    private boolean mSecondFinished;
+    private Iterator<T> mSecond;
+    private Iterator<T> mCurrent;
 
     public CombiningIterator(Iterator<T> iterator1, Iterator<T> iterator2){
         this.iterator1 = iterator1;
         this.iterator2 = iterator2;
+        this.iteratorIterator = null;
     }
 
     @Override
     public boolean hasNext() {
-        if(!mFirstFinished){
-            if(iterator1 != null && iterator1.hasNext()){
-                return true;
-            }
-            mFirstFinished = true;
-        }
-        Iterator<T> iterator2 = this.iterator2;
-        return iterator2 != null && iterator2.hasNext();
+        return getCurrent() != null;
     }
     @Override
     public T next() {
-        Iterator<T> current;
-        if(mFirstFinished){
-            current = iterator2;
-        }else {
-            current = iterator1;
-        }
+        Iterator<T> current = getCurrent();
         if(current == null){
             throw new NoSuchElementException();
         }
+        mCurrent = null;
         return current.next();
+    }
+    private Iterator<T> getCurrent() {
+        Iterator<T> current = mCurrent;
+        if(current == null){
+            current = loadCurrent();
+            mCurrent = current;
+        }
+        return current;
+    }
+    private Iterator<T> loadCurrent() {
+        Iterator<T> current = getFirst();
+        if(current == null){
+            current = getSecond();
+        }
+        return current;
+    }
+
+    private Iterator<T> getSecond() {
+        if(mSecondFinished){
+            return null;
+        }
+        Iterator<T> second = mSecond;
+        if(second == null && iterator2 != null){
+            second = iterator2;
+            if(!second.hasNext()){
+                iterator2 = null;
+                mSecondFinished = true;
+                return null;
+            }
+            return second;
+        }
+        second = iterator2;
+        if(second != null){
+            if(second.hasNext()){
+                return second;
+            }
+            iterator2 = null;
+            mSecondFinished = true;
+            return null;
+        }
+        Iterator<Iterator<T>> iteratorIterator = this.iteratorIterator;
+        if(iteratorIterator == null){
+            mSecondFinished = true;
+            return null;
+        }
+        second = mSecond;
+        while (second == null || !second.hasNext()){
+            if(!iteratorIterator.hasNext()){
+                this.iteratorIterator = null;
+                mSecond = null;
+                mSecondFinished = true;
+                return null;
+            }
+            second = iteratorIterator.next();
+        }
+        mSecond = second;
+        return second;
+    }
+    private Iterator<T> getFirst() {
+        if(mFirstFinished){
+            return null;
+        }
+        Iterator<T> first = iterator1;
+        if(first == null || !first.hasNext()){
+            iterator1 = null;
+            mFirstFinished = true;
+            return null;
+        }
+        return first;
+    }
+
+    public static<T1> CombiningIterator<T1> of(Iterator<T1> iterator1, Iterator<Iterator<T1>> iteratorIterator){
+        CombiningIterator<T1> iterator = new CombiningIterator<>(iterator1, null);
+        iterator.iteratorIterator = iteratorIterator;
+        return iterator;
     }
 }

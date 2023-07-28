@@ -30,6 +30,7 @@ import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.xml.StyleDocument;
 
 import java.io.IOException;
@@ -44,6 +45,13 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         super();
     }
 
+    public Iterator<ValueItem> allValues(){
+        TableEntry<?, ?> tableEntry = getTableEntry();
+        if(tableEntry != null){
+            return tableEntry.allValues();
+        }
+        return EmptyIterator.of();
+    }
     public void linkTableStringsInternal(TableStringPool tableStringPool){
         TableEntry<?, ?> tableEntry = getTableEntry();
         tableEntry.linkTableStringsInternal(tableStringPool);

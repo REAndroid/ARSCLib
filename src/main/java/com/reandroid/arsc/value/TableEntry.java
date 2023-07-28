@@ -24,6 +24,7 @@ import com.reandroid.json.JSONObject;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
 
 public abstract class TableEntry<HEADER extends ValueHeader, VALUE extends Block> extends Block implements
         JSONConvert<JSONObject> {
@@ -40,6 +41,7 @@ public abstract class TableEntry<HEADER extends ValueHeader, VALUE extends Block
         this.resValue.setParent(this);
         this.resValue.setIndex(1);
     }
+    public abstract Iterator<ValueItem> allValues();
     public Entry getParentEntry(){
         return getParent(Entry.class);
     }

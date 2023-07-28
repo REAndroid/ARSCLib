@@ -359,7 +359,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         trimAllocatedFreeSpace();
         return new BlockIterator(skipNullBlock);
     }
-    public Iterator<T> iterator(Predicate<T> tester) {
+    public Iterator<T> iterator(Predicate<? super T> tester) {
         trimAllocatedFreeSpace();
         return new PredicateIterator(tester);
     }
@@ -586,8 +586,8 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
     private class PredicateIterator implements Iterator<T> {
         private int mCursor;
         private final int mMaxSize;
-        private final Predicate<T> mTester;
-        PredicateIterator(Predicate<T> tester){
+        private final Predicate<? super T> mTester;
+        PredicateIterator(Predicate<? super T> tester){
             this.mTester = tester;
             mCursor = 0;
             mMaxSize = BlockArray.this.childesCount();
@@ -622,7 +622,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
             return mCursor;
         }
         private boolean test(T item){
-            Predicate<T> tester = mTester;
+            Predicate<? super T> tester = mTester;
             if(tester != null){
                 return tester.test(item);
             }

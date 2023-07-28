@@ -22,6 +22,7 @@ import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.Iterator;
 
@@ -31,6 +32,10 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
         super(new EntryHeaderMap(), mapArray);
     }
 
+    @Override
+    public Iterator<ValueItem> allValues(){
+        return new ComputeIterator<>(iterator(), item -> item);
+    }
     @Override
     public Iterator<ITEM> iterator(){
         return getValue().iterator();

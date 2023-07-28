@@ -15,13 +15,13 @@
  */
 package com.reandroid.utils.collection;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class CollectionUtil {
 
+    public static<T extends Comparable<T>> void sort(List<T> list){
+        list.sort(getComparator());
+    }
     public static<T> T getFirst(Iterator<T> iterator){
         if(iterator == null || !iterator.hasNext()){
             return null;
@@ -90,13 +90,27 @@ public class CollectionUtil {
         return !iterator.hasNext();
     }
     public static<T> List<T> toList(Iterator<? extends T> iterator){
-        if(!iterator.hasNext()){
+        boolean hasNext = iterator.hasNext();
+        if(!hasNext){
             return EmptyList.of();
         }
-        List<T> results = new ArrayList<>(2);
-        while (iterator.hasNext()){
+        ArrayList<T> results = new ArrayList<>(2);
+        while (hasNext){
             results.add(iterator.next());
+            hasNext = iterator.hasNext();
         }
+        results.trimToSize();
         return results;
     }
+    @SuppressWarnings("unchecked")
+    public static<T extends Comparable<T>> Comparator<T> getComparator(){
+        return (Comparator<T>) COMPARABLE_COMPARATOR;
+    }
+    @SuppressWarnings("all")
+    private static final Comparator<? extends Comparable> COMPARABLE_COMPARATOR = new Comparator<Comparable<?>>() {
+        @Override
+        public int compare(Comparable c1, Comparable c2) {
+            return c1.compareTo(c2);
+        }
+    };
 }
