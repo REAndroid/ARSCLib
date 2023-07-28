@@ -99,7 +99,9 @@ public class CollectionUtil {
             results.add(iterator.next());
             hasNext = iterator.hasNext();
         }
-        results.trimToSize();
+        if(results.size() > 1000){
+            results.trimToSize();
+        }
         return results;
     }
     @SuppressWarnings("unchecked")
