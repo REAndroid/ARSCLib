@@ -445,7 +445,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         setNavigation(Navigation.valueOf(json.optString(NAME_navigation)));
         setInputFlagsKeysHidden(InputFlagsKeysHidden.valueOf(json.optString(NAME_input_flags_keys_hidden)));
         setInputFlagsNavHidden(InputFlagsNavHidden.valueOf(json.optString(NAME_input_flags_nav_hidden)));
-        setInputPad0((byte)json.optInt(NAME_inputPad0));
+        setInputPad0(json.optInt(NAME_inputPad0));
         setScreenWidth(json.optInt(NAME_screenWidth));
         setScreenHeight(json.optInt(NAME_screenHeight));
         setSdkVersion(json.optInt(NAME_sdkVersion));
