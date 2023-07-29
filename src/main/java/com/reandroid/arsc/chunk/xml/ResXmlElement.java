@@ -38,6 +38,7 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>,
@@ -65,15 +66,15 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     /**
      * Iterates every attribute on this element and on child elements recursively
      * */
-    public Iterator<ResXmlAttribute> allAttributes(){
-        return new MergingIterator<>(new ComputeIterator<>(allElements(), ResXmlElement::getAttributes));
+    public Iterator<ResXmlAttribute> recursiveAttributes(){
+        return new MergingIterator<>(new ComputeIterator<>(recursiveElements(), RECURSIVE_ATTRIBUTES));
     }
     /**
      * Iterates every element and child elements recursively
      * */
-    public Iterator<ResXmlElement> allElements(){
+    public Iterator<ResXmlElement> recursiveElements(){
         return CombiningIterator.of(SingleIterator.of(this),
-                new ComputeIterator<>(getElements(), ResXmlElement::allElements));
+                ComputeIterator.of(getElements(), RECURSIVE_ELEMENTS));
     }
     public ResXmlAttribute getIdAttribute(){
         ResXmlStartElement startElement = getStartElement();
@@ -572,9 +573,17 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             startElement.setTagNamespace(uri, prefix);
         }
     }
+    public int removeAttributesWithId(int resourceId){
+        return removeAttributes(getAttributesWithId(resourceId));
+    }
+    public int removeAttributesWithName(String name){
+        return removeAttributes(getAttributesWithName(name));
+    }
     public int removeAttributes(Predicate<? super ResXmlAttribute> predicate){
-        List<ResXmlAttribute> removeList = CollectionUtil.toList(getAttributes(predicate));
-        Iterator<ResXmlAttribute> iterator = removeList.iterator();
+        return removeAttributes(getAttributes(predicate));
+    }
+    public int removeAttributes(Iterator<? extends ResXmlAttribute> attributes){
+        Iterator<ResXmlAttribute> iterator = CollectionUtil.copyOf(attributes);
         int count = 0;
         while (iterator.hasNext()){
             boolean removed = removeAttribute(iterator.next());
@@ -587,6 +596,9 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public Iterator<ResXmlAttribute> getAttributes(){
         ResXmlAttributeArray attributeArray = getAttributeArray();
         if(attributeArray != null){
+            if(attributeArray.childesCount() == 0){
+                return EmptyIterator.of();
+            }
             return attributeArray.iterator();
         }
         return EmptyIterator.of();
@@ -594,9 +606,19 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public Iterator<ResXmlAttribute> getAttributes(Predicate<? super ResXmlAttribute> filter){
         ResXmlAttributeArray attributeArray = getAttributeArray();
         if(attributeArray != null){
+            if(attributeArray.childesCount() == 0){
+                return EmptyIterator.of();
+            }
             return attributeArray.iterator(filter);
         }
         return EmptyIterator.of();
+    }
+    public Iterator<ResXmlAttribute> getAttributesWithId(int resourceId){
+        return getAttributes(attribute -> attribute.getNameResourceID() == resourceId);
+    }
+    public Iterator<ResXmlAttribute> getAttributesWithName(String name){
+        return getAttributes(attribute ->
+                attribute.getNameResourceID() == 0 && attribute.equalsName(name));
     }
     public int getAttributeCount() {
         ResXmlStartElement startElement=getStartElement();
@@ -1501,6 +1523,8 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }catch (Throwable ignored){
         }
     }
+    private static final Function<ResXmlElement, Iterator<ResXmlElement>> RECURSIVE_ELEMENTS = ResXmlElement::recursiveElements;
+    private static final Function<ResXmlElement, Iterator<ResXmlAttribute>> RECURSIVE_ATTRIBUTES = ResXmlElement::getAttributes;
 
     static final String NAME_element = "element";
     static final String NAME_name = "name";

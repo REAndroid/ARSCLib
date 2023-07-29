@@ -116,7 +116,10 @@ public class CombiningIterator<T> implements Iterator<T> {
         return first;
     }
 
-    public static<T1> CombiningIterator<T1> of(Iterator<T1> iterator1, Iterator<Iterator<T1>> iteratorIterator){
+    public static<T1> Iterator<T1> of(Iterator<T1> iterator1, Iterator<Iterator<T1>> iteratorIterator){
+        if(!iteratorIterator.hasNext()){
+            return iterator1;
+        }
         CombiningIterator<T1> iterator = new CombiningIterator<>(iterator1, null);
         iterator.iteratorIterator = iteratorIterator;
         return iterator;

@@ -60,4 +60,10 @@ public class ComputeIterator<E, T> implements Iterator<T> {
         }
         return mNext;
     }
+    public static<E1, T1> Iterator<T1> of(Iterator<? extends E1> iterator, Function<? super E1, T1> function){
+        if(!iterator.hasNext()){
+            return EmptyIterator.of();
+        }
+        return new ComputeIterator<>(iterator, function);
+    }
 }

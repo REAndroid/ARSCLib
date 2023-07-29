@@ -68,7 +68,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     public Iterator<ResXmlAttribute> allAttributes(){
         ResXmlElement element = getResXmlElement();
         if(element != null){
-            return element.allAttributes();
+            return element.recursiveAttributes();
         }
         return EmptyIterator.of();
     }
@@ -79,7 +79,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     public Iterator<ResXmlElement> allElements(){
         ResXmlElement element = getResXmlElement();
         if(element != null){
-            return element.allElements();
+            return element.recursiveElements();
         }
         return EmptyIterator.of();
     }

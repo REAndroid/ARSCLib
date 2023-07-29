@@ -104,6 +104,21 @@ public class CollectionUtil {
         }
         return results;
     }
+    public static<T> Iterator<T> copyOf(Iterator<? extends T> iterator){
+        boolean hasNext = iterator.hasNext();
+        if(!hasNext){
+            return EmptyIterator.of();
+        }
+        ArrayList<T> results = new ArrayList<>(2);
+        while (hasNext){
+            results.add(iterator.next());
+            hasNext = iterator.hasNext();
+        }
+        if(results.size() > 1000){
+            results.trimToSize();
+        }
+        return results.iterator();
+    }
     @SuppressWarnings("unchecked")
     public static<T extends Comparable<T>> Comparator<T> getComparator(){
         return (Comparator<T>) COMPARABLE_COMPARATOR;

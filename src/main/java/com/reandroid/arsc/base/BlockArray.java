@@ -15,7 +15,9 @@
  */
 package com.reandroid.arsc.base;
 
+import com.reandroid.utils.SingleIterator;
 import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -359,10 +361,25 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
     }
     public Iterator<T> iterator(boolean skipNullBlock) {
         trimAllocatedFreeSpace();
+        int count = childesCount();
+        if(count == 0){
+            return EmptyIterator.of();
+        }
+        if(count == 1){
+            T item = get(0);
+            if(skipNullBlock && (item == null || item.isNull())){
+                return EmptyIterator.of();
+            }
+            return SingleIterator.of(item);
+        }
         return new BlockIterator(skipNullBlock);
     }
     public Iterator<T> iterator(Predicate<? super T> tester) {
         trimAllocatedFreeSpace();
+        int count = childesCount();
+        if(count == 0){
+            return EmptyIterator.of();
+        }
         return new PredicateIterator(tester);
     }
     public boolean contains(Object block){
