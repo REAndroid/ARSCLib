@@ -17,7 +17,7 @@ package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.json.JSONObject;
-import com.reandroid.utils.SingleIterator;
+import com.reandroid.utils.collection.SingleIterator;
 import java.util.Iterator;
 
 public class ResTableEntry extends TableEntry<EntryHeader, ResValue> {

@@ -65,7 +65,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
      * Iterates every attribute on root element and on child elements recursively
      * */
     // Experimental
-    public Iterator<ResXmlAttribute> allAttributes(){
+    public Iterator<ResXmlAttribute> recursiveAttributes(){
         ResXmlElement element = getResXmlElement();
         if(element != null){
             return element.recursiveAttributes();
@@ -76,7 +76,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
      * Iterates every element and child elements recursively
      * */
     // Experimental
-    public Iterator<ResXmlElement> allElements(){
+    public Iterator<ResXmlElement> recursiveElements(){
         ResXmlElement element = getResXmlElement();
         if(element != null){
             return element.recursiveElements();

@@ -490,7 +490,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
         if(manifestElement==null){
             return null;
         }
-        if(!TAG_manifest.equals(manifestElement.getName())){
+        if(!manifestElement.equalsName(TAG_manifest)){
             return null;
         }
         return manifestElement;

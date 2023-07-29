@@ -15,19 +15,28 @@
  */
 package com.reandroid.utils.collection;
 
-import java.util.function.Function;
+import java.util.Iterator;
 
-public class InstanceFunction<T> implements Function<Object, T> {
-    private final Class<T> instanceClass;
-    public InstanceFunction(Class<T> instanceClass){
-        this.instanceClass = instanceClass;
+public class SingleIterator<T> implements Iterator<T> {
+    private T mItem;
+    public SingleIterator(T item){
+        this.mItem = item;
     }
-    @SuppressWarnings("unchecked")
     @Override
-    public T apply(Object obj) {
-        if(instanceClass.isInstance(obj)){
-            return (T) obj;
+    public boolean hasNext() {
+        return this.mItem != null;
+    }
+    @Override
+    public T next() {
+        T item = this.mItem;
+        this.mItem = null;
+        return item;
+    }
+
+    public static<T1> Iterator<T1> of(T1 item){
+        if(item == null){
+            return EmptyIterator.of();
         }
-        return null;
+        return new SingleIterator<>(item);
     }
 }

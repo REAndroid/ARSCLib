@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.base;
 
-import com.reandroid.utils.SingleIterator;
+import com.reandroid.utils.collection.SingleIterator;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 

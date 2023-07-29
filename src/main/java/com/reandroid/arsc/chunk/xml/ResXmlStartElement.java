@@ -20,6 +20,7 @@ import com.reandroid.arsc.array.ResXmlAttributeArray;
 import com.reandroid.arsc.item.ShortItem;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 public class ResXmlStartElement extends BaseXmlChunk {
     private final ShortItem mAttributeStart;
@@ -87,8 +88,9 @@ public class ResXmlStartElement extends BaseXmlChunk {
         if(end != null){
             end.onRemoved();
         }
-        for(ResXmlAttribute attr:listResXmlAttributes()){
-            attr.onRemoved();
+        Iterator<ResXmlAttribute> iterator = iterator();
+        while (iterator.hasNext()){
+            iterator.next().onRemoved();
         }
     }
     @Override
@@ -149,15 +151,19 @@ public class ResXmlStartElement extends BaseXmlChunk {
         }
     }
     public ResXmlAttribute getAttribute(int resourceId){
-        for(ResXmlAttribute attribute:listResXmlAttributes()){
-            if(resourceId==attribute.getNameResourceID()){
+        Iterator<ResXmlAttribute> iterator = iterator();
+        while (iterator.hasNext()){
+            ResXmlAttribute attribute = iterator.next();
+            if(resourceId == attribute.getNameResourceID()){
                 return attribute;
             }
         }
         return null;
     }
     private ResXmlAttribute getNoIdAttribute(String name){
-        for(ResXmlAttribute attribute:listResXmlAttributes()){
+        Iterator<ResXmlAttribute> iterator = iterator();
+        while (iterator.hasNext()){
+            ResXmlAttribute attribute = iterator.next();
             if(attribute.getNameResourceID()!=0){
                 continue;
             }
@@ -171,7 +177,9 @@ public class ResXmlStartElement extends BaseXmlChunk {
         if(name==null){
             return null;
         }
-        for(ResXmlAttribute attribute:listResXmlAttributes()){
+        Iterator<ResXmlAttribute> iterator = iterator();
+        while (iterator.hasNext()){
+            ResXmlAttribute attribute = iterator.next();
             if(attribute.equalsName(name)){
                 if(uri != null){
                     if(uri.equals(attribute.getUri())){
@@ -189,8 +197,10 @@ public class ResXmlStartElement extends BaseXmlChunk {
         if(name == null){
             return null;
         }
+        Iterator<ResXmlAttribute> iterator = getResXmlAttributeArray().iterator();
         ResXmlAttribute withIdAttribute = null;
-        for(ResXmlAttribute attribute:listResXmlAttributes()){
+        while (iterator.hasNext()){
+            ResXmlAttribute attribute = iterator.next();
             if(attribute.equalsName(name)){
                 if(attribute.getNameResourceID() != 0){
                     withIdAttribute = attribute;
@@ -205,7 +215,9 @@ public class ResXmlStartElement extends BaseXmlChunk {
         if(resourceId == 0){
             return null;
         }
-        for(ResXmlAttribute attribute:listResXmlAttributes()){
+        Iterator<ResXmlAttribute> iterator = iterator();
+        while (iterator.hasNext()){
+            ResXmlAttribute attribute = iterator.next();
             if(resourceId == attribute.getNameResourceID()){
                 return attribute;
             }
@@ -248,6 +260,9 @@ public class ResXmlStartElement extends BaseXmlChunk {
     }
     public Collection<ResXmlAttribute> listResXmlAttributes(){
         return getResXmlAttributeArray().listItems();
+    }
+    public Iterator<ResXmlAttribute> iterator(){
+        return getResXmlAttributeArray().iterator();
     }
     public ResXmlAttributeArray getResXmlAttributeArray(){
         return mAttributeArray;

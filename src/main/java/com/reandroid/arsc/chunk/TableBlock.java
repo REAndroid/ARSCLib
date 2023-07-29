@@ -30,7 +30,6 @@ import com.reandroid.common.ReferenceResolver;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
-import com.reandroid.utils.*;
 import com.reandroid.utils.collection.*;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;

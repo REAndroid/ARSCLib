@@ -21,7 +21,6 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Predicate;
 
 public abstract class XMLNodeTree extends XMLNode implements Iterable<XMLNode>, SizedSupplier<XMLNode> {
@@ -56,7 +55,7 @@ public abstract class XMLNodeTree extends XMLNode implements Iterable<XMLNode>, 
         return iterator(instance, null);
     }
     public <T1 extends XMLNode> Iterator<T1> iterator(Class<T1> instance, Predicate<T1> filter) {
-        return new ComputeIterator<>(iterator(), new InstanceFunction<>(instance), filter);
+        return new InstanceIterator<>(iterator(), instance, filter);
     }
     public Iterator<XMLNode> iterator(Predicate<? super XMLNode> filter){
         return new IndexIterator<>(this, filter);

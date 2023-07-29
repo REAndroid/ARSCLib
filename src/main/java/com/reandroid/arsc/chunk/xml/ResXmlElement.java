@@ -29,7 +29,7 @@ import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
-import com.reandroid.utils.SingleIterator;
+import com.reandroid.utils.collection.SingleIterator;
 import com.reandroid.utils.collection.*;
 import com.reandroid.xml.*;
 import org.xmlpull.v1.XmlPullParser;
@@ -440,14 +440,10 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         getStartElement().getResXmlAttributeArray().add(attribute);
     }
     public ResXmlElement getElementByTagName(String name){
-        if(name==null){
+        if(name == null){
             return null;
         }
-        Iterator<ResXmlElement> iterator = getElements(name);
-        if(iterator.hasNext()){
-            return iterator.next();
-        }
-        return null;
+        return CollectionUtil.getFirst(getElements(name));
     }
     private ResXmlAttribute searchAttribute(String name, int resourceId){
         if(resourceId==0){
