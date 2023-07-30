@@ -90,46 +90,11 @@ public class PackageBlock extends Chunk<PackageHeader>
         Iterator<ValueItem> iterator = allValues();
         while (iterator.hasNext()){
             ValueItem valueItem = iterator.next();
-            if(valueItem instanceof ResValueMap){
-                changePackageIdName(packageIdOld, packageIdNew, (ResValueMap)valueItem);
-            }
-            changePackageIdValue(packageIdOld, packageIdNew, valueItem);
+            changePackageId(valueItem, packageIdOld, packageIdNew);
         }
         if(packageIdOld == getId()){
             setId(packageIdNew);
         }
-    }
-    private void changePackageIdName(int packageIdOld, int packageIdNew, ResValueMap resValueMap){
-        int resourceId = resValueMap.getNameResourceID();
-        if(!isResourceId(resourceId)){
-            return;
-        }
-        int id = (resourceId >> 24) & 0xff;
-        if(id != packageIdOld){
-            return;
-        }
-        resourceId = resourceId & 0xffffff;
-        id = packageIdNew << 24;
-        resourceId = id | resourceId;
-        resValueMap.setNameResourceID(resourceId);
-    }
-    private void changePackageIdValue(int packageIdOld, int packageIdNew, ValueItem valueItem){
-        ValueType valueType = valueItem.getValueType();
-        if(valueType == null || !valueType.isReference()){
-            return;
-        }
-        int resourceId = valueItem.getData();
-        if(!isResourceId(resourceId)){
-            return;
-        }
-        int id = (resourceId >> 24) & 0xff;
-        if(id != packageIdOld){
-            return;
-        }
-        resourceId = resourceId & 0xffffff;
-        id = packageIdNew << 24;
-        resourceId = id | resourceId;
-        valueItem.setData(resourceId);
     }
     public Iterator<ValueItem> allValues(){
         return new MergingIterator<>(new ComputeIterator<>(getSpecTypePairs(),
@@ -786,6 +751,44 @@ public class PackageBlock extends Chunk<PackageHeader>
                 && (resourceId & 0xff000000) != 0;
     }
 
+    public static void changePackageId(ValueItem valueItem, int packageIdOld, int packageIdNew){
+        if(valueItem instanceof AttributeValue){
+            changePackageIdName(packageIdOld, packageIdNew, (AttributeValue)valueItem);
+        }
+        changePackageIdValue(packageIdOld, packageIdNew, valueItem);
+    }
+    private static void changePackageIdName(int packageIdOld, int packageIdNew, AttributeValue value){
+        int resourceId = value.getNameResourceID();
+        if(!isResourceId(resourceId)){
+            return;
+        }
+        int id = (resourceId >> 24) & 0xff;
+        if(id != packageIdOld){
+            return;
+        }
+        resourceId = resourceId & 0xffffff;
+        id = packageIdNew << 24;
+        resourceId = id | resourceId;
+        value.setNameResourceID(resourceId);
+    }
+    private static void changePackageIdValue(int packageIdOld, int packageIdNew, ValueItem valueItem){
+        ValueType valueType = valueItem.getValueType();
+        if(valueType == null || !valueType.isReference()){
+            return;
+        }
+        int resourceId = valueItem.getData();
+        if(!isResourceId(resourceId)){
+            return;
+        }
+        int id = (resourceId >> 24) & 0xff;
+        if(id != packageIdOld){
+            return;
+        }
+        resourceId = resourceId & 0xffffff;
+        id = packageIdNew << 24;
+        resourceId = id | resourceId;
+        valueItem.setData(resourceId);
+    }
     public static class PublicXmlParser{
         private final PackageBlock packageBlock;
         private boolean mInitializeIds = true;
