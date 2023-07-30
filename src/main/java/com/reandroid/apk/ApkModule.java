@@ -423,7 +423,13 @@ public class ApkModule implements ApkFile, Closeable {
         List<DexFileInputSource> results = new ArrayList<>();
         for(InputSource source: getInputSources()){
             if(DexFileInputSource.isDexName(source.getAlias())){
-                results.add(new DexFileInputSource(source.getAlias(), source));
+                DexFileInputSource inputSource;
+                if(source instanceof DexFileInputSource){
+                    inputSource = (DexFileInputSource)source;
+                }else {
+                    inputSource = new DexFileInputSource(source.getAlias(), source);
+                }
+                results.add(inputSource);
             }
         }
         DexFileInputSource.sort(results);

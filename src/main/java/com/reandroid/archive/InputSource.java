@@ -181,7 +181,7 @@ public abstract class InputSource {
             return -1;
         }
     }
-    private static int compareDex(String dex1, String dex2){
+    public static int compareDex(String dex1, String dex2){
         int d1 = getDexNumber(dex1);
         int d2 = getDexNumber(dex2);
         if(d1 == d2){
