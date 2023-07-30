@@ -77,8 +77,7 @@ public class ValueCoder {
         if(resourceEntry != null){
             return resourceEntry.buildReference(packageBlock, referenceType);
         }
-        decodeUnknownResourceId(referenceType == ValueType.REFERENCE, resourceId);
-        return null;
+        return decodeUnknownResourceId(referenceType == ValueType.REFERENCE, resourceId);
     }
     public static EncodeResult encodeReference(PackageBlock packageBlock, String value){
         if(value == null || value.length() < 3){
