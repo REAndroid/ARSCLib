@@ -16,7 +16,10 @@
 package com.reandroid.apk;
 
 import com.reandroid.apk.xmlencoder.XMLEncodeSource;
+import com.reandroid.archive.BlockInputSource;
 import com.reandroid.archive.InputSource;
+import com.reandroid.arsc.chunk.Chunk;
+import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.header.InfoHeader;
@@ -40,6 +43,27 @@ public class ResFile {
     }
     public List<Entry> getEntryList(){
         return entryList;
+    }
+    public PackageBlock getPackageBlock(){
+        Entry entry = pickOne();
+        if(entry != null){
+            return entry.getPackageBlock();
+        }
+        return null;
+    }
+    public ResXmlDocument readAsXmlDocument() throws IOException {
+        InputSource inputSource = getInputSource();
+        if(inputSource instanceof BlockInputSource){
+            BlockInputSource<?> bis = (BlockInputSource<?>) inputSource;
+            Chunk<?> chunk = bis.getBlock();
+            if(chunk instanceof ResXmlDocument){
+                return (ResXmlDocument) chunk;
+            }
+        }
+        ResXmlDocument xmlDocument = new ResXmlDocument();
+        xmlDocument.setPackageBlock(getPackageBlock());
+        xmlDocument.readBytes(getInputSource().openStream());
+        return xmlDocument;
     }
     public String validateTypeDirectoryName(){
         Entry entry =pickOne();
@@ -76,20 +100,17 @@ public class ResFile {
             return null;
         }
         if(entryList.size() == 1){
-            String p1 = entryList.get(0).getResValue().getValueAsString();
-            String p2 = getInputSource().getName();
-            if(p1.equals(p2)){
-                return entryList.get(entryList.size()-1);
-            }
             return entryList.get(0);
         }
-        String path = getInputSource().getName();
+        String name = getInputSource().getName();
+        String alias = getInputSource().getAlias();
         for(Entry entry : entryList){
             ResValue resValue = entry.getResValue();
             if(resValue == null || resValue.getValueType() != ValueType.STRING){
                 continue;
             }
-            if(path.equals(resValue.getValueAsString())){
+            String value = resValue.getValueAsString();
+            if(name.equals(value) || alias.equals(value)){
                 return entry;
             }
         }
@@ -135,11 +156,27 @@ public class ResFile {
         InputSource inputSource = getInputSource();
         if((inputSource instanceof XMLEncodeSource)
                 || (inputSource instanceof JsonXmlInputSource)){
-            mBinXml=true;
-        }else{
+            mBinXml = true;
+        }else if (inputSource instanceof BlockInputSource){
+            BlockInputSource<?> bis = (BlockInputSource<?>) inputSource;
+            Chunk<?> chunk = bis.getBlock();
+            if(chunk instanceof ResXmlDocument){
+                mBinXml = true;
+            }
+        }
+        if(!mBinXml){
             try {
-                mBinXml = ResXmlDocument.isResXmlBlock(inputSource.getBytes(InfoHeader.INFO_MIN_SIZE));
+                mBinXml = ResXmlDocument.isResXmlBlock(
+                        inputSource.getBytes(InfoHeader.INFO_MIN_SIZE));
             } catch (IOException ignored) {
+            }
+            // Header could be obfuscated lets try load the whole document
+            if(!mBinXml && getFilePath().endsWith(".xml")){
+                try {
+                    ResXmlDocument resXmlDocument = readAsXmlDocument();
+                    mBinXml = resXmlDocument.getStringPool().countStrings() > 0;
+                } catch (IOException ignored) {
+                }
             }
         }
         return mBinXml;

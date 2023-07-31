@@ -237,12 +237,23 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        HeaderBlock headerBlock=reader.readHeaderBlock();
-        if(headerBlock==null){
-            return;
+        HeaderBlock headerBlock = reader.readHeaderBlock();
+        if(headerBlock == null){
+            throw new IOException("Not bin xml: " + reader);
         }
-        BlockReader chunkReader=reader.create(headerBlock.getChunkSize());
-        headerBlock=getHeaderBlock();
+        int chunkSize = headerBlock.getChunkSize();
+        if(chunkSize < 0){
+            throw new IOException("Negative chunk size: " + chunkSize);
+        }
+        if(chunkSize > reader.available()){
+            throw new IOException("Higher chunk size: " + chunkSize
+                    + ", available = " + reader.available());
+        }
+        if(chunkSize < headerBlock.getHeaderSize()){
+            throw new IOException("Higher header size: " + headerBlock);
+        }
+        BlockReader chunkReader = reader.create(chunkSize);
+        headerBlock = getHeaderBlock();
         headerBlock.readBytes(chunkReader);
         // android/aapt2 accepts 0x0000 (NULL) chunk type as XML, it could
         // be android's bug and might be fixed in the future until then lets fix it ourselves
@@ -369,6 +380,14 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     public void setResXmlElement(ResXmlElement resXmlElement){
         this.mResXmlElement=resXmlElement;
         this.mResXmlElementContainer.setItem(resXmlElement);
+    }
+    @Override
+    protected void onPreRefreshRefresh(){
+        ResXmlElement root = getResXmlElement();
+        if(root != null){
+            root.refresh();
+        }
+        super.onPreRefreshRefresh();
     }
     @Override
     protected void onChunkRefreshed() {
