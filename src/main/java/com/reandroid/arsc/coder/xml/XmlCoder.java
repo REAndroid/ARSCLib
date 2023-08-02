@@ -499,6 +499,7 @@ public class XmlCoder {
                     throw new XmlEncodeException("Unexpected array value: " + child.getDebugText());
                 }
                 valueMap.setValue(encodeResult);
+                return;
             }
             valueMap.setValueAsString(StyleDocument.copyInner(child));
         }
@@ -544,6 +545,7 @@ public class XmlCoder {
                     throw new XmlEncodeException(encodeResult.getError() + ": " + child.getDebugText());
                 }
                 valueMap.setValue(encodeResult);
+                return;
             }
             valueMap.setValueAsString(StyleDocument.copyInner(child));
         }

@@ -205,6 +205,8 @@ public class ApkModuleTest {
         Entry entry = packageBlock
                 .getOrCreate("", "array", "array_1");
         entry.ensureComplex(true);
+        Entry appName = packageBlock.getOrCreate("", "string", "app_name");
+
 
         ResValueMapArray mapArray = entry.getResValueMapArray();
 
@@ -213,6 +215,10 @@ public class ApkModuleTest {
 
         valueMap.setValueAsString("@integer/value");
         Assert.assertEquals("@integer/value", valueMap.getValueAsString());
+
+        valueMap = mapArray.createNext();
+        valueMap.setArrayIndex(2);
+        valueMap.setTypeAndData(ValueType.REFERENCE, appName.getResourceId());
 
         mapArray.refresh();
 
