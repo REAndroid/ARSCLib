@@ -789,6 +789,20 @@ public class PackageBlock extends Chunk<PackageHeader>
         resourceId = id | resourceId;
         valueItem.setData(resourceId);
     }
+
+    public static int replacePackageId(int resourceId, int packageIdOld, int packageIdNew){
+        if(!isResourceId(resourceId)){
+            return resourceId;
+        }
+        int id = (resourceId >> 24) & 0xff;
+        if(id != packageIdOld){
+            return resourceId;
+        }
+        resourceId = resourceId & 0xffffff;
+        id = packageIdNew << 24;
+        resourceId = id | resourceId;
+        return resourceId;
+    }
     public static class PublicXmlParser{
         private final PackageBlock packageBlock;
         private boolean mInitializeIds = true;
