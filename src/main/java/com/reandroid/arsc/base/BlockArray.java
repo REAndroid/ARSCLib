@@ -30,6 +30,9 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
     public BlockArray(){
         elementData = newInstance(0);
     }
+    public BlockArray(T[] elementData){
+        this.elementData = elementData;
+    }
 
     public void removeAllNull(int start){
         removeAll(start, true);
