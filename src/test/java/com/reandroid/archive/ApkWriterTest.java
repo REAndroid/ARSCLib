@@ -11,17 +11,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class ApkWriterTest {
-    private static ApkModule apk_module;
     @Test
     public void testArchiveByteReadAndWriter() throws IOException {
-        byte[] bytes = getApkModule().writeApkBytes();
+        ApkModule apkModule_1 = getApkModule();
+        Assert.assertNotNull("Null source ApkModule", apkModule_1);
+        byte[] bytes = apkModule_1.writeApkBytes();
         ApkModule apkModule2 = ApkModule.readApkBytes(bytes);
+        Assert.assertNotNull("Null ApkModule loaded from byte array", apkModule_1);
         AndroidManifestBlock manifestBlock = apkModule2.getAndroidManifestBlock();
-        Assert.assertNotNull(manifestBlock);
+        Assert.assertNotNull("Null manifest block", manifestBlock);
         TableBlock tableBlock = apkModule2.getTableBlock();
-        Assert.assertNotNull(tableBlock);
+        Assert.assertNotNull("Null table block", tableBlock);
         InputSource inputSource = apkModule2.getInputSource("classes.dex");
-        Assert.assertNotNull(inputSource);
+        Assert.assertNotNull("Null classes.dex input source", inputSource);
     }
     @Test
     public void testArchiveStreamWriter() throws IOException {
@@ -40,16 +42,7 @@ public class ApkWriterTest {
     }
 
     private ApkModule getApkModule() throws IOException {
-        ApkModule apkModule = ApkWriterTest.apk_module;
-        if(apkModule != null){
-            return apkModule;
-        }
-        apkModule = ApkModuleTest.getLastApkModule();
-        if(apkModule == null){
-            ApkModuleTest apkModuleTest = new ApkModuleTest();
-            apkModule = apkModuleTest.createApkModule();
-        }
-        ApkWriterTest.apk_module = apkModule;
-        return apkModule;
+        ApkModuleTest apkModuleTest = new ApkModuleTest();
+        return apkModuleTest.createApkModule();
     }
 }
