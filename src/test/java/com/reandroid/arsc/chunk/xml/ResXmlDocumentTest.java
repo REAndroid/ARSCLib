@@ -124,7 +124,7 @@ public class ResXmlDocumentTest {
         Assert.assertNotNull(root);
         Assert.assertEquals(3, root.countElements());
         Assert.assertEquals(2, root.getNamespaceCount());
-        Assert.assertEquals(11, root.getAttributeCount());
+        Assert.assertEquals(12, root.getAttributeCount());
 
         ResXmlAttribute attribute = root.searchAttributeByName("style");
         Assert.assertNotNull(attribute);
@@ -149,6 +149,7 @@ public class ResXmlDocumentTest {
     }
     private static final String XML_STRING = "<?xml version='1.0' encoding='utf-8' ?>\n" +
             "<manifest android:configChanges=\"keyboardHidden|orientation|screenSize\"\n" +
+            "          android:title=\"60%\"\n" +
             "          android:versionCode=\"1\"\n"+
             "          android:versionName=\"1.0\"\n" +
             "          android:compileSdkVersion=\"32\"\n" +

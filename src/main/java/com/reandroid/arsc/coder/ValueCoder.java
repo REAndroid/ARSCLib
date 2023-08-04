@@ -46,6 +46,10 @@ public class ValueCoder {
             if(attributeBag != null){
                 encodeResult = attributeBag.encode(value);
                 if(encodeResult != null){
+                    if(encodeResult.valueType == ValueType.STRING){
+                        output.setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
+                        return new EncodeResult(ValueType.STRING, output.getData());
+                    }
                     if(encodeResult.isError()){
                         if(validate){
                             return encodeResult;

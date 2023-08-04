@@ -561,6 +561,10 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         AttributeBag attributeBag = AttributeBag.create(attrResource.get());
         encodeResult = attributeBag.encode(value);
         if(encodeResult != null){
+            if(encodeResult.valueType == ValueType.STRING){
+                setValueAsString(XmlSanitizer.unEscapeSpecialCharacter(value));
+                return;
+            }
             if(encodeResult.isError()){
                 if(validate){
                     throw new IOException(buildErrorMessage(

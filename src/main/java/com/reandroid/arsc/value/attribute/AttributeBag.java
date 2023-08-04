@@ -48,7 +48,7 @@ public class AttributeBag {
             }
         }
         if(isCompatible(ValueType.STRING)){
-            return null;
+            return new EncodeResult(ValueType.STRING, -1);
         }
         if(isEnumOrFlag()){
             return new EncodeResult("Invalid attribute enum/flag/value");
