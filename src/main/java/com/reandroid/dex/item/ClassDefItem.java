@@ -15,15 +15,20 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.common.AccessFlag;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class ClassDefItem extends BaseItem {
     private TypeList interfaceList;
+    private AnnotationsDirectoryItem annotationsDirectory;
     public ClassDefItem() {
         super(SIZE);
+        this.annotationsDirectory = new AnnotationsDirectoryItem();
+        this.annotationsDirectory.setParent(this);
     }
 
     public TypeIndex getType(){
@@ -69,10 +74,10 @@ public class ClassDefItem extends BaseItem {
     public void setSourceFileIndex(int index){
         putInteger(getBytesInternal(), OFFSET_SOURCE_FILE, index);
     }
-    public int getAnnotationsIndex(){
+    public int getAnnotationsOffset(){
         return getInteger(getBytesInternal(), OFFSET_ANNOTATIONS);
     }
-    public void setAnnotationsIndex(int index){
+    public void setAnnotationsOffset(int index){
         putInteger(getBytesInternal(), OFFSET_ANNOTATIONS, index);
     }
     public int getClassDataIndex(){
@@ -100,7 +105,17 @@ public class ClassDefItem extends BaseItem {
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
         interfaceList = TypeList.read(reader, getInterfacesOffset());
-        //TODO: read annotation, data ...
+        int offset = getAnnotationsOffset();
+        if(offset <= 0){
+            return;
+        }
+        int position = reader.getPosition();
+        reader.seek(offset);
+        AnnotationsDirectoryItem adi = this.annotationsDirectory;
+        adi.setParent(this);
+        adi.readBytes(reader);
+        reader.seek(position);
+        //TODO: read  data ...
     }
 
     @Override
@@ -112,7 +127,6 @@ public class ClassDefItem extends BaseItem {
             builder.append(af);
             builder.append(" ");
         }
-        builder.append(AccessFlag.format(accessFlags));
         builder.append(getType());
         builder.append("\n.super ").append(getSuperClass());
         StringIndex sourceFile = getSourceFile();
@@ -125,6 +139,16 @@ public class ClassDefItem extends BaseItem {
             builder.append("\n# interfaces");
             for(TypeIndex typeIndex : interfaces){
                 builder.append("\n.implements ").append(typeIndex);
+            }
+        }
+        BlockList<AnnotationItem> annotations = annotationsDirectory.getClassAnnotations();
+        if(annotations.size() > 0){
+            builder.append("\n\n# annotations");
+            Iterator<AnnotationItem> iterator = annotations.iterator();
+            while (iterator.hasNext()){
+                builder.append("\n");
+                builder.append(iterator.next());
+                builder.append("\n");
             }
         }
         return builder.toString();

@@ -28,8 +28,25 @@ public class ShortList extends DexItem {
         return getInteger(getBytesInternal(), 0);
     }
     public void setSize(int size){
-        setBytesLength(4 + size * 2, false);
+        setBytesLength(4 + size * getFactor(), false);
         putInteger(getBytesInternal(), 0, size);
+    }
+    private int realSize(){
+        return (countBytes() - 4) / getFactor();
+    }
+    int getFactor(){
+        return 2;
+    }
+    public void addAll(int[] values){
+        if(values == null || values.length == 0){
+            return;
+        }
+        int length = values.length;
+        int start = size();
+        setSize(start + length);
+        for(int i = 0; i < length; i++){
+            set(start + i, values[i]);
+        }
     }
     public void add(int value){
         int index = size();
@@ -59,6 +76,9 @@ public class ShortList extends DexItem {
         reader.readFully(getBytesInternal());
         reader.seek(position);
         int size = size();
+        if(size > 1000){
+            String junk="";
+        }
         if(size <= 0){
             setSize(0);
             return;
@@ -69,6 +89,11 @@ public class ShortList extends DexItem {
 
     @Override
     public String toString() {
-        return "size=" + size();
+        int size = size();
+        int real = realSize();
+        if(size == real){
+            return "size=" + size;
+        }
+        return "size=" + size + ", real=" + real;
     }
 }

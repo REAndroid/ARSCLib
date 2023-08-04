@@ -30,10 +30,6 @@ public class TypeList extends ShortList {
         return typeSection.toArray(toArray());
     }
 
-    @Override
-    public String toString() {
-        return "size=" + size();
-    }
     public static TypeList read(BlockReader reader, int offset) throws IOException {
         if(offset <= 0){
             return null;
