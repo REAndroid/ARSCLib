@@ -17,8 +17,6 @@ package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
 
-public interface ReferenceItem {
-    void set(int val);
-    int get();
+public interface ReferenceItem extends IntegerReference{
     <T1 extends Block> T1 getReferredParent(Class<T1> parentClass);
 }

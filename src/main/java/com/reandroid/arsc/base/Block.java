@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -119,23 +119,102 @@ public abstract class Block {
     }
 
 
-    protected static byte[] addBytes(byte[] bts1, byte[] bts2){
-        boolean empty1=(bts1==null || bts1.length==0);
-        boolean empty2=(bts2==null || bts2.length==0);
+    public static int getInteger(byte[] bytes, int offset){
+        if((offset + 4) > bytes.length){
+            return 0;
+        }
+        return bytes[offset] & 0xff |
+                (bytes[offset + 1] & 0xff) << 8 |
+                (bytes[offset + 2] & 0xff) << 16 |
+                (bytes[offset + 3] & 0xff) << 24;
+    }
+    public static short getShort(byte[] bytes, int offset){
+        if((offset + 2) > bytes.length){
+            return 0;
+        }
+        return (short) (bytes[offset] & 0xff
+                | (bytes[offset + 1] & 0xff) << 8);
+    }
+    public static void putInteger(byte[] bytes, int offset, int val){
+        if((offset + 4) > bytes.length){
+            return;
+        }
+        bytes[offset + 3]= (byte) (val >>> 24 & 0xff);
+        bytes[offset + 2]= (byte) (val >>> 16 & 0xff);
+        bytes[offset + 1]= (byte) (val >>> 8 & 0xff);
+        bytes[offset]= (byte) (val & 0xff);
+    }
+    public static void putShort(byte[] bytes, int offset, short val){
+        bytes[offset + 1]= (byte) (val >>> 8 & 0xff);
+        bytes[offset]= (byte) (val & 0xff);
+    }
+    public static boolean getBit(byte[] bytes, int byteOffset, int bitIndex){
+        return (((bytes[byteOffset] & 0xff) >>bitIndex) & 0x1) == 1;
+    }
+    public static void putBit(byte[] bytes, int byteOffset, int bitIndex, boolean bit){
+        int mask = 1 << bitIndex;
+        int add = bit ? mask : 0;
+        mask = (~mask) & 0xff;
+        int value = (bytes[byteOffset] & mask) | add;
+        bytes[byteOffset] = (byte) value;
+    }
+    public static long getLong(byte[] bytes, int offset){
+        if((offset + 8) > bytes.length){
+            return 0;
+        }
+        long result = 0;
+        int index = offset + 7;
+        while (index >= offset){
+            result = result << 8;
+            result |= (bytes[index] & 0xff);
+            index --;
+        }
+        return result;
+    }
+    public static void putLong(byte[] bytes, int offset, long value){
+        if((offset + 8) > bytes.length){
+            return;
+        }
+        int index = offset;
+        offset = index + 8;
+        while (index < offset){
+            bytes[index] = (byte) (value & 0xff);
+            value = value >>> 8;
+            index++;
+        }
+    }
+    public static byte[] getBytes(byte[] bytes, int offset, int length){
+        if(bytes.length == 0){
+            return new byte[0];
+        }
+        int available = bytes.length - offset;
+        if(available < 0){
+            available = 0;
+        }
+        if(length > available){
+            length = available;
+        }
+        byte[] result = new byte[length];
+        System.arraycopy(bytes, offset, result, 0, length);
+        return result;
+    }
+    protected static byte[] addBytes(byte[] bytes1, byte[] bytes2){
+        boolean empty1 = (bytes1 == null || bytes1.length == 0);
+        boolean empty2 = (bytes2 == null || bytes2.length == 0);
         if(empty1 && empty2){
             return null;
         }
         if(empty1){
-            return bts2;
+            return bytes2;
         }
         if(empty2){
-            return bts1;
+            return bytes1;
         }
-        int len=bts1.length+bts2.length;
-        byte[] result=new byte[len];
-        int start=bts1.length;
-        System.arraycopy(bts1, 0, result, 0, start);
-        System.arraycopy(bts2, 0, result, start, bts2.length);
+        int length = bytes1.length + bytes2.length;
+        byte[] result = new byte[length];
+        int start = bytes1.length;
+        System.arraycopy(bytes1, 0, result, 0, start);
+        System.arraycopy(bytes2, 0, result, start, bytes2.length);
         return result;
     }
 }

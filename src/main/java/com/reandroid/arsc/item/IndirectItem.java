@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,9 @@ public class IndirectItem<T extends BlockItem> {
     public IndirectItem(T blockItem, int offset){
         this.blockItem = blockItem;
         this.offset = offset;
+    }
+    public byte[] getBytesInternal(){
+        return blockItem.getBytesInternal();
     }
     public T getBlockItem() {
         return blockItem;

@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -122,66 +122,5 @@ public abstract class BlockItem extends Block {
         onBytesChanged();
         super.notifyBlockLoad();
         return bts.length;
-    }
-
-    protected static int getInteger(byte[] bts, int offset){
-        if((offset+4)>bts.length){
-            return 0;
-        }
-        return bts[offset] & 0xff |
-                (bts[offset+1] & 0xff) << 8 |
-                (bts[offset+2] & 0xff) << 16 |
-                (bts[offset+3] & 0xff) << 24;
-    }
-    protected static short getShort(byte[] bts, int offset){
-        return (short) (bts[offset] & 0xff | (bts[offset+1] & 0xff) << 8);
-    }
-    protected static void putInteger(byte[] bts, int offset, int val){
-        if((offset+4)>bts.length){
-            return;
-        }
-        bts[offset+3]= (byte) (val >>> 24 & 0xff);
-        bts[offset+2]= (byte) (val >>> 16 & 0xff);
-        bts[offset+1]= (byte) (val >>> 8 & 0xff);
-        bts[offset]= (byte) (val & 0xff);
-    }
-    protected static void putShort(byte[] bts, int offset, short val){
-        bts[offset+1]= (byte) (val >>> 8 & 0xff);
-        bts[offset]= (byte) (val & 0xff);
-    }
-    protected static boolean getBit(byte[] bts, int byteOffset, int bitIndex){
-        return (((bts[byteOffset] & 0xff) >>bitIndex) & 0x1) == 1;
-    }
-    protected static void putBit(byte[] bytes, int byteOffset, int bitIndex, boolean bit){
-        int mask = 1 << bitIndex;
-        int add = bit ? mask : 0;
-        mask = (~mask) & 0xff;
-        int value = (bytes[byteOffset] & mask) | add;
-        bytes[byteOffset] = (byte) value;
-    }
-    protected static long getLong(byte[] bytes, int offset){
-        if((offset + 8)>bytes.length){
-            return 0;
-        }
-        long result = 0;
-        int index = offset + 7;
-        while (index>=offset){
-            result = result << 8;
-            result |= (bytes[index] & 0xff);
-            index --;
-        }
-        return result;
-    }
-    protected static void putLong(byte[] bytes, int offset, long value){
-        if((offset + 8) > bytes.length){
-            return;
-        }
-        int index = offset;
-        offset = index + 8;
-        while (index<offset){
-            bytes[index] = (byte) (value & 0xff);
-            value = value >>> 8;
-            index++;
-        }
     }
 }
