@@ -5,7 +5,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexItemArray;
 import com.reandroid.dex.base.DexOffsetArray;
 import com.reandroid.dex.header.OffsetAndCount;
-import com.reandroid.dex.item.StringIndex;
+import com.reandroid.dex.index.StringIndex;
 
 import java.io.IOException;
 

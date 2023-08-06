@@ -7,14 +7,14 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.DexFile;
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.dex.value.ArrayValue;
-import com.reandroid.dex.value.DexValue;
-import com.reandroid.dex.value.DexValueType;
-import com.reandroid.dex.value.PrimitiveValue;
+import com.reandroid.dex.index.StringIndex;
+import com.reandroid.dex.value.*;
+import com.reandroid.dex.writer.SmaliFormat;
+import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class AnnotationElement extends FixedBlockContainer {
+public class AnnotationElement extends FixedBlockContainer implements SmaliFormat {
     private final Ule128Item nameIndex;
     private final ByteItem valueType;
     private final SingleBlockContainer<DexValue<?>> valueContainer;
@@ -46,23 +46,11 @@ public class AnnotationElement extends FixedBlockContainer {
         nameIndex.readBytes(reader);
         valueType.readBytes(reader);
         reader.offset(-1);
-        initializeValue();
+        setValue(DexValue.createFor(getValueType()));
         valueContainer.readBytes(reader);
-        Block item=valueContainer.getItem();
-    }
-    private void initializeValue(){
-        DexValueType valueType = getValueType();
-        int valueSize = getValueTypeSize();
-        if(valueType == DexValueType.ARRAY){
-            ArrayValue arrayValue = new ArrayValue();
-            setValue(arrayValue);
-            return;
-        }
-        PrimitiveValue value = new PrimitiveValue();
-        setValue(value);
     }
     public StringIndex getName(){
-        int i = nameIndex.getValue();
+        int i = nameIndex.get();
         if(i == 0){
             return null;
         }
@@ -72,7 +60,12 @@ public class AnnotationElement extends FixedBlockContainer {
         }
         return dexFile.getStringPool().get(i);
     }
-
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.append(getName().getString());
+        writer.append(" = ");
+        getValue().append(writer);
+    }
     @Override
     public String toString() {
         return  getName() + " = " + getValue();

@@ -17,8 +17,9 @@ package com.reandroid.dex.value;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.DexFile;
-import com.reandroid.dex.item.StringIndex;
-import com.reandroid.dex.item.TypeIndex;
+import com.reandroid.dex.index.StringIndex;
+import com.reandroid.dex.index.TypeIndex;
+import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
@@ -30,6 +31,7 @@ public class PrimitiveValue extends DexValue<NumberValue>{
     public long getNumberValue(){
         return getValue().getNumberValue();
     }
+    @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         NumberValue numberValue = getValue();
         numberValue.setSize(0);
@@ -38,6 +40,21 @@ public class PrimitiveValue extends DexValue<NumberValue>{
         numberValue.readBytes(reader);
 
         numberValue.getSize();
+    }
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        DexValueType valueType = getValueType();
+        if(valueType == DexValueType.TYPE){
+            DexFile dexFile = getParentInstance(DexFile.class);
+            TypeIndex type = dexFile.getTypeSection().get((int) getNumberValue());
+            type.append(writer);
+        }else if(valueType == DexValueType.STRING){
+            DexFile dexFile = getParentInstance(DexFile.class);
+            StringIndex stringIndex = dexFile.getStringPool().get((int) getNumberValue());
+            stringIndex.append(writer);
+        }else {
+            writer.append(HexUtil.toHex(getNumberValue(), getValueSize()));
+        }
     }
     @Override
     public String toString() {

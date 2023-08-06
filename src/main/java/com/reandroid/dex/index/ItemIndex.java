@@ -13,18 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.item;
+package com.reandroid.dex.index;
 
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.DexFile;
 import com.reandroid.dex.base.DexItem;
 import com.reandroid.dex.sections.DexSection;
 import com.reandroid.dex.sections.DexStringPool;
+import com.reandroid.dex.writer.SmaliFormat;
 
-public abstract class BaseItem extends DexItem {
-    public BaseItem(int bytesLength) {
+public abstract class ItemIndex extends DexItem implements SmaliFormat {
+    ItemIndex(int bytesLength) {
         super(bytesLength);
     }
 
+    TypeIndex getTypeIndex(IntegerReference reference){
+        return getTypeIndex(reference.get());
+    }
     TypeIndex getTypeIndex(int index){
         if(index < 0){
             return null;

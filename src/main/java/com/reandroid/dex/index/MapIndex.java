@@ -13,17 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.item;
+package com.reandroid.dex.index;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.dex.base.DexItem;
+import com.reandroid.dex.common.MapItemType;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class MapItem extends BaseItem {
+public class MapIndex extends DexItem {
     private final IntegerItem offset;
-    public MapItem(IntegerItem offset) {
+    public MapIndex(IntegerItem offset) {
         super(SIZE);
         this.offset = offset;
     }

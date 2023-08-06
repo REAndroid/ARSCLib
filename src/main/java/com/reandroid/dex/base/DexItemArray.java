@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.base;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
@@ -22,7 +23,7 @@ import com.reandroid.dex.header.OffsetAndCount;
 
 import java.io.IOException;
 
-public class DexItemArray<T extends DexItem> extends BlockArray<T>{
+public class DexItemArray<T extends Block> extends BlockArray<T>{
     private final OffsetAndCount offsetAndCount;
     private final Creator<T> creator;
     public DexItemArray(OffsetAndCount offsetAndCount,

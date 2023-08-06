@@ -32,7 +32,7 @@ public class ArrayValueList extends FixedBlockContainer {
         addChild(1, elements);
     }
     public int getCount() {
-        return elementCount.getValue();
+        return elementCount.get();
     }
     public BlockList<DexValue<?>> getElements() {
         return elements;

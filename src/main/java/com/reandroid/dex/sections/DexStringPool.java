@@ -4,7 +4,7 @@ import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.dex.base.DexOffsetArray;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.header.OffsetAndCount;
-import com.reandroid.dex.item.StringIndex;
+import com.reandroid.dex.index.StringIndex;
 
 import java.util.Iterator;
 

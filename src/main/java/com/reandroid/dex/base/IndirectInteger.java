@@ -13,32 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.value;
+package com.reandroid.dex.base;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.arsc.item.BlockItem;
+import com.reandroid.arsc.item.IndirectItem;
+import com.reandroid.arsc.item.IntegerReference;
 
-import java.io.IOException;
-
-public class NullValue extends DexValue<Block> {
-    public NullValue() {
-        super();
+public class IndirectInteger extends IndirectItem<BlockItem> implements IntegerReference {
+    public IndirectInteger(BlockItem blockItem, int offset){
+        super(blockItem, offset);
     }
     @Override
-    public boolean isNull(){
-        return true;
+    public int get(){
+        return Block.getInteger(getBytesInternal(), getOffset());
     }
     @Override
-    public DexValueType getValueType() {
-        return DexValueType.NULL;
-    }
-
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
-        writer.append("null");
+    public void set(int value){
+        Block.putInteger(getBytesInternal(), getOffset(), value);
     }
     @Override
-    public String toString() {
-        return "NullValue";
+    public String toString(){
+        return Integer.toString(get());
     }
 }

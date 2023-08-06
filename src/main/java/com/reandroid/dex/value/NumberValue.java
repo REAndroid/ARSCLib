@@ -16,6 +16,7 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.dex.base.DexItem;
+import com.reandroid.utils.HexUtil;
 
 public class NumberValue extends DexItem {
     public NumberValue(int bytesLength) {
@@ -31,24 +32,69 @@ public class NumberValue extends DexItem {
         setBytesLength(size, false);
     }
 
+    public long getSignedValue(){
+        int size = getSize();
+        long value = getNumberValue();
+        if(size == 1){
+            return (byte)value;
+        }
+        if(size == 2){
+            return (short)value;
+        }
+        if(size < 5){
+            return (int)value;
+        }
+        return value;
+    }
     public long getNumberValue(){
         return getNumber(getBytesInternal(), 0, getSize());
     }
     public void setNumberValue(byte value){
+        setSize(1);
         getBytesInternal()[0] = value;
     }
     public void setNumberValue(short value){
-        putNumber(getBytesInternal(), 0, getSize(), value & 0xffffffffL);
+        if(value < 0){
+            byte b = (byte) (value & 0xff);
+            if(value == b){
+                setNumberValue(b);
+                return;
+            }
+        }
+        setNumberValue(value & 0xffffL);
     }
     public void setNumberValue(int value){
-        putNumber(getBytesInternal(), 0, getSize(), value & 0xffffffffL);
+        if(value < 0){
+            short s = (short) (value & 0xffff);
+            if(value == s){
+                setNumberValue(s);
+                return;
+            }
+        }
+        setNumberValue(value & 0xffffffffL);
     }
     public void setNumberValue(long value){
-        putNumber(getBytesInternal(), 0, getSize(), value);
+        int size = calculateSize(value);
+        setSize(size);
+        putNumber(getBytesInternal(), 0, size, value);
     }
 
+    public String toHex(){
+        return HexUtil.toHex(getNumberValue(), getSize());
+    }
     @Override
     public String toString() {
-        return getSize() + ":" + getNumberValue();
+        return getSize() + ":" + toHex() + ":" + getSignedValue();
+    }
+    private static int calculateSize(long value){
+        if(value == 0){
+            return 1;
+        }
+        int i = 0;
+        while (value != 0){
+            value = value >>> 8;
+            i++;
+        }
+        return i;
     }
 }

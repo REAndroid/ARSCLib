@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.sections;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.ExpandableBlockContainer;
 import com.reandroid.dex.base.DexItem;
@@ -23,7 +24,7 @@ import com.reandroid.dex.header.OffsetAndCount;
 
 import java.util.Iterator;
 
-public class DexSection<T extends DexItem>  extends ExpandableBlockContainer implements Iterable<T>{
+public class DexSection<T extends Block>  extends ExpandableBlockContainer implements Iterable<T>{
     private final DexItemArray<T> itemArray;
     public DexSection(OffsetAndCount offsetAndCount, Creator<T> creator){
         super(1);

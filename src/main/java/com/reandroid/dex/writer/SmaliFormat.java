@@ -13,32 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.value;
-
-import com.reandroid.arsc.base.Block;
-import com.reandroid.dex.writer.SmaliWriter;
+package com.reandroid.dex.writer;
 
 import java.io.IOException;
 
-public class NullValue extends DexValue<Block> {
-    public NullValue() {
-        super();
-    }
-    @Override
-    public boolean isNull(){
-        return true;
-    }
-    @Override
-    public DexValueType getValueType() {
-        return DexValueType.NULL;
-    }
-
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
-        writer.append("null");
-    }
-    @Override
-    public String toString() {
-        return "NullValue";
-    }
+public interface SmaliFormat {
+    void append(SmaliWriter writer) throws IOException;
 }

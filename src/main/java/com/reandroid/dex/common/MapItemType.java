@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.item;
+package com.reandroid.dex.common;
 
 public enum MapItemType {
 

@@ -3,7 +3,7 @@ package com.reandroid.dex;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.ExpandableBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.item.*;
+import com.reandroid.dex.index.*;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.sections.*;
 
@@ -18,12 +18,13 @@ public class DexFile extends ExpandableBlockContainer {
     private final DexStringPool stringPool;
     private final DexSection<TypeIndex> typeSection;
     private final DexSection<ProtoIndex> protoSection;
-    private final DexSection<FieldIdItem> fieldSection;
-    private final DexSection<ClassDefItem> classSection;
-    private final DexSection<MethodIdItem> methodSection;
+    private final DexSection<FieldIndex> fieldSection;
+    private final DexSection<ClassIndex> classSection;
+    private final DexSection<MethodIndex> methodSection;
 
-    private final MapItem mapItem;
+    private final MapIndex mapIndex;
 
+    private final DexAnnotationPool annotationPool;
     public DexFile() {
         super(8);
 
@@ -37,16 +38,19 @@ public class DexFile extends ExpandableBlockContainer {
         this.classSection = new DexSection<>(header.class_def, CREATOR_CLASS);
         this.methodSection = new DexSection<>(header.method, CREATOR_METHOD);
 
-        this.mapItem = new MapItem(header.map);
+        this.mapIndex = new MapIndex(header.map);
+
+        this.annotationPool = new DexAnnotationPool();
+        annotationPool.setParent(this);
 
         addChild(dexHeader);
         addChild(stringPool);
         addChild(typeSection);
         addChild(protoSection);
         addChild(fieldSection);
-        addChild(classSection);
         addChild(methodSection);
-        addChild(mapItem);
+        addChild(classSection);
+        addChild(mapIndex);
     }
 
     public DexHeader getHeader() {
@@ -61,17 +65,21 @@ public class DexFile extends ExpandableBlockContainer {
     public DexSection<ProtoIndex> getProtoSection() {
         return protoSection;
     }
-    public DexSection<FieldIdItem> getFieldSection() {
+    public DexSection<FieldIndex> getFieldSection() {
         return fieldSection;
     }
-    public DexSection<ClassDefItem> getClassSection() {
+    public DexSection<ClassIndex> getClassSection() {
         return classSection;
     }
-    public DexSection<MethodIdItem> getMethodSection(){
+    public DexSection<MethodIndex> getMethodSection(){
         return methodSection;
     }
-    public MapItem getMapItem(){
-        return mapItem;
+    public MapIndex getMapItem(){
+        return mapIndex;
+    }
+
+    public DexAnnotationPool getAnnotationPool(){
+        return annotationPool;
     }
 
     public static boolean isDexFile(File file){
@@ -142,34 +150,34 @@ public class DexFile extends ExpandableBlockContainer {
             return new ProtoIndex();
         }
     };
-    private static final Creator<FieldIdItem> CREATOR_FIELD = new Creator<FieldIdItem>() {
+    private static final Creator<FieldIndex> CREATOR_FIELD = new Creator<FieldIndex>() {
         @Override
-        public FieldIdItem[] newInstance(int length) {
-            return new FieldIdItem[length];
+        public FieldIndex[] newInstance(int length) {
+            return new FieldIndex[length];
         }
         @Override
-        public FieldIdItem newInstance() {
-            return new FieldIdItem();
-        }
-    };
-    private static final Creator<ClassDefItem> CREATOR_CLASS = new Creator<ClassDefItem>() {
-        @Override
-        public ClassDefItem[] newInstance(int length) {
-            return new ClassDefItem[length];
-        }
-        @Override
-        public ClassDefItem newInstance() {
-            return new ClassDefItem();
+        public FieldIndex newInstance() {
+            return new FieldIndex();
         }
     };
-    private static final Creator<MethodIdItem> CREATOR_METHOD = new Creator<MethodIdItem>() {
+    private static final Creator<ClassIndex> CREATOR_CLASS = new Creator<ClassIndex>() {
         @Override
-        public MethodIdItem[] newInstance(int length) {
-            return new MethodIdItem[length];
+        public ClassIndex[] newInstance(int length) {
+            return new ClassIndex[length];
         }
         @Override
-        public MethodIdItem newInstance() {
-            return new MethodIdItem();
+        public ClassIndex newInstance() {
+            return new ClassIndex();
+        }
+    };
+    private static final Creator<MethodIndex> CREATOR_METHOD = new Creator<MethodIndex>() {
+        @Override
+        public MethodIndex[] newInstance(int length) {
+            return new MethodIndex[length];
+        }
+        @Override
+        public MethodIndex newInstance() {
+            return new MethodIndex();
         }
     };
 

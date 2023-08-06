@@ -17,31 +17,31 @@ package com.reandroid.dex.item;
 
 import com.reandroid.arsc.io.BlockReader;
 
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.ShortList;
+import com.reandroid.dex.index.TypeIndex;
 import com.reandroid.dex.sections.DexSection;
 
 import java.io.IOException;
 
 public class TypeList extends ShortList {
-    public TypeList() {
+    private final IntegerReference offsetReference;
+    public TypeList(IntegerReference offsetReference) {
         super();
+        this.offsetReference = offsetReference;
     }
-    public TypeIndex[] toTypes(DexSection<TypeIndex> typeSection){
-        return typeSection.toArray(toArray());
-    }
-
-    public static TypeList read(BlockReader reader, int offset) throws IOException {
-        if(offset <= 0){
-            return null;
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException{
+        int offset = offsetReference.get();
+        if(offset == 0){
+            return;
         }
         int position = reader.getPosition();
         reader.seek(offset);
-        TypeList typeList = new TypeList();
-        typeList.readBytes(reader);
+        super.onReadBytes(reader);
         reader.seek(position);
-        if(typeList.size() > 0){
-            return typeList;
-        }
-        return null;
+    }
+    public TypeIndex[] toTypes(DexSection<TypeIndex> typeSection){
+        return typeSection.toArray(toArray());
     }
 }

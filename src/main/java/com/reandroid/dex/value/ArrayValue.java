@@ -17,6 +17,7 @@ package com.reandroid.dex.value;
 
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
@@ -41,13 +42,32 @@ public class ArrayValue extends DexValue<ArrayValueList>{
             int type = reader.read();
             reader.offset(-1);
             DexValueType valueType = DexValueType.fromFlag(type);
-            if(!valueType.isPrimitive()){
+            DexValue<?> dexValue = createFor(valueType);
+            if(dexValue == null){
                 return;
             }
-            PrimitiveValue value = new PrimitiveValue();
-            addValue(value);
-            value.readBytes(reader);
+            addValue(dexValue);
+            dexValue.readBytes(reader);
         }
+    }
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.append('{');
+        writer.indentPlus();
+        BlockList<DexValue<?>> elements = getElements();
+        int count = elements.size();
+        for(int i = 0; i < count; i++){
+            if(i != 0){
+                writer.append(',');
+            }
+            writer.newLine();
+            elements.get(i).append(writer);
+        }
+        writer.indentMinus();
+        if(count > 0){
+            writer.newLine();
+        }
+        writer.append('}');
     }
     @Override
     public String toString(){

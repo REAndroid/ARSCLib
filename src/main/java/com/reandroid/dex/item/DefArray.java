@@ -13,32 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.value;
+package com.reandroid.dex.item;
 
-import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.BlockArray;
+import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class NullValue extends DexValue<Block> {
-    public NullValue() {
+public abstract class DefArray<T extends Def> extends BlockArray<T>  implements SmaliFormat {
+    private final IntegerReference itemCount;
+    public DefArray(IntegerReference itemCount){
         super();
+        this.itemCount = itemCount;
     }
     @Override
-    public boolean isNull(){
-        return true;
+    protected void onRefreshed() {
     }
     @Override
-    public DexValueType getValueType() {
-        return DexValueType.NULL;
+    public void onReadBytes(BlockReader reader) throws IOException {
+        setChildesCount(itemCount.get());
+        super.onReadBytes(reader);
     }
-
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append("null");
-    }
-    @Override
-    public String toString() {
-        return "NullValue";
+        for(Def def : getChildes()){
+            def.append(writer);
+            writer.newLine();
+        }
     }
 }

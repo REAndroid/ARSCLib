@@ -15,30 +15,32 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.arsc.base.Block;
+import com.reandroid.dex.index.FieldIndex;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class NullValue extends DexValue<Block> {
-    public NullValue() {
+public class EnumValue extends PrimitiveValue {
+    public EnumValue(){
         super();
     }
-    @Override
-    public boolean isNull(){
-        return true;
+    public FieldIndex getFieldId(){
+        return getFieldId(getFieldIdIndex());
     }
-    @Override
-    public DexValueType getValueType() {
-        return DexValueType.NULL;
+    public int getFieldIdIndex(){
+        return (int) getNumberValue();
     }
-
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append("null");
+        writer.append(".enum ");
+        getFieldId().append(writer);
     }
     @Override
-    public String toString() {
-        return "NullValue";
+    public String toString(){
+        FieldIndex fieldIndex = getFieldId();
+        if(fieldIndex != null){
+            return ".enum " + fieldIndex;
+        }
+        return "enum field index: " + getNumberValue();
     }
 }

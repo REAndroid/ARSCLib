@@ -1,11 +1,27 @@
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.dex.base;
 
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.io.StreamUtil;
 
 import java.io.IOException;
 
-public class Ule128Item extends DexItem{
+public class Ule128Item extends DexItem implements IntegerReference {
     private final boolean large;
     private int value;
     public Ule128Item(boolean large) {
@@ -15,11 +31,12 @@ public class Ule128Item extends DexItem{
     public Ule128Item() {
         this(false);
     }
-
-    public int getValue() {
+    @Override
+    public int get() {
         return value;
     }
-    public void setValue(int value) {
+    @Override
+    public void set(int value) {
         if(this.value == value){
             return;
         }
@@ -41,6 +58,6 @@ public class Ule128Item extends DexItem{
 
     @Override
     public String toString() {
-        return "bytes = " + countBytes() + ", value = " + getValue();
+        return "bytes = " + countBytes() + ", value = " + get();
     }
 }

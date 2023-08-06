@@ -13,44 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.item;
+package com.reandroid.dex.index;
 
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.base.IndirectInteger;
+import com.reandroid.dex.item.TypeList;
+import com.reandroid.dex.writer.SmaliWriter;
+
 import java.io.IOException;
 
-public class ProtoIndex extends BaseItem {
-    private TypeList typeList;
+public class ProtoIndex extends ItemIndex {
+    private final TypeList typeList;
+
+    private final IndirectInteger shorty;
+    private final IndirectInteger returnType;
+    private final IndirectInteger parameters;
+
     public ProtoIndex() {
         super(SIZE);
+        int offset = -4;
+
+        this.shorty = new IndirectInteger(this, offset += 4);
+        this.returnType = new IndirectInteger(this, offset += 4);
+        this.parameters = new IndirectInteger(this, offset += 4);
+
+        typeList = new TypeList(parameters);
     }
 
-    public TypeIndex getReturnType(){
-        return getTypeIndex(getReturnTypeIndex());
+    public IndirectInteger getShorty() {
+        return shorty;
+    }
+    public IndirectInteger getReturnType() {
+        return returnType;
+    }
+    public IndirectInteger getParameters() {
+        return parameters;
     }
 
-    public int getShortyIndex(){
-        return getInteger(getBytesInternal(), OFFSET_SHORTY);
+    public TypeIndex getReturnTypeIndex(){
+        return getTypeIndex(getReturnType());
     }
-    public void setShortyIndex(int index){
-        putInteger(getBytesInternal(), OFFSET_RETURN_TYPE, index);
-    }
-    public int getReturnTypeIndex(){
-        return getShort(getBytesInternal(), OFFSET_RETURN_TYPE) & 0xffff;
-    }
-    public void setReturnTypeIndex(int index){
-        putShort(getBytesInternal(), OFFSET_RETURN_TYPE, (short) index);
-    }
-    public int getParametersOffset(){
-        return getInteger(getBytesInternal(), OFFSET_PARAMETERS);
-    }
-    public void setParametersOffset(int index){
-        putInteger(getBytesInternal(), OFFSET_PARAMETERS, index);
-    }
-
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
-        typeList = TypeList.read(reader, getParametersOffset());
+        typeList.readBytes(reader);
     }
     public int[] getParametersIndexes(){
         TypeList typeList = this.typeList;
@@ -59,7 +65,7 @@ public class ProtoIndex extends BaseItem {
         }
         return null;
     }
-    public TypeIndex[] getParameters(){
+    public TypeIndex[] getParameterTypes(){
         TypeList typeList = this.typeList;
         if(typeList != null){
             return typeList.toTypes(getTypeSection());
@@ -68,23 +74,31 @@ public class ProtoIndex extends BaseItem {
     }
 
     public String buildMethodParameters(){
-        TypeIndex[] parameters = getParameters();
+        TypeIndex[] parameters = getParameterTypes();
         if(parameters == null){
             return "";
         }
         StringBuilder builder = new StringBuilder();
         for(TypeIndex typeIndex:parameters){
-            builder.append(typeIndex.getString().getString());
+            builder.append(typeIndex.getStringIndex().getString());
         }
         return builder.toString();
+    }
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        TypeIndex[] parameters = getParameterTypes();
+        if(parameters == null){
+            return;
+        }
+        for(TypeIndex typeIndex : parameters){
+            typeIndex.append(writer);
+        }
     }
     @Override
     public String toString() {
         return "(" + buildMethodParameters() +")" + getReturnType().toString();
     }
 
-    private static final int OFFSET_SHORTY = 0;
-    private static final int OFFSET_RETURN_TYPE = 4;
-    private static final int OFFSET_PARAMETERS = 8;
-    public static final int SIZE = 12;
+    private static final int SIZE = 12;
+
 }

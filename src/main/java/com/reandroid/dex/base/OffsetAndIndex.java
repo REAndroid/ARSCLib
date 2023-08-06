@@ -13,29 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.item;
+package com.reandroid.dex.base;
 
-public class TypeIndex extends BaseItem {
-    public TypeIndex() {
-        super(4);
-    }
+import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.item.BlockItem;
+import com.reandroid.arsc.item.IndirectItem;
 
-    public StringIndex getString(){
-        return getStringIndex(getStringIndex());
+public class OffsetAndIndex extends IndirectItem<BlockItem> {
+    public OffsetAndIndex(BlockItem blockItem, int offset) {
+        super(blockItem, offset);
     }
-    public int getStringIndex(){
-        return getInteger(getBytesInternal(), 0);
+    public int getItemOffset(){
+        return Block.getInteger(getBytesInternal(), super.getOffset());
     }
-    public void setStringIndex(int index){
-        putInteger(getBytesInternal(), 0, index);
+    public int getItemIndex(){
+        return Block.getInteger(getBytesInternal(), super.getOffset() + 4);
     }
-
     @Override
-    public String toString(){
-        StringIndex stringIndex = getString();
-        if(stringIndex != null){
-            return stringIndex.getString();
-        }
-        return getIndex() + ":" + getStringIndex() + "{" + getString() + "}";
+    public String toString() {
+        return "offset=" + getItemOffset() + ", index=" + getItemIndex();
     }
 }

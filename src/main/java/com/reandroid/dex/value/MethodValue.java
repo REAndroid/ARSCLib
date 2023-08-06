@@ -15,30 +15,22 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.arsc.base.Block;
+import com.reandroid.dex.DexFile;
+import com.reandroid.dex.index.MethodIndex;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class NullValue extends DexValue<Block> {
-    public NullValue() {
+public class MethodValue extends PrimitiveValue{
+    public MethodValue(){
         super();
     }
-    @Override
-    public boolean isNull(){
-        return true;
+    public MethodIndex getMethodIndex(){
+        DexFile dexFile = getDexFile();
+        return dexFile.getMethodSection().get((int) getNumberValue());
     }
-    @Override
-    public DexValueType getValueType() {
-        return DexValueType.NULL;
-    }
-
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append("null");
-    }
-    @Override
-    public String toString() {
-        return "NullValue";
+        getMethodIndex().append(writer);
     }
 }

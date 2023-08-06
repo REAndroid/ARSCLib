@@ -13,10 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.item;
+package com.reandroid.dex.index;
 
-public class FieldIdItem extends BaseItem {
-    public FieldIdItem() {
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.DexFile;
+import com.reandroid.dex.sections.DexSection;
+import com.reandroid.dex.sections.DexStringPool;
+import com.reandroid.dex.writer.SmaliFormat;
+import com.reandroid.dex.writer.SmaliWriter;
+
+import java.io.IOException;
+
+public class FieldIndex extends ItemIndex implements SmaliFormat {
+    public FieldIndex() {
         super(8);
     }
 
@@ -26,7 +35,7 @@ public class FieldIdItem extends BaseItem {
         if(type == null){
             return null;
         }
-        StringIndex stringIndex = type.getString();
+        StringIndex stringIndex = type.getStringIndex();
         if(stringIndex == null){
             return null;
         }
@@ -42,7 +51,7 @@ public class FieldIdItem extends BaseItem {
         if(type == null){
             return null;
         }
-        stringIndex = type.getString();
+        stringIndex = type.getStringIndex();
         if(stringIndex == null){
             return null;
         }
@@ -78,6 +87,55 @@ public class FieldIdItem extends BaseItem {
         putInteger(getBytesInternal(), 4, index);
     }
 
+
+    TypeIndex getTypeIndex(IntegerReference reference){
+        return getTypeIndex(reference.get());
+    }
+    TypeIndex getTypeIndex(int index){
+        if(index < 0){
+            return null;
+        }
+        DexSection<TypeIndex> stringPool = getTypeSection();
+        if(stringPool != null){
+            return stringPool.get(index);
+        }
+        return null;
+    }
+    StringIndex getStringIndex(int index){
+        if(index < 0){
+            return null;
+        }
+        DexStringPool stringPool = getStringPool();
+        if(stringPool != null){
+            return stringPool.get(index);
+        }
+        return null;
+    }
+    DexStringPool getStringPool(){
+        DexFile dexFile = getDexFile();
+        if(dexFile != null){
+            return dexFile.getStringPool();
+        }
+        return null;
+    }
+    DexSection<TypeIndex> getTypeSection(){
+        DexFile dexFile = getDexFile();
+        if(dexFile != null){
+            return dexFile.getTypeSection();
+        }
+        return null;
+    }
+    DexFile getDexFile(){
+        return getParentInstance(DexFile.class);
+    }
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        getClassType().append(writer);
+        writer.append("->");
+        writer.append(getNameString().getString());
+        writer.append(':');
+        getFieldType().append(writer);
+    }
     @Override
     public String toString(){
         String key = getKey();

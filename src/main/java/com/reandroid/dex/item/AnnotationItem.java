@@ -21,13 +21,16 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.DexFile;
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.value.DexValue;
+import com.reandroid.dex.common.AnnotationVisibility;
+import com.reandroid.dex.index.TypeIndex;
+import com.reandroid.dex.sections.DexAnnotationPool;
+import com.reandroid.dex.writer.SmaliFormat;
+import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class AnnotationItem extends FixedBlockContainer {
+public class AnnotationItem extends FixedBlockContainer implements SmaliFormat {
     private final ByteItem visibility;
     private final Ule128Item typeIndex;
     private final Ule128Item elementsCount;
@@ -43,13 +46,16 @@ public class AnnotationItem extends FixedBlockContainer {
         addChild(2, elementsCount);
         addChild(3, annotationElements);
     }
+    public AnnotationVisibility getVisibility(){
+        return AnnotationVisibility.valueOf(visibility.unsignedInt());
+    }
     public int getElementsCount(){
-        return elementsCount.getValue();
+        return elementsCount.get();
     }
     public TypeIndex getTypeIndex(){
         DexFile dexFile = getParentInstance(DexFile.class);
         if(dexFile != null){
-            return dexFile.getTypeSection().get(typeIndex.getValue());
+            return dexFile.getTypeSection().get(typeIndex.get());
         }
         return null;
     }
@@ -57,19 +63,37 @@ public class AnnotationItem extends FixedBlockContainer {
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
         int count = getElementsCount();
+        DexAnnotationPool pool = getParentInstance(DexFile.class).getAnnotationPool();
         BlockList<AnnotationElement> elements = this.annotationElements;
         for(int i = 0; i < count; i++){
-            AnnotationElement element = new AnnotationElement();
+            AnnotationElement element = pool.getOrRead(reader);
             elements.add(element);
-            element.readBytes(reader);
         }
         elements.size();
     }
 
     @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.append(".annotation ");
+        writer.append(getVisibility().getName());
+        writer.append(' ');
+        getTypeIndex().append(writer);
+        Iterator<AnnotationElement> iterator = annotationElements.iterator();
+        writer.indentPlus();
+        while (iterator.hasNext()){
+            writer.newLine();
+            iterator.next().append(writer);
+        }
+        writer.indentMinus();
+        writer.newLine();
+        writer.append(".end annotation");
+    }
+    @Override
     public String toString(){
         StringBuilder builder = new StringBuilder();
-        builder.append(".annotation system ");
+        builder.append(".annotation ");
+        builder.append(getVisibility());
+        builder.append(' ');
         builder.append(getTypeIndex());
         Iterator<AnnotationElement> iterator = annotationElements.iterator();
         while (iterator.hasNext()){

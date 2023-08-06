@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.item;
+package com.reandroid.dex.index;
 
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.base.DexItem;
 import com.reandroid.dex.io.ByteReader;
 import com.reandroid.dex.io.StreamUtil;
+import com.reandroid.dex.writer.SmaliFormat;
+import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class StringIndex extends DexItem {
+public class StringIndex extends ItemIndex implements SmaliFormat {
     private String mCache;
 
     public StringIndex() {
@@ -34,14 +35,6 @@ public class StringIndex extends DexItem {
         return mCache;
     }
 
-    @Override
-    public String toString(){
-        String text = getString();
-        if(text != null){
-            return text;
-        }
-        return "NULL";
-    }
 
     @Override
     protected void onBytesChanged() {
@@ -63,6 +56,20 @@ public class StringIndex extends DexItem {
         mCache = text;
     }
 
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.append('"');
+        writer.append(getString());
+        writer.append('"');
+    }
+    @Override
+    public String toString(){
+        String text = getString();
+        if(text != null){
+            return text;
+        }
+        return "NULL";
+    }
     private String decodeString(){
         String text;
         try {
