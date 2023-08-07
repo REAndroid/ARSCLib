@@ -265,7 +265,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
             return new ArrayList<>();
         }
         List<ResXmlElement> results = application.listElements(TAG_activity);
-        if(includeActivityAlias){
+        if(includeActivityAlias && !results.isEmpty()){
             results.addAll(application.listElements(TAG_activity_alias));
         }
         return results;
