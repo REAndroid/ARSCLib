@@ -15,6 +15,7 @@
  */
 package com.reandroid.arsc.pool;
 
+import com.reandroid.arsc.array.IntegerOffsetArray;
 import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.array.StyleArray;
@@ -45,8 +46,8 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     StringPool(boolean is_utf8, boolean stringLinkLocked){
         super(new StringPoolHeader(), 4);
 
-        OffsetArray offsetStrings = new OffsetArray();
-        OffsetArray offsetStyles = new OffsetArray();
+        IntegerOffsetArray offsetStrings = new IntegerOffsetArray();
+        IntegerOffsetArray offsetStyles = new IntegerOffsetArray();
 
         StringPoolHeader header = getHeaderBlock();
 
@@ -287,7 +288,6 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     private T createNewString(String str){
         T item = mArrayStrings.createNext();
         item.set(str);
-        //getHeaderBlock().getCountStrings().set(mArrayStrings.childesCount());
         return item;
     }
     public final StyleItem getStyle(int index){

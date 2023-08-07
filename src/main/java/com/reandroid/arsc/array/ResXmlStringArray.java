@@ -17,7 +17,6 @@ package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
-import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ResXmlString;
 

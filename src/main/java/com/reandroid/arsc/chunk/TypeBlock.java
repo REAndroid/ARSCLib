@@ -16,7 +16,7 @@
 package com.reandroid.arsc.chunk;
 
 import com.reandroid.arsc.array.EntryArray;
-import com.reandroid.arsc.array.OffsetArray;
+import com.reandroid.arsc.array.IntegerOffsetArray;
 import com.reandroid.arsc.array.SparseOffsetsArray;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.header.TypeHeader;
@@ -48,11 +48,11 @@ public class TypeBlock extends Chunk<TypeHeader>
         super(new TypeHeader(sparse), 2);
         TypeHeader header = getHeaderBlock();
 
-        OffsetArray entryOffsets;
+        IntegerOffsetArray entryOffsets;
         if(sparse){
             entryOffsets = new SparseOffsetsArray();
         }else {
-            entryOffsets = new OffsetArray();
+            entryOffsets = new IntegerOffsetArray();
         }
         this.mEntryArray = new EntryArray(entryOffsets,
                 header.getCount(), header.getEntriesStart());

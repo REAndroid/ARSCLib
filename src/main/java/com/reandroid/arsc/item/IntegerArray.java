@@ -32,7 +32,7 @@ public class IntegerArray extends BlockItem {
         }
         return false;
     }
-    public final void clear(){
+    public void clear(){
         setSize(0);
     }
     public final void add(int value){

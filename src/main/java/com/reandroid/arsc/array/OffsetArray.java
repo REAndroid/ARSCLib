@@ -15,26 +15,14 @@
  */
 package com.reandroid.arsc.array;
 
-import com.reandroid.arsc.item.IntegerArray;
+public interface OffsetArray {
+    int getOffset(int i);
+    void setOffset(int index, int value);
+    int[] getOffsets();
+    int size();
+    void setSize(int count);
+    void clear();
 
-public class OffsetArray extends IntegerArray {
-    public OffsetArray(){
-        super();
-    }
-    public int getOffset(int i){
-        return super.getAt(i);
-    }
-    public void setOffset(int index, int value){
-        super.put(index, value);
-    }
-    public int[] getOffsets(){
-        int length = size();
-        int[] result = new int[length];
-        for(int i=0;i<length;i++){
-            result[i] = getOffset(i);
-        }
-        return result;
-    }
+    int NO_ENTRY = 0xFFFFFFFF;
 
-    public static final int NO_ENTRY = 0xFFFFFFFF;
 }

@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.array;
 
-public class SparseOffsetsArray extends OffsetArray{
+public class SparseOffsetsArray extends IntegerOffsetArray {
     public SparseOffsetsArray(){
         super();
     }

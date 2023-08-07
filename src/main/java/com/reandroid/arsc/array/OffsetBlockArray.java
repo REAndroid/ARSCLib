@@ -15,53 +15,53 @@
  */
 package com.reandroid.arsc.array;
 
-
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.ByteArray;
-import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.AlignItem;
+import com.reandroid.arsc.item.IntegerReference;
 
 
 import java.io.IOException;
 import java.io.OutputStream;
 
 public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> implements BlockLoad {
-    private final OffsetArray mOffsets;
-    private final IntegerItem mItemStart;
-    private final IntegerItem mItemCount;
-    private final ByteArray mEnd4Block;
-    private byte mEnd4Type;
-    public OffsetBlockArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart){
+    private final OffsetArray mOffsetArray;
+    private final IntegerReference mItemStart;
+    private final IntegerReference mItemCount;
+    private final AlignItem alignItem;
+
+    public OffsetBlockArray(OffsetArray offsets, IntegerReference itemCount, IntegerReference itemStart){
         super();
-        this.mOffsets=offsets;
-        this.mItemCount=itemCount;
-        this.mItemStart=itemStart;
-        this.mEnd4Block=new ByteArray();
-        mItemCount.setBlockLoad(this);
+        this.mOffsetArray = offsets;
+        this.mItemCount = itemCount;
+        this.mItemStart = itemStart;
+        this.alignItem = new AlignItem();
+        if(itemCount instanceof Block){
+            ((Block)itemCount).setBlockLoad(this);
+        }
     }
     OffsetArray getOffsetArray(){
-        return mOffsets;
+        return mOffsetArray;
     }
-    void setEndBytes(byte b){
-        this.mEnd4Type=b;
-        this.mEnd4Block.fill(b);
+    protected AlignItem getAlignItem(){
+        return alignItem;
     }
     @Override
     public void clearChildes(){
         super.clearChildes();
-        mOffsets.clear();
+        mOffsetArray.clear();
         mItemStart.set(0);
         mItemCount.set(0);
-        mEnd4Block.clear();
+        alignItem.clear();
     }
     @Override
     public int countBytes(){
-        int result=super.countBytes();
-        int endCount=mEnd4Block.countBytes();
-        return result+endCount;
+        int result = super.countBytes();
+        int alignSize = getAlignItem().countBytes();
+        return result + alignSize;
     }
     @Override
     public void onCountUpTo(BlockCounter counter){
@@ -69,51 +69,58 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         if(counter.FOUND){
             return;
         }
-        mEnd4Block.onCountUpTo(counter);
+        getAlignItem().onCountUpTo(counter);
     }
     @Override
     public byte[] getBytes(){
-        byte[] results=super.getBytes();
-        if(results==null){
+        byte[] results = super.getBytes();
+        if(results == null){
             return null;
         }
-        byte[] endBytes=mEnd4Block.getBytes();
-        results=addBytes(results, endBytes);
+        byte[] alignBytes = alignItem.getBytes();
+        results = addBytes(results, alignBytes);
         return results;
     }
     @Override
     public int onWriteBytes(OutputStream stream) throws IOException {
-        int result=super.onWriteBytes(stream);
-        if(result==0){
+        int result = super.onWriteBytes(stream);
+        if(result == 0){
             return 0;
         }
-        result+=mEnd4Block.writeBytes(stream);
+        result += alignItem.writeBytes(stream);
         return result;
     }
     @Override
     protected void onRefreshed() {
-        int count=childesCount();
-        OffsetArray offsetArray = this.mOffsets;
-        offsetArray.setSize(count);
-        T[] childes=getChildes();
-        int sum=0;
-        if(childes!=null){
-            int max=childes.length;
-            for(int i=0;i<max;i++){
-                T item=childes[i];
-                int offset;
-                if(item==null || item.isNull()){
-                    offset=-1;
-                }else {
-                    offset=sum;
-                    sum+=item.countBytes();
-                }
-                offsetArray.setOffset(i, offset);
-            }
-        }
+        calculateOffsets();
         refreshCount();
         refreshStart();
-        refreshEnd4Block();
+        refreshAlignment(getAlignItem());
+    }
+    private void calculateOffsets() {
+        T[] childes = getChildes();
+        int count = 0;
+        if(childes != null){
+            count = childes.length;
+        }
+        OffsetArray offsetArray = getOffsetArray();
+        offsetArray.setSize(count);
+        if(count == 0){
+            return;
+        }
+        int sum = 0;
+        int length = childes.length;
+        for(int i = 0; i < length; i++){
+            T item = childes[i];
+            int offset;
+            if(item == null || item.isNull()){
+                offset = -1;
+            }else {
+                offset = sum;
+                sum += item.countBytes();
+            }
+            offsetArray.setOffset(i, offset);
+        }
     }
     public void refreshCountAndStart(){
         refreshCount();
@@ -123,83 +130,75 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         mItemCount.set(childesCount());
     }
     private void refreshStart(){
-        int count=childesCount();
-        if(count==0){
+        int count = childesCount();
+        if(count == 0){
             mItemStart.set(0);
-            mEnd4Block.clear();
+            alignItem.clear();
             return;
         }
-        Block parent=getParent();
-        if(parent==null){
+        Block parent = getParent();
+        if(parent == null){
             return;
         }
-        int start=parent.countUpTo(this);
+        int start = parent.countUpTo(this);
         mItemStart.set(start);
     }
-    void refreshEnd4Block(BlockReader reader, ByteArray end4Block) throws IOException{
-        refreshEnd4Block();
+    void refreshAlignment(BlockReader reader, AlignItem alignItem) throws IOException{
+        refreshAlignment(alignItem);
     }
-    void refreshEnd4Block(ByteArray end4Block){
-        if(childesCount()==0){
-            end4Block.clear();
+    void refreshAlignment(AlignItem alignItem){
+        if(childesCount() == 0){
+            alignItem.clear();
             return;
         }
-        int count=countBytes();
-        if(count%4==0){
-            return;
-        }
-        end4Block.clear();
-        count=countBytes();
-        int add=0;
-        int rem=count%4;
-        while (rem!=0){
-            add++;
-            count++;
-            rem=count%4;
-        }
-        end4Block.setSize(add);
-        end4Block.fill(mEnd4Type);
-    }
-    private void refreshEnd4Block(){
-        refreshEnd4Block(mEnd4Block);
+        alignItem.align(this);
     }
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
-        T[] childes=getChildes();
-        if(childes==null||childes.length==0){
+        T[] childes = getChildes();
+        if(childes == null || childes.length == 0){
             return;
         }
-        int[] offsetArray=mOffsets.getOffsets();
-        int max=childes.length;
-        int start=mItemStart.get();
-        reader.seek(start);
-        int zeroPosition=reader.getPosition();
-        int maxPos=zeroPosition;
-        for(int i=0;i<max;i++){
-            T item=childes[i];
-            int offset=offsetArray[i];
-            if(offset==-1){
+        int noEntry = OffsetArray.NO_ENTRY;
+        int[] offsetArray = mOffsetArray.getOffsets();
+        int length = childes.length;
+        int zeroPosition = getZeroPosition();
+        reader.seek(zeroPosition);
+        int maximumPosition = zeroPosition;
+        for(int i = 0; i < length; i++){
+            T item = childes[i];
+            int offset = offsetArray[i];
+            if(offset == noEntry){
                 item.setNull(true);
                 continue;
             }
-            int itemStart=zeroPosition+offset;
+            int itemStart = zeroPosition + offset;
             reader.seek(itemStart);
             item.readBytes(reader);
-            int pos=reader.getPosition();
-            if(pos>maxPos){
-                maxPos=pos;
+            int position = reader.getPosition();
+            if(position > maximumPosition){
+                maximumPosition = position;
             }
         }
-        reader.seek(maxPos);
-        refreshEnd4Block(reader, mEnd4Block);
+        if(maximumPosition > 0){
+            reader.seek(maximumPosition);
+            refreshAlignment(reader, getAlignItem());
+        }
+    }
+    private int getZeroPosition(){
+        int start = mItemStart.get();
+        if(start < 0){
+            start = 0;
+        }
+        return start;
     }
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender==mItemCount){
-            int count=mItemCount.get();
+        if(sender == mItemCount){
+            int count = mItemCount.get();
             setChildesCount(count);
-            mOffsets.setSize(count);
+            getOffsetArray().setSize(count);
         }
     }
 
@@ -208,10 +207,10 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(": count = ");
-        int s= childesCount();
-        builder.append(s);
-        int count=mItemCount.get();
-        if(s!=count){
+        int realCount = childesCount();
+        builder.append(realCount);
+        int count = mItemCount.get();
+        if(realCount != count){
             builder.append(", countValue=");
             builder.append(count);
         }
@@ -219,5 +218,4 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         builder.append(mItemStart.get());
         return builder.toString();
     }
-
 }

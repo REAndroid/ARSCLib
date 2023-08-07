@@ -30,7 +30,6 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     public StringArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         super(offsets, itemCount, itemStart);
         this.mUtf8=is_utf8;
-        setEndBytes((byte)0x00);
     }
     @Override
     protected void onPreShifting(){

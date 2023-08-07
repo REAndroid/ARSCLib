@@ -16,7 +16,7 @@
 package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.arsc.item.AlignItem;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.StyleItem;
 import com.reandroid.json.JSONConvert;
@@ -27,7 +27,6 @@ import java.io.IOException;
 public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConvert<JSONArray> {
     public StyleArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart) {
         super(offsets, itemCount, itemStart);
-        setEndBytes(END_BYTE);
     }
     protected void onStringShifted(int index){
         StyleItem styleItem = get(index);
@@ -47,30 +46,31 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
         super.clearChildes();
     }
     @Override
-    void refreshEnd4Block(BlockReader reader, ByteArray end4Block) throws IOException {
-        end4Block.clear();
-        if(reader.available()<4){
+    void refreshAlignment(BlockReader reader, AlignItem alignItem) throws IOException {
+        alignItem.clear();
+        alignItem.setFill(END_BYTE);
+        if(reader.available() < 4){
             return;
         }
-        IntegerItem integerItem=new IntegerItem();
-        while (reader.available()>=4){
-            int pos=reader.getPosition();
+        IntegerItem integerItem = new IntegerItem();
+        while (reader.available() >= 4){
+            int position = reader.getPosition();
             integerItem.readBytes(reader);
-            if(integerItem.get()!=0xFFFFFFFF){
-                reader.seek(pos);
+            if(integerItem.get() != 0xFFFFFFFF){
+                reader.seek(position);
                 break;
             }
-            end4Block.add(integerItem.getBytes());
+            alignItem.setSize(alignItem.size() + 4);
         }
     }
     @Override
-    void refreshEnd4Block(ByteArray end4Block) {
-        super.refreshEnd4Block(end4Block);
-        if(childesCount()==0){
+    void refreshAlignment(AlignItem alignItem) {
+        if(childesCount() == 0){
+            alignItem.clear();
             return;
         }
-        end4Block.ensureArraySize(8);
-        end4Block.fill(END_BYTE);
+        alignItem.setFill(END_BYTE);
+        alignItem.ensureSize(8);
     }
     @Override
     protected void refreshChildes(){
