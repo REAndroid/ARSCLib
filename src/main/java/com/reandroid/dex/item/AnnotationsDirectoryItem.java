@@ -17,9 +17,10 @@ package com.reandroid.dex.item;
 
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.DexFile;
 import com.reandroid.dex.base.OffsetIndexArray;
+import com.reandroid.dex.index.AnnotationIndex;
 import com.reandroid.dex.index.FieldIndex;
 import com.reandroid.dex.sections.IndexSections;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -30,11 +31,7 @@ import java.io.IOException;
 public class AnnotationsDirectoryItem extends FixedBlockContainer implements SmaliFormat {
 
 
-    private final IntegerItem classOffset;
-    private final IntegerItem fieldCount;
-    private final IntegerItem methodCount;
-    private final IntegerItem parameterCount;
-    private final IntegerItem annotationStart;
+    private final AnnotationIndex annotationIndex;
 
     private final OffsetIndexArray fieldsOffset;
     private final OffsetIndexArray methodsOffset;
@@ -46,27 +43,19 @@ public class AnnotationsDirectoryItem extends FixedBlockContainer implements Sma
     private final AnnotationGroup parameterAnnotations;
 
     public AnnotationsDirectoryItem() {
-        super(8);
+        super(4);
         int offset = -4;
-        this.classOffset = new IntegerItem();
-        this.fieldCount = new IntegerItem();
-        this.methodCount = new IntegerItem();
-        this.parameterCount = new IntegerItem();
-        this.annotationStart = new IntegerItem();
+        this.annotationIndex = new AnnotationIndex();
 
-        this.fieldsOffset = new OffsetIndexArray(fieldCount);
-        this.methodsOffset = new OffsetIndexArray(methodCount);
-        this.parametersOffset = new OffsetIndexArray(parameterCount);
+        this.fieldsOffset = new OffsetIndexArray(annotationIndex.getFieldCount());
+        this.methodsOffset = new OffsetIndexArray(annotationIndex.getMethodCount());
+        this.parametersOffset = new OffsetIndexArray(annotationIndex.getParameterCount());
 
-        addChild(0, classOffset);
-        addChild(1, fieldCount);
-        addChild(2, methodCount);
-        addChild(3, parameterCount);
+        addChild(0, annotationIndex);
 
-        addChild(4, annotationStart);
-        addChild(5, fieldsOffset);
-        addChild(6, methodsOffset);
-        addChild(7, parametersOffset);
+        addChild(1, fieldsOffset);
+        addChild(2, methodsOffset);
+        addChild(3, parametersOffset);
         
         this.classAnnotations = new AnnotationGroup();
         this.fieldAnnotations = new AnnotationGroup();
@@ -79,20 +68,8 @@ public class AnnotationsDirectoryItem extends FixedBlockContainer implements Sma
         parameterAnnotations.setParent(this);
     }
 
-    public IntegerItem getClassOffset() {
-        return classOffset;
-    }
-    public IntegerItem getFieldCount() {
-        return fieldCount;
-    }
-    public IntegerItem getMethodCount() {
-        return methodCount;
-    }
-    public IntegerItem getParameterCount() {
-        return parameterCount;
-    }
-    public IntegerItem getAnnotationsStart() {
-        return annotationStart;
+    public IntegerReference getClassOffset() {
+        return annotationIndex.getClassOffset();
     }
     
     public AnnotationGroup getClassAnnotations() {
@@ -103,6 +80,9 @@ public class AnnotationsDirectoryItem extends FixedBlockContainer implements Sma
     }
     public AnnotationGroup getMethodAnnotations() {
         return methodAnnotations;
+    }
+    public AnnotationGroup getParameterAnnotations() {
+        return parameterAnnotations;
     }
 
     @Override
@@ -120,10 +100,9 @@ public class AnnotationsDirectoryItem extends FixedBlockContainer implements Sma
         IndexSections indexSections = dexFile.getSections();
         for(int i = 0; i < count; i++){
             FieldIndex fieldIndex = indexSections.getFieldIndex(offsetIndexArray.getItemIndex(i));
-            if(fieldIndex ==null){
+            if(fieldIndex == null){
                 continue;
             }
-            fieldIndex.getTypeIndex();
             offset = offsetIndexArray.getOffset(i);
             reader.seek(offset);
             AnnotationGroup itemList=new AnnotationGroup();
@@ -163,9 +142,10 @@ public class AnnotationsDirectoryItem extends FixedBlockContainer implements Sma
     }
     @Override
     public String toString() {
-        return "class=" + classOffset
+        return "index=" + annotationIndex
                 + ", fields={" + fieldsOffset
-                + "}, methods={" + methodsOffset + "}";
+                + "}, methods={" + methodsOffset
+                + "}, parameters={" + parametersOffset + "}";
     }
 
 

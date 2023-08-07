@@ -32,8 +32,14 @@ public class IndirectInteger extends IndirectItem<BlockItem> implements IntegerR
     public void set(int value){
         Block.putInteger(getBytesInternal(), getOffset(), value);
     }
+    public boolean isNull(){
+        return (getBytesInternal().length - getOffset()) < 4;
+    }
     @Override
     public String toString(){
+        if(isNull()){
+            return "NULL";
+        }
         return Integer.toString(get());
     }
 }

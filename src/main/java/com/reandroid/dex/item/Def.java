@@ -39,7 +39,7 @@ public class Def extends FixedBlockContainer implements SmaliFormat {
         return accessFlags.get();
     }
     public int getDefIndexId() {
-        DefArray<?> parentArray = getParentInstance(FieldDefArray.class);
+        DefArray<?> parentArray = getParentInstance(DefArray.class);
         if(parentArray != null){
             Def previous = parentArray.get(getIndex() - 1);
             if(previous != null){

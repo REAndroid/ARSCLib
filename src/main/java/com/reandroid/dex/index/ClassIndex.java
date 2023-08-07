@@ -39,7 +39,8 @@ public class ClassIndex extends ItemIndex{
     
     private TypeList interfaceList;
     private AnnotationsDirectoryItem annotationsDirectory;
-    private ClassDataItem classDataItem;
+    private final ClassDataItem classDataItem;
+
     public ClassIndex() {
         super(SIZE);
         int offset = -4;
@@ -52,9 +53,7 @@ public class ClassIndex extends ItemIndex{
         this.annotationsOffset = new IndirectInteger(this, offset += 4);
         this.classDataOffset = new IndirectInteger(this, offset += 4);
         this.staticValuesOffset = new IndirectInteger(this, offset += 4);
-        
-        this.annotationsDirectory = new AnnotationsDirectoryItem();
-        this.annotationsDirectory.setParent(this);
+
         classDataItem = new ClassDataItem(classDataOffset);
         classDataItem.setParent(this);
     }
@@ -79,9 +78,6 @@ public class ClassIndex extends ItemIndex{
             return interfaceList.toTypes(getTypeSection());
         }
         return null;
-    }
-    public AnnotationsDirectoryItem getAnnotationsDirectory() {
-        return annotationsDirectory;
     }
     public ClassDataItem getClassDataItem(){
         return classDataItem;
@@ -111,24 +107,44 @@ public class ClassIndex extends ItemIndex{
     public IndirectInteger getStaticValuesOffset() {
         return staticValuesOffset;
     }
+
+    public AnnotationsDirectoryItem getAnnotationsDirectory(){
+        return annotationsDirectory;
+    }
+    public void setAnnotationsDirectory(AnnotationsDirectoryItem annotationsDirectory) {
+        this.annotationsDirectory = annotationsDirectory;
+    }
+
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
         int position = reader.getPosition();
-        interfaceList = new TypeList(getInterfacesOffset());
-        interfaceList.readBytes(reader);
-        int offset = getAnnotationsOffset().get();
-        if(offset > 0){
-            reader.seek(offset);
-            AnnotationsDirectoryItem directoryItem = this.annotationsDirectory;
-            directoryItem.readBytes(reader);
-        }
-
-        ClassDataItem classDataItem = getClassDataItem();
-        classDataItem.readBytes(reader);
-
+        loadInterfaces(reader);
+        loadAnnotations(reader);
+        loadClassData(reader);
         reader.seek(position);
         //TODO: read  static values, hidden api ...
+    }
+    private void loadInterfaces(BlockReader reader) throws IOException {
+        interfaceList = new TypeList(getInterfacesOffset());
+        interfaceList.readBytes(reader);
+    }
+    private void loadAnnotations(BlockReader reader) throws IOException {
+        int offset = getAnnotationsOffset().get();
+        if(offset == 0){
+            setAnnotationsDirectory(null);
+            return;
+        }
+        AnnotationsDirectoryItem directoryItem = new AnnotationsDirectoryItem();
+        directoryItem.setParent(this);
+        setAnnotationsDirectory(directoryItem);
+        reader.seek(offset);
+        directoryItem.readBytes(reader);
+    }
+
+    private void loadClassData(BlockReader reader) throws IOException {
+        ClassDataItem classDataItem = getClassDataItem();
+        classDataItem.readBytes(reader);
     }
 
     @Override
@@ -162,7 +178,10 @@ public class ClassIndex extends ItemIndex{
             }
         }
         writer.newLine();
-        annotationsDirectory.append(writer);
+        AnnotationsDirectoryItem directoryItem = getAnnotationsDirectory();
+        if(directoryItem != null){
+            directoryItem.append(writer);
+        }
         getClassDataItem().append(writer);
     }
     @Override
@@ -188,14 +207,17 @@ public class ClassIndex extends ItemIndex{
                 builder.append("\n.implements ").append(typeIndex);
             }
         }
-        BlockList<AnnotationItem> annotations = annotationsDirectory.getClassAnnotations();
-        if(annotations.size() > 0){
-            builder.append("\n\n# annotations");
-            Iterator<AnnotationItem> iterator = annotations.iterator();
-            while (iterator.hasNext()){
-                builder.append("\n");
-                builder.append(iterator.next());
-                builder.append("\n");
+        AnnotationsDirectoryItem directoryItem = annotationsDirectory;
+        if(directoryItem != null){
+            BlockList<AnnotationItem> annotations = directoryItem.getClassAnnotations();
+            if(annotations.size() > 0){
+                builder.append("\n\n# annotations");
+                Iterator<AnnotationItem> iterator = annotations.iterator();
+                while (iterator.hasNext()){
+                    builder.append("\n");
+                    builder.append(iterator.next());
+                    builder.append("\n");
+                }
             }
         }
         return builder.toString();
