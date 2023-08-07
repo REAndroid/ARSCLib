@@ -30,10 +30,6 @@ public class AnnotationGroup extends BlockList<AnnotationItem> implements
         super();
     }
     public void read(BlockReader reader) throws IOException {
-
-        if(reader.getPosition() >= 2881200){
-            String junk="";
-        }
         IntegerList integerList = new IntegerList();
         integerList.readBytes(reader);
         if(integerList.size() == 0){

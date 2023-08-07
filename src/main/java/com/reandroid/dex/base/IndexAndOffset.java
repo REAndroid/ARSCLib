@@ -19,18 +19,18 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.arsc.item.IndirectItem;
 
-public class OffsetAndIndex extends IndirectItem<BlockItem> {
-    public OffsetAndIndex(BlockItem blockItem, int offset) {
+public class IndexAndOffset extends IndirectItem<BlockItem> {
+    public IndexAndOffset(BlockItem blockItem, int offset) {
         super(blockItem, offset);
     }
-    public int getItemOffset(){
+    public int getItemIndex(){
         return Block.getInteger(getBytesInternal(), super.getOffset());
     }
-    public int getItemIndex(){
+    public int getItemOffset(){
         return Block.getInteger(getBytesInternal(), super.getOffset() + 4);
     }
     @Override
     public String toString() {
-        return "offset=" + getItemOffset() + ", index=" + getItemIndex();
+        return "index=" + getItemIndex() + ", offset=" + getItemOffset();
     }
 }

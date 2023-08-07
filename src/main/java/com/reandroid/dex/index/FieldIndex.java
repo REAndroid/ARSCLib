@@ -30,14 +30,6 @@ public class FieldIndex extends ItemIndex implements SmaliFormat {
         annotations = new ArrayList<>();
     }
 
-    public void addAnnotations(AnnotationGroup itemList){
-        annotations.add(itemList);
-    }
-
-    public List<AnnotationGroup> getAnnotations() {
-        return annotations;
-    }
-
     public String getKey(){
         StringBuilder builder = new StringBuilder();
         TypeIndex type = getClassType();

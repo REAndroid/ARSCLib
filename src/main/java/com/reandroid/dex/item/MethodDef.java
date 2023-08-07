@@ -42,6 +42,10 @@ public class MethodDef extends Def {
         methodIndex.getProto().getReturnTypeIndex().append(writer);
         writer.indentPlus();
         writer.newLine();
+        for(AnnotationGroup group: methodIndex.getAnnotations()){
+            group.append(writer);
+        }
+        writer.newLine();
         writer.append(".locals 0");
         writer.newLine();
         writer.appendComment("TODO: finish instructions");

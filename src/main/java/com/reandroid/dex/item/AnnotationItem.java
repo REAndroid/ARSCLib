@@ -24,6 +24,7 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.index.TypeIndex;
 import com.reandroid.dex.sections.DexAnnotationPool;
+import com.reandroid.dex.value.ArrayValue;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 

@@ -18,14 +18,33 @@ package com.reandroid.dex.index;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.DexFile;
 import com.reandroid.dex.base.DexItem;
+import com.reandroid.dex.item.AnnotationGroup;
 import com.reandroid.dex.sections.DexSection;
 import com.reandroid.dex.sections.DexStringPool;
 import com.reandroid.dex.sections.IndexSections;
 import com.reandroid.dex.writer.SmaliFormat;
+import com.reandroid.utils.collection.EmptyList;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class ItemIndex extends DexItem implements SmaliFormat {
+    private List<AnnotationGroup> annotations;
     ItemIndex(int bytesLength) {
         super(bytesLength);
+        this.annotations = EmptyList.of();
+    }
+    public void addAnnotations(AnnotationGroup annotationGroup){
+        List<AnnotationGroup> annotations = this.annotations;
+        if(annotations.isEmpty()){
+            annotations = new ArrayList<>();
+            this.annotations = annotations;
+        }
+        annotations.add(annotationGroup);
+    }
+
+    public List<AnnotationGroup> getAnnotations() {
+        return annotations;
     }
 
     TypeIndex getTypeIndex(IntegerReference reference){

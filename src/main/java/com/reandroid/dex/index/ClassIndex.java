@@ -15,16 +15,15 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.item.*;
-import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 public class ClassIndex extends ItemIndex{
 
@@ -178,9 +177,8 @@ public class ClassIndex extends ItemIndex{
             }
         }
         writer.newLine();
-        AnnotationsDirectoryItem directoryItem = getAnnotationsDirectory();
-        if(directoryItem != null){
-            directoryItem.append(writer);
+        for(AnnotationGroup group:getAnnotations()){
+            group.append(writer);
         }
         getClassDataItem().append(writer);
     }
@@ -209,10 +207,10 @@ public class ClassIndex extends ItemIndex{
         }
         AnnotationsDirectoryItem directoryItem = annotationsDirectory;
         if(directoryItem != null){
-            BlockList<AnnotationItem> annotations = directoryItem.getClassAnnotations();
+            List<AnnotationGroup> annotations = getAnnotations();
             if(annotations.size() > 0){
                 builder.append("\n\n# annotations");
-                Iterator<AnnotationItem> iterator = annotations.iterator();
+                Iterator<AnnotationGroup> iterator = annotations.iterator();
                 while (iterator.hasNext()){
                     builder.append("\n");
                     builder.append(iterator.next());

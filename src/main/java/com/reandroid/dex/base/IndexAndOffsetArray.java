@@ -23,30 +23,30 @@ import com.reandroid.arsc.item.IntegerReference;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class OffsetIndexArray extends DexItem implements OffsetArray {
+public class IndexAndOffsetArray extends DexItem implements OffsetArray {
     private final IntegerReference itemCount;
-    public OffsetIndexArray(IntegerReference itemCount) {
+    public IndexAndOffsetArray(IntegerReference itemCount) {
         super(0);
         this.itemCount = itemCount;
     }
     public int getItemIndex(int i){
-        return Block.getInteger(getBytesInternal(), i * 8 + 4);
+        return Block.getInteger(getBytesInternal(), i * 8 );
     }
-    public OffsetAndIndex[] toOffsetAndIndexArray(){
+    public IndexAndOffset[] toOffsetAndIndexArray(){
         int size = size();
-        OffsetAndIndex[] results = new OffsetAndIndex[size];
+        IndexAndOffset[] results = new IndexAndOffset[size];
         for(int i = 0; i < size; i++){
             results[i] = get(i);
         }
         return results;
     }
-    public OffsetAndIndex get(int i){
-        return new OffsetAndIndex(this, i * 8);
+    public IndexAndOffset get(int i){
+        return new IndexAndOffset(this, i * 8);
     }
 
     @Override
     public int getOffset(int i) {
-        return Block.getInteger(getBytesInternal(), i * 8);
+        return Block.getInteger(getBytesInternal(), i * 8 + 4);
     }
     @Override
     public void setOffset(int index, int value) {
@@ -79,9 +79,6 @@ public class OffsetIndexArray extends DexItem implements OffsetArray {
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        if(itemCount.get() > 100 || itemCount.get() <0){
-            String junk = "";
-        }
         setBytesLength(itemCount.get() * 8, false);
         super.onReadBytes(reader);
     }
