@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.base;
 
+import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
@@ -22,33 +23,14 @@ import com.reandroid.arsc.item.IntegerReference;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class OffsetIndexArray extends DexItem {
+public class OffsetIndexArray extends DexItem implements OffsetArray {
     private final IntegerReference itemCount;
     public OffsetIndexArray(IntegerReference itemCount) {
         super(0);
         this.itemCount = itemCount;
     }
-    public int getItemOffset(int i){
-        return Block.getInteger(getBytesInternal(), i * 8);
-    }
     public int getItemIndex(int i){
         return Block.getInteger(getBytesInternal(), i * 8 + 4);
-    }
-    public int[] toOffsetArray(){
-        int size = size();
-        int[] results = new int[size];
-        for(int i = 0; i < size; i++){
-            results[i] = getItemOffset(i);
-        }
-        return results;
-    }
-    public int[] toIndexArray(){
-        int size = size();
-        int[] results = new int[size];
-        for(int i = 0; i < size; i++){
-            results[i] = getItemIndex(i);
-        }
-        return results;
     }
     public OffsetAndIndex[] toOffsetAndIndexArray(){
         int size = size();
@@ -61,6 +43,25 @@ public class OffsetIndexArray extends DexItem {
     public OffsetAndIndex get(int i){
         return new OffsetAndIndex(this, i * 8);
     }
+
+    @Override
+    public int getOffset(int i) {
+        return Block.getInteger(getBytesInternal(), i * 8);
+    }
+    @Override
+    public void setOffset(int index, int value) {
+        Block.putInteger(getBytesInternal(), index * 8, value);
+    }
+    @Override
+    public int[] getOffsets() {
+        int size = size();
+        int[] results = new int[size];
+        for(int i = 0; i < size; i++){
+            results[i] = getOffset(i);
+        }
+        return results;
+    }
+
     public int size(){
         return countBytes() / 8;
     }
@@ -70,6 +71,10 @@ public class OffsetIndexArray extends DexItem {
         }
         setBytesLength(size * 8, false);
         itemCount.set(size);
+    }
+    @Override
+    public void clear() {
+        setSize(0);
     }
 
     @Override

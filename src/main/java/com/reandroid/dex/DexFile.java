@@ -1,6 +1,20 @@
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.dex;
 
-import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.ExpandableBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.index.*;
@@ -16,40 +30,28 @@ public class DexFile extends ExpandableBlockContainer {
 
     private final DexHeader dexHeader;
     private final DexStringPool stringPool;
-    private final DexSection<TypeIndex> typeSection;
-    private final DexSection<ProtoIndex> protoSection;
-    private final DexSection<FieldIndex> fieldSection;
-    private final DexSection<ClassIndex> classSection;
-    private final DexSection<MethodIndex> methodSection;
+    private final IndexSections sections;
 
     private final MapIndex mapIndex;
 
     private final DexAnnotationPool annotationPool;
+
     public DexFile() {
-        super(8);
+        super(4);
 
         DexHeader header = new DexHeader();
         this.dexHeader =  header;
         this.stringPool = new DexStringPool(header);
+        this.sections = new IndexSections(header);
 
-        this.typeSection = new DexSection<>(header.type, CREATOR_TYPE);
-        this.protoSection = new DexSection<>(header.proto, CREATOR_PROTO);
-        this.fieldSection = new DexSection<>(header.field, CREATOR_FIELD);
-        this.classSection = new DexSection<>(header.class_def, CREATOR_CLASS);
-        this.methodSection = new DexSection<>(header.method, CREATOR_METHOD);
-
-        this.mapIndex = new MapIndex(header.map);
+        this.mapIndex = new MapIndex(header);
 
         this.annotationPool = new DexAnnotationPool();
         annotationPool.setParent(this);
 
         addChild(dexHeader);
         addChild(stringPool);
-        addChild(typeSection);
-        addChild(protoSection);
-        addChild(fieldSection);
-        addChild(methodSection);
-        addChild(classSection);
+        addChild(sections);
         addChild(mapIndex);
     }
 
@@ -59,21 +61,27 @@ public class DexFile extends ExpandableBlockContainer {
     public DexStringPool getStringPool(){
         return stringPool;
     }
+
+    public IndexSections getSections() {
+        return sections;
+    }
+
     public DexSection<TypeIndex> getTypeSection() {
-        return typeSection;
+        return getSections().getTypeSection();
     }
     public DexSection<ProtoIndex> getProtoSection() {
-        return protoSection;
+        return getSections().getProtoSection();
     }
     public DexSection<FieldIndex> getFieldSection() {
-        return fieldSection;
+        return getSections().getFieldSection();
     }
     public DexSection<ClassIndex> getClassSection() {
-        return classSection;
+        return getSections().getClassSection();
     }
     public DexSection<MethodIndex> getMethodSection(){
-        return methodSection;
+        return getSections().getMethodSection();
     }
+
     public MapIndex getMapItem(){
         return mapIndex;
     }
@@ -129,56 +137,4 @@ public class DexFile extends ExpandableBlockContainer {
         readBytes(reader);
         reader.close();
     }
-
-    private static final Creator<TypeIndex> CREATOR_TYPE = new Creator<TypeIndex>() {
-        @Override
-        public TypeIndex[] newInstance(int length) {
-            return new TypeIndex[length];
-        }
-        @Override
-        public TypeIndex newInstance() {
-            return new TypeIndex();
-        }
-    };
-    private static final Creator<ProtoIndex> CREATOR_PROTO = new Creator<ProtoIndex>() {
-        @Override
-        public ProtoIndex[] newInstance(int length) {
-            return new ProtoIndex[length];
-        }
-        @Override
-        public ProtoIndex newInstance() {
-            return new ProtoIndex();
-        }
-    };
-    private static final Creator<FieldIndex> CREATOR_FIELD = new Creator<FieldIndex>() {
-        @Override
-        public FieldIndex[] newInstance(int length) {
-            return new FieldIndex[length];
-        }
-        @Override
-        public FieldIndex newInstance() {
-            return new FieldIndex();
-        }
-    };
-    private static final Creator<ClassIndex> CREATOR_CLASS = new Creator<ClassIndex>() {
-        @Override
-        public ClassIndex[] newInstance(int length) {
-            return new ClassIndex[length];
-        }
-        @Override
-        public ClassIndex newInstance() {
-            return new ClassIndex();
-        }
-    };
-    private static final Creator<MethodIndex> CREATOR_METHOD = new Creator<MethodIndex>() {
-        @Override
-        public MethodIndex[] newInstance(int length) {
-            return new MethodIndex[length];
-        }
-        @Override
-        public MethodIndex newInstance() {
-            return new MethodIndex();
-        }
-    };
-
 }

@@ -16,10 +16,16 @@
 package com.reandroid.dex.header;
 
 import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.base.IndirectInteger;
 
 public class OffsetAndCount extends ByteArray {
+    private final IntegerReference mCountReference;
+    private final IntegerReference mOffsetReference;
     public OffsetAndCount(){
         super(8);
+        this.mCountReference = new IndirectInteger(this, 0);
+        this.mOffsetReference = new IndirectInteger(this, 4);
     }
     public int getCount(){
         return getInteger(0);
@@ -33,6 +39,14 @@ public class OffsetAndCount extends ByteArray {
     public void setOffset(int offset){
         putInteger(4, offset);
     }
+
+    public IntegerReference getCountReference() {
+        return mCountReference;
+    }
+    public IntegerReference getOffsetReference() {
+        return mOffsetReference;
+    }
+
     @Override
     public String toString(){
         return "(O " + getOffset() + ":" + getCount() + ")";

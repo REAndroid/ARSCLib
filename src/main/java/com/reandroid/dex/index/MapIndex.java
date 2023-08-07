@@ -17,17 +17,22 @@ package com.reandroid.dex.index;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexItem;
 import com.reandroid.dex.common.MapItemType;
+import com.reandroid.dex.header.DexHeader;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
 public class MapIndex extends DexItem {
-    private final IntegerItem offset;
-    public MapIndex(IntegerItem offset) {
+    private final IntegerReference offset;
+    public MapIndex(IntegerReference offset) {
         super(SIZE);
         this.offset = offset;
+    }
+    public MapIndex(DexHeader header) {
+        this(header.map);
     }
     public MapItemType getMapItemType(){
         return MapItemType.get(getType());
@@ -52,8 +57,7 @@ public class MapIndex extends DexItem {
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        IntegerItem offset = this.offset;
-        reader.seek(offset.get());
+        reader.seek(this.offset.get());
         super.onReadBytes(reader);
     }
     @Override

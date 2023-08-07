@@ -1,6 +1,5 @@
 package com.reandroid.dex.item;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.io.BlockReader;

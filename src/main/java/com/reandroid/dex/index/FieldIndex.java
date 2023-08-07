@@ -15,18 +15,27 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.DexFile;
-import com.reandroid.dex.sections.DexSection;
-import com.reandroid.dex.sections.DexStringPool;
+import com.reandroid.dex.item.AnnotationGroup;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FieldIndex extends ItemIndex implements SmaliFormat {
+    private final List<AnnotationGroup> annotations;
     public FieldIndex() {
         super(8);
+        annotations = new ArrayList<>();
+    }
+
+    public void addAnnotations(AnnotationGroup itemList){
+        annotations.add(itemList);
+    }
+
+    public List<AnnotationGroup> getAnnotations() {
+        return annotations;
     }
 
     public String getKey(){
@@ -87,47 +96,6 @@ public class FieldIndex extends ItemIndex implements SmaliFormat {
         putInteger(getBytesInternal(), 4, index);
     }
 
-
-    TypeIndex getTypeIndex(IntegerReference reference){
-        return getTypeIndex(reference.get());
-    }
-    TypeIndex getTypeIndex(int index){
-        if(index < 0){
-            return null;
-        }
-        DexSection<TypeIndex> stringPool = getTypeSection();
-        if(stringPool != null){
-            return stringPool.get(index);
-        }
-        return null;
-    }
-    StringIndex getStringIndex(int index){
-        if(index < 0){
-            return null;
-        }
-        DexStringPool stringPool = getStringPool();
-        if(stringPool != null){
-            return stringPool.get(index);
-        }
-        return null;
-    }
-    DexStringPool getStringPool(){
-        DexFile dexFile = getDexFile();
-        if(dexFile != null){
-            return dexFile.getStringPool();
-        }
-        return null;
-    }
-    DexSection<TypeIndex> getTypeSection(){
-        DexFile dexFile = getDexFile();
-        if(dexFile != null){
-            return dexFile.getTypeSection();
-        }
-        return null;
-    }
-    DexFile getDexFile(){
-        return getParentInstance(DexFile.class);
-    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getClassType().append(writer);

@@ -20,6 +20,7 @@ import com.reandroid.dex.DexFile;
 import com.reandroid.dex.base.DexItem;
 import com.reandroid.dex.sections.DexSection;
 import com.reandroid.dex.sections.DexStringPool;
+import com.reandroid.dex.sections.IndexSections;
 import com.reandroid.dex.writer.SmaliFormat;
 
 public abstract class ItemIndex extends DexItem implements SmaliFormat {
@@ -34,9 +35,9 @@ public abstract class ItemIndex extends DexItem implements SmaliFormat {
         if(index < 0){
             return null;
         }
-        DexSection<TypeIndex> stringPool = getTypeSection();
-        if(stringPool != null){
-            return stringPool.get(index);
+        IndexSections indexSections = getIndexSections();
+        if(indexSections != null){
+            return indexSections.getTypeIndex(index);
         }
         return null;
     }
@@ -58,11 +59,14 @@ public abstract class ItemIndex extends DexItem implements SmaliFormat {
         return null;
     }
     DexSection<TypeIndex> getTypeSection(){
-        DexFile dexFile = getDexFile();
-        if(dexFile != null){
-            return dexFile.getTypeSection();
+        IndexSections indexSections = getIndexSections();
+        if(indexSections != null){
+            return indexSections.getTypeSection();
         }
         return null;
+    }
+    IndexSections getIndexSections(){
+        return getParentInstance(IndexSections.class);
     }
     DexFile getDexFile(){
         return getParentInstance(DexFile.class);

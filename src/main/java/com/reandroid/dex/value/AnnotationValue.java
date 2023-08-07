@@ -6,7 +6,6 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.item.AnnotationElement;
-import com.reandroid.dex.item.AnnotationItemList;
 
 import java.io.IOException;
 

@@ -78,6 +78,7 @@ public class ShortList extends DexItem {
         int size = size();
         if(size > 1000){
             String junk="";
+            throw new IOException("Huge size = " + size);
         }
         if(size <= 0){
             setSize(0);

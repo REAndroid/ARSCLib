@@ -26,7 +26,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class ClassIndex extends ItemIndex implements SmaliFormat {
+public class ClassIndex extends ItemIndex{
 
     private final IndirectInteger typeIndex;
     private final IndirectInteger accessFlagValue;
@@ -163,7 +163,6 @@ public class ClassIndex extends ItemIndex implements SmaliFormat {
         }
         writer.newLine();
         annotationsDirectory.append(writer);
-        writer.newLine();
         getClassDataItem().append(writer);
     }
     @Override

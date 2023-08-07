@@ -62,36 +62,6 @@ public class MethodIndex extends ItemIndex {
         putInteger(getBytesInternal(), OFFSET_NAME, index);
     }
 
-    TypeIndex getTypeIndex(IntegerReference reference){
-        return getTypeIndex(reference.get());
-    }
-    TypeIndex getTypeIndex(int index){
-        if(index < 0){
-            return null;
-        }
-        DexSection<TypeIndex> stringPool = getTypeSection();
-        if(stringPool != null){
-            return stringPool.get(index);
-        }
-        return null;
-    }
-    StringIndex getStringIndex(int index){
-        if(index < 0){
-            return null;
-        }
-        DexStringPool stringPool = getStringPool();
-        if(stringPool != null){
-            return stringPool.get(index);
-        }
-        return null;
-    }
-    DexStringPool getStringPool(){
-        DexFile dexFile = getDexFile();
-        if(dexFile != null){
-            return dexFile.getStringPool();
-        }
-        return null;
-    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getClassType().append(writer);

@@ -22,6 +22,7 @@ import com.reandroid.dex.index.FieldIndex;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
+import java.util.List;
 
 public class FieldDef extends Def {
     public FieldDef() {
@@ -51,6 +52,17 @@ public class FieldDef extends Def {
         writer.append(fieldIndex.getNameString().getString());
         writer.append(':');
         fieldIndex.getFieldType().append(writer);
+        List<AnnotationGroup> annotations = fieldIndex.getAnnotations();
+        if (annotations.size()>0){
+            writer.indentPlus();
+            writer.newLine();
+            for(AnnotationGroup itemList:annotations){
+                itemList.append(writer);
+            }
+            writer.indentMinus();
+            writer.newLine();
+            writer.append(".end field");
+        }
     }
     @Override
     public String toString() {

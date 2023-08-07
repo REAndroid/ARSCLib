@@ -24,12 +24,16 @@ import com.reandroid.dex.writer.SmaliWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class AnnotationItemList extends BlockList<AnnotationItem> implements
+public class AnnotationGroup extends BlockList<AnnotationItem> implements
         Iterable<AnnotationItem>, SmaliFormat {
-    public AnnotationItemList(){
+    public AnnotationGroup(){
         super();
     }
     public void read(BlockReader reader) throws IOException {
+
+        if(reader.getPosition() >= 2881200){
+            String junk="";
+        }
         IntegerList integerList = new IntegerList();
         integerList.readBytes(reader);
         if(integerList.size() == 0){
