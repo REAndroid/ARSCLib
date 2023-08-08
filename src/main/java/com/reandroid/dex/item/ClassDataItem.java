@@ -52,8 +52,6 @@ public class ClassDataItem extends FixedBlockContainer implements SmaliFormat {
         this.directMethods = new MethodDefArray(directMethodCount);
         this.virtualMethods = new MethodDefArray(virtualMethodCount);
 
-        staticFields.setParent(this);
-        instanceFields.setParent(this);
 
         addChild(0, staticFieldsCount);
         addChild(1, instanceFieldCount);

@@ -17,8 +17,8 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.dex.base.DexOffsetArray;
+import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.header.OffsetAndCount;
 import com.reandroid.dex.index.StringIndex;
 
 import java.util.Iterator;
@@ -27,10 +27,10 @@ public class DexStringPool extends FixedBlockContainer implements Iterable<Strin
 
     private final DexStringArray dexStringArray;
 
-    public DexStringPool(OffsetAndCount offsetAndCount) {
+    public DexStringPool(IntegerPair countAndOffset) {
         super(2);
-        DexOffsetArray offsetArray = new DexOffsetArray(offsetAndCount.getCountReference());
-        DexStringArray dexStringArray = new DexStringArray(offsetAndCount, offsetArray);
+        DexOffsetArray offsetArray = new DexOffsetArray(countAndOffset.getFirst());
+        DexStringArray dexStringArray = new DexStringArray(countAndOffset, offsetArray);
         this.dexStringArray = dexStringArray;
 
         addChild(0, offsetArray);

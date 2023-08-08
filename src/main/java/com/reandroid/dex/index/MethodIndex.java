@@ -71,6 +71,7 @@ public class MethodIndex extends ItemIndex {
         getProto().append(writer);
         writer.append(')');
         getProto().getReturnTypeIndex().append(writer);
+        appendAnnotations(writer);
     }
     @Override
     public String toString() {

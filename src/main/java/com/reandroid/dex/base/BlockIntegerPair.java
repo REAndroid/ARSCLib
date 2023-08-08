@@ -15,22 +15,27 @@
  */
 package com.reandroid.dex.base;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.BlockItem;
-import com.reandroid.arsc.item.IndirectItem;
+import com.reandroid.arsc.item.IntegerReference;
 
-public class IndexAndOffset extends IndirectItem<BlockItem> {
-    public IndexAndOffset(BlockItem blockItem, int offset) {
-        super(blockItem, offset);
-    }
-    public int getItemIndex(){
-        return Block.getInteger(getBytesInternal(), super.getOffset());
-    }
-    public int getItemOffset(){
-        return Block.getInteger(getBytesInternal(), super.getOffset() + 4);
+public class BlockIntegerPair extends BlockItem implements IntegerPair{
+    private final IntegerReference first;
+    private final IntegerReference second;
+    public BlockIntegerPair() {
+        super(8);
+        this.first = new IndirectInteger(this, 0);
+        this.second = new IndirectInteger(this, 4);
     }
     @Override
-    public String toString() {
-        return "index=" + getItemIndex() + ", offset=" + getItemOffset();
+    public IntegerReference getFirst() {
+        return first;
+    }
+    @Override
+    public IntegerReference getSecond() {
+        return second;
+    }
+    @Override
+    public String toString(){
+        return "(" + getFirst() + ", " + getSecond() + ")";
     }
 }

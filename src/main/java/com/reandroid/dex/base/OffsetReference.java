@@ -15,21 +15,12 @@
  */
 package com.reandroid.dex.base;
 
-import com.reandroid.arsc.array.IntegerOffsetArray;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 
 import java.io.IOException;
 
-public class DexOffsetArray extends IntegerOffsetArray {
-    private final IntegerReference itemCount;
-    public DexOffsetArray(IntegerReference itemCount){
-        super();
-        this.itemCount = itemCount;
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException{
-        setSize(itemCount.get());
-        super.onReadBytes(reader);
-    }
+public interface OffsetReference {
+    IntegerReference getOffsetReference();
+    void readBytes(BlockReader reader) throws IOException;
 }

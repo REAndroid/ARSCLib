@@ -19,7 +19,7 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexItemArray;
 import com.reandroid.dex.base.DexOffsetArray;
-import com.reandroid.dex.header.OffsetAndCount;
+import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.index.StringIndex;
 
 import java.io.IOException;
@@ -27,22 +27,22 @@ import java.io.IOException;
 public class DexStringArray extends DexItemArray<StringIndex> {
     private final DexOffsetArray offsetArray;
 
-    public DexStringArray(OffsetAndCount offsetAndCount, DexOffsetArray offsetArray){
-        super(offsetAndCount, CREATOR);
+    public DexStringArray(IntegerPair countAndOffset, DexOffsetArray offsetArray){
+        super(countAndOffset, CREATOR);
         this.offsetArray = offsetArray;
     }
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        OffsetAndCount offsetAndCount = getOffsetAndCount();
-        setChildesCount(offsetAndCount.getCount());
+        IntegerPair offsetAndCount = getCountAndOffset();
+        setChildesCount(offsetAndCount.getFirst().get());
         StringIndex[] childes = getChildes();
         if(childes == null || childes.length == 0){
             return;
         }
 
         int[] offsets = offsetArray.getOffsets();
-        int maximumPosition = getOffsetAndCount().getOffset();
+        int maximumPosition = offsetAndCount.getSecond().get();
 
         int length = childes.length;
         for(int i = 0; i < length; i++){

@@ -1,17 +1,29 @@
 package com.reandroid.dex.value;
 
-import com.reandroid.arsc.base.BlockArray;
+import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.item.AnnotationElement;
+import com.reandroid.dex.reader.DexReader;
+import com.reandroid.dex.reader.ReaderPool;
+import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
+import java.util.List;
 
 public class AnnotationValue extends DexValue<AnnotationValue.AnnotationArray>{
     public AnnotationValue(){
         super(new AnnotationArray());
+    }
+
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        AnnotationArray array = getValue();
+        for(AnnotationElement element:array.getArray()){
+            element.append(writer);
+        }
     }
 
     public static class AnnotationArray extends FixedBlockContainer{
@@ -27,32 +39,28 @@ public class AnnotationValue extends DexValue<AnnotationValue.AnnotationArray>{
             addChild(1, elementCount);
             addChild(2, elementArray);
         }
-        public BlockArray<AnnotationElement> getArray(){
-            return elementArray;
+        public List<AnnotationElement> getArray(){
+            return elementArray.getChildes();
         }
     }
-    private static class ElementArray extends BlockArray<AnnotationElement>{
+    private static class ElementArray extends BlockList<AnnotationElement> implements Iterable<AnnotationElement>{
         private final IntegerReference itemCount;
-        public ElementArray(Ule128Item itemCount){
+        public ElementArray(IntegerReference itemCount){
             super();
             this.itemCount = itemCount;
         }
-
-        @Override
-        public AnnotationElement[] newInstance(int length) {
-            return new AnnotationElement[length];
-        }
-        @Override
-        public AnnotationElement newInstance() {
-            return new AnnotationElement();
-        }
-        @Override
-        protected void onRefreshed() {
-        }
         @Override
         public void onReadBytes(BlockReader reader) throws IOException {
-            setChildesCount(itemCount.get());
-            super.onReadBytes(reader);
+            DexReader dexReader = (DexReader) reader;
+            ReaderPool<AnnotationElement> pool = dexReader.getAnnotationPool();
+            int count = itemCount.get();
+            for(int i = 0; i < count; i++){
+                AnnotationElement element = new AnnotationElement();
+                element.setParent(this);
+                element.getOffsetReference().set(reader.getPosition());
+                element = pool.getOrRead(reader, element);
+                add(element);
+            }
         }
     }
 }

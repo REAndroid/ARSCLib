@@ -23,8 +23,8 @@ import com.reandroid.dex.DexFile;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.index.TypeIndex;
-import com.reandroid.dex.sections.DexAnnotationPool;
-import com.reandroid.dex.value.ArrayValue;
+import com.reandroid.dex.reader.DexReader;
+import com.reandroid.dex.reader.ReaderPool;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
@@ -63,11 +63,15 @@ public class AnnotationItem extends FixedBlockContainer implements SmaliFormat {
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
-        int count = getElementsCount();
-        DexAnnotationPool pool = getParentInstance(DexFile.class).getAnnotationPool();
+        DexReader dexReader = (DexReader) reader;
+        ReaderPool<AnnotationElement> pool = dexReader.getAnnotationPool();
         BlockList<AnnotationElement> elements = this.annotationElements;
+        int count = getElementsCount();
         for(int i = 0; i < count; i++){
-            AnnotationElement element = pool.getOrRead(reader);
+            AnnotationElement element = new AnnotationElement();
+            element.setParent(this);
+            element.getOffsetReference().set(reader.getPosition());
+            element = pool.getOrRead(reader, element);
             elements.add(element);
         }
         elements.size();

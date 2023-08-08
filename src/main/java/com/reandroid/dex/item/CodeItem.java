@@ -1,0 +1,90 @@
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.reandroid.dex.item;
+
+import com.reandroid.arsc.container.FixedBlockContainer;
+import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.arsc.item.ShortItem;
+import com.reandroid.dex.base.OffsetReference;
+import com.reandroid.dex.base.ShortList;
+
+import java.io.IOException;
+
+public class CodeItem extends FixedBlockContainer implements OffsetReference {
+    private final IntegerReference offsetReference;
+
+    private final ShortItem registersCount;
+    private final ShortItem instruction;
+    private final ShortItem outs;
+    private final ShortItem triesSize;
+    private final IntegerItem debugInfoOffset;
+    private final IntegerItem instructionCount;
+
+    private  ShortList instructions;
+
+    public CodeItem(IntegerReference offsetReference) {
+        super(6);
+        this.offsetReference = offsetReference;
+        registersCount = new ShortItem();
+        instruction = new ShortItem();
+        outs = new ShortItem();
+        triesSize = new ShortItem();
+        debugInfoOffset = new IntegerItem();
+        instructionCount = new IntegerItem();
+
+        addChild(0, registersCount);
+        addChild(1, instruction);
+        addChild(2, outs);
+        addChild(3, triesSize);
+        addChild(4, debugInfoOffset);
+        addChild(5, instructionCount);
+        setNull(true);
+    }
+
+    @Override
+    public IntegerReference getOffsetReference() {
+        return offsetReference;
+    }
+
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        int offset = offsetReference.get();
+        if(offset == 0){
+            setNull(true);
+            return;
+        }
+        setNull(false);
+        int position = reader.getPosition();
+        reader.seek(offset);
+        super.onReadBytes(reader);
+        reader.seek(position);
+    }
+
+    @Override
+    public String toString() {
+        if(isNull()){
+            return "NULL";
+        }
+        return  "registersCount=" + registersCount +
+                ", instruction=" + instruction +
+                ", outs=" + outs +
+                ", triesSize=" + triesSize +
+                ", debugInfoOffset=" + debugInfoOffset +
+                ", instructionCount=" + instructionCount;
+    }
+}

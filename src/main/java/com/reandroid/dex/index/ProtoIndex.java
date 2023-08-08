@@ -43,15 +43,15 @@ public class ProtoIndex extends ItemIndex {
     public IndirectInteger getShorty() {
         return shorty;
     }
-    public IndirectInteger getReturnType() {
+    public IndirectInteger getReturnTypeIndexReference() {
         return returnType;
     }
-    public IndirectInteger getParameters() {
+    public IndirectInteger getParametersReference() {
         return parameters;
     }
 
     public TypeIndex getReturnTypeIndex(){
-        return getTypeIndex(getReturnType());
+        return getTypeIndex(getReturnTypeIndexReference());
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
@@ -96,7 +96,7 @@ public class ProtoIndex extends ItemIndex {
     }
     @Override
     public String toString() {
-        return "(" + buildMethodParameters() +")" + getReturnType().toString();
+        return "(" + buildMethodParameters() +")" + getReturnTypeIndex().toString();
     }
 
     private static final int SIZE = 12;

@@ -19,33 +19,40 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.header.OffsetAndCount;
+import com.reandroid.arsc.item.IntegerReference;
 
 import java.io.IOException;
 
 public class DexItemArray<T extends Block> extends BlockArray<T>{
-    private final OffsetAndCount offsetAndCount;
+
+    private final IntegerPair countAndOffset;
     private final Creator<T> creator;
-    public DexItemArray(OffsetAndCount offsetAndCount,
+
+    public DexItemArray(IntegerPair countAndOffset,
                         Creator<T> creator) {
         super(creator.newInstance(0));
         this.creator = creator;
-        this.offsetAndCount = offsetAndCount;
+        this.countAndOffset = countAndOffset;
     }
 
-    protected OffsetAndCount getOffsetAndCount() {
-        return offsetAndCount;
+    protected IntegerPair getCountAndOffset() {
+        return countAndOffset;
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
-        OffsetAndCount offsetAndCount = getOffsetAndCount();
-        setChildesCount(offsetAndCount.getCount());
-        reader.seek(offsetAndCount.getOffset());
+        IntegerPair countAndOffset = getCountAndOffset();
+        setChildesCount(countAndOffset.getFirst().get());
+        reader.seek(countAndOffset.getSecond().get());
         super.onReadBytes(reader);
     }
 
     @Override
     protected void onRefreshed() {
+        IntegerReference count = getCountAndOffset().getFirst();
+        count.set(childesCount());
+        calculateOffset();
+    }
+    protected void calculateOffset() {
 
     }
     @Override

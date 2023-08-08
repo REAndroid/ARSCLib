@@ -177,9 +177,7 @@ public class ClassIndex extends ItemIndex{
             }
         }
         writer.newLine();
-        for(AnnotationGroup group:getAnnotations()){
-            group.append(writer);
-        }
+        appendAnnotations(writer);
         getClassDataItem().append(writer);
     }
     @Override

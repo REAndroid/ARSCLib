@@ -18,17 +18,16 @@ package com.reandroid.dex.sections;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.ExpandableBlockContainer;
-import com.reandroid.dex.base.DexItem;
 import com.reandroid.dex.base.DexItemArray;
-import com.reandroid.dex.header.OffsetAndCount;
+import com.reandroid.dex.header.CountAndOffset;
 
 import java.util.Iterator;
 
 public class DexSection<T extends Block>  extends ExpandableBlockContainer implements Iterable<T>{
     private final DexItemArray<T> itemArray;
-    public DexSection(OffsetAndCount offsetAndCount, Creator<T> creator){
+    public DexSection(CountAndOffset countAndOffset, Creator<T> creator){
         super(1);
-        this.itemArray = new DexItemArray<>(offsetAndCount, creator);
+        this.itemArray = new DexItemArray<>(countAndOffset, creator);
         addChild(itemArray);
     }
     public T get(int index){

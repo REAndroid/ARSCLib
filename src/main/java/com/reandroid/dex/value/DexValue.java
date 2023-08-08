@@ -29,7 +29,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class DexValue<T extends Block> extends FixedBlockContainer implements SmaliFormat {
+public abstract class DexValue<T extends Block> extends FixedBlockContainer implements SmaliFormat {
     private final ByteItem valueType;
     private final SingleBlockContainer<T> valueContainer;
     DexValue(T value){
@@ -82,9 +82,6 @@ public class DexValue<T extends Block> extends FixedBlockContainer implements Sm
     }
     public void onReadBytes(BlockReader reader) throws IOException{
         super.onReadBytes(reader);
-    }
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
     }
 
     public static DexValue<?> createFor(DexValueType valueType){

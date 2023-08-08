@@ -19,9 +19,9 @@ import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public class IndexAndOffsetArray extends DexItem implements OffsetArray {
     private final IntegerReference itemCount;
@@ -29,19 +29,16 @@ public class IndexAndOffsetArray extends DexItem implements OffsetArray {
         super(0);
         this.itemCount = itemCount;
     }
-    public int getItemIndex(int i){
-        return Block.getInteger(getBytesInternal(), i * 8 );
-    }
-    public IndexAndOffset[] toOffsetAndIndexArray(){
+    public IntegerPair[] toIntegerPairArray(){
         int size = size();
-        IndexAndOffset[] results = new IndexAndOffset[size];
+        IntegerPair[] results = new IntegerPair[size];
         for(int i = 0; i < size; i++){
             results[i] = get(i);
         }
         return results;
     }
-    public IndexAndOffset get(int i){
-        return new IndexAndOffset(this, i * 8);
+    public IntegerPair get(int i){
+        return new IndirectBlockIntegerPair(this, i * 8);
     }
 
     @Override
@@ -84,7 +81,6 @@ public class IndexAndOffsetArray extends DexItem implements OffsetArray {
     }
     @Override
     public String toString() {
-        return "size = " + size()
-                + ", items = " + Arrays.toString(toOffsetAndIndexArray());
+        return StringsUtil.toString(toIntegerPairArray());
     }
 }

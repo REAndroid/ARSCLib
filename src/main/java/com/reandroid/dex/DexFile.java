@@ -19,6 +19,7 @@ import com.reandroid.arsc.container.ExpandableBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.index.*;
 import com.reandroid.dex.header.DexHeader;
+import com.reandroid.dex.reader.DexReader;
 import com.reandroid.dex.sections.*;
 
 import java.io.File;
@@ -32,9 +33,8 @@ public class DexFile extends ExpandableBlockContainer {
     private final DexStringPool stringPool;
     private final IndexSections sections;
 
-    private final MapIndex mapIndex;
+    private final MapList mapList;
 
-    private final DexAnnotationPool annotationPool;
 
     public DexFile() {
         super(4);
@@ -44,15 +44,12 @@ public class DexFile extends ExpandableBlockContainer {
         this.stringPool = new DexStringPool(header);
         this.sections = new IndexSections(header);
 
-        this.mapIndex = new MapIndex(header);
-
-        this.annotationPool = new DexAnnotationPool();
-        annotationPool.setParent(this);
+        this.mapList = new MapList(header);
 
         addChild(dexHeader);
         addChild(stringPool);
         addChild(sections);
-        addChild(mapIndex);
+        addChild(mapList);
     }
 
     public DexHeader getHeader() {
@@ -82,14 +79,33 @@ public class DexFile extends ExpandableBlockContainer {
         return getSections().getMethodSection();
     }
 
-    public MapIndex getMapItem(){
-        return mapIndex;
+    public MapList getMapList(){
+        return mapList;
     }
 
-    public DexAnnotationPool getAnnotationPool(){
-        return annotationPool;
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException{
+        DexReader dexReader = DexReader.create(this, reader);
+        super.onReadBytes(dexReader);
+        System.err.println("annotation: " + dexReader.getAnnotationPool());
+        System.err.println("code: " + dexReader.getCodePool());
     }
 
+    public void read(byte[] dexBytes) throws IOException {
+        DexReader reader = new DexReader(this, dexBytes);
+        readBytes(reader);
+        reader.close();
+    }
+    public void read(InputStream inputStream) throws IOException {
+        BlockReader reader = new BlockReader(inputStream);
+        readBytes(reader);
+        reader.close();
+    }
+    public void read(File file) throws IOException {
+        BlockReader reader = new BlockReader(file);
+        readBytes(reader);
+        reader.close();
+    }
     public static boolean isDexFile(File file){
         if(file == null || !file.isFile()){
             return false;
@@ -121,20 +137,5 @@ public class DexFile extends ExpandableBlockContainer {
         }
         int version = dexHeader.version.getVersionAsInteger();
         return version > 0 && version < 1000;
-    }
-    public void read(byte[] dexBytes) throws IOException {
-        BlockReader reader = new BlockReader(dexBytes);
-        readBytes(reader);
-        reader.close();
-    }
-    public void read(InputStream inputStream) throws IOException {
-        BlockReader reader = new BlockReader(inputStream);
-        readBytes(reader);
-        reader.close();
-    }
-    public void read(File file) throws IOException {
-        BlockReader reader = new BlockReader(file);
-        readBytes(reader);
-        reader.close();
     }
 }

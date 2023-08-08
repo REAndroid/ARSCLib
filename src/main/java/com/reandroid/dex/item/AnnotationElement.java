@@ -4,7 +4,10 @@ import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteItem;
+import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.DexFile;
+import com.reandroid.dex.base.OffsetReference;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.index.StringIndex;
 import com.reandroid.dex.value.*;
@@ -13,10 +16,12 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class AnnotationElement extends FixedBlockContainer implements SmaliFormat {
+public class AnnotationElement extends FixedBlockContainer implements SmaliFormat, OffsetReference {
     private final Ule128Item nameIndex;
     private final ByteItem valueType;
     private final SingleBlockContainer<DexValue<?>> valueContainer;
+
+    private final IntegerReference weakPosition;
 
     public AnnotationElement() {
         super(3);
@@ -27,6 +32,8 @@ public class AnnotationElement extends FixedBlockContainer implements SmaliForma
         addChild(0, nameIndex);
         addChild(1, valueType);
         addChild(2, valueContainer);
+
+        this.weakPosition = new IntegerItem();
     }
     public DexValue<?> getValue(){
         return valueContainer.getItem();
@@ -39,6 +46,11 @@ public class AnnotationElement extends FixedBlockContainer implements SmaliForma
     }
     public int getValueTypeSize(){
         return DexValueType.decodeSize(valueType.unsignedInt()) + 1;
+    }
+
+    @Override
+    public IntegerReference getOffsetReference() {
+        return weakPosition;
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {

@@ -13,23 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.base;
+package com.reandroid.dex.header;
 
-import com.reandroid.arsc.array.IntegerOffsetArray;
-import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.base.BlockIntegerPair;
 
-import java.io.IOException;
-
-public class DexOffsetArray extends IntegerOffsetArray {
-    private final IntegerReference itemCount;
-    public DexOffsetArray(IntegerReference itemCount){
+public class CountAndOffset extends BlockIntegerPair {
+    public CountAndOffset(){
         super();
-        this.itemCount = itemCount;
     }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException{
-        setSize(itemCount.get());
-        super.onReadBytes(reader);
+    public int getCount(){
+        return getFirst().get();
+    }
+    public void setCount(int count){
+        getFirst().set(count);
+    }
+    public int getOffset(){
+        return getSecond().get();
+    }
+    public void setOffset(int offset){
+        getSecond().set(offset);
     }
 }

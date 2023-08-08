@@ -22,9 +22,11 @@ import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.DexFile;
 import com.reandroid.dex.base.IndexAndOffsetArray;
+import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.index.ClassIndex;
 import com.reandroid.dex.index.FieldIndex;
 import com.reandroid.dex.index.ItemIndex;
+import com.reandroid.dex.reader.DexReader;
 import com.reandroid.dex.sections.DexSection;
 import com.reandroid.dex.sections.IndexSections;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -43,9 +45,6 @@ public class AnnotationsDirectoryItem extends FixedBlockContainer implements Sma
     private final IndexAndOffsetArray fieldsOffset;
     private final IndexAndOffsetArray methodsOffset;
     private final IndexAndOffsetArray parametersOffset;
-    
-    private final AnnotationGroup classAnnotations;
-    private final AnnotationGroup parameterAnnotations;
 
 
     public AnnotationsDirectoryItem() {
@@ -68,31 +67,18 @@ public class AnnotationsDirectoryItem extends FixedBlockContainer implements Sma
         addChild(4, fieldsOffset);
         addChild(5, methodsOffset);
         addChild(6, parametersOffset);
-        
-        this.classAnnotations = new AnnotationGroup();
-        this.parameterAnnotations = new AnnotationGroup();
-        
-        classAnnotations.setParent(this);
-        parameterAnnotations.setParent(this);
+
     }
 
     public IntegerReference getClassOffset() {
         return classOffset;
-    }
-    public AnnotationGroup getClassAnnotations() {
-        return classAnnotations;
-    }
-    public AnnotationGroup getParameterAnnotations() {
-        return parameterAnnotations;
     }
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         int position = reader.getPosition();
         super.onReadBytes(reader);
-
         loadClassAnnotation(reader);
-
         DexFile dexFile = getParentInstance(DexFile.class);
         IndexSections indexSections = dexFile.getSections();
 
@@ -106,47 +92,35 @@ public class AnnotationsDirectoryItem extends FixedBlockContainer implements Sma
         int offset = getClassOffset().get();
         if(offset > 0){
             ClassIndex classIndex = getParentInstance(ClassIndex.class);
-            AnnotationGroup group = new AnnotationGroup();
+            AnnotationGroup group = new AnnotationGroup(getClassOffset());
             group.setParent(this);
             reader.seek(offset);
-            group.read(reader);
+            group.readBytes(reader);
             classIndex.addAnnotations(group);
         }
     }
     private void load(BlockReader reader, DexSection<? extends ItemIndex> section, IndexAndOffsetArray offsetArray) throws IOException {
         int count = offsetArray.size();
         for(int i = 0; i < count; i++){
-            int offset = offsetArray.getOffset(i);
+            IntegerPair pair = offsetArray.get(i);
+            IntegerReference offsetReference = pair.getSecond();
+            int offset = offsetReference.get();
             if(offset == 0){
                 continue;
             }
-            int index = offsetArray.getItemIndex(i);
+            int index = pair.getFirst().get();
             ItemIndex itemIndex = section.get(index);
-            AnnotationGroup group = new AnnotationGroup();
+            AnnotationGroup group = new AnnotationGroup(offsetReference);
             group.setParent(this);
-            reader.seek(offset);
-            group.read(reader);
+            group.readBytes(reader);
             itemIndex.addAnnotations(group);
         }
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        AnnotationGroup annotations = getClassAnnotations();
-        if(annotations.size() > 0){
-            writer.newLine();
-            writer.append("# annotations");
-            writer.newLine();
-            annotations.append(writer);
-        }
-    }
-    public String toString00() {
-        return "classOffset=" + classOffset
-                + ", fields={" + fieldsOffset
-                + "}, methods={" + methodsOffset
-                + "}, parameters={" + parametersOffset + "}";
-    }
 
+    }
     @Override
     public String toString() {
         return  "classOffset=" + classOffset +

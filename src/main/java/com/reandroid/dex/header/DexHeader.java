@@ -37,13 +37,13 @@ public class DexHeader extends FixedBlockContainer implements BlockLoad {
     public final Endian endian;
     public final IntegerItem map;
 
-    public final OffsetAndCount strings;
-    public final OffsetAndCount type;
-    public final OffsetAndCount proto;
-    public final OffsetAndCount field;
-    public final OffsetAndCount method;
-    public final OffsetAndCount class_def;
-    public final OffsetAndCount data;
+    public final CountAndOffset strings;
+    public final CountAndOffset type;
+    public final CountAndOffset proto;
+    public final CountAndOffset field;
+    public final CountAndOffset method;
+    public final CountAndOffset class_def;
+    public final CountAndOffset data;
 
     public final ByteArray unknown;
 
@@ -62,13 +62,13 @@ public class DexHeader extends FixedBlockContainer implements BlockLoad {
 
         this.map = new IntegerItem();
 
-        this.strings = new OffsetAndCount();
-        this.type = new OffsetAndCount();
-        this.proto = new OffsetAndCount();
-        this.field = new OffsetAndCount();
-        this.method = new OffsetAndCount();
-        this.class_def = new OffsetAndCount();
-        this.data = new OffsetAndCount();
+        this.strings = new CountAndOffset();
+        this.type = new CountAndOffset();
+        this.proto = new CountAndOffset();
+        this.field = new CountAndOffset();
+        this.method = new CountAndOffset();
+        this.class_def = new CountAndOffset();
+        this.data = new CountAndOffset();
 
         this.unknown = new ByteArray();
 

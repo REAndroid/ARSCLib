@@ -15,8 +15,13 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.arsc.container.BlockList;
+import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.base.CountedArray;
+import com.reandroid.dex.base.DexOffsetArray;
 import com.reandroid.dex.base.IntegerList;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -24,32 +29,41 @@ import com.reandroid.dex.writer.SmaliWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class AnnotationGroup extends BlockList<AnnotationItem> implements
+public class AnnotationGroup extends FixedBlockContainer implements
         Iterable<AnnotationItem>, SmaliFormat {
-    public AnnotationGroup(){
-        super();
+    private final IntegerReference offsetReference;
+    private final IntegerItem itemCount;
+    private final DexOffsetArray offsetArray;
+    private final AnnotationItemArray itemsArray;
+    public AnnotationGroup(IntegerReference offsetReference){
+        super(3);
+        this.offsetReference = offsetReference;
+        this.itemCount = new IntegerItem();
+        this.offsetArray = new DexOffsetArray(itemCount);
+        this.itemsArray = new AnnotationItemArray(itemCount, offsetArray);
+        addChild(0, itemCount);
+        addChild(1, offsetArray);
+        addChild(2, itemsArray);
     }
-    public void read(BlockReader reader) throws IOException {
-        IntegerList integerList = new IntegerList();
-        integerList.readBytes(reader);
-        if(integerList.size() == 0){
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException{
+        int groupOffset = offsetReference.get();
+        if(groupOffset == 0){
             return;
         }
-        int[] offsetsArray = integerList.toArray();
-        for(int annotationOffset : offsetsArray){
-            if(annotationOffset == 0){
-                continue;
-            }
-            reader.seek(annotationOffset);
-            AnnotationItem adi = new AnnotationItem();
-            add(adi);
-            adi.readBytes(reader);
-        }
+        int position = reader.getPosition();
+        reader.seek(groupOffset);
+        super.onReadBytes(reader);
+        reader.seek(position);
+    }
+    @Override
+    public Iterator<AnnotationItem> iterator() {
+        return itemsArray.iterator();
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        Iterator<AnnotationItem> iterator = iterator();
+        Iterator<AnnotationItem> iterator = itemsArray.iterator();
         boolean appendOnce = false;
         while (iterator.hasNext()){
             if(appendOnce){

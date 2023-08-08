@@ -23,9 +23,12 @@ import com.reandroid.dex.sections.DexSection;
 import com.reandroid.dex.sections.DexStringPool;
 import com.reandroid.dex.sections.IndexSections;
 import com.reandroid.dex.writer.SmaliFormat;
+import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.collection.EmptyList;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public abstract class ItemIndex extends DexItem implements SmaliFormat {
@@ -89,5 +92,17 @@ public abstract class ItemIndex extends DexItem implements SmaliFormat {
     }
     DexFile getDexFile(){
         return getParentInstance(DexFile.class);
+    }
+
+    void appendAnnotations(SmaliWriter writer) throws IOException {
+        List<AnnotationGroup> annotations = getAnnotations();
+        if(annotations.size() == 0){
+            return;
+        }
+        Iterator<AnnotationGroup> iterator = annotations.iterator();
+        writer.newLine();
+        while (iterator.hasNext()){
+            iterator.next().append(writer);
+        }
     }
 }

@@ -13,23 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.base;
+package com.reandroid.dex.item;
 
-import com.reandroid.arsc.array.IntegerOffsetArray;
+import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 
 import java.io.IOException;
 
-public class DexOffsetArray extends IntegerOffsetArray {
+public class MapItemArray extends BlockArray<MapItem> {
     private final IntegerReference itemCount;
-    public DexOffsetArray(IntegerReference itemCount){
+    public MapItemArray(IntegerReference itemCount){
         super();
         this.itemCount = itemCount;
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException{
-        setSize(itemCount.get());
+    public void onReadBytes(BlockReader reader) throws IOException {
+        setChildesCount(itemCount.get());
         super.onReadBytes(reader);
     }
+    @Override
+    public MapItem[] newInstance(int length) {
+        return new MapItem[length];
+    }
+    @Override
+    public MapItem newInstance() {
+        return new MapItem();
+    }
+    @Override
+    protected void onRefreshed() {
+    }
+
 }
