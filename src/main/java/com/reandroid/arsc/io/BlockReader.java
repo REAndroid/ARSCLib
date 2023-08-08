@@ -115,6 +115,9 @@ public class BlockReader extends InputStream {
         return (short) (bts[offset] & 0xff |
                 (bts[offset+1] & 0xff) << 8);
     }
+    public byte[] getBuffer(){
+        return BUFFER;
+    }
     public byte[] getBytes(){
         int len = length();
         if(this.BUFFER.length == len){
