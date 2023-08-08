@@ -64,10 +64,10 @@ public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
         this.mHeaderLoaded=headerLoaded;
     }
     public ChunkType getChunkType(){
-        return ChunkType.get(mType.get());
+        return ChunkType.get(mType.getShort());
     }
     public short getType(){
-        return mType.get();
+        return mType.getShort();
     }
     public void setType(ChunkType chunkType){
         short type;
@@ -160,7 +160,7 @@ public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
         if(sender==this.mType){
-            onChunkTypeLoaded(mType.get());
+            onChunkTypeLoaded(mType.getShort());
         }else if(sender==this.mHeaderSize){
             onHeaderSizeLoaded(mHeaderSize.unsignedInt());
         }else if(sender==this.mChunkSize){

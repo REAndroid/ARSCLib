@@ -118,17 +118,17 @@ public class ResXmlStartElement extends BaseXmlChunk {
 
         array.sortAttributes();
         if(idAttribute!=null){
-            mIdAttributePosition.set((short) (idAttribute.getIndex()+1));
+            mIdAttributePosition.set(idAttribute.getIndex() + 1);
         }
         if(classAttribute!=null){
-            mClassAttributePosition.set((short) (classAttribute.getIndex()+1));
+            mClassAttributePosition.set(classAttribute.getIndex() + 1);
             // In case obfuscation
             if(!ATTRIBUTE_NAME_CLASS.equals(classAttribute.getName())){
                 classAttribute.setName(ATTRIBUTE_NAME_CLASS, 0);
             }
         }
-        if(styleAttribute!=null){
-            mStyleAttributePosition.set((short) (styleAttribute.getIndex()+1));
+        if(styleAttribute != null){
+            mStyleAttributePosition.set(styleAttribute.getIndex() + 1);
             // In case obfuscation
             if(!ATTRIBUTE_NAME_STYLE.equals(styleAttribute.getName())){
                 styleAttribute.setName(ATTRIBUTE_NAME_STYLE, 0);
@@ -140,14 +140,14 @@ public class ResXmlStartElement extends BaseXmlChunk {
         ResXmlAttribute classAttribute=getNoIdAttribute(ATTRIBUTE_NAME_CLASS);
         ResXmlAttribute styleAttribute=getNoIdAttribute(ATTRIBUTE_NAME_STYLE);
 
-        if(idAttribute!=null){
-            mIdAttributePosition.set((short) (idAttribute.getIndex()+1));
+        if(idAttribute != null){
+            mIdAttributePosition.set(idAttribute.getIndex() + 1);
         }
-        if(classAttribute!=null){
-            mClassAttributePosition.set((short) (classAttribute.getIndex()+1));
+        if(classAttribute != null){
+            mClassAttributePosition.set(classAttribute.getIndex() + 1);
         }
-        if(styleAttribute!=null){
-            mStyleAttributePosition.set((short) (styleAttribute.getIndex()+1));
+        if(styleAttribute != null){
+            mStyleAttributePosition.set(styleAttribute.getIndex() + 1);
         }
     }
     public ResXmlAttribute getAttribute(int resourceId){
@@ -320,13 +320,13 @@ public class ResXmlStartElement extends BaseXmlChunk {
         refreshAttributeCount();
     }
     private void refreshAttributeStart(){
-        int start=countUpTo(mAttributeArray);
-        start=start-getHeaderBlock().getHeaderSize();
-        mAttributeStart.set((short)start);
+        int start = countUpTo(mAttributeArray);
+        start = start - getHeaderBlock().getHeaderSize();
+        mAttributeStart.set(start);
     }
     private void refreshAttributeCount(){
-        int count=mAttributeArray.childesCount();
-        mAttributeCount.set((short)count);
+        int count = mAttributeArray.childesCount();
+        mAttributeCount.set(count);
     }
 
     @Override

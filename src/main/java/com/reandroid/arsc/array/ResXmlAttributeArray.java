@@ -67,14 +67,13 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         for(int i=0;i<attributes.length;i++){
             attributes[i].setAttributesUnitSize(size);
         }
-        mAttributesUnitSize.set((short) size);
+        mAttributesUnitSize.set(size);
     }
     public void sortAttributes(){
         sort(this);
     }
     private void refreshCount(){
-        short count= (short) childesCount();
-        mAttributeCount.set(count);
+        mAttributeCount.set(childesCount());
     }
     private void refreshStart(){
         Block parent=getParent();
@@ -82,8 +81,8 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
             return;
         }
         int start = parent.countUpTo(this);
-        start=start-mHeaderBlock.countBytes();
-        mAttributeStart.set((short) start);
+        start = start - mHeaderBlock.countBytes();
+        mAttributeStart.set(start);
     }
     @Override
     public ResXmlAttribute newInstance() {

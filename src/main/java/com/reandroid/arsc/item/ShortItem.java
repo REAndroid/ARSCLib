@@ -15,68 +15,55 @@
  */
 package com.reandroid.arsc.item;
 
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.HexUtil;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-public class ShortItem extends BlockItem {
-    private short mCache;
+public class ShortItem extends BlockItem implements IntegerReference{
+    private int mCache;
 
     public ShortItem(){
         super(2);
     }
-    public ShortItem(short val){
+    public ShortItem(short value){
         this();
-        set(val);
+        set(value);
     }
-    public void set(short val){
-        if(val==mCache){
+    @Override
+    public void set(int value){
+        if(value == mCache){
             return;
         }
-        mCache=val;
-        byte[] bts = getBytesInternal();
-        bts[1]= (byte) (val >>> 8 & 0xff);
-        bts[0]= (byte) (val & 0xff);
+        mCache = value;
+        byte[] bytes = getBytesInternal();
+        bytes[1]= (byte) (value >>> 8 & 0xff);
+        bytes[0]= (byte) (value & 0xff);
     }
-    public short get(){
+    @Override
+    public int get(){
         return mCache;
     }
+    public void set(short value){
+        set(0xffff & value);
+    }
     public int unsignedInt(){
-        return 0xffff & get();
+        return get();
+    }
+    public short getShort(){
+        return (short) mCache;
     }
     public String toHex(){
-        return HexUtil.toHex4(get());
+        return HexUtil.toHex4(getShort());
     }
     @Override
     protected void onBytesChanged() {
         // To save cpu usage, better to calculate once only when bytes changed
-        mCache=readShortBytes();
+        mCache = readShortBytes();
     }
-    private short readShortBytes(){
-        byte[] bts = getBytesInternal();
-        return (short) (bts[0] & 0xff | (bts[1] & 0xff) << 8);
+    private int readShortBytes(){
+        byte[] bytes = getBytesInternal();
+        return (bytes[0] & 0xff | (bytes[1] & 0xff) << 8);
     }
     @Override
     public String toString(){
         return String.valueOf(get());
-    }
-
-    public static short readShort(BlockReader reader) throws IOException {
-        ShortItem shortItem = new ShortItem();
-        shortItem.readBytes(reader);
-        return shortItem.get();
-    }
-    public static short readShort(InputStream inputStream) throws IOException {
-        ShortItem shortItem = new ShortItem();
-        shortItem.readBytes(inputStream);
-        return shortItem.get();
-    }
-    public static int readUnsignedShort(BlockReader reader) throws IOException {
-        return 0x0000ffff & readShort(reader);
-    }
-    public static int readUnsignedShort(InputStream inputStream) throws IOException {
-        return 0x0000ffff & readShort(inputStream);
     }
 }
