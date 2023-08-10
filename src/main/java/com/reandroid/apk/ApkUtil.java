@@ -38,10 +38,7 @@ public class ApkUtil {
         String ext = ApkUtil.JSON_FILE_EXTENSION;
         if(path.endsWith(ext)){
             int i2 = path.length() - ext.length();
-            String tmp = path.substring(0, i2);
-            if(tmp.indexOf('.') > 0){
-                path = tmp;
-            }
+            path = path.substring(0, i2);
         }
         return path;
     }
