@@ -179,7 +179,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
             mDestroyed = true;
             ResXmlElement root = getResXmlElement();
             if(root != null){
-                root.clearChildes();
+                root.clearChildren();
                 setResXmlElement(null);
             }
             getResXmlIDMap().destroy();
@@ -524,7 +524,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
                 }
             }
         }
-        JSONArray childElements = elementJson.optJSONArray(ResXmlElement.NAME_childes);
+        JSONArray childElements = elementJson.optJSONArray(ResXmlElement.NAME_children);
         if(childElements!=null){
             int length=childElements.length();
             for(int i=0;i<length;i++){
@@ -565,7 +565,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
                 }
             }
         }
-        JSONArray childElements = elementJson.optJSONArray(ResXmlElement.NAME_childes);
+        JSONArray childElements = elementJson.optJSONArray(ResXmlElement.NAME_children);
         if(childElements!=null){
             int length=childElements.length();
             for(int i=0;i<length;i++){

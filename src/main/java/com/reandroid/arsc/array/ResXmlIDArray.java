@@ -69,13 +69,13 @@ public class ResXmlIDArray extends BlockArray<ResXmlID>  {
         }
         mUpdated=true;
         mResIdMap.clear();
-        ResXmlID[] allChildes=getChildes();
-        if(allChildes==null||allChildes.length==0){
+        ResXmlID[] allChildren=getChildren();
+        if(allChildren==null||allChildren.length==0){
             return;
         }
-        int max=allChildes.length;
+        int max=allChildren.length;
         for(int i=0;i<max;i++){
-            ResXmlID xmlID=allChildes[i];
+            ResXmlID xmlID=allChildren[i];
             mResIdMap.put(xmlID.get(), xmlID);
         }
     }
@@ -96,7 +96,7 @@ public class ResXmlIDArray extends BlockArray<ResXmlID>  {
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         int count=calculateCountFromHeaderBlock();
-        setChildesCount(count);
+        setChildrenCount(count);
         super.onReadBytes(reader);
         updateIdMap();
     }

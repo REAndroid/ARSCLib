@@ -25,8 +25,8 @@ import java.io.IOException;
 public class Def extends FixedBlockContainer implements SmaliFormat {
     private final Ule128Item id;
     private final Ule128Item accessFlags;
-    public Def(int childesCount) {
-        super(childesCount + 2);
+    public Def(int childrenCount) {
+        super(childrenCount + 2);
         this.id = new Ule128Item(true);
         this.accessFlags = new Ule128Item();
         addChild(0, id);

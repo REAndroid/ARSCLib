@@ -51,12 +51,12 @@ public class PackageBody extends FixedBlockContainer {
         addChild(5, mUnknownChunkList);
     }
     public void destroy(){
-        getSpecTypePairArray().clearChildes();
-        getLibraryBlock().getLibraryInfoArray().clearChildes();
-        getStagedAliasList().clearChildes();
-        getOverlayableList().clearChildes();
-        getOverlayablePolicyList().clearChildes();
-        getUnknownChunkList().clearChildes();
+        getSpecTypePairArray().clearChildren();
+        getLibraryBlock().getLibraryInfoArray().clearChildren();
+        getStagedAliasList().clearChildren();
+        getOverlayableList().clearChildren();
+        getOverlayablePolicyList().clearChildren();
+        getUnknownChunkList().clearChildren();
     }
     public OverlayableList getOverlayableList() {
         return mOverlayableList;

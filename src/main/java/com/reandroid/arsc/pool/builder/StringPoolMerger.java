@@ -66,7 +66,7 @@ public class StringPoolMerger implements Comparator<String> {
                 destination.insertStrings(listStyleTags(styledStrings));
 
         StyleArray styleArray = destination.getStyleArray();
-        styleArray.setChildesCount(styledStrings.size());
+        styleArray.setChildrenCount(styledStrings.size());
 
         for(TableString tableString:styledStrings){
             TableString createdString = mapTableStrings.get(tableString.get());

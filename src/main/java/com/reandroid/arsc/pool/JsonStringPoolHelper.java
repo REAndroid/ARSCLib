@@ -34,8 +34,8 @@ class JsonStringPoolHelper<T extends StringItem> {
     }
     void loadStyledStrings(JSONArray jsonArray) {
         //Styled strings should be at first rows of string pool thus we clear all before adding
-        stringPool.getStringsArray().clearChildes();
-        stringPool.getStyleArray().clearChildes();
+        stringPool.getStringsArray().clearChildren();
+        stringPool.getStyleArray().clearChildren();
 
         List<StyledString> styledStringList = StyledString.fromJson(jsonArray);
         loadText(styledStringList);
@@ -59,7 +59,7 @@ class JsonStringPoolHelper<T extends StringItem> {
         tagList.sort(CompareUtil.STRING_COMPARATOR);
         StringArray<T> stringsArray = stringPool.getStringsArray();
         int tagsSize = tagList.size();
-        int initialSize = stringsArray.getChildesCount();
+        int initialSize = stringsArray.getChildrenCount();
         stringsArray.ensureSize(initialSize + tagsSize);
         for(int i=0;i<tagsSize;i++){
             String tag = tagList.get(i);

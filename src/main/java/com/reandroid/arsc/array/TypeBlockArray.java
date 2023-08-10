@@ -62,7 +62,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
                 typeBlock.destroy();
             }
         }
-        clearChildes();
+        clearChildren();
     }
     public void sort(){
         sort(this);
@@ -76,7 +76,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return result;
     }
     public void removeEmptyBlocks(){
-        TypeBlock[] typeBlocks = getChildes().clone();
+        TypeBlock[] typeBlocks = getChildren().clone();
         boolean foundEmpty = false;
         for(TypeBlock typeBlock:typeBlocks){
             if(typeBlock.isEmpty()){
@@ -146,7 +146,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return typeBlock;
     }
     public TypeBlock getTypeBlock(String qualifiers){
-        TypeBlock[] items=getChildes();
+        TypeBlock[] items=getChildren();
         if(items==null){
             return null;
         }
@@ -166,7 +166,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         if(config==null){
             return null;
         }
-        TypeBlock[] items = getChildes();
+        TypeBlock[] items = getChildren();
         if(items == null){
             return null;
         }
@@ -184,13 +184,13 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     public void setTypeId(byte id){
         this.mTypeId=id;
-        TypeBlock[] allChildes=getChildes();
-        if(allChildes==null){
+        TypeBlock[] allChildren=getChildren();
+        if(allChildren==null){
             return;
         }
-        int max=allChildes.length;
+        int max=allChildren.length;
         for(int i=0;i<max;i++){
-            TypeBlock typeBlock = allChildes[i];
+            TypeBlock typeBlock = allChildren[i];
             typeBlock.setTypeId(id);
         }
     }
@@ -205,13 +205,13 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         if(mTypeId != 0){
             return mTypeId;
         }
-        TypeBlock[] childes = getChildes();
-        if(childes == null){
+        TypeBlock[] children = getChildren();
+        if(children == null){
             return 0;
         }
-        int length = childes.length;
+        int length = children.length;
         for(int i=0; i < length; i++){
-            TypeBlock typeBlock = childes[i];
+            TypeBlock typeBlock = children[i];
             if(typeBlock == null){
                 continue;
             }
@@ -229,7 +229,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     public Set<ResConfig> listResConfig(){
         Set<ResConfig> unique = new HashSet<>();
-        for(TypeBlock typeBlock : getChildes()){
+        for(TypeBlock typeBlock : getChildren()){
             unique.add(typeBlock.getResConfig());
         }
         return unique;
@@ -332,7 +332,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     public int getHighestEntryId(){
         int result = -1;
-        for(TypeBlock typeBlock:getChildes()){
+        for(TypeBlock typeBlock:getChildren()){
             int high = typeBlock.getEntryArray().getHighestEntryId();
             if(high > result){
                 result = high;
@@ -342,8 +342,8 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     public int getHighestEntryCount(){
         int result = 0;
-        for(TypeBlock typeBlock:getChildes()){
-            int count = typeBlock.getEntryArray().getChildesCount();
+        for(TypeBlock typeBlock:getChildren()){
+            int count = typeBlock.getEntryArray().getChildrenCount();
             if(count > result){
                 result = count;
             }
@@ -351,14 +351,14 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return result;
     }
     public void setEntryCount(int count){
-        for(TypeBlock typeBlock:getChildes()){
+        for(TypeBlock typeBlock:getChildren()){
             if(!typeBlock.isSparse()){
                 typeBlock.setEntryCount(count);
             }
         }
     }
     public TypeString getTypeString(){
-        for(TypeBlock typeBlock:getChildes()){
+        for(TypeBlock typeBlock:getChildren()){
             TypeString typeString=typeBlock.getTypeString();
             if(typeString!=null){
                 return typeString;
@@ -414,11 +414,11 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         if(entryName==null){
             return null;
         }
-        TypeBlock[] childes = getChildes();
-        if(childes==null || childes.length==0){
+        TypeBlock[] children = getChildren();
+        if(children==null || children.length==0){
             return null;
         }
-        return childes[0].getEntry(entryName);
+        return children[0].getEntry(entryName);
     }
     @Override
     public int compare(TypeBlock typeBlock1, TypeBlock typeBlock2) {

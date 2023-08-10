@@ -106,7 +106,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         if(styleArray == null){
             return;
         }
-        StyleItem[] styles = styleArray.getChildes();
+        StyleItem[] styles = styleArray.getChildren();
         for(StyleItem styleItem : styles){
             styleItem.linkIfRequiredInternal();
         }
@@ -116,8 +116,8 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         getStringsArray().remove(item);
     }
     public void destroy(){
-        getStyleArray().clearChildes();
-        getStringsArray().clearChildes();
+        getStyleArray().clearChildren();
+        getStringsArray().clearChildren();
     }
     public List<String> toStringList(){
         return getStringsArray().toStringList();
@@ -143,9 +143,9 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     }
     private void insertStringList(List<String> stringList){
         StringArray<T> stringsArray = getStringsArray();
-        int initialSize=stringsArray.getChildesCount();
+        int initialSize=stringsArray.getChildrenCount();
         stringsArray.ensureSize(initialSize + stringList.size());
-        int size=stringsArray.getChildesCount();
+        int size=stringsArray.getChildrenCount();
         int j=0;
         for (int i=initialSize;i<size;i++){
             T item=stringsArray.get(i);
@@ -157,9 +157,9 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     public Map<String, T> insertStrings(List<String> stringList){
         Map<String, T> results=new HashMap<>();
         StringArray<T> stringsArray = getStringsArray();
-        int initialSize=stringsArray.getChildesCount();
+        int initialSize=stringsArray.getChildrenCount();
         stringsArray.ensureSize(initialSize + stringList.size());
-        int size=stringsArray.getChildesCount();
+        int size=stringsArray.getChildrenCount();
         int j=0;
         for (int i=initialSize;i<size;i++){
             T item=stringsArray.get(i);
@@ -176,7 +176,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         Map<String, StringGroup<T>> map = mUniqueMap;
         map.clear();
         StringArray<T> stringArray = this.mArrayStrings;
-        T[] stringItems = stringArray.getChildes();
+        T[] stringItems = stringArray.getChildren();
         int length = stringItems.length;
         if(length == 0){
             return;
@@ -294,16 +294,16 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         return mArrayStyles.get(index);
     }
     public final int countStrings(){
-        return mArrayStrings.getChildesCount();
+        return mArrayStrings.getChildrenCount();
     }
     public final int countStyles(){
-        return mArrayStyles.getChildesCount();
+        return mArrayStyles.getChildrenCount();
     }
     public final T[] getStrings(){
-        return mArrayStrings.getChildes();
+        return mArrayStrings.getChildren();
     }
     public final StyleItem[] getStyles(){
-        return mArrayStyles.getChildes();
+        return mArrayStyles.getChildren();
     }
     public boolean isUtf8(){
         return getHeaderBlock().isUtf8();

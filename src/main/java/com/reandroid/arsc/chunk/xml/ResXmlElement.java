@@ -221,7 +221,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     }
     public void changeIndex(ResXmlElement element, int index){
         int i = 0;
-        for(ResXmlNode xmlNode:mBody.getChildes()){
+        for(ResXmlNode xmlNode:mBody.getChildren()){
             if(i == index){
                 element.setIndex(i);
                 i++;
@@ -252,7 +252,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     }
     public int indexOf(ResXmlElement element){
         int index = 0;
-        for(ResXmlNode xmlNode:mBody.getChildes()){
+        for(ResXmlNode xmlNode:mBody.getChildren()){
             if(xmlNode==element){
                 return index;
             }
@@ -592,7 +592,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public Iterator<ResXmlAttribute> getAttributes(){
         ResXmlAttributeArray attributeArray = getAttributeArray();
         if(attributeArray != null){
-            if(attributeArray.getChildesCount() == 0){
+            if(attributeArray.getChildrenCount() == 0){
                 return EmptyIterator.of();
             }
             return attributeArray.iterator();
@@ -602,7 +602,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public Iterator<ResXmlAttribute> getAttributes(Predicate<? super ResXmlAttribute> filter){
         ResXmlAttributeArray attributeArray = getAttributeArray();
         if(attributeArray != null){
-            if(attributeArray.getChildesCount() == 0){
+            if(attributeArray.getChildrenCount() == 0){
                 return EmptyIterator.of();
             }
             return attributeArray.iterator(filter);
@@ -619,7 +619,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public int getAttributeCount() {
         ResXmlStartElement startElement=getStartElement();
         if(startElement!=null){
-            return startElement.getResXmlAttributeArray().getChildesCount();
+            return startElement.getResXmlAttributeArray().getChildrenCount();
         }
         return 0;
     }
@@ -723,8 +723,8 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         return result;
     }
-    public void clearChildes(){
-        ResXmlNode[] copyOfNodeList=mBody.getChildes().toArray(new ResXmlNode[0]);
+    public void clearChildren(){
+        ResXmlNode[] copyOfNodeList=mBody.getChildren().toArray(new ResXmlNode[0]);
         for(ResXmlNode xmlNode:copyOfNodeList){
             if(xmlNode==null){
                 continue;
@@ -765,7 +765,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return mBody.iterator(predicate);
     }
     private List<ResXmlNode> getXmlNodeList(){
-        return mBody.getChildes();
+        return mBody.getChildren();
     }
     public int removeNodes(Predicate<? super ResXmlNode> predicate){
         List<ResXmlNode> removeList = CollectionUtil.toList(getResXmlNodes(predicate));
@@ -826,7 +826,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(uriRef<0){
             return null;
         }
-        for(ResXmlStartNamespace ns:mStartNamespaceList.getChildes()){
+        for(ResXmlStartNamespace ns:mStartNamespaceList.getChildren()){
             if(uriRef==ns.getUriReference()){
                 return ns;
             }
@@ -841,7 +841,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(uri == null || prefix == null){
             return null;
         }
-        for(ResXmlStartNamespace ns : mStartNamespaceList.getChildes()){
+        for(ResXmlStartNamespace ns : mStartNamespaceList.getChildren()){
             if(uri.equals(ns.getUri()) && prefix.equals(ns.getPrefix())){
                 return ns;
             }
@@ -877,7 +877,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(uri==null){
             return null;
         }
-        for(ResXmlStartNamespace ns:mStartNamespaceList.getChildes()){
+        for(ResXmlStartNamespace ns:mStartNamespaceList.getChildren()){
             if(uri.equals(ns.getUri())){
                 return ns;
             }
@@ -909,7 +909,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return result;
     }
     private List<ResXmlStartNamespace> getStartNamespaceList(){
-        return mStartNamespaceList.getChildes();
+        return mStartNamespaceList.getChildren();
     }
     private void addStartNamespace(ResXmlStartNamespace item){
         mStartNamespaceList.add(item);
@@ -1245,7 +1245,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         parseNamespaces(parser);
         parseAttributes(parser);
-        parseChildes(parser);
+        parseChildren(parser);
         if(prefix != null){
             if(uri == null || uri.length() == 0){
                 ResXmlNamespace ns = getNamespaceByPrefix(prefix);
@@ -1259,7 +1259,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         clearNullNodes(false);
         calculatePositions();
     }
-    private void parseChildes(XmlPullParser parser) throws IOException, XmlPullParserException {
+    private void parseChildren(XmlPullParser parser) throws IOException, XmlPullParserException {
         ResXmlElement currentElement = this;
         int event = parser.next();
         while (event != XmlPullParser.END_TAG && event != XmlPullParser.END_DOCUMENT){
@@ -1359,12 +1359,12 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
                 jsonObject.put(NAME_attributes, attrArray);
             }
         }
-        JSONArray childes = new JSONArray();
+        JSONArray children = new JSONArray();
         for(ResXmlNode xmlNode : getXmlNodeList()){
-            childes.put(xmlNode.toJson());
+            children.put(xmlNode.toJson());
         }
-        if(!childes.isEmpty()){
-            jsonObject.put(NAME_childes, childes);
+        if(!children.isEmpty()){
+            jsonObject.put(NAME_children, children);
         }
         return jsonObject;
     }
@@ -1400,7 +1400,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(attributeArray != null){
             attributeArray.fromJson(json.optJSONArray(NAME_attributes));
         }
-        JSONArray childArray = json.optJSONArray(NAME_childes);
+        JSONArray childArray = json.optJSONArray(NAME_children);
         if(childArray != null){
             int length = childArray.length();
             for(int i = 0; i < length; i++){
@@ -1532,7 +1532,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     private static final String NAME_line = "line";
     private static final String NAME_line_end = "line_end";
     static final String NAME_attributes = "attributes";
-    static final String NAME_childes = "childes";
+    static final String NAME_children = "children";
 
     private static final String FEATURE_INDENT_OUTPUT = "http://xmlpull.org/v1/doc/features.html#indent-output";
 

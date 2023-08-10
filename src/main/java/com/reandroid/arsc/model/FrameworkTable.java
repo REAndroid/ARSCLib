@@ -151,14 +151,14 @@ public class FrameworkTable extends TableBlock {
         SpecTypePairArray specTypePairArray = pkg.getSpecTypePairArray();
         specTypePairArray.sort();
 
-        SpecTypePair[] specTypePairs = specTypePairArray.getChildes().clone();
+        SpecTypePair[] specTypePairs = specTypePairArray.getChildren().clone();
         for(SpecTypePair specTypePair : specTypePairs){
             removeEmptyBlocks(specTypePair);
         }
     }
     private void removeEmptyBlocks(SpecTypePair specTypePair){
         TypeBlockArray typeBlockArray = specTypePair.getTypeBlockArray();
-        if(typeBlockArray.getChildesCount()<2){
+        if(typeBlockArray.getChildrenCount()<2){
             return;
         }
         typeBlockArray.removeEmptyBlocks();
@@ -166,7 +166,7 @@ public class FrameworkTable extends TableBlock {
     private void optimizeTableString(){
         removeUnusedTableString();
         shrinkTableString();
-        getStringPool().getStyleArray().clearChildes();
+        getStringPool().getStyleArray().clearChildren();
         removeUnusedTableString();
     }
     private void removeUnusedTableString(){

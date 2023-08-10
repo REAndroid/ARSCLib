@@ -34,7 +34,7 @@ public class DexSection<T extends Block>  extends ExpandableBlockContainer imple
         return itemArray.get(index);
     }
     public int size(){
-        return itemArray.childesCount();
+        return itemArray.childrenCount();
     }
 
     public T[] toArray(int[] indexes){

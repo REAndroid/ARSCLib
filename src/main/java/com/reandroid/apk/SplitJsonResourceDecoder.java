@@ -55,7 +55,7 @@ public class SplitJsonResourceDecoder {
         jsonObject.put(PackageBlock.NAME_package_id, packageBlock.getId());
         jsonObject.put(PackageBlock.NAME_package_name, packageBlock.getName());
         StagedAlias stagedAlias=StagedAlias
-                .mergeAll(packageBlock.getStagedAliasList().getChildes());
+                .mergeAll(packageBlock.getStagedAliasList().getChildren());
         if(stagedAlias!=null){
             jsonObject.put(PackageBlock.NAME_staged_aliases,
                     stagedAlias.getStagedAliasEntryArray().toJson());

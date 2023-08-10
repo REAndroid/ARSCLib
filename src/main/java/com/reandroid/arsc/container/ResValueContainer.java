@@ -19,21 +19,21 @@ import com.reandroid.arsc.base.BlockContainer;
 import com.reandroid.arsc.value.ValueItem;
 
 public class ResValueContainer extends BlockContainer<ValueItem> {
-    private final ValueItem[] mChildes;
+    private final ValueItem[] mChildren;
     public ResValueContainer(){
         super();
-        mChildes=new ValueItem[1];
+        mChildren=new ValueItem[1];
     }
     @Override
     protected void onRefreshed(){
     }
     @Override
-    public int getChildesCount() {
-        return mChildes.length;
+    public int getChildrenCount() {
+        return mChildren.length;
     }
     @Override
-    public ValueItem[] getChildes() {
-        return mChildes;
+    public ValueItem[] getChildren() {
+        return mChildren;
     }
     public void setResValue(ValueItem resValue){
         ValueItem old=getResValue();
@@ -41,7 +41,7 @@ public class ResValueContainer extends BlockContainer<ValueItem> {
             old.setIndex(-1);
             old.setParent(null);
         }
-        mChildes[0]=resValue;
+        mChildren[0]=resValue;
         if(resValue==null){
             return;
         }
@@ -49,9 +49,9 @@ public class ResValueContainer extends BlockContainer<ValueItem> {
         resValue.setParent(this);
     }
     public ValueItem getResValue(){
-        if(mChildes.length==0){
+        if(mChildren.length==0){
             return null;
         }
-        return mChildes[0];
+        return mChildren[0];
     }
 }

@@ -19,13 +19,13 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockContainer;
 
 public class FixedBlockContainer extends BlockContainer<Block> {
-    private final Block[] mChildes;
-    public FixedBlockContainer(int childesCount){
+    private final Block[] mChildren;
+    public FixedBlockContainer(int childrenCount){
         super();
-        mChildes=new Block[childesCount];
+        mChildren=new Block[childrenCount];
     }
     public void addChild(int index, Block block){
-        mChildes[index]=block;
+        mChildren[index]=block;
         block.setIndex(index);
         block.setParent(this);
     }
@@ -33,11 +33,11 @@ public class FixedBlockContainer extends BlockContainer<Block> {
     protected void onRefreshed(){
     }
     @Override
-    public int getChildesCount() {
-        return mChildes.length;
+    public int getChildrenCount() {
+        return mChildren.length;
     }
     @Override
-    public Block[] getChildes() {
-        return mChildes;
+    public Block[] getChildren() {
+        return mChildren;
     }
 }

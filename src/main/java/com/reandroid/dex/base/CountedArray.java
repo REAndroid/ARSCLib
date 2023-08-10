@@ -35,12 +35,12 @@ public abstract class CountedArray<T extends Block> extends BlockArray<T> {
 
     @Override
     protected void onRefreshed() {
-        itemCount.set(childesCount());
+        itemCount.set(childrenCount());
     }
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
+        setChildrenCount(itemCount.get());
         super.onReadBytes(reader);
     }
 }

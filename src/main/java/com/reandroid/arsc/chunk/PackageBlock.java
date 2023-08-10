@@ -355,7 +355,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         return null;
     }
     public List<StagedAlias> listStagedAlias(){
-        return getStagedAliasList().getChildes();
+        return getStagedAliasList().getChildren();
     }
     public StagedAliasList getStagedAliasList(){
         return mBody.getStagedAliasList();
@@ -660,11 +660,11 @@ public class PackageBlock extends Chunk<PackageHeader>
         jsonObject.put(NAME_package_name, getName());
         jsonObject.put(NAME_specs, getSpecTypePairArray().toJson(!addTypes));
         LibraryInfoArray libraryInfoArray = getLibraryBlock().getLibraryInfoArray();
-        if(libraryInfoArray.getChildesCount()>0){
+        if(libraryInfoArray.getChildrenCount()>0){
             jsonObject.put(NAME_libraries,libraryInfoArray.toJson());
         }
         StagedAlias stagedAlias =
-                StagedAlias.mergeAll(getStagedAliasList().getChildes());
+                StagedAlias.mergeAll(getStagedAliasList().getChildren());
         if(stagedAlias!=null){
             jsonObject.put(NAME_staged_aliases,
                     stagedAlias.getStagedAliasEntryArray().toJson());

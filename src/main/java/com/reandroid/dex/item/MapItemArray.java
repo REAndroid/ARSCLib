@@ -29,7 +29,7 @@ public class MapItemArray extends BlockArray<MapItem> {
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
+        setChildrenCount(itemCount.get());
         super.onReadBytes(reader);
     }
     @Override

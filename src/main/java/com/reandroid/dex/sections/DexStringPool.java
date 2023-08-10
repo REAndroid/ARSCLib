@@ -44,7 +44,7 @@ public class DexStringPool extends FixedBlockContainer implements Iterable<Strin
         return dexStringArray.get(index);
     }
     public int size(){
-        return dexStringArray.childesCount();
+        return dexStringArray.childrenCount();
     }
     @Override
     public Iterator<StringIndex> iterator() {

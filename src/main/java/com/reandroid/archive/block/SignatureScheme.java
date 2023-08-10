@@ -19,8 +19,8 @@ import com.reandroid.arsc.container.ExpandableBlockContainer;
 
 public class SignatureScheme extends ExpandableBlockContainer {
     private final SignatureId signatureId;
-    public SignatureScheme(int childesCount, SignatureId signatureId){
-        super(childesCount);
+    public SignatureScheme(int childrenCount, SignatureId signatureId){
+        super(childrenCount);
         this.signatureId = signatureId;
     }
     public SignatureId getSignatureId() {

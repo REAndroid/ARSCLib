@@ -40,21 +40,21 @@ public class AnnotationItemArray extends BlockArray<AnnotationItem> implements B
         if(sender == itemCount){
             int count = itemCount.get();
             offsetsArray.setSize(count);
-            setChildesCount(count);
+            setChildrenCount(count);
         }
     }
     @Override
     protected void onRefreshed() {
-        itemCount.set(childesCount());
+        itemCount.set(childrenCount());
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         int[] offsets = offsetsArray.toArray();
-        AnnotationItem[] childes = getChildes();
+        AnnotationItem[] children = getChildren();
         int count = offsets.length;
         for(int i = 0; i < count; i++){
             int offset = offsets[i];
-            AnnotationItem item = childes[i];
+            AnnotationItem item = children[i];
             if(offset == 0){
                 item.setNull(true);
                 continue;

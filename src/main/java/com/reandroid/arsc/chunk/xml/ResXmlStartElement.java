@@ -325,7 +325,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
         mAttributeStart.set(start);
     }
     private void refreshAttributeCount(){
-        int count = mAttributeArray.getChildesCount();
+        int count = mAttributeArray.getChildrenCount();
         mAttributeCount.set(count);
     }
 
@@ -337,7 +337,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
         }
         StringBuilder builder=new StringBuilder();
         builder.append(txt);
-        ResXmlAttribute[] allAttr=mAttributeArray.getChildes();
+        ResXmlAttribute[] allAttr=mAttributeArray.getChildren();
         if(allAttr!=null){
             for(int i=0;i<allAttr.length;i++){
                 if(i>10){

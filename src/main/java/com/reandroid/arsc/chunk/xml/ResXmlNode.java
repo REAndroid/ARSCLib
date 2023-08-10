@@ -26,8 +26,8 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.IOException;
 
 public abstract class ResXmlNode extends FixedBlockContainer  implements JSONConvert<JSONObject> {
-    ResXmlNode(int childesCount) {
-        super(childesCount);
+    ResXmlNode(int childrenCount) {
+        super(childrenCount);
     }
     abstract void onRemoved();
     abstract void linkStringReferences();

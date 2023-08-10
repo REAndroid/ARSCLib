@@ -50,8 +50,8 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         return alignItem;
     }
     @Override
-    public void clearChildes(){
-        super.clearChildes();
+    public void clearChildren(){
+        super.clearChildren();
         mOffsetArray.clear();
         mItemStart.set(0);
         mItemCount.set(0);
@@ -98,10 +98,10 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         refreshAlignment(getAlignItem());
     }
     private void calculateOffsets() {
-        T[] childes = getChildes();
+        T[] children = getChildren();
         int count = 0;
-        if(childes != null){
-            count = childes.length;
+        if(children != null){
+            count = children.length;
         }
         OffsetArray offsetArray = getOffsetArray();
         offsetArray.setSize(count);
@@ -109,9 +109,9 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
             return;
         }
         int sum = 0;
-        int length = childes.length;
+        int length = children.length;
         for(int i = 0; i < length; i++){
-            T item = childes[i];
+            T item = children[i];
             int offset;
             if(item == null || item.isNull()){
                 offset = -1;
@@ -127,10 +127,10 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         refreshStart();
     }
     public void refreshCount(){
-        mItemCount.set(getChildesCount());
+        mItemCount.set(getChildrenCount());
     }
     private void refreshStart(){
-        int count = getChildesCount();
+        int count = getChildrenCount();
         if(count == 0){
             mItemStart.set(0);
             alignItem.clear();
@@ -147,7 +147,7 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         refreshAlignment(alignItem);
     }
     void refreshAlignment(AlignItem alignItem){
-        if(getChildesCount() == 0){
+        if(getChildrenCount() == 0){
             alignItem.clear();
             return;
         }
@@ -156,18 +156,18 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
-        T[] childes = getChildes();
-        if(childes == null || childes.length == 0){
+        T[] children = getChildren();
+        if(children == null || children.length == 0){
             return;
         }
         int noEntry = OffsetArray.NO_ENTRY;
         int[] offsetArray = mOffsetArray.getOffsets();
-        int length = childes.length;
+        int length = children.length;
         int zeroPosition = getZeroPosition();
         reader.seek(zeroPosition);
         int maximumPosition = zeroPosition;
         for(int i = 0; i < length; i++){
-            T item = childes[i];
+            T item = children[i];
             int offset = offsetArray[i];
             if(offset == noEntry){
                 item.setNull(true);
@@ -197,7 +197,7 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
         if(sender == mItemCount){
             int count = mItemCount.get();
-            setChildesCount(count);
+            setChildrenCount(count);
             getOffsetArray().setSize(count);
         }
     }
@@ -207,7 +207,7 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(": count = ");
-        int realCount = getChildesCount();
+        int realCount = getChildrenCount();
         builder.append(realCount);
         int count = mItemCount.get();
         if(realCount != count){

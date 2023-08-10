@@ -35,12 +35,12 @@
          this.count.setBlockLoad(this);
      }
      public boolean contains(StagedAliasEntry aliasEntry){
-         StagedAliasEntry[] childes=getChildes();
-         if(childes==null){
+         StagedAliasEntry[] children=getChildren();
+         if(children==null){
              return false;
          }
-         for(int i=0;i<childes.length;i++){
-             StagedAliasEntry entry=childes[i];
+         for(int i=0;i<children.length;i++){
+             StagedAliasEntry entry=children[i];
              if(entry.isEqual(aliasEntry)){
                  return true;
              }
@@ -48,12 +48,12 @@
          return false;
      }
      public StagedAliasEntry searchByStagedResId(int stagedResId){
-         StagedAliasEntry[] childes=getChildes();
-         if(childes==null){
+         StagedAliasEntry[] children=getChildren();
+         if(children==null){
              return null;
          }
-         for(int i=0;i<childes.length;i++){
-             StagedAliasEntry entry=childes[i];
+         for(int i=0;i<children.length;i++){
+             StagedAliasEntry entry=children[i];
              if(stagedResId==entry.getStagedResId()){
                  return entry;
              }
@@ -80,33 +80,33 @@
      @Override
      public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
          if(sender==this.count){
-             setChildesCount(this.count.get());
+             setChildrenCount(this.count.get());
          }
      }
      private void updateCount(){
-         this.count.set(getChildesCount());
+         this.count.set(getChildrenCount());
      }
 
      @Override
      public JSONArray toJson() {
-         StagedAliasEntry[] childes=getChildes();
-         if(childes==null||childes.length==0){
+         StagedAliasEntry[] children=getChildren();
+         if(children==null||children.length==0){
              return null;
          }
          JSONArray jsonArray=new JSONArray();
-         for(int i=0;i<childes.length;i++){
-             jsonArray.put(i, childes[i].toJson());
+         for(int i=0;i<children.length;i++){
+             jsonArray.put(i, children[i].toJson());
          }
          return jsonArray;
      }
      @Override
      public void fromJson(JSONArray json) {
-         clearChildes();
+         clearChildren();
          if(json==null){
              return;
          }
          int length = json.length();
-         setChildesCount(length);
+         setChildrenCount(length);
          for(int i=0;i<length;i++){
              get(i).fromJson(json.getJSONObject(i));
          }

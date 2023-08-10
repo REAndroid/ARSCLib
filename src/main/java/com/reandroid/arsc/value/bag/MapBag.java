@@ -110,14 +110,14 @@ public abstract class MapBag<K, V extends BagItem> extends AbstractMap<K, V> imp
 
         @Override
         public int size() {
-            return getMapArray().getChildesCount();
+            return getMapArray().getChildrenCount();
         }
     }
 
     @Override
     public V remove(Object key) {
         ResValueMapArray array = getMapArray();
-        for (ResValueMap item : array.getChildes()) {
+        for (ResValueMap item : array.getChildren()) {
             if (getKeyFor(item).equals(key)) {
                 if (!array.remove(item)) {
                     throw new IllegalStateException("Could not remove item");
@@ -131,7 +131,7 @@ public abstract class MapBag<K, V extends BagItem> extends AbstractMap<K, V> imp
 
     @Override
     public void clear() {
-        getMapArray().clearChildes();
+        getMapArray().clearChildren();
         updateSize();
     }
 
@@ -150,7 +150,7 @@ public abstract class MapBag<K, V extends BagItem> extends AbstractMap<K, V> imp
         }
         ResValueMapArray array = getMapArray();
         ResValueMap valueMap = null;
-        for (ResValueMap item : array.getChildes()) {
+        for (ResValueMap item : array.getChildren()) {
             if (getKeyFor(item).equals(key)) {
                 valueMap = item;
                 break;
@@ -172,7 +172,7 @@ public abstract class MapBag<K, V extends BagItem> extends AbstractMap<K, V> imp
         LinkedHashSet<K> keys = new LinkedHashSet<>(m.keySet());
         ResValueMapArray array = getMapArray();
 
-        for (ResValueMap item : array.getChildes()) {
+        for (ResValueMap item : array.getChildren()) {
             K currentKey = getKeyFor(item);
 
             if (keys.remove(currentKey)) {

@@ -35,15 +35,15 @@ public abstract class BlockContainer<T extends Block> extends Block{
             return;
         }
         onPreRefreshRefresh();
-        refreshChildes();
+        refreshChildren();
         onRefreshed();
     }
-    protected void refreshChildes(){
-        T[] childes=getChildes();
-        if(childes!=null){
-            int max=childes.length;
+    protected void refreshChildren(){
+        T[] children=getChildren();
+        if(children!=null){
+            int max=children.length;
             for(int i=0;i<max;i++){
-                T item=childes[i];
+                T item=children[i];
                 if(item instanceof BlockContainer){
                     BlockContainer<?> container=(BlockContainer<?>)item;
                     container.refresh();
@@ -64,16 +64,16 @@ public abstract class BlockContainer<T extends Block> extends Block{
             counter.FOUND=true;
             return;
         }
-        T[] childes=getChildes();
-        if(childes==null){
+        T[] children=getChildren();
+        if(children==null){
             return;
         }
-        int max=childes.length;
+        int max=children.length;
         for(int i=0;i<max;i++){
             if(counter.FOUND){
                 return;
             }
-            T item=childes[i];
+            T item=children[i];
             if(item!=null){
                 item.onCountUpTo(counter);
             }
@@ -84,14 +84,14 @@ public abstract class BlockContainer<T extends Block> extends Block{
         if(isNull()){
             return 0;
         }
-        T[] childes=getChildes();
-        if(childes==null){
+        T[] children=getChildren();
+        if(children==null){
             return 0;
         }
         int result=0;
-        int max=childes.length;
+        int max=children.length;
         for(int i=0;i<max;i++){
-            T item=childes[i];
+            T item=children[i];
             if(item!=null){
                 result += item.countBytes();
             }
@@ -103,14 +103,14 @@ public abstract class BlockContainer<T extends Block> extends Block{
         if(isNull()){
             return null;
         }
-        T[] childes=getChildes();
-        if(childes==null){
+        T[] children=getChildren();
+        if(children==null){
             return null;
         }
         byte[] results=null;
-        int max=childes.length;
+        int max=children.length;
         for(int i=0;i<max;i++){
-            T item=childes[i];
+            T item=children[i];
             if(item!=null){
                 results = addBytes(results, item.getBytes());
             }
@@ -122,14 +122,14 @@ public abstract class BlockContainer<T extends Block> extends Block{
         if(isNull()){
             return 0;
         }
-        T[] childes=getChildes();
-        if(childes==null){
+        T[] children=getChildren();
+        if(children==null){
             return 0;
         }
         int result=0;
-        int max=childes.length;
+        int max=children.length;
         for(int i=0;i<max;i++){
-            T item=childes[i];
+            T item=children[i];
             if(item!=null){
                 result+=item.writeBytes(stream);
             }
@@ -139,24 +139,24 @@ public abstract class BlockContainer<T extends Block> extends Block{
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
-        T[] childes=getChildes();
-        if(childes==null){
+        T[] children=getChildren();
+        if(children==null){
             return;
         }
-        int max=childes.length;
+        int max=children.length;
         for(int i=0;i<max;i++){
-            T item=childes[i];
+            T item=children[i];
             if(item!=null){
                 item.readBytes(reader);
             }
         }
     }
 
-    //use getChildesCount()
+    //use getChildrenCount()
     @Deprecated
-    public int childesCount(){
-        return getChildesCount();
+    public int childrenCount(){
+        return getChildrenCount();
     }
-    public abstract int getChildesCount();
-    public abstract T[] getChildes();
+    public abstract int getChildrenCount();
+    public abstract T[] getChildren();
 }

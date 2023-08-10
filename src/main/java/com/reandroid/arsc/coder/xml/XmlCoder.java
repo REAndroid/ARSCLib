@@ -254,9 +254,9 @@ public class XmlCoder {
         public void encodeBag(XMLElement element, Entry entry) throws IOException{
             entry.ensureComplex(true);
             BAG_ROOT_ATTRIBUTE.encode(element, entry);
-            Iterator<? extends XMLElement> childes = element.getElements();
-            while (childes.hasNext()){
-                BAG_CHILD.encode(childes.next(), entry);
+            Iterator<? extends XMLElement> children = element.getElements();
+            while (children.hasNext()){
+                BAG_CHILD.encode(children.next(), entry);
             }
             checkVisibility(entry);
         }
@@ -406,7 +406,7 @@ public class XmlCoder {
             ResTableMapEntry mapEntry = entry.getResTableMapEntry();
             ResValueMapArray mapArray = mapEntry.getValue();
             int childCount = 0;
-            for(ResValueMap valueMap : mapArray.getChildes()){
+            for(ResValueMap valueMap : mapArray.getChildren()){
                 if(valueMap == null){
                     continue;
                 }
@@ -426,7 +426,7 @@ public class XmlCoder {
             ResTableMapEntry mapEntry = entry.getResTableMapEntry();
             ResValueMapArray mapArray = mapEntry.getValue();
             int childCount = 0;
-            for(ResValueMap valueMap : mapArray.getChildes()){
+            for(ResValueMap valueMap : mapArray.getChildren()){
                 if(valueMap == null){
                     continue;
                 }
@@ -443,7 +443,7 @@ public class XmlCoder {
             ResTableMapEntry mapEntry = entry.getResTableMapEntry();
             ResValueMapArray mapArray = mapEntry.getValue();
             int childCount = 0;
-            for(ResValueMap valueMap : mapArray.getChildes()){
+            for(ResValueMap valueMap : mapArray.getChildren()){
                 if(valueMap == null){
                     continue;
                 }
@@ -571,7 +571,7 @@ public class XmlCoder {
             }
             ResTableMapEntry mapEntry = entry.getResTableMapEntry();
             ResValueMapArray mapArray = mapEntry.getValue();
-            for(ResValueMap valueMap : mapArray.getChildes()){
+            for(ResValueMap valueMap : mapArray.getChildren()){
                 if(valueMap == null){
                     continue;
                 }
@@ -579,7 +579,7 @@ public class XmlCoder {
                 if(attributeType == null){
                     continue;
                 }
-                boolean ignore_empty = mapArray.getChildesCount() > 1;
+                boolean ignore_empty = mapArray.getChildrenCount() > 1;
                 valueMap.serializeAttribute(serializer,
                         attributeType.getName(), ignore_empty);
             }
@@ -592,7 +592,7 @@ public class XmlCoder {
                 return;
             }
             if(mapEntry.isStyle()){
-                if(mapEntry.childesCount() == 0){
+                if(mapEntry.childrenCount() == 0){
                     serializer.attribute(null, ATTR_parent, "");
                 }
             }

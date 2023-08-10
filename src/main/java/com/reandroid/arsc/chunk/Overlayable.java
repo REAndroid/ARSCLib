@@ -51,7 +51,7 @@ public class Overlayable extends Chunk<OverlayableHeader> implements JSONConvert
         this.policyList.add(overlayablePolicy);
     }
     public List<OverlayablePolicy> listOverlayablePolicies() {
-        return policyList.getChildes();
+        return policyList.getChildren();
     }
     public ByteArray getExtraBytes() {
         return extraBytes;

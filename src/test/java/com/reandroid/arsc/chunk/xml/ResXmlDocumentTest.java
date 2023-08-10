@@ -50,7 +50,7 @@ public class ResXmlDocumentTest {
         Assert.assertNotNull("Element not found <child>", root.getElementByTagName("child"));
         root.removeNode(root.getElementByTagName("child"));
         Assert.assertEquals(1, root.listElements("child").size());
-        root.clearChildes();
+        root.clearChildren();
         Assert.assertEquals("Child nodes cleared", 0, root.listXmlNodes().size());
     }
     @Test

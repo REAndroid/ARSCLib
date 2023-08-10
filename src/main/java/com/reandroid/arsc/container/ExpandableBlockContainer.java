@@ -19,11 +19,11 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockContainer;
 
 public  class ExpandableBlockContainer extends BlockContainer<Block> {
-    private Block[] mChildes;
+    private Block[] mChildren;
     private int mCursor;
     public ExpandableBlockContainer(int initialSize){
         super();
-        this.mChildes=new Block[initialSize];
+        this.mChildren=new Block[initialSize];
     }
     public final void addChild(Block block){
         if(block==null){
@@ -31,19 +31,19 @@ public  class ExpandableBlockContainer extends BlockContainer<Block> {
         }
         int index=mCursor;
         ensureCount(index+1);
-        mChildes[index]=block;
+        mChildren[index]=block;
         block.setIndex(index);
         block.setParent(this);
         mCursor++;
     }
     private void ensureCount(int count){
-        if(count<= getChildesCount()){
+        if(count<= getChildrenCount()){
             return;
         }
-        Block[] old=mChildes;
-        mChildes=new Block[count];
+        Block[] old=mChildren;
+        mChildren=new Block[count];
         for(int i=0;i<old.length;i++){
-            mChildes[i]=old[i];
+            mChildren[i]=old[i];
         }
     }
     @Override
@@ -52,11 +52,11 @@ public  class ExpandableBlockContainer extends BlockContainer<Block> {
     }
 
     @Override
-    public final int getChildesCount() {
-        return mChildes.length;
+    public final int getChildrenCount() {
+        return mChildren.length;
     }
     @Override
-    public final Block[] getChildes() {
-        return mChildes;
+    public final Block[] getChildren() {
+        return mChildren;
     }
 }

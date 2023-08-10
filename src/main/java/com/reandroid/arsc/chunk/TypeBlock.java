@@ -107,7 +107,7 @@ public class TypeBlock extends Chunk<TypeHeader>
         startId = 0x0000ffff & startId;
         EntryArray entryArray = getEntryArray();
         entryArray.removeAllNull(startId);
-        return entryArray.getChildesCount() == startId;
+        return entryArray.getChildrenCount() == startId;
     }
     public PackageBlock getPackageBlock(){
         SpecTypePair specTypePair = getParent(SpecTypePair.class);
@@ -288,7 +288,7 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
 
     private void onSetEntryCount(int count) {
-        getEntryArray().setChildesCount(count);
+        getEntryArray().setChildrenCount(count);
     }
     @Override
     protected void onChunkRefreshed() {

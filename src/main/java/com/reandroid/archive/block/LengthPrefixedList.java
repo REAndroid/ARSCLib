@@ -67,7 +67,7 @@ public abstract class LengthPrefixedList<T extends Block> extends FixedBlockCont
         return getElements().size();
     }
     public List<T> getElements() {
-        return elements.getChildes();
+        return elements.getChildren();
     }
     public T add(T element){
         this.elements.add(element);

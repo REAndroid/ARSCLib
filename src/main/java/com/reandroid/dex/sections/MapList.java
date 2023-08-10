@@ -57,7 +57,7 @@ public class MapList extends FixedBlockContainer implements Iterable<MapItem> {
         }
         reader.seek(offset);
         super.onReadBytes(reader);
-        mapItemArray.childesCount();
+        mapItemArray.childrenCount();
     }
 
 }

@@ -23,7 +23,7 @@ public class StagedAliasList extends BlockList<StagedAlias> {
         super();
     }
     private StagedAlias pickOne(){
-        for(StagedAlias stagedAlias:getChildes()){
+        for(StagedAlias stagedAlias:getChildren()){
             if(stagedAlias!=null){
                 return stagedAlias;
             }
@@ -39,7 +39,7 @@ public class StagedAliasList extends BlockList<StagedAlias> {
             exist=new StagedAlias();
             add(exist);
         }
-        for(StagedAlias stagedAlias:stagedAliasList.getChildes()){
+        for(StagedAlias stagedAlias:stagedAliasList.getChildren()){
             exist.merge(stagedAlias);
         }
     }

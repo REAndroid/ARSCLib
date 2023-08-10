@@ -39,11 +39,11 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
         styleItem.onDataLoaded();
     }
     @Override
-    public void clearChildes(){
+    public void clearChildren(){
         for(StyleItem styleItem:listItems()){
             styleItem.onRemoved();
         }
-        super.clearChildes();
+        super.clearChildren();
     }
     @Override
     void refreshAlignment(BlockReader reader, AlignItem alignItem) throws IOException {
@@ -65,7 +65,7 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
     }
     @Override
     void refreshAlignment(AlignItem alignItem) {
-        if(getChildesCount() == 0){
+        if(getChildrenCount() == 0){
             alignItem.clear();
             return;
         }
@@ -73,7 +73,7 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
         alignItem.ensureSize(8);
     }
     @Override
-    protected void refreshChildes(){
+    protected void refreshChildren(){
         // Not required
     }
     @Override
@@ -98,7 +98,7 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
 
     @Override
     public JSONArray toJson() {
-        if(getChildesCount()==0){
+        if(getChildrenCount()==0){
             return null;
         }
         return null;
@@ -111,10 +111,10 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
         if(styleArray==null||styleArray==this){
             return;
         }
-        if(getChildesCount()!=0){
+        if(getChildrenCount()!=0){
             return;
         }
-        int count=styleArray.getChildesCount();
+        int count=styleArray.getChildrenCount();
         ensureSize(count);
         for(int i=0;i<count;i++){
             StyleItem exist=get(i);

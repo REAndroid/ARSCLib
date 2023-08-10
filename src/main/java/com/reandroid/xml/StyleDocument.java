@@ -105,9 +105,9 @@ public class StyleDocument extends XMLDocument implements StyleNode, Comparable<
     @Override
     void write(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
         appendDocument(appendable, xml);
-        appendChildes(iterator(), appendable, xml, escapeXmlText);
+        appendChildren(iterator(), appendable, xml, escapeXmlText);
     }
-    private void appendChildes(Iterator<XMLNode> iterator, Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
+    private void appendChildren(Iterator<XMLNode> iterator, Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException {
         while (iterator.hasNext()){
             iterator.next().write(appendable, xml, escapeXmlText);
         }

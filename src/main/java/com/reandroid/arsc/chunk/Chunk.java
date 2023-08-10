@@ -26,8 +26,8 @@ import java.io.IOException;
 public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContainer {
     private final T mHeaderBlock;
     protected final SingleBlockContainer<Block> firstPlaceHolder;
-    protected Chunk(T headerBlock, int initialChildesCount) {
-        super(initialChildesCount+2);
+    protected Chunk(T headerBlock, int initialChildrenCount) {
+        super(initialChildrenCount+2);
         this.mHeaderBlock = headerBlock;
         this.firstPlaceHolder = new SingleBlockContainer<>();
         addChild(headerBlock);

@@ -243,7 +243,7 @@ public class AttributeBag {
             builder.append(entry.getSpecString());
         }
         int len=bagItems.length;
-        builder.append(", childes=").append(len);
+        builder.append(", children=").append(len);
         for(int i=0;i<len;i++){
             AttributeBagItem item = bagItems[i];
             builder.append("\n    [").append((i+1)).append("]  ");
@@ -262,7 +262,7 @@ public class AttributeBag {
         if(resValueMapArray==null){
             return null;
         }
-        AttributeBagItem[] bagItems=AttributeBagItem.create(resValueMapArray.getChildes());
+        AttributeBagItem[] bagItems=AttributeBagItem.create(resValueMapArray.getChildren());
         if(bagItems==null){
             return null;
         }

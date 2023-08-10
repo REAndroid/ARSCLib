@@ -56,10 +56,10 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
         return getValue().getByType(attributeType);
     }
     public void refresh(){
-        getHeader().setValuesCount(getValue().getChildesCount());
+        getHeader().setValuesCount(getValue().getChildrenCount());
     }
     public ITEM[] listResValueMap(){
-        return getValue().getChildes();
+        return getValue().getChildren();
     }
 
     public String decodeParentId(){
@@ -78,12 +78,12 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
     public void setParentId(int parentId){
         getHeader().setParentId(parentId);
     }
-    public int childesCount(){
-        return getValue().getChildesCount();
+    public int childrenCount(){
+        return getValue().getChildrenCount();
     }
     public void setValuesCount(int valuesCount){
         getHeader().setValuesCount(valuesCount);
-        getValue().setChildesCount(valuesCount);
+        getValue().setChildrenCount(valuesCount);
     }
     public ResourceEntry resolveParentId(){
         int id = getParentId();
@@ -115,7 +115,7 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
     }
     @Override
     void onHeaderLoaded(ARRAY value, EntryHeaderMap header){
-        value.setChildesCount(header.getValuesCount());
+        value.setChildrenCount(header.getValuesCount());
     }
 
     @Override

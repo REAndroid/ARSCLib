@@ -41,7 +41,7 @@ public class DexItemArray<T extends Block> extends BlockArray<T>{
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
         IntegerPair countAndOffset = getCountAndOffset();
-        setChildesCount(countAndOffset.getFirst().get());
+        setChildrenCount(countAndOffset.getFirst().get());
         reader.seek(countAndOffset.getSecond().get());
         super.onReadBytes(reader);
     }
@@ -49,7 +49,7 @@ public class DexItemArray<T extends Block> extends BlockArray<T>{
     @Override
     protected void onRefreshed() {
         IntegerReference count = getCountAndOffset().getFirst();
-        count.set(childesCount());
+        count.set(childrenCount());
         calculateOffset();
     }
     protected void calculateOffset() {

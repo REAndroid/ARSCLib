@@ -51,7 +51,7 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         sort(this);
     }
     public void removeEmptyPairs(){
-        SpecTypePair[] specTypePairs = getChildes().clone();
+        SpecTypePair[] specTypePairs = getChildren().clone();
         boolean foundEmpty = false;
         for(SpecTypePair typePair:specTypePairs){
             typePair.removeEmptyTypeBlocks();
@@ -138,7 +138,7 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         return getSpecTypePair((byte) typeId);
     }
     public SpecTypePair getSpecTypePair(byte typeId){
-        SpecTypePair[] items = getChildes();
+        SpecTypePair[] items = getChildren();
         if(items == null){
             return null;
         }
@@ -222,8 +222,8 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
     }
     private Map<Byte, Integer> mapHighestEntryCount(){
         Map<Byte, Integer> results=new HashMap<>();
-        SpecTypePair[] childes=getChildes();
-        for (SpecTypePair pair:childes){
+        SpecTypePair[] children=getChildren();
+        for (SpecTypePair pair:children){
             int count=pair.getHighestEntryCount();
             byte id=pair.getTypeId();
             Integer exist=results.get(id);
@@ -234,14 +234,14 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         return results;
     }
     public int getSmallestTypeId(){
-        SpecTypePair[] childes=getChildes();
-        if(childes==null){
+        SpecTypePair[] children=getChildren();
+        if(children==null){
             return 0;
         }
         int result=0;
         boolean firstFound=false;
-        for (int i=0;i<childes.length;i++){
-            SpecTypePair pair=childes[i];
+        for (int i=0;i<children.length;i++){
+            SpecTypePair pair=children[i];
             if(pair==null){
                 continue;
             }
@@ -257,13 +257,13 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         return result;
     }
     public int getHighestTypeId(){
-        SpecTypePair[] childes=getChildes();
-        if(childes==null){
+        SpecTypePair[] children=getChildren();
+        if(children==null){
             return 0;
         }
         int result=0;
-        for (int i=0;i<childes.length;i++){
-            SpecTypePair pair=childes[i];
+        for (int i=0;i<children.length;i++){
+            SpecTypePair pair=children[i];
             if(pair==null){
                 continue;
             }
@@ -348,12 +348,12 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
         if(typeName==null){
             return null;
         }
-        SpecTypePair[] childes=getChildes();
-        if(childes==null){
+        SpecTypePair[] children=getChildren();
+        if(children==null){
             return null;
         }
-        for(int i=0;i<childes.length;i++){
-            SpecTypePair specTypePair=childes[i];
+        for(int i=0;i<children.length;i++){
+            SpecTypePair specTypePair=children[i];
             if(typeName.equals(specTypePair.getTypeName())){
                 return specTypePair;
             }

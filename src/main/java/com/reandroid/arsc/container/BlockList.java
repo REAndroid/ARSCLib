@@ -45,8 +45,8 @@ public class BlockList<T extends Block> extends Block {
     public Iterator<T> iterator(Predicate<? super T> filter){
         return FilterIterator.of(this.iterator(), filter);
     }
-    public void clearChildes(){
-        ArrayList<T> childList = new ArrayList<>(getChildes());
+    public void clearChildren(){
+        ArrayList<T> childList = new ArrayList<>(getChildren());
         for(T child:childList){
             remove(child);
         }
@@ -95,17 +95,17 @@ public class BlockList<T extends Block> extends Block {
     public int size(){
         return mItems.size();
     }
-    public List<T> getChildes(){
+    public List<T> getChildren(){
         return mItems;
     }
     public final void refresh(){
         if(isNull()){
             return;
         }
-        refreshChildes();
+        refreshChildren();
     }
-    private void refreshChildes(){
-        for(T item:getChildes()){
+    private void refreshChildren(){
+        for(T item:getChildren()){
             if(item instanceof BlockContainer){
                 BlockContainer<?> container=(BlockContainer<?>)item;
                 container.refresh();

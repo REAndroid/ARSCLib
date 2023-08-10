@@ -65,7 +65,7 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
             }
             @Override
             public int size() {
-                return getChildesCount();
+                return getChildrenCount();
             }
         };
     }
@@ -106,9 +106,9 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     }
     public List<T> listUnusedStrings(){
         List<T> results=new ArrayList<>();
-        T[] childes = getChildes();
-        for(int i = 0; i < childes.length; i++){
-            T item = childes[i];
+        T[] children = getChildren();
+        for(int i = 0; i < children.length; i++){
+            T item = children[i];
             if(item != null && !item.hasReference()){
                 results.add(item);
             }
@@ -120,10 +120,10 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
             return;
         }
         mUtf8 = is_utf8;
-        T[] childes = getChildes();
-        int length = childes.length;
+        T[] children = getChildren();
+        int length = children.length;
         for(int i = 0; i < length; i++){
-            T item = childes[i];
+            T item = children[i];
             if(item != null){
                 item.setUtf8(is_utf8);
             }
@@ -134,7 +134,7 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     }
 
     @Override
-    protected void refreshChildes(){
+    protected void refreshChildren(){
         // Not required
     }
     // Only styled strings
@@ -143,7 +143,7 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         return toJson(true);
     }
     public JSONArray toJson(boolean styledOnly) {
-        if(getChildesCount()==0){
+        if(getChildrenCount()==0){
             return null;
         }
         JSONArray jsonArray=new JSONArray();

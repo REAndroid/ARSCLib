@@ -29,7 +29,7 @@ public class SingleBlockContainer<T extends Block> extends BlockContainer<T> {
         super();
     }
     @Override
-    protected void refreshChildes(){
+    protected void refreshChildren(){
         if(mItem!=null){
             if(mItem instanceof BlockContainer){
                 ((BlockContainer)mItem).refresh();
@@ -104,12 +104,12 @@ public class SingleBlockContainer<T extends Block> extends BlockContainer<T> {
     }
 
     @Override
-    public int getChildesCount() {
+    public int getChildrenCount() {
         return hasItem()?0:1;
     }
 
     @Override
-    public T[] getChildes() {
+    public T[] getChildren() {
         return null;
     }
 

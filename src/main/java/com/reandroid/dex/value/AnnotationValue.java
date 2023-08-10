@@ -40,7 +40,7 @@ public class AnnotationValue extends DexValue<AnnotationValue.AnnotationArray>{
             addChild(2, elementArray);
         }
         public List<AnnotationElement> getArray(){
-            return elementArray.getChildes();
+            return elementArray.getChildren();
         }
     }
     private static class ElementArray extends BlockList<AnnotationElement> implements Iterable<AnnotationElement>{

@@ -112,7 +112,7 @@ public class PluralsBag extends MapBag<AttributeType, PluralsBagItem> {
         if (plurals == null) {
             return false;
         }
-        ResValueMap[] items = plurals.getMapArray().getChildes();
+        ResValueMap[] items = plurals.getMapArray().getChildren();
         if (items.length == 0) {
             return false;
         }

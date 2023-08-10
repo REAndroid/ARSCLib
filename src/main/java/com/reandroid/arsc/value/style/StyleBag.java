@@ -122,7 +122,7 @@ public class StyleBag extends MapBag<Integer, StyleBagItem> {
         if (tableBlock == null) {
             return false;
         }
-        ResValueMap[] items = style.getMapArray().getChildes();
+        ResValueMap[] items = style.getMapArray().getChildren();
         if (items.length == 0) {
             return false;
         }

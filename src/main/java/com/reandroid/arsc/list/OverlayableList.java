@@ -26,7 +26,7 @@ public class OverlayableList extends BlockList<Overlayable> implements JSONConve
         super();
     }
     public Overlayable get(String name){
-        for(Overlayable overlayable:getChildes()){
+        for(Overlayable overlayable:getChildren()){
             if(name.equals(overlayable.getName())){
                 return overlayable;
             }
@@ -39,7 +39,7 @@ public class OverlayableList extends BlockList<Overlayable> implements JSONConve
             return null;
         }
         JSONArray jsonArray = new JSONArray();
-        for(Overlayable overlayable:getChildes()){
+        for(Overlayable overlayable:getChildren()){
             JSONObject jsonOverlayble = overlayable.toJson();
             jsonArray.put(jsonOverlayble);
         }
@@ -61,7 +61,7 @@ public class OverlayableList extends BlockList<Overlayable> implements JSONConve
         if(overlayableList==null || overlayableList==this){
             return;
         }
-        for(Overlayable overlayable: overlayableList.getChildes()){
+        for(Overlayable overlayable: overlayableList.getChildren()){
             Overlayable exist=get(overlayable.getName());
             if(exist==null){
                 exist = new Overlayable();

@@ -28,8 +28,8 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
 
     public boolean isAttr(){
         boolean hasFormats = false;
-        ResValueMap[] childes = getValue().getChildes();
-        for(ResValueMap valueMap : childes){
+        ResValueMap[] children = getValue().getChildren();
+        for(ResValueMap valueMap : children){
             if(valueMap == null){
                 continue;
             }
@@ -47,9 +47,9 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
         return hasFormats;
     }
     public boolean isPlural(){
-        ResValueMap[] childes = getValue().getChildes();
+        ResValueMap[] children = getValue().getChildren();
         Set<AttributeType> uniqueSet = new HashSet<>();
-        for(ResValueMap valueMap : childes){
+        for(ResValueMap valueMap : children){
             if(valueMap == null){
                 continue;
             }
@@ -65,9 +65,9 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
         return uniqueSet.size() > 0;
     }
     public boolean isArray(){
-        ResValueMap[] childes = getValue().getChildes();
-        int size = childes.length;
-        for(ResValueMap valueMap : childes){
+        ResValueMap[] children = getValue().getChildren();
+        int size = children.length;
+        for(ResValueMap valueMap : children){
             if(valueMap == null){
                 continue;
             }
@@ -98,8 +98,8 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
     }
     public ValueType isAllSameValueType(){
         ValueType allValueType = null;
-        ResValueMap[] childes = getValue().getChildes();
-        for(ResValueMap valueMap : childes){
+        ResValueMap[] children = getValue().getChildren();
+        for(ResValueMap valueMap : children){
             ValueType valueType = valueMap.getValueType();
             if(allValueType == null){
                 allValueType = valueType;
@@ -115,10 +115,10 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
             return false;
         }
         ResValueMapArray coming = ((ResTableMapEntry) tableEntry).getValue();
-        if(coming.getChildesCount() == 0){
+        if(coming.getChildrenCount() == 0){
             return false;
         }
-        return getValue().getChildesCount() == 0;
+        return getValue().getChildrenCount() == 0;
     }
 
     @Override

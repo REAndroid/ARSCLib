@@ -34,12 +34,12 @@ public abstract class DefArray<T extends Def> extends BlockArray<T>  implements 
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
+        setChildrenCount(itemCount.get());
         super.onReadBytes(reader);
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        for(Def def : getChildes()){
+        for(Def def : getChildren()){
             def.append(writer);
             writer.newLine();
         }

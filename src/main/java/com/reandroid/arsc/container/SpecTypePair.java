@@ -44,7 +44,7 @@ import java.util.function.Predicate;
 
 public class SpecTypePair extends BlockContainer<Block>
         implements JSONConvert<JSONObject>, Comparable<SpecTypePair>{
-    private final Block[] mChildes;
+    private final Block[] mChildren;
     private final SpecBlock mSpecBlock;
     private final TypeBlockArray mTypeBlockArray;
 
@@ -52,7 +52,7 @@ public class SpecTypePair extends BlockContainer<Block>
         this.mSpecBlock = specBlock;
         this.mTypeBlockArray = typeBlockArray;
 
-        this.mChildes = new Block[]{specBlock, typeBlockArray};
+        this.mChildren = new Block[]{specBlock, typeBlockArray};
 
         specBlock.setIndex(0);
         typeBlockArray.setIndex(1);
@@ -191,7 +191,7 @@ public class SpecTypePair extends BlockContainer<Block>
     }
     public Entry getAnyEntry(short entryId){
         Entry result = null;
-        TypeBlock[] types = getTypeBlockArray().getChildes();
+        TypeBlock[] types = getTypeBlockArray().getChildren();
         for(int i = 0; i < types.length; i++){
             TypeBlock typeBlock = types[i];
             if(typeBlock == null){
@@ -211,7 +211,7 @@ public class SpecTypePair extends BlockContainer<Block>
         return result;
     }
     public Entry getAnyEntry(String name){
-        TypeBlock[] types = getTypeBlockArray().getChildes();
+        TypeBlock[] types = getTypeBlockArray().getChildren();
         for(int i = 0; i < types.length; i++){
             TypeBlock typeBlock = types[i];
             if(typeBlock == null){
@@ -246,7 +246,7 @@ public class SpecTypePair extends BlockContainer<Block>
         return getTypeBlockArray().isEmpty();
     }
     public int countTypeBlocks(){
-        return getTypeBlockArray().getChildesCount();
+        return getTypeBlockArray().getChildrenCount();
     }
     public Entry getOrCreateEntry(short entryId, String qualifiers){
         return getTypeBlockArray().getOrCreateEntry(entryId, qualifiers);
@@ -355,12 +355,12 @@ public class SpecTypePair extends BlockContainer<Block>
 
     }
     @Override
-    public int getChildesCount() {
-        return mChildes.length;
+    public int getChildrenCount() {
+        return mChildren.length;
     }
     @Override
-    public Block[] getChildes() {
-        return mChildes;
+    public Block[] getChildren() {
+        return mChildren;
     }
 
     @Override
@@ -460,7 +460,7 @@ public class SpecTypePair extends BlockContainer<Block>
             builder.append("null");
         }
         builder.append(") config count=");
-        builder.append(getTypeBlockArray().getChildesCount());
+        builder.append(getTypeBlockArray().getChildrenCount());
         return builder.toString();
     }
 

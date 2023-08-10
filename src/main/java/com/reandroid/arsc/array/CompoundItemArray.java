@@ -40,7 +40,7 @@ public abstract class CompoundItemArray<T extends ResValueMap>
     }
     private void updateCountToHeader(){
         EntryHeaderMap headerMap = getEntryHeaderMap();
-        headerMap.setValuesCount(getChildesCount());
+        headerMap.setValuesCount(getChildrenCount());
     }
     private EntryHeaderMap getEntryHeaderMap(){
         ResTableMapEntry mapEntry = getParent(ResTableMapEntry.class);
@@ -56,7 +56,7 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         return null;
     }
     public boolean containsType(AttributeType attributeType){
-        for(T valueMap : getChildes()){
+        for(T valueMap : getChildren()){
             if(attributeType == valueMap.getAttributeType()){
                 return true;
             }
@@ -78,7 +78,7 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         if(attributeType == null){
             return null;
         }
-        for(T valueMap : getChildes()){
+        for(T valueMap : getChildren()){
             if(attributeType == valueMap.getAttributeType()){
                 return valueMap;
             }
@@ -86,7 +86,7 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         return null;
     }
     public T getByName(int name){
-        for(T resValueMap : getChildes()){
+        for(T resValueMap : getChildren()){
             if(resValueMap != null && name == resValueMap.getName()){
                 return resValueMap;
             }
@@ -97,14 +97,14 @@ public abstract class CompoundItemArray<T extends ResValueMap>
     protected void onRefreshed() {
     }
     public void onRemoved(){
-        for(T resValueMap : getChildes()){
+        for(T resValueMap : getChildren()){
             resValueMap.onRemoved();
         }
     }
     @Override
-    public void clearChildes(){
+    public void clearChildren(){
         this.onRemoved();
-        super.clearChildes();
+        super.clearChildren();
     }
     @Override
     public JSONArray toJson() {
@@ -112,15 +112,15 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         if(isNull()){
             return jsonArray;
         }
-        T[] childes = getChildes();
-        for(int i = 0; i < childes.length; i++){
-            jsonArray.put(i, childes[i].toJson());
+        T[] children = getChildren();
+        for(int i = 0; i < children.length; i++){
+            jsonArray.put(i, children[i].toJson());
         }
         return jsonArray;
     }
     @Override
     public void fromJson(JSONArray json){
-        clearChildes();
+        clearChildren();
         if(json==null){
             return;
         }
@@ -134,8 +134,8 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         if(mapArray == null || mapArray == this){
             return;
         }
-        clearChildes();
-        int count = mapArray.getChildesCount();
+        clearChildren();
+        int count = mapArray.getChildrenCount();
         ensureSize(count);
         for(int i=0;i<count;i++){
             ResValueMap coming = mapArray.get(i);

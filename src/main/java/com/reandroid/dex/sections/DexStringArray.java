@@ -35,18 +35,18 @@ public class DexStringArray extends DexItemArray<StringIndex> {
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         IntegerPair offsetAndCount = getCountAndOffset();
-        setChildesCount(offsetAndCount.getFirst().get());
-        StringIndex[] childes = getChildes();
-        if(childes == null || childes.length == 0){
+        setChildrenCount(offsetAndCount.getFirst().get());
+        StringIndex[] children = getChildren();
+        if(children == null || children.length == 0){
             return;
         }
 
         int[] offsets = offsetArray.getOffsets();
         int maximumPosition = offsetAndCount.getSecond().get();
 
-        int length = childes.length;
+        int length = children.length;
         for(int i = 0; i < length; i++){
-            StringIndex item = childes[i];
+            StringIndex item = children[i];
             int offset = offsets[i];
             if(offset == -1){
                 item.setNull(true);

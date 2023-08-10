@@ -51,7 +51,7 @@ public class StagedAlias extends Chunk<StagedAliasHeader> {
         return getStagedAliasEntryArray().listItems();
     }
     public int getStagedAliasEntryCount(){
-        return getStagedAliasEntryArray().getChildesCount();
+        return getStagedAliasEntryArray().getChildrenCount();
     }
     @Override
     public boolean isNull(){

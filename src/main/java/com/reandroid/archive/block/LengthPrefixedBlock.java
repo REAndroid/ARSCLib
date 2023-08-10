@@ -25,8 +25,8 @@ import java.io.IOException;
 
 public class LengthPrefixedBlock extends ExpandableBlockContainer{
     private final Block numberBlock;
-    public LengthPrefixedBlock(int childesCount, boolean is_long) {
-        super(1 + childesCount);
+    public LengthPrefixedBlock(int childrenCount, boolean is_long) {
+        super(1 + childrenCount);
         Block numberBlock;
         if(is_long){
             numberBlock = new LongItem();
@@ -65,9 +65,9 @@ public class LengthPrefixedBlock extends ExpandableBlockContainer{
         }
         onSizeLoaded(dataSize);
         BlockReader chunkReader = reader.create(dataSize);
-        Block[] childes = getChildes();
-        for(int i=0;i<childes.length;i++){
-            Block child = childes[i];
+        Block[] children = getChildren();
+        for(int i=0;i<children.length;i++){
+            Block child = children[i];
             if(child == numberBlock){
                 continue;
             }

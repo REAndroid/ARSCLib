@@ -53,7 +53,7 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
     }
     public List<ResXmlAttribute> listUndefined(){
         List<ResXmlAttribute> results = new ArrayList<>();
-        ResXmlAttribute[] attributes = getChildes();
+        ResXmlAttribute[] attributes = getChildren();
         for(int i = 0; i < attributes.length; i++){
             ResXmlAttribute attribute = attributes[i];
             if(attribute != null && attribute.isUndefined()){
@@ -63,7 +63,7 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         return results;
     }
     public void setAttributesUnitSize(int size){
-        ResXmlAttribute[] attributes=getChildes();
+        ResXmlAttribute[] attributes=getChildren();
         for(int i=0;i<attributes.length;i++){
             attributes[i].setAttributesUnitSize(size);
         }
@@ -73,7 +73,7 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         sort(this);
     }
     private void refreshCount(){
-        mAttributeCount.set(getChildesCount());
+        mAttributeCount.set(getChildrenCount());
     }
     private void refreshStart(){
         Block parent=getParent();
@@ -104,33 +104,33 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
     public void onReadBytes(BlockReader reader) throws IOException {
         int start = mHeaderBlock.getHeaderSize() + mAttributeStart.get();
         reader.seek(start);
-        setChildesCount(mAttributeCount.get());
+        setChildrenCount(mAttributeCount.get());
         int attributeSize = mAttributesUnitSize.unsignedInt();
-        ResXmlAttribute[] childes = getChildes();
-        for(int i=0;i<childes.length;i++){
+        ResXmlAttribute[] children = getChildren();
+        for(int i=0;i<children.length;i++){
             int position = reader.getPosition();
-            ResXmlAttribute attribute = childes[i];
+            ResXmlAttribute attribute = children[i];
             attribute.readBytes(reader);
             int remaining = attributeSize - (reader.getPosition() - position);
             reader.offset(remaining);
         }
     }
     @Override
-    public void clearChildes(){
-        ResXmlAttribute[] childes = getChildes();
-        if(childes==null || childes.length==0){
-            super.clearChildes();
+    public void clearChildren(){
+        ResXmlAttribute[] children = getChildren();
+        if(children==null || children.length==0){
+            super.clearChildren();
             return;
         }
-        int length = childes.length;
+        int length = children.length;
         for(int i=0;i<length;i++){
-            ResXmlAttribute child = childes[i];
+            ResXmlAttribute child = children[i];
             if(child==null){
                 continue;
             }
             child.onRemoved();
         }
-        super.clearChildes();
+        super.clearChildren();
     }
     @Override
     public int compare(ResXmlAttribute attr1, ResXmlAttribute attr2) {
@@ -151,7 +151,7 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
     }
     @Override
     public void fromJson(JSONArray json) {
-        clearChildes();
+        clearChildren();
         if(json == null){
             return;
         }

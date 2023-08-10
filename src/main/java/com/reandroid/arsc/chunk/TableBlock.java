@@ -478,7 +478,7 @@ public class TableBlock extends Chunk<TableHeader>
         refresh();
     }
     public int countPackages(){
-        return getPackageArray().getChildesCount();
+        return getPackageArray().getChildrenCount();
     }
 
     public PackageBlock pickOne(){
@@ -558,7 +558,7 @@ public class TableBlock extends Chunk<TableHeader>
     }
 
     private void refreshPackageCount(){
-        int count = getPackageArray().getChildesCount();
+        int count = getPackageArray().getChildrenCount();
         getHeaderBlock().getPackageCount().set(count);
     }
     @Override
@@ -575,7 +575,7 @@ public class TableBlock extends Chunk<TableHeader>
         boolean stringPoolLoaded=false;
         InfoHeader infoHeader = reader.readHeaderBlock();
         PackageArray packageArray=mPackageArray;
-        packageArray.clearChildes();
+        packageArray.clearChildren();
         while(infoHeader!=null && reader.isAvailable()){
             ChunkType chunkType=infoHeader.getChunkType();
             if(chunkType==ChunkType.STRING){
@@ -727,7 +727,7 @@ public class TableBlock extends Chunk<TableHeader>
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(": packages = ");
-        builder.append(mPackageArray.getChildesCount());
+        builder.append(mPackageArray.getChildrenCount());
         builder.append(", size = ");
         builder.append(getHeaderBlock().getChunkSize());
         builder.append(" bytes");

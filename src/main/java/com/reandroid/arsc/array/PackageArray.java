@@ -43,13 +43,13 @@ public class PackageArray extends BlockArray<PackageBlock>
             PackageBlock packageBlock=itr.next();
             packageBlock.destroy();
         }
-        clearChildes();
+        clearChildren();
     }
     public PackageBlock pickOne(){
-        return pickOne(getChildes(), 0);
+        return pickOne(getChildren(), 0);
     }
     public PackageBlock pickOne(int packageId){
-        return pickOne(getChildes(), packageId);
+        return pickOne(getChildren(), packageId);
     }
     private PackageBlock pickOne(PackageBlock[] items, int packageId){
         if(items==null||items.length==0){
@@ -132,7 +132,7 @@ public class PackageArray extends BlockArray<PackageBlock>
         refreshPackageCount();
     }
     private void refreshPackageCount(){
-        mPackageCount.set(getChildesCount());
+        mPackageCount.set(getChildrenCount());
     }
 
     @Override
@@ -140,7 +140,7 @@ public class PackageArray extends BlockArray<PackageBlock>
         if(sender != mPackageCount){
             return;
         }
-        setChildesCount(mPackageCount.get());
+        setChildrenCount(mPackageCount.get());
     }
     @Override
     public JSONArray toJson() {
@@ -159,7 +159,7 @@ public class PackageArray extends BlockArray<PackageBlock>
     @Override
     public void fromJson(JSONArray json) {
         int length= json.length();
-        clearChildes();
+        clearChildren();
         ensureSize(length);
         for (int i=0;i<length;i++){
             JSONObject jsonObject=json.getJSONObject(i);

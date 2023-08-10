@@ -532,17 +532,17 @@ public class XMLElement extends XMLNodeTree{
         appendable.append('<');
         appendable.append(getName());
         appendAttributes(appendable, xml, escapeXmlText);
-        boolean haveChildes = false;
+        boolean haveChildren = false;
         Iterator<XMLNode> iterator = iterator();
         while (iterator.hasNext()){
-            if(!haveChildes){
+            if(!haveChildren){
                 appendable.append(">");
             }
             XMLNode child = iterator.next();
             child.write(appendable, xml, escapeXmlText);
-            haveChildes = true;
+            haveChildren = true;
         }
-        if(haveChildes){
+        if(haveChildren){
             appendable.append("</");
             appendable.append(getName());
             appendable.append('>');
@@ -590,17 +590,17 @@ public class XMLElement extends XMLNodeTree{
             length = attributes.next()
                     .appendDebugText(appendable, limit, length);
         }
-        boolean hasChildes = false;
+        boolean hasChildren = false;
         Iterator<XMLNode> iterator = iterator();
         while (iterator.hasNext() && length < limit){
-            if(!hasChildes){
+            if(!hasChildren){
                 appendable.append("/>");
                 length += 2;
             }
             length = iterator.next().appendDebugText(appendable, limit, length);
-            hasChildes = true;
+            hasChildren = true;
         }
-        if(hasChildes){
+        if(hasChildren){
             appendable.append("</");
             appendable.append(name);
             length += name.length();

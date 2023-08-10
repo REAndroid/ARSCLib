@@ -130,15 +130,15 @@ public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
         if(block instanceof BlockItem){
             result = ((BlockItem)block).readBytes(inputStream);
         }else if(block instanceof BlockList){
-            List<? extends Block> childes=
-                    ((BlockList<? extends Block>) block).getChildes();
-            for(Block child:childes){
+            List<? extends Block> children=
+                    ((BlockList<? extends Block>) block).getChildren();
+            for(Block child:children){
                 result+=readBytes(inputStream, child);
             }
         }else if(block instanceof BlockContainer){
-            Block[] childes =
-                    ((BlockContainer<? extends Block>) block).getChildes();
-            for(Block child:childes){
+            Block[] children =
+                    ((BlockContainer<? extends Block>) block).getChildren();
+            for(Block child:children){
                 result+=readBytes(inputStream, child);
             }
         }else {
@@ -174,7 +174,7 @@ public class HeaderBlock extends ExpandableBlockContainer implements BlockLoad {
         // Not required, the parent should call refreshHeader()
     }
     @Override
-    protected void refreshChildes(){
+    protected void refreshChildren(){
         // Not required
     }
     void initExtraBytes(ByteArray extraBytes, int difference){

@@ -30,8 +30,8 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
     private final IntegerItem mNamespaceReference;
     private final IntegerItem mStringReference;
 
-    BaseXmlChunk(ChunkType chunkType, int initialChildesCount) {
-        super(new XmlNodeHeader(chunkType), initialChildesCount+2);
+    BaseXmlChunk(ChunkType chunkType, int initialChildrenCount) {
+        super(new XmlNodeHeader(chunkType), initialChildrenCount+2);
 
         this.mNamespaceReference=new IntegerItem(-1);
         this.mStringReference=new IntegerItem(-1);
