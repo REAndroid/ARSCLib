@@ -65,7 +65,7 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
             }
             @Override
             public int size() {
-                return childesCount();
+                return getChildesCount();
             }
         };
     }
@@ -143,7 +143,7 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         return toJson(true);
     }
     public JSONArray toJson(boolean styledOnly) {
-        if(childesCount()==0){
+        if(getChildesCount()==0){
             return null;
         }
         JSONArray jsonArray=new JSONArray();

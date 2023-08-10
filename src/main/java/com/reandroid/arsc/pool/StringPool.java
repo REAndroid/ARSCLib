@@ -143,9 +143,9 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     }
     private void insertStringList(List<String> stringList){
         StringArray<T> stringsArray = getStringsArray();
-        int initialSize=stringsArray.childesCount();
+        int initialSize=stringsArray.getChildesCount();
         stringsArray.ensureSize(initialSize + stringList.size());
-        int size=stringsArray.childesCount();
+        int size=stringsArray.getChildesCount();
         int j=0;
         for (int i=initialSize;i<size;i++){
             T item=stringsArray.get(i);
@@ -157,9 +157,9 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     public Map<String, T> insertStrings(List<String> stringList){
         Map<String, T> results=new HashMap<>();
         StringArray<T> stringsArray = getStringsArray();
-        int initialSize=stringsArray.childesCount();
+        int initialSize=stringsArray.getChildesCount();
         stringsArray.ensureSize(initialSize + stringList.size());
-        int size=stringsArray.childesCount();
+        int size=stringsArray.getChildesCount();
         int j=0;
         for (int i=initialSize;i<size;i++){
             T item=stringsArray.get(i);
@@ -294,10 +294,10 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         return mArrayStyles.get(index);
     }
     public final int countStrings(){
-        return mArrayStrings.childesCount();
+        return mArrayStrings.getChildesCount();
     }
     public final int countStyles(){
-        return mArrayStyles.childesCount();
+        return mArrayStyles.getChildesCount();
     }
     public final T[] getStrings(){
         return mArrayStrings.getChildes();

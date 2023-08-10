@@ -53,7 +53,7 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         if(isSparse()){
             return ((SparseOffsetsArray) getOffsetArray()).getHighestId();
         }
-        return childesCount() - 1;
+        return getChildesCount() - 1;
     }
     public int getEntryId(int index){
         OffsetArray offsetArray = getOffsetArray();
@@ -110,7 +110,7 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         boolean sparse = isSparse();
         int count;
         if(sparse){
-            count = childesCount() + 1;
+            count = getChildesCount() + 1;
         }else {
             count = id + 1;
         }
@@ -120,7 +120,7 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
             return super.get(id);
         }
         SparseOffsetsArray offsetsArray = (SparseOffsetsArray) getOffsetArray();
-        offsetsArray.ensureArraySize(childesCount());
+        offsetsArray.ensureArraySize(getChildesCount());
         int index = count - 1;
         offsetsArray.setIdx(index, id);
         refreshCount();
@@ -250,7 +250,7 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         }
     }
     private void mergeNonSparse(EntryArray entryArray){
-        ensureSize(entryArray.childesCount());
+        ensureSize(entryArray.getChildesCount());
         Iterator<Entry> itr = entryArray.iterator(true);
         while (itr.hasNext()){
             Entry comingBlock = itr.next();
@@ -272,6 +272,6 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
     }
     @Override
     public String toString(){
-        return getClass().getSimpleName()+": size="+childesCount();
+        return getClass().getSimpleName()+": size="+ getChildesCount();
     }
 }

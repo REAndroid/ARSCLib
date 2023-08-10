@@ -59,7 +59,7 @@ class JsonStringPoolHelper<T extends StringItem> {
         tagList.sort(CompareUtil.STRING_COMPARATOR);
         StringArray<T> stringsArray = stringPool.getStringsArray();
         int tagsSize = tagList.size();
-        int initialSize = stringsArray.childesCount();
+        int initialSize = stringsArray.getChildesCount();
         stringsArray.ensureSize(initialSize + tagsSize);
         for(int i=0;i<tagsSize;i++){
             String tag = tagList.get(i);

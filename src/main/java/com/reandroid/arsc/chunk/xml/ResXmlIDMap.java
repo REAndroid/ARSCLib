@@ -56,7 +56,7 @@
          stringPool.removeString(xmlString);
      }
      public int countId(){
-         return getResXmlIDArray().childesCount();
+         return getResXmlIDArray().getChildesCount();
      }
      public void destroy(){
          getResXmlIDArray().clearChildes();

@@ -127,10 +127,10 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         refreshStart();
     }
     public void refreshCount(){
-        mItemCount.set(childesCount());
+        mItemCount.set(getChildesCount());
     }
     private void refreshStart(){
-        int count = childesCount();
+        int count = getChildesCount();
         if(count == 0){
             mItemStart.set(0);
             alignItem.clear();
@@ -147,7 +147,7 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         refreshAlignment(alignItem);
     }
     void refreshAlignment(AlignItem alignItem){
-        if(childesCount() == 0){
+        if(getChildesCount() == 0){
             alignItem.clear();
             return;
         }
@@ -207,7 +207,7 @@ public abstract class OffsetBlockArray<T extends Block> extends BlockArray<T> im
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(": count = ");
-        int realCount = childesCount();
+        int realCount = getChildesCount();
         builder.append(realCount);
         int count = mItemCount.get();
         if(realCount != count){

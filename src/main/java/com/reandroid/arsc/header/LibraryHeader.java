@@ -27,7 +27,7 @@ public class LibraryHeader extends HeaderBlock{
         addChild(this.count);
     }
 
-    public IntegerItem getCount() {
+    public IntegerItem getCountItem() {
         return count;
     }
     @Override
@@ -36,6 +36,6 @@ public class LibraryHeader extends HeaderBlock{
             return super.toString();
         }
         return getClass().getSimpleName()
-                +" {count="+getCount() + '}';
+                +" {count="+ getCountItem() + '}';
     }
 }

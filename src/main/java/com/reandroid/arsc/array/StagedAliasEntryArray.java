@@ -84,7 +84,7 @@
          }
      }
      private void updateCount(){
-         this.count.set(childesCount());
+         this.count.set(getChildesCount());
      }
 
      @Override

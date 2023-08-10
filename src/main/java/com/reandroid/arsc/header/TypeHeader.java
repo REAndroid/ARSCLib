@@ -67,7 +67,7 @@ public class TypeHeader extends HeaderBlock{
     public ByteItem getFlags() {
         return flags;
     }
-    public IntegerItem getCount() {
+    public IntegerItem getCountItem() {
         return count;
     }
     public IntegerItem getEntriesStart() {
@@ -85,7 +85,7 @@ public class TypeHeader extends HeaderBlock{
         return getClass().getSimpleName()
                 +" {id="+getId().toHex()
                 +", flags=" + getFlags().toHex()
-                +", count=" + getCount()
+                +", count=" + getCountItem()
                 +", entriesStart=" + getEntriesStart()
                 +", config=" + getConfig() + '}';
     }

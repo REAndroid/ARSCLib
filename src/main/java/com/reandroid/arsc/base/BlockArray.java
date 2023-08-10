@@ -23,7 +23,8 @@ import java.util.*;
 import java.util.function.Predicate;
 
 
-public abstract class BlockArray<T extends Block> extends BlockContainer<T> implements BlockArrayCreator<T>  {
+public abstract class BlockArray<T extends Block> extends BlockContainer<T>
+        implements BlockArrayCreator<T>, ArraySupplier<T>  {
     private T[] elementData;
     private int mFreeSpace;
     private int mAllocateStep;
@@ -107,7 +108,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
             }
             @Override
             public int size() {
-                return BlockArray.this.childesCount();
+                return BlockArray.this.getChildesCount();
             }
         };
     }
@@ -116,7 +117,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         return elementData;
     }
     public void ensureSize(int size){
-        if(size <= childesCount()){
+        if(size <= getChildesCount()){
             return;
         }
         setChildesCount(size);
@@ -129,7 +130,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
             clearChildes();
             return;
         }
-        int diff = count - childesCount();
+        int diff = count - getChildesCount();
         if(diff==0){
             return;
         }
@@ -194,7 +195,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         }
     }
     public void insertItem(int index, T item){
-        int count = childesCount();
+        int count = getChildesCount();
         if(count < index){
             count = index;
         }
@@ -284,7 +285,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
     }
     private int calculateAllocate(){
         mAllocateStep++;
-        int amount = childesCount() / 4;
+        int amount = getChildesCount() / 4;
         if(amount < 10){
             amount = 10;
         }else if(amount > 100){
@@ -314,7 +315,8 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
     public final int countNonNull(){
         return countNonNull(true);
     }
-    public final int childesCount(){
+    @Override
+    public final int getChildesCount(){
         return elementData.length;
     }
     public T createNext(){
@@ -322,14 +324,19 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         add(block);
         return block;
     }
+    @Override
     public final T get(int i){
-        if(i >= childesCount() || i<0){
+        if(i >= getChildesCount() || i<0){
             return null;
         }
         return elementData[i];
     }
+    @Override
+    public int getCount(){
+        return getChildesCount();
+    }
     public final T getLast(){
-        return get(childesCount() - mFreeSpace - 1);
+        return get(getChildesCount() - mFreeSpace - 1);
     }
     public int indexOf(Object block){
         T[] items=elementData;
@@ -364,7 +371,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
     }
     public Iterator<T> iterator(boolean skipNullBlock) {
         trimAllocatedFreeSpace();
-        int count = childesCount();
+        int count = getChildesCount();
         if(count == 0){
             return EmptyIterator.of();
         }
@@ -379,7 +386,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
     }
     public Iterator<T> iterator(Predicate<? super T> tester) {
         trimAllocatedFreeSpace();
-        int count = childesCount();
+        int count = getChildesCount();
         if(count == 0){
             return EmptyIterator.of();
         }
@@ -555,7 +562,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
 
     @Override
     public String toString(){
-        return "count="+ childesCount();
+        return "count="+ getChildesCount();
     }
 
     private static boolean isAllNull(Block[] itemsList){
@@ -575,7 +582,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         BlockIterator(boolean skipNullBlock){
             mSkipNullBlock=skipNullBlock;
             mCursor=0;
-            mMaxSize=BlockArray.this.childesCount();
+            mMaxSize=BlockArray.this.getChildesCount();
         }
         @Override
         public boolean hasNext() {
@@ -618,7 +625,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T> impl
         PredicateIterator(Predicate<? super T> tester){
             this.mTester = tester;
             mCursor = 0;
-            mMaxSize = BlockArray.this.childesCount();
+            mMaxSize = BlockArray.this.getChildesCount();
         }
         @Override
         public boolean hasNext() {

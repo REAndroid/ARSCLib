@@ -73,7 +73,7 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         sort(this);
     }
     private void refreshCount(){
-        mAttributeCount.set(childesCount());
+        mAttributeCount.set(getChildesCount());
     }
     private void refreshStart(){
         Block parent=getParent();

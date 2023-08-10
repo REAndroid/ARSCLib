@@ -28,7 +28,7 @@ public class BlockCounter {
         }
         COUNT+=val;
     }
-    public int getCount() {
+    public int getCountValue() {
         return COUNT;
     }
 

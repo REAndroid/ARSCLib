@@ -660,7 +660,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         jsonObject.put(NAME_package_name, getName());
         jsonObject.put(NAME_specs, getSpecTypePairArray().toJson(!addTypes));
         LibraryInfoArray libraryInfoArray = getLibraryBlock().getLibraryInfoArray();
-        if(libraryInfoArray.childesCount()>0){
+        if(libraryInfoArray.getChildesCount()>0){
             jsonObject.put(NAME_libraries,libraryInfoArray.toJson());
         }
         StagedAlias stagedAlias =

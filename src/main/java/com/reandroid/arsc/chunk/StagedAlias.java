@@ -27,7 +27,7 @@ public class StagedAlias extends Chunk<StagedAliasHeader> {
         super(new StagedAliasHeader(), 1);
         StagedAliasHeader header = getHeaderBlock();
 
-        stagedAliasEntryArray = new StagedAliasEntryArray(header.getCount());
+        stagedAliasEntryArray = new StagedAliasEntryArray(header.getCountItem());
         addChild(stagedAliasEntryArray);
     }
     public StagedAliasEntry searchByStagedResId(int stagedResId){
@@ -51,7 +51,7 @@ public class StagedAlias extends Chunk<StagedAliasHeader> {
         return getStagedAliasEntryArray().listItems();
     }
     public int getStagedAliasEntryCount(){
-        return getStagedAliasEntryArray().childesCount();
+        return getStagedAliasEntryArray().getChildesCount();
     }
     @Override
     public boolean isNull(){
@@ -59,7 +59,7 @@ public class StagedAlias extends Chunk<StagedAliasHeader> {
     }
     @Override
     protected void onChunkRefreshed() {
-        getHeaderBlock().getCount().set(getStagedAliasEntryCount());
+        getHeaderBlock().getCountItem().set(getStagedAliasEntryCount());
     }
     @Override
     public String toString(){

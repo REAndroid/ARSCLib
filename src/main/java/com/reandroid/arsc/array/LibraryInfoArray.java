@@ -45,7 +45,7 @@ public class LibraryInfoArray extends BlockArray<LibraryInfo> implements JSONCon
         if(info!=null){
             return info;
         }
-        int index=childesCount();
+        int index= getChildesCount();
         ensureSize(index+1);
         info=get(index);
         info.setId(pkgId);
@@ -69,7 +69,7 @@ public class LibraryInfoArray extends BlockArray<LibraryInfo> implements JSONCon
     }
     @Override
     protected void onRefreshed() {
-        mInfoCount.set(childesCount());
+        mInfoCount.set(getChildesCount());
     }
 
     @Override
@@ -106,7 +106,7 @@ public class LibraryInfoArray extends BlockArray<LibraryInfo> implements JSONCon
         }
     }
     public void merge(LibraryInfoArray infoArray){
-        if(infoArray==null||infoArray==this||infoArray.childesCount()==0){
+        if(infoArray==null||infoArray==this||infoArray.getChildesCount()==0){
             return;
         }
         for(LibraryInfo info:infoArray.listItems()){

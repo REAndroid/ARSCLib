@@ -47,7 +47,7 @@
          }
 
          ResValueMapArray array = getMapArray();
-         for (int i = regenStart; i < array.childesCount(); i++) {
+         for (int i = regenStart; i < array.getChildesCount(); i++) {
              setIndex(array.get(i), i);
          }
      }
@@ -63,7 +63,7 @@
 
      @Override
      public int size() {
-         return getMapArray().childesCount();
+         return getMapArray().getChildesCount();
      }
 
      @Override

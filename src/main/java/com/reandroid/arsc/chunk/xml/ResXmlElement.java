@@ -287,7 +287,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         ResXmlElement root = getRootResXmlElement();
         BlockCounter counter = new BlockCounter(this);
         root.calculateLineNumber(counter, startLine);
-        return counter.getCount();
+        return counter.getCountValue();
     }
     @Override
     void calculateLineNumber(BlockCounter counter, boolean startLine){
@@ -592,7 +592,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public Iterator<ResXmlAttribute> getAttributes(){
         ResXmlAttributeArray attributeArray = getAttributeArray();
         if(attributeArray != null){
-            if(attributeArray.childesCount() == 0){
+            if(attributeArray.getChildesCount() == 0){
                 return EmptyIterator.of();
             }
             return attributeArray.iterator();
@@ -602,7 +602,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public Iterator<ResXmlAttribute> getAttributes(Predicate<? super ResXmlAttribute> filter){
         ResXmlAttributeArray attributeArray = getAttributeArray();
         if(attributeArray != null){
-            if(attributeArray.childesCount() == 0){
+            if(attributeArray.getChildesCount() == 0){
                 return EmptyIterator.of();
             }
             return attributeArray.iterator(filter);
@@ -619,7 +619,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public int getAttributeCount() {
         ResXmlStartElement startElement=getStartElement();
         if(startElement!=null){
-            return startElement.getResXmlAttributeArray().childesCount();
+            return startElement.getResXmlAttributeArray().getChildesCount();
         }
         return 0;
     }

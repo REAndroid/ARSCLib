@@ -104,7 +104,7 @@ public class SingleBlockContainer<T extends Block> extends BlockContainer<T> {
     }
 
     @Override
-    public int childesCount() {
+    public int getChildesCount() {
         return hasItem()?0:1;
     }
 

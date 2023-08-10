@@ -28,7 +28,7 @@ public class ResValueContainer extends BlockContainer<ValueItem> {
     protected void onRefreshed(){
     }
     @Override
-    public int childesCount() {
+    public int getChildesCount() {
         return mChildes.length;
     }
     @Override

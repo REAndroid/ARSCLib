@@ -94,11 +94,11 @@ public class TableStringPool extends StringPool<TableString> {
             return;
         }
         StringArray<TableString> existArray = getStringsArray();
-        if(existArray.childesCount()!=0){
+        if(existArray.getChildesCount()!=0){
             return;
         }
         StringArray<TableString> comingArray = stringPool.getStringsArray();
-        int count=comingArray.childesCount();
+        int count=comingArray.getChildesCount();
         existArray.ensureSize(count);
         for(int i=0;i<count;i++){
             TableString exist = existArray.get(i);

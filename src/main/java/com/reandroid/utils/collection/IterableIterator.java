@@ -26,7 +26,7 @@ public abstract class IterableIterator<E, T> implements Iterator<T> {
     public IterableIterator(Iterator<E> iterator){
         this.iterator = iterator;
     }
-    public int getCount() {
+    public int getCountValue() {
         return mCount;
     }
     public void stop(){

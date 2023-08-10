@@ -28,7 +28,7 @@ public class BlockLocator extends BlockCounter{
             return;
         }
         this.current = current;
-        if(getCount() >= bytePosition){
+        if(getCountValue() >= bytePosition){
             FOUND = true;
         }
     }
@@ -44,10 +44,10 @@ public class BlockLocator extends BlockCounter{
     @Override
     public String toString(){
         if(!FOUND){
-            return getCount() + "/" + bytePosition;
+            return getCountValue() + "/" + bytePosition;
         }
         StringBuilder builder = new StringBuilder();
-        builder.append("Found at: ").append(getCount());
+        builder.append("Found at: ").append(getCountValue());
         Block current = this.current;
         builder.append(", block = [").append(current).append(']');
         if(current == null){

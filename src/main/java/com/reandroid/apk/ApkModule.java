@@ -650,7 +650,7 @@ public class ApkModule implements ApkFile, Closeable {
         TableBlock tableBlock=getTableBlock();
         PackageArray pkgArray = tableBlock.getPackageArray();
         for(PackageBlock pkg:pkgArray.listItems()){
-            if(pkgArray.childesCount()==1){
+            if(pkgArray.getChildesCount()==1){
                 pkg.setName(name);
                 continue;
             }

@@ -40,7 +40,7 @@ public abstract class CompoundItemArray<T extends ResValueMap>
     }
     private void updateCountToHeader(){
         EntryHeaderMap headerMap = getEntryHeaderMap();
-        headerMap.setValuesCount(childesCount());
+        headerMap.setValuesCount(getChildesCount());
     }
     private EntryHeaderMap getEntryHeaderMap(){
         ResTableMapEntry mapEntry = getParent(ResTableMapEntry.class);
@@ -135,7 +135,7 @@ public abstract class CompoundItemArray<T extends ResValueMap>
             return;
         }
         clearChildes();
-        int count = mapArray.childesCount();
+        int count = mapArray.getChildesCount();
         ensureSize(count);
         for(int i=0;i<count;i++){
             ResValueMap coming = mapArray.get(i);

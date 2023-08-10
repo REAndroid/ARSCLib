@@ -37,7 +37,7 @@ public  class ExpandableBlockContainer extends BlockContainer<Block> {
         mCursor++;
     }
     private void ensureCount(int count){
-        if(count<= childesCount()){
+        if(count<= getChildesCount()){
             return;
         }
         Block[] old=mChildes;
@@ -52,7 +52,7 @@ public  class ExpandableBlockContainer extends BlockContainer<Block> {
     }
 
     @Override
-    public final int childesCount() {
+    public final int getChildesCount() {
         return mChildes.length;
     }
     @Override

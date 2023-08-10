@@ -158,7 +158,7 @@ public class FrameworkTable extends TableBlock {
     }
     private void removeEmptyBlocks(SpecTypePair specTypePair){
         TypeBlockArray typeBlockArray = specTypePair.getTypeBlockArray();
-        if(typeBlockArray.childesCount()<2){
+        if(typeBlockArray.getChildesCount()<2){
             return;
         }
         typeBlockArray.removeEmptyBlocks();

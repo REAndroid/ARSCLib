@@ -295,7 +295,7 @@ public class TableBlock extends Chunk<TableHeader>
         return new IterableIterator<PackageBlock, Entry>(getAllPackages(packageId)) {
             @Override
             public Iterator<Entry> iterator(PackageBlock element) {
-                if(super.getCount() > 0){
+                if(super.getCountValue() > 0){
                     super.stop();
                     return null;
                 }
@@ -307,7 +307,7 @@ public class TableBlock extends Chunk<TableHeader>
         return new IterableIterator<PackageBlock, Entry>(getAllPackages(packageName)) {
             @Override
             public Iterator<Entry> iterator(PackageBlock element) {
-                if(super.getCount() > 0){
+                if(super.getCountValue() > 0){
                     super.stop();
                     return null;
                 }
@@ -478,7 +478,7 @@ public class TableBlock extends Chunk<TableHeader>
         refresh();
     }
     public int countPackages(){
-        return getPackageArray().childesCount();
+        return getPackageArray().getChildesCount();
     }
 
     public PackageBlock pickOne(){
@@ -558,7 +558,7 @@ public class TableBlock extends Chunk<TableHeader>
     }
 
     private void refreshPackageCount(){
-        int count = getPackageArray().childesCount();
+        int count = getPackageArray().getChildesCount();
         getHeaderBlock().getPackageCount().set(count);
     }
     @Override
@@ -727,7 +727,7 @@ public class TableBlock extends Chunk<TableHeader>
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(": packages = ");
-        builder.append(mPackageArray.childesCount());
+        builder.append(mPackageArray.getChildesCount());
         builder.append(", size = ");
         builder.append(getHeaderBlock().getChunkSize());
         builder.append(" bytes");

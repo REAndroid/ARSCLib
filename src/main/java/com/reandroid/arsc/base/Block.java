@@ -31,7 +31,7 @@ public abstract class Block {
     public final int countUpTo(Block block){
         BlockCounter counter=new BlockCounter(block);
         onCountUpTo(counter);
-        return counter.getCount();
+        return counter.getCountValue();
     }
     public final Block locateBlock(int bytePosition){
         BlockLocator locator = new BlockLocator(bytePosition);

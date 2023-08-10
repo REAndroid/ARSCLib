@@ -26,7 +26,7 @@ public class LibraryBlock extends Chunk<LibraryHeader> {
     public LibraryBlock() {
         super(new LibraryHeader(),1);
         LibraryHeader header = getHeaderBlock();
-        this.mLibraryInfoArray = new LibraryInfoArray(header.getCount());
+        this.mLibraryInfoArray = new LibraryInfoArray(header.getCountItem());
 
         addChild(mLibraryInfoArray);
     }
@@ -56,25 +56,25 @@ public class LibraryBlock extends Chunk<LibraryHeader> {
             return;
         }
         getLibraryInfoArray().add(info);
-        getHeaderBlock().getCount().set(mLibraryInfoArray.childesCount());
+        getHeaderBlock().getCountItem().set(mLibraryInfoArray.getChildesCount());
     }
     public Collection<LibraryInfo> listLibraryInfo(){
         return getLibraryInfoArray().listItems();
     }
     @Override
     public boolean isNull(){
-        return mLibraryInfoArray.childesCount()==0;
+        return mLibraryInfoArray.getChildesCount()==0;
     }
     public int getLibraryCount(){
-        return mLibraryInfoArray.childesCount();
+        return mLibraryInfoArray.getChildesCount();
     }
     public void setLibraryCount(int count){
-        getHeaderBlock().getCount().set(count);
+        getHeaderBlock().getCountItem().set(count);
         mLibraryInfoArray.setChildesCount(count);
     }
     @Override
     protected void onChunkRefreshed() {
-        getHeaderBlock().getCount().set(mLibraryInfoArray.childesCount());
+        getHeaderBlock().getCountItem().set(mLibraryInfoArray.getChildesCount());
     }
 
     public void merge(LibraryBlock libraryBlock){

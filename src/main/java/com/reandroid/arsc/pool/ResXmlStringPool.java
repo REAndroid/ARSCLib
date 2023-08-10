@@ -71,7 +71,7 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
             return super.getOrCreate(str);
         }
         ResXmlIDArray idArray = resXmlIDMap.getResXmlIDArray();
-        int count = idArray.childesCount();
+        int count = idArray.getChildesCount();
         if(resourceId == 0){
             return getOrCreateAfter(count, str);
         }
@@ -83,7 +83,7 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
                 return xmlString;
             }
         }
-        count = idArray.childesCount() + 1;
+        count = idArray.getChildesCount() + 1;
         stringsArray.ensureSize(count);
         idArray.setChildesCount(count);
         int index = count - 1;
@@ -115,7 +115,7 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
             }
         }
         StringArray<ResXmlString> stringsArray = getStringsArray();
-        int count = stringsArray.childesCount();
+        int count = stringsArray.getChildesCount();
         if(count < position){
             count = position;
         }
@@ -137,8 +137,8 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
     public void onChunkLoaded() {
         super.onChunkLoaded();
         StyleArray styleArray = getStyleArray();
-        if(styleArray.childesCount()>0){
-            notifyResXmlStringPoolHasStyles(styleArray.childesCount());
+        if(styleArray.getChildesCount()>0){
+            notifyResXmlStringPoolHasStyles(styleArray.getChildesCount());
         }
     }
     private static void notifyResXmlStringPoolHasStyles(int styleArrayCount){

@@ -55,7 +55,7 @@ public class TypeBlock extends Chunk<TypeHeader>
             entryOffsets = new IntegerOffsetArray();
         }
         this.mEntryArray = new EntryArray(entryOffsets,
-                header.getCount(), header.getEntriesStart());
+                header.getCountItem(), header.getEntriesStart());
 
         addChild(entryOffsets);
         addChild(mEntryArray);
@@ -107,7 +107,7 @@ public class TypeBlock extends Chunk<TypeHeader>
         startId = 0x0000ffff & startId;
         EntryArray entryArray = getEntryArray();
         entryArray.removeAllNull(startId);
-        return entryArray.childesCount() == startId;
+        return entryArray.getChildesCount() == startId;
     }
     public PackageBlock getPackageBlock(){
         SpecTypePair specTypePair = getParent(SpecTypePair.class);
@@ -167,7 +167,7 @@ public class TypeBlock extends Chunk<TypeHeader>
         return null;
     }
     public void setEntryCount(int count){
-        IntegerItem entryCount = getHeaderBlock().getCount();
+        IntegerItem entryCount = getHeaderBlock().getCountItem();
         if(count == entryCount.get()){
             return;
         }

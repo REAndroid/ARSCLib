@@ -20,7 +20,6 @@ import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.array.TypeStringArray;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.group.StringGroup;
-import com.reandroid.arsc.item.IntegerArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.TypeString;
 
@@ -65,12 +64,12 @@ public class TypeStringPool extends StringPool<TypeString> {
     }
     public TypeString getOrCreate(int typeId, String typeName){
         StringArray<TypeString> stringsArray = getStringsArray();
-        int old = stringsArray.childesCount();
+        int old = stringsArray.getChildesCount();
         int size = toIndex(typeId) + 1;
         stringsArray.ensureSize(size);
         TypeString typeString = getById(typeId);
         typeString.set(typeName);
-        if(old != stringsArray.childesCount()){
+        if(old != stringsArray.getChildesCount()){
             updateUniqueIdMap(typeString);
         }
         return typeString;

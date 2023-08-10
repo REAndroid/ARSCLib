@@ -132,7 +132,7 @@ public class PackageArray extends BlockArray<PackageBlock>
         refreshPackageCount();
     }
     private void refreshPackageCount(){
-        mPackageCount.set(childesCount());
+        mPackageCount.set(getChildesCount());
     }
 
     @Override

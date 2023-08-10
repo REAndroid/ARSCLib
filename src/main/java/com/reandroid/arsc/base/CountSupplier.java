@@ -13,14 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.base;
+package com.reandroid.arsc.base;
 
-import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
-
-import java.io.IOException;
-
-public interface OffsetReference {
-    IntegerReference getOffsetReference();
-    void readBytes(BlockReader reader) throws IOException;
+public interface CountSupplier {
+    int getCount();
 }

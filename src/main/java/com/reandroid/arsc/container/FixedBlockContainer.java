@@ -33,7 +33,7 @@ public class FixedBlockContainer extends BlockContainer<Block> {
     protected void onRefreshed(){
     }
     @Override
-    public int childesCount() {
+    public int getChildesCount() {
         return mChildes.length;
     }
     @Override

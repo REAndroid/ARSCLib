@@ -65,7 +65,7 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
     }
     @Override
     void refreshAlignment(AlignItem alignItem) {
-        if(childesCount() == 0){
+        if(getChildesCount() == 0){
             alignItem.clear();
             return;
         }
@@ -98,7 +98,7 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
 
     @Override
     public JSONArray toJson() {
-        if(childesCount()==0){
+        if(getChildesCount()==0){
             return null;
         }
         return null;
@@ -111,10 +111,10 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
         if(styleArray==null||styleArray==this){
             return;
         }
-        if(childesCount()!=0){
+        if(getChildesCount()!=0){
             return;
         }
-        int count=styleArray.childesCount();
+        int count=styleArray.getChildesCount();
         ensureSize(count);
         for(int i=0;i<count;i++){
             StyleItem exist=get(i);

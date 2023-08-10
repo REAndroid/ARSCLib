@@ -343,7 +343,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     public int getHighestEntryCount(){
         int result = 0;
         for(TypeBlock typeBlock:getChildes()){
-            int count = typeBlock.getEntryArray().childesCount();
+            int count = typeBlock.getEntryArray().getChildesCount();
             if(count > result){
                 result = count;
             }

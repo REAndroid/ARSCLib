@@ -579,7 +579,7 @@ public class XmlCoder {
                 if(attributeType == null){
                     continue;
                 }
-                boolean ignore_empty = mapArray.childesCount() > 1;
+                boolean ignore_empty = mapArray.getChildesCount() > 1;
                 valueMap.serializeAttribute(serializer,
                         attributeType.getName(), ignore_empty);
             }

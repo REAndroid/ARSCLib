@@ -51,7 +51,7 @@ public class ResXmlTextNode extends ResXmlNode {
         root = root.getRootResXmlElement();
         BlockCounter counter = new BlockCounter(this);
         root.calculateLineNumber(counter, true);
-        setLineNumber(counter.getCount());
+        setLineNumber(counter.getCountValue());
     }
     @Override
     void calculateLineNumber(BlockCounter counter, boolean startLine){

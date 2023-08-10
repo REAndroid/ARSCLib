@@ -246,7 +246,7 @@ public class SpecTypePair extends BlockContainer<Block>
         return getTypeBlockArray().isEmpty();
     }
     public int countTypeBlocks(){
-        return getTypeBlockArray().childesCount();
+        return getTypeBlockArray().getChildesCount();
     }
     public Entry getOrCreateEntry(short entryId, String qualifiers){
         return getTypeBlockArray().getOrCreateEntry(entryId, qualifiers);
@@ -355,7 +355,7 @@ public class SpecTypePair extends BlockContainer<Block>
 
     }
     @Override
-    public int childesCount() {
+    public int getChildesCount() {
         return mChildes.length;
     }
     @Override
@@ -460,7 +460,7 @@ public class SpecTypePair extends BlockContainer<Block>
             builder.append("null");
         }
         builder.append(") config count=");
-        builder.append(getTypeBlockArray().childesCount());
+        builder.append(getTypeBlockArray().getChildesCount());
         return builder.toString();
     }
 
