@@ -397,7 +397,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         ResourceEntry resourceEntry = tableBlock.getResource(packageBlock, data);
         if(resourceEntry == null || !resourceEntry.isDeclared()){
-            return ValueCoder.decodeUnknownResourceId(valueType.isReference(), data);
+            return ValueCoder.decodeUnknownResourceId(valueType == ValueType.REFERENCE, data);
         }
         return resourceEntry.buildReference(packageBlock, valueType);
     }
