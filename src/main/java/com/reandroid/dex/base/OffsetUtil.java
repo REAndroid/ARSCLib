@@ -15,27 +15,24 @@
  */
 package com.reandroid.dex.base;
 
-import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockArray;
-import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.item.IntegerReference;
 
-import java.io.IOException;
-
-public class CountedArray<T extends Block> extends CreatorArray<T> {
-    private final IntegerReference itemCount;
-    public CountedArray(IntegerReference itemCount, Creator<T> creator){
-        super(creator);
-        this.itemCount = itemCount;
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
-        super.onReadBytes(reader);
-    }
-    @Override
-    protected void onRefreshed() {
-        itemCount.set(getChildesCount());
+public class OffsetUtil {
+    public static IntegerPair from(IntegerReference reference, OffsetSupplier supplier){
+        return new IntegerPair() {
+            @Override
+            public IntegerReference getFirst() {
+                return reference;
+            }
+            @Override
+            public IntegerReference getSecond() {
+                return supplier.getOffsetReference();
+            }
+            @Override
+            public String toString(){
+                return "(" + getFirst() + ", " + getSecond() + ")";
+            }
+        };
     }
 }

@@ -15,52 +15,110 @@
  */
 package com.reandroid.dex.base;
 
-import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockArray;
-import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.base.*;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 
 import java.io.IOException;
 
-public class DexItemArray<T extends Block> extends BlockArray<T>{
+public class DexItemArray<T extends Block> extends CreatorArray<T>
+        implements OffsetSupplier, DexArraySupplier<T> {
 
     private final IntegerPair countAndOffset;
-    private final Creator<T> creator;
-
+    private PreloadArray<T> mPreloadArray;
     public DexItemArray(IntegerPair countAndOffset,
                         Creator<T> creator) {
-        super(creator.newInstance(0));
-        this.creator = creator;
+        super(creator);
         this.countAndOffset = countAndOffset;
     }
-
-    protected IntegerPair getCountAndOffset() {
+    public void setPreloadArray(PreloadArray<T> preloadArray) {
+        this.mPreloadArray = preloadArray;
+    }
+    @Override
+    public IntegerReference getOffsetReference(){
+        return getCountAndOffset().getSecond();
+    }
+    public IntegerPair getCountAndOffset() {
         return countAndOffset;
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
         IntegerPair countAndOffset = getCountAndOffset();
+        if(skipReading(countAndOffset, reader)){
+            return;
+        }
+        positionItem(this, reader);
         setChildesCount(countAndOffset.getFirst().get());
-        reader.seek(countAndOffset.getSecond().get());
-        super.onReadBytes(reader);
+        readChildes(reader);
     }
-
+    private boolean skipReading(IntegerPair countAndOffset, BlockReader reader){
+        if(countAndOffset == null){
+            return false;
+        }
+        IntegerReference reference = countAndOffset.getSecond();
+        if(reference != null){
+            int offset = reference.get();
+            if(!isValidOffset(offset)){
+                return true;
+            }
+            reader.seek(offset);
+        }
+        return false;
+    }
+    private void readChildes(BlockReader reader) throws IOException {
+        T[] childes = getChildes();
+        if(childes == null){
+            return;
+        }
+        int length = childes.length;
+        notifyPreload(childes);
+        for(int i = 0; i < length; i++){
+            Block block = childes[i];
+            if(block == null){
+                continue;
+            }
+            if(skipReading(block, reader)){
+                continue;
+            }
+            positionItem(block, reader);
+            block.readBytes(reader);
+            //block.toString();
+        }
+    }
+    private void notifyPreload(T[] childes){
+        PreloadArray<T> preloadArray = this.mPreloadArray;
+        if(preloadArray != null){
+            preloadArray.onPreload(childes);
+        }
+    }
+    private boolean skipReading(Block block, BlockReader reader){
+        if(!(block instanceof OffsetSupplier)){
+            return false;
+        }
+        OffsetSupplier offsetSupplier = (OffsetSupplier) block;
+        IntegerReference reference = offsetSupplier.getOffsetReference();
+        if(reference != null){
+            int offset = reference.get();
+            if(!isValidOffset(offset)){
+                return true;
+            }
+            reader.seek(offset);
+        }
+        return false;
+    }
+    private void positionItem(Block block, BlockReader reader){
+        if(!(block instanceof PositionedItem)){
+            return;
+        }
+        PositionedItem positionedItem = (PositionedItem) block;
+        positionedItem.setPosition(reader.getPosition());
+    }
+    protected boolean isValidOffset(int offset){
+        return offset > 0;
+    }
     @Override
     protected void onRefreshed() {
         IntegerReference count = getCountAndOffset().getFirst();
-        count.set(childesCount());
-        calculateOffset();
-    }
-    protected void calculateOffset() {
-
-    }
-    @Override
-    public T[] newInstance(int length) {
-        return creator.newInstance(length);
-    }
-    @Override
-    public T newInstance() {
-        return creator.newInstance();
+        count.set(getChildesCount());
     }
 }

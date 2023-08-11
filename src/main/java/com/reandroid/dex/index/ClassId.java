@@ -19,13 +19,12 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.item.*;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
 
-public class ClassIndex extends ItemIndex{
+public class ClassId extends ItemId {
 
     private final IndirectInteger typeIndex;
     private final IndirectInteger accessFlagValue;
@@ -37,10 +36,9 @@ public class ClassIndex extends ItemIndex{
     private final IndirectInteger staticValuesOffset;
     
     private TypeList interfaceList;
-    private AnnotationsDirectoryItem annotationsDirectory;
-    private final ClassDataItem classDataItem;
+    private final ClassData classData;
 
-    public ClassIndex() {
+    public ClassId() {
         super(SIZE);
         int offset = -4;
         
@@ -53,33 +51,36 @@ public class ClassIndex extends ItemIndex{
         this.classDataOffset = new IndirectInteger(this, offset += 4);
         this.staticValuesOffset = new IndirectInteger(this, offset += 4);
 
-        classDataItem = new ClassDataItem(classDataOffset);
-        classDataItem.setParent(this);
+        classData = new ClassData();
+        classData.setParent(this);
     }
 
-    public TypeIndex getType(){
-        return getTypeIndex(getTypeIndex().get());
+    public TypeId getType(){
+        return getTypeId(getTypeIndex().get());
     }
     public AccessFlag[] getAccessFlags(){
         return AccessFlag.getAccessFlagsForClass(getAccessFlagValue().get());
     }
-    public TypeIndex getSuperClass(){
-        return getTypeIndex(getSuperClassIndex().get());
+    public TypeId getSuperClass(){
+        return getTypeId(getSuperClassIndex().get());
     }
-    public StringIndex getSourceFile(){
-        return getStringIndex(getSourceFileIndex().get());
+    public StringData getSourceFile(){
+        return getStringData(getSourceFileIndex().get());
     }
 
 
-    public TypeIndex[] getInterfaces(){
-        TypeList interfaceList = this.interfaceList;
+    public TypeId[] getInterfaceTypeIds(){
+        TypeList interfaceList = getInterfaceList();
         if(interfaceList != null){
-            return interfaceList.toTypes(getTypeSection());
+            return interfaceList.toTypeIds();
         }
         return null;
     }
-    public ClassDataItem getClassDataItem(){
-        return classDataItem;
+    public TypeList getInterfaceList(){
+        return interfaceList;
+    }
+    public ClassData getClassData(){
+        return classData;
     }
 
     public IndirectInteger getTypeIndex() {
@@ -107,45 +108,12 @@ public class ClassIndex extends ItemIndex{
         return staticValuesOffset;
     }
 
-    public AnnotationsDirectoryItem getAnnotationsDirectory(){
-        return annotationsDirectory;
-    }
-    public void setAnnotationsDirectory(AnnotationsDirectoryItem annotationsDirectory) {
-        this.annotationsDirectory = annotationsDirectory;
-    }
-
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
-        int position = reader.getPosition();
-        loadInterfaces(reader);
-        loadAnnotations(reader);
-        loadClassData(reader);
-        reader.seek(position);
-        //TODO: read  static values, hidden api ...
-    }
-    private void loadInterfaces(BlockReader reader) throws IOException {
-        interfaceList = new TypeList(getInterfacesOffset());
-        interfaceList.readBytes(reader);
-    }
-    private void loadAnnotations(BlockReader reader) throws IOException {
-        int offset = getAnnotationsOffset().get();
-        if(offset == 0){
-            setAnnotationsDirectory(null);
-            return;
-        }
-        AnnotationsDirectoryItem directoryItem = new AnnotationsDirectoryItem();
-        directoryItem.setParent(this);
-        setAnnotationsDirectory(directoryItem);
-        reader.seek(offset);
-        directoryItem.readBytes(reader);
-    }
+        interfaceList = getSectionList().getAt(SectionType.TYPE_LIST, getInterfacesOffset().get());
 
-    private void loadClassData(BlockReader reader) throws IOException {
-        ClassDataItem classDataItem = getClassDataItem();
-        classDataItem.readBytes(reader);
     }
-
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.newLine();
@@ -160,25 +128,25 @@ public class ClassIndex extends ItemIndex{
         writer.append(".super ");
         getSuperClass().append(writer);
         writer.newLine();
-        StringIndex sourceFile = getSourceFile();
+        StringData sourceFile = getSourceFile();
         if(sourceFile != null){
             writer.append(".source ");
             sourceFile.append(writer);
         }
         writer.newLine();
-        TypeIndex[] interfaces = getInterfaces();
+        TypeId[] interfaces = getInterfaceTypeIds();
         if(interfaces != null){
             writer.newLine();
             writer.append("# interfaces");
-            for(TypeIndex typeIndex : interfaces){
+            for(TypeId typeId : interfaces){
                 writer.newLine();
                 writer.append(".implements ");
-                typeIndex.append(writer);
+                typeId.append(writer);
             }
         }
         writer.newLine();
         appendAnnotations(writer);
-        getClassDataItem().append(writer);
+        getClassData().append(writer);
     }
     @Override
     public String toString(){
@@ -191,29 +159,16 @@ public class ClassIndex extends ItemIndex{
         }
         builder.append(getType());
         builder.append("\n.super ").append(getSuperClass());
-        StringIndex sourceFile = getSourceFile();
+        StringData sourceFile = getSourceFile();
         if(sourceFile != null){
             builder.append("\n.source \"").append(sourceFile.getString()).append("\"");
         }
         builder.append("\n");
-        TypeIndex[] interfaces = getInterfaces();
+        TypeId[] interfaces = getInterfaceTypeIds();
         if(interfaces != null){
             builder.append("\n# interfaces");
-            for(TypeIndex typeIndex : interfaces){
-                builder.append("\n.implements ").append(typeIndex);
-            }
-        }
-        AnnotationsDirectoryItem directoryItem = annotationsDirectory;
-        if(directoryItem != null){
-            List<AnnotationGroup> annotations = getAnnotations();
-            if(annotations.size() > 0){
-                builder.append("\n\n# annotations");
-                Iterator<AnnotationGroup> iterator = annotations.iterator();
-                while (iterator.hasNext()){
-                    builder.append("\n");
-                    builder.append(iterator.next());
-                    builder.append("\n");
-                }
+            for(TypeId typeId : interfaces){
+                builder.append("\n.implements ").append(typeId);
             }
         }
         return builder.toString();

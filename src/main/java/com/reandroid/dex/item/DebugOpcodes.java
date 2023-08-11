@@ -13,29 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.base;
+package com.reandroid.dex.item;
 
-import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockArray;
-import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.dex.base.Ule128Item;
 
 import java.io.IOException;
 
-public class CountedArray<T extends Block> extends CreatorArray<T> {
-    private final IntegerReference itemCount;
-    public CountedArray(IntegerReference itemCount, Creator<T> creator){
-        super(creator);
-        this.itemCount = itemCount;
+public class DebugOpcodes extends ByteArray {
+    private final Ule128Item lineStart;
+    public DebugOpcodes(Ule128Item lineStart){
+        super();
+        this.lineStart = lineStart;
     }
+
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
-        super.onReadBytes(reader);
-    }
-    @Override
-    protected void onRefreshed() {
-        itemCount.set(getChildesCount());
+        //TODO: finish
     }
 }

@@ -13,35 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.item;
+package com.reandroid.dex.base;
 
-import com.reandroid.arsc.base.BlockArray;
-import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.arsc.item.IntegerReference;
 
-import java.io.IOException;
+public class IndirectIntegerPair implements IntegerPair {
+    private final IntegerReference first;
+    private final IntegerReference second;
 
-public class MapItemArray extends BlockArray<MapItem> {
-    private final IntegerReference itemCount;
-    public MapItemArray(IntegerReference itemCount){
-        super();
-        this.itemCount = itemCount;
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
-        super.onReadBytes(reader);
-    }
-    @Override
-    public MapItem[] newInstance(int length) {
-        return new MapItem[length];
-    }
-    @Override
-    public MapItem newInstance() {
-        return new MapItem();
-    }
-    @Override
-    protected void onRefreshed() {
+    public IndirectIntegerPair(BlockItem blockItem, int offset){
+        this.first = new IndirectInteger(blockItem, offset);
+        this.second = new IndirectInteger(blockItem, offset + 4);
     }
 
+    @Override
+    public IntegerReference getFirst() {
+        return first;
+    }
+    @Override
+    public IntegerReference getSecond() {
+        return second;
+    }
+    @Override
+    public String toString(){
+        return "(" + getFirst() + ", " + getSecond() + ")";
+    }
 }

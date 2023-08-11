@@ -17,8 +17,9 @@ package com.reandroid.dex.value;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.DexFile;
-import com.reandroid.dex.index.StringIndex;
-import com.reandroid.dex.index.TypeIndex;
+import com.reandroid.dex.index.StringData;
+import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
@@ -46,12 +47,12 @@ public class PrimitiveValue extends DexValue<NumberValue>{
         DexValueType valueType = getValueType();
         if(valueType == DexValueType.TYPE){
             DexFile dexFile = getParentInstance(DexFile.class);
-            TypeIndex type = dexFile.getTypeSection().get((int) getNumberValue());
+            TypeId type = dexFile.getSectionList().get(SectionType.TYPE_ID, (int) getNumberValue());
             type.append(writer);
         }else if(valueType == DexValueType.STRING){
             DexFile dexFile = getParentInstance(DexFile.class);
-            StringIndex stringIndex = dexFile.getStringPool().get((int) getNumberValue());
-            stringIndex.append(writer);
+            StringData stringData = dexFile.getSectionList().get(SectionType.STRING_DATA, (int) getNumberValue());
+            stringData.append(writer);
         }else {
             writer.append(HexUtil.toHex(getNumberValue(), getValueSize()));
         }
@@ -61,12 +62,12 @@ public class PrimitiveValue extends DexValue<NumberValue>{
         DexValueType valueType = getValueType();
         if(valueType == DexValueType.TYPE){
             DexFile dexFile = getParentInstance(DexFile.class);
-            TypeIndex type = dexFile.getTypeSection().get((int) getNumberValue());
+            TypeId type = dexFile.getSectionList().get(SectionType.TYPE_ID, (int) getNumberValue());
             return type.toString();
         }
         if(valueType == DexValueType.STRING){
             DexFile dexFile = getParentInstance(DexFile.class);
-            StringIndex type = dexFile.getStringPool().get((int) getNumberValue());
+            StringData type = dexFile.getSectionList().get(SectionType.STRING_DATA, (int) getNumberValue());
             return "\"" + type.getString() + "\"";
         }
         if(valueType == DexValueType.INT){

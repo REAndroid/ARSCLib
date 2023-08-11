@@ -15,27 +15,18 @@
  */
 package com.reandroid.dex.base;
 
-import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockArray;
-import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.arsc.item.AlignItem;
 
 import java.io.IOException;
 
-public class CountedArray<T extends Block> extends CreatorArray<T> {
-    private final IntegerReference itemCount;
-    public CountedArray(IntegerReference itemCount, Creator<T> creator){
-        super(creator);
-        this.itemCount = itemCount;
+public class DexAlign extends AlignItem {
+    public DexAlign(){
+        super();
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
+        super.align(reader.getPosition());
         super.onReadBytes(reader);
-    }
-    @Override
-    protected void onRefreshed() {
-        itemCount.set(getChildesCount());
     }
 }

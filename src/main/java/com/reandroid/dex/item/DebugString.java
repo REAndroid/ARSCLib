@@ -13,24 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.base;
+package com.reandroid.dex.item;
 
-public class IntegerList extends ShortList {
-    public IntegerList(){
+import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.dex.index.StringData;
+import com.reandroid.dex.sections.SectionList;
+import com.reandroid.dex.sections.SectionType;
+
+public class DebugString extends Ule128Item {
+    public DebugString(){
         super();
     }
-    @Override
-    public void set(int index, int value){
-        int i = 4 + index * 4;
-        putInteger(getBytesInternal(), i, value);
+    public StringData getStringData(){
+        SectionList sectionList = getParent(SectionList.class);
+        if(sectionList != null){
+            return sectionList.get(SectionType.STRING_DATA, get() - 1);
+        }
+        return null;
     }
     @Override
-    public int get(int index){
-        int i = 4 + index * 4;
-        return getInteger(getBytesInternal(), i);
-    }
-    @Override
-    int getFactor(){
-        return 4;
+    public String toString() {
+        return get() + ":" + getStringData();
     }
 }

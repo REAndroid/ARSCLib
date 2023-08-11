@@ -40,10 +40,6 @@ public class SmaliWriter implements Closeable {
     }
     public void newLine() throws IOException {
         flushComment();
-        if(lineNumber == 1){
-            lineNumber ++;
-            return;
-        }
         writer.append('\n');
         writeIndent();
         lineNumber++;

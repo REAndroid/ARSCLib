@@ -18,24 +18,24 @@ package com.reandroid.dex.base;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
 
-import java.io.IOException;
+public class CreatorArray<T extends Block> extends BlockArray<T> {
+    private final Creator<T> creator;
 
-public class CountedArray<T extends Block> extends CreatorArray<T> {
-    private final IntegerReference itemCount;
-    public CountedArray(IntegerReference itemCount, Creator<T> creator){
-        super(creator);
-        this.itemCount = itemCount;
+    public CreatorArray(Creator<T> creator){
+        super(creator.newInstance(0));
+        this.creator = creator;
     }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
-        super.onReadBytes(reader);
-    }
+
     @Override
     protected void onRefreshed() {
-        itemCount.set(getChildesCount());
+    }
+    @Override
+    public T[] newInstance(int length) {
+        return creator.newInstance(length);
+    }
+    @Override
+    public T newInstance() {
+        return creator.newInstance();
     }
 }

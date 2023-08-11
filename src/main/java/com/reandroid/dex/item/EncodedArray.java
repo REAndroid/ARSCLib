@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.value;
+package com.reandroid.dex.item;
 
 import com.reandroid.arsc.container.BlockList;
-import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.value.DexValue;
@@ -25,10 +24,10 @@ import com.reandroid.dex.value.DexValueType;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class ArrayValueList extends FixedBlockContainer {
+public class EncodedArray extends BaseItem{
     private final Ule128Item elementCount;
     private final BlockList<DexValue<?>> elements;
-    public ArrayValueList() {
+    public EncodedArray() {
         super(2);
         this.elementCount = new Ule128Item();
         this.elements = new BlockList<>();
@@ -40,6 +39,19 @@ public class ArrayValueList extends FixedBlockContainer {
     }
     public BlockList<DexValue<?>> getElements() {
         return elements;
+    }
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException{
+        super.onReadBytes(reader);
+        int count = elementCount.get();
+        for(int i = 0; i < count; i++){
+            int type = reader.read();
+            reader.offset(-1);
+            DexValueType valueType = DexValueType.fromFlag(type);
+            DexValue<?> dexValue = DexValue.createFor(valueType);
+            elements.add(dexValue);
+            dexValue.readBytes(reader);
+        }
     }
     @Override
     public String toString(){

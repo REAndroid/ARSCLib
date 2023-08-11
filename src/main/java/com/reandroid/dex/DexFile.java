@@ -17,82 +17,50 @@ package com.reandroid.dex;
 
 import com.reandroid.arsc.container.ExpandableBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.index.*;
+import com.reandroid.dex.index.ClassId;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.reader.DexReader;
 import com.reandroid.dex.sections.*;
+import com.reandroid.dex.writer.SmaliWriter;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 public class DexFile extends ExpandableBlockContainer {
 
-    private final DexHeader dexHeader;
-    private final DexStringPool stringPool;
-    private final IndexSections sections;
 
-    private final MapList mapList;
-
+    private final SectionList sectionList;
 
     public DexFile() {
-        super(4);
-
-        DexHeader header = new DexHeader();
-        this.dexHeader =  header;
-        this.stringPool = new DexStringPool(header);
-        this.sections = new IndexSections(header);
-
-        this.mapList = new MapList(header);
-
-        addChild(dexHeader);
-        addChild(stringPool);
-        addChild(sections);
-        addChild(mapList);
+        super(1);
+        this.sectionList = new SectionList();
+        addChild(sectionList);
     }
 
+    public SectionList getSectionList(){
+        return sectionList;
+    }
     public DexHeader getHeader() {
-        return dexHeader;
-    }
-    public DexStringPool getStringPool(){
-        return stringPool;
+        return getSectionList().getHeader();
     }
 
-    public IndexSections getSections() {
-        return sections;
-    }
-
-    public DexSection<TypeIndex> getTypeSection() {
-        return getSections().getTypeSection();
-    }
-    public DexSection<ProtoIndex> getProtoSection() {
-        return getSections().getProtoSection();
-    }
-    public DexSection<FieldIndex> getFieldSection() {
-        return getSections().getFieldSection();
-    }
-    public DexSection<ClassIndex> getClassSection() {
-        return getSections().getClassSection();
-    }
-    public DexSection<MethodIndex> getMethodSection(){
-        return getSections().getMethodSection();
-    }
-
-    public MapList getMapList(){
-        return mapList;
-    }
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
-        DexReader dexReader = DexReader.create(this, reader);
-        super.onReadBytes(dexReader);
-        System.err.println("annotation: " + dexReader.getAnnotationPool());
-        System.err.println("code: " + dexReader.getCodePool());
+        super.onReadBytes(reader);
+        //TEST
+        Section<ClassId> sectionClass = sectionList.get(SectionType.CLASS_ID);
+        for(ClassId classId:sectionClass){
+            StringWriter writer = new StringWriter();
+            SmaliWriter smaliWriter=new SmaliWriter(writer);
+            classId.append(smaliWriter);
+            smaliWriter.close();
+            System.err.println(writer.toString());
+        }
+
     }
 
     public void read(byte[] dexBytes) throws IOException {
-        DexReader reader = new DexReader(this, dexBytes);
+        BlockReader reader = new BlockReader(dexBytes);
         readBytes(reader);
         reader.close();
     }

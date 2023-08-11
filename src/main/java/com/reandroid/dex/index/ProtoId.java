@@ -15,49 +15,50 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.item.TypeList;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class ProtoIndex extends ItemIndex {
-    private final TypeList typeList;
+public class ProtoId extends ItemId {
+
+    private TypeList typeList;
 
     private final IndirectInteger shorty;
     private final IndirectInteger returnType;
     private final IndirectInteger parameters;
 
-    public ProtoIndex() {
+    public ProtoId() {
         super(SIZE);
         int offset = -4;
 
         this.shorty = new IndirectInteger(this, offset += 4);
         this.returnType = new IndirectInteger(this, offset += 4);
         this.parameters = new IndirectInteger(this, offset += 4);
+    }
 
-        typeList = new TypeList(parameters);
+    public TypeList getTypeList() {
+        return typeList;
+    }
+    public void setTypeList(TypeList typeList) {
+        this.typeList = typeList;
     }
 
     public IndirectInteger getShorty() {
         return shorty;
     }
-    public IndirectInteger getReturnTypeIndexReference() {
+    public IndirectInteger getReturnTypeIdReference() {
         return returnType;
     }
     public IndirectInteger getParametersReference() {
         return parameters;
     }
 
-    public TypeIndex getReturnTypeIndex(){
-        return getTypeIndex(getReturnTypeIndexReference());
+    public TypeId getReturnTypeId(){
+        return getTypeId(getReturnTypeIdReference());
     }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
-        typeList.readBytes(reader);
-    }
+
     public int[] getParametersIndexes(){
         TypeList typeList = this.typeList;
         if(typeList != null){
@@ -65,38 +66,38 @@ public class ProtoIndex extends ItemIndex {
         }
         return null;
     }
-    public TypeIndex[] getParameterTypes(){
+    public TypeId[] getParameterTypes(){
         TypeList typeList = this.typeList;
         if(typeList != null){
-            return typeList.toTypes(getTypeSection());
+            //return typeList.toTypes(getTypeSection());
         }
         return null;
     }
 
     public String buildMethodParameters(){
-        TypeIndex[] parameters = getParameterTypes();
+        TypeId[] parameters = getParameterTypes();
         if(parameters == null){
             return "";
         }
         StringBuilder builder = new StringBuilder();
-        for(TypeIndex typeIndex:parameters){
-            builder.append(typeIndex.getStringIndex().getString());
+        for(TypeId typeId :parameters){
+            builder.append(typeId.getStringData().getString());
         }
         return builder.toString();
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        TypeIndex[] parameters = getParameterTypes();
+        TypeId[] parameters = getParameterTypes();
         if(parameters == null){
             return;
         }
-        for(TypeIndex typeIndex : parameters){
-            typeIndex.append(writer);
+        for(TypeId typeId : parameters){
+            typeId.append(writer);
         }
     }
     @Override
     public String toString() {
-        return "(" + buildMethodParameters() +")" + getReturnTypeIndex().toString();
+        return "(" + buildMethodParameters() +")" + getReturnTypeId().toString();
     }
 
     private static final int SIZE = 12;

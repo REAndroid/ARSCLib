@@ -15,27 +15,28 @@
  */
 package com.reandroid.dex.base;
 
-import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockArray;
-import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 
-import java.io.IOException;
+public class NumberIntegerReference implements IntegerReference {
+    private int value;
 
-public class CountedArray<T extends Block> extends CreatorArray<T> {
-    private final IntegerReference itemCount;
-    public CountedArray(IntegerReference itemCount, Creator<T> creator){
-        super(creator);
-        this.itemCount = itemCount;
+    public NumberIntegerReference(int value){
+        this.value = value;
+    }
+    public NumberIntegerReference(){
+        this(0);
+    }
+
+    @Override
+    public int get() {
+        return this.value;
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
-        super.onReadBytes(reader);
+    public void set(int value) {
+        this.value = value;
     }
     @Override
-    protected void onRefreshed() {
-        itemCount.set(getChildesCount());
+    public String toString() {
+        return Integer.toString(get());
     }
 }

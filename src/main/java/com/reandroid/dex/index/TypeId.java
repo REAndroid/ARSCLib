@@ -15,29 +15,31 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.dex.DexFile;
 import com.reandroid.dex.base.DexItem;
+import com.reandroid.dex.sections.SectionList;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class TypeIndex extends DexItem implements SmaliFormat {
-    public TypeIndex() {
+public class TypeId extends DexItem implements SmaliFormat {
+    public TypeId() {
         super(4);
     }
 
     public String getString(){
-        StringIndex stringIndex = getStringIndex();
-        if(stringIndex != null){
-            return stringIndex.getString();
+        StringData stringData = getStringData();
+        if(stringData != null){
+            return stringData.getString();
         }
         return null;
     }
-    public StringIndex getStringIndex(){
-        DexFile dexFile = getParentInstance(DexFile.class);
-        if(dexFile != null){
-            return dexFile.getStringPool().get(getStringIndexValue());
+    public StringData getStringData(){
+        SectionList sectionList = getParentInstance(SectionList.class);
+        if(sectionList != null){
+
+            return sectionList.get(SectionType.STRING_DATA, getStringIndexValue());
         }
         return null;
     }
@@ -54,9 +56,9 @@ public class TypeIndex extends DexItem implements SmaliFormat {
     }
     @Override
     public String toString(){
-        StringIndex stringIndex = getStringIndex();
-        if(stringIndex != null){
-            return stringIndex.getString();
+        StringData stringData = getStringData();
+        if(stringData != null){
+            return stringData.getString();
         }
         return getIndex() + ":string-index=" + getStringIndexValue();
     }

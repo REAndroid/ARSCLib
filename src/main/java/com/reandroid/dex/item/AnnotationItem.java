@@ -15,73 +15,86 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.arsc.container.BlockList;
-import com.reandroid.arsc.container.FixedBlockContainer;
-import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.item.ByteItem;
-import com.reandroid.dex.DexFile;
-import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.AnnotationVisibility;
-import com.reandroid.dex.index.TypeIndex;
-import com.reandroid.dex.reader.DexReader;
-import com.reandroid.dex.reader.ReaderPool;
+import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.sections.SectionList;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Iterator;
 
-public class AnnotationItem extends FixedBlockContainer implements SmaliFormat {
+public class AnnotationItem extends BaseItem
+        implements SmaliFormat {
+
     private final ByteItem visibility;
     private final Ule128Item typeIndex;
     private final Ule128Item elementsCount;
-    private final BlockList<AnnotationElement> annotationElements;
-    public AnnotationItem() {
-        super(4);
-        this.visibility = new ByteItem();
+    private final BlockArray<AnnotationElement> annotationElements;
+
+    private final boolean mValueEntry;
+
+    public AnnotationItem(boolean valueEntry) {
+        super(valueEntry? 3 : 4);
+        this.mValueEntry = valueEntry;
+        ByteItem visibility;
+        if(valueEntry){
+            visibility = null;
+        }else {
+            visibility = new ByteItem();
+        }
+        this.visibility = visibility;
         this.typeIndex = new Ule128Item();
         this.elementsCount = new Ule128Item();
-        this.annotationElements = new BlockList<>();
-        addChild(0, visibility);
-        addChild(1, typeIndex);
-        addChild(2, elementsCount);
-        addChild(3, annotationElements);
+        this.annotationElements = new CountedArray<>(elementsCount,
+                AnnotationElement.CREATOR);
+        int i = 0;
+        if(!valueEntry){
+            addChild(i++, visibility);
+        }
+        addChild(i++, typeIndex);
+        addChild(i++, elementsCount);
+        addChild(i, annotationElements);
+    }
+    public AnnotationItem(){
+        this(false);
+    }
+    public boolean isValueEntry() {
+        return mValueEntry;
     }
     public AnnotationVisibility getVisibility(){
-        return AnnotationVisibility.valueOf(visibility.unsignedInt());
+        if(!isValueEntry()){
+            return AnnotationVisibility.valueOf(visibility.unsignedInt());
+        }
+        return null;
     }
     public int getElementsCount(){
         return elementsCount.get();
     }
-    public TypeIndex getTypeIndex(){
-        DexFile dexFile = getParentInstance(DexFile.class);
+    public TypeId getTypeIndex(){
+        SectionList dexFile = getParentInstance(SectionList.class);
         if(dexFile != null){
-            return dexFile.getTypeSection().get(typeIndex.get());
+            return dexFile.get(SectionType.TYPE_ID, typeIndex.get());
         }
         return null;
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
-        DexReader dexReader = (DexReader) reader;
-        ReaderPool<AnnotationElement> pool = dexReader.getAnnotationPool();
-        BlockList<AnnotationElement> elements = this.annotationElements;
-        int count = getElementsCount();
-        for(int i = 0; i < count; i++){
-            AnnotationElement element = new AnnotationElement();
-            element.setParent(this);
-            element.getOffsetReference().set(reader.getPosition());
-            element = pool.getOrRead(reader, element);
-            elements.add(element);
-        }
-        elements.size();
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(".annotation ");
-        writer.append(getVisibility().getName());
+        String tag = getTagName();
+        writer.append('.');
+        writer.append(tag);
         writer.append(' ');
+        AnnotationVisibility visibility = getVisibility();
+        if(visibility != null){
+            writer.append(visibility.getName());
+            writer.append(' ');
+        }
         getTypeIndex().append(writer);
         Iterator<AnnotationElement> iterator = annotationElements.iterator();
         writer.indentPlus();
@@ -91,14 +104,36 @@ public class AnnotationItem extends FixedBlockContainer implements SmaliFormat {
         }
         writer.indentMinus();
         writer.newLine();
-        writer.append(".end annotation");
+        writer.append(".end ");
+        writer.append(tag);
+    }
+    private String getTagName(){
+        if(isValueEntry()){
+            return "subannotation";
+        }
+        return "annotation";
     }
     @Override
     public String toString(){
+        StringWriter writer = new StringWriter();
+        SmaliWriter smaliWriter = new SmaliWriter(writer);
+        try {
+            this.append(smaliWriter);
+            smaliWriter.close();
+        } catch (IOException exception) {
+        }
+        return writer.toString();
+    }
+    public String toString1(){
         StringBuilder builder = new StringBuilder();
-        builder.append(".annotation ");
-        builder.append(getVisibility());
+        String tag = getTagName();
+        builder.append('.');
+        builder.append(tag);
         builder.append(' ');
+        if(!isValueEntry()){
+            builder.append(getVisibility());
+            builder.append(' ');
+        }
         builder.append(getTypeIndex());
         Iterator<AnnotationElement> iterator = annotationElements.iterator();
         while (iterator.hasNext()){
@@ -106,7 +141,8 @@ public class AnnotationItem extends FixedBlockContainer implements SmaliFormat {
             builder.append(iterator.next());
         }
         builder.append('\n');
-        builder.append(".end annotation");
+        builder.append(".end ");
+        builder.append(tag);
         return builder.toString();
     }
 }

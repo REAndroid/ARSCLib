@@ -15,49 +15,72 @@
  */
 package com.reandroid.dex.sections;
 
-import com.reandroid.arsc.container.FixedBlockContainer;
-import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.base.*;
 import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.item.MapItem;
-import com.reandroid.dex.item.MapItemArray;
 
-import java.io.IOException;
-import java.util.Iterator;
+import java.util.*;
 
-public class MapList extends FixedBlockContainer implements Iterable<MapItem> {
+public class MapList extends FixedDexContainer
+        implements Iterable<MapItem>, OffsetSupplier {
+
     private final IntegerReference offsetReference;
 
-    private final IntegerItem itemCount;
-    private final MapItemArray mapItemArray;
+    private final IntegerItem mapItemsCount;
+
+    private final DexItemArray<MapItem> itemArray;
 
     public MapList(IntegerReference offsetReference) {
         super(2);
         this.offsetReference = offsetReference;
-        this.itemCount = new IntegerItem();
-        this.mapItemArray = new MapItemArray(itemCount);
-        addChild(0, itemCount);
-        addChild(1, mapItemArray);
+        this.mapItemsCount = new IntegerItem();
+
+        IntegerPair countAndOffset = IntegerPair.of(mapItemsCount,
+                new AddingIntegerReference(offsetReference, mapItemsCount));
+        this.itemArray = new DexItemArray<>(countAndOffset, CREATOR);
+
+        addChild(0, mapItemsCount);
+        addChild(1, itemArray);
     }
     public MapList(DexHeader header){
         this(header.map);
     }
 
+
+    public MapItem get(SectionType<?> type){
+        for(MapItem mapItem:this){
+            if(type == mapItem.getMapType()){
+                return mapItem;
+            }
+        }
+        return null;
+    }
+    @Override
+    public IntegerReference getOffsetReference() {
+        return offsetReference;
+    }
     @Override
     public Iterator<MapItem> iterator() {
-        return mapItemArray.iterator();
+        return itemArray.iterator();
     }
 
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        int offset = this.offsetReference.get();
-        if(offset == 0){
-            return;
+    public MapItem[] getReadSorted(){
+        MapItem[] mapItemList = itemArray.getChildes().clone();
+        Arrays.sort(mapItemList, MapItem.READ_COMPARATOR);
+        return mapItemList;
+    }
+
+    private static final Creator<MapItem> CREATOR = new Creator<MapItem>() {
+        @Override
+        public MapItem[] newInstance(int length) {
+            return new MapItem[length];
         }
-        reader.seek(offset);
-        super.onReadBytes(reader);
-        mapItemArray.childesCount();
-    }
-
+        @Override
+        public MapItem newInstance() {
+            return new MapItem();
+        }
+    };
 }

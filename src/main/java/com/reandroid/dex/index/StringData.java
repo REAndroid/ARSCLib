@@ -15,7 +15,10 @@
  */
 package com.reandroid.dex.index;
 
+import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.base.OffsetReceiver;
 import com.reandroid.dex.io.ByteReader;
 import com.reandroid.dex.io.StreamUtil;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -24,11 +27,27 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class StringIndex extends ItemIndex implements SmaliFormat {
+public class StringData extends ItemId
+        implements SmaliFormat, OffsetSupplier, OffsetReceiver {
     private String mCache;
+    private StringId mStringId;
 
-    public StringIndex() {
+    public StringData() {
         super(0);
+    }
+
+    @Override
+    public IntegerReference getOffsetReference() {
+        StringId reference = this.mStringId;
+        if(reference == null){
+            reference = new StringId();
+            this.mStringId = reference;
+        }
+        return reference;
+    }
+    @Override
+    public void setOffsetReference(IntegerReference reference) {
+        this.mStringId = (StringId) reference;
     }
 
     public String getString(){

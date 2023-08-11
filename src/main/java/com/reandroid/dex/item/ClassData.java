@@ -15,17 +15,15 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.dex.base.*;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class ClassDataItem extends FixedBlockContainer implements SmaliFormat {
-    private final IntegerReference offsetReference;
+public class ClassData extends BaseItem
+        implements SmaliFormat {
 
     private final Ule128Item staticFieldsCount;
     private final Ule128Item instanceFieldCount;
@@ -38,9 +36,8 @@ public class ClassDataItem extends FixedBlockContainer implements SmaliFormat {
     private final MethodDefArray virtualMethods;
 
 
-    public ClassDataItem(IntegerReference offsetReference) {
+    public ClassData() {
         super(8);
-        this.offsetReference = offsetReference;
         this.staticFieldsCount = new Ule128Item();
         this.instanceFieldCount = new Ule128Item();
         this.directMethodCount = new Ule128Item();
@@ -79,14 +76,7 @@ public class ClassDataItem extends FixedBlockContainer implements SmaliFormat {
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
-        int offset = offsetReference.get();
-        if(offset <= 0){
-            return;
-        }
-        int position = reader.getPosition();
-        reader.seek(offset);
         super.onReadBytes(reader);
-        reader.seek(position);
     }
 
     @Override
@@ -103,4 +93,5 @@ public class ClassDataItem extends FixedBlockContainer implements SmaliFormat {
                 ", directMethodCount=" + getDirectMethodCount() +
                 ", virtualMethodCount=" + getVirtualMethodCount();
     }
+
 }

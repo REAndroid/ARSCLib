@@ -17,16 +17,17 @@ package com.reandroid.dex.value;
 
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.item.EncodedArray;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class ArrayValue extends DexValue<ArrayValueList>{
+public class ArrayValue extends DexValue<EncodedArray>{
     public ArrayValue() {
-        super(new ArrayValueList());
+        super(new EncodedArray());
     }
-    public int getCount() {
-        return getValue().getCount();
+    public int getCountValue() {
+        return getValue().getCountValue();
     }
     public void addValue(DexValue<?> value){
         getElements().add(value);
@@ -34,21 +35,9 @@ public class ArrayValue extends DexValue<ArrayValueList>{
     public BlockList<DexValue<?>> getElements() {
         return getValue().getElements();
     }
-    @Override
+
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
-        int count = getCount();
-        for(int i = 0; i < count; i++){
-            int type = reader.read();
-            reader.offset(-1);
-            DexValueType valueType = DexValueType.fromFlag(type);
-            DexValue<?> dexValue = createFor(valueType);
-            if(dexValue == null){
-                return;
-            }
-            addValue(dexValue);
-            dexValue.readBytes(reader);
-        }
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {

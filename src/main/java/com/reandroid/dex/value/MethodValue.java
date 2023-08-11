@@ -15,8 +15,8 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.dex.DexFile;
-import com.reandroid.dex.index.MethodIndex;
+import com.reandroid.dex.index.MethodId;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
@@ -25,12 +25,16 @@ public class MethodValue extends PrimitiveValue{
     public MethodValue(){
         super();
     }
-    public MethodIndex getMethodIndex(){
-        DexFile dexFile = getDexFile();
-        return dexFile.getMethodSection().get((int) getNumberValue());
+    public MethodId getMethodIndex(){
+        return getItem(SectionType.METHOD_ID, (int) getNumberValue());
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        getMethodIndex().append(writer);
+        MethodId methodId = getMethodIndex();
+        if(methodId !=null){
+            methodId.append(writer);
+        }else {
+            writer.append("met ind " + getNumberValue());
+        }
     }
 }

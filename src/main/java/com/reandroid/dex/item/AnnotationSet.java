@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
@@ -24,34 +23,31 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class TypeList extends ShortList implements SmaliFormat {
-
-    public TypeList() {
+public class AnnotationSet extends IntegerList implements SmaliFormat {
+    public AnnotationSet(){
         super();
     }
-    public TypeId[] toTypeIds(){
+    public AnnotationItem[] toItemArray(){
         if(size() == 0){
             return null;
         }
-        return get(SectionType.TYPE_ID, toArray());
-    }
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
-        int size = size();
-        if(size == 0){
-            return;
-        }
-        SectionList sectionList = getParentInstance(SectionList.class);
-        if(sectionList != null){
-            Section<TypeId> section = sectionList.get(SectionType.TYPE_ID);
-            if(section != null){
-                for(int i = 0; i < size; i++){
-                    section.get(this.get(i)).append(writer);
-                }
-            }
-        }
+        return getAt(SectionType.ANNOTATION, toArray());
     }
 
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        AnnotationItem[] annotations = toItemArray();
+        if(annotations == null){
+            return;
+        }
+        writer.newLine();
+        for(int i = 0; i < annotations.length; i++){
+            if(i != 0){
+                writer.newLine();
+            }
+            annotations[i].append(writer);
+        }
+    }
     @Override
     public String toString() {
         if(getOffsetReference() == null){
@@ -63,11 +59,14 @@ public class TypeList extends ShortList implements SmaliFormat {
         }
         SectionList sectionList = getParentInstance(SectionList.class);
         if(sectionList != null){
-            Section<TypeId> section = sectionList.get(SectionType.TYPE_ID);
+            Section<AnnotationItem> section = sectionList.get(SectionType.ANNOTATION);
             if(section != null){
                 StringBuilder builder = new StringBuilder();
                 for(int i = 0; i < size; i++){
-                    builder.append(section.get(this.get(i)));
+                    if(i != 0){
+                        builder.append('\n');
+                    }
+                    builder.append(section.getAt(this.get(i)));
                 }
                 return builder.toString();
             }

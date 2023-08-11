@@ -18,7 +18,8 @@ package com.reandroid.dex.item;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.DexFile;
 import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.index.FieldIndex;
+import com.reandroid.dex.index.FieldId;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
@@ -28,10 +29,10 @@ public class FieldDef extends Def {
     public FieldDef() {
         super(0);
     }
-    public FieldIndex getFieldIndex(){
+    public FieldId getFieldIndex(){
         DexFile dexFile = getParentInstance(DexFile.class);
         if(dexFile != null){
-            return dexFile.getFieldSection().get(getDefIndexId());
+            return dexFile.getSectionList().get(SectionType.FIELD_ID, getDefIndexId());
         }
         return null;
     }
@@ -48,15 +49,15 @@ public class FieldDef extends Def {
             writer.append(af.toString());
             writer.append(' ');
         }
-        FieldIndex fieldIndex = getFieldIndex();
-        writer.append(fieldIndex.getNameString().getString());
+        FieldId fieldId = getFieldIndex();
+        writer.append(fieldId.getNameString().getString());
         writer.append(':');
-        fieldIndex.getFieldType().append(writer);
-        List<AnnotationGroup> annotations = fieldIndex.getAnnotations();
+        fieldId.getFieldType().append(writer);
+        List<AnnotationSet> annotations = fieldId.getAnnotations();
         if (annotations.size()>0){
             writer.indentPlus();
             writer.newLine();
-            for(AnnotationGroup itemList:annotations){
+            for(AnnotationSet itemList:annotations){
                 itemList.append(writer);
             }
             writer.indentMinus();
@@ -66,11 +67,12 @@ public class FieldDef extends Def {
     }
     @Override
     public String toString() {
-        FieldIndex fieldIndex = getFieldIndex();
-        if(fieldIndex != null){
+        FieldId fieldId = getFieldIndex();
+        if(fieldId != null){
             return ".field " + AccessFlag.formatForField(getAccessFlagsValue())
-                    + " " + fieldIndex.toString();
+                    + " " + fieldId.toString();
         }
-        return Integer.toString(getIdValue());
+        return ".field " + AccessFlag.formatForField(getAccessFlagsValue())
+                + " " + getIdValue();
     }
 }

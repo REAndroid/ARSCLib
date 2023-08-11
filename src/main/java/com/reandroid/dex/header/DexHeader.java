@@ -16,16 +16,21 @@
 package com.reandroid.dex.header;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.base.FixedDexContainer;
+import com.reandroid.dex.base.NumberIntegerReference;
+import com.reandroid.arsc.base.OffsetSupplier;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-public class DexHeader extends FixedBlockContainer implements BlockLoad {
+public class DexHeader extends FixedDexContainer implements OffsetSupplier, BlockLoad {
+
+    private final IntegerReference offsetReference;
 
     public final Magic magic;
     public final Version version;
@@ -47,8 +52,9 @@ public class DexHeader extends FixedBlockContainer implements BlockLoad {
 
     public final ByteArray unknown;
 
-    public DexHeader() {
+    public DexHeader(IntegerReference offsetReference) {
         super(16);
+        this.offsetReference = offsetReference;
 
         this.magic = new Magic();
         this.version = new Version();
@@ -98,6 +104,19 @@ public class DexHeader extends FixedBlockContainer implements BlockLoad {
         this.version.putByteArray(0,
                 new byte[]{(byte)'0', (byte)'3', (byte)'5', (byte)0x0});
     }
+    public DexHeader(){
+        this(new NumberIntegerReference(0));
+    }
+
+
+    @Override
+    public IntegerReference getOffsetReference() {
+        return offsetReference;
+    }
+    @Override
+    protected boolean isValidOffset(int offset){
+        return offset >= 0;
+    }
 
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
@@ -127,6 +146,7 @@ public class DexHeader extends FixedBlockContainer implements BlockLoad {
                 ", unknown=" + unknown +
                 '}';
     }
+
     public static DexHeader readHeader(InputStream inputStream) throws IOException {
         byte[] bytes = new byte[COMMON_HEADER_SIZE];
         int read = inputStream.read(bytes, 0, bytes.length);

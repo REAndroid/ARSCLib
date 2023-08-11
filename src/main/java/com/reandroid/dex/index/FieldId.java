@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.dex.item.AnnotationGroup;
+import com.reandroid.dex.item.AnnotationSet;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
@@ -23,50 +23,50 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FieldIndex extends ItemIndex implements SmaliFormat {
-    private final List<AnnotationGroup> annotations;
-    public FieldIndex() {
+public class FieldId extends ItemId implements SmaliFormat {
+    private final List<AnnotationSet> annotations;
+    public FieldId() {
         super(8);
         annotations = new ArrayList<>();
     }
 
     public String getKey(){
         StringBuilder builder = new StringBuilder();
-        TypeIndex type = getClassType();
+        TypeId type = getClassType();
         if(type == null){
             return null;
         }
-        StringIndex stringIndex = type.getStringIndex();
-        if(stringIndex == null){
+        StringData stringData = type.getStringData();
+        if(stringData == null){
             return null;
         }
-        builder.append(stringIndex.getString());
+        builder.append(stringData.getString());
         builder.append("->");
-        stringIndex = getNameString();
-        if(stringIndex == null){
+        stringData = getNameString();
+        if(stringData == null){
             return null;
         }
-        builder.append(stringIndex.getString());
+        builder.append(stringData.getString());
         builder.append(':');
         type = getFieldType();
         if(type == null){
             return null;
         }
-        stringIndex = type.getStringIndex();
-        if(stringIndex == null){
+        stringData = type.getStringData();
+        if(stringData == null){
             return null;
         }
-        builder.append(stringIndex.getString());
+        builder.append(stringData.getString());
         return builder.toString();
     }
-    public TypeIndex getClassType(){
-        return getTypeIndex(getClassIndex());
+    public TypeId getClassType(){
+        return getTypeId(getClassIndex());
     }
-    public StringIndex getNameString(){
-        return getStringIndex(getNameIndex());
+    public StringData getNameString(){
+        return getStringData(getNameIndex());
     }
-    public TypeIndex getFieldType(){
-        return getTypeIndex(getTypeIndex());
+    public TypeId getFieldType(){
+        return getTypeId(getTypeIndex());
     }
 
     public int getClassIndex(){

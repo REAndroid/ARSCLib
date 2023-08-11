@@ -78,7 +78,7 @@ public class DexValueType {
         valueTypes[0x1d] = ANNOTATION;
         NULL = new DexValueType("NULL", 0x1e, 0, false);
         valueTypes[0x1e] = NULL;
-        BOOLEAN = new DexValueType("BOOLEAN", 0x1f, 1, true);
+        BOOLEAN = new DexValueType("BOOLEAN", 0x1f, 1, false);
         valueTypes[0x1f] = BOOLEAN;
         int index = 0;
         for(int i = 0; i < valueTypes.length; i++){
@@ -100,14 +100,14 @@ public class DexValueType {
     private final String name;
     private final int type;
     private final int size;
-    private final boolean primitive;
+    private final boolean number;
     private final int flag;
 
-    private DexValueType(String name, int type, int size, boolean primitive){
+    private DexValueType(String name, int type, int size, boolean number){
         this.name = name;
         this.type = type;
         this.size = size;
-        this.primitive = primitive;
+        this.number = number;
 
         flag = (size << 5) | type;
     }
@@ -118,8 +118,8 @@ public class DexValueType {
     public int getType() {
         return type;
     }
-    public boolean isPrimitive() {
-        return primitive;
+    public boolean isNumber() {
+        return number;
     }
 
     public int getFlag(){

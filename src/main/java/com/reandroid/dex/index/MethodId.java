@@ -15,32 +15,24 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.DexFile;
-import com.reandroid.dex.base.DexItem;
-import com.reandroid.dex.sections.DexSection;
-import com.reandroid.dex.sections.DexStringPool;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class MethodIndex extends ItemIndex {
-    public MethodIndex() {
+public class MethodId extends ItemId {
+    public MethodId() {
         super(SIZE);
     }
 
-    public TypeIndex getClassType(){
-        return getTypeIndex(getClassIndex());
+    public TypeId getClassType(){
+        return getTypeId(getClassIndex());
     }
-    public StringIndex getNameString(){
-        return getStringIndex(getNameIndex());
+    public StringData getNameString(){
+        return getStringData(getNameIndex());
     }
-    public ProtoIndex getProto(){
-        DexFile dexFile = getDexFile();
-        if(dexFile != null){
-            return dexFile.getProtoSection().get(getProtoIndex());
-        }
-        return null;
+    public ProtoId getProto(){
+        return getSectionList().get(SectionType.PROTO_ID, getProtoIndex());
     }
 
     public int getClassIndex(){
@@ -70,7 +62,7 @@ public class MethodIndex extends ItemIndex {
         writer.append('(');
         getProto().append(writer);
         writer.append(')');
-        getProto().getReturnTypeIndex().append(writer);
+        getProto().getReturnTypeId().append(writer);
         appendAnnotations(writer);
     }
     @Override

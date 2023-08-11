@@ -15,18 +15,13 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
-import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.ShortItem;
-import com.reandroid.dex.base.OffsetReference;
-import com.reandroid.dex.base.ShortList;
 
 import java.io.IOException;
 
-public class CodeItem extends FixedBlockContainer implements OffsetReference {
-    private final IntegerReference offsetReference;
+public class CodeItem extends BaseItem {
 
     private final ShortItem registersCount;
     private final ShortItem instruction;
@@ -35,11 +30,8 @@ public class CodeItem extends FixedBlockContainer implements OffsetReference {
     private final IntegerItem debugInfoOffset;
     private final IntegerItem instructionCount;
 
-    private  ShortList instructions;
-
-    public CodeItem(IntegerReference offsetReference) {
+    public CodeItem() {
         super(6);
-        this.offsetReference = offsetReference;
         registersCount = new ShortItem();
         instruction = new ShortItem();
         outs = new ShortItem();
@@ -55,24 +47,9 @@ public class CodeItem extends FixedBlockContainer implements OffsetReference {
         addChild(5, instructionCount);
         setNull(true);
     }
-
-    @Override
-    public IntegerReference getOffsetReference() {
-        return offsetReference;
-    }
-
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        int offset = offsetReference.get();
-        if(offset == 0){
-            setNull(true);
-            return;
-        }
-        setNull(false);
-        int position = reader.getPosition();
-        reader.seek(offset);
         super.onReadBytes(reader);
-        reader.seek(position);
     }
 
     @Override

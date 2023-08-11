@@ -13,34 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.value;
+package com.reandroid.dex.sections;
 
-import com.reandroid.dex.index.FieldId;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.arsc.base.BlockArray;
+import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.IntegerReference;
 
 import java.io.IOException;
 
-public class EnumValue extends PrimitiveValue {
-    public EnumValue(){
+public class MapItemArray extends BlockArray<MapItem> {
+    private final IntegerReference itemCount;
+    public MapItemArray(IntegerReference itemCount){
         super();
-    }
-    public FieldId getFieldId(){
-        return getFieldId(getFieldIdIndex());
-    }
-    public int getFieldIdIndex(){
-        return (int) getNumberValue();
+        this.itemCount = itemCount;
     }
     @Override
-    public void append(SmaliWriter writer) throws IOException {
-        writer.append(".enum ");
-        getFieldId().append(writer);
+    public void onReadBytes(BlockReader reader) throws IOException {
+        setChildesCount(itemCount.get());
+        super.onReadBytes(reader);
     }
     @Override
-    public String toString(){
-        FieldId fieldId = getFieldId();
-        if(fieldId != null){
-            return ".enum " + fieldId;
-        }
-        return "enum field index: " + getNumberValue();
+    public MapItem[] newInstance(int length) {
+        return new MapItem[length];
     }
+    @Override
+    public MapItem newInstance() {
+        return new MapItem();
+    }
+    @Override
+    protected void onRefreshed() {
+    }
+
 }

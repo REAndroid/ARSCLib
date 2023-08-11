@@ -16,26 +16,25 @@
 package com.reandroid.dex.base;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockArray;
-import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 
-import java.io.IOException;
-
-public class CountedArray<T extends Block> extends CreatorArray<T> {
-    private final IntegerReference itemCount;
-    public CountedArray(IntegerReference itemCount, Creator<T> creator){
-        super(creator);
-        this.itemCount = itemCount;
+public class AddingIntegerReference implements IntegerReference {
+    private final IntegerReference baseReference;
+    private final Block byteSizeBlock;
+    public AddingIntegerReference(IntegerReference baseReference, Block byteSizeBlock){
+        this.baseReference = baseReference;
+        this.byteSizeBlock = byteSizeBlock;
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
-        super.onReadBytes(reader);
+    public void set(int value) {
+        baseReference.set(value - byteSizeBlock.countBytes());
     }
     @Override
-    protected void onRefreshed() {
-        itemCount.set(getChildesCount());
+    public int get() {
+        return baseReference.get() + byteSizeBlock.countBytes();
+    }
+    @Override
+    public String toString(){
+        return baseReference + " + " + byteSizeBlock.countBytes() + " = " + get();
     }
 }

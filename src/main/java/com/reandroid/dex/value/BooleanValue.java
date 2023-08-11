@@ -15,32 +15,24 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.dex.index.FieldId;
+import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class EnumValue extends PrimitiveValue {
-    public EnumValue(){
+public class BooleanValue extends DexValue<Block> {
+    public BooleanValue(){
         super();
     }
-    public FieldId getFieldId(){
-        return getFieldId(getFieldIdIndex());
-    }
-    public int getFieldIdIndex(){
-        return (int) getNumberValue();
+    public boolean getBoolean(){
+        return getValueSize() == 1;
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(".enum ");
-        getFieldId().append(writer);
+        writer.append(Boolean.toString(getBoolean()));
     }
     @Override
     public String toString(){
-        FieldId fieldId = getFieldId();
-        if(fieldId != null){
-            return ".enum " + fieldId;
-        }
-        return "enum field index: " + getNumberValue();
+        return Boolean.toString(getBoolean());
     }
 }
