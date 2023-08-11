@@ -382,6 +382,9 @@ public class TypeBlock extends Chunk<TypeHeader>
         return builder.toString();
     }
 
+    public static boolean canHaveResourceFile(String typeName){
+        return !isEqualTypeName("string", typeName);
+    }
     public static boolean isEqualTypeName(String name1, String name2){
         if(name1 == null){
             return name2 == null;

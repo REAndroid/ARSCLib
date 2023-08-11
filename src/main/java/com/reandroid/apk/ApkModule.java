@@ -26,6 +26,7 @@ import com.reandroid.arsc.array.PackageArray;
 import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.container.SpecTypePair;
@@ -613,7 +614,8 @@ public class ApkModule implements ApkFile, Closeable {
         Iterator<Entry> itr = tableString.getEntries(new Predicate<Entry>() {
             @Override
             public boolean test(Entry item) {
-                if(!item.isScalar()){
+                if(!item.isScalar() ||
+                        !TypeBlock.canHaveResourceFile(item.getTypeName())){
                     return false;
                 }
                 if(resourceId != 0 && resourceId != item.getResourceId()){
