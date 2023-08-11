@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,12 +15,11 @@
   */
 package com.reandroid.arsc.item;
 
-
 import java.util.AbstractList;
 import java.util.List;
 
-public class IntegerArray extends BlockItem {
-    public IntegerArray() {
+public class IntegerArrayBlock extends BlockItem {
+    public IntegerArrayBlock() {
         super(0);
     }
     public final boolean contains(int value){
@@ -66,11 +65,11 @@ public class IntegerArray extends BlockItem {
         return new AbstractList<Integer>() {
             @Override
             public Integer get(int i) {
-                return IntegerArray.this.get(i);
+                return IntegerArrayBlock.this.get(i);
             }
             @Override
             public int size() {
-                return IntegerArray.this.size();
+                return IntegerArrayBlock.this.size();
             }
         };
     }

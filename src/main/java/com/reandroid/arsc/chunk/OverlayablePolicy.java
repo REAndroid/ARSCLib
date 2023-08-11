@@ -19,7 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.header.OverlayablePolicyHeader;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerArray;
+import com.reandroid.arsc.item.IntegerArrayBlock;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
@@ -30,10 +30,10 @@ import java.util.Collection;
 
 public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements BlockLoad,
         JSONConvert<JSONObject> {
-    private final IntegerArray tableRefArray;
+    private final IntegerArrayBlock tableRefArray;
     public OverlayablePolicy(){
         super(new OverlayablePolicyHeader(), 1);
-        this.tableRefArray = new IntegerArray();
+        this.tableRefArray = new IntegerArrayBlock();
         addChild(this.tableRefArray);
 
         getHeaderBlock().getEntryCount().setBlockLoad(this);
@@ -49,7 +49,7 @@ public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements
     public Collection<Integer> listTableReferences(){
         return getTableRefArray().toList();
     }
-    public IntegerArray getTableRefArray() {
+    public IntegerArrayBlock getTableRefArray() {
         return tableRefArray;
     }
     public int getFlags() {
@@ -95,11 +95,11 @@ public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements
     public void fromJson(JSONObject json) {
         setFlags(json.getInt(NAME_flags));
         JSONArray jsonArray = json.getJSONArray(NAME_references);
-        IntegerArray integerArray = getTableRefArray();
+        IntegerArrayBlock integerArrayBlock = getTableRefArray();
         int length = jsonArray.length();
-        integerArray.setSize(length);
+        integerArrayBlock.setSize(length);
         for(int i=0;i<length;i++){
-            integerArray.put(i, jsonArray.getInt(i));
+            integerArrayBlock.put(i, jsonArray.getInt(i));
         }
     }
     public void merge(OverlayablePolicy policy){
@@ -107,8 +107,8 @@ public class OverlayablePolicy extends Chunk<OverlayablePolicyHeader> implements
             return;
         }
         setFlags(policy.getFlags());
-        IntegerArray exist = getTableRefArray();
-        IntegerArray coming = policy.getTableRefArray();
+        IntegerArrayBlock exist = getTableRefArray();
+        IntegerArrayBlock coming = policy.getTableRefArray();
         for(int reference: coming.toArray()){
             if(!exist.contains(reference)){
                 exist.add(reference);

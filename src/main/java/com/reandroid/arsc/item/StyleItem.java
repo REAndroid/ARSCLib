@@ -30,7 +30,7 @@ import com.reandroid.xml.StyleElement;
 import java.io.IOException;
 import java.util.*;
 
-public class StyleItem extends IntegerArray implements JSONConvert<JSONObject> {
+public class StyleItem extends IntegerArrayBlock implements JSONConvert<JSONObject> {
     private List<StyleSpanInfo> mSpanInfoList;
     private final Set<StyleItemReference> mReferences;
     private StyleIndexReference indexReference;

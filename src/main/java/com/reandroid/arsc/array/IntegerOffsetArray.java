@@ -15,9 +15,9 @@
  */
 package com.reandroid.arsc.array;
 
-import com.reandroid.arsc.item.IntegerArray;
+import com.reandroid.arsc.item.IntegerArrayBlock;
 
-public class IntegerOffsetArray extends IntegerArray implements OffsetArray{
+public class IntegerOffsetArray extends IntegerArrayBlock implements OffsetArray{
     public IntegerOffsetArray(){
         super();
     }

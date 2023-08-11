@@ -27,7 +27,7 @@ import com.reandroid.json.JSONObject;
 import java.io.IOException;
 import java.util.AbstractList;
 
-public class SpecFlagsArray extends IntegerArray implements BlockLoad, JSONConvert<JSONArray> {
+public class SpecFlagsArray extends IntegerArrayBlock implements BlockLoad, JSONConvert<JSONArray> {
     private final IntegerItem entryCount;
     private AbstractList<SpecFlag> specFlagList;
     public SpecFlagsArray(IntegerItem entryCount) {
