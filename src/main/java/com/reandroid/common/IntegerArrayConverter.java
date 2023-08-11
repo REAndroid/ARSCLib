@@ -13,8 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.arsc.base;
+package com.reandroid.common;
 
-public interface ArraySupplier<T> extends CountSupplier {
-    T get(int i);
+public class IntegerArrayConverter<T> implements ArraySupplier<T>{
+    private final IntegerArray integerArray;
+    private final ArraySupplier<? extends T> supplier;
+
+    public IntegerArrayConverter(IntegerArray integerArray, ArraySupplier<? extends T> supplier){
+        this.integerArray = integerArray;
+        this.supplier = supplier;
+    }
+
+    @Override
+    public T get(int i){
+        return supplier.get(integerArray.get(i));
+    }
+    @Override
+    public int getCount(){
+        return integerArray.size();
+    }
 }

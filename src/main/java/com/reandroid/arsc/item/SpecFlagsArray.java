@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,7 +69,7 @@ public class SpecFlagsArray extends IntegerArrayBlock implements BlockLoad, JSON
         super.put(id, flag);
     }
     @Override
-    public Integer get(int entryId){
+    public int get(int entryId){
         entryId = 0xffff & entryId;
         return super.get(entryId);
     }

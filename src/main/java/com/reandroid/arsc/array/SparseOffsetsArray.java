@@ -43,7 +43,7 @@ public class SparseOffsetsArray extends IntegerOffsetArray {
         return NO_ENTRY;
     }
     public int getIdx(int i){
-        int value = super.getAt(i);
+        int value = super.get(i);
         if(value != NO_ENTRY) {
             value = value & 0xffff;
         }
@@ -54,7 +54,7 @@ public class SparseOffsetsArray extends IntegerOffsetArray {
         if(idx == NO_ENTRY){
             value = idx;
         }else {
-            int offset = getAt(index) & 0xffff0000;
+            int offset = get(index) & 0xffff0000;
             idx = idx & 0xffff;
             value = offset | idx;
         }
@@ -62,7 +62,7 @@ public class SparseOffsetsArray extends IntegerOffsetArray {
     }
     @Override
     public int getOffset(int i){
-        int value = super.getAt(i);
+        int value = super.get(i);
         if(value == NO_ENTRY){
             return value;
         }
@@ -75,7 +75,7 @@ public class SparseOffsetsArray extends IntegerOffsetArray {
         if(offset == NO_ENTRY){
             value = 0;
         }else {
-            int idx  = getAt(index);
+            int idx  = get(index);
             idx = idx & 0xffff;
             offset = offset & 0xffff;
             offset = offset / 4;

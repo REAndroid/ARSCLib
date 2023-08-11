@@ -15,6 +15,7 @@
  */
 package com.reandroid.arsc.base;
 
+import com.reandroid.common.ArraySupplier;
 import com.reandroid.utils.collection.SingleIterator;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -22,9 +23,8 @@ import com.reandroid.utils.collection.EmptyIterator;
 import java.util.*;
 import java.util.function.Predicate;
 
-
 public abstract class BlockArray<T extends Block> extends BlockContainer<T>
-        implements BlockArrayCreator<T>, ArraySupplier<T>  {
+        implements BlockArrayCreator<T>, ArraySupplier<T> {
     private T[] elementData;
     private int mFreeSpace;
     private int mAllocateStep;

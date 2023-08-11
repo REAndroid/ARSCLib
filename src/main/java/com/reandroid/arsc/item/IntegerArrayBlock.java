@@ -18,48 +18,9 @@ package com.reandroid.arsc.item;
 import java.util.AbstractList;
 import java.util.List;
 
-public class IntegerArrayBlock extends BlockItem {
+public class IntegerArrayBlock extends ShortArrayBlock{
     public IntegerArrayBlock() {
-        super(0);
-    }
-    public final boolean contains(int value){
-        int s=size();
-        for(int i=0;i<s;i++){
-            if(value==get(i)){
-                return true;
-            }
-        }
-        return false;
-    }
-    public void clear(){
-        setSize(0);
-    }
-    public final void add(int value){
-        int old=size();
-        setSize(old+1);
-        put(old, value);
-    }
-    public final void add(int[] values){
-        if(values==null || values.length==0){
-            return;
-        }
-        int old=size();
-        int s=old+values.length;
-        setSize(s);
-        for(int i=0;i<s;i++){
-            put(old+i, values[i]);
-        }
-    }
-    public final void set(int[] values){
-        if(values==null || values.length==0){
-            setSize(0);
-            return;
-        }
-        int s=values.length;
-        setSize(s);
-        for(int i=0;i<s;i++){
-            put(i, values[i]);
-        }
+        super();
     }
     public final List<Integer> toList(){
         return new AbstractList<Integer>() {
@@ -73,66 +34,26 @@ public class IntegerArrayBlock extends BlockItem {
             }
         };
     }
-    public final int[] toArray(){
-        int s=size();
-        int[] result=new int[s];
-        for(int i=0;i<s;i++){
-            result[i]=get(i);
+    @Override
+    public void setSize(int size){
+        if(size < 0){
+            size = 0;
         }
-        return result;
-    }
-    public final void fill(int value){
-        int max=size();
-        for(int i=0;i<max;i++){
-            put(i, value);
-        }
-    }
-    public final void ensureArraySize(int s){
-        int sz=size();
-        if(sz>=s){
-            return;
-        }
-        setSize(s);
-    }
-    public final void setSize(int s){
-        if(s<0){
-            s=0;
-        }
-        int len=s*4;
-        setBytesLength(len);
-    }
-    public Integer get(int index){
-        if(index<0 || index>=size()){
-            return null;
-        }
-        int i=index*4;
-        byte[] bts = getBytesInternal();
-        return bts[i] & 0xff |
-                (bts[i+1] & 0xff) << 8 |
-                (bts[i+2] & 0xff) << 16 |
-                (bts[i+3] & 0xff) << 24;
-    }
-    public int getAt(int index){
-        int i=index*4;
-        byte[] bts = getBytesInternal();
-        return bts[i] & 0xff |
-                (bts[i+1] & 0xff) << 8 |
-                (bts[i+2] & 0xff) << 16 |
-                (bts[i+3] & 0xff) << 24;
-    }
-    public final int size(){
-        return getBytesLength()/4;
-    }
-    public final void put(int index, int value){
-        int i=index*4;
-        byte[] bts = getBytesInternal();
-        bts[i+3]= (byte) (value >>> 24 & 0xff);
-        bts[i+2]= (byte) (value >>> 16 & 0xff);
-        bts[i+1]= (byte) (value >>> 8 & 0xff);
-        bts[i]= (byte) (value & 0xff);
+        setBytesLength(size * 4);
     }
     @Override
-    public String toString(){
-        return "size="+size();
+    public int get(int index){
+        if(index < 0 || index >= size()){
+            return 0;
+        }
+        return getInteger(getBytesInternal(), index * 4);
+    }
+    @Override
+    public int size(){
+        return getBytesLength() / 4;
+    }
+    @Override
+    public void put(int index, int value){
+        putInteger(getBytesInternal(), index * 4, value);
     }
 }

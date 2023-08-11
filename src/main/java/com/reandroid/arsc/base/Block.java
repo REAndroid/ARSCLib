@@ -135,6 +135,13 @@ public abstract class Block {
         return (short) (bytes[offset] & 0xff
                 | (bytes[offset + 1] & 0xff) << 8);
     }
+    public static int getShortUnsigned(byte[] bytes, int offset){
+        if((offset + 2) > bytes.length){
+            return 0;
+        }
+        return (bytes[offset] & 0xff
+                | (bytes[offset + 1] & 0xff) << 8);
+    }
     public static void putInteger(byte[] bytes, int offset, int val){
         if((offset + 4) > bytes.length){
             return;
@@ -147,6 +154,10 @@ public abstract class Block {
     public static void putShort(byte[] bytes, int offset, short val){
         bytes[offset + 1]= (byte) (val >>> 8 & 0xff);
         bytes[offset]= (byte) (val & 0xff);
+    }
+    public static void putShort(byte[] bytes, int offset, int value){
+        bytes[offset + 1]= (byte) (value >>> 8 & 0xff);
+        bytes[offset]= (byte) (value & 0xff);
     }
     public static boolean getBit(byte[] bytes, int byteOffset, int bitIndex){
         return (((bytes[byteOffset] & 0xff) >>bitIndex) & 0x1) == 1;

@@ -23,8 +23,9 @@ public class IntegerOffsetArray extends IntegerArrayBlock implements OffsetArray
     }
     @Override
     public int getOffset(int i){
-        return super.getAt(i);
+        return super.get(i);
     }
+
     @Override
     public void setOffset(int index, int value){
         super.put(index, value);
@@ -33,7 +34,7 @@ public class IntegerOffsetArray extends IntegerArrayBlock implements OffsetArray
     public int[] getOffsets(){
         int length = size();
         int[] result = new int[length];
-        for(int i=0;i<length;i++){
+        for(int i = 0; i < length; i++){
             result[i] = getOffset(i);
         }
         return result;
