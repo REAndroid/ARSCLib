@@ -20,6 +20,7 @@ import com.reandroid.archive.InputSource;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -140,8 +141,12 @@ public class UncompressedFiles implements JSONConvert<JSONObject> {
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(NAME_extensions, new JSONArray(mExtensionList));
-        jsonObject.put(NAME_paths, new JSONArray(mPathList));
+        JSONArray extensions = new JSONArray(mExtensionList);
+        extensions.sort(CompareUtil.STRING_COMPARATOR);
+        jsonObject.put(NAME_extensions, extensions);
+        JSONArray paths = new JSONArray(mPathList);
+        paths.sort(CompareUtil.STRING_COMPARATOR);
+        jsonObject.put(NAME_paths, paths);
         return jsonObject;
     }
     @Override
