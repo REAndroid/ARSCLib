@@ -290,6 +290,12 @@ public class XmlCoder {
             if(encodeResult == null){
                 AttributeDataFormat dataFormat = AttributeDataFormat.fromValueTypeName(
                         element.getAttributeValue(ATTR_type));
+                if(dataFormat == null){
+                    dataFormat = AttributeDataFormat.fromValueTypeName(element.getName());
+                    if(dataFormat != AttributeDataFormat.STRING){
+                        dataFormat = null;
+                    }
+                }
                 encodeResult = ValueCoder.encode(text, dataFormat);
                 if(encodeResult == null && dataFormat != null && !dataFormat.contains(ValueType.STRING)){
                     throw new XmlEncodeException("Invalid value: " + element);
@@ -304,7 +310,6 @@ public class XmlCoder {
                 resValue.setValueAsString(StyleDocument.copyInner(element));
             }
         }
-
         private boolean isTypeId(XMLElement element){
             if(element.hasChildElements()){
                 return false;

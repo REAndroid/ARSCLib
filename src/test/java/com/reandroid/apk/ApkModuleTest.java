@@ -181,6 +181,13 @@ public class ApkModuleTest {
         Assert.assertNotNull("resValue", resValue);
         Assert.assertEquals("@integer/value", resValue.getValueAsString());
 
+        entry = packageBlock
+                .getOrCreate("", "string", "test_issue_apkeditor_65");
+        entry.setValueAsString("3");
+        resValue = entry.getResValue();
+        Assert.assertNotNull("resValue", resValue);
+        Assert.assertEquals("3", resValue.getValueAsString());
+
     }
     private void createAttrEntry(PackageBlock packageBlock){
         Entry entry = packageBlock
