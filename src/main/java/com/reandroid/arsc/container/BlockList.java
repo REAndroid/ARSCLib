@@ -78,13 +78,13 @@ public class BlockList<T extends Block> extends Block {
             index++;
         }
     }
-    public void add(T item){
-        if(item==null){
-            return;
+    public boolean add(T item){
+        if(item == null){
+            return false;
         }
         item.setIndex(mItems.size());
         item.setParent(this);
-        mItems.add(item);
+        return mItems.add(item);
     }
     public T get(int i){
         if(i>=mItems.size() || i<0){
@@ -95,6 +95,16 @@ public class BlockList<T extends Block> extends Block {
     public int size(){
         return mItems.size();
     }
+    public boolean contains(Object obj){
+        return mItems.contains(obj);
+    }
+    public Object[] toArray(){
+        return mItems.toArray();
+    }
+    public <T1> T1[] toArray(T1[] ts) {
+        return mItems.toArray(ts);
+    }
+
     public List<T> getChildes(){
         return mItems;
     }
@@ -164,5 +174,10 @@ public class BlockList<T extends Block> extends Block {
         for(T item:mItems){
             item.readBytes(reader);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "size=" + size();
     }
 }
