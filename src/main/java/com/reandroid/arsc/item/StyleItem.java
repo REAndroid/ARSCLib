@@ -430,9 +430,14 @@ public class StyleItem extends IntegerArrayBlock implements JSONConvert<JSONObje
         }
         @Override
         public void set(int val) {
+            StyleItem styleItem = this.styleItem;
+            int oldIndex = styleItem.getIndex();
             StyleArray styleArray = styleItem.getParentInstance(StyleArray.class);
             if(styleArray != null){
-                styleArray.setItem(styleItem.getIndex(), null);
+                StyleItem previous = styleArray.get(oldIndex);
+                if(previous == styleItem){
+                    styleArray.setItem(oldIndex, null);
+                }
                 styleArray.setItem(val, styleItem);
             }
         }
