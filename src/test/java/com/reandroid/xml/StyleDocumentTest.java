@@ -28,5 +28,5 @@ public class StyleDocumentTest {
     private static final String STYLED_STRING_1 = "\n" +
             "   %1dThe quick brown fox <jumps over the lazy dog";
     private static final String STYLED_HTML_STRING_1 = "<br>\n" +
-            "   </br><font color=#E7E7E7;size=bold>%1dThe quick </font>brown<font color=#FF0000> fox <jumps </font>over<a/> the lazy dog<b/>";
+            "   </br><font;color=#E7E7E7;size=bold>%1dThe quick </font>brown<font;color=#FF0000> fox <jumps </font>over<a/> the lazy dog<b/>";
 }

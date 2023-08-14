@@ -118,8 +118,11 @@ public class StyleSpanInfo implements JSONConvert<JSONObject> {
             return;
         }
         int i = tag.indexOf(';');
+        int i2 = tag.indexOf(' ');
         if(i < 0){
-            i = tag.indexOf(' ');
+            i = i2;
+        }else if(i2 >= 0 && i2 < i){
+            i = i2;
         }
         if(i < 0){
             return;
@@ -142,8 +145,11 @@ public class StyleSpanInfo implements JSONConvert<JSONObject> {
             return null;
         }
         int i = tag.indexOf(';');
+        int i2 = tag.indexOf(' ');
         if(i < 0){
-            i = tag.indexOf(' ');
+            i = i2;
+        }else if(i2 >= 0 && i2 < i){
+            i = i2;
         }
         if(i < 0){
             return tag;

@@ -14,7 +14,6 @@ import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.*;
 import com.reandroid.utils.io.FileUtil;
-import com.reandroid.utils.io.IOUtil;
 import com.reandroid.xml.*;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -185,9 +184,44 @@ public class ApkModuleTest {
                 .getOrCreate("", "string", "test_issue_apkeditor_65");
         entry.setValueAsString("3");
         resValue = entry.getResValue();
-        Assert.assertNotNull("resValue", resValue);
         Assert.assertEquals("3", resValue.getValueAsString());
 
+        createMoreStrings_65(packageBlock);
+        createMoreStrings_62(packageBlock);
+    }
+    private void createMoreStrings_65(PackageBlock packageBlock){
+
+        Entry entry = packageBlock
+                .getOrCreate("", "string", "test_issue_apkeditor_65");
+        String text = "3";
+        entry.setValueAsString(text);
+        ResValue resValue = entry.getResValue();
+        Assert.assertEquals(text, resValue.getValueAsString());
+    }
+    private void createMoreStrings_62(PackageBlock packageBlock){
+
+        Entry entry = packageBlock
+                .getOrCreate("", "string", "test_issue_apkeditor_62");
+
+        String text = "<font size=\"30\" color=\"red\">Multi attribute styled string</font>";
+        StyleDocument styleDocument = null;
+        Exception exception = null;
+        try {
+            styleDocument = StyleDocument.parseStyledString(text);
+        } catch (Exception ex) {
+            exception = ex;
+        }
+        Assert.assertNull(exception);
+        Assert.assertNotNull(styleDocument);
+        entry.setValueAsString(styleDocument);
+        ResValue resValue = entry.getResValue();
+        TableString stringItem = (TableString) resValue.getDataAsPoolString();
+        StyleDocument document = stringItem.getStyleDocument();
+        Assert.assertNotNull(document);
+
+        packageBlock.getTableBlock().refreshFull();
+
+        Assert.assertEquals(text, resValue.getValueAsString());
     }
     private void createAttrEntry(PackageBlock packageBlock){
         Entry entry = packageBlock

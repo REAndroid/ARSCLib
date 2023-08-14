@@ -557,15 +557,9 @@ public class XMLElement extends XMLNodeTree{
         }else {
             separator = ';';
         }
-        boolean appendFirst = false;
         Iterator<? extends XMLAttribute> iterator = getAttributes();
         while (iterator.hasNext()){
-            if(!appendFirst){
-                appendable.append(' ');
-            }else {
-                appendable.append(separator);
-            }
-            appendFirst = true;
+            appendable.append(separator);
             iterator.next().write(appendable, xml, escapeXmlText);
         }
     }
