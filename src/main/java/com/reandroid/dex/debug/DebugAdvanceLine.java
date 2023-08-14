@@ -13,26 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.item;
+package com.reandroid.dex.debug;
 
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.dex.index.StringData;
-import com.reandroid.dex.sections.SectionList;
-import com.reandroid.dex.sections.SectionType;
 
-public class DebugString extends Ule128Item {
-    public DebugString(){
-        super();
+public class DebugAdvanceLine extends DebugElement{
+    private final Ule128Item lineDiff;
+    public DebugAdvanceLine() {
+        super(1, DebugElementType.ADVANCE_LINE);
+        this.lineDiff = new Ule128Item();
+        addChild(1, lineDiff);
     }
-    public StringData getStringData(){
-        SectionList sectionList = getParent(SectionList.class);
-        if(sectionList != null){
-            return sectionList.get(SectionType.STRING_DATA, get() - 1);
-        }
-        return null;
+
+    public int getLineDiff() {
+        return lineDiff.get();
     }
+    public void setLineDiff(int lineDiff) {
+        this.lineDiff.set(lineDiff);
+    }
+
     @Override
     public String toString() {
-        return get() + ":" + getStringData();
+        return "lineDiff=" + lineDiff;
     }
 }

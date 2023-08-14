@@ -21,7 +21,7 @@ import com.reandroid.arsc.item.ShortItem;
 
 import java.io.IOException;
 
-public class CodeItem extends BaseItem {
+public class CodeItem extends DexItem {
 
     private final ShortItem registersCount;
     private final ShortItem instruction;

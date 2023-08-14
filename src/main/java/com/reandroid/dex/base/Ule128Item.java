@@ -58,6 +58,7 @@ public class Ule128Item extends DexItem implements IntegerReference {
 
     @Override
     public String toString() {
-        return "bytes = " + countBytes() + ", value = " + get();
+        // return "bytes = " + countBytes() + ", value = " + get();
+        return Integer.toString(get());
     }
 }

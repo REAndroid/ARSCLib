@@ -22,7 +22,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class ClassData extends BaseItem
+public class ClassData extends DexItem
         implements SmaliFormat {
 
     private final Ule128Item staticFieldsCount;

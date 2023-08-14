@@ -18,7 +18,7 @@ package com.reandroid.dex.item;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.dex.base.*;
 
-public class AnnotationsDirectory extends BaseItem {
+public class AnnotationsDirectory extends DexItem {
 
     private final IntegerItem classOffset;
     private final IntegerItem fieldCount;

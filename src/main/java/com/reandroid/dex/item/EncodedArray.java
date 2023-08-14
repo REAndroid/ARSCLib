@@ -24,7 +24,7 @@ import com.reandroid.dex.value.DexValueType;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class EncodedArray extends BaseItem{
+public class EncodedArray extends DexItem {
     private final Ule128Item elementCount;
     private final BlockList<DexValue<?>> elements;
     public EncodedArray() {

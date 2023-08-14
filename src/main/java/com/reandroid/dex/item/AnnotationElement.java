@@ -15,7 +15,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class AnnotationElement extends BaseItem
+public class AnnotationElement extends DexItem
         implements BlockLoad, SmaliFormat {
     private final Ule128Item nameIndex;
     private final SingleBlockContainer<DexValue<?>> valueContainer;

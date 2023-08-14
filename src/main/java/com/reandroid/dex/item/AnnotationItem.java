@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
 
-public class AnnotationItem extends BaseItem
+public class AnnotationItem extends DexItem
         implements SmaliFormat {
 
     private final ByteItem visibility;

@@ -16,56 +16,47 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.CountedArray;
-import com.reandroid.dex.base.DexAlign;
 import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.dex.debug.DebugElementList;
+import com.reandroid.dex.debug.DebugParameterIndex;
 
-import java.io.IOException;
-
-public class DebugInfo extends BaseItem{
+public class DebugInfo extends DexItem {
 
     private final Ule128Item lineStart;
     private final Ule128Item parameterCount;
-    private final CountedArray<DebugString> elements;
-    private final DebugOpcodes opcodes;
-    private final DexAlign dexAlign;
+    private final CountedArray<DebugParameterIndex> parameterNames;
+    private final DebugElementList elementList;
+
     public DebugInfo() {
         super(4);
         this.lineStart = new Ule128Item(true);
         this.parameterCount = new Ule128Item();
-        this.elements = new CountedArray<>(parameterCount, CREATOR);
-        this.opcodes = new DebugOpcodes(lineStart);
-        this.dexAlign = new DexAlign();
+        this.parameterNames = new CountedArray<>(parameterCount, CREATOR);
+        this.elementList = new DebugElementList(lineStart);
 
         addChild(0, lineStart);
         addChild(1, parameterCount);
-        addChild(2, elements);
-        addChild(3, opcodes);
-        //addChild(4, dexAlign);
-
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+        addChild(2, parameterNames);
+        addChild(3, elementList);
     }
     @Override
     public String toString() {
         return "DebugInfo{" +
                 "lineStart=" + lineStart.get() +
                 ", parameterCount=" + parameterCount.get() +
-                ", elements=" + elements.getChildesCount() +
+                ", elements=" + parameterNames.getChildesCount() +
                 '}';
     }
 
-    private static final Creator<DebugString> CREATOR = new Creator<DebugString>() {
+    private static final Creator<DebugParameterIndex> CREATOR = new Creator<DebugParameterIndex>() {
         @Override
-        public DebugString[] newInstance(int length) {
-            return new DebugString[length];
+        public DebugParameterIndex[] newInstance(int length) {
+            return new DebugParameterIndex[length];
         }
         @Override
-        public DebugString newInstance() {
-            return new DebugString();
+        public DebugParameterIndex newInstance() {
+            return new DebugParameterIndex();
         }
     };
 

@@ -19,13 +19,11 @@ import com.reandroid.common.ArraySupplier;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
-import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.NumberIntegerReference;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.item.DebugInfo;
 
 import java.io.IOException;
 import java.util.*;
@@ -88,7 +86,7 @@ public class SectionList extends FixedBlockContainer
         }
         if(sectionType == SectionType.DEBUG_INFO){
             // TODO: until completed
-            return;
+            //return;
         }
         Section<?> section = mapItem.createNewSection();
         if(section == null){

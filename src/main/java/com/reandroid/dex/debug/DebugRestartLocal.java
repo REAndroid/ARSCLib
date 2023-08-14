@@ -13,23 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.item;
+package com.reandroid.dex.debug;
 
-import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.ByteArray;
-import com.reandroid.dex.base.Ule128Item;
-
-import java.io.IOException;
-
-public class DebugOpcodes extends ByteArray {
-    private final Ule128Item lineStart;
-    public DebugOpcodes(Ule128Item lineStart){
-        super();
-        this.lineStart = lineStart;
-    }
-
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        //TODO: finish
+public class DebugRestartLocal extends DebugRegisterNumber {
+    public DebugRestartLocal() {
+        super(0, DebugElementType.RESTART_LOCAL);
     }
 }

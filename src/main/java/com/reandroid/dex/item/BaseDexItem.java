@@ -16,22 +16,13 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.OffsetSupplier;
-import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.FixedDexContainer;
-import com.reandroid.dex.base.NumberIntegerReference;
-import com.reandroid.dex.base.OffsetReceiver;
-import com.reandroid.dex.base.PositionedItem;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 
-public class BaseItem extends FixedDexContainer
-        implements PositionedItem, OffsetSupplier, OffsetReceiver {
-
-    private IntegerReference mReference;
-
-    public BaseItem(int childesCount) {
+public class BaseDexItem extends FixedDexContainer {
+    public BaseDexItem(int childesCount) {
         super(childesCount);
     }
 
@@ -77,23 +68,4 @@ public class BaseItem extends FixedDexContainer
         }
         return null;
     }
-    @Override
-    public void setPosition(int position) {
-        IntegerReference reference = getOffsetReference();
-        if(reference == null){
-            reference = new NumberIntegerReference(position);
-            setOffsetReference(reference);
-        }else {
-            reference.set(position);
-        }
-    }
-    @Override
-    public IntegerReference getOffsetReference() {
-        return mReference;
-    }
-    @Override
-    public void setOffsetReference(IntegerReference reference) {
-        this.mReference = reference;
-    }
-
 }

@@ -17,7 +17,6 @@ package com.reandroid.dex.item;
 
 import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.sections.Section;
-import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -41,13 +40,10 @@ public class TypeList extends ShortList implements SmaliFormat {
         if(size == 0){
             return;
         }
-        SectionList sectionList = getParentInstance(SectionList.class);
-        if(sectionList != null){
-            Section<TypeId> section = sectionList.get(SectionType.TYPE_ID);
-            if(section != null){
-                for(int i = 0; i < size; i++){
-                    section.get(this.get(i)).append(writer);
-                }
+        Section<TypeId> section = getSection(SectionType.TYPE_ID);
+        if(section != null){
+            for(int i = 0; i < size; i++){
+                section.get(this.get(i)).append(writer);
             }
         }
     }
@@ -61,16 +57,13 @@ public class TypeList extends ShortList implements SmaliFormat {
         if(size == 0){
             return "";
         }
-        SectionList sectionList = getParentInstance(SectionList.class);
-        if(sectionList != null){
-            Section<TypeId> section = sectionList.get(SectionType.TYPE_ID);
-            if(section != null){
-                StringBuilder builder = new StringBuilder();
-                for(int i = 0; i < size; i++){
-                    builder.append(section.get(this.get(i)));
-                }
-                return builder.toString();
+        Section<TypeId> section = getSection(SectionType.TYPE_ID);
+        if(section != null){
+            StringBuilder builder = new StringBuilder();
+            for(int i = 0; i < size; i++){
+                builder.append(section.get(this.get(i)));
             }
+            return builder.toString();
         }
         return super.toString();
     }
