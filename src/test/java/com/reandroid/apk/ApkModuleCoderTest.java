@@ -1,6 +1,6 @@
 package com.reandroid.apk;
 
-import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.BlockDiff;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.value.ResConfig;
@@ -96,22 +96,10 @@ public class ApkModuleCoderTest {
         tableBlock1.refreshFull();
         tableBlock2.refreshFull();
 
-        int position = findByteDifferencePosition(tableBlock1.getBytes(), tableBlock2.getBytes());
-        if(position >= 0){
-            position++;
-            Block block1 = tableBlock1.locateBlock(position);
-            Block block2 = tableBlock2.locateBlock(position);
-            Assert.assertEquals("Difference at " + position, block1, block2);
-        }
-    }
-    private int findByteDifferencePosition(byte[] bytes1, byte[] bytes2){
-        Assert.assertEquals("TableBlock bytes", bytes1.length, bytes2.length);
-        for(int i = 0; i < bytes1.length; i++){
-            if(bytes1[i] != bytes2[i]){
-                return i;
-            }
-        }
-        return -1;
+        BlockDiff.DiffResult[] diffResults = new BlockDiff(tableBlock1, tableBlock2).find();
+        String message = BlockDiff.toString(diffResults);
+
+        Assert.assertNull(message);
     }
     private void compareManifest(AndroidManifestBlock manifest1, AndroidManifestBlock manifest2) throws IOException {
         String xml1 = manifest1.serializeToXml();

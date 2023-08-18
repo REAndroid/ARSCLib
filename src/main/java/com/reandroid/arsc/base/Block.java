@@ -33,7 +33,7 @@ public abstract class Block {
         onCountUpTo(counter);
         return counter.getCountValue();
     }
-    public final Block locateBlock(int bytePosition){
+    public final BlockLocator.Result locateBlock(int bytePosition){
         BlockLocator locator = new BlockLocator(bytePosition);
         onCountUpTo(locator);
         return locator.getResult();
