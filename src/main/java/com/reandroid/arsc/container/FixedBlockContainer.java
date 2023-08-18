@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,12 +22,14 @@ public class FixedBlockContainer extends BlockContainer<Block> {
     private final Block[] mChildes;
     public FixedBlockContainer(int childesCount){
         super();
-        mChildes=new Block[childesCount];
+        mChildes = new Block[childesCount];
     }
     public void addChild(int index, Block block){
-        mChildes[index]=block;
-        block.setIndex(index);
-        block.setParent(this);
+        mChildes[index] = block;
+        if(block != null){
+            block.setIndex(index);
+            block.setParent(this);
+        }
     }
     @Override
     protected void onRefreshed(){

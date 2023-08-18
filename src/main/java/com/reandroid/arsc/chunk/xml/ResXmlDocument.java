@@ -382,12 +382,12 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         this.mResXmlElementContainer.setItem(resXmlElement);
     }
     @Override
-    protected void onPreRefreshRefresh(){
+    protected void onPreRefresh(){
         ResXmlElement root = getResXmlElement();
         if(root != null){
             root.refresh();
         }
-        super.onPreRefreshRefresh();
+        super.onPreRefresh();
     }
     @Override
     protected void onChunkRefreshed() {

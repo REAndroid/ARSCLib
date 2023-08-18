@@ -372,9 +372,9 @@ public class PackageBlock extends Chunk<PackageHeader>
 
 
     @Override
-    protected void onPreRefreshRefresh() {
+    protected void onPreRefresh() {
         removeEmpty();
-        super.onPreRefreshRefresh();
+        super.onPreRefresh();
     }
     public void removeEmpty(){
         getSpecTypePairArray().removeEmptyPairs();

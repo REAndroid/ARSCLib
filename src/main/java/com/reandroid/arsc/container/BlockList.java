@@ -16,8 +16,8 @@
 package com.reandroid.arsc.container;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockContainer;
 import com.reandroid.arsc.base.BlockCounter;
+import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.FilterIterator;
@@ -30,11 +30,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class BlockList<T extends Block> extends Block {
+public class BlockList<T extends Block> extends Block implements BlockRefresh {
     private final List<T> mItems;
     public BlockList(){
         super();
-        mItems=new ArrayList<>();
+        mItems = new ArrayList<>();
     }
     public Iterator<T> iterator(){
         if(size() == 0){
@@ -73,8 +73,9 @@ public class BlockList<T extends Block> extends Block {
     }
     private void updateIndex(){
         int index = 0;
-        for(T item : mItems){
-            item.setIndex(index);
+        Iterator<T> iterator = iterator();
+        while (iterator.hasNext()){
+            iterator.next().setIndex(index);
             index++;
         }
     }
@@ -108,38 +109,43 @@ public class BlockList<T extends Block> extends Block {
     public List<T> getChildes(){
         return mItems;
     }
+    @Override
     public final void refresh(){
         if(isNull()){
             return;
         }
+        onPreRefresh();
         refreshChildes();
+        onRefreshed();
+    }
+    protected void onPreRefresh(){
+    }
+    protected void onRefreshed(){
     }
     private void refreshChildes(){
-        for(T item:getChildes()){
-            if(item instanceof BlockContainer){
-                BlockContainer<?> container=(BlockContainer<?>)item;
-                container.refresh();
-            }else if(item instanceof BlockList){
-                BlockList<?> blockList=(BlockList<?>)item;
-                blockList.refresh();
+        Iterator<?> iterator = iterator();
+        while (iterator.hasNext()){
+            Object item = iterator.next();
+            if(item instanceof BlockRefresh){
+                ((BlockRefresh) item).refresh();
             }
         }
     }
     @Override
     public byte[] getBytes() {
-        byte[] results=null;
-        for(T item:mItems){
-            if(item!=null){
-                results=addBytes(results, item.getBytes());
-            }
+        byte[] results = null;
+        Iterator<T> iterator = iterator();
+        while (iterator.hasNext()){
+            results = addBytes(results, iterator.next().getBytes());
         }
         return results;
     }
     @Override
     public int countBytes() {
-        int result=0;
-        for(T item:mItems){
-            result+=item.countBytes();
+        int result = 0;
+        Iterator<T> iterator = iterator();
+        while (iterator.hasNext()){
+            result += iterator.next().countBytes();
         }
         return result;
     }
@@ -150,29 +156,29 @@ public class BlockList<T extends Block> extends Block {
             return;
         }
         counter.setCurrent(this);
-        if(counter.END==this){
-            counter.FOUND=true;
+        if(counter.END == this){
+            counter.FOUND = true;
             return;
         }
-        for(T item:mItems){
-            if(counter.FOUND){
-                break;
-            }
-            item.onCountUpTo(counter);
+        Iterator<T> iterator = iterator();
+        while (!counter.FOUND && iterator.hasNext()){
+            iterator.next().onCountUpTo(counter);
         }
     }
     @Override
     protected int onWriteBytes(OutputStream stream) throws IOException {
-        int result=0;
-        for(T item:mItems){
-            result+=item.writeBytes(stream);
+        int result = 0;
+        Iterator<T> iterator = iterator();
+        while (iterator.hasNext()){
+            result += iterator.next().writeBytes(stream);
         }
         return result;
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
-        for(T item:mItems){
-            item.readBytes(reader);
+        Iterator<T> iterator = iterator();
+        while (iterator.hasNext()){
+            iterator.next().readBytes(reader);
         }
     }
 

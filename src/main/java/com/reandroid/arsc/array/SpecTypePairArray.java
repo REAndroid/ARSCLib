@@ -206,7 +206,7 @@ public class SpecTypePairArray extends BlockArray<SpecTypePair>
 
     }
     @Override
-    protected void onPreRefreshRefresh(){
+    protected void onPreRefresh(){
         validateEntryCounts();
     }
 

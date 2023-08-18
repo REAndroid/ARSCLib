@@ -463,7 +463,7 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         if(isNull()){
             return;
         }
-        counter.addCount(getTableEntry().countBytes());
+        getTableEntry().onCountUpTo(counter);
     }
     @Override
     protected int onWriteBytes(OutputStream stream) throws IOException {

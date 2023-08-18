@@ -256,23 +256,24 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
     }
     protected void onPostShift(int index){
     }
-    public void add(T block){
-        if(block==null){
-            return;
+    public boolean add(T block){
+        if(block == null){
+            return false;
         }
         if(isFlexible()){
             addAtNull(block);
-            return;
+            return true;
         }
-        T[] old=elementData;
-        int index=old.length;
+        T[] oldElementData = elementData;
+        int index = oldElementData.length;
         elementData = newInstance(index+1);
         if(index>0){
-            System.arraycopy(old, 0, elementData, 0, index);
+            System.arraycopy(oldElementData, 0, elementData, 0, index);
         }
-        elementData[index]=block;
+        elementData[index] = block;
         block.setIndex(index);
         block.setParent(this);
+        return true;
     }
     private void addAtNull(T block){
         allocateIfFull();

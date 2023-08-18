@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@ package com.reandroid.arsc.container;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockContainer;
 import com.reandroid.arsc.base.BlockCounter;
+import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 
 import java.io.IOException;
@@ -30,26 +31,25 @@ public class SingleBlockContainer<T extends Block> extends BlockContainer<T> {
     }
     @Override
     protected void refreshChildes(){
-        if(mItem!=null){
-            if(mItem instanceof BlockContainer){
-                ((BlockContainer)mItem).refresh();
-            }
+        T item = this.mItem;
+        if(item instanceof BlockRefresh){
+            ((BlockRefresh)item).refresh();
         }
     }
     @Override
     protected void onRefreshed() {
-
     }
     public T getItem() {
         return mItem;
     }
     public void setItem(T item) {
-        if(item==null){
-            if(mItem!=null){
-                mItem.setIndex(-1);
-                mItem.setParent(null);
+        if(item == null){
+            T oldItem = this.mItem;
+            if(oldItem != null){
+                oldItem.setIndex(-1);
+                oldItem.setParent(null);
             }
-            mItem=null;
+            this.mItem = null;
             return;
         }
         this.mItem = item;
@@ -57,18 +57,18 @@ public class SingleBlockContainer<T extends Block> extends BlockContainer<T> {
         item.setParent(this);
     }
     public boolean hasItem(){
-        return this.mItem!=null;
+        return this.mItem != null;
     }
     @Override
     public byte[] getBytes() {
-        if(mItem!=null){
+        if(mItem != null){
             return mItem.getBytes();
         }
         return null;
     }
     @Override
     public int countBytes() {
-        if(mItem!=null){
+        if(mItem != null){
             return mItem.countBytes();
         }
         return 0;
@@ -80,24 +80,24 @@ public class SingleBlockContainer<T extends Block> extends BlockContainer<T> {
             return;
         }
         counter.setCurrent(this);
-        if(counter.END==this){
-            counter.FOUND=true;
+        if(counter.END == this){
+            counter.FOUND = true;
             return;
         }
-        if(mItem!=null){
+        if(mItem != null){
             mItem.onCountUpTo(counter);
         }
     }
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
-        if(mItem!=null){
+        if(mItem != null){
             mItem.readBytes(reader);
         }
     }
     @Override
     public int onWriteBytes(OutputStream stream) throws IOException {
-        if(mItem!=null){
+        if(mItem != null){
             return mItem.writeBytes(stream);
         }
         return 0;
@@ -105,7 +105,7 @@ public class SingleBlockContainer<T extends Block> extends BlockContainer<T> {
 
     @Override
     public int getChildesCount() {
-        return hasItem()?0:1;
+        return this.mItem == null ? 0 : 1;
     }
 
     @Override
@@ -115,9 +115,9 @@ public class SingleBlockContainer<T extends Block> extends BlockContainer<T> {
 
     @Override
     public String toString(){
-        if(mItem!=null){
+        if(mItem != null){
             return mItem.toString();
         }
-        return getClass().getSimpleName()+": EMPTY";
+        return getClass().getSimpleName() + ": EMPTY";
     }
 }

@@ -266,7 +266,7 @@ class ResConfigBase extends FixedBlockContainer
 
 
     @Override
-    protected void onPreRefreshRefresh(){
+    protected void onPreRefresh(){
         int count = countBytes();
         configSize.set(count);
     }

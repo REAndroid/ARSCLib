@@ -46,11 +46,11 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         }
     }
     @Override
-    protected void onPreRefreshRefresh(){
+    protected void onPreRefresh(){
         if(isFlexible()){
             trimNullBlocks();
         }
-        super.onPreRefreshRefresh();
+        super.onPreRefresh();
     }
 
     public List<String> toStringList(){

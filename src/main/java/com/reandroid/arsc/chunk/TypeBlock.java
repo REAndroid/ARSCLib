@@ -295,9 +295,9 @@ public class TypeBlock extends Chunk<TypeHeader>
         getEntryArray().refreshCountAndStart();
     }
     @Override
-    protected void onPreRefreshRefresh(){
+    protected void onPreRefresh(){
         getHeaderBlock().getConfig().refresh();
-        super.onPreRefreshRefresh();
+        super.onPreRefresh();
     }
     /*
      * method Block.addBytes is inefficient for large size byte array

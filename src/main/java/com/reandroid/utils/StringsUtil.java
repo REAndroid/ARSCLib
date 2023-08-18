@@ -51,7 +51,10 @@ public class StringsUtil {
             String s1 = strings1[i];
             String s2 = strings2[i];
             int c = compareStrings(s1, s2);
-            if(c != 0){
+            if(c == 0){
+                continue;
+            }
+            if(length1 == length2 || i < length -1){
                 return c;
             }
         }

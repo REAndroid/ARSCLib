@@ -29,6 +29,9 @@ public class AlignItem extends BlockItem{
     }
     public void align(Block block){
         clear();
+        if(getAlignment() <= 0){
+            return;
+        }
         align(block.countBytes());
     }
     public void align(int count){
@@ -88,7 +91,7 @@ public class AlignItem extends BlockItem{
             builder.append(HexUtil.toHex2(fill));
             builder.append(", ");
         }
-        builder.append("size=");
+        builder.append("align=");
         builder.append(size);
         return builder.toString();
     }

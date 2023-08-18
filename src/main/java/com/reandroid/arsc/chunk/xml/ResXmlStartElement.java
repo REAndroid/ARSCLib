@@ -94,7 +94,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
         }
     }
     @Override
-    protected void onPreRefreshRefresh(){
+    protected void onPreRefresh(){
         sortAttributes();
     }
     void unlinkNamespace(){
