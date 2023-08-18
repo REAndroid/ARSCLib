@@ -23,10 +23,13 @@ public class BlockCounter {
         this.END=end;
     }
     public void addCount(int val){
-        if(FOUND){
+        if(FOUND || val == 0){
             return;
         }
-        COUNT+=val;
+        COUNT += val;
+        onCountAdded(COUNT);
+    }
+    void onCountAdded(int count){
     }
     public int getCountValue() {
         return COUNT;
