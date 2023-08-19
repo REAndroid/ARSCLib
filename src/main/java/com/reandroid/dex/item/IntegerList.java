@@ -30,21 +30,26 @@ import com.reandroid.dex.base.PositionedItem;
 import java.io.IOException;
 
 public class IntegerList extends DexItem implements
-        IntegerArray, BlockLoad, PositionedItem, OffsetSupplier, OffsetReceiver {
+        IntegerArray, PositionedItem, OffsetSupplier, OffsetReceiver {
 
     private IntegerReference mReference;
 
-    private final IntegerItem itemCount;
+    private final IntegerReference itemCount;
     private final IntegerArray arrayBlock;
 
     public IntegerList(int childesCount, IntegerArray arrayBlock){
         super(childesCount + 2);
         this.itemCount = new IntegerItem();
         this.arrayBlock = arrayBlock;
-        addChild(0, itemCount);
+        addChild(0, (Block) itemCount);
         addChild(1, (Block) arrayBlock);
 
-        itemCount.setBlockLoad(this);
+    }
+    public IntegerList(IntegerReference itemCount){
+        super(1);
+        this.itemCount = itemCount;
+        this.arrayBlock = new IntegerArrayBlock();
+        addChild(0, (Block) arrayBlock);
     }
     public IntegerList(){
         this(0, new IntegerArrayBlock());
@@ -67,10 +72,9 @@ public class IntegerList extends DexItem implements
     }
 
     @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender == this.itemCount){
-            arrayBlock.setSize(itemCount.get());
-        }
+    public void onReadBytes(BlockReader reader) throws IOException {
+        arrayBlock.setSize(itemCount.get());
+        super.onReadBytes(reader);
     }
     @Override
     public void setPosition(int position) {
@@ -103,10 +107,6 @@ public class IntegerList extends DexItem implements
         if(arrayBlock.size() != itemCount.get()) {
             builder.append("count=");
             builder.append(itemCount);
-            builder.append(", ");
-        }
-        if(getChildesCount() > 2){
-            builder.append(getChildes()[2]);
             builder.append(", ");
         }
         builder.append(IntegerArray.toString(this));

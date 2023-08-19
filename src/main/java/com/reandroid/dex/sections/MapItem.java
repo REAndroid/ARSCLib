@@ -22,7 +22,7 @@ import com.reandroid.dex.base.*;
 
 import java.util.Comparator;
 
-public class MapItem extends DexItem{
+public class MapItem extends DexBlockItem {
     private final IndirectInteger type;
     private final IntegerPair countAndOffset;
 

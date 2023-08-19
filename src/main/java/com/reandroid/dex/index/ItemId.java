@@ -17,7 +17,7 @@ package com.reandroid.dex.index;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.DexItem;
+import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.item.AnnotationSet;
 import com.reandroid.dex.sections.*;
@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public abstract class ItemId extends DexItem implements SmaliFormat {
+public abstract class ItemId extends DexBlockItem implements SmaliFormat {
     private List<AnnotationSet> annotations;
     ItemId(int bytesLength) {
         super(bytesLength);

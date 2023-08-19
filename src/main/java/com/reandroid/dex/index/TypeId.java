@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.dex.base.DexItem;
+import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -23,7 +23,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class TypeId extends DexItem implements SmaliFormat {
+public class TypeId extends DexBlockItem implements SmaliFormat {
     public TypeId() {
         super(4);
     }

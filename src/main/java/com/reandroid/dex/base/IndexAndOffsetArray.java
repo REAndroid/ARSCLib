@@ -23,7 +23,7 @@ import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 
-public class IndexAndOffsetArray extends DexItem implements OffsetArray {
+public class IndexAndOffsetArray extends DexBlockItem implements OffsetArray {
     private final IntegerReference itemCount;
     public IndexAndOffsetArray(IntegerReference itemCount) {
         super(0);

@@ -121,9 +121,6 @@ public class DebugElementType<T extends DebugElement> {
     public BlockCreator<T> getCreator() {
         return creator;
     }
-    public boolean isSkipElement(){
-        return flag > 0x0A;
-    }
 
     @Override
     public boolean equals(Object obj) {

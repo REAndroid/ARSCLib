@@ -38,13 +38,13 @@ public class SectionType<T extends Block> {
     public static final SectionType<MethodId> METHOD_ID;
     public static final SectionType<ClassId> CLASS_ID;
     public static final SectionType<Block> CALL_SITE_ID;
-    public static final SectionType<Block> METHOD_HANDLE;
+    public static final SectionType<MethodHandle> METHOD_HANDLE;
     public static final SectionType<MapList> MAP_LIST;
     public static final SectionType<TypeList> TYPE_LIST;
     public static final SectionType<IntegerList> ANNOTATION_SET_REF_LIST;
     public static final SectionType<AnnotationSet> ANNOTATION_SET;
     public static final SectionType<ClassData> CLASS_DATA;
-    public static final SectionType<Block> CODE;
+    public static final SectionType<CodeItem> CODE;
     public static final SectionType<StringData> STRING_DATA;
     public static final SectionType<DebugInfo> DEBUG_INFO;
     public static final SectionType<AnnotationItem> ANNOTATION;
@@ -245,9 +245,6 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = CLASS_DATA;
 
-        CODE = new SectionType<>("CODE", 0x2001, index, 15, null);
-        VALUES[index++] = CODE;
-
         DEBUG_INFO = new SectionType<>("DEBUG_INFO", 0x2003, index, 14, new Creator<DebugInfo>() {
             @Override
             public DebugInfo[] newInstance(int length) {
@@ -259,6 +256,19 @@ public class SectionType<T extends Block> {
             }
         });
         VALUES[index++] = DEBUG_INFO;
+
+        CODE = new SectionType<>("CODE", 0x2001, index, 15, new Creator<CodeItem>() {
+            @Override
+            public CodeItem[] newInstance(int length) {
+                return new CodeItem[length];
+            }
+
+            @Override
+            public CodeItem newInstance() {
+                return new CodeItem();
+            }
+        });
+        VALUES[index++] = CODE;
 
         ENCODED_ARRAY = new SectionType<>("ENCODED_ARRAY", 0x2005, index, 9, new Creator<EncodedArray>() {
             @Override

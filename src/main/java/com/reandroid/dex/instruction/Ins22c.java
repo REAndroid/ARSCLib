@@ -13,20 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.base;
+package com.reandroid.dex.instruction;
 
-import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.AlignItem;
-
-import java.io.IOException;
-
-public class DexAlign extends AlignItem {
-    public DexAlign(){
-        super();
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.align(reader.getPosition());
-        super.onReadBytes(reader);
+public class Ins22c extends Size4Ins {
+    public Ins22c(Opcode<?> opcode) {
+        super(opcode);
     }
 }

@@ -36,10 +36,8 @@ public class DebugElementList extends FixedDexContainer implements Collection<De
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         DebugElement debugElement = readNext(reader);
-        int type = debugElement.getElementTypeFlag();
-        while (type != 0){
+        while (debugElement.getElementTypeFlag() != 0){
             debugElement = readNext(reader);
-            type = debugElement.getElementTypeFlag();
         }
     }
     private DebugElement readNext(BlockReader reader) throws IOException {

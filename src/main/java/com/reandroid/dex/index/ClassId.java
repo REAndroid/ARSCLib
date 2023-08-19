@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.item.*;
@@ -31,12 +30,9 @@ public class ClassId extends ItemId {
     private final IndirectInteger superClassIndex;
     private final IndirectInteger interfacesOffset;
     private final IndirectInteger sourceFileIndex;
-    private final IndirectInteger annotationsOffset;
+    private final IndirectInteger annotationSetOffset;
     private final IndirectInteger classDataOffset;
     private final IndirectInteger staticValuesOffset;
-    
-    private TypeList interfaceList;
-    private final ClassData classData;
 
     public ClassId() {
         super(SIZE);
@@ -47,28 +43,27 @@ public class ClassId extends ItemId {
         this.superClassIndex = new IndirectInteger(this, offset += 4);
         this.interfacesOffset = new IndirectInteger(this, offset += 4);
         this.sourceFileIndex = new IndirectInteger(this, offset += 4);
-        this.annotationsOffset = new IndirectInteger(this, offset += 4);
+        this.annotationSetOffset = new IndirectInteger(this, offset += 4);
         this.classDataOffset = new IndirectInteger(this, offset += 4);
         this.staticValuesOffset = new IndirectInteger(this, offset += 4);
 
-        classData = new ClassData();
-        classData.setParent(this);
     }
 
     public TypeId getType(){
-        return getTypeId(getTypeIndex().get());
+        return getTypeId(typeIndex.get());
+    }
+    public int getAccessFlagValue() {
+        return accessFlagValue.get();
     }
     public AccessFlag[] getAccessFlags(){
-        return AccessFlag.getAccessFlagsForClass(getAccessFlagValue().get());
+        return AccessFlag.getAccessFlagsForClass(getAccessFlagValue());
     }
     public TypeId getSuperClass(){
-        return getTypeId(getSuperClassIndex().get());
+        return getTypeId(superClassIndex.get());
     }
     public StringData getSourceFile(){
-        return getStringData(getSourceFileIndex().get());
+        return getStringData(sourceFileIndex.get());
     }
-
-
     public TypeId[] getInterfaceTypeIds(){
         TypeList interfaceList = getInterfaceList();
         if(interfaceList != null){
@@ -77,43 +72,18 @@ public class ClassId extends ItemId {
         return null;
     }
     public TypeList getInterfaceList(){
-        return interfaceList;
+        return getAt(SectionType.TYPE_LIST, interfacesOffset.get());
+    }
+    public AnnotationSet getAnnotationSet(){
+        return getAt(SectionType.ANNOTATION_SET, annotationSetOffset.get());
     }
     public ClassData getClassData(){
-        return classData;
+        return getAt(SectionType.CLASS_DATA, classDataOffset.get());
+    }
+    public EncodedArray getStaticValues(){
+        return getAt(SectionType.ENCODED_ARRAY, staticValuesOffset.get());
     }
 
-    public IndirectInteger getTypeIndex() {
-        return typeIndex;
-    }
-    public IndirectInteger getAccessFlagValue() {
-        return accessFlagValue;
-    }
-    public IndirectInteger getSuperClassIndex() {
-        return superClassIndex;
-    }
-    public IndirectInteger getInterfacesOffset() {
-        return interfacesOffset;
-    }
-    public IndirectInteger getSourceFileIndex() {
-        return sourceFileIndex;
-    }
-    public IndirectInteger getAnnotationsOffset() {
-        return annotationsOffset;
-    }
-    public IndirectInteger getClassDataOffset() {
-        return classDataOffset;
-    }
-    public IndirectInteger getStaticValuesOffset() {
-        return staticValuesOffset;
-    }
-
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
-        interfaceList = getSectionList().getAt(SectionType.TYPE_LIST, getInterfacesOffset().get());
-
-    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.newLine();
@@ -144,9 +114,20 @@ public class ClassId extends ItemId {
                 typeId.append(writer);
             }
         }
+        AnnotationSet annotationSet = getAnnotationSet();
+        if(annotationSet != null){
+            writer.newLine();
+            writer.append("# annotations");
+            annotationSet.append(writer);
+        }
         writer.newLine();
         appendAnnotations(writer);
-        getClassData().append(writer);
+        ClassData classData = getClassData();
+        if(classData != null){
+            classData.append(writer);
+        }else {
+            writer.appendComment("Null class data: " + classDataOffset.get());
+        }
     }
     @Override
     public String toString(){

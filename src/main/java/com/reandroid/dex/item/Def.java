@@ -15,14 +15,13 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class Def extends FixedBlockContainer implements SmaliFormat {
+public class Def extends DexContainerItem implements SmaliFormat {
     private final Ule128Item id;
     private final Ule128Item accessFlags;
     public Def(int childesCount) {

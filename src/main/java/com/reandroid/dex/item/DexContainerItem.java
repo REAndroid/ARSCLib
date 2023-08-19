@@ -21,8 +21,8 @@ import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 
-public class BaseDexItem extends FixedDexContainer {
-    public BaseDexItem(int childesCount) {
+public class DexContainerItem extends FixedDexContainer {
+    public DexContainerItem(int childesCount) {
         super(childesCount);
     }
 

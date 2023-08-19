@@ -22,8 +22,8 @@ import com.reandroid.dex.io.StreamUtil;
 import java.io.IOException;
 import java.io.InputStream;
 
-public abstract class DexItem extends BlockItem {
-    public DexItem(int bytesLength) {
+public abstract class DexBlockItem extends BlockItem {
+    public DexBlockItem(int bytesLength) {
         super(bytesLength);
     }
 
@@ -66,7 +66,44 @@ public abstract class DexItem extends BlockItem {
         }
         return result;
     }
+    public static int readSleb128(ByteReader reader) throws IOException {
+        int value = 0x80;
+        int result = 0;
+        int count = 0;
 
+        while (value > 0x7f && count < 5){
+            value = reader.read();
+            result = result | ((value & 0x7f) << count * 7);
+            count ++;
+        }
+        if(count == 5 && value > 0x7f){
+            throw new IOException("Invalid sleb128 integer");
+        }
+        int shift = 32 - count * 7;
+        result = (result << shift) >> shift;
+        return result;
+    }
+    public static int writeSleb128(byte[] bytes, int offset, int value) {
+        int index = 0;
+        if (value >= 0) {
+            while (value > 0x3f) {
+                bytes[offset + index] = (byte) ((value & 0x7f) | 0x80);
+                index ++;
+                value >>>= 7;
+            }
+            bytes[offset + index] = (byte) (value & 0x7f);
+            index ++;
+        } else {
+            while (value < -0x40) {
+                bytes[offset + index] = (byte) ((value & 0x7f) | 0x80);
+                index ++;
+                value >>= 7;
+            }
+            bytes[offset + index] = (byte) (value & 0x7f);
+            index ++;
+        }
+        return index;
+    }
     protected static long getNumber(byte[] bytes, int offset, int size){
         if((offset + size)>bytes.length){
             return 0;

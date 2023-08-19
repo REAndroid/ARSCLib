@@ -21,7 +21,7 @@ import com.reandroid.dex.io.StreamUtil;
 
 import java.io.IOException;
 
-public class Ule128Item extends DexItem implements IntegerReference {
+public class Ule128Item extends DexBlockItem implements IntegerReference {
     private final boolean large;
     private int value;
     public Ule128Item(boolean large) {
@@ -58,7 +58,7 @@ public class Ule128Item extends DexItem implements IntegerReference {
 
     @Override
     public String toString() {
-        // return "bytes = " + countBytes() + ", value = " + get();
-        return Integer.toString(get());
+         return "bytes = " + countBytes() + ", value = " + get();
+        //return Integer.toString(get());
     }
 }

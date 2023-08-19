@@ -16,9 +16,9 @@
 package com.reandroid.dex.debug;
 
 import com.reandroid.arsc.item.ByteItem;
-import com.reandroid.dex.item.BaseDexItem;
+import com.reandroid.dex.item.DexContainerItem;
 
-public class DebugElement extends BaseDexItem {
+public class DebugElement extends DexContainerItem {
     private final ByteItem elementType;
 
     DebugElement(int childesCount, int flag) {

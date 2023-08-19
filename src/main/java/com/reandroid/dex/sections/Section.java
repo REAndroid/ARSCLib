@@ -30,14 +30,14 @@ public class Section<T extends Block>  extends FixedDexContainer
 
     private final SectionType<T> sectionType;
     private final DexItemArray<T> itemArray;
-    private final DexAlign sectionAlign;
+    private final DexPositionAlign sectionAlign;
     private final Map<Integer, T> offsetMap;
 
     public Section(SectionType<T> sectionType, DexItemArray<T> itemArray){
         super(2);
         this.sectionType = sectionType;
         this.itemArray = itemArray;
-        this.sectionAlign = new DexAlign();
+        this.sectionAlign = new DexPositionAlign();
         this.offsetMap = new HashMap<>();
         addChild(0, itemArray);
         addChild(1, sectionAlign);
@@ -140,7 +140,7 @@ public class Section<T extends Block>  extends FixedDexContainer
         return sectionList.get(sectionType);
     }
     @Override
-    protected void onPreRefreshRefresh(){
+    protected void onPreRefresh(){
         sectionAlign.setSize(0);
     }
     @Override

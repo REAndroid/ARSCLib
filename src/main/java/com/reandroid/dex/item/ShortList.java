@@ -16,12 +16,23 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.item.ShortArrayBlock;
-import com.reandroid.dex.base.DexAlign;
-import com.reandroid.dex.item.IntegerList;
+import com.reandroid.dex.base.DexPositionAlign;
 
 public class ShortList extends IntegerList {
     public ShortList(){
         super(1, new ShortArrayBlock());
-        addChild(2, new DexAlign());
+        addChild(2, new DexPositionAlign());
+    }
+
+    public DexPositionAlign getDexAlign(){
+        return (DexPositionAlign) getChildes()[2];
+    }
+    @Override
+    public String toString() {
+        DexPositionAlign dexPositionAlign = getDexAlign();
+        if(dexPositionAlign.size() > 0){
+            return super.toString() + dexPositionAlign;
+        }
+        return super.toString();
     }
 }

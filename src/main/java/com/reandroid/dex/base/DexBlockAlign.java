@@ -13,35 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.sections;
+package com.reandroid.dex.base;
 
-import com.reandroid.arsc.base.BlockArray;
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.arsc.item.AlignItem;
 
 import java.io.IOException;
 
-public class MapItemArray extends BlockArray<MapItem> {
-    private final IntegerReference itemCount;
-    public MapItemArray(IntegerReference itemCount){
-        super();
-        this.itemCount = itemCount;
+public class DexBlockAlign extends AlignItem {
+    private final Block block;
+    public DexBlockAlign(Block block){
+        this.block = block;
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
+        super.align(block);
         super.onReadBytes(reader);
     }
-    @Override
-    public MapItem[] newInstance(int length) {
-        return new MapItem[length];
-    }
-    @Override
-    public MapItem newInstance() {
-        return new MapItem();
-    }
-    @Override
-    protected void onRefreshed() {
-    }
-
 }

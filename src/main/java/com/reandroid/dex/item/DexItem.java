@@ -21,7 +21,7 @@ import com.reandroid.dex.base.NumberIntegerReference;
 import com.reandroid.dex.base.OffsetReceiver;
 import com.reandroid.dex.base.PositionedItem;
 
-public class DexItem extends BaseDexItem
+public class DexItem extends DexContainerItem
         implements PositionedItem, OffsetSupplier, OffsetReceiver {
 
     private IntegerReference mReference;

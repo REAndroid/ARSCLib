@@ -84,10 +84,6 @@ public class SectionList extends FixedBlockContainer
         if(typeMap.containsKey(sectionType)){
             return;
         }
-        if(sectionType == SectionType.DEBUG_INFO){
-            // TODO: until completed
-            //return;
-        }
         Section<?> section = mapItem.createNewSection();
         if(section == null){
             return;

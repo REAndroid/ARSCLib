@@ -15,13 +15,13 @@
  */
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.dex.base.Sle128Item;
 
 public class DebugAdvanceLine extends DebugElement{
-    private final Ule128Item lineDiff;
+    private final Sle128Item lineDiff;
     public DebugAdvanceLine() {
         super(1, DebugElementType.ADVANCE_LINE);
-        this.lineDiff = new Ule128Item();
+        this.lineDiff = new Sle128Item();
         addChild(1, lineDiff);
     }
 

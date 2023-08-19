@@ -15,10 +15,10 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.dex.base.DexItem;
+import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.utils.HexUtil;
 
-public class NumberValue extends DexItem {
+public class NumberValue extends DexBlockItem {
     public NumberValue(int bytesLength) {
         super(bytesLength);
     }

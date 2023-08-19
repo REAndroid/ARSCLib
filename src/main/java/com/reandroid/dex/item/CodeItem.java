@@ -15,53 +15,79 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerItem;
-import com.reandroid.arsc.item.ShortItem;
-
-import java.io.IOException;
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.base.*;
+import com.reandroid.dex.instruction.TryBlock;
+import com.reandroid.dex.sections.SectionType;
 
 public class CodeItem extends DexItem {
 
-    private final ShortItem registersCount;
-    private final ShortItem instruction;
-    private final ShortItem outs;
-    private final ShortItem triesSize;
-    private final IntegerItem debugInfoOffset;
-    private final IntegerItem instructionCount;
+    private final Header header;
+    private final InstructionList instructionList;
+    private final TryBlock tryBlock;
 
     public CodeItem() {
-        super(6);
-        registersCount = new ShortItem();
-        instruction = new ShortItem();
-        outs = new ShortItem();
-        triesSize = new ShortItem();
-        debugInfoOffset = new IntegerItem();
-        instructionCount = new IntegerItem();
+        super(3);
+        this.header = new Header();
+        this.instructionList = new InstructionList(header.instructionCodeUnits);
+        this.tryBlock = new TryBlock(header.tryBlockCount);
 
-        addChild(0, registersCount);
-        addChild(1, instruction);
-        addChild(2, outs);
-        addChild(3, triesSize);
-        addChild(4, debugInfoOffset);
-        addChild(5, instructionCount);
-        setNull(true);
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+        addChild(0, header);
+        addChild(1, instructionList);
+        addChild(2, tryBlock);
     }
 
+    public DebugInfo getDebugInfo(){
+        return getAt(SectionType.DEBUG_INFO,
+                header.debugInfoOffset.get());
+    }
+    public InstructionList getInstructionList() {
+        return instructionList;
+    }
+    public TryBlock getTryBlock(){
+        return tryBlock;
+    }
     @Override
     public String toString() {
         if(isNull()){
             return "NULL";
         }
-        return  "registersCount=" + registersCount +
-                ", instruction=" + instruction +
-                ", outs=" + outs +
-                ", triesSize=" + triesSize +
-                ", debugInfoOffset=" + debugInfoOffset +
-                ", instructionCount=" + instructionCount;
+        return header.toString()
+                + "\n instructionList=" + instructionList
+                + "\n tryBlock=" + tryBlock
+                + "\n debug=" + getDebugInfo();
+    }
+
+    static class Header extends DexBlockItem {
+
+        final IntegerReference registersCount;
+        final IntegerReference instruction;
+        final IntegerReference outs;
+        final IntegerReference tryBlockCount;
+
+        final IntegerReference debugInfoOffset;
+        final IntegerReference instructionCodeUnits;
+
+        public Header() {
+            super(16);
+            int offset = -2;
+            this.registersCount = new IndirectShort(this, offset += 2);
+            this.instruction = new IndirectShort(this, offset += 2);
+            this.outs = new IndirectShort(this, offset += 2);
+            this.tryBlockCount = new IndirectShort(this, offset += 2);
+            this.debugInfoOffset = new IndirectInteger(this, offset += 2);
+            this.instructionCodeUnits = new IndirectInteger(this, offset += 4);
+
+        }
+
+        @Override
+        public String toString() {
+            return  "registers=" + registersCount +
+                    ", instruction=" + instruction +
+                    ", outs=" + outs +
+                    ", tries=" + tryBlockCount +
+                    ", debugInfo=" + debugInfoOffset +
+                    ", codeUnits=" + instructionCodeUnits;
+        }
     }
 }
