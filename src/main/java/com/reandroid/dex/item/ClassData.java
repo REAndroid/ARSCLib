@@ -17,6 +17,7 @@ package com.reandroid.dex.item;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.*;
+import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
@@ -34,7 +35,6 @@ public class ClassData extends DexItem
     private final FieldDefArray instanceFields;
     private final MethodDefArray directMethods;
     private final MethodDefArray virtualMethods;
-
 
     public ClassData() {
         super(8);
@@ -61,22 +61,11 @@ public class ClassData extends DexItem
         addChild(7, virtualMethods);
     }
 
-    public int getStaticFieldsCount() {
-        return staticFieldsCount.get();
-    }
-    public int getInstanceFieldCount() {
-        return instanceFieldCount.get();
-    }
-    public int getDirectMethodCount() {
-        return directMethodCount.get();
-    }
-    public int getVirtualMethodCount() {
-        return virtualMethodCount.get();
-    }
-
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException{
-        super.onReadBytes(reader);
+    public void setClassId(ClassId classId) {
+        staticFields.setClassId(classId);
+        instanceFields.setClassId(classId);
+        directMethods.setClassId(classId);
+        virtualMethods.setClassId(classId);
     }
 
     @Override
@@ -88,10 +77,10 @@ public class ClassData extends DexItem
     }
     @Override
     public String toString() {
-        return "staticFieldsCount=" + getStaticFieldsCount() +
-                ", instanceFieldCount=" + getInstanceFieldCount() +
-                ", directMethodCount=" + getDirectMethodCount() +
-                ", virtualMethodCount=" + getVirtualMethodCount();
+        return "staticFieldsCount=" + staticFieldsCount +
+                ", instanceFieldCount=" + instanceFieldCount +
+                ", directMethodCount=" + directMethodCount +
+                ", virtualMethodCount=" + virtualMethodCount;
     }
 
 }

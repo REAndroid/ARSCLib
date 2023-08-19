@@ -16,25 +16,27 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.DexFile;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.FieldId;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
-import java.util.List;
 
 public class FieldDef extends Def {
     public FieldDef() {
         super(0);
     }
     public FieldId getFieldIndex(){
-        DexFile dexFile = getParentInstance(DexFile.class);
-        if(dexFile != null){
-            return dexFile.getSectionList().get(SectionType.FIELD_ID, getDefIndexId());
+        return get(SectionType.FIELD_ID, getDefIndexId());
+    }
+    @Override
+    public AnnotationSet[] getAnnotations(){
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if(directory == null){
+            return null;
         }
-        return null;
+        return directory.getFieldsAnnotation(getDefIndexId());
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
@@ -53,12 +55,12 @@ public class FieldDef extends Def {
         writer.append(fieldId.getNameString().getString());
         writer.append(':');
         fieldId.getFieldType().append(writer);
-        List<AnnotationSet> annotations = fieldId.getAnnotations();
-        if (annotations.size()>0){
+        AnnotationSet[] annotations = getAnnotations();
+        if (annotations != null){
             writer.indentPlus();
             writer.newLine();
-            for(AnnotationSet itemList:annotations){
-                itemList.append(writer);
+            for(AnnotationSet annotationSet : annotations){
+                annotationSet.append(writer);
             }
             writer.indentMinus();
             writer.newLine();

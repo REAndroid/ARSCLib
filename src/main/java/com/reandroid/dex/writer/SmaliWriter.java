@@ -38,6 +38,9 @@ public class SmaliWriter implements Closeable {
     public void append(String text) throws IOException {
         writer.append(text);
     }
+    public void append(int i) throws IOException {
+        writer.append(Integer.toString(i));
+    }
     public void newLine() throws IOException {
         flushComment();
         writer.append('\n');

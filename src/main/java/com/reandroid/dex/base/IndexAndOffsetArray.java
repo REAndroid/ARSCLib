@@ -29,6 +29,22 @@ public class IndexAndOffsetArray extends DexBlockItem implements OffsetArray {
         super(0);
         this.itemCount = itemCount;
     }
+    public int[] getOffsetsForIndex(int index){
+        int size = size();
+        int[] tmp = new int[size];
+        int count = 0;
+        for(int i = 0; i < size; i++){
+            if(index == getIndexEntry(i)){
+                tmp[count] = getOffset(i);
+                count++;
+            }
+        }
+        int[] results = new int[count];
+        for(int i = 0; i < count; i++){
+            results[i] = tmp[i];
+        }
+        return results;
+    }
     public IntegerPair[] toIntegerPairArray(){
         int size = size();
         IntegerPair[] results = new IntegerPair[size];
@@ -41,6 +57,9 @@ public class IndexAndOffsetArray extends DexBlockItem implements OffsetArray {
         return new IndirectBlockIntegerPair(this, i * 8);
     }
 
+    private int getIndexEntry(int i) {
+        return Block.getInteger(getBytesInternal(), i * 8);
+    }
     @Override
     public int getOffset(int i) {
         return Block.getInteger(getBytesInternal(), i * 8 + 4);

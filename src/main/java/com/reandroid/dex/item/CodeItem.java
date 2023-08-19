@@ -17,14 +17,20 @@ package com.reandroid.dex.item;
 
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
+import com.reandroid.dex.index.ProtoId;
 import com.reandroid.dex.instruction.TryBlock;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.writer.SmaliFormat;
+import com.reandroid.dex.writer.SmaliWriter;
 
-public class CodeItem extends DexItem {
+import java.io.IOException;
+
+public class CodeItem extends DexItem implements SmaliFormat {
 
     private final Header header;
     private final InstructionList instructionList;
     private final TryBlock tryBlock;
+    private MethodDef methodDef;
 
     public CodeItem() {
         super(3);
@@ -46,6 +52,25 @@ public class CodeItem extends DexItem {
     }
     public TryBlock getTryBlock(){
         return tryBlock;
+    }
+
+    public MethodDef getMethodDef() {
+        return methodDef;
+    }
+    public void setMethodDef(MethodDef methodDef) {
+        this.methodDef = methodDef;
+    }
+
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        MethodDef methodDef = getMethodDef();
+        ProtoId proto = methodDef.getMethodIndex().getProto();
+        writer.newLine();
+        writer.append(".locals ");
+        InstructionList instructionList = getInstructionList();
+        int count = header.registersCount.get() - proto.getParametersCount();
+        writer.append(count);
+        instructionList.append(writer);
     }
     @Override
     public String toString() {

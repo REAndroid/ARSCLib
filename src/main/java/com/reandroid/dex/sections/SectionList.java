@@ -36,9 +36,6 @@ public class SectionList extends FixedBlockContainer
     private final Map<SectionType<?>, Section<?>> typeMap;
     private final MapList mapList;
 
-    private boolean headerLoaded;
-    private boolean mapListLoaded;
-
     public SectionList() {
         super(1);
 

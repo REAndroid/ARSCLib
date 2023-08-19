@@ -31,24 +31,9 @@ import java.util.Iterator;
 import java.util.List;
 
 public abstract class ItemId extends DexBlockItem implements SmaliFormat {
-    private List<AnnotationSet> annotations;
     ItemId(int bytesLength) {
         super(bytesLength);
-        this.annotations = EmptyList.of();
     }
-    public void addAnnotations(AnnotationSet annotationSet){
-        List<AnnotationSet> annotations = this.annotations;
-        if(annotations.isEmpty()){
-            annotations = new ArrayList<>();
-            this.annotations = annotations;
-        }
-        annotations.add(annotationSet);
-    }
-
-    public List<AnnotationSet> getAnnotations() {
-        return annotations;
-    }
-
     TypeId getTypeId(IntegerReference reference){
         return getTypeId(reference.get());
     }
@@ -62,6 +47,9 @@ public abstract class ItemId extends DexBlockItem implements SmaliFormat {
         return getParentInstance(SectionList.class);
     }
     public<T1 extends Block> T1 getAt(SectionType<T1> sectionType, int offset){
+        if(offset == 0){
+            return null;
+        }
         Section<T1> section = getSection(sectionType);
         if(section != null){
             return section.getAt(offset);
@@ -101,17 +89,5 @@ public abstract class ItemId extends DexBlockItem implements SmaliFormat {
             return sectionList.get(sectionType);
         }
         return null;
-    }
-
-    void appendAnnotations(SmaliWriter writer) throws IOException {
-        List<AnnotationSet> annotations = getAnnotations();
-        if(annotations.size() == 0){
-            return;
-        }
-        Iterator<AnnotationSet> iterator = annotations.iterator();
-        writer.newLine();
-        while (iterator.hasNext()){
-            iterator.next().append(writer);
-        }
     }
 }

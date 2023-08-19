@@ -30,7 +30,7 @@ public class ClassId extends ItemId {
     private final IndirectInteger superClassIndex;
     private final IndirectInteger interfacesOffset;
     private final IndirectInteger sourceFileIndex;
-    private final IndirectInteger annotationSetOffset;
+    private final IndirectInteger annotationDirectoryOffset;
     private final IndirectInteger classDataOffset;
     private final IndirectInteger staticValuesOffset;
 
@@ -43,7 +43,7 @@ public class ClassId extends ItemId {
         this.superClassIndex = new IndirectInteger(this, offset += 4);
         this.interfacesOffset = new IndirectInteger(this, offset += 4);
         this.sourceFileIndex = new IndirectInteger(this, offset += 4);
-        this.annotationSetOffset = new IndirectInteger(this, offset += 4);
+        this.annotationDirectoryOffset = new IndirectInteger(this, offset += 4);
         this.classDataOffset = new IndirectInteger(this, offset += 4);
         this.staticValuesOffset = new IndirectInteger(this, offset += 4);
 
@@ -74,8 +74,15 @@ public class ClassId extends ItemId {
     public TypeList getInterfaceList(){
         return getAt(SectionType.TYPE_LIST, interfacesOffset.get());
     }
-    public AnnotationSet getAnnotationSet(){
-        return getAt(SectionType.ANNOTATION_SET, annotationSetOffset.get());
+    public AnnotationSet getClassAnnotations(){
+        AnnotationsDirectory annotationsDirectory = getAnnotationsDirectory();
+        if(annotationsDirectory != null){
+            return annotationsDirectory.getClassAnnotations();
+        }
+        return null;
+    }
+    public AnnotationsDirectory getAnnotationsDirectory(){
+        return getAt(SectionType.ANNOTATIONS_DIRECTORY, annotationDirectoryOffset.get());
     }
     public ClassData getClassData(){
         return getAt(SectionType.CLASS_DATA, classDataOffset.get());
@@ -114,16 +121,17 @@ public class ClassId extends ItemId {
                 typeId.append(writer);
             }
         }
-        AnnotationSet annotationSet = getAnnotationSet();
+        AnnotationSet annotationSet = getClassAnnotations();
         if(annotationSet != null){
+            writer.newLine();
             writer.newLine();
             writer.append("# annotations");
             annotationSet.append(writer);
         }
         writer.newLine();
-        appendAnnotations(writer);
         ClassData classData = getClassData();
         if(classData != null){
+            classData.setClassId(this);
             classData.append(writer);
         }else {
             writer.appendComment("Null class data: " + classDataOffset.get());

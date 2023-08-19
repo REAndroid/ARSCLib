@@ -15,10 +15,6 @@
  */
 package com.reandroid.dex.instruction;
 
-import com.reandroid.arsc.base.Block;
-import com.reandroid.dex.index.StringData;
-import com.reandroid.dex.sections.SectionType;
-import com.reandroid.utils.HexUtil;
 
 public class Ins21c extends Size4Ins {
     public Ins21c(Opcode<?> opcode) {

@@ -16,6 +16,7 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
@@ -24,12 +25,29 @@ import java.io.IOException;
 public class Def extends DexContainerItem implements SmaliFormat {
     private final Ule128Item id;
     private final Ule128Item accessFlags;
+    private ClassId classId;
     public Def(int childesCount) {
         super(childesCount + 2);
         this.id = new Ule128Item(true);
         this.accessFlags = new Ule128Item();
         addChild(0, id);
         addChild(1, accessFlags);
+    }
+    public AnnotationSet[] getAnnotations(){
+        return null;
+    }
+    public AnnotationsDirectory getAnnotationsDirectory(){
+        ClassId classId = getClassId();
+        if(classId != null){
+            return classId.getAnnotationsDirectory();
+        }
+        return null;
+    }
+    public ClassId getClassId() {
+        return classId;
+    }
+    public void setClassId(ClassId classId) {
+        this.classId = classId;
     }
     public int getIdValue() {
         return id.get();

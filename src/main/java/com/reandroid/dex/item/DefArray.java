@@ -18,16 +18,24 @@ package com.reandroid.dex.item;
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public abstract class DefArray<T extends Def> extends BlockArray<T>  implements SmaliFormat {
     private final IntegerReference itemCount;
     public DefArray(IntegerReference itemCount){
         super();
         this.itemCount = itemCount;
+    }
+    public void setClassId(ClassId classId) {
+        Iterator<T> iterator = iterator();
+        while (iterator.hasNext()){
+            iterator.next().setClassId(classId);
+        }
     }
     @Override
     protected void onRefreshed() {

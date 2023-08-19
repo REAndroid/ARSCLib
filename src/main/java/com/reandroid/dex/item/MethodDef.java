@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.dex.DexFile;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.MethodId;
@@ -26,18 +25,36 @@ import java.io.IOException;
 
 public class MethodDef extends Def {
     private final Ule128Item codeOffset;
-    private CodeItem codeItem;
+
     public MethodDef() {
         super(1);
         this.codeOffset = new Ule128Item();
         addChild(2, codeOffset);
     }
     public MethodId getMethodIndex(){
-        DexFile dexFile = getParentInstance(DexFile.class);
-        if(dexFile != null){
-            return dexFile.getSectionList().get(SectionType.METHOD_ID, getDefIndexId());
+        return get(SectionType.METHOD_ID, getDefIndexId());
+    }
+    public InstructionList getInstructionList(){
+        CodeItem codeItem = getCodeItem();
+        if(codeItem != null){
+            return codeItem.getInstructionList();
         }
         return null;
+    }
+    public CodeItem getCodeItem(){
+        CodeItem codeItem = getAt(SectionType.CODE, codeOffset.get());
+        if(codeItem != null){
+            codeItem.setMethodDef(this);
+        }
+        return codeItem;
+    }
+    @Override
+    public AnnotationSet[] getAnnotations(){
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if(directory == null){
+            return null;
+        }
+        return directory.getMethodAnnotation(getDefIndexId());
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
@@ -55,14 +72,17 @@ public class MethodDef extends Def {
         writer.append(')');
         methodId.getProto().getReturnTypeId().append(writer);
         writer.indentPlus();
-        writer.newLine();
-        for(AnnotationSet group: methodId.getAnnotations()){
-            group.append(writer);
+        AnnotationSet[] annotations = getAnnotations();
+        if(annotations != null){
+            for(AnnotationSet annotationSet : annotations){
+                annotationSet.append(writer);
+            }
+            writer.newLine();
         }
-        writer.newLine();
-        writer.append(".locals 0");
-        writer.newLine();
-        writer.appendComment("TODO: finish instructions");
+        CodeItem codeItem = getCodeItem();
+        if(codeItem != null){
+            codeItem.append(writer);
+        }
         writer.indentMinus();
         writer.newLine();
         writer.append(".end method");

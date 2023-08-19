@@ -28,6 +28,9 @@ public class DexContainerItem extends FixedDexContainer {
 
 
     public<T1 extends Block> T1 getAt(SectionType<T1> sectionType, int offset){
+        if(offset == 0){
+            return null;
+        }
         Section<T1> section = getSection(sectionType);
         if(section != null){
             return section.getAt(offset);

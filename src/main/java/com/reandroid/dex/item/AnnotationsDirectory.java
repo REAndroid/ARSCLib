@@ -17,6 +17,7 @@ package com.reandroid.dex.item;
 
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.dex.base.*;
+import com.reandroid.dex.sections.SectionType;
 
 public class AnnotationsDirectory extends DexItem {
 
@@ -48,6 +49,18 @@ public class AnnotationsDirectory extends DexItem {
         addChild(4, fieldsOffset);
         addChild(5, methodsOffset);
         addChild(6, parametersOffset);
+    }
+    public AnnotationSet getClassAnnotations(){
+        return getAt(SectionType.ANNOTATION_SET, classOffset.get());
+    }
+    public AnnotationSet[] getFieldsAnnotation(int index){
+        return getAt(SectionType.ANNOTATION_SET, fieldsOffset.getOffsetsForIndex(index));
+    }
+    public AnnotationSet[] getMethodAnnotation(int index){
+        return getAt(SectionType.ANNOTATION_SET, methodsOffset.getOffsetsForIndex(index));
+    }
+    public AnnotationSet[] getParameterAnnotation(int index){
+        return getAt(SectionType.ANNOTATION_SET, parametersOffset.getOffsetsForIndex(index));
     }
 
     @Override

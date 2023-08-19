@@ -17,13 +17,12 @@ package com.reandroid.dex.index;
 
 import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.item.TypeList;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
 public class ProtoId extends ItemId {
-
-    private TypeList typeList;
 
     private final IndirectInteger shorty;
     private final IndirectInteger returnType;
@@ -39,10 +38,7 @@ public class ProtoId extends ItemId {
     }
 
     public TypeList getTypeList() {
-        return typeList;
-    }
-    public void setTypeList(TypeList typeList) {
-        this.typeList = typeList;
+        return getAt(SectionType.TYPE_LIST, parameters.get());
     }
 
     public IndirectInteger getShorty() {
@@ -60,18 +56,25 @@ public class ProtoId extends ItemId {
     }
 
     public int[] getParametersIndexes(){
-        TypeList typeList = this.typeList;
+        TypeList typeList = getTypeList();
         if(typeList != null){
             return typeList.toArray();
         }
         return null;
     }
     public TypeId[] getParameterTypes(){
-        TypeList typeList = this.typeList;
+        TypeList typeList = getTypeList();
         if(typeList != null){
-            //return typeList.toTypes(getTypeSection());
+            return typeList.toTypeIds();
         }
         return null;
+    }
+    public int getParametersCount(){
+        TypeList typeList = getTypeList();
+        if(typeList != null){
+            return typeList.size();
+        }
+        return 0;
     }
 
     public String buildMethodParameters(){

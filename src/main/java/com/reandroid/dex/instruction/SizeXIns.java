@@ -18,7 +18,11 @@ package com.reandroid.dex.instruction;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.writer.SmaliFormat;
+import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
+
+import java.io.IOException;
 
 public class SizeXIns extends Instruction {
     private final ByteArray valueBytes;
@@ -43,6 +47,29 @@ public class SizeXIns extends Instruction {
         return getValueBytes().get(1) & 0xff;
     }
 
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        Opcode<?> opcode = getOpcode();
+        if(opcode.size() < 4){
+            super.append(writer);
+            return;
+        }
+        writer.newLine();
+        writer.append(opcode.getName());
+        writer.append(" v");
+        writer.append(Integer.toString(getRegisterA()));
+        writer.append(", ");
+        int data = getValueBytes().getShortUnsigned(2);
+        SectionType<?> sectionType = opcode.getSectionType();
+        if(sectionType != null){
+            Block sectionData = get(sectionType, data);
+            if(sectionData instanceof SmaliFormat){
+                ((SmaliFormat) sectionData).append(writer);
+            }
+        }else {
+            writer.append(HexUtil.toHex(data, 2));
+        }
+    }
     @Override
     public String toString() {
         Opcode<?> opcode = getOpcode();

@@ -20,23 +20,27 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexBlockList;
 import com.reandroid.dex.instruction.Instruction;
 import com.reandroid.dex.instruction.Opcode;
+import com.reandroid.dex.writer.SmaliFormat;
+import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
+import java.util.Iterator;
 
-public class InstructionList extends DexBlockList<Instruction> {
+public class InstructionList extends DexBlockList<Instruction> implements SmaliFormat {
     private final IntegerReference codeUnits;
     public InstructionList(IntegerReference codeUnits){
         super();
         this.codeUnits = codeUnits;
     }
 
-    private void linkLabels(){
-
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        Iterator<Instruction> iterator = iterator();
+        while (iterator.hasNext()){
+            writer.newLine();
+            iterator.next().append(writer);
+        }
     }
-    private void addLabel(){
-
-    }
-
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         int position = reader.getPosition() + codeUnits.get() * 2;
@@ -51,6 +55,5 @@ public class InstructionList extends DexBlockList<Instruction> {
             reader.seek(position);
         }
         getDexPositionAlign().readBytes(reader);
-        linkLabels();
     }
 }

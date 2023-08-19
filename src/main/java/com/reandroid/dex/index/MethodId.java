@@ -63,7 +63,6 @@ public class MethodId extends ItemId {
         getProto().append(writer);
         writer.append(')');
         getProto().getReturnTypeId().append(writer);
-        appendAnnotations(writer);
     }
     @Override
     public String toString() {

@@ -504,7 +504,7 @@ public class Opcode<T extends Instruction> implements BlockCreator<T> {
             }
         });
         VALUES[0x1b] = CONST_STRING_JUMBO;
-        CONST_CLASS = new Opcode<>(0x1c, 4, "const-class", new BlockCreator<Ins21c>() {
+        CONST_CLASS = new Opcode<>(0x1c, 4, "const-class", SectionType.TYPE_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(CONST_CLASS);
@@ -525,7 +525,7 @@ public class Opcode<T extends Instruction> implements BlockCreator<T> {
             }
         });
         VALUES[0x1e] = MONITOR_EXIT;
-        CHECK_CAST = new Opcode<>(0x1f, 4, "check-cast", new BlockCreator<Ins21c>() {
+        CHECK_CAST = new Opcode<>(0x1f, 4, "check-cast", SectionType.TYPE_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(CHECK_CAST);
@@ -546,14 +546,14 @@ public class Opcode<T extends Instruction> implements BlockCreator<T> {
             }
         });
         VALUES[0x21] = ARRAY_LENGTH;
-        NEW_INSTANCE = new Opcode<>(0x22, 4, "new-instance", new BlockCreator<Ins21c>() {
+        NEW_INSTANCE = new Opcode<>(0x22, 4, "new-instance", SectionType.TYPE_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(NEW_INSTANCE);
             }
         });
         VALUES[0x22] = NEW_INSTANCE;
-        NEW_ARRAY = new Opcode<>(0x23, 4, "new-array", new BlockCreator<Ins22c>() {
+        NEW_ARRAY = new Opcode<>(0x23, 4, "new-array", SectionType.TYPE_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(NEW_ARRAY);
@@ -840,7 +840,7 @@ public class Opcode<T extends Instruction> implements BlockCreator<T> {
             }
         });
         VALUES[0x51] = APUT_SHORT;
-        IGET = new Opcode<>(0x52, 4, "iget", new BlockCreator<Ins22c>() {
+        IGET = new Opcode<>(0x52, 4, "iget", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IGET);
@@ -854,182 +854,182 @@ public class Opcode<T extends Instruction> implements BlockCreator<T> {
             }
         });
         VALUES[0x53] = IGET_WIDE;
-        IGET_OBJECT = new Opcode<>(0x54, 4, "iget-object", SectionType.TYPE_ID, new BlockCreator<Ins22c>() {
+        IGET_OBJECT = new Opcode<>(0x54, 4, "iget-object", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IGET_OBJECT);
             }
         });
         VALUES[0x54] = IGET_OBJECT;
-        IGET_BOOLEAN = new Opcode<>(0x55, 4, "iget-boolean", new BlockCreator<Ins22c>() {
+        IGET_BOOLEAN = new Opcode<>(0x55, 4, "iget-boolean", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IGET_BOOLEAN);
             }
         });
         VALUES[0x55] = IGET_BOOLEAN;
-        IGET_BYTE = new Opcode<>(0x56, 4, "iget-byte", new BlockCreator<Ins22c>() {
+        IGET_BYTE = new Opcode<>(0x56, 4, "iget-byte", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IGET_BYTE);
             }
         });
         VALUES[0x56] = IGET_BYTE;
-        IGET_CHAR = new Opcode<>(0x57, 4, "iget-char", new BlockCreator<Ins22c>() {
+        IGET_CHAR = new Opcode<>(0x57, 4, "iget-char", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IGET_CHAR);
             }
         });
         VALUES[0x57] = IGET_CHAR;
-        IGET_SHORT = new Opcode<>(0x58, 4, "iget-short", new BlockCreator<Ins22c>() {
+        IGET_SHORT = new Opcode<>(0x58, 4, "iget-short", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IGET_SHORT);
             }
         });
         VALUES[0x58] = IGET_SHORT;
-        IPUT = new Opcode<>(0x59, 4, "iput", new BlockCreator<Ins22c>() {
+        IPUT = new Opcode<>(0x59, 4, "iput", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IPUT);
             }
         });
         VALUES[0x59] = IPUT;
-        IPUT_WIDE = new Opcode<>(0x5a, 4, "iput-wide", new BlockCreator<Ins22c>() {
+        IPUT_WIDE = new Opcode<>(0x5a, 4, "iput-wide", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IPUT_WIDE);
             }
         });
         VALUES[0x5a] = IPUT_WIDE;
-        IPUT_OBJECT = new Opcode<>(0x5b, 4, "iput-object", new BlockCreator<Ins22c>() {
+        IPUT_OBJECT = new Opcode<>(0x5b, 4, "iput-object", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IPUT_OBJECT);
             }
         });
         VALUES[0x5b] = IPUT_OBJECT;
-        IPUT_BOOLEAN = new Opcode<>(0x5c, 4, "iput-boolean", new BlockCreator<Ins22c>() {
+        IPUT_BOOLEAN = new Opcode<>(0x5c, 4, "iput-boolean", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IPUT_BOOLEAN);
             }
         });
         VALUES[0x5c] = IPUT_BOOLEAN;
-        IPUT_BYTE = new Opcode<>(0x5d, 4, "iput-byte", new BlockCreator<Ins22c>() {
+        IPUT_BYTE = new Opcode<>(0x5d, 4, "iput-byte", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IPUT_BYTE);
             }
         });
         VALUES[0x5d] = IPUT_BYTE;
-        IPUT_CHAR = new Opcode<>(0x5e, 4, "iput-char", new BlockCreator<Ins22c>() {
+        IPUT_CHAR = new Opcode<>(0x5e, 4, "iput-char", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IPUT_CHAR);
             }
         });
         VALUES[0x5e] = IPUT_CHAR;
-        IPUT_SHORT = new Opcode<>(0x5f, 4, "iput-short", new BlockCreator<Ins22c>() {
+        IPUT_SHORT = new Opcode<>(0x5f, 4, "iput-short", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IPUT_SHORT);
             }
         });
         VALUES[0x5f] = IPUT_SHORT;
-        SGET = new Opcode<>(0x60, 4, "sget", new BlockCreator<Ins21c>() {
+        SGET = new Opcode<>(0x60, 4, "sget", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SGET);
             }
         });
         VALUES[0x60] = SGET;
-        SGET_WIDE = new Opcode<>(0x61, 4, "sget-wide", new BlockCreator<Ins21c>() {
+        SGET_WIDE = new Opcode<>(0x61, 4, "sget-wide", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SGET_WIDE);
             }
         });
         VALUES[0x61] = SGET_WIDE;
-        SGET_OBJECT = new Opcode<>(0x62, 4, "sget-object", new BlockCreator<Ins21c>() {
+        SGET_OBJECT = new Opcode<>(0x62, 4, "sget-object", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SGET_OBJECT);
             }
         });
         VALUES[0x62] = SGET_OBJECT;
-        SGET_BOOLEAN = new Opcode<>(0x63, 4, "sget-boolean", new BlockCreator<Ins21c>() {
+        SGET_BOOLEAN = new Opcode<>(0x63, 4, "sget-boolean", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SGET_BOOLEAN);
             }
         });
         VALUES[0x63] = SGET_BOOLEAN;
-        SGET_BYTE = new Opcode<>(0x64, 4, "sget-byte", new BlockCreator<Ins21c>() {
+        SGET_BYTE = new Opcode<>(0x64, 4, "sget-byte", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SGET_BYTE);
             }
         });
         VALUES[0x64] = SGET_BYTE;
-        SGET_CHAR = new Opcode<>(0x65, 4, "sget-char", new BlockCreator<Ins21c>() {
+        SGET_CHAR = new Opcode<>(0x65, 4, "sget-char", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SGET_CHAR);
             }
         });
         VALUES[0x65] = SGET_CHAR;
-        SGET_SHORT = new Opcode<>(0x66, 4, "sget-short", new BlockCreator<Ins21c>() {
+        SGET_SHORT = new Opcode<>(0x66, 4, "sget-short", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SGET_SHORT);
             }
         });
         VALUES[0x66] = SGET_SHORT;
-        SPUT = new Opcode<>(0x67, 4, "sput", new BlockCreator<Ins21c>() {
+        SPUT = new Opcode<>(0x67, 4, "sput", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SPUT);
             }
         });
         VALUES[0x67] = SPUT;
-        SPUT_WIDE = new Opcode<>(0x68, 4, "sput-wide", new BlockCreator<Ins21c>() {
+        SPUT_WIDE = new Opcode<>(0x68, 4, "sput-wide", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SPUT_WIDE);
             }
         });
         VALUES[0x68] = SPUT_WIDE;
-        SPUT_OBJECT = new Opcode<>(0x69, 4, "sput-object", new BlockCreator<Ins21c>() {
+        SPUT_OBJECT = new Opcode<>(0x69, 4, "sput-object", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SPUT_OBJECT);
             }
         });
         VALUES[0x69] = SPUT_OBJECT;
-        SPUT_BOOLEAN = new Opcode<>(0x6a, 4, "sput-boolean", new BlockCreator<Ins21c>() {
+        SPUT_BOOLEAN = new Opcode<>(0x6a, 4, "sput-boolean", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SPUT_BOOLEAN);
             }
         });
         VALUES[0x6a] = SPUT_BOOLEAN;
-        SPUT_BYTE = new Opcode<>(0x6b, 4, "sput-byte", new BlockCreator<Ins21c>() {
+        SPUT_BYTE = new Opcode<>(0x6b, 4, "sput-byte", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SPUT_BYTE);
             }
         });
         VALUES[0x6b] = SPUT_BYTE;
-        SPUT_CHAR = new Opcode<>(0x6c, 4, "sput-char", new BlockCreator<Ins21c>() {
+        SPUT_CHAR = new Opcode<>(0x6c, 4, "sput-char", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SPUT_CHAR);
             }
         });
         VALUES[0x6c] = SPUT_CHAR;
-        SPUT_SHORT = new Opcode<>(0x6d, 4, "sput-short", new BlockCreator<Ins21c>() {
+        SPUT_SHORT = new Opcode<>(0x6d, 4, "sput-short", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SPUT_SHORT);

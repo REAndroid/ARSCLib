@@ -15,21 +15,15 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.dex.item.AnnotationSet;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class FieldId extends ItemId implements SmaliFormat {
-    private final List<AnnotationSet> annotations;
     public FieldId() {
         super(8);
-        annotations = new ArrayList<>();
     }
-
     public String getKey(){
         StringBuilder builder = new StringBuilder();
         TypeId type = getClassType();

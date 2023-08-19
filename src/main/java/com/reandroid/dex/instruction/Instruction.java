@@ -20,7 +20,9 @@ public class Instruction extends DexContainerItem implements SmaliFormat {
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-
+        writer.newLine();
+        writer.append(getOpcode().getName());
+        writer.append(' ');
     }
     @Override
     public String toString() {
