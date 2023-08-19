@@ -73,6 +73,13 @@ public class IntegerList extends DexItem implements
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
+        IntegerReference itemCount = this.itemCount;
+        if(itemCount instanceof Block){
+            Block block = (Block) itemCount;
+            if(block.getParent() == this){
+                block.readBytes(reader);
+            }
+        }
         arrayBlock.setSize(itemCount.get());
         super.onReadBytes(reader);
     }
