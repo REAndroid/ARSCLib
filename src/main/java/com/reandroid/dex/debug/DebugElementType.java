@@ -21,10 +21,10 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class DebugElementType<T extends DebugElement> {
+public class DebugElementType<T extends DebugElement> implements BlockCreator<T>{
 
     public static final DebugElementType<?>[] VALUES;
-    private static final BlockCreator<DebugSkip> SKIP_BLOCK_CREATOR;
+    private static final BlockCreator<DebugLine> DEBUG_LINE_CREATOR;
 
     public static final DebugElementType<DebugStartLocal> START_LOCAL;
     public static final DebugElementType<DebugEndLocal> END_LOCAL;
@@ -42,7 +42,7 @@ public class DebugElementType<T extends DebugElement> {
     static {
 
         VALUES = new DebugElementType[0xff + 1];
-        SKIP_BLOCK_CREATOR = DebugSkip::new;
+        DEBUG_LINE_CREATOR = DebugLine::new;
 
         START_LOCAL = new DebugElementType<>("START_LOCAL", ".local",
                 0x03, DebugStartLocal::new);
@@ -73,7 +73,6 @@ public class DebugElementType<T extends DebugElement> {
         VALUES[LINE_NUMBER.flag] = LINE_NUMBER;
 
 
-
         END_SEQUENCE = new DebugElementType<>("END_SEQUENCE",
                 0x00, DebugEndSequence::new);
         VALUES[END_SEQUENCE.flag] = END_SEQUENCE;
@@ -89,10 +88,7 @@ public class DebugElementType<T extends DebugElement> {
         START_LOCAL_EXTENDED = new DebugElementType<>("START_LOCAL_EXTENDED", ".local",
                 0x04, DebugStartLocalExtended::new);
         VALUES[START_LOCAL_EXTENDED.flag] = START_LOCAL_EXTENDED;
-
     }
-
-
 
     private final String name;
     private final String opcode;
@@ -118,8 +114,9 @@ public class DebugElementType<T extends DebugElement> {
     public int getFlag() {
         return flag;
     }
-    public BlockCreator<T> getCreator() {
-        return creator;
+    @Override
+    public T newInstance() {
+        return creator.newInstance();
     }
 
     @Override
@@ -155,19 +152,20 @@ public class DebugElementType<T extends DebugElement> {
         flag = flag & 0xff;
         DebugElementType<?> debugElementType = VALUES[flag];
         if(debugElementType == null){
-            debugElementType = createUnknown(flag);
+            debugElementType = createDebugLine(flag);
         }
         return debugElementType;
     }
-    private static DebugElementType<?> createUnknown(int flag){
+    private static DebugElementType<?> createDebugLine(int flag){
         synchronized (DebugElementType.class){
             DebugElementType<?> debugElementType = VALUES[flag];
 
             if(debugElementType == null){
                 debugElementType = new DebugElementType<>(
-                        HexUtil.toHex("UNKNOWN-0x", flag, 2),
+                        HexUtil.toHex("DebugLine-0x", flag, 2),
+                        ".line",
                         flag,
-                        SKIP_BLOCK_CREATOR);
+                        DEBUG_LINE_CREATOR);
                 VALUES[flag] = debugElementType;
             }
 

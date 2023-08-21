@@ -17,7 +17,7 @@ package com.reandroid.dex.debug;
 
 import com.reandroid.dex.base.Sle128Item;
 
-public class DebugAdvanceLine extends DebugElement{
+public class DebugAdvanceLine extends DebugSkip{
     private final Sle128Item lineDiff;
     public DebugAdvanceLine() {
         super(1, DebugElementType.ADVANCE_LINE);

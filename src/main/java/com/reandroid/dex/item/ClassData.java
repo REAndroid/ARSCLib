@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.writer.SmaliFormat;

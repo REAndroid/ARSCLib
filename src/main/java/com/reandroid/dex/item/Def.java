@@ -43,6 +43,15 @@ public class Def extends DexContainerItem implements SmaliFormat {
         }
         return null;
     }
+    public void appendAnnotations(SmaliWriter writer) throws IOException {
+        AnnotationSet[] annotations = getAnnotations();
+        if(annotations != null){
+            for(AnnotationSet annotationSet : annotations){
+                annotationSet.append(writer);
+            }
+            writer.newLine();
+        }
+    }
     public ClassId getClassId() {
         return classId;
     }

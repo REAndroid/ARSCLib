@@ -72,16 +72,11 @@ public class MethodDef extends Def {
         writer.append(')');
         methodId.getProto().getReturnTypeId().append(writer);
         writer.indentPlus();
-        AnnotationSet[] annotations = getAnnotations();
-        if(annotations != null){
-            for(AnnotationSet annotationSet : annotations){
-                annotationSet.append(writer);
-            }
-            writer.newLine();
-        }
         CodeItem codeItem = getCodeItem();
         if(codeItem != null){
             codeItem.append(writer);
+        }else {
+            appendAnnotations(writer);
         }
         writer.indentMinus();
         writer.newLine();

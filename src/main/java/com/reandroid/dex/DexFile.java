@@ -27,7 +27,6 @@ import java.io.*;
 
 public class DexFile extends ExpandableBlockContainer {
 
-
     private final SectionList sectionList;
 
     public DexFile() {
@@ -43,11 +42,11 @@ public class DexFile extends ExpandableBlockContainer {
         return getSectionList().getHeader();
     }
 
-
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
         super.onReadBytes(reader);
         //TEST
+        int count = 0;
         Section<ClassId> sectionClass = sectionList.get(SectionType.CLASS_ID);
         for(ClassId classId:sectionClass){
             StringWriter writer = new StringWriter();
@@ -55,6 +54,10 @@ public class DexFile extends ExpandableBlockContainer {
             classId.append(smaliWriter);
             smaliWriter.close();
             System.err.println(writer.toString());
+            count++;
+            if(count > 100){
+                break;
+            }
         }
 
     }

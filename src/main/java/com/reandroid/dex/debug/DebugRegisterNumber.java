@@ -16,6 +16,9 @@
 package com.reandroid.dex.debug;
 
 import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.dex.writer.SmaliWriter;
+
+import java.io.IOException;
 
 class DebugRegisterNumber extends DebugElement {
 
@@ -37,6 +40,11 @@ class DebugRegisterNumber extends DebugElement {
         this.registerNumber.set(registerNumber);
     }
 
+    public void appendExtra(SmaliWriter writer) throws IOException {
+        writer.append(getElementType().getOpcode());
+        writer.append(" v");
+        writer.append(getRegisterNumber());
+    }
     @Override
     public String toString() {
         return getElementType() + " v" + getRegisterNumber();

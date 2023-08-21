@@ -15,17 +15,16 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.dex.base.DexBlockItem;
-import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class TypeId extends DexBlockItem implements SmaliFormat {
+public class TypeId extends ItemId {
+    private final ItemIndexReference<StringData> stringData;
     public TypeId() {
         super(4);
+        this.stringData = new ItemIndexReference<>(SectionType.STRING_DATA, this, 0);
     }
 
     public String getString(){
@@ -36,18 +35,13 @@ public class TypeId extends DexBlockItem implements SmaliFormat {
         return null;
     }
     public StringData getStringData(){
-        SectionList sectionList = getParentInstance(SectionList.class);
-        if(sectionList != null){
-
-            return sectionList.get(SectionType.STRING_DATA, getStringIndexValue());
-        }
-        return null;
+        return stringData.getItem();
     }
     public int getStringIndexValue(){
-        return getInteger(getBytesInternal(), 0);
+        return stringData.get();
     }
     public void setStringIndex(int index){
-        putInteger(getBytesInternal(), 0, index);
+        stringData.set(index);
     }
 
     @Override

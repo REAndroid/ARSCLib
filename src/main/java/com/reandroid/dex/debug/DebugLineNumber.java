@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.debug;
 
-public class DebugLineNumber extends DebugEmptyElement{
+public class DebugLineNumber extends DebugLine{
     public DebugLineNumber() {
         super(DebugElementType.LINE_NUMBER);
     }

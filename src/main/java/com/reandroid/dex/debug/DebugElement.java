@@ -16,10 +16,15 @@
 package com.reandroid.dex.debug;
 
 import com.reandroid.arsc.item.ByteItem;
+import com.reandroid.dex.ins.ExtraLine;
 import com.reandroid.dex.item.DexContainerItem;
+import com.reandroid.dex.writer.SmaliWriter;
 
-public class DebugElement extends DexContainerItem {
+import java.io.IOException;
+
+public class DebugElement extends DexContainerItem implements ExtraLine {
     private final ByteItem elementType;
+    private int address;
 
     DebugElement(int childesCount, int flag) {
         super(childesCount + 1);
@@ -33,11 +38,31 @@ public class DebugElement extends DexContainerItem {
         this(childesCount, elementType.getFlag());
     }
 
+    public int getAddress() {
+        return address;
+    }
+    public void setAddress(int address) {
+        this.address = address;
+    }
+
     public int getElementTypeFlag(){
         return elementType.unsignedInt();
     }
     public DebugElementType<?> getElementType() {
         return DebugElementType.fromFlag(getElementTypeFlag());
+    }
+
+    @Override
+    public void appendExtra(SmaliWriter writer) throws IOException {
+        writer.append(getElementType().getOpcode());
+    }
+    @Override
+    public boolean isEqualExtraLine(Object obj) {
+        return obj == this;
+    }
+    @Override
+    public int getSortOrder() {
+        return ExtraLine.ORDER_DEBUG_LINE;
     }
     @Override
     public String toString() {

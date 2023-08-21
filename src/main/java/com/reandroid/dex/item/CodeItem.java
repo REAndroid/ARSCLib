@@ -17,13 +17,15 @@ package com.reandroid.dex.item;
 
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
+import com.reandroid.dex.debug.DebugParameter;
 import com.reandroid.dex.index.ProtoId;
-import com.reandroid.dex.instruction.TryBlock;
+import com.reandroid.dex.ins.TryBlock;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class CodeItem extends DexItem implements SmaliFormat {
 
@@ -35,8 +37,8 @@ public class CodeItem extends DexItem implements SmaliFormat {
     public CodeItem() {
         super(3);
         this.header = new Header();
-        this.instructionList = new InstructionList(header.instructionCodeUnits);
         this.tryBlock = new TryBlock(header.tryBlockCount);
+        this.instructionList = new InstructionList(header.instructionCodeUnits, tryBlock);
 
         addChild(0, header);
         addChild(1, instructionList);
@@ -64,12 +66,21 @@ public class CodeItem extends DexItem implements SmaliFormat {
     @Override
     public void append(SmaliWriter writer) throws IOException {
         MethodDef methodDef = getMethodDef();
+        DebugInfo debugInfo = getDebugInfo();
         ProtoId proto = methodDef.getMethodIndex().getProto();
         writer.newLine();
         writer.append(".locals ");
         InstructionList instructionList = getInstructionList();
+        instructionList.buildDebugInfo(debugInfo);
         int count = header.registersCount.get() - proto.getParametersCount();
         writer.append(count);
+        if(debugInfo != null){
+            Iterator<DebugParameter> parameterIterator = debugInfo.getParameters();
+            while (parameterIterator.hasNext()){
+                parameterIterator.next().append(writer);
+            }
+        }
+        methodDef.appendAnnotations(writer);
         instructionList.append(writer);
     }
     @Override

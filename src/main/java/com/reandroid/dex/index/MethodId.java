@@ -21,37 +21,27 @@ import com.reandroid.dex.writer.SmaliWriter;
 import java.io.IOException;
 
 public class MethodId extends ItemId {
+
+    private final ItemIndexReference<TypeId> classType;
+    private final ItemIndexReference<ProtoId> proto;
+    private final ItemIndexReference<StringData> name;
+
     public MethodId() {
         super(SIZE);
+        int offset = -2;
+        this.classType = new ItemShortReference<>(SectionType.TYPE_ID, this, offset += 2);
+        this.proto = new ItemShortReference<>(SectionType.PROTO_ID, this, offset += 2);
+        this.name = new ItemIndexReference<>(SectionType.STRING_DATA, this, offset += 2);
     }
 
     public TypeId getClassType(){
-        return getTypeId(getClassIndex());
+        return classType.getItem();
     }
     public StringData getNameString(){
-        return getStringData(getNameIndex());
+        return name.getItem();
     }
     public ProtoId getProto(){
-        return getSectionList().get(SectionType.PROTO_ID, getProtoIndex());
-    }
-
-    public int getClassIndex(){
-        return getShort(getBytesInternal(), OFFSET_CLASS) & 0xffff;
-    }
-    public void setClassIndex(int index){
-        putShort(getBytesInternal(), OFFSET_CLASS, (short) index);;
-    }
-    public int getProtoIndex(){
-        return getShort(getBytesInternal(), OFFSET_PROTO) & 0xffff;
-    }
-    public void setProtoIndex(int index){
-        putShort(getBytesInternal(), OFFSET_PROTO, (short) index);;
-    }
-    public int getNameIndex(){
-        return getInteger(getBytesInternal(), OFFSET_NAME);
-    }
-    public void setNameIndex(int index){
-        putInteger(getBytesInternal(), OFFSET_NAME, index);
+        return proto.getItem();
     }
 
     @Override
@@ -69,9 +59,6 @@ public class MethodId extends ItemId {
         return getClassType() + "->" + getNameString() + getProto();
     }
 
-    private static final int OFFSET_CLASS = 0;
-    private static final int OFFSET_PROTO = 2;
-    private static final int OFFSET_NAME = 4;
     private static final int SIZE = 8;
 
 }

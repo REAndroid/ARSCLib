@@ -15,8 +15,18 @@
  */
 package com.reandroid.dex.debug;
 
-public class DebugSkip extends DebugEmptyElement {
-    public DebugSkip() {
-        super(0xff);
+import com.reandroid.dex.writer.SmaliWriter;
+
+import java.io.IOException;
+
+public class DebugSkip extends DebugElement{
+    DebugSkip(int childesCount, DebugElementType<?> elementType) {
+        super(childesCount, elementType);
+    }
+    DebugSkip(DebugElementType<?> elementType) {
+        this(0, elementType);
+    }
+    @Override
+    public void appendExtra(SmaliWriter writer) throws IOException {
     }
 }

@@ -19,6 +19,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.FieldId;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.value.DexValue;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
@@ -55,10 +56,19 @@ public class FieldDef extends Def {
         writer.append(fieldId.getNameString().getString());
         writer.append(':');
         fieldId.getFieldType().append(writer);
+        if(AccessFlag.STATIC.isSet(getAccessFlagsValue()) && AccessFlag.FINAL.isSet(getAccessFlagsValue())){
+            EncodedArray encodedArray = getClassId().getStaticValues();
+            if(encodedArray != null){
+                DexValue<?> value = encodedArray.getElements().get(getIndex());
+                if(value != null){
+                    writer.append(" = ");
+                    value.append(writer);
+                }
+            }
+        }
         AnnotationSet[] annotations = getAnnotations();
         if (annotations != null){
             writer.indentPlus();
-            writer.newLine();
             for(AnnotationSet annotationSet : annotations){
                 annotationSet.append(writer);
             }

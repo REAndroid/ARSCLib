@@ -17,7 +17,7 @@ package com.reandroid.dex.debug;
 
 import com.reandroid.dex.base.Ule128Item;
 
-public class DebugAdvancePc extends DebugElement{
+public class DebugAdvancePc extends DebugSkip{
     private final Ule128Item addressDiff;
     public DebugAdvancePc() {
         super(1, DebugElementType.ADVANCE_PC);

@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.debug;
 
-public class DebugEndSequence extends DebugEmptyElement{
+public class DebugEndSequence extends DebugSkip{
     public DebugEndSequence() {
         super(DebugElementType.END_SEQUENCE);
     }

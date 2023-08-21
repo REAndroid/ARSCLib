@@ -19,6 +19,9 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.index.StringData;
 import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.writer.SmaliWriter;
+
+import java.io.IOException;
 
 public class DebugStartLocal extends DebugRegisterNumber {
 
@@ -48,6 +51,15 @@ public class DebugStartLocal extends DebugRegisterNumber {
         return get(SectionType.TYPE_ID, typeIndex.get() - 1);
     }
 
+    public void appendExtra(SmaliWriter writer) throws IOException {
+        writer.append(getElementType().getOpcode());
+        writer.append(" v");
+        writer.append(getRegisterNumber());
+        writer.append(", ");
+        getName().append(writer);
+        writer.append(':');
+        getTypeId().append(writer);
+    }
     @Override
     public String toString() {
         StringData stringData = getName();

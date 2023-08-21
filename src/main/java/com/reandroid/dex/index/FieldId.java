@@ -15,14 +15,21 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.dex.writer.SmaliFormat;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class FieldId extends ItemId implements SmaliFormat {
+public class FieldId extends ItemId {
+    private final ItemIndexReference<TypeId> classType;
+    private final ItemIndexReference<TypeId> fieldType;
+    private final ItemIndexReference<StringData> name;
+
     public FieldId() {
         super(8);
+        this.classType = new ItemShortReference<>(SectionType.TYPE_ID, this, 0);
+        this.fieldType = new ItemShortReference<>(SectionType.TYPE_ID, this, 2);
+        this.name = new ItemIndexReference<>(SectionType.STRING_DATA, this, 4);
     }
     public String getKey(){
         StringBuilder builder = new StringBuilder();
@@ -54,32 +61,13 @@ public class FieldId extends ItemId implements SmaliFormat {
         return builder.toString();
     }
     public TypeId getClassType(){
-        return getTypeId(getClassIndex());
+        return classType.getItem();
     }
     public StringData getNameString(){
-        return getStringData(getNameIndex());
+        return name.getItem();
     }
     public TypeId getFieldType(){
-        return getTypeId(getTypeIndex());
-    }
-
-    public int getClassIndex(){
-        return getShort(getBytesInternal(), 0) & 0xffff;
-    }
-    public void setClassIndex(int index){
-        putShort(getBytesInternal(), 0, (short) index);
-    }
-    public int getTypeIndex(){
-        return getShort(getBytesInternal(), 2) & 0xffff;
-    }
-    public void setTypeIndex(int index){
-        putShort(getBytesInternal(), 2, (short) index);
-    }
-    public int getNameIndex(){
-        return getInteger(getBytesInternal(), 4);
-    }
-    public void setNameIndex(int index){
-        putInteger(getBytesInternal(), 4, index);
+        return fieldType.getItem();
     }
 
     @Override
@@ -96,6 +84,6 @@ public class FieldId extends ItemId implements SmaliFormat {
         if(key != null){
             return key;
         }
-        return getClassIndex() + "->" + getNameString() + ":" + getFieldType();
+        return getClassType() + "->" + getNameString() + ":" + getFieldType();
     }
 }

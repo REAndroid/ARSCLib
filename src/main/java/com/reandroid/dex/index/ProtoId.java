@@ -25,7 +25,7 @@ import java.io.IOException;
 public class ProtoId extends ItemId {
 
     private final IndirectInteger shorty;
-    private final IndirectInteger returnType;
+    private final ItemIndexReference<TypeId> returnType;
     private final IndirectInteger parameters;
 
     public ProtoId() {
@@ -33,7 +33,7 @@ public class ProtoId extends ItemId {
         int offset = -4;
 
         this.shorty = new IndirectInteger(this, offset += 4);
-        this.returnType = new IndirectInteger(this, offset += 4);
+        this.returnType = new ItemIndexReference<>(SectionType.TYPE_ID, this, offset += 4);
         this.parameters = new IndirectInteger(this, offset += 4);
     }
 
@@ -41,18 +41,8 @@ public class ProtoId extends ItemId {
         return getAt(SectionType.TYPE_LIST, parameters.get());
     }
 
-    public IndirectInteger getShorty() {
-        return shorty;
-    }
-    public IndirectInteger getReturnTypeIdReference() {
-        return returnType;
-    }
-    public IndirectInteger getParametersReference() {
-        return parameters;
-    }
-
     public TypeId getReturnTypeId(){
-        return getTypeId(getReturnTypeIdReference());
+        return returnType.getItem();
     }
 
     public int[] getParametersIndexes(){

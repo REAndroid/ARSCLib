@@ -25,32 +25,32 @@ import java.io.IOException;
 
 public class ClassId extends ItemId {
 
-    private final IndirectInteger typeIndex;
+    private final ItemIndexReference<TypeId> typeIndex;
     private final IndirectInteger accessFlagValue;
     private final IndirectInteger superClassIndex;
     private final IndirectInteger interfacesOffset;
     private final IndirectInteger sourceFileIndex;
     private final IndirectInteger annotationDirectoryOffset;
-    private final IndirectInteger classDataOffset;
+    private final ItemOffsetReference<ClassData> classDataOffset;
     private final IndirectInteger staticValuesOffset;
 
     public ClassId() {
         super(SIZE);
         int offset = -4;
         
-        this.typeIndex = new IndirectInteger(this, offset += 4);
+        this.typeIndex = new ItemIndexReference<>(SectionType.TYPE_ID, this, offset += 4);
         this.accessFlagValue = new IndirectInteger(this, offset += 4);
         this.superClassIndex = new IndirectInteger(this, offset += 4);
         this.interfacesOffset = new IndirectInteger(this, offset += 4);
         this.sourceFileIndex = new IndirectInteger(this, offset += 4);
         this.annotationDirectoryOffset = new IndirectInteger(this, offset += 4);
-        this.classDataOffset = new IndirectInteger(this, offset += 4);
+        this.classDataOffset = new ItemOffsetReference<>(SectionType.CLASS_DATA, this, offset += 4);
         this.staticValuesOffset = new IndirectInteger(this, offset += 4);
 
     }
 
     public TypeId getType(){
-        return getTypeId(typeIndex.get());
+        return typeIndex.getItem();
     }
     public int getAccessFlagValue() {
         return accessFlagValue.get();
@@ -85,7 +85,7 @@ public class ClassId extends ItemId {
         return getAt(SectionType.ANNOTATIONS_DIRECTORY, annotationDirectoryOffset.get());
     }
     public ClassData getClassData(){
-        return getAt(SectionType.CLASS_DATA, classDataOffset.get());
+        return classDataOffset.getItem();
     }
     public EncodedArray getStaticValues(){
         return getAt(SectionType.ENCODED_ARRAY, staticValuesOffset.get());

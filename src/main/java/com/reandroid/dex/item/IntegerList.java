@@ -57,6 +57,9 @@ public class IntegerList extends DexItem implements
     public int[] toArray(){
         return IntegerArray.toArray(arrayBlock);
     }
+    public void put(int index, int value){
+        arrayBlock.put(index, value);
+    }
     @Override
     public int get(int i) {
         return arrayBlock.get(i);

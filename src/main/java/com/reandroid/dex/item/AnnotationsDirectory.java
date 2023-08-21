@@ -17,6 +17,7 @@ package com.reandroid.dex.item;
 
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.dex.base.*;
+import com.reandroid.dex.index.ItemIndexReference;
 import com.reandroid.dex.sections.SectionType;
 
 public class AnnotationsDirectory extends DexItem {

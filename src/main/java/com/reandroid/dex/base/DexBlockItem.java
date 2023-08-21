@@ -15,9 +15,13 @@
  */
 package com.reandroid.dex.base;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.dex.io.ByteReader;
 import com.reandroid.dex.io.StreamUtil;
+import com.reandroid.dex.sections.Section;
+import com.reandroid.dex.sections.SectionList;
+import com.reandroid.dex.sections.SectionType;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +31,51 @@ public abstract class DexBlockItem extends BlockItem {
         super(bytesLength);
     }
 
+
+    public<T1 extends Block> T1 getAt(SectionType<T1> sectionType, int offset){
+        if(offset == 0){
+            return null;
+        }
+        Section<T1> section = getSection(sectionType);
+        if(section != null){
+            return section.getAt(offset);
+        }
+        return null;
+    }
+    public<T1 extends Block> T1[] getAt(SectionType<T1> sectionType, int[] offsets){
+        if(offsets == null || offsets.length == 0){
+            return null;
+        }
+        Section<T1> section = getSection(sectionType);
+        if(section != null){
+            return section.getAt(offsets);
+        }
+        return null;
+    }
+    public<T1 extends Block> T1[] get(SectionType<T1> sectionType, int[] indexes){
+        if(indexes == null || indexes.length == 0){
+            return null;
+        }
+        Section<T1> section = getSection(sectionType);
+        if(section == null){
+            return null;
+        }
+        return section.get(indexes);
+    }
+    public<T1 extends Block> T1 get(SectionType<T1> sectionType, int i){
+        Section<T1> section = getSection(sectionType);
+        if(section != null){
+            return section.get(i);
+        }
+        return null;
+    }
+    public<T1 extends Block> Section<T1> getSection(SectionType<T1> sectionType){
+        SectionList sectionList = getParent(SectionList.class);
+        if(sectionList != null){
+            return sectionList.get(sectionType);
+        }
+        return null;
+    }
 
     public static int writeUleb128(byte[] bytes, int offset, int value) {
         int index = 0;
