@@ -15,10 +15,7 @@
  */
 package com.reandroid.utils.collection;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 public class EmptyList<T> implements List<T>, EmptyItem {
     @Override
@@ -39,7 +36,7 @@ public class EmptyList<T> implements List<T>, EmptyItem {
     }
     @Override
     public Object[] toArray() {
-        return new Object[0];
+        return EMPTY;
     }
     @Override
     public <T1> T1[] toArray(T1[] t1s) {
@@ -117,10 +114,26 @@ public class EmptyList<T> implements List<T>, EmptyItem {
     public List<T> subList(int i, int i1) {
         throw new IllegalArgumentException("Empty list");
     }
+    @Override
+    public void sort(Comparator<? super T> c) {
+    }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == this){
+            return true;
+        }
+        if(!(obj instanceof Collection)){
+            return false;
+        }
+        return ((Collection<?>) obj).isEmpty();
+    }
+
+    @SuppressWarnings("unchecked")
     public static <T1> EmptyList<T1> of(){
         return (EmptyList<T1>) INS;
     }
 
     private static final EmptyList<?> INS = new EmptyList<>();
+    private static final Object[] EMPTY = new Object[0];
 }

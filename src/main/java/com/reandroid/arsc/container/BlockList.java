@@ -20,6 +20,7 @@ import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.EmptyList;
 import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
@@ -31,10 +32,10 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class BlockList<T extends Block> extends Block implements BlockRefresh {
-    private final List<T> mItems;
+    private List<T> mItems;
     public BlockList(){
         super();
-        mItems = new ArrayList<>();
+        mItems = EmptyList.of();
     }
     public Iterator<T> iterator(){
         if(size() == 0){
@@ -46,17 +47,21 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         return FilterIterator.of(this.iterator(), filter);
     }
     public void clearChildes(){
+        if(mItems.isEmpty()){
+            return;
+        }
         ArrayList<T> childList = new ArrayList<>(getChildes());
         for(T child:childList){
             remove(child);
         }
+        mItems = EmptyList.of();
     }
     public void sort(Comparator<T> comparator){
         mItems.sort(comparator);
         updateIndex();
     }
     public boolean remove(T item){
-        if(item!=null){
+        if(item != null){
             item.setParent(null);
             item.setIndex(-1);
         }
@@ -66,6 +71,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         if(item == null){
             return;
         }
+        unlockList();
         item.setIndex(index);
         item.setParent(this);
         mItems.add(index, item);
@@ -83,6 +89,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         if(item == null){
             return false;
         }
+        unlockList();
         item.setIndex(mItems.size());
         item.setParent(this);
         return mItems.add(item);
@@ -108,6 +115,11 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
 
     public List<T> getChildes(){
         return mItems;
+    }
+    private void unlockList(){
+        if(mItems.isEmpty()){
+            mItems = new ArrayList<>();
+        }
     }
     @Override
     public final void refresh(){

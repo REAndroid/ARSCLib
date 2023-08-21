@@ -17,10 +17,10 @@ package com.reandroid.common;
 
 import java.util.Iterator;
 
-public class ArrayIterator<T> implements Iterator<T> {
+public class ArraySupplierIterator<T> implements Iterator<T> {
     private final ArraySupplier<T> supplier;
     private int index;
-    public ArrayIterator(ArraySupplier<T> supplier){
+    public ArraySupplierIterator(ArraySupplier<T> supplier){
         this.supplier = supplier;
     }
     @Override

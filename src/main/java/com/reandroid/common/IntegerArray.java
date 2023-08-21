@@ -21,6 +21,7 @@ public interface IntegerArray {
     int get(int i);
     int size();
     void setSize(int size);
+    void put(int i, int value);
 
 
     static int[] toArray(IntegerArray array){
@@ -135,6 +136,9 @@ public interface IntegerArray {
             }
             @Override
             public void setSize(int size) {
+            }
+            @Override
+            public void put(int i, int value) {
             }
             @Override
             public String toString(){
