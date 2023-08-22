@@ -18,16 +18,16 @@ package com.reandroid.utils.collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class CombiningIterator<T> implements Iterator<T> {
-    private Iterator<T> iterator1;
-    private Iterator<T> iterator2;
-    private Iterator<Iterator<T>> iteratorIterator;
+public class CombiningIterator<T, E extends T> implements Iterator<T> {
+    private Iterator<? extends T> iterator1;
+    private Iterator<? extends T> iterator2;
+    private Iterator<Iterator<E>> iteratorIterator;
     private boolean mFirstFinished;
     private boolean mSecondFinished;
-    private Iterator<T> mSecond;
-    private Iterator<T> mCurrent;
+    private Iterator<? extends T> mSecond;
+    private Iterator<? extends T> mCurrent;
 
-    public CombiningIterator(Iterator<T> iterator1, Iterator<T> iterator2){
+    public CombiningIterator(Iterator<? extends T> iterator1, Iterator<? extends T> iterator2){
         this.iterator1 = iterator1;
         this.iterator2 = iterator2;
         this.iteratorIterator = null;
@@ -39,34 +39,34 @@ public class CombiningIterator<T> implements Iterator<T> {
     }
     @Override
     public T next() {
-        Iterator<T> current = getCurrent();
+        Iterator<? extends T> current = getCurrent();
         if(current == null){
             throw new NoSuchElementException();
         }
         mCurrent = null;
         return current.next();
     }
-    private Iterator<T> getCurrent() {
-        Iterator<T> current = mCurrent;
+    private Iterator<? extends T> getCurrent() {
+        Iterator<? extends T> current = mCurrent;
         if(current == null){
             current = loadCurrent();
             mCurrent = current;
         }
         return current;
     }
-    private Iterator<T> loadCurrent() {
-        Iterator<T> current = getFirst();
+    private Iterator<? extends T> loadCurrent() {
+        Iterator<? extends T> current = getFirst();
         if(current == null){
             current = getSecond();
         }
         return current;
     }
 
-    private Iterator<T> getSecond() {
+    private Iterator<? extends T> getSecond() {
         if(mSecondFinished){
             return null;
         }
-        Iterator<T> second = mSecond;
+        Iterator<? extends T> second = mSecond;
         if(second == null && iterator2 != null){
             second = iterator2;
             if(!second.hasNext()){
@@ -85,7 +85,7 @@ public class CombiningIterator<T> implements Iterator<T> {
             mSecondFinished = true;
             return null;
         }
-        Iterator<Iterator<T>> iteratorIterator = this.iteratorIterator;
+        Iterator<Iterator<E>> iteratorIterator = this.iteratorIterator;
         if(iteratorIterator == null){
             mSecondFinished = true;
             return null;
@@ -103,11 +103,11 @@ public class CombiningIterator<T> implements Iterator<T> {
         mSecond = second;
         return second;
     }
-    private Iterator<T> getFirst() {
+    private Iterator<? extends T> getFirst() {
         if(mFirstFinished){
             return null;
         }
-        Iterator<T> first = iterator1;
+        Iterator<? extends T> first = iterator1;
         if(first == null || !first.hasNext()){
             iterator1 = null;
             mFirstFinished = true;
@@ -116,11 +116,11 @@ public class CombiningIterator<T> implements Iterator<T> {
         return first;
     }
 
-    public static<T1> Iterator<T1> of(Iterator<T1> iterator1, Iterator<Iterator<T1>> iteratorIterator){
+    public static<T1, E1 extends T1> Iterator<T1> of(Iterator<T1> iterator1, Iterator<Iterator<E1>> iteratorIterator){
         if(!iteratorIterator.hasNext()){
             return iterator1;
         }
-        CombiningIterator<T1> iterator = new CombiningIterator<>(iterator1, null);
+        CombiningIterator<T1, E1> iterator = new CombiningIterator<>(iterator1, null);
         iterator.iteratorIterator = iteratorIterator;
         return iterator;
     }
