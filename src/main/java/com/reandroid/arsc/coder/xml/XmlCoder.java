@@ -436,8 +436,11 @@ public class XmlCoder {
                     continue;
                 }
                 startTag(serializer, TAG_item);
-                serializer.attribute(null, ATTR_name,
-                        valueMap.decodeName(true));
+                String name = valueMap.decodeName(true);
+                if(name == null){
+                    name = ValueCoder.decodeUnknownNameId(valueMap.getNameResourceID());
+                }
+                serializer.attribute(null, ATTR_name, name);
                 valueMap.serializeText(serializer);
                 endTag(serializer, TAG_item);
                 childCount ++;
