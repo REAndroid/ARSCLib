@@ -73,4 +73,21 @@ public class ArrayIterator<T> implements Iterator<T>, SizedItem{
         }
         return mTester == null || mTester.test(item);
     }
+    public static<T1> Iterator<T1> of(T1[] elements){
+        if(isEmpty(elements)){
+            return EmptyIterator.of();
+        }
+        return new ArrayIterator<>(elements);
+    }
+    private static boolean isEmpty(Object[] elements){
+        if(elements == null || elements.length == 0){
+            return true;
+        }
+        for(Object element : elements){
+            if(element != null){
+                return false;
+            }
+        }
+        return true;
+    }
 }

@@ -525,18 +525,21 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         if(index>size){
             end=size;
         }else {
-            end=index;
+            end = index;
         }
-        if(end>0){
+        if(end > 0){
             System.arraycopy(old, 0, update, 0, end);
         }
-        for(int i=end;i<size;i++){
-            T item=newInstance();
-            update[i]=item;
+        for(int i = end; i < size; i++){
+            T item = update[i];
+            if(item == null){
+                item = newInstance();
+                update[i] = item;
+            }
             item.setIndex(i);
             item.setParent(this);
         }
-        elementData=update;
+        elementData = update;
     }
     private void allocateIfFull(){
         if(mFreeSpace > 0){
