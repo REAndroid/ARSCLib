@@ -26,42 +26,54 @@ import java.io.OutputStream;
 public abstract class BlockItem extends Block {
 
     private byte[] mBytes;
+
     public BlockItem(int bytesLength){
         super();
-        mBytes=new byte[bytesLength];
+        if(bytesLength == 0){
+            mBytes = EMPTY;
+        }else {
+            mBytes = new byte[bytesLength];
+        }
     }
     protected void onBytesChanged(){
     }
     protected byte[] getBytesInternal() {
         return mBytes;
     }
-    void setBytesInternal(byte[] bts){
-        if(bts==null){
-            bts=new byte[0];
+    void setBytesInternal(byte[] bytes){
+        if(bytes == null){
+            bytes = EMPTY;
         }
-        if(bts==mBytes){
+        if(bytes == mBytes){
             return;
         }
-        mBytes=bts;
+        mBytes = bytes;
         onBytesChanged();
     }
     final void setBytesLength(int length){
         setBytesLength(length, true);
     }
     protected final void setBytesLength(int length, boolean notify){
-        if(length<0){
-            length=0;
+        if(length < 0){
+            length = 0;
         }
-        int old=mBytes.length;
-        if(length==old){
+        if(length == 0){
+            mBytes = EMPTY;
+            if(notify){
+                onBytesChanged();
+            }
             return;
         }
-        byte[] bts=new byte[length];
-        if(length<old){
-            old=length;
+        int old = mBytes.length;
+        if(length == old){
+            return;
         }
-        System.arraycopy(mBytes, 0, bts, 0, old);
-        mBytes=bts;
+        byte[] bytes = new byte[length];
+        if(length < old){
+            old = length;
+        }
+        System.arraycopy(mBytes, 0, bytes, 0, old);
+        mBytes = bytes;
         if(notify){
             onBytesChanged();
         }
@@ -98,29 +110,42 @@ public abstract class BlockItem extends Block {
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
-        reader.readFully(getBytesInternal());
+        byte[] bytes = getBytesInternal();
+        int length = bytes.length;
+        if(length == 0){
+            return;
+        }
+        reader.readFully(bytes);
         onBytesChanged();
     }
     @Override
     protected int onWriteBytes(OutputStream stream) throws IOException {
-        stream.write(getBytesInternal());
-        return getBytesLength();
-    }
-    public int readBytes(InputStream inputStream) throws IOException {
-        byte[] bts=getBytesInternal();
-        if(bts==null || bts.length==0){
+        byte[] bytes = getBytesInternal();
+        int length = bytes.length;
+        if(length == 0){
             return 0;
         }
-        int length=bts.length;
-        int offset=0;
-        int read=length;
-        while (length>0 && read>0){
-            read = inputStream.read(bts, offset, length);
-            length-=read;
-            offset+=read;
+        stream.write(bytes, 0, length);
+        return length;
+    }
+
+    public int readBytes(InputStream inputStream) throws IOException {
+        byte[] bytes=getBytesInternal();
+        if(bytes == null || bytes.length==0){
+            return 0;
+        }
+        int length = bytes.length;
+        int offset = 0;
+        int read = length;
+        while (length > 0 && read > 0){
+            read = inputStream.read(bytes, offset, length);
+            length -= read;
+            offset += read;
         }
         onBytesChanged();
         super.notifyBlockLoad();
-        return bts.length;
+        return bytes.length;
     }
+
+    private static final byte[] EMPTY = new byte[0];
 }
