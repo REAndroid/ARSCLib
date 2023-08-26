@@ -167,6 +167,7 @@ public class ApkModuleTest {
         createAttrEntry(packageBlock);
         createArrayEntry(packageBlock);
         createMoreStrings(packageBlock);
+        addArrayBagStrings_1(packageBlock);
 
         tableBlock.refreshFull();
 
@@ -222,6 +223,49 @@ public class ApkModuleTest {
         packageBlock.getTableBlock().refreshFull();
 
         Assert.assertEquals(text, resValue.getValueAsString());
+    }
+    private void addArrayBagStrings_1(PackageBlock packageBlock){
+
+        Entry entry = packageBlock
+                .getOrCreate("", "array", "test_array_bag_1");
+        entry.ensureComplex(true);
+        ResTableMapEntry mapEntry = entry.getResTableMapEntry();
+
+        mapEntry.setValuesCount(5);
+
+        ResValueMapArray mapArray = mapEntry.getValue();
+
+        ResValueMap valueMap;
+
+        valueMap = mapArray.get(0);
+        Assert.assertNotNull(valueMap);
+        valueMap.setArrayIndex(1);
+        String text = "123";
+        valueMap.setValueAsString(text);
+
+        valueMap = mapArray.get(1);
+        Assert.assertNotNull(valueMap);
+        valueMap.setArrayIndex(2);
+        text = "10.0dp";
+        valueMap.setValueAsString(text);
+
+        valueMap = mapArray.get(2);
+        Assert.assertNotNull(valueMap);
+        valueMap.setArrayIndex(3);
+        valueMap.setTypeAndData(ValueType.DEC, 123);
+
+        valueMap = mapArray.get(3);
+        Assert.assertNotNull(valueMap);
+        valueMap.setArrayIndex(4);
+        text = "#ffaa00";
+        valueMap.setValueAsString(text);
+        entry.getResTableMapEntry().refresh();
+
+        valueMap = mapArray.get(4);
+        Assert.assertNotNull(valueMap);
+        valueMap.setArrayIndex(5);
+        text = "@string/app_name";
+        valueMap.setValueAsString(text);
     }
     private void createAttrEntry(PackageBlock packageBlock){
         Entry entry = packageBlock

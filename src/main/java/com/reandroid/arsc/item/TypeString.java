@@ -91,6 +91,13 @@ public class TypeString extends StringItem {
         // TODO: find better way
         return "id".equals(type);
     }
+    public static boolean isTypeString(String type){
+        // TODO: find better way
+        if(type == null){
+            return false;
+        }
+        return type.equals("string");
+    }
     public static String toXmlTagName(String typeName){
         // e.g ^attr-private
         if(typeName != null && typeName.length()>0 && typeName.charAt(0) == '^'){

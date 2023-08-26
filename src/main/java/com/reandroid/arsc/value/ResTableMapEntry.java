@@ -101,6 +101,12 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
         ResValueMap[] childes = getValue().getChildes();
         for(ResValueMap valueMap : childes){
             ValueType valueType = valueMap.getValueType();
+            if(valueType == null){
+                return null;
+            }
+            if(valueType == ValueType.REFERENCE){
+                continue;
+            }
             if(allValueType == null){
                 allValueType = valueType;
             }else if(valueType != allValueType){

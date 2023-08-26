@@ -99,9 +99,12 @@ public class XmlSanitizer {
         if(len <= offset || len > 14){
             return false;
         }
-        if(looksNumber(text, offset)){
-            return true;
+        if(!looksNumber(text, offset) && !isBoolean(text, offset)){
+            return false;
         }
+        return ValueCoder.encode(text.substring(offset)) != null;
+    }
+    private static boolean isBoolean(String text, int offset){
         text = text.substring(offset);
         return "true".equals(text)
                 || "false".equals(text);

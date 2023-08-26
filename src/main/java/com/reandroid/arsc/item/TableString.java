@@ -32,10 +32,10 @@ public class TableString extends StringItem {
     }
 
     @Override
-    public void serializeText(XmlSerializer serializer) throws IOException {
+    public void serializeText(XmlSerializer serializer, boolean escapeValues) throws IOException {
         StyleDocument styleDocument = getStyleDocument();
         if(styleDocument == null){
-            super.serializeText(serializer);
+            super.serializeText(serializer, escapeValues);
             return;
         }
         styleDocument.serialize(serializer);

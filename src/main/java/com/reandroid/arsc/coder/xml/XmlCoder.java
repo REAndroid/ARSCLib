@@ -163,7 +163,14 @@ public class XmlCoder {
                 endEntry(serializer, tag);
                 return;
             }
-            entry.getResValue().serializeText(serializer);
+            ResValue resValue = entry.getResValue();
+            boolean escapeValues;
+            if(resValue.getValueType() == ValueType.STRING){
+                escapeValues = ! TypeString.isTypeString(entry.getTypeName());
+            }else {
+                escapeValues = false;
+            }
+            resValue.serializeText(serializer, escapeValues);
             endEntry(serializer, tag);
         }
         private String startEntry(XmlSerializer serializer, Entry entry) throws IOException {
@@ -437,17 +444,20 @@ public class XmlCoder {
                 }
                 startTag(serializer, TAG_item);
                 String name = valueMap.decodeName(true);
+                boolean escapeValue = false;
                 if(name == null){
                     name = ValueCoder.decodeUnknownNameId(valueMap.getNameResourceID());
+                    escapeValue = true;
                 }
                 serializer.attribute(null, ATTR_name, name);
-                valueMap.serializeText(serializer);
+                valueMap.serializeText(serializer, escapeValue);
                 endTag(serializer, TAG_item);
                 childCount ++;
             }
             return childCount;
         }
         public int decodeArray(XmlSerializer serializer, Entry entry) throws IOException {
+            boolean escapeValues = "array".equals(entry.getXmlTag());
             ResTableMapEntry mapEntry = entry.getResTableMapEntry();
             ResValueMapArray mapArray = mapEntry.getValue();
             int childCount = 0;
@@ -456,7 +466,7 @@ public class XmlCoder {
                     continue;
                 }
                 startTag(serializer, TAG_item);
-                valueMap.serializeText(serializer);
+                valueMap.serializeText(serializer, escapeValues);
                 endTag(serializer, TAG_item);
                 childCount ++;
             }

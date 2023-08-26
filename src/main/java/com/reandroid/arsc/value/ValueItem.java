@@ -288,12 +288,14 @@ public abstract class ValueItem extends BlockItem implements Value,
         setValueType(ValueType.STRING);
     }
     public void serializeText(XmlSerializer serializer) throws IOException {
+        serializeText(serializer, false);
+    }
+    public void serializeText(XmlSerializer serializer, boolean escapeValues) throws IOException {
         if(getValueType() == ValueType.STRING){
             StringItem stringItem = getDataAsPoolString();
             if(stringItem != null){
-                stringItem.serializeText(serializer);
+                stringItem.serializeText(serializer, escapeValues);
             }else {
-                // TODO: should throw ?
                 serializer.text(CoderUnknownStringRef.INS.decode(getData()));
             }
             return;

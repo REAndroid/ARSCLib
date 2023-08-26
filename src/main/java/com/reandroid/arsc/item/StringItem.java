@@ -135,11 +135,19 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject>, Co
         reUpdateReferences(newIndex);
     }
     public void serializeText(XmlSerializer serializer) throws IOException {
+        serializeText(serializer, false);
+    }
+    public void serializeText(XmlSerializer serializer, boolean escapeValues) throws IOException {
         String text = get();
         if(text == null){
             return;
         }
-        serializer.text(XmlSanitizer.escapeSpecialCharacter(text));
+        if(escapeValues){
+            text = XmlSanitizer.escapeDecodedValue(text);
+        }else {
+            text = XmlSanitizer.escapeSpecialCharacter(text);
+        }
+        serializer.text(text);
     }
     public void serializeAttribute(XmlSerializer serializer, String name) throws IOException {
         serializeAttribute(serializer, null, name);
