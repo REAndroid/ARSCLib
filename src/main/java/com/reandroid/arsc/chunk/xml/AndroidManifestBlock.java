@@ -601,6 +601,11 @@ public class AndroidManifestBlock extends ResXmlDocument {
     public static final String NAME_label = "label";
     public static final String NAME_theme = "theme";
     public static final String NAME_id = "id";
+    public static final String NAME_configChanges = "configChanges";
+    public static final String NAME_host = "host";
+    public static final String NAME_authorities = "authorities";
+    public static final String NAME_screenOrientation = "screenOrientation";
+    public static final String NAME_exported = "exported";
 
     public static final int ID_name = 0x01010003;
     public static final int ID_compileSdkVersion = 0x01010572;
@@ -622,6 +627,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
     public static final int ID_label = 0x01010001;
     public static final int ID_theme = 0x01010000;
     public static final int ID_id = 0x010100d0;
+    public static final int ID_exported = 0x01010010;
 
     public static final String VALUE_android_intent_action_MAIN = "android.intent.action.MAIN";
 
