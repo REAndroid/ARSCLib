@@ -28,10 +28,14 @@ public class ZipEntryMap implements Comparator<InputSource>{
     public ZipEntryMap(){
         this(new LinkedHashMap<>());
     }
+
+    public PathTree<InputSource> getPathTree(){
+        return Archive.buildPathTree(toArray());
+    }
     public LinkedHashMap<String, InputSource> toAliasMap(){
         InputSource[] sources = toArray();
         int length = sources.length;
-        LinkedHashMap<String, InputSource> map = new LinkedHashMap<>();
+        LinkedHashMap<String, InputSource> map = new LinkedHashMap<>(length);
         for(int i = 0; i < length; i++){
             InputSource inputSource = sources[i];
             map.put(inputSource.getAlias(), inputSource);

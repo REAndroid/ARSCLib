@@ -83,6 +83,22 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
         }
         return filtered;
     }
+
+    public PathTree<InputSource> getPathTree(){
+        PathTree<InputSource> root = PathTree.newRoot();
+        ArchiveEntry[] entryList = this.entryList;
+        int length = entryList.length;
+        for(int i = 0; i < length; i++){
+            ArchiveEntry entry = entryList[i];
+            if(entry.isDirectory()){
+                continue;
+            }
+            InputSource inputSource = createInputSource(entry);
+            inputSource.setSort(i);
+            root.add(inputSource.getAlias(), inputSource);
+        }
+        return root;
+    }
     public LinkedHashMap<String, InputSource> mapEntrySource(){
         ArchiveEntry[] entryList = this.entryList;
         int length = entryList.length;
@@ -202,6 +218,17 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
     public void close() throws IOException {
         this.zipInput.close();
     }
+
+    public static<T1 extends InputSource> PathTree<T1> buildPathTree(T1[] inputSources){
+        PathTree<T1> root = PathTree.newRoot();
+        int length = inputSources.length;
+        for(int i = 0; i < length; i ++){
+            T1 item = inputSources[i];
+            root.add(item.getAlias(), item);
+        }
+        return root;
+    }
+
     private static final long LOG_LARGE_FILE_SIZE = 1024 * 1000 * 20;
 
 
