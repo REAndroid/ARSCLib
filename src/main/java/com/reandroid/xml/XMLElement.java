@@ -15,6 +15,7 @@
  */
 package com.reandroid.xml;
 
+import com.reandroid.common.Namespace;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.IndexIterator;
 import com.reandroid.utils.collection.SizedSupplier;
@@ -101,6 +102,13 @@ public class XMLElement extends XMLNodeTree{
     }
     public void setNamespace(XMLNamespace namespace) {
         this.mNamespace = namespace;
+    }
+    public void setNamespace(Namespace namespace) {
+        if(namespace == null){
+            setNamespace(null, null);
+        }else {
+            setNamespace(namespace.getUri(), namespace.getPrefix());
+        }
     }
     public void setNamespace(String uri, String prefix) {
         setNamespace(getOrCreateXMLNamespace(uri, prefix));

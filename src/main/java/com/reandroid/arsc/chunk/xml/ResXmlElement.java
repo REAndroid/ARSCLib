@@ -1449,11 +1449,18 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     }
 
     public XMLElement decodeToXml() {
-        XMLElement xmlElement = new XMLElement(getName(true));
+        return decodeToXml(null);
+    }
+    private XMLElement decodeToXml(XMLElement parent) {
+        XMLElement xmlElement = new XMLElement(getName(false));
+        if(parent != null){
+            parent.add(xmlElement);
+        }
         xmlElement.setLineNumber(getStartElement().getLineNumber());
         for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
             xmlElement.addNamespace(startNamespace.decodeToXml());
         }
+        xmlElement.setNamespace(getTagNamespace());
         for(ResXmlAttribute resXmlAttribute:listAttributes()){
             XMLAttribute xmlAttribute =
                     resXmlAttribute.decodeToXml();
@@ -1470,9 +1477,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         for(ResXmlNode xmlNode: getXmlNodeList()){
             if(xmlNode instanceof ResXmlElement){
                 ResXmlElement childResXmlElement=(ResXmlElement)xmlNode;
-                XMLElement childXMLElement =
-                        childResXmlElement.decodeToXml();
-                xmlElement.add(childXMLElement);
+                        childResXmlElement.decodeToXml(xmlElement);
             }else if(xmlNode instanceof ResXmlTextNode){
                 ResXmlTextNode childResXmlTextNode=(ResXmlTextNode)xmlNode;
                 XMLText xmlText = childResXmlTextNode.decodeToXml();
