@@ -606,10 +606,12 @@ public class AndroidManifestBlock extends ResXmlDocument {
     public static final String NAME_authorities = "authorities";
     public static final String NAME_screenOrientation = "screenOrientation";
     public static final String NAME_exported = "exported";
+    public static final String NAME_maxSdkVersion = "maxSdkVersion";
 
     public static final int ID_name = 0x01010003;
     public static final int ID_compileSdkVersion = 0x01010572;
     public static final int ID_minSdkVersion = 0x0101020c;
+    public static final int ID_maxSdkVersion = 0x01010271;
     public static final int ID_targetSdkVersion = 0x01010270;
     public static final int ID_compileSdkVersionCodename = 0x01010573;
     public static final int ID_authorities = 0x01010018;
