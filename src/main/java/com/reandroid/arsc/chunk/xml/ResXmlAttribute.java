@@ -248,6 +248,13 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         }
         return stringPool.getOrCreateAttribute(resourceId, name);
     }
+    public boolean removeSelf(){
+        ResXmlElement parent = getParentResXmlElement();
+        if(parent != null){
+            return parent.removeAttribute(this);
+        }
+        return false;
+    }
     public ResXmlElement getParentResXmlElement(){
         return getParent(ResXmlElement.class);
     }

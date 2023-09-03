@@ -717,6 +717,13 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         return getStartElement().getResXmlAttributeArray().remove(resXmlAttribute);
     }
+    public boolean removeSelf(){
+        ResXmlElement parent = getParentResXmlElement();
+        if(parent != null){
+            return parent.removeElement(this);
+        }
+        return false;
+    }
     public boolean removeElement(ResXmlElement element){
         if(element !=null && element.getParent()!=null){
             element.onRemoved();
