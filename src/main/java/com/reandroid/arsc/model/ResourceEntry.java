@@ -225,16 +225,20 @@ public class ResourceEntry implements Iterable<Entry>{
     public String getHexId(){
         return HexUtil.toHex8(getResourceId());
     }
-
+    public String buildReference(){
+        return buildReference(getPackageBlock(), null);
+    }
+    public String buildReference(PackageBlock context){
+        return buildReference(context, null);
+    }
     public String buildReference(PackageBlock context, ValueType referenceType){
-        if(!referenceType.isReference()){
-            throw new IllegalArgumentException("Not reference: " + referenceType);
-        }
         StringBuilder builder = new StringBuilder();
-        if(referenceType == ValueType.REFERENCE){
-            builder.append('@');
-        }else {
-            builder.append('?');
+        if(referenceType != null){
+            if(referenceType == ValueType.REFERENCE){
+                builder.append('@');
+            }else {
+                builder.append('?');
+            }
         }
         if(context != getPackageBlock()){
             builder.append(getPackageName());

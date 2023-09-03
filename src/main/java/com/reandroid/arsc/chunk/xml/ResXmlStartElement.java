@@ -296,7 +296,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
         setNamespaceReference(ns.getUriReference());
         linkNamespace();
     }
-    private ResXmlStartNamespace getResXmlStartNamespace(){
+    ResXmlStartNamespace getResXmlStartNamespace(){
         int uriRef = getNamespaceReference();
         if(uriRef < 0){
             return null;

@@ -26,6 +26,7 @@ import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.pool.ResXmlStringPool;
+import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
@@ -349,9 +350,9 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     public void setComment(String comment){
         getStartElement().setComment(comment);
     }
-    void calculatePositions(){
+    public void calculateAttributesOrder(){
         ResXmlStartElement start = getStartElement();
-        if(start!=null){
+        if(start != null){
             start.calculatePositions();
         }
     }
@@ -562,6 +563,20 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     @Deprecated
     public String getTagPrefix(){
         return getPrefix();
+    }
+    public ResXmlNamespace getTagNamespace(){
+        ResXmlStartElement startElement = getStartElement();
+        if(startElement != null){
+            return startElement.getResXmlStartNamespace();
+        }
+        return null;
+    }
+    public void setTagNamespace(Namespace namespace){
+        if(namespace != null){
+            setTagNamespace(namespace.getUri(), namespace.getPrefix());
+        }else {
+            setTagNamespace(null, null);
+        }
     }
     public void setTagNamespace(String uri, String prefix){
         ResXmlStartElement startElement = getStartElement();
@@ -979,7 +994,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(text==null){
             return;
         }
-        ResXmlTextNode xmlTextNode = createResXmlText();
+        ResXmlTextNode xmlTextNode = createResXmlTextNode();
         xmlTextNode.setText(text);
     }
     private ResXmlTextNode getOrCreateResXmlText(){
@@ -987,9 +1002,9 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(last instanceof ResXmlTextNode){
             return (ResXmlTextNode) last;
         }
-        return createResXmlText();
+        return createResXmlTextNode();
     }
-    private ResXmlTextNode createResXmlText(){
+    public ResXmlTextNode createResXmlTextNode(){
         ResXmlTextNode xmlTextNode = new ResXmlTextNode();
         addResXmlTextNode(xmlTextNode);
         return xmlTextNode;
@@ -1257,7 +1272,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         setEndLineNumber(parser.getLineNumber());
         clearNullNodes(false);
-        calculatePositions();
+        calculateAttributesOrder();
     }
     private void parseChildes(XmlPullParser parser) throws IOException, XmlPullParserException {
         ResXmlElement currentElement = this;
@@ -1406,7 +1421,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             for(int i = 0; i < length; i++){
                 JSONObject childObject = childArray.getJSONObject(i);
                 if(isTextNode(childObject)){
-                    createResXmlText().fromJson(childObject);
+                    createResXmlTextNode().fromJson(childObject);
                 }else {
                     createChildElement().fromJson(childObject);
                 }

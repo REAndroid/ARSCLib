@@ -16,12 +16,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.chunk.TableBlock;
-import com.reandroid.arsc.coder.*;
-import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.model.ResourceLibrary;
-import com.reandroid.arsc.value.*;
-import com.reandroid.arsc.value.attribute.AttributeBag;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
@@ -256,7 +251,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
     @Override
     public ResXmlPullSerializer endTag(String namespace, String name) throws IOException, IllegalArgumentException, IllegalStateException {
         flushText();
-        mCurrentElement.calculatePositions();
+        mCurrentElement.calculateAttributesOrder();
         mCurrentElement = mCurrentElement.getParentResXmlElement();
         return this;
     }

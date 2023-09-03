@@ -74,6 +74,33 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         parser.parse();
         return parser.getErrors();
     }
+    public String getLocale(){
+        StringBuilder builder = new StringBuilder();
+        String str = getLanguage();
+        if(str != null){
+            builder.append(str);
+        }
+        str = getRegion();
+        if(str != null){
+            if(builder.length() != 0){
+                builder.append('-');
+            }
+            builder.append(str);
+        }
+        str = getLocaleScriptInternal();
+        if(str != null){
+            if(builder.length() != 0){
+                builder.append('-');
+            }
+            builder.append(str);
+        }
+        return builder.toString();
+    }
+    public String[] parseLocale(String locale){
+        QualifierParser parser = new QualifierParser(this, locale);
+        parser.parseLocale();
+        return parser.getErrors();
+    }
 
     public char[] getLanguageChars(){
         byte[] bytes = getLanguageBytes();
@@ -1071,7 +1098,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         }
     }
 
-    static class Flag{
+    public static class Flag{
         private final String name;
         private final int flag;
         Flag(String name, int flag){
@@ -1368,6 +1395,36 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             parseRegion();
             onParseComplete();
         }
+        public void parseLocale(){
+            if(mParseComplete){
+                return;
+            }
+            if(isEmpty()){
+                ResConfig resConfig = mConfig;
+                resConfig.setLanguage((String) null);
+                resConfig.setRegion((String) null);
+                resConfig.setLocaleScript((String) null);
+                mParseComplete = true;
+                return;
+            }
+            parseLanguage();
+            parseLocaleRegion();
+            String[] qualifiers = this.mQualifiers;
+            String script = null;
+            if(qualifiers != null){
+                for(int i = 0; i < qualifiers.length; i++){
+                    String qualifier = qualifiers[i];
+                    if(qualifier == null || qualifier.length() < 2){
+                        continue;
+                    }
+                    script = qualifier;
+                    qualifiers[i] = null;
+                    break;
+                }
+            }
+            mConfig.setLocaleScript(script);
+            mParseComplete = true;
+        }
         public String[] getErrors(){
             if(!this.mParseComplete){
                 return null;
@@ -1589,6 +1646,18 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             this.mConfig.setLanguage(qualifier);
             return true;
         }
+        private void parseLocaleRegion(){
+            if(mLanguageRegionParsed || isEmpty()){
+                return;
+            }
+            String[] qualifiers = this.mQualifiers;
+            for(int i = 0; i < qualifiers.length; i++){
+                if(parseLocaleRegion(qualifiers[i])){
+                    qualifiers[i] = null;
+                    return;
+                }
+            }
+        }
         private void parseRegion(){
             if(mLanguageRegionParsed || isEmpty()){
                 return;
@@ -1600,6 +1669,13 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
                     return;
                 }
             }
+        }
+        private boolean parseLocaleRegion(String qualifier){
+            if(!isLocaleRegion(qualifier)){
+                return false;
+            }
+            this.mConfig.setRegion(qualifier);
+            return true;
         }
         private boolean parseRegion(String qualifier){
             if(!isRegion(qualifier)){
@@ -1665,6 +1741,30 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             }
             for(int i = 0; i < length; i++){
                 if(!isAtoZLower(chars[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        private static boolean isLocaleRegion(String qualifier){
+            if(qualifier == null){
+                return false;
+            }
+            int length = qualifier.length();
+            if(length != 2 && length != 3){
+                return false;
+            }
+            char[] chars = qualifier.toCharArray();
+            if(length == 2){
+                for(char ch : chars){
+                    if(!isAtoZUpper(ch)){
+                        return false;
+                    }
+                }
+                return true;
+            }
+            for(char ch : chars){
+                if(!isDigit(ch)){
                     return false;
                 }
             }

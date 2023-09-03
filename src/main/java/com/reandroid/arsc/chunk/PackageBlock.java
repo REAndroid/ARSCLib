@@ -335,6 +335,10 @@ public class PackageBlock extends Chunk<PackageHeader>
         SpecTypePair specTypePair = getOrCreateSpecTypePair(typeName);
         return specTypePair.getOrCreateTypeBlock(resConfig);
     }
+    public SpecTypePair getOrCreateSpecTypePair(int typeId, String typeName){
+        getOrCreateTypeString(typeId, typeName);
+        return getSpecTypePairArray().getOrCreate((byte) typeId);
+    }
     public SpecTypePair getOrCreateSpecTypePair(String typeName){
         return getSpecTypePairArray().getOrCreate(typeName);
     }

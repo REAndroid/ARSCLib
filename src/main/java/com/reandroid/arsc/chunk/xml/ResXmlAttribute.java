@@ -22,6 +22,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.pool.StringPool;
+import com.reandroid.common.Namespace;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.AttributeValue;
 import com.reandroid.arsc.value.ValueType;
@@ -161,6 +162,16 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
             return namespace.getPrefix();
         }
         return null;
+    }
+    public ResXmlNamespace getNamespace(){
+        return getStartNamespace();
+    }
+    public void setNamespace(Namespace namespace){
+        if(namespace != null){
+            setNamespace(namespace.getUri(), namespace.getPrefix());
+        }else {
+            setNamespace(null, null);
+        }
     }
     // WARN! Careful this is not real value
     public String getValueString(){

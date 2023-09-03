@@ -26,6 +26,7 @@ import com.reandroid.arsc.header.StringPoolHeader;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
+import com.reandroid.common.BytesOutputStream;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.utils.CompareUtil;
@@ -354,6 +355,17 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         if(sender == header.getFlagUtf8()){
             mArrayStrings.setUtf8(header.isUtf8());
         }
+    }
+    @Override
+    public byte[] getBytes(){
+        BytesOutputStream outputStream = new BytesOutputStream(
+                getHeaderBlock().getChunkSize());
+        try {
+            writeBytes(outputStream);
+            outputStream.close();
+        } catch (IOException ignored) {
+        }
+        return outputStream.toByteArray();
     }
     @Override
     public JSONArray toJson() {
