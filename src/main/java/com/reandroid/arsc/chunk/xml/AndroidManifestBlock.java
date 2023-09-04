@@ -116,19 +116,36 @@ public class AndroidManifestBlock extends ResXmlDocument {
     }
     public int getIconResourceId(){
         ResXmlElement applicationElement = getApplicationElement();
-        if(applicationElement==null){
+        if(applicationElement == null){
             return 0;
         }
-        ResXmlAttribute iconAttribute=applicationElement.searchAttributeByResourceId(ID_icon);
-        if(iconAttribute==null || iconAttribute.getValueType() != ValueType.REFERENCE){
+        ResXmlAttribute attribute = applicationElement.searchAttributeByResourceId(ID_icon);
+        if(attribute == null || attribute.getValueType() != ValueType.REFERENCE){
             return 0;
         }
-        return iconAttribute.getData();
+        return attribute.getData();
     }
     public void setIconResourceId(int resourceId){
         ResXmlElement applicationElement = getOrCreateApplicationElement();
         ResXmlAttribute iconAttribute =
                 applicationElement.getOrCreateAndroidAttribute(NAME_icon, ID_icon);
+        iconAttribute.setTypeAndData(ValueType.REFERENCE, resourceId);
+    }
+    public int getRoundIconResourceId(){
+        ResXmlElement applicationElement = getApplicationElement();
+        if(applicationElement == null){
+            return 0;
+        }
+        ResXmlAttribute attribute = applicationElement.searchAttributeByResourceId(ID_roundIcon);
+        if(attribute == null || attribute.getValueType() != ValueType.REFERENCE){
+            return 0;
+        }
+        return attribute.getData();
+    }
+    public void setRoundIconResourceId(int resourceId){
+        ResXmlElement applicationElement = getOrCreateApplicationElement();
+        ResXmlAttribute iconAttribute =
+                applicationElement.getOrCreateAndroidAttribute(NAME_icon, ID_roundIcon);
         iconAttribute.setTypeAndData(ValueType.REFERENCE, resourceId);
     }
     public Integer getApplicationLabelReference(){
@@ -598,6 +615,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
     public static final String NAME_resource = "resource";
     public static final String NAME_debuggable = "debuggable";
     public static final String NAME_icon = "icon";
+    public static final String NAME_roundIcon = "roundIcon";
     public static final String NAME_label = "label";
     public static final String NAME_theme = "theme";
     public static final String NAME_id = "id";
@@ -626,6 +644,7 @@ public class AndroidManifestBlock extends ResXmlDocument {
     public static final int ID_versionName = 0x0101021c;
     public static final int ID_debuggable = 0x0101000f;
     public static final int ID_icon = 0x01010002;
+    public static final int ID_roundIcon = 0x0101052c;
     public static final int ID_label = 0x01010001;
     public static final int ID_theme = 0x01010000;
     public static final int ID_id = 0x010100d0;
