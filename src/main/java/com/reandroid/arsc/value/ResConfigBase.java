@@ -276,7 +276,7 @@ class ResConfigBase extends FixedBlockContainer
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
         if(sender == configSize){
-            setConfigSize(configSize.get());
+            mValuesContainer.setSize(configSize.get() - 4);
         }
     }
 

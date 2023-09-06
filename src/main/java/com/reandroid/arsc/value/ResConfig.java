@@ -559,7 +559,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             out[0] = (char) (first + base);
             out[1] = (char) (second + base);
             out[2] = (char) (third + base);
-        }else if (in0 != 0) {
+        }else if (in0 != 0 && in1 != 0) {
             out = new char[2];
             out[0] = (char) in0;
             out[1] = (char) in1;
