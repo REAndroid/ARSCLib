@@ -15,7 +15,6 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
-import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLText;
@@ -36,6 +35,25 @@ public class ResXmlTextNode extends ResXmlNode {
     public ResXmlTextNode() {
         this(new ResXmlText());
     }
+
+    void makeIndent(int length){
+        if(!isIndent()){
+            throw new IllegalArgumentException("Not indent text: '" + getText() + "'");
+        }
+        if(length < 2){
+            setText("\n");
+            return;
+        }
+        char[] chars = new char[length];
+        chars[0] = '\n';
+        for(int i = 1; i < length; i++){
+            chars[i] = ' ';
+        }
+        setText(new String(chars));
+    }
+    public boolean isIndent(){
+        return isIndent(getText());
+    }
     ResXmlText getResXmlText() {
         return resXmlText;
     }
@@ -43,40 +61,23 @@ public class ResXmlTextNode extends ResXmlNode {
         return getResXmlText().getLineNumber();
     }
 
-    public void autoSetLineNumber(){
-        ResXmlElement root = getParentResXmlElement();
-        if(root == null){
-            return;
-        }
-        root = root.getRootResXmlElement();
-        BlockCounter counter = new BlockCounter(this);
-        root.calculateLineNumber(counter, true);
-        setLineNumber(counter.getCountValue());
-    }
     @Override
-    void calculateLineNumber(BlockCounter counter, boolean startLine){
-        if(counter.FOUND){
-            return;
-        }
-        if(startLine && counter.END == this){
-            counter.FOUND = true;
-            return;
-        }
+    int autoSetLineNumber(int start){
         String text = getText();
-        if(text == null){
-            return;
-        }
-        int result = 1;
-        char[] chars = text.toCharArray();
-        for(char ch : chars){
-            if(ch == '\n'){
-                result ++;
+        int lineNumber = start;
+        boolean indent = isIndent(text);
+        if(indent){
+            lineNumber ++;
+        }else {
+            char[] chars = text.toCharArray();
+            for(char ch : chars){
+                if(ch == '\n'){
+                    start ++;
+                }
             }
         }
-        counter.addCount(result);
-        if(counter.END == this){
-            counter.FOUND = true;
-        }
+        setLineNumber(lineNumber);
+        return start;
     }
     public String getComment() {
         return getResXmlText().getComment();
@@ -209,7 +210,7 @@ public class ResXmlTextNode extends ResXmlNode {
                 || event == XmlPullParser.ENTITY_REF;
     }
     private static boolean isIndent(String text){
-        if(text.length() == 0){
+        if(text == null || text.length() == 0){
             return true;
         }
         char[] chars = text.toCharArray();

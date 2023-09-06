@@ -328,6 +328,14 @@ public class ResXmlStartElement extends BaseXmlChunk {
         int count = mAttributeArray.getChildesCount();
         mAttributeCount.set(count);
     }
+    @Override
+    public void setLineNumber(int lineNumber){
+        super.setLineNumber(lineNumber);
+        ResXmlEndElement endElement = getResXmlEndElement();
+        if(endElement != null){
+            endElement.setLineNumber(lineNumber);
+        }
+    }
 
     @Override
     public String toString(){

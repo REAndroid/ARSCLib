@@ -22,6 +22,16 @@ public class CollectionUtil {
     public static<T extends Comparable<T>> void sort(List<T> list){
         list.sort(getComparator());
     }
+    public static<T> T getLast(Iterator<T> iterator){
+        if(iterator == null){
+            return null;
+        }
+        T result = null;
+        while (iterator.hasNext()){
+            result = iterator.next();
+        }
+        return result;
+    }
     public static<T> T getFirst(Iterator<T> iterator){
         if(iterator == null || !iterator.hasNext()){
             return null;

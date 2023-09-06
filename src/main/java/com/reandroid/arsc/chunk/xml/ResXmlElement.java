@@ -16,7 +16,6 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.array.ResXmlAttributeArray;
-import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.model.ResourceLibrary;
@@ -49,7 +48,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
     private final BlockList<ResXmlNode> mBody;
     private final SingleBlockContainer<ResXmlEndElement> mEndElementContainer;
     private final BlockList<ResXmlEndNamespace> mEndNamespaceList;
-    private int mLevel;
+
     public ResXmlElement() {
         super(5);
         this.mStartNamespaceList = new BlockList<>();
@@ -64,10 +63,54 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         addChild(4, mEndNamespaceList);
     }
 
+    public void addIndent(int scale){
+        if(hasText()){
+            return;
+        }
+        int depth = getDepth();
+        if(depth > MAX_INDENT_DEPTH){
+            depth = MAX_INDENT_DEPTH;
+        }
+        int indent = (depth + 1) * scale;
+        ResXmlTextNode textNode = null;
+        for (ResXmlElement element : listElements()){
+            textNode = new ResXmlTextNode();
+            addNode(indexOf(element), textNode);
+            textNode.makeIndent(indent);
+            element.addIndent(scale);
+        }
+        if(textNode != null){
+            indent = depth * scale;
+            textNode = new ResXmlTextNode();
+            addResXmlTextNode(textNode);
+            textNode.makeIndent(indent);
+        }
+    }
+    public int clearIndents(){
+        return removeNodes(resXmlNode -> {
+            if(resXmlNode instanceof ResXmlTextNode){
+                return  ((ResXmlTextNode) resXmlNode).isIndent();
+            }
+            return false;
+        });
+    }
+    /**
+     * Iterates every xml-nodes (ResXmlElement & ResXmlTextNode) and child nodes recursively
+     *
+     * */
+    public Iterator<ResXmlNode> recursiveXmlNodes() throws ConcurrentModificationException{
+        return CombiningIterator.of(SingleIterator.of(this),
+                ComputeIterator.of(getResXmlNodes(), xmlNode -> {
+                    if(xmlNode instanceof ResXmlElement){
+                        return ((ResXmlElement) xmlNode).recursiveXmlNodes();
+                    }
+                    return SingleIterator.of(xmlNode);
+                }));
+    }
     /**
      * Iterates every attribute on this element and on child elements recursively
      * */
-    public Iterator<ResXmlAttribute> recursiveAttributes(){
+    public Iterator<ResXmlAttribute> recursiveAttributes() throws ConcurrentModificationException{
         return new MergingIterator<>(new ComputeIterator<>(recursiveElements(), RECURSIVE_ATTRIBUTES));
     }
     /**
@@ -165,16 +208,25 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         return changedCount;
     }
-    public void autoSetLineNumber(){
-        int startLineNumber = calculateLineNumber(true);
-        setStartLineNumber(startLineNumber);
-        for(ResXmlStartNamespace startNamespace : getStartNamespaceList()){
-            startNamespace.setLineNumber(startLineNumber);
+    @Override
+    int autoSetLineNumber(int start){
+        start ++;
+        setLineNumber(start);
+        int attrCount = getAttributeCount();
+        if(attrCount != 0){
+            start +=(attrCount - 1);
         }
-        for(ResXmlNode child : getXmlNodeList()){
-            child.autoSetLineNumber();
+        boolean haveElement = false;
+        for(ResXmlNode xmlNode : getXmlNodeList()){
+            start = xmlNode.autoSetLineNumber(start);
+            if(!haveElement && xmlNode instanceof ResXmlElement){
+                haveElement = true;
+            }
         }
-        setEndLineNumber(calculateLineNumber(false));
+        if(haveElement){
+            start ++;
+        }
+        return start;
     }
     public void clearNullNodes(){
         clearNullNodes(true);
@@ -235,31 +287,35 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         mBody.sort(this);
     }
-    public int lastIndexOf(String tagName){
-        List<ResXmlElement> elementList = listElements(tagName);
-        int i = elementList.size();
-        if(i==0){
-            return -1;
-        }
-        i--;
-        return elementList.get(i).getIndex();
-    }
     public int indexOf(String tagName){
         ResXmlElement element = getElementByTagName(tagName);
-        if(element!=null){
+        if(element != null){
             return element.getIndex();
         }
         return -1;
     }
+    public int lastIndexOf(String tagName){
+        return lastIndexOf(tagName, -1);
+    }
+    public int lastIndexOf(String tagName, int def){
+        ResXmlElement last = CollectionUtil.getLast(getElements(tagName));
+        if(last != null){
+            def = indexOf(last, def);
+        }
+        return def;
+    }
     public int indexOf(ResXmlElement element){
+        return indexOf(element, -1);
+    }
+    public int indexOf(ResXmlNode resXmlNode, int def){
         int index = 0;
-        for(ResXmlNode xmlNode:mBody.getChildes()){
-            if(xmlNode==element){
+        for(ResXmlNode xmlNode : mBody.getChildes()){
+            if(xmlNode == resXmlNode){
                 return index;
             }
             index++;
         }
-        return -1;
+        return def;
     }
     public void setAttributesUnitSize(int size, boolean setToAll){
         ResXmlStartElement startElement = getStartElement();
@@ -284,41 +340,22 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         return null;
     }
-    private int calculateLineNumber(boolean startLine){
-        ResXmlElement root = getRootResXmlElement();
-        BlockCounter counter = new BlockCounter(this);
-        root.calculateLineNumber(counter, startLine);
-        return counter.getCountValue();
+    public int getLineNumber(){
+        ResXmlStartElement start = getStartElement();
+        if(start != null){
+            return start.getLineNumber();
+        }
+        return 0;
     }
-    @Override
-    void calculateLineNumber(BlockCounter counter, boolean startLine){
-        if(counter.FOUND){
-            return;
+    public void setLineNumber(int lineNumber){
+        ResXmlStartElement start = getStartElement();
+        if(start != null){
+            start.setLineNumber(lineNumber);
+            start.getResXmlEndElement().setLineNumber(lineNumber);
         }
-        counter.addCount(1);
-        if(counter.END == this && startLine){
-            counter.FOUND = true;
-            return;
-        }
-        int attrCount = getAttributeCount() + getNamespaceCount();
-        if(attrCount != 0){
-            counter.addCount(attrCount - 1);
-        }
-        boolean haveElement = false;
-        for(ResXmlNode xmlNode : getXmlNodeList()){
-            if(counter.FOUND){
-                return;
-            }
-            xmlNode.calculateLineNumber(counter, startLine);
-            if(xmlNode instanceof ResXmlElement){
-                haveElement = true;
-            }
-        }
-        if(haveElement){
-            counter.addCount(1);
-        }
-        if(counter.END == this){
-            counter.FOUND = true;
+        int count = getNamespaceCount();
+        for(int i = 0; i < count; i++){
+           getNamespaceAt(i).setLineNumber(lineNumber);
         }
     }
     public int getStartLineNumber(){
@@ -702,12 +739,6 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         parserEventList.add(new ParserEvent(ParserEvent.END_TAG, this));
     }
-    public int getLevel(){
-        return mLevel;
-    }
-    private void setLevel(int level){
-        mLevel = level;
-    }
     public void addElement(ResXmlElement element){
         mBody.add(element);
     }
@@ -989,13 +1020,11 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         mEndElementContainer.setItem(item);
     }
 
+    private void addNode(int position, ResXmlNode xmlNode){
+        mBody.add(position, xmlNode);
+    }
     private void addResXmlTextNode(ResXmlTextNode xmlTextNode){
         mBody.add(xmlTextNode);
-    }
-    public void addResXmlText(ResXmlText xmlText){
-        if(xmlText!=null){
-            addResXmlTextNode(new ResXmlTextNode(xmlText));
-        }
     }
     public void addResXmlText(String text){
         if(text==null){
@@ -1119,19 +1148,13 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             }
         }
         linkStartEnd();
-        onFinishedRead(reader, headerBlock);
+        onFinishedRead(reader);
         return false;
     }
-    private void onFinishedRead(BlockReader reader, HeaderBlock headerBlock) throws IOException{
-        int avail=reader.available();
-        if(avail>0 && getLevel()==0){
+    private void onFinishedRead(BlockReader reader) throws IOException{
+        if(reader.available() > 3 && getParentResXmlElement() == null){
             onFinishedUnexpected(reader);
-            return;
         }
-        onFinishedSuccess(reader, headerBlock);
-    }
-    private void onFinishedSuccess(BlockReader reader, HeaderBlock headerBlock) throws IOException{
-
     }
     private void onFinishedUnexpected(BlockReader reader) throws IOException{
         StringBuilder builder=new StringBuilder();
@@ -1147,7 +1170,6 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         if(hasStartElement()){
             ResXmlElement childElement=new ResXmlElement();
             addElement(childElement);
-            childElement.setLevel(getLevel()+1);
             childElement.readBytes(reader);
         }else{
             ResXmlStartElement startElement=new ResXmlStartElement();
@@ -1175,9 +1197,8 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         endNamespace.readBytes(reader);
     }
     private void onXmlText(BlockReader reader) throws IOException{
-        ResXmlText xmlText=new ResXmlText();
-        addResXmlText(xmlText);
-        xmlText.readBytes(reader);
+        ResXmlTextNode textNode = createResXmlTextNode();
+        textNode.getResXmlText().readBytes(reader);
     }
 
     private void unknownChunk(BlockReader reader, HeaderBlock headerBlock) throws IOException{
@@ -1255,8 +1276,6 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             throw new XmlPullParserException("Invalid state START_TAG != "
                     + parser.getEventType());
         }
-        setStartLineNumber(parser.getLineNumber());
-
         String name = parser.getName();
         String prefix = splitPrefix(name);
         name = splitName(name);
@@ -1266,6 +1285,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             prefix = parser.getPrefix();
         }
         parseNamespaces(parser);
+        setLineNumber(parser.getLineNumber());
         parseAttributes(parser);
         parseChildes(parser);
         if(prefix != null){
@@ -1277,7 +1297,6 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
             }
             setTagNamespace(uri, prefix);
         }
-        setEndLineNumber(parser.getLineNumber());
         clearNullNodes(false);
         calculateAttributesOrder();
     }
@@ -1495,6 +1514,11 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         ResXmlStartElement start = getStartElement();
         if(start!=null){
             StringBuilder builder=new StringBuilder();
+            builder.append("(");
+            builder.append(getStartLineNumber());
+            builder.append(":");
+            builder.append(getEndLineNumber());
+            builder.append(") ");
             builder.append("<");
             builder.append(start.toString());
             if(hasText() && !hasElement()){
@@ -1563,4 +1587,5 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
 
     private static final String FEATURE_INDENT_OUTPUT = "http://xmlpull.org/v1/doc/features.html#indent-output";
 
+    private static final int MAX_INDENT_DEPTH = 25;
 }

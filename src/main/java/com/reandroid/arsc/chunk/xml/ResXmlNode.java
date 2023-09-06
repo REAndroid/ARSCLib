@@ -15,7 +15,6 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
-import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
@@ -33,8 +32,10 @@ public abstract class ResXmlNode extends FixedBlockContainer  implements JSONCon
     abstract void linkStringReferences();
     public abstract int getDepth();
     abstract void addEvents(ParserEventList parserEventList);
-    abstract void calculateLineNumber(BlockCounter counter, boolean startLine);
-    public abstract void autoSetLineNumber();
+    public void autoSetLineNumber(){
+        autoSetLineNumber(1);
+    }
+    abstract int autoSetLineNumber(int start);
     public abstract void serialize(XmlSerializer serializer) throws IOException;
     public abstract void parse(XmlPullParser parser) throws IOException, XmlPullParserException;
 
