@@ -36,18 +36,28 @@ public class ApkSplitInfoCleaner {
         AndroidManifestBlock manifestBlock = apkModule.getAndroidManifestBlock();
         cleanSplitInfoAttributes(manifestBlock.getManifestElement());
         cleanSplitInfoMeta(apkModule);
+        cleanActivities(apkModule);
     }
 
+    private static void cleanActivities(ApkModule apkModule){
+        AndroidManifestBlock manifestBlock = apkModule.getAndroidManifestBlock();
+        ResXmlElement manifest = manifestBlock.getManifestElement();
+        List<ResXmlElement> removeList = CollectionUtil.toList(
+                FilterIterator.of(manifest.recursiveElements(), ApkSplitInfoCleaner::isSplitElement));
+        for(ResXmlElement metaElement : removeList){
+            cleanElement(apkModule, metaElement);
+        }
+    }
     private static void cleanSplitInfoMeta(ApkModule apkModule){
         AndroidManifestBlock manifestBlock = apkModule.getAndroidManifestBlock();
         ResXmlElement manifest = manifestBlock.getManifestElement();
         List<ResXmlElement> removeList = CollectionUtil.toList(
                 FilterIterator.of(manifest.recursiveElements(), ApkSplitInfoCleaner::isSplitMetaElement));
         for(ResXmlElement metaElement : removeList){
-            cleanSplitInfoMeta(apkModule, metaElement);
+            cleanElement(apkModule, metaElement);
         }
     }
-    private static void cleanSplitInfoMeta(ApkModule apkModule, ResXmlElement metaElement){
+    private static void cleanElement(ApkModule apkModule, ResXmlElement metaElement){
         if(metaElement.getAttributeCount() < 2){
             metaElement.removeSelf();
             return;
@@ -56,12 +66,12 @@ public class ApkSplitInfoCleaner {
         while (iterator.hasNext()){
             ResXmlAttribute attribute = iterator.next();
             if(attribute.getValueType() == ValueType.REFERENCE){
-                cleanSplitInfoMeta(apkModule, attribute.getData());
+                cleanElement(apkModule, attribute.getData());
             }
         }
         metaElement.removeSelf();
     }
-    private static void cleanSplitInfoMeta(ApkModule apkModule, int resourceId){
+    private static void cleanElement(ApkModule apkModule, int resourceId){
         if(resourceId == 0){
             return;
         }
@@ -90,10 +100,25 @@ public class ApkSplitInfoCleaner {
             attribute.removeSelf();
         }
     }
+    static boolean isSplitElement(ResXmlElement element){
+        return element != null &&
+
+                ( element.equalsName(AndroidManifestBlock.TAG_activity) ||
+                element.equalsName(AndroidManifestBlock.TAG_service) ) &&
+
+                isSplitElement(AndroidManifestBlock.getAndroidNameValue(element));
+    }
+    private static boolean isSplitElement(String name){
+        if(name == null){
+            return false;
+        }
+        return name.startsWith("com.google.android.play.core.missingsplits.")
+                || name.startsWith("com.google.android.play.core.assetpacks.");
+    }
     static boolean isSplitMetaElement(ResXmlElement element){
         return element != null &&
                 element.equalsName(AndroidManifestBlock.TAG_meta_data) &&
-                isSplitMetaNamePrefix(getAndroidNameValue(element));
+                isSplitMetaNamePrefix(AndroidManifestBlock.getAndroidNameValue(element));
     }
     private static boolean isSplitMetaNamePrefix(String name){
         if(name == null){

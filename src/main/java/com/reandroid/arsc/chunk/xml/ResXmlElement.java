@@ -74,15 +74,14 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         int indent = (depth + 1) * scale;
         ResXmlTextNode textNode = null;
         for (ResXmlElement element : listElements()){
-            textNode = new ResXmlTextNode();
-            addNode(indexOf(element), textNode);
+            textNode = createResXmlTextNode(element.getIndex());
             textNode.makeIndent(indent);
             element.addIndent(scale);
         }
         if(textNode != null){
             indent = depth * scale;
             textNode = new ResXmlTextNode();
-            addResXmlTextNode(textNode);
+            addNode(textNode);
             textNode.makeIndent(indent);
         }
     }
@@ -423,19 +422,54 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
     }
     public ResXmlElement createChildElement(){
-        return createChildElement(null);
+        return createChildElement(-1, null);
+    }
+    public ResXmlElement createChildElement(int position){
+        return createChildElement(position, null);
     }
     public ResXmlElement createChildElement(String name){
-        int lineNo = getStartElement().getLineNumber()+1;
-        ResXmlElement resXmlElement=new ResXmlElement();
+        return createChildElement(-1, name);
+    }
+    public ResXmlElement createChildElement(int position, String name){
+        int lineNo = getStartElement().getLineNumber() + 1;
+        ResXmlElement resXmlElement = new ResXmlElement();
         resXmlElement.newStartElement(lineNo);
-
-        addElement(resXmlElement);
-
+        if(position >= 0){
+            addNode(position, resXmlElement);
+        }else {
+            addNode(resXmlElement);
+        }
         if(name != null){
             resXmlElement.setName(name);
         }
         return resXmlElement;
+    }
+    public ResXmlTextNode createResXmlTextNode(){
+        return createResXmlTextNode(-1, null);
+    }
+    public ResXmlTextNode createResXmlTextNode(int position){
+        return createResXmlTextNode(position, null);
+    }
+    public ResXmlTextNode createResXmlTextNode(String text){
+        return createResXmlTextNode(-1, text);
+    }
+    public ResXmlTextNode createResXmlTextNode(int position, String text){
+        ResXmlTextNode xmlTextNode = new ResXmlTextNode();
+        if(position >= 0){
+            addNode(position, xmlTextNode);
+        }else {
+            addNode(xmlTextNode);
+        }
+        if(text != null){
+            xmlTextNode.setText(text);
+        }
+        return xmlTextNode;
+    }
+    public void addResXmlText(String text){
+        if(text == null){
+            return;
+        }
+        createResXmlTextNode(text);
     }
     public ResXmlAttribute getOrCreateAndroidAttribute(String name, int resourceId){
         return getOrCreateAttribute(
@@ -740,7 +774,7 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         parserEventList.add(new ParserEvent(ParserEvent.END_TAG, this));
     }
     public void addElement(ResXmlElement element){
-        mBody.add(element);
+        addNode(element);
     }
     public boolean removeAttribute(ResXmlAttribute resXmlAttribute){
         if(resXmlAttribute != null){
@@ -1020,19 +1054,6 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         mEndElementContainer.setItem(item);
     }
 
-    private void addNode(int position, ResXmlNode xmlNode){
-        mBody.add(position, xmlNode);
-    }
-    private void addResXmlTextNode(ResXmlTextNode xmlTextNode){
-        mBody.add(xmlTextNode);
-    }
-    public void addResXmlText(String text){
-        if(text==null){
-            return;
-        }
-        ResXmlTextNode xmlTextNode = createResXmlTextNode();
-        xmlTextNode.setText(text);
-    }
     private ResXmlTextNode getOrCreateResXmlText(){
         ResXmlNode last = getResXmlNode(countResXmlNodes() - 1);
         if(last instanceof ResXmlTextNode){
@@ -1040,10 +1061,11 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         }
         return createResXmlTextNode();
     }
-    public ResXmlTextNode createResXmlTextNode(){
-        ResXmlTextNode xmlTextNode = new ResXmlTextNode();
-        addResXmlTextNode(xmlTextNode);
-        return xmlTextNode;
+    public void addNode(ResXmlNode xmlNode){
+        mBody.add(xmlNode);
+    }
+    public void addNode(int position, ResXmlNode xmlNode){
+        mBody.add(position, xmlNode);
     }
 
     private boolean isBalanced(){

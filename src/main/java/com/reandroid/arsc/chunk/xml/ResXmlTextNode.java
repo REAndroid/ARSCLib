@@ -65,8 +65,7 @@ public class ResXmlTextNode extends ResXmlNode {
     int autoSetLineNumber(int start){
         String text = getText();
         int lineNumber = start;
-        boolean indent = isIndent(text);
-        if(indent){
+        if(isIndent(text) && isNextElement()){
             lineNumber ++;
         }else {
             char[] chars = text.toCharArray();
@@ -78,6 +77,13 @@ public class ResXmlTextNode extends ResXmlNode {
         }
         setLineNumber(lineNumber);
         return start;
+    }
+    private boolean isNextElement(){
+        ResXmlElement parent = getParentResXmlElement();
+        if(parent != null){
+            return parent.getResXmlNode(getIndex() + 1) instanceof ResXmlElement;
+        }
+        return false;
     }
     public String getComment() {
         return getResXmlText().getComment();

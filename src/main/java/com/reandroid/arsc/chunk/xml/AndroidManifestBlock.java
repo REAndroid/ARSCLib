@@ -557,6 +557,14 @@ public class AndroidManifestBlock extends ResXmlDocument {
         builder.append("}");
         return builder.toString();
     }
+    public static String getAndroidNameValue(ResXmlElement element){
+        ResXmlAttribute attribute = element.searchAttributeByResourceId(AndroidManifestBlock.ID_name);
+        if(attribute != null){
+            return attribute.getValueAsString();
+        }
+        return null;
+    }
+
     public static boolean isAndroidManifestBlock(ResXmlDocument xmlBlock){
         if(xmlBlock==null){
             return false;
