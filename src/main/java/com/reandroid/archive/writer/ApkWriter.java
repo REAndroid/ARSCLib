@@ -34,6 +34,7 @@ public abstract class ApkWriter<T extends ZipOutput, OUT extends OutputSource> i
     private ApkSignatureBlock apkSignatureBlock;
     private APKLogger apkLogger;
     private WriteProgress writeProgress;
+    private HeaderInterceptor headerInterceptor;
 
     public ApkWriter(T zipOutput, InputSource[] sources){
         this.zipOutput = zipOutput;
@@ -104,9 +105,12 @@ public abstract class ApkWriter<T extends ZipOutput, OUT extends OutputSource> i
         InputSource[] sources = this.getInputSources();
         int length = sources.length;
         OUT[] results = createOutArray(length);
+        HeaderInterceptor interceptor = this.headerInterceptor;
         for(int i = 0; i < length; i++){
             InputSource inputSource = sources[i];
-            results[i] = toOutputSource(inputSource);
+            OUT out = toOutputSource(inputSource);
+            out.setHeaderInterceptor(interceptor);
+            results[i] = out;
         }
         return results;
     }
@@ -122,7 +126,7 @@ public abstract class ApkWriter<T extends ZipOutput, OUT extends OutputSource> i
     OutputStream getOutputStream() throws IOException {
         return zipOutput.getOutputStream();
     }
-    T getZipOutput() {
+    public T getZipOutput() {
         return zipOutput;
     }
     InputSource[] getInputSources() {
@@ -169,6 +173,9 @@ public abstract class ApkWriter<T extends ZipOutput, OUT extends OutputSource> i
 
     public void setWriteProgress(WriteProgress writeProgress){
         this.writeProgress = writeProgress;
+    }
+    public void setHeaderInterceptor(HeaderInterceptor interceptor) {
+        this.headerInterceptor = interceptor;
     }
 
     void onCompressFileProgress(String path, int mode, long writtenBytes) {

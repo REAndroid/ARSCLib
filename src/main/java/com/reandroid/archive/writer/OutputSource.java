@@ -35,6 +35,7 @@ class OutputSource {
     private final InputSource inputSource;
     private LocalFileHeader lfh;
     private APKLogger apkLogger;
+    private HeaderInterceptor headerInterceptor;
 
     OutputSource(InputSource inputSource){
         this.inputSource = inputSource;
@@ -77,6 +78,7 @@ class OutputSource {
     void writeCEH(ZipOutput zipOutput) throws IOException{
         LocalFileHeader lfh = getLocalFileHeader();
         CentralEntryHeader ceh = CentralEntryHeader.fromLocalFileHeader(lfh);
+        notifyCEHWrite(ceh);
         ceh.writeBytes(zipOutput.getOutputStream());
     }
     void writeDD(ZipOutput apkFileWriter) throws IOException{
@@ -84,6 +86,7 @@ class OutputSource {
         if(dataDescriptor == null){
             return;
         }
+        notifyDDWrite(dataDescriptor);
         dataDescriptor.writeBytes(apkFileWriter.getOutputStream());
     }
     void writeLFH(ZipOutput zipOutput, ZipAligner zipAligner) throws IOException {
@@ -91,7 +94,30 @@ class OutputSource {
         if(zipAligner != null){
             zipAligner.align(zipOutput.position(), lfh);
         }
+        notifyLFHWrite(lfh);
         lfh.writeBytes(zipOutput.getOutputStream());
+    }
+
+    public void setHeaderInterceptor(HeaderInterceptor interceptor) {
+        this.headerInterceptor = interceptor;
+    }
+    private void notifyLFHWrite(LocalFileHeader lfh){
+        HeaderInterceptor interceptor = this.headerInterceptor;
+        if(interceptor != null){
+            interceptor.onWriteLfh(lfh);
+        }
+    }
+    private void notifyCEHWrite(CentralEntryHeader ceh){
+        HeaderInterceptor interceptor = this.headerInterceptor;
+        if(interceptor != null){
+            interceptor.onWriteCeh(ceh);
+        }
+    }
+    private void notifyDDWrite(DataDescriptor dataDescriptor){
+        HeaderInterceptor interceptor = this.headerInterceptor;
+        if(interceptor != null){
+            interceptor.onWriteDD(dataDescriptor);
+        }
     }
     InputSource getInputSource() {
         return inputSource;
