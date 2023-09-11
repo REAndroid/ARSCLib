@@ -15,11 +15,13 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.archive.PathTree;
 import com.reandroid.arsc.container.ExpandableBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.index.ClassId;
-import com.reandroid.dex.index.TypeNamePool;
+import com.reandroid.dex.index.StringData;
+import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
@@ -29,19 +31,19 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 public class DexFile extends ExpandableBlockContainer {
 
     private final SectionList sectionList;
     private Map<String, DexClass> dexClasses = new HashMap<>();
-    private final TypeNamePool typeNamePool;
+    private PathTree<StringData> pathTree;
 
     public DexFile() {
         super(1);
         this.sectionList = new SectionList();
         addChild(sectionList);
-        this.typeNamePool = new TypeNamePool();
     }
     public void decode(File outDir) throws IOException {
         int size = dexClasses.size();
@@ -71,9 +73,22 @@ public class DexFile extends ExpandableBlockContainer {
             dexClasses.put(dexClass.getName(), dexClass);
         }
     }
+    private void buildPathTree(){
+        PathTree<StringData> pathTree = PathTree.newRoot();
+        Section<TypeId> typeSection = getSectionList().get(SectionType.TYPE_ID);
+        Iterator<TypeId> iterator = typeSection.iterator();
+        while (iterator.hasNext()){
+            TypeId typeId = iterator.next();
+            StringData stringData = typeId.getNameData();
+            String name = stringData.getString();
+            pathTree.add(name, stringData);
+        }
+        this.pathTree = pathTree;
+    }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
         super.onReadBytes(reader);
+        //buildPathTree();
     }
 
     public void read(byte[] dexBytes) throws IOException {
