@@ -29,14 +29,29 @@ public class ItemIndexReference<T extends ItemId> extends IndirectItem<DexBlockI
     public ItemIndexReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset) {
         super(blockItem, offset);
         this.sectionType = sectionType;
+        set(-1);
     }
     public T getItem() {
         int i = get();
-        if(item == null || i != item.getIndex()){
+        if(item == null){
             item = getBlockItem().get(sectionType, i);
         }
         return item;
     }
+    public void setItem(T item) {
+        if(item == this.item){
+            return;
+        }
+        int value;
+        if(item != null) {
+            value = item.getIndex();
+        }else {
+            value = -1;
+        }
+        set(value);
+        this.item = item;
+    }
+
     @Override
     public void set(int val) {
         Block.putInteger(getBytesInternal(), getOffset(), val);
@@ -53,5 +68,13 @@ public class ItemIndexReference<T extends ItemId> extends IndirectItem<DexBlockI
         if(item != null){
             set(item.getIndex());
         }
+    }
+
+    @Override
+    public String toString() {
+        if(item != null){
+            return item.toString();
+        }
+        return sectionType.getName() + ": " + get();
     }
 }

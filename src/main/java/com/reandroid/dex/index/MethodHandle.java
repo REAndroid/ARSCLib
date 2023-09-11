@@ -33,9 +33,6 @@ public class MethodHandle extends ItemId {
         this.memberId = new IndirectShort(this, offset += 4);
     }
 
-    public TypeId getTypeId(){
-        return getTypeId(memberId);
-    }
     public MethodId getMethodId(){
         return get(SectionType.METHOD_ID, methodId.get());
     }
@@ -47,6 +44,6 @@ public class MethodHandle extends ItemId {
 
     @Override
     public String toString() {
-        return getTypeId() + "->" + getMethodId();
+        return memberId + "->" + getMethodId();
     }
 }

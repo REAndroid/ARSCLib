@@ -25,7 +25,7 @@ public class Ule128Item extends DexBlockItem implements IntegerReference {
     private final boolean large;
     private int value;
     public Ule128Item(boolean large) {
-        super(1);
+        super(0);
         this.large = large;
     }
     public Ule128Item() {

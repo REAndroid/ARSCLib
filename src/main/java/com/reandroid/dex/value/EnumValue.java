@@ -16,31 +16,30 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.dex.index.FieldId;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class EnumValue extends PrimitiveValue {
+public class EnumValue extends SectionValue<FieldId> {
     public EnumValue(){
-        super();
+        super(SectionType.FIELD_ID);
     }
-    public FieldId getFieldId(){
-        return getFieldId(getFieldIdIndex());
-    }
-    public int getFieldIdIndex(){
-        return (int) getNumberValue();
+    @Override
+    public String getTypeName(){
+        FieldId fieldId = getData();
+        if(fieldId == null){
+            return toString();
+        }
+        return fieldId.getFieldType().getName();
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append(".enum ");
-        getFieldId().append(writer);
+        super.append(writer);
     }
     @Override
     public String toString(){
-        FieldId fieldId = getFieldId();
-        if(fieldId != null){
-            return ".enum " + fieldId;
-        }
-        return "enum field index: " + getNumberValue();
+        return ".enum " + super.toString();
     }
 }

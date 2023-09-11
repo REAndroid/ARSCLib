@@ -17,6 +17,7 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.base.BlockCreator;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.index.ItemId;
 import com.reandroid.dex.sections.SectionType;
 
 import java.io.IOException;
@@ -2164,11 +2165,11 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
     private final int size;
     private final String name;
     private final BlockCreator<T> creator;
-    private final SectionType<?> sectionType;
+    private final SectionType<? extends ItemId> sectionType;
 
     private final int width;
 
-    private Opcode(int value, int size, String name, SectionType<?> sectionType, BlockCreator<T> creator){
+    private Opcode(int value, int size, String name, SectionType<? extends ItemId> sectionType, BlockCreator<T> creator){
         this.value = value;
         this.size = size;
         this.name = name;
@@ -2200,7 +2201,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
     public int getWidth() {
         return width;
     }
-    public SectionType<?> getSectionType(){
+    public SectionType<? extends ItemId> getSectionType(){
         return sectionType;
     }
     @Override

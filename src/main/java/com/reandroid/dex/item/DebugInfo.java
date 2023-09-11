@@ -77,7 +77,7 @@ public class DebugInfo extends DexItem {
         return "DebugInfo{" +
                 "lineStart=" + lineStart.get() +
                 ", parameterCount=" + parameterCount.get() +
-                ", elements=" + parameterNames.getChildesCount() +
+                ", elements=" + parameterNames +
                 '}';
     }
 

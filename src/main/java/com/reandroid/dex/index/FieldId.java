@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.index;
 
+import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 
@@ -31,29 +32,49 @@ public class FieldId extends ItemId {
         this.fieldType = new ItemShortReference<>(SectionType.TYPE_ID, this, 2);
         this.name = new ItemIndexReference<>(SectionType.STRING_DATA, this, 4);
     }
+    public String getName(){
+        StringData stringData = getNameString();
+        if(stringData != null){
+            return stringData.getString();
+        }
+        return null;
+    }
+    public void setName(String name){
+        DexIdPool<StringData> stringPool = getPool(SectionType.STRING_DATA);
+        StringData stringData = stringPool.getOrCreate(name);
+        setName(stringData);
+    }
+    public void setName(StringData name){
+        this.name.setItem(name);
+    }
     public String getKey(){
         StringBuilder builder = new StringBuilder();
         TypeId type = getClassType();
         if(type == null){
             return null;
         }
-        StringData stringData = type.getStringData();
+        StringData stringData = type.getNameData();
         if(stringData == null){
             return null;
         }
         builder.append(stringData.getString());
         builder.append("->");
-        stringData = getNameString();
+        builder.append(key());
+        return builder.toString();
+    }
+    public String key(){
+        StringBuilder builder = new StringBuilder();
+        StringData stringData = getNameString();
         if(stringData == null){
             return null;
         }
         builder.append(stringData.getString());
         builder.append(':');
-        type = getFieldType();
+        TypeId type = getFieldType();
         if(type == null){
             return null;
         }
-        stringData = type.getStringData();
+        stringData = type.getNameData();
         if(stringData == null){
             return null;
         }

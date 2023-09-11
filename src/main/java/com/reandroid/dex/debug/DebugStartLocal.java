@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.index.StringData;
 import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.sections.SectionType;
@@ -25,14 +24,14 @@ import java.io.IOException;
 
 public class DebugStartLocal extends DebugRegisterNumber {
 
-    private final Ule128Item nameIndex;
-    private final Ule128Item typeIndex;
+    private final Base1Ule128Item<StringData> nameIndex;
+    private final Base1Ule128Item<TypeId> typeIndex;
 
     DebugStartLocal(int childesCount, int flag) {
         super(childesCount + 2, flag);
 
-        this.nameIndex = new Ule128Item();
-        this.typeIndex = new Ule128Item();
+        this.nameIndex = new Base1Ule128Item<>(SectionType.STRING_DATA);
+        this.typeIndex = new Base1Ule128Item<>(SectionType.TYPE_ID);
 
         addChild(2, nameIndex);
         addChild(3, typeIndex);
@@ -45,10 +44,10 @@ public class DebugStartLocal extends DebugRegisterNumber {
     }
 
     public StringData getName(){
-        return get(SectionType.STRING_DATA, nameIndex.get() - 1);
+        return nameIndex.getItem();
     }
     public TypeId getTypeId(){
-        return get(SectionType.TYPE_ID, typeIndex.get() - 1);
+        return typeIndex.getItem();
     }
 
     public void appendExtra(SmaliWriter writer) throws IOException {
@@ -80,7 +79,7 @@ public class DebugStartLocal extends DebugRegisterNumber {
             builder.append("type id = ");
             builder.append(typeIndex.get());
         }else {
-            builder.append(typeId.getString());
+            builder.append(typeId.getName());
         }
         return builder.toString();
     }

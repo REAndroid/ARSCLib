@@ -72,6 +72,16 @@ public class HandlerOffsetArray extends DexBlockItem implements OffsetArray, Int
         setOffset(i, value);
     }
 
+    public int indexOf(int value){
+        int size = size();
+        for(int i = 0; i < size; i++){
+            if(value == getOffset(i)){
+                return i;
+            }
+        }
+        return -1;
+    }
+
     @Override
     public void clear() {
         setSize(0);
@@ -90,6 +100,8 @@ public class HandlerOffsetArray extends DexBlockItem implements OffsetArray, Int
         setBytesLength(itemCount.get() * 8, false);
         super.onReadBytes(reader);
         itemsStart = reader.getPosition();
+        int ii=getParent().countBytes();
+        ii=getParent().countBytes();
     }
 
     @Override

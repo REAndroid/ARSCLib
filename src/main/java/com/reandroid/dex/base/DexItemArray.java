@@ -82,7 +82,6 @@ public class DexItemArray<T extends Block> extends CreatorArray<T>
             }
             positionItem(block, reader);
             block.readBytes(reader);
-            //block.toString();
         }
     }
     private void notifyPreload(T[] childes){

@@ -29,6 +29,9 @@ public interface Label extends ExtraLine{
     }
     @Override
     default boolean isEqualExtraLine(Object obj) {
+        if(obj == this){
+            return true;
+        }
         if(!(obj instanceof Label)){
             return false;
         }

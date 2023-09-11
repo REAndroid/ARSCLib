@@ -20,22 +20,25 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.FieldId;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValue;
+import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class FieldDef extends Def {
     public FieldDef() {
         super(0);
     }
-    public FieldId getFieldIndex(){
+    public FieldId getFieldId(){
         return get(SectionType.FIELD_ID, getDefIndexId());
     }
     @Override
-    public AnnotationSet[] getAnnotations(){
+    public Iterator<AnnotationSet> getAnnotations(){
         AnnotationsDirectory directory = getAnnotationsDirectory();
         if(directory == null){
-            return null;
+            return EmptyIterator.of();
         }
         return directory.getFieldsAnnotation(getDefIndexId());
     }
@@ -52,34 +55,28 @@ public class FieldDef extends Def {
             writer.append(af.toString());
             writer.append(' ');
         }
-        FieldId fieldId = getFieldIndex();
+        FieldId fieldId = getFieldId();
         writer.append(fieldId.getNameString().getString());
         writer.append(':');
         fieldId.getFieldType().append(writer);
-        if(AccessFlag.STATIC.isSet(getAccessFlagsValue()) && AccessFlag.FINAL.isSet(getAccessFlagsValue())){
-            EncodedArray encodedArray = getClassId().getStaticValues();
-            if(encodedArray != null){
-                DexValue<?> value = encodedArray.getElements().get(getIndex());
-                if(value != null){
-                    writer.append(" = ");
-                    value.append(writer);
-                }
+        if(isStatic()){
+            DexValue<?> value = getClassId().getStaticValue(getIndex());
+            if(value != null && value.getValueType() != DexValueType.NULL){
+                writer.append(" = ");
+                value.append(writer);
             }
         }
-        AnnotationSet[] annotations = getAnnotations();
-        if (annotations != null){
-            writer.indentPlus();
-            for(AnnotationSet annotationSet : annotations){
-                annotationSet.append(writer);
-            }
-            writer.indentMinus();
+        writer.indentPlus();
+        boolean hasAnnotation = appendAnnotations(writer);
+        writer.indentMinus();
+        if(hasAnnotation){
             writer.newLine();
             writer.append(".end field");
         }
     }
     @Override
     public String toString() {
-        FieldId fieldId = getFieldIndex();
+        FieldId fieldId = getFieldId();
         if(fieldId != null){
             return ".field " + AccessFlag.formatForField(getAccessFlagsValue())
                     + " " + fieldId.toString();

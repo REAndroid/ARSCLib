@@ -13,28 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.value;
+package com.reandroid.dex.item;
 
-import com.reandroid.dex.index.MethodId;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliWriter;
 
-import java.io.IOException;
-
-public class MethodValue extends PrimitiveValue{
-    public MethodValue(){
-        super();
-    }
-    public MethodId getMethodIndex(){
-        return getItem(SectionType.METHOD_ID, (int) getNumberValue());
-    }
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
-        MethodId methodId = getMethodIndex();
-        if(methodId !=null){
-            methodId.append(writer);
-        }else {
-            writer.append("met ind " + getNumberValue());
-        }
+public class AnnotationGroup extends IntegerOffsetSectionList<AnnotationSet> {
+    public AnnotationGroup(){
+        super(SectionType.ANNOTATION_SET);
     }
 }

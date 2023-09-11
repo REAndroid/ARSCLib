@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.index.StringData;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
@@ -24,16 +23,12 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class DebugParameter extends Ule128Item implements SmaliFormat {
+public class DebugParameter extends Base1Ule128Item<StringData> implements SmaliFormat {
     public DebugParameter(){
-        super();
+        super(SectionType.STRING_DATA);
     }
     public StringData getParameterName(){
-        SectionList sectionList = getParent(SectionList.class);
-        if(sectionList != null){
-            return sectionList.get(SectionType.STRING_DATA, get() - 1);
-        }
-        return null;
+        return getItem();
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {

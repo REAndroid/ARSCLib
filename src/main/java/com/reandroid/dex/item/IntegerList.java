@@ -17,7 +17,6 @@ package com.reandroid.dex.item;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.OffsetSupplier;
-import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerArrayBlock;
 import com.reandroid.arsc.item.IntegerItem;
@@ -32,12 +31,10 @@ import java.io.IOException;
 public class IntegerList extends DexItem implements
         IntegerArray, PositionedItem, OffsetSupplier, OffsetReceiver {
 
-    private IntegerReference mReference;
-
     private final IntegerReference itemCount;
     private final IntegerArray arrayBlock;
 
-    public IntegerList(int childesCount, IntegerArray arrayBlock){
+    IntegerList(int childesCount, IntegerArray arrayBlock){
         super(childesCount + 2);
         this.itemCount = new IntegerItem();
         this.arrayBlock = arrayBlock;
@@ -54,8 +51,49 @@ public class IntegerList extends DexItem implements
     public IntegerList(){
         this(0, new IntegerArrayBlock());
     }
+
     public int[] toArray(){
         return IntegerArray.toArray(arrayBlock);
+    }
+    public boolean removeValue(int value){
+        return remove(indexOf(value));
+    }
+    public boolean remove(int index){
+        if(index < 0){
+            return false;
+        }
+        int size = size();
+        if(index >= size){
+            return false;
+        }
+        size = size - 1;
+        for(int i = index; i < size; i++){
+            put(i, get(i + 1));
+        }
+        setSize(size);
+        return true;
+    }
+    public int indexOf(int value){
+        int size = size();
+        for(int i = 0; i < size; i++){
+            if(value == get(i)){
+                return i;
+            }
+        }
+        return -1;
+    }
+    public boolean addIfAbsent(int value){
+        if(indexOf(value) < 0){
+            add(value);
+            return true;
+        }
+        return false;
+    }
+    public void add(int value){
+        int index = size();
+        setSize(index + 1, false);
+        put(index, value);
+        onChanged();
     }
     public void put(int index, int value){
         arrayBlock.put(index, value);
@@ -70,8 +108,17 @@ public class IntegerList extends DexItem implements
     }
     @Override
     public void setSize(int size){
+        setSize(size, true);
+    }
+    void setSize(int size, boolean notify){
+        int old = size();
         arrayBlock.setSize(size);
         itemCount.set(size);
+        if(notify && old != size){
+            onChanged();
+        }
+    }
+    void onChanged(){
     }
 
     @Override
@@ -85,33 +132,17 @@ public class IntegerList extends DexItem implements
         }
         arrayBlock.setSize(itemCount.get());
         super.onReadBytes(reader);
-    }
-    @Override
-    public void setPosition(int position) {
-        IntegerReference reference = getOffsetReference();
-        if(reference == null){
-            reference = new NumberIntegerReference(position);
-            setOffsetReference(reference);
-        }else {
-            reference.set(position);
-        }
-    }
-    @Override
-    public IntegerReference getOffsetReference() {
-        return mReference;
-    }
-    @Override
-    public void setOffsetReference(IntegerReference reference) {
-        this.mReference = reference;
+        onChanged();
     }
     @Override
     public String toString(){
         StringBuilder builder = new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(": ");
-        if(mReference != null){
+        IntegerReference ref = getOffsetReference();
+        if(ref != null){
             builder.append("offset=");
-            builder.append(mReference.get());
+            builder.append(ref.get());
             builder.append(", ");
         }
         if(arrayBlock.size() != itemCount.get()) {

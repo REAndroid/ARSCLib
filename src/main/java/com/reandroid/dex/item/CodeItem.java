@@ -46,8 +46,7 @@ public class CodeItem extends DexItem implements SmaliFormat {
     }
 
     public DebugInfo getDebugInfo(){
-        return getAt(SectionType.DEBUG_INFO,
-                header.debugInfoOffset.get());
+        return getAt(SectionType.DEBUG_INFO, header.debugInfoOffset);
     }
     public InstructionList getInstructionList() {
         return instructionList;
@@ -67,17 +66,21 @@ public class CodeItem extends DexItem implements SmaliFormat {
     public void append(SmaliWriter writer) throws IOException {
         MethodDef methodDef = getMethodDef();
         DebugInfo debugInfo = getDebugInfo();
-        ProtoId proto = methodDef.getMethodIndex().getProto();
+        ProtoId proto = methodDef.getMethodId().getProto();
         writer.newLine();
         writer.append(".locals ");
         InstructionList instructionList = getInstructionList();
         instructionList.buildDebugInfo(debugInfo);
         int count = header.registersCount.get() - proto.getParametersCount();
+        if(!methodDef.isStatic()){
+            count = count - 1;
+        }
         writer.append(count);
+        methodDef.appendParameterAnnotations(writer, proto);
         if(debugInfo != null){
-            Iterator<DebugParameter> parameterIterator = debugInfo.getParameters();
-            while (parameterIterator.hasNext()){
-                parameterIterator.next().append(writer);
+            Iterator<DebugParameter> iterator = debugInfo.getParameters();
+            while (iterator.hasNext()){
+                iterator.next().append(writer);
             }
         }
         methodDef.appendAnnotations(writer);

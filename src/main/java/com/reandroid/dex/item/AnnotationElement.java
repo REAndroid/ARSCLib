@@ -2,12 +2,11 @@ package com.reandroid.dex.item;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.DexFile;
-import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.index.StringData;
+import com.reandroid.dex.pool.DexIdPool;
+import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.*;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -17,61 +16,74 @@ import java.io.IOException;
 
 public class AnnotationElement extends DexItem
         implements BlockLoad, SmaliFormat {
-    private final Ule128Item nameIndex;
-    private final SingleBlockContainer<DexValue<?>> valueContainer;
 
+    private final SectionUle128Item<StringData> elementName;
     public AnnotationElement() {
         super(2);
-        this.nameIndex = new Ule128Item();
-        this.valueContainer = new SingleBlockContainer<>();
+        this.elementName = new SectionUle128Item<>(SectionType.STRING_DATA);
+        addChild(0, elementName);
+        elementName.setBlockLoad(this);
+    }
 
-        addChild(0, nameIndex);
-        addChild(1, valueContainer);
-
-        nameIndex.setBlockLoad(this);
+    public String key(){
+        StringBuilder builder = new StringBuilder();
+        AnnotationItem parentItem = getParent(AnnotationItem.class);
+        if(parentItem != null){
+            builder.append(parentItem.getTypeId());
+            builder.append("->");
+        }
+        builder.append(getName());
+        builder.append("()");
+        builder.append(getValue().getTypeName());
+        return builder.toString();
     }
     public DexValue<?> getValue(){
-        return valueContainer.getItem();
+        return (DexValue<?>) getChildes()[1];
     }
     public void setValue(DexValue<?> dexValue){
-        valueContainer.setItem(dexValue);
+        addChild(1, dexValue);
     }
-    public DexValueType getValueType(){
+    public DexValueType<?> getValueType(){
         DexValue<?> value = getValue();
         if(value != null){
             return value.getValueType();
         }
         return null;
     }
-
-    public StringData getName(){
-        int i = nameIndex.get();
-        if(i == 0){
-            return null;
+    public String getName(){
+        StringData stringData = getNameStringData();
+        if(stringData != null){
+            return stringData.getString();
         }
-        DexFile dexFile = getParentInstance(DexFile.class);
-        if(dexFile == null){
-            return null;
-        }
-        return dexFile.getSectionList().get(SectionType.STRING_DATA, i);
+        return null;
+    }
+    public void setName(String name){
+        Section<StringData> section = getSection(SectionType.STRING_DATA);
+        DexIdPool<StringData> pool = section.getPool();
+        StringData stringData = pool.getOrCreate(name);
+        setName(stringData);
+    }
+    public void setName(StringData name){
+        elementName.setItem(name);
+    }
+    public StringData getNameStringData(){
+        return elementName.getItem();
     }
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender == this.nameIndex){
-            DexValueType valueType = DexValueType.fromFlag(reader.read());
-            reader.offset(-1);
-            setValue(DexValue.createFor(valueType));
+        if(sender == this.elementName){
+            setValue(DexValueType.create(reader));
         }
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(getName().getString());
+        writer.append(getNameStringData().getString());
         writer.append(" = ");
         getValue().append(writer);
     }
     @Override
     public String toString() {
-        return  getName() + " = " + getValue();
+        return getNameStringData() + " = " + getValue();
     }
 
     public static final Creator<AnnotationElement> CREATOR = new Creator<AnnotationElement>() {

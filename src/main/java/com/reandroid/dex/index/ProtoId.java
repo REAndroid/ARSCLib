@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.item.TypeList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -24,41 +23,33 @@ import java.io.IOException;
 
 public class ProtoId extends ItemId {
 
-    private final IndirectInteger shorty;
+    private final ItemIndexReference<StringData> shorty;
     private final ItemIndexReference<TypeId> returnType;
-    private final IndirectInteger parameters;
+    private final ItemOffsetReference<TypeList> parameters;
 
     public ProtoId() {
         super(SIZE);
         int offset = -4;
 
-        this.shorty = new IndirectInteger(this, offset += 4);
+        this.shorty = new ItemIndexReference<>(SectionType.STRING_DATA, this, offset += 4);
         this.returnType = new ItemIndexReference<>(SectionType.TYPE_ID, this, offset += 4);
-        this.parameters = new IndirectInteger(this, offset += 4);
+        this.parameters = new ItemOffsetReference<>(SectionType.TYPE_LIST, this, offset += 4);
+    }
+
+    public String getKey(){
+        return "(" + buildMethodParameters() +")" + getReturnTypeId().getName();
     }
 
     public TypeList getTypeList() {
-        return getAt(SectionType.TYPE_LIST, parameters.get());
+        return parameters.getItem();
     }
-
     public TypeId getReturnTypeId(){
         return returnType.getItem();
     }
+    public StringData getShorty(){
+        return shorty.getItem();
+    }
 
-    public int[] getParametersIndexes(){
-        TypeList typeList = getTypeList();
-        if(typeList != null){
-            return typeList.toArray();
-        }
-        return null;
-    }
-    public TypeId[] getParameterTypes(){
-        TypeList typeList = getTypeList();
-        if(typeList != null){
-            return typeList.toTypeIds();
-        }
-        return null;
-    }
     public int getParametersCount(){
         TypeList typeList = getTypeList();
         if(typeList != null){
@@ -66,31 +57,30 @@ public class ProtoId extends ItemId {
         }
         return 0;
     }
-
     public String buildMethodParameters(){
-        TypeId[] parameters = getParameterTypes();
-        if(parameters == null){
+        TypeList typeList = getTypeList();
+        if(typeList == null || typeList.size() == 0){
             return "";
         }
         StringBuilder builder = new StringBuilder();
-        for(TypeId typeId :parameters){
-            builder.append(typeId.getStringData().getString());
+        for(TypeId typeId : typeList){
+            builder.append(typeId.getNameData().getString());
         }
         return builder.toString();
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        TypeId[] parameters = getParameterTypes();
-        if(parameters == null){
+        TypeList typeList = getTypeList();
+        if(typeList == null || typeList.size() == 0){
             return;
         }
-        for(TypeId typeId : parameters){
+        for(TypeId typeId : typeList){
             typeId.append(writer);
         }
     }
     @Override
     public String toString() {
-        return "(" + buildMethodParameters() +")" + getReturnTypeId().toString();
+        return getKey();
     }
 
     private static final int SIZE = 12;

@@ -44,48 +44,24 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat {
         }
         return null;
     }
-    private void buildLabels(){
-        for(Ins ins : this){
-            if(ins instanceof Label){
-                Label label = (Label) ins;
-                Ins target = getAtAddress(label.getTargetAddress());
-                if(target != null){
-                    target.addExtraLine(label);
-                }
-            }else if(ins instanceof LabelList){
-                Iterator<? extends Label> iterator = ((LabelList) ins).getLabels();
-                while (iterator.hasNext()){
-                    Label label = iterator.next();
-                    Ins target = getAtAddress(label.getTargetAddress());
-                    if(target != null){
-                        target.addExtraLine(label);
-                    }
-                }
-            }
-        }
-    }
-    private void addExceptionHandler(ExceptionHandler handler){
-        if(handler == null){
-            return;
-        }
-        Label start = handler.getStartLabel();
-        Ins target = getAtAddress(start.getTargetAddress());
-        target.addExtraLine(start);
-
-        Label label = handler.getEndLabel();
-
-        target = getAtAddress(label.getTargetAddress());
+    private void addLabel(Label label){
+        Ins target = getAtAddress(label.getTargetAddress());
         if(target != null){
             target.addExtraLine(label);
         }
-
-        label = handler.getCatchLabel();
-        target = getAtAddress(label.getTargetAddress());
-        target.addExtraLine(label);
-
-        target = getAtAddress(handler.getAddress());
-        if(target != null){
-            target.addExtraLine(handler);
+    }
+    private void addLabels(Iterator<? extends Label> iterator){
+        while (iterator.hasNext()){
+            addLabel(iterator.next());
+        }
+    }
+    private void buildLabels(){
+        for(Ins ins : this){
+            if(ins instanceof Label){
+                addLabel((Label) ins);
+            }else if(ins instanceof LabelList){
+                addLabels(((LabelList) ins).getLabels());
+            }
         }
     }
     private void buildTryBlock(){
@@ -93,12 +69,7 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat {
         if(tryBlock.isNull()){
             return;
         }
-        for(TryItem tryItem : tryBlock){
-            for(TryHandler handler : tryItem){
-                addExceptionHandler(handler);
-            }
-            addExceptionHandler(tryItem.getCatchAllHandler());
-        }
+        addLabels(tryBlock.getLabels());
     }
 
     public void buildDebugInfo(DebugInfo debugInfo){

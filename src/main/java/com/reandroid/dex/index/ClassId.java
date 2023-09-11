@@ -15,42 +15,54 @@
  */
 package com.reandroid.dex.index;
 
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.item.*;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.value.DexValue;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
 public class ClassId extends ItemId {
 
-    private final ItemIndexReference<TypeId> typeIndex;
+    private final ItemIndexReference<TypeId> classType;
     private final IndirectInteger accessFlagValue;
-    private final IndirectInteger superClassIndex;
-    private final IndirectInteger interfacesOffset;
-    private final IndirectInteger sourceFileIndex;
-    private final IndirectInteger annotationDirectoryOffset;
-    private final ItemOffsetReference<ClassData> classDataOffset;
-    private final IndirectInteger staticValuesOffset;
+    private final ItemIndexReference<TypeId> superClass;
+    private final ItemOffsetReference<TypeList> interfaces;
+    private final ItemIndexReference<StringData> sourceFile;
+    private final ItemOffsetReference<AnnotationsDirectory> annotationsDirectory;
+    private final ItemOffsetReference<ClassData> classData;
+    private final ItemOffsetReference<EncodedArray> staticValues;
 
     public ClassId() {
         super(SIZE);
         int offset = -4;
         
-        this.typeIndex = new ItemIndexReference<>(SectionType.TYPE_ID, this, offset += 4);
+        this.classType = new ItemIndexReference<>(SectionType.TYPE_ID, this, offset += 4);
         this.accessFlagValue = new IndirectInteger(this, offset += 4);
-        this.superClassIndex = new IndirectInteger(this, offset += 4);
-        this.interfacesOffset = new IndirectInteger(this, offset += 4);
-        this.sourceFileIndex = new IndirectInteger(this, offset += 4);
-        this.annotationDirectoryOffset = new IndirectInteger(this, offset += 4);
-        this.classDataOffset = new ItemOffsetReference<>(SectionType.CLASS_DATA, this, offset += 4);
-        this.staticValuesOffset = new IndirectInteger(this, offset += 4);
-
+        this.superClass = new ItemIndexReference<>(SectionType.TYPE_ID, this, offset += 4);
+        this.interfaces = new ItemOffsetReference<>(SectionType.TYPE_LIST, this, offset += 4);
+        this.sourceFile = new ItemIndexReference<>(SectionType.STRING_DATA,this, offset += 4);
+        this.annotationsDirectory = new ItemOffsetReference<>(SectionType.ANNOTATIONS_DIRECTORY, this, offset += 4);
+        this.classData = new ItemOffsetReference<>(SectionType.CLASS_DATA, this, offset += 4);
+        this.staticValues = new ItemOffsetReference<>(SectionType.ENCODED_ARRAY, this, offset += 4);
     }
 
-    public TypeId getType(){
-        return typeIndex.getItem();
+    public String getName(){
+        TypeId typeId = getClassType();
+        if(typeId != null){
+            return typeId.getName();
+        }
+        return null;
+    }
+
+    public TypeId getClassType(){
+        return classType.getItem();
+    }
+    public void setClassType(TypeId typeId){
+        this.classType.setItem(typeId);
     }
     public int getAccessFlagValue() {
         return accessFlagValue.get();
@@ -59,20 +71,29 @@ public class ClassId extends ItemId {
         return AccessFlag.getAccessFlagsForClass(getAccessFlagValue());
     }
     public TypeId getSuperClass(){
-        return getTypeId(superClassIndex.get());
+        return superClass.getItem();
+    }
+    public void setSuperClass(TypeId typeId){
+        superClass.setItem(typeId);
     }
     public StringData getSourceFile(){
-        return getStringData(sourceFileIndex.get());
+        return sourceFile.getItem();
+    }
+    public void setSourceFile(StringData stringData){
+        this.sourceFile.setItem(stringData);
     }
     public TypeId[] getInterfaceTypeIds(){
-        TypeList interfaceList = getInterfaceList();
+        TypeList interfaceList = getInterfaces();
         if(interfaceList != null){
-            return interfaceList.toTypeIds();
+            return interfaceList.getTypeIds();
         }
         return null;
     }
-    public TypeList getInterfaceList(){
-        return getAt(SectionType.TYPE_LIST, interfacesOffset.get());
+    public TypeList getInterfaces(){
+        return interfaces.getItem();
+    }
+    public void setInterfaces(TypeList interfaces){
+        this.interfaces.setItem(interfaces);
     }
     public AnnotationSet getClassAnnotations(){
         AnnotationsDirectory annotationsDirectory = getAnnotationsDirectory();
@@ -82,25 +103,56 @@ public class ClassId extends ItemId {
         return null;
     }
     public AnnotationsDirectory getAnnotationsDirectory(){
-        return getAt(SectionType.ANNOTATIONS_DIRECTORY, annotationDirectoryOffset.get());
+        return annotationsDirectory.getItem();
+    }
+    public void setAnnotationsDirectory(AnnotationsDirectory directory){
+        this.annotationsDirectory.setItem(directory);
     }
     public ClassData getClassData(){
-        return classDataOffset.getItem();
+        return classData.getItem();
+    }
+    public void setClassData(ClassData classData){
+        this.classData.setItem(classData);
     }
     public EncodedArray getStaticValues(){
-        return getAt(SectionType.ENCODED_ARRAY, staticValuesOffset.get());
+        return staticValues.getItem();
+    }
+    public DexValue<?> getStaticValue(int i){
+        EncodedArray encodedArray = getStaticValues();
+        if(encodedArray != null){
+            return encodedArray.get(i);
+        }
+        return null;
+    }
+    public void setStaticValues(EncodedArray staticValues){
+        this.staticValues.setItem(staticValues);
+    }
+
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+        cacheItems();
+    }
+
+    private void cacheItems(){
+        this.classType.getItem();
+        this.superClass.getItem();
+        this.interfaces.getItem();
+        this.sourceFile.getItem();
+        this.annotationsDirectory.getItem();
+        this.classData.getItem();
+        this.staticValues.getItem();
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.newLine();
         writer.append(".class ");
         AccessFlag[] accessFlags = getAccessFlags();
         for(AccessFlag af:accessFlags){
             writer.append(af.toString());
             writer.append(' ');
         }
-        getType().append(writer);
+        getClassType().append(writer);
         writer.newLine();
         writer.append(".super ");
         getSuperClass().append(writer);
@@ -111,8 +163,8 @@ public class ClassId extends ItemId {
             sourceFile.append(writer);
         }
         writer.newLine();
-        TypeId[] interfaces = getInterfaceTypeIds();
-        if(interfaces != null){
+        TypeList interfaces = getInterfaces();
+        if(interfaces != null && interfaces.size() > 0){
             writer.newLine();
             writer.append("# interfaces");
             for(TypeId typeId : interfaces){
@@ -134,7 +186,7 @@ public class ClassId extends ItemId {
             classData.setClassId(this);
             classData.append(writer);
         }else {
-            writer.appendComment("Null class data: " + classDataOffset.get());
+            writer.appendComment("Null class data: " + this.classData.get());
         }
     }
     @Override
@@ -146,14 +198,14 @@ public class ClassId extends ItemId {
             builder.append(af);
             builder.append(" ");
         }
-        builder.append(getType());
+        builder.append(getClassType());
         builder.append("\n.super ").append(getSuperClass());
         StringData sourceFile = getSourceFile();
         if(sourceFile != null){
             builder.append("\n.source \"").append(sourceFile.getString()).append("\"");
         }
         builder.append("\n");
-        TypeId[] interfaces = getInterfaceTypeIds();
+        TypeList interfaces = getInterfaces();
         if(interfaces != null){
             builder.append("\n# interfaces");
             for(TypeId typeId : interfaces){

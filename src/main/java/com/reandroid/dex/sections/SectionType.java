@@ -17,12 +17,12 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.dex.item.IntegerList;
 import com.reandroid.dex.base.WarpedIntegerReference;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.index.*;
 import com.reandroid.dex.item.*;
-import com.reandroid.dex.value.ArrayValueList;
 import com.reandroid.utils.HexUtil;
 
 
@@ -41,7 +41,7 @@ public class SectionType<T extends Block> {
     public static final SectionType<MethodHandle> METHOD_HANDLE;
     public static final SectionType<MapList> MAP_LIST;
     public static final SectionType<TypeList> TYPE_LIST;
-    public static final SectionType<IntegerList> ANNOTATION_SET_REF_LIST;
+    public static final SectionType<AnnotationGroup> ANNOTATION_GROUP;
     public static final SectionType<AnnotationSet> ANNOTATION_SET;
     public static final SectionType<ClassData> CLASS_DATA;
     public static final SectionType<CodeItem> CODE;
@@ -190,6 +190,19 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = ANNOTATION_SET;
 
+        ANNOTATION_GROUP = new SectionType<>("ANNOTATION_GROUP", 0x1002, index, 12, new Creator<AnnotationGroup>() {
+            @Override
+            public AnnotationGroup[] newInstance(int length) {
+                return new AnnotationGroup[length];
+            }
+
+            @Override
+            public AnnotationGroup newInstance() {
+                return new AnnotationGroup();
+            }
+        });
+        VALUES[index++] = ANNOTATION_GROUP;
+
         ANNOTATIONS_DIRECTORY = new SectionType<>("ANNOTATIONS_DIRECTORY", 0x2006, index, 13, new Creator<AnnotationsDirectory>() {
             @Override
             public AnnotationsDirectory[] newInstance(int length) {
@@ -219,19 +232,6 @@ public class SectionType<T extends Block> {
 
         METHOD_HANDLE = new SectionType<>("METHOD_HANDLE", 0x0008, index, 100, null);
         VALUES[index++] = METHOD_HANDLE;
-
-        ANNOTATION_SET_REF_LIST = new SectionType<>("ANNOTATION_SET_REF_LIST", 0x1002, index, 12, new Creator<IntegerList>() {
-            @Override
-            public IntegerList[] newInstance(int length) {
-                return new IntegerList[length];
-            }
-
-            @Override
-            public IntegerList newInstance() {
-                return new IntegerList();
-            }
-        });
-        VALUES[index++] = ANNOTATION_SET_REF_LIST;
 
         CLASS_DATA = new SectionType<>("CLASS_DATA", 0x2000, index, 16, new Creator<ClassData>() {
             @Override
@@ -293,6 +293,7 @@ public class SectionType<T extends Block> {
     private final SectionType<?> idSectionType;
     private final int readOrder;
     private final int writeOrder;
+    private Boolean offsetType;
 
     private SectionType(String name, int type, int readOrder, int writeOrder, SectionType<?> idSectionType, Creator<T> creator){
         this.name = name;
@@ -320,6 +321,19 @@ public class SectionType<T extends Block> {
     }
     public int getWriteOrder() {
         return writeOrder;
+    }
+    public boolean isOffsetType(){
+        if(offsetType != null){
+            return offsetType;
+        }
+        synchronized (this){
+            if(creator != null){
+                offsetType = (creator.newInstance() instanceof OffsetSupplier);
+            }else {
+                offsetType = false;
+            }
+            return offsetType;
+        }
     }
 
     @Override

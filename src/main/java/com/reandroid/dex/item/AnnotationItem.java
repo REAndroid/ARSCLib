@@ -20,7 +20,6 @@ import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.index.TypeId;
-import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -30,10 +29,10 @@ import java.io.StringWriter;
 import java.util.Iterator;
 
 public class AnnotationItem extends DexItem
-        implements SmaliFormat {
+        implements Iterable<AnnotationElement>, SmaliFormat {
 
     private final ByteItem visibility;
-    private final Ule128Item typeIndex;
+    private final SectionUle128Item<TypeId> typeId;
     private final Ule128Item elementsCount;
     private final BlockArray<AnnotationElement> annotationElements;
 
@@ -49,7 +48,7 @@ public class AnnotationItem extends DexItem
             visibility = new ByteItem();
         }
         this.visibility = visibility;
-        this.typeIndex = new Ule128Item();
+        this.typeId = new SectionUle128Item<>(SectionType.TYPE_ID);
         this.elementsCount = new Ule128Item();
         this.annotationElements = new CountedArray<>(elementsCount,
                 AnnotationElement.CREATOR);
@@ -57,12 +56,28 @@ public class AnnotationItem extends DexItem
         if(!valueEntry){
             addChild(i++, visibility);
         }
-        addChild(i++, typeIndex);
+        addChild(i++, typeId);
         addChild(i++, elementsCount);
         addChild(i, annotationElements);
     }
     public AnnotationItem(){
         this(false);
+    }
+    public String key(){
+        StringBuilder builder = new StringBuilder();
+        boolean appendOnce = false;
+        for (AnnotationElement element : this){
+            if(appendOnce){
+                builder.append(',');
+            }
+            builder.append(element.key());
+            appendOnce = true;
+        }
+        return builder.toString();
+    }
+    @Override
+    public Iterator<AnnotationElement> iterator(){
+        return annotationElements.iterator();
     }
     public boolean isValueEntry() {
         return mValueEntry;
@@ -73,15 +88,8 @@ public class AnnotationItem extends DexItem
         }
         return null;
     }
-    public int getElementsCount(){
-        return elementsCount.get();
-    }
-    public TypeId getTypeIndex(){
-        SectionList dexFile = getParentInstance(SectionList.class);
-        if(dexFile != null){
-            return dexFile.get(SectionType.TYPE_ID, typeIndex.get());
-        }
-        return null;
+    public TypeId getTypeId(){
+        return typeId.getItem();
     }
 
     @Override
@@ -95,7 +103,7 @@ public class AnnotationItem extends DexItem
             writer.append(visibility.getName());
             writer.append(' ');
         }
-        getTypeIndex().append(writer);
+        getTypeId().append(writer);
         Iterator<AnnotationElement> iterator = annotationElements.iterator();
         writer.indentPlus();
         while (iterator.hasNext()){
@@ -123,26 +131,5 @@ public class AnnotationItem extends DexItem
         } catch (IOException exception) {
         }
         return writer.toString();
-    }
-    public String toString1(){
-        StringBuilder builder = new StringBuilder();
-        String tag = getTagName();
-        builder.append('.');
-        builder.append(tag);
-        builder.append(' ');
-        if(!isValueEntry()){
-            builder.append(getVisibility());
-            builder.append(' ');
-        }
-        builder.append(getTypeIndex());
-        Iterator<AnnotationElement> iterator = annotationElements.iterator();
-        while (iterator.hasNext()){
-            builder.append('\n');
-            builder.append(iterator.next());
-        }
-        builder.append('\n');
-        builder.append(".end ");
-        builder.append(tag);
-        return builder.toString();
     }
 }

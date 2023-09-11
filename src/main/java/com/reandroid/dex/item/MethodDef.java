@@ -18,10 +18,14 @@ package com.reandroid.dex.item;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.MethodId;
+import com.reandroid.dex.index.ProtoId;
+import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class MethodDef extends Def {
     private final Ule128Item codeOffset;
@@ -31,7 +35,7 @@ public class MethodDef extends Def {
         this.codeOffset = new Ule128Item();
         addChild(2, codeOffset);
     }
-    public MethodId getMethodIndex(){
+    public MethodId getMethodId(){
         return get(SectionType.METHOD_ID, getDefIndexId());
     }
     public InstructionList getInstructionList(){
@@ -42,19 +46,26 @@ public class MethodDef extends Def {
         return null;
     }
     public CodeItem getCodeItem(){
-        CodeItem codeItem = getAt(SectionType.CODE, codeOffset.get());
+        CodeItem codeItem = getAt(SectionType.CODE, codeOffset);
         if(codeItem != null){
             codeItem.setMethodDef(this);
         }
         return codeItem;
     }
     @Override
-    public AnnotationSet[] getAnnotations(){
+    public Iterator<AnnotationSet> getAnnotations(){
         AnnotationsDirectory directory = getAnnotationsDirectory();
         if(directory == null){
-            return null;
+            return EmptyIterator.of();
         }
         return directory.getMethodAnnotation(getDefIndexId());
+    }
+    public Iterator<AnnotationSet> getParameterAnnotations(int parameterIndex){
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if(directory == null){
+            return EmptyIterator.of();
+        }
+        return directory.getParameterAnnotation(getDefIndexId(), parameterIndex);
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
@@ -65,10 +76,11 @@ public class MethodDef extends Def {
             writer.append(af.toString());
             writer.append(' ');
         }
-        MethodId methodId = getMethodIndex();
+        MethodId methodId = getMethodId();
         writer.append(methodId.getNameString().getString());
         writer.append('(');
-        methodId.getProto().append(writer);
+        ProtoId protoId = methodId.getProto();
+        protoId.append(writer);
         writer.append(')');
         methodId.getProto().getReturnTypeId().append(writer);
         writer.indentPlus();
@@ -82,9 +94,47 @@ public class MethodDef extends Def {
         writer.newLine();
         writer.append(".end method");
     }
+    void appendParameterAnnotations(SmaliWriter writer, ProtoId protoId) throws IOException {
+        if(protoId == null || protoId.getParametersCount() == 0){
+            return;
+        }
+        TypeList typeList = protoId.getTypeList();
+        TypeId[] parameters = typeList.getTypeIds();
+        if(parameters == null){
+            return;
+        }
+        for(int i = 0; i < parameters.length; i++){
+            appendParameterAnnotations(writer, parameters[i], i);
+        }
+    }
+    private void appendParameterAnnotations(SmaliWriter writer, TypeId typeId, int index) throws IOException {
+        if(typeId == null){
+            return;
+        }
+        Iterator<AnnotationSet> iterator = getParameterAnnotations(index);
+        boolean appendOnce = false;
+        while (iterator.hasNext()){
+            if(!appendOnce){
+                int param = isStatic() ? 0 : 1;
+                writer.newLine();
+                writer.append(".param p");
+                writer.append(index + param);
+                writer.appendComment(typeId.getName());
+                writer.indentPlus();
+            }
+            iterator.next().append(writer);
+            appendOnce = true;
+        }
+        if(appendOnce){
+            writer.indentMinus();
+            writer.newLine();
+            writer.append(".end param");
+        }
+    }
+
     @Override
     public String toString() {
-        MethodId methodId = getMethodIndex();
+        MethodId methodId = getMethodId();
         if(methodId != null){
             return ".method " + AccessFlag.formatForMethod(getAccessFlagsValue())
                     + " " + methodId.toString();

@@ -22,6 +22,7 @@ import com.reandroid.arsc.container.BlockList;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.Iterator;
 
 public class DexBlockList<T extends Block> extends BlockList<T> implements Collection<T> {
     private final DexPositionAlign dexPositionAlign;

@@ -16,63 +16,33 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.DexFile;
-import com.reandroid.dex.index.StringData;
-import com.reandroid.dex.index.TypeId;
-import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class PrimitiveValue extends DexValue<NumberValue>{
+public class PrimitiveValue extends DexValue<NumberValue> {
+
     public PrimitiveValue() {
         super(new NumberValue());
     }
+
     public long getNumberValue(){
         return getValue().getNumberValue();
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
+        getValueTypeItem().onReadBytes(reader);
         NumberValue numberValue = getValue();
-        numberValue.setSize(0);
-        super.onReadBytes(reader);
         numberValue.setSize(getValueSize() + 1);
         numberValue.readBytes(reader);
-
-        numberValue.getSize();
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        DexValueType valueType = getValueType();
-        if(valueType == DexValueType.TYPE){
-            DexFile dexFile = getParentInstance(DexFile.class);
-            TypeId type = dexFile.getSectionList().get(SectionType.TYPE_ID, (int) getNumberValue());
-            type.append(writer);
-        }else if(valueType == DexValueType.STRING){
-            DexFile dexFile = getParentInstance(DexFile.class);
-            StringData stringData = dexFile.getSectionList().get(SectionType.STRING_DATA, (int) getNumberValue());
-            stringData.append(writer);
-        }else {
-            writer.append(HexUtil.toHex(getNumberValue(), getValueSize()));
-        }
+        writer.append(HexUtil.toHex(getNumberValue(), getValueSize()));
     }
     @Override
     public String toString() {
-        DexValueType valueType = getValueType();
-        if(valueType == DexValueType.TYPE){
-            DexFile dexFile = getParentInstance(DexFile.class);
-            TypeId type = dexFile.getSectionList().get(SectionType.TYPE_ID, (int) getNumberValue());
-            return type.toString();
-        }
-        if(valueType == DexValueType.STRING){
-            DexFile dexFile = getParentInstance(DexFile.class);
-            StringData type = dexFile.getSectionList().get(SectionType.STRING_DATA, (int) getNumberValue());
-            return "\"" + type.getString() + "\"";
-        }
-        if(valueType == DexValueType.INT){
-            return HexUtil.toHex(getNumberValue(), getValueSize());
-        }
-        return getValueType() + ":" + getNumberValue();
+        return HexUtil.toHex(getNumberValue(), getValueSize());
     }
 }

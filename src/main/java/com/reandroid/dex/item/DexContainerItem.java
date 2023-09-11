@@ -16,6 +16,7 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.FixedDexContainer;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
@@ -27,6 +28,12 @@ public class DexContainerItem extends FixedDexContainer {
     }
 
 
+    public<T1 extends Block> T1 getAt(SectionType<T1> sectionType, IntegerReference offset){
+        if(offset != null && sectionType != null){
+            return getAt(sectionType, offset.get());
+        }
+        return null;
+    }
     public<T1 extends Block> T1 getAt(SectionType<T1> sectionType, int offset){
         if(offset == 0){
             return null;

@@ -19,25 +19,35 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.CountedArray;
+import com.reandroid.dex.base.DexBlockAlign;
 import com.reandroid.dex.base.DexPositionAlign;
+import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.item.DexContainerItem;
 import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.ExpandIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
 public class TryBlock extends DexContainerItem implements
-        Creator<TryItem>, Iterable<TryItem> {
-    private final IntegerReference itemCount;
+        Creator<TryItem>, Iterable<TryItem>, LabelList {
+    private final IntegerReference totalCount;
 
     private HandlerOffsetArray handlerOffsetArray;
+    private Ule128Item tryItemsCount;
     private CountedArray<TryItem> tryItemArray;
-    private DexPositionAlign positionAlign;
+    private DexBlockAlign positionAlign;
 
-    public TryBlock(IntegerReference itemCount) {
-        super(3);
-        this.itemCount = itemCount;
+    public TryBlock(IntegerReference totalCount) {
+        super(4);
+        this.totalCount = totalCount;
     }
+
+    @Override
+    public Iterator<? extends Label> getLabels() {
+        return new ExpandIterator<>(iterator());
+    }
+
     @Override
     public Iterator<TryItem> iterator(){
         if(isNull()){
@@ -48,7 +58,7 @@ public class TryBlock extends DexContainerItem implements
 
     private HandlerOffsetArray getHandlersOffset() {
         if(handlerOffsetArray == null){
-            handlerOffsetArray = new HandlerOffsetArray(itemCount);
+            handlerOffsetArray = new HandlerOffsetArray(totalCount);
             addChild(0, handlerOffsetArray);
         }
         return handlerOffsetArray;
@@ -57,9 +67,10 @@ public class TryBlock extends DexContainerItem implements
         if(tryItemArray != null){
             return;
         }
-        tryItemArray = new CountedArray<>(itemCount, this);
-        addChild(1, tryItemArray);
-        tryItemArray.setChildesCount(itemCount.get());
+        tryItemsCount = new Ule128Item();
+        addChild(1, tryItemsCount);
+        tryItemArray = new CountedArray<>(totalCount, this);
+        addChild(2, tryItemArray);
     }
     @Override
     public void setNull(boolean is_null){
@@ -76,8 +87,8 @@ public class TryBlock extends DexContainerItem implements
         getHandlersOffset();
         initTryItemArray();
         if(positionAlign == null){
-            positionAlign = new DexPositionAlign();
-            addChild(2, positionAlign);
+            positionAlign = new DexBlockAlign(this);
+            addChild(3, positionAlign);
         }
     }
     private void clear(){
@@ -87,18 +98,24 @@ public class TryBlock extends DexContainerItem implements
             handlerOffsetArray = null;
             addChild(0, null);
         }
+        if(tryItemsCount != null){
+            tryItemsCount.setParent(null);
+            tryItemsCount.setIndex(-1);
+            tryItemArray = null;
+            addChild(1, null);
+        }
         if(tryItemArray != null){
             tryItemArray.clearChildes();
             tryItemArray.setParent(null);
             tryItemArray.setIndex(-1);
             tryItemArray = null;
-            addChild(1, null);
+            addChild(2, null);
         }
         if(positionAlign != null){
             positionAlign.setParent(null);
             positionAlign.setIndex(-1);
             positionAlign = null;
-            addChild(2, null);
+            addChild(3, null);
         }
     }
     @Override
@@ -108,7 +125,7 @@ public class TryBlock extends DexContainerItem implements
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        boolean is_null = itemCount.get() == 0;
+        boolean is_null = totalCount.get() == 0;
         setNull(is_null);
         if(!is_null){
             super.onReadBytes(reader);
@@ -117,11 +134,52 @@ public class TryBlock extends DexContainerItem implements
 
     @Override
     public TryItem[] newInstance(int length) {
-        return new TryItem[length];
+        HandlerOffsetArray offsetArray = getHandlersOffset();
+        int count = offsetArray.size();
+        TryItem[] results = new TryItem[length];
+        if(length < 2 || length != count || tryItemArray.getCount() != 0){
+            return results;
+        }
+        for(int i = 0; i < count; i++){
+            int offset = offsetArray.getOffset(i);
+            int index = offsetArray.indexOf(offset);
+            TryItem tryItem;
+            if(index >= 0 && index < i){
+                tryItem = results[index].newCopy();
+            }else {
+                tryItem = new TryItem(offsetArray);
+            }
+            tryItem.setIndex(i);
+            results[i] = tryItem;
+        }
+        return results;
     }
-    @Override
+
     public TryItem newInstance() {
         return new TryItem(getHandlersOffset());
+    }
+    public TryItem newInstance1() {
+        HandlerOffsetArray offsetArray = getHandlersOffset();
+        if(offsetArray.size() < 2){
+            return new TryItem(offsetArray);
+        }
+        int index = 0;
+        TryItem[] childes = tryItemArray.getChildes();
+        for(int i = 0; i < childes.length; i++){
+            if(childes[i] == null){
+                index = i;
+                break;
+            }
+        }
+        if(index == 0){
+            return new TryItem(offsetArray);
+        }
+        int offset = offsetArray.getOffset(index);
+        int i = offsetArray.indexOf(offset);
+        if(i >= 0 && i < index){
+            return childes[i].newCopy();
+        }
+        return new TryItem(offsetArray);
     }
 
     @Override
@@ -129,6 +187,6 @@ public class TryBlock extends DexContainerItem implements
         if(isNull()){
             return "NULL";
         }
-        return "tryItems = " + tryItemArray.toString();
+        return "tryItems = " + tryItemArray.toString() + ", bytes="+countBytes();
     }
 }

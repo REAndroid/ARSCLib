@@ -15,37 +15,38 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.dex.sections.Section;
-import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class AnnotationSet extends IntegerList implements SmaliFormat {
+public class AnnotationSet extends IntegerOffsetSectionList<AnnotationItem> implements SmaliFormat {
+
     public AnnotationSet(){
-        super();
+        super(SectionType.ANNOTATION);
     }
-    public AnnotationItem[] toItemArray(){
-        if(size() == 0){
-            return null;
+    public String getKey(){
+        StringBuilder builder = new StringBuilder();
+        boolean appendOnce = false;
+        for(AnnotationItem item : this){
+            if(appendOnce){
+                builder.append(',');
+            }
+            builder.append(item.key());
+            appendOnce = true;
         }
-        return getAt(SectionType.ANNOTATION, toArray());
+        return builder.toString();
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        AnnotationItem[] annotations = toItemArray();
-        if(annotations == null){
+        if(size() == 0){
             return;
         }
-        writer.newLine();
-        for(int i = 0; i < annotations.length; i++){
-            if(i != 0){
-                writer.newLine();
-            }
-            annotations[i].append(writer);
+        for(AnnotationItem item : this){
+            writer.newLine();
+            item.append(writer);
         }
     }
     @Override
@@ -55,22 +56,17 @@ public class AnnotationSet extends IntegerList implements SmaliFormat {
         }
         int size = size();
         if(size == 0){
-            return "";
+            return "EMPTY";
         }
-        SectionList sectionList = getParentInstance(SectionList.class);
-        if(sectionList != null){
-            Section<AnnotationItem> section = sectionList.get(SectionType.ANNOTATION);
-            if(section != null){
-                StringBuilder builder = new StringBuilder();
-                for(int i = 0; i < size; i++){
-                    if(i != 0){
-                        builder.append('\n');
-                    }
-                    builder.append(section.getAt(this.get(i)));
-                }
-                return builder.toString();
+        StringBuilder builder = new StringBuilder();
+        boolean appendOnce = false;
+        for(AnnotationItem item : this){
+            if(appendOnce){
+                builder.append(',');
             }
+            builder.append(item);
+            appendOnce = true;
         }
-        return super.toString();
+        return builder.toString();
     }
 }

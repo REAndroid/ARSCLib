@@ -88,12 +88,16 @@ public class Ins extends DexContainerItem implements SmaliFormat {
     private void appendExtraLines(SmaliWriter writer) throws IOException {
         Iterator<ExtraLine> iterator = getExtraLinesSorted();
         ExtraLine extraLine = null;
+        boolean hasHandler = false;
         while (iterator.hasNext()){
             writer.newLine();
             extraLine = iterator.next();
             extraLine.appendExtra(writer);
+            if(!hasHandler){
+                hasHandler = extraLine.getSortOrder() == ExtraLine.ORDER_EXCEPTION_HANDLER;
+            }
         }
-        if(extraLine instanceof ExceptionHandler){
+        if(hasHandler && extraLine.getSortOrder() >= ExtraLine.ORDER_EXCEPTION_HANDLER){
             writer.newLine();
         }
     }

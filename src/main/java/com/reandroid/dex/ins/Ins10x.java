@@ -15,8 +15,21 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.dex.writer.SmaliWriter;
+
+import java.io.IOException;
+
 public class Ins10x extends Size2Ins {
     public Ins10x(Opcode<?> opcode) {
         super(opcode);
+    }
+    @Override
+    void appendCode(SmaliWriter writer) throws IOException {
+        writer.newLine();
+        writer.append(getOpcode().getName());
+    }
+    @Override
+    public String toString() {
+        return getOpcode().getName();
     }
 }

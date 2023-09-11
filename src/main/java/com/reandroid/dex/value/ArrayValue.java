@@ -21,29 +21,45 @@ import com.reandroid.dex.item.EncodedArray;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
+import java.util.Iterator;
 
-public class ArrayValue extends DexValue<EncodedArray>{
+public class ArrayValue extends DexValue<EncodedArray>
+        implements Iterable<DexValue<?>> {
     public ArrayValue() {
         super(new EncodedArray());
     }
-    public int getCountValue() {
-        return getValue().getCountValue();
+
+    public DexValue<?> get(int i){
+        return getElementBlockList().get(i);
+    }
+    public int size() {
+        return getElementBlockList().size();
     }
     public void addValue(DexValue<?> value){
-        getElements().add(value);
+        getElementBlockList().add(value);
     }
-    public BlockList<DexValue<?>> getElements() {
+    public BlockList<DexValue<?>> getElementBlockList() {
         return getValue().getElements();
     }
-
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    @Override
+    public Iterator<DexValue<?>> iterator() {
+        return getElementBlockList().iterator();
+    }
+    @Override
+    public String getTypeName(){
+        StringBuilder builder = new StringBuilder();
+        builder.append('[');
+        Iterator<DexValue<?>> iterator = iterator();
+        if(iterator.hasNext()){
+            builder.append(iterator.next().getTypeName());
+        }
+        return builder.toString();
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append('{');
         writer.indentPlus();
-        BlockList<DexValue<?>> elements = getElements();
+        BlockList<DexValue<?>> elements = getElementBlockList();
         int count = elements.size();
         for(int i = 0; i < count; i++){
             if(i != 0){
@@ -57,9 +73,5 @@ public class ArrayValue extends DexValue<EncodedArray>{
             writer.newLine();
         }
         writer.append('}');
-    }
-    @Override
-    public String toString(){
-        return getValue().toString();
     }
 }

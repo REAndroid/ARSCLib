@@ -60,13 +60,16 @@ public class IndexAndOffsetArray extends DexBlockItem implements OffsetArray {
     private int getIndexEntry(int i) {
         return Block.getInteger(getBytesInternal(), i * 8);
     }
+    public void setIndexEntry(int index, int value) {
+        Block.putInteger(getBytesInternal(), index * 8, value);
+    }
     @Override
     public int getOffset(int i) {
         return Block.getInteger(getBytesInternal(), i * 8 + 4);
     }
     @Override
     public void setOffset(int index, int value) {
-        Block.putInteger(getBytesInternal(), index * 8, value);
+        Block.putInteger(getBytesInternal(), index * 8 + 4, value);
     }
     @Override
     public int[] getOffsets() {
@@ -74,6 +77,14 @@ public class IndexAndOffsetArray extends DexBlockItem implements OffsetArray {
         int[] results = new int[size];
         for(int i = 0; i < size; i++){
             results[i] = getOffset(i);
+        }
+        return results;
+    }
+    public int[] getIndexEntries() {
+        int size = size();
+        int[] results = new int[size];
+        for(int i = 0; i < size; i++){
+            results[i] = getIndexEntry(i);
         }
         return results;
     }

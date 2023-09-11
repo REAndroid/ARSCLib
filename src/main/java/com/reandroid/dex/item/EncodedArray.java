@@ -24,7 +24,7 @@ import com.reandroid.dex.value.DexValueType;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class EncodedArray extends DexItem {
+public class EncodedArray extends DexItem implements Iterable<DexValue<?>> {
     private final Ule128Item elementCount;
     private final BlockList<DexValue<?>> elements;
     public EncodedArray() {
@@ -34,9 +34,17 @@ public class EncodedArray extends DexItem {
         addChild(0, elementCount);
         addChild(1, elements);
     }
-    public int getCountValue() {
-        return elementCount.get();
+    public DexValue<?> get(int i){
+        return getElements().get(i);
     }
+    public int size(){
+        return getElements().size();
+    }
+    @Override
+    public Iterator<DexValue<?>> iterator(){
+        return getElements().iterator();
+    }
+
     public BlockList<DexValue<?>> getElements() {
         return elements;
     }
@@ -45,10 +53,7 @@ public class EncodedArray extends DexItem {
         super.onReadBytes(reader);
         int count = elementCount.get();
         for(int i = 0; i < count; i++){
-            int type = reader.read();
-            reader.offset(-1);
-            DexValueType valueType = DexValueType.fromFlag(type);
-            DexValue<?> dexValue = DexValue.createFor(valueType);
+            DexValue<?> dexValue = DexValueType.create(reader);
             elements.add(dexValue);
             dexValue.readBytes(reader);
         }
@@ -57,7 +62,7 @@ public class EncodedArray extends DexItem {
     public String toString(){
         StringBuilder builder = new StringBuilder();
         builder.append('{');
-        Iterator<DexValue<?>> iterator = getElements().iterator();
+        Iterator<DexValue<?>> iterator = iterator();
         boolean appendOnce = false;
         while (iterator.hasNext()){
             if(appendOnce){

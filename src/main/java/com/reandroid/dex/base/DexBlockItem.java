@@ -17,6 +17,7 @@ package com.reandroid.dex.base;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.BlockItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.io.ByteReader;
 import com.reandroid.dex.io.StreamUtil;
 import com.reandroid.dex.sections.Section;
@@ -27,11 +28,17 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public abstract class DexBlockItem extends BlockItem {
+
     public DexBlockItem(int bytesLength) {
         super(bytesLength);
     }
 
-
+    public<T1 extends Block> T1 getAt(SectionType<T1> sectionType, IntegerReference offset){
+        if(offset != null){
+            return getAt(sectionType, offset.get());
+        }
+        return null;
+    }
     public<T1 extends Block> T1 getAt(SectionType<T1> sectionType, int offset){
         if(offset == 0){
             return null;

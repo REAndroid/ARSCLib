@@ -16,55 +16,56 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.dex.index.TypeId;
-import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.collection.ArrayIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
-public class TypeList extends ShortList implements SmaliFormat {
+public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId> {
+    private TypeId[] typeIds;
 
     public TypeList() {
         super();
     }
-    public TypeId[] toTypeIds(){
-        if(size() == 0){
-            return null;
+    public boolean add(TypeId typeId){
+        if(typeId != null){
+            return addIfAbsent(typeId.getIndex());
         }
-        return get(SectionType.TYPE_ID, toArray());
+        return false;
+    }
+    @Override
+    public Iterator<TypeId> iterator() {
+        return ArrayIterator.of(getTypeIds());
+    }
+    @Override
+    public int size() {
+        return super.size();
+    }
+    public TypeId[] getTypeIds(){
+        return typeIds;
+    }
+    @Override
+    void onChanged(){
+        updateTypeIds();
+    }
+    private void updateTypeIds(){
+        typeIds = get(SectionType.TYPE_ID, toArray());
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        int size = size();
-        if(size == 0){
-            return;
-        }
-        Section<TypeId> section = getSection(SectionType.TYPE_ID);
-        if(section != null){
-            for(int i = 0; i < size; i++){
-                section.get(this.get(i)).append(writer);
-            }
+        for(TypeId typeId : this){
+            typeId.append(writer);
         }
     }
-
     @Override
     public String toString() {
-        if(getOffsetReference() == null){
-            return super.toString();
+        StringBuilder builder = new StringBuilder();
+        for(TypeId typeId : this){
+            builder.append(typeId);
         }
-        int size = size();
-        if(size == 0){
-            return "";
-        }
-        Section<TypeId> section = getSection(SectionType.TYPE_ID);
-        if(section != null){
-            StringBuilder builder = new StringBuilder();
-            for(int i = 0; i < size; i++){
-                builder.append(section.get(this.get(i)));
-            }
-            return builder.toString();
-        }
-        return super.toString();
+        return builder.toString();
     }
 }

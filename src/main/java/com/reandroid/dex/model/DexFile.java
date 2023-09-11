@@ -13,26 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex;
+package com.reandroid.dex.model;
 
 import com.reandroid.arsc.container.ExpandableBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.index.ClassId;
-import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.sections.*;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.index.ClassId;
+import com.reandroid.dex.index.TypeNamePool;
+import com.reandroid.dex.sections.Section;
+import com.reandroid.dex.sections.SectionList;
+import com.reandroid.dex.sections.SectionType;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DexFile extends ExpandableBlockContainer {
 
     private final SectionList sectionList;
+    private Map<String, DexClass> dexClasses = new HashMap<>();
+    private final TypeNamePool typeNamePool;
 
     public DexFile() {
         super(1);
         this.sectionList = new SectionList();
         addChild(sectionList);
+        this.typeNamePool = new TypeNamePool();
+    }
+    public void decode(File outDir) throws IOException {
+        int size = dexClasses.size();
+        System.out.println("Total: " + size);
+        int i = 0;
+        for(DexClass dexClass : dexClasses.values()){
+            i++;
+            System.out.println(i + "/" + size + ": " + dexClass);
+            dexClass.decode(outDir);
+        }
+        System.out.println("Done: " + outDir);
     }
 
     public SectionList getSectionList(){
@@ -41,25 +61,19 @@ public class DexFile extends ExpandableBlockContainer {
     public DexHeader getHeader() {
         return getSectionList().getHeader();
     }
-
+    private void mapClasses(){
+        Section<ClassId> sectionClass = sectionList.get(SectionType.CLASS_ID);
+        int count = sectionClass.getCount();
+        Map<String, DexClass> dexClasses = new HashMap<>(count);
+        this.dexClasses = dexClasses;
+        for(int i = 0; i < count; i++){
+            DexClass dexClass = DexClass.create(sectionClass.get(i));
+            dexClasses.put(dexClass.getName(), dexClass);
+        }
+    }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
         super.onReadBytes(reader);
-        //TEST
-        int count = 0;
-        Section<ClassId> sectionClass = sectionList.get(SectionType.CLASS_ID);
-        for(ClassId classId:sectionClass){
-            StringWriter writer = new StringWriter();
-            SmaliWriter smaliWriter=new SmaliWriter(writer);
-            classId.append(smaliWriter);
-            smaliWriter.close();
-            System.err.println(writer.toString());
-            count++;
-            if(count > 100){
-                break;
-            }
-        }
-
     }
 
     public void read(byte[] dexBytes) throws IOException {

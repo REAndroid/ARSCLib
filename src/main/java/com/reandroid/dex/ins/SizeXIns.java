@@ -18,6 +18,7 @@ package com.reandroid.dex.ins;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.dex.index.ItemId;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -92,11 +93,11 @@ public class SizeXIns extends Ins {
         }
         writer.append(", ");
         int data = getData();
-        SectionType<?> sectionType = opcode.getSectionType();
+        SectionType<? extends ItemId> sectionType = opcode.getSectionType();
         if(sectionType != null){
-            Block sectionData = get(sectionType, data);
-            if(sectionData instanceof SmaliFormat){
-                ((SmaliFormat) sectionData).append(writer);
+            ItemId sectionData = get(sectionType, data);
+            if(sectionData != null){
+                sectionData.append(writer);
             }
         }else {
             writer.append(HexUtil.toHex(data, 1));

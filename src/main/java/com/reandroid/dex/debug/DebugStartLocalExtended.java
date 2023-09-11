@@ -1,6 +1,5 @@
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.index.StringData;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -9,16 +8,16 @@ import java.io.IOException;
 
 public class DebugStartLocalExtended extends DebugStartLocal {
 
-    private final Ule128Item signatureIndex;
+    private final Base1Ule128Item<StringData> signatureData;
 
     public DebugStartLocalExtended(){
         super(1, DebugElementType.START_LOCAL_EXTENDED);
-        this.signatureIndex = new Ule128Item();
+        this.signatureData = new Base1Ule128Item<>(SectionType.STRING_DATA);
 
-        addChild(4, signatureIndex);
+        addChild(4, signatureData);
     }
     public StringData getSignature(){
-        return get(SectionType.STRING_DATA, signatureIndex.get() - 1);
+        return signatureData.getItem();
     }
 
     public void appendExtra(SmaliWriter writer) throws IOException {

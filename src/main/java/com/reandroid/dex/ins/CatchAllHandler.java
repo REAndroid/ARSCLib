@@ -15,32 +15,42 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.writer.SmaliWriter;
-
-import java.io.IOException;
+import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.dex.index.TypeId;
 
 public class CatchAllHandler extends ExceptionHandler {
     public CatchAllHandler() {
         super(0);
     }
+    CatchAllHandler(boolean forCopy) {
+        super();
+    }
 
+    CatchAllHandler newCopy(){
+        CatchAllHandler handler = new Copy(this);
+        handler.setIndex(getIndex());
+        return handler;
+    }
+
+    @Override
+    TypeId getTypeId(){
+        return null;
+    }
     @Override
     String getOpcodeName(){
         return "catchall";
     }
-    @Override
-    void appendType(SmaliWriter writer) throws IOException {
-    }
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(".catchall ");
-        builder.append(" {");
-        builder.append(getStartLabel().getLabelName());
-        builder.append(" .. ");
-        builder.append(getEndLabel().getLabelName());
-        builder.append("} ");
-        builder.append(getCatchLabel().getLabelName());
-        return builder.toString();
+
+    static class Copy extends CatchAllHandler {
+
+        private final CatchAllHandler catchAllHandler;
+        Copy(CatchAllHandler catchAllHandler){
+            super(true);
+            this.catchAllHandler = catchAllHandler;
+        }
+        @Override
+        Ule128Item getCatchAddressUle128(){
+            return catchAllHandler.getCatchAddressUle128();
+        }
     }
 }

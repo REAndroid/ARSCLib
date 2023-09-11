@@ -24,7 +24,7 @@ import java.io.IOException;
 public class Sle128Item extends DexBlockItem implements IntegerReference {
     private int value;
     public Sle128Item() {
-        super(1);
+        super(0);
     }
     @Override
     public int get() {

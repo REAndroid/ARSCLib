@@ -17,7 +17,7 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.DexFile;
+import com.reandroid.dex.model.DexFile;
 import com.reandroid.dex.base.*;
 
 import java.util.Comparator;

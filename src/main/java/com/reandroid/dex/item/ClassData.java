@@ -60,6 +60,20 @@ public class ClassData extends DexItem
         addChild(7, virtualMethods);
     }
 
+    public FieldDefArray getStaticFields() {
+        return staticFields;
+    }
+    public FieldDefArray getInstanceFields() {
+        return instanceFields;
+    }
+
+    public MethodDefArray getDirectMethods() {
+        return directMethods;
+    }
+    public MethodDefArray getVirtualMethods() {
+        return virtualMethods;
+    }
+
     public void setClassId(ClassId classId) {
         staticFields.setClassId(classId);
         instanceFields.setClassId(classId);

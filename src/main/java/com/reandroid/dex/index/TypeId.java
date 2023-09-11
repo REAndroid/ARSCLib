@@ -15,45 +15,96 @@
  */
 package com.reandroid.dex.index;
 
+import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
 public class TypeId extends ItemId {
-    private final ItemIndexReference<StringData> stringData;
+
+    private final ItemIndexReference<StringData> nameData;
+
+    private TypeName typeName;
     public TypeId() {
         super(4);
-        this.stringData = new ItemIndexReference<>(SectionType.STRING_DATA, this, 0);
+        this.nameData = new ItemIndexReference<>(SectionType.STRING_DATA, this, 0);
     }
 
-    public String getString(){
-        StringData stringData = getStringData();
+    @Override
+    public String getKey(){
+        return getName();
+    }
+    @Override
+    public void setKey(String key){
+        setName(key);
+    }
+    public TypeName getTypeName(){
+        TypeName typeName = this.typeName;
+        if(typeName != null){
+            return typeName;
+        }
+        synchronized (this){
+            StringData stringData = getNameData();
+            if(stringData == null){
+                return null;
+            }
+            typeName = TypeName.createOrDefault(stringData);
+            this.typeName = typeName;
+            return typeName;
+        }
+    }
+    private void clearTypeName(){
+        if(this.typeName == null){
+            return;
+        }
+        synchronized (this){
+            this.typeName = null;
+        }
+    }
+    public void setName(String name){
+        DexIdPool<StringData> stringPool = getPool(SectionType.STRING_DATA);
+        StringData stringData = stringPool.get(name);
+        if(stringData == null){
+            stringData = getNameData();
+            if(stringData != null){
+                String old = stringData.getKey();
+                stringData.setString(name);
+                stringPool.keyChanged(old, stringData);
+                clearTypeName();
+                return;
+            }
+        }
+        if(stringData == null){
+            stringData = stringPool.getOrCreate(name);
+        }
+        setName(stringData);
+        clearTypeName();
+    }
+    public String getName(){
+        StringData stringData = getNameData();
         if(stringData != null){
             return stringData.getString();
         }
         return null;
     }
-    public StringData getStringData(){
-        return stringData.getItem();
+    public StringData getNameData(){
+        return nameData.getItem();
     }
-    public int getStringIndexValue(){
-        return stringData.get();
-    }
-    public void setStringIndex(int index){
-        stringData.set(index);
+    public void setName(StringData name){
+        nameData.setItem(name);
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(getString());
+        writer.append(getName());
     }
     @Override
     public String toString(){
-        StringData stringData = getStringData();
+        StringData stringData = getNameData();
         if(stringData != null){
             return stringData.getString();
         }
-        return getIndex() + ":string-index=" + getStringIndexValue();
+        return getIndex() + ":string-index=" + nameData.get();
     }
 }

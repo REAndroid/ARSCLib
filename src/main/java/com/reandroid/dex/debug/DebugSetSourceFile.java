@@ -15,27 +15,20 @@
  */
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.index.StringData;
 import com.reandroid.dex.sections.SectionType;
 
 public class DebugSetSourceFile extends DebugElement {
-    private final Ule128Item nameIndex;
+    private final Base1Ule128Item<StringData> nameData;
 
     public DebugSetSourceFile() {
         super(1, DebugElementType.SET_SOURCE_FILE);
-        this.nameIndex = new Ule128Item();
-        addChild(1, nameIndex);
+        this.nameData = new Base1Ule128Item<>(SectionType.STRING_DATA);
+        addChild(1, nameData);
     }
 
     public StringData getName(){
-        return get(SectionType.STRING_DATA, nameIndex.get() - 1);
-    }
-    public int getNameIndex(){
-        return nameIndex.get() - 1;
-    }
-    public void setNameIndex(int nameIndex){
-        this.nameIndex.set(nameIndex + 1);
+        return nameData.getItem();
     }
 
     @Override
@@ -46,7 +39,7 @@ public class DebugSetSourceFile extends DebugElement {
         builder.append(", ");
         if(stringData == null){
             builder.append("name index = ");
-            builder.append(nameIndex.get());
+            builder.append(nameData.get());
         }else {
             builder.append('"');
             builder.append(stringData.getString());

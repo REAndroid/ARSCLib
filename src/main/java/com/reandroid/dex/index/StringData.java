@@ -37,6 +37,25 @@ public class StringData extends ItemId
     }
 
     @Override
+    public String getKey(){
+        return getString();
+    }
+    @Override
+    public void setKey(String key){
+        setString(key);
+    }
+    public String getString(){
+        return mCache;
+    }
+    public void setString(String value){
+        if(value.equals(mCache)){
+            return;
+        }
+        mCache = value;
+        encodeString(value);
+    }
+
+    @Override
     public IntegerReference getOffsetReference() {
         StringId reference = this.mStringId;
         if(reference == null){
@@ -49,12 +68,6 @@ public class StringData extends ItemId
     public void setOffsetReference(IntegerReference reference) {
         this.mStringId = (StringId) reference;
     }
-
-    public String getString(){
-        return mCache;
-    }
-
-
     @Override
     protected void onBytesChanged() {
         mCache = decodeString();
@@ -69,7 +82,7 @@ public class StringData extends ItemId
         String text = decodeString(StreamUtil.createByteReader(reader));
         int length = reader.getPosition() - position;
         reader.seek(position);
-        setBytesLength(length, false);
+        setBytesLength(length + 1, false);
         byte[] bytes = getBytesInternal();
         reader.readFully(bytes);
         mCache = text;
@@ -98,8 +111,27 @@ public class StringData extends ItemId
         }
         return text;
     }
-
-    // copied from JesusFreke/smali
+    private void encodeString(String text){
+        int length = text.length();
+        setBytesLength(length * 3 + 4, false);
+        final byte[] buffer = getBytesInternal();
+        int position = writeUleb128(buffer, 0, length);
+        for (int i = 0; i < length; i++) {
+            char ch = text.charAt(i);
+            if ((ch != 0) && (ch < 0x80)) {
+                buffer[position++] = (byte)ch;
+            } else if (ch < 0x800) {
+                buffer[position++] = (byte)(((ch >> 6) & 0x1f) | 0xc0);
+                buffer[position++] = (byte)((ch & 0x3f) | 0x80);
+            } else {
+                buffer[position++] = (byte)(((ch >> 12) & 0x0f) | 0xe0);
+                buffer[position++] = (byte)(((ch >> 6) & 0x3f) | 0x80);
+                buffer[position++] = (byte)((ch & 0x3f) | 0x80);
+            }
+        }
+        buffer[position++] = 0;
+        setBytesLength(position, false);
+    }
     private static String decodeString(ByteReader reader) throws IOException {
         int utf16Length = readUleb128(reader);
         char[] chars = new char[utf16Length];

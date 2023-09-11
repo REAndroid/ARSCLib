@@ -13,29 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.index;
+package com.reandroid.dex.value;
 
-import com.reandroid.dex.base.DexBlockItem;
-import com.reandroid.dex.pool.DexIdPool;
-import com.reandroid.dex.sections.Section;
+import com.reandroid.dex.index.StringData;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliFormat;
 
-public abstract class ItemId extends DexBlockItem implements SmaliFormat {
-    ItemId(int bytesLength) {
-        super(bytesLength);
+public class StringValue extends SectionValue<StringData> {
+
+    public StringValue() {
+        super(SectionType.STRING_DATA);
     }
 
-    public String getKey(){
-        return null;
-    }
-    public void setKey(String key){
-    }
-    public<T1 extends ItemId> DexIdPool<T1> getPool(SectionType<T1> sectionType){
-        Section<T1> section = getSection(sectionType);
-        if(section != null){
-            return section.getPool();
-        }
-        return null;
+    @Override
+    void onDataUpdated(StringData data) {
+        super.onDataUpdated(data);
     }
 }

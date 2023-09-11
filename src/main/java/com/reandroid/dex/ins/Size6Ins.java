@@ -21,6 +21,6 @@ public class Size6Ins extends SizeXIns {
     }
     @Override
     public int getData(){
-        return getValueBytes().getInteger(2);
+        return getValueBytes().getShortUnsigned(2);
     }
 }

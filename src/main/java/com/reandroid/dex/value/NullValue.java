@@ -25,11 +25,7 @@ public class NullValue extends DexValue<Block> {
         super();
     }
     @Override
-    public boolean isNull(){
-        return true;
-    }
-    @Override
-    public DexValueType getValueType() {
+    public DexValueType<NullValue> getValueType() {
         return DexValueType.NULL;
     }
 
@@ -41,4 +37,14 @@ public class NullValue extends DexValue<Block> {
     public String toString() {
         return "NullValue";
     }
+    public static NullValue getInstance(){
+        synchronized (NullValue.class){
+            if(sInstance == null){
+                sInstance = new NullValue();
+                sInstance.getValueTypeItem().set((byte) DexValueType.NULL.getFlag());
+            }
+            return sInstance;
+        }
+    }
+    private static NullValue sInstance;
 }

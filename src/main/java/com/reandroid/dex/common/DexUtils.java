@@ -13,20 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.item;
 
-import com.reandroid.arsc.item.IntegerReference;
+// originally copied from JesusFreke/smali
+package com.reandroid.dex.common;
 
-public class MethodDefArray extends DefArray<MethodDef> {
-    public MethodDefArray(IntegerReference itemCount){
-        super(itemCount);
-    }
-    @Override
-    public MethodDef[] newInstance(int length) {
-        return new MethodDef[length];
-    }
-    @Override
-    public MethodDef newInstance() {
-        return new MethodDef();
+public class DexUtils {
+    public static String toDalvikName(String javaName){
+        return "L" + javaName.replace('.', '/') + ";";
     }
 }

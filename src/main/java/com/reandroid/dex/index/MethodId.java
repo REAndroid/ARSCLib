@@ -34,6 +34,32 @@ public class MethodId extends ItemId {
         this.name = new ItemIndexReference<>(SectionType.STRING_DATA, this, offset += 2);
     }
 
+    public String getName(){
+        StringData stringData = getNameString();
+        if(stringData != null){
+            return stringData.getString();
+        }
+        return null;
+    }
+    public String getKey(){
+        StringBuilder builder = new StringBuilder();
+        TypeId type = getClassType();
+        if(type == null){
+            return null;
+        }
+        StringData stringData = type.getNameData();
+        if(stringData == null){
+            return null;
+        }
+        builder.append(stringData.getString());
+        builder.append("->");
+        builder.append(key());
+        return builder.toString();
+    }
+    public String key(){
+        return getName() + getProto().getKey();
+    }
+
     public TypeId getClassType(){
         return classType.getItem();
     }

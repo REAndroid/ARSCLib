@@ -16,6 +16,8 @@
 package com.reandroid.dex.index;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.BlockRefresh;
+import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.item.IndirectItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexBlockItem;
@@ -23,27 +25,67 @@ import com.reandroid.dex.item.DexItem;
 import com.reandroid.dex.sections.SectionType;
 
 public class ItemOffsetReference<T extends DexItem> extends IndirectItem<DexBlockItem>
-        implements IntegerReference{
+        implements IntegerReference, BlockRefresh {
+
     private final SectionType<T> sectionType;
     private T item;
+
     public ItemOffsetReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset) {
         super(blockItem, offset);
         this.sectionType = sectionType;
     }
+
     public T getItem() {
         int i = get();
-        if(item == null || i != item.getIndex()){
+        if(item == null && i != 0){
             item = getBlockItem().getAt(sectionType, i);
         }
         return item;
     }
+
+    public void setItem(T item) {
+        if(item == this.item){
+            return;
+        }
+        int value = 0;
+        if(item != null){
+            IntegerReference reference = item.getOffsetReference();
+            if(reference != null){
+                value = reference.get();
+            }
+        }
+        set(value);
+        this.item = item;
+    }
+
     @Override
-    public void set(int val) {
-        Block.putInteger(getBytesInternal(), getOffset(), val);
+    public void set(int value) {
+        Block.putInteger(getBytesInternal(), getOffset(), value);
         item = null;
     }
     @Override
     public int get() {
         return Block.getInteger(getBytesInternal(), getOffset());
+    }
+
+    @Override
+    public void refresh() {
+        T item = getItem();
+        int value = 0;
+        if(item != null){
+            IntegerReference reference = item.getOffsetReference();
+            if(reference != null){
+                value = reference.get();
+            }
+        }
+        set(value);
+    }
+
+    @Override
+    public String toString() {
+        if(item != null){
+            return item.toString();
+        }
+        return sectionType.getName() + ": " + get();
     }
 }

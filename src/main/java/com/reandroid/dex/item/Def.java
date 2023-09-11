@@ -16,11 +16,13 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class Def extends DexContainerItem implements SmaliFormat {
     private final Ule128Item id;
@@ -33,7 +35,7 @@ public class Def extends DexContainerItem implements SmaliFormat {
         addChild(0, id);
         addChild(1, accessFlags);
     }
-    public AnnotationSet[] getAnnotations(){
+    public Iterator<AnnotationSet> getAnnotations(){
         return null;
     }
     public AnnotationsDirectory getAnnotationsDirectory(){
@@ -43,14 +45,14 @@ public class Def extends DexContainerItem implements SmaliFormat {
         }
         return null;
     }
-    public void appendAnnotations(SmaliWriter writer) throws IOException {
-        AnnotationSet[] annotations = getAnnotations();
-        if(annotations != null){
-            for(AnnotationSet annotationSet : annotations){
-                annotationSet.append(writer);
-            }
-            writer.newLine();
+    public boolean appendAnnotations(SmaliWriter writer) throws IOException {
+        boolean appendOnce = false;
+        Iterator<AnnotationSet> iterator = getAnnotations();
+        while (iterator.hasNext()){
+            iterator.next().append(writer);
+            appendOnce = true;
         }
+        return appendOnce;
     }
     public ClassId getClassId() {
         return classId;
@@ -63,6 +65,9 @@ public class Def extends DexContainerItem implements SmaliFormat {
     }
     public int getAccessFlagsValue() {
         return accessFlags.get();
+    }
+    public boolean isStatic(){
+        return AccessFlag.STATIC.isSet(getAccessFlagsValue());
     }
     public int getDefIndexId() {
         DefArray<?> parentArray = getParentInstance(DefArray.class);
