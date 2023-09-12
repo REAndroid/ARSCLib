@@ -354,7 +354,11 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         this.mPackageBlock = packageBlock;
     }
     PackageBlock selectPackageBlock(TableBlock tableBlock){
-        return tableBlock.pickOne();
+        PackageBlock packageBlock = tableBlock.pickOne();
+        if(packageBlock == null){
+            packageBlock = tableBlock.pickOrEmptyPackage();
+        }
+        return packageBlock;
     }
     @Override
     public TableBlock getTableBlock(){
@@ -464,7 +468,6 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
             throw new IOException("Can not decode without package");
         }
         ResXmlElement.setIndent(serializer, true);
-        setPackageBlock(packageBlock);
         serializer.startDocument("utf-8", null);
         ResXmlElement element = getResXmlElement();
         if(element != null){

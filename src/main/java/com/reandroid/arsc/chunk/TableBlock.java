@@ -46,6 +46,7 @@ public class TableBlock extends Chunk<TableHeader>
     private ApkFile mApkFile;
     private ReferenceResolver referenceResolver;
     private PackageBlock mCurrentPackage;
+    private PackageBlock mEmptyTablePackage;
 
     public TableBlock() {
         super(new TableHeader(), 2);
@@ -356,6 +357,9 @@ public class TableBlock extends Chunk<TableHeader>
                 new FilterIterator.Except<>(iterator, current)
         );
     }
+    public void removePackage(PackageBlock packageBlock){
+        getPackageArray().remove(packageBlock);
+    }
     public Iterator<PackageBlock> getAllPackages(){
         return getAllPackages((PackageBlock) null);
     }
@@ -480,6 +484,9 @@ public class TableBlock extends Chunk<TableHeader>
     public int countPackages(){
         return getPackageArray().getChildesCount();
     }
+    public boolean isEmpty(){
+        return countPackages() == 0;
+    }
 
     public PackageBlock pickOne(){
         PackageBlock current = getCurrentPackage();
@@ -490,6 +497,16 @@ public class TableBlock extends Chunk<TableHeader>
     }
     public PackageBlock pickOne(int packageId){
         return getPackageArray().pickOne(packageId);
+    }
+    public PackageBlock pickOrEmptyPackage(){
+        PackageBlock packageBlock = this.pickOne();
+        if(packageBlock == null){
+            packageBlock = this.mEmptyTablePackage;
+            if(packageBlock == null){
+                this.mEmptyTablePackage = PackageBlock.createEmptyPackage(this);
+            }
+        }
+        return packageBlock;
     }
     public void sortPackages(){
         getPackageArray().sort();
@@ -565,6 +582,16 @@ public class TableBlock extends Chunk<TableHeader>
     protected void onChunkRefreshed() {
         refreshPackageCount();
     }
+    @Override
+    protected void onPreRefresh() {
+        List<PackageBlock> emptyList = CollectionUtil.toList(
+                FilterIterator.of(getPackages(), PackageBlock::isEmpty));
+        for(PackageBlock packageBlock : emptyList){
+            removePackage(packageBlock);
+        }
+        super.onPreRefresh();
+    }
+
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         TableHeader tableHeader = getHeaderBlock();

@@ -26,6 +26,7 @@ import com.reandroid.arsc.coder.xml.XmlEncodeException;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.PackageBody;
 import com.reandroid.arsc.container.SpecTypePair;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.header.PackageHeader;
 import com.reandroid.arsc.item.TypeString;
@@ -52,6 +53,7 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -384,14 +386,11 @@ public class PackageBlock extends Chunk<PackageHeader>
         getSpecTypePairArray().removeEmptyPairs();
     }
     public boolean isEmpty(){
-        return getSpecTypePairArray().isEmpty();
+        return mBody.isEmpty();
     }
     @Override
     public int getId(){
         return getHeaderBlock().getPackageId().get();
-    }
-    public void setId(byte id){
-        setId(0xff & id);
     }
     public void setId(int id){
         getHeaderBlock().getPackageId().set(id);
@@ -917,6 +916,65 @@ public class PackageBlock extends Chunk<PackageHeader>
                 packageBlock.setId(encodeResult.value);
             }
         }
+    }
+
+    public static PackageBlock createEmptyPackage(TableBlock tableBlock){
+        PackageBlock packageBlock = new PackageBlock(){
+            @Override
+            public boolean isEmpty() {
+                return true;
+            }
+            @Override
+            public boolean isNull() {
+                return true;
+            }
+            @Override
+            public TableBlock getTableBlock() {
+                return tableBlock;
+            }
+            @Override
+            public int getId() {
+                return 0;
+            }
+            @Override
+            public void setId(int id) {
+                if(id != 0){
+                    throw new IllegalArgumentException("Can't set id to empty package");
+                }
+            }
+            @Override
+            public String getName(){
+                return "EmptyPackage";
+            }
+            @Override
+            public void setName(String name) {
+                if(name != null && name.length() != 0){
+                    throw new IllegalArgumentException("Can't set name to empty package");
+                }
+            }
+            @Override
+            public int countBytes() {
+                return 0;
+            }
+            @Override
+            public byte[] getBytes() {
+                return new byte[0];
+            }
+            @Override
+            public void onReadBytes(BlockReader reader) throws IOException {
+                throw new IOException("Can't read on empty package");
+            }
+            @Override
+            public int onWriteBytes(OutputStream stream) throws IOException {
+                throw new IOException("Can't write on empty package");
+            }
+            @Override
+            public String toString() {
+                return getName();
+            }
+        };
+        packageBlock.setParent(tableBlock);
+        return packageBlock;
     }
 
     public static final String NAME_package_id = "package_id";

@@ -50,6 +50,16 @@ public class PackageBody extends FixedBlockContainer {
         addChild(4, mOverlayablePolicyList);
         addChild(5, mUnknownChunkList);
     }
+
+    public boolean isEmpty(){
+        return  getSpecTypePairArray().isEmpty() &&
+                getLibraryBlock().isEmpty() &&
+                getStagedAliasList().size() == 0 &&
+                getOverlayableList().size() == 0 &&
+                getOverlayablePolicyList().size() == 0 &&
+                getUnknownChunkList().size() == 0;
+    }
+
     public void destroy(){
         getSpecTypePairArray().clearChildes();
         getLibraryBlock().getLibraryInfoArray().clearChildes();
