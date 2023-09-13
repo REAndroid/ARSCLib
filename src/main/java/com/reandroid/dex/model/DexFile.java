@@ -83,6 +83,16 @@ public class DexFile extends FixedBlockContainer {
         }
         this.pathTree = pathTree;
     }
+
+    @Override
+    protected void onPreRefresh() {
+        sectionList.refresh();
+    }
+    @Override
+    protected void onRefreshed() {
+        sectionList.updateHeader();
+    }
+
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
         super.onReadBytes(reader);

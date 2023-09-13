@@ -54,11 +54,21 @@ public class SectionList extends FixedBlockContainer
 
     }
 
+    public void updateHeader(){
+        dexHeader.updateHeaderInternal(this);
+    }
+
+    @Override
+    protected void onPreRefresh() {
+        super.onPreRefresh();
+        mapList.countBytes();
+    }
+
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
         mapList.refresh();
-        dexHeader.updateHeaderInternal(this);
+        mapList.countBytes();
     }
 
     @Override
