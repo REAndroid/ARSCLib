@@ -82,40 +82,50 @@ public class ItemGroup<T extends Block> {
             }
         };
     }
-    public T get(int i){
-        if(i<0||i>= size()){
-            return null;
+    public T first(){
+        T[] items = getItems();
+        if(items != null && items.length > 0){
+            return items[0];
         }
-        return items[i];
+        return null;
+    }
+    public T get(int i){
+        T[] items = getItems();
+        if(items != null && i >= 0 && i < items.length){
+            return items[0];
+        }
+        return null;
     }
     public int size(){
-        if(items==null){
+        if(items == null){
             return 0;
         }
         return items.length;
     }
     public boolean contains(T block){
-        if(block==null){
+        T[] items = this.items;
+        if(block == null || items == null){
             return false;
         }
-        int len=items.length;
-        for(int i=0;i<len;i++){
-            if(block==items[i]){
+        int length = items.length;
+        for(int i = 0; i < length; i++){
+            if(block == items[i]){
                 return true;
             }
         }
         return false;
     }
     public void remove(T block){
-        if(block==null){
+        T[] items = this.items;
+        if(block == null || items == null){
             return;
         }
-        boolean found=false;
-        int len=items.length;
-        for(int i=0;i<len;i++){
-            if(block==items[i]){
-                items[i]=null;
-                found=true;
+        boolean found = false;
+        int length = items.length;
+        for(int i = 0; i < length; i++){
+            if(block == items[i]){
+                items[i] = null;
+                found = true;
             }
         }
         if(found){
@@ -123,38 +133,46 @@ public class ItemGroup<T extends Block> {
         }
     }
     public void add(T block){
-        if(block==null){
+        if(block == null){
             return;
         }
-        int index=items.length;
-        T[] update=createNew(index+1);
-        System.arraycopy(items, 0, update, 0, index);
-        update[index]=block;
-        items=update;
+        T[] items = this.items;
+        int index;
+        if(items != null){
+            index = items.length;
+        }else {
+            index = 0;
+        }
+        T[] update = createNew(index + 1);
+        if(index != 0){
+            System.arraycopy(items, 0, update, 0, index);
+        }
+        update[index] = block;
+        this.items = update;
     }
     public T[] getItems(){
         return items;
     }
     private void trimToSize(){
-        T[] items=this.items;
-        int count=countNonNull();
-        int len=items.length;
-        if(count==len){
+        T[] items = this.items;
+        int count = countNonNull();
+        int length = items.length;
+        if(count == length){
             return;
         }
-        T[] update=createNew(count);
-        int index=0;
-        for(int i=0;i<len;i++){
-            T block=items[i];
-            if(block!=null){
-                update[index]=block;
+        T[] update = createNew(count);
+        int index = 0;
+        for(int i = 0; i < length; i++){
+            T block = items[i];
+            if(block != null){
+                update[index] = block;
                 index++;
             }
         }
-        this.items=update;
+        this.items = update;
     }
     private int countNonNull(){
-        int result=0;
+        int result = 0;
         for(T t:items){
             if(t!=null){
                 result++;
