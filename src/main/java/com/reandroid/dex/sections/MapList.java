@@ -20,6 +20,7 @@ import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
+import com.reandroid.dex.header.CountAndOffset;
 import com.reandroid.dex.header.DexHeader;
 
 import java.util.*;
@@ -50,6 +51,51 @@ public class MapList extends FixedDexContainer
     }
 
 
+    public void updateHeader(DexHeader dexHeader){
+        MapItem mapItem = get(SectionType.STRING_ID);
+        if(mapItem != null){
+            CountAndOffset countAndOffset = dexHeader.strings;
+            countAndOffset.setCount(mapItem.getCount().get());
+            countAndOffset.setOffset(mapItem.getOffset().get());
+        }
+        mapItem = get(SectionType.TYPE_ID);
+        if(mapItem != null){
+            CountAndOffset countAndOffset = dexHeader.type;
+            countAndOffset.setCount(mapItem.getCount().get());
+            countAndOffset.setOffset(mapItem.getOffset().get());
+        }
+        mapItem = get(SectionType.PROTO_ID);
+        if(mapItem != null){
+            CountAndOffset countAndOffset = dexHeader.proto;
+            countAndOffset.setCount(mapItem.getCount().get());
+            countAndOffset.setOffset(mapItem.getOffset().get());
+        }
+        mapItem = get(SectionType.FIELD_ID);
+        if(mapItem != null){
+            CountAndOffset countAndOffset = dexHeader.field;
+            countAndOffset.setCount(mapItem.getCount().get());
+            countAndOffset.setOffset(mapItem.getOffset().get());
+        }
+        mapItem = get(SectionType.METHOD_ID);
+        if(mapItem != null){
+            CountAndOffset countAndOffset = dexHeader.method;
+            countAndOffset.setCount(mapItem.getCount().get());
+            countAndOffset.setOffset(mapItem.getOffset().get());
+        }
+        mapItem = get(SectionType.CLASS_ID);
+        if(mapItem != null){
+            CountAndOffset countAndOffset = dexHeader.class_def;
+            countAndOffset.setCount(mapItem.getCount().get());
+            countAndOffset.setOffset(mapItem.getOffset().get());
+        }
+        mapItem = get(SectionType.STRING_DATA);
+        if(mapItem != null){
+            //TODO: this is not right way
+            CountAndOffset countAndOffset = dexHeader.data;
+            countAndOffset.setCount(dexHeader.fileSize.get() - mapItem.getOffset().get());
+            countAndOffset.setOffset(mapItem.getOffset().get());
+        }
+    }
     public MapItem get(SectionType<?> type){
         for(MapItem mapItem:this){
             if(type == mapItem.getMapType()){

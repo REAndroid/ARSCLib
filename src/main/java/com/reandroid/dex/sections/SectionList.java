@@ -62,6 +62,7 @@ public class SectionList extends FixedBlockContainer
     protected void onRefreshed() {
         super.onRefreshed();
         mapList.refresh();
+        mapList.updateHeader(dexHeader);
     }
 
     @Override
