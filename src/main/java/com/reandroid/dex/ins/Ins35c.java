@@ -23,4 +23,7 @@ public class Ins35c extends Size6Ins {
     public int getData(){
         return getValueBytes().getShortUnsigned(2);
     }
+    public void setData(int data){
+        getValueBytes().putShort(2, data);
+    }
 }

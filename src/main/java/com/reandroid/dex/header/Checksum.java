@@ -15,19 +15,34 @@
  */
 package com.reandroid.dex.header;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.utils.HexUtil;
 
-public class Checksum extends HeaderPiece{
+import java.io.IOException;
+
+public class Checksum extends HeaderPiece {
+
     public Checksum(){
         super(4);
+    }
+
+    public int getChecksum(){
+        return getInteger(0);
     }
     public void setChecksum(int checksum){
         setSize(4);
         putInteger(0, checksum);
     }
-    public int getChecksum(){
-        return getInteger(0);
+    public void update(Block parent) {
+        Alder32OutputStream outputStream = new Alder32OutputStream();
+        try {
+            parent.writeBytes(outputStream);
+        } catch (IOException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+        setChecksum(outputStream.getValue());
     }
+
     @Override
     public String toString(){
         return HexUtil.toHex8(getChecksum());

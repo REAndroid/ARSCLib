@@ -13,67 +13,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.index;
+package com.reandroid.dex.item;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockRefresh;
-import com.reandroid.arsc.item.IndirectItem;
-import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.DexBlockItem;
+import com.reandroid.arsc.base.OffsetSupplier;
+import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.sections.SectionType;
 
-public class ItemIndexReference<T extends ItemId> extends IndirectItem<DexBlockItem>
-        implements IntegerReference, BlockRefresh {
+import java.io.IOException;
+
+public class OffsetUle128Item<T extends Block> extends Ule128Item implements BlockRefresh {
     private final SectionType<T> sectionType;
     private T item;
-    public ItemIndexReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset) {
-        super(blockItem, offset);
+
+    public OffsetUle128Item(SectionType<T> sectionType){
+        super();
         this.sectionType = sectionType;
-        set(-1);
     }
-    public T getItem() {
-        int i = get();
-        if(item == null){
-            item = getBlockItem().get(sectionType, i);
-        }
+
+    public T getItem(){
         return item;
     }
     public void setItem(T item) {
-        if(item == this.item){
-            return;
+        int index = 0;
+        if(item != null){
+            index = item.getIndex();
         }
-        int value;
-        if(item != null) {
-            value = item.getIndex();
-        }else {
-            value = -1;
-        }
-        set(value);
         this.item = item;
+        set(index);
     }
-
-    @Override
-    public void set(int value) {
-        Block.putInteger(getBytesInternal(), getOffset(), value);
-        item = null;
+    private void updateItem(){
+        item = getAt(sectionType, get());
     }
-    @Override
-    public int get() {
-        return Block.getInteger(getBytesInternal(), getOffset());
-    }
-
     @Override
     public void refresh() {
         T item = getItem();
         if(item != null){
-            Block.putInteger(getBytesInternal(), getOffset(), item.getIndex());
+            OffsetSupplier supplier = (OffsetSupplier) item;
+            set(supplier.getOffsetReference().get());
         }
     }
-
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+        updateItem();
+    }
     @Override
     public String toString() {
+        T item = this.item;
         if(item != null){
-            return get() + ": " + item.toString();
+            return item.toString();
         }
         return sectionType.getName() + ": " + get();
     }

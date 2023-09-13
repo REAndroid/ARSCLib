@@ -15,26 +15,33 @@
  */
 package com.reandroid.dex.header;
 
-import com.reandroid.arsc.base.Block;
-
 import java.io.IOException;
+import java.io.OutputStream;
+import java.util.zip.Adler32;
 
-public class Signature extends HeaderPiece{
-    public Signature(){
-        super(20);
+public class Alder32OutputStream extends OutputStream {
+
+    private final Adler32 adler32;
+
+    public Alder32OutputStream() {
+        adler32 = new Adler32();
     }
-    public void update(Block parent) {
-        Sha1OutputStream outputStream = new Sha1OutputStream();
-        try {
-            parent.writeBytes(outputStream);
-        } catch (IOException ex) {
-            throw new IllegalArgumentException(ex);
+
+    @Override
+    public void write(byte[] bytes, int offset, int length) throws IOException {
+        if (length != 0) {
+            adler32.update(bytes, offset, length);
         }
-        byte[] bytes = outputStream.digest();
-        putByteArray(0, bytes);
     }
     @Override
-    public String toString() {
-        return printHex(getBytesInternal());
+    public void write(byte[] bytes) throws IOException {
+        this.write(bytes, 0, bytes.length);
+    }
+    @Override
+    public void write(int i) throws IOException {
+        this.write(new byte[]{(byte) i}, 0, 1);
+    }
+    public int getValue() {
+        return (int) adler32.getValue();
     }
 }

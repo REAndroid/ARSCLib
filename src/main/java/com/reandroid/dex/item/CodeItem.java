@@ -15,9 +15,12 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.arsc.base.BlockRefresh;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.debug.DebugParameter;
+import com.reandroid.dex.index.ItemOffsetReference;
 import com.reandroid.dex.index.ProtoId;
 import com.reandroid.dex.ins.TryBlock;
 import com.reandroid.dex.sections.SectionType;
@@ -46,7 +49,7 @@ public class CodeItem extends DexItem implements SmaliFormat {
     }
 
     public DebugInfo getDebugInfo(){
-        return getAt(SectionType.DEBUG_INFO, header.debugInfoOffset);
+        return header.debugInfoOffset.getItem();
     }
     public InstructionList getInstructionList() {
         return instructionList;
@@ -97,14 +100,14 @@ public class CodeItem extends DexItem implements SmaliFormat {
                 + "\n debug=" + getDebugInfo();
     }
 
-    static class Header extends DexBlockItem {
+    static class Header extends DexBlockItem implements BlockRefresh {
 
         final IntegerReference registersCount;
         final IntegerReference instruction;
         final IntegerReference outs;
         final IntegerReference tryBlockCount;
 
-        final IntegerReference debugInfoOffset;
+        final ItemOffsetReference<DebugInfo> debugInfoOffset;
         final IntegerReference instructionCodeUnits;
 
         public Header() {
@@ -114,9 +117,20 @@ public class CodeItem extends DexItem implements SmaliFormat {
             this.instruction = new IndirectShort(this, offset += 2);
             this.outs = new IndirectShort(this, offset += 2);
             this.tryBlockCount = new IndirectShort(this, offset += 2);
-            this.debugInfoOffset = new IndirectInteger(this, offset += 2);
+            this.debugInfoOffset = new ItemOffsetReference<>(SectionType.DEBUG_INFO,this, offset += 2);
             this.instructionCodeUnits = new IndirectInteger(this, offset += 4);
 
+        }
+
+
+        @Override
+        public void refresh() {
+            debugInfoOffset.refresh();
+        }
+        @Override
+        public void onReadBytes(BlockReader reader) throws IOException {
+            super.onReadBytes(reader);
+            debugInfoOffset.getItem();
         }
 
         @Override

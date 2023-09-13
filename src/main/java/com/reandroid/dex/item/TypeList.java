@@ -54,6 +54,19 @@ public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId>
     private void updateTypeIds(){
         typeIds = get(SectionType.TYPE_ID, toArray());
     }
+
+    @Override
+    protected void onRefreshed() {
+        TypeId[] typeIds = getTypeIds();
+        if(typeIds == null){
+            return;
+        }
+        int length = typeIds.length;
+        for(int i = 0; i < length; i++){
+            put(i, typeIds[i].getIndex());
+        }
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         for(TypeId typeId : this){

@@ -18,19 +18,21 @@ package com.reandroid.dex.item;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.ClassId;
+import com.reandroid.dex.index.ItemId;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class Def extends DexContainerItem implements SmaliFormat {
-    private final Ule128Item id;
+public class Def<T extends ItemId> extends DexContainerItem implements SmaliFormat {
+    private final SectionUle128Item<T> id;
     private final Ule128Item accessFlags;
     private ClassId classId;
-    public Def(int childesCount) {
+    public Def(int childesCount, SectionType<T> sectionType) {
         super(childesCount + 2);
-        this.id = new Ule128Item(true);
+        this.id = new SectionUle128Item<>(sectionType, true);
         this.accessFlags = new Ule128Item();
         addChild(0, id);
         addChild(1, accessFlags);
@@ -82,5 +84,11 @@ public class Def extends DexContainerItem implements SmaliFormat {
     @Override
     public void append(SmaliWriter writer) throws IOException {
 
+    }
+
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        id.refresh();
     }
 }

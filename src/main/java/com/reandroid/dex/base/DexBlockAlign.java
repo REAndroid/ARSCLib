@@ -26,6 +26,9 @@ public class DexBlockAlign extends AlignItem {
     public DexBlockAlign(Block block){
         this.block = block;
     }
+    public void align(){
+        super.align(block);
+    }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.align(block);

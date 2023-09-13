@@ -27,9 +27,9 @@ import com.reandroid.utils.collection.EmptyIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class FieldDef extends Def {
+public class FieldDef extends Def<FieldId> {
     public FieldDef() {
-        super(0);
+        super(0, SectionType.FIELD_ID);
     }
     public FieldId getFieldId(){
         return get(SectionType.FIELD_ID, getDefIndexId());

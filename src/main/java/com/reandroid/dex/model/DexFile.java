@@ -16,8 +16,9 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.archive.PathTree;
-import com.reandroid.arsc.container.ExpandableBlockContainer;
+import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.common.BytesOutputStream;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.index.StringData;
@@ -26,15 +27,12 @@ import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class DexFile extends ExpandableBlockContainer {
+public class DexFile extends FixedBlockContainer {
 
     private final SectionList sectionList;
     private Map<String, DexClass> dexClasses = new HashMap<>();
@@ -43,7 +41,7 @@ public class DexFile extends ExpandableBlockContainer {
     public DexFile() {
         super(1);
         this.sectionList = new SectionList();
-        addChild(sectionList);
+        addChild(0, sectionList);
     }
     public void decode(File outDir) throws IOException {
         int size = dexClasses.size();
@@ -90,6 +88,17 @@ public class DexFile extends ExpandableBlockContainer {
         super.onReadBytes(reader);
         //buildPathTree();
     }
+    @Override
+    public byte[] getBytes(){
+        BytesOutputStream outputStream = new BytesOutputStream(
+                getHeader().fileSize.get());
+        try {
+            writeBytes(outputStream);
+            outputStream.close();
+        } catch (IOException ignored) {
+        }
+        return outputStream.toByteArray();
+    }
 
     public void read(byte[] dexBytes) throws IOException {
         BlockReader reader = new BlockReader(dexBytes);
@@ -105,6 +114,15 @@ public class DexFile extends ExpandableBlockContainer {
         BlockReader reader = new BlockReader(file);
         readBytes(reader);
         reader.close();
+    }
+    public void write(File file) throws IOException {
+        File dir = file.getParentFile();
+        if(dir != null && !dir.exists()){
+            dir.mkdirs();
+        }
+        FileOutputStream outputStream = new FileOutputStream(file);
+        writeBytes(outputStream);
+        outputStream.close();
     }
     public static boolean isDexFile(File file){
         if(file == null || !file.isFile()){

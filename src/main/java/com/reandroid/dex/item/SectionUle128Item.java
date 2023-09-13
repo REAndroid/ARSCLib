@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.index.ItemId;
@@ -22,10 +23,14 @@ import com.reandroid.dex.sections.SectionType;
 
 import java.io.IOException;
 
-public class SectionUle128Item<T extends ItemId> extends Ule128Item {
+public class SectionUle128Item<T extends ItemId> extends Ule128Item implements BlockRefresh {
     private final SectionType<T> sectionType;
     private T item;
 
+    public SectionUle128Item(SectionType<T> sectionType, boolean large){
+        super(large);
+        this.sectionType = sectionType;
+    }
     public SectionUle128Item(SectionType<T> sectionType){
         super();
         this.sectionType = sectionType;
@@ -45,6 +50,14 @@ public class SectionUle128Item<T extends ItemId> extends Ule128Item {
 
     private void updateItem(){
         item = get(sectionType, get());
+    }
+
+    @Override
+    public void refresh() {
+        T item = getItem();
+        if(item != null){
+            set(item.getIndex());
+        }
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {

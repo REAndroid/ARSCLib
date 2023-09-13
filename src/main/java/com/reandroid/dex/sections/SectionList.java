@@ -53,6 +53,14 @@ public class SectionList extends FixedBlockContainer
         addChild(0, dexSectionList);
 
     }
+
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        mapList.refresh();
+        dexHeader.updateHeaderInternal(this);
+    }
+
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         dexHeader.readBytes(reader);

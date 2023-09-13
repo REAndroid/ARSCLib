@@ -23,4 +23,8 @@ public class Size4Ins extends SizeXIns {
     public int getData(){
         return getValueBytes().getShortUnsigned(2);
     }
+    @Override
+    public void setData(int data){
+        getValueBytes().putShort(2, data);
+    }
 }

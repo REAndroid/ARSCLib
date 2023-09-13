@@ -28,6 +28,7 @@ import java.io.IOException;
 
 public class SizeXIns extends Ins {
     private final ByteArray valueBytes;
+    private ItemId mItemId;
     public SizeXIns(Opcode<?> opcode) {
         super(opcode);
         this.valueBytes = new ByteArray();
@@ -71,9 +72,26 @@ public class SizeXIns extends Ins {
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         valueBytes.onReadBytes(reader);
+        SectionType<? extends ItemId> sectionType = getOpcode().getSectionType();
+        if(sectionType == null){
+            return;
+        }
+        int data = getData();
+        this.mItemId = get(sectionType, data);
     }
     public int getData(){
         return getValueBytes().getShortUnsigned(2);
+    }
+    public void setData(int data){
+        getValueBytes().putShort(2, data);
+    }
+
+    @Override
+    protected void onRefreshed() {
+        ItemId itemId = this.mItemId;
+        if(itemId != null){
+            setData(itemId.getIndex());
+        }
     }
 
     @Override

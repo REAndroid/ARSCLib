@@ -32,7 +32,7 @@ public class Section<T extends Block>  extends FixedDexContainer
 
     private final SectionType<T> sectionType;
     private final DexItemArray<T> itemArray;
-    private final DexPositionAlign sectionAlign;
+    private final DexBlockAlign sectionAlign;
     private final Map<Integer, T> offsetMap;
 
     private DexIdPool<?> dexIdPool;
@@ -41,7 +41,7 @@ public class Section<T extends Block>  extends FixedDexContainer
         super(2);
         this.sectionType = sectionType;
         this.itemArray = itemArray;
-        this.sectionAlign = new DexPositionAlign();
+        this.sectionAlign = new DexBlockAlign(this);
         this.offsetMap = new HashMap<>();
         addChild(0, itemArray);
         addChild(1, sectionAlign);
@@ -162,6 +162,7 @@ public class Section<T extends Block>  extends FixedDexContainer
             position += item.countBytes();
         }
         updateNextSection(position);
+        buildOffsetMap();
     }
     private boolean updateIdOffsets(){
         Section<?> idSection = getSection(getSectionType().getIdSectionType());
@@ -182,12 +183,11 @@ public class Section<T extends Block>  extends FixedDexContainer
         return true;
     }
     private void updateNextSection(int position){
-        int ss=countBytes();
         T last=get(getCount()-1);
-        if(last==null || ss==-1){
+        if(last==null){
             return;
         }
-        sectionAlign.align(position);
+        sectionAlign.align();
         position += sectionAlign.size();
         Section<?> next = getNextSection();
         if(next != null){
@@ -214,7 +214,7 @@ public class Section<T extends Block>  extends FixedDexContainer
     }
     @Override
     protected void onPreRefresh(){
-        sectionAlign.setSize(0);
+        //sectionAlign.setSize(0);
         boolean hasId = updateIdOffsets();
         if(!hasId && sectionType.isOffsetType()){
             updateItemOffsets();

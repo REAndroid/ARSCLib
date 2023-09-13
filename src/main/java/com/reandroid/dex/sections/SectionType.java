@@ -215,35 +215,12 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = ANNOTATIONS_DIRECTORY;
 
-        CLASS_ID = new SectionType<>("CLASS_ID", 0x0006, index, 6, new Creator<ClassId>() {
-            @Override
-            public ClassId[] newInstance(int length) {
-                return new ClassId[length];
-            }
-            @Override
-            public ClassId newInstance() {
-                return new ClassId();
-            }
-        });
-        VALUES[index++] = CLASS_ID;
-
         CALL_SITE_ID = new SectionType<>("CALL_SITE_ID", 0x0007, index, 100, null);
         VALUES[index++] = CALL_SITE_ID;
 
         METHOD_HANDLE = new SectionType<>("METHOD_HANDLE", 0x0008, index, 100, null);
         VALUES[index++] = METHOD_HANDLE;
 
-        CLASS_DATA = new SectionType<>("CLASS_DATA", 0x2000, index, 16, new Creator<ClassData>() {
-            @Override
-            public ClassData[] newInstance(int length) {
-                return new ClassData[length];
-            }
-            @Override
-            public ClassData newInstance() {
-                return new ClassData();
-            }
-        });
-        VALUES[index++] = CLASS_DATA;
 
         DEBUG_INFO = new SectionType<>("DEBUG_INFO", 0x2003, index, 14, new Creator<DebugInfo>() {
             @Override
@@ -281,6 +258,30 @@ public class SectionType<T extends Block> {
             }
         });
         VALUES[index++] = ENCODED_ARRAY;
+
+        CLASS_DATA = new SectionType<>("CLASS_DATA", 0x2000, index, 16, new Creator<ClassData>() {
+            @Override
+            public ClassData[] newInstance(int length) {
+                return new ClassData[length];
+            }
+            @Override
+            public ClassData newInstance() {
+                return new ClassData();
+            }
+        });
+        VALUES[index++] = CLASS_DATA;
+
+        CLASS_ID = new SectionType<>("CLASS_ID", 0x0006, index, 6, new Creator<ClassId>() {
+            @Override
+            public ClassId[] newInstance(int length) {
+                return new ClassId[length];
+            }
+            @Override
+            public ClassId newInstance() {
+                return new ClassId();
+            }
+        });
+        VALUES[index++] = CLASS_ID;
 
         HIDDEN_API = new SectionType<>("HIDDEN_API", 0xF000, index, 100, null);
         VALUES[index] = HIDDEN_API;

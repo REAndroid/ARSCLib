@@ -77,14 +77,14 @@ public class ItemOffsetReference<T extends DexItem> extends IndirectItem<DexBloc
             if(reference != null){
                 value = reference.get();
             }
+            Block.putInteger(getBytesInternal(), getOffset(), value);
         }
-        set(value);
     }
 
     @Override
     public String toString() {
         if(item != null){
-            return item.toString();
+            return get() + ":" +item.toString();
         }
         return sectionType.getName() + ": " + get();
     }

@@ -24,9 +24,13 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.FixedDexContainer;
 import com.reandroid.dex.base.NumberIntegerReference;
 import com.reandroid.arsc.base.OffsetSupplier;
+import com.reandroid.dex.sections.SectionList;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class DexHeader extends FixedDexContainer implements OffsetSupplier, BlockLoad {
 
@@ -99,15 +103,18 @@ public class DexHeader extends FixedDexContainer implements OffsetSupplier, Bloc
 
 
         headerSize.setBlockLoad(this);
-
-
-        this.version.putByteArray(0,
-                new byte[]{(byte)'0', (byte)'3', (byte)'5', (byte)0x0});
     }
     public DexHeader(){
         this(new NumberIntegerReference(0));
     }
 
+    public void updateHeaderInternal(Block parent){
+        headerSize.set(countBytes());
+        fileSize.set(parent.countBytes());
+        signature.update(parent);
+        checksum.update(parent);
+        fileSize.get();
+    }
 
     @Override
     public IntegerReference getOffsetReference() {
@@ -123,6 +130,26 @@ public class DexHeader extends FixedDexContainer implements OffsetSupplier, Bloc
         if(sender == headerSize){
             unknown.setSize(headerSize.get() - countBytes());
         }
+    }
+
+    @Override
+    public int onWriteBytes(OutputStream stream) throws IOException {
+        int start = 0;
+        Class<?> streamClass = stream.getClass();
+        if(streamClass == Alder32OutputStream.class){
+            start = 3;
+        }else if(streamClass == Sha1OutputStream.class){
+            start = 4;
+        }
+        int result = 0;
+        Block[] childes = getChildes();
+        for(int i = start; i < childes.length; i++){
+            Block block = childes[i];
+            if(block != null){
+                result += block.writeBytes(stream);
+            }
+        }
+        return result;
     }
 
     @Override

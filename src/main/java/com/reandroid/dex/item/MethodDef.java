@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.MethodId;
 import com.reandroid.dex.index.ProtoId;
@@ -27,12 +26,12 @@ import com.reandroid.utils.collection.EmptyIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class MethodDef extends Def {
-    private final Ule128Item codeOffset;
+public class MethodDef extends Def<MethodId> {
+    private final OffsetUle128Item<CodeItem> codeOffset;
 
     public MethodDef() {
-        super(1);
-        this.codeOffset = new Ule128Item();
+        super(1, SectionType.METHOD_ID);
+        this.codeOffset = new OffsetUle128Item<>(SectionType.CODE);
         addChild(2, codeOffset);
     }
     public MethodId getMethodId(){
@@ -46,7 +45,7 @@ public class MethodDef extends Def {
         return null;
     }
     public CodeItem getCodeItem(){
-        CodeItem codeItem = getAt(SectionType.CODE, codeOffset);
+        CodeItem codeItem = codeOffset.getItem();
         if(codeItem != null){
             codeItem.setMethodDef(this);
         }
@@ -67,6 +66,7 @@ public class MethodDef extends Def {
         }
         return directory.getParameterAnnotation(getDefIndexId(), parameterIndex);
     }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.newLine();
