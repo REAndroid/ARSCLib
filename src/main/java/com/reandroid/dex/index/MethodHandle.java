@@ -15,33 +15,44 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.IndirectInteger;
-import com.reandroid.dex.base.IndirectShort;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
 public class MethodHandle extends ItemId {
-    private final IntegerReference methodId;
-    private final IntegerReference memberId;
+
+    private final ItemIndexReference<MethodId> methodId;
+    private final ItemIndexReference<MethodId> memberId;
+
     public MethodHandle() {
         super(8);
-        int offset = -4;
-        this.methodId = new IndirectInteger(this, offset += 4);
-        this.memberId = new IndirectShort(this, offset += 4);
+        this.methodId = new ItemIndexReference<>(SectionType.METHOD_ID, this, 0);
+        this.memberId = new ItemIndexReference<>(SectionType.METHOD_ID, this, 4);
     }
 
     public MethodId getMethodId(){
-        return get(SectionType.METHOD_ID, methodId.get());
+        return methodId.getItem();
+    }
+    public MethodId getMemberId(){
+        return memberId.getItem();
+    }
+
+    @Override
+    public void refresh() {
+        methodId.refresh();
+        methodId.refresh();
+    }
+    @Override
+    void cacheItems() {
+        methodId.getItem();
+        methodId.getItem();
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
 
     }
-
     @Override
     public String toString() {
         return memberId + "->" + getMethodId();

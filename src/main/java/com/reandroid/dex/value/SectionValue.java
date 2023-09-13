@@ -59,10 +59,13 @@ public class SectionValue<T extends Block> extends DexValue<NumberValue> impleme
     protected void onPreRefresh() {
         refreshData();
     }
-    protected void refreshData() {
+    private void refreshData() {
         T data = this.mData;
         if(data != null){
-            getValue().setNumberValue(data.getIndex());
+            NumberValue numberValue = getValue();
+            numberValue.setNumberValue(data.getIndex());
+            int size = numberValue.getSize();
+            setValueSize(size - 1);
         }
     }
     private void updateData(){

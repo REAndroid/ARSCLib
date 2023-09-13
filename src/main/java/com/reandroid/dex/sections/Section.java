@@ -32,7 +32,7 @@ public class Section<T extends Block>  extends FixedDexContainer
 
     private final SectionType<T> sectionType;
     private final DexItemArray<T> itemArray;
-    private final DexBlockAlign sectionAlign;
+    private final DexPositionAlign sectionAlign;
     private final Map<Integer, T> offsetMap;
 
     private DexIdPool<?> dexIdPool;
@@ -41,7 +41,7 @@ public class Section<T extends Block>  extends FixedDexContainer
         super(2);
         this.sectionType = sectionType;
         this.itemArray = itemArray;
-        this.sectionAlign = new DexBlockAlign(this);
+        this.sectionAlign = new DexPositionAlign();
         this.offsetMap = new HashMap<>();
         addChild(0, itemArray);
         addChild(1, sectionAlign);
@@ -187,7 +187,7 @@ public class Section<T extends Block>  extends FixedDexContainer
         if(last==null){
             return;
         }
-        sectionAlign.align();
+        sectionAlign.align(position);
         position += sectionAlign.size();
         Section<?> next = getNextSection();
         if(next != null){

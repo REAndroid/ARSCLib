@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.ClassId;
@@ -27,14 +28,17 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class Def<T extends ItemId> extends DexContainerItem implements SmaliFormat {
-    private final SectionUle128Item<T> id;
+    private final SectionType<T> sectionType;
+    private final Ule128Item relativeId;
     private final Ule128Item accessFlags;
+    private T mItem;
     private ClassId classId;
     public Def(int childesCount, SectionType<T> sectionType) {
         super(childesCount + 2);
-        this.id = new SectionUle128Item<>(sectionType, true);
+        this.sectionType = sectionType;
+        this.relativeId = new Ule128Item(true);
         this.accessFlags = new Ule128Item();
-        addChild(0, id);
+        addChild(0, relativeId);
         addChild(1, accessFlags);
     }
     public Iterator<AnnotationSet> getAnnotations(){
@@ -62,8 +66,8 @@ public class Def<T extends ItemId> extends DexContainerItem implements SmaliForm
     public void setClassId(ClassId classId) {
         this.classId = classId;
     }
-    public int getIdValue() {
-        return id.get();
+    public int getRelativeIdValue() {
+        return relativeId.get();
     }
     public int getAccessFlagsValue() {
         return accessFlags.get();
@@ -71,24 +75,56 @@ public class Def<T extends ItemId> extends DexContainerItem implements SmaliForm
     public boolean isStatic(){
         return AccessFlag.STATIC.isSet(getAccessFlagsValue());
     }
-    public int getDefIndexId() {
+    T getItem(){
+        return mItem;
+    }
+    int getIdIndex() {
         DefArray<?> parentArray = getParentInstance(DefArray.class);
         if(parentArray != null){
-            Def previous = parentArray.get(getIndex() - 1);
+            Def<?> previous = parentArray.get(getIndex() - 1);
             if(previous != null){
-                return getIdValue() + previous.getDefIndexId();
+                return getRelativeIdValue() + previous.getIdIndex();
             }
         }
-        return id.get();
+        return relativeId.get();
     }
+    private int getPreviousIdIndex() {
+        DefArray<?> parentArray = getParentInstance(DefArray.class);
+        if(parentArray != null){
+            Def<?> previous = parentArray.get(getIndex() - 1);
+            if(previous != null){
+                return previous.getIdIndex();
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+        cacheItem();
+    }
+    private void cacheItem(){
+        this.mItem = get(sectionType, getIdIndex());
+    }
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        updateIndex();
+    }
+    private void updateIndex(){
+        T item = this.mItem;
+        if(item == null){
+            return;
+        }
+        int index = getPreviousIdIndex();
+        index = item.getIndex() - index;
+        relativeId.set(index);
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
 
     }
 
-    @Override
-    protected void onRefreshed() {
-        super.onRefreshed();
-        id.refresh();
-    }
 }

@@ -35,7 +35,7 @@ public class MethodDef extends Def<MethodId> {
         addChild(2, codeOffset);
     }
     public MethodId getMethodId(){
-        return get(SectionType.METHOD_ID, getDefIndexId());
+        return getItem();
     }
     public InstructionList getInstructionList(){
         CodeItem codeItem = getCodeItem();
@@ -57,14 +57,14 @@ public class MethodDef extends Def<MethodId> {
         if(directory == null){
             return EmptyIterator.of();
         }
-        return directory.getMethodAnnotation(getDefIndexId());
+        return directory.getMethodAnnotation(getIdIndex());
     }
     public Iterator<AnnotationSet> getParameterAnnotations(int parameterIndex){
         AnnotationsDirectory directory = getAnnotationsDirectory();
         if(directory == null){
             return EmptyIterator.of();
         }
-        return directory.getParameterAnnotation(getDefIndexId(), parameterIndex);
+        return directory.getParameterAnnotation(getIdIndex(), parameterIndex);
     }
 
     @Override
@@ -140,6 +140,6 @@ public class MethodDef extends Def<MethodId> {
                     + " " + methodId.toString();
         }
         return ".method " + AccessFlag.formatForMethod(getAccessFlagsValue())
-                + " " + getIdValue();
+                + " " + getRelativeIdValue();
     }
 }

@@ -59,16 +59,9 @@ public class SectionList extends FixedBlockContainer
     }
 
     @Override
-    protected void onPreRefresh() {
-        super.onPreRefresh();
-        mapList.countBytes();
-    }
-
-    @Override
     protected void onRefreshed() {
         super.onRefreshed();
         mapList.refresh();
-        mapList.countBytes();
     }
 
     @Override

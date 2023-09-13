@@ -52,6 +52,10 @@ public class DexValue<T extends Block> extends FixedBlockContainer implements Sm
     int getValueSize(){
         return DexValueType.decodeSize(valueType.unsignedInt());
     }
+    void setValueSize(int size){
+        int flag = getValueType().getFlag(size);
+        valueType.set((byte) flag);
+    }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {

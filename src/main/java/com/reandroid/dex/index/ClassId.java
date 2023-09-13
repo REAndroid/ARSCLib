@@ -15,8 +15,6 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.arsc.base.BlockRefresh;
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.item.*;
@@ -26,7 +24,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class ClassId extends ItemId implements BlockRefresh {
+public class ClassId extends ItemId {
 
     private final ItemIndexReference<TypeId> classType;
     private final IndirectInteger accessFlagValue;
@@ -130,13 +128,6 @@ public class ClassId extends ItemId implements BlockRefresh {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
-        cacheItems();
-    }
-
-
-    @Override
     public void refresh() {
         this.classType.refresh();
         this.superClass.refresh();
@@ -145,10 +136,9 @@ public class ClassId extends ItemId implements BlockRefresh {
         this.annotationsDirectory.refresh();
         this.classData.refresh();
         this.staticValues.refresh();
-        cacheItems();
     }
-
-    private void cacheItems(){
+    @Override
+    void cacheItems(){
         this.classType.getItem();
         this.superClass.getItem();
         this.interfaces.getItem();

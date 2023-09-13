@@ -64,13 +64,13 @@ public class TypeId extends ItemId {
     }
     public void setName(String name){
         DexIdPool<StringData> stringPool = getPool(SectionType.STRING_DATA);
-        StringData stringData = stringPool.get(name);
+        StringData stringData = stringPool.getOrCreate(name);
         if(stringData == null){
             stringData = getNameData();
             if(stringData != null){
                 String old = stringData.getKey();
                 stringData.setString(name);
-                stringPool.keyChanged(old, stringData);
+                stringPool.keyChanged(old);
                 clearTypeName();
                 return;
             }
@@ -93,6 +93,15 @@ public class TypeId extends ItemId {
     }
     public void setName(StringData name){
         nameData.setItem(name);
+    }
+
+    @Override
+    public void refresh() {
+        nameData.refresh();
+    }
+    @Override
+    void cacheItems(){
+        nameData.getItem();
     }
 
     @Override

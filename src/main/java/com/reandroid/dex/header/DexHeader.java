@@ -113,7 +113,6 @@ public class DexHeader extends FixedDexContainer implements OffsetSupplier, Bloc
         fileSize.set(parent.countBytes());
         signature.update(parent);
         checksum.update(parent);
-        fileSize.get();
     }
 
     @Override

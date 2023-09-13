@@ -92,6 +92,19 @@ public class FieldId extends ItemId {
     }
 
     @Override
+    public void refresh() {
+        classType.refresh();
+        fieldType.refresh();
+        name.refresh();
+    }
+    @Override
+    void cacheItems(){
+        classType.getItem();
+        fieldType.getItem();
+        name.getItem();
+    }
+
+    @Override
     public void append(SmaliWriter writer) throws IOException {
         getClassType().append(writer);
         writer.append("->");

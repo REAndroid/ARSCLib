@@ -29,15 +29,24 @@ public class ProtoId extends ItemId {
 
     public ProtoId() {
         super(SIZE);
-        int offset = -4;
 
-        this.shorty = new ItemIndexReference<>(SectionType.STRING_DATA, this, offset += 4);
-        this.returnType = new ItemIndexReference<>(SectionType.TYPE_ID, this, offset += 4);
-        this.parameters = new ItemOffsetReference<>(SectionType.TYPE_LIST, this, offset += 4);
+        this.shorty = new ItemIndexReference<>(SectionType.STRING_DATA, this, 0);
+        this.returnType = new ItemIndexReference<>(SectionType.TYPE_ID, this, 4);
+        this.parameters = new ItemOffsetReference<>(SectionType.TYPE_LIST, this, 8);
     }
 
     public String getKey(){
-        return "(" + buildMethodParameters() +")" + getReturnTypeId().getName();
+        return getKey(true);
+    }
+    public String getKey(boolean appendReturnType){
+        StringBuilder builder = new StringBuilder();
+        builder.append('(');
+        builder.append(buildMethodParameters());
+        builder.append(')');
+        if(appendReturnType){
+            builder.append(getReturnTypeId().getName());
+        }
+        return builder.toString();
     }
 
     public TypeList getTypeList() {
@@ -57,6 +66,20 @@ public class ProtoId extends ItemId {
         }
         return 0;
     }
+
+    @Override
+    public void refresh() {
+        shorty.refresh();
+        returnType.refresh();
+        parameters.refresh();
+    }
+    @Override
+    void cacheItems(){
+        shorty.getItem();
+        returnType.getItem();
+        parameters.getItem();
+    }
+
     public String buildMethodParameters(){
         TypeList typeList = getTypeList();
         if(typeList == null || typeList.size() == 0){

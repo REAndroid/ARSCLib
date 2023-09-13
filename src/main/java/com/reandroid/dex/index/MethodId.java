@@ -28,10 +28,9 @@ public class MethodId extends ItemId {
 
     public MethodId() {
         super(SIZE);
-        int offset = -2;
-        this.classType = new ItemShortReference<>(SectionType.TYPE_ID, this, offset += 2);
-        this.proto = new ItemShortReference<>(SectionType.PROTO_ID, this, offset += 2);
-        this.name = new ItemIndexReference<>(SectionType.STRING_DATA, this, offset += 2);
+        this.classType = new ItemShortReference<>(SectionType.TYPE_ID, this, 0);
+        this.proto = new ItemShortReference<>(SectionType.PROTO_ID, this, 2);
+        this.name = new ItemIndexReference<>(SectionType.STRING_DATA, this, 4);
     }
 
     public String getName(){
@@ -42,6 +41,9 @@ public class MethodId extends ItemId {
         return null;
     }
     public String getKey(){
+        return getKey(false);
+    }
+    public String getKey(boolean appendReturnType){
         StringBuilder builder = new StringBuilder();
         TypeId type = getClassType();
         if(type == null){
@@ -53,11 +55,25 @@ public class MethodId extends ItemId {
         }
         builder.append(stringData.getString());
         builder.append("->");
-        builder.append(key());
+        builder.append(getName());
+        ProtoId protoId = getProto();
+        if(protoId != null){
+            builder.append(protoId.getKey(appendReturnType));
+        }
         return builder.toString();
     }
     public String key(){
-        return getName() + getProto().getKey();
+        return key(true);
+    }
+    public String key(boolean appendReturnType){
+        StringBuilder builder = new StringBuilder();
+        builder.append("->");
+        builder.append(getName());
+        ProtoId protoId = getProto();
+        if(protoId != null){
+            builder.append(protoId.getKey(appendReturnType));
+        }
+        return builder.toString();
     }
 
     public TypeId getClassType(){
@@ -68,6 +84,19 @@ public class MethodId extends ItemId {
     }
     public ProtoId getProto(){
         return proto.getItem();
+    }
+
+    @Override
+    public void refresh() {
+        classType.refresh();
+        proto.refresh();
+        name.refresh();
+    }
+    @Override
+    void cacheItems(){
+        classType.getItem();
+        proto.getItem();
+        name.getItem();
     }
 
     @Override

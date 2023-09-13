@@ -87,6 +87,12 @@ public class StringData extends ItemId
         reader.readFully(bytes);
         mCache = text;
     }
+    @Override
+    public void refresh() {
+    }
+    @Override
+    void cacheItems() {
+    }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {

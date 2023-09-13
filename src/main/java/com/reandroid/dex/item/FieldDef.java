@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.FieldId;
 import com.reandroid.dex.sections.SectionType;
@@ -32,7 +31,7 @@ public class FieldDef extends Def<FieldId> {
         super(0, SectionType.FIELD_ID);
     }
     public FieldId getFieldId(){
-        return get(SectionType.FIELD_ID, getDefIndexId());
+        return getItem();
     }
     @Override
     public Iterator<AnnotationSet> getAnnotations(){
@@ -40,11 +39,7 @@ public class FieldDef extends Def<FieldId> {
         if(directory == null){
             return EmptyIterator.of();
         }
-        return directory.getFieldsAnnotation(getDefIndexId());
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+        return directory.getFieldsAnnotation(getIdIndex());
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
@@ -82,6 +77,6 @@ public class FieldDef extends Def<FieldId> {
                     + " " + fieldId.toString();
         }
         return ".field " + AccessFlag.formatForField(getAccessFlagsValue())
-                + " " + getIdValue();
+                + " " + getRelativeIdValue();
     }
 }
