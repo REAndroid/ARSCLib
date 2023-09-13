@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class ItemGroup<T extends Block> {
+public class ItemGroup<T extends Block> implements Iterable<T>{
     private final BlockArrayCreator<T> mBlockArrayCreator;
     private final String name;
     private T[] items;
@@ -45,6 +45,7 @@ public class ItemGroup<T extends Block> {
         this(blockArrayCreator, name, null);
     }
 
+    @Override
     public Iterator<T> iterator(){
         return iterator(false);
     }
