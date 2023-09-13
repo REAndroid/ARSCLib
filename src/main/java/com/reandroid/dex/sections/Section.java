@@ -52,10 +52,11 @@ public class Section<T extends Block>  extends FixedDexContainer
     }
 
     @SuppressWarnings("unchecked")
-    public<T1 extends ItemId> DexIdPool<T1> getPool(){
+    public<T1 extends Block> DexIdPool<T1> getPool(){
         DexIdPool<T1> dexIdPool = (DexIdPool<T1>) this.dexIdPool;
         if(dexIdPool == null){
             dexIdPool = new DexIdPool<T1>((Section<T1>) this);
+            this.dexIdPool = dexIdPool;
             dexIdPool.load();
         }
         return dexIdPool;

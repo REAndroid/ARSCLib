@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.OffsetReceiver;
+import com.reandroid.dex.base.StringKeyItemCreate;
 import com.reandroid.dex.io.ByteReader;
 import com.reandroid.dex.io.StreamUtil;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -28,7 +29,7 @@ import com.reandroid.utils.HexUtil;
 import java.io.IOException;
 
 public class StringData extends ItemId
-        implements SmaliFormat, OffsetSupplier, OffsetReceiver {
+        implements SmaliFormat, OffsetSupplier, OffsetReceiver, StringKeyItemCreate {
     private String mCache;
     private StringId mStringId;
 

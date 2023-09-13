@@ -26,6 +26,7 @@ public class AnnotationSet extends IntegerOffsetSectionList<AnnotationItem> impl
     public AnnotationSet(){
         super(SectionType.ANNOTATION);
     }
+    @Override
     public String getKey(){
         StringBuilder builder = new StringBuilder();
         boolean appendOnce = false;
@@ -33,7 +34,7 @@ public class AnnotationSet extends IntegerOffsetSectionList<AnnotationItem> impl
             if(appendOnce){
                 builder.append(',');
             }
-            builder.append(item.key());
+            builder.append(item.getKey());
             appendOnce = true;
         }
         return builder.toString();

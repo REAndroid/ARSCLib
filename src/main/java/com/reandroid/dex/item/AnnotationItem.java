@@ -63,14 +63,15 @@ public class AnnotationItem extends DexItem
     public AnnotationItem(){
         this(false);
     }
-    public String key(){
+    @Override
+    public String getKey(){
         StringBuilder builder = new StringBuilder();
         boolean appendOnce = false;
         for (AnnotationElement element : this){
             if(appendOnce){
                 builder.append(',');
             }
-            builder.append(element.key());
+            builder.append(element.getKey());
             appendOnce = true;
         }
         return builder.toString();
@@ -78,6 +79,12 @@ public class AnnotationItem extends DexItem
     @Override
     public Iterator<AnnotationElement> iterator(){
         return annotationElements.iterator();
+    }
+    public int getElementsCount(){
+        return annotationElements.getCount();
+    }
+    public AnnotationElement getElement(int index){
+        return annotationElements.get(index);
     }
     public boolean isValueEntry() {
         return mValueEntry;

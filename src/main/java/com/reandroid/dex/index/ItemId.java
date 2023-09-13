@@ -18,6 +18,7 @@ package com.reandroid.dex.index;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexBlockItem;
+import com.reandroid.dex.base.StringKeyItem;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
@@ -26,12 +27,13 @@ import com.reandroid.dex.writer.SmaliFormat;
 import java.io.IOException;
 
 public abstract class ItemId extends DexBlockItem
-        implements SmaliFormat, BlockRefresh {
+        implements SmaliFormat, BlockRefresh, StringKeyItem {
 
     ItemId(int bytesLength) {
         super(bytesLength);
     }
 
+    @Override
     public String getKey(){
         return null;
     }

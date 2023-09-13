@@ -51,6 +51,9 @@ public class CodeItem extends DexItem implements SmaliFormat {
     public DebugInfo getDebugInfo(){
         return header.debugInfoOffset.getItem();
     }
+    public void setDebugInfo(DebugInfo debugInfo){
+        header.debugInfoOffset.setItem(debugInfo);
+    }
     public InstructionList getInstructionList() {
         return instructionList;
     }

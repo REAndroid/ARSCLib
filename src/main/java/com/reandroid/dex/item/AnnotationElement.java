@@ -25,16 +25,16 @@ public class AnnotationElement extends DexItem
         elementName.setBlockLoad(this);
     }
 
-    public String key(){
+    @Override
+    public String getKey(){
         StringBuilder builder = new StringBuilder();
         AnnotationItem parentItem = getParent(AnnotationItem.class);
         if(parentItem != null){
-            builder.append(parentItem.getTypeId());
+            builder.append(parentItem.getTypeId().getKey());
             builder.append("->");
         }
         builder.append(getName());
         builder.append("()");
-        builder.append(getValue().getTypeName());
         return builder.toString();
     }
     public DexValue<?> getValue(){

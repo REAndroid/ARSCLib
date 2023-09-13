@@ -20,14 +20,20 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.NumberIntegerReference;
 import com.reandroid.dex.base.OffsetReceiver;
 import com.reandroid.dex.base.PositionedItem;
+import com.reandroid.dex.base.StringKeyItem;
 
 public class DexItem extends DexContainerItem
-        implements PositionedItem, OffsetSupplier, OffsetReceiver {
+        implements PositionedItem, OffsetSupplier, OffsetReceiver, StringKeyItem {
 
     private IntegerReference mReference;
 
     public DexItem(int childesCount) {
         super(childesCount);
+    }
+
+    @Override
+    public String getKey() {
+        return null;
     }
     @Override
     public void setPosition(int position) {
@@ -47,5 +53,4 @@ public class DexItem extends DexContainerItem
     public void setOffsetReference(IntegerReference reference) {
         this.mReference = reference;
     }
-
 }
