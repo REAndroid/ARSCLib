@@ -1,6 +1,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.apk.AndroidFrameworks;
+import com.reandroid.apk.ApkModule;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.xml.XMLFactory;
@@ -115,7 +116,7 @@ public class ResXmlDocumentTest {
     @Test
     public void testEncodeDecodeXml() throws XmlPullParserException, IOException {
         ResXmlDocument document = new ResXmlDocument();
-        document.setPackageBlock(createDummy().pickOne());
+        document.setApkFile(createEmptyApkModule());
 
         XmlPullParser parser = XMLFactory.newPullParser(XML_STRING);
         document.parse(parser);
@@ -140,11 +141,15 @@ public class ResXmlDocumentTest {
         decoded = decoded.replaceAll("\\s+", "");
         Assert.assertEquals(org, decoded);
     }
-    private static TableBlock createDummy() throws IOException {
+    private static ApkModule createEmptyApkModule() throws IOException {
+        ApkModule apkModule = new ApkModule();
+        apkModule.setTableBlock(createEmptyTable());
+        return apkModule;
+    }
+    private static TableBlock createEmptyTable() throws IOException {
         TableBlock tableBlock = new TableBlock();
-        tableBlock.newPackage(0x7f, "com.example.package");
-        tableBlock.refresh();
         tableBlock.addFramework(AndroidFrameworks.getLatest().getTableBlock());
+        tableBlock.refresh();
         return tableBlock;
     }
     private static final String XML_STRING = "<?xml version='1.0' encoding='utf-8' ?>\n" +
