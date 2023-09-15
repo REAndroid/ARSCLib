@@ -15,10 +15,10 @@
  */
 package com.reandroid.utils.io;
 
-import com.reandroid.arsc.BuildInfo;
-import com.reandroid.utils.StringsUtil;
+import com.reandroid.arsc.ARSCLib;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -72,10 +72,24 @@ public class FileUtil {
         dir.delete();
     }
     public static void deleteEmptyDirectory(File dir){
-        if(dir.isFile()){
+        if(dir == null || !dir.isDirectory()){
             return;
         }
-        if(!dir.isDirectory()){
+        File[] files = dir.listFiles();
+        if(files == null || files.length == 0){
+            dir.delete();
+            return;
+        }
+        for(File file : files){
+            if(!file.isDirectory()){
+                return;
+            }
+            deleteEmptyDirectory(file);
+        }
+        deleteIfEmptyDirectory(dir);
+    }
+    private static void deleteIfEmptyDirectory(File dir){
+        if(dir == null || !dir.isDirectory()){
             return;
         }
         File[] files = dir.listFiles();
@@ -84,17 +98,20 @@ public class FileUtil {
         }
     }
     public static File getTempDir(){
-        return getTempDir(getDefPrefix());
+        return getTempDir(null);
     }
-    public static File getTempDir(String prefix) {
+    public static File getTempDir(String rootName) {
         synchronized (FileUtil.class){
-            if(prefix == null){
-                prefix = "";
+            if(rootName == null){
+                rootName = getDefRootName();
             }
-            File dir = TEMP_DIRS.get(prefix);
+            File dir = TEMP_DIRS.get(rootName);
             if(dir == null){
-                dir = createTempDir(prefix);
-                TEMP_DIRS.put(prefix, dir);
+                dir = getWritableTempDir(rootName);
+                if(dir != null){
+                    dir.deleteOnExit();
+                    TEMP_DIRS.put(rootName, dir);
+                }
             }else if(!dir.exists()){
                 dir.mkdir();
                 dir.deleteOnExit();
@@ -102,38 +119,52 @@ public class FileUtil {
             return dir;
         }
     }
-    private static File createTempDir(String prefix) {
+    private static File getWritableTempDir(String rootName) {
         String path = System.getProperty("java.io.tmpdir", null);
-        if(path == null){
+        File dir = getWritableTempDir(path, rootName);
+        if(dir == null){
             path = System.getProperty("user.home", null);
+            dir = getWritableTempDir(path, rootName);
         }
-        if(path == null){
-            path = "path";
-            File file = new File(path).getParentFile();
+        if(dir == null){
+            File file = new File("current");
+            file = new File(file.getAbsolutePath());
+            file = file.getParentFile();
             path = file.getAbsolutePath();
+            dir = getWritableTempDir(path, rootName);
         }
-        return createTempDir(new File(path), prefix);
+        return dir;
     }
-    private static File createTempDir(File baseDir, String prefix) {
-        String baseName = System.currentTimeMillis() + "-";
-        if(baseName.length() > 12){
-            baseName = baseName.substring(6);
+    private static File getWritableTempDir(String path, String rootName) {
+        if(path == null){
+            return null;
         }
-        if(prefix == null){
-            prefix = "";
+        return getWritableTempDir(new File(path), rootName);
+    }
+    private static File getWritableTempDir(File baseDir, String rootName) {
+        File dir = new File(baseDir, rootName);
+        if(!dir.isDirectory() && !dir.mkdirs()){
+            return null;
         }
+        String testName = "test_" + System.currentTimeMillis() + "-";
         int max = 9999;
         int i;
         for (i = 0; i < max; i++) {
-            String name = prefix + baseName + StringsUtil.formatNumber(i, max);
-            File tempDir = new File(baseDir, name);
-            if (tempDir.mkdir()) {
-                tempDir.deleteOnExit();
-                return tempDir;
+            String name = testName + i;
+            File file = new File(dir, name);
+            if(file.exists()){
+                continue;
+            }
+            try {
+                if(!file.createNewFile() || !file.delete()){
+                    return null;
+                }
+                return dir;
+            } catch (IOException exception) {
+                return null;
             }
         }
-        throw new IllegalStateException(
-                "Failed to create temp directory, trials = " + i + ", base = " + baseName);
+        return null;
     }
 
     public static void setDefaultTempPrefix(String prefix) {
@@ -148,9 +179,9 @@ public class FileUtil {
         }
     }
 
-    private static String getDefPrefix() {
+    private static String getDefRootName() {
         if(def_prefix == null){
-            def_prefix = BuildInfo.getName() + "-";
+            def_prefix = "tmp_" + ARSCLib.getName() + "-" + ARSCLib.getVersion();
         }
         return def_prefix;
     }
