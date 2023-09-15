@@ -15,7 +15,7 @@
  */
 package com.reandroid.arsc.chunk;
 
-import com.reandroid.arsc.BuildInfo;
+import com.reandroid.arsc.ARSCLib;
 import com.reandroid.arsc.array.LibraryInfoArray;
 import com.reandroid.arsc.array.SpecTypePairArray;
 import com.reandroid.arsc.base.Block;
@@ -657,7 +657,7 @@ public class PackageBlock extends Chunk<PackageHeader>
     public JSONObject toJson(boolean addTypes) {
         JSONObject jsonObject=new JSONObject();
 
-        jsonObject.put(BuildInfo.NAME_arsc_lib_version, BuildInfo.getVersion());
+        jsonObject.put(ARSCLib.NAME_arsc_lib_version, ARSCLib.getVersion());
 
         jsonObject.put(NAME_package_id, getId());
         jsonObject.put(NAME_package_name, getName());

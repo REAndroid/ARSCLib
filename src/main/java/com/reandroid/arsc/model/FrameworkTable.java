@@ -15,7 +15,7 @@
   */
 package com.reandroid.arsc.model;
 
-import com.reandroid.arsc.BuildInfo;
+import com.reandroid.arsc.ARSCLib;
 import com.reandroid.arsc.array.SpecTypePairArray;
 import com.reandroid.arsc.array.TypeBlockArray;
 import com.reandroid.arsc.chunk.ChunkType;
@@ -178,7 +178,7 @@ public class FrameworkTable extends TableBlock {
         TableStringPool tableStringPool=getStringPool();
         tableStringPool.getStringsArray().ensureSize(1);
         TableString title=tableStringPool.get(0);
-        title.set(BuildInfo.getRepo());
+        title.set(ARSCLib.getRepo());
         for(TableString tableString:tableStringPool.getStringsArray().listItems()){
             if(tableString==title){
                 continue;

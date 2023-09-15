@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@ package com.reandroid.arsc;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class BuildInfo {
+public class ARSCLib {
     private static Properties sProperties;
 
     public static String getName(){
@@ -45,7 +45,7 @@ public class BuildInfo {
         return sProperties;
     }
     private static Properties loadProperties(){
-        InputStream inputStream=BuildInfo.class.getResourceAsStream("/arsclib.properties");
+        InputStream inputStream= ARSCLib.class.getResourceAsStream("/arsclib.properties");
         Properties properties=new Properties();
         try{
             properties.load(inputStream);
@@ -54,5 +54,5 @@ public class BuildInfo {
         return properties;
     }
 
-    public static final String NAME_arsc_lib_version="arsc_lib_version";
+    public static final String NAME_arsc_lib_version = "arsc_lib_version";
 }

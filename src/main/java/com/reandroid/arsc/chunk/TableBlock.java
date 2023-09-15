@@ -16,7 +16,7 @@
 package com.reandroid.arsc.chunk;
 
 import com.reandroid.arsc.ApkFile;
-import com.reandroid.arsc.BuildInfo;
+import com.reandroid.arsc.ARSCLib;
 import com.reandroid.arsc.array.PackageArray;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.header.HeaderBlock;
@@ -715,7 +715,7 @@ public class TableBlock extends Chunk<TableHeader>
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
 
-        jsonObject.put(BuildInfo.NAME_arsc_lib_version, BuildInfo.getVersion());
+        jsonObject.put(ARSCLib.NAME_arsc_lib_version, ARSCLib.getVersion());
 
         jsonObject.put(NAME_packages, getPackageArray().toJson());
         JSONArray jsonArray = getStringPool().toJson();
