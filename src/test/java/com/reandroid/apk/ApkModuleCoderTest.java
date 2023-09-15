@@ -1,5 +1,6 @@
 package com.reandroid.apk;
 
+import com.reandroid.TestUtils;
 import com.reandroid.arsc.base.BlockDiff;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
@@ -22,7 +23,7 @@ public class ApkModuleCoderTest {
     public void a_testDecodeToXml() throws IOException {
         ApkModule apkModule = getApkModule();
         Assert.assertNotNull(apkModule);
-        File dir = FileUtil.getTempDir();
+        File dir = TestUtils.getTempDir();
         dir = new File(dir, "decode_xml");
         ApkModuleXmlDecoder decoder = new ApkModuleXmlDecoder(apkModule);
         decoder.decode(dir);
@@ -52,7 +53,7 @@ public class ApkModuleCoderTest {
     public void c_testDecodeToJson() throws IOException {
         ApkModule apkModule = getApkModule();
         Assert.assertNotNull(apkModule);
-        File dir = FileUtil.getTempDir();
+        File dir = TestUtils.getTempDir();
         dir = new File(dir, "decode_json");
         ApkModuleJsonDecoder decoder = new ApkModuleJsonDecoder(apkModule);
         decoder.decode(dir);

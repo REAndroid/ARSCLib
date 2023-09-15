@@ -1,5 +1,6 @@
 package com.reandroid.apk;
 
+import com.reandroid.TestUtils;
 import com.reandroid.archive.ByteInputSource;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.ArchiveBytes;
@@ -41,7 +42,7 @@ public class ApkModuleTest {
         Assert.assertNotNull("Table block", apkModule.getTableBlock());
 
         ApkModuleXmlDecoder decoder = new ApkModuleXmlDecoder(apkModule);
-        File dir = FileUtil.getTempDir();
+        File dir = TestUtils.getTempDir();
         decoder.decode(dir);
     }
     @Test
