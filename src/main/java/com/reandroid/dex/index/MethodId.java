@@ -15,6 +15,9 @@
  */
 package com.reandroid.dex.index;
 
+import com.reandroid.arsc.base.Block;
+import com.reandroid.dex.pool.DexIdPool;
+import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 
@@ -39,6 +42,15 @@ public class MethodId extends ItemId {
             return stringData.getString();
         }
         return null;
+    }
+    public void setName(String name){
+        Section<StringData> stringSection = getSection(SectionType.STRING_DATA);
+        DexIdPool<StringData> pool = stringSection.getPool();
+        StringData stringData = pool.getOrCreate(name);
+        setName(stringData);
+    }
+    public void setName(StringData stringData){
+        this.name.setItem(stringData);
     }
     public String getKey(){
         return getKey(false);

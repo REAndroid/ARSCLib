@@ -19,7 +19,6 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
-import com.reandroid.dex.index.ItemId;
 import com.reandroid.dex.pool.DexIdPool;
 
 import java.util.HashMap;
@@ -35,7 +34,7 @@ public class Section<T extends Block>  extends FixedDexContainer
     private final DexPositionAlign sectionAlign;
     private final Map<Integer, T> offsetMap;
 
-    private DexIdPool<?> dexIdPool;
+    private DexIdPool<T> dexIdPool;
 
     public Section(SectionType<T> sectionType, DexItemArray<T> itemArray){
         super(2);
@@ -51,11 +50,10 @@ public class Section<T extends Block>  extends FixedDexContainer
         this(sectionType, new DexItemArray<>(countAndOffset, sectionType.getCreator()));
     }
 
-    @SuppressWarnings("unchecked")
-    public<T1 extends Block> DexIdPool<T1> getPool(){
-        DexIdPool<T1> dexIdPool = (DexIdPool<T1>) this.dexIdPool;
+    public DexIdPool<T> getPool(){
+        DexIdPool<T> dexIdPool = this.dexIdPool;
         if(dexIdPool == null){
-            dexIdPool = new DexIdPool<T1>((Section<T1>) this);
+            dexIdPool = new DexIdPool<T>(this);
             this.dexIdPool = dexIdPool;
             dexIdPool.load();
         }
@@ -215,10 +213,15 @@ public class Section<T extends Block>  extends FixedDexContainer
     }
     @Override
     protected void onPreRefresh(){
-        //sectionAlign.setSize(0);
         boolean hasId = updateIdOffsets();
-        if(!hasId && sectionType.isOffsetType()){
-            updateItemOffsets();
+        if(!hasId){
+            if(sectionType.isOffsetType()){
+                updateItemOffsets();
+            }else {
+                int position = getOffset();
+                position += getItemArray().countBytes();
+                updateNextSection(position);
+            }
         }
     }
     @Override

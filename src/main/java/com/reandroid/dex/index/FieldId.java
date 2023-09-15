@@ -59,7 +59,11 @@ public class FieldId extends ItemId {
         }
         builder.append(stringData.getString());
         builder.append("->");
-        builder.append(key());
+        stringData = getNameString();
+        if(stringData == null){
+            return null;
+        }
+        builder.append(stringData.getString());
         return builder.toString();
     }
     public String key(){
