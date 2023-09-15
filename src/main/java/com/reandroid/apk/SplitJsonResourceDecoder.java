@@ -15,7 +15,7 @@
   */
 package com.reandroid.apk;
 
-import com.reandroid.arsc.BuildInfo;
+import com.reandroid.arsc.ARSCLib;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.StagedAlias;
 import com.reandroid.arsc.chunk.TableBlock;
@@ -50,7 +50,7 @@ public class SplitJsonResourceDecoder {
     private void writeSplitPackageInfoJson(File packageDirectory, PackageBlock packageBlock) throws IOException {
         JSONObject jsonObject = new JSONObject();
 
-        jsonObject.put(BuildInfo.NAME_arsc_lib_version, BuildInfo.getVersion());
+        jsonObject.put(ARSCLib.NAME_arsc_lib_version, ARSCLib.getVersion());
 
         jsonObject.put(PackageBlock.NAME_package_id, packageBlock.getId());
         jsonObject.put(PackageBlock.NAME_package_name, packageBlock.getName());
