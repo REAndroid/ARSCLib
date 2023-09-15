@@ -72,6 +72,7 @@ public class ApkModuleTest {
 
         apkModule.add(tableSource);
         tableSource.setMethod(ZipEntry.STORED);
+        apkModule.getTableBlock();
 
         apkModule.add(new ByteInputSource(EMPTY_DEX_FILE, "classes.dex"));
 
