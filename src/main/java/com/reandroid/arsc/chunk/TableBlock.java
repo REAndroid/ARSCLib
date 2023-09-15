@@ -503,7 +503,8 @@ public class TableBlock extends Chunk<TableHeader>
         if(packageBlock == null){
             packageBlock = this.mEmptyTablePackage;
             if(packageBlock == null){
-                this.mEmptyTablePackage = PackageBlock.createEmptyPackage(this);
+                packageBlock = PackageBlock.createEmptyPackage(this);
+                this.mEmptyTablePackage = packageBlock;
             }
         }
         return packageBlock;

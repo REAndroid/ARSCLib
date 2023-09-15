@@ -386,7 +386,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         getSpecTypePairArray().removeEmptyPairs();
     }
     public boolean isEmpty(){
-        return mBody.isEmpty();
+        return getId() == 0 && mBody.isEmpty();
     }
     @Override
     public int getId(){
