@@ -59,10 +59,27 @@ public class SectionList extends FixedBlockContainer
     }
 
     @Override
+    protected void onPreRefresh() {
+        super.onPreRefresh();
+        updateIdCounts();
+    }
+
+    @Override
     protected void onRefreshed() {
         super.onRefreshed();
         mapList.refresh();
         mapList.updateHeader(dexHeader);
+    }
+    private void updateIdCounts(){
+        for(Section<?> section : this){
+            Section<?> idSection = get(
+                    section.getSectionType().getIdSectionType());
+            if(idSection == null){
+                continue;
+            }
+            idSection.getItemArray()
+                    .setChildesCount(section.getCount());
+        }
     }
 
     @Override
