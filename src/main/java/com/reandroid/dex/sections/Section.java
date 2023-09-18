@@ -38,7 +38,7 @@ public class Section<T extends Block>  extends FixedDexContainer
 
     private DexIdPool<T> dexIdPool;
 
-    public Section(SectionType<T> sectionType, DexItemArray<T> itemArray){
+    Section(SectionType<T> sectionType, DexItemArray<T> itemArray){
         super(2);
         this.sectionType = sectionType;
         this.itemArray = itemArray;
@@ -208,6 +208,14 @@ public class Section<T extends Block>  extends FixedDexContainer
             return null;
         }
         return sectionList.get(sectionType);
+    }
+
+    @Override
+    protected boolean isValidOffset(int offset){
+        if(offset == 0){
+            return getSectionType() == SectionType.HEADER;
+        }
+        return offset > 0;
     }
     @Override
     protected void onPreRefresh(){

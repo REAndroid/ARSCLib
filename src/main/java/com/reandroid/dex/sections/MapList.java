@@ -16,42 +16,29 @@
 package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.base.OffsetSupplier;
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.*;
+import com.reandroid.dex.base.CountedArray;
 import com.reandroid.dex.header.CountAndOffset;
 import com.reandroid.dex.header.DexHeader;
+import com.reandroid.dex.item.DataItemEntry;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
 
-public class MapList extends FixedDexContainer
-        implements Iterable<MapItem>, OffsetSupplier {
+public class MapList extends DataItemEntry
+        implements Iterable<MapItem> {
 
-    private final IntegerReference offsetReference;
-
-    private final IntegerItem mapItemsCount;
-
-    private final DexItemArray<MapItem> itemArray;
+    private final CountedArray<MapItem> itemArray;
 
     public MapList(IntegerReference offsetReference) {
         super(2);
-        this.offsetReference = offsetReference;
-        this.mapItemsCount = new IntegerItem();
-
-        IntegerPair countAndOffset = IntegerPair.of(mapItemsCount,
-                new AddingIntegerReference(offsetReference, mapItemsCount));
-        this.itemArray = new DexItemArray<>(countAndOffset, CREATOR);
-
+        IntegerItem mapItemsCount = new IntegerItem();
+        this.itemArray = new CountedArray<>(mapItemsCount, CREATOR);
         addChild(0, mapItemsCount);
         addChild(1, itemArray);
+        setOffsetReference(offsetReference);
     }
-    public MapList(DexHeader header){
-        this(header.map);
-    }
-
 
     public void updateHeader(DexHeader dexHeader){
         MapItem mapItem = get(SectionType.STRING_ID);
@@ -97,10 +84,20 @@ public class MapList extends FixedDexContainer
             countAndOffset.setCount(dexHeader.fileSize.get() - mapItem.getOffset().get());
             countAndOffset.setOffset(mapItem.getOffset().get());
         }
+        mapItem = get(SectionType.MAP_LIST);
+        if(mapItem != null){
+            mapItem.getCount().set(1);
+            mapItem.getOffset().set(dexHeader.map.get());
+        }
     }
     public MapItem getDataStart(){
+        boolean headerFound = false;
         for(MapItem mapItem : this){
-            if(!mapItem.getMapType().isIndexSection()){
+            SectionType<?> sectionType = mapItem.getMapType();
+            if(!headerFound){
+                headerFound = sectionType == SectionType.HEADER;
+            }
+            if(!sectionType.isIndexSection()){
                 return mapItem;
             }
         }
@@ -113,10 +110,6 @@ public class MapList extends FixedDexContainer
             }
         }
         return null;
-    }
-    @Override
-    public IntegerReference getOffsetReference() {
-        return offsetReference;
     }
     @Override
     public Iterator<MapItem> iterator() {

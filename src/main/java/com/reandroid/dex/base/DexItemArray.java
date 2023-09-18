@@ -18,6 +18,7 @@ package com.reandroid.dex.base;
 import com.reandroid.arsc.base.*;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.header.DexHeader;
 
 import java.io.IOException;
 
@@ -118,7 +119,13 @@ public class DexItemArray<T extends Block> extends CreatorArray<T>
         positionedItem.setPosition(reader.getPosition());
     }
     protected boolean isValidOffset(int offset){
+        if(offset == 0){
+            return isDexHeaderArray();
+        }
         return offset > 0;
+    }
+    private boolean isDexHeaderArray(){
+        return (get(0) instanceof DexHeader);
     }
     @Override
     protected void onRefreshed() {

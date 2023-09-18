@@ -46,9 +46,12 @@ public class MapItem extends DexBlockItem {
         if(sectionType == null || sectionType.getCreator() == null){
             return null;
         }
-        Block parent = getParentInstance(MapList.class);
+        Block parent = getParentInstance(SectionList.class);
         if(parent != null){
             parent = parent.getParent();
+        }
+        if(parent == null){
+            parent = getParentInstance(MapList.class);
         }
         if(parent == null){
             parent = getParentInstance(DexFile.class);

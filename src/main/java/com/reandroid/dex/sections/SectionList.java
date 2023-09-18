@@ -21,6 +21,8 @@ import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.base.DexItemArray;
+import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.NumberIntegerReference;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.dex.header.DexHeader;
@@ -45,18 +47,39 @@ public class SectionList extends FixedBlockContainer
         super(1);
 
         this.baseOffset = new NumberIntegerReference();
-
-        this.dexHeader = new DexHeader(baseOffset);
         this.dexSectionList = new BlockList<>();
-        this.mapList = new MapList(dexHeader);
 
-        dexHeader.setParent(this);
-        mapList.setParent(this);
+        IntegerPair headerCountAndOffset = IntegerPair.of(
+                new NumberIntegerReference(),
+                baseOffset);
+
+        headerCountAndOffset.getFirst().set(1);
+
+        Section<DexHeader> dexHeaderSection = new Section<>(headerCountAndOffset, SectionType.HEADER);
+        DexHeader dexHeader = new DexHeader(baseOffset);
+        dexHeaderSection.add(dexHeader);
+
+        IntegerPair mapListCountAndOffset = IntegerPair.of(
+                new NumberIntegerReference(),
+                dexHeader.map);
+        mapListCountAndOffset.getFirst().set(1);
+
+        Section<MapList> mapListSection = new Section<>(mapListCountAndOffset, SectionType.MAP_LIST);
+        MapList mapList = new MapList(dexHeader.map);
+        mapListSection.add(mapList);
 
         this.typeMap = new HashMap<>();
 
         addChild(0, dexSectionList);
 
+        this.dexSectionList.add(dexHeaderSection);
+        this.dexSectionList.add(mapListSection);
+
+        this.dexHeader = dexHeader;
+        this.mapList = mapList;
+
+        typeMap.put(SectionType.HEADER, dexHeaderSection);
+        typeMap.put(SectionType.MAP_LIST, mapListSection);
     }
 
     public void updateHeader(){
@@ -89,12 +112,8 @@ public class SectionList extends FixedBlockContainer
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        dexHeader.readBytes(reader);
-        mapList.readBytes(reader);
-        add(mapList.get(SectionType.HEADER).createNewSection())
-                .add(dexHeader);
-        add(mapList.get(SectionType.MAP_LIST).createNewSection())
-                .add(mapList);
+        get(SectionType.HEADER).readBytes(reader);
+        get(SectionType.MAP_LIST).readBytes(reader);
 
         MapItem[] mapItemList = mapList.getReadSorted();
         int length = mapItemList.length;
