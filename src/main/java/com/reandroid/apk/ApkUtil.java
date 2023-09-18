@@ -16,7 +16,7 @@
 package com.reandroid.apk;
 
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.File;
 import java.util.*;
@@ -102,7 +102,7 @@ public class ApkUtil {
                 results.add(dir);
             }
         }
-        StringsUtil.toStringSort(results);
+        results.sort(CompareUtil.getComparableComparator());
         return results;
     }
     public static List<File> listPublicXmlFiles(File resourcesDirectory){
@@ -120,7 +120,7 @@ public class ApkUtil {
                 }
             }
         }
-        StringsUtil.toStringSort(results);
+        results.sort(CompareUtil.getComparableComparator());
         return results;
     }
     private static File getPublicXmlFile(File resDir){
@@ -157,7 +157,7 @@ public class ApkUtil {
                 results.add(dir);
             }
         }
-        StringsUtil.toStringSort(results);
+        results.sort(CompareUtil.getComparableComparator());
         return results;
     }
     public static boolean isValuesDirectoryName(String name, boolean checkVariant){

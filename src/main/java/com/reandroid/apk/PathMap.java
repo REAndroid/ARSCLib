@@ -15,12 +15,12 @@
   */
 package com.reandroid.apk;
 
+import com.reandroid.archive.PathTree;
 import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.archive.InputSource;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
-import com.reandroid.utils.StringsUtil;
 
 import java.util.*;
 
@@ -145,9 +145,9 @@ public class PathMap implements JSONConvert<JSONArray> {
     public JSONArray toJson() {
         JSONArray jsonArray = new JSONArray();
         Map<String, String> nameMap = this.mNameAliasMap;
-        List<String> nameList = new ArrayList<>(nameMap.keySet());
-        StringsUtil.toStringSort(nameList);
-        for(String name:nameList){
+        Iterator<String> nameList = PathTree.sortPaths(nameMap.keySet().iterator());
+        while (nameList.hasNext()) {
+            String name = nameList.next();
             JSONObject jsonObject = new JSONObject();
             jsonObject.put(NAME_name, name);
             jsonObject.put(NAME_alias, nameMap.get(name));

@@ -88,6 +88,9 @@ public class PathTree<T> implements Comparable<PathTree<?>>, Iterable<PathTree<T
         });
         return new MergingIterator<>(iteratorIterator);
     }
+    public Iterator<T> getFileItems(){
+        return ComputeIterator.of(getFiles(), PathTree::getItem);
+    }
 
     public int size(){
         return elementsMap.size();
@@ -287,6 +290,15 @@ public class PathTree<T> implements Comparable<PathTree<?>>, Iterable<PathTree<T
         return new PathTree<>("/");
     }
 
+    public static Iterator<String> sortPaths(Iterator<String> iterator){
+        PathTree<String> pathTree = newRoot();
+        while (iterator.hasNext()){
+            String path = iterator.next();
+            pathTree.add(path, path);
+        }
+        pathTree.sort();
+        return pathTree.getFileItems();
+    }
     private static String getName(String path){
         int i = path.length();
         if(i < 2){

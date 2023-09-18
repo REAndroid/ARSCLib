@@ -16,7 +16,6 @@
 package com.reandroid.utils;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -117,27 +116,37 @@ public class StringsUtil {
     public static String toString(Collection<?> collection){
         return toString(collection, MAX_STRING_APPEND);
     }
-    public static String toString(Collection<?> collection, int max){
-        if(collection == null){
+    public static String toString(Collection<?> collection, int max) {
+        return toString(collection.iterator(), max, collection.size());
+    }
+    public static String toString(Iterator<?> iterator, int max, int size) {
+        if(iterator == null){
             return "null";
         }
-        if(max < 0){
-            max = collection.size();
+        if(max < 0 && size >= 0){
+            max = size;
         }
-        StringBuilder builder = new StringBuilder();
-        builder.append("size=");
-        builder.append(collection.size());
-        builder.append(" [");
         int count = 0;
-        Iterator<?> iterator = collection.iterator();
-        while (iterator.hasNext() && count < max){
+        StringBuilder elements = new StringBuilder();
+        while (iterator.hasNext() && (max < 0 || count < max)){
             if(count != 0){
-                builder.append(", ");
+                elements.append(", ");
             }
-            builder.append(iterator.next());
+            elements.append(iterator.next());
             count ++;
         }
-        if(count < collection.size()){
+        if(max < 0){
+            size = count;
+        }
+        StringBuilder builder = new StringBuilder(elements.length() + 20);
+        if(size >= 0){
+            builder.append("size=");
+            builder.append(size);
+            builder.append(' ');
+        }
+        builder.append('[');
+        builder.append(elements.toString());
+        if(count < size){
             builder.append(" ... ");
         }
         builder.append(']');
@@ -237,13 +246,7 @@ public class StringsUtil {
         if(itemList == null || itemList.size() < 2){
             return;
         }
-        Comparator<Object> cmp = new Comparator<Object>() {
-            @Override
-            public int compare(Object obj1, Object obj2) {
-                return String.valueOf(obj1).compareTo(String.valueOf(obj2));
-            }
-        };
-        itemList.sort(cmp);
+        itemList.sort(CompareUtil.getToStringComparator());
     }
     public static String formatNumber(long number, long maximumValue){
         int minLength = Long.toString(maximumValue).length();
@@ -268,7 +271,7 @@ public class StringsUtil {
         return append(text, ch, count, false);
     }
     public static String append(String text, char ch, int count, boolean prefix){
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder(text.length() + count);
         if(!prefix){
             builder.append(text);
         }
@@ -285,23 +288,7 @@ public class StringsUtil {
                 obj2 == null ? null : obj2.toString());
     }
     public static int compareStrings(String s1, String s2) {
-        if(s1 == null && s2 == null){
-            return 0;
-        }
-        if(s1 == null){
-            return 1;
-        }
-        if(s2 == null){
-            return -1;
-        }
-        int i = s1.compareTo(s2);
-        if(i == 0){
-            return 0;
-        }
-        if(i > 0){
-            return 1;
-        }
-        return -1;
+        return CompareUtil.compare(s1, s2);
     }
 
     private static final int MAX_STRING_APPEND = 5;
