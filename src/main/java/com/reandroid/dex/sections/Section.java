@@ -231,10 +231,6 @@ public class Section<T extends Block>  extends FixedDexContainer
         }
     }
     @Override
-    protected void onRefreshed(){
-        sectionAlign.align(this);
-    }
-    @Override
     public String toString() {
         return getSectionType() +", offset = " + getOffset()
                 + ", count = " + getCount();

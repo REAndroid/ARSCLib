@@ -34,6 +34,10 @@ public class DexItemArray<T extends Block> extends CreatorArray<T>
     }
     @Override
     public int countBytes() {
+        T item = get(0);
+        if(item instanceof FixedSizeBlock){
+            return item.countBytes() * getCount();
+        }
         return super.countBytes();
     }
 
