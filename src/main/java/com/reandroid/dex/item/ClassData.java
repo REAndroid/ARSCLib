@@ -15,14 +15,16 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
-public class ClassData extends DexItem
+public class ClassData extends DataItemEntry
         implements SmaliFormat {
 
     private final Ule128Item staticFieldsCount;
@@ -79,6 +81,15 @@ public class ClassData extends DexItem
         instanceFields.setClassId(classId);
         directMethods.setClassId(classId);
         virtualMethods.setClassId(classId);
+    }
+
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        staticFields.sort(CompareUtil.getComparableComparator());
+        instanceFields.sort(CompareUtil.getComparableComparator());
+        directMethods.sort(CompareUtil.getComparableComparator());
+        virtualMethods.sort(CompareUtil.getComparableComparator());
     }
 
     @Override

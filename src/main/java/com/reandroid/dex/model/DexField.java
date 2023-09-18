@@ -16,7 +16,7 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.index.FieldId;
-import com.reandroid.dex.index.StringData;
+import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.item.AnnotationSet;
 import com.reandroid.dex.item.FieldDef;
 import com.reandroid.dex.item.FieldDefArray;

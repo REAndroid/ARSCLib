@@ -18,12 +18,12 @@ package com.reandroid.dex.debug;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.dex.index.ItemId;
+import com.reandroid.dex.index.IndexItemEntry;
 import com.reandroid.dex.sections.SectionType;
 
 import java.io.IOException;
 
-public class Base1Ule128Item<T extends ItemId> extends Ule128Item implements BlockRefresh {
+public class Base1Ule128Item<T extends IndexItemEntry> extends Ule128Item implements BlockRefresh {
     private final SectionType<T> sectionType;
     private T item;
 

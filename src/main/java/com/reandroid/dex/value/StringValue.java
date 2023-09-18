@@ -15,17 +15,21 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.dex.index.StringData;
+import com.reandroid.dex.index.StringId;
+import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.sections.SectionType;
 
-public class StringValue extends SectionValue<StringData> {
+public class StringValue extends SectionValue<StringId> {
 
     public StringValue() {
-        super(SectionType.STRING_DATA);
+        super(SectionType.STRING_ID);
+    }
+    public StringData getStringData(){
+        return getData().getStringData();
     }
 
     @Override
-    void onDataUpdated(StringData data) {
+    void onDataUpdated(StringId data) {
         super.onDataUpdated(data);
     }
 }

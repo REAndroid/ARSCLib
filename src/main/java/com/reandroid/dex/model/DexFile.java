@@ -17,15 +17,21 @@ package com.reandroid.dex.model;
 
 import com.reandroid.archive.PathTree;
 import com.reandroid.arsc.container.FixedBlockContainer;
+import com.reandroid.arsc.group.ItemGroup;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.common.BytesOutputStream;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.index.ClassId;
-import com.reandroid.dex.index.StringData;
+import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.item.AnnotationElement;
+import com.reandroid.dex.item.AnnotationItem;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.value.ArrayValue;
+import com.reandroid.dex.value.DexValue;
+import com.reandroid.dex.value.StringValue;
 
 import java.io.*;
 import java.util.HashMap;
@@ -42,6 +48,39 @@ public class DexFile extends FixedBlockContainer {
         super(1);
         this.sectionList = new SectionList();
         addChild(0, sectionList);
+    }
+    public void linkTypeSignature(){
+        Section<AnnotationItem> annotationSection = getSectionList().get(SectionType.ANNOTATION);
+        if(annotationSection == null){
+            return;
+        }
+        ItemGroup<AnnotationItem> group = annotationSection.getPool().getGroup(ANNOTATION_SIG_KEY);
+        if(group == null){
+            return;
+        }
+        for(AnnotationItem item : group){
+            AnnotationElement element = item.getElement(0);
+            if(element == null){
+                continue;
+            }
+            DexValue<?> dexValue = element.getValue();
+            if(!(dexValue instanceof ArrayValue)){
+                continue;
+            }
+            ArrayValue arrayValue = (ArrayValue) dexValue;
+            linkTypeSignature(arrayValue);
+        }
+    }
+    private void linkTypeSignature(ArrayValue arrayValue){
+        for(DexValue<?> value : arrayValue){
+            if(!(value instanceof StringValue)){
+                continue;
+            }
+            StringData stringData = ((StringValue) value).getStringData();
+            if(stringData != null){
+                stringData.addStringUsage(StringData.USAGE_TYPE);
+            }
+        }
     }
     public void decode(File outDir) throws IOException {
         int size = dexClasses.size();
@@ -166,4 +205,6 @@ public class DexFile extends FixedBlockContainer {
         int version = dexHeader.version.getVersionAsInteger();
         return version > 0 && version < 1000;
     }
+
+    public static final String ANNOTATION_SIG_KEY = "Ldalvik/annotation/Signature;->value()";
 }

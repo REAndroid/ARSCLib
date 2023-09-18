@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
 
-public class AnnotationItem extends DexItem
+public class AnnotationItem extends DataItemEntry
         implements Iterable<AnnotationElement>, SmaliFormat {
 
     private final ByteItem visibility;

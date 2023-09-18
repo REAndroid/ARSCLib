@@ -17,14 +17,13 @@ package com.reandroid.dex.index;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockRefresh;
-import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.item.IndirectItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexBlockItem;
-import com.reandroid.dex.item.DexItem;
+import com.reandroid.dex.item.DataItemEntry;
 import com.reandroid.dex.sections.SectionType;
 
-public class ItemOffsetReference<T extends DexItem> extends IndirectItem<DexBlockItem>
+public class ItemOffsetReference<T extends DataItemEntry> extends IndirectItem<DexBlockItem>
         implements IntegerReference, BlockRefresh {
 
     private final SectionType<T> sectionType;

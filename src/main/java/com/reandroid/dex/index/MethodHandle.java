@@ -17,10 +17,11 @@ package com.reandroid.dex.index;
 
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
-public class MethodHandle extends ItemId {
+public class MethodHandle extends IndexItemEntry implements Comparable<MethodHandle>{
 
     private final ItemIndexReference<MethodId> methodId;
     private final ItemIndexReference<MethodId> memberId;
@@ -41,18 +42,31 @@ public class MethodHandle extends ItemId {
     @Override
     public void refresh() {
         methodId.refresh();
-        methodId.refresh();
+        memberId.refresh();
     }
     @Override
     void cacheItems() {
         methodId.getItem();
-        methodId.getItem();
+        memberId.getItem();
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
 
     }
+
+    @Override
+    public int compareTo(MethodHandle methodHandle) {
+        if(methodHandle == null){
+            return -1;
+        }
+        int i = CompareUtil.compare(getMethodId(), methodHandle.getMethodId());
+        if(i != 0){
+            return i;
+        }
+        return CompareUtil.compare(getMemberId(), methodHandle.getMemberId());
+    }
+
     @Override
     public String toString() {
         return memberId + "->" + getMethodId();

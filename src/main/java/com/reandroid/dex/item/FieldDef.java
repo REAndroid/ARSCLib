@@ -21,12 +21,13 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValue;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class FieldDef extends Def<FieldId> {
+public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
     public FieldDef() {
         super(0, SectionType.FIELD_ID);
     }
@@ -70,6 +71,13 @@ public class FieldDef extends Def<FieldId> {
         }
     }
     @Override
+    public int compareTo(FieldDef fieldDef) {
+        if(fieldDef == null){
+            return -1;
+        }
+        return CompareUtil.compare(getFieldId(), fieldDef.getFieldId());
+    }
+    @Override
     public String toString() {
         FieldId fieldId = getFieldId();
         if(fieldId != null){
@@ -79,4 +87,5 @@ public class FieldDef extends Def<FieldId> {
         return ".field " + AccessFlag.formatForField(getAccessFlagsValue())
                 + " " + getRelativeIdValue();
     }
+
 }

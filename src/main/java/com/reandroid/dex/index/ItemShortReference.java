@@ -19,7 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.sections.SectionType;
 
-public class ItemShortReference<T extends ItemId> extends ItemIndexReference<T> {
+public class ItemShortReference<T extends IndexItemEntry> extends ItemIndexReference<T> {
     public ItemShortReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset) {
         super(sectionType, blockItem, offset);
     }

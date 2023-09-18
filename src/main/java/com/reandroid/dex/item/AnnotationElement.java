@@ -4,7 +4,6 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.index.StringData;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
@@ -14,13 +13,14 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class AnnotationElement extends DexItem
+public class AnnotationElement extends DataItemEntry
         implements BlockLoad, SmaliFormat {
 
-    private final SectionUle128Item<StringData> elementName;
+    private final StringReferenceUle128 elementName;
+
     public AnnotationElement() {
         super(2);
-        this.elementName = new SectionUle128Item<>(SectionType.STRING_DATA);
+        this.elementName = new StringReferenceUle128();
         addChild(0, elementName);
         elementName.setBlockLoad(this);
     }
@@ -65,16 +65,33 @@ public class AnnotationElement extends DexItem
     }
     public void setName(StringData name){
         elementName.setItem(name);
+        linkStringUsageName();
     }
     public StringData getNameStringData(){
         return elementName.getItem();
     }
+
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
         if(sender == this.elementName){
             setValue(DexValueType.create(reader));
         }
     }
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+        linkStringUsage();
+    }
+    private void linkStringUsage(){
+        linkStringUsageName();
+    }
+    private void linkStringUsageName(){
+        StringData stringData = this.elementName.getItem();
+        if(stringData != null){
+            stringData.addStringUsage(StringData.USAGE_METHOD);
+        }
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append(getNameStringData().getString());

@@ -18,7 +18,6 @@ package com.reandroid.dex.sections;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.base.OffsetSupplier;
-import com.reandroid.dex.item.IntegerList;
 import com.reandroid.dex.base.WarpedIntegerReference;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.index.*;
@@ -336,6 +335,9 @@ public class SectionType<T extends Block> {
             return offsetType;
         }
     }
+    public boolean isIndexSection(){
+        return isIndexSection(this);
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -375,5 +377,15 @@ public class SectionType<T extends Block> {
             }
         }
         return null;
+    }
+    public static boolean isIndexSection(SectionType<?> sectionType){
+        return sectionType == SectionType.HEADER ||
+                sectionType == SectionType.STRING_ID ||
+                sectionType == SectionType.TYPE_ID ||
+                sectionType == SectionType.FIELD_ID ||
+                sectionType == SectionType.METHOD_ID ||
+                sectionType == SectionType.PROTO_ID ||
+                sectionType == SectionType.CLASS_ID ||
+                sectionType == SectionType.CALL_SITE_ID;
     }
 }

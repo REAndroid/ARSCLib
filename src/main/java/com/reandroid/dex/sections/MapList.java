@@ -17,12 +17,14 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.base.OffsetSupplier;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.header.CountAndOffset;
 import com.reandroid.dex.header.DexHeader;
 
+import java.io.IOException;
 import java.util.*;
 
 public class MapList extends FixedDexContainer
@@ -88,13 +90,21 @@ public class MapList extends FixedDexContainer
             countAndOffset.setCount(mapItem.getCount().get());
             countAndOffset.setOffset(mapItem.getOffset().get());
         }
-        mapItem = get(SectionType.STRING_DATA);
+        mapItem = getDataStart();
         if(mapItem != null){
             //TODO: this is not right way
             CountAndOffset countAndOffset = dexHeader.data;
             countAndOffset.setCount(dexHeader.fileSize.get() - mapItem.getOffset().get());
             countAndOffset.setOffset(mapItem.getOffset().get());
         }
+    }
+    public MapItem getDataStart(){
+        for(MapItem mapItem : this){
+            if(!mapItem.getMapType().isIndexSection()){
+                return mapItem;
+            }
+        }
+        return null;
     }
     public MapItem get(SectionType<?> type){
         for(MapItem mapItem:this){
@@ -117,6 +127,24 @@ public class MapList extends FixedDexContainer
         MapItem[] mapItemList = itemArray.getChildes().clone();
         Arrays.sort(mapItemList, MapItem.READ_COMPARATOR);
         return mapItemList;
+    }
+
+    @Override
+    public String toString() {
+        MapItem[] mapItems = itemArray.getChildes();
+        StringBuilder builder = new StringBuilder(mapItems.length * 47);
+        for(int i = 0; i < mapItems.length; i++){
+            if(i != 0){
+                builder.append('\n');
+            }
+            if(i < 9){
+                builder.append(' ');
+            }
+            builder.append((i + 1));
+            builder.append(") ");
+            builder.append(mapItems[i]);
+        }
+        return builder.toString();
     }
 
     private static final Creator<MapItem> CREATOR = new Creator<MapItem>() {

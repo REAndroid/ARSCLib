@@ -24,6 +24,11 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.NumberIntegerReference;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.dex.header.DexHeader;
+import com.reandroid.dex.index.ProtoId;
+import com.reandroid.dex.index.StringId;
+import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.item.StringData;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 import java.util.*;
@@ -128,6 +133,30 @@ public class SectionList extends FixedBlockContainer
     }
     public MapList getMapList() {
         return mapList;
+    }
+
+    public void sortStrings(){
+        if(!sort(SectionType.STRING_DATA)){
+            return;
+        }
+        if(!sort(SectionType.STRING_ID)){
+            return;
+        }
+        if(!sort(SectionType.TYPE_ID)){
+            return;
+        }
+        sort(SectionType.PROTO_ID);
+        sort(SectionType.FIELD_ID);
+        sort(SectionType.METHOD_ID);
+        sort(SectionType.CLASS_ID);
+    }
+    private boolean sort(SectionType<?> sectionType){
+        Section<?> section = get(sectionType);
+        if(section != null){
+            section.sort();
+            return true;
+        }
+        return false;
     }
 
     public<T1 extends Block> T1 getAt(SectionType<T1> sectionType, int i){

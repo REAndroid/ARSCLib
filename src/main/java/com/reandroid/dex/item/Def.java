@@ -19,7 +19,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.ClassId;
-import com.reandroid.dex.index.ItemId;
+import com.reandroid.dex.index.IndexItemEntry;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -27,7 +27,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class Def<T extends ItemId> extends DexContainerItem implements SmaliFormat {
+public class Def<T extends IndexItemEntry> extends DexContainerItem implements SmaliFormat {
     private final SectionType<T> sectionType;
     private final Ule128Item relativeId;
     private final Ule128Item accessFlags;
@@ -72,12 +72,20 @@ public class Def<T extends ItemId> extends DexContainerItem implements SmaliForm
     public int getAccessFlagsValue() {
         return accessFlags.get();
     }
+    public boolean isPrivate(){
+        return AccessFlag.PRIVATE.isSet(getAccessFlagsValue());
+    }
+    public boolean isNative(){
+        return AccessFlag.NATIVE.isSet(getAccessFlagsValue());
+    }
     public boolean isStatic(){
         return AccessFlag.STATIC.isSet(getAccessFlagsValue());
     }
+
     T getItem(){
         return mItem;
     }
+
     int getIdIndex() {
         DefArray<?> parentArray = getParentInstance(DefArray.class);
         if(parentArray != null){

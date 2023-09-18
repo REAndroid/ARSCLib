@@ -22,7 +22,7 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.sections.SectionType;
 
-public class ItemIndexReference<T extends ItemId> extends IndirectItem<DexBlockItem>
+public class ItemIndexReference<T extends IndexItemEntry> extends IndirectItem<DexBlockItem>
         implements IntegerReference, BlockRefresh {
     private final SectionType<T> sectionType;
     private T item;

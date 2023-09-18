@@ -15,25 +15,26 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.arsc.base.Block;
+import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
-public class MethodId extends ItemId {
+public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
 
     private final ItemIndexReference<TypeId> classType;
     private final ItemIndexReference<ProtoId> proto;
-    private final ItemIndexReference<StringData> name;
+    private final StringReference nameReference;
 
     public MethodId() {
         super(SIZE);
         this.classType = new ItemShortReference<>(SectionType.TYPE_ID, this, 0);
         this.proto = new ItemShortReference<>(SectionType.PROTO_ID, this, 2);
-        this.name = new ItemIndexReference<>(SectionType.STRING_DATA, this, 4);
+        this.nameReference = new StringReference(this, 4);
     }
 
     public String getName(){
@@ -50,7 +51,7 @@ public class MethodId extends ItemId {
         setName(stringData);
     }
     public void setName(StringData stringData){
-        this.name.setItem(stringData);
+        this.nameReference.setItem(stringData);
     }
     public String getKey(){
         return getKey(false);
@@ -92,7 +93,10 @@ public class MethodId extends ItemId {
         return classType.getItem();
     }
     public StringData getNameString(){
-        return name.getItem();
+        return nameReference.getItem();
+    }
+    public StringReference getNameReference(){
+        return nameReference;
     }
     public ProtoId getProto(){
         return proto.getItem();
@@ -102,13 +106,13 @@ public class MethodId extends ItemId {
     public void refresh() {
         classType.refresh();
         proto.refresh();
-        name.refresh();
+        nameReference.refresh();
     }
     @Override
     void cacheItems(){
         classType.getItem();
         proto.getItem();
-        name.getItem();
+        nameReference.getItem();
     }
 
     @Override
@@ -121,6 +125,23 @@ public class MethodId extends ItemId {
         writer.append(')');
         getProto().getReturnTypeId().append(writer);
     }
+
+    @Override
+    public int compareTo(MethodId methodId) {
+        if(methodId == null){
+            return -1;
+        }
+        int i = CompareUtil.compare(getClassType(), methodId.getClassType());
+        if(i != 0){
+            return i;
+        }
+        i = CompareUtil.compare(getNameReference(), methodId.getNameReference());
+        if(i != 0){
+            return i;
+        }
+        return CompareUtil.compare(getProto(), methodId.getProto());
+    }
+
     @Override
     public String toString() {
         return getClassType() + "->" + getNameString() + getProto();

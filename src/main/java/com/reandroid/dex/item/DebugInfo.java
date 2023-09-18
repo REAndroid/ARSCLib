@@ -22,13 +22,12 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.debug.DebugElementList;
 import com.reandroid.dex.debug.DebugParameter;
-import com.reandroid.dex.ins.LabelList;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class DebugInfo extends DexItem {
+public class DebugInfo extends DataItemEntry {
 
     private final Ule128Item lineStart;
     private final Ule128Item parameterCount;

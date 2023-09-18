@@ -1,10 +1,6 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
-
-import java.io.IOException;
 
 public class FieldDefArray extends DefArray<FieldDef>{
     public FieldDefArray(IntegerReference itemCount){

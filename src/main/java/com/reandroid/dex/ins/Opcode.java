@@ -17,7 +17,7 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.base.BlockCreator;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.index.ItemId;
+import com.reandroid.dex.index.IndexItemEntry;
 import com.reandroid.dex.sections.SectionType;
 
 import java.io.IOException;
@@ -491,14 +491,14 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
             }
         });
         VALUES[0x19] = CONST_WIDE_HIGH16;
-        CONST_STRING = new Opcode<>(0x1a, 4, "const-string", SectionType.STRING_DATA, new BlockCreator<Ins21c>() {
+        CONST_STRING = new Opcode<>(0x1a, 4, "const-string", SectionType.STRING_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(CONST_STRING);
             }
         });
         VALUES[0x1a] = CONST_STRING;
-        CONST_STRING_JUMBO = new Opcode<>(0x1b, 6, "const-string/jumbo", SectionType.STRING_DATA, new BlockCreator<Ins31c>() {
+        CONST_STRING_JUMBO = new Opcode<>(0x1b, 6, "const-string/jumbo", SectionType.STRING_ID, new BlockCreator<Ins31c>() {
             @Override
             public Ins31c newInstance() {
                 return new Ins31c(CONST_STRING_JUMBO);
@@ -2165,11 +2165,11 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
     private final int size;
     private final String name;
     private final BlockCreator<T> creator;
-    private final SectionType<? extends ItemId> sectionType;
+    private final SectionType<? extends IndexItemEntry> sectionType;
 
     private final int width;
 
-    private Opcode(int value, int size, String name, SectionType<? extends ItemId> sectionType, BlockCreator<T> creator){
+    private Opcode(int value, int size, String name, SectionType<? extends IndexItemEntry> sectionType, BlockCreator<T> creator){
         this.value = value;
         this.size = size;
         this.name = name;
@@ -2201,7 +2201,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
     public int getWidth() {
         return width;
     }
-    public SectionType<? extends ItemId> getSectionType(){
+    public SectionType<? extends IndexItemEntry> getSectionType(){
         return sectionType;
     }
     @Override

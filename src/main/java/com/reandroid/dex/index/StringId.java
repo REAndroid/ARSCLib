@@ -15,10 +15,63 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.writer.SmaliWriter;
 
-public class StringId extends IntegerItem {
+import java.io.IOException;
+
+public class StringId extends IndexItemEntry implements IntegerReference, Comparable<StringId> {
+
+    private StringData stringData;
+
     public StringId(){
-        super();
+        super(4);
+    }
+
+    public StringData getStringData() {
+        return stringData;
+    }
+    public void setStringData(StringData stringData) {
+        this.stringData = stringData;
+    }
+    @Override
+    public void set(int value) {
+        putInteger(getBytesInternal(), 0, value);
+    }
+    @Override
+    public int get() {
+        return getInteger(getBytesInternal(), 0);
+    }
+    @Override
+    public void refresh() {
+
+    }
+    @Override
+    void cacheItems() {
+
+    }
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        StringData stringData = getStringData();
+        if(stringData != null){
+            stringData.append(writer);
+        }
+    }
+    @Override
+    public int compareTo(StringId stringId) {
+        if(stringId == null){
+            return -1;
+        }
+        return Integer.compare(getStringData().getIndex(), stringId.getStringData().getIndex());
+    }
+
+    @Override
+    public String toString() {
+        StringData stringData = this.stringData;
+        if(stringData != null){
+            return stringData.toString();
+        }
+        return Integer.toString(get());
     }
 }

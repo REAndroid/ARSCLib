@@ -15,20 +15,23 @@
  */
 package com.reandroid.dex.index;
 
+import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
-public class TypeId extends ItemId {
+public class TypeId extends IndexItemEntry implements Comparable<TypeId>{
 
-    private final ItemIndexReference<StringData> nameData;
+    private final StringReference nameReference;
 
     private TypeName typeName;
     public TypeId() {
         super(4);
-        this.nameData = new ItemIndexReference<>(SectionType.STRING_DATA, this, 0);
+        this.nameReference = new StringReference(this, 0);
     }
 
     @Override
@@ -89,31 +92,55 @@ public class TypeId extends ItemId {
         return null;
     }
     public StringData getNameData(){
-        return nameData.getItem();
+        return getNameReference().getItem();
     }
+
+    public StringReference getNameReference() {
+        return nameReference;
+    }
+
     public void setName(StringData name){
-        nameData.setItem(name);
+        nameReference.setItem(name);
+        if(name != null){
+            name.addStringUsage(StringData.USAGE_TYPE);
+        }
     }
 
     @Override
     public void refresh() {
-        nameData.refresh();
+        nameReference.refresh();
+        StringData stringData = nameReference.getItem();
+        if(stringData != null){
+            stringData.addStringUsage(StringData.USAGE_TYPE);
+        }
     }
     @Override
     void cacheItems(){
-        nameData.getItem();
+        StringData stringData = nameReference.getItem();
+        if(stringData != null){
+            stringData.addStringUsage(StringData.USAGE_TYPE);
+        }
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append(getName());
     }
+
+    @Override
+    public int compareTo(TypeId typeId) {
+        if(typeId == null){
+            return -1;
+        }
+        return CompareUtil.compare(this.getNameReference(), typeId.getNameReference());
+    }
+
     @Override
     public String toString(){
         StringData stringData = getNameData();
         if(stringData != null){
             return stringData.getString();
         }
-        return getIndex() + ":string-index=" + nameData.get();
+        return getIndex() + ":string-index=" + nameReference.get();
     }
 }

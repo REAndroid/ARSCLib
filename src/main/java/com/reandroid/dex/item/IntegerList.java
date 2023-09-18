@@ -22,13 +22,12 @@ import com.reandroid.arsc.item.IntegerArrayBlock;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.common.IntegerArray;
-import com.reandroid.dex.base.NumberIntegerReference;
 import com.reandroid.dex.base.OffsetReceiver;
 import com.reandroid.dex.base.PositionedItem;
 
 import java.io.IOException;
 
-public class IntegerList extends DexItem implements
+public class IntegerList extends DataItemEntry implements
         IntegerArray, PositionedItem, OffsetSupplier, OffsetReceiver {
 
     private final IntegerReference itemCount;

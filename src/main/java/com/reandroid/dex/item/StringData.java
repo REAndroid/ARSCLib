@@ -13,28 +13,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.index;
+package com.reandroid.dex.item;
 
+import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.OffsetReceiver;
-import com.reandroid.dex.base.StringKeyItemCreate;
+import com.reandroid.dex.base.*;
+import com.reandroid.dex.index.StringId;
 import com.reandroid.dex.io.ByteReader;
 import com.reandroid.dex.io.StreamUtil;
+import com.reandroid.dex.sections.Section;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class StringData extends ItemId
-        implements SmaliFormat, OffsetSupplier, OffsetReceiver, StringKeyItemCreate {
+public class StringData extends DexBlockItem
+        implements SmaliFormat, BlockRefresh,
+        OffsetSupplier, OffsetReceiver, StringKeyItemCreate,
+        Comparable<StringData> {
+
     private String mCache;
     private StringId mStringId;
+    private int stringUsage;
 
     public StringData() {
         super(0);
+        this.mCache = "";
+    }
+
+    public int getStringUsage() {
+        return stringUsage;
+    }
+    public void addStringUsage(int usage){
+        this.stringUsage |= usage;
     }
 
     @Override
@@ -58,16 +73,26 @@ public class StringData extends ItemId
 
     @Override
     public IntegerReference getOffsetReference() {
-        StringId reference = this.mStringId;
-        if(reference == null){
-            reference = new StringId();
-            this.mStringId = reference;
-        }
-        return reference;
+        return getStringId();
     }
     @Override
     public void setOffsetReference(IntegerReference reference) {
         this.mStringId = (StringId) reference;
+        this.mStringId.setStringData(this);
+    }
+
+    public StringId getStringId() {
+        StringId stringId = this.mStringId;
+        if(stringId == null){
+            Section<StringId> section = getSection(SectionType.STRING_ID);
+            DexItemArray<StringId> itemArray = section.getItemArray();
+            int index = getIndex();
+            itemArray.ensureSize(index + 1);
+            stringId = itemArray.get(index);
+            this.mStringId = stringId;
+            stringId.setStringData(this);
+        }
+        return stringId;
     }
     @Override
     protected void onBytesChanged() {
@@ -76,7 +101,7 @@ public class StringData extends ItemId
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        if(reader.available()<4){
+        if(reader.available() < 4){
             return;
         }
         int position = reader.getPosition();
@@ -91,15 +116,19 @@ public class StringData extends ItemId
     @Override
     public void refresh() {
     }
-    @Override
-    void cacheItems() {
-    }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append('"');
         writer.append(getString());
         writer.append('"');
+    }
+    @Override
+    public int compareTo(StringData stringData) {
+        if(stringData == null){
+            return -1;
+        }
+        return getString().compareTo(stringData.getString());
     }
     @Override
     public String toString(){
@@ -215,4 +244,10 @@ public class StringData extends ItemId
         throw new IOException("bad utf-8 byte " + HexUtil.toHex2("", (byte)value)
                 + " at offset " + offset);
     }
+
+    public static final int USAGE_LITERAL = 0x0000;
+    public static final int USAGE_TYPE = 0x0001;
+    public static final int USAGE_FIELD = 0x0002;
+    public static final int USAGE_METHOD = 0x0004;
+    public static final int USAGE_SOURCE = 0x0008;
 }

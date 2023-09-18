@@ -19,12 +19,13 @@ import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ArrayIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId> {
+public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId>, Comparable<TypeList> {
     private TypeId[] typeIds;
 
     public TypeList() {
@@ -59,9 +60,11 @@ public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId>
     protected void onRefreshed() {
         TypeId[] typeIds = getTypeIds();
         if(typeIds == null){
+            setSize(0);
             return;
         }
         int length = typeIds.length;
+        setSize(length, false);
         for(int i = 0; i < length; i++){
             put(i, typeIds[i].getIndex());
         }
@@ -73,6 +76,15 @@ public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId>
             typeId.append(writer);
         }
     }
+
+    @Override
+    public int compareTo(TypeList typeList) {
+        if(typeList == null){
+            return -1;
+        }
+        return CompareUtil.compare(getTypeIds(), typeList.getTypeIds());
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();

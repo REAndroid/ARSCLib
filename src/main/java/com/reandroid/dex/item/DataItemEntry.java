@@ -22,12 +22,12 @@ import com.reandroid.dex.base.OffsetReceiver;
 import com.reandroid.dex.base.PositionedItem;
 import com.reandroid.dex.base.StringKeyItem;
 
-public class DexItem extends DexContainerItem
+public class DataItemEntry extends DexContainerItem
         implements PositionedItem, OffsetSupplier, OffsetReceiver, StringKeyItem {
 
     private IntegerReference mReference;
 
-    public DexItem(int childesCount) {
+    public DataItemEntry(int childesCount) {
         super(childesCount);
     }
 

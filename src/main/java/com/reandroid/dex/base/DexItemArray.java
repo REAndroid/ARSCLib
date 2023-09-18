@@ -31,6 +31,11 @@ public class DexItemArray<T extends Block> extends CreatorArray<T>
         super(creator);
         this.countAndOffset = countAndOffset;
     }
+    @Override
+    public int countBytes() {
+        return super.countBytes();
+    }
+
     public void setPreloadArray(PreloadArray<T> preloadArray) {
         this.mPreloadArray = preloadArray;
     }

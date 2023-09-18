@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.model.DexFile;
 import com.reandroid.dex.base.*;
+import com.reandroid.utils.HexUtil;
 
 import java.util.Comparator;
 
@@ -75,8 +76,37 @@ public class MapItem extends DexBlockItem {
 
     @Override
     public String toString() {
-        return  "type=" + getMapType() +
-                ", count=" + countAndOffset;
+        StringBuilder builder = new StringBuilder();
+        SectionType<?> sectionType = getMapType();
+        String name;
+        if(sectionType == null){
+            name = HexUtil.toHex("UNKNOWN_", getType().get(), 1);
+        }else {
+            name = sectionType.getName();
+        }
+        builder.append(name);
+        builder.append(' ');
+        int fill = 24 - name.length();
+        for(int i = 0; i < fill; i++){
+            builder.append('-');
+        }
+        IntegerPair co = getCountAndOffset();
+        builder.append("[");
+        name = Integer.toString(co.getFirst().get());
+        builder.append(name);
+        fill = 6 - name.length();
+        for(int i = 0; i < fill; i++){
+            builder.append(' ');
+        }
+        builder.append(',');
+        name = Integer.toString(co.getSecond().get());
+        fill = 8 - name.length();
+        for(int i = 0; i < fill; i++){
+            builder.append(' ');
+        }
+        builder.append(name);
+        builder.append(']');
+        return builder.toString();
     }
 
     public static final Comparator<MapItem> READ_COMPARATOR = new Comparator<MapItem>() {
@@ -100,30 +130,6 @@ public class MapItem extends DexBlockItem {
                 return 1;
             }
             return sectionType1.compareReadOrder(sectionType2);
-        }
-    };
-
-    public static final Comparator<MapItem> WRITE_COMPARATOR = new Comparator<MapItem>() {
-        @Override
-        public int compare(MapItem mapItem1, MapItem mapItem2) {
-            if(mapItem1 == mapItem2){
-                return 0;
-            }
-            if(mapItem1 == null){
-                return 1;
-            }
-            if(mapItem2 == null){
-                return -1;
-            }
-            SectionType<?> sectionType1 = mapItem1.getMapType();
-            SectionType<?> sectionType2 = mapItem2.getMapType();
-            if(sectionType1 == sectionType2){
-                return 0;
-            }
-            if(sectionType1 == null){
-                return 1;
-            }
-            return sectionType1.compareWriteOrder(sectionType2);
         }
     };
 

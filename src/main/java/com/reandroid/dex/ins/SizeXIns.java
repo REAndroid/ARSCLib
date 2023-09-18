@@ -18,9 +18,8 @@ package com.reandroid.dex.ins;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
-import com.reandroid.dex.index.ItemId;
+import com.reandroid.dex.index.IndexItemEntry;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
@@ -28,7 +27,7 @@ import java.io.IOException;
 
 public class SizeXIns extends Ins {
     private final ByteArray valueBytes;
-    private ItemId mItemId;
+    private IndexItemEntry mItemId;
     public SizeXIns(Opcode<?> opcode) {
         super(opcode);
         this.valueBytes = new ByteArray();
@@ -72,7 +71,7 @@ public class SizeXIns extends Ins {
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         valueBytes.onReadBytes(reader);
-        SectionType<? extends ItemId> sectionType = getOpcode().getSectionType();
+        SectionType<? extends IndexItemEntry> sectionType = getOpcode().getSectionType();
         if(sectionType == null){
             return;
         }
@@ -88,7 +87,7 @@ public class SizeXIns extends Ins {
 
     @Override
     protected void onRefreshed() {
-        ItemId itemId = this.mItemId;
+        IndexItemEntry itemId = this.mItemId;
         if(itemId != null){
             setData(itemId.getIndex());
         }
@@ -111,9 +110,9 @@ public class SizeXIns extends Ins {
         }
         writer.append(", ");
         int data = getData();
-        SectionType<? extends ItemId> sectionType = opcode.getSectionType();
+        SectionType<? extends IndexItemEntry> sectionType = opcode.getSectionType();
         if(sectionType != null){
-            ItemId sectionData = get(sectionType, data);
+            IndexItemEntry sectionData = get(sectionType, data);
             if(sectionData != null){
                 sectionData.append(writer);
             }

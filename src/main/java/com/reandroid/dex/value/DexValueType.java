@@ -20,8 +20,6 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.index.FieldId;
 import com.reandroid.dex.index.MethodId;
-import com.reandroid.dex.index.StringData;
-import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.item.AnnotationItem;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.HexUtil;

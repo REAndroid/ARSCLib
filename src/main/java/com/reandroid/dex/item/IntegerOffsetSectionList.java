@@ -20,7 +20,7 @@ import com.reandroid.utils.collection.ArrayIterator;
 
 import java.util.Iterator;
 
-public class IntegerOffsetSectionList<T extends DexItem> extends IntegerList implements Iterable<T>{
+public class IntegerOffsetSectionList<T extends DataItemEntry> extends IntegerList implements Iterable<T>{
     private final SectionType<T> sectionType;
     private T[] items;
 

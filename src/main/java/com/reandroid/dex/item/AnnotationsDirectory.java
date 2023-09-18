@@ -26,9 +26,8 @@ import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.function.Function;
 
-public class AnnotationsDirectory extends DexItem {
+public class AnnotationsDirectory extends DataItemEntry {
 
     private final Header header;
 
@@ -96,7 +95,7 @@ public class AnnotationsDirectory extends DexItem {
                 ", parametersOffset=" + parametersOffset;
     }
 
-    static class SparseSectionArray<T extends DexItem> extends IndexAndOffsetArray implements BlockRefresh {
+    static class SparseSectionArray<T extends DataItemEntry> extends IndexAndOffsetArray implements BlockRefresh {
         private final SectionType<T> sectionType;
         private int[] indexArray;
         private T[] items;

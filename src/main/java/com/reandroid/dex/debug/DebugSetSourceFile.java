@@ -15,20 +15,25 @@
  */
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.index.StringData;
+import com.reandroid.dex.index.StringId;
+import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.sections.SectionType;
 
 public class DebugSetSourceFile extends DebugElement {
-    private final Base1Ule128Item<StringData> nameData;
+    private final Base1Ule128Item<StringId> nameData;
 
     public DebugSetSourceFile() {
         super(1, DebugElementType.SET_SOURCE_FILE);
-        this.nameData = new Base1Ule128Item<>(SectionType.STRING_DATA);
+        this.nameData = new Base1Ule128Item<>(SectionType.STRING_ID);
         addChild(1, nameData);
     }
 
     public StringData getName(){
-        return nameData.getItem();
+        StringId stringId = nameData.getItem();
+        if(stringId != null){
+            return stringId.getStringData();
+        }
+        return null;
     }
 
     @Override

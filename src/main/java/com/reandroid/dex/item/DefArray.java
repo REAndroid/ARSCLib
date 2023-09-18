@@ -25,7 +25,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public abstract class DefArray<T extends Def> extends BlockArray<T>  implements SmaliFormat {
+public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implements SmaliFormat {
     private final IntegerReference itemCount;
     public DefArray(IntegerReference itemCount){
         super();
@@ -39,6 +39,7 @@ public abstract class DefArray<T extends Def> extends BlockArray<T>  implements 
     }
     @Override
     protected void onRefreshed() {
+        itemCount.set(getCount());
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
@@ -47,7 +48,7 @@ public abstract class DefArray<T extends Def> extends BlockArray<T>  implements 
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        for(Def def : getChildes()){
+        for(Def<?> def : getChildes()){
             def.append(writer);
             writer.newLine();
         }

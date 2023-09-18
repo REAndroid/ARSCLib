@@ -21,12 +21,13 @@ import com.reandroid.dex.index.ProtoId;
 import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class MethodDef extends Def<MethodId> {
+public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
     private final OffsetUle128Item<CodeItem> codeOffset;
 
     public MethodDef() {
@@ -133,6 +134,13 @@ public class MethodDef extends Def<MethodId> {
     }
 
     @Override
+    public int compareTo(MethodDef methodDef) {
+        if(methodDef == null){
+            return -1;
+        }
+        return CompareUtil.compare(getMethodId(), methodDef.getMethodId());
+    }
+    @Override
     public String toString() {
         MethodId methodId = getMethodId();
         if(methodId != null){
@@ -142,4 +150,5 @@ public class MethodDef extends Def<MethodId> {
         return ".method " + AccessFlag.formatForMethod(getAccessFlagsValue())
                 + " " + getRelativeIdValue();
     }
+
 }

@@ -30,7 +30,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class CodeItem extends DexItem implements SmaliFormat {
+public class CodeItem extends DataItemEntry implements SmaliFormat {
 
     private final Header header;
     private final InstructionList instructionList;

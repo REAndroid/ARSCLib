@@ -16,7 +16,7 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.index.ClassId;
-import com.reandroid.dex.index.StringData;
+import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.item.*;
 import com.reandroid.dex.writer.SmaliWriter;

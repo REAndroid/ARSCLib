@@ -20,7 +20,9 @@ import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.pool.DexIdPool;
+import com.reandroid.utils.CompareUtil;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -65,13 +67,11 @@ public class Section<T extends Block>  extends FixedDexContainer
 
     public void buildOffsetMap(){
         offsetMap.clear();
-        Iterator<T> iterator = iterator();
-        while (iterator.hasNext()){
-            T item = iterator.next();
-            if(!(item instanceof OffsetSupplier)){
+        for (T item : this) {
+            if (!(item instanceof OffsetSupplier)) {
                 return;
             }
-            int offset = ((OffsetSupplier)item).getOffsetReference().get();
+            int offset = ((OffsetSupplier) item).getOffsetReference().get();
             offsetMap.put(offset, item);
         }
     }
@@ -125,6 +125,12 @@ public class Section<T extends Block>  extends FixedDexContainer
     public DexItemArray<T> getItemArray() {
         return itemArray;
     }
+    public void sort() throws ClassCastException {
+        sort(CompareUtil.getComparatorUnchecked());
+    }
+    public void sort(Comparator<? super T> comparator){
+        getItemArray().sort(comparator);
+    }
 
     @Override
     public Iterator<T> iterator() {
@@ -153,10 +159,6 @@ public class Section<T extends Block>  extends FixedDexContainer
                 continue;
             }
             IntegerReference supplier = ((OffsetSupplier) item).getOffsetReference();
-            int old = supplier.get();
-            if(old != position){
-                old+=0;
-            }
             supplier.set(position);
             position += item.countBytes();
         }
@@ -182,10 +184,6 @@ public class Section<T extends Block>  extends FixedDexContainer
         return true;
     }
     private void updateNextSection(int position){
-        T last=get(getCount()-1);
-        if(last==null){
-            return;
-        }
         sectionAlign.align(position);
         position += sectionAlign.size();
         Section<?> next = getNextSection();

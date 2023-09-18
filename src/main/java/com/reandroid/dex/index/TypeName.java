@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.index;
 
+import com.reandroid.dex.item.StringData;
+
 public class TypeName {
     private final StringData stringData;
     private String name;

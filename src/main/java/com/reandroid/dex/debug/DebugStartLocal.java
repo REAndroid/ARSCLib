@@ -15,7 +15,8 @@
  */
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.index.StringData;
+import com.reandroid.dex.index.StringId;
+import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -24,13 +25,13 @@ import java.io.IOException;
 
 public class DebugStartLocal extends DebugRegisterNumber {
 
-    private final Base1Ule128Item<StringData> nameIndex;
+    private final Base1Ule128Item<StringId> nameIndex;
     private final Base1Ule128Item<TypeId> typeIndex;
 
     DebugStartLocal(int childesCount, int flag) {
         super(childesCount + 2, flag);
 
-        this.nameIndex = new Base1Ule128Item<>(SectionType.STRING_DATA);
+        this.nameIndex = new Base1Ule128Item<>(SectionType.STRING_ID);
         this.typeIndex = new Base1Ule128Item<>(SectionType.TYPE_ID);
 
         addChild(2, nameIndex);
@@ -44,7 +45,11 @@ public class DebugStartLocal extends DebugRegisterNumber {
     }
 
     public StringData getName(){
-        return nameIndex.getItem();
+        StringId stringId = nameIndex.getItem();
+        if(stringId != null){
+            return stringId.getStringData();
+        }
+        return null;
     }
     public TypeId getTypeId(){
         return typeIndex.getItem();

@@ -15,26 +15,29 @@
  */
 package com.reandroid.dex.index;
 
+import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.item.TypeList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
-public class ProtoId extends ItemId {
+public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
 
-    private final ItemIndexReference<StringData> shorty;
+    private final StringReference shorty;
     private final ItemIndexReference<TypeId> returnType;
     private final ItemOffsetReference<TypeList> parameters;
 
     public ProtoId() {
         super(SIZE);
 
-        this.shorty = new ItemIndexReference<>(SectionType.STRING_DATA, this, 0);
+        this.shorty = new StringReference(this, 0);
         this.returnType = new ItemIndexReference<>(SectionType.TYPE_ID, this, 4);
         this.parameters = new ItemOffsetReference<>(SectionType.TYPE_LIST, this, 8);
     }
 
+    @Override
     public String getKey(){
         return getKey(true);
     }
@@ -52,11 +55,20 @@ public class ProtoId extends ItemId {
     public TypeList getTypeList() {
         return parameters.getItem();
     }
+    public void setParameters(TypeList typeList){
+        parameters.setItem(typeList);
+    }
     public TypeId getReturnTypeId(){
         return returnType.getItem();
     }
+    public void setReturnTypeId(TypeId typeId){
+        returnType.setItem(typeId);
+    }
     public StringData getShorty(){
         return shorty.getItem();
+    }
+    public void setShorty(StringData stringData){
+        shorty.setItem(stringData);
     }
 
     public int getParametersCount(){
@@ -101,9 +113,22 @@ public class ProtoId extends ItemId {
             typeId.append(writer);
         }
     }
+
+    @Override
+    public int compareTo(ProtoId protoId) {
+        if(protoId == null) {
+            return -1;
+        }
+        int i = CompareUtil.compare(getReturnTypeId(), protoId.getReturnTypeId());
+        if(i != 0){
+            return i;
+        }
+        return CompareUtil.compare(getTypeList(), protoId.getTypeList());
+    }
+
     @Override
     public String toString() {
-        return getKey();
+        return getKey(true);
     }
 
     private static final int SIZE = 12;

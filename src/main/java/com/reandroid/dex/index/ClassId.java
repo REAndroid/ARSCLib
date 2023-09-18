@@ -21,16 +21,17 @@ import com.reandroid.dex.item.*;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValue;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
-public class ClassId extends ItemId {
+public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
 
     private final ItemIndexReference<TypeId> classType;
     private final IndirectInteger accessFlagValue;
     private final ItemIndexReference<TypeId> superClass;
     private final ItemOffsetReference<TypeList> interfaces;
-    private final ItemIndexReference<StringData> sourceFile;
+    private final StringReference sourceFile;
     private final ItemOffsetReference<AnnotationsDirectory> annotationsDirectory;
     private final ItemOffsetReference<ClassData> classData;
     private final ItemOffsetReference<EncodedArray> staticValues;
@@ -43,7 +44,7 @@ public class ClassId extends ItemId {
         this.accessFlagValue = new IndirectInteger(this, offset += 4);
         this.superClass = new ItemIndexReference<>(SectionType.TYPE_ID, this, offset += 4);
         this.interfaces = new ItemOffsetReference<>(SectionType.TYPE_LIST, this, offset += 4);
-        this.sourceFile = new ItemIndexReference<>(SectionType.STRING_DATA,this, offset += 4);
+        this.sourceFile = new StringReference(this, offset += 4);
         this.annotationsDirectory = new ItemOffsetReference<>(SectionType.ANNOTATIONS_DIRECTORY, this, offset += 4);
         this.classData = new ItemOffsetReference<>(SectionType.CLASS_DATA, this, offset += 4);
         this.staticValues = new ItemOffsetReference<>(SectionType.ENCODED_ARRAY, this, offset += 4);
@@ -146,6 +147,13 @@ public class ClassId extends ItemId {
         this.annotationsDirectory.getItem();
         this.classData.getItem();
         this.staticValues.getItem();
+        linkStringData();
+    }
+    private void linkStringData(){
+        StringData stringData = this.sourceFile.getItem();
+        if(stringData != null){
+            stringData.addStringUsage(StringData.USAGE_SOURCE);
+        }
     }
 
     @Override
@@ -193,6 +201,15 @@ public class ClassId extends ItemId {
             writer.appendComment("Null class data: " + this.classData.get());
         }
     }
+
+    @Override
+    public int compareTo(ClassId classId) {
+        if(classId == null){
+            return -1;
+        }
+        return CompareUtil.compare(getClassType(), classId.getClassType());
+    }
+
     @Override
     public String toString(){
         StringBuilder builder = new StringBuilder();

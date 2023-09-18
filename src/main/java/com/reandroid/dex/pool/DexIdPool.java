@@ -121,22 +121,20 @@ public class DexIdPool<T extends Block> {
         }
     }
     private boolean isKeyItemsCreate(){
-        if(!isKeyItems()){
-            return false;
-        }
+        isKeyItems();
         return keyItemsCreate;
     }
     private boolean isKeyItems(){
         if(keyItemsChecked){
             return keyItems;
         }
-        T first = CollectionUtil.getFirst(section.getItemArray().iterator());
-        if(first == null){
-            return false;
+        T sample = section.getItemArray().getLast();
+        if(sample == null){
+            sample = section.getSectionType().getCreator().newInstance();
         }
         keyItemsChecked = true;
-        keyItems = first instanceof StringKeyItem;
-        keyItemsCreate = first instanceof StringKeyItemCreate;
+        keyItems = sample instanceof StringKeyItem;
+        keyItemsCreate = sample instanceof StringKeyItemCreate;
         return keyItems;
     }
 
