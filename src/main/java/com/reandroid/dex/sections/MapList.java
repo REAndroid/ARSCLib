@@ -24,6 +24,7 @@ import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.item.DataItemEntry;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 
 public class MapList extends DataItemEntry
@@ -38,6 +39,10 @@ public class MapList extends DataItemEntry
         addChild(0, mapItemsCount);
         addChild(1, itemArray);
         setOffsetReference(offsetReference);
+    }
+
+    public void sortMapItems(SectionType<?>[] order){
+        itemArray.sort(new OrderBasedComparator(order));
     }
 
     public void updateHeader(DexHeader dexHeader){
@@ -150,4 +155,26 @@ public class MapList extends DataItemEntry
             return new MapItem();
         }
     };
+
+    static class OrderBasedComparator implements Comparator<MapItem> {
+        private final SectionType<?>[] sortOrder;
+        OrderBasedComparator(SectionType<?>[] sortOrder){
+            this.sortOrder = sortOrder;
+        }
+        private int getOrder(SectionType<?> sectionType){
+            SectionType<?>[] sortOrder = this.sortOrder;
+            int length = sortOrder.length;
+            for(int i = 0; i < length; i++){
+                if(sortOrder[i] == sectionType){
+                    return i;
+                }
+            }
+            return length - 2;
+        }
+        @Override
+        public int compare(MapItem mapItem1, MapItem mapItem2) {
+            return Integer.compare(getOrder(mapItem1.getMapType()),
+                    getOrder(mapItem2.getMapType()));
+        }
+    }
 }

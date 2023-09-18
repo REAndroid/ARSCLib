@@ -388,4 +388,52 @@ public class SectionType<T extends Block> {
                 sectionType == SectionType.CLASS_ID ||
                 sectionType == SectionType.CALL_SITE_ID;
     }
+
+    public static SectionType<?>[] getR8Order() {
+        return R8_ORDER.clone();
+    }
+    public static SectionType<?>[] getDexLib2Order() {
+        return DEX_LIB2_ORDER.clone();
+    }
+
+    private static final SectionType<?>[] R8_ORDER = new SectionType[]{
+            HEADER,
+            STRING_ID,
+            TYPE_ID,
+            PROTO_ID,
+            FIELD_ID,
+            METHOD_ID,
+            CLASS_ID,
+            CODE,
+            DEBUG_INFO,
+            TYPE_LIST,
+            STRING_DATA,
+            ANNOTATION,
+            CLASS_DATA,
+            ENCODED_ARRAY,
+            ANNOTATION_SET,
+            ANNOTATION_GROUP,
+            ANNOTATIONS_DIRECTORY,
+            MAP_LIST
+    };
+    private static final SectionType<?>[] DEX_LIB2_ORDER = new SectionType[]{
+            HEADER,
+            STRING_ID,
+            TYPE_ID,
+            PROTO_ID,
+            FIELD_ID,
+            METHOD_ID,
+            CLASS_ID,
+            STRING_DATA,
+            TYPE_LIST,
+            ENCODED_ARRAY,
+            ANNOTATION,
+            ANNOTATION_SET,
+            ANNOTATION_GROUP,
+            ANNOTATIONS_DIRECTORY,
+            DEBUG_INFO,
+            CODE,
+            CLASS_DATA,
+            MAP_LIST
+    };
 }

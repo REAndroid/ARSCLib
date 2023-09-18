@@ -21,16 +21,10 @@ import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.DexItemArray;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.NumberIntegerReference;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.index.ProtoId;
-import com.reandroid.dex.index.StringId;
-import com.reandroid.dex.index.TypeId;
-import com.reandroid.dex.item.StringData;
-import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 import java.util.*;
@@ -154,22 +148,26 @@ public class SectionList extends FixedBlockContainer
         return mapList;
     }
 
-    public void sortStrings(){
-        if(!sort(SectionType.STRING_DATA)){
-            return;
-        }
-        if(!sort(SectionType.STRING_ID)){
-            return;
-        }
-        if(!sort(SectionType.TYPE_ID)){
-            return;
-        }
-        sort(SectionType.PROTO_ID);
-        sort(SectionType.FIELD_ID);
-        sort(SectionType.METHOD_ID);
-        sort(SectionType.CLASS_ID);
+    public void sortSection(SectionType<?>[] order){
+        dexSectionList.sort(new OrderBasedComparator(order));
+        mapList.sortMapItems(order);
     }
-    private boolean sort(SectionType<?> sectionType){
+    public void sortStrings(){
+        if(!sortItems(SectionType.STRING_DATA)){
+            return;
+        }
+        if(!sortItems(SectionType.STRING_ID)){
+            return;
+        }
+        if(!sortItems(SectionType.TYPE_ID)){
+            return;
+        }
+        sortItems(SectionType.PROTO_ID);
+        sortItems(SectionType.FIELD_ID);
+        sortItems(SectionType.METHOD_ID);
+        sortItems(SectionType.CLASS_ID);
+    }
+    private boolean sortItems(SectionType<?> sectionType){
         Section<?> section = get(sectionType);
         if(section != null){
             section.sort();
@@ -221,12 +219,33 @@ public class SectionList extends FixedBlockContainer
         return baseOffset;
     }
 
-    private static  Comparator<Section<?>> getOffsetComparator() {
+    private static Comparator<Section<?>> getOffsetComparator() {
         return new Comparator<Section<?>>() {
             @Override
             public int compare(Section<?> section1, Section<?> section2) {
                 return Integer.compare(section1.getOffset(), section2.getOffset());
             }
         };
+    }
+    static class OrderBasedComparator implements Comparator<Section<?>> {
+        private final SectionType<?>[] sortOrder;
+        OrderBasedComparator(SectionType<?>[] sortOrder){
+            this.sortOrder = sortOrder;
+        }
+        private int getOrder(SectionType<?> sectionType){
+            SectionType<?>[] sortOrder = this.sortOrder;
+            int length = sortOrder.length;
+            for(int i = 0; i < length; i++){
+                if(sortOrder[i] == sectionType){
+                    return i;
+                }
+            }
+            return length - 2;
+        }
+        @Override
+        public int compare(Section<?> section1, Section<?> section2) {
+            return Integer.compare(getOrder(section1.getSectionType()),
+                    getOrder(section2.getSectionType()));
+        }
     }
 }
