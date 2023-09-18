@@ -15,5 +15,119 @@
  */
 package com.reandroid.dex.refactor;
 
-public class Rename {
+import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.model.DexFile;
+import com.reandroid.dex.sections.Section;
+import com.reandroid.dex.sections.SectionList;
+import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.MergingIterator;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+public class Rename implements Iterable<RenameInfo<?>>{
+    private final List<RenameInfo<?>> renameInfoList;
+
+    public Rename(){
+        this.renameInfoList = new ArrayList<>();
+    }
+
+    public void apply(DexFile dexFile){
+        dexFile.linkTypeSignature();
+        SectionList sectionList = dexFile.getSectionList();
+        for(RenameInfo<?> renameInfo : this){
+            renameInfo.apply(sectionList);
+        }
+        lookStrings(sectionList.get(SectionType.STRING_DATA));
+
+    }
+    private void lookStrings(Section<StringData> sectionString){
+        List<RenameInfo<?>> renameInfoList = CollectionUtil.toList(FilterIterator.of(
+                getAll(), RenameInfo::looksStrings));
+        if(renameInfoList.isEmpty()){
+            return;
+        }
+        Iterator<StringData> iterator = sectionString.iterator();
+        while (iterator.hasNext()){
+            lookString(renameInfoList, iterator.next());
+        }
+    }
+    private void lookString(List<RenameInfo<?>> renameInfoList, StringData stringData){
+        for(RenameInfo<?> renameInfo : renameInfoList){
+            if(renameInfo.lookString(stringData)){
+                return;
+            }
+        }
+    }
+    public Iterator<RenameInfo<?>> getAll(){
+        return new MergingIterator<>(ComputeIterator.of(iterator(),
+                RenameInfo::iterator));
+    }
+
+    public void addClass(String search, String replace){
+        add(new RenameInfoClass(search, replace));
+    }
+    public void addMethod(String typeName, String parameters, String search, String replace){
+        add(new RenameInfoMethodName(typeName, parameters, search, replace));
+    }
+    public void addAnnotation(String typeName, String search, String replace){
+        add(new RenameInfoAnnotationName(typeName, search, replace));
+    }
+    public void addField(String typeName, String search, String replace){
+        add(new RenameInfoFieldName(typeName, search, replace));
+    }
+    public void addPackage(String search, String replace){
+        add(new RenameInfoPackage(search, replace));
+    }
+    public void addString(String search, String replace){
+        add(new RenameInfoString(search, replace));
+    }
+
+    public void add(RenameInfo<?> renameInfo){
+        if(renameInfo == null || contains(renameInfo)){
+            return;
+        }
+        this.renameInfoList.add(renameInfo);
+    }
+    public boolean contains(RenameInfo<?> renameInfo){
+        if(renameInfo == null){
+            return false;
+        }
+        if(this.renameInfoList.contains(renameInfo)){
+            return true;
+        }
+        for(RenameInfo<?> info : this){
+            if(info.contains(renameInfo)){
+                return true;
+            }
+        }
+        return false;
+    }
+    @Override
+    public Iterator<RenameInfo<?>> iterator(){
+        return renameInfoList.iterator();
+    }
+    public void write(Writer writer) throws IOException {
+        for(RenameInfo<?> info : this){
+            info.write(writer, true);
+        }
+    }
+    @Override
+    public String toString() {
+        StringWriter writer = new StringWriter();
+        try {
+            write(writer);
+            writer.close();
+        } catch (IOException exception) {
+            return exception.toString();
+        }
+        return writer.toString();
+    }
 }

@@ -18,13 +18,17 @@ package com.reandroid.dex.refactor;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.group.ItemGroup;
 import com.reandroid.dex.base.StringKeyItem;
+import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.MergingIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -34,6 +38,7 @@ public abstract class RenameInfo<T extends Block> implements StringKeyItem {
     private final String search;
     private final String replace;
     private List<RenameInfo<?>> childRenames;
+    private int renameCount;
 
     public RenameInfo(String search, String replace){
         this.search = search;
@@ -60,10 +65,36 @@ public abstract class RenameInfo<T extends Block> implements StringKeyItem {
         }
         apply(group);
         pool.keyChanged(key);
+        addRenameCount();
     }
 
+    public boolean contains(RenameInfo<?> renameInfo){
+        if(renameInfo == null){
+            return false;
+        }
+        List<RenameInfo<?>> childRenames = this.childRenames;
+        if(childRenames == null){
+            return false;
+        }
+        if(childRenames.contains(renameInfo)){
+            return true;
+        }
+        for (RenameInfo<?> info : childRenames){
+            if(info.contains(renameInfo)){
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean lookString(StringData stringData){
+        return false;
+    }
+    public boolean looksStrings(){
+        return false;
+    }
     public Iterator<RenameInfo<?>> iterator(){
-        return new MergingIterator<>(ComputeIterator.of(getChildRenames(), RenameInfo::iterator));
+        return CombiningIterator.of(SingleIterator.of(this),
+                ComputeIterator.of(getChildRenames(), RenameInfo::iterator));
     }
 
     public String getSearch() {
@@ -96,9 +127,16 @@ public abstract class RenameInfo<T extends Block> implements StringKeyItem {
     public RenameInfo<?> getParent(){
         return null;
     }
+
     abstract SectionType<T> getSectionType();
     abstract void apply(ItemGroup<T> group);
     abstract List<RenameInfo<?>> createChildRenames();
+    void addRenameCount(){
+        renameCount ++;
+    }
+    public int getRenameCount() {
+        return renameCount;
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -108,15 +146,51 @@ public abstract class RenameInfo<T extends Block> implements StringKeyItem {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        RenameInfo renameInfo = (RenameInfo) obj;
+        RenameInfo<?> renameInfo = (RenameInfo<?>) obj;
         return Objects.equals(getKey(), renameInfo.getKey());
     }
-
     @Override
     public int hashCode() {
         return Objects.hash(getKey());
     }
 
+    private int getDepth(){
+        int result = 0;
+        RenameInfo<?> renameInfo = getParent();
+        while (renameInfo != null){
+            result ++;
+            renameInfo = renameInfo.getParent();
+        }
+        return result;
+    }
+    public void write(Writer writer, boolean appendCount) throws IOException {
+        append(writer, appendCount);
+        Iterator<RenameInfo<?>> iterator = getChildRenames();
+        while (iterator.hasNext()){
+            iterator.next().write(writer, appendCount);
+        }
+    }
+    void append(Writer writer, boolean appendCount) throws IOException {
+        int count = getRenameCount();
+        if(appendCount && count == 0){
+            return;
+        }
+        appendIndent(writer);
+        writer.write(getKey());
+        writer.write("=");
+        writer.write(getReplace());
+        if(appendCount){
+            writer.append("  // count=");
+            writer.write(Integer.toString(getRenameCount()));
+        }
+        writer.write("\n");
+    }
+    void appendIndent(Writer writer) throws IOException {
+        int depth = getDepth() * 2;
+        for(int i = 0; i < depth; i++){
+            writer.append(' ');
+        }
+    }
     @Override
     public String toString() {
         return getKey() + "=" + getReplace();
