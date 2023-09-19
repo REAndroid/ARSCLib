@@ -29,9 +29,8 @@ public class MapItem extends DexBlockItem {
 
     public MapItem() {
         super(SIZE);
-        int offset = -4;
-        this.type = new IndirectInteger(this, offset += 4);
-        this.countAndOffset = new IndirectIntegerPair(this, offset += 4);
+        this.type = new IndirectInteger(this, 0);
+        this.countAndOffset = new IndirectIntegerPair(this, 4);
     }
 
     public IntegerPair getCountAndOffset() {
@@ -112,28 +111,25 @@ public class MapItem extends DexBlockItem {
         return builder.toString();
     }
 
-    public static final Comparator<MapItem> READ_COMPARATOR = new Comparator<MapItem>() {
-        @Override
-        public int compare(MapItem mapItem1, MapItem mapItem2) {
-            if(mapItem1 == mapItem2){
-                return 0;
-            }
-            if(mapItem1 == null){
-                return 1;
-            }
-            if(mapItem2 == null){
-                return -1;
-            }
-            SectionType<?> sectionType1 = mapItem1.getMapType();
-            SectionType<?> sectionType2 = mapItem2.getMapType();
-            if(sectionType1 == sectionType2){
-                return 0;
-            }
-            if(sectionType1 == null){
-                return 1;
-            }
-            return sectionType1.compareReadOrder(sectionType2);
+    public static final Comparator<MapItem> READ_COMPARATOR = (mapItem1, mapItem2) -> {
+        if(mapItem1 == mapItem2){
+            return 0;
         }
+        if(mapItem1 == null){
+            return 1;
+        }
+        if(mapItem2 == null){
+            return -1;
+        }
+        SectionType<?> sectionType1 = mapItem1.getMapType();
+        SectionType<?> sectionType2 = mapItem2.getMapType();
+        if(sectionType1 == sectionType2){
+            return 0;
+        }
+        if(sectionType1 == null){
+            return 1;
+        }
+        return sectionType1.compareReadOrder(sectionType2);
     };
 
     private static final int SIZE = 12;

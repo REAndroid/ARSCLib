@@ -15,10 +15,11 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.dex.index.IndexItemEntry;
+import com.reandroid.dex.index.StringId;
+import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
@@ -26,8 +27,10 @@ import com.reandroid.utils.HexUtil;
 import java.io.IOException;
 
 public class SizeXIns extends Ins {
+
     private final ByteArray valueBytes;
-    private IndexItemEntry mItemId;
+    private IndexItemEntry mSectionItem;
+
     public SizeXIns(Opcode<?> opcode) {
         super(opcode);
         this.valueBytes = new ByteArray();
@@ -35,6 +38,7 @@ public class SizeXIns extends Ins {
         valueBytes.setSize(opcode.size());
         valueBytes.putShort(0, opcode.getValue());
     }
+
     public int getInteger(int offset){
         return valueBytes.getInteger(2 + offset);
     }
@@ -71,13 +75,23 @@ public class SizeXIns extends Ins {
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         valueBytes.onReadBytes(reader);
+        cacheSectionItem();
+    }
+    private void cacheSectionItem(){
         SectionType<? extends IndexItemEntry> sectionType = getOpcode().getSectionType();
         if(sectionType == null){
             return;
         }
         int data = getData();
-        this.mItemId = get(sectionType, data);
+        this.mSectionItem = get(sectionType, data);
+        if(mSectionItem instanceof StringId){
+            ((StringId) mSectionItem).addStringUsage(StringData.USAGE_INSTRUCTION);
+        }
     }
+    public IndexItemEntry getSectionItem() {
+        return mSectionItem;
+    }
+
     public int getData(){
         return getValueBytes().getShortUnsigned(2);
     }
@@ -87,7 +101,7 @@ public class SizeXIns extends Ins {
 
     @Override
     protected void onRefreshed() {
-        IndexItemEntry itemId = this.mItemId;
+        IndexItemEntry itemId = this.mSectionItem;
         if(itemId != null){
             setData(itemId.getIndex());
         }
@@ -110,12 +124,9 @@ public class SizeXIns extends Ins {
         }
         writer.append(", ");
         int data = getData();
-        SectionType<? extends IndexItemEntry> sectionType = opcode.getSectionType();
-        if(sectionType != null){
-            IndexItemEntry sectionData = get(sectionType, data);
-            if(sectionData != null){
-                sectionData.append(writer);
-            }
+        IndexItemEntry sectionItem = getSectionItem();
+        if(sectionItem != null){
+            sectionItem.append(writer);
         }else {
             writer.append(HexUtil.toHex(data, 1));
         }
@@ -131,13 +142,11 @@ public class SizeXIns extends Ins {
         builder.append(" v");
         builder.append(getRegisterA());
         builder.append(", ");
-        int data = getValueBytes().getShortUnsigned(2);
-        SectionType<?> sectionType = opcode.getSectionType();
-        if(sectionType != null){
-            Block sectionData = get(sectionType, data);
-            builder.append(sectionData);
+        IndexItemEntry sectionItem = getSectionItem();
+        if(sectionItem != null){
+            builder.append(sectionItem);
         }else {
-            builder.append(HexUtil.toHex(data, 2));
+            builder.append(HexUtil.toHex(getData(), 2));
         }
         return builder.toString();
     }

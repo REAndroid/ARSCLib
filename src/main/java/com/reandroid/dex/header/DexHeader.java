@@ -16,6 +16,7 @@
 package com.reandroid.dex.header;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
@@ -23,14 +24,10 @@ import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.FixedDexContainer;
 import com.reandroid.dex.base.NumberIntegerReference;
-import com.reandroid.arsc.base.OffsetSupplier;
-import com.reandroid.dex.sections.SectionList;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class DexHeader extends FixedDexContainer implements OffsetSupplier, BlockLoad {
 

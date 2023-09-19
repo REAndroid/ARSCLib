@@ -15,7 +15,10 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.dex.base.DexItemArray;
+import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -57,7 +60,10 @@ public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId>
     }
 
     @Override
-    protected void onRefreshed() {
+    protected void onPreRefresh() {
+        refreshTypeIds();
+    }
+    private void refreshTypeIds() {
         TypeId[] typeIds = getTypeIds();
         if(typeIds == null){
             setSize(0);

@@ -32,7 +32,7 @@ public class FieldId extends IndexItemEntry implements Comparable<FieldId>{
         super(8);
         this.classType = new ItemShortReference<>(SectionType.TYPE_ID, this, 0);
         this.fieldType = new ItemShortReference<>(SectionType.TYPE_ID, this, 2);
-        this.nameReference = new StringReference( this, 4);
+        this.nameReference = new StringReference( this, 4, StringData.USAGE_FIELD);
     }
 
     public StringReference getNameReference() {

@@ -19,4 +19,12 @@ public class Ins3rc extends Size6Ins {
     public Ins3rc(Opcode<?> opcode) {
         super(opcode);
     }
+
+    @Override
+    public int getData(){
+        return getValueBytes().getShortUnsigned(2);
+    }
+    public void setData(int data){
+        getValueBytes().putShort(2, data);
+    }
 }

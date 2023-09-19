@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexBlockItem;
+import com.reandroid.dex.base.DexItemArray;
 import com.reandroid.dex.base.FixedSizeBlock;
 import com.reandroid.dex.base.StringKeyItem;
 import com.reandroid.dex.pool.DexIdPool;
@@ -35,6 +36,14 @@ public abstract class IndexItemEntry extends DexBlockItem
         super(bytesLength);
     }
 
+
+    @SuppressWarnings("unchecked")
+    public void removeSelf(){
+        DexItemArray<IndexItemEntry> itemArray = getParentInstance(DexItemArray.class);
+        if(itemArray != null){
+            itemArray.remove(this);
+        }
+    }
     @Override
     public String getKey(){
         return null;

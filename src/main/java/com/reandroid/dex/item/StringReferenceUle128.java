@@ -16,6 +16,7 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.base.BlockRefresh;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.index.StringId;
 import com.reandroid.dex.pool.DexIdPool;
@@ -23,18 +24,18 @@ import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.CompareUtil;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public class StringReferenceUle128 extends Ule128Item implements
         BlockRefresh, Comparable<StringReferenceUle128> {
 
+    private final int stringUsage;
     private StringId stringId;
 
-    public StringReferenceUle128(boolean large) {
-        super(large);
-    }
-    public StringReferenceUle128() {
+    public StringReferenceUle128(int stringUsage) {
         super();
+        this.stringUsage = stringUsage;
     }
 
     public StringId getStringId() {
@@ -42,6 +43,7 @@ public class StringReferenceUle128 extends Ule128Item implements
         if(stringId == null){
             stringId = get(SectionType.STRING_ID, get());
             this.stringId = stringId;
+            stringId.addStringUsage(stringUsage);
         }
         return stringId;
     }
@@ -50,6 +52,7 @@ public class StringReferenceUle128 extends Ule128Item implements
         int value = 0;
         if(stringId != null){
             value = stringId.getIndex();
+            stringId.addStringUsage(stringUsage);
         }
         set(value);
     }
@@ -86,6 +89,12 @@ public class StringReferenceUle128 extends Ule128Item implements
         DexIdPool<StringData> pool = section.getPool();
         StringData stringData = pool.getOrCreate(text);
         setStringId(stringData.getStringId());
+    }
+
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+        getItem();
     }
 
     @Override

@@ -44,7 +44,84 @@ public class StringData extends DexBlockItem
         super(0);
         this.mCache = "";
     }
+    @SuppressWarnings("unchecked")
+    public void removeSelf(){
+        DexItemArray<StringData> itemArray = getParentInstance(DexItemArray.class);
+        if(itemArray != null){
+            itemArray.remove(this);
+        }
+        StringId stringId = this.mStringId;
+        this.mStringId = null;
+        if(stringId != null){
+            stringId.setStringData(null);
+            stringId.removeSelf();
+        }
+    }
 
+    public String getStringUsageName() {
+        if(containsUsage(USAGE_NONE)){
+            return "NONE";
+        }
+        StringBuilder builder = new StringBuilder();
+        if(containsUsage(USAGE_INSTRUCTION)){
+            builder.append("INSTRUCTION");
+        }
+        if(containsUsage(USAGE_INITIAL)){
+            if(builder.length() != 0){
+                builder.append('|');
+            }
+            builder.append("INITIAL");
+        }
+        if(containsUsage(USAGE_ANNOTATION)){
+            if(builder.length() != 0){
+                builder.append('|');
+            }
+            builder.append("ANNOTATION");
+        }
+        if(containsUsage(USAGE_TYPE)){
+            if(builder.length() != 0){
+                builder.append('|');
+            }
+            builder.append("TYPE");
+        }
+        if(containsUsage(USAGE_FIELD)){
+            if(builder.length() != 0){
+                builder.append('|');
+            }
+            builder.append("FIELD");
+        }
+        if(containsUsage(USAGE_METHOD)){
+            if(builder.length() != 0){
+                builder.append('|');
+            }
+            builder.append("METHOD");
+        }
+        if(containsUsage(USAGE_SHORTY)){
+            if(builder.length() != 0){
+                builder.append('|');
+            }
+            builder.append("SHORTY");
+        }
+        if(containsUsage(USAGE_SOURCE)){
+            if(builder.length() != 0){
+                builder.append('|');
+            }
+            builder.append("SOURCE");
+        }
+        if(containsUsage(USAGE_DEBUG)){
+            if(builder.length() != 0){
+                builder.append('|');
+            }
+            builder.append("DEBUG");
+        }
+        return builder.toString();
+    }
+    public boolean containsUsage(int usage){
+        if(usage == 0){
+            return this.stringUsage == 0;
+        }
+        return (this.stringUsage & usage) == usage;
+    }
     public int getStringUsage() {
         return stringUsage;
     }
@@ -69,6 +146,7 @@ public class StringData extends DexBlockItem
         }
         mCache = value;
         encodeString(value);
+        getStringId();
     }
 
     @Override
@@ -245,9 +323,14 @@ public class StringData extends DexBlockItem
                 + " at offset " + offset);
     }
 
-    public static final int USAGE_LITERAL = 0x0000;
-    public static final int USAGE_TYPE = 0x0001;
-    public static final int USAGE_FIELD = 0x0002;
-    public static final int USAGE_METHOD = 0x0004;
-    public static final int USAGE_SOURCE = 0x0008;
+    public static final int USAGE_NONE = 0x0000;
+    public static final int USAGE_INSTRUCTION = 1;
+    public static final int USAGE_INITIAL = 1 << 1;
+    public static final int USAGE_ANNOTATION = 1 << 2;
+    public static final int USAGE_TYPE = 1 << 4;
+    public static final int USAGE_FIELD = 1 << 5;
+    public static final int USAGE_METHOD = 1 << 6;
+    public static final int USAGE_SHORTY = 4 << 7;
+    public static final int USAGE_SOURCE = 1 << 8;
+    public static final int USAGE_DEBUG = 1 << 9;
 }

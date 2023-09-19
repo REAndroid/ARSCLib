@@ -38,7 +38,7 @@ public class RenameInfoClass extends RenameInfo<StringData> {
     void apply(ItemGroup<StringData> group){
         String replace = getReplace();
         for(StringData stringData : group){
-            if(stringData.getStringUsage() != StringData.USAGE_TYPE){
+            if(!stringData.containsUsage(StringData.USAGE_TYPE)){
                 continue;
             }
             stringData.setString(replace);
@@ -203,7 +203,7 @@ public class RenameInfoClass extends RenameInfo<StringData> {
         void apply(ItemGroup<StringData> group){
             String replace = getReplace();
             for(StringData stringData : group){
-                if(stringData.getStringUsage() != StringData.USAGE_LITERAL){
+                if(stringData.getStringUsage() != StringData.USAGE_INSTRUCTION){
                     continue;
                 }
                 stringData.setString(replace);
@@ -211,7 +211,7 @@ public class RenameInfoClass extends RenameInfo<StringData> {
         }
         @Override
         public boolean lookString(StringData stringData){
-            if(stringData.getStringUsage() != StringData.USAGE_LITERAL){
+            if(stringData.getStringUsage() != StringData.USAGE_INSTRUCTION){
                 return false;
             }
             String text = stringData.getString();

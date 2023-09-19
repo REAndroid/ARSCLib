@@ -13,17 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.ins;
+package com.reandroid.dex.base;
 
-public class Ins31c extends Size6Ins {
-    public Ins31c(Opcode<?> opcode) {
-        super(opcode);
-    }
-    @Override
-    public int getData(){
-        return getValueBytes().getInteger(2);
-    }
-    public void setData(int data){
-        getValueBytes().putInteger(2, data);
-    }
+public interface PositionAlignedItem {
+    DexPositionAlign getPositionAlign();
 }

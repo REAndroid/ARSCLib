@@ -17,19 +17,24 @@ package com.reandroid.dex.item;
 
 import com.reandroid.arsc.item.ShortArrayBlock;
 import com.reandroid.dex.base.DexPositionAlign;
+import com.reandroid.dex.base.PositionAlignedItem;
 
-public class ShortList extends IntegerList {
+public class ShortList extends IntegerList implements PositionAlignedItem {
+    private final DexPositionAlign positionAlign;
     public ShortList(){
         super(1, new ShortArrayBlock());
-        addChild(2, new DexPositionAlign());
+        this.positionAlign = new DexPositionAlign();
+        addChild(2, positionAlign);
     }
 
-    public DexPositionAlign getDexAlign(){
-        return (DexPositionAlign) getChildes()[2];
+    @Override
+    public DexPositionAlign getPositionAlign(){
+        return positionAlign;
     }
+
     @Override
     public String toString() {
-        DexPositionAlign dexPositionAlign = getDexAlign();
+        DexPositionAlign dexPositionAlign = getPositionAlign();
         if(dexPositionAlign.size() > 0){
             return super.toString() + dexPositionAlign;
         }

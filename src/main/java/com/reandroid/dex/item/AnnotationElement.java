@@ -20,7 +20,7 @@ public class AnnotationElement extends DataItemEntry
 
     public AnnotationElement() {
         super(2);
-        this.elementName = new StringReferenceUle128();
+        this.elementName = new StringReferenceUle128(StringData.USAGE_METHOD);
         addChild(0, elementName);
         elementName.setBlockLoad(this);
     }
@@ -65,7 +65,6 @@ public class AnnotationElement extends DataItemEntry
     }
     public void setName(StringData name){
         elementName.setItem(name);
-        linkStringUsageName();
     }
     public StringData getNameStringData(){
         return elementName.getItem();
@@ -75,20 +74,6 @@ public class AnnotationElement extends DataItemEntry
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
         if(sender == this.elementName){
             setValue(DexValueType.create(reader));
-        }
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
-        linkStringUsage();
-    }
-    private void linkStringUsage(){
-        linkStringUsageName();
-    }
-    private void linkStringUsageName(){
-        StringData stringData = this.elementName.getItem();
-        if(stringData != null){
-            stringData.addStringUsage(StringData.USAGE_METHOD);
         }
     }
 

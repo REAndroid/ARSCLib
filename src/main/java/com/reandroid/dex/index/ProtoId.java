@@ -32,7 +32,7 @@ public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
     public ProtoId() {
         super(SIZE);
 
-        this.shorty = new StringReference(this, 0);
+        this.shorty = new StringReference(this, 0, StringData.USAGE_SHORTY);
         this.returnType = new ItemIndexReference<>(SectionType.TYPE_ID, this, 4);
         this.parameters = new ItemOffsetReference<>(SectionType.TYPE_LIST, this, 8);
     }

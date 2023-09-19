@@ -31,7 +31,7 @@ public class TypeId extends IndexItemEntry implements Comparable<TypeId>{
     private TypeName typeName;
     public TypeId() {
         super(4);
-        this.nameReference = new StringReference(this, 0);
+        this.nameReference = new StringReference(this, 0, StringData.USAGE_TYPE);
     }
 
     @Override
@@ -101,25 +101,15 @@ public class TypeId extends IndexItemEntry implements Comparable<TypeId>{
 
     public void setName(StringData name){
         nameReference.setItem(name);
-        if(name != null){
-            name.addStringUsage(StringData.USAGE_TYPE);
-        }
     }
 
     @Override
     public void refresh() {
         nameReference.refresh();
-        StringData stringData = nameReference.getItem();
-        if(stringData != null){
-            stringData.addStringUsage(StringData.USAGE_TYPE);
-        }
     }
     @Override
     void cacheItems(){
-        StringData stringData = nameReference.getItem();
-        if(stringData != null){
-            stringData.addStringUsage(StringData.USAGE_TYPE);
-        }
+        nameReference.getItem();
     }
 
     @Override

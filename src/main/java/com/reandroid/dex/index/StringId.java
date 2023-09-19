@@ -29,11 +29,42 @@ public class StringId extends IndexItemEntry implements IntegerReference, Compar
         super(4);
     }
 
+    @Override
+    public void removeSelf() {
+        StringData stringData = this.stringData;
+        this.stringData = null;
+        if(stringData != null){
+            stringData.removeSelf();
+        }else {
+            super.removeSelf();
+        }
+    }
+
     public StringData getStringData() {
         return stringData;
     }
     public void setStringData(StringData stringData) {
         this.stringData = stringData;
+    }
+    public boolean containsUsage(int usage){
+        StringData stringData = getStringData();
+        if(stringData != null){
+            return stringData.containsUsage(usage);
+        }
+        return false;
+    }
+    public int getStringUsage() {
+        StringData stringData = getStringData();
+        if(stringData != null){
+            return stringData.getStringUsage();
+        }
+        return StringData.USAGE_NONE;
+    }
+    public void addStringUsage(int usage){
+        StringData stringData = getStringData();
+        if(stringData != null){
+            stringData.addStringUsage(usage);
+        }
     }
     @Override
     public void set(int value) {

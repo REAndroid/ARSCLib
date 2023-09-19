@@ -44,7 +44,7 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
         this.accessFlagValue = new IndirectInteger(this, offset += 4);
         this.superClass = new ItemIndexReference<>(SectionType.TYPE_ID, this, offset += 4);
         this.interfaces = new ItemOffsetReference<>(SectionType.TYPE_LIST, this, offset += 4);
-        this.sourceFile = new StringReference(this, offset += 4);
+        this.sourceFile = new StringReference(this, offset += 4, StringData.USAGE_SOURCE);
         this.annotationsDirectory = new ItemOffsetReference<>(SectionType.ANNOTATIONS_DIRECTORY, this, offset += 4);
         this.classData = new ItemOffsetReference<>(SectionType.CLASS_DATA, this, offset += 4);
         this.staticValues = new ItemOffsetReference<>(SectionType.ENCODED_ARRAY, this, offset += 4);
@@ -147,13 +147,6 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
         this.annotationsDirectory.getItem();
         this.classData.getItem();
         this.staticValues.getItem();
-        linkStringData();
-    }
-    private void linkStringData(){
-        StringData stringData = this.sourceFile.getItem();
-        if(stringData != null){
-            stringData.addStringUsage(StringData.USAGE_SOURCE);
-        }
     }
 
     @Override

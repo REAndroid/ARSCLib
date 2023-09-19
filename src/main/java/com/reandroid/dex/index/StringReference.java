@@ -32,9 +32,11 @@ public class StringReference extends IndirectItem<DexBlockItem> implements
         IntegerReference, BlockRefresh, Comparable<StringReference> {
 
     private StringId stringId;
+    private final int stringUsage;
 
-    public StringReference(DexBlockItem blockItem, int offset) {
+    public StringReference(DexBlockItem blockItem, int offset, int usage) {
         super(blockItem, offset);
+        this.stringUsage = usage;
     }
 
     public StringId getStringId() {
@@ -42,6 +44,9 @@ public class StringReference extends IndirectItem<DexBlockItem> implements
         if(stringId == null){
             stringId = getBlockItem().get(SectionType.STRING_ID, get());
             this.stringId = stringId;
+            if(stringId != null){
+                stringId.addStringUsage(stringUsage);
+            }
         }
         return stringId;
     }
@@ -50,6 +55,7 @@ public class StringReference extends IndirectItem<DexBlockItem> implements
         int value = 0;
         if(stringId != null){
             value = stringId.getIndex();
+            stringId.addStringUsage(stringUsage);
         }
         set(value);
     }

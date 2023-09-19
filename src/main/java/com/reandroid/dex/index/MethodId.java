@@ -34,7 +34,7 @@ public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
         super(SIZE);
         this.classType = new ItemShortReference<>(SectionType.TYPE_ID, this, 0);
         this.proto = new ItemShortReference<>(SectionType.PROTO_ID, this, 2);
-        this.nameReference = new StringReference(this, 4);
+        this.nameReference = new StringReference(this, 4, StringData.USAGE_METHOD);
     }
 
     public String getName(){

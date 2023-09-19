@@ -17,11 +17,13 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.OffsetSupplier;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.utils.CompareUtil;
 
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,18 +46,26 @@ public class Section<T extends Block>  extends FixedDexContainer
         this.itemArray = itemArray;
         this.sectionAlign = new DexPositionAlign();
         this.offsetMap = new HashMap<>();
-        addChild(0, itemArray);
-        addChild(1, sectionAlign);
+        addChild(0, sectionAlign);
+        addChild(1, itemArray);
         itemArray.setPreloadArray(this);
     }
     public Section(IntegerPair countAndOffset, SectionType<T> sectionType){
         this(sectionType, new DexItemArray<>(countAndOffset, sectionType.getCreator()));
     }
 
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        int align = sectionAlign.getAlignment();
+        sectionAlign.setAlignment(0);
+        super.onReadBytes(reader);
+        sectionAlign.setAlignment(align);
+    }
+
     public DexIdPool<T> getPool(){
         DexIdPool<T> dexIdPool = this.dexIdPool;
         if(dexIdPool == null){
-            dexIdPool = new DexIdPool<T>(this);
+            dexIdPool = new DexIdPool<>(this);
             this.dexIdPool = dexIdPool;
             dexIdPool.load();
         }
@@ -148,24 +158,39 @@ public class Section<T extends Block>  extends FixedDexContainer
             receiver.setOffsetReference(reference);
         }
     }
-    private void updateItemOffsets(){
+    private void updateItemOffsets(int position){
         DexItemArray<T> array = getItemArray();
         int count = array.getCount();
         array.getCountAndOffset().getFirst().set(count);
-        int position = getOffset();
+        DexPositionAlign previous = null;
         for(int i = 0; i < count; i++){
             T item = array.get(i);
-            if(item == null){
+            if(item == null) {
+                previous = null;
                 continue;
             }
-            IntegerReference supplier = ((OffsetSupplier) item).getOffsetReference();
-            supplier.set(position);
+            DexPositionAlign itemAlign = null;
+            if(item instanceof PositionAlignedItem){
+                itemAlign = ((PositionAlignedItem) item).getPositionAlign();
+                itemAlign.setSize(0);
+                if(previous != null){
+                    previous.align(position);
+                    position += previous.size();
+                }
+            }
+            if(item instanceof PositionedItem){
+                ((PositionedItem) item).setPosition(position);
+            }else {
+                IntegerReference supplier = ((OffsetSupplier) item).getOffsetReference();
+                supplier.set(position);
+            }
             position += item.countBytes();
+            previous = itemAlign;
         }
         updateNextSection(position);
         buildOffsetMap();
     }
-    private boolean updateIdOffsets(){
+    private boolean updateIdOffsets(int position){
         Section<?> idSection = getSection(getSectionType().getIdSectionType());
         if(idSection == null){
             return false;
@@ -173,7 +198,6 @@ public class Section<T extends Block>  extends FixedDexContainer
         int count = getCount();
         DexItemArray<?> idArray = idSection.getItemArray();
         idArray.setChildesCount(count);
-        int position = getOffset();
         for(int i = 0; i < count; i++){
             T item = get(i);
             IntegerReference reference = (IntegerReference) idArray.get(i);
@@ -184,8 +208,6 @@ public class Section<T extends Block>  extends FixedDexContainer
         return true;
     }
     private void updateNextSection(int position){
-        sectionAlign.align(position);
-        position += sectionAlign.size();
         Section<?> next = getNextSection();
         if(next != null){
             next.getOffsetReference().set(position);
@@ -217,14 +239,18 @@ public class Section<T extends Block>  extends FixedDexContainer
         }
         return offset > 0;
     }
+
     @Override
-    protected void onPreRefresh(){
-        boolean hasId = updateIdOffsets();
+    protected void onRefreshed(){
+        int position = getOffset();
+        sectionAlign.align(position);
+        position += sectionAlign.size();
+        getOffsetReference().set(position);
+        boolean hasId = updateIdOffsets(position);
         if(!hasId){
             if(sectionType.isOffsetType()){
-                updateItemOffsets();
+                updateItemOffsets(position);
             }else {
-                int position = getOffset();
                 position += getItemArray().countBytes();
                 updateNextSection(position);
             }
