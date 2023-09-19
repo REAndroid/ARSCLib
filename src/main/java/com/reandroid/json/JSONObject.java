@@ -176,6 +176,28 @@ public class JSONObject extends JSONItem {
         } catch (IOException ignored) {
         }
     }
+    public void sort(Comparator<String> keyComparator) {
+        sort(keyComparator, false);
+    }
+    public void sort(Comparator<String> keyComparator, boolean recursive) {
+        LinkedHashMap<String, Object> map = this.map;
+        LinkedHashMap<String, Object> copy = new LinkedHashMap<>(map);
+        map.clear();
+        List<String> sortedKeys = new ArrayList<>(copy.keySet());
+        sortedKeys.sort(keyComparator);
+        for(String key : sortedKeys){
+            map.put(key, copy.get(key));
+        }
+        copy.clear();
+        if(recursive){
+            for(String key : sortedKeys){
+                Object obj = map.get(key);
+                if(obj instanceof JSONObject){
+                    ((JSONObject) obj).sort(keyComparator, true);
+                }
+            }
+        }
+    }
     public JSONObject accumulate(String key, Object value) throws JSONException {
         testValidity(value);
         Object object = this.opt(key);
