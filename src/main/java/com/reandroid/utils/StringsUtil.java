@@ -120,6 +120,9 @@ public class StringsUtil {
         return toString(collection.iterator(), max, collection.size());
     }
     public static String toString(Iterator<?> iterator, int max, int size) {
+        return toString(", ", iterator, max, size);
+    }
+    public static String toString(String separator, Iterator<?> iterator, int max, int size) {
         if(iterator == null){
             return "null";
         }
@@ -130,7 +133,7 @@ public class StringsUtil {
         StringBuilder elements = new StringBuilder();
         while (iterator.hasNext() && (max < 0 || count < max)){
             if(count != 0){
-                elements.append(", ");
+                elements.append(separator);
             }
             elements.append(iterator.next());
             count ++;
