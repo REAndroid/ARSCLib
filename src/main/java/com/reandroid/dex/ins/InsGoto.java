@@ -20,11 +20,13 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class InsGoto extends SizeXIns implements Label{
+public class InsGoto extends SizeXIns implements Label {
+
     public InsGoto(Opcode<?> opcode) {
         super(opcode);
     }
-    private int getValue(){
+    @Override
+    public int getData() {
         int size = getOpcode().size();
         if(size == 2){
             return getByte(1);
@@ -36,7 +38,7 @@ public class InsGoto extends SizeXIns implements Label{
     }
     @Override
     public int getTargetAddress() {
-        return getAddress() + getValue();
+        return getAddress() + getData();
     }
     @Override
     public String getLabelName() {

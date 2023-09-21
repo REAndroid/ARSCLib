@@ -149,6 +149,9 @@ public class StringData extends DexBlockItem
         encodeString(value);
         getStringId();
     }
+    public String getQuotedString() {
+        return DexUtils.quoteString(getString());
+    }
 
     @Override
     public IntegerReference getOffsetReference() {

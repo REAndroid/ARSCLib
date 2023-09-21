@@ -19,11 +19,14 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.BlockItem;
+import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.dex.base.Sle128Item;
 import com.reandroid.dex.item.DexContainerItem;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.function.Function;
 
@@ -166,6 +169,10 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
             this.tryItem = tryItem;
         }
         @Override
+        TryItem newCopy() {
+            return tryItem.newCopy();
+        }
+        @Override
         HandlerOffsetArray getHandlerOffsetArray(){
             return tryItem.getHandlerOffsetArray();
         }
@@ -198,6 +205,26 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
             }
             return null;
         }
+
+        @Override
+        public int countBytes() {
+            return 0;
+        }
+        @Override
+        public int onWriteBytes(OutputStream stream) throws IOException {
+            return 0;
+        }
+        @Override
+        public byte[] getBytes() {
+            return null;
+        }
+        @Override
+        protected void onPreRefresh() {
+        }
+        @Override
+        protected void onRefreshed() {
+        }
+
         @Override
         public void onReadBytes(BlockReader reader) throws IOException {
         }

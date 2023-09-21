@@ -20,7 +20,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 import java.io.IOException;
 import java.util.Comparator;
 
-public interface ExtraLine{
+public interface ExtraLine {
     void appendExtra(SmaliWriter writer) throws IOException;
     boolean isEqualExtraLine(Object obj);
     int getSortOrder();

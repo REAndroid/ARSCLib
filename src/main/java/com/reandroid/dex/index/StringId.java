@@ -82,6 +82,20 @@ public class StringId extends IndexItemEntry implements IntegerReference, Compar
     void cacheItems() {
 
     }
+    public String getQuotedString(){
+        StringData stringData = getStringData();
+        if(stringData != null){
+            return stringData.getQuotedString();
+        }
+        return null;
+    }
+    public String getString() {
+        StringData stringData = getStringData();
+        if(stringData != null){
+            return stringData.getString();
+        }
+        return null;
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         StringData stringData = getStringData();

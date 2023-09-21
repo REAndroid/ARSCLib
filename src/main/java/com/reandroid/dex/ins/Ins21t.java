@@ -20,7 +20,7 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class Ins21t extends Size4Ins implements Label{
+public class Ins21t extends Size4Ins implements Label {
     public Ins21t(Opcode<?> opcode) {
         super(opcode);
     }
@@ -47,17 +47,5 @@ public class Ins21t extends Size4Ins implements Label{
         writer.append(Integer.toString(getRegisterA()));
         writer.append(", ");
         writer.append(getLabelName());
-    }
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        Opcode<?> opcode = getOpcode();
-        builder.append(opcode.getName());
-        builder.append(' ');
-        builder.append("v");
-        builder.append(getRegisterA());
-        builder.append(", ");
-        builder.append(getLabelName());
-        return builder.toString();
     }
 }

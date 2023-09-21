@@ -101,6 +101,7 @@ public class SizeXIns extends Ins {
 
     @Override
     protected void onRefreshed() {
+        super.onRefreshed();
         IndexItemEntry itemId = this.mSectionItem;
         if(itemId != null){
             setData(itemId.getIndex());
@@ -131,8 +132,8 @@ public class SizeXIns extends Ins {
             writer.append(HexUtil.toHex(data, 1));
         }
     }
-    @Override
-    public String toString() {
+
+    public String toString1() {
         Opcode<?> opcode = getOpcode();
         if(opcode.size() < 4){
             return super.toString();
@@ -144,7 +145,11 @@ public class SizeXIns extends Ins {
         builder.append(", ");
         IndexItemEntry sectionItem = getSectionItem();
         if(sectionItem != null){
-            builder.append(sectionItem);
+            if(sectionItem instanceof StringId){
+                builder.append(((StringId)sectionItem).getQuotedString());
+            }else {
+                builder.append(sectionItem);
+            }
         }else {
             builder.append(HexUtil.toHex(getData(), 2));
         }

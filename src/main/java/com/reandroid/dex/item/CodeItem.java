@@ -34,18 +34,17 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
 
     private final Header header;
     private final InstructionList instructionList;
-    private final TryBlock tryBlock;
+    private TryBlock tryBlock;
     private MethodDef methodDef;
 
     public CodeItem() {
         super(3);
-        this.header = new Header();
-        this.tryBlock = new TryBlock(header.tryBlockCount);
-        this.instructionList = new InstructionList(header.instructionCodeUnits, tryBlock);
+        this.header = new Header(this);
+        this.tryBlock = null;
+        this.instructionList = new InstructionList(this);
 
         addChild(0, header);
         addChild(1, instructionList);
-        addChild(2, tryBlock);
     }
 
     public DebugInfo getDebugInfo(){
@@ -60,6 +59,10 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
     public TryBlock getTryBlock(){
         return tryBlock;
     }
+    public TryBlock getOrCreateTryBlock(){
+        initTryBlock();
+        return tryBlock;
+    }
 
     public MethodDef getMethodDef() {
         return methodDef;
@@ -68,6 +71,20 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
         this.methodDef = methodDef;
     }
 
+    IntegerReference getInstructionCodeUnitsReference(){
+        return header.instructionCodeUnits;
+    }
+    void initTryBlock(){
+        if(this.tryBlock == null){
+            this.tryBlock = new TryBlock(header.tryBlockCount);
+            addChild(2, this.tryBlock);
+        }
+    }
+
+    @Override
+    protected void onPreRefresh() {
+        super.onPreRefresh();
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         MethodDef methodDef = getMethodDef();
@@ -76,7 +93,6 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
         writer.newLine();
         writer.append(".locals ");
         InstructionList instructionList = getInstructionList();
-        instructionList.buildDebugInfo(debugInfo);
         int count = header.registersCount.get() - proto.getParametersCount();
         if(!methodDef.isStatic()){
             count = count - 1;
@@ -105,6 +121,8 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
 
     static class Header extends DexBlockItem implements BlockRefresh {
 
+        private final CodeItem codeItem;
+
         final IntegerReference registersCount;
         final IntegerReference instruction;
         final IntegerReference outs;
@@ -113,8 +131,9 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
         final ItemOffsetReference<DebugInfo> debugInfoOffset;
         final IntegerReference instructionCodeUnits;
 
-        public Header() {
+        public Header(CodeItem codeItem) {
             super(16);
+            this.codeItem = codeItem;
             int offset = -2;
             this.registersCount = new IndirectShort(this, offset += 2);
             this.instruction = new IndirectShort(this, offset += 2);
@@ -122,7 +141,6 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
             this.tryBlockCount = new IndirectShort(this, offset += 2);
             this.debugInfoOffset = new ItemOffsetReference<>(SectionType.DEBUG_INFO,this, offset += 2);
             this.instructionCodeUnits = new IndirectInteger(this, offset += 4);
-
         }
 
 
@@ -133,8 +151,12 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
         @Override
         public void onReadBytes(BlockReader reader) throws IOException {
             super.onReadBytes(reader);
-            debugInfoOffset.getItem();
+            this.debugInfoOffset.getItem();
+            if(this.tryBlockCount.get() != 0){
+                this.codeItem.initTryBlock();
+            }
         }
+
 
         @Override
         public String toString() {

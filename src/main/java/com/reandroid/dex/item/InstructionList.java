@@ -16,7 +16,6 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexBlockList;
 import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.ins.*;
@@ -24,18 +23,82 @@ import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Iterator;
 
 public class InstructionList extends DexBlockList<Ins> implements SmaliFormat {
-    private final IntegerReference codeUnits;
-    private final TryBlock tryBlock;
+    private final CodeItem codeItem;
 
-    public InstructionList(IntegerReference codeUnits, TryBlock tryBlock){
+    public InstructionList(CodeItem codeItem){
         super();
-        this.codeUnits = codeUnits;
-        this.tryBlock = tryBlock;
+        this.codeItem = codeItem;
     }
 
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        this.codeItem.getInstructionCodeUnitsReference().set(getCodeUnits());
+    }
+    public int getCodeUnits() {
+        int result = 0;
+        for (Ins ins : this) {
+            result += ins.getCodeUnits();
+        }
+        return result;
+    }
+
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        buildExtraLines();
+        for (Ins ins : this) {
+            writer.newLine();
+            ins.append(writer);
+        }
+    }
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+
+        int position = reader.getPosition() +
+                codeItem.getInstructionCodeUnitsReference().get() * 2;
+
+        int zeroPosition = reader.getPosition();
+
+        while (reader.getPosition() < position){
+            Opcode<?> opcode = Opcode.read(reader);
+            Ins ins = opcode.newInstance();
+            ins.setAddress((reader.getPosition() - zeroPosition) / 2);
+            add(ins);
+            ins.readBytes(reader);
+        }
+        if(position != reader.getPosition()){
+            // should not reach here
+            reader.seek(position);
+        }
+        getDexPositionAlign().readBytes(reader);
+        clearExtraLines();
+    }
+
+    private void clearExtraLines() {
+        for (Ins ins : this) {
+            ins.clearExtraLines();
+        }
+    }
+    private boolean haveExtraLines() {
+        for (Ins ins : this) {
+            if(ins.hasExtraLines()){
+                return true;
+            }
+        }
+        return false;
+    }
+    private void buildExtraLines(){
+        if(haveExtraLines()){
+            return;
+        }
+        buildLabels();
+        buildTryBlock();
+        buildDebugInfo();
+    }
     private Ins getAtAddress(int address){
         for (Ins ins : this) {
             if(ins.getAddress() == address){
@@ -62,17 +125,18 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat {
             }else if(ins instanceof LabelList){
                 addLabels(((LabelList) ins).getLabels());
             }
+            ins.sortExtraLines();
         }
     }
     private void buildTryBlock(){
-        TryBlock tryBlock = this.tryBlock;
-        if(tryBlock.isNull()){
+        TryBlock tryBlock = this.codeItem.getTryBlock();
+        if(tryBlock == null || tryBlock.isNull()){
             return;
         }
         addLabels(tryBlock.getLabels());
     }
-
-    public void buildDebugInfo(DebugInfo debugInfo){
+    private void buildDebugInfo(){
+        DebugInfo debugInfo = codeItem.getDebugInfo();
         if(debugInfo == null){
             return;
         }
@@ -87,29 +151,16 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat {
     }
 
     @Override
-    public void append(SmaliWriter writer) throws IOException {
-        buildTryBlock();
-        for (Ins ins : this) {
-            writer.newLine();
-            ins.append(writer);
+    public String toString() {
+        StringWriter writer = new StringWriter();
+        SmaliWriter smaliWriter = new SmaliWriter(writer);
+        smaliWriter.indentPlus();
+        try {
+            append(smaliWriter);
+            smaliWriter.close();
+        } catch (IOException exception) {
+            return exception.toString();
         }
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        int position = reader.getPosition() + codeUnits.get() * 2;
-        int zeroPosition = reader.getPosition();
-        while (reader.getPosition() < position){
-            Opcode<?> opcode = Opcode.read(reader);
-            Ins ins = opcode.newInstance();
-            ins.setAddress((reader.getPosition() - zeroPosition) / 2);
-            add(ins);
-            ins.readBytes(reader);
-        }
-        if(position != reader.getPosition()){
-            // should not reach here
-            reader.seek(position);
-        }
-        getDexPositionAlign().readBytes(reader);
-        buildLabels();
+        return writer.toString();
     }
 }

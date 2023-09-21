@@ -24,6 +24,7 @@ import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.EmptyList;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -85,6 +86,20 @@ public class Ins extends DexContainerItem implements SmaliFormat {
         extraLines.sort(ExtraLine.COMPARATOR);
         return this.extraLines.iterator();
     }
+    public void sortExtraLines() {
+        if(extraLines.isEmpty()){
+            return;
+        }
+        extraLines.sort(ExtraLine.COMPARATOR);
+    }
+    public void clearExtraLines() {
+        if(!extraLines.isEmpty()){
+            extraLines = EmptyList.of();
+        }
+    }
+    public boolean hasExtraLines() {
+        return !extraLines.isEmpty();
+    }
     private void appendExtraLines(SmaliWriter writer) throws IOException {
         Iterator<ExtraLine> iterator = getExtraLinesSorted();
         ExtraLine extraLine = null;
@@ -101,6 +116,13 @@ public class Ins extends DexContainerItem implements SmaliFormat {
             writer.newLine();
         }
     }
+
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        clearExtraLines();
+    }
+
     @Override
     public final void append(SmaliWriter writer) throws IOException {
         appendExtraLines(writer);
@@ -113,6 +135,14 @@ public class Ins extends DexContainerItem implements SmaliFormat {
     }
     @Override
     public String toString() {
-        return String.valueOf(getOpcode());
+        StringWriter writer = new StringWriter();
+        SmaliWriter smaliWriter = new SmaliWriter(writer);
+        try {
+            append(smaliWriter);
+            smaliWriter.close();
+        } catch (IOException exception) {
+            return exception.toString();
+        }
+        return writer.toString();
     }
 }
