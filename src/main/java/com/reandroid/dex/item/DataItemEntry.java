@@ -15,12 +15,10 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.NumberIntegerReference;
-import com.reandroid.dex.base.OffsetReceiver;
-import com.reandroid.dex.base.PositionedItem;
-import com.reandroid.dex.base.StringKeyItem;
+import com.reandroid.dex.base.*;
 
 public class DataItemEntry extends DexContainerItem
         implements PositionedItem, OffsetSupplier, OffsetReceiver, StringKeyItem {
@@ -31,6 +29,16 @@ public class DataItemEntry extends DexContainerItem
         super(childesCount);
     }
 
+    public void removeSelf() {
+        Block parent = getParent();
+        if(!(parent instanceof DexItemArray<?>)){
+            return;
+        }
+        DexItemArray<DataItemEntry> itemArray = (DexItemArray<DataItemEntry>) parent;
+        setParent(null);
+        itemArray.remove(this);
+        setPosition(0);
+    }
     @Override
     public String getKey() {
         return null;

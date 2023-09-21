@@ -18,12 +18,14 @@ package com.reandroid.dex.item;
 import com.reandroid.dex.base.DexItemArray;
 import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -34,11 +36,43 @@ public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId>
     public TypeList() {
         super();
     }
-    public boolean add(TypeId typeId){
-        if(typeId != null){
-            return addIfAbsent(typeId.getIndex());
+
+    public void addAll(Iterator<String> iterator) {
+        if(!iterator.hasNext()) {
+            return;
         }
-        return false;
+        DexIdPool<TypeId> pool = getPool(SectionType.TYPE_ID);
+        if(pool == null) {
+            return;
+        }
+        while (iterator.hasNext()){
+            TypeId typeId = pool.getOrCreate(iterator.next());
+            add(typeId);
+        }
+    }
+    public void add(String typeName) {
+        if(typeName == null){
+            return;
+        }
+        DexIdPool<TypeId> pool = getPool(SectionType.TYPE_ID);
+        if(pool != null){
+            add(pool.getOrCreate(typeName));
+        }
+    }
+    public void add(TypeId typeId){
+        if(typeId != null) {
+            add(typeId.getIndex());
+        }else {
+            add(0);
+        }
+    }
+    public void remove(TypeId typeId){
+        if(typeId != null){
+            remove(indexOf(typeId.getIndex()));
+        }
+    }
+    public Iterator<String> getTypeNames() {
+        return ComputeIterator.of(iterator(), TypeId::getName);
     }
     @Override
     public Iterator<TypeId> iterator() {
@@ -50,6 +84,13 @@ public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId>
     }
     public TypeId[] getTypeIds(){
         return typeIds;
+    }
+    public TypeId getTypeId(int index){
+        TypeId[] typeIds = getTypeIds();
+        if(typeIds != null && index >= 0 && index < typeIds.length){
+            return typeIds[index];
+        }
+        return null;
     }
     @Override
     void onChanged(){

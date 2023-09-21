@@ -56,6 +56,9 @@ public class AnnotationsDirectory extends DataItemEntry {
     public void setClassAnnotations(AnnotationSet annotationSet){
         header.classAnnotation.setItem(annotationSet);
     }
+    public boolean isEmpty(){
+        return header.isEmpty();
+    }
 
     public Iterator<AnnotationSet> getFieldsAnnotation(int index){
         return fieldsOffset.getItems(index);
@@ -198,6 +201,12 @@ public class AnnotationsDirectory extends DataItemEntry {
             this.parameterCount = new IndirectInteger(this, offset += 4);
         }
 
+        public boolean isEmpty(){
+            return classAnnotation.get() == 0
+                    && fieldCount.get() == 0
+                    && methodCount.get() == 0
+                    && parameterCount.get() == 0;
+        }
         @Override
         public void onReadBytes(BlockReader reader) throws IOException {
             super.onReadBytes(reader);

@@ -27,7 +27,6 @@ import com.reandroid.dex.base.NumberIntegerReference;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 public class DexHeader extends FixedDexContainer implements OffsetSupplier, BlockLoad {
 
@@ -106,10 +105,11 @@ public class DexHeader extends FixedDexContainer implements OffsetSupplier, Bloc
     }
 
     public void updateHeaderInternal(Block parent){
+        byte[] bytes = parent.getBytes();
         headerSize.set(countBytes());
-        fileSize.set(parent.countBytes());
-        signature.update(parent);
-        checksum.update(parent);
+        fileSize.set(bytes.length);
+        signature.update(parent, bytes);
+        checksum.update(parent, bytes);
     }
 
     @Override
@@ -126,26 +126,6 @@ public class DexHeader extends FixedDexContainer implements OffsetSupplier, Bloc
         if(sender == headerSize){
             unknown.setSize(headerSize.get() - countBytes());
         }
-    }
-
-    @Override
-    public int onWriteBytes(OutputStream stream) throws IOException {
-        int start = 0;
-        Class<?> streamClass = stream.getClass();
-        if(streamClass == Alder32OutputStream.class){
-            start = 3;
-        }else if(streamClass == Sha1OutputStream.class){
-            start = 4;
-        }
-        int result = 0;
-        Block[] childes = getChildes();
-        for(int i = start; i < childes.length; i++){
-            Block block = childes[i];
-            if(block != null){
-                result += block.writeBytes(stream);
-            }
-        }
-        return result;
     }
 
     @Override

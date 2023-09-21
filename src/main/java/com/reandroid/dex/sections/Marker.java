@@ -221,8 +221,7 @@ public class Marker {
     }
 
     public static Iterator<Marker> parse(DexFile dexFile){
-        Section<StringData> stringSection = dexFile.getSectionList().get(SectionType.STRING_DATA);
-        return ComputeIterator.of(stringSection.iterator(), Marker::parse);
+        return ComputeIterator.of(dexFile.getStringData(), Marker::parse);
     }
     public static Marker parse(StringData stringData) {
         String str = stringData.getString();
@@ -259,6 +258,9 @@ public class Marker {
     public static Marker createR8() {
         return parse(R8_TEMPLATE);
     }
+    public static Marker createD8() {
+        return parse(D8_TEMPLATE);
+    }
     public static boolean hasMarkerPrefix(String content) {
         if(content == null || content.length() < 3){
             return false;
@@ -291,5 +293,6 @@ public class Marker {
     }
 
     private static final String R8_TEMPLATE = "~~R8{\"backend\":\"dex\",\"compilation-mode\":\"release\",\"has-checksums\":false,\"r8-mode\":\"compatibility\",\"version\":\"3.2.74\"}";
+    private static final String D8_TEMPLATE = "~~D8{\"backend\":\"dex\",\"compilation-mode\":\"release\",\"has-checksums\":false,\"min-api\":24,\"version\":\"4.0.48\"}";
 }
 

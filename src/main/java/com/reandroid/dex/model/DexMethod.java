@@ -15,14 +15,13 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.MethodId;
+import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.item.MethodDef;
-import com.reandroid.dex.item.MethodDefArray;
-import com.reandroid.utils.collection.EmptyList;
+import com.reandroid.utils.collection.ComputeIterator;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 public class DexMethod {
     private final DexClass dexClass;
@@ -33,12 +32,36 @@ public class DexMethod {
         this.methodDef = methodDef;
     }
 
+    public String getAccessFlags() {
+        return AccessFlag.formatForField(getMethodDef().getAccessFlagsValue());
+    }
     public String getName(){
         return getMethodId().getName();
     }
-    public String key(){
-        return getMethodId().key();
+    public void setName(String name){
+        getMethodId().setName(name);
     }
+    public int getParametersCount() {
+        return getMethodId().getParametersCount();
+    }
+    public String getParameter(int index) {
+        TypeId typeId = getMethodId().getParameter(index);
+        if(typeId != null){
+            return typeId.getName();
+        }
+        return null;
+    }
+    public Iterator<String> getParameters() {
+        return ComputeIterator.of(getMethodId().getParameters(), TypeId::getName);
+    }
+    public String getReturnType() {
+        TypeId typeId = getMethodId().getReturnTypeId();
+        if(typeId != null) {
+            return typeId.getName();
+        }
+        return null;
+    }
+
     public String getKey(){
         return getMethodId().getKey();
     }
@@ -53,22 +76,6 @@ public class DexMethod {
     }
     @Override
     public String toString() {
-        return key();
-    }
-
-    static DexMethod create(DexClass dexClass, MethodDef fieldDef){
-        return new DexMethod(dexClass, fieldDef);
-    }
-    static List<DexMethod> create(DexClass dexClass, MethodDefArray defArray){
-        int count = defArray.getChildesCount();
-        if(count == 0){
-            return EmptyList.of();
-        }
-        List<DexMethod> results = new ArrayList<>(count);
-        Iterator<MethodDef> iterator = defArray.iterator();
-        while (iterator.hasNext()){
-            results.add(create(dexClass, iterator.next()));
-        }
-        return results;
+        return getKey();
     }
 }

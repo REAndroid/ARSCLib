@@ -18,7 +18,10 @@ package com.reandroid.dex.item;
 import com.reandroid.dex.sections.SectionType;
 
 public class AnnotationGroup extends IntegerOffsetSectionList<AnnotationSet> {
-    public AnnotationGroup(){
+    public AnnotationGroup() {
         super(SectionType.ANNOTATION_SET);
+    }
+    @Override
+    void removeNulls() {
     }
 }

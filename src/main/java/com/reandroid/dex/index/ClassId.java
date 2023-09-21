@@ -19,7 +19,7 @@ import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.item.*;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.value.DexValue;
+import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 
@@ -74,13 +74,19 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
         return superClass.getItem();
     }
     public void setSuperClass(TypeId typeId){
-        superClass.setItem(typeId);
+        this.superClass.setItem(typeId);
+    }
+    public void setSuperClass(String superClass){
+        this.superClass.setItem(superClass);
     }
     public StringData getSourceFile(){
         return sourceFile.getItem();
     }
     public void setSourceFile(StringData stringData){
         this.sourceFile.setItem(stringData);
+    }
+    public void setSourceFile(String sourceFile){
+        this.sourceFile.setString(sourceFile);
     }
     public TypeId[] getInterfaceTypeIds(){
         TypeList interfaceList = getInterfaces();
@@ -92,6 +98,9 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
     public TypeList getInterfaces(){
         return interfaces.getItem();
     }
+    public ItemOffsetReference<TypeList> getInterfacesReference() {
+        return this.interfaces;
+    }
     public void setInterfaces(TypeList interfaces){
         this.interfaces.setItem(interfaces);
     }
@@ -101,6 +110,12 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
             return annotationsDirectory.getClassAnnotations();
         }
         return null;
+    }
+    public void setClassAnnotations(AnnotationSet annotationSet){
+        AnnotationsDirectory annotationsDirectory = getAnnotationsDirectory();
+        if(annotationsDirectory != null){
+            annotationsDirectory.setClassAnnotations(annotationSet);
+        }
     }
     public AnnotationsDirectory getAnnotationsDirectory(){
         return annotationsDirectory.getItem();
@@ -117,7 +132,7 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
     public EncodedArray getStaticValues(){
         return staticValues.getItem();
     }
-    public DexValue<?> getStaticValue(int i){
+    public DexValueBlock<?> getStaticValue(int i){
         EncodedArray encodedArray = getStaticValues();
         if(encodedArray != null){
             return encodedArray.get(i);

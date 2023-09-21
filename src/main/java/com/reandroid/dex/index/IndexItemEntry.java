@@ -56,12 +56,4 @@ public abstract class IndexItemEntry extends DexBlockItem
         super.onReadBytes(reader);
         cacheItems();
     }
-
-    public<T1 extends Block> DexIdPool<T1> getPool(SectionType<T1> sectionType){
-        Section<T1> section = getSection(sectionType);
-        if(section != null){
-            return section.getPool();
-        }
-        return null;
-    }
 }

@@ -76,8 +76,12 @@ public class SectionList extends FixedBlockContainer
         typeMap.put(SectionType.MAP_LIST, mapListSection);
     }
 
-    public void updateHeader(){
-        dexHeader.updateHeaderInternal(this);
+    public void updateHeader() {
+        Block parent = getParentInstance(DexFileBlock.class);
+        if(parent == null){
+            parent = this;
+        }
+        dexHeader.updateHeaderInternal(parent);
     }
 
     @Override

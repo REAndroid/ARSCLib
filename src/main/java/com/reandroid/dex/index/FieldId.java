@@ -16,7 +16,6 @@
 package com.reandroid.dex.index;
 
 import com.reandroid.dex.item.StringData;
-import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
@@ -35,71 +34,45 @@ public class FieldId extends IndexItemEntry implements Comparable<FieldId>{
         this.nameReference = new StringReference( this, 4, StringData.USAGE_FIELD);
     }
 
-    public StringReference getNameReference() {
-        return nameReference;
-    }
-    public String getName(){
-        StringData stringData = getNameString();
-        if(stringData != null){
-            return stringData.getString();
-        }
-        return null;
+    public String getName() {
+        return nameReference.getString();
     }
     public void setName(String name){
-        DexIdPool<StringData> stringPool = getPool(SectionType.STRING_DATA);
-        StringData stringData = stringPool.getOrCreate(name);
-        setName(stringData);
+        this.nameReference.setString(name);
     }
     public void setName(StringData stringData){
         this.nameReference.setItem(stringData);
     }
-    @Override
-    public String getKey(){
-        StringBuilder builder = new StringBuilder();
-        TypeId type = getClassType();
-        if(type == null){
-            return null;
-        }
-        StringData stringData = type.getNameData();
-        if(stringData == null){
-            return null;
-        }
-        builder.append(stringData.getString());
-        builder.append("->");
-        stringData = getNameString();
-        if(stringData == null){
-            return null;
-        }
-        builder.append(stringData.getString());
-        return builder.toString();
+    public StringData getNameString(){
+        return nameReference.getItem();
     }
-    public String key(){
-        StringBuilder builder = new StringBuilder();
-        StringData stringData = getNameString();
-        if(stringData == null){
-            return null;
-        }
-        builder.append(stringData.getString());
-        builder.append(':');
-        TypeId type = getFieldType();
-        if(type == null){
-            return null;
-        }
-        stringData = type.getNameData();
-        if(stringData == null){
-            return null;
-        }
-        builder.append(stringData.getString());
-        return builder.toString();
+    StringReference getNameReference() {
+        return nameReference;
+    }
+    public String getClassName(){
+        return classType.getKey();
     }
     public TypeId getClassType(){
         return classType.getItem();
     }
-    public StringData getNameString(){
-        return nameReference.getItem();
+    public void setClassType(TypeId typeId){
+        classType.setItem(typeId);
+    }
+    public void setClassType(String type) {
+        classType.setItem(type);
+    }
+
+    public String getFieldTypeName(){
+        return fieldType.getKey();
     }
     public TypeId getFieldType(){
         return fieldType.getItem();
+    }
+    public void setFieldType(TypeId typeId) {
+        fieldType.setItem(typeId);
+    }
+    public void setFieldType(String type) {
+        fieldType.setItem(type);
     }
 
     @Override
@@ -113,6 +86,35 @@ public class FieldId extends IndexItemEntry implements Comparable<FieldId>{
         classType.getItem();
         fieldType.getItem();
         nameReference.getStringId();
+    }
+
+    @Override
+    public String getKey(){
+        return key(false);
+    }
+
+    public String key(boolean appendFieldType) {
+        StringBuilder builder = new StringBuilder();
+        String type = getClassName();
+        if(type == null){
+            return null;
+        }
+        builder.append(type);
+        builder.append("->");
+        String name = getName();
+        if(name == null){
+            return null;
+        }
+        builder.append(name);
+        if(appendFieldType) {
+            builder.append(':');
+            String fieldType = getFieldTypeName();
+            if(fieldType == null) {
+                return null;
+            }
+            builder.append(fieldType);
+        }
+        return builder.toString();
     }
 
     @Override

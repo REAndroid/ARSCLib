@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.base.*;
@@ -23,6 +24,7 @@ import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.collection.CollectionUtil;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -63,18 +65,14 @@ public class AnnotationItem extends DataItemEntry
     public AnnotationItem(){
         this(false);
     }
+
     @Override
     public String getKey(){
-        StringBuilder builder = new StringBuilder();
-        boolean appendOnce = false;
-        for (AnnotationElement element : this){
-            if(appendOnce){
-                builder.append(',');
-            }
-            builder.append(element.getKey());
-            appendOnce = true;
+        AnnotationElement first = CollectionUtil.getFirst(iterator());
+        if(first != null){
+            return first.getKey();
         }
-        return builder.toString();
+        return "";
     }
     @Override
     public Iterator<AnnotationElement> iterator(){

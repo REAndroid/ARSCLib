@@ -18,15 +18,15 @@ package com.reandroid.dex.item;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.dex.value.DexValue;
+import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class EncodedArray extends DataItemEntry implements Iterable<DexValue<?>> {
+public class EncodedArray extends DataItemEntry implements Iterable<DexValueBlock<?>> {
     private final Ule128Item elementCount;
-    private final BlockList<DexValue<?>> elements;
+    private final BlockList<DexValueBlock<?>> elements;
     public EncodedArray() {
         super(2);
         this.elementCount = new Ule128Item();
@@ -34,18 +34,18 @@ public class EncodedArray extends DataItemEntry implements Iterable<DexValue<?>>
         addChild(0, elementCount);
         addChild(1, elements);
     }
-    public DexValue<?> get(int i){
+    public DexValueBlock<?> get(int i){
         return getElements().get(i);
     }
     public int size(){
         return getElements().size();
     }
     @Override
-    public Iterator<DexValue<?>> iterator(){
+    public Iterator<DexValueBlock<?>> iterator(){
         return getElements().iterator();
     }
 
-    public BlockList<DexValue<?>> getElements() {
+    public BlockList<DexValueBlock<?>> getElements() {
         return elements;
     }
     @Override
@@ -53,7 +53,7 @@ public class EncodedArray extends DataItemEntry implements Iterable<DexValue<?>>
         super.onReadBytes(reader);
         int count = elementCount.get();
         for(int i = 0; i < count; i++){
-            DexValue<?> dexValue = DexValueType.create(reader);
+            DexValueBlock<?> dexValue = DexValueType.create(reader);
             elements.add(dexValue);
             dexValue.readBytes(reader);
         }
@@ -62,7 +62,7 @@ public class EncodedArray extends DataItemEntry implements Iterable<DexValue<?>>
     public String toString(){
         StringBuilder builder = new StringBuilder();
         builder.append('{');
-        Iterator<DexValue<?>> iterator = iterator();
+        Iterator<DexValueBlock<?>> iterator = iterator();
         boolean appendOnce = false;
         while (iterator.hasNext()){
             if(appendOnce){

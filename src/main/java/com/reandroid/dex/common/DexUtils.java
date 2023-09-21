@@ -17,7 +17,50 @@
 // originally copied from JesusFreke/smali
 package com.reandroid.dex.common;
 
+import java.io.IOException;
+
 public class DexUtils {
+
+    public static String quoteString(String text){
+        StringBuilder builder = new StringBuilder(text.length() + 2);
+        try {
+            appendQuotedString(builder, text);
+        } catch (IOException ignored) {
+        }
+        return builder.toString();
+    }
+    public static void appendQuotedString(Appendable appendable, String text) throws IOException {
+        appendable.append('"');
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+
+            if ((c >= ' ') && (c < 0x7f)) {
+                if ((c == '\'') || (c == '\"') || (c == '\\')) {
+                    appendable.append('\\');
+                }
+                appendable.append(c);
+                continue;
+            } else if (c <= 0x7f) {
+                switch (c) {
+                    case '\n':
+                        appendable.append("\\n");
+                        continue;
+                    case '\r':
+                        appendable.append("\\r");
+                        continue;
+                    case '\t':
+                        appendable.append("\\t");
+                        continue;
+                }
+            }
+            appendable.append("\\u");
+            appendable.append(Character.forDigit(c >> 12, 16));
+            appendable.append(Character.forDigit((c >> 8) & 0x0f, 16));
+            appendable.append(Character.forDigit((c >> 4) & 0x0f, 16));
+            appendable.append(Character.forDigit(c & 0x0f, 16));
+        }
+        appendable.append('"');
+    }
     public static boolean isNative(String type){
         if(type == null){
             return false;

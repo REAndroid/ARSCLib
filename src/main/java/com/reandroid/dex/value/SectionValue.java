@@ -17,6 +17,7 @@ package com.reandroid.dex.value;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.base.StringKeyItem;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -25,7 +26,7 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class SectionValue<T extends Block> extends DexValue<NumberValue> implements SmaliFormat {
+public class SectionValue<T extends Block> extends DexValueBlock<NumberValue> implements SmaliFormat {
 
     private final SectionType<T> sectionType;
     private T mData;
@@ -82,6 +83,14 @@ public class SectionValue<T extends Block> extends DexValue<NumberValue> impleme
     void onDataUpdated(T data){
     }
 
+    @Override
+    public String getAsString() {
+        T data = getData();
+        if(data instanceof StringKeyItem){
+            return ((StringKeyItem) data).getKey();
+        }
+        return null;
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         T data = getData();

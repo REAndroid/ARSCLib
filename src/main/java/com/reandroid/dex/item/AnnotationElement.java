@@ -37,14 +37,14 @@ public class AnnotationElement extends DataItemEntry
         builder.append("()");
         return builder.toString();
     }
-    public DexValue<?> getValue(){
-        return (DexValue<?>) getChildes()[1];
+    public DexValueBlock<?> getValue(){
+        return (DexValueBlock<?>) getChildes()[1];
     }
-    public void setValue(DexValue<?> dexValue){
+    public void setValue(DexValueBlock<?> dexValue){
         addChild(1, dexValue);
     }
     public DexValueType<?> getValueType(){
-        DexValue<?> value = getValue();
+        DexValueBlock<?> value = getValue();
         if(value != null){
             return value.getValueType();
         }

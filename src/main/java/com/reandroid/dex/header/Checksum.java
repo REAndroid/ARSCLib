@@ -19,6 +19,9 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.zip.Adler32;
 
 public class Checksum extends HeaderPiece {
 
@@ -33,14 +36,11 @@ public class Checksum extends HeaderPiece {
         setSize(4);
         putInteger(0, checksum);
     }
-    public void update(Block parent) {
-        Alder32OutputStream outputStream = new Alder32OutputStream();
-        try {
-            parent.writeBytes(outputStream);
-        } catch (IOException ex) {
-            throw new IllegalArgumentException(ex);
-        }
-        setChecksum(outputStream.getValue());
+    public void update(Block parent, byte[] bytes) {
+        int start = parent.countUpTo(this) + countBytes();
+        Adler32 adler32 = new Adler32();
+        adler32.update(bytes, start, bytes.length - start);
+        setChecksum((int) adler32.getValue());
     }
 
     @Override

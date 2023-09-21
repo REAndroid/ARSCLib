@@ -17,7 +17,6 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.model.DexFile;
 import com.reandroid.dex.base.*;
 import com.reandroid.utils.HexUtil;
 
@@ -53,7 +52,7 @@ public class MapItem extends DexBlockItem {
             parent = getParentInstance(MapList.class);
         }
         if(parent == null){
-            parent = getParentInstance(DexFile.class);
+            parent = getParentInstance(DexFileBlock.class);
         }
         if(parent == null){
             parent = getParent();

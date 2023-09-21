@@ -20,20 +20,21 @@ import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class DexValue<T extends Block> extends FixedBlockContainer implements SmaliFormat {
+public class DexValueBlock<T extends Block> extends FixedBlockContainer implements SmaliFormat {
     private final ByteItem valueType;
     private final T valueContainer;
-    DexValue(T value){
+    DexValueBlock(T value){
         super(2);
         valueType = new ByteItem();
         valueContainer = value;
         addChild(0, valueType);
         addChild(1, valueContainer);
     }
-    DexValue(){
+    DexValueBlock(){
         this(null);
     }
 
@@ -63,6 +64,10 @@ public class DexValue<T extends Block> extends FixedBlockContainer implements Sm
         if(value instanceof SmaliFormat){
             ((SmaliFormat)value).append(writer);
         }
+    }
+
+    public String getAsString() {
+        return String.valueOf(getValue());
     }
     @Override
     public String toString() {

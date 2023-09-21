@@ -21,7 +21,7 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class PrimitiveValue extends DexValue<NumberValue> {
+public class PrimitiveValue extends DexValueBlock<NumberValue> {
 
     public PrimitiveValue() {
         super(new NumberValue());
@@ -42,7 +42,11 @@ public class PrimitiveValue extends DexValue<NumberValue> {
         writer.append(HexUtil.toHex(getNumberValue(), getValueSize()));
     }
     @Override
-    public String toString() {
+    public String getAsString() {
         return HexUtil.toHex(getNumberValue(), getValueSize());
+    }
+    @Override
+    public String toString() {
+        return getAsString();
     }
 }

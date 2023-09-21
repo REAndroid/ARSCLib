@@ -16,22 +16,27 @@
 package com.reandroid.dex.header;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.dex.model.DexFile;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class Signature extends HeaderPiece{
     public Signature(){
         super(20);
     }
-    public void update(Block parent) {
-        Sha1OutputStream outputStream = new Sha1OutputStream();
+    public void update(Block parent, byte[] bytes) {
+        int start = parent.countUpTo(this) + countBytes();
+        MessageDigest messageDigest;
         try {
-            parent.writeBytes(outputStream);
-        } catch (IOException ex) {
+            messageDigest = MessageDigest.getInstance("SHA-1");
+        } catch (NoSuchAlgorithmException ex) {
             throw new IllegalArgumentException(ex);
         }
-        byte[] bytes = outputStream.digest();
-        putByteArray(0, bytes);
+        messageDigest.update(bytes, start, bytes.length - start);
+        byte[] digest = messageDigest.digest();
+        putByteArray(0, digest);
     }
     @Override
     public String toString() {

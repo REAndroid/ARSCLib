@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-public class DexValueType<T extends DexValue<?>> implements BlockCreator<T> {
+public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T> {
 
     private static final DexValueType<?>[] VALUES;
     private static final DexValueType<?>[] VALUES_COPY;
@@ -48,7 +48,7 @@ public class DexValueType<T extends DexValue<?>> implements BlockCreator<T> {
     public static final DexValueType<SectionValue<MethodId>> METHOD;
     public static final DexValueType<EnumValue> ENUM;
     public static final DexValueType<ArrayValue> ARRAY;
-    public static final DexValueType<DexValue<AnnotationItem>> ANNOTATION;
+    public static final DexValueType<DexValueBlock<AnnotationItem>> ANNOTATION;
     public static final DexValueType<NullValue> NULL;
     public static final DexValueType<BooleanValue> BOOLEAN;
 
@@ -118,7 +118,7 @@ public class DexValueType<T extends DexValue<?>> implements BlockCreator<T> {
         valueTypes[0x1c] = ARRAY;
 
         ANNOTATION = new DexValueType<>("ANNOTATION", 0x1d, 0, false,
-                "", () -> new DexValue<>(new AnnotationItem(true)));
+                "", () -> new DexValueBlock<>(new AnnotationItem(true)));
         valueTypes[0x1d] = ANNOTATION;
 
         NULL = new DexValueType<>("NULL", 0x1e, 0, false,
@@ -207,7 +207,7 @@ public class DexValueType<T extends DexValue<?>> implements BlockCreator<T> {
         return VALUES[flag & 0x1f];
     }
 
-    public static DexValue<?> create(BlockReader reader) throws IOException {
+    public static DexValueBlock<?> create(BlockReader reader) throws IOException {
         int type = reader.read();
         reader.offset(-1);
         DexValueType<?> valueType = fromFlag(type);

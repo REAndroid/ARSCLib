@@ -15,16 +15,15 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.FieldId;
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.item.AnnotationSet;
 import com.reandroid.dex.item.FieldDef;
-import com.reandroid.dex.item.FieldDefArray;
-import com.reandroid.utils.collection.EmptyList;
+import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.value.DexValueBlock;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 public class DexField {
 
@@ -36,18 +35,29 @@ public class DexField {
         this.fieldDef = fieldDef;
     }
 
+    public String getAccessFlags() {
+        return AccessFlag.formatForField(getFieldDef().getAccessFlagsValue());
+    }
     public String getName(){
         return getFieldId().getName();
     }
     public void setName(String name){
         getFieldId().setName(name);
     }
-    public void setName(StringData name){
-        getFieldId().setName(name);
+    public String getFieldType(){
+        return getFieldId().getFieldTypeName();
     }
-    public String key(){
-        return getFieldId().key();
+    public void setFieldType(String type){
+        getFieldId().setFieldType(type);
     }
+    public String getInitialValue() {
+        DexValueBlock<?> dexValueBlock = getFieldDef().getStaticInitialValue();
+        if(dexValueBlock != null){
+            return dexValueBlock.getAsString();
+        }
+        return null;
+    }
+
     public String getKey(){
         return getFieldId().getKey();
     }
@@ -67,23 +77,22 @@ public class DexField {
 
     @Override
     public String toString() {
-        return key();
-    }
-
-    static DexField create(DexClass dexClass, FieldDef fieldDef){
-        return new DexField(dexClass, fieldDef);
-    }
-    static List<DexField> create(DexClass dexClass, FieldDefArray defArray){
-        int count = defArray.getChildesCount();
-        if(count == 0){
-            return EmptyList.of();
+        StringBuilder builder = new StringBuilder();
+        builder.append(".field");
+        String flags = getAccessFlags();
+        if(flags.length() != 0){
+            builder.append(' ');
+            builder.append(flags);
         }
-        List<DexField> results = new ArrayList<>(count);
-        Iterator<FieldDef> iterator = defArray.iterator();
-        while (iterator.hasNext()){
-            results.add(create(dexClass, iterator.next()));
+        builder.append(' ');
+        builder.append(getName());
+        builder.append(":");
+        builder.append(getFieldType());
+        String value = getInitialValue();
+        if(value != null){
+            builder.append(" = ");
+            builder.append(value);
         }
-        return results;
+        return builder.toString();
     }
-
 }

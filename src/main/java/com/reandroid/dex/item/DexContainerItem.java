@@ -18,6 +18,7 @@ package com.reandroid.dex.item;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.FixedDexContainer;
+import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
@@ -75,6 +76,13 @@ public class DexContainerItem extends FixedDexContainer {
         SectionList sectionList = getParent(SectionList.class);
         if(sectionList != null){
             return sectionList.get(sectionType);
+        }
+        return null;
+    }
+    public<T1 extends Block> DexIdPool<T1> getPool(SectionType<T1> sectionType){
+        Section<T1> section = getSection(sectionType);
+        if(section != null){
+            return section.getPool();
         }
         return null;
     }

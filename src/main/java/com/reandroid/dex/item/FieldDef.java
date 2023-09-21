@@ -18,7 +18,7 @@ package com.reandroid.dex.item;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.FieldId;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.value.DexValue;
+import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
@@ -30,6 +30,13 @@ import java.util.Iterator;
 public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
     public FieldDef() {
         super(0, SectionType.FIELD_ID);
+    }
+
+    public DexValueBlock<?> getStaticInitialValue(){
+        if(isStatic()){
+            return getClassId().getStaticValue(getIndex());
+        }
+        return null;
     }
     public FieldId getFieldId(){
         return getItem();
@@ -56,7 +63,7 @@ public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
         writer.append(':');
         fieldId.getFieldType().append(writer);
         if(isStatic()){
-            DexValue<?> value = getClassId().getStaticValue(getIndex());
+            DexValueBlock<?> value = getClassId().getStaticValue(getIndex());
             if(value != null && value.getValueType() != DexValueType.NULL){
                 writer.append(" = ");
                 value.append(writer);

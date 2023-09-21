@@ -16,18 +16,13 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.container.FixedBlockContainer;
-import com.reandroid.arsc.group.ItemGroup;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.common.BytesOutputStream;
-import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.item.AnnotationElement;
-import com.reandroid.dex.item.AnnotationItem;
+import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.item.StringData;
-import com.reandroid.dex.sections.*;
-import com.reandroid.dex.value.ArrayValue;
-import com.reandroid.dex.value.DexValue;
-import com.reandroid.dex.value.StringValue;
+import com.reandroid.dex.sections.DexFileBlock;
+import com.reandroid.dex.sections.Marker;
+import com.reandroid.dex.sections.Section;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -37,40 +32,15 @@ import java.io.*;
 import java.util.Iterator;
 import java.util.List;
 
-public class DexFile extends FixedBlockContainer {
+public class DexFile {
 
-    private final SectionList sectionList;
+    private final DexFileBlock dexFileBlock;
 
-    public DexFile() {
-        super(1);
-        this.sectionList = new SectionList();
-        addChild(0, sectionList);
+    public DexFile(DexFileBlock dexFileBlock){
+        this.dexFileBlock = dexFileBlock;
     }
-
-    public Iterator<StringData> unusedStrings(){
-        return getStringsWithUsage(StringData.USAGE_NONE);
-    }
-    public Iterator<StringData> getStringsContainsUsage(int usage){
-        return FilterIterator.of(getStrings(),
-                stringData -> stringData.containsUsage(usage));
-    }
-    public Iterator<StringData> getStringsWithUsage(int usage){
-        return FilterIterator.of(getStrings(),
-                stringData -> stringData.getStringUsage() == usage);
-    }
-    public Iterator<StringData> getStrings(){
-        Section<StringData> stringSection = get(SectionType.STRING_DATA);
-        if(stringSection == null){
-            return EmptyIterator.of();
-        }
-        return stringSection.iterator();
-    }
-    public void clearMarkers(){
-        List<StringData> removeList = CollectionUtil.toList(
-                ComputeIterator.of(getMarkers(), Marker::getStringData));
-        for(StringData stringData : removeList){
-            stringData.removeSelf();
-        }
+    public Iterator<DexClass> getDexClasses() {
+        return ComputeIterator.of(getClassIds(), DexClass::new);
     }
     public Marker getOrCreateMarker() {
         Marker marker = CollectionUtil.getFirst(getMarkers());
@@ -89,95 +59,57 @@ public class DexFile extends FixedBlockContainer {
     public Iterator<Marker> getMarkers() {
         return Marker.parse(this);
     }
+    public void clearMarkers(){
+        List<StringData> removeList = CollectionUtil.toList(
+                ComputeIterator.of(getMarkers(), Marker::getStringData));
+        for(StringData stringData : removeList){
+            stringData.removeSelf();
+        }
+    }
     public void sortSection(SectionType<?>[] order){
         refresh();
-        getSectionList().sortSection(order);
+        getDexFileBlock().sortSection(order);
         refresh();
     }
     public void sortStrings(){
-        getSectionList().sortStrings();
+        getDexFileBlock().sortStrings();
     }
-    public void linkTypeSignature(){
-        Section<AnnotationItem> annotationSection = getSectionList().get(SectionType.ANNOTATION);
-        if(annotationSection == null){
-            return;
+    public Iterator<StringData> unusedStrings(){
+        return getStringsWithUsage(StringData.USAGE_NONE);
+    }
+    public Iterator<StringData> getStringsContainsUsage(int usage){
+        return FilterIterator.of(getStringData(),
+                stringData -> stringData.containsUsage(usage));
+    }
+    public Iterator<StringData> getStringsWithUsage(int usage){
+        return FilterIterator.of(getStringData(),
+                stringData -> stringData.getStringUsage() == usage);
+    }
+    Iterator<ClassId> getClassIds(){
+        Section<ClassId> section = get(SectionType.CLASS_ID);
+        if(section != null){
+            return section.iterator();
         }
-        ItemGroup<AnnotationItem> group = annotationSection.getPool().getGroup(ANNOTATION_SIG_KEY);
-        if(group == null){
-            return;
+        return EmptyIterator.of();
+    }
+    public Iterator<StringData> getStringData(){
+        Section<StringData> section = get(SectionType.STRING_DATA);
+        if(section != null){
+            return section.iterator();
         }
-        for(AnnotationItem item : group){
-            AnnotationElement element = item.getElement(0);
-            if(element == null){
-                continue;
-            }
-            DexValue<?> dexValue = element.getValue();
-            if(!(dexValue instanceof ArrayValue)){
-                continue;
-            }
-            ArrayValue arrayValue = (ArrayValue) dexValue;
-            linkTypeSignature(arrayValue);
-        }
+        return EmptyIterator.of();
     }
-    private void linkTypeSignature(ArrayValue arrayValue){
-        for(DexValue<?> value : arrayValue){
-            if(!(value instanceof StringValue)){
-                continue;
-            }
-            StringData stringData = ((StringValue) value).getStringData();
-            if(stringData != null){
-                stringData.addStringUsage(StringData.USAGE_TYPE);
-            }
-        }
+    public <T1 extends Block> Section<T1> get(SectionType<T1> sectionType){
+        return getDexFileBlock().get(sectionType);
     }
-
-    public<T1 extends Block> Section<T1> get(SectionType<T1> sectionType){
-        return getSectionList().get(sectionType);
+    public void refresh() {
+        getDexFileBlock().refresh();
     }
-    public DexHeader getHeader() {
-        return getSectionList().getHeader();
+    public DexFileBlock getDexFileBlock() {
+        return dexFileBlock;
     }
-    public SectionList getSectionList(){
-        return sectionList;
-    }
-    public MapList getMapList(){
-        return getSectionList().getMapList();
-    }
-
-    @Override
-    protected void onPreRefresh() {
-        sectionList.refresh();
-    }
-    @Override
-    protected void onRefreshed() {
-        sectionList.updateHeader();
-    }
-    @Override
-    public byte[] getBytes(){
-        BytesOutputStream outputStream = new BytesOutputStream(
-                getHeader().fileSize.get());
-        try {
-            writeBytes(outputStream);
-            outputStream.close();
-        } catch (IOException ignored) {
-        }
-        return outputStream.toByteArray();
-    }
-
-    public void read(byte[] dexBytes) throws IOException {
-        BlockReader reader = new BlockReader(dexBytes);
-        readBytes(reader);
-        reader.close();
-    }
-    public void read(InputStream inputStream) throws IOException {
-        BlockReader reader = new BlockReader(inputStream);
-        readBytes(reader);
-        reader.close();
-    }
-    public void read(File file) throws IOException {
-        BlockReader reader = new BlockReader(file);
-        readBytes(reader);
-        reader.close();
+    public byte[] getBytes() {
+        return getDexFileBlock().getBytes();
     }
     public void write(File file) throws IOException {
         File dir = file.getParentFile();
@@ -185,41 +117,32 @@ public class DexFile extends FixedBlockContainer {
             dir.mkdirs();
         }
         FileOutputStream outputStream = new FileOutputStream(file);
-        writeBytes(outputStream);
+        write(outputStream);
         outputStream.close();
     }
-    public static boolean isDexFile(File file){
-        if(file == null || !file.isFile()){
-            return false;
-        }
-        DexHeader dexHeader = null;
-        try {
-            InputStream inputStream = new FileInputStream(file);
-            dexHeader = DexHeader.readHeader(inputStream);
-            inputStream.close();
-        } catch (IOException ignored) {
-        }
-        return isDexFile(dexHeader);
-    }
-    public static boolean isDexFile(InputStream inputStream){
-        DexHeader dexHeader = null;
-        try {
-            dexHeader = DexHeader.readHeader(inputStream);
-            inputStream.close();
-        } catch (IOException ignored) {
-        }
-        return isDexFile(dexHeader);
-    }
-    private static boolean isDexFile(DexHeader dexHeader){
-        if(dexHeader == null){
-            return false;
-        }
-        if(dexHeader.magic.isDefault()){
-            return false;
-        }
-        int version = dexHeader.version.getVersionAsInteger();
-        return version > 0 && version < 1000;
+    public void write(OutputStream outputStream) throws IOException {
+        byte[] bytes = getBytes();
+        outputStream.write(bytes, 0, bytes.length);
     }
 
-    public static final String ANNOTATION_SIG_KEY = "Ldalvik/annotation/Signature;->value()";
+    @Override
+    public String toString() {
+        return getDexFileBlock().getMapList().toString();
+    }
+
+    public static DexFile read(byte[] dexBytes) throws IOException {
+        return read(new BlockReader(dexBytes));
+    }
+    public static DexFile read(InputStream inputStream) throws IOException {
+        return read(new BlockReader(inputStream));
+    }
+    public static DexFile read(File file) throws IOException {
+        return read(new BlockReader(file));
+    }
+    public static DexFile read(BlockReader reader) throws IOException {
+        DexFileBlock dexFileBlock = new DexFileBlock();
+        dexFileBlock.readBytes(reader);
+        reader.close();
+        return new DexFile(dexFileBlock);
+    }
 }

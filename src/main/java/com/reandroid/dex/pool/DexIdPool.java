@@ -39,7 +39,7 @@ public class DexIdPool<T extends Block> {
     }
 
     public void keyChanged(String old){
-        if(!isKeyItems()){
+        if(old == null || !isKeyItems()){
             return;
         }
         ItemGroup<T> exist = itemsMap.remove(old);

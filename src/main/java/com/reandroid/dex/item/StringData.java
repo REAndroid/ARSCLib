@@ -20,6 +20,7 @@ import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
+import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.index.StringId;
 import com.reandroid.dex.io.ByteReader;
 import com.reandroid.dex.io.StreamUtil;
@@ -197,9 +198,7 @@ public class StringData extends DexBlockItem
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append('"');
-        writer.append(getString());
-        writer.append('"');
+        DexUtils.appendQuotedString(writer, getString());
     }
     @Override
     public int compareTo(StringData stringData) {

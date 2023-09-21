@@ -16,7 +16,7 @@
 package com.reandroid.dex.refactor;
 
 import com.reandroid.dex.item.StringData;
-import com.reandroid.dex.model.DexFile;
+import com.reandroid.dex.sections.DexFileBlock;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
@@ -39,9 +39,9 @@ public class Rename implements Iterable<RenameInfo<?>>{
         this.renameInfoList = new ArrayList<>();
     }
 
-    public void apply(DexFile dexFile){
-        dexFile.linkTypeSignature();
-        SectionList sectionList = dexFile.getSectionList();
+    public void apply(DexFileBlock dexFileBlock){
+        dexFileBlock.linkTypeSignature();
+        SectionList sectionList = dexFileBlock.getSectionList();
         for(RenameInfo<?> renameInfo : this){
             renameInfo.apply(sectionList);
         }

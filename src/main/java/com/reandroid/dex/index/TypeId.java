@@ -15,10 +15,7 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.item.StringData;
-import com.reandroid.dex.pool.DexIdPool;
-import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 
@@ -42,6 +39,29 @@ public class TypeId extends IndexItemEntry implements Comparable<TypeId>{
     public void setKey(String key){
         setName(key);
     }
+    public String getName(){
+        StringData stringData = getNameData();
+        if(stringData != null){
+            return stringData.getString();
+        }
+        return null;
+    }
+    public void setName(String name){
+        getNameReference().setString(name);
+        clearTypeName();
+    }
+    public StringData getNameData(){
+        return getNameReference().getItem();
+    }
+
+    public StringReference getNameReference() {
+        return nameReference;
+    }
+
+    public void setName(StringData name){
+        nameReference.setItem(name);
+    }
+
     public TypeName getTypeName(){
         TypeName typeName = this.typeName;
         if(typeName != null){
@@ -64,43 +84,6 @@ public class TypeId extends IndexItemEntry implements Comparable<TypeId>{
         synchronized (this){
             this.typeName = null;
         }
-    }
-    public void setName(String name){
-        DexIdPool<StringData> stringPool = getPool(SectionType.STRING_DATA);
-        StringData stringData = stringPool.getOrCreate(name);
-        if(stringData == null){
-            stringData = getNameData();
-            if(stringData != null){
-                String old = stringData.getKey();
-                stringData.setString(name);
-                stringPool.keyChanged(old);
-                clearTypeName();
-                return;
-            }
-        }
-        if(stringData == null){
-            stringData = stringPool.getOrCreate(name);
-        }
-        setName(stringData);
-        clearTypeName();
-    }
-    public String getName(){
-        StringData stringData = getNameData();
-        if(stringData != null){
-            return stringData.getString();
-        }
-        return null;
-    }
-    public StringData getNameData(){
-        return getNameReference().getItem();
-    }
-
-    public StringReference getNameReference() {
-        return nameReference;
-    }
-
-    public void setName(StringData name){
-        nameReference.setItem(name);
     }
 
     @Override

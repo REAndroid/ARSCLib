@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.value;
 
+import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.index.StringId;
 import com.reandroid.dex.item.AnnotationElement;
 import com.reandroid.dex.item.StringData;
@@ -42,5 +43,13 @@ public class StringValue extends SectionValue<StringId> {
             }
             stringData.addStringUsage(usage);
         }
+    }
+    @Override
+    public String getAsString() {
+        StringData stringData = getStringData();
+        if(stringData != null) {
+            return DexUtils.quoteString(stringData.getString());
+        }
+        return null;
     }
 }

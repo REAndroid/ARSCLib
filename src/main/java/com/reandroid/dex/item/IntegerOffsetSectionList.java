@@ -19,6 +19,7 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.ArrayIterator;
 
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 public class IntegerOffsetSectionList<T extends DataItemEntry> extends IntegerList implements Iterable<T>{
     private final SectionType<T> sectionType;
@@ -29,6 +30,64 @@ public class IntegerOffsetSectionList<T extends DataItemEntry> extends IntegerLi
         this.sectionType = sectionType;
     }
 
+    @Override
+    public void removeSelf() {
+        setItems(null);
+        super.removeSelf();
+    }
+
+    public void remove(T item) {
+        remove(t -> t == item);
+    }
+    public void remove(Predicate<? super T> filter) {
+        T[] items = this.items;
+        if(items == null){
+            return;
+        }
+        int length = items.length;
+        boolean found = false;
+        for(int i = 0; i < length; i++){
+            T item = items[i];
+            if(filter.test(item)){
+                items[i] = null;
+                if(item != null){
+                    item.removeSelf();
+                }
+                found = true;
+            }
+        }
+        if(found){
+            removeNulls();
+        }
+    }
+    void removeNulls() {
+        T[] items = this.items;
+        if(items == null || items.length == 0){
+            setItems(null);
+            return;
+        }
+        int length = items.length;
+        int count = 0;
+        for(int i = 0; i < length; i++){
+            if(items[i] == null){
+                count ++;
+            }
+        }
+        if(count == 0){
+            return;
+        }
+        T[] update = sectionType.getCreator()
+                .newInstance(length - count);
+        int index = 0;
+        for(int i  = 0; i < length; i++){
+            T element = items[i];
+            if(element != null){
+                update[index] = element;
+                index++;
+            }
+        }
+        setItems(update);
+    }
     @Override
     public Iterator<T> iterator() {
         return ArrayIterator.of(items);
@@ -45,6 +104,23 @@ public class IntegerOffsetSectionList<T extends DataItemEntry> extends IntegerLi
     }
     public T[] getItems() {
         return items;
+    }
+    public void setItems(T[] items){
+        if(items == this.items){
+            return;
+        }
+        if(isEmpty(items)){
+            this.items = null;
+            setSize(0);
+            return;
+        }
+        int length = items.length;
+        setSize(length, false);
+        for(int i = 0; i < length; i++){
+            T item = items[i];
+            put(i, getData(item));
+        }
+        this.items = items;
     }
 
     @Override
@@ -68,9 +144,18 @@ public class IntegerOffsetSectionList<T extends DataItemEntry> extends IntegerLi
         }
         int length = items.length;
         setSize(length, false);
+        boolean found = false;
         for(int i = 0; i < length; i++){
             T item = items[i];
+            int data = getData(item);
             put(i, getData(item));
+            if(data == 0) {
+                items[i] = null;
+                found = true;
+            }
+        }
+        if(found){
+            removeNulls();
         }
     }
     private int getData(T item){

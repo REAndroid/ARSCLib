@@ -16,43 +16,58 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.index.ClassId;
+import com.reandroid.dex.index.ItemOffsetReference;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.item.*;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.EmptyList;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 public class DexClass implements Comparable<DexClass>{
     private final ClassId classId;
 
-    private List<DexField> staticFields;
-    private List<DexField> instanceFields;
-
-    private List<DexMethod> directMethods;
-    private List<DexMethod> virtualMethods;
-
     public DexClass(ClassId classId){
         this.classId = classId;
-
-        this.staticFields = EmptyList.of();
-        this.instanceFields = EmptyList.of();
-
-        this.directMethods = EmptyList.of();
-        this.virtualMethods = EmptyList.of();
     }
 
-    public List<DexField> getStaticFields() {
-        return staticFields;
+    public Iterator<DexField> getStaticFields() {
+        ClassData classData = getClassData();
+        if(classData != null){
+            return ComputeIterator.of(classData
+                    .getStaticFields().iterator(), this::createField);
+        }
+        return EmptyIterator.of();
     }
-    public List<DexField> getInstanceFields() {
-        return instanceFields;
+    public Iterator<DexField> getInstanceFields() {
+        return ComputeIterator.of(getClassData()
+                .getInstanceFields().iterator(), this::createField);
+    }
+    public Iterator<DexMethod> getDirectMethods() {
+        return ComputeIterator.of(getClassData()
+                .getDirectMethods().iterator(), this::createMethod);
+    }
+    public Iterator<DexMethod> getVirtualMethods() {
+        return ComputeIterator.of(getClassData()
+                .getVirtualMethods().iterator(), this::createMethod);
+    }
+
+    DexField createField(FieldDef fieldDef){
+        fieldDef.setClassId(getClassId());
+        return new DexField(this, fieldDef);
+    }
+    DexMethod createMethod(MethodDef methodDef){
+        return new DexMethod(this, methodDef);
     }
 
 
@@ -85,6 +100,9 @@ public class DexClass implements Comparable<DexClass>{
     public String getSuperClass(){
         return getClassId().getSuperClass().getName();
     }
+    public void setSuperClass(String superClass){
+        getClassId().setSuperClass(superClass);
+    }
     public String getSourceFile(){
         StringData stringData = getClassId().getSourceFile();
         if(stringData != null){
@@ -92,10 +110,50 @@ public class DexClass implements Comparable<DexClass>{
         }
         return null;
     }
-    public TypeId[] getInterfaces(){
-        return getClassId().getInterfaceTypeIds();
+    public void setSourceFile(String sourceFile){
+        getClassId().setSourceFile(sourceFile);
+    }
+    public Iterator<String> getInterfaces(){
+        TypeList typeList = getClassId().getInterfaces();
+        if(typeList != null){
+            return typeList.getTypeNames();
+        }
+        return EmptyIterator.of();
+    }
+    public void addInterface(String typeName) {
+        ItemOffsetReference<TypeList> reference = getClassId().getInterfacesReference();
+        TypeList typeList = reference.getOrCreate();
+        typeList.add(typeName);
+    }
+    public void addInterfaces(Iterator<String> iterator){
+        ItemOffsetReference<TypeList> reference = getClassId().getInterfacesReference();
+        TypeList typeList = reference.getOrCreate();
+        typeList.addAll(iterator);
+    }
+    public void clearInterfaces() {
+        ItemOffsetReference<TypeList> reference = getClassId().getInterfacesReference();
+        reference.setItem(null);
     }
 
+    public void removeAnnotations(Predicate<AnnotationItem> filter) {
+        ClassId classId = getClassId();
+        AnnotationSet annotationSet = classId.getClassAnnotations();
+        if(annotationSet == null) {
+            return;
+        }
+        annotationSet.remove(filter);
+        annotationSet.refresh();
+        if(annotationSet.size() == 0){
+            annotationSet.removeSelf();
+            classId.setClassAnnotations(null);
+            AnnotationsDirectory directory = getClassId().getAnnotationsDirectory();
+            if(directory != null && directory.isEmpty()){
+                directory.removeSelf();
+                classId.setAnnotationsDirectory(null);
+            }
+        }
+        getClassId().refresh();
+    }
     public AnnotationSet getAnnotations(){
         return getClassId().getClassAnnotations();
     }
@@ -113,24 +171,6 @@ public class DexClass implements Comparable<DexClass>{
 
 
     public void refresh(){
-        loadFields();
-        loadMethods();
-    }
-    private void loadFields(){
-        ClassData classData = getClassData();
-        if(classData == null){
-            return;
-        }
-        this.staticFields = DexField.create(this, classData.getStaticFields());
-        this.instanceFields = DexField.create(this, classData.getInstanceFields());
-    }
-    private void loadMethods(){
-        ClassData classData = getClassData();
-        if(classData == null){
-            return;
-        }
-        this.directMethods = DexMethod.create(this, classData.getDirectMethods());
-        this.virtualMethods = DexMethod.create(this, classData.getVirtualMethods());
     }
 
     @Override

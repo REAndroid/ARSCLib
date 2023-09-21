@@ -20,8 +20,10 @@ import com.reandroid.dex.item.TypeList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
 
@@ -52,6 +54,27 @@ public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
         return builder.toString();
     }
 
+    public int getParametersCount(){
+        TypeList typeList = getTypeList();
+        if(typeList != null){
+            return typeList.size();
+        }
+        return 0;
+    }
+    public TypeId getParameter(int index) {
+        TypeList typeList = getTypeList();
+        if(typeList != null){
+            return typeList.getTypeId(index);
+        }
+        return null;
+    }
+    public Iterator<TypeId> getParameters(){
+        TypeList typeList = getTypeList();
+        if(typeList != null){
+            return typeList.iterator();
+        }
+        return EmptyIterator.of();
+    }
     public TypeList getTypeList() {
         return parameters.getItem();
     }
@@ -69,14 +92,6 @@ public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
     }
     public void setShorty(StringData stringData){
         shorty.setItem(stringData);
-    }
-
-    public int getParametersCount(){
-        TypeList typeList = getTypeList();
-        if(typeList != null){
-            return typeList.size();
-        }
-        return 0;
     }
 
     @Override

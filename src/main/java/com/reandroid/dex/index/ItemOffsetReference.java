@@ -34,6 +34,15 @@ public class ItemOffsetReference<T extends DataItemEntry> extends IndirectItem<D
         this.sectionType = sectionType;
     }
 
+    public T getOrCreate() {
+        T item = getItem();
+        if(item != null) {
+            return item;
+        }
+        item = getBlockItem().createOffsetItem(sectionType);
+        setItem(item);
+        return item;
+    }
     public T getItem() {
         int i = get();
         if(item == null && i != 0){
@@ -76,8 +85,11 @@ public class ItemOffsetReference<T extends DataItemEntry> extends IndirectItem<D
             if(reference != null){
                 value = reference.get();
             }
-            Block.putInteger(getBytesInternal(), getOffset(), value);
+            if(value == 0){
+                this.item = null;
+            }
         }
+        Block.putInteger(getBytesInternal(), getOffset(), value);
     }
 
     @Override

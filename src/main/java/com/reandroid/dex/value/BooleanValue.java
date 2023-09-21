@@ -20,7 +20,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class BooleanValue extends DexValue<Block> {
+public class BooleanValue extends DexValueBlock<Block> {
     public BooleanValue(){
         super();
     }
@@ -32,7 +32,11 @@ public class BooleanValue extends DexValue<Block> {
         writer.append(Boolean.toString(getBoolean()));
     }
     @Override
-    public String toString(){
+    public String getAsString() {
         return Boolean.toString(getBoolean());
+    }
+    @Override
+    public String toString(){
+        return getAsString();
     }
 }

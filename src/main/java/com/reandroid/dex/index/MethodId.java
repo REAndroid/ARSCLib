@@ -21,8 +21,10 @@ import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
 
@@ -45,63 +47,77 @@ public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
         return null;
     }
     public void setName(String name){
-        Section<StringData> stringSection = getSection(SectionType.STRING_DATA);
-        DexIdPool<StringData> pool = stringSection.getPool();
-        StringData stringData = pool.getOrCreate(name);
-        setName(stringData);
+        nameReference.setString(name);
     }
     public void setName(StringData stringData){
         this.nameReference.setItem(stringData);
     }
-    public String getKey(){
-        return getKey(false);
+
+    public StringData getNameString(){
+        return nameReference.getItem();
     }
-    public String getKey(boolean appendReturnType){
-        StringBuilder builder = new StringBuilder();
-        TypeId type = getClassType();
-        if(type == null){
-            return null;
-        }
-        StringData stringData = type.getNameData();
-        if(stringData == null){
-            return null;
-        }
-        builder.append(stringData.getString());
-        builder.append("->");
-        builder.append(getName());
-        ProtoId protoId = getProto();
-        if(protoId != null){
-            builder.append(protoId.getKey(appendReturnType));
-        }
-        return builder.toString();
-    }
-    public String key(){
-        return key(true);
-    }
-    public String key(boolean appendReturnType){
-        StringBuilder builder = new StringBuilder();
-        builder.append("->");
-        builder.append(getName());
-        ProtoId protoId = getProto();
-        if(protoId != null){
-            builder.append(protoId.getKey(appendReturnType));
-        }
-        return builder.toString();
+    StringReference getNameReference(){
+        return nameReference;
     }
 
     public TypeId getClassType(){
         return classType.getItem();
     }
-    public StringData getNameString(){
-        return nameReference.getItem();
+    public String getClassName() {
+        return classType.getKey();
     }
-    public StringReference getNameReference(){
-        return nameReference;
+    public int getParametersCount() {
+        ProtoId protoId = getProto();
+        if(protoId != null){
+            return protoId.getParametersCount();
+        }
+        return 0;
+    }
+    public TypeId getParameter(int index) {
+        ProtoId protoId = getProto();
+        if(protoId != null){
+            return protoId.getParameter(index);
+        }
+        return null;
+    }
+    public Iterator<TypeId> getParameters(){
+        ProtoId protoId = getProto();
+        if(protoId != null){
+            return protoId.getParameters();
+        }
+        return EmptyIterator.of();
     }
     public ProtoId getProto(){
         return proto.getItem();
     }
 
+    public TypeId getReturnTypeId() {
+        ProtoId protoId = getProto();
+        if(protoId != null){
+            return protoId.getReturnTypeId();
+        }
+        return null;
+    }
+
+    @Override
+    public String getKey() {
+        return getKey(false);
+    }
+    public String getKey(boolean appendReturnType){
+        StringBuilder builder = new StringBuilder();
+        String type = getClassName();
+        if(type == null){
+            return null;
+        }
+        builder.append(type);
+        builder.append("->");
+        builder.append(getName());
+        ProtoId protoId = getProto();
+        if(protoId != null){
+            builder.append(protoId.getKey(appendReturnType));
+        }
+        return builder.toString();
+    }
     @Override
     public void refresh() {
         classType.refresh();

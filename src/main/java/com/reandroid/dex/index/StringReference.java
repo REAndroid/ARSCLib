@@ -22,7 +22,6 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.pool.DexIdPool;
-import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.CompareUtil;
 
@@ -81,17 +80,33 @@ public class StringReference extends IndirectItem<DexBlockItem> implements
         }
         return null;
     }
-    public void setString(String text){
-        if(Objects.equals(text, getString())){
+    public void setString(String text) {
+        setString(text, false);
+    }
+    public void setString(String text, boolean overwrite) {
+        StringId stringId = this.stringId;
+        StringData stringData = null;
+        if(stringId != null){
+            stringData = stringId.getStringData();
+        }
+        String oldText = null;
+        if(stringData != null) {
+            oldText = stringData.getString();
+        }
+        if(Objects.equals(text, oldText)){
             return;
         }
-        Section<StringData> section = getBlockItem().getSection(SectionType.STRING_DATA);
-        if(section == null){
+        DexIdPool<StringData> pool = getBlockItem().getPool(SectionType.STRING_DATA);
+        if(pool == null){
             return;
         }
-        DexIdPool<StringData> pool = section.getPool();
-        StringData stringData = pool.getOrCreate(text);
+        if(!overwrite || stringData == null){
+            stringData = pool.getOrCreate(text);
+        }
         setStringId(stringData.getStringId());
+        if(overwrite){
+            pool.keyChanged(oldText);
+        }
     }
 
     @Override

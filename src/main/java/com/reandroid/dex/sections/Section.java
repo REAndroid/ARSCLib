@@ -121,6 +121,29 @@ public class Section<T extends Block>  extends FixedDexContainer
         }
         return results;
     }
+    public T createOffsetItem() {
+        int position = estimateLastOffset();
+        T item = getItemArray().createNext();
+        if(item instanceof PositionedItem) {
+            ((PositionedItem) item).setPosition(position);
+        }else {
+            IntegerReference supplier = ((OffsetSupplier) item).getOffsetReference();
+            supplier.set(position);
+        }
+        return item;
+    }
+    private int estimateLastOffset() {
+        int offset;
+        T last = getItemArray().getLast();
+        if(last instanceof OffsetSupplier) {
+            IntegerReference supplier = ((OffsetSupplier) last).getOffsetReference();
+            offset = supplier.get();
+            offset += last.countBytes();
+        }else {
+            offset = getOffset() + countBytes();
+        }
+        return offset;
+    }
     @Override
     public int getCount(){
         return getItemArray().getCount();

@@ -20,7 +20,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class NullValue extends DexValue<Block> {
+public class NullValue extends DexValueBlock<Block> {
     public NullValue() {
         super();
     }
@@ -32,6 +32,10 @@ public class NullValue extends DexValue<Block> {
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append("null");
+    }
+    @Override
+    public String getAsString() {
+        return "null";
     }
     @Override
     public String toString() {

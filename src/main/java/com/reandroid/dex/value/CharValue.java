@@ -20,54 +20,22 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class CharValue extends PrimitiveValue{
+public class CharValue extends PrimitiveValue {
+
     public CharValue(){
         super();
     }
+
     public char getChar(){
         return (char) getNumberValue();
     }
+
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
     }
-
     @Override
-    public void append(SmaliWriter writer) throws IOException {
-        char ch = getChar();
-        if ((ch >= ' ') && (ch < 0x7f)) {
-            writer.append('\'');
-            if ((ch == '\'') || (ch == '\"') || (ch == '\\')) {
-                writer.append('\\');
-            }
-            writer.append(ch);
-            writer.append('\'');
-            return;
-        } else if (ch <= 0x7f) {
-            switch (ch) {
-                case '\n':
-                    writer.append("'\\n'");
-                    return;
-                case '\r':
-                    writer.append("'\\r'");
-                    return;
-                case '\t':
-                    writer.append("'\\t'");
-                    return;
-            }
-        }
-
-        writer.append('\'');
-        writer.append("\\u");
-        writer.append(Character.forDigit(ch >> 12, 16));
-        writer.append(Character.forDigit((ch >> 8) & 0x0f, 16));
-        writer.append(Character.forDigit((ch >> 4) & 0x0f, 16));
-        writer.append(Character.forDigit(ch & 0x0f, 16));
-        writer.append('\'');
-    }
-
-    @Override
-    public String toString() {
+    public String getAsString() {
         StringBuilder builder = new StringBuilder();
         char ch = getChar();
         if ((ch >= ' ') && (ch < 0x7f)) {
@@ -100,5 +68,14 @@ public class CharValue extends PrimitiveValue{
         builder.append(Character.forDigit(ch & 0x0f, 16));
         builder.append('\'');
         return builder.toString();
+    }
+
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.append(getAsString());
+    }
+    @Override
+    public String toString() {
+        return getAsString();
     }
 }
