@@ -22,7 +22,13 @@ public class FixedBlockContainer extends BlockContainer<Block> {
     private final Block[] mChildes;
     public FixedBlockContainer(int childesCount){
         super();
-        mChildes = new Block[childesCount];
+        Block[] childes;
+        if(childesCount == 0){
+            childes = EMPTY;
+        }else {
+            childes = new Block[childesCount];
+        }
+        this.mChildes = childes;
     }
     public void addChild(int index, Block block){
         mChildes[index] = block;
@@ -42,4 +48,6 @@ public class FixedBlockContainer extends BlockContainer<Block> {
     public Block[] getChildes() {
         return mChildes;
     }
+
+    private static final Block[] EMPTY = new Block[0];
 }
