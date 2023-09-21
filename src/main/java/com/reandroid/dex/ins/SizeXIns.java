@@ -132,27 +132,4 @@ public class SizeXIns extends Ins {
             writer.append(HexUtil.toHex(data, 1));
         }
     }
-
-    public String toString1() {
-        Opcode<?> opcode = getOpcode();
-        if(opcode.size() < 4){
-            return super.toString();
-        }
-        StringBuilder builder = new StringBuilder();
-        builder.append(opcode);
-        builder.append(" v");
-        builder.append(getRegisterA());
-        builder.append(", ");
-        IndexItemEntry sectionItem = getSectionItem();
-        if(sectionItem != null){
-            if(sectionItem instanceof StringId){
-                builder.append(((StringId)sectionItem).getQuotedString());
-            }else {
-                builder.append(sectionItem);
-            }
-        }else {
-            builder.append(HexUtil.toHex(getData(), 2));
-        }
-        return builder.toString();
-    }
 }
