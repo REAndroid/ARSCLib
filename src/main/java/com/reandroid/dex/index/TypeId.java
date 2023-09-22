@@ -116,4 +116,14 @@ public class TypeId extends IndexItemEntry implements Comparable<TypeId>{
         }
         return getIndex() + ":string-index=" + nameReference.get();
     }
+
+    public static boolean equals(TypeId typeId1, TypeId typeId2) {
+        if(typeId1 == typeId2){
+            return true;
+        }
+        if(typeId1 == null){
+            return false;
+        }
+        return CompareUtil.compare(typeId1.getName(), typeId2.getName()) == 0;
+    }
 }

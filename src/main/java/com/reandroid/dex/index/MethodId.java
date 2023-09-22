@@ -16,8 +16,7 @@
 package com.reandroid.dex.index;
 
 import com.reandroid.dex.item.StringData;
-import com.reandroid.dex.pool.DexIdPool;
-import com.reandroid.dex.sections.Section;
+import com.reandroid.dex.item.TypeList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
@@ -90,6 +89,13 @@ public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
         }
         return EmptyIterator.of();
     }
+    public TypeList getParameterTypes(){
+        ProtoId protoId = getProto();
+        if(protoId != null){
+            return protoId.getTypeList();
+        }
+        return null;
+    }
     public ProtoId getProto(){
         return proto.getItem();
     }
@@ -107,16 +113,18 @@ public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
 
     @Override
     public String getKey() {
-        return getKey(false);
+        return getKey(true, false);
     }
-    public String getKey(boolean appendReturnType){
+    public String getKey(boolean appendType, boolean appendReturnType){
         StringBuilder builder = new StringBuilder();
         String type = getClassName();
-        if(type == null){
+        if(type == null && appendType){
             return null;
         }
-        builder.append(type);
-        builder.append("->");
+        if(appendType){
+            builder.append(type);
+            builder.append("->");
+        }
         builder.append(getName());
         ProtoId protoId = getProto();
         if(protoId != null){
@@ -167,6 +175,27 @@ public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
     @Override
     public String toString() {
         return getClassType() + "->" + getNameString() + getProto();
+    }
+
+    public static boolean equals(MethodId methodId1, MethodId methodId2) {
+        return equals(false, methodId1, methodId2);
+    }
+    public static boolean equals(boolean ignoreClass, MethodId methodId1, MethodId methodId2) {
+        if(methodId1 == methodId2){
+            return true;
+        }
+        if(methodId1 == null){
+            return false;
+        }
+        if(!StringReference.equals(methodId1.getNameReference(), methodId1.getNameReference())){
+            return false;
+        }
+        if(!ignoreClass) {
+            if(!TypeId.equals(methodId1.getClassType(), methodId2.getClassType())){
+                return false;
+            }
+        }
+        return TypeList.equals(methodId1.getParameterTypes(), methodId2.getParameterTypes());
     }
 
     private static final int SIZE = 8;

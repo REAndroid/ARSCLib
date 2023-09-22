@@ -68,11 +68,11 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
     public void setClassType(TypeId typeId){
         this.classType.setItem(typeId);
     }
-    public int getAccessFlagValue() {
+    public int getAccessFlagsValue() {
         return accessFlagValue.get();
     }
     public AccessFlag[] getAccessFlags(){
-        return AccessFlag.getAccessFlagsForClass(getAccessFlagValue());
+        return AccessFlag.getAccessFlagsForClass(getAccessFlagsValue());
     }
     public TypeId getSuperClass(){
         return superClass.getItem();

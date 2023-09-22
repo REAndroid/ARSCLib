@@ -150,4 +150,19 @@ public class FieldId extends IndexItemEntry implements Comparable<FieldId>{
         }
         return getClassType() + "->" + getNameString() + ":" + getFieldType();
     }
+    public static boolean equals(FieldId fieldId1, FieldId fieldId2) {
+        return equals(false, fieldId1, fieldId2);
+    }
+    public static boolean equals(boolean ignoreClass, FieldId fieldId1, FieldId fieldId2) {
+        if(fieldId1 == fieldId2) {
+            return true;
+        }
+        if(fieldId1 == null) {
+            return false;
+        }
+        if(!StringReference.equals(fieldId1.getNameReference(), fieldId2.getNameReference())){
+            return false;
+        }
+        return ignoreClass || TypeId.equals(fieldId1.getClassType(), fieldId2.getClassType());
+    }
 }

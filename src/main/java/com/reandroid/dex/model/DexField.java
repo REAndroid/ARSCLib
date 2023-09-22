@@ -17,18 +17,16 @@ package com.reandroid.dex.model;
 
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.FieldId;
-import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.item.AnnotationSet;
 import com.reandroid.dex.item.FieldDef;
-import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.value.DexValueBlock;
-import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Objects;
 
-public class DexField extends DexModel {
+public class DexField extends DexDef {
 
     private final DexClass dexClass;
     private final FieldDef fieldDef;
@@ -40,6 +38,10 @@ public class DexField extends DexModel {
 
     public String getAccessFlags() {
         return AccessFlag.formatForField(getFieldDef().getAccessFlagsValue());
+    }
+    @Override
+    int getAccessFlagsValue() {
+        return getFieldDef().getAccessFlagsValue();
     }
     public String getName(){
         return getFieldId().getName();
@@ -61,8 +63,13 @@ public class DexField extends DexModel {
         return null;
     }
 
+    @Override
     public String getKey(){
-        return getFieldId().getKey();
+        return getFieldId().getName();
+    }
+    @Override
+    public String getClassName() {
+        return getFieldId().getClassName();
     }
     public FieldId getFieldId() {
         return getFieldDef().getFieldId();
@@ -79,24 +86,15 @@ public class DexField extends DexModel {
     }
 
     @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(".field");
-        String flags = getAccessFlags();
-        if(flags.length() != 0){
-            builder.append(' ');
-            builder.append(flags);
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
         }
-        builder.append(' ');
-        builder.append(getName());
-        builder.append(":");
-        builder.append(getFieldType());
-        String value = getInitialValue();
-        if(value != null){
-            builder.append(" = ");
-            builder.append(value);
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
         }
-        return builder.toString();
+        DexField dexField = (DexField) obj;
+        return FieldId.equals(getFieldId(), dexField.getFieldId());
     }
 
     @Override

@@ -116,4 +116,38 @@ public class DexUtils {
     public static String toDalvikName(String javaName){
         return 'L' + javaName.replace('.', '/') + ';';
     }
+    public static String getPackageName(String className) {
+        if(className.length() < 3){
+            return "";
+        }
+        int i = 0;
+        while (className.charAt(i) == '[') {
+            i++;
+        }
+        if(className.charAt(i) != 'L'){
+            return "";
+        }
+        i = className.lastIndexOf('/');
+        if (i < 0){
+            i = 0;
+        }
+        i++;
+        return className.substring(0, i);
+    }
+    public static String getSimpleName(String className) {
+        if(className.length() < 3){
+            return "";
+        }
+        int i = className.lastIndexOf('/');
+        if (i < 0){
+            i = 0;
+        }
+        i++;
+        className = className.substring(i);
+        i = className.length() - 1;
+        if(className.charAt(i) == ';' || className.charAt(i) == '<'){
+            className = className.substring(0, i);
+        }
+        return className;
+    }
 }

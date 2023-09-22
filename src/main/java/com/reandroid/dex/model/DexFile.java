@@ -18,6 +18,7 @@ package com.reandroid.dex.model;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.index.ClassId;
+import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.sections.DexFileBlock;
 import com.reandroid.dex.sections.Marker;
@@ -96,6 +97,9 @@ public class DexFile {
         return FilterIterator.of(getStringData(),
                 stringData -> stringData.getStringUsage() == usage);
     }
+    public Iterator<String> getClassNames(){
+        return ComputeIterator.of(getClassIds(), ClassId::getName);
+    }
     Iterator<ClassId> getClassIds(){
         Section<ClassId> section = get(SectionType.CLASS_ID);
         if(section != null){
@@ -105,6 +109,16 @@ public class DexFile {
     }
     public Iterator<StringData> getStringData(){
         Section<StringData> section = get(SectionType.STRING_DATA);
+        if(section != null){
+            return section.iterator();
+        }
+        return EmptyIterator.of();
+    }
+    public Iterator<String> getTypeNames(){
+        return ComputeIterator.of(getTypes(), TypeId::getName);
+    }
+    public Iterator<TypeId> getTypes(){
+        Section<TypeId> section = get(SectionType.TYPE_ID);
         if(section != null){
             return section.iterator();
         }

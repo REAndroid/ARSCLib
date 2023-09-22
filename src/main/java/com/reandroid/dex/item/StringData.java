@@ -28,6 +28,7 @@ import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
@@ -208,6 +209,9 @@ public class StringData extends DexBlockItem
         if(stringData == null){
             return -1;
         }
+        if(stringData == this){
+            return 0;
+        }
         return getString().compareTo(stringData.getString());
     }
     @Override
@@ -325,6 +329,9 @@ public class StringData extends DexBlockItem
                 + " at offset " + offset);
     }
 
+    public static boolean equals(StringData stringData1, StringData stringData2) {
+        return CompareUtil.compare(stringData1, stringData2) == 0;
+    }
     public static final int USAGE_NONE = 0x0000;
     public static final int USAGE_INSTRUCTION = 1;
     public static final int USAGE_INITIAL = 1 << 1;

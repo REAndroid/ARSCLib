@@ -108,6 +108,9 @@ public class StringId extends IndexItemEntry implements IntegerReference, Compar
         if(stringId == null){
             return -1;
         }
+        if(stringId == this){
+            return 0;
+        }
         return Integer.compare(getStringData().getIndex(), stringId.getStringData().getIndex());
     }
 
@@ -118,5 +121,15 @@ public class StringId extends IndexItemEntry implements IntegerReference, Compar
             return stringData.toString();
         }
         return Integer.toString(get());
+    }
+
+    public static boolean equals(StringId stringId1, StringId stringId2) {
+        if(stringId1 == stringId2) {
+            return true;
+        }
+        if(stringId1 == null) {
+            return false;
+        }
+        return StringData.equals(stringId1.getStringData(), stringId2.getStringData());
     }
 }

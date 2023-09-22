@@ -15,11 +15,8 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.dex.base.DexItemArray;
-import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.pool.DexIdPool;
-import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -85,6 +82,18 @@ public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId>
     public TypeId[] getTypeIds(){
         return typeIds;
     }
+    public String[] getNames() {
+        TypeId[] typeIds = getTypeIds();
+        if(typeIds == null){
+            return null;
+        }
+        int length = typeIds.length;
+        String[] results = new String[length];
+        for(int i = 0; i < length; i++){
+            results[i] = typeIds[i].getName();
+        }
+        return results;
+    }
     public TypeId getTypeId(int index){
         TypeId[] typeIds = getTypeIds();
         if(typeIds != null && index >= 0 && index < typeIds.length){
@@ -139,5 +148,15 @@ public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId>
             builder.append(typeId);
         }
         return builder.toString();
+    }
+
+    public static boolean equals(TypeList typeList1, TypeList typeList2) {
+        if(typeList1 == typeList2) {
+            return true;
+        }
+        if(typeList1 == null){
+            return false;
+        }
+        return CompareUtil.compare(typeList1.getNames(), typeList2.getNames()) == 0;
     }
 }

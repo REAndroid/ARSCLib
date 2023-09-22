@@ -26,7 +26,7 @@ import com.reandroid.utils.collection.ComputeIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class DexMethod extends DexModel {
+public class DexMethod extends DexDef {
     private final DexClass dexClass;
     private final MethodDef methodDef;
 
@@ -34,15 +34,22 @@ public class DexMethod extends DexModel {
         this.dexClass = dexClass;
         this.methodDef = methodDef;
     }
+    public Iterator<DexMethod> getSuperMethods() {
+        String key = getKey();
+        return ComputeIterator.of(getDexClass().getSuperClasses(),
+                dexClass -> dexClass.getDefinedMethod(key));
+    }
+
     public Iterator<DexMethod> getImplementations() {
         return null;
     }
-    public Iterator<DexMethod> getSuperMethods() {
-        return null;
-    }
-
+    @Override
     public String getAccessFlags() {
-        return AccessFlag.formatForField(getMethodDef().getAccessFlagsValue());
+        return AccessFlag.formatForMethod(getAccessFlagsValue());
+    }
+    @Override
+    int getAccessFlagsValue() {
+        return getMethodDef().getAccessFlagsValue();
     }
     public String getName(){
         return getMethodDef().getName();
@@ -77,8 +84,13 @@ public class DexMethod extends DexModel {
         return new DexInstruction(this, ins);
     }
 
+    @Override
     public String getKey(){
-        return getMethodId().getKey();
+        return getMethodId().getKey(false, false);
+    }
+    @Override
+    public String getClassName() {
+        return getMethodId().getClassName();
     }
     public MethodId getMethodId() {
         return getMethodDef().getMethodId();
@@ -95,7 +107,14 @@ public class DexMethod extends DexModel {
         getMethodDef().append(writer);
     }
     @Override
-    public String toString() {
-        return getKey();
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        DexMethod dexMethod = (DexMethod) obj;
+        return MethodId.equals(true, getMethodId(), dexMethod.getMethodId());
     }
 }

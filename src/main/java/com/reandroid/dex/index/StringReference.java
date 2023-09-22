@@ -136,4 +136,14 @@ public class StringReference extends IndirectItem<DexBlockItem> implements
     public String toString() {
         return get() + "{" + stringId + "}";
     }
+
+    public static boolean equals(StringReference reference1, StringReference reference2) {
+        if(reference1 == reference2){
+            return true;
+        }
+        if(reference1 == null){
+            return false;
+        }
+        return StringId.equals(reference1.getStringId(), reference2.getStringId());
+    }
 }

@@ -20,7 +20,6 @@ import com.reandroid.dex.index.MethodId;
 import com.reandroid.dex.index.ProtoId;
 import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.ins.Ins;
-import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
@@ -50,18 +49,7 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         if(Objects.equals(getName(), name)){
             return;
         }
-        MethodId methodId = createMethodId();
-        methodId.setName(name);
-    }
-    private MethodId createMethodId() {
-        MethodId exist = getMethodId();
-        Section<MethodId> section = getSection(SectionType.METHOD_ID);
-        MethodId methodId = section.createIdItem();
-        methodId.setName(exist.getName());
-        methodId.setClassType(exist.getClassType());
-        methodId.setProto(exist.getProto());
-        setItem(methodId);
-        return methodId;
+        getMethodId().setName(name);
     }
     public MethodId getMethodId(){
         return getItem();

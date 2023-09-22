@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.index.ItemOffsetReference;
 import com.reandroid.dex.item.StringData;
@@ -26,7 +27,7 @@ import java.io.*;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class DexClass extends DexModel implements Comparable<DexClass> {
+public class DexClass extends DexDef implements Comparable<DexClass> {
     private final DexFile dexFile;
     private final ClassId classId;
 
@@ -35,6 +36,67 @@ public class DexClass extends DexModel implements Comparable<DexClass> {
         this.classId = classId;
     }
 
+    public DexField getField(String fieldKey) {
+        DexField dexField = getDefinedField(fieldKey);
+        if(dexField != null) {
+            return dexField;
+        }
+        Iterator<DexClass> iterator = getSuperClasses();
+        while (iterator.hasNext()) {
+            DexClass dexClass = iterator.next();
+            dexField = dexClass.getDefinedField(fieldKey);
+            if(dexField == null){
+                continue;
+            }
+            if(dexField.isAccessibleTo(this)) {
+                return dexField;
+            }
+        }
+        return null;
+    }
+    public DexField getDefinedField(String fieldKey) {
+        Iterator<DexField> iterator = getFields();
+        while (iterator.hasNext()){
+            DexField dexField = iterator.next();
+            if(fieldKey.equals(dexField.getKey())){
+                return dexField;
+            }
+        }
+        return null;
+    }
+    public DexMethod getMethod(String methodKey) {
+        DexMethod dexMethod = getDefinedMethod(methodKey);
+        if(dexMethod != null) {
+            return dexMethod;
+        }
+        Iterator<DexClass> iterator = getSuperClasses();
+        while (iterator.hasNext()) {
+            DexClass dexClass = iterator.next();
+            dexMethod = dexClass.getDefinedMethod(methodKey);
+            if(dexMethod == null){
+                continue;
+            }
+            if(!dexMethod.isAccessibleTo(this)) {
+                // TODO: should not reach here ?
+                continue;
+            }
+            return dexMethod;
+        }
+        return null;
+    }
+    public DexMethod getDefinedMethod(String methodKey) {
+        Iterator<DexMethod> iterator = getMethods();
+        while (iterator.hasNext()){
+            DexMethod dexMethod = iterator.next();
+            if(methodKey.equals(dexMethod.getKey())){
+                return dexMethod;
+            }
+        }
+        return null;
+    }
+    public Iterator<DexClass> getSuperClasses(){
+        return listSuperClasses().iterator();
+    }
     public Set<DexClass> listSuperClasses(){
         Set<DexClass> results = new HashSet<>();
         listSuperClasses(results);
@@ -58,6 +120,9 @@ public class DexClass extends DexModel implements Comparable<DexClass> {
 
     public DexClass getSuperClass() {
         return dexFile.get(getSuperClassName());
+    }
+    public Iterator<DexField> getFields() {
+        return new CombiningIterator<>(getStaticFields(), getInstanceFields());
     }
     public Iterator<DexField> getStaticFields() {
         ClassData classData = getClassData();
@@ -91,22 +156,29 @@ public class DexClass extends DexModel implements Comparable<DexClass> {
         return new DexMethod(this, methodDef);
     }
 
+    @Override
+    public String getAccessFlags() {
+        return AccessFlag.formatForClass(getAccessFlagsValue());
+    }
+    @Override
+    int getAccessFlagsValue() {
+        return getClassId().getAccessFlagsValue();
+    }
 
     public void decode(File outDir) throws IOException {
-        ClassId classId = getClassId();
         File file = new File(outDir, toFilePath());
         File dir = file.getParentFile();
-        if(!dir.exists()){
-            dir.mkdirs();
+        if(dir != null && !dir.exists() && !dir.mkdirs()){
+            throw new IOException("Failed to create dir: " + dir);
         }
         FileOutputStream outputStream = new FileOutputStream(file);
         SmaliWriter writer = new SmaliWriter(new OutputStreamWriter(outputStream));
-        classId.append(writer);
+        append(writer);
         writer.close();
         outputStream.close();
     }
     private String toFilePath(){
-        String name = getName();
+        String name = getClassName();
         name = name.substring(1, name.length()-1);
         name = name.replace('/', File.separatorChar);
         return name + ".smali";
@@ -118,7 +190,12 @@ public class DexClass extends DexModel implements Comparable<DexClass> {
     public ClassId getClassId() {
         return classId;
     }
-    public String getName(){
+    @Override
+    public String getKey() {
+        return getClassName();
+    }
+    @Override
+    public String getClassName() {
         return getClassId().getName();
     }
     public String getSuperClassName(){
@@ -201,16 +278,16 @@ public class DexClass extends DexModel implements Comparable<DexClass> {
 
 
 
-    public void refresh(){
+    public void refresh() {
     }
 
     @Override
     public int compareTo(DexClass dexClass) {
-        String name1 = getName();
+        String name1 = getClassName();
         if(name1 == null){
             name1 = "null";
         }
-        String name2 = dexClass.getName();
+        String name2 = dexClass.getClassName();
         if(name2 == null){
             name2 = "null";
         }
@@ -225,15 +302,7 @@ public class DexClass extends DexModel implements Comparable<DexClass> {
             return false;
         }
         DexClass dexClass = (DexClass) obj;
-        return Objects.equals(getName(), dexClass.getName());
-    }
-    @Override
-    public int hashCode() {
-        String name = getName();
-        if(name != null){
-            return name.hashCode();
-        }
-        return 0;
+        return Objects.equals(getClassName(), dexClass.getClassName());
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
