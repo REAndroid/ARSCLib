@@ -19,4 +19,26 @@ public class Ins21ih extends Size4Ins {
     public Ins21ih(Opcode<?> opcode) {
         super(opcode);
     }
+
+    @Override
+    public int getData() {
+        return getShort(2) << 16;
+    }
+    @Override
+    public void setData(int data) {
+        setShort(2, data >>> 16);
+    }
+
+    @Override
+    public int getRegistersCount() {
+        return 1;
+    }
+    @Override
+    public int getRegister(int index) {
+        return getByteUnsigned(1);
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        setByte(1, value);
+    }
 }

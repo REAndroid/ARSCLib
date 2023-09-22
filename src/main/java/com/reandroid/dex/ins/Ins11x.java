@@ -22,24 +22,26 @@ import java.io.IOException;
 public class Ins11x extends Size2Ins {
     public Ins11x(Opcode<?> opcode) {
         super(opcode);
-    }    public int getRegisterA(){
-        return getValueBytes().get(1) & 0xff;
+    }
+
+    @Override
+    public int getRegistersCount() {
+        return 1;
+    }
+    @Override
+    public int getRegister(int index) {
+        return getByteUnsigned(1);
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        setByte(1, value);
     }
 
     @Override
     void appendCode(SmaliWriter writer) throws IOException {
         writer.newLine();
         writer.append(getOpcode().getName());
-        writer.append(" v");
-        writer.append(getRegisterA());
-    }
-    @Override
-    public String toString() {
-        Opcode<?> opcode = getOpcode();
-        StringBuilder builder = new StringBuilder();
-        builder.append(opcode);
-        builder.append(" v");
-        builder.append(getRegisterA());
-        return builder.toString();
+        writer.append(' ');
+        getRegisters().append(writer);
     }
 }

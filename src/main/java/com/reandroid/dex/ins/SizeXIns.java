@@ -19,6 +19,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.dex.index.IndexItemEntry;
 import com.reandroid.dex.index.StringId;
+import com.reandroid.dex.item.InstructionList;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -26,7 +27,7 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class SizeXIns extends Ins {
+public class SizeXIns extends Ins implements RegisterNumber{
 
     private final ByteArray valueBytes;
     private IndexItemEntry mSectionItem;
@@ -40,7 +41,10 @@ public class SizeXIns extends Ins {
     }
 
     public int getInteger(int offset){
-        return valueBytes.getInteger(2 + offset);
+        return valueBytes.getInteger(offset);
+    }
+    public void setInteger(int offset, int value){
+        valueBytes.putInteger(offset, value);
     }
     public int getShortUnsigned(int offset){
         return valueBytes.getShortUnsigned(2 + offset);
@@ -49,23 +53,47 @@ public class SizeXIns extends Ins {
     public int getByte(int offset){
         return valueBytes.get(offset);
     }
+    public void setByte(int offset, int value){
+        valueBytes.put(offset, (byte) value);
+    }
     public int getByteUnsigned(int offset){
         return valueBytes.get(offset) & 0xff;
     }
     public int getShort(int offset){
-        return valueBytes.getShort(2 + offset);
+        return valueBytes.getShort(offset);
+    }
+    public void setShort(int offset, int value){
+        valueBytes.putShort(2 + offset, value);
     }
     public int getNibble(int index){
         int i = getByteUnsigned(index / 2);
-        index = (index + 1) % 2;
+        index = index % 2;
         return (i >> index * 4) & 0x0f;
+    }
+    public void setNibble(int index, int value){
+        int i = index / 2;
+        int half = getByteUnsigned(i);
+        int shift1 = ((index) % 2) * 4;
+        int shift2 = ((index + 1) % 2) * 4;
+        int result = (value << shift1) | ((half >> shift2) & 0x0f);
+        setByte(i, result);
     }
 
     public ByteArray getValueBytes() {
         return valueBytes;
     }
-    public int getRegisterA(){
-        return getNibble(3);
+
+    @Override
+    public int getRegistersCount() {
+        return 1;
+    }
+    @Override
+    public int getRegister(int index) {
+        return getByteUnsigned(1);
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        setByte(1, value);
     }
 
     @Override
@@ -108,6 +136,16 @@ public class SizeXIns extends Ins {
         }
     }
 
+    public Registers getRegisters() {
+        return new Registers(getRegisterFactory(), this);
+    }
+    private RegisterFactory getRegisterFactory() {
+        InstructionList instructionList = getParentInstance(InstructionList.class);
+        if(instructionList != null){
+            return instructionList.getRegisterFactory();
+        }
+        return null;
+    }
     @Override
     void appendCode(SmaliWriter writer) throws IOException {
         Opcode<?> opcode = getOpcode();
@@ -118,11 +156,13 @@ public class SizeXIns extends Ins {
         if(method){
             writer.append('{');
         }
-        writer.append("v");
-        writer.append(Integer.toString(getRegisterA()));
+        getRegisters().append(writer);
         if(method){
             writer.append('}');
         }
+        appendCodeData(writer);
+    }
+    void appendCodeData(SmaliWriter writer) throws IOException {
         writer.append(", ");
         int data = getData();
         IndexItemEntry sectionItem = getSectionItem();

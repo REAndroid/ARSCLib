@@ -15,8 +15,23 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins22c extends Size4Ins {
+public class Ins22c extends Size4Ins implements RegisterNumber{
     public Ins22c(Opcode<?> opcode) {
         super(opcode);
+    }
+
+    @Override
+    public int getRegistersCount() {
+        return 2;
+    }
+
+    @Override
+    public int getRegister(int index) {
+        return getNibble(2 + index);
+    }
+
+    @Override
+    public void setRegister(int index, int value) {
+        setNibble(2 + index, value);
     }
 }

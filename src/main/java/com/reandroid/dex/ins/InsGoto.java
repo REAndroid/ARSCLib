@@ -32,9 +32,20 @@ public class InsGoto extends SizeXIns implements Label {
             return getByte(1);
         }
         if(size == 4){
-            return getShort(0);
+            return getShort(2);
         }
-        return getInteger(0);
+        return getInteger(2);
+    }
+    @Override
+    public void setData(int data) {
+        int size = getOpcode().size();
+        if(size == 2){
+            setByte(1, data);
+        }
+        if(size == 4){
+            setShort(2, data);
+        }
+        setInteger(2, data);
     }
     @Override
     public int getTargetAddress() {

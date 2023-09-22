@@ -54,6 +54,23 @@ public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
         return builder.toString();
     }
 
+    public int getParameterRegistersCount(){
+        TypeList typeList = getTypeList();
+        if(typeList == null){
+            return 0;
+        }
+        int result = 0;
+        Iterator<String> iterator = typeList.getTypeNames();
+        while (iterator.hasNext()){
+            String name = iterator.next();
+            if("J".equals(name) || "D".equals(name)){
+                result ++;
+            }
+            result ++;
+        }
+        return result;
+    }
+
     public int getParametersCount(){
         TypeList typeList = getTypeList();
         if(typeList != null){

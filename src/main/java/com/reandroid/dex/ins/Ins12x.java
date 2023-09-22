@@ -15,8 +15,27 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.dex.writer.SmaliWriter;
+
+import java.io.IOException;
+
 public class Ins12x extends Size2Ins {
     public Ins12x(Opcode<?> opcode) {
         super(opcode);
+    }
+    @Override
+    public int getRegistersCount() {
+        return 2;
+    }
+    @Override
+    public int getRegister(int index) {
+        return getNibble(2 + index);
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        setNibble(2 + index, value);
+    }
+    @Override
+    void appendCodeData(SmaliWriter writer) {
     }
 }

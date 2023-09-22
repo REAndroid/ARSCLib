@@ -15,8 +15,15 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.dex.writer.SmaliWriter;
+
 public class Ins32x extends Size6Ins {
+
     public Ins32x(Opcode<?> opcode) {
         super(opcode);
+    }
+
+    @Override
+    void appendCodeData(SmaliWriter writer) {
     }
 }

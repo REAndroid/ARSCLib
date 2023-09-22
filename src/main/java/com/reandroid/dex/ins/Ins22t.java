@@ -20,16 +20,23 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class Ins22t extends Size4Ins implements Label{
+public class Ins22t extends Size4Ins implements Label {
+
     public Ins22t(Opcode<?> opcode) {
         super(opcode);
     }
+
     @Override
-    public int getRegisterA(){
-        return getNibble(2);
+    public int getRegistersCount() {
+        return 2;
     }
-    public int getRegisterB(){
-        return getNibble(3);
+    @Override
+    public int getRegister(int index) {
+        return getNibble(2 + index);
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        setNibble(2 + index, value);
     }
     @Override
     public int getTargetAddress() {
@@ -45,32 +52,12 @@ public class Ins22t extends Size4Ins implements Label{
         writer.newLine();
         writer.append(opcode.getName());
         writer.append(' ');
-        writer.append("v");
-        writer.append(getRegisterA());
-        writer.append(", ");
-        writer.append("v");
-        writer.append(getRegisterB());
+        getRegisters().append(writer);
         writer.append(", ");
         writer.append(getLabelName());
     }
     @Override
     public int getSortOrder() {
         return ExtraLine.ORDER_INSTRUCTION_LABEL;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        Opcode<?> opcode = getOpcode();
-        builder.append(opcode.getName());
-        builder.append(' ');
-        builder.append("v");
-        builder.append(getRegisterA());
-        builder.append(", ");
-        builder.append("v");
-        builder.append(getRegisterB());
-        builder.append(", ");
-        builder.append(getLabelName());
-        return builder.toString();
     }
 }

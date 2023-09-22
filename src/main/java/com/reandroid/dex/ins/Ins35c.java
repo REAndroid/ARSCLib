@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins35c extends Size6Ins {
+public class Ins35c extends Size6Ins implements RegisterNumber{
     public Ins35c(Opcode<?> opcode) {
         super(opcode);
     }
@@ -25,5 +25,26 @@ public class Ins35c extends Size6Ins {
     }
     public void setData(int data){
         getValueBytes().putShort(2, data);
+    }
+
+    @Override
+    public int getRegistersCount() {
+        return getNibble(3);
+    }
+
+    @Override
+    public int getRegister(int index) {
+        if(index < 4){
+            return getNibble(8 + index);
+        }
+        return getNibble(2);
+    }
+
+    @Override
+    public void setRegister(int index, int value) {
+        if(index < 4){
+            setNibble(8 + index, value);
+        }
+        setNibble(2, value);
     }
 }

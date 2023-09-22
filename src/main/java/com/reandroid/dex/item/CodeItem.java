@@ -46,6 +46,15 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
         addChild(0, header);
         addChild(1, instructionList);
     }
+    public int getLocalsCount() {
+        return getRegistersCount() - getParameterRegistersCount();
+    }
+    public int getRegistersCount(){
+        return header.registersCount.get();
+    }
+    public int getParameterRegistersCount(){
+        return header.parameterRegisters.get();
+    }
 
     public DebugInfo getDebugInfo(){
         return header.debugInfoOffset.getItem();
@@ -93,10 +102,7 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
         writer.newLine();
         writer.append(".locals ");
         InstructionList instructionList = getInstructionList();
-        int count = header.registersCount.get() - proto.getParametersCount();
-        if(!methodDef.isStatic()){
-            count = count - 1;
-        }
+        int count = getLocalsCount();
         writer.append(count);
         methodDef.appendParameterAnnotations(writer, proto);
         if(debugInfo != null){
@@ -124,7 +130,7 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
         private final CodeItem codeItem;
 
         final IntegerReference registersCount;
-        final IntegerReference instruction;
+        final IntegerReference parameterRegisters;
         final IntegerReference outs;
         final IntegerReference tryBlockCount;
 
@@ -136,7 +142,7 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
             this.codeItem = codeItem;
             int offset = -2;
             this.registersCount = new IndirectShort(this, offset += 2);
-            this.instruction = new IndirectShort(this, offset += 2);
+            this.parameterRegisters = new IndirectShort(this, offset += 2);
             this.outs = new IndirectShort(this, offset += 2);
             this.tryBlockCount = new IndirectShort(this, offset += 2);
             this.debugInfoOffset = new ItemOffsetReference<>(SectionType.DEBUG_INFO,this, offset += 2);
@@ -161,7 +167,7 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
         @Override
         public String toString() {
             return  "registers=" + registersCount +
-                    ", instruction=" + instruction +
+                    ", parameters=" + parameterRegisters +
                     ", outs=" + outs +
                     ", tries=" + tryBlockCount +
                     ", debugInfo=" + debugInfoOffset +

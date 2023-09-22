@@ -23,7 +23,7 @@ public class Ins20t extends Size4Ins implements Label{
     }
     @Override
     public int getTargetAddress() {
-        return getAddress() + getShort(0);
+        return getAddress() + getShort(2);
     }
     @Override
     public int getSortOrder() {

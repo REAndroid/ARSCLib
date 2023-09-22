@@ -15,17 +15,22 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins31i extends Size6Ins {
-    public Ins31i(Opcode<?> opcode) {
-        super(opcode);
+import com.reandroid.dex.item.CodeItem;
+
+public class RegisterFactory {
+    private final CodeItem codeItem;
+    public RegisterFactory(CodeItem codeItem){
+        this.codeItem = codeItem;
     }
 
-    @Override
-    public int getData() {
-        return getInteger(2);
+    public int getValue(int register) {
+        int local = codeItem.getLocalsCount();
+        if(register >= local){
+            register = register - local;
+        }
+        return register;
     }
-    @Override
-    public void setData(int data) {
-        setInteger(2, data);
+    public boolean isParameter(int register) {
+        return register >= codeItem.getLocalsCount();
     }
 }

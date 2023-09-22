@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins3rc extends Size6Ins {
+public class Ins3rc extends Size6Ins implements RegisterNumber{
     public Ins3rc(Opcode<?> opcode) {
         super(opcode);
     }
@@ -26,5 +26,32 @@ public class Ins3rc extends Size6Ins {
     }
     public void setData(int data){
         getValueBytes().putShort(2, data);
+    }
+
+    @Override
+    public int getRegistersCount() {
+        return 2;
+    }
+
+    @Override
+    public int getRegister(int index) {
+        int value = getShort(4);
+        if(index != 0) {
+            value += getByteUnsigned(1) - 1;
+        }
+        return value;
+    }
+
+    @Override
+    public void setRegister(int index, int value) {
+        if(index != 0) {
+            setByte(1, value + 1);
+        }else {
+            setShort(4, value);
+        }
+    }
+    @Override
+    public String getRegisterSeparator(){
+        return " .. ";
     }
 }

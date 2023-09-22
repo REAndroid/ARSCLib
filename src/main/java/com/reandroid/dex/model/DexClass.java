@@ -309,4 +309,16 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
         getClassData();
         getClassId().append(writer);
     }
+    @Override
+    public String toString() {
+        StringWriter writer = new StringWriter();
+        SmaliWriter smaliWriter = new SmaliWriter(writer);
+        try {
+            append(smaliWriter);
+            smaliWriter.close();
+        } catch (IOException exception) {
+            return exception.toString();
+        }
+        return writer.toString();
+    }
 }

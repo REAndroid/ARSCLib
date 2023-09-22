@@ -24,9 +24,22 @@ public class Ins21t extends Size4Ins implements Label {
     public Ins21t(Opcode<?> opcode) {
         super(opcode);
     }
+
+    @Override
+    public int getRegistersCount() {
+        return 1;
+    }
+    @Override
+    public int getRegister(int index) {
+        return getByteUnsigned(1);
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        setByte(1, value);
+    }
     @Override
     public int getTargetAddress() {
-        return getAddress() + getShort(0);
+        return getAddress() + getShort(2);
     }
     @Override
     public String getLabelName() {
@@ -43,8 +56,7 @@ public class Ins21t extends Size4Ins implements Label {
         writer.newLine();
         writer.append(opcode.getName());
         writer.append(' ');
-        writer.append("v");
-        writer.append(Integer.toString(getRegisterA()));
+        getRegisters().append(writer);
         writer.append(", ");
         writer.append(getLabelName());
     }

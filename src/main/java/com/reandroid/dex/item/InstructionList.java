@@ -28,10 +28,16 @@ import java.util.Iterator;
 
 public class InstructionList extends DexBlockList<Ins> implements SmaliFormat {
     private final CodeItem codeItem;
+    private final RegisterFactory registerFactory;
 
     public InstructionList(CodeItem codeItem){
         super();
         this.codeItem = codeItem;
+        this.registerFactory = new RegisterFactory(codeItem);
+    }
+
+    public RegisterFactory getRegisterFactory() {
+        return registerFactory;
     }
 
     @Override

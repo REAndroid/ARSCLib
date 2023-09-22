@@ -19,4 +19,17 @@ public class Ins11n extends Size2Ins {
     public Ins11n(Opcode<?> opcode) {
         super(opcode);
     }
+
+    @Override
+    public int getRegistersCount() {
+        return 1;
+    }
+    @Override
+    public int getRegister(int index) {
+        return getNibble(3);
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        setNibble(3, value);
+    }
 }

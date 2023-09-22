@@ -15,17 +15,11 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins31i extends Size6Ins {
-    public Ins31i(Opcode<?> opcode) {
-        super(opcode);
-    }
-
-    @Override
-    public int getData() {
-        return getInteger(2);
-    }
-    @Override
-    public void setData(int data) {
-        setInteger(2, data);
+public interface RegisterNumber {
+    int getRegistersCount();
+    int getRegister(int index);
+    void setRegister(int index, int value);
+    default String getRegisterSeparator(){
+        return ", ";
     }
 }

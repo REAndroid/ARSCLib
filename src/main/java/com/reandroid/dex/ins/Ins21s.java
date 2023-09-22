@@ -19,4 +19,17 @@ public class Ins21s extends Size4Ins {
     public Ins21s(Opcode<?> opcode) {
         super(opcode);
     }
+
+    @Override
+    public int getRegistersCount() {
+        return 1;
+    }
+    @Override
+    public int getRegister(int index) {
+        return getByteUnsigned(1);
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        setByte(1, value);
+    }
 }

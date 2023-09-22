@@ -19,4 +19,17 @@ public class Ins22b extends Size4Ins {
     public Ins22b(Opcode<?> opcode) {
         super(opcode);
     }
+
+    @Override
+    public int getRegistersCount() {
+        return 2;
+    }
+    @Override
+    public int getRegister(int index) {
+        return getByteUnsigned(1 + index);
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        setByte(1 + index, value);
+    }
 }

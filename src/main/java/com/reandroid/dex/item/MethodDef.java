@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.MethodId;
 import com.reandroid.dex.index.ProtoId;
