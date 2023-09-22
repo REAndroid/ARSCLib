@@ -63,6 +63,9 @@ public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
     public TypeId getClassType(){
         return classType.getItem();
     }
+    public void setClassType(TypeId typeId){
+        classType.setItem(typeId);
+    }
     public String getClassName() {
         return classType.getKey();
     }
@@ -89,6 +92,9 @@ public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
     }
     public ProtoId getProto(){
         return proto.getItem();
+    }
+    public void setProto(ProtoId protoId) {
+        proto.setItem(protoId);
     }
 
     public TypeId getReturnTypeId() {

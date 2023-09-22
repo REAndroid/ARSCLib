@@ -18,12 +18,15 @@ package com.reandroid.dex.model;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.MethodId;
 import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.item.MethodDef;
+import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.collection.ComputeIterator;
 
+import java.io.IOException;
 import java.util.Iterator;
 
-public class DexMethod {
+public class DexMethod extends DexModel {
     private final DexClass dexClass;
     private final MethodDef methodDef;
 
@@ -31,15 +34,21 @@ public class DexMethod {
         this.dexClass = dexClass;
         this.methodDef = methodDef;
     }
+    public Iterator<DexMethod> getImplementations() {
+        return null;
+    }
+    public Iterator<DexMethod> getSuperMethods() {
+        return null;
+    }
 
     public String getAccessFlags() {
         return AccessFlag.formatForField(getMethodDef().getAccessFlagsValue());
     }
     public String getName(){
-        return getMethodId().getName();
+        return getMethodDef().getName();
     }
     public void setName(String name){
-        getMethodId().setName(name);
+        getMethodDef().setName(name);
     }
     public int getParametersCount() {
         return getMethodId().getParametersCount();
@@ -61,6 +70,12 @@ public class DexMethod {
         }
         return null;
     }
+    public Iterator<DexInstruction> getInstructions() {
+        return ComputeIterator.of(getMethodDef().getInstructions(), this::create);
+    }
+    private DexInstruction create(Ins ins){
+        return new DexInstruction(this, ins);
+    }
 
     public String getKey(){
         return getMethodId().getKey();
@@ -73,6 +88,11 @@ public class DexMethod {
     }
     public MethodDef getMethodDef() {
         return methodDef;
+    }
+
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        getMethodDef().append(writer);
     }
     @Override
     public String toString() {

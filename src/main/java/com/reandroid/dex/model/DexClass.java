@@ -18,29 +18,47 @@ package com.reandroid.dex.model;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.index.ItemOffsetReference;
 import com.reandroid.dex.item.StringData;
-import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.item.*;
 import com.reandroid.dex.writer.SmaliWriter;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.EmptyList;
+import com.reandroid.utils.collection.*;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.io.*;
+import java.util.*;
 import java.util.function.Predicate;
 
-public class DexClass implements Comparable<DexClass>{
+public class DexClass extends DexModel implements Comparable<DexClass> {
+    private final DexFile dexFile;
     private final ClassId classId;
 
-    public DexClass(ClassId classId){
+    public DexClass(DexFile dexFile, ClassId classId){
+        this.dexFile = dexFile;
         this.classId = classId;
     }
 
+    public Set<DexClass> listSuperClasses(){
+        Set<DexClass> results = new HashSet<>();
+        listSuperClasses(results);
+        return results;
+    }
+    private void listSuperClasses(Set<DexClass> results) {
+        DexClass dexClass = getSuperClass();
+        if(dexClass != null && !results.contains(dexClass)){
+            results.add(dexClass);
+            dexClass.listSuperClasses(results);
+        }
+        Iterator<String> interfaceNames = getInterfaces();
+        while (interfaceNames.hasNext()){
+            dexClass = dexFile.get(interfaceNames.next());
+            if(dexClass != null && !results.contains(dexClass)){
+                results.add(dexClass);
+                dexClass.listSuperClasses(results);
+            }
+        }
+    }
+
+    public DexClass getSuperClass() {
+        return dexFile.get(getSuperClassName());
+    }
     public Iterator<DexField> getStaticFields() {
         ClassData classData = getClassData();
         if(classData != null){
@@ -52,6 +70,9 @@ public class DexClass implements Comparable<DexClass>{
     public Iterator<DexField> getInstanceFields() {
         return ComputeIterator.of(getClassData()
                 .getInstanceFields().iterator(), this::createField);
+    }
+    public Iterator<DexMethod> getMethods() {
+        return new CombiningIterator<>(getDirectMethods(), getVirtualMethods());
     }
     public Iterator<DexMethod> getDirectMethods() {
         return ComputeIterator.of(getClassData()
@@ -91,13 +112,16 @@ public class DexClass implements Comparable<DexClass>{
         return name + ".smali";
     }
 
+    public DexFile getDexFile() {
+        return dexFile;
+    }
     public ClassId getClassId() {
         return classId;
     }
     public String getName(){
         return getClassId().getName();
     }
-    public String getSuperClass(){
+    public String getSuperClassName(){
         return getClassId().getSuperClass().getName();
     }
     public void setSuperClass(String superClass){
@@ -112,6 +136,10 @@ public class DexClass implements Comparable<DexClass>{
     }
     public void setSourceFile(String sourceFile){
         getClassId().setSourceFile(sourceFile);
+    }
+
+    public Iterator<DexClass> getInterfaceClasses(){
+        return ComputeIterator.of(getInterfaces(), DexClass.this.dexFile::get);
     }
     public Iterator<String> getInterfaces(){
         TypeList typeList = getClassId().getInterfaces();
@@ -159,7 +187,10 @@ public class DexClass implements Comparable<DexClass>{
     }
 
     ClassData getClassData(){
-        return getClassId().getClassData();
+        ClassId classId = getClassId();
+        ClassData classData = classId.getClassData();
+        classData.setClassId(classId);
+        return classData;
     }
     EncodedArray getStaticValues(){
         return getClassId().getStaticValues();
@@ -205,17 +236,8 @@ public class DexClass implements Comparable<DexClass>{
         return 0;
     }
     @Override
-    public String toString() {
-        String name = getName();
-        if(name != null){
-            return name;
-        }
-        return "null";
-    }
-
-    public static DexClass create(ClassId classId){
-        DexClass dexClass = new DexClass(classId);
-        dexClass.refresh();
-        return dexClass;
+    public void append(SmaliWriter writer) throws IOException {
+        getClassData();
+        getClassId().append(writer);
     }
 }

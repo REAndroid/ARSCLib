@@ -121,6 +121,9 @@ public class Section<T extends Block>  extends FixedDexContainer
         }
         return results;
     }
+    public T createIdItem() {
+        return getItemArray().createNext();
+    }
     public T createOffsetItem() {
         int position = estimateLastOffset();
         T item = getItemArray().createNext();

@@ -19,6 +19,8 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.MethodId;
 import com.reandroid.dex.index.ProtoId;
 import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.ins.Ins;
+import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
@@ -26,6 +28,7 @@ import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Objects;
 
 public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
     private final OffsetUle128Item<CodeItem> codeOffset;
@@ -35,9 +38,43 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         this.codeOffset = new OffsetUle128Item<>(SectionType.CODE);
         addChild(2, codeOffset);
     }
+
+    public String getName() {
+        MethodId methodId = getMethodId();
+        if(methodId != null) {
+            return methodId.getName();
+        }
+        return null;
+    }
+    public void setName(String name) {
+        if(Objects.equals(getName(), name)){
+            return;
+        }
+        MethodId methodId = createMethodId();
+        methodId.setName(name);
+    }
+    private MethodId createMethodId() {
+        MethodId exist = getMethodId();
+        Section<MethodId> section = getSection(SectionType.METHOD_ID);
+        MethodId methodId = section.createIdItem();
+        methodId.setName(exist.getName());
+        methodId.setClassType(exist.getClassType());
+        methodId.setProto(exist.getProto());
+        setItem(methodId);
+        return methodId;
+    }
     public MethodId getMethodId(){
         return getItem();
     }
+
+    public Iterator<Ins> getInstructions() {
+        InstructionList instructionList = getInstructionList();
+        if(instructionList != null) {
+            return instructionList.iterator();
+        }
+        return EmptyIterator.of();
+    }
+
     public InstructionList getInstructionList(){
         CodeItem codeItem = getCodeItem();
         if(codeItem != null){

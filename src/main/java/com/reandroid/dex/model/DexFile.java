@@ -40,7 +40,18 @@ public class DexFile {
         this.dexFileBlock = dexFileBlock;
     }
     public Iterator<DexClass> getDexClasses() {
-        return ComputeIterator.of(getClassIds(), DexClass::new);
+        return ComputeIterator.of(getClassIds(), this::create);
+    }
+    public DexClass get(String typeName){
+        Section<ClassId> section = getDexFileBlock().get(SectionType.CLASS_ID);
+        ClassId classId = section.getPool().get(typeName);
+        if(classId == null) {
+            return null;
+        }
+        return create(classId);
+    }
+    private DexClass create(ClassId classId) {
+        return new DexClass(this, classId);
     }
     public Marker getOrCreateMarker() {
         Marker marker = CollectionUtil.getFirst(getMarkers());

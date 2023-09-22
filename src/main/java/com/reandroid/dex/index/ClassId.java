@@ -50,6 +50,10 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
         this.staticValues = new ItemOffsetReference<>(SectionType.ENCODED_ARRAY, this, offset += 4);
     }
 
+    @Override
+    public String getKey(){
+        return getName();
+    }
     public String getName(){
         TypeId typeId = getClassType();
         if(typeId != null){

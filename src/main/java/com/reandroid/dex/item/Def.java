@@ -85,6 +85,10 @@ public class Def<T extends IndexItemEntry> extends DexContainerItem implements S
     T getItem(){
         return mItem;
     }
+    void setItem(T item) {
+        this.mItem = item;
+        updateIndex();
+    }
 
     int getIdIndex() {
         DefArray<?> parentArray = getParentInstance(DefArray.class);

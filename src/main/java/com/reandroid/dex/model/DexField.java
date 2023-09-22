@@ -22,10 +22,13 @@ import com.reandroid.dex.item.AnnotationSet;
 import com.reandroid.dex.item.FieldDef;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.value.DexValueBlock;
+import com.reandroid.dex.writer.SmaliFormat;
+import com.reandroid.dex.writer.SmaliWriter;
 
+import java.io.IOException;
 import java.util.Iterator;
 
-public class DexField {
+public class DexField extends DexModel {
 
     private final DexClass dexClass;
     private final FieldDef fieldDef;
@@ -94,5 +97,10 @@ public class DexField {
             builder.append(value);
         }
         return builder.toString();
+    }
+
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        getFieldDef().append(writer);
     }
 }
