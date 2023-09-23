@@ -15,8 +15,6 @@
  */
 package com.reandroid.arsc.item;
 
-import com.reandroid.arsc.item.IntegerReference;
-
 public interface IntegerVisitor {
     void visit(Object sender, IntegerReference reference);
 }
