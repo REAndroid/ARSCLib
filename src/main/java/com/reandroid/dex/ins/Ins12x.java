@@ -23,6 +23,14 @@ public class Ins12x extends Size2Ins {
     public Ins12x(Opcode<?> opcode) {
         super(opcode);
     }
+
+    @Override
+    public int getData(){
+        return 0;
+    }
+    public void setData(int data){
+    }
+    
     @Override
     public int getRegistersCount() {
         return 2;

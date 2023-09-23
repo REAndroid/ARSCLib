@@ -16,6 +16,7 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.index.TypeId;
@@ -24,14 +25,13 @@ import com.reandroid.dex.sections.DexFileBlock;
 import com.reandroid.dex.sections.Marker;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.*;
+import com.reandroid.utils.io.IOUtil;
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.*;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class DexFile {
 
@@ -39,6 +39,25 @@ public class DexFile {
 
     public DexFile(DexFileBlock dexFileBlock){
         this.dexFileBlock = dexFileBlock;
+    }
+
+    public List<RField> listRFields() {
+        List<RField> fieldList = CollectionUtil.toUniqueList(getRFields());
+        fieldList.sort(CompareUtil.getComparableComparator());
+        return fieldList;
+    }
+    public Iterator<RField> getRFields() {
+        return new MergingIterator<>(ComputeIterator.of(getRClasses(),
+                RClass::getStaticFields));
+    }
+    public Iterator<RClass> getRClasses() {
+        return ComputeIterator.of(getClassIds(), this::createRClass);
+    }
+    private RClass createRClass(ClassId classId) {
+        if(RClass.isRClassName(classId)){
+            return new RClass(this, classId);
+        }
+        return null;
     }
     public Iterator<DexClass> getDexClasses() {
         return ComputeIterator.of(getClassIds(), this::create);
@@ -148,6 +167,23 @@ public class DexFile {
     public void write(OutputStream outputStream) throws IOException {
         byte[] bytes = getBytes();
         outputStream.write(bytes, 0, bytes.length);
+    }
+
+    public void serializePublicXml(XmlSerializer serializer) throws IOException {
+        serializer.startDocument("utf-8", null);
+        serializer.text("\n");
+        serializer.startTag(null, PackageBlock.TAG_resources);
+
+        List<RField> fieldList = listRFields();
+        for(RField rField : fieldList) {
+            rField.serializePublicXml(serializer);
+        }
+
+        serializer.text("\n");
+        serializer.endTag(null, PackageBlock.TAG_resources);
+        serializer.endDocument();
+        serializer.flush();
+        IOUtil.close(serializer);
     }
 
     @Override

@@ -24,6 +24,12 @@ public class Ins10x extends Size2Ins {
         super(opcode);
     }
     @Override
+    public int getData(){
+        return 0;
+    }
+    public void setData(int data){
+    }
+    @Override
     void appendCode(SmaliWriter writer) throws IOException {
         writer.newLine();
         writer.append(getOpcode().getName());

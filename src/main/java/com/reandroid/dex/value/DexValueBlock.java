@@ -69,6 +69,12 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
     public String getAsString() {
         return String.valueOf(getValue());
     }
+    public int getAsInteger(int def) {
+        return def;
+    }
+    public long getAsNumber(long def) {
+        return def;
+    }
     @Override
     public String toString() {
         return String.valueOf(getValue());

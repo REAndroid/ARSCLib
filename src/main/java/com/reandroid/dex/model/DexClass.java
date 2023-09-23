@@ -124,7 +124,7 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
     public Iterator<DexField> getFields() {
         return new CombiningIterator<>(getStaticFields(), getInstanceFields());
     }
-    public Iterator<DexField> getStaticFields() {
+    public Iterator<? extends DexField> getStaticFields() {
         ClassData classData = getClassData();
         if(classData != null){
             return ComputeIterator.of(classData

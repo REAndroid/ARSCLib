@@ -25,6 +25,13 @@ public class Ins11x extends Size2Ins {
     }
 
     @Override
+    public int getData(){
+        return 0;
+    }
+    public void setData(int data){
+    }
+
+    @Override
     public int getRegistersCount() {
         return 1;
     }

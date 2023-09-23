@@ -55,10 +55,11 @@ public class DexField extends DexDef {
     public void setFieldType(String type){
         getFieldId().setFieldType(type);
     }
-    public String getInitialValue() {
+
+    public DexValue getInitialValue() {
         DexValueBlock<?> dexValueBlock = getFieldDef().getStaticInitialValue();
         if(dexValueBlock != null){
-            return dexValueBlock.getAsString();
+            return new DexValue(dexValueBlock);
         }
         return null;
     }

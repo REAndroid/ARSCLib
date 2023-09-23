@@ -47,7 +47,7 @@ public class SizeXIns extends Ins implements RegisterNumber{
         valueBytes.putInteger(offset, value);
     }
     public int getShortUnsigned(int offset){
-        return valueBytes.getShortUnsigned(2 + offset);
+        return valueBytes.getShortUnsigned(offset);
     }
 
     public int getByte(int offset){
@@ -63,7 +63,7 @@ public class SizeXIns extends Ins implements RegisterNumber{
         return valueBytes.getShort(offset);
     }
     public void setShort(int offset, int value){
-        valueBytes.putShort(2 + offset, value);
+        valueBytes.putShort(offset, value);
     }
     public int getNibble(int index){
         int i = getByteUnsigned(index / 2);

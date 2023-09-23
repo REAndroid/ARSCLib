@@ -17,12 +17,32 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.dex.writer.SmaliWriter;
 
+
 public class Ins32x extends Size6Ins {
 
     public Ins32x(Opcode<?> opcode) {
         super(opcode);
     }
 
+    @Override
+    public int getData(){
+        return 0;
+    }
+    public void setData(int data){
+    }
+
+    @Override
+    public int getRegistersCount() {
+        return 2;
+    }
+    @Override
+    public int getRegister(int index) {
+        return getShort(2 + index);
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        setShort(2 + index, value);
+    }
     @Override
     void appendCodeData(SmaliWriter writer) {
     }

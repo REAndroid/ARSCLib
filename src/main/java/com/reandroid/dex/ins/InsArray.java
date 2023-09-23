@@ -62,57 +62,25 @@ public class InsArray extends PayloadData {
     private void appendData(SmaliWriter writer) throws IOException {
         int width = numberArray.getWidth();
         if(width == 1){
-            buildHex(writer, width, numberArray.getByteUnsignedArray());
+            buildHex(writer, numberArray.getByteUnsignedArray());
         }else if(width == 2){
-            buildHex(writer, width, numberArray.getShortUnsignedArray());
+            buildHex(writer, numberArray.getShortUnsignedArray());
         }else if(width == 4){
-            buildHex(writer, width, numberArray.getIntArray());
+            buildHex(writer, numberArray.getIntArray());
         }else if(width == 8){
-            buildHex(writer, width, numberArray.getLongArray());
+            buildHex(writer, numberArray.getLongArray());
         }
     }
-    private void buildHex(SmaliWriter builder, int width, int[] numbers) throws IOException {
+    private void buildHex(SmaliWriter builder, int[] numbers) throws IOException {
         for(int num : numbers){
             builder.newLine();
             builder.append(HexUtil.toHex(num, 1));
         }
     }
-    private void buildHex(SmaliWriter builder, int width, long[] numbers) throws IOException {
+    private void buildHex(SmaliWriter builder, long[] numbers) throws IOException {
         for(long num : numbers){
             builder.newLine();
             builder.append(HexUtil.toHex(num, 1));
-        }
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(getOpcode());
-        String separator = "\n    ";
-        int width = numberArray.getWidth() * 2;
-        if(width == 2){
-            buildHex(builder, separator, width, numberArray.getByteUnsignedArray());
-        }else if(width == 4){
-            buildHex(builder, separator, width, numberArray.getShortUnsignedArray());
-        }else if(width == 8){
-            buildHex(builder, separator, width, numberArray.getIntArray());
-        }else if(width == 16){
-            buildHex(builder, separator, width, numberArray.getLongArray());
-        }else {
-            builder.append(" # Invalid number width: ").append(numberArray.getWidth());
-        }
-        return builder.toString();
-    }
-    private static void buildHex(StringBuilder builder, String separator, int width, int[] numbers){
-        for(int num : numbers){
-            builder.append(separator);
-            builder.append(HexUtil.toHex(num, width));
-        }
-    }
-    private static void buildHex(StringBuilder builder, String separator, int width, long[] numbers){
-        for(long num : numbers){
-            builder.append(separator);
-            builder.append(HexUtil.toHex(num, width));
         }
     }
 }
