@@ -36,7 +36,7 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
     public static final DexValueType<PrimitiveValue> BYTE;
     public static final DexValueType<PrimitiveValue> SHORT;
     public static final DexValueType<CharValue> CHAR;
-    public static final DexValueType<PrimitiveValue> INT;
+    public static final DexValueType<IntValue> INT;
     public static final DexValueType<PrimitiveValue> LONG;
     public static final DexValueType<PrimitiveValue> FLOAT;
     public static final DexValueType<PrimitiveValue> DOUBLE;
@@ -73,7 +73,7 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
                 "C", CharValue::new);
         valueTypes[0x03] = CHAR;
         INT = new DexValueType<>("INT", 0x04, 3, true,
-                "I", creatorPrimitive);
+                "I", IntValue::new);
         valueTypes[0x04] = INT;
         LONG = new DexValueType<>("LONG", 0x06, 7, true,
                 "J", creatorPrimitive);

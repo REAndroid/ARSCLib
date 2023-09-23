@@ -18,13 +18,15 @@ package com.reandroid.dex.ins;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ShortItem;
 import com.reandroid.dex.base.DexBlockAlign;
+import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.dex.base.NumberArray;
+import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class InsArray extends PayloadData {
+public class InsArray extends PayloadData implements VisitableInteger {
 
     private final ShortItem elementWidth;
     private final IntegerItem elementCount;
@@ -45,6 +47,23 @@ public class InsArray extends PayloadData {
         addChild(4, blockAlign);
     }
 
+    @Override
+    public void visitIntegers(IntegerVisitor visitor) {
+        NumberArray numberArray = this.numberArray;
+        if(numberArray.getWidth() != 4) {
+            return;
+        }
+        int size = numberArray.size();
+        for(int i = 0; i < size; i++){
+            visitor.visit(this, numberArray.getReference(i));
+        }
+    }
+    public int size(){
+        return numberArray.size();
+    }
+    public int getWidth(){
+        return numberArray.getWidth();
+    }
     @Override
     void appendCode(SmaliWriter writer) throws IOException {
         writer.newLine();

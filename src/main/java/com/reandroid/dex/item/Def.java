@@ -16,7 +16,9 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.index.IndexItemEntry;
@@ -27,7 +29,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class Def<T extends IndexItemEntry> extends DexContainerItem implements SmaliFormat {
+public class Def<T extends IndexItemEntry> extends DexContainerItem implements SmaliFormat, VisitableInteger {
     private final SectionType<T> sectionType;
     private final Ule128Item relativeId;
     private final Ule128Item accessFlags;
@@ -41,6 +43,11 @@ public class Def<T extends IndexItemEntry> extends DexContainerItem implements S
         addChild(0, relativeId);
         addChild(1, accessFlags);
     }
+
+    @Override
+    public void visitIntegers(IntegerVisitor visitor) {
+    }
+
     public Iterator<AnnotationSet> getAnnotations(){
         return null;
     }

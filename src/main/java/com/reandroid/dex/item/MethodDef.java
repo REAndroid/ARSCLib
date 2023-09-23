@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.MethodId;
 import com.reandroid.dex.index.ProtoId;
@@ -38,6 +39,13 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         addChild(2, codeOffset);
     }
 
+    @Override
+    public void visitIntegers(IntegerVisitor visitor) {
+        CodeItem codeItem = getCodeItem();
+        if(codeItem != null){
+            codeItem.visitIntegers(visitor);
+        }
+    }
     public String getName() {
         MethodId methodId = getMethodId();
         if(methodId != null) {

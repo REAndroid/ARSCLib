@@ -18,6 +18,8 @@ package com.reandroid.dex.item;
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.arsc.item.IntegerVisitor;
+import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -25,12 +27,21 @@ import com.reandroid.dex.writer.SmaliWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implements SmaliFormat {
+public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implements SmaliFormat, VisitableInteger {
     private final IntegerReference itemCount;
     public DefArray(IntegerReference itemCount){
         super();
         this.itemCount = itemCount;
     }
+
+    @Override
+    public void visitIntegers(IntegerVisitor visitor) {
+        Iterator<T> iterator = iterator();
+        while (iterator.hasNext()) {
+            iterator.next().visitIntegers(visitor);
+        }
+    }
+
     public void setClassId(ClassId classId) {
         Iterator<T> iterator = iterator();
         while (iterator.hasNext()){

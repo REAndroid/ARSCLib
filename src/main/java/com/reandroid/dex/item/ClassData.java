@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.arsc.item.IntegerVisitor;
+import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -24,7 +26,7 @@ import com.reandroid.utils.CompareUtil;
 import java.io.IOException;
 
 public class ClassData extends DataItemEntry
-        implements SmaliFormat {
+        implements SmaliFormat, VisitableInteger {
 
     private final Ule128Item staticFieldsCount;
     private final Ule128Item instanceFieldCount;
@@ -59,6 +61,13 @@ public class ClassData extends DataItemEntry
         addChild(5, instanceFields);
         addChild(6, directMethods);
         addChild(7, virtualMethods);
+    }
+
+    @Override
+    public void visitIntegers(IntegerVisitor visitor) {
+        getStaticFields().visitIntegers(visitor);
+        getDirectMethods().visitIntegers(visitor);
+        getVirtualMethods().visitIntegers(visitor);
     }
 
     public FieldDefArray getStaticFields() {

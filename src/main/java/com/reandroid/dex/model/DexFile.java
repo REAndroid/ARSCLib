@@ -18,8 +18,11 @@ package com.reandroid.dex.model;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.IntegerVisitor;
+import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.item.ClassData;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.sections.DexFileBlock;
 import com.reandroid.dex.sections.Marker;
@@ -31,9 +34,10 @@ import com.reandroid.utils.io.IOUtil;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.*;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
 
-public class DexFile {
+public class DexFile implements VisitableInteger {
 
     private final DexFileBlock dexFileBlock;
 
@@ -95,6 +99,13 @@ public class DexFile {
                 ComputeIterator.of(getMarkers(), Marker::getStringData));
         for(StringData stringData : removeList){
             stringData.removeSelf();
+        }
+    }
+    @Override
+    public void visitIntegers(IntegerVisitor visitor) {
+        Section<ClassData> section = get(SectionType.CLASS_DATA);
+        for(ClassData classData : section){
+            classData.visitIntegers(visitor);
         }
     }
     public void sortSection(SectionType<?>[] order){

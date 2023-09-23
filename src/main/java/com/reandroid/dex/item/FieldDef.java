@@ -15,8 +15,12 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.arsc.item.IntegerVisitor;
+import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.common.AccessFlag;
+import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.index.FieldId;
+import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
@@ -32,12 +36,51 @@ public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
         super(0, SectionType.FIELD_ID);
     }
 
+    @Override
+    public void visitIntegers(IntegerVisitor visitor) {
+        DexValueBlock<?> valueBlock = getStaticInitialValue();
+        if(valueBlock instanceof VisitableInteger){
+            ((VisitableInteger) valueBlock).visitIntegers(visitor);
+        }
+    }
+
     public DexValueBlock<?> getStaticInitialValue(){
         if(isStatic()){
-            return getClassId().getStaticValue(getIndex());
+            ClassId classId = getClassId();
+            if(classId != null){
+                return classId.getStaticValue(getIndex());
+            }
         }
         return null;
     }
+
+    @Override
+    public ClassId getClassId() {
+        ClassId classId = super.getClassId();
+        if(classId != null){
+            return classId;
+        }
+        FieldId fieldId = getFieldId();
+        if(fieldId == null){
+            return null;
+        }
+        DexIdPool<ClassId> pool = getPool(SectionType.CLASS_ID);
+        if(pool == null){
+            return null;
+        }
+        String className = fieldId.getClassName();
+        classId = pool.get(className);
+        if(classId == null) {
+            return null;
+        }
+        ClassData classData = getParentInstance(ClassData.class);
+        if(classData == null){
+            return null;
+        }
+        classData.setClassId(classId);
+        return classId;
+    }
+
     public FieldId getFieldId(){
         return getItem();
     }

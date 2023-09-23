@@ -16,6 +16,8 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.arsc.container.BlockList;
+import com.reandroid.arsc.item.IntegerVisitor;
+import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.item.EncodedArray;
 import com.reandroid.dex.writer.SmaliWriter;
 
@@ -23,11 +25,19 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class ArrayValue extends DexValueBlock<EncodedArray>
-        implements Iterable<DexValueBlock<?>> {
+        implements Iterable<DexValueBlock<?>>, VisitableInteger {
     public ArrayValue() {
         super(new EncodedArray());
     }
 
+    @Override
+    public void visitIntegers(IntegerVisitor visitor) {
+        for(DexValueBlock<?> dexValue : this){
+            if(dexValue instanceof VisitableInteger){
+                ((VisitableInteger)dexValue).visitIntegers(visitor);
+            }
+        }
+    }
     public DexValueBlock<?> get(int i){
         return getElementBlockList().get(i);
     }

@@ -53,8 +53,8 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
     public static final Opcode<Ins11x> RETURN_OBJECT;
     public static final Opcode<Ins11n> CONST_4;
     public static final Opcode<Ins21s> CONST_16;
-    public static final Opcode<Ins31i> CONST;
-    public static final Opcode<Ins21ih> CONST_HIGH16;
+    public static final Opcode<InsConst> CONST;
+    public static final Opcode<InsConst16High> CONST_HIGH16;
     public static final Opcode<Ins21s> CONST_WIDE_16;
     public static final Opcode<Ins31i> CONST_WIDE_32;
     public static final Opcode<Ins51l> CONST_WIDE;
@@ -449,19 +449,9 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
             }
         });
         VALUES[0x13] = CONST_16;
-        CONST = new Opcode<>(0x14, 6, "const", new BlockCreator<Ins31i>() {
-            @Override
-            public Ins31i newInstance() {
-                return new Ins31i(CONST);
-            }
-        });
+        CONST = new Opcode<>(0x14, 6, "const", InsConst::new);
         VALUES[0x14] = CONST;
-        CONST_HIGH16 = new Opcode<>(0x15, 4, "const/high16", new BlockCreator<Ins21ih>() {
-            @Override
-            public Ins21ih newInstance() {
-                return new Ins21ih(CONST_HIGH16);
-            }
-        });
+        CONST_HIGH16 = new Opcode<>(0x15, 4, "const/high16", InsConst16High::new);
         VALUES[0x15] = CONST_HIGH16;
         CONST_WIDE_16 = new Opcode<>(0x16, 4, "const-wide/16", new BlockCreator<Ins21s>() {
             @Override

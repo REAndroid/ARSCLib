@@ -16,26 +16,17 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class PrimitiveValue extends DexValueBlock<NumberValue> implements IntegerReference {
+public class PrimitiveValue extends DexValueBlock<NumberValue> {
 
     public PrimitiveValue() {
         super(new NumberValue());
     }
 
-    @Override
-    public int get() {
-        return getAsInteger(0);
-    }
-    @Override
-    public void set(int value) {
-        setNumberValue(value);
-    }
     public long getNumberValue(){
         return getValue().getNumberValue();
     }

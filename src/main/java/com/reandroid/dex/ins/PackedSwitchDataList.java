@@ -18,6 +18,8 @@ package com.reandroid.dex.ins;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.common.ArraySupplier;
 import com.reandroid.common.ArraySupplierIterator;
+import com.reandroid.arsc.item.IntegerVisitor;
+import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.item.IntegerList;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -28,7 +30,7 @@ import java.util.Iterator;
 import java.util.Objects;
 
 public class PackedSwitchDataList extends IntegerList
-        implements SmaliFormat, LabelList {
+        implements SmaliFormat, LabelList, VisitableInteger {
 
     private final IntegerReference firstKey;
     private final InsPackedSwitchData switchData;
@@ -37,6 +39,14 @@ public class PackedSwitchDataList extends IntegerList
         super(itemCount);
         this.firstKey = firstKey;
         this.switchData = switchData;
+    }
+
+    @Override
+    public void visitIntegers(IntegerVisitor visitor) {
+        int size = size();
+        for(int i = 0; i < size; i++){
+            visitor.visit(this, getData(i));
+        }
     }
     public int getFirstKey(){
         return firstKey.get();

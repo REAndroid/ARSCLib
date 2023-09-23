@@ -16,6 +16,8 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.base.BlockRefresh;
+import com.reandroid.arsc.item.IntegerVisitor;
+import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
@@ -30,7 +32,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class CodeItem extends DataItemEntry implements SmaliFormat {
+public class CodeItem extends DataItemEntry implements SmaliFormat, VisitableInteger {
 
     private final Header header;
     private final InstructionList instructionList;
@@ -45,6 +47,10 @@ public class CodeItem extends DataItemEntry implements SmaliFormat {
 
         addChild(0, header);
         addChild(1, instructionList);
+    }
+    @Override
+    public void visitIntegers(IntegerVisitor visitor) {
+        getInstructionList().visitIntegers(visitor);
     }
     public int getLocalsCount() {
         return getRegistersCount() - getParameterRegistersCount();

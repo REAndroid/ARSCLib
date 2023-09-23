@@ -35,6 +35,9 @@ public class NumberArray extends DexBlockItem {
         this.widthReference = widthReference;
         this.itemCount = itemCount;
     }
+    public IntegerReference getReference(int index) {
+        return new Data(this, index);
+    }
     public short[] getShortArray(){
         int width = getWidth();
         short[] results = new short[size()];
@@ -88,6 +91,9 @@ public class NumberArray extends DexBlockItem {
     }
     public int getInteger(int index){
         return getInteger(getBytesInternal(), index * getWidth());
+    }
+    public void setInteger(int index, int value){
+        putInteger(getBytesInternal(), index * getWidth(), value);
     }
     public long getLong(int index){
         return getLong(getBytesInternal(), index * getWidth());
@@ -152,5 +158,23 @@ public class NumberArray extends DexBlockItem {
     @Override
     public String toString() {
         return "width=" + getWidth() + ", " + StringsUtil.toString(toList());
+    }
+
+    static class Data implements IntegerReference {
+        private final NumberArray numberArray;
+        private final int index;
+
+        public Data(NumberArray numberArray, int index){
+            this.numberArray = numberArray;
+            this.index = index;
+        }
+        @Override
+        public int get() {
+            return numberArray.getInteger(index);
+        }
+        @Override
+        public void set(int value) {
+            numberArray.setInteger(index, value);
+        }
     }
 }

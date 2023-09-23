@@ -17,6 +17,8 @@ package com.reandroid.dex.item;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexBlockList;
+import com.reandroid.arsc.item.IntegerVisitor;
+import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.ins.*;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -26,7 +28,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
 
-public class InstructionList extends DexBlockList<Ins> implements SmaliFormat {
+public class InstructionList extends DexBlockList<Ins> implements SmaliFormat, VisitableInteger {
     private final CodeItem codeItem;
     private final RegisterFactory registerFactory;
 
@@ -34,6 +36,15 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat {
         super();
         this.codeItem = codeItem;
         this.registerFactory = new RegisterFactory(codeItem);
+    }
+
+    @Override
+    public void visitIntegers(IntegerVisitor visitor) {
+        for(Ins ins : this) {
+            if(ins instanceof VisitableInteger){
+                ((VisitableInteger)ins).visitIntegers(visitor);
+            }
+        }
     }
 
     public RegisterFactory getRegisterFactory() {
