@@ -98,7 +98,7 @@ public class ResourceEntry implements Iterable<Entry>{
         int resourceId = this.getResourceId();
         byte typeId = (byte)((resourceId >> 16) & 0xff);
         short entryId = (short)(resourceId & 0xffff);
-        Entry entry = packageBlock.getOrCreateEntry(typeId, entryId, resConfig);
+        Entry entry = getPackageBlock().getOrCreateEntry(typeId, entryId, resConfig);
         String name = getName();
         if(name != null && entry.getName() ==  null){
             entry.setName(name, true);
@@ -169,7 +169,7 @@ public class ResourceEntry implements Iterable<Entry>{
         return getPackageBlock().getName();
     }
     public String getType(){
-        return packageBlock.typeNameOf((getResourceId() >> 16) & 0xff);
+        return getPackageBlock().typeNameOf((getResourceId() >> 16) & 0xff);
     }
     public void setName(String name){
         boolean hasEntry = false;
@@ -209,10 +209,10 @@ public class ResourceEntry implements Iterable<Entry>{
         return iterator(true);
     }
     public Iterator<Entry> iterator(boolean skipNull){
-        return packageBlock.getEntries(getResourceId(), skipNull);
+        return getPackageBlock().getEntries(getResourceId(), skipNull);
     }
     public Iterator<Entry> iterator(Predicate<Entry> filter){
-        return new FilterIterator<>(packageBlock.getEntries(getResourceId()), filter);
+        return new FilterIterator<>(getPackageBlock().getEntries(getResourceId()), filter);
     }
     public Iterator<ResConfig> getConfigs(){
         return new ComputeIterator<>(iterator(false), new Function<Entry, ResConfig>() {
@@ -240,9 +240,13 @@ public class ResourceEntry implements Iterable<Entry>{
                 builder.append('?');
             }
         }
-        if(context != getPackageBlock()){
-            builder.append(getPackageName());
-            builder.append(':');
+        PackageBlock packageBlock = getPackageBlock();
+        if(context != packageBlock && !packageBlock.isEmpty()){
+            String packageName = getPackageName();
+            if(packageName != null){
+                builder.append(packageName);
+                builder.append(':');
+            }
         }
         builder.append(getType());
         builder.append('/');
@@ -262,14 +266,15 @@ public class ResourceEntry implements Iterable<Entry>{
     }
 
     public boolean serializePublicXml(XmlSerializer serializer) throws IOException {
-        if(isEmpty()){
+        String name = getName();
+        if(name == null){
             return false;
         }
         serializer.text("\n  ");
         serializer.startTag(null, PackageBlock.TAG_public);
         serializer.attribute(null, "id", getHexId());
         serializer.attribute(null, "type", getType());
-        serializer.attribute(null, "name", getName());
+        serializer.attribute(null, "name", name);
         serializer.endTag(null, PackageBlock.TAG_public);
         return true;
     }
@@ -292,7 +297,11 @@ public class ResourceEntry implements Iterable<Entry>{
 
     @Override
     public String toString(){
-        return getHexId() + " @" + getPackageName()
+        String packageName = getPackageName();
+        if(packageName == null){
+            return getHexId() + " @" + getType() + "/" + getName();
+        }
+        return getHexId() + " @" + packageName
                 + ":" + getType() + "/" + getName();
     }
 
