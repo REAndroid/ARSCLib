@@ -19,6 +19,18 @@ import java.util.*;
 
 public class CollectionUtil {
 
+    public static<T> List<T> toUniqueList(Iterator<? extends T> iterator) {
+        return new ArrayList<>(toHashSet(iterator));
+    }
+    public static<T> HashSet<T> toHashSet(Iterator<? extends T> iterator) {
+        HashSet<T> results = new HashSet<>();
+        while (iterator.hasNext()){
+            T item = iterator.next();
+            results.add(item);
+        }
+        return results;
+    }
+
     public static<T extends Comparable<T>> void sort(List<T> list){
         list.sort(getComparator());
     }
