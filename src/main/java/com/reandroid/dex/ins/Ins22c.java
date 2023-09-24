@@ -34,4 +34,13 @@ public class Ins22c extends Size4Ins implements RegisterNumber{
     public void setRegister(int index, int value) {
         setNibble(2 + index, value);
     }
+
+    @Override
+    public int getData(){
+        return getShort(2);
+    }
+    @Override
+    public void setData(int data){
+        setShort(2, data);
+    }
 }

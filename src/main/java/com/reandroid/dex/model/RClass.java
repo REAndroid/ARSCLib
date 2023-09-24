@@ -15,15 +15,23 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.item.ClassData;
 import com.reandroid.dex.item.FieldDef;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.io.IOUtil;
+import org.xmlpull.v1.XmlSerializer;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 public class RClass extends DexClass {
 
@@ -104,6 +112,23 @@ public class RClass extends DexClass {
             return null;
         }
         return simpleName;
+    }
+    public static void serializePublicXml(Collection<RField> rFields, XmlSerializer serializer) throws IOException {
+        serializer.startDocument("utf-8", null);
+        serializer.text("\n");
+        serializer.startTag(null, PackageBlock.TAG_resources);
+
+        List<RField> fieldList = new ArrayList<>(rFields);
+        fieldList.sort(CompareUtil.getComparableComparator());
+        for(RField rField : fieldList) {
+            rField.serializePublicXml(serializer);
+        }
+
+        serializer.text("\n");
+        serializer.endTag(null, PackageBlock.TAG_resources);
+        serializer.endDocument();
+        serializer.flush();
+        IOUtil.close(serializer);
     }
 
     private static final String SIMPLE_NAME_PREFIX = "R$";

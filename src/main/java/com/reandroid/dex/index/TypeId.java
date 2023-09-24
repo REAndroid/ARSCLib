@@ -15,13 +15,14 @@
  */
 package com.reandroid.dex.index;
 
+import com.reandroid.dex.base.StringKeyItemCreate;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
-public class TypeId extends IndexItemEntry implements Comparable<TypeId>{
+public class TypeId extends IndexItemEntry implements Comparable<TypeId>, StringKeyItemCreate {
 
     private final StringReference nameReference;
 

@@ -19,6 +19,9 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.FieldId;
 import com.reandroid.dex.item.AnnotationSet;
 import com.reandroid.dex.item.FieldDef;
+import com.reandroid.dex.pool.DexIdPool;
+import com.reandroid.dex.sections.Section;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.writer.SmaliWriter;
 
@@ -36,6 +39,21 @@ public class DexField extends DexDef {
         this.fieldDef = fieldDef;
     }
 
+    public FieldId getOrCreate(DexFile dexFile){
+        Section<FieldId> section = dexFile.get(SectionType.FIELD_ID);
+        DexIdPool<FieldId> pool = section.getPool();
+        FieldId fieldId = pool.get(this.getFieldId().getKey());
+        if(fieldId != null){
+            return fieldId;
+        }
+        fieldId = section.createIdItem();
+        fieldId.setName(getName());
+        fieldId.setClassType(getClassName());
+        fieldId.setFieldType(getFieldType());
+        pool.add(fieldId);
+        System.err.println("Created: " + fieldId);
+        return fieldId;
+    }
     public String getAccessFlags() {
         return AccessFlag.formatForField(getFieldDef().getAccessFlagsValue());
     }

@@ -15,16 +15,12 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.base.DexItemArray;
 import com.reandroid.dex.base.FixedSizeBlock;
 import com.reandroid.dex.base.StringKeyItem;
-import com.reandroid.dex.pool.DexIdPool;
-import com.reandroid.dex.sections.Section;
-import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 
 import java.io.IOException;

@@ -48,9 +48,17 @@ import java.util.Map;
 public class DexFile implements VisitableInteger {
 
     private final DexFileBlock dexFileBlock;
+    private Object mTag;
 
     public DexFile(DexFileBlock dexFileBlock){
         this.dexFileBlock = dexFileBlock;
+    }
+
+    public Object getTag() {
+        return mTag;
+    }
+    public void setTag(Object tag) {
+        this.mTag = tag;
     }
 
     public void replaceRFields(){
@@ -58,33 +66,10 @@ public class DexFile implements VisitableInteger {
         IntegerVisitor visitor = new IntegerVisitor() {
             @Override
             public void visit(Object sender, IntegerReference reference) {
-                replaceRFields(map, reference);
+                replaceRFields(DexFile.this, map, reference);
             }
         };
         this.visitIntegers(visitor);
-    }
-    public void replaceRFields(Map<Integer, RField> map, IntegerReference reference){
-        if(!(reference instanceof InsConst)){
-            return;
-        }
-        InsConst insConst = (InsConst) reference;
-        int id = reference.get();
-        RField rField = map.get(id);
-        if(rField == null){
-            return;
-        }
-        MethodDef methodDef = insConst.getMethodDef();
-        if(methodDef == null){
-            return;
-        }
-        if(rField.getClassName().equals(methodDef.getClassName())){
-            return;
-        }
-        Ins21c ins = Opcode.SGET.newInstance();
-        ins.setRegister(0, insConst.getRegister(0));
-        insConst.replace(ins);
-        FieldId fieldId = rField.getFieldId();
-        ins.setData(fieldId.getIndex());
     }
     public List<RField> listRFields() {
         List<RField> fieldList = CollectionUtil.toUniqueList(getRFields());
@@ -243,6 +228,29 @@ public class DexFile implements VisitableInteger {
         return getDexFileBlock().getMapList().toString();
     }
 
+    public static void replaceRFields(DexFile dexFile, Map<Integer, RField> map, IntegerReference reference){
+        if(!(reference instanceof InsConst)){
+            return;
+        }
+        InsConst insConst = (InsConst) reference;
+        int id = reference.get();
+        RField rField = map.get(id);
+        if(rField == null){
+            return;
+        }
+        MethodDef methodDef = insConst.getMethodDef();
+        if(methodDef == null){
+            return;
+        }
+        if(rField.getClassName().equals(methodDef.getClassName())){
+            return;
+        }
+        Ins21c ins = Opcode.SGET.newInstance();
+        ins.setRegister(0, insConst.getRegister(0));
+        insConst.replace(ins);
+        FieldId fieldId = rField.getOrCreate(dexFile);
+        ins.setData(fieldId.getIndex());
+    }
     public static DexFile read(byte[] dexBytes) throws IOException {
         return read(new BlockReader(dexBytes));
     }

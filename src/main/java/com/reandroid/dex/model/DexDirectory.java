@@ -16,24 +16,82 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.arsc.item.IntegerVisitor;
+import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.MergingIterator;
 import com.reandroid.utils.io.IOUtil;
+import com.reandroid.xml.XMLFactory;
 import org.xmlpull.v1.XmlSerializer;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-public class DexDirectory implements Iterable<DexFile> {
+public class DexDirectory implements Iterable<DexFile>, VisitableInteger {
     private final List<DexFile> dexFileList;
+    private Object mTag;
+    private DexFile mCurrent;
 
     public DexDirectory() {
         this.dexFileList = new ArrayList<>();
     }
 
+    public Object getTag() {
+        return mTag;
+    }
+    public void setTag(Object tag) {
+        this.mTag = tag;
+    }
+    public void replaceRFields(){
+        Map<Integer, RField> map = RField.mapRFields(listRFields().iterator());
+        IntegerVisitor visitor = new IntegerVisitor() {
+            @Override
+            public void visit(Object sender, IntegerReference reference) {
+                DexFile.replaceRFields(mCurrent, map, reference);
+            }
+        };
+        this.visitIntegers(visitor);
+        File dir = (File) getTag();
+        File pubXml = new File(dir, "public.xml");
+        try {
+            XmlSerializer serializer = XMLFactory.newSerializer(pubXml);
+            RClass.serializePublicXml(map.values(), serializer);
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        }
+    }
+    @Override
+    public void visitIntegers(IntegerVisitor visitor) {
+        for(DexFile dexFile : this){
+            mCurrent = dexFile;
+            dexFile.visitIntegers(visitor);
+            save(dexFile);
+        }
+    }
+    private void save(DexFile dexFile){
+        Object tag = dexFile.getTag();
+        if(!(tag instanceof File)){
+            return;
+        }
+        File file = (File) tag;
+        String name = file.getName();
+        name = name.substring(0, name.length()-4);
+        name = name + "_mod.dex";
+        File modFile = new File(file.getParentFile(), name);
+        try {
+            dexFile.refresh();
+            dexFile.sortStrings();
+            dexFile.refresh();
+            dexFile.write(modFile);
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        }
+    }
     public List<RField> listRFields() {
         List<RField> fieldList = CollectionUtil.toUniqueList(getRFields());
         fieldList.sort(CompareUtil.getComparableComparator());
@@ -65,6 +123,28 @@ public class DexDirectory implements Iterable<DexFile> {
         return getDexFileList().iterator();
     }
 
+    public void refresh(){
+        for(DexFile dexFile : this){
+            dexFile.refresh();
+        }
+    }
+    public void addDirectory(File dir) throws IOException {
+        File[] files = dir.listFiles();
+        if(files == null){
+            return;
+        }
+        for(File file : files){
+            String name = file.getName();
+            if(file.isFile() && name.endsWith(".dex") && !name.contains("_mod")){
+                add(file);
+            }
+        }
+    }
+    public void add(File file) throws IOException {
+        DexFile dexFile = DexFile.read(file);
+        dexFile.setTag(file);
+        add(dexFile);
+    }
     public void add(InputStream inputStream) throws IOException {
         DexFile dexFile = DexFile.read(inputStream);
         add(dexFile);
