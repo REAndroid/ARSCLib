@@ -60,7 +60,7 @@ public class SizeXIns extends Ins implements RegisterNumber{
         return valueBytes.get(offset) & 0xff;
     }
     public int getShort(int offset){
-        return valueBytes.getShort(offset);
+        return valueBytes.getShortUnsigned(offset);
     }
     public void setShort(int offset, int value){
         valueBytes.putShort(offset, value);
@@ -105,7 +105,7 @@ public class SizeXIns extends Ins implements RegisterNumber{
         valueBytes.onReadBytes(reader);
         cacheSectionItem();
     }
-    private void cacheSectionItem(){
+    void cacheSectionItem(){
         SectionType<? extends IndexItemEntry> sectionType = getOpcode().getSectionType();
         if(sectionType == null){
             return;

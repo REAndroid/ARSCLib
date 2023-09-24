@@ -22,8 +22,20 @@ public class Ins20t extends Size4Ins implements Label{
         super(opcode);
     }
     @Override
+    public int getData(){
+        return getShort(2);
+    }
+    @Override
+    public void setData(int data){
+        setShort(2, data);
+    }
+    @Override
     public int getTargetAddress() {
         return getAddress() + getShort(2);
+    }
+    @Override
+    public void setTargetAddress(int targetAddress){
+        setShort(2, targetAddress - getAddress());
     }
     @Override
     public int getSortOrder() {

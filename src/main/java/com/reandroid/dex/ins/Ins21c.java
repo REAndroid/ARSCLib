@@ -22,6 +22,16 @@ public class Ins21c extends Size4Ins {
     }
 
     @Override
+    public int getData(){
+        return getShort(2);
+    }
+    @Override
+    public void setData(int data){
+        setShort(2, data);
+        cacheSectionItem();
+    }
+
+    @Override
     public int getRegistersCount() {
         return 1;
     }

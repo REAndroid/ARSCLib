@@ -19,8 +19,6 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.BlockItem;
-import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.dex.base.Sle128Item;
 import com.reandroid.dex.item.DexContainerItem;
 import com.reandroid.utils.collection.*;
@@ -57,6 +55,9 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
     TryItem newCopy(){
         return new Copy(this);
     }
+    HandlerOffset getHandlerOffset() {
+        return getHandlerOffsetArray().get(getIndex());
+    }
     HandlerOffsetArray getHandlerOffsetArray(){
         return handlerOffsetArray;
     }
@@ -86,10 +87,13 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
         return new CombiningIterator<>(getTryHandlers(), iterator1);
     }
     public int getStartAddress(){
-        return getHandlerOffsetArray().getStartAddress(getIndex());
+        return getHandlerOffset().getStartAddress();
+    }
+    public void setStartAddress(int address){
+        getHandlerOffset().setStartAddress(address);
     }
     public int getCatchCodeUnit(){
-        return getHandlerOffsetArray().getCatchCodeUnit(getIndex());
+        return getHandlerOffset().getCatchCodeUnit();
     }
 
     public CatchAllHandler getCatchAllHandler(){

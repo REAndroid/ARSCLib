@@ -32,6 +32,11 @@ public class DexBlockList<T extends Block> extends BlockList<T> implements Colle
         dexPositionAlign.setParent(this);
     }
 
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        getDexPositionAlign().align(this);
+    }
     public DexPositionAlign getDexPositionAlign() {
         return dexPositionAlign;
     }

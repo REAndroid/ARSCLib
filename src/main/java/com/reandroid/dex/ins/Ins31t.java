@@ -26,6 +26,13 @@ public class Ins31t extends Size6Ins implements Label{
     }
 
     @Override
+    public int getData(){
+        return getShort(2);
+    }
+    public void setData(int data){
+        setShort(2, data);
+    }
+    @Override
     public int getRegistersCount() {
         return 2;
     }
@@ -40,6 +47,10 @@ public class Ins31t extends Size6Ins implements Label{
     @Override
     public int getTargetAddress() {
         return getAddress() + getData();
+    }
+    @Override
+    public void setTargetAddress(int targetAddress){
+        setData(targetAddress - getAddress());
     }
     @Override
     public String getLabelName() {

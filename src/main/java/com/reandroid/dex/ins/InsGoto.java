@@ -52,6 +52,10 @@ public class InsGoto extends SizeXIns implements Label {
         return getAddress() + getData();
     }
     @Override
+    public void setTargetAddress(int targetAddress){
+        setData(targetAddress - getAddress());
+    }
+    @Override
     public String getLabelName() {
         return HexUtil.toHex(":goto_", getTargetAddress(), 1);
     }

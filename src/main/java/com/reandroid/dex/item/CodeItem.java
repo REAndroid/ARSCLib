@@ -42,8 +42,8 @@ public class CodeItem extends DataItemEntry implements SmaliFormat, VisitableInt
     public CodeItem() {
         super(3);
         this.header = new Header(this);
-        this.tryBlock = null;
         this.instructionList = new InstructionList(this);
+        this.tryBlock = null;
 
         addChild(0, header);
         addChild(1, instructionList);
@@ -55,8 +55,14 @@ public class CodeItem extends DataItemEntry implements SmaliFormat, VisitableInt
     public int getLocalsCount() {
         return getRegistersCount() - getParameterRegistersCount();
     }
+    public void setLocalsCount(int count) {
+        setRegistersCount(count + getParameterRegistersCount());
+    }
     public int getRegistersCount(){
         return header.registersCount.get();
+    }
+    public void setRegistersCount(int count){
+        header.registersCount.set(count);
     }
     public int getParameterRegistersCount(){
         return header.parameterRegisters.get();
@@ -96,10 +102,6 @@ public class CodeItem extends DataItemEntry implements SmaliFormat, VisitableInt
         }
     }
 
-    @Override
-    protected void onPreRefresh() {
-        super.onPreRefresh();
-    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         MethodDef methodDef = getMethodDef();

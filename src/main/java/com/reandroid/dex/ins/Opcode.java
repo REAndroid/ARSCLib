@@ -33,7 +33,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
     public static final Map<String, Opcode<?>> NAME_MAP;
 
 
-    public static final Opcode<Ins10x> NOP;
+    public static final Opcode<InsNop> NOP;
     public static final Opcode<Ins12x> MOVE;
     public static final Opcode<Ins22x> MOVE_FROM16;
     public static final Opcode<Ins32x> MOVE_16;
@@ -309,12 +309,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
         Map<String, Opcode<?>> map = new HashMap<>();
         NAME_MAP = map;
 
-        NOP = new Opcode<>(0x00, 2, "nop", new BlockCreator<Ins10x>() {
-            @Override
-            public Ins10x newInstance() {
-                return new Ins10x(NOP);
-            }
-        });
+        NOP = new Opcode<>(0x00, 2, "nop", InsNop::new);
         VALUES[0x00] = NOP;
         MOVE = new Opcode<>(0x01, 2, "move", new BlockCreator<Ins12x>() {
             @Override

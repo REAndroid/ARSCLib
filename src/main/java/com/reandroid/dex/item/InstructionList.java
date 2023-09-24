@@ -23,10 +23,12 @@ import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.ins.*;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.collection.CollectionUtil;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
+import java.util.List;
 
 public class InstructionList extends DexBlockList<Ins> implements SmaliFormat, VisitableInteger {
     private final CodeItem codeItem;
@@ -38,9 +40,67 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat, V
         this.registerFactory = new RegisterFactory(codeItem);
     }
 
+    public MethodDef getMethodDef() {
+        return getCodeItem().getMethodDef();
+    }
+    public CodeItem getCodeItem() {
+        return codeItem;
+    }
+    @Override
+    public void add(int index, Ins item) {
+        reBuildExtraLines();
+        super.add(index, item);
+        updateAddresses();
+        updateLabelAddress();
+        reBuildExtraLines();
+    }
+    @Override
+    public boolean remove(Ins item) {
+        if(!contains(item)){
+            return false;
+        }
+        reBuildExtraLines();
+        if(item.hasExtraLines()){
+            Ins next = get(item.getIndex() + 1);
+            if(next != null) {
+                item.transferExtraLines(next);
+            }
+        }
+        super.remove(item);
+        updateAddresses();
+        updateLabelAddress();
+        return true;
+    }
+    public void replace(Ins old, Ins item) {
+        if(old == item){
+            return;
+        }
+        reBuildExtraLines();
+        int index = old.getIndex();
+        old.transferExtraLines(item);
+        item.setAddress(old.getAddress());
+        super.remove(old);
+        super.add(index, item);
+        updateAddresses();
+        updateLabelAddress();
+    }
+    private void updateLabelAddress() {
+        for(Ins ins : this) {
+            ins.updateLabelAddress();
+        }
+    }
+    private void updateAddresses() {
+        int address = 0;
+        for(Ins ins : this) {
+            ins.setAddress(address);
+            address += ins.getCodeUnits();
+        }
+    }
+
     @Override
     public void visitIntegers(IntegerVisitor visitor) {
-        for(Ins ins : this) {
+        List<Ins> insList = CollectionUtil.toList(this.iterator());
+        for(Ins ins : insList) {
             if(ins instanceof VisitableInteger){
                 ((VisitableInteger)ins).visitIntegers(visitor);
             }
@@ -92,7 +152,6 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat, V
             reader.seek(position);
         }
         getDexPositionAlign().readBytes(reader);
-        clearExtraLines();
     }
 
     private void clearExtraLines() {
@@ -108,13 +167,17 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat, V
         }
         return false;
     }
-    private void buildExtraLines(){
+    public void buildExtraLines(){
         if(haveExtraLines()){
             return;
         }
         buildLabels();
         buildTryBlock();
         buildDebugInfo();
+    }
+    public void reBuildExtraLines(){
+        clearExtraLines();
+        buildExtraLines();
     }
     private Ins getAtAddress(int address){
         for (Ins ins : this) {

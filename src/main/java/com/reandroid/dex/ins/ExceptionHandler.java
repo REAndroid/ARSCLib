@@ -70,8 +70,14 @@ public abstract class ExceptionHandler extends DexContainerItem
     public int getCatchAddress(){
         return getCatchAddressUle128().get();
     }
+    public void setCatchAddress(int address){
+        getCatchAddressUle128().set(address);
+    }
     public int getAddress(){
         return getStartAddress() + getCodeUnit();
+    }
+    public void setAddress(int address){
+        setCodeUnit(address - getStartAddress());
     }
     public Label getHandlerLabel(){
         return handlerLabel;
@@ -92,12 +98,24 @@ public abstract class ExceptionHandler extends DexContainerItem
         }
         return 0;
     }
+    public void setStartAddress(int address){
+        TryItem tryItem = getTryItem();
+        if(tryItem != null){
+            tryItem.setStartAddress(address);
+        }
+    }
     public int getCodeUnit(){
         TryItem tryItem = getTryItem();
         if(tryItem != null){
             return tryItem.getCatchCodeUnit();
         }
         return 0;
+    }
+    public void setCodeUnit(int value){
+        TryItem tryItem = getTryItem();
+        if(tryItem != null){
+            tryItem.getHandlerOffset().setCatchCodeUnit(value);
+        }
     }
     TryItem getTryItem(){
         return getParentInstance(TryItem.class);
@@ -122,6 +140,10 @@ public abstract class ExceptionHandler extends DexContainerItem
         @Override
         public int getTargetAddress() {
             return handler.getAddress();
+        }
+        @Override
+        public void setTargetAddress(int targetAddress){
+            handler.setAddress(targetAddress);
         }
 
         @Override
@@ -198,6 +220,10 @@ public abstract class ExceptionHandler extends DexContainerItem
             return handler.getStartAddress();
         }
         @Override
+        public void setTargetAddress(int targetAddress){
+            handler.setStartAddress(targetAddress);
+        }
+        @Override
         public String getLabelName() {
             return HexUtil.toHex(":try_start_", getTargetAddress(), 1);
         }
@@ -241,6 +267,10 @@ public abstract class ExceptionHandler extends DexContainerItem
             return handler.getAddress();
         }
         @Override
+        public void setTargetAddress(int targetAddress){
+            handler.setAddress(targetAddress);
+        }
+        @Override
         public String getLabelName() {
             return HexUtil.toHex(":try_end_", getTargetAddress(), 1);
         }
@@ -281,6 +311,10 @@ public abstract class ExceptionHandler extends DexContainerItem
         @Override
         public int getTargetAddress() {
             return handler.getCatchAddress();
+        }
+        @Override
+        public void setTargetAddress(int targetAddress){
+            handler.setCatchAddress(targetAddress);
         }
         @Override
         public String getLabelName() {

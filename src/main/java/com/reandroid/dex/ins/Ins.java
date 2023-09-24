@@ -18,6 +18,8 @@ package com.reandroid.dex.ins;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.NumberIntegerReference;
 import com.reandroid.dex.item.DexContainerItem;
+import com.reandroid.dex.item.InstructionList;
+import com.reandroid.dex.item.MethodDef;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -42,6 +44,46 @@ public class Ins extends DexContainerItem implements SmaliFormat {
     Ins(Opcode<?> opcode) {
         this(1, opcode);
     }
+
+    public MethodDef getMethodDef() {
+        InstructionList instructionList = getInstructionList();
+        if(instructionList != null) {
+            return instructionList.getMethodDef();
+        }
+        return null;
+    }
+    public InstructionList getInstructionList() {
+        return getParentInstance(InstructionList.class);
+    }
+
+    public void updateLabelAddress() {
+        int address = getAddress();
+        Iterator<ExtraLine> iterator = getExtraLines();
+        while (iterator.hasNext()) {
+            ExtraLine extraLine = iterator.next();
+            if(extraLine instanceof Label){
+                Label label = (Label) extraLine;
+                if(address != label.getTargetAddress()){
+                    label.setTargetAddress(address);
+                }
+            }
+        }
+    }
+    public void transferExtraLines(Ins target) {
+        target.extraLines = this.extraLines;
+        this.extraLines = EmptyList.of();
+    }
+    public void replace(Ins ins){
+        if(ins == null || ins == this){
+            return;
+        }
+        InstructionList instructionList = getInstructionList();
+        if(instructionList == null){
+            return;
+        }
+        instructionList.replace(this, ins);
+    }
+
     public Opcode<?> getOpcode() {
         return opcode;
     }
@@ -79,13 +121,6 @@ public class Ins extends DexContainerItem implements SmaliFormat {
     public Iterator<ExtraLine> getExtraLines(){
         return this.extraLines.iterator();
     }
-    public Iterator<ExtraLine> getExtraLinesSorted(){
-        if(extraLines.isEmpty()){
-            return EmptyIterator.of();
-        }
-        extraLines.sort(ExtraLine.COMPARATOR);
-        return this.extraLines.iterator();
-    }
     public void sortExtraLines() {
         if(extraLines.isEmpty()){
             return;
@@ -101,7 +136,7 @@ public class Ins extends DexContainerItem implements SmaliFormat {
         return !extraLines.isEmpty();
     }
     private void appendExtraLines(SmaliWriter writer) throws IOException {
-        Iterator<ExtraLine> iterator = getExtraLinesSorted();
+        Iterator<ExtraLine> iterator = getExtraLines();
         ExtraLine extraLine = null;
         boolean hasHandler = false;
         while (iterator.hasNext()){

@@ -17,10 +17,9 @@ package com.reandroid.dex.item;
 
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.index.MethodId;
-import com.reandroid.dex.index.ProtoId;
-import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.index.*;
 import com.reandroid.dex.ins.Ins;
+import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
@@ -46,6 +45,31 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
             codeItem.visitIntegers(visitor);
         }
     }
+    @Override
+    public ClassId getClassId() {
+        ClassId classId = super.getClassId();
+        if(classId != null){
+            return classId;
+        }
+        String className = getClassName();
+        if(className == null){
+            return null;
+        }
+        DexIdPool<ClassId> pool = getPool(SectionType.CLASS_ID);
+        if(pool == null){
+            return null;
+        }
+        classId = pool.get(className);
+        if(classId == null) {
+            return null;
+        }
+        ClassData classData = getParentInstance(ClassData.class);
+        if(classData == null){
+            return null;
+        }
+        classData.setClassId(classId);
+        return classId;
+    }
     public String getName() {
         MethodId methodId = getMethodId();
         if(methodId != null) {
@@ -58,6 +82,13 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
             return;
         }
         getMethodId().setName(name);
+    }
+    public String getClassName(){
+        MethodId methodId = getMethodId();
+        if(methodId != null){
+            return methodId.getClassName();
+        }
+        return null;
     }
     public MethodId getMethodId(){
         return getItem();

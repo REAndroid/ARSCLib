@@ -121,6 +121,10 @@ public class PackedSwitchDataList extends IntegerList
             return dataList.getBaseAddress() + get();
         }
         @Override
+        public void setTargetAddress(int targetAddress){
+            set(targetAddress - dataList.getBaseAddress());
+        }
+        @Override
         public String getLabelName() {
             return HexUtil.toHex(":pswitch_", getTargetAddress(), 1);
         }

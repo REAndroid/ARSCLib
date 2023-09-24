@@ -27,6 +27,7 @@ public class Ins10x extends Size2Ins {
     public int getData(){
         return 0;
     }
+    @Override
     public void setData(int data){
     }
     @Override

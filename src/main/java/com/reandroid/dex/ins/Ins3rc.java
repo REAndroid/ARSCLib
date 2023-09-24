@@ -26,6 +26,7 @@ public class Ins3rc extends Size6Ins implements RegisterNumber{
     }
     public void setData(int data){
         getValueBytes().putShort(2, data);
+        cacheSectionItem();
     }
 
     @Override

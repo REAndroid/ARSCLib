@@ -26,7 +26,10 @@ import com.reandroid.utils.collection.EmptyIterator;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 public class RField extends DexField implements Comparable<RField> {
@@ -134,6 +137,14 @@ public class RField extends DexField implements Comparable<RField> {
         }
         builder.append(fieldName.charAt(length));
         return builder.toString();
+    }
+    public static Map<Integer, RField> mapRFields(Iterator<RField> iterator) {
+        Map<Integer, RField> map = new HashMap<>();
+        while (iterator.hasNext()){
+            RField rField = iterator.next();
+            map.put(rField.getResourceId(), rField);
+        }
+        return map;
     }
 
     public static class DexResourceEntry extends ResourceEntry {

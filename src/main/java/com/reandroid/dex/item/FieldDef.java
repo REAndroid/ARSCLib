@@ -60,15 +60,14 @@ public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
         if(classId != null){
             return classId;
         }
-        FieldId fieldId = getFieldId();
-        if(fieldId == null){
+        String className = getClassName();
+        if(className == null){
             return null;
         }
         DexIdPool<ClassId> pool = getPool(SectionType.CLASS_ID);
         if(pool == null){
             return null;
         }
-        String className = fieldId.getClassName();
         classId = pool.get(className);
         if(classId == null) {
             return null;
@@ -79,6 +78,13 @@ public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
         }
         classData.setClassId(classId);
         return classId;
+    }
+    public String getClassName(){
+        FieldId fieldId = getFieldId();
+        if(fieldId != null){
+            return fieldId.getClassName();
+        }
+        return null;
     }
 
     public FieldId getFieldId(){

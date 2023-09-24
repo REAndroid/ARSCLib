@@ -27,6 +27,14 @@ public class Ins22t extends Size4Ins implements Label {
     }
 
     @Override
+    public int getData(){
+        return getShort(2);
+    }
+    @Override
+    public void setData(int data){
+        setShort(2, data);
+    }
+    @Override
     public int getRegistersCount() {
         return 2;
     }
@@ -41,6 +49,10 @@ public class Ins22t extends Size4Ins implements Label {
     @Override
     public int getTargetAddress() {
         return getAddress() + getData();
+    }
+    @Override
+    public void setTargetAddress(int targetAddress){
+        setData(targetAddress - getAddress());
     }
     @Override
     public String getLabelName() {

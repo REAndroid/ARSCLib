@@ -18,11 +18,18 @@ package com.reandroid.dex.model;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.index.ClassId;
+import com.reandroid.dex.index.FieldId;
 import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.ins.Ins;
+import com.reandroid.dex.ins.Ins21c;
+import com.reandroid.dex.ins.InsConst;
+import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.item.ClassData;
+import com.reandroid.dex.item.MethodDef;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.sections.DexFileBlock;
 import com.reandroid.dex.sections.Marker;
@@ -36,6 +43,7 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.*;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class DexFile implements VisitableInteger {
 
@@ -45,6 +53,39 @@ public class DexFile implements VisitableInteger {
         this.dexFileBlock = dexFileBlock;
     }
 
+    public void replaceRFields(){
+        Map<Integer, RField> map = RField.mapRFields(listRFields().iterator());
+        IntegerVisitor visitor = new IntegerVisitor() {
+            @Override
+            public void visit(Object sender, IntegerReference reference) {
+                replaceRFields(map, reference);
+            }
+        };
+        this.visitIntegers(visitor);
+    }
+    public void replaceRFields(Map<Integer, RField> map, IntegerReference reference){
+        if(!(reference instanceof InsConst)){
+            return;
+        }
+        InsConst insConst = (InsConst) reference;
+        int id = reference.get();
+        RField rField = map.get(id);
+        if(rField == null){
+            return;
+        }
+        MethodDef methodDef = insConst.getMethodDef();
+        if(methodDef == null){
+            return;
+        }
+        if(rField.getClassName().equals(methodDef.getClassName())){
+            return;
+        }
+        Ins21c ins = Opcode.SGET.newInstance();
+        ins.setRegister(0, insConst.getRegister(0));
+        insConst.replace(ins);
+        FieldId fieldId = rField.getFieldId();
+        ins.setData(fieldId.getIndex());
+    }
     public List<RField> listRFields() {
         List<RField> fieldList = CollectionUtil.toUniqueList(getRFields());
         fieldList.sort(CompareUtil.getComparableComparator());
