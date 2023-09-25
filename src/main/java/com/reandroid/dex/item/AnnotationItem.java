@@ -66,6 +66,14 @@ public class AnnotationItem extends DataItemEntry
         this(false);
     }
 
+    public AnnotationElement getElement(String name){
+        for(AnnotationElement element : this){
+            if(name.equals(element.getName())){
+                return element;
+            }
+        }
+        return null;
+    }
     @Override
     public String getKey(){
         AnnotationElement first = CollectionUtil.getFirst(iterator());
