@@ -19,8 +19,10 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.item.FieldDef;
 import com.reandroid.dex.value.DexValueBlock;
+import com.reandroid.dex.value.PrimitiveValue;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import org.xmlpull.v1.XmlSerializer;
@@ -28,7 +30,6 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -38,6 +39,9 @@ public class RField extends DexField implements Comparable<RField> {
         super(rClass, fieldDef);
     }
 
+    public void addAccessFlag(AccessFlag accessFlag){
+        getFieldDef().addAccessFlag(accessFlag);
+    }
     public void serializePublicXml(XmlSerializer serializer) throws IOException {
         ResourceEntry resourceEntry = toResourceEntry();
         resourceEntry.serializePublicXml(serializer);
@@ -112,8 +116,12 @@ public class RField extends DexField implements Comparable<RField> {
     }
 
     static boolean isResourceIdValue(DexValueBlock<?> dexValueBlock) {
-        if(dexValueBlock != null){
-            return PackageBlock.isResourceId(dexValueBlock.getAsInteger(0));
+        if(dexValueBlock instanceof PrimitiveValue){
+            long value = ((PrimitiveValue)dexValueBlock).getNumberValue();
+            if((value & 0xffffffffL) != 0){
+                return false;
+            }
+            return PackageBlock.isResourceId((int) value);
         }
         return false;
     }

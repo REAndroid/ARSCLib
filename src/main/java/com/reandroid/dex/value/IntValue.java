@@ -18,11 +18,12 @@ package com.reandroid.dex.value;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
+import com.reandroid.utils.HexUtil;
 
 public class IntValue extends PrimitiveValue implements IntegerReference, VisitableInteger {
 
     public IntValue() {
-        super();
+        super(DexValueType.INT);
     }
 
     @Override
@@ -32,10 +33,18 @@ public class IntValue extends PrimitiveValue implements IntegerReference, Visita
 
     @Override
     public int get() {
-        return getAsInteger(0);
+        return getValueContainer().getIntegerValue();
     }
     @Override
     public void set(int value) {
-        setNumberValue(value);
+        getValueContainer().setNumberValue(value);
+    }
+    @Override
+    public DexValueType<?> getValueType() {
+        return DexValueType.INT;
+    }
+    @Override
+    public String getHex() {
+        return HexUtil.toHex(getNumberValue(), getValueSize());
     }
 }

@@ -20,13 +20,14 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.base.DexItemArray;
 import com.reandroid.dex.base.FixedSizeBlock;
-import com.reandroid.dex.base.StringKeyItem;
+import com.reandroid.dex.key.KeyItem;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.writer.SmaliFormat;
 
 import java.io.IOException;
 
 public abstract class IndexItemEntry extends DexBlockItem
-        implements SmaliFormat, BlockRefresh, StringKeyItem, FixedSizeBlock {
+        implements SmaliFormat, BlockRefresh, KeyItem, FixedSizeBlock {
 
     IndexItemEntry(int bytesLength) {
         super(bytesLength);
@@ -41,10 +42,10 @@ public abstract class IndexItemEntry extends DexBlockItem
         }
     }
     @Override
-    public String getKey(){
+    public Key getKey(){
         return null;
     }
-    public void setKey(String key){
+    public void setKey(Key key){
     }
     abstract void cacheItems();
     @Override

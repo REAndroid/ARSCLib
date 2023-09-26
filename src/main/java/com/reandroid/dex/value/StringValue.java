@@ -21,13 +21,22 @@ import com.reandroid.dex.item.AnnotationElement;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.sections.SectionType;
 
-public class StringValue extends SectionValue<StringId> {
+public class StringValue extends SectionIdValue<StringId> {
 
     public StringValue() {
-        super(SectionType.STRING_ID);
+        super(SectionType.STRING_ID, DexValueType.STRING);
+    }
+
+    @Override
+    public DexValueType<?> getValueType() {
+        return DexValueType.STRING;
     }
     public StringData getStringData(){
-        return getData().getStringData();
+        StringId stringId = get();
+        if(stringId != null) {
+            return stringId.getStringData();
+        }
+        return null;
     }
 
     @Override
@@ -43,6 +52,13 @@ public class StringValue extends SectionValue<StringId> {
             }
             stringData.addStringUsage(usage);
         }
+    }
+    public String getString() {
+        StringData stringData = getStringData();
+        if(stringData != null) {
+            return stringData.getString();
+        }
+        return null;
     }
     @Override
     public String getAsString() {

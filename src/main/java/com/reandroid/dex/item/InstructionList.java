@@ -15,10 +15,16 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.arsc.base.BlockArray;
+import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.base.CreatorArray;
+import com.reandroid.dex.base.DexBlockAlign;
 import com.reandroid.dex.base.DexBlockList;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
+import com.reandroid.dex.base.FixedDexContainer;
 import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.ins.*;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -30,14 +36,23 @@ import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.List;
 
-public class InstructionList extends DexBlockList<Ins> implements SmaliFormat, VisitableInteger {
+public class InstructionList extends FixedBlockContainer implements Iterable<Ins>, SmaliFormat, VisitableInteger {
     private final CodeItem codeItem;
+    private final BlockArray<Ins> insArray;
+    private final DexBlockAlign blockAlign;
     private final RegisterFactory registerFactory;
 
     public InstructionList(CodeItem codeItem){
-        super();
+        super(2);
         this.codeItem = codeItem;
+
+        this.insArray = new CreatorArray<>(CREATOR);
+        this.blockAlign = new DexBlockAlign(this);
+
         this.registerFactory = new RegisterFactory(codeItem);
+
+        addChild(0, insArray);
+        addChild(1, blockAlign);
     }
 
     public MethodDef getMethodDef() {
@@ -46,15 +61,32 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat, V
     public CodeItem getCodeItem() {
         return codeItem;
     }
+
     @Override
+    public Iterator<Ins> iterator() {
+        return getInsArray().iterator();
+    }
+
+    private BlockArray<Ins> getInsArray() {
+        return insArray;
+    }
+
+    public Ins get(int i){
+        return getInsArray().get(i);
+    }
+    public void add(Ins ins){
+        getInsArray().add(ins);
+    }
     public void add(int index, Ins item) {
         reBuildExtraLines();
-        super.add(index, item);
+        getInsArray().insertItem(index, item);
         updateAddresses();
         updateLabelAddress();
         reBuildExtraLines();
     }
-    @Override
+    public boolean contains(Ins item){
+        return getInsArray().contains(item);
+    }
     public boolean remove(Ins item) {
         if(!contains(item)){
             return false;
@@ -66,7 +98,7 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat, V
                 item.transferExtraLines(next);
             }
         }
-        super.remove(item);
+        getInsArray().remove(item);
         updateAddresses();
         updateLabelAddress();
         return true;
@@ -79,8 +111,9 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat, V
         int index = old.getIndex();
         old.transferExtraLines(item);
         item.setAddress(old.getAddress());
-        super.remove(old);
-        super.add(index, item);
+        getInsArray().setItem(index, item);
+        old.setParent(null);
+        old.setIndex(-1);
         updateAddresses();
         updateLabelAddress();
     }
@@ -115,6 +148,7 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat, V
     protected void onRefreshed() {
         super.onRefreshed();
         this.codeItem.getInstructionCodeUnitsReference().set(getCodeUnits());
+        this.blockAlign.align();
     }
     public int getCodeUnits() {
         int result = 0;
@@ -135,23 +169,31 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat, V
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
 
-        int position = reader.getPosition() +
-                codeItem.getInstructionCodeUnitsReference().get() * 2;
-
+        int insCodeUnits = codeItem.getInstructionCodeUnitsReference().get();
+        int position = reader.getPosition() + insCodeUnits * 2;
         int zeroPosition = reader.getPosition();
+
+        int count = (insCodeUnits + 1) / 2;
+        BlockArray<Ins> insBlockArray = getInsArray();
+        insBlockArray.setChildesCount(count);
+        int index = 0;
 
         while (reader.getPosition() < position){
             Opcode<?> opcode = Opcode.read(reader);
             Ins ins = opcode.newInstance();
             ins.setAddress((reader.getPosition() - zeroPosition) / 2);
-            add(ins);
+            insBlockArray.setItem(index, ins);
+            index ++;
             ins.readBytes(reader);
         }
+        insBlockArray.setChildesCount(index);
         if(position != reader.getPosition()){
             // should not reach here
             reader.seek(position);
         }
-        getDexPositionAlign().readBytes(reader);
+        int totalRead = reader.getPosition() - zeroPosition;
+        blockAlign.align(totalRead);
+        reader.offset(blockAlign.size());
     }
 
     private void clearExtraLines() {
@@ -243,4 +285,16 @@ public class InstructionList extends DexBlockList<Ins> implements SmaliFormat, V
         }
         return writer.toString();
     }
+    private static final Creator<Ins> CREATOR = new Creator<Ins>() {
+        @Override
+        public Ins[] newInstance(int length) {
+            return new Ins[length];
+        }
+        @Override
+        public Ins newInstance() {
+            return PLACE_HOLDER;
+        }
+    };
+
+    private static final Ins PLACE_HOLDER = Opcode.NOP.newInstance();
 }

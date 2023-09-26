@@ -18,6 +18,7 @@ package com.reandroid.dex.refactor;
 import com.reandroid.arsc.group.ItemGroup;
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.EmptyList;
 
@@ -45,8 +46,8 @@ public class RenameInfoClass extends RenameInfo<StringData> {
         }
     }
     @Override
-    public String getKey(){
-        return getSearch();
+    public TypeKey getKey(){
+        return new TypeKey(getSearch());
     }
     @Override
     List<RenameInfo<?>> createChildRenames() {

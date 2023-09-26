@@ -17,6 +17,7 @@ package com.reandroid.dex.refactor;
 
 import com.reandroid.arsc.group.ItemGroup;
 import com.reandroid.dex.index.FieldId;
+import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.sections.SectionType;
 
 public class RenameInfoFieldName extends RenameInfoName<FieldId> {
@@ -38,7 +39,7 @@ public class RenameInfoFieldName extends RenameInfoName<FieldId> {
         }
     }
     @Override
-    public String getKey(){
-        return getTypeName() +  "->" + getSearch();
+    public FieldKey getKey(){
+        return new FieldKey(getTypeName(), getSearch(), null);
     }
 }

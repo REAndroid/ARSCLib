@@ -22,18 +22,25 @@ import java.io.IOException;
 
 public class BooleanValue extends DexValueBlock<Block> {
     public BooleanValue(){
-        super();
+        super(DexValueType.BOOLEAN);
     }
-    public boolean getBoolean(){
+    public boolean get(){
         return getValueSize() == 1;
+    }
+    public void set(boolean value){
+        setValueSize(value ? 1 : 0);
+    }
+    @Override
+    public DexValueType<?> getValueType() {
+        return DexValueType.BOOLEAN;
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(Boolean.toString(getBoolean()));
+        writer.append(Boolean.toString(get()));
     }
     @Override
     public String getAsString() {
-        return Boolean.toString(getBoolean());
+        return Boolean.toString(get());
     }
     @Override
     public String toString(){

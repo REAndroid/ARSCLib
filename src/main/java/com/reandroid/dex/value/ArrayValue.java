@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.item.EncodedArray;
@@ -26,8 +25,9 @@ import java.util.Iterator;
 
 public class ArrayValue extends DexValueBlock<EncodedArray>
         implements Iterable<DexValueBlock<?>>, VisitableInteger {
+
     public ArrayValue() {
-        super(new EncodedArray());
+        super(new EncodedArray(), DexValueType.ARRAY);
     }
 
     @Override
@@ -39,20 +39,21 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
         }
     }
     public DexValueBlock<?> get(int i){
-        return getElementBlockList().get(i);
+        return getValueContainer().get(i);
     }
     public int size() {
-        return getElementBlockList().size();
+        return getValueContainer().size();
     }
-    public void addValue(DexValueBlock<?> value){
-        getElementBlockList().add(value);
-    }
-    public BlockList<DexValueBlock<?>> getElementBlockList() {
-        return getValue().getElements();
+    public void add(DexValueBlock<?> value){
+        getValueContainer().add(value);
     }
     @Override
     public Iterator<DexValueBlock<?>> iterator() {
-        return getElementBlockList().iterator();
+        return getValueContainer().iterator();
+    }
+    @Override
+    public DexValueType<?> getValueType() {
+        return DexValueType.ARRAY;
     }
     @Override
     public String getTypeName(){
@@ -68,14 +69,13 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
     public void append(SmaliWriter writer) throws IOException {
         writer.append('{');
         writer.indentPlus();
-        BlockList<DexValueBlock<?>> elements = getElementBlockList();
-        int count = elements.size();
+        int count = size();
         for(int i = 0; i < count; i++){
             if(i != 0){
                 writer.append(',');
             }
             writer.newLine();
-            elements.get(i).append(writer);
+            get(i).append(writer);
         }
         writer.indentMinus();
         if(count > 0){

@@ -20,6 +20,7 @@ import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.utils.CompareUtil;
 
@@ -120,6 +121,9 @@ public class Section<T extends Block>  extends FixedDexContainer
             results[i] = offsetMap.get(offsets[i]);
         }
         return results;
+    }
+    public T getOrCreate(Key key) {
+        return getPool().getOrCreate(key);
     }
     public T createIdItem() {
         return getItemArray().createNext();

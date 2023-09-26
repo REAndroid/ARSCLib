@@ -17,6 +17,8 @@ package com.reandroid.dex.index;
 
 import com.reandroid.dex.base.StringKeyItemCreate;
 import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 
@@ -33,12 +35,18 @@ public class TypeId extends IndexItemEntry implements Comparable<TypeId>, String
     }
 
     @Override
-    public String getKey(){
-        return getName();
+    public TypeKey getKey(){
+        String name = getName();
+        if(name != null){
+            return new TypeKey(name);
+        }
+        return null;
     }
     @Override
-    public void setKey(String key){
-        setName(key);
+    public void setKey(Key key){
+        if(key instanceof TypeKey){
+            setName(((TypeKey)key).getType());
+        }
     }
     public String getName(){
         StringData stringData = getNameData();

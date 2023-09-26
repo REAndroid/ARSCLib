@@ -17,7 +17,8 @@ package com.reandroid.dex.value;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.base.StringKeyItem;
+import com.reandroid.dex.key.KeyItem;
+import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -26,32 +27,43 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class SectionValue<T extends Block> extends DexValueBlock<NumberValue> implements SmaliFormat {
+public abstract class SectionValue<T extends Block> extends DexValueBlock<NumberValue> implements SmaliFormat {
 
     private final SectionType<T> sectionType;
     private T mData;
 
-    public SectionValue(SectionType<T> sectionType){
-        super(new NumberValue());
+    public SectionValue(SectionType<T> sectionType, DexValueType<?> type){
+        super(new NumberValue(), type);
         this.sectionType = sectionType;
     }
 
-    public T getData(){
+    public T get(){
         return mData;
     }
-    public void setData(T data){
+    public void set(T data){
         if(data == mData){
             return;
         }
         this.mData = data;
-        getValue().setNumberValue(data.getIndex());
+        getValueContainer().setNumberValue(getSectionValue(data));
         onDataUpdated(data);
+    }
+    @Override
+    public abstract DexValueType<?> getValueType();
+    abstract int getSectionValue(T data);
+    abstract T getSectionData(Section<T> section, int value);
+    Section<T> getSection(){
+        SectionList sectionList = getParentInstance(SectionList.class);
+        if(sectionList != null) {
+            return sectionList.get(sectionType);
+        }
+        return null;
     }
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         getValueTypeItem().onReadBytes(reader);
-        NumberValue numberValue = getValue();
+        NumberValue numberValue = getValueContainer();
         numberValue.setSize(getValueSize() + 1);
         numberValue.readBytes(reader);
         updateData();
@@ -62,20 +74,18 @@ public class SectionValue<T extends Block> extends DexValueBlock<NumberValue> im
     }
     private void refreshData() {
         T data = this.mData;
-        if(data != null){
-            NumberValue numberValue = getValue();
-            numberValue.setNumberValue(data.getIndex());
-            int size = numberValue.getSize();
-            setValueSize(size - 1);
-        }
+        NumberValue numberValue = getValueContainer();
+        numberValue.setNumberValue(getSectionValue(data));
+        int size = numberValue.getSize();
+        setValueSize(size - 1);
     }
     private void updateData(){
         T data = this.mData;
-        int index = (int) getValue().getNumberValue();
-        if(data == null || data.getIndex() != index){
-            SectionList sectionList = getParentInstance(SectionList.class);
-            if(sectionList != null){
-                mData = sectionList.get(sectionType, index);
+        int value = getValueContainer().getIntegerValue();
+        if(data == null || getSectionValue(data) != value){
+            Section<T> section = getSection();
+            if(section != null){
+                mData = getSectionData(section, value);
                 onDataUpdated(mData);
             }
         }
@@ -85,20 +95,20 @@ public class SectionValue<T extends Block> extends DexValueBlock<NumberValue> im
 
     @Override
     public String getAsString() {
-        T data = getData();
-        if(data instanceof StringKeyItem){
-            return ((StringKeyItem) data).getKey();
+        T data = get();
+        if(data instanceof KeyItem){
+            return ((KeyItem) data).toString();
         }
         return null;
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        T data = getData();
+        T data = get();
         if(data == null){
             writer.append("value error: ");
             writer.append(sectionType.toString());
             writer.append(' ');
-            writer.append(HexUtil.toHex(getValue().getNumberValue(), getValueSize()));
+            writer.append(HexUtil.toHex(getValueContainer().getNumberValue(), getValueSize()));
         }else {
             ((SmaliFormat) data).append(writer);
         }
@@ -107,12 +117,12 @@ public class SectionValue<T extends Block> extends DexValueBlock<NumberValue> im
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        T data = getData();
+        T data = get();
         if(data == null){
             builder.append("value error: ");
             builder.append(sectionType);
             builder.append(' ');
-            builder.append(HexUtil.toHex(getValue().getNumberValue(), getValueSize()));
+            builder.append(HexUtil.toHex(getValueContainer().getNumberValue(), getValueSize()));
         }else {
             builder.append(data);
         }

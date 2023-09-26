@@ -24,6 +24,8 @@ import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.index.StringId;
 import com.reandroid.dex.io.ByteReader;
 import com.reandroid.dex.io.StreamUtil;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -132,12 +134,14 @@ public class StringData extends DexBlockItem
     }
 
     @Override
-    public String getKey(){
-        return getString();
+    public StringKey getKey(){
+        return new StringKey(getString());
     }
     @Override
-    public void setKey(String key){
-        setString(key);
+    public void setKey(Key key){
+        if(key instanceof StringKey){
+            setString(((StringKey)key).getString());
+        }
     }
     public String getString(){
         return mCache;

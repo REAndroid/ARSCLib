@@ -21,6 +21,7 @@ import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.item.ClassData;
 import com.reandroid.dex.item.FieldDef;
+import com.reandroid.dex.key.FieldKey;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -61,6 +62,10 @@ public class RClass extends DexClass {
         return toResourceTypeName(getClassName());
     }
 
+    @Override
+    public RField getOrCreateStaticField(FieldKey fieldKey){
+        return new RField(this, getOrCreateStatic(fieldKey));
+    }
     @Override
     public Iterator<RField> getStaticFields() {
         ClassData classData = getClassData();

@@ -30,7 +30,10 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class DexDirectory implements Iterable<DexFile>, VisitableInteger {
     private final List<DexFile> dexFileList;
@@ -47,6 +50,7 @@ public class DexDirectory implements Iterable<DexFile>, VisitableInteger {
     public void setTag(Object tag) {
         this.mTag = tag;
     }
+
     public void replaceRFields(){
         Map<Integer, RField> map = RField.mapRFields(listRFields().iterator());
         IntegerVisitor visitor = new IntegerVisitor() {
@@ -75,6 +79,7 @@ public class DexDirectory implements Iterable<DexFile>, VisitableInteger {
     }
     private void save(DexFile dexFile){
         Object tag = dexFile.getTag();
+        System.err.println("Saving: " + tag);
         if(!(tag instanceof File)){
             return;
         }
@@ -87,7 +92,7 @@ public class DexDirectory implements Iterable<DexFile>, VisitableInteger {
             dexFile.refresh();
             dexFile.sortStrings();
             dexFile.refresh();
-            dexFile.write(modFile);
+            dexFile.write(file);
         } catch (IOException exception) {
             exception.printStackTrace();
         }

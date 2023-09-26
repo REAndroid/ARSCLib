@@ -17,6 +17,8 @@ package com.reandroid.dex.index;
 
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.item.TypeList;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
@@ -24,6 +26,7 @@ import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Objects;
 
 public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
 
@@ -40,8 +43,23 @@ public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
     }
 
     @Override
-    public String getKey(){
-        return getKey(true);
+    public ProtoKey getKey(){
+        return ProtoKey.create(this);
+    }
+    @Override
+    public void setKey(Key key){
+        if(!(key instanceof ProtoKey)){
+            return;
+        }
+        setKey((ProtoKey) key);
+    }
+    public void setKey(ProtoKey key){
+        if(Objects.equals(key, getKey())){
+            return;
+        }
+        returnType.setItem(key.getReturnTypeKey());
+        parameters.getOrCreate().setKey(key.getParametersKey());
+        shorty.setString(key.getShorty());
     }
     public String getKey(boolean appendReturnType){
         StringBuilder builder = new StringBuilder();
@@ -85,6 +103,13 @@ public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
         }
         return null;
     }
+    public String[] getParameterNames(){
+        TypeList typeList = getTypeList();
+        if(typeList != null){
+            return typeList.getNames();
+        }
+        return null;
+    }
     public Iterator<TypeId> getParameters(){
         TypeList typeList = getTypeList();
         if(typeList != null){
@@ -97,6 +122,13 @@ public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
     }
     public void setParameters(TypeList typeList){
         parameters.setItem(typeList);
+    }
+    public String getReturnType(){
+        TypeId typeId = getReturnTypeId();
+        if(typeId != null){
+            return typeId.getName();
+        }
+        return null;
     }
     public TypeId getReturnTypeId(){
         return returnType.getItem();

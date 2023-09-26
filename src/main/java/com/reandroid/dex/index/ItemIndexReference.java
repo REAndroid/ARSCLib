@@ -20,12 +20,13 @@ import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.item.IndirectItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexBlockItem;
-import com.reandroid.dex.base.StringKeyItem;
+import com.reandroid.dex.key.KeyItem;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
 
 public class ItemIndexReference<T extends IndexItemEntry> extends IndirectItem<DexBlockItem>
-        implements IntegerReference, BlockRefresh, StringKeyItem {
+        implements IntegerReference, BlockRefresh, KeyItem {
     private final SectionType<T> sectionType;
     private T item;
     public ItemIndexReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset) {
@@ -34,7 +35,7 @@ public class ItemIndexReference<T extends IndexItemEntry> extends IndirectItem<D
         set(-1);
     }
     @Override
-    public String getKey(){
+    public Key getKey(){
         T item = getItem();
         if(item != null){
             return item.getKey();
@@ -61,7 +62,7 @@ public class ItemIndexReference<T extends IndexItemEntry> extends IndirectItem<D
         set(value);
         this.item = item;
     }
-    public void setItem(String item){
+    public void setItem(Key item){
         DexIdPool<T> pool = getBlockItem().getPool(sectionType);
         setItem(pool.getOrCreate(item));
     }

@@ -15,11 +15,15 @@
  */
 package com.reandroid.dex.index;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.item.*;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValueBlock;
+import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 
@@ -51,8 +55,12 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
     }
 
     @Override
-    public String getKey(){
-        return getName();
+    public TypeKey getKey(){
+        String name = getName();
+        if(name != null){
+            return new TypeKey(name);
+        }
+        return null;
     }
     public String getName(){
         TypeId typeId = getClassType();
@@ -65,11 +73,23 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
     public TypeId getClassType(){
         return classType.getItem();
     }
+    public void setClassType(String typeName){
+        setClassType(new TypeKey(typeName));
+    }
+    public void setClassType(TypeKey typeKey){
+        this.classType.setItem(typeKey);
+    }
     public void setClassType(TypeId typeId){
         this.classType.setItem(typeId);
     }
     public int getAccessFlagsValue() {
         return accessFlagValue.get();
+    }
+    public void setAccessFlagsValue(int value) {
+        accessFlagValue.set(value);
+    }
+    public void addAccessFlag(AccessFlag flag) {
+        setAccessFlagsValue(getAccessFlagsValue() | flag.getValue());
     }
     public AccessFlag[] getAccessFlags(){
         return AccessFlag.getAccessFlagsForClass(getAccessFlagsValue());
@@ -81,7 +101,7 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
         this.superClass.setItem(typeId);
     }
     public void setSuperClass(String superClass){
-        this.superClass.setItem(superClass);
+        this.superClass.setItem(new TypeKey(superClass));
     }
     public StringData getSourceFile(){
         return sourceFile.getItem();
@@ -127,6 +147,16 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
     public void setAnnotationsDirectory(AnnotationsDirectory directory){
         this.annotationsDirectory.setItem(directory);
     }
+    public ClassData getOrCreateClassData(){
+        ClassData classData = getClassData();
+        if(classData != null){
+            return classData;
+        }
+        Section<ClassData> section = getSection(SectionType.CLASS_DATA);
+        classData = section.createOffsetItem();
+        setClassData(classData);
+        return classData;
+    }
     public ClassData getClassData(){
         return classData.getItem();
     }
@@ -136,12 +166,18 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
     public EncodedArray getStaticValues(){
         return staticValues.getItem();
     }
+    public EncodedArray getOrCreateStaticValues(){
+        return staticValues.getOrCreate();
+    }
     public DexValueBlock<?> getStaticValue(int i){
         EncodedArray encodedArray = getStaticValues();
         if(encodedArray != null){
             return encodedArray.get(i);
         }
         return null;
+    }
+    public<T1 extends DexValueBlock<?>> T1 getOrCreateStaticValue(DexValueType<T1> valueType, int i){
+        return getOrCreateStaticValues().getOrCreate(valueType, i);
     }
     public void setStaticValues(EncodedArray staticValues){
         this.staticValues.setItem(staticValues);

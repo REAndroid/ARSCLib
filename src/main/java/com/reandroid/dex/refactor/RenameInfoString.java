@@ -16,7 +16,9 @@
 package com.reandroid.dex.refactor;
 
 import com.reandroid.arsc.group.ItemGroup;
+import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.EmptyList;
 
@@ -32,8 +34,8 @@ public class RenameInfoString extends RenameInfo<StringData> {
     }
 
     @Override
-    public String getKey() {
-        return getSearch();
+    public StringKey getKey() {
+        return new StringKey(getSearch());
     }
     @Override
     SectionType<StringData> getSectionType() {
@@ -59,13 +61,9 @@ public class RenameInfoString extends RenameInfo<StringData> {
             return;
         }
         appendIndent(writer);
-        writer.append('"');
-        writer.write(getKey());
-        writer.append('"');
+        writer.append(getKey().toString());
         writer.write("=");
-        writer.append('"');
-        writer.write(getReplace());
-        writer.append('"');
+        writer.write(DexUtils.quoteString(getReplace()));
         if(appendCount){
             writer.append("  // count=");
             writer.write(Integer.toString(getRenameCount()));

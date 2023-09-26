@@ -24,6 +24,7 @@ import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.item.AnnotationElement;
 import com.reandroid.dex.item.AnnotationItem;
 import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.key.AnnotationKey;
 import com.reandroid.dex.value.ArrayValue;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.StringValue;
@@ -193,5 +194,6 @@ public class DexFileBlock extends FixedBlockContainer {
         return version > 0 && version < 1000;
     }
 
-    public static final String ANNOTATION_SIG_KEY = "Ldalvik/annotation/Signature;->value()";
+    public static final AnnotationKey ANNOTATION_SIG_KEY = new AnnotationKey(
+            "Ldalvik/annotation/Signature;","value");
 }

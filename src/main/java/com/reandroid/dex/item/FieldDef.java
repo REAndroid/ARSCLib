@@ -20,6 +20,7 @@ import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.index.FieldId;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValueBlock;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
+    private DexValueBlock<?> tmpValue;
     public FieldDef() {
         super(0, SectionType.FIELD_ID);
     }
@@ -53,6 +55,18 @@ public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
         }
         return null;
     }
+    public<T1 extends DexValueBlock<?>> T1 getOrCreateStaticValue(DexValueType<T1> valueType){
+        return getClassId().getOrCreateStaticValue(valueType, getIndex());
+    }
+    EncodedArray getStaticValues(){
+        if(isStatic()){
+            ClassId classId = getClassId();
+            if(classId != null){
+                return classId.getStaticValues();
+            }
+        }
+        return null;
+    }
 
     @Override
     public ClassId getClassId() {
@@ -68,7 +82,7 @@ public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
         if(pool == null){
             return null;
         }
-        classId = pool.get(className);
+        classId = pool.get(new TypeKey(className));
         if(classId == null) {
             return null;
         }
@@ -98,6 +112,14 @@ public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
         }
         return directory.getFieldsAnnotation(getIdIndex());
     }
+
+    DexValueBlock<?> getTmpValue() {
+        return tmpValue;
+    }
+    void setTmpValue(DexValueBlock<?> tmpValue) {
+        this.tmpValue = tmpValue;
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.newLine();

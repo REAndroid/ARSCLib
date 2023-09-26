@@ -21,6 +21,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
+import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.index.FieldId;
 import com.reandroid.dex.index.TypeId;
@@ -31,6 +32,9 @@ import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.item.ClassData;
 import com.reandroid.dex.item.MethodDef;
 import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.DexFileBlock;
 import com.reandroid.dex.sections.Marker;
 import com.reandroid.dex.sections.Section;
@@ -54,6 +58,17 @@ public class DexFile implements VisitableInteger {
         this.dexFileBlock = dexFileBlock;
     }
 
+    public DexClass getOrCreateClass(String type){
+        return getOrCreateClass(new TypeKey(type));
+    }
+    public DexClass getOrCreateClass(TypeKey key){
+        DexClass dexClass = get(key);
+        if(dexClass != null){
+            return dexClass;
+        }
+        ClassId classId = getOrCreateClassId(key);
+        return create(classId);
+    }
     public Object getTag() {
         return mTag;
     }
@@ -93,12 +108,42 @@ public class DexFile implements VisitableInteger {
         return ComputeIterator.of(getClassIds(), this::create);
     }
     public DexClass get(String typeName){
+        return get(new TypeKey(typeName));
+    }
+    public RClass getOrCreateRClass(TypeKey typeKey){
+        ClassId classId = getOrCreateClassId(typeKey);
+        return createRClass(classId);
+    }
+    public RClass getRClass(TypeKey key){
         Section<ClassId> section = getDexFileBlock().get(SectionType.CLASS_ID);
-        ClassId classId = section.getPool().get(typeName);
+        ClassId classId = section.getPool().get(key);
+        if(classId == null) {
+            return null;
+        }
+        return createRClass(classId);
+    }
+    public DexClass get(TypeKey key){
+        Section<ClassId> section = getDexFileBlock().get(SectionType.CLASS_ID);
+        ClassId classId = section.getPool().get(key);
         if(classId == null) {
             return null;
         }
         return create(classId);
+    }
+    public ClassId getOrCreateClassId(TypeKey key){
+        Section<ClassId> section = getDexFileBlock().get(SectionType.CLASS_ID);
+        DexIdPool<ClassId> pool = section.getPool();
+        ClassId classId = pool.get(key);
+        if(classId != null) {
+            return classId;
+        }
+        classId = section.createIdItem();
+        classId.setClassType(key);
+        pool.add(classId);
+        classId.getOrCreateClassData();
+        classId.setSuperClass("Ljava/lang/Object;");
+        classId.setSourceFile(DexUtils.toSourceName(key.getType()));
+        return classId;
     }
     private DexClass create(ClassId classId) {
         return new DexClass(this, classId);
@@ -110,7 +155,7 @@ public class DexFile implements VisitableInteger {
         }
         marker = Marker.createR8();
         Section<StringData> stringSection = get(SectionType.STRING_DATA);
-        StringData stringData = stringSection.getPool().getOrCreate(marker.buildString());
+        StringData stringData = stringSection.getPool().getOrCreate(new StringKey(marker.buildString()));
         marker.setStringData(stringData);
         marker.save();
         sortStrings();

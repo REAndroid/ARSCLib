@@ -20,63 +20,61 @@ import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
-import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
 public class DexValueBlock<T extends Block> extends FixedBlockContainer implements SmaliFormat {
-    private final ByteItem valueType;
+
+    private final ByteItem valueTypeItem;
     private final T valueContainer;
-    DexValueBlock(T value){
+
+    DexValueBlock(T value, DexValueType<?> type){
         super(2);
-        valueType = new ByteItem();
+        valueTypeItem = new ByteItem();
         valueContainer = value;
-        addChild(0, valueType);
+        addChild(0, valueTypeItem);
         addChild(1, valueContainer);
+        valueTypeItem.set((byte) type.getFlag());
     }
-    DexValueBlock(){
-        this(null);
+    DexValueBlock(DexValueType<?> type){
+        this(null, type);
     }
 
-    T getValue(){
+    T getValueContainer(){
         return valueContainer;
     }
     ByteItem getValueTypeItem(){
-        return valueType;
+        return valueTypeItem;
     }
     public DexValueType<?> getValueType(){
-        return DexValueType.fromFlag(valueType.unsignedInt());
+        return getValueTypeReal();
+    }
+    private DexValueType<?> getValueTypeReal(){
+        return DexValueType.fromFlag(valueTypeItem.unsignedInt());
     }
     public String getTypeName(){
         return getValueType().getTypeName();
     }
     int getValueSize(){
-        return DexValueType.decodeSize(valueType.unsignedInt());
+        return DexValueType.decodeSize(valueTypeItem.unsignedInt());
     }
     void setValueSize(int size){
         int flag = getValueType().getFlag(size);
-        valueType.set((byte) flag);
+        valueTypeItem.set((byte) flag);
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        T value = getValue();
+        T value = getValueContainer();
         if(value instanceof SmaliFormat){
             ((SmaliFormat)value).append(writer);
         }
     }
-
     public String getAsString() {
-        return String.valueOf(getValue());
-    }
-    public int getAsInteger(int def) {
-        return def;
-    }
-    public long getAsNumber(long def) {
-        return def;
+        return String.valueOf(getValueContainer());
     }
     @Override
     public String toString() {
-        return String.valueOf(getValue());
+        return String.valueOf(getValueContainer());
     }
 }

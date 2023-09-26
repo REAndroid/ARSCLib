@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.index.StringId;
+import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
@@ -87,7 +88,7 @@ public class StringReferenceUle128 extends Ule128Item implements
             return;
         }
         DexIdPool<StringData> pool = section.getPool();
-        StringData stringData = pool.getOrCreate(text);
+        StringData stringData = pool.getOrCreate(new StringKey(text));
         setStringId(stringData.getStringId());
     }
 

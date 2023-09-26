@@ -1,20 +1,16 @@
 package com.reandroid.dex.item;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.pool.DexIdPool;
-import com.reandroid.dex.sections.Section;
-import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.value.*;
+import com.reandroid.dex.key.AnnotationKey;
+import com.reandroid.dex.value.DexValueBlock;
+import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class AnnotationElement extends DataItemEntry
-        implements BlockLoad, SmaliFormat {
+public class AnnotationElement extends DataItemEntry implements SmaliFormat {
 
     private final StringReferenceUle128 elementName;
 
@@ -22,20 +18,15 @@ public class AnnotationElement extends DataItemEntry
         super(2);
         this.elementName = new StringReferenceUle128(StringData.USAGE_METHOD);
         addChild(0, elementName);
-        elementName.setBlockLoad(this);
     }
 
     @Override
-    public String getKey(){
-        StringBuilder builder = new StringBuilder();
+    public AnnotationKey getKey(){
         AnnotationItem parentItem = getParent(AnnotationItem.class);
         if(parentItem != null){
-            builder.append(parentItem.getTypeId().getKey());
-            builder.append("->");
+            return new AnnotationKey(parentItem.getTypeId().getName(), getName(), null);
         }
-        builder.append(getName());
-        builder.append("()");
-        return builder.toString();
+        return null;
     }
     public DexValueBlock<?> getValue(){
         return (DexValueBlock<?>) getChildes()[1];
@@ -51,17 +42,10 @@ public class AnnotationElement extends DataItemEntry
         return null;
     }
     public String getName(){
-        StringData stringData = getNameStringData();
-        if(stringData != null){
-            return stringData.getString();
-        }
-        return null;
+        return elementName.getString();
     }
     public void setName(String name){
-        Section<StringData> section = getSection(SectionType.STRING_DATA);
-        DexIdPool<StringData> pool = section.getPool();
-        StringData stringData = pool.getOrCreate(name);
-        setName(stringData);
+        elementName.setString(name);
     }
     public void setName(StringData name){
         elementName.setItem(name);
@@ -71,21 +55,22 @@ public class AnnotationElement extends DataItemEntry
     }
 
     @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender == this.elementName){
-            setValue(DexValueType.create(reader));
-        }
+    public void onReadBytes(BlockReader reader) throws IOException {
+        this.elementName.onReadBytes(reader);
+        DexValueBlock<?> value = DexValueType.create(reader);
+        setValue(value);
+        value.onReadBytes(reader);
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(getNameStringData().getString());
+        writer.append(getName());
         writer.append(" = ");
         getValue().append(writer);
     }
     @Override
     public String toString() {
-        return getNameStringData() + " = " + getValue();
+        return getName() + " = " + getValue();
     }
 
     public static final Creator<AnnotationElement> CREATOR = new Creator<AnnotationElement>() {

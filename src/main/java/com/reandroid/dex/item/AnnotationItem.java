@@ -15,16 +15,15 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.key.AnnotationKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
-import com.reandroid.utils.collection.CollectionUtil;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -75,12 +74,24 @@ public class AnnotationItem extends DataItemEntry
         return null;
     }
     @Override
-    public String getKey(){
-        AnnotationElement first = CollectionUtil.getFirst(iterator());
-        if(first != null){
-            return first.getKey();
+    public AnnotationKey getKey(){
+        String type = getTypeName();
+        if(type == null){
+            return null;
         }
-        return "";
+        AnnotationElement[] elements = this.annotationElements.getChildes();
+        if(elements == null || elements.length == 0){
+            return null;
+        }
+        int length = elements.length;
+        if(length == 1){
+            return new AnnotationKey(type, elements[0].getName());
+        }
+        String[] names = new String[length];
+        for(int i = 0; i < length; i++){
+            names[i] = elements[i].getName();
+        }
+        return new AnnotationKey(type, names[0], null, names);
     }
     @Override
     public Iterator<AnnotationElement> iterator(){
@@ -101,8 +112,21 @@ public class AnnotationItem extends DataItemEntry
         }
         return null;
     }
+    public String getTypeName(){
+        TypeId typeId = getTypeId();
+        if(typeId != null){
+            return typeId.getName();
+        }
+        return null;
+    }
     public TypeId getTypeId(){
         return typeId.getItem();
+    }
+
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        elementsCount.set(getElementsCount());
     }
 
     @Override

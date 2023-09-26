@@ -17,10 +17,50 @@
 // originally copied from JesusFreke/smali
 package com.reandroid.dex.common;
 
+import com.reandroid.utils.StringsUtil;
+
 import java.io.IOException;
 
 public class DexUtils {
 
+    public static String[] splitParameters(String parameters) {
+        if(StringsUtil.isEmpty(parameters)){
+            return null;
+        }
+        int length = parameters.length();
+        String[] results = new String[length];
+        int count = 0;
+        boolean array = false;
+        int start = 0;
+        for(int i = 0; i < length; i++){
+            boolean pop = false;
+            char ch = parameters.charAt(i);
+            if(ch == '[') {
+                array = true;
+            }else if(ch == ';'){
+                pop = true;
+            }else if((array || (i - start) == 0) && isPrimitive(ch)){
+                pop = true;
+                array = false;
+            }else {
+                array = false;
+            }
+            if(pop) {
+                results[count] = parameters.substring(start, i + 1);
+                count ++;
+                start = i + 1;
+            }
+        }
+        if(count == 0){
+            return null;
+        }
+        if(count == length){
+            return results;
+        }
+        String[] tmp = new String[count];
+        System.arraycopy(results, 0, tmp, 0, count);
+        return tmp;
+    }
     public static String quoteString(String text){
         StringBuilder builder = new StringBuilder(text.length() + 2);
         try {
@@ -61,7 +101,45 @@ public class DexUtils {
         }
         appendable.append('"');
     }
-    public static boolean isNative(String type){
+    public static String quoteChar(char ch){
+        StringBuilder builder = new StringBuilder();
+        try {
+            appendSingleQuotedChar(builder, ch);
+        } catch (IOException ignored) {
+        }
+        return builder.toString();
+    }
+    public static void appendSingleQuotedChar(Appendable appendable, char ch) throws IOException {
+        if ((ch >= ' ') && (ch < 0x7f)) {
+            appendable.append('\'');
+            if ((ch == '\'') || (ch == '\"') || (ch == '\\')) {
+                appendable.append('\\');
+            }
+            appendable.append(ch);
+            appendable.append('\'');
+        } else if (ch <= 0x7f) {
+            switch (ch) {
+                case '\n':
+                    appendable.append("'\\n'");
+                    return;
+                case '\r':
+                    appendable.append("'\\r'");
+                    return;
+                case '\t':
+                    appendable.append("'\\t'");
+                    return;
+            }
+        }
+
+        appendable.append('\'');
+        appendable.append("\\u");
+        appendable.append(Character.forDigit(ch >> 12, 16));
+        appendable.append(Character.forDigit((ch >> 8) & 0x0f, 16));
+        appendable.append(Character.forDigit((ch >> 4) & 0x0f, 16));
+        appendable.append(Character.forDigit(ch & 0x0f, 16));
+        appendable.append('\'');
+    }
+    public static boolean isPrimitive(String type){
         if(type == null){
             return false;
         }
@@ -76,9 +154,9 @@ public class DexUtils {
         if(i >= length){
             return false;
         }
-        return isNative(type.charAt(i));
+        return isPrimitive(type.charAt(i));
     }
-    public static boolean isNative(char ch){
+    public static boolean isPrimitive(char ch){
         switch (ch){
             case 'B':
             case 'C':
@@ -133,6 +211,14 @@ public class DexUtils {
         }
         i++;
         return className.substring(0, i);
+    }
+    public static String toSourceName(String className){
+        String simple = getSimpleName(className);
+        int i = simple.indexOf('$');
+        if(i > 0){
+            simple = simple.substring(0, i);
+        }
+        return simple + ".java";
     }
     public static String getSimpleName(String className) {
         if(className.length() < 3){

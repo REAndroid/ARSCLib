@@ -16,11 +16,15 @@
 package com.reandroid.dex.index;
 
 import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class FieldId extends IndexItemEntry implements Comparable<FieldId>{
     private final ItemIndexReference<TypeId> classType;
@@ -50,7 +54,11 @@ public class FieldId extends IndexItemEntry implements Comparable<FieldId>{
         return nameReference;
     }
     public String getClassName(){
-        return classType.getKey();
+        TypeId typeId = getClassType();
+        if(typeId != null){
+            return typeId.getName();
+        }
+        return null;
     }
     public TypeId getClassType(){
         return classType.getItem();
@@ -59,11 +67,15 @@ public class FieldId extends IndexItemEntry implements Comparable<FieldId>{
         classType.setItem(typeId);
     }
     public void setClassType(String type) {
-        classType.setItem(type);
+        classType.setItem(new TypeKey(type));
     }
 
     public String getFieldTypeName(){
-        return fieldType.getKey();
+        TypeId typeId = getFieldType();
+        if(typeId != null){
+            return typeId.getName();
+        }
+        return null;
     }
     public TypeId getFieldType(){
         return fieldType.getItem();
@@ -72,7 +84,7 @@ public class FieldId extends IndexItemEntry implements Comparable<FieldId>{
         fieldType.setItem(typeId);
     }
     public void setFieldType(String type) {
-        fieldType.setItem(type);
+        fieldType.setItem(new TypeKey(type));
     }
 
     @Override
@@ -89,10 +101,25 @@ public class FieldId extends IndexItemEntry implements Comparable<FieldId>{
     }
 
     @Override
-    public String getKey(){
-        return key(false);
+    public FieldKey getKey(){
+        return FieldKey.create(this);
     }
 
+    @Override
+    public void setKey(Key key){
+        if(!(key instanceof FieldKey)){
+            return;
+        }
+        setKey((FieldKey) key);
+    }
+    public void setKey(FieldKey key){
+        if(Objects.equals(key, getKey())){
+            return;
+        }
+        classType.setItem(key.getDefiningKey());
+        nameReference.setString(key.getName());
+        fieldType.setItem(key.getTypeKey());
+    }
     public String key(boolean appendFieldType) {
         StringBuilder builder = new StringBuilder();
         String type = getClassName();
@@ -144,9 +171,9 @@ public class FieldId extends IndexItemEntry implements Comparable<FieldId>{
 
     @Override
     public String toString(){
-        String key = getKey();
+        FieldKey key = getKey();
         if(key != null){
-            return key;
+            return key.toString();
         }
         return getClassType() + "->" + getNameString() + ":" + getFieldType();
     }

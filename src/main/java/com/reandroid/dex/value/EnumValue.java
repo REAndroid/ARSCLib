@@ -21,13 +21,18 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class EnumValue extends SectionValue<FieldId> {
+public class EnumValue extends SectionIdValue<FieldId> {
     public EnumValue(){
-        super(SectionType.FIELD_ID);
+        super(SectionType.FIELD_ID, DexValueType.ENUM);
+    }
+
+    @Override
+    public DexValueType<?> getValueType() {
+        return DexValueType.ENUM;
     }
     @Override
     public String getTypeName(){
-        FieldId fieldId = getData();
+        FieldId fieldId = get();
         if(fieldId == null){
             return toString();
         }

@@ -19,6 +19,7 @@ import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.*;
 import com.reandroid.dex.ins.Ins;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -59,7 +60,7 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         if(pool == null){
             return null;
         }
-        classId = pool.get(className);
+        classId = pool.get(new TypeKey(className));
         if(classId == null) {
             return null;
         }
@@ -108,6 +109,15 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
             return codeItem.getInstructionList();
         }
         return null;
+    }
+    public CodeItem getOrCreateCodeItem(){
+        CodeItem codeItem = codeOffset.getItem();
+        if(codeItem == null){
+            codeItem = getSection(SectionType.CODE).createOffsetItem();
+            codeOffset.setItem(codeItem);
+            codeItem.setMethodDef(this);
+        }
+        return codeItem;
     }
     public CodeItem getCodeItem(){
         CodeItem codeItem = codeOffset.getItem();

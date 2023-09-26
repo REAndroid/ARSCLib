@@ -13,8 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.base;
+package com.reandroid.dex.value;
 
-public interface StringKeyItem {
-    String getKey();
+import com.reandroid.dex.index.MethodId;
+import com.reandroid.dex.sections.SectionType;
+
+
+public class MethodIdValue extends SectionIdValue<MethodId> {
+
+    public MethodIdValue() {
+        super(SectionType.METHOD_ID, DexValueType.METHOD);
+    }
+
+    @Override
+    public DexValueType<?> getValueType() {
+        return DexValueType.METHOD;
+    }
 }

@@ -15,6 +15,9 @@
  */
 package com.reandroid.dex.base;
 
-public interface StringKeyItemCreate extends StringKeyItem {
-    void setKey(String key);
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyItem;
+
+public interface StringKeyItemCreate extends KeyItem {
+    void setKey(Key key);
 }

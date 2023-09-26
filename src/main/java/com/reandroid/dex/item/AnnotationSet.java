@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.dex.key.AnnotationKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -26,18 +27,27 @@ public class AnnotationSet extends IntegerOffsetSectionList<AnnotationItem> impl
     public AnnotationSet(){
         super(SectionType.ANNOTATION);
     }
-    @Override
-    public String getKey(){
-        StringBuilder builder = new StringBuilder();
-        boolean appendOnce = false;
-        for(AnnotationItem item : this){
-            if(appendOnce){
-                builder.append(',');
-            }
-            builder.append(item.getKey());
-            appendOnce = true;
+
+    public AnnotationItem get(AnnotationKey key){
+        if(key == null){
+            return null;
         }
-        return builder.toString();
+        for(AnnotationItem item : this){
+            if(key.equals(item.getKey())){
+                return item;
+            }
+        }
+        return null;
+    }
+    @Override
+    public AnnotationKey getKey(){
+        for(AnnotationItem item : this){
+            AnnotationKey key = item.getKey();
+            if(key != null){
+                return key;
+            }
+        }
+        return null;
     }
 
     @Override

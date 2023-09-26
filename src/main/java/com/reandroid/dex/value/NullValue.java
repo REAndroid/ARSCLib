@@ -21,9 +21,11 @@ import com.reandroid.dex.writer.SmaliWriter;
 import java.io.IOException;
 
 public class NullValue extends DexValueBlock<Block> {
+
     public NullValue() {
-        super();
+        super(DexValueType.NULL);
     }
+
     @Override
     public DexValueType<NullValue> getValueType() {
         return DexValueType.NULL;
@@ -42,10 +44,12 @@ public class NullValue extends DexValueBlock<Block> {
         return "NullValue";
     }
     public static NullValue getInstance(){
+        if(sInstance != null){
+            return sInstance;
+        }
         synchronized (NullValue.class){
             if(sInstance == null){
                 sInstance = new NullValue();
-                sInstance.getValueTypeItem().set((byte) DexValueType.NULL.getFlag());
             }
             return sInstance;
         }

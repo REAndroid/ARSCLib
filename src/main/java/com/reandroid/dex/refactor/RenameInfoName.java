@@ -16,6 +16,7 @@
 package com.reandroid.dex.refactor;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.dex.key.Key;
 import com.reandroid.utils.collection.EmptyList;
 
 import java.util.List;
@@ -39,7 +40,7 @@ public abstract class RenameInfoName<T extends Block> extends RenameInfo<T> {
     }
 
     @Override
-    public abstract String getKey();
+    public abstract Key getKey();
     @Override
     List<RenameInfo<?>> createChildRenames() {
         return EmptyList.of();

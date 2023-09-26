@@ -16,7 +16,9 @@
 package com.reandroid.dex.refactor;
 
 import com.reandroid.arsc.group.ItemGroup;
+import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.index.MethodId;
+import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.sections.SectionType;
 
 public class RenameInfoMethodName extends RenameInfoName<MethodId> {
@@ -37,17 +39,8 @@ public class RenameInfoMethodName extends RenameInfoName<MethodId> {
         }
     }
     @Override
-    public String getKey(){
-        StringBuilder builder = new StringBuilder();
-        builder.append(getTypeName());
-        builder.append("->");
-        builder.append(getSearch());
-        builder.append('(');
-        String parameters = getParameters();
-        if(parameters != null) {
-            builder.append(parameters);
-        }
-        builder.append(')');
-        return builder.toString();
+    public MethodKey getKey(){
+        return new MethodKey(getTypeName(), getSearch(),
+                DexUtils.splitParameters(getParameters()), null);
     }
 }

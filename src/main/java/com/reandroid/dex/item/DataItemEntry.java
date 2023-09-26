@@ -19,9 +19,11 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyItem;
 
 public class DataItemEntry extends DexContainerItem
-        implements PositionedItem, OffsetSupplier, OffsetReceiver, StringKeyItem {
+        implements PositionedItem, OffsetSupplier, OffsetReceiver, KeyItem {
 
     private IntegerReference mReference;
 
@@ -40,7 +42,7 @@ public class DataItemEntry extends DexContainerItem
         setPosition(0);
     }
     @Override
-    public String getKey() {
+    public Key getKey() {
         return null;
     }
     @Override

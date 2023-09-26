@@ -16,6 +16,8 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -34,6 +36,22 @@ public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId>
         super();
     }
 
+    public void setKey(TypeListKey key){
+        String[] names = key.getParameters();;
+        if(names == null){
+            setSize(0);
+            return;
+        }
+        setSize(0);
+        DexIdPool<TypeId> pool = getPool(SectionType.TYPE_ID);
+        if(pool == null) {
+            return;
+        }
+        for(String name : names){
+            TypeId typeId = pool.getOrCreate(new TypeKey(name));
+            add(typeId);
+        }
+    }
     public void addAll(Iterator<String> iterator) {
         if(!iterator.hasNext()) {
             return;
@@ -43,7 +61,7 @@ public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId>
             return;
         }
         while (iterator.hasNext()){
-            TypeId typeId = pool.getOrCreate(iterator.next());
+            TypeId typeId = pool.getOrCreate(new TypeKey(iterator.next()));
             add(typeId);
         }
     }
@@ -53,7 +71,7 @@ public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId>
         }
         DexIdPool<TypeId> pool = getPool(SectionType.TYPE_ID);
         if(pool != null){
-            add(pool.getOrCreate(typeName));
+            add(pool.getOrCreate(new TypeKey(typeName)));
         }
     }
     public void add(TypeId typeId){

@@ -17,52 +17,45 @@ package com.reandroid.dex.value;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.writer.SmaliWriter;
-import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class PrimitiveValue extends DexValueBlock<NumberValue> {
+public abstract class PrimitiveValue extends DexValueBlock<NumberValue> {
 
-    public PrimitiveValue() {
-        super(new NumberValue());
+    public PrimitiveValue(DexValueType<?> type) {
+        super(new NumberValue(), type);
     }
 
     public long getNumberValue(){
-        return getValue().getNumberValue();
+        return getValueContainer().getNumberValue();
     }
     public void setNumberValue(int value){
-        getValue().setNumberValue(value);
+        setNumberValue((long)value);
     }
     public void setNumberValue(long value){
-        getValue().setNumberValue(value);
+        NumberValue container = getValueContainer();
+        container.setNumberValue(value);
+        setValueSize(container.getSize() - 1);
     }
+
+    public abstract String getHex();
     @Override
-    public int getAsInteger(int def) {
-        if(getValueType() == DexValueType.INT){
-            return (int) getNumberValue();
-        }
-        return def;
-    }
-    public long getAsNumber(long def) {
-        return getNumberValue();
+    public String getAsString() {
+        return getHex();
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         getValueTypeItem().onReadBytes(reader);
-        NumberValue numberValue = getValue();
-        numberValue.setSize(getValueSize() + 1);
-        numberValue.readBytes(reader);
+        NumberValue container = getValueContainer();
+        container.setSize(getValueSize() + 1);
+        container.readBytes(reader);
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(HexUtil.toHex(getNumberValue(), getValueSize()));
-    }
-    @Override
-    public String getAsString() {
-        return HexUtil.toHex(getNumberValue(), getValueSize());
+        writer.append(getHex());
     }
     @Override
     public String toString() {
-        return getAsString();
+        return getHex();
     }
 }

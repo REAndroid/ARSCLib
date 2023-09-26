@@ -18,8 +18,12 @@ package com.reandroid.dex.model;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.index.ItemOffsetReference;
+import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.item.*;
+import com.reandroid.dex.key.AnnotationKey;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.value.StringValue;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.collection.*;
 
@@ -36,6 +40,103 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
         this.classId = classId;
     }
 
+    public void logAnnotation(){
+        getClassData();
+        AnnotationSet annotationSet = getAnnotations();
+        if(annotationSet == null){
+            return;
+        }
+        AnnotationKey key = new AnnotationKey("Lkotlin/coroutines/jvm/internal/f;", "c");
+        AnnotationItem item = annotationSet.get(key);
+        if(item == null){
+            return;
+        }
+        AnnotationElement element = item.getElement("c");
+        String value = ((StringValue)element.getValue()).getString();
+        int i = value.lastIndexOf('.');
+        value = value.substring(0, i + 1);
+        value = value.replace('.', '/');
+        value = "L"+value;
+
+        String pkg = getPackageName();
+        if(pkg.equals(value)){
+            return;
+        }
+        String msg = pkg + "=" + value;
+        System.err.println(msg);
+    }
+    public void cleanKotlin(){
+        getClassData();
+        cleanKotlinAnnotation();
+        cleanKotlinIntrinsics();
+    }
+    private void cleanKotlinIntrinsics(){
+        ClassData classData = getClassData();
+        if(classData == null){
+            return;
+        }
+        MethodDefArray defArray = classData.getDirectMethods();
+        for(MethodDef methodDef : defArray.getChildes()){
+            cleanKotlinIntrinsics(methodDef);
+        }
+        defArray = classData.getVirtualMethods();
+        for(MethodDef methodDef : defArray.getChildes()){
+            cleanKotlinIntrinsics(methodDef);
+        }
+    }
+    private void cleanKotlinIntrinsics(MethodDef methodDef){
+        InstructionList instructionList = methodDef.getInstructionList();
+        if(instructionList == null || methodDef.getCodeItem().getTryBlock() != null){
+            return;
+        }
+        Ins previous = null;
+        List<Ins> insList = CollectionUtil.toList(instructionList.iterator());
+        for(Ins ins : insList) {
+            if(ins.toString().contains("Lkotlin/jvm/internal/Intrinsics;->f(Ljava/lang/Object;Ljava/lang/String;)V")){
+                if(previous != null && previous.toString().contains("const-string")){
+                    instructionList.remove(previous);
+                    instructionList.remove(ins);
+                    previous = null;
+                    continue;
+                }
+            }
+            if(!ins.toString().contains("move-")){
+                previous = ins;
+            }
+        }
+    }
+    private void cleanKotlinAnnotation(){
+        ClassId classId = getClassId();
+        AnnotationSet annotationSet = classId.getClassAnnotations();
+        if(annotationSet == null){
+            return;
+        }
+        List<AnnotationItem> annotationItems = getKotlin();
+        for(AnnotationItem annotationItem : annotationItems){
+            annotationSet.remove(annotationItem);
+        }
+        if(annotationSet.size() !=  0){
+            return;
+        }
+        classId.setClassAnnotations(null);
+    }
+    private List<AnnotationItem> getKotlin(){
+        ClassId classId = getClassId();
+        AnnotationSet annotationSet = classId.getClassAnnotations();
+        if(annotationSet == null){
+            return EmptyList.of();
+        }
+        Iterator<AnnotationItem> iterator = annotationSet.iterator();
+        iterator = FilterIterator.of(iterator, new Predicate<AnnotationItem>() {
+            @Override
+            public boolean test(AnnotationItem item) {
+                String type = item.getTypeId().getName();
+                return "Lkotlin/Metadata;".equals(type);
+            }
+        });
+        return CollectionUtil.toList(iterator);
+    }
+    ///////////////////////////////////////////
     public DexField getField(String fieldKey) {
         DexField dexField = getDefinedField(fieldKey);
         if(dexField != null) {
@@ -124,6 +225,19 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
     public Iterator<DexField> getFields() {
         return new CombiningIterator<>(getStaticFields(), getInstanceFields());
     }
+    FieldDef getStatic(FieldKey fieldKey){
+        ClassData classData = getClassData();
+        if(classData != null){
+            return classData.getStaticFields().get(fieldKey);
+        }
+        return null;
+    }
+    public DexField getOrCreateStaticField(FieldKey fieldKey){
+        return createField(getOrCreateStatic(fieldKey));
+    }
+    public FieldDef getOrCreateStatic(FieldKey fieldKey){
+        return getOrCreateClassData().getOrCreateStatic(fieldKey);
+    }
     public Iterator<? extends DexField> getStaticFields() {
         ClassData classData = getClassData();
         if(classData != null){
@@ -186,6 +300,9 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
 
     public DexFile getDexFile() {
         return dexFile;
+    }
+    public void addAccessFlag(AccessFlag accessFlag){
+        getClassId().addAccessFlag(accessFlag);
     }
     public ClassId getClassId() {
         return classId;
@@ -263,10 +380,15 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
         return getClassId().getClassAnnotations();
     }
 
+    ClassData getOrCreateClassData(){
+        return getClassId().getOrCreateClassData();
+    }
     ClassData getClassData(){
         ClassId classId = getClassId();
         ClassData classData = classId.getClassData();
-        classData.setClassId(classId);
+        if(classData != null){
+            classData.setClassId(classId);
+        }
         return classData;
     }
     EncodedArray getStaticValues(){

@@ -18,7 +18,12 @@ package com.reandroid.dex.item;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.base.*;
+import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.ClassId;
+import com.reandroid.dex.ins.Ins10x;
+import com.reandroid.dex.ins.Opcode;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
@@ -73,6 +78,30 @@ public class ClassData extends DataItemEntry
     public FieldDefArray getStaticFields() {
         return staticFields;
     }
+    public FieldDef getOrCreateStatic(FieldKey fieldKey){
+        FieldDef fieldDef = getStaticFields().getOrCreate(fieldKey);
+        fieldDef.addAccessFlag(AccessFlag.STATIC);
+        fieldDef.addAccessFlag(AccessFlag.PUBLIC);
+        fieldDef.addAccessFlag(AccessFlag.FINAL);
+        return fieldDef;
+    }
+    public void ensureStaticConstructor(String type){
+        MethodKey methodKey = new MethodKey(type, "<clinit>", null, "V");
+        MethodDef methodDef = getDirectMethods().get(methodKey);
+        if(methodDef != null){
+            return;
+        }
+        methodDef = getDirectMethods().getOrCreate(methodKey);
+        directMethodCount.set(getDirectMethods().getCount());
+        virtualMethodCount.set(getVirtualMethods().getCount());
+        methodDef.addAccessFlag(AccessFlag.STATIC);
+        methodDef.addAccessFlag(AccessFlag.CONSTRUCTOR);
+        CodeItem codeItem = methodDef.getCodeItem();
+        Ins10x ins = Opcode.RETURN_VOID.newInstance();
+        codeItem.getInstructionList().add(ins);
+        codeItem.refresh();
+        codeItem.refresh();
+    }
     public FieldDefArray getInstanceFields() {
         return instanceFields;
     }
@@ -94,6 +123,10 @@ public class ClassData extends DataItemEntry
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
+        staticFieldsCount.set(staticFields.getCount());
+        instanceFieldCount.set(instanceFields.getCount());
+        directMethodCount.set(directMethods.getCount());
+        virtualMethodCount.set(virtualMethods.getCount());
         staticFields.sort(CompareUtil.getComparableComparator());
         instanceFields.sort(CompareUtil.getComparableComparator());
         directMethods.sort(CompareUtil.getComparableComparator());

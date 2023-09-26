@@ -21,6 +21,7 @@ import com.reandroid.arsc.item.IndirectItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.CompareUtil;
@@ -84,6 +85,7 @@ public class StringReference extends IndirectItem<DexBlockItem> implements
         setString(text, false);
     }
     public void setString(String text, boolean overwrite) {
+        StringKey key = new StringKey(text);
         StringId stringId = this.stringId;
         StringData stringData = null;
         if(stringId != null){
@@ -101,11 +103,11 @@ public class StringReference extends IndirectItem<DexBlockItem> implements
             return;
         }
         if(!overwrite || stringData == null){
-            stringData = pool.getOrCreate(text);
+            stringData = pool.getOrCreate(key);
         }
         setStringId(stringData.getStringId());
         if(overwrite){
-            pool.keyChanged(oldText);
+            pool.keyChanged(new StringKey(oldText));
         }
     }
 

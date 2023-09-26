@@ -17,8 +17,9 @@ package com.reandroid.dex.refactor;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.group.ItemGroup;
-import com.reandroid.dex.base.StringKeyItem;
+import com.reandroid.dex.key.KeyItem;
 import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
@@ -34,7 +35,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class RenameInfo<T extends Block> implements StringKeyItem {
+public abstract class RenameInfo<T extends Block> implements KeyItem {
     private final String search;
     private final String replace;
     private List<RenameInfo<?>> childRenames;
@@ -58,7 +59,7 @@ public abstract class RenameInfo<T extends Block> implements StringKeyItem {
             return;
         }
         DexIdPool<T> pool = section.getPool();
-        String key = getKey();
+        Key key = getKey();
         ItemGroup<T> group = pool.getGroup(getKey());
         if(group == null){
             return;
@@ -176,7 +177,7 @@ public abstract class RenameInfo<T extends Block> implements StringKeyItem {
             return;
         }
         appendIndent(writer);
-        writer.write(getKey());
+        writer.write(getKey().toString());
         writer.write("=");
         writer.write(getReplace());
         if(appendCount){

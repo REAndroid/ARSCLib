@@ -19,9 +19,6 @@ import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.utils.HexUtil;
 
 public class NumberValue extends DexBlockItem {
-    public NumberValue(int bytesLength) {
-        super(bytesLength);
-    }
     public NumberValue() {
         super(1);
     }
@@ -45,6 +42,9 @@ public class NumberValue extends DexBlockItem {
             return (int)value;
         }
         return value;
+    }
+    public int getIntegerValue(){
+        return (int) getNumberValue();
     }
     public long getNumberValue(){
         return getNumber(getBytesInternal(), 0, getSize());

@@ -18,10 +18,6 @@ package com.reandroid.dex.value;
 import com.reandroid.arsc.base.BlockCreator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.common.DexUtils;
-import com.reandroid.dex.index.FieldId;
-import com.reandroid.dex.index.MethodId;
-import com.reandroid.dex.item.AnnotationItem;
-import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
@@ -33,41 +29,35 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
     private static final DexValueType<?>[] VALUES;
     private static final DexValueType<?>[] VALUES_COPY;
 
-    public static final DexValueType<PrimitiveValue> BYTE;
-    public static final DexValueType<PrimitiveValue> SHORT;
+    public static final DexValueType<ByteValue> BYTE;
+    public static final DexValueType<ShortValue> SHORT;
     public static final DexValueType<CharValue> CHAR;
     public static final DexValueType<IntValue> INT;
-    public static final DexValueType<PrimitiveValue> LONG;
-    public static final DexValueType<PrimitiveValue> FLOAT;
-    public static final DexValueType<PrimitiveValue> DOUBLE;
-    public static final DexValueType<SectionValue<MethodId>> METHOD_TYPE;
-    public static final DexValueType<SectionValue<MethodId>> METHOD_HANDLE;
+    public static final DexValueType<LongValue> LONG;
+    public static final DexValueType<FloatValue> FLOAT;
+    public static final DexValueType<DoubleValue> DOUBLE;
+    public static final DexValueType<ProtoValue> PROTO;
+    public static final DexValueType<MethodHandleValue> METHOD_HANDLE;
     public static final DexValueType<StringValue> STRING;
     public static final DexValueType<TypeValue> TYPE;
-    public static final DexValueType<SectionValue<FieldId>> FIELD;
-    public static final DexValueType<SectionValue<MethodId>> METHOD;
+    public static final DexValueType<FieldIdValue> FIELD;
+    public static final DexValueType<MethodIdValue> METHOD;
     public static final DexValueType<EnumValue> ENUM;
     public static final DexValueType<ArrayValue> ARRAY;
-    public static final DexValueType<DexValueBlock<AnnotationItem>> ANNOTATION;
+    public static final DexValueType<AnnotationValue> ANNOTATION;
     public static final DexValueType<NullValue> NULL;
     public static final DexValueType<BooleanValue> BOOLEAN;
 
     static {
 
-        BlockCreator<PrimitiveValue> creatorPrimitive = PrimitiveValue::new;
-        BlockCreator<StringValue> creatorString = StringValue::new;
-        BlockCreator<TypeValue> creatorType = TypeValue::new;
-        BlockCreator<SectionValue<FieldId>> creatorField = () -> new SectionValue<>(SectionType.FIELD_ID);
-        BlockCreator<SectionValue<MethodId>> creatorMethod = () -> new SectionValue<>(SectionType.METHOD_ID);
-
         DexValueType<?>[] valueTypes = new DexValueType[0x1f + 1];
         VALUES = valueTypes;
 
         BYTE = new DexValueType<>("BYTE", 0x00, 0, true,
-                "B", creatorPrimitive);
+                "B", ByteValue::new);
         valueTypes[0x00] = BYTE;
         SHORT = new DexValueType<>("SHORT", 0x02, 1, true,
-                "S", creatorPrimitive);
+                "S", ShortValue::new);
         valueTypes[0x02] = SHORT;
         CHAR = new DexValueType<>("CHAR", 0x03, 1, true,
                 "C", CharValue::new);
@@ -76,37 +66,37 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
                 "I", IntValue::new);
         valueTypes[0x04] = INT;
         LONG = new DexValueType<>("LONG", 0x06, 7, true,
-                "J", creatorPrimitive);
+                "J", LongValue::new);
         valueTypes[0x06] = LONG;
         FLOAT = new DexValueType<>("FLOAT", 0x10, 3, true,
-                "F", creatorPrimitive);
+                "F", FloatValue::new);
         valueTypes[0x10] = FLOAT;
         DOUBLE = new DexValueType<>("DOUBLE", 0x11, 7, true,
-                "D", creatorPrimitive);
+                "D", DoubleValue::new);
         valueTypes[0x11] = DOUBLE;
 
-        METHOD_TYPE = new DexValueType<>("METHOD_TYPE", 0x15, 3, false,
-                DexUtils.toDalvikName(Method.class.getName()), creatorMethod);
-        valueTypes[0x15] = METHOD_TYPE;
+        PROTO = new DexValueType<>("PROTO", 0x15, 3, false,
+                DexUtils.toDalvikName(Method.class.getName()), ProtoValue::new);
+        valueTypes[0x15] = PROTO;
 
         METHOD_HANDLE = new DexValueType<>("METHOD_HANDLE", 0x16, 3, false,
-                DexUtils.toDalvikName(Method.class.getName()), creatorMethod);
+                DexUtils.toDalvikName(Method.class.getName()), MethodHandleValue::new);
         valueTypes[0x16] = METHOD_HANDLE;
 
         STRING = new DexValueType<>("STRING", 0x17, 3, true,
-                DexUtils.toDalvikName(String.class.getName()), creatorString);
+                DexUtils.toDalvikName(String.class.getName()), StringValue::new);
         valueTypes[0x17] = STRING;
 
         TYPE = new DexValueType<>("TYPE", 0x18, 3, true,
-                DexUtils.toDalvikName(Class.class.getName()), creatorType);
+                DexUtils.toDalvikName(Class.class.getName()), TypeValue::new);
         valueTypes[0x18] = TYPE;
 
         FIELD = new DexValueType<>("FIELD", 0x19, 3, false,
-                DexUtils.toDalvikName(Field.class.getName()), creatorField);
+                DexUtils.toDalvikName(Field.class.getName()), FieldIdValue::new);
         valueTypes[0x19] = FIELD;
 
         METHOD = new DexValueType<>("METHOD", 0x1a, 3, false,
-                DexUtils.toDalvikName(Method.class.getName()), creatorMethod);
+                DexUtils.toDalvikName(Method.class.getName()), MethodIdValue::new);
         valueTypes[0x1a] = METHOD;
 
         ENUM = new DexValueType<>("ENUM", 0x1b, 3, false,
@@ -118,11 +108,11 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
         valueTypes[0x1c] = ARRAY;
 
         ANNOTATION = new DexValueType<>("ANNOTATION", 0x1d, 0, false,
-                "", () -> new DexValueBlock<>(new AnnotationItem(true)));
+                "", AnnotationValue::new);
         valueTypes[0x1d] = ANNOTATION;
 
         NULL = new DexValueType<>("NULL", 0x1e, 0, false,
-                "null", NullValue::getInstance);
+                "null", NullValue::new);
         valueTypes[0x1e] = NULL;
 
         BOOLEAN = new DexValueType<>("BOOLEAN", 0x1f, 1, false,

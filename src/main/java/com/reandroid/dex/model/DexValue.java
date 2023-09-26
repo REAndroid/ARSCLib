@@ -17,6 +17,7 @@ package com.reandroid.dex.model;
 
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
+import com.reandroid.dex.value.PrimitiveValue;
 
 public class DexValue {
     private final DexValueBlock<?> dexValueBlock;
@@ -32,7 +33,11 @@ public class DexValue {
         return getAsInteger(0);
     }
     public int getAsInteger(int def) {
-        return getDexValueBlock().getAsInteger(def);
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof PrimitiveValue){
+            return (int) ((PrimitiveValue)value).getNumberValue();
+        }
+        return def;
     }
     public DexValueType<?> getValueType(){
         return getDexValueBlock().getValueType();

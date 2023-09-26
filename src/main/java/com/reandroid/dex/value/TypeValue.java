@@ -18,14 +18,14 @@ package com.reandroid.dex.value;
 import com.reandroid.dex.index.TypeId;
 import com.reandroid.dex.sections.SectionType;
 
-public class TypeValue extends SectionValue<TypeId> {
+public class TypeValue extends SectionIdValue<TypeId> {
 
     public TypeValue() {
-        super(SectionType.TYPE_ID);
+        super(SectionType.TYPE_ID, DexValueType.TYPE);
     }
 
     @Override
-    void onDataUpdated(TypeId data) {
-        super.onDataUpdated(data);
+    public DexValueType<?> getValueType() {
+        return DexValueType.TYPE;
     }
 }

@@ -18,6 +18,7 @@ package com.reandroid.dex.refactor;
 import com.reandroid.arsc.group.ItemGroup;
 import com.reandroid.dex.item.AnnotationElement;
 import com.reandroid.dex.item.AnnotationItem;
+import com.reandroid.dex.key.AnnotationKey;
 import com.reandroid.dex.sections.SectionType;
 
 import java.util.ArrayList;
@@ -42,8 +43,8 @@ public class RenameInfoAnnotationName extends RenameInfoName<AnnotationItem> {
         }
     }
     @Override
-    public String getKey(){
-        return getTypeName() + "->" + getSearch() + "()";
+    public AnnotationKey getKey(){
+        return new AnnotationKey(getTypeName(), getSearch(), null);
     }
     @Override
     List<RenameInfo<?>> createChildRenames() {

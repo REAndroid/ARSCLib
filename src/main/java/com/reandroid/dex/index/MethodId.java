@@ -17,6 +17,9 @@ package com.reandroid.dex.index;
 
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.item.TypeList;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
@@ -24,6 +27,7 @@ import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Objects;
 
 public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
 
@@ -66,7 +70,11 @@ public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
         classType.setItem(typeId);
     }
     public String getClassName() {
-        return classType.getKey();
+        TypeId typeId = getClassType();
+        if(typeId != null){
+            return typeId.getName();
+        }
+        return null;
     }
     public int getParametersCount() {
         ProtoId protoId = getProto();
@@ -79,6 +87,13 @@ public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
         ProtoId protoId = getProto();
         if(protoId != null){
             return protoId.getParameter(index);
+        }
+        return null;
+    }
+    public String[] getParameterNames(){
+        ProtoId protoId = getProto();
+        if(protoId != null){
+            return protoId.getParameterNames();
         }
         return null;
     }
@@ -103,6 +118,13 @@ public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
         proto.setItem(protoId);
     }
 
+    public String getReturnType() {
+        TypeId typeId = getReturnTypeId();
+        if(typeId != null){
+            return typeId.getName();
+        }
+        return null;
+    }
     public TypeId getReturnTypeId() {
         ProtoId protoId = getProto();
         if(protoId != null){
@@ -112,8 +134,23 @@ public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
     }
 
     @Override
-    public String getKey() {
-        return getKey(true, false);
+    public MethodKey getKey() {
+        return MethodKey.create(this);
+    }
+    @Override
+    public void setKey(Key key){
+        if(!(key instanceof MethodKey)){
+            return;
+        }
+        setKey((MethodKey) key);
+    }
+    public void setKey(MethodKey key){
+        if(Objects.equals(key, getKey())){
+            return;
+        }
+        classType.setItem(key.getDefiningKey());
+        nameReference.setString(key.getName());
+        proto.setItem(key.getProtoKey());
     }
     public String getKey(boolean appendType, boolean appendReturnType){
         StringBuilder builder = new StringBuilder();

@@ -15,64 +15,41 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
 public class CharValue extends PrimitiveValue {
 
     public CharValue(){
-        super();
+        super(DexValueType.CHAR);
     }
 
-    public char getChar(){
+    public char get(){
         return (char) getNumberValue();
     }
-
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void set(char ch){
+        setNumberValue(ch);
     }
     @Override
-    public String getAsString() {
-        StringBuilder builder = new StringBuilder();
-        char ch = getChar();
-        if ((ch >= ' ') && (ch < 0x7f)) {
-            builder.append('\'');
-            if ((ch == '\'') || (ch == '\"') || (ch == '\\')) {
-                builder.append('\\');
-            }
-            builder.append(ch);
-            builder.append('\'');
-            return builder.toString();
-        } else if (ch <= 0x7f) {
-            switch (ch) {
-                case '\n':
-                    builder.append("'\\n'");
-                    return builder.toString();
-                case '\r':
-                    builder.append("'\\r'");
-                    return builder.toString();
-                case '\t':
-                    builder.append("'\\t'");
-                    return builder.toString();
-            }
-        }
+    public DexValueType<?> getValueType() {
+        return DexValueType.CHAR;
+    }
+    @Override
+    public String getHex() {
+        return HexUtil.toHex(getNumberValue(), getValueSize()) + "C";
+    }
 
-        builder.append('\'');
-        builder.append("\\u");
-        builder.append(Character.forDigit(ch >> 12, 16));
-        builder.append(Character.forDigit((ch >> 8) & 0x0f, 16));
-        builder.append(Character.forDigit((ch >> 4) & 0x0f, 16));
-        builder.append(Character.forDigit(ch & 0x0f, 16));
-        builder.append('\'');
-        return builder.toString();
+    @Override
+    public String getAsString() {
+        return DexUtils.quoteChar(get());
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(getAsString());
+        DexUtils.appendSingleQuotedChar(writer, get());
     }
     @Override
     public String toString() {

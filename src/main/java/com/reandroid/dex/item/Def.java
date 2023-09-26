@@ -22,6 +22,8 @@ import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.index.IndexItemEntry;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -44,6 +46,13 @@ public class Def<T extends IndexItemEntry> extends DexContainerItem implements S
         addChild(1, accessFlags);
     }
 
+    public Key getKey(){
+        T item = getItem();
+        if(item != null){
+            return item.getKey();
+        }
+        return null;
+    }
     @Override
     public void visitIntegers(IntegerVisitor visitor) {
     }
@@ -79,6 +88,12 @@ public class Def<T extends IndexItemEntry> extends DexContainerItem implements S
     public int getAccessFlagsValue() {
         return accessFlags.get();
     }
+    public void addAccessFlag(AccessFlag flag) {
+        setAccessFlagsValue(getAccessFlagsValue() | flag.getValue());
+    }
+    public void setAccessFlagsValue(int value) {
+        accessFlags.set(value);
+    }
     public boolean isPrivate(){
         return AccessFlag.PRIVATE.isSet(getAccessFlagsValue());
     }
@@ -89,6 +104,17 @@ public class Def<T extends IndexItemEntry> extends DexContainerItem implements S
         return AccessFlag.STATIC.isSet(getAccessFlagsValue());
     }
 
+    T getOrCreate(Key key){
+        T item = getItem();
+        if(item != null){
+            return item;
+        }
+        Section<T> section = getSection(sectionType);
+        item = section.createIdItem();
+        item.setKey(key);
+        setItem(item);
+        return item;
+    }
     T getItem(){
         return mItem;
     }
