@@ -184,15 +184,21 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
             trimNullBlocks();
         }
     }
-    public void sort(Comparator<? super T> comparator){
+    public boolean sort(Comparator<? super T> comparator){
         T[] elementData = this.elementData;
         if(comparator == null || elementData.length < 2){
-            return;
+            return false;
         }
         Arrays.sort(elementData, 0, elementData.length, comparator);
-        for(int i=0 ; i <elementData.length; i++){
-            elementData[i].setIndex(i);
+        boolean changed = false;
+        for(int i=0 ; i < elementData.length; i++){
+            T item = elementData[i];
+            if(item != null && item.getIndex() != i){
+                item.setIndex(i);
+                changed = true;
+            }
         }
+        return changed;
     }
     public void insertItem(int index, T item){
         int count = getChildesCount();
