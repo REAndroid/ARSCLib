@@ -21,14 +21,14 @@ import java.util.function.Predicate;
 
 public class IndexIterator<T> implements Iterator<T> {
     private final Predicate<? super T> mFilter;
-    private final SizedSupplier<T> mSupplier;
+    private final SizedSupplier<? extends T> mSupplier;
     private int mIndex;
     private T mNext;
-    public IndexIterator(SizedSupplier<T> supplier, Predicate<? super T> filter){
+    public IndexIterator(SizedSupplier<? extends T> supplier, Predicate<? super T> filter){
         this.mSupplier = supplier;
         this.mFilter = filter;
     }
-    public IndexIterator(SizedSupplier<T> supplier){
+    public IndexIterator(SizedSupplier<? extends T> supplier){
         this(supplier, null);
     }
     @Override
@@ -65,4 +65,15 @@ public class IndexIterator<T> implements Iterator<T> {
         return mFilter == null
                 || mFilter.test(item);
     }
+
+    public static<T1> Iterator<T1> of(SizedSupplier<T1> supplier){
+        return of(supplier, null);
+    }
+    public static<T1> Iterator<T1> of(SizedSupplier<T1> supplier, Predicate<? super T1> filter){
+        if(supplier == null || supplier.size() == 0){
+            return EmptyIterator.of();
+        }
+        return new IndexIterator<T1>(supplier, filter);
+    }
+
 }

@@ -21,6 +21,32 @@ import java.util.List;
 
 public class StringsUtil {
 
+    public static boolean isWhiteSpace(String text){
+        return text == null || skipWhitespace(text) == text.length();
+    }
+    public static int skipWhitespace(String text){
+        return skipWhitespace(0, text);
+    }
+    public static int skipWhitespace(int start, String text){
+        int length = text.length();
+        for(int i = start; i < length; i++){
+            if(!isWhiteSpace(text.charAt(i))) {
+                return i;
+            }
+        }
+        return length;
+    }
+    public static boolean isWhiteSpace(char ch){
+        switch (ch){
+            case ' ':
+            case '\n':
+            case '\t':
+            case '\r':
+                return true;
+            default:
+                return false;
+        }
+    }
     public static int compare(String[] strings1, String[] strings2){
         if(strings1 == strings2){
             return 0;
@@ -190,9 +216,6 @@ public class StringsUtil {
     }
     public static boolean isEmpty(String text){
         return text == null || text.length() == 0;
-    }
-    public static boolean isWhiteSpace(String text){
-        return text == null || text.trim().length() == 0;
     }
     public static String toUpperCase(String str){
         if(str == null || str.length() == 0){
