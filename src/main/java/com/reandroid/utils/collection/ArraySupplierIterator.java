@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.common;
+package com.reandroid.utils.collection;
+
+import com.reandroid.common.ArraySupplier;
 
 import java.util.Iterator;
 
 public class ArraySupplierIterator<T> implements Iterator<T> {
-    private final ArraySupplier<T> supplier;
+
+    private final ArraySupplier<? extends T> supplier;
     private int index;
-    public ArraySupplierIterator(ArraySupplier<T> supplier){
+
+    public ArraySupplierIterator(ArraySupplier<? extends T> supplier){
         this.supplier = supplier;
     }
     @Override
@@ -30,5 +34,12 @@ public class ArraySupplierIterator<T> implements Iterator<T> {
     @Override
     public T next() {
         return this.supplier.get(index++);
+    }
+
+    public static<T1> Iterator<T1> of(ArraySupplier<? extends T1> supplier){
+        if(supplier == null || supplier.getCount() == 0){
+            return EmptyIterator.of();
+        }
+        return new ArraySupplierIterator<>(supplier);
     }
 }
