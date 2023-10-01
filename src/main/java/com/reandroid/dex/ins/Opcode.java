@@ -19,10 +19,11 @@ import com.reandroid.arsc.base.BlockCreator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.index.IndexItemEntry;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Opcode<T extends Ins> implements BlockCreator<T> {
 
@@ -51,7 +52,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
     public static final Opcode<Ins11x> RETURN;
     public static final Opcode<Ins11x> RETURN_WIDE;
     public static final Opcode<Ins11x> RETURN_OBJECT;
-    public static final Opcode<Ins11n> CONST_4;
+    public static final Opcode<InsConst4> CONST_4;
     public static final Opcode<Ins21s> CONST_16;
     public static final Opcode<InsConst> CONST;
     public static final Opcode<InsConst16High> CONST_HIGH16;
@@ -77,7 +78,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
     public static final Opcode<InsGoto> GOTO_16;
     public static final Opcode<InsGoto> GOTO_32;
     public static final Opcode<InsPackedSwitch> PACKED_SWITCH;
-    public static final Opcode<Ins31t> SPARSE_SWITCH;
+    public static final Opcode<InsSparseSwitch> SPARSE_SWITCH;
     public static final Opcode<Ins23x> CMPL_FLOAT;
     public static final Opcode<Ins23x> CMPG_FLOAT;
     public static final Opcode<Ins23x> CMPL_DOUBLE;
@@ -283,7 +284,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
     public static final Opcode<Ins21c> CONST_METHOD_TYPE;
 
     public static final Opcode<InsPackedSwitchData> PACKED_SWITCH_PAYLOAD;
-    public static final Opcode<InsSparse> SPARSE_SWITCH_PAYLOAD;
+    public static final Opcode<InsSparseSwitchData> SPARSE_SWITCH_PAYLOAD;
     public static final Opcode<InsArray> ARRAY_PAYLOAD;
 
     public static final Opcode<Ins22cs> IPUT_BOOLEAN_QUICK;
@@ -430,12 +431,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
             }
         });
         VALUES[0x11] = RETURN_OBJECT;
-        CONST_4 = new Opcode<>(0x12, 2, "const/4", new BlockCreator<Ins11n>() {
-            @Override
-            public Ins11n newInstance() {
-                return new Ins11n(CONST_4);
-            }
-        });
+        CONST_4 = new Opcode<>(0x12, 2, "const/4", InsConst4::new);
         VALUES[0x12] = CONST_4;
         CONST_16 = new Opcode<>(0x13, 4, "const/16", new BlockCreator<Ins21s>() {
             @Override
@@ -518,7 +514,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
             }
         });
         VALUES[0x1f] = CHECK_CAST;
-        INSTANCE_OF = new Opcode<>(0x20, 4, "instance-of", new BlockCreator<Ins22c>() {
+        INSTANCE_OF = new Opcode<>(0x20, 4, "instance-of", SectionType.TYPE_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(INSTANCE_OF);
@@ -546,14 +542,14 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
             }
         });
         VALUES[0x23] = NEW_ARRAY;
-        FILLED_NEW_ARRAY = new Opcode<>(0x24, 6, "filled-new-array", new BlockCreator<Ins35c>() {
+        FILLED_NEW_ARRAY = new Opcode<>(0x24, 6, "filled-new-array", SectionType.TYPE_ID, new BlockCreator<Ins35c>() {
             @Override
             public Ins35c newInstance() {
                 return new Ins35c(FILLED_NEW_ARRAY);
             }
         });
         VALUES[0x24] = FILLED_NEW_ARRAY;
-        FILLED_NEW_ARRAY_RANGE = new Opcode<>(0x25, 6, "filled-new-array/range", new BlockCreator<Ins3rc>() {
+        FILLED_NEW_ARRAY_RANGE = new Opcode<>(0x25, 6, "filled-new-array/range", SectionType.TYPE_ID, new BlockCreator<Ins3rc>() {
             @Override
             public Ins3rc newInstance() {
                 return new Ins3rc(FILLED_NEW_ARRAY_RANGE);
@@ -592,12 +588,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
         VALUES[0x2a] = GOTO_32;
         PACKED_SWITCH = new Opcode<>(0x2b, 6, "packed-switch", InsPackedSwitch::new);
         VALUES[0x2b] = PACKED_SWITCH;
-        SPARSE_SWITCH = new Opcode<>(0x2c, 6, "sparse-switch", new BlockCreator<Ins31t>() {
-            @Override
-            public Ins31t newInstance() {
-                return new Ins31t(SPARSE_SWITCH);
-            }
-        });
+        SPARSE_SWITCH = new Opcode<>(0x2c, 6, "sparse-switch", InsSparseSwitch::new);
         VALUES[0x2c] = SPARSE_SWITCH;
         CMPL_FLOAT = new Opcode<>(0x2d, 4, "cmpl-float", new BlockCreator<Ins23x>() {
             @Override
@@ -1075,7 +1066,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
             }
         });
         VALUES[0x76] = INVOKE_DIRECT_RANGE;
-        INVOKE_STATIC_RANGE = new Opcode<>(0x77, 6, "invoke-static/range", new BlockCreator<Ins3rc>() {
+        INVOKE_STATIC_RANGE = new Opcode<>(0x77, 6, "invoke-static/range", SectionType.METHOD_ID, new BlockCreator<Ins3rc>() {
             @Override
             public Ins3rc newInstance() {
                 return new Ins3rc(INVOKE_STATIC_RANGE);
@@ -1817,70 +1808,70 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
             }
         });
         VALUES[0xe2] = USHR_INT_LIT8;
-        IGET_VOLATILE = new Opcode<>(0xe3, 4, "iget-volatile", new BlockCreator<Ins22c>() {
+        IGET_VOLATILE = new Opcode<>(0xe3, 4, "iget-volatile", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IGET_VOLATILE);
             }
         });
         VALUES[0xe3] = IGET_VOLATILE;
-        IPUT_VOLATILE = new Opcode<>(0xe4, 4, "iput-volatile", new BlockCreator<Ins22c>() {
+        IPUT_VOLATILE = new Opcode<>(0xe4, 4, "iput-volatile", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IPUT_VOLATILE);
             }
         });
         VALUES[0xe4] = IPUT_VOLATILE;
-        SGET_VOLATILE = new Opcode<>(0xe5, 4, "sget-volatile", new BlockCreator<Ins21c>() {
+        SGET_VOLATILE = new Opcode<>(0xe5, 4, "sget-volatile", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SGET_VOLATILE);
             }
         });
         VALUES[0xe5] = SGET_VOLATILE;
-        SPUT_VOLATILE = new Opcode<>(0xe6, 4, "sput-volatile", new BlockCreator<Ins21c>() {
+        SPUT_VOLATILE = new Opcode<>(0xe6, 4, "sput-volatile", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SPUT_VOLATILE);
             }
         });
         VALUES[0xe6] = SPUT_VOLATILE;
-        IGET_OBJECT_VOLATILE = new Opcode<>(0xe7, 4, "iget-object-volatile", new BlockCreator<Ins22c>() {
+        IGET_OBJECT_VOLATILE = new Opcode<>(0xe7, 4, "iget-object-volatile", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IGET_OBJECT_VOLATILE);
             }
         });
         VALUES[0xe7] = IGET_OBJECT_VOLATILE;
-        IGET_WIDE_VOLATILE = new Opcode<>(0xe8, 4, "iget-wide-volatile", new BlockCreator<Ins22c>() {
+        IGET_WIDE_VOLATILE = new Opcode<>(0xe8, 4, "iget-wide-volatile", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IGET_WIDE_VOLATILE);
             }
         });
         VALUES[0xe8] = IGET_WIDE_VOLATILE;
-        IPUT_WIDE_VOLATILE = new Opcode<>(0xe9, 4, "iput-wide-volatile", new BlockCreator<Ins22c>() {
+        IPUT_WIDE_VOLATILE = new Opcode<>(0xe9, 4, "iput-wide-volatile", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IPUT_WIDE_VOLATILE);
             }
         });
         VALUES[0xe9] = IPUT_WIDE_VOLATILE;
-        SGET_WIDE_VOLATILE = new Opcode<>(0xea, 4, "sget-wide-volatile", new BlockCreator<Ins21c>() {
+        SGET_WIDE_VOLATILE = new Opcode<>(0xea, 4, "sget-wide-volatile", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SGET_WIDE_VOLATILE);
             }
         });
         VALUES[0xea] = SGET_WIDE_VOLATILE;
-        SPUT_WIDE_VOLATILE = new Opcode<>(0xeb, 4, "sput-wide-volatile", new BlockCreator<Ins21c>() {
+        SPUT_WIDE_VOLATILE = new Opcode<>(0xeb, 4, "sput-wide-volatile", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SPUT_WIDE_VOLATILE);
             }
         });
         VALUES[0xeb] = SPUT_WIDE_VOLATILE;
-        IPUT_BYTE_QUICK = new Opcode<>(0xec, 4, "iput-byte-quick", new BlockCreator<Ins22cs>() {
+        IPUT_BYTE_QUICK = new Opcode<>(0xec, 4, "iput-byte-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IPUT_BYTE_QUICK);
@@ -1908,7 +1899,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
             }
         });
         VALUES[0xef] = EXECUTE_INLINE_RANGE;
-        INVOKE_DIRECT_EMPTY = new Opcode<>(0xf0, 6, "invoke-direct-empty", new BlockCreator<Ins35c>() {
+        INVOKE_DIRECT_EMPTY = new Opcode<>(0xf0, 6, "invoke-direct-empty", SectionType.METHOD_ID, new BlockCreator<Ins35c>() {
             @Override
             public Ins35c newInstance() {
                 return new Ins35c(INVOKE_DIRECT_EMPTY);
@@ -1922,91 +1913,91 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
             }
         });
         VALUES[0xf1] = RETURN_VOID_BARRIER;
-        IGET_QUICK = new Opcode<>(0xf2, 4, "iget-quick", new BlockCreator<Ins22cs>() {
+        IGET_QUICK = new Opcode<>(0xf2, 4, "iget-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IGET_QUICK);
             }
         });
         VALUES[0xf2] = IGET_QUICK;
-        IGET_WIDE_QUICK = new Opcode<>(0xf3, 4, "iget-wide-quick", new BlockCreator<Ins22cs>() {
+        IGET_WIDE_QUICK = new Opcode<>(0xf3, 4, "iget-wide-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IGET_WIDE_QUICK);
             }
         });
         VALUES[0xf3] = IGET_WIDE_QUICK;
-        IGET_OBJECT_QUICK = new Opcode<>(0xf4, 4, "iget-object-quick", new BlockCreator<Ins22cs>() {
+        IGET_OBJECT_QUICK = new Opcode<>(0xf4, 4, "iget-object-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IGET_OBJECT_QUICK);
             }
         });
         VALUES[0xf4] = IGET_OBJECT_QUICK;
-        IPUT_QUICK = new Opcode<>(0xf5, 4, "iput-quick", new BlockCreator<Ins22cs>() {
+        IPUT_QUICK = new Opcode<>(0xf5, 4, "iput-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IPUT_QUICK);
             }
         });
         VALUES[0xf5] = IPUT_QUICK;
-        IPUT_WIDE_QUICK = new Opcode<>(0xf6, 4, "iput-wide-quick", new BlockCreator<Ins22cs>() {
+        IPUT_WIDE_QUICK = new Opcode<>(0xf6, 4, "iput-wide-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IPUT_WIDE_QUICK);
             }
         });
         VALUES[0xf6] = IPUT_WIDE_QUICK;
-        IPUT_OBJECT_QUICK = new Opcode<>(0xf7, 4, "iput-object-quick", new BlockCreator<Ins22cs>() {
+        IPUT_OBJECT_QUICK = new Opcode<>(0xf7, 4, "iput-object-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IPUT_OBJECT_QUICK);
             }
         });
         VALUES[0xf7] = IPUT_OBJECT_QUICK;
-        INVOKE_VIRTUAL_QUICK = new Opcode<>(0xf8, 6, "invoke-virtual-quick", new BlockCreator<Ins35ms>() {
+        INVOKE_VIRTUAL_QUICK = new Opcode<>(0xf8, 6, "invoke-virtual-quick", SectionType.METHOD_ID, new BlockCreator<Ins35ms>() {
             @Override
             public Ins35ms newInstance() {
                 return new Ins35ms(INVOKE_VIRTUAL_QUICK);
             }
         });
         VALUES[0xf8] = INVOKE_VIRTUAL_QUICK;
-        INVOKE_VIRTUAL_QUICK_RANGE = new Opcode<>(0xf9, 6, "invoke-virtual-quick/range", new BlockCreator<Ins3rms>() {
+        INVOKE_VIRTUAL_QUICK_RANGE = new Opcode<>(0xf9, 6, "invoke-virtual-quick/range", SectionType.METHOD_ID, new BlockCreator<Ins3rms>() {
             @Override
             public Ins3rms newInstance() {
                 return new Ins3rms(INVOKE_VIRTUAL_QUICK_RANGE);
             }
         });
         VALUES[0xf9] = INVOKE_VIRTUAL_QUICK_RANGE;
-        INVOKE_SUPER_QUICK = new Opcode<>(0xfa, 6, "invoke-super-quick", new BlockCreator<Ins35ms>() {
+        INVOKE_SUPER_QUICK = new Opcode<>(0xfa, 6, "invoke-super-quick", SectionType.METHOD_ID, new BlockCreator<Ins35ms>() {
             @Override
             public Ins35ms newInstance() {
                 return new Ins35ms(INVOKE_SUPER_QUICK);
             }
         });
         VALUES[0xfa] = INVOKE_SUPER_QUICK;
-        INVOKE_SUPER_QUICK_RANGE = new Opcode<>(0xfb, 6, "invoke-super-quick/range", new BlockCreator<Ins3rms>() {
+        INVOKE_SUPER_QUICK_RANGE = new Opcode<>(0xfb, 6, "invoke-super-quick/range", SectionType.METHOD_ID, new BlockCreator<Ins3rms>() {
             @Override
             public Ins3rms newInstance() {
                 return new Ins3rms(INVOKE_SUPER_QUICK_RANGE);
             }
         });
         VALUES[0xfb] = INVOKE_SUPER_QUICK_RANGE;
-        IPUT_OBJECT_VOLATILE = new Opcode<>(0xfc, 4, "iput-object-volatile", new BlockCreator<Ins22c>() {
+        IPUT_OBJECT_VOLATILE = new Opcode<>(0xfc, 4, "iput-object-volatile", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
             @Override
             public Ins22c newInstance() {
                 return new Ins22c(IPUT_OBJECT_VOLATILE);
             }
         });
         VALUES[0xfc] = IPUT_OBJECT_VOLATILE;
-        SGET_OBJECT_VOLATILE = new Opcode<>(0xfd, 4, "sget-object-volatile", new BlockCreator<Ins21c>() {
+        SGET_OBJECT_VOLATILE = new Opcode<>(0xfd, 4, "sget-object-volatile", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SGET_OBJECT_VOLATILE);
             }
         });
         VALUES[0xfd] = SGET_OBJECT_VOLATILE;
-        SPUT_OBJECT_VOLATILE = new Opcode<>(0xfe, 4, "sput-object-volatile", new BlockCreator<Ins21c>() {
+        SPUT_OBJECT_VOLATILE = new Opcode<>(0xfe, 4, "sput-object-volatile", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(SPUT_OBJECT_VOLATILE);
@@ -2024,83 +2015,83 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
 
         PACKED_SWITCH_PAYLOAD = new Opcode<>(0x100, -1, "packed-switch", InsPackedSwitchData::new);
         PAYLOADS[0] = PACKED_SWITCH_PAYLOAD;
-        SPARSE_SWITCH_PAYLOAD = new Opcode<>(0x200, -1, "sparse-switch-payload", InsSparse::new);
+        SPARSE_SWITCH_PAYLOAD = new Opcode<>(0x200, -1, "sparse-switch-payload", InsSparseSwitchData::new);
         PAYLOADS[1] = SPARSE_SWITCH_PAYLOAD;
         ARRAY_PAYLOAD = new Opcode<>(0x300, -1, "array-data", InsArray::new);
         PAYLOADS[2] = ARRAY_PAYLOAD;
 
 
-        IPUT_BOOLEAN_QUICK = new Opcode<>(0xeb, 4, "iput-boolean-quick", new BlockCreator<Ins22cs>() {
+        IPUT_BOOLEAN_QUICK = new Opcode<>(0xeb, 4, "iput-boolean-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IPUT_BOOLEAN_QUICK);
             }
         });
         VALUES_2[0] = IPUT_BOOLEAN_QUICK;
-        IPUT_CHAR_QUICK = new Opcode<>(0xed, 4, "iput-char-quick", new BlockCreator<Ins22cs>() {
+        IPUT_CHAR_QUICK = new Opcode<>(0xed, 4, "iput-char-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IPUT_CHAR_QUICK);
             }
         });
         VALUES_2[1] = IPUT_CHAR_QUICK;
-        IPUT_SHORT_QUICK = new Opcode<>(0xee, 4, "iput-short-quick", new BlockCreator<Ins22cs>() {
+        IPUT_SHORT_QUICK = new Opcode<>(0xee, 4, "iput-short-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IPUT_SHORT_QUICK);
             }
         });
         VALUES_2[2] = IPUT_SHORT_QUICK;
-        IGET_BOOLEAN_QUICK = new Opcode<>(0xef, 4, "iget-boolean-quick", new BlockCreator<Ins22cs>() {
+        IGET_BOOLEAN_QUICK = new Opcode<>(0xef, 4, "iget-boolean-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IGET_BOOLEAN_QUICK);
             }
         });
         VALUES_2[3] = IGET_BOOLEAN_QUICK;
-        INVOKE_OBJECT_INIT_RANGE = new Opcode<>(0xf0, 6, "invoke-object-init/range", new BlockCreator<Ins3rc>() {
+        INVOKE_OBJECT_INIT_RANGE = new Opcode<>(0xf0, 6, "invoke-object-init/range", SectionType.METHOD_ID, new BlockCreator<Ins3rc>() {
             @Override
             public Ins3rc newInstance() {
                 return new Ins3rc(INVOKE_OBJECT_INIT_RANGE);
             }
         });
         VALUES_2[4] = INVOKE_OBJECT_INIT_RANGE;
-        IGET_CHAR_QUICK = new Opcode<>(0xf1, 4, "iget-char-quick", new BlockCreator<Ins22cs>() {
+        IGET_CHAR_QUICK = new Opcode<>(0xf1, 4, "iget-char-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IGET_CHAR_QUICK);
             }
         });
         VALUES_2[5] = IGET_CHAR_QUICK;
-        IGET_SHORT_QUICK = new Opcode<>(0xf2, 4, "iget-short-quick", new BlockCreator<Ins22cs>() {
+        IGET_SHORT_QUICK = new Opcode<>(0xf2, 4, "iget-short-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IGET_SHORT_QUICK);
             }
         });
         VALUES_2[6] = IGET_SHORT_QUICK;
-        INVOKE_POLYMORPHIC = new Opcode<>(0xfa, 8, "invoke-polymorphic", new BlockCreator<Ins45cc>() {
+        INVOKE_POLYMORPHIC = new Opcode<>(0xfa, 8, "invoke-polymorphic", SectionType.METHOD_ID, new BlockCreator<Ins45cc>() {
             @Override
             public Ins45cc newInstance() {
                 return new Ins45cc(INVOKE_POLYMORPHIC);
             }
         });
         VALUES_2[7] = INVOKE_POLYMORPHIC;
-        INVOKE_POLYMORPHIC_RANGE = new Opcode<>(0xfb, 8, "invoke-polymorphic/range", new BlockCreator<Ins4rcc>() {
+        INVOKE_POLYMORPHIC_RANGE = new Opcode<>(0xfb, 8, "invoke-polymorphic/range", SectionType.METHOD_ID, new BlockCreator<Ins4rcc>() {
             @Override
             public Ins4rcc newInstance() {
                 return new Ins4rcc(INVOKE_POLYMORPHIC_RANGE);
             }
         });
         VALUES_2[8] = INVOKE_POLYMORPHIC_RANGE;
-        INVOKE_CUSTOM = new Opcode<>(0xfc, 6, "invoke-custom", new BlockCreator<Ins35c>() {
+        INVOKE_CUSTOM = new Opcode<>(0xfc, 6, "invoke-custom", SectionType.METHOD_ID, new BlockCreator<Ins35c>() {
             @Override
             public Ins35c newInstance() {
                 return new Ins35c(INVOKE_CUSTOM);
             }
         });
         VALUES_2[9] = INVOKE_CUSTOM;
-        INVOKE_CUSTOM_RANGE = new Opcode<>(0xfd, 6, "invoke-custom/range", new BlockCreator<Ins3rc>() {
+        INVOKE_CUSTOM_RANGE = new Opcode<>(0xfd, 6, "invoke-custom/range", SectionType.METHOD_ID, new BlockCreator<Ins3rc>() {
             @Override
             public Ins3rc newInstance() {
                 return new Ins3rc(INVOKE_CUSTOM_RANGE);
@@ -2182,6 +2173,9 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
     public String getName() {
         return name;
     }
+    public boolean hasOutRegisters(){
+        return hasOutRegisters(this);
+    }
 
     public int getWidth() {
         return width;
@@ -2213,6 +2207,13 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
         return NAME_MAP.get(name);
     }
 
+    private static boolean hasOutRegisters(Opcode<?> opcode){
+        if(opcode.getSectionType() == SectionType.METHOD_ID){
+            return true;
+        }
+        return opcode == FILLED_NEW_ARRAY || opcode == FILLED_NEW_ARRAY_RANGE;
+    }
+
     public static Opcode<?> read(BlockReader reader) throws IOException {
         int value = reader.read();
         if(value == 0){
@@ -2223,4 +2224,52 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
         return valueOf(value);
     }
 
+    public static Opcode<?> parseSmali(SmaliReader parser) throws IOException {
+        parser.skipWhitespaces();
+        if(!isPrefix(parser.get())){
+            return null;
+        }
+        int i = parser.indexOf(' ');
+        i = i - parser.position();
+        String name = parser.readString(i);
+        return valueOf(name);
+    }
+    public static Opcode<?> parse(String line){
+        return parse(0, line);
+    }
+    public static Opcode<?> parse(int start, String smali){
+        int i1 = StringsUtil.skipWhitespace(start, smali);
+        if(i1 == smali.length()){
+            return null;
+        }
+        int i2 = smali.indexOf(' ', i1 + 1);
+        if(i2 < i1){
+            return null;
+        }
+        return valueOf(smali.substring(i1, i2));
+    }
+    public static boolean isPrefix(byte b) {
+        switch (b){
+            case 'a':
+            case 'c':
+            case 'd':
+            case 'e':
+            case 'f':
+            case 'g':
+            case 'i':
+            case 'l':
+            case 'm':
+            case 'n':
+            case 'o':
+            case 'p':
+            case 'r':
+            case 's':
+            case 't':
+            case 'u':
+            case 'x':
+                return true;
+            default:
+                return false;
+        }
+    }
 }
