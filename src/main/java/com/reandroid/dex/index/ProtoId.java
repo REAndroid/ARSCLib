@@ -18,6 +18,7 @@ package com.reandroid.dex.index;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.item.TypeList;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -28,17 +29,17 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
+public class ProtoId extends IdSectionEntry implements Comparable<ProtoId>, KeyItemCreate {
 
     private final StringReference shorty;
-    private final ItemIndexReference<TypeId> returnType;
+    private final ItemIdReference<TypeId> returnType;
     private final ItemOffsetReference<TypeList> parameters;
 
     public ProtoId() {
         super(SIZE);
 
-        this.shorty = new StringReference(this, 0, StringData.USAGE_SHORTY);
-        this.returnType = new ItemIndexReference<>(SectionType.TYPE_ID, this, 4);
+        this.shorty = new StringReference(this, 0, StringId.USAGE_SHORTY);
+        this.returnType = new ItemIdReference<>(SectionType.TYPE_ID, this, 4);
         this.parameters = new ItemOffsetReference<>(SectionType.TYPE_LIST, this, 8);
     }
 
@@ -103,6 +104,18 @@ public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
         }
         return null;
     }
+    public void removeParameter(int index){
+        TypeList typeList = getTypeList();
+        TypeList update = getSection(SectionType.TYPE_LIST).createItem();
+        int length = getParametersCount();
+        for(int i = 0; i < length; i++){
+            if(i == index){
+                continue;
+            }
+            update.add(typeList.getTypeId(i));
+        }
+        setParameters(update);
+    }
     public String[] getParameterNames(){
         TypeList typeList = getTypeList();
         if(typeList != null){
@@ -139,8 +152,8 @@ public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
     public StringData getShorty(){
         return shorty.getItem();
     }
-    public void setShorty(StringData stringData){
-        shorty.setItem(stringData);
+    public void setShorty(String shortyString){
+        shorty.setString(shortyString);
     }
 
     @Override
@@ -151,7 +164,7 @@ public class ProtoId extends IndexItemEntry implements Comparable<ProtoId> {
     }
     @Override
     void cacheItems(){
-        shorty.getItem();
+        shorty.cacheItem();
         returnType.getItem();
         parameters.getItem();
     }

@@ -27,7 +27,7 @@ import com.reandroid.utils.collection.EmptyIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class DebugInfo extends DataItemEntry {
+public class DebugInfo extends DataSectionEntry {
 
     private final Ule128Item lineStart;
     private final Ule128Item parameterCount;

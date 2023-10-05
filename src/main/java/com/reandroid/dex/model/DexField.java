@@ -23,6 +23,7 @@ import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValueBlock;
+import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
@@ -46,7 +47,7 @@ public class DexField extends DexDef {
         if(fieldId != null){
             return fieldId;
         }
-        fieldId = section.createIdItem();
+        fieldId = section.createItem();
         fieldId.setName(getName());
         fieldId.setClassType(getClassName());
         fieldId.setFieldType(getFieldType());
@@ -80,6 +81,9 @@ public class DexField extends DexDef {
             return new DexValue(dexValueBlock);
         }
         return null;
+    }
+    public<T1 extends DexValueBlock<?>> T1 getOrCreateInitialValue(DexValueType<T1> dexValueType) {
+        return getFieldDef().getOrCreateStaticValue(dexValueType);
     }
 
     @Override

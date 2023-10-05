@@ -17,7 +17,7 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.dex.writer.SmaliWriter;
 
-public class Ins23x extends Size4Ins {
+public class Ins23x extends Size4Ins implements RegistersSet {
 
     public Ins23x(Opcode<?> opcode) {
         super(opcode);
@@ -28,12 +28,19 @@ public class Ins23x extends Size4Ins {
         return 3;
     }
     @Override
+    public void setRegistersCount(int count) {
+    }
+    @Override
     public int getRegister(int index) {
         return getByteUnsigned(1 + index);
     }
     @Override
     public void setRegister(int index, int value) {
         setByte(1 + index, value);
+    }
+    @Override
+    public int getRegistersLimit(){
+        return 0xff;
     }
 
     @Override

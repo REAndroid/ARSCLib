@@ -15,16 +15,14 @@
  */
 package com.reandroid.dex.item;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockRefresh;
-import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.sections.SectionType;
 
 import java.io.IOException;
 
-public class OffsetUle128Item<T extends Block> extends Ule128Item implements BlockRefresh {
+public class OffsetUle128Item<T extends DataSectionEntry> extends Ule128Item implements BlockRefresh {
     private final SectionType<T> sectionType;
     private T item;
 
@@ -45,14 +43,13 @@ public class OffsetUle128Item<T extends Block> extends Ule128Item implements Blo
         set(index);
     }
     private void updateItem(){
-        item = getAt(sectionType, get());
+        item = get(sectionType, get());
     }
     @Override
     public void refresh() {
         T item = getItem();
         if(item != null){
-            OffsetSupplier supplier = (OffsetSupplier) item;
-            set(supplier.getOffsetReference().get());
+            set(item.getOffset());
         }
     }
     @Override

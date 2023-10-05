@@ -21,10 +21,10 @@ public class Size4Ins extends SizeXIns {
     }
     @Override
     public int getData(){
-        return getValueBytes().getShortUnsigned(2);
+        return getShortUnsigned(2);
     }
     @Override
     public void setData(int data){
-        getValueBytes().putShort(2, data);
+        setShort(2, data);
     }
 }

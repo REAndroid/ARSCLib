@@ -23,42 +23,48 @@ import com.reandroid.utils.collection.SizedSupplier;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class Registers implements SizedSupplier<Reg>, Iterable<Reg>, SmaliFormat {
+public class RegistersIterator implements SizedSupplier<Reg>, Iterable<Reg>, SmaliFormat {
 
-    private final RegisterFactory factory;
-    private final RegisterNumber registerNumber;
+    private final RegistersTable registersTable;
+    private final RegistersSet registersSet;
 
-    public Registers(RegisterFactory factory, RegisterNumber registerNumber){
-        this.factory = factory;
-        this.registerNumber = registerNumber;
+    public RegistersIterator(RegistersTable registersTable, RegistersSet registersSet){
+        this.registersTable = registersTable;
+        this.registersSet = registersSet;
     }
 
+    @Override
     public Reg get(int index) {
-        return new Reg(getFactory(), getRegisterNumber(), index);
+        return new Reg(getRegistersTable(), getRegistersSet(), index);
     }
     @Override
     public int size() {
-        return getRegisterNumber().getRegistersCount();
+        return getRegistersSet().getRegistersCount();
     }
     @Override
     public Iterator<Reg> iterator() {
         return new IndexIterator<>(this);
     }
-    public RegisterNumber getRegisterNumber() {
-        return registerNumber;
+    public RegistersSet getRegistersSet() {
+        return registersSet;
     }
-    public RegisterFactory getFactory() {
-        return factory;
+    public RegistersTable getRegistersTable() {
+        return registersTable;
     }
-    String getSeparator() {
-        return registerNumber.getRegisterSeparator();
-    }
-
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
         int size = size();
-        String separator = getSeparator();
+        if(size == 0){
+            return;
+        }
+        if(getRegistersSet().isRegistersRange()){
+            get(0).append(writer);
+            writer.append(" .. ");
+            get(size - 1).append(writer);
+            return;
+        }
+        String separator = ", ";
         for(int i = 0; i < size; i++){
             if(i != 0){
                 writer.append(separator);
@@ -70,8 +76,8 @@ public class Registers implements SizedSupplier<Reg>, Iterable<Reg>, SmaliFormat
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
+        String separator = ", ";
         int size = size();
-        String separator = getSeparator();
         for(int i = 0; i < size; i++){
             if(i != 0){
                 builder.append(separator);

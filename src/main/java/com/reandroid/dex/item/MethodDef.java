@@ -19,14 +19,17 @@ import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.index.*;
 import com.reandroid.dex.ins.Ins;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -39,6 +42,9 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         addChild(2, codeOffset);
     }
 
+    public boolean isConstructor(){
+        return AccessFlag.CONSTRUCTOR.isSet(getAccessFlagsValue());
+    }
     @Override
     public void visitIntegers(IntegerVisitor visitor) {
         CodeItem codeItem = getCodeItem();
@@ -91,6 +97,38 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         }
         return null;
     }
+    public int getParametersCount(){
+        ProtoId protoId = getProtoId();
+        if(protoId != null){
+            return protoId.getParametersCount();
+        }
+        return 0;
+    }
+    public Parameter getParameter(int index){
+        if(index < 0 || index >= getParametersCount()){
+            return null;
+        }
+        return new Parameter(this, index);
+    }
+    public void removeParameter(int index){
+        ProtoId protoId = getProtoId();
+        if(protoId == null){
+            return;
+        }
+        Parameter parameter = getParameter(index);
+        if(parameter == null){
+            return;
+        }
+        parameter.clearAnnotations();
+        protoId.removeParameter(index);
+    }
+    public ProtoId getProtoId(){
+        MethodId methodId = getMethodId();
+        if(methodId != null){
+            return methodId.getProto();
+        }
+        return null;
+    }
     public MethodId getMethodId(){
         return getItem();
     }
@@ -103,6 +141,9 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         return EmptyIterator.of();
     }
 
+    public InstructionList getOrCreateInstructionList(){
+        return getOrCreateCodeItem().getInstructionList();
+    }
     public InstructionList getInstructionList(){
         CodeItem codeItem = getCodeItem();
         if(codeItem != null){
@@ -113,9 +154,16 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
     public CodeItem getOrCreateCodeItem(){
         CodeItem codeItem = codeOffset.getItem();
         if(codeItem == null){
-            codeItem = getSection(SectionType.CODE).createOffsetItem();
+            codeItem = getSection(SectionType.CODE).createItem();
             codeOffset.setItem(codeItem);
             codeItem.setMethodDef(this);
+            int parametersCount = getParametersCount();
+            int registers = parametersCount;
+            if(!isStatic()){
+                registers = registers + 1;
+            }
+            codeItem.setRegistersCount(registers);
+            codeItem.setParameterRegistersCount(parametersCount);
         }
         return codeItem;
     }
@@ -126,20 +174,20 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         }
         return codeItem;
     }
-    @Override
-    public Iterator<AnnotationSet> getAnnotations(){
+
+    public Iterator<AnnotationGroup> getParameterAnnotations(){
         AnnotationsDirectory directory = getAnnotationsDirectory();
-        if(directory == null){
-            return EmptyIterator.of();
+        if(directory != null){
+            return directory.getParameterAnnotation(this);
         }
-        return directory.getMethodAnnotation(getIdIndex());
+        return EmptyIterator.of();
     }
     public Iterator<AnnotationSet> getParameterAnnotations(int parameterIndex){
         AnnotationsDirectory directory = getAnnotationsDirectory();
         if(directory == null){
             return EmptyIterator.of();
         }
-        return directory.getParameterAnnotation(getIdIndex(), parameterIndex);
+        return directory.getParameterAnnotation(getDefinitionIndex(), parameterIndex);
     }
 
     @Override
@@ -223,6 +271,152 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         }
         return ".method " + AccessFlag.formatForMethod(getAccessFlagsValue())
                 + " " + getRelativeIdValue();
+    }
+
+    public static class Parameter implements DefIndex, SmaliFormat {
+
+        private final MethodDef methodDef;
+        private final int index;
+
+        public Parameter(MethodDef methodDef, int index){
+            this.methodDef = methodDef;
+            this.index = index;
+        }
+        public void clearAnnotations(){
+            AnnotationsDirectory directory = this.methodDef.getUniqueAnnotationsDirectory();
+            if(directory == null || !hasAnnotations()){
+                return;
+            }
+            Iterator<DirectoryEntry<MethodDef, AnnotationGroup>> iterator =
+                    directory.getParameterEntries(this.methodDef);
+            int index = getDefinitionIndex();
+            while (iterator.hasNext()){
+                DirectoryEntry<MethodDef, AnnotationGroup> entry = iterator.next();
+                AnnotationGroup group = entry.getValue();
+                if(group == null || group.getItem(index) == null){
+                    continue;
+                }
+                AnnotationGroup update = group.getSection(SectionType.ANNOTATION_GROUP)
+                        .createItem();
+                entry.setValue(update);
+                update.put(index, 0);
+                update.refresh();
+            }
+        }
+        public boolean hasAnnotations(){
+            return getAnnotations().hasNext();
+        }
+        public Iterator<AnnotationSet> getAnnotations(){
+            AnnotationsDirectory directory = this.methodDef.getAnnotationsDirectory();
+            if(directory != null){
+                return directory.getParameterAnnotation(this.methodDef, getDefinitionIndex());
+            }
+            return EmptyIterator.of();
+        }
+        public TypeId getTypeId() {
+            ProtoId protoId = this.methodDef.getProtoId();
+            if(protoId != null){
+                return protoId.getParameter(getDefinitionIndex());
+            }
+            return null;
+        }
+        @Override
+        public int getDefinitionIndex() {
+            return index;
+        }
+        @Override
+        public Key getKey() {
+            TypeId typeId = getTypeId();
+            if(typeId != null){
+                return typeId.getKey();
+            }
+            return null;
+        }
+        @Override
+        public void append(SmaliWriter writer) throws IOException {
+            TypeId typeId = getTypeId();
+            if(typeId == null){
+                return;
+            }
+            Iterator<AnnotationSet> iterator = getAnnotations();
+            boolean appendOnce = false;
+            while (iterator.hasNext()){
+                if(!appendOnce){
+                    int param = this.methodDef.isStatic() ? 0 : 1;
+                    writer.newLine();
+                    writer.append(".param p");
+                    writer.append(getDefinitionIndex() + param);
+                    writer.appendComment(typeId.getName());
+                    writer.indentPlus();
+                }
+                iterator.next().append(writer);
+                appendOnce = true;
+            }
+            if(appendOnce){
+                writer.indentMinus();
+                writer.newLine();
+                writer.append(".end param");
+            }
+        }
+        private String getDebugString() throws IOException {
+            StringWriter writer = new StringWriter();
+            SmaliWriter smaliWriter = new SmaliWriter(writer);
+            TypeId typeId = getTypeId();
+            int param = this.methodDef.isStatic() ? 0 : 1;
+            param += getDefinitionIndex();
+            smaliWriter.newLine();
+            smaliWriter.append("p");
+            smaliWriter.append(param);
+            smaliWriter.append(", ");
+            String typeName = null;
+            if(typeId != null){
+                typeName = typeId.getName();
+            }
+            if(typeName != null){
+                smaliWriter.append(typeName);
+            }else {
+                smaliWriter.append("null");
+            }
+            Iterator<AnnotationSet> iterator = getAnnotations();
+            boolean appendOnce = false;
+            while (iterator.hasNext()){
+                if(!appendOnce){
+                    smaliWriter.newLine();
+                    smaliWriter.indentPlus();
+                    appendOnce = true;
+                }
+                iterator.next().append(smaliWriter);
+            }
+            if(appendOnce){
+                smaliWriter.indentMinus();
+            }
+            smaliWriter.close();
+            return writer.toString();
+        }
+        @Override
+        public int hashCode() {
+            return methodDef.hashCode() * 31 + index;
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+            Parameter parameter = (Parameter) obj;
+            return index == parameter.index && this.methodDef == parameter.methodDef;
+        }
+
+        @Override
+        public String toString() {
+            try {
+                return getDebugString();
+            } catch (IOException exception) {
+                return exception.toString();
+            }
+        }
     }
 
 }

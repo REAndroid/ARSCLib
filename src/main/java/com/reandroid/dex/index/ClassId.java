@@ -15,10 +15,11 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.item.*;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
@@ -29,11 +30,11 @@ import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
-public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
+public class ClassId extends IdSectionEntry implements Comparable<ClassId>, KeyItemCreate {
 
-    private final ItemIndexReference<TypeId> classType;
+    private final ItemIdReference<TypeId> classType;
     private final IndirectInteger accessFlagValue;
-    private final ItemIndexReference<TypeId> superClass;
+    private final ItemIdReference<TypeId> superClass;
     private final ItemOffsetReference<TypeList> interfaces;
     private final StringReference sourceFile;
     private final ItemOffsetReference<AnnotationsDirectory> annotationsDirectory;
@@ -44,16 +45,21 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
         super(SIZE);
         int offset = -4;
         
-        this.classType = new ItemIndexReference<>(SectionType.TYPE_ID, this, offset += 4);
+        this.classType = new ItemIdReference<>(SectionType.TYPE_ID, this, offset += 4, USAGE_DEFINITION);
         this.accessFlagValue = new IndirectInteger(this, offset += 4);
-        this.superClass = new ItemIndexReference<>(SectionType.TYPE_ID, this, offset += 4);
+        this.superClass = new ItemIdReference<>(SectionType.TYPE_ID, this, offset += 4, USAGE_SUPER_CLASS);
         this.interfaces = new ItemOffsetReference<>(SectionType.TYPE_LIST, this, offset += 4);
-        this.sourceFile = new StringReference(this, offset += 4, StringData.USAGE_SOURCE);
+        this.sourceFile = new StringReference(this, offset += 4, USAGE_SOURCE);
         this.annotationsDirectory = new ItemOffsetReference<>(SectionType.ANNOTATIONS_DIRECTORY, this, offset += 4);
         this.classData = new ItemOffsetReference<>(SectionType.CLASS_DATA, this, offset += 4);
         this.staticValues = new ItemOffsetReference<>(SectionType.ENCODED_ARRAY, this, offset += 4);
     }
 
+    public void ensureAllUnique(){
+        annotationsDirectory.getUniqueItem(this);
+        classData.getUniqueItem(this);
+        staticValues.getUniqueItem(this);
+    }
     @Override
     public TypeKey getKey(){
         String name = getName();
@@ -61,6 +67,10 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
             return new TypeKey(name);
         }
         return null;
+    }
+    @Override
+    public void setKey(Key key){
+        this.classType.setItem(key);
     }
     public String getName(){
         TypeId typeId = getClassType();
@@ -74,10 +84,7 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
         return classType.getItem();
     }
     public void setClassType(String typeName){
-        setClassType(new TypeKey(typeName));
-    }
-    public void setClassType(TypeKey typeKey){
-        this.classType.setItem(typeKey);
+        setKey(new TypeKey(typeName));
     }
     public void setClassType(TypeId typeId){
         this.classType.setItem(typeId);
@@ -106,9 +113,6 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
     public StringData getSourceFile(){
         return sourceFile.getItem();
     }
-    public void setSourceFile(StringData stringData){
-        this.sourceFile.setItem(stringData);
-    }
     public void setSourceFile(String sourceFile){
         this.sourceFile.setString(sourceFile);
     }
@@ -128,6 +132,9 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
     public void setInterfaces(TypeList interfaces){
         this.interfaces.setItem(interfaces);
     }
+    public AnnotationSet getOrCreateClassAnnotations(){
+        return getOrCreateAnnotationsDirectory().getOrCreateClassAnnotations();
+    }
     public AnnotationSet getClassAnnotations(){
         AnnotationsDirectory annotationsDirectory = getAnnotationsDirectory();
         if(annotationsDirectory != null){
@@ -141,6 +148,14 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
             annotationsDirectory.setClassAnnotations(annotationSet);
         }
     }
+    public AnnotationsDirectory getOrCreateAnnotationsDirectory(){
+        AnnotationsDirectory directory = annotationsDirectory.getOrCreate();
+        directory.addUsage(this);
+        return directory;
+    }
+    public AnnotationsDirectory getUniqueAnnotationsDirectory(){
+        return annotationsDirectory.getUniqueItem(this);
+    }
     public AnnotationsDirectory getAnnotationsDirectory(){
         return annotationsDirectory.getItem();
     }
@@ -153,7 +168,7 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
             return classData;
         }
         Section<ClassData> section = getSection(SectionType.CLASS_DATA);
-        classData = section.createOffsetItem();
+        classData = section.createItem();
         setClassData(classData);
         return classData;
     }
@@ -168,6 +183,9 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
     }
     public EncodedArray getOrCreateStaticValues(){
         return staticValues.getOrCreate();
+    }
+    public EncodedArray getUniqueStaticValues(){
+        return staticValues.getUniqueItem(this);
     }
     public DexValueBlock<?> getStaticValue(int i){
         EncodedArray encodedArray = getStaticValues();
@@ -195,14 +213,16 @@ public class ClassId extends IndexItemEntry implements Comparable<ClassId>{
     }
     @Override
     void cacheItems(){
+
         this.classType.getItem();
         this.superClass.getItem();
         this.interfaces.getItem();
-        this.sourceFile.getItem();
-        this.annotationsDirectory.getItem();
-        this.classData.getItem();
-        this.staticValues.getItem();
+        this.sourceFile.cacheItem();
+        this.annotationsDirectory.addUsage(this);
+        this.classData.addUsage(this);
+        this.staticValues.addUsage(this);
     }
+
 
     @Override
     public void append(SmaliWriter writer) throws IOException {

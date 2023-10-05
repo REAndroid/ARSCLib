@@ -25,14 +25,18 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
 
-public class ItemIndexReference<T extends IndexItemEntry> extends IndirectItem<DexBlockItem>
+public class ItemIdReference<T extends IdSectionEntry> extends IndirectItem<DexBlockItem>
         implements IntegerReference, BlockRefresh, KeyItem {
     private final SectionType<T> sectionType;
+    private final int mUsage;
     private T item;
-    public ItemIndexReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset) {
+    public ItemIdReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset, int usage) {
         super(blockItem, offset);
         this.sectionType = sectionType;
-        set(-1);
+        this.mUsage = usage;
+    }
+    public ItemIdReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset) {
+        this(sectionType, blockItem, offset, IdSectionEntry.USAGE_NONE);
     }
     @Override
     public Key getKey(){
@@ -45,9 +49,18 @@ public class ItemIndexReference<T extends IndexItemEntry> extends IndirectItem<D
     public T getItem() {
         int i = get();
         if(item == null){
-            item = getBlockItem().get(sectionType, i);
+            cacheItem();
         }
         return item;
+    }
+    private void cacheItem(){
+        this.item = getBlockItem().get(sectionType, get());
+        updateItemUsage();
+    }
+    private void updateItemUsage(){
+        if(this.mUsage != IdSectionEntry.USAGE_NONE && this.item != null){
+            this.item.addUsageType(this.mUsage);
+        }
     }
     public void setItem(T item) {
         if(item == this.item){
@@ -61,6 +74,7 @@ public class ItemIndexReference<T extends IndexItemEntry> extends IndirectItem<D
         }
         set(value);
         this.item = item;
+        updateItemUsage();
     }
     public void setItem(Key item){
         DexIdPool<T> pool = getBlockItem().getPool(sectionType);
@@ -70,7 +84,6 @@ public class ItemIndexReference<T extends IndexItemEntry> extends IndirectItem<D
     @Override
     public void set(int value) {
         Block.putInteger(getBytesInternal(), getOffset(), value);
-        item = null;
     }
     @Override
     public int get() {
@@ -81,8 +94,9 @@ public class ItemIndexReference<T extends IndexItemEntry> extends IndirectItem<D
     public void refresh() {
         T item = getItem();
         if(item != null){
-            Block.putInteger(getBytesInternal(), getOffset(), item.getIndex());
+            set(item.getIndex());
         }
+        updateItemUsage();
     }
 
     @Override

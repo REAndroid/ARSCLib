@@ -18,12 +18,14 @@ package com.reandroid.dex.item;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.dex.index.IndexItemEntry;
+import com.reandroid.dex.index.IdSectionEntry;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.pool.DexIdPool;
 import com.reandroid.dex.sections.SectionType;
 
 import java.io.IOException;
 
-public class SectionUle128Item<T extends IndexItemEntry> extends Ule128Item implements BlockRefresh {
+public class SectionUle128Item<T extends IdSectionEntry> extends Ule128Item implements BlockRefresh {
     private final SectionType<T> sectionType;
     private T item;
 
@@ -46,6 +48,11 @@ public class SectionUle128Item<T extends IndexItemEntry> extends Ule128Item impl
         }
         this.item = item;
         set(index);
+    }
+
+    public void setItem(Key item){
+        DexIdPool<T> pool = getPool(sectionType);
+        setItem(pool.getOrCreate(item));
     }
 
     private void updateItem(){

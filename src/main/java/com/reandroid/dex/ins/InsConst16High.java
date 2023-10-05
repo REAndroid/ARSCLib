@@ -19,7 +19,7 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
 
-public class InsConst16High extends Ins21ih implements IntegerReference, VisitableInteger {
+public class InsConst16High extends Ins21ih implements RegistersSet, IntegerReference, VisitableInteger {
     public InsConst16High() {
         super(Opcode.CONST_HIGH16);
     }

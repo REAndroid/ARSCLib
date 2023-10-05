@@ -20,10 +20,10 @@ import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.item.IndirectItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexBlockItem;
-import com.reandroid.dex.item.DataItemEntry;
+import com.reandroid.dex.item.DataSectionEntry;
 import com.reandroid.dex.sections.SectionType;
 
-public class ItemOffsetReference<T extends DataItemEntry> extends IndirectItem<DexBlockItem>
+public class ItemOffsetReference<T extends DataSectionEntry> extends IndirectItem<DexBlockItem>
         implements IntegerReference, BlockRefresh {
 
     private final SectionType<T> sectionType;
@@ -39,16 +39,50 @@ public class ItemOffsetReference<T extends DataItemEntry> extends IndirectItem<D
         if(item != null) {
             return item;
         }
-        item = getBlockItem().createOffsetItem(sectionType);
+        item = getBlockItem().createItem(sectionType);
         setItem(item);
         return item;
     }
     public T getItem() {
         int i = get();
         if(item == null && i != 0){
-            item = getBlockItem().getAt(sectionType, i);
+            item = getBlockItem().get(sectionType, i);
         }
         return item;
+    }
+    public T getUniqueItem(ClassId classId) {
+        T item = getItem();
+        if(item == null){
+            return null;
+        }
+        if(item.isSharedUsage()){
+            item = createNewCopy();
+            item.addUsage(classId);
+        }
+        return item;
+    }
+    public T getOrCreateUniqueItem(ClassId classId) {
+        T item = getUniqueItem(classId);
+        if(item != null) {
+            return item;
+        }
+        item = getBlockItem().createItem(sectionType);
+        setItem(item);
+        addUsage(classId);
+        return item;
+    }
+    public boolean isSharedUsage(){
+        T item = getItem();
+        if(item != null){
+            return item.isSharedUsage();
+        }
+        return false;
+    }
+    public void addUsage(ClassId classId){
+        T item = getItem();
+        if(item != null){
+            item.addUsage(classId);
+        }
     }
 
     public void setItem(T item) {
@@ -92,6 +126,18 @@ public class ItemOffsetReference<T extends DataItemEntry> extends IndirectItem<D
         Block.putInteger(getBytesInternal(), getOffset(), value);
     }
 
+    private T createNewCopy() {
+        T itemNew = getBlockItem().createItem(sectionType);
+        copyToIfPresent(itemNew);
+        setItem(itemNew);
+        return itemNew;
+    }
+    private void copyToIfPresent(T itemNew){
+        T item = this.getItem();
+        if(item != null){
+            itemNew.copyFrom(item);
+        }
+    }
     @Override
     public String toString() {
         if(item != null){

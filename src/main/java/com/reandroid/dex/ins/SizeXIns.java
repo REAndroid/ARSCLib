@@ -17,20 +17,20 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
-import com.reandroid.dex.index.IndexItemEntry;
-import com.reandroid.dex.index.StringId;
+import com.reandroid.dex.index.IdSectionEntry;
 import com.reandroid.dex.item.InstructionList;
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class SizeXIns extends Ins implements RegisterNumber{
+public class SizeXIns extends Ins {
 
     private final ByteArray valueBytes;
-    private IndexItemEntry mSectionItem;
+    private IdSectionEntry mSectionItem;
 
     public SizeXIns(Opcode<?> opcode) {
         super(opcode);
@@ -40,60 +40,71 @@ public class SizeXIns extends Ins implements RegisterNumber{
         valueBytes.putShort(0, opcode.getValue());
     }
 
-    public int getInteger(int offset){
-        return valueBytes.getInteger(offset);
-    }
-    public void setInteger(int offset, int value){
-        valueBytes.putInteger(offset, value);
-    }
-    public int getShortUnsigned(int offset){
-        return valueBytes.getShortUnsigned(offset);
+    public SectionType<? extends IdSectionEntry> getSectionType(){
+        return getOpcode().getSectionType();
     }
 
-    public int getByte(int offset){
-        return valueBytes.get(offset);
+
+    long getLong(){
+        return getLong(valueBytes.getBytes(), 2);
     }
-    public void setByte(int offset, int value){
-        valueBytes.put(offset, (byte) value);
+    void setLong(long value){
+        putLong(valueBytes.getBytes(), 2, value);
     }
-    public int getByteUnsigned(int offset){
-        return valueBytes.get(offset) & 0xff;
+
+    int getInteger(){
+        return valueBytes.getInteger(2);
     }
-    public int getShort(int offset){
+    void setInteger(int value){
+        valueBytes.putInteger(2, value);
+    }
+
+    int getShortUnsigned(int offset){
         return valueBytes.getShortUnsigned(offset);
     }
-    public void setShort(int offset, int value){
+    int getShortSigned(){
+        return valueBytes.getShort(2);
+    }
+    void setShort(int offset, int value){
+        if(value != (value & 0xffff) && (value & 0xffff0000) != 0xffff0000){
+           throw new InstructionException("Short value out of range "
+                    + HexUtil.toHex(value, 4) + " > 0xffff", this);
+        }
         valueBytes.putShort(offset, value);
     }
-    public int getNibble(int index){
-        int i = getByteUnsigned(index / 2);
-        index = index % 2;
-        return (i >> index * 4) & 0x0f;
+
+    int getByteSigned(){
+        return valueBytes.get(1);
     }
-    public void setNibble(int index, int value){
+    void setByte(int offset, int value){
+        if(value != (value & 0xff) && (value & 0xffffff00) != 0xffffff00){
+            throw new InstructionException("Byte value out of range "
+                    + HexUtil.toHex(value, 2) + "> 0xff", this);
+        }
+        valueBytes.put(offset, (byte) value);
+    }
+    int getByteUnsigned(int offset){
+        return valueBytes.getByteUnsigned(offset);
+    }
+    int getNibble(int index){
+        int i = valueBytes.getByteUnsigned(index / 2);
+        int shift = (index % 2) * 4;
+        return (i >> shift) & 0x0f;
+    }
+    void setNibble(int index, int value){
+        if((value & 0x0f) != value){
+            throw new InstructionException("Nibble value out of range "
+                    + HexUtil.toHex(value, 1) + " > 0xf", this);
+        }
         int i = index / 2;
-        int half = getByteUnsigned(i);
-        int shift1 = ((index) % 2) * 4;
-        int shift2 = ((index + 1) % 2) * 4;
-        int result = (value << shift1) | ((half >> shift2) & 0x0f);
-        setByte(i, result);
-    }
-
-    public ByteArray getValueBytes() {
-        return valueBytes;
-    }
-
-    @Override
-    public int getRegistersCount() {
-        return 1;
-    }
-    @Override
-    public int getRegister(int index) {
-        return getByteUnsigned(1);
-    }
-    @Override
-    public void setRegister(int index, int value) {
-        setByte(1, value);
+        int half = valueBytes.getByteUnsigned(i);
+        int shift = (index % 2) * 4;
+        int mask = 0x0f;
+        if(shift == 0){
+            mask = 0xf0;
+        }
+        int result = (value << shift) | (half & mask);
+        valueBytes.put(i, (byte) result);
     }
 
     @Override
@@ -106,43 +117,64 @@ public class SizeXIns extends Ins implements RegisterNumber{
         cacheSectionItem();
     }
     void cacheSectionItem(){
-        SectionType<? extends IndexItemEntry> sectionType = getOpcode().getSectionType();
+        SectionType<? extends IdSectionEntry> sectionType = getSectionType();
         if(sectionType == null){
             return;
         }
         int data = getData();
         this.mSectionItem = get(sectionType, data);
-        if(mSectionItem instanceof StringId){
-            ((StringId) mSectionItem).addStringUsage(StringData.USAGE_INSTRUCTION);
+        if(this.mSectionItem != null){
+            this.mSectionItem.addUsageType(IdSectionEntry.USAGE_INSTRUCTION);
         }
     }
-    public IndexItemEntry getSectionItem() {
+    public IdSectionEntry getSectionItem() {
         return mSectionItem;
     }
 
+    public void setSectionItem(Key key){
+        Section<? extends IdSectionEntry> section = getSection(getSectionType());
+        IdSectionEntry item = section.getOrCreate(key);
+        setSectionItem(item);
+    }
+    public void setSectionItem(IdSectionEntry item){
+        this.mSectionItem = item;
+        setData(item.getIndex());
+    }
+    public void setSectionIndex(int index){
+        setData(index);
+        cacheSectionItem();
+    }
+
     public int getData(){
-        return getValueBytes().getShortUnsigned(2);
+        return getShortUnsigned(2);
     }
     public void setData(int data){
-        getValueBytes().putShort(2, data);
+        setShort(2, data);
     }
 
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
-        IndexItemEntry itemId = this.mSectionItem;
+        updateSectionItem();
+    }
+    void updateSectionItem(){
+        IdSectionEntry itemId = this.mSectionItem;
         if(itemId != null){
             setData(itemId.getIndex());
+            itemId.addUsageType(IdSectionEntry.USAGE_INSTRUCTION);
         }
     }
 
-    public Registers getRegisters() {
-        return new Registers(getRegisterFactory(), this);
+    public RegistersIterator getRegistersIterator() {
+        if(this instanceof RegistersSet){
+            return new RegistersIterator(getRegistersTable(), (RegistersSet) this);
+        }
+        return null;
     }
-    private RegisterFactory getRegisterFactory() {
+    private RegistersTable getRegistersTable() {
         InstructionList instructionList = getParentInstance(InstructionList.class);
         if(instructionList != null){
-            return instructionList.getRegisterFactory();
+            return instructionList.getCodeItem();
         }
         return null;
     }
@@ -152,20 +184,27 @@ public class SizeXIns extends Ins implements RegisterNumber{
         writer.newLine();
         writer.append(opcode.getName());
         writer.append(' ');
-        boolean method = opcode.getSectionType() == SectionType.METHOD_ID;
-        if(method){
+        appendRegisters(writer);
+        appendCodeData(writer);
+    }
+    void appendRegisters(SmaliWriter writer) throws IOException {
+        RegistersIterator iterator = getRegistersIterator();
+        if(iterator == null){
+            return;
+        }
+        boolean out = getOpcode().hasOutRegisters();
+        if(out){
             writer.append('{');
         }
-        getRegisters().append(writer);
-        if(method){
+        iterator.append(writer);
+        if(out){
             writer.append('}');
         }
-        appendCodeData(writer);
     }
     void appendCodeData(SmaliWriter writer) throws IOException {
         writer.append(", ");
         int data = getData();
-        IndexItemEntry sectionItem = getSectionItem();
+        IdSectionEntry sectionItem = getSectionItem();
         if(sectionItem != null){
             sectionItem.append(writer);
         }else {

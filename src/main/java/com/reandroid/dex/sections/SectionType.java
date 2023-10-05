@@ -18,26 +18,37 @@ package com.reandroid.dex.sections;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.base.OffsetSupplier;
+import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.WarpedIntegerReference;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.index.*;
 import com.reandroid.dex.item.*;
 import com.reandroid.utils.HexUtil;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.function.Function;
+
 
 public class SectionType<T extends Block> {
 
-    private static final SectionType<?>[] VALUES;
+    public static final SectionType<?>[] VALUES;
+    private static final SectionType<?>[] READ_ORDER;
+
+    private static final SectionType<?>[] R8_ORDER;
+    private static final SectionType<?>[] DEX_LIB2_ORDER;
 
     public static final SectionType<DexHeader> HEADER;
+
     public static final SectionType<StringId> STRING_ID;
     public static final SectionType<TypeId> TYPE_ID;
     public static final SectionType<ProtoId> PROTO_ID;
     public static final SectionType<FieldId> FIELD_ID;
     public static final SectionType<MethodId> METHOD_ID;
     public static final SectionType<ClassId> CLASS_ID;
-    public static final SectionType<Block> CALL_SITE_ID;
+    public static final SectionType<IdSectionEntry> CALL_SITE_ID;
     public static final SectionType<MethodHandle> METHOD_HANDLE;
+
     public static final SectionType<MapList> MAP_LIST;
     public static final SectionType<TypeList> TYPE_LIST;
     public static final SectionType<AnnotationGroup> ANNOTATION_GROUP;
@@ -49,14 +60,14 @@ public class SectionType<T extends Block> {
     public static final SectionType<AnnotationItem> ANNOTATION;
     public static final SectionType<EncodedArray> ENCODED_ARRAY;
     public static final SectionType<AnnotationsDirectory> ANNOTATIONS_DIRECTORY;
-    public static final SectionType<Block> HIDDEN_API;
+    public static final SectionType<DataSectionEntry> HIDDEN_API;
 
     static {
 
         VALUES = new SectionType[21];
         int index = 0;
 
-        HEADER = new SectionType<>("HEADER", 0x0000, index, 0, new Creator<DexHeader>() {
+        HEADER = new SectionType<>("HEADER", 0x0000, index, new Creator<DexHeader>() {
             @Override
             public DexHeader[] newInstance(int length) {
                 return new DexHeader[length];
@@ -68,7 +79,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = HEADER;
 
-        MAP_LIST = new SectionType<>("MAP_LIST", 0x1000, index, 21, new Creator<MapList>() {
+        MAP_LIST = new DataSectionType<>("MAP_LIST", 0x1000, index, new Creator<MapList>() {
             @Override
             public MapList[] newInstance(int length) {
                 return new MapList[length];
@@ -80,7 +91,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = MAP_LIST;
 
-        STRING_ID = new SectionType<>("STRING_ID", 0x0001, index, 1, new Creator<StringId>() {
+        STRING_ID = new StringIdSectionType("STRING_ID", 0x0001, index, 0, new Creator<StringId>() {
             @Override
             public StringId[] newInstance(int length) {
                 return new StringId[length];
@@ -92,7 +103,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = STRING_ID;
 
-        STRING_DATA = new SectionType<>("STRING_DATA", 0x2002, index, 7, STRING_ID, new Creator<StringData>() {
+        STRING_DATA = new StringDataSectionType("STRING_DATA", 0x2002, index, new Creator<StringData>() {
             @Override
             public StringData[] newInstance(int length) {
                 return new StringData[length];
@@ -104,7 +115,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = STRING_DATA;
 
-        TYPE_ID = new SectionType<>("TYPE_ID", 0x0002, index, 2, new Creator<TypeId>() {
+        TYPE_ID = new IdSectionType<>("TYPE_ID", 0x0002, index, 1,  new Creator<TypeId>() {
             @Override
             public TypeId[] newInstance(int length) {
                 return new TypeId[length];
@@ -116,7 +127,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = TYPE_ID;
 
-        TYPE_LIST = new SectionType<>("TYPE_LIST", 0x1001, index, 8, new Creator<TypeList>() {
+        TYPE_LIST = new DataSectionType<>("TYPE_LIST", 0x1001, index, new Creator<TypeList>() {
             @Override
             public TypeList[] newInstance(int length) {
                 return new TypeList[length];
@@ -128,7 +139,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = TYPE_LIST;
 
-        PROTO_ID = new SectionType<>("PROTO_ID", 0x0003, index, 3, new Creator<ProtoId>() {
+        PROTO_ID = new IdSectionType<>("PROTO_ID", 0x0003, index, 4, new Creator<ProtoId>() {
             @Override
             public ProtoId[] newInstance(int length) {
                 return new ProtoId[length];
@@ -140,7 +151,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = PROTO_ID;
 
-        FIELD_ID = new SectionType<>("FIELD_ID", 0x0004, index, 4, new Creator<FieldId>() {
+        FIELD_ID = new IdSectionType<>("FIELD_ID", 0x0004, index, 2, new Creator<FieldId>() {
             @Override
             public FieldId[] newInstance(int length) {
                 return new FieldId[length];
@@ -153,7 +164,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = FIELD_ID;
 
-        METHOD_ID = new SectionType<>("METHOD_ID", 0x0005, index, 5, new Creator<MethodId>() {
+        METHOD_ID = new IdSectionType<>("METHOD_ID", 0x0005, index, 3, new Creator<MethodId>() {
             @Override
             public MethodId[] newInstance(int length) {
                 return new MethodId[length];
@@ -165,7 +176,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = METHOD_ID;
 
-        ANNOTATION = new SectionType<>("ANNOTATION", 0x2004, index, 10, new Creator<AnnotationItem>() {
+        ANNOTATION = new DataSectionType<>("ANNOTATION", 0x2004, index, new Creator<AnnotationItem>() {
             @Override
             public AnnotationItem[] newInstance(int length) {
                 return new AnnotationItem[length];
@@ -177,7 +188,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = ANNOTATION;
 
-        ANNOTATION_SET = new SectionType<>("ANNOTATION_SET", 0x1003, index, 11, new Creator<AnnotationSet>() {
+        ANNOTATION_SET = new DataSectionType<>("ANNOTATION_SET", 0x1003, index, new Creator<AnnotationSet>() {
             @Override
             public AnnotationSet[] newInstance(int length) {
                 return new AnnotationSet[length];
@@ -189,7 +200,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = ANNOTATION_SET;
 
-        ANNOTATION_GROUP = new SectionType<>("ANNOTATION_GROUP", 0x1002, index, 12, new Creator<AnnotationGroup>() {
+        ANNOTATION_GROUP = new DataSectionType<>("ANNOTATION_GROUP", 0x1002, index, new Creator<AnnotationGroup>() {
             @Override
             public AnnotationGroup[] newInstance(int length) {
                 return new AnnotationGroup[length];
@@ -202,7 +213,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = ANNOTATION_GROUP;
 
-        ANNOTATIONS_DIRECTORY = new SectionType<>("ANNOTATIONS_DIRECTORY", 0x2006, index, 13, new Creator<AnnotationsDirectory>() {
+        ANNOTATIONS_DIRECTORY = new DataSectionType<>("ANNOTATIONS_DIRECTORY", 0x2006, index, new Creator<AnnotationsDirectory>() {
             @Override
             public AnnotationsDirectory[] newInstance(int length) {
                 return new AnnotationsDirectory[length];
@@ -214,14 +225,14 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = ANNOTATIONS_DIRECTORY;
 
-        CALL_SITE_ID = new SectionType<>("CALL_SITE_ID", 0x0007, index, 100, null);
+        CALL_SITE_ID = new IdSectionType<>("CALL_SITE_ID", 0x0007, index, 5, null);
         VALUES[index++] = CALL_SITE_ID;
 
-        METHOD_HANDLE = new SectionType<>("METHOD_HANDLE", 0x0008, index, 100, null);
+        METHOD_HANDLE = new IdSectionType<>("METHOD_HANDLE", 0x0008, index, 6, null);
         VALUES[index++] = METHOD_HANDLE;
 
 
-        DEBUG_INFO = new SectionType<>("DEBUG_INFO", 0x2003, index, 14, new Creator<DebugInfo>() {
+        DEBUG_INFO = new DataSectionType<>("DEBUG_INFO", 0x2003, index, new Creator<DebugInfo>() {
             @Override
             public DebugInfo[] newInstance(int length) {
                 return new DebugInfo[length];
@@ -233,7 +244,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = DEBUG_INFO;
 
-        CODE = new SectionType<>("CODE", 0x2001, index, 15, new Creator<CodeItem>() {
+        CODE = new DataSectionType<>("CODE", 0x2001, index, new Creator<CodeItem>() {
             @Override
             public CodeItem[] newInstance(int length) {
                 return new CodeItem[length];
@@ -246,7 +257,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = CODE;
 
-        ENCODED_ARRAY = new SectionType<>("ENCODED_ARRAY", 0x2005, index, 9, new Creator<EncodedArray>() {
+        ENCODED_ARRAY = new DataSectionType<>("ENCODED_ARRAY", 0x2005, index,  new Creator<EncodedArray>() {
             @Override
             public EncodedArray[] newInstance(int length) {
                 return new EncodedArray[length];
@@ -258,7 +269,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = ENCODED_ARRAY;
 
-        CLASS_DATA = new SectionType<>("CLASS_DATA", 0x2000, index, 16, new Creator<ClassData>() {
+        CLASS_DATA = new DataSectionType<>("CLASS_DATA", 0x2000, index, new Creator<ClassData>() {
             @Override
             public ClassData[] newInstance(int length) {
                 return new ClassData[length];
@@ -270,7 +281,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = CLASS_DATA;
 
-        CLASS_ID = new SectionType<>("CLASS_ID", 0x0006, index, 6, new Creator<ClassId>() {
+        CLASS_ID = new IdSectionType<>("CLASS_ID", 0x0006, index, 7, new Creator<ClassId>() {
             @Override
             public ClassId[] newInstance(int length) {
                 return new ClassId[length];
@@ -282,29 +293,88 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = CLASS_ID;
 
-        HIDDEN_API = new SectionType<>("HIDDEN_API", 0xF000, index, 100, null);
+        HIDDEN_API = new DataSectionType<>("HIDDEN_API", 0xF000, index, null);
         VALUES[index] = HIDDEN_API;
+
+        READ_ORDER = new SectionType[]{
+                HEADER,
+                MAP_LIST,
+                STRING_ID,
+                STRING_DATA,
+                TYPE_ID,
+                TYPE_LIST,
+                PROTO_ID,
+                FIELD_ID,
+                METHOD_ID,
+                ANNOTATION,
+                ANNOTATION_SET,
+                ANNOTATION_GROUP,
+                ANNOTATIONS_DIRECTORY,
+                CALL_SITE_ID,
+                METHOD_HANDLE,
+                DEBUG_INFO,
+                CODE,
+                ENCODED_ARRAY,
+                CLASS_DATA,
+                CLASS_ID,
+                HIDDEN_API
+        };
+
+        R8_ORDER = new SectionType[]{
+                HEADER,
+                STRING_ID,
+                TYPE_ID,
+                PROTO_ID,
+                FIELD_ID,
+                METHOD_ID,
+                CLASS_ID,
+                CODE,
+                DEBUG_INFO,
+                TYPE_LIST,
+                STRING_DATA,
+                ANNOTATION,
+                CLASS_DATA,
+                ENCODED_ARRAY,
+                ANNOTATION_SET,
+                ANNOTATION_GROUP,
+                ANNOTATIONS_DIRECTORY,
+                MAP_LIST
+        };
+
+        DEX_LIB2_ORDER = new SectionType[]{
+                HEADER,
+                STRING_ID,
+                TYPE_ID,
+                PROTO_ID,
+                FIELD_ID,
+                METHOD_ID,
+                CLASS_ID,
+                STRING_DATA,
+                TYPE_LIST,
+                ENCODED_ARRAY,
+                ANNOTATION,
+                ANNOTATION_SET,
+                ANNOTATION_GROUP,
+                ANNOTATIONS_DIRECTORY,
+                DEBUG_INFO,
+                CODE,
+                CLASS_DATA,
+                MAP_LIST
+        };
 
     }
 
     private final String name;
     private final int type;
     private final Creator<T> creator;
-    private final SectionType<?> idSectionType;
     private final int readOrder;
-    private final int writeOrder;
     private Boolean offsetType;
 
-    private SectionType(String name, int type, int readOrder, int writeOrder, SectionType<?> idSectionType, Creator<T> creator){
+    private SectionType(String name, int type, int readOrder, Creator<T> creator){
         this.name = name;
         this.type = type;
         this.creator = creator;
-        this.idSectionType = idSectionType;
         this.readOrder = readOrder;
-        this.writeOrder = writeOrder;
-    }
-    private SectionType(String name, int type, int readOrder, int writeOrder, Creator<T> creator){
-        this(name, type, readOrder, writeOrder, null, creator);
     }
 
     public String getName() {
@@ -314,13 +384,10 @@ public class SectionType<T extends Block> {
         return type;
     }
     public SectionType<?> getIdSectionType() {
-        return idSectionType;
+        return null;
     }
     public int getReadOrder() {
         return readOrder;
-    }
-    public int getWriteOrder() {
-        return writeOrder;
     }
     public boolean isOffsetType(){
         if(offsetType != null){
@@ -335,8 +402,17 @@ public class SectionType<T extends Block> {
             return offsetType;
         }
     }
-    public boolean isIndexSection(){
-        return isIndexSection(this);
+    public boolean isIdSection(){
+        return false;
+    }
+    public boolean isDataSection(){
+        return false;
+    }
+    public Section<T> createSection(IntegerPair countAndOffset){
+        return null;
+    }
+    public int getReferenceType(){
+        return 7;
     }
 
     @Override
@@ -362,78 +438,131 @@ public class SectionType<T extends Block> {
         }
         return Integer.compare(getReadOrder(), sectionType.getReadOrder());
     }
-    public int compareWriteOrder(SectionType<?> sectionType) {
-        if(sectionType == null){
-            return -1;
-        }
-        return Integer.compare(getWriteOrder(), sectionType.getWriteOrder());
-    }
 
     @SuppressWarnings("unchecked")
     public static<T1 extends Block> SectionType<T1> get(int type){
-        for(SectionType<?> itemType : VALUES){
-            if(type == itemType.type){
-                return (SectionType<T1>) itemType;
+        for(SectionType<?> sectionType : VALUES){
+            if(type == sectionType.type){
+                return (SectionType<T1>) sectionType;
             }
         }
         return null;
     }
-    public static boolean isIndexSection(SectionType<?> sectionType){
-        return sectionType == SectionType.HEADER ||
-                sectionType == SectionType.STRING_ID ||
-                sectionType == SectionType.TYPE_ID ||
-                sectionType == SectionType.FIELD_ID ||
-                sectionType == SectionType.METHOD_ID ||
-                sectionType == SectionType.PROTO_ID ||
-                sectionType == SectionType.CLASS_ID ||
-                sectionType == SectionType.CALL_SITE_ID;
+    public static SectionType<? extends IdSectionEntry> getReferenceType(int reference){
+        switch (reference){
+            case 0:
+                return STRING_ID;
+            case 1:
+                return TYPE_ID;
+            case 2:
+                return FIELD_ID;
+            case 3:
+                return METHOD_ID;
+            case 4:
+                return PROTO_ID;
+            case 5:
+                return CALL_SITE_ID;
+            case 6:
+                return METHOD_HANDLE;
+            default:
+                return null;
+        }
     }
 
+    public static<T1> Comparator<T1> comparator(SectionType<?>[] sortOrder, Function<? super T1, SectionType<?>> function){
+        return new OrderBasedComparator<>(sortOrder, function);
+    }
     public static SectionType<?>[] getR8Order() {
         return R8_ORDER.clone();
     }
     public static SectionType<?>[] getDexLib2Order() {
         return DEX_LIB2_ORDER.clone();
     }
+    public static SectionType<?>[] getReadOrderList() {
+        return READ_ORDER.clone();
+    }
 
-    private static final SectionType<?>[] R8_ORDER = new SectionType[]{
-            HEADER,
-            STRING_ID,
-            TYPE_ID,
-            PROTO_ID,
-            FIELD_ID,
-            METHOD_ID,
-            CLASS_ID,
-            CODE,
-            DEBUG_INFO,
-            TYPE_LIST,
-            STRING_DATA,
-            ANNOTATION,
-            CLASS_DATA,
-            ENCODED_ARRAY,
-            ANNOTATION_SET,
-            ANNOTATION_GROUP,
-            ANNOTATIONS_DIRECTORY,
-            MAP_LIST
-    };
-    private static final SectionType<?>[] DEX_LIB2_ORDER = new SectionType[]{
-            HEADER,
-            STRING_ID,
-            TYPE_ID,
-            PROTO_ID,
-            FIELD_ID,
-            METHOD_ID,
-            CLASS_ID,
-            STRING_DATA,
-            TYPE_LIST,
-            ENCODED_ARRAY,
-            ANNOTATION,
-            ANNOTATION_SET,
-            ANNOTATION_GROUP,
-            ANNOTATIONS_DIRECTORY,
-            DEBUG_INFO,
-            CODE,
-            CLASS_DATA,
-            MAP_LIST
-    };
+    private static class IdSectionType<T1 extends IdSectionEntry> extends SectionType<T1> {
+
+        private final int referenceType;
+
+        private IdSectionType(String name, int type, int readOrder, int referenceType, Creator<T1> creator) {
+            super(name, type, readOrder, creator);
+            this.referenceType = referenceType;
+        }
+        @Override
+        public boolean isIdSection() {
+            return true;
+        }
+        @Override
+        public Section<T1> createSection(IntegerPair countAndOffset){
+            return new IdSection<>(countAndOffset, this);
+        }
+        @Override
+        public int getReferenceType() {
+            return referenceType;
+        }
+    }
+    private static class StringIdSectionType extends IdSectionType<StringId> {
+        StringIdSectionType(String name, int type, int readOrder, int referenceType, Creator<StringId> creator) {
+            super(name, type, readOrder, referenceType, creator);
+        }
+        @Override
+        public StringIdSection createSection(IntegerPair countAndOffset){
+            return new StringIdSection(countAndOffset, this);
+        }
+    }
+    private static class DataSectionType<T1 extends DataSectionEntry> extends SectionType<T1> {
+        DataSectionType(String name, int type, int readOrder, Creator<T1> creator) {
+            super(name, type, readOrder, creator);
+        }
+
+        @Override
+        public boolean isDataSection() {
+            return true;
+        }
+        @Override
+        public Section<T1> createSection(IntegerPair countAndOffset){
+            return new DataSection<>(countAndOffset, this);
+        }
+    }
+    private static class StringDataSectionType extends DataSectionType<StringData> {
+        StringDataSectionType(String name, int type, int readOrder, Creator<StringData> creator) {
+            super(name, type, readOrder, creator);
+        }
+        @Override
+        public StringDataSection createSection(IntegerPair countAndOffset){
+            return new StringDataSection(countAndOffset, this);
+        }
+    }
+
+    static class OrderBasedComparator<T1> implements Comparator<T1> {
+        private final Function<? super T1, SectionType<?>> function;
+        private final SectionType<?>[] sortOrder;
+
+        public OrderBasedComparator(SectionType<?>[] sortOrder, Function<? super T1, SectionType<?>> function){
+            this.sortOrder = sortOrder;
+            this.function = function;
+        }
+        private int getOrder(SectionType<?> sectionType){
+            SectionType<?>[] sortOrder = this.sortOrder;
+            int length = sortOrder.length;
+            for(int i = 0; i < length; i++){
+                if(sortOrder[i] == sectionType){
+                    return i;
+                }
+            }
+            return length - 2;
+        }
+        private int getOrder(T1 item){
+            if(item == null){
+                return this.sortOrder.length - 1;
+            }
+            return getOrder(this.function.apply(item));
+        }
+        @Override
+        public int compare(T1 item1, T1 item2) {
+            return Integer.compare(getOrder(item1), getOrder(item2));
+        }
+    }
 }

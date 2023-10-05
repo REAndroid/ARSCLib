@@ -18,6 +18,7 @@ package com.reandroid.dex.index;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
@@ -26,16 +27,16 @@ import com.reandroid.utils.CompareUtil;
 import java.io.IOException;
 import java.util.Objects;
 
-public class FieldId extends IndexItemEntry implements Comparable<FieldId>{
-    private final ItemIndexReference<TypeId> classType;
-    private final ItemIndexReference<TypeId> fieldType;
+public class FieldId extends IdSectionEntry implements KeyItemCreate, Comparable<FieldId>{
+    private final ItemIdReference<TypeId> classType;
+    private final ItemIdReference<TypeId> fieldType;
     private final StringReference nameReference;
 
     public FieldId() {
         super(8);
-        this.classType = new ItemShortReference<>(SectionType.TYPE_ID, this, 0);
-        this.fieldType = new ItemShortReference<>(SectionType.TYPE_ID, this, 2);
-        this.nameReference = new StringReference( this, 4, StringData.USAGE_FIELD);
+        this.classType = new ItemShortReference<>(SectionType.TYPE_ID, this, 0, USAGE_FIELD_CLASS);
+        this.fieldType = new ItemShortReference<>(SectionType.TYPE_ID, this, 2, USAGE_FIELD_TYPE);
+        this.nameReference = new StringReference( this, 4, USAGE_FIELD_NAME);
     }
 
     public String getName() {
@@ -43,9 +44,6 @@ public class FieldId extends IndexItemEntry implements Comparable<FieldId>{
     }
     public void setName(String name){
         this.nameReference.setString(name);
-    }
-    public void setName(StringData stringData){
-        this.nameReference.setItem(stringData);
     }
     public StringData getNameString(){
         return nameReference.getItem();
@@ -97,7 +95,7 @@ public class FieldId extends IndexItemEntry implements Comparable<FieldId>{
     void cacheItems(){
         classType.getItem();
         fieldType.getItem();
-        nameReference.getStringId();
+        nameReference.cacheItem();
     }
 
     @Override

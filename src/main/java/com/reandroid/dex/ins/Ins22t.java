@@ -20,24 +20,12 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class Ins22t extends Size4Ins implements Label {
+public class Ins22t extends Ins22 implements Label {
 
     public Ins22t(Opcode<?> opcode) {
         super(opcode);
     }
 
-    @Override
-    public int getData(){
-        return getShort(2);
-    }
-    @Override
-    public void setData(int data){
-        setShort(2, data);
-    }
-    @Override
-    public int getRegistersCount() {
-        return 2;
-    }
     @Override
     public int getRegister(int index) {
         return getNibble(2 + index);
@@ -45,6 +33,19 @@ public class Ins22t extends Size4Ins implements Label {
     @Override
     public void setRegister(int index, int value) {
         setNibble(2 + index, value);
+    }
+    @Override
+    public int getRegistersLimit(){
+        return 0x0f;
+    }
+
+    @Override
+    public int getData(){
+        return getShortSigned();
+    }
+    @Override
+    public void setData(int data){
+        setShort(2, data);
     }
     @Override
     public int getTargetAddress() {
@@ -64,7 +65,7 @@ public class Ins22t extends Size4Ins implements Label {
         writer.newLine();
         writer.append(opcode.getName());
         writer.append(' ');
-        getRegisters().append(writer);
+        getRegistersIterator().append(writer);
         writer.append(", ");
         writer.append(getLabelName());
     }

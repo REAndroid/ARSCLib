@@ -24,6 +24,7 @@ import com.reandroid.dex.base.*;
 import com.reandroid.dex.debug.DebugParameter;
 import com.reandroid.dex.index.ItemOffsetReference;
 import com.reandroid.dex.index.ProtoId;
+import com.reandroid.dex.ins.RegistersTable;
 import com.reandroid.dex.ins.TryBlock;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -32,7 +33,8 @@ import com.reandroid.dex.writer.SmaliWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class CodeItem extends DataItemEntry implements SmaliFormat, VisitableInteger {
+public class CodeItem extends DataSectionEntry implements RegistersTable,
+        SmaliFormat, VisitableInteger, PositionAlignedItem {
 
     private final Header header;
     private final InstructionList instructionList;
@@ -48,24 +50,31 @@ public class CodeItem extends DataItemEntry implements SmaliFormat, VisitableInt
         addChild(0, header);
         addChild(1, instructionList);
     }
+
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+    }
+
     @Override
     public void visitIntegers(IntegerVisitor visitor) {
         getInstructionList().visitIntegers(visitor);
     }
-    public int getLocalsCount() {
-        return getRegistersCount() - getParameterRegistersCount();
-    }
-    public void setLocalsCount(int count) {
-        setRegistersCount(count + getParameterRegistersCount());
-    }
+    @Override
     public int getRegistersCount(){
         return header.registersCount.get();
     }
+    @Override
     public void setRegistersCount(int count){
         header.registersCount.set(count);
     }
+    @Override
     public int getParameterRegistersCount(){
         return header.parameterRegisters.get();
+    }
+    @Override
+    public void setParameterRegistersCount(int count){
+        header.parameterRegisters.set(count);
     }
 
     public DebugInfo getDebugInfo(){
@@ -95,10 +104,29 @@ public class CodeItem extends DataItemEntry implements SmaliFormat, VisitableInt
     IntegerReference getInstructionCodeUnitsReference(){
         return header.instructionCodeUnits;
     }
+    IntegerReference getInstructionOutsReference(){
+        return header.outs;
+    }
     void initTryBlock(){
         if(this.tryBlock == null){
             this.tryBlock = new TryBlock(header.tryBlockCount);
             addChild(2, this.tryBlock);
+        }
+    }
+    public DexPositionAlign getPositionAlign(){
+        if(this.tryBlock != null){
+            return this.tryBlock.getPositionAlign();
+        }else if(this.instructionList != null){
+            return this.instructionList.getBlockAlign();
+        }
+        return new DexPositionAlign();
+    }
+    @Override
+    public void removeLastAlign(){
+        if(this.tryBlock != null){
+            this.tryBlock.getPositionAlign().setSize(0);
+        }else if(this.instructionList != null){
+            this.instructionList.getBlockAlign().setSize(0);
         }
     }
 
@@ -110,7 +138,7 @@ public class CodeItem extends DataItemEntry implements SmaliFormat, VisitableInt
         writer.newLine();
         writer.append(".locals ");
         InstructionList instructionList = getInstructionList();
-        int count = getLocalsCount();
+        int count = getRegistersCount() - getParameterRegistersCount();
         writer.append(count);
         methodDef.appendParameterAnnotations(writer, proto);
         if(debugInfo != null){

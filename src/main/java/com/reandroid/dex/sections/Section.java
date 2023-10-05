@@ -22,22 +22,25 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.DexIdPool;
+import com.reandroid.dex.pool.StringIdPool;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class Section<T extends Block>  extends FixedDexContainer
         implements DexArraySupplier<T>, OffsetSupplier,
-        Iterable<T>, PreloadArray<T>{
+        Iterable<T>{
 
     private final SectionType<T> sectionType;
-    private final DexItemArray<T> itemArray;
     private final DexPositionAlign sectionAlign;
-    private final Map<Integer, T> offsetMap;
+    private final DexItemArray<T> itemArray;
 
     private DexIdPool<T> dexIdPool;
 
@@ -46,45 +49,51 @@ public class Section<T extends Block>  extends FixedDexContainer
         this.sectionType = sectionType;
         this.itemArray = itemArray;
         this.sectionAlign = new DexPositionAlign();
-        this.offsetMap = new HashMap<>();
         addChild(0, sectionAlign);
         addChild(1, itemArray);
-        itemArray.setPreloadArray(this);
     }
     public Section(IntegerPair countAndOffset, SectionType<T> sectionType){
         this(sectionType, new DexItemArray<>(countAndOffset, sectionType.getCreator()));
     }
 
+    public Iterator<T> getWithUsage(int usage){
+        if(!hasUsageMarker()){
+            return EmptyIterator.of();
+        }
+        return FilterIterator.of(iterator(), item -> ((UsageMarker) item).containsUsage(usage));
+    }
+    public void clearUsageTypes(){
+        if(hasUsageMarker()){
+            UsageMarker.clearUsageTypes(iterator());
+        }
+    }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        int align = sectionAlign.getAlignment();
         sectionAlign.setAlignment(0);
         super.onReadBytes(reader);
-        sectionAlign.setAlignment(align);
     }
 
+    public T get(Key key) {
+        return getPool().get(key);
+    }
     public DexIdPool<T> getPool(){
         DexIdPool<T> dexIdPool = this.dexIdPool;
         if(dexIdPool == null){
-            dexIdPool = new DexIdPool<>(this);
+            dexIdPool = createPool();
             this.dexIdPool = dexIdPool;
             dexIdPool.load();
         }
         return dexIdPool;
     }
+    public boolean isPoolLoaded(){
+        return dexIdPool != null;
+    }
+    @SuppressWarnings("unchecked")
+    private DexIdPool<T> createPool(){
+        return new DexIdPool<>(this);
+    }
     public void add(T item){
         itemArray.add(item);
-    }
-
-    public void buildOffsetMap(){
-        offsetMap.clear();
-        for (T item : this) {
-            if (!(item instanceof OffsetSupplier)) {
-                return;
-            }
-            int offset = ((OffsetSupplier) item).getOffsetReference().get();
-            offsetMap.put(offset, item);
-        }
     }
 
     public SectionType<T> getSectionType() {
@@ -93,63 +102,16 @@ public class Section<T extends Block>  extends FixedDexContainer
 
     @Override
     public T get(int i){
-        return getItemArray().get(i);
+        return null;
     }
     public T[] get(int[] indexes){
-        if(indexes == null || indexes.length == 0){
-            return null;
-        }
-        DexItemArray<T> itemArray = getItemArray();
-        int length = indexes.length;
-        T[] results = itemArray.newInstance(indexes.length);
-        for(int i = 0; i < length; i++){
-            results[i] = itemArray.get(indexes[i]);
-        }
-        return results;
-    }
-    public T getAt(int offset){
-        return offsetMap.get(offset);
-    }
-    public T[] getAt(int[] offsets){
-        if(offsets == null || offsets.length == 0){
-            return null;
-        }
-        Map<Integer, T> offsetMap = this.offsetMap;
-        int length = offsets.length;
-        T[] results = getItemArray().newInstance(offsets.length);
-        for(int i = 0; i < length; i++){
-            results[i] = offsetMap.get(offsets[i]);
-        }
-        return results;
+        return null;
     }
     public T getOrCreate(Key key) {
         return getPool().getOrCreate(key);
     }
-    public T createIdItem() {
+    public T createItem() {
         return getItemArray().createNext();
-    }
-    public T createOffsetItem() {
-        int position = estimateLastOffset();
-        T item = getItemArray().createNext();
-        if(item instanceof PositionedItem) {
-            ((PositionedItem) item).setPosition(position);
-        }else {
-            IntegerReference supplier = ((OffsetSupplier) item).getOffsetReference();
-            supplier.set(position);
-        }
-        return item;
-    }
-    private int estimateLastOffset() {
-        int offset;
-        T last = getItemArray().getLast();
-        if(last instanceof OffsetSupplier) {
-            IntegerReference supplier = ((OffsetSupplier) last).getOffsetReference();
-            offset = supplier.get();
-            offset += last.countBytes();
-        }else {
-            offset = getOffset() + countBytes();
-        }
-        return offset;
     }
     @Override
     public int getCount(){
@@ -176,91 +138,33 @@ public class Section<T extends Block>  extends FixedDexContainer
     public Iterator<T> iterator() {
         return getItemArray().iterator();
     }
-    @Override
-    public void onPreload(T[] elements) {
-        Section<?> idSection = getSection(getSectionType().getIdSectionType());
-        if(idSection == null){
-            return;
-        }
-        for(int i = 0; i < elements.length; i++){
-            IntegerReference reference = (IntegerReference) idSection.get(i);
-            OffsetReceiver receiver = (OffsetReceiver) elements[i];
-            receiver.setOffsetReference(reference);
-        }
-    }
-    private void updateItemOffsets(int position){
-        DexItemArray<T> array = getItemArray();
-        int count = array.getCount();
-        array.getCountAndOffset().getFirst().set(count);
-        DexPositionAlign previous = null;
-        for(int i = 0; i < count; i++){
-            T item = array.get(i);
-            if(item == null) {
-                previous = null;
-                continue;
-            }
-            DexPositionAlign itemAlign = null;
-            if(item instanceof PositionAlignedItem){
-                itemAlign = ((PositionAlignedItem) item).getPositionAlign();
-                itemAlign.setSize(0);
-                if(previous != null){
-                    previous.align(position);
-                    position += previous.size();
-                }
-            }
-            if(item instanceof PositionedItem){
-                ((PositionedItem) item).setPosition(position);
-            }else {
-                IntegerReference supplier = ((OffsetSupplier) item).getOffsetReference();
-                supplier.set(position);
-            }
-            position += item.countBytes();
-            previous = itemAlign;
-        }
-        updateNextSection(position);
-        buildOffsetMap();
-    }
-    private boolean updateIdOffsets(int position){
-        Section<?> idSection = getSection(getSectionType().getIdSectionType());
-        if(idSection == null){
-            return false;
-        }
-        int count = getCount();
-        DexItemArray<?> idArray = idSection.getItemArray();
-        idArray.setChildesCount(count);
-        for(int i = 0; i < count; i++){
-            T item = get(i);
-            IntegerReference reference = (IntegerReference) idArray.get(i);
-            reference.set(position);
-            position += item.countBytes();
-        }
-        updateNextSection(position);
-        return true;
-    }
-    private void updateNextSection(int position){
+    void updateNextSection(int position){
         Section<?> next = getNextSection();
         if(next != null){
             next.getOffsetReference().set(position);
         }
     }
-    private Section<?> getNextSection(){
+    Section<?> getNextSection(){
         SectionList sectionList = getParentInstance(SectionList.class);
         if(sectionList != null){
-            return sectionList.get(getIndex() + 1);
+            int i = sectionList.indexOf(this);
+            if(i >= 0){
+                return sectionList.get(i + 1);
+            }
+        }
+        return null;
+    }
+    Section<?> getPreviousSection(){
+        SectionList sectionList = getParentInstance(SectionList.class);
+        if(sectionList != null){
+            int i = sectionList.indexOf(this);
+            if(i >= 0){
+                return sectionList.get(i - 1);
+            }
         }
         return null;
     }
 
-    private Section<?> getSection(SectionType<?> sectionType){
-        if(sectionType == null){
-            return null;
-        }
-        SectionList sectionList = getParentInstance(SectionList.class);
-        if(sectionList == null){
-            return null;
-        }
-        return sectionList.get(sectionType);
-    }
 
     @Override
     protected boolean isValidOffset(int offset){
@@ -273,17 +177,29 @@ public class Section<T extends Block>  extends FixedDexContainer
     @Override
     protected void onRefreshed(){
         int position = getOffset();
-        sectionAlign.align(position);
+        alignSection(sectionAlign, position);
         position += sectionAlign.size();
         getOffsetReference().set(position);
-        boolean hasId = updateIdOffsets(position);
-        if(!hasId){
-            if(sectionType.isOffsetType()){
-                updateItemOffsets(position);
-            }else {
-                position += getItemArray().countBytes();
-                updateNextSection(position);
-            }
+        onRefreshed(position);
+    }
+    void alignSection(DexPositionAlign positionAlign, int position){
+        if(isPositionAlignedItem()){
+            positionAlign.setAlignment(4);
+            positionAlign.align(position);
+        }
+    }
+    private boolean isPositionAlignedItem(){
+        return getItemArray().get(0) instanceof PositionAlignedItem;
+    }
+    void onRefreshed(int position){
+    }
+    public boolean hasUsageMarker() {
+        return get(0) instanceof UsageMarker;
+    }
+    void onRemoving(T item){
+        DexIdPool<T> dexIdPool = this.dexIdPool;
+        if(dexIdPool != null){
+            dexIdPool.onRemoving(item);
         }
     }
     @Override

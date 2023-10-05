@@ -23,17 +23,4 @@ public class Size2Ins extends SizeXIns {
     public int getData(){
         return getNibble(2);
     }
-
-    @Override
-    public int getRegistersCount() {
-        return 1;
-    }
-    @Override
-    public int getRegister(int index) {
-        return getNibble(3);
-    }
-    @Override
-    public void setRegister(int index, int value) {
-        setNibble(3, value);
-    }
 }

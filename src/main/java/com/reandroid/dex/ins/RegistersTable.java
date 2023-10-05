@@ -15,11 +15,11 @@
  */
 package com.reandroid.dex.ins;
 
-public interface RegisterNumber {
+public interface RegistersTable {
+
     int getRegistersCount();
-    int getRegister(int index);
-    void setRegister(int index, int value);
-    default String getRegisterSeparator(){
-        return ", ";
-    }
+    int getParameterRegistersCount();
+    void setRegistersCount(int count);
+    void setParameterRegistersCount(int count);
+
 }

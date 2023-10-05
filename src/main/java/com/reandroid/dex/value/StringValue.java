@@ -17,7 +17,6 @@ package com.reandroid.dex.value;
 
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.index.StringId;
-import com.reandroid.dex.item.AnnotationElement;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.sections.SectionType;
 
@@ -37,21 +36,6 @@ public class StringValue extends SectionIdValue<StringId> {
             return stringId.getStringData();
         }
         return null;
-    }
-
-    @Override
-    void onDataUpdated(StringId data) {
-        super.onDataUpdated(data);
-        if(data != null){
-            StringData stringData = data.getStringData();
-            int usage;
-            if(getParent(AnnotationElement.class) != null){
-                usage = StringData.USAGE_ANNOTATION;
-            }else {
-                usage = StringData.USAGE_INITIAL;
-            }
-            stringData.addStringUsage(usage);
-        }
     }
     public String getString() {
         StringData stringData = getStringData();

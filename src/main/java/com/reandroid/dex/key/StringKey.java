@@ -44,11 +44,11 @@ public class StringKey implements Key{
         if (this == obj) {
             return true;
         }
-        if (obj == null || getClass() != obj.getClass()) {
+        if (!(obj instanceof StringKey)) {
             return false;
         }
         StringKey stringKey = (StringKey) obj;
-        return Objects.equals(text, stringKey.text);
+        return Objects.equals(getString(), stringKey.getString());
     }
     @Override
     public int hashCode() {

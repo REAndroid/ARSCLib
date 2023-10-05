@@ -15,19 +15,53 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.dex.base.PositionAlignedItem;
 import com.reandroid.dex.key.AnnotationKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.function.Predicate;
 
-public class AnnotationSet extends IntegerOffsetSectionList<AnnotationItem> implements SmaliFormat {
+public class AnnotationSet extends IntegerOffsetSectionList<AnnotationItem>
+        implements SmaliFormat, PositionAlignedItem {
 
+    private final AnnotationSetBlockKey annotationSetKey;
     public AnnotationSet(){
         super(SectionType.ANNOTATION);
+        this.annotationSetKey = new AnnotationSetBlockKey(this);
     }
 
+
+    public Iterator<AnnotationItem> getByType(String typeName) {
+        return FilterIterator.of(iterator(), new Predicate<AnnotationItem>() {
+            @Override
+            public boolean test(AnnotationItem item) {
+                return typeName.equals(item.getTypeName());
+            }
+        });
+    }
+    public boolean contains(String typeName) {
+        for(AnnotationItem item : this){
+            if(typeName.equals(item.getTypeName())){
+                return true;
+            }
+        }
+        return false;
+    }
+    public AnnotationItem getOrCreate(AnnotationKey key){
+        AnnotationItem item = get(key);
+        if(item != null){
+            return item;
+        }
+        item = addNew();
+        item.setKey(key);
+        return item;
+    }
     public AnnotationItem get(AnnotationKey key){
         if(key == null){
             return null;
@@ -41,6 +75,9 @@ public class AnnotationSet extends IntegerOffsetSectionList<AnnotationItem> impl
     }
     @Override
     public AnnotationKey getKey(){
+        return null;
+    }
+    public AnnotationKey getKeyOld(){
         for(AnnotationItem item : this){
             AnnotationKey key = item.getKey();
             if(key != null){
@@ -79,5 +116,83 @@ public class AnnotationSet extends IntegerOffsetSectionList<AnnotationItem> impl
             appendOnce = true;
         }
         return builder.toString();
+    }
+    static class AnnotationSetBlockKey extends AnnotationKey {
+
+        private final AnnotationSet annotationSet;
+
+        public AnnotationSetBlockKey(AnnotationSet annotationSet) {
+            super(null, null);
+            this.annotationSet = annotationSet;
+        }
+        @Override
+        public String getDefining() {
+            for(AnnotationItem annotationItem : annotationSet){
+                AnnotationKey key = annotationItem.getKey();
+                if(key != null){
+                    return key.getDefining();
+                }
+            }
+            return null;
+        }
+        public boolean containsDefining(String defining) {
+            if(defining == null){
+                return false;
+            }
+            for(AnnotationItem annotationItem : annotationSet){
+                AnnotationKey key = annotationItem.getKey();
+                if(key != null && defining.equals(key.getDefining())){
+                    return true;
+                }
+            }
+            return false;
+        }
+        @Override
+        public String getName() {
+            for(AnnotationItem annotationItem : annotationSet){
+                AnnotationKey key = annotationItem.getKey();
+                if(key != null){
+                    return key.getName();
+                }
+            }
+            return null;
+        }
+        @Override
+        public String[] getOtherNames() {
+            for(AnnotationItem annotationItem : annotationSet){
+                AnnotationKey key = annotationItem.getKey();
+                if(key != null){
+                    return key.getOtherNames();
+                }
+            }
+            return null;
+        }
+
+        private int mHash;
+        @Override
+        public int hashCode() {
+            if(mHash == 0 || mHash == 1){
+                mHash = super.hashCode();
+            }
+            return mHash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (!(obj instanceof AnnotationKey)) {
+                return false;
+            }
+            AnnotationKey key = (AnnotationKey) obj;
+            return containsDefining(key.getDefining()) &&
+                    (Objects.equals(getName(), key.getName()) || containsName(key.getName()));
+        }
+
+        @Override
+        public String toString() {
+            return hashCode() + " " + super.toString();
+        }
     }
 }

@@ -21,10 +21,9 @@ import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.CreatorArray;
 import com.reandroid.dex.base.DexBlockAlign;
-import com.reandroid.dex.base.DexBlockList;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
-import com.reandroid.dex.base.FixedDexContainer;
+import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.ins.*;
 import com.reandroid.dex.writer.SmaliFormat;
@@ -36,20 +35,19 @@ import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.List;
 
-public class InstructionList extends FixedBlockContainer implements Iterable<Ins>, SmaliFormat, VisitableInteger {
+public class InstructionList extends FixedBlockContainer implements
+        Iterable<Ins>, SmaliFormat, VisitableInteger {
+
     private final CodeItem codeItem;
     private final BlockArray<Ins> insArray;
-    private final DexBlockAlign blockAlign;
-    private final RegisterFactory registerFactory;
+    private final DexPositionAlign blockAlign;
 
     public InstructionList(CodeItem codeItem){
         super(2);
         this.codeItem = codeItem;
 
         this.insArray = new CreatorArray<>(CREATOR);
-        this.blockAlign = new DexBlockAlign(this);
-
-        this.registerFactory = new RegisterFactory(codeItem);
+        this.blockAlign = new DexPositionAlign();
 
         addChild(0, insArray);
         addChild(1, blockAlign);
@@ -74,8 +72,20 @@ public class InstructionList extends FixedBlockContainer implements Iterable<Ins
     public Ins get(int i){
         return getInsArray().get(i);
     }
+    public int getCount(){
+        return getInsArray().getCount();
+    }
     public void add(Ins ins){
-        getInsArray().add(ins);
+        BlockArray<Ins> array = getInsArray();
+        array.add(ins);
+        Ins previous = array.get(ins.getIndex() - 1);
+        int address;
+        if(previous != null){
+            address = previous.getAddress() + previous.getCodeUnits();
+        }else {
+            address = 0;
+        }
+        ins.setAddress(address);
     }
     public void add(int index, Ins item) {
         reBuildExtraLines();
@@ -83,6 +93,11 @@ public class InstructionList extends FixedBlockContainer implements Iterable<Ins
         updateAddresses();
         updateLabelAddress();
         reBuildExtraLines();
+    }
+    public<T1 extends Ins> T1 createNext(Opcode<T1> opcode) {
+        T1 item = opcode.newInstance();
+        add(item);
+        return item;
     }
     public boolean contains(Ins item){
         return getInsArray().contains(item);
@@ -99,6 +114,8 @@ public class InstructionList extends FixedBlockContainer implements Iterable<Ins
             }
         }
         getInsArray().remove(item);
+        item.setParent(null);
+        item.setIndex(-1);
         updateAddresses();
         updateLabelAddress();
         return true;
@@ -140,15 +157,12 @@ public class InstructionList extends FixedBlockContainer implements Iterable<Ins
         }
     }
 
-    public RegisterFactory getRegisterFactory() {
-        return registerFactory;
-    }
-
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
         this.codeItem.getInstructionCodeUnitsReference().set(getCodeUnits());
-        this.blockAlign.align();
+        this.codeItem.getInstructionOutsReference().set(getOutSize());
+        this.blockAlign.align(this);
     }
     public int getCodeUnits() {
         int result = 0;
@@ -156,6 +170,23 @@ public class InstructionList extends FixedBlockContainer implements Iterable<Ins
             result += ins.getCodeUnits();
         }
         return result;
+    }
+    public int getOutSize() {
+        int result = 0;
+        for (Ins ins : this) {
+            if(!ins.getOpcode().hasOutRegisters()){
+                continue;
+            }
+            int count = ((RegistersSet) ins).getRegistersCount();
+            if(count > result){
+                result = count;
+            }
+        }
+        return result;
+    }
+
+    public DexPositionAlign getBlockAlign() {
+        return blockAlign;
     }
 
     @Override
@@ -244,10 +275,10 @@ public class InstructionList extends FixedBlockContainer implements Iterable<Ins
         for(Ins ins : this){
             if(ins instanceof Label){
                 addLabel((Label) ins);
-            }else if(ins instanceof LabelList){
-                addLabels(((LabelList) ins).getLabels());
+            }else if(ins instanceof LabelsSet){
+                addLabels(((LabelsSet) ins).getLabels());
             }
-            ins.sortExtraLines();
+            ins.trimExtraLines();
         }
     }
     private void buildTryBlock(){

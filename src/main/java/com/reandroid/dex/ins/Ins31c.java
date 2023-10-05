@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins31c extends Size6Ins {
+public class Ins31c extends Size6Ins implements RegistersSet {
     public Ins31c(Opcode<?> opcode) {
         super(opcode);
     }
@@ -25,6 +25,9 @@ public class Ins31c extends Size6Ins {
         return 1;
     }
     @Override
+    public final void setRegistersCount(int count) {
+    }
+    @Override
     public int getRegister(int index) {
         return getByteUnsigned(1);
     }
@@ -32,13 +35,16 @@ public class Ins31c extends Size6Ins {
     public void setRegister(int index, int value) {
         setByte(1, value);
     }
+    @Override
+    public int getRegistersLimit(){
+        return 0xff;
+    }
 
     @Override
     public int getData(){
-        return getValueBytes().getInteger(2);
+        return getInteger();
     }
     public void setData(int data){
-        getValueBytes().putInteger(2, data);
-        cacheSectionItem();
+        setInteger(data);
     }
 }

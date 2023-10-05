@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public abstract class ExceptionHandler extends DexContainerItem
-        implements Iterable<Label>, LabelList {
+        implements Iterable<Label>, LabelsSet {
 
     private final Ule128Item catchAddress;
     private final Label handlerLabel;

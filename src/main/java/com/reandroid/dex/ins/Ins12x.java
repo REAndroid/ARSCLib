@@ -19,7 +19,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class Ins12x extends Size2Ins {
+public class Ins12x extends Size2Ins implements RegistersSet {
     public Ins12x(Opcode<?> opcode) {
         super(opcode);
     }
@@ -36,12 +36,19 @@ public class Ins12x extends Size2Ins {
         return 2;
     }
     @Override
+    public void setRegistersCount(int count) {
+    }
+    @Override
     public int getRegister(int index) {
         return getNibble(2 + index);
     }
     @Override
     public void setRegister(int index, int value) {
         setNibble(2 + index, value);
+    }
+    @Override
+    public int getRegistersLimit(){
+        return 0x0f;
     }
     @Override
     void appendCodeData(SmaliWriter writer) {

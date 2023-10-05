@@ -20,19 +20,17 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.utils.HexUtil;
 
-import java.util.Comparator;
-
 public class MapItem extends DexBlockItem {
     private final IndirectInteger type;
-    private final IntegerPair countAndOffset;
+    private final ParallelIntegerPair countAndOffset;
 
     public MapItem() {
         super(SIZE);
         this.type = new IndirectInteger(this, 0);
-        this.countAndOffset = new IndirectIntegerPair(this, 4);
+        this.countAndOffset = new ParallelIntegerPair(new IndirectIntegerPair(this, 4));
     }
 
-    public IntegerPair getCountAndOffset() {
+    public ParallelIntegerPair getCountAndOffset() {
         return countAndOffset;
     }
     public<T1 extends Block> SectionType<T1> getMapType(){
@@ -57,7 +55,7 @@ public class MapItem extends DexBlockItem {
         if(parent == null){
             parent = getParent();
         }
-        Section<T1> section = new Section<>(getCountAndOffset(), sectionType);
+        Section<T1> section = sectionType.createSection(getCountAndOffset());
         section.setParent(parent);
         return section;
     }
@@ -68,11 +66,23 @@ public class MapItem extends DexBlockItem {
     public IntegerReference getType(){
         return type;
     }
-    public IntegerReference getCount(){
+    public ParallelReference getCount(){
         return countAndOffset.getFirst();
     }
-    public IntegerReference getOffset(){
+    public int getCountValue(){
+        return getCount().get();
+    }
+    public void setCount(int value){
+        getCount().set(value);
+    }
+    public ParallelReference getOffset(){
         return countAndOffset.getSecond();
+    }
+    public int getOffsetValue(){
+        return getOffset().get();
+    }
+    public void setOffset(int value){
+        getOffset().set(value);
     }
 
     @Override
@@ -110,26 +120,5 @@ public class MapItem extends DexBlockItem {
         return builder.toString();
     }
 
-    public static final Comparator<MapItem> READ_COMPARATOR = (mapItem1, mapItem2) -> {
-        if(mapItem1 == mapItem2){
-            return 0;
-        }
-        if(mapItem1 == null){
-            return 1;
-        }
-        if(mapItem2 == null){
-            return -1;
-        }
-        SectionType<?> sectionType1 = mapItem1.getMapType();
-        SectionType<?> sectionType2 = mapItem2.getMapType();
-        if(sectionType1 == sectionType2){
-            return 0;
-        }
-        if(sectionType1 == null){
-            return 1;
-        }
-        return sectionType1.compareReadOrder(sectionType2);
-    };
-
-    private static final int SIZE = 12;
+    public static final int SIZE = 12;
 }

@@ -15,23 +15,18 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins21ih extends Size4Ins {
+public class Ins21ih extends Size4Ins implements RegistersSet {
     public Ins21ih(Opcode<?> opcode) {
         super(opcode);
     }
 
-    @Override
-    public int getData() {
-        return getShort(2) << 16;
-    }
-    @Override
-    public void setData(int data) {
-        setShort(2, data >>> 16);
-    }
 
     @Override
     public int getRegistersCount() {
         return 1;
+    }
+    @Override
+    public void setRegistersCount(int count) {
     }
     @Override
     public int getRegister(int index) {
@@ -41,4 +36,19 @@ public class Ins21ih extends Size4Ins {
     public void setRegister(int index, int value) {
         setByte(1, value);
     }
+
+    @Override
+    public int getRegistersLimit(){
+        return 0xff;
+    }
+
+    @Override
+    public int getData() {
+        return getShortUnsigned(2) << 16;
+    }
+    @Override
+    public void setData(int data) {
+        setShort(2, data >>> 16);
+    }
+
 }

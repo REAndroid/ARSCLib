@@ -42,12 +42,12 @@ public class DexHeader extends FixedDexContainer implements OffsetSupplier, Bloc
     public final Endian endian;
     public final IntegerItem map;
 
-    public final CountAndOffset strings;
-    public final CountAndOffset type;
-    public final CountAndOffset proto;
-    public final CountAndOffset field;
-    public final CountAndOffset method;
-    public final CountAndOffset class_def;
+    public final CountAndOffset string_id;
+    public final CountAndOffset type_id;
+    public final CountAndOffset proto_id;
+    public final CountAndOffset field_id;
+    public final CountAndOffset method_id;
+    public final CountAndOffset class_id;
     public final CountAndOffset data;
 
     public final ByteArray unknown;
@@ -68,12 +68,12 @@ public class DexHeader extends FixedDexContainer implements OffsetSupplier, Bloc
 
         this.map = new IntegerItem();
 
-        this.strings = new CountAndOffset();
-        this.type = new CountAndOffset();
-        this.proto = new CountAndOffset();
-        this.field = new CountAndOffset();
-        this.method = new CountAndOffset();
-        this.class_def = new CountAndOffset();
+        this.string_id = new CountAndOffset();
+        this.type_id = new CountAndOffset();
+        this.proto_id = new CountAndOffset();
+        this.field_id = new CountAndOffset();
+        this.method_id = new CountAndOffset();
+        this.class_id = new CountAndOffset();
         this.data = new CountAndOffset();
 
         this.unknown = new ByteArray();
@@ -87,12 +87,12 @@ public class DexHeader extends FixedDexContainer implements OffsetSupplier, Bloc
         addChild(6, endian);
         addChild(7, map);
 
-        addChild(8, strings);
-        addChild(9, type);
-        addChild(10, proto);
-        addChild(11, field);
-        addChild(12, method);
-        addChild(13, class_def);
+        addChild(8, string_id);
+        addChild(9, type_id);
+        addChild(10, proto_id);
+        addChild(11, field_id);
+        addChild(12, method_id);
+        addChild(13, class_id);
         addChild(14, data);
 
         addChild(15, unknown);
@@ -139,12 +139,12 @@ public class DexHeader extends FixedDexContainer implements OffsetSupplier, Bloc
                 ", headerSize=" + headerSize +
                 ", endian=" + endian +
                 ", map=" + map +
-                ", strings=" + strings +
-                ", type=" + type +
-                ", proto=" + proto +
-                ", field=" + field +
-                ", method=" + method +
-                ", clazz=" + class_def +
+                ", strings=" + string_id +
+                ", type=" + type_id +
+                ", proto=" + proto_id +
+                ", field=" + field_id +
+                ", method=" + method_id +
+                ", clazz=" + class_id +
                 ", data=" + data +
                 ", unknown=" + unknown +
                 '}';

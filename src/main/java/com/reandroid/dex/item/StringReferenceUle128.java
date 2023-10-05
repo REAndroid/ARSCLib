@@ -44,7 +44,7 @@ public class StringReferenceUle128 extends Ule128Item implements
         if(stringId == null){
             stringId = get(SectionType.STRING_ID, get());
             this.stringId = stringId;
-            stringId.addStringUsage(stringUsage);
+            stringId.addUsageType(stringUsage);
         }
         return stringId;
     }
@@ -53,7 +53,7 @@ public class StringReferenceUle128 extends Ule128Item implements
         int value = 0;
         if(stringId != null){
             value = stringId.getIndex();
-            stringId.addStringUsage(stringUsage);
+            stringId.addUsageType(stringUsage);
         }
         set(value);
     }
@@ -64,13 +64,6 @@ public class StringReferenceUle128 extends Ule128Item implements
             return stringId.getStringData();
         }
         return null;
-    }
-    public void setItem(StringData stringData){
-        StringId stringId = null;
-        if(stringData != null){
-            stringId = stringData.getStringId();
-        }
-        setStringId(stringId);
     }
     public String getString(){
         StringData stringData = getItem();
@@ -83,13 +76,13 @@ public class StringReferenceUle128 extends Ule128Item implements
         if(Objects.equals(text, getString())){
             return;
         }
-        Section<StringData> section = getSection(SectionType.STRING_DATA);
+        Section<StringId> section = getSection(SectionType.STRING_ID);
         if(section == null){
             return;
         }
-        DexIdPool<StringData> pool = section.getPool();
-        StringData stringData = pool.getOrCreate(new StringKey(text));
-        setStringId(stringData.getStringId());
+        DexIdPool<StringId> pool = section.getPool();
+        StringId stringId = pool.getOrCreate(new StringKey(text));
+        setStringId(stringId);
     }
 
     @Override
@@ -104,6 +97,7 @@ public class StringReferenceUle128 extends Ule128Item implements
         int value = 0;
         if(stringId != null){
             value = stringId.getIndex();
+            stringId.addUsageType(stringUsage);
         }
         set(value);
     }

@@ -84,6 +84,9 @@ public class AnnotationKey implements Key{
         if(obj == null){
             return -1;
         }
+        if(obj == this){
+            return 0;
+        }
         AnnotationKey key = (AnnotationKey) obj;
         int i = CompareUtil.compare(getDefining(), key.getDefining());
         if(i != 0) {
@@ -120,8 +123,15 @@ public class AnnotationKey implements Key{
 
     @Override
     public int hashCode() {
-        int hash = getDefining().hashCode();
-        hash = hash * 31 + getName().hashCode();
+        int hash = 1;
+        String text = getDefining();
+        if(text != null){
+            hash = hash * 31 + text.hashCode();
+        }
+        text = getName();
+        if(text != null){
+            hash = hash * 31 + text.hashCode();
+        }
         return hash;
     }
     @Override

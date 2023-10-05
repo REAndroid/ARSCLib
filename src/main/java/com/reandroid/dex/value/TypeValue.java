@@ -16,12 +16,29 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
 
 public class TypeValue extends SectionIdValue<TypeId> {
 
     public TypeValue() {
         super(SectionType.TYPE_ID, DexValueType.TYPE);
+    }
+
+    public String getType(){
+        TypeId typeId = get();
+        if(typeId != null){
+            return typeId.getName();
+        }
+        return null;
+    }
+    public void setType(String type) {
+        setKey(new TypeKey(type));
+    }
+    @Override
+    public TypeKey getKey() {
+        return (TypeKey) super.getKey();
     }
 
     @Override

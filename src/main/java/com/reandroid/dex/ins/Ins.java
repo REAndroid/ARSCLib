@@ -22,23 +22,21 @@ import com.reandroid.dex.item.InstructionList;
 import com.reandroid.dex.item.MethodDef;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.EmptyList;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 public class Ins extends DexContainerItem implements SmaliFormat {
+
     private final Opcode<?> opcode;
-    private List<ExtraLine> extraLines;
+    private ExtraLineList extraLineList;
     private final IntegerReference address;
+
     Ins(int childesCount, Opcode<?> opcode) {
         super(childesCount);
         this.opcode = opcode;
-        this.extraLines = EmptyList.of();
+        this.extraLineList = ExtraLineList.EMPTY;
         this.address = new NumberIntegerReference();
     }
     Ins(Opcode<?> opcode) {
@@ -70,8 +68,8 @@ public class Ins extends DexContainerItem implements SmaliFormat {
         }
     }
     public void transferExtraLines(Ins target) {
-        target.extraLines = this.extraLines;
-        this.extraLines = EmptyList.of();
+        target.extraLineList = this.extraLineList;
+        this.extraLineList = ExtraLineList.EMPTY;
     }
     public void replace(Ins ins){
         if(ins == null || ins == this){
@@ -101,51 +99,40 @@ public class Ins extends DexContainerItem implements SmaliFormat {
         this.address.set(address);
     }
 
-    private boolean containsExtraLine(ExtraLine extraLine){
-        Iterator<ExtraLine> iterator = getExtraLines();
-        while (iterator.hasNext()){
-            if(extraLine.isEqualExtraLine(iterator.next())){
-                return true;
-            }
-        }
-        return false;
+    public void trimExtraLines(){
+        this.extraLineList.trimToSize();
     }
     public void addExtraLine(ExtraLine extraLine){
-        if(extraLines.isEmpty()){
-            extraLines = new ArrayList<>();
-        }else if(containsExtraLine(extraLine)){
-            return;
-        }
-        extraLines.add(extraLine);
+        this.extraLineList = ExtraLineList.add(this.extraLineList, extraLine);
+    }
+    public void addExtraLine(Iterator<ExtraLine> iterator){
+        this.extraLineList = ExtraLineList.add(this.extraLineList, iterator);
     }
     public Iterator<ExtraLine> getExtraLines(){
-        return this.extraLines.iterator();
-    }
-    public void sortExtraLines() {
-        if(extraLines.isEmpty()){
-            return;
-        }
-        extraLines.sort(ExtraLine.COMPARATOR);
+        return this.extraLineList.iterator();
     }
     public void clearExtraLines() {
-        if(!extraLines.isEmpty()){
-            extraLines = EmptyList.of();
-        }
+        extraLineList = ExtraLineList.EMPTY;
     }
     public boolean hasExtraLines() {
-        return !extraLines.isEmpty();
+        return !extraLineList.isEmpty();
     }
     private void appendExtraLines(SmaliWriter writer) throws IOException {
         Iterator<ExtraLine> iterator = getExtraLines();
         ExtraLine extraLine = null;
         boolean hasHandler = false;
+        ExtraLine previous = null;
         while (iterator.hasNext()){
-            writer.newLine();
             extraLine = iterator.next();
+            if(extraLine.isEqualExtraLine(previous)){
+                continue;
+            }
+            writer.newLine();
             extraLine.appendExtra(writer);
             if(!hasHandler){
                 hasHandler = extraLine.getSortOrder() == ExtraLine.ORDER_EXCEPTION_HANDLER;
             }
+            previous = extraLine;
         }
         if(hasHandler && extraLine.getSortOrder() >= ExtraLine.ORDER_EXCEPTION_HANDLER){
             writer.newLine();
@@ -173,11 +160,11 @@ public class Ins extends DexContainerItem implements SmaliFormat {
         StringWriter writer = new StringWriter();
         SmaliWriter smaliWriter = new SmaliWriter(writer);
         try {
-            append(smaliWriter);
+            appendCode(smaliWriter);
             smaliWriter.close();
-        } catch (IOException exception) {
+            return writer.toString().trim();
+        } catch (Throwable exception) {
             return exception.toString();
         }
-        return writer.toString();
     }
 }

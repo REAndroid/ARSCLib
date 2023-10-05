@@ -21,6 +21,7 @@ import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.CountedArray;
 import com.reandroid.dex.base.DexBlockAlign;
+import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.item.DexContainerItem;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -30,14 +31,14 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class TryBlock extends DexContainerItem implements
-        Creator<TryItem>, Iterable<TryItem>, LabelList {
+        Creator<TryItem>, Iterable<TryItem>, LabelsSet {
     private final IntegerReference totalCount;
 
     private HandlerOffsetArray handlerOffsetArray;
     private Ule128Item tryItemsCount;
     private ByteArray unknownBytes;
     private CountedArray<TryItem> tryItemArray;
-    private DexBlockAlign positionAlign;
+    private DexPositionAlign positionAlign;
 
     public TryBlock(IntegerReference totalCount) {
         super(5);
@@ -63,12 +64,27 @@ public class TryBlock extends DexContainerItem implements
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
-
-
+        updateHandlerOffsets();
+        DexPositionAlign positionAlign = this.positionAlign;
+        if(positionAlign != null){
+            positionAlign.align(this);
+        }
     }
-    private int getStart(int index) {
-        int start = tryItemsCount.countBytes();
-        return 0;
+    private void updateHandlerOffsets(){
+        CountedArray<TryItem> array = this.tryItemArray;
+        if(array == null){
+            return;
+        }
+        int baseOffset = this.tryItemsCount.countBytes();
+        HandlerOffsetArray offsetArray = this.handlerOffsetArray;
+        int size = array.getCount();
+        for(int i = 0; i < size; i++){
+            TryItem item = array.get(i);
+            HandlerOffset offset = offsetArray.get(i);
+            int count = array.countUpTo(item);
+            count += baseOffset;
+            offset.setOffset(count);
+        }
     }
 
     private HandlerOffsetArray initHandlersOffset() {
@@ -102,7 +118,7 @@ public class TryBlock extends DexContainerItem implements
         initHandlersOffset();
         initTryItemArray();
         if(positionAlign == null){
-            positionAlign = new DexBlockAlign(this);
+            positionAlign = new DexPositionAlign();
             addChild(INDEX_positionAlign, positionAlign);
         }
     }
@@ -183,6 +199,9 @@ public class TryBlock extends DexContainerItem implements
         }
     }
 
+    public DexPositionAlign getPositionAlign(){
+        return positionAlign;
+    }
     @Override
     public TryItem[] newInstance(int length) {
         HandlerOffsetArray offsetArray = initHandlersOffset();

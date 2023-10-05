@@ -26,7 +26,6 @@ public class DexItemArray<T extends Block> extends CreatorArray<T>
         implements OffsetSupplier, DexArraySupplier<T> {
 
     private final IntegerPair countAndOffset;
-    private PreloadArray<T> mPreloadArray;
     public DexItemArray(IntegerPair countAndOffset,
                         Creator<T> creator) {
         super(creator);
@@ -41,9 +40,6 @@ public class DexItemArray<T extends Block> extends CreatorArray<T>
         return super.countBytes();
     }
 
-    public void setPreloadArray(PreloadArray<T> preloadArray) {
-        this.mPreloadArray = preloadArray;
-    }
     @Override
     public IntegerReference getOffsetReference(){
         return getCountAndOffset().getSecond();
@@ -75,13 +71,12 @@ public class DexItemArray<T extends Block> extends CreatorArray<T>
         }
         return false;
     }
-    private void readChildes(BlockReader reader) throws IOException {
+    protected void readChildes(BlockReader reader) throws IOException {
         T[] childes = getChildes();
         if(childes == null){
             return;
         }
         int length = childes.length;
-        notifyPreload(childes);
         for(int i = 0; i < length; i++){
             Block block = childes[i];
             if(block == null){
@@ -92,12 +87,6 @@ public class DexItemArray<T extends Block> extends CreatorArray<T>
             }
             positionItem(block, reader);
             block.readBytes(reader);
-        }
-    }
-    private void notifyPreload(T[] childes){
-        PreloadArray<T> preloadArray = this.mPreloadArray;
-        if(preloadArray != null){
-            preloadArray.onPreload(childes);
         }
     }
     private boolean skipReading(Block block, BlockReader reader){

@@ -22,6 +22,8 @@ import com.reandroid.arsc.value.Entry;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.item.FieldDef;
 import com.reandroid.dex.value.DexValueBlock;
+import com.reandroid.dex.value.DexValueType;
+import com.reandroid.dex.value.IntValue;
 import com.reandroid.dex.value.PrimitiveValue;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -72,6 +74,10 @@ public class RField extends DexField implements Comparable<RField> {
         }
         return 0;
     }
+    public void setResourceId(int resourceId) {
+        IntValue dexValue = getOrCreateInitialValue(DexValueType.INT);
+        dexValue.set(resourceId);
+    }
     public String getResourceName(){
         String name = getName();
         if(TypeString.isTypeStyle(getResourceType())) {
@@ -118,7 +124,7 @@ public class RField extends DexField implements Comparable<RField> {
     static boolean isResourceIdValue(DexValueBlock<?> dexValueBlock) {
         if(dexValueBlock instanceof PrimitiveValue){
             long value = ((PrimitiveValue)dexValueBlock).getNumberValue();
-            if((value & 0xffffffffL) != 0){
+            if((value & 0xffffffff00000000L) != 0){
                 return false;
             }
             return PackageBlock.isResourceId((int) value);
@@ -145,6 +151,13 @@ public class RField extends DexField implements Comparable<RField> {
         }
         builder.append(fieldName.charAt(length));
         return builder.toString();
+    }
+    public static String sanitizeResourceName(String resourceName) {
+        if(resourceName.charAt(0) == '$'){
+            resourceName = resourceName.substring(1);
+        }
+        resourceName = resourceName.replace('.', '_');
+        return resourceName;
     }
     public static Map<Integer, RField> mapRFields(Iterator<RField> iterator) {
         Map<Integer, RField> map = new HashMap<>();

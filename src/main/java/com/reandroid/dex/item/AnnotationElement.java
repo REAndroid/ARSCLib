@@ -2,6 +2,7 @@ package com.reandroid.dex.item;
 
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.index.StringId;
 import com.reandroid.dex.key.AnnotationKey;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
@@ -10,13 +11,13 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class AnnotationElement extends DataItemEntry implements SmaliFormat {
+public class AnnotationElement extends DataSectionEntry implements SmaliFormat {
 
     private final StringReferenceUle128 elementName;
 
     public AnnotationElement() {
         super(2);
-        this.elementName = new StringReferenceUle128(StringData.USAGE_METHOD);
+        this.elementName = new StringReferenceUle128(StringId.USAGE_METHOD_NAME);
         addChild(0, elementName);
     }
 
@@ -46,9 +47,6 @@ public class AnnotationElement extends DataItemEntry implements SmaliFormat {
     }
     public void setName(String name){
         elementName.setString(name);
-    }
-    public void setName(StringData name){
-        elementName.setItem(name);
     }
     public StringData getNameStringData(){
         return elementName.getItem();

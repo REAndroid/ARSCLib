@@ -23,11 +23,13 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.NullValue;
+import com.reandroid.utils.collection.InstanceIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
-public class EncodedArray extends DataItemEntry implements Iterable<DexValueBlock<?>> {
+public class EncodedArray extends DataSectionEntry implements Iterable<DexValueBlock<?>> {
 
     private final Ule128Item elementCount;
     private final BlockArray<DexValueBlock<?>> elementsArray;
@@ -48,7 +50,7 @@ public class EncodedArray extends DataItemEntry implements Iterable<DexValueBloc
         BlockArray<DexValueBlock<?>> array = getElementsArray();
         array.ensureSize(i + 1);
         DexValueBlock<?> value = array.get(i);
-        if(value.getValueType() != valueType){
+        if(value == PLACE_HOLDER || value.getValueType() != valueType){
             value = valueType.newInstance();
             array.setItem(i, value);
         }
@@ -60,11 +62,24 @@ public class EncodedArray extends DataItemEntry implements Iterable<DexValueBloc
     public void add(DexValueBlock<?> value){
        getElementsArray().add(value);
     }
+    public void remove(DexValueBlock<?> value){
+        getElementsArray().remove(value);
+    }
     public void set(int i, DexValueBlock<?> value){
         getElementsArray().setItem(i, value);
     }
     public void trimNull(){
-        getElementsArray().removeAllNull(0);
+        int size = size();
+        int updatedSize = 0;
+        for(int i = 0; i < size; i++){
+            DexValueBlock<?> value = get(i);
+            if(value != null && value != PLACE_HOLDER) {
+                updatedSize = i + 1;
+            }
+        }
+        if(updatedSize != size){
+            setSize(updatedSize);
+        }
     }
 
 
@@ -74,6 +89,12 @@ public class EncodedArray extends DataItemEntry implements Iterable<DexValueBloc
     @Override
     public Iterator<DexValueBlock<?>> iterator(){
         return getElementsArray().iterator();
+    }
+    public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance){
+        return InstanceIterator.of(iterator(), instance);
+    }
+    public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance, Predicate<? super T1> filter){
+        return InstanceIterator.of(iterator(), instance, filter);
     }
 
     private BlockArray<DexValueBlock<?>> getElementsArray() {
@@ -130,8 +151,9 @@ public class EncodedArray extends DataItemEntry implements Iterable<DexValueBloc
         }
         @Override
         public DexValueBlock<?> newInstance() {
-            return NullValue.getInstance();
+            return PLACE_HOLDER;
         }
     };
     static final DexValueBlock<?>[] EMPTY = new DexValueBlock<?>[0];
+    static final NullValue PLACE_HOLDER = new NullValue();
 }

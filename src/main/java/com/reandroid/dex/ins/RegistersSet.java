@@ -15,22 +15,16 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.item.CodeItem;
 
-public class RegisterFactory {
-    private final CodeItem codeItem;
-    public RegisterFactory(CodeItem codeItem){
-        this.codeItem = codeItem;
-    }
+public interface RegistersSet {
+    int getRegistersCount();
+    void setRegistersCount(int count);
 
-    public int getValue(int register) {
-        int local = codeItem.getLocalsCount();
-        if(register >= local){
-            register = register - local;
-        }
-        return register;
+    int getRegister(int index);
+    void setRegister(int index, int value);
+
+    default boolean isRegistersRange(){
+        return false;
     }
-    public boolean isParameter(int register) {
-        return register >= codeItem.getLocalsCount();
-    }
+    int getRegistersLimit();
 }

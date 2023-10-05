@@ -15,15 +15,12 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins22b extends Size4Ins {
+public class Ins22b extends Ins22 implements RegistersSet {
+
     public Ins22b(Opcode<?> opcode) {
         super(opcode);
     }
 
-    @Override
-    public int getRegistersCount() {
-        return 2;
-    }
     @Override
     public int getRegister(int index) {
         return getByteUnsigned(1 + index);
@@ -31,5 +28,18 @@ public class Ins22b extends Size4Ins {
     @Override
     public void setRegister(int index, int value) {
         setByte(1 + index, value);
+    }
+    @Override
+    public int getRegistersLimit(){
+        return 0xff;
+    }
+
+    @Override
+    public int getData(){
+        return getByteUnsigned(3);
+    }
+    @Override
+    public void setData(int data){
+        setByte(3, data);
     }
 }

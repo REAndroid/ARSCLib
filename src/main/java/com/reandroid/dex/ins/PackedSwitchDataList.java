@@ -17,7 +17,7 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.common.ArraySupplier;
-import com.reandroid.common.ArraySupplierIterator;
+import com.reandroid.utils.collection.ArraySupplierIterator;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.item.IntegerList;
@@ -30,7 +30,7 @@ import java.util.Iterator;
 import java.util.Objects;
 
 public class PackedSwitchDataList extends IntegerList
-        implements SmaliFormat, LabelList, VisitableInteger {
+        implements SmaliFormat, LabelsSet, VisitableInteger {
 
     private final IntegerReference firstKey;
     private final InsPackedSwitchData switchData;

@@ -25,6 +25,10 @@ import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.NumberIntegerReference;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.dex.header.DexHeader;
+import com.reandroid.dex.index.IdSectionEntry;
+import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.ArraySupplierIterator;
+import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
 import java.util.*;
@@ -33,15 +37,19 @@ public class SectionList extends FixedBlockContainer
         implements OffsetSupplier, Iterable<Section<?>> , ArraySupplier<Section<?>> {
     private final IntegerReference baseOffset;
     private final DexHeader dexHeader;
-    private final BlockList<Section<?>> dexSectionList;
+    private final Section<DexHeader> dexHeaderSection;
+    private final BlockList<IdSection<?>> idSectionList;
+    private final BlockList<DataSection<?>> dataSectionList;
+    private final Section<MapList> mapListSection;
     private final Map<SectionType<?>, Section<?>> typeMap;
     private final MapList mapList;
 
     public SectionList() {
-        super(1);
+        super(4);
 
         this.baseOffset = new NumberIntegerReference();
-        this.dexSectionList = new BlockList<>();
+        this.idSectionList = new BlockList<>();
+        this.dataSectionList = new BlockList<>();
 
         IntegerPair headerCountAndOffset = IntegerPair.of(
                 new NumberIntegerReference(),
@@ -52,6 +60,7 @@ public class SectionList extends FixedBlockContainer
         Section<DexHeader> dexHeaderSection = new Section<>(headerCountAndOffset, SectionType.HEADER);
         DexHeader dexHeader = new DexHeader(baseOffset);
         dexHeaderSection.add(dexHeader);
+        this.dexHeaderSection = dexHeaderSection;
 
         IntegerPair mapListCountAndOffset = IntegerPair.of(
                 new NumberIntegerReference(),
@@ -61,13 +70,14 @@ public class SectionList extends FixedBlockContainer
         Section<MapList> mapListSection = new Section<>(mapListCountAndOffset, SectionType.MAP_LIST);
         MapList mapList = new MapList(dexHeader.map);
         mapListSection.add(mapList);
+        this.mapListSection = mapListSection;
 
         this.typeMap = new HashMap<>();
 
-        addChild(0, dexSectionList);
-
-        this.dexSectionList.add(dexHeaderSection);
-        this.dexSectionList.add(mapListSection);
+        addChild(0, dexHeaderSection);
+        addChild(1, idSectionList);
+        addChild(2, dataSectionList);
+        addChild(3, mapListSection);
 
         this.dexHeader = dexHeader;
         this.mapList = mapList;
@@ -76,6 +86,21 @@ public class SectionList extends FixedBlockContainer
         typeMap.put(SectionType.MAP_LIST, mapListSection);
     }
 
+    public void clearUsageTypes(){
+        for (Section<?> section : this) {
+            section.clearUsageTypes();
+        }
+    }
+    @SuppressWarnings("unchecked")
+    public Iterator<Section<IdSectionEntry>> getIndexSections(){
+        Iterator<Section<?>> iterator = iterator();
+        return ComputeIterator.of(iterator, section -> {
+            if(section.getSectionType().isIdSection()){
+                return (Section<IdSectionEntry>) section;
+            }
+            return null;
+        });
+    }
     public void updateHeader() {
         Block parent = getParentInstance(DexFileBlock.class);
         if(parent == null){
@@ -94,7 +119,7 @@ public class SectionList extends FixedBlockContainer
     protected void onRefreshed() {
         super.onRefreshed();
         mapList.refresh();
-        mapList.updateHeader(dexHeader);
+        //mapList.updateHeader(dexHeader);
     }
     private void updateIdCounts(){
         for(Section<?> section : this){
@@ -122,7 +147,9 @@ public class SectionList extends FixedBlockContainer
             }
             loadSection(mapItem, reader);
         }
-        dexSectionList.sort(getOffsetComparator());
+        idSectionList.sort(getIdOffsetComparator());
+        dataSectionList.sort(getDataOffsetComparator());
+        mapList.linkHeader(dexHeader);
     }
     private void loadSection(MapItem mapItem, BlockReader reader) throws IOException {
         if(mapItem == null){
@@ -138,10 +165,13 @@ public class SectionList extends FixedBlockContainer
         }
         add(section);
         section.readBytes(reader);
-        section.buildOffsetMap();
     }
     public<T1 extends Block> Section<T1> add(Section<T1> section){
-        dexSectionList.add(section);
+        if(section instanceof IdSection){
+            idSectionList.add((IdSection<?>) section);
+        }else {
+            dataSectionList.add((DataSection<?>) section);
+        }
         typeMap.put(section.getSectionType(), section);
         return section;
     }
@@ -153,7 +183,8 @@ public class SectionList extends FixedBlockContainer
     }
 
     public void sortSection(SectionType<?>[] order){
-        dexSectionList.sort(new OrderBasedComparator(order));
+        idSectionList.sort(SectionType.comparator(order, Section::getSectionType));
+        dataSectionList.sort(SectionType.comparator(order, Section::getSectionType));
         mapList.sortMapItems(order);
     }
     public void sortStrings(){
@@ -179,14 +210,6 @@ public class SectionList extends FixedBlockContainer
         }
         return false;
     }
-
-    public<T1 extends Block> T1 getAt(SectionType<T1> sectionType, int i){
-        Section<T1> section = get(sectionType);
-        if(section != null){
-            return section.getAt(i);
-        }
-        return null;
-    }
     public<T1 extends Block> T1 get(SectionType<T1> sectionType, int i){
         Section<T1> section = get(sectionType);
         if(section != null){
@@ -205,51 +228,78 @@ public class SectionList extends FixedBlockContainer
     public<T1 extends Block> Section<T1> get(SectionType<T1> sectionType){
         return (Section<T1>) typeMap.get(sectionType);
     }
+    public<T1 extends Block> Section<T1> getOrCreate(SectionType<T1> sectionType){
+        Section<T1> section = get(sectionType);
+        if(section != null){
+            return section;
+        }
+        if(sectionType == SectionType.MAP_LIST){
+            return null;
+        }
+        MapList mapList = getMapList();
+        MapItem mapItem = mapList.getOrCreate(sectionType);
+        section = mapItem.createNewSection();
+        add(section);
+        sortSection(SectionType.getR8Order());
 
+        return section;
+    }
+
+    public int indexOf(Section<?> section){
+        if(section == dexHeaderSection){
+            return 0;
+        }
+        if(section == mapListSection){
+            return getCount() - 1;
+        }
+        if (section == idSectionList.get(section.getIndex())){
+            return 1 + section.getIndex();
+        }
+        if (section == dataSectionList.get(section.getIndex())){
+            return 1 + idSectionList.size() + section.getIndex();
+        }
+        return -1;
+    }
     @Override
     public Section<?> get(int i) {
-        return dexSectionList.get(i);
+        if(i == 0){
+            return dexHeaderSection;
+        }
+        if(i == getCount() - 1){
+            return mapListSection;
+        }
+        if(i <= idSectionList.size()){
+            return idSectionList.get(i - 1);
+        }
+        return dataSectionList.get(i - 1 - idSectionList.size());
     }
     @Override
     public int getCount(){
-        return dexSectionList.size();
+        return 2 + idSectionList.size() + dataSectionList.size();
     }
     @Override
     public Iterator<Section<?>> iterator() {
-        return dexSectionList.iterator();
+        return ArraySupplierIterator.of(this);
     }
     @Override
     public IntegerReference getOffsetReference() {
         return baseOffset;
     }
 
-    private static Comparator<Section<?>> getOffsetComparator() {
-        return new Comparator<Section<?>>() {
+    private static Comparator<IdSection<?>> getIdOffsetComparator() {
+        return new Comparator<IdSection<?>>() {
             @Override
-            public int compare(Section<?> section1, Section<?> section2) {
+            public int compare(IdSection<?> section1, IdSection<?> section2) {
                 return Integer.compare(section1.getOffset(), section2.getOffset());
             }
         };
     }
-    static class OrderBasedComparator implements Comparator<Section<?>> {
-        private final SectionType<?>[] sortOrder;
-        OrderBasedComparator(SectionType<?>[] sortOrder){
-            this.sortOrder = sortOrder;
-        }
-        private int getOrder(SectionType<?> sectionType){
-            SectionType<?>[] sortOrder = this.sortOrder;
-            int length = sortOrder.length;
-            for(int i = 0; i < length; i++){
-                if(sortOrder[i] == sectionType){
-                    return i;
-                }
+    private static Comparator<DataSection<?>> getDataOffsetComparator() {
+        return new Comparator<DataSection<?>>() {
+            @Override
+            public int compare(DataSection<?> section1, DataSection<?> section2) {
+                return Integer.compare(section1.getOffset(), section2.getOffset());
             }
-            return length - 2;
-        }
-        @Override
-        public int compare(Section<?> section1, Section<?> section2) {
-            return Integer.compare(getOrder(section1.getSectionType()),
-                    getOrder(section2.getSectionType()));
-        }
+        };
     }
 }

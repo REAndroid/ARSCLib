@@ -16,11 +16,31 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.utils.collection.FilterIterator;
+
+import java.util.Iterator;
 
 public class MethodDefArray extends DefArray<MethodDef> {
     public MethodDefArray(IntegerReference itemCount){
         super(itemCount);
     }
+
+    @Override
+    public boolean remove(MethodDef methodDef){
+        return super.remove(methodDef);
+    }
+
+    @Override
+    void sortAnnotations(){
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if(directory != null){
+            directory.sortMethods();
+        }
+    }
+    public Iterator<MethodDef> getConstructors() {
+        return FilterIterator.of(iterator(), MethodDef::isConstructor);
+    }
+
     @Override
     public MethodDef[] newInstance(int length) {
         return new MethodDef[length];

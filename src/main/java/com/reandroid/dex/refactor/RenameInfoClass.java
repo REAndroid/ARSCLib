@@ -17,6 +17,7 @@ package com.reandroid.dex.refactor;
 
 import com.reandroid.arsc.group.ItemGroup;
 import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.index.StringId;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
@@ -39,7 +40,7 @@ public class RenameInfoClass extends RenameInfo<StringData> {
     void apply(ItemGroup<StringData> group){
         String replace = getReplace();
         for(StringData stringData : group){
-            if(!stringData.containsUsage(StringData.USAGE_TYPE)){
+            if(!stringData.containsUsage(StringId.USAGE_TYPE_NAME)){
                 continue;
             }
             stringData.setString(replace);
@@ -111,7 +112,7 @@ public class RenameInfoClass extends RenameInfo<StringData> {
         }
         @Override
         public boolean lookString(StringData stringData){
-            if(stringData.getStringUsage() != StringData.USAGE_TYPE){
+            if(stringData.getUsageType() != StringId.USAGE_TYPE_NAME){
                 return false;
             }
             String text = stringData.getString();
@@ -204,7 +205,7 @@ public class RenameInfoClass extends RenameInfo<StringData> {
         void apply(ItemGroup<StringData> group){
             String replace = getReplace();
             for(StringData stringData : group){
-                if(stringData.getStringUsage() != StringData.USAGE_INSTRUCTION){
+                if(stringData.getUsageType() != StringId.USAGE_INSTRUCTION){
                     continue;
                 }
                 stringData.setString(replace);
@@ -212,7 +213,7 @@ public class RenameInfoClass extends RenameInfo<StringData> {
         }
         @Override
         public boolean lookString(StringData stringData){
-            if(stringData.getStringUsage() != StringData.USAGE_INSTRUCTION){
+            if(stringData.getUsageType() != StringId.USAGE_INSTRUCTION){
                 return false;
             }
             String text = stringData.getString();

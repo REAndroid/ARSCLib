@@ -16,9 +16,12 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
+import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
@@ -51,6 +54,11 @@ public class DexDirectory implements Iterable<DexFile>, VisitableInteger {
         this.mTag = tag;
     }
 
+    public void loadRClass(TableBlock tableBlock){
+        for(DexFile dexFile:this){
+            dexFile.loadRClass(tableBlock);
+        }
+    }
     public void replaceRFields(){
         Map<Integer, RField> map = RField.mapRFields(listRFields().iterator());
         IntegerVisitor visitor = new IntegerVisitor() {
@@ -77,9 +85,14 @@ public class DexDirectory implements Iterable<DexFile>, VisitableInteger {
             save(dexFile);
         }
     }
+    public void save(){
+        for(DexFile dexFile : this){
+            mCurrent = dexFile;
+            save(dexFile);
+        }
+    }
     private void save(DexFile dexFile){
         Object tag = dexFile.getTag();
-        System.err.println("Saving: " + tag);
         if(!(tag instanceof File)){
             return;
         }
@@ -88,11 +101,12 @@ public class DexDirectory implements Iterable<DexFile>, VisitableInteger {
         name = name.substring(0, name.length()-4);
         name = name + "_mod.dex";
         File modFile = new File(file.getParentFile(), name);
+        System.err.println("Saving: " + name);
         try {
-            dexFile.refresh();
             dexFile.sortStrings();
-            dexFile.refresh();
-            dexFile.write(file);
+            dexFile.refreshFull();
+            dexFile.write(modFile);
+            System.err.println("Saved: " + modFile);
         } catch (IOException exception) {
             exception.printStackTrace();
         }
@@ -128,6 +142,11 @@ public class DexDirectory implements Iterable<DexFile>, VisitableInteger {
         return getDexFileList().iterator();
     }
 
+    public void refreshFull(){
+        for(DexFile dexFile : this){
+            dexFile.refreshFull();
+        }
+    }
     public void refresh(){
         for(DexFile dexFile : this){
             dexFile.refresh();
@@ -148,6 +167,7 @@ public class DexDirectory implements Iterable<DexFile>, VisitableInteger {
     public void add(File file) throws IOException {
         DexFile dexFile = DexFile.read(file);
         dexFile.setTag(file);
+        dexFile.setSimpleName(file.getName());
         add(dexFile);
     }
     public void add(InputStream inputStream) throws IOException {
@@ -161,6 +181,15 @@ public class DexDirectory implements Iterable<DexFile>, VisitableInteger {
         if(!dexFileList.contains(dexFile)){
             dexFileList.add(dexFile);
         }
+    }
+    public DexClass get(TypeKey key){
+        for(DexFile dexFile : this){
+            DexClass dexClass = dexFile.get(key);
+            if(dexClass != null){
+                return null;
+            }
+        }
+        return null;
     }
     public DexFile get(int i){
         return dexFileList.get(i);

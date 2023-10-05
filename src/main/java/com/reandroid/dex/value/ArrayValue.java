@@ -22,6 +22,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 public class ArrayValue extends DexValueBlock<EncodedArray>
         implements Iterable<DexValueBlock<?>>, VisitableInteger {
@@ -47,9 +48,23 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
     public void add(DexValueBlock<?> value){
         getValueContainer().add(value);
     }
+    public void remove(DexValueBlock<?> value){
+        getValueContainer().remove(value);
+    }
+    public<T1 extends DexValueBlock<?>> T1 createNext(DexValueType<T1> valueType){
+        T1 item = valueType.newInstance();
+        add(item);
+        return item;
+    }
     @Override
     public Iterator<DexValueBlock<?>> iterator() {
         return getValueContainer().iterator();
+    }
+    public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance) {
+        return getValueContainer().iterator(instance);
+    }
+    public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance, Predicate<? super T1> filter){
+        return getValueContainer().iterator(instance, filter);
     }
     @Override
     public DexValueType<?> getValueType() {

@@ -15,129 +15,61 @@
  */
 package com.reandroid.dex.item;
 
+import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.*;
+import com.reandroid.arsc.item.BlockItem;
+import com.reandroid.dex.base.DexBlockItem;
+import com.reandroid.dex.base.DexException;
+import com.reandroid.dex.base.DexItemArray;
+import com.reandroid.dex.base.OffsetReceiver;
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.index.StringId;
 import com.reandroid.dex.io.ByteReader;
 import com.reandroid.dex.io.StreamUtil;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.key.StringKey;
-import com.reandroid.dex.sections.Section;
-import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Objects;
 
-public class StringData extends DexBlockItem
+public class StringData extends DataSectionEntry
         implements SmaliFormat, BlockRefresh,
-        OffsetSupplier, OffsetReceiver, StringKeyItemCreate,
-        Comparable<StringData> {
+        OffsetSupplier, OffsetReceiver, Comparable<StringData> {
 
+    static String EMPTY_STRING = "";
+    private final StringDataContainer mDataContainer;
     private String mCache;
-    private StringId mStringId;
-    private int stringUsage;
+    private final StringDataKey mKey;
 
     public StringData() {
-        super(0);
-        this.mCache = "";
-    }
-    @SuppressWarnings("unchecked")
-    public void removeSelf(){
-        DexItemArray<StringData> itemArray = getParentInstance(DexItemArray.class);
-        if(itemArray != null){
-            itemArray.remove(this);
-        }
-        StringId stringId = this.mStringId;
-        this.mStringId = null;
-        if(stringId != null){
-            stringId.setStringData(null);
-            stringId.removeSelf();
-        }
+        super(1);
+        this.mDataContainer = new StringDataContainer(this);
+        addChild(0, mDataContainer);
+        this.mCache = EMPTY_STRING;
+        this.mKey = new StringDataKey(this);
     }
 
-    public String getStringUsageName() {
-        if(containsUsage(USAGE_NONE)){
-            return "NONE";
-        }
-        StringBuilder builder = new StringBuilder();
-        if(containsUsage(USAGE_INSTRUCTION)){
-            builder.append("INSTRUCTION");
-        }
-        if(containsUsage(USAGE_INITIAL)){
-            if(builder.length() != 0){
-                builder.append('|');
-            }
-            builder.append("INITIAL");
-        }
-        if(containsUsage(USAGE_ANNOTATION)){
-            if(builder.length() != 0){
-                builder.append('|');
-            }
-            builder.append("ANNOTATION");
-        }
-        if(containsUsage(USAGE_TYPE)){
-            if(builder.length() != 0){
-                builder.append('|');
-            }
-            builder.append("TYPE");
-        }
-        if(containsUsage(USAGE_FIELD)){
-            if(builder.length() != 0){
-                builder.append('|');
-            }
-            builder.append("FIELD");
-        }
-        if(containsUsage(USAGE_METHOD)){
-            if(builder.length() != 0){
-                builder.append('|');
-            }
-            builder.append("METHOD");
-        }
-        if(containsUsage(USAGE_SHORTY)){
-            if(builder.length() != 0){
-                builder.append('|');
-            }
-            builder.append("SHORTY");
-        }
-        if(containsUsage(USAGE_SOURCE)){
-            if(builder.length() != 0){
-                builder.append('|');
-            }
-            builder.append("SOURCE");
-        }
-        if(containsUsage(USAGE_DEBUG)){
-            if(builder.length() != 0){
-                builder.append('|');
-            }
-            builder.append("DEBUG");
-        }
-        return builder.toString();
+    public void removeSelf(){
+        throw new DexException("Remove STRING_ID first before STRING_DATA");
     }
-    public boolean containsUsage(int usage){
-        if(usage == 0){
-            return this.stringUsage == 0;
+    public void removeSelf(StringId request){
+        if(request != null && request.getParent() != null){
+            super.removeSelf();
         }
-        return (this.stringUsage & usage) == usage;
-    }
-    public int getStringUsage() {
-        return stringUsage;
-    }
-    public void addStringUsage(int usage){
-        this.stringUsage |= usage;
     }
 
     @Override
     public StringKey getKey(){
-        return new StringKey(getString());
+        return mKey;
     }
-    @Override
     public void setKey(Key key){
         if(key instanceof StringKey){
             setString(((StringKey)key).getString());
@@ -152,38 +84,35 @@ public class StringData extends DexBlockItem
         }
         mCache = value;
         encodeString(value);
-        getStringId();
     }
     public String getQuotedString() {
         return DexUtils.quoteString(getString());
     }
 
-    @Override
-    public IntegerReference getOffsetReference() {
-        return getStringId();
-    }
-    @Override
-    public void setOffsetReference(IntegerReference reference) {
-        this.mStringId = (StringId) reference;
-        this.mStringId.setStringData(this);
+    void onBytesChanged() {
+        mCache = decodeString();
     }
 
-    public StringId getStringId() {
-        StringId stringId = this.mStringId;
-        if(stringId == null){
-            Section<StringId> section = getSection(SectionType.STRING_ID);
-            DexItemArray<StringId> itemArray = section.getItemArray();
-            int index = getIndex();
-            itemArray.ensureSize(index + 1);
-            stringId = itemArray.get(index);
-            this.mStringId = stringId;
-            stringId.setStringData(this);
-        }
-        return stringId;
+    @Override
+    public int countBytes() {
+        return mDataContainer.countBytes();
     }
     @Override
-    protected void onBytesChanged() {
-        mCache = decodeString();
+    public byte[] getBytes() {
+        return mDataContainer.getBytes();
+    }
+
+    @Override
+    public void onCountUpTo(BlockCounter counter) {
+        if(counter.FOUND){
+            return;
+        }
+        counter.setCurrent(this);
+        if(counter.END == this){
+            counter.FOUND=true;
+            return;
+        }
+        counter.addCount(countBytes());
     }
 
     @Override
@@ -195,13 +124,15 @@ public class StringData extends DexBlockItem
         String text = decodeString(StreamUtil.createByteReader(reader));
         int length = reader.getPosition() - position;
         reader.seek(position);
-        setBytesLength(length + 1, false);
-        byte[] bytes = getBytesInternal();
+        mDataContainer.setLength(length + 1);
+        byte[] bytes = mDataContainer.getBytesInternal();
         reader.readFully(bytes);
         mCache = text;
     }
+
     @Override
-    public void refresh() {
+    public int onWriteBytes(OutputStream stream) throws IOException {
+        return mDataContainer.onWriteBytes(stream);
     }
 
     @Override
@@ -229,7 +160,7 @@ public class StringData extends DexBlockItem
     private String decodeString(){
         String text;
         try {
-            text = decodeString(StreamUtil.createByteReader(getBytesInternal()));
+            text = decodeString(StreamUtil.createByteReader(mDataContainer.getBytesInternal()));
         } catch (IOException exception) {
             text = null;
         }
@@ -237,9 +168,9 @@ public class StringData extends DexBlockItem
     }
     private void encodeString(String text){
         int length = text.length();
-        setBytesLength(length * 3 + 4, false);
-        final byte[] buffer = getBytesInternal();
-        int position = writeUleb128(buffer, 0, length);
+        mDataContainer.setLength(length * 3 + 4);
+        final byte[] buffer = mDataContainer.getBytesInternal();
+        int position = DexBlockItem.writeUleb128(buffer, 0, length);
         for (int i = 0; i < length; i++) {
             char ch = text.charAt(i);
             if ((ch != 0) && (ch < 0x80)) {
@@ -254,14 +185,14 @@ public class StringData extends DexBlockItem
             }
         }
         buffer[position++] = 0;
-        setBytesLength(position, false);
+        mDataContainer.setLength(position);
     }
     private static String decodeString(ByteReader reader) throws IOException {
-        int utf16Length = readUleb128(reader);
+        int utf16Length = DexBlockItem.readUleb128(reader);
         char[] chars = new char[utf16Length];
         int outAt = 0;
 
-        int at = 0;
+        int at;
         for (at = 0; utf16Length > 0; utf16Length--) {
             int v0 = reader.read();
             char out;
@@ -336,14 +267,57 @@ public class StringData extends DexBlockItem
     public static boolean equals(StringData stringData1, StringData stringData2) {
         return CompareUtil.compare(stringData1, stringData2) == 0;
     }
-    public static final int USAGE_NONE = 0x0000;
-    public static final int USAGE_INSTRUCTION = 1;
-    public static final int USAGE_INITIAL = 1 << 1;
-    public static final int USAGE_ANNOTATION = 1 << 2;
-    public static final int USAGE_TYPE = 1 << 4;
-    public static final int USAGE_FIELD = 1 << 5;
-    public static final int USAGE_METHOD = 1 << 6;
-    public static final int USAGE_SHORTY = 4 << 7;
-    public static final int USAGE_SOURCE = 1 << 8;
-    public static final int USAGE_DEBUG = 1 << 9;
+    static class StringDataContainer extends BlockItem {
+        private final StringData stringData;
+
+        StringDataContainer(StringData stringData) {
+            super(0);
+            this.stringData = stringData;
+        }
+        void setLength(int length){
+            setBytesLength(length, false);
+        }
+        @Override
+        public byte[] getBytesInternal() {
+            return super.getBytesInternal();
+        }
+        @Override
+        protected void onBytesChanged() {
+            stringData.onBytesChanged();
+        }
+        @Override
+        public int onWriteBytes(OutputStream stream) throws IOException {
+            return super.onWriteBytes(stream);
+        }
+    }
+    static class StringDataKey extends StringKey{
+
+        private final StringData stringData;
+
+        public StringDataKey(StringData stringData) {
+            super(null);
+            this.stringData = stringData;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if(!(obj instanceof StringKey) || stringData.getParent() == null) {
+                return false;
+            }
+            if(obj instanceof StringDataKey) {
+                if(((StringDataKey)obj).stringData.getParent() == null){
+                    return false;
+                }
+            }
+            StringKey key = (StringKey) obj;
+            return Objects.equals(getString(), key.getString());
+        }
+        @Override
+        public String getString() {
+            return stringData.getString();
+        }
+    }
 }

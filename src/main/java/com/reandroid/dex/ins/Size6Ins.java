@@ -21,22 +21,10 @@ public class Size6Ins extends SizeXIns {
     }
     @Override
     public int getData(){
-        return getValueBytes().getShortUnsigned(2);
+        return getShortUnsigned(2);
     }
     public void setData(int data){
-        getValueBytes().putShort(2, data);
+        setShort(2, data);
     }
 
-    @Override
-    public int getRegistersCount() {
-        return 1;
-    }
-    @Override
-    public int getRegister(int index) {
-        return getByteUnsigned(1);
-    }
-    @Override
-    public void setRegister(int index, int value) {
-        setByte(1, value);
-    }
 }

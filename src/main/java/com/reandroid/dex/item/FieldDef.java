@@ -58,15 +58,6 @@ public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
     public<T1 extends DexValueBlock<?>> T1 getOrCreateStaticValue(DexValueType<T1> valueType){
         return getClassId().getOrCreateStaticValue(valueType, getIndex());
     }
-    EncodedArray getStaticValues(){
-        if(isStatic()){
-            ClassId classId = getClassId();
-            if(classId != null){
-                return classId.getStaticValues();
-            }
-        }
-        return null;
-    }
 
     @Override
     public ClassId getClassId() {
@@ -103,14 +94,6 @@ public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
 
     public FieldId getFieldId(){
         return getItem();
-    }
-    @Override
-    public Iterator<AnnotationSet> getAnnotations(){
-        AnnotationsDirectory directory = getAnnotationsDirectory();
-        if(directory == null){
-            return EmptyIterator.of();
-        }
-        return directory.getFieldsAnnotation(getIdIndex());
     }
 
     DexValueBlock<?> getTmpValue() {

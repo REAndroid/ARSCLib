@@ -20,30 +20,40 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class Ins31t extends Size6Ins implements Label{
+public class Ins31t extends Size6Ins implements RegistersSet, Label{
+
     public Ins31t(Opcode<?> opcode) {
         super(opcode);
     }
 
     @Override
-    public int getData(){
-        return getShort(2);
-    }
-    public void setData(int data){
-        setShort(2, data);
+    public int getRegistersCount() {
+        return 1;
     }
     @Override
-    public int getRegistersCount() {
-        return 2;
+    public final void setRegistersCount(int count) {
     }
     @Override
     public int getRegister(int index) {
-        return getNibble(2 + index);
+        return getByteUnsigned(1);
     }
     @Override
     public void setRegister(int index, int value) {
-        setNibble(2 + index, value);
+        setByte(1, value);
     }
+    @Override
+    public int getRegistersLimit(){
+        return 0xff;
+    }
+
+    @Override
+    public int getData(){
+        return getInteger();
+    }
+    public void setData(int data){
+        setInteger(data);
+    }
+
     @Override
     public int getTargetAddress() {
         return getAddress() + getData();
@@ -65,7 +75,7 @@ public class Ins31t extends Size6Ins implements Label{
         writer.newLine();
         writer.append(opcode.getName());
         writer.append(' ');
-        getRegisters().append(writer);
+        getRegistersIterator().append(writer);
         writer.append(", ");
         writer.append(getLabelName());
     }

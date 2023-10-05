@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.refactor;
 
+import com.reandroid.dex.index.StringId;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
@@ -37,7 +38,7 @@ public class RenameInfoPackage extends RenameInfoClass {
     }
     @Override
     public boolean lookString(StringData stringData){
-        if(stringData.getStringUsage() != StringData.USAGE_TYPE){
+        if(stringData.getUsageType() != StringId.USAGE_TYPE_NAME){
             return false;
         }
         String text = stringData.getString();

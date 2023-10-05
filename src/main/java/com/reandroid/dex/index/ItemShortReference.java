@@ -17,11 +17,14 @@ package com.reandroid.dex.index;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.base.DexBlockItem;
+import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.HexUtil;
 
-public class ItemShortReference<T extends IndexItemEntry> extends ItemIndexReference<T> {
-    public ItemShortReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset) {
-        super(sectionType, blockItem, offset);
+public class ItemShortReference<T extends IdSectionEntry> extends ItemIdReference<T> {
+
+    public ItemShortReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset, int usage) {
+        super(sectionType, blockItem, offset, usage);
     }
 
     @Override
@@ -29,7 +32,11 @@ public class ItemShortReference<T extends IndexItemEntry> extends ItemIndexRefer
         return Block.getShortUnsigned(getBytesInternal(), getOffset());
     }
     @Override
-    public void set(int val) {
-        Block.putShort(getBytesInternal(), getOffset(), val);
+    public void set(int value) {
+        if((value & 0xffff0000) != 0){
+            throw new DexException("Short value out of range "
+                    + HexUtil.toHex(value, 4) + " > 0xffff");
+        }
+        Block.putShort(getBytesInternal(), getOffset(), value);
     }
 }

@@ -17,18 +17,18 @@ package com.reandroid.dex.pool;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.group.ItemGroup;
 import com.reandroid.dex.key.KeyItem;
-import com.reandroid.dex.base.StringKeyItemCreate;
+import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.Section;
+import com.reandroid.dex.sections.SectionType;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class DexIdPool<T extends Block> {
     private final Section<T> section;
-    private final Map<Key, ItemGroup<T>> itemsMap;
+    private final Map<Key, KeyItemGroup<T>> itemsMap;
     private boolean keyItems;
     private boolean keyItemsCreate;
     private boolean keyItemsChecked;
@@ -37,12 +37,30 @@ public class DexIdPool<T extends Block> {
         this.section = section;
         this.itemsMap = new HashMap<>(section.getCount());
     }
+    DexIdPool(){
+        this.section = null;
+        this.itemsMap = null;
+    }
 
+    public void onRemoving(T item){
+        if(item instanceof KeyItem){
+            Key key = ((KeyItem) item).getKey();
+            KeyItemGroup<T> exist = itemsMap.get(key);
+            if(exist != null && exist.contains(item)){
+                itemsMap.remove(key);
+                exist.remove(item);
+                key = exist.getKey();
+                if(key != null){
+                    itemsMap.put(key, exist);
+                }
+            }
+        }
+    }
     public void keyChanged(Key old){
         if(old == null || !isKeyItems()){
             return;
         }
-        ItemGroup<T> exist = itemsMap.remove(old);
+        KeyItemGroup<T> exist = itemsMap.remove(old);
         if(exist != null){
             T item = exist.first();
             KeyItem keyItem = (KeyItem) item;
@@ -51,9 +69,9 @@ public class DexIdPool<T extends Block> {
         }
     }
     public T get(Key key){
-        ItemGroup<T> group = itemsMap.get(key);
+        KeyItemGroup<T> group = getGroup(key);
         if(group != null){
-            return group.first();
+            return group.matching(key);
         }
         return null;
     }
@@ -61,32 +79,36 @@ public class DexIdPool<T extends Block> {
         if(key == null || !isKeyItemsCreate()){
             return null;
         }
-        ItemGroup<T>  exist = itemsMap.get(key);
+        KeyItemGroup<T>  exist = getGroup(key);
         if(exist == null) {
             T item = section.getItemArray().createNext();
-            ((StringKeyItemCreate)item).setKey(key);
-            exist = new ItemGroup<>(section.getSectionType().getCreator(), key.toString(), item);
+            ((KeyItemCreate)item).setKey(key);
+            exist = new KeyItemGroup<>(getSectionType().getCreator(), item);
+            key = ((KeyItemCreate) item).getKey();
             itemsMap.put(key, exist);
         }
-        return exist.first();
+        return exist.matching(key);
     }
-    public ItemGroup<T> getGroup(Key key){
+    public KeyItemGroup<T> getGroup(Key key){
         return itemsMap.get(key);
     }
     public void add(T item){
-        if(!(item instanceof KeyItem)){
+        if(!(item instanceof KeyItem) || item.getParent() == null){
             return;
         }
         Key key = ((KeyItem)item).getKey();
         if(key != null){
-            ItemGroup<T> group = itemsMap.get(key);
+            KeyItemGroup<T> group = itemsMap.get(key);
             if(group == null){
-                group = new ItemGroup<>(section.getSectionType().getCreator(), key.toString(), item);
+                group = new KeyItemGroup<>(getSectionType().getCreator(), item);
                 itemsMap.put(key, group);
             }else {
                 group.add(item);
             }
         }
+    }
+    SectionType<T> getSectionType(){
+        return section.getSectionType();
     }
     public int size(){
         return itemsMap.size();
@@ -96,7 +118,7 @@ public class DexIdPool<T extends Block> {
             return;
         }
         Section<T> section = this.section;
-        Map<Key, ItemGroup<T>> itemsMap = this.itemsMap;
+        Map<Key, KeyItemGroup<T>> itemsMap = this.itemsMap;
         itemsMap.clear();
         Creator<T> creator = section.getSectionType().getCreator();
         T[] items = section.getItemArray().getChildes();
@@ -111,9 +133,9 @@ public class DexIdPool<T extends Block> {
             if(key == null){
                 continue;
             }
-            ItemGroup<T> group = itemsMap.get(key);
+            KeyItemGroup<T> group = itemsMap.get(key);
             if(group == null){
-                group = new ItemGroup<>(creator, key.toString(), item);
+                group = new KeyItemGroup<>(creator, item);
                 itemsMap.put(key, group);
             }else {
                 group.add(item);
@@ -128,18 +150,15 @@ public class DexIdPool<T extends Block> {
         if(keyItemsChecked){
             return keyItems;
         }
-        T sample = section.getItemArray().getLast();
-        if(sample == null){
-            sample = section.getSectionType().getCreator().newInstance();
-        }
+        T sample = getSectionType().getCreator().newInstance();
         keyItemsChecked = true;
         keyItems = sample instanceof KeyItem;
-        keyItemsCreate = sample instanceof StringKeyItemCreate;
+        keyItemsCreate = sample instanceof KeyItemCreate;
         return keyItems;
     }
 
     @Override
     public String toString() {
-        return section.getSectionType().getName() + "-Pool = " + size();
+        return getSectionType().getName() + "-Pool = " + size();
     }
 }

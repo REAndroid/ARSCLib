@@ -18,14 +18,13 @@ package com.reandroid.dex.debug;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.dex.index.IndexItemEntry;
+import com.reandroid.dex.index.IdSectionEntry;
 import com.reandroid.dex.index.StringId;
-import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.sections.SectionType;
 
 import java.io.IOException;
 
-public class Base1Ule128Item<T extends IndexItemEntry> extends Ule128Item implements BlockRefresh {
+public class Base1Ule128Item<T extends IdSectionEntry> extends Ule128Item implements BlockRefresh {
     private final SectionType<T> sectionType;
     private T item;
 
@@ -51,7 +50,7 @@ public class Base1Ule128Item<T extends IndexItemEntry> extends Ule128Item implem
     private void updateItem(){
         item = get(sectionType, get() - 1);
         if(item instanceof StringId){
-            ((StringId) item).addStringUsage(StringData.USAGE_DEBUG);
+            item.addUsageType(StringId.USAGE_DEBUG);
         }
     }
     @Override
@@ -64,6 +63,9 @@ public class Base1Ule128Item<T extends IndexItemEntry> extends Ule128Item implem
         T item = getItem();
         if(item != null){
             set(item.getIndex() + 1);
+            if(item instanceof StringId){
+                item.addUsageType(StringId.USAGE_DEBUG);
+            }
         }
     }
     @Override

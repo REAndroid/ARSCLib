@@ -15,9 +15,9 @@
  */
 package com.reandroid.dex.index;
 
+import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.item.TypeList;
-import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.sections.SectionType;
@@ -29,17 +29,17 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
+public class MethodId extends IdSectionEntry implements Comparable<MethodId>, KeyItemCreate {
 
-    private final ItemIndexReference<TypeId> classType;
-    private final ItemIndexReference<ProtoId> proto;
+    private final ItemIdReference<TypeId> classType;
+    private final ItemIdReference<ProtoId> proto;
     private final StringReference nameReference;
 
     public MethodId() {
         super(SIZE);
-        this.classType = new ItemShortReference<>(SectionType.TYPE_ID, this, 0);
-        this.proto = new ItemShortReference<>(SectionType.PROTO_ID, this, 2);
-        this.nameReference = new StringReference(this, 4, StringData.USAGE_METHOD);
+        this.classType = new ItemShortReference<>(SectionType.TYPE_ID, this, 0, USAGE_METHOD);
+        this.proto = new ItemShortReference<>(SectionType.PROTO_ID, this, 2, USAGE_METHOD);
+        this.nameReference = new StringReference(this, 4, StringId.USAGE_METHOD_NAME);
     }
 
     public String getName(){
@@ -52,10 +52,6 @@ public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
     public void setName(String name){
         nameReference.setString(name);
     }
-    public void setName(StringData stringData){
-        this.nameReference.setItem(stringData);
-    }
-
     public StringData getNameString(){
         return nameReference.getItem();
     }
@@ -179,7 +175,7 @@ public class MethodId extends IndexItemEntry implements Comparable<MethodId>{
     void cacheItems(){
         classType.getItem();
         proto.getItem();
-        nameReference.getItem();
+        nameReference.cacheItem();
     }
 
     @Override

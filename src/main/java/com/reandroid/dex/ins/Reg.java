@@ -22,31 +22,37 @@ import java.io.IOException;
 
 public class Reg implements SmaliFormat {
 
-    private final RegisterFactory factory;
-    private final RegisterNumber registerNumber;
+    private final RegistersTable registersTable;
+    private final RegistersSet registersSet;
     private final int index;
 
-    public Reg(RegisterFactory factory, RegisterNumber registerNumber, int index){
-        this.factory = factory;
-        this.registerNumber = registerNumber;
+    public Reg(RegistersTable registersTable, RegistersSet registersSet, int index){
+        this.registersTable = registersTable;
+        this.registersSet = registersSet;
         this.index = index;
     }
 
-    public int getValue() {
-        int val = registerNumber.getRegister(getIndex());
-        return getFactory().getValue(val);
+    public int getNumber() {
+        int register = getRegister();
+        int local = getLocalRegistersCount();
+        if(register >= local){
+            register = register - local;
+        }
+        return register;
+    }
+    public int getRegister(){
+        return registersSet.getRegister(getIndex());
     }
     public int getIndex() {
         return index;
     }
     public boolean isParameter() {
-        return getFactory().isParameter(registerNumber.getRegister(getIndex()));
+        return getRegister() >= getLocalRegistersCount();
     }
 
-    public RegisterFactory getFactory() {
-        return factory;
+    public int getLocalRegistersCount(){
+        return registersTable.getRegistersCount() - registersTable.getParameterRegistersCount();
     }
-
     @Override
     public void append(SmaliWriter writer) throws IOException {
         if(isParameter()){
@@ -54,14 +60,14 @@ public class Reg implements SmaliFormat {
         }else {
             writer.append('v');
         }
-        writer.append(getValue());
+        writer.append(getNumber());
     }
 
     @Override
     public String toString() {
         if(isParameter()){
-            return "p" + getValue();
+            return "p" + getNumber();
         }
-        return "v" + getValue();
+        return "v" + getNumber();
     }
 }

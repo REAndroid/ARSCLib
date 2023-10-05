@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class TypeList extends ShortList implements SmaliFormat, Iterable<TypeId>, Comparable<TypeList> {
+
     private TypeId[] typeIds;
 
     public TypeList() {

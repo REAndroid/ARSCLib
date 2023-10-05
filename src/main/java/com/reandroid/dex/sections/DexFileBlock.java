@@ -20,7 +20,10 @@ import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.group.ItemGroup;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.common.BytesOutputStream;
+import com.reandroid.dex.base.DexException;
+import com.reandroid.dex.header.Checksum;
 import com.reandroid.dex.header.DexHeader;
+import com.reandroid.dex.index.StringId;
 import com.reandroid.dex.item.AnnotationElement;
 import com.reandroid.dex.item.AnnotationItem;
 import com.reandroid.dex.item.StringData;
@@ -38,6 +41,8 @@ public class DexFileBlock extends FixedBlockContainer {
 
     private final SectionList sectionList;
 
+    private String mSimpleName;
+
     public DexFileBlock() {
         super(1);
         this.sectionList = new SectionList();
@@ -45,7 +50,7 @@ public class DexFileBlock extends FixedBlockContainer {
     }
 
     public Iterator<StringData> unusedStrings(){
-        return getStringsWithUsage(StringData.USAGE_NONE);
+        return getStringsWithUsage(StringId.USAGE_NONE);
     }
     public Iterator<StringData> getStringsContainsUsage(int usage){
         return FilterIterator.of(getStrings(),
@@ -53,7 +58,7 @@ public class DexFileBlock extends FixedBlockContainer {
     }
     public Iterator<StringData> getStringsWithUsage(int usage){
         return FilterIterator.of(getStrings(),
-                stringData -> stringData.getStringUsage() == usage);
+                stringData -> stringData.getUsageType() == usage);
     }
     public Iterator<StringData> getStrings(){
         Section<StringData> stringSection = get(SectionType.STRING_DATA);
@@ -61,6 +66,21 @@ public class DexFileBlock extends FixedBlockContainer {
             return EmptyIterator.of();
         }
         return stringSection.iterator();
+    }
+    public void refreshFull() throws DexException{
+        Checksum checksum = getHeader().checksum;
+        int previousSum = checksum.getValue();
+        int max_trials = 10;
+        int trials;
+        for(trials = 0; trials < max_trials; trials++){
+            refresh();
+            int sum = checksum.getValue();
+            if(previousSum == sum){
+                return;
+            }
+            previousSum = sum;
+        }
+        throw new DexException("Failed to refresh trials = " + trials);
     }
     public void sortSection(SectionType<?>[] order){
         refresh();
@@ -97,9 +117,9 @@ public class DexFileBlock extends FixedBlockContainer {
             if(!(value instanceof StringValue)){
                 continue;
             }
-            StringData stringData = ((StringValue) value).getStringData();
-            if(stringData != null){
-                stringData.addStringUsage(StringData.USAGE_TYPE);
+            StringId stringId = ((StringValue) value).get();
+            if(stringId != null){
+                stringId.addUsageType(StringId.USAGE_TYPE_NAME);
             }
         }
     }
@@ -161,6 +181,14 @@ public class DexFileBlock extends FixedBlockContainer {
         writeBytes(outputStream);
         outputStream.close();
     }
+
+    public String getSimpleName() {
+        return mSimpleName;
+    }
+    public void setSimpleName(String simpleName) {
+        this.mSimpleName = simpleName;
+    }
+
     public static boolean isDexFile(File file){
         if(file == null || !file.isFile()){
             return false;

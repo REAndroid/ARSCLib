@@ -17,7 +17,6 @@ package com.reandroid.dex.base;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.BlockItem;
-import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.io.ByteReader;
 import com.reandroid.dex.io.StreamUtil;
 import com.reandroid.dex.pool.DexIdPool;
@@ -34,37 +33,10 @@ public abstract class DexBlockItem extends BlockItem {
         super(bytesLength);
     }
 
-    public<T1 extends Block> T1 createOffsetItem(SectionType<T1> sectionType) {
-        Section<T1> section = getSection(sectionType);
+    public<T1 extends Block> T1 createItem(SectionType<T1> sectionType) {
+        Section<T1> section = getOrCreateSection(sectionType);
         if(section != null){
-            return section.createOffsetItem();
-        }
-        return null;
-    }
-
-    public<T1 extends Block> T1 getAt(SectionType<T1> sectionType, IntegerReference offset){
-        if(offset != null){
-            return getAt(sectionType, offset.get());
-        }
-        return null;
-    }
-    public<T1 extends Block> T1 getAt(SectionType<T1> sectionType, int offset){
-        if(offset == 0){
-            return null;
-        }
-        Section<T1> section = getSection(sectionType);
-        if(section != null){
-            return section.getAt(offset);
-        }
-        return null;
-    }
-    public<T1 extends Block> T1[] getAt(SectionType<T1> sectionType, int[] offsets){
-        if(offsets == null || offsets.length == 0){
-            return null;
-        }
-        Section<T1> section = getSection(sectionType);
-        if(section != null){
-            return section.getAt(offsets);
+            return section.createItem();
         }
         return null;
     }
@@ -89,6 +61,13 @@ public abstract class DexBlockItem extends BlockItem {
         SectionList sectionList = getParent(SectionList.class);
         if(sectionList != null){
             return sectionList.get(sectionType);
+        }
+        return null;
+    }
+    public<T1 extends Block> Section<T1> getOrCreateSection(SectionType<T1> sectionType){
+        SectionList sectionList = getParent(SectionList.class);
+        if(sectionList != null){
+            return sectionList.getOrCreate(sectionType);
         }
         return null;
     }

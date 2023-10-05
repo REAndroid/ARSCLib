@@ -39,24 +39,4 @@ public class InsConst extends Ins31i implements IntegerReference, VisitableInteg
         setData(value);
     }
 
-    @Override
-    public int getRegistersCount() {
-        return 1;
-    }
-    @Override
-    public int getRegister(int index) {
-        return getByteUnsigned(1);
-    }
-    @Override
-    public void setRegister(int index, int value) {
-        setByte(1, value);
-    }
-    @Override
-    public int getData() {
-        return getInteger(2);
-    }
-    @Override
-    public void setData(int data) {
-        setInteger(2, data);
-    }
 }

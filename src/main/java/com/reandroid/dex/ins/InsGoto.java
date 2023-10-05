@@ -29,12 +29,12 @@ public class InsGoto extends SizeXIns implements Label {
     public int getData() {
         int size = getOpcode().size();
         if(size == 2){
-            return getByte(1);
+            return getByteSigned();
         }
         if(size == 4){
-            return getShort(2);
+            return getShortSigned();
         }
-        return getInteger(2);
+        return getInteger();
     }
     @Override
     public void setData(int data) {
@@ -45,7 +45,7 @@ public class InsGoto extends SizeXIns implements Label {
         if(size == 4){
             setShort(2, data);
         }
-        setInteger(2, data);
+        setInteger(data);
     }
     @Override
     public int getTargetAddress() {

@@ -15,8 +15,43 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins3rms extends Size6Ins {
+public class Ins3rms extends Size6Ins implements RegistersSet {
+
     public Ins3rms(Opcode<?> opcode) {
         super(opcode);
     }
+
+    @Override
+    public int getRegistersCount() {
+        return getByteUnsigned(1);
+    }
+    @Override
+    public void setRegistersCount(int count) {
+    }
+    @Override
+    public int getRegister(int index) {
+        return getShortUnsigned(4) + index;
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        if(index != 0) {
+            setShort(2, value + 1);
+        }else {
+            setShort(4, value);
+        }
+    }
+    @Override
+    public boolean isRegistersRange(){
+        return true;
+    }
+    @Override
+    public int getRegistersLimit(){
+        return 0xffff;
+    }
+
+    @Override
+    public String toString() {
+        return getOpcode() + " {" + getRegistersIterator() + "}, " + getSectionItem();
+    }
+
 }

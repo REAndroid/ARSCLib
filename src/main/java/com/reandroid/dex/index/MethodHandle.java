@@ -21,15 +21,15 @@ import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
-public class MethodHandle extends IndexItemEntry implements Comparable<MethodHandle>{
+public class MethodHandle extends IdSectionEntry implements Comparable<MethodHandle>{
 
-    private final ItemIndexReference<MethodId> methodId;
-    private final ItemIndexReference<MethodId> memberId;
+    private final ItemIdReference<MethodId> methodId;
+    private final ItemIdReference<MethodId> memberId;
 
     public MethodHandle() {
         super(8);
-        this.methodId = new ItemIndexReference<>(SectionType.METHOD_ID, this, 0);
-        this.memberId = new ItemIndexReference<>(SectionType.METHOD_ID, this, 4);
+        this.methodId = new ItemIdReference<>(SectionType.METHOD_ID, this, 0);
+        this.memberId = new ItemIdReference<>(SectionType.METHOD_ID, this, 4);
     }
 
     public MethodId getMethodId(){

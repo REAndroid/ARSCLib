@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.ins;
+package com.reandroid.dex.item;
 
-import java.util.Iterator;
+import com.reandroid.dex.key.Key;
 
-public interface LabelList{
-    Iterator<? extends Label> getLabels();
+public interface DefIndex {
+    int getDefinitionIndex();
+    Key getKey();
 }

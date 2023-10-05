@@ -18,10 +18,30 @@ package com.reandroid.dex.ins;
 import com.reandroid.dex.writer.SmaliWriter;
 
 
-public class Ins32x extends Size6Ins {
+public class Ins32x extends Size6Ins implements RegistersSet{
 
     public Ins32x(Opcode<?> opcode) {
         super(opcode);
+    }
+
+    @Override
+    public int getRegistersCount() {
+        return 2;
+    }
+    @Override
+    public final void setRegistersCount(int count) {
+    }
+    @Override
+    public int getRegister(int index) {
+        return getShortUnsigned(2 + index);
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        setShort(2 + index, value);
+    }
+    @Override
+    public int getRegistersLimit(){
+        return 0xffff;
     }
 
     @Override
@@ -31,18 +51,6 @@ public class Ins32x extends Size6Ins {
     public void setData(int data){
     }
 
-    @Override
-    public int getRegistersCount() {
-        return 2;
-    }
-    @Override
-    public int getRegister(int index) {
-        return getShort(2 + index);
-    }
-    @Override
-    public void setRegister(int index, int value) {
-        setShort(2 + index, value);
-    }
     @Override
     void appendCodeData(SmaliWriter writer) {
     }

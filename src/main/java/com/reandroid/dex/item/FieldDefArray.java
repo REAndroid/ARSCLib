@@ -1,73 +1,35 @@
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.value.DexValueBlock;
 
-import java.util.Comparator;
+public class FieldDefArray extends DefArray<FieldDef> {
 
-public class FieldDefArray extends DefArray<FieldDef>{
     public FieldDefArray(IntegerReference itemCount){
         super(itemCount);
     }
 
+
     @Override
-    public boolean sort(Comparator<? super FieldDef> comparator) {
-        if(getCount() < 2){
-            return false;
+    void sortAnnotations(){
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if(directory != null){
+            directory.sortFields();
         }
-        EncodedArray encodedArray = holdStaticValues();
-        boolean changed = super.sort(comparator);
-        if(changed){
-            sortStaticValues(encodedArray);
-        }else if(encodedArray != null){
-            unHoldStaticValues();
-        }
-        return changed;
-    }
-    private EncodedArray holdStaticValues(){
-        int count = getCount();
-        if(count < 2){
-            return null;
-        }
-        EncodedArray encodedArray = getStaticValues();
-        if(encodedArray == null){
-            return null;
-        }
-        for(int i = 0; i < count; i++){
-            FieldDef def = get(i);
-            DexValueBlock<?> valueBlock = encodedArray.get(i);
-            def.setTmpValue(valueBlock);
-        }
-        return encodedArray;
-    }
-    private void unHoldStaticValues(){
-        int count = getCount();
-        for(int i = 0; i < count; i++){
-            FieldDef def = get(i);
-            def.setTmpValue(null);
-        }
-    }
-    private void sortStaticValues(EncodedArray encodedArray){
-        if(encodedArray == null){
-            return;
-        }
-        int count = getCount();
-        for(int i = 0; i < count; i++){
-            FieldDef def = get(i);
-            DexValueBlock<?> valueBlock = def.getTmpValue();
-            if(valueBlock != null && valueBlock.getIndex() != i){
-                encodedArray.set(i, valueBlock);
-            }
-            def.setTmpValue(null);
-        }
-        encodedArray.trimNull();
-    }
-    private EncodedArray getStaticValues(){
-        FieldDef fieldDef = get(0);
-        if(fieldDef != null){
-            return fieldDef.getStaticValues();
-        }
-        return null;
     }
 
     @Override

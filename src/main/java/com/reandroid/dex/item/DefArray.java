@@ -27,13 +27,54 @@ import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Iterator;
 
 public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implements Iterable<T>, SmaliFormat, VisitableInteger {
     private final IntegerReference itemCount;
+
     public DefArray(IntegerReference itemCount){
         super();
         this.itemCount = itemCount;
+    }
+
+    @Override
+    public boolean remove(T def){
+        AnnotationsDirectory directory = getUniqueAnnotationsDirectory();
+        if(directory != null){
+            directory.remove(def);
+        }
+        boolean removed = super.remove(def);
+        if(removed && directory != null){
+            sortAnnotations();
+        }
+        if(removed){
+            resetIndex();
+        }
+        return removed;
+    }
+    @Override
+    public final boolean sort(Comparator<? super T> comparator) {
+        if(!needsSort(comparator)){
+            return false;
+        }
+        onPreSort();
+        boolean changed = super.sort(comparator);
+        onPostSort();
+        return changed;
+    }
+    void onPreSort(){
+        ClassId classId = getClassId();
+        if(classId != null){
+            classId.getUniqueAnnotationsDirectory();
+        }
+        linkAnnotation();
+    }
+    void onPostSort(){
+        resetIndex();
+        sortAnnotations();
+    }
+    void sortAnnotations(){
     }
 
     public T getOrCreate(Key key) {
@@ -42,7 +83,7 @@ public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implemen
             return item;
         }
         item = createNext();
-        item.getOrCreate(key);
+        item.setKey(key);
         return item;
     }
     public T get(Key key) {
@@ -89,7 +130,11 @@ public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implemen
     @Override
     protected void onPreRefresh() {
         super.onPreRefresh();
-        sort(CompareUtil.getComparatorUnchecked());
+        linkAnnotation();
+        boolean sorted = sort(CompareUtil.getComparatorUnchecked());
+        if(!sorted){
+            resetIndex();
+        }
     }
 
     @Override
@@ -100,6 +145,34 @@ public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implemen
     public void onReadBytes(BlockReader reader) throws IOException {
         setChildesCount(itemCount.get());
         super.onReadBytes(reader);
+    }
+    private void linkAnnotation(){
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if(directory == null){
+            return;
+        }
+        for(Def<?> def : this){
+            directory.link(def);
+        }
+    }
+    AnnotationsDirectory getAnnotationsDirectory(){
+        ClassId classId = getClassId();
+        if(classId == null){
+            return null;
+        }
+        return classId.getAnnotationsDirectory();
+    }
+    AnnotationsDirectory getUniqueAnnotationsDirectory(){
+        ClassId classId = getClassId();
+        if(classId == null){
+            return null;
+        }
+        return classId.getUniqueAnnotationsDirectory();
+    }
+    void resetIndex(){
+        for(T def : this){
+            def.resetIndex();
+        }
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {

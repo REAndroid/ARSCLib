@@ -40,14 +40,6 @@ public class StringReference extends IndirectItem<DexBlockItem> implements
     }
 
     public StringId getStringId() {
-        StringId stringId = this.stringId;
-        if(stringId == null){
-            stringId = getBlockItem().get(SectionType.STRING_ID, get());
-            this.stringId = stringId;
-            if(stringId != null){
-                stringId.addStringUsage(stringUsage);
-            }
-        }
         return stringId;
     }
     public void setStringId(StringId stringId) {
@@ -55,7 +47,7 @@ public class StringReference extends IndirectItem<DexBlockItem> implements
         int value = 0;
         if(stringId != null){
             value = stringId.getIndex();
-            stringId.addStringUsage(stringUsage);
+            stringId.addUsageType(stringUsage);
         }
         set(value);
     }
@@ -66,13 +58,6 @@ public class StringReference extends IndirectItem<DexBlockItem> implements
             return stringId.getStringData();
         }
         return null;
-    }
-    public void setItem(StringData stringData){
-        StringId stringId = null;
-        if(stringData != null){
-            stringId = stringData.getStringId();
-        }
-        setStringId(stringId);
     }
     public String getString(){
         StringData stringData = getItem();
@@ -87,35 +72,41 @@ public class StringReference extends IndirectItem<DexBlockItem> implements
     public void setString(String text, boolean overwrite) {
         StringKey key = new StringKey(text);
         StringId stringId = this.stringId;
-        StringData stringData = null;
-        if(stringId != null){
-            stringData = stringId.getStringData();
-        }
         String oldText = null;
-        if(stringData != null) {
-            oldText = stringData.getString();
+        if(stringId != null) {
+            oldText = stringId.getString();
         }
         if(Objects.equals(text, oldText)){
             return;
         }
-        DexIdPool<StringData> pool = getBlockItem().getPool(SectionType.STRING_DATA);
+        DexIdPool<StringId> pool = getBlockItem().getPool(SectionType.STRING_ID);
         if(pool == null){
             return;
         }
-        if(!overwrite || stringData == null){
-            stringData = pool.getOrCreate(key);
+        if(!overwrite || stringId == null){
+            stringId = pool.getOrCreate(key);
+            if(stringId.getStringData()==null){
+                stringId = pool.getOrCreate(key);
+            }
         }
-        setStringId(stringData.getStringId());
+        setStringId(stringId);
         if(overwrite){
             pool.keyChanged(new StringKey(oldText));
         }
     }
 
+    public void cacheItem(){
+        this.stringId = getBlockItem().get(SectionType.STRING_ID, get());
+        if(this.stringId != null){
+            this.stringId.addUsageType(stringUsage);
+        }
+    }
     @Override
     public void refresh() {
         StringId stringId = getStringId();
         if(stringId != null){
             Block.putInteger(getBytesInternal(), getOffset(), stringId.getIndex());
+            stringId.addUsageType(stringUsage);
         }
     }
     @Override

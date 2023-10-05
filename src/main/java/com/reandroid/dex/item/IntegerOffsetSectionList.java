@@ -21,13 +21,18 @@ import com.reandroid.utils.collection.ArrayIterator;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class IntegerOffsetSectionList<T extends DataItemEntry> extends IntegerList implements Iterable<T>{
+public class IntegerOffsetSectionList<T extends DataSectionEntry> extends IntegerList implements Iterable<T>{
     private final SectionType<T> sectionType;
     private T[] items;
 
     public IntegerOffsetSectionList(SectionType<T> sectionType) {
         super();
         this.sectionType = sectionType;
+    }
+    public T addNew(){
+        T item = getSection(sectionType).createItem();
+        add(item.getOffset());
+        return item;
     }
 
     @Override
@@ -50,9 +55,6 @@ public class IntegerOffsetSectionList<T extends DataItemEntry> extends IntegerLi
             T item = items[i];
             if(filter.test(item)){
                 items[i] = null;
-                if(item != null){
-                    item.removeSelf();
-                }
                 found = true;
             }
         }
@@ -162,10 +164,10 @@ public class IntegerOffsetSectionList<T extends DataItemEntry> extends IntegerLi
         if(item == null){
             return 0;
         }
-        return item.getOffsetReference().get();
+        return item.getOffset();
     }
     private void updateItems(){
-        items = getAt(sectionType, toArray());
+        items = get(sectionType, toArray());
     }
     private boolean isEmpty(T[] items){
         if(items == null || items.length == 0){

@@ -17,6 +17,7 @@ package com.reandroid.dex.value;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
@@ -27,7 +28,8 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public abstract class SectionValue<T extends Block> extends DexValueBlock<NumberValue> implements SmaliFormat {
+public abstract class SectionValue<T extends Block> extends DexValueBlock<NumberValue>
+        implements SmaliFormat, KeyItem {
 
     private final SectionType<T> sectionType;
     private T mData;
@@ -37,6 +39,10 @@ public abstract class SectionValue<T extends Block> extends DexValueBlock<Number
         this.sectionType = sectionType;
     }
 
+    @Override
+    public Key getKey(){
+        return null;
+    }
     public T get(){
         return mData;
     }
@@ -47,6 +53,10 @@ public abstract class SectionValue<T extends Block> extends DexValueBlock<Number
         this.mData = data;
         getValueContainer().setNumberValue(getSectionValue(data));
         onDataUpdated(data);
+    }
+    public void set(Key key){
+        T item = getSection().getPool().getOrCreate(key);
+        set(item);
     }
     @Override
     public abstract DexValueType<?> getValueType();
@@ -78,6 +88,7 @@ public abstract class SectionValue<T extends Block> extends DexValueBlock<Number
         numberValue.setNumberValue(getSectionValue(data));
         int size = numberValue.getSize();
         setValueSize(size - 1);
+        onDataRefreshed(data);
     }
     private void updateData(){
         T data = this.mData;
@@ -89,6 +100,8 @@ public abstract class SectionValue<T extends Block> extends DexValueBlock<Number
                 onDataUpdated(mData);
             }
         }
+    }
+    void onDataRefreshed(T data){
     }
     void onDataUpdated(T data){
     }

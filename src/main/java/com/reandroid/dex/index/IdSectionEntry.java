@@ -20,25 +20,29 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.base.DexItemArray;
 import com.reandroid.dex.base.FixedSizeBlock;
+import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.key.KeyItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.writer.SmaliFormat;
 
 import java.io.IOException;
 
-public abstract class IndexItemEntry extends DexBlockItem
-        implements SmaliFormat, BlockRefresh, KeyItem, FixedSizeBlock {
+public abstract class IdSectionEntry extends DexBlockItem
+        implements SmaliFormat, BlockRefresh, KeyItem, FixedSizeBlock, UsageMarker {
 
-    IndexItemEntry(int bytesLength) {
+    private int mUsageType;
+
+    IdSectionEntry(int bytesLength) {
         super(bytesLength);
     }
 
-
     @SuppressWarnings("unchecked")
     public void removeSelf(){
-        DexItemArray<IndexItemEntry> itemArray = getParentInstance(DexItemArray.class);
+        DexItemArray<IdSectionEntry> itemArray = getParentInstance(DexItemArray.class);
         if(itemArray != null){
             itemArray.remove(this);
+            setParent(null);
+            setIndex(-1);
         }
     }
     @Override
@@ -52,5 +56,25 @@ public abstract class IndexItemEntry extends DexBlockItem
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
         cacheItems();
+    }
+
+    @Override
+    public int getUsageType() {
+        return mUsageType;
+    }
+    @Override
+    public void addUsageType(int usage){
+        this.mUsageType |= usage;
+    }
+    @Override
+    public boolean containsUsage(int usage){
+        if(usage == 0){
+            return this.mUsageType == 0;
+        }
+        return (this.mUsageType & usage) == usage;
+    }
+    @Override
+    public void clearUsageType(){
+        this.mUsageType = USAGE_NONE;
     }
 }

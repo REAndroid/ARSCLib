@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.ins;
+package com.reandroid.dex.sections;
 
-public class Ins11n extends Size2Ins {
-    public Ins11n(Opcode<?> opcode) {
-        super(opcode);
+import com.reandroid.dex.base.IntegerPair;
+import com.reandroid.dex.item.StringData;
+
+public class StringDataSection extends DataSection<StringData> {
+
+    public StringDataSection(IntegerPair countAndOffset, SectionType<StringData> sectionType) {
+        super(sectionType, new StringDataArray(countAndOffset, sectionType.getCreator()));
     }
 
-    @Override
-    public int getRegistersCount() {
-        return 1;
-    }
-    @Override
-    public int getRegister(int index) {
-        return getNibble(3);
-    }
-    @Override
-    public void setRegister(int index, int value) {
-        setNibble(3, value);
-    }
 }

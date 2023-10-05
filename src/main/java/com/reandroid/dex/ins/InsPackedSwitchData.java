@@ -23,7 +23,7 @@ import com.reandroid.utils.HexUtil;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class InsPackedSwitchData extends PayloadData implements LabelList{
+public class InsPackedSwitchData extends PayloadData implements LabelsSet {
     private final ShortItem elementCount;
     private final IntegerItem firstKey;
     private final PackedSwitchDataList elements;

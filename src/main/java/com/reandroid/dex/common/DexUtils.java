@@ -220,6 +220,14 @@ public class DexUtils {
         }
         return simple + ".java";
     }
+    public static String getInnerSimpleName(String className) {
+        className = getSimpleName(className);
+        int i = className.lastIndexOf('$');
+        if(i > 0){
+            return className.substring(i + 1);
+        }
+        return className;
+    }
     public static String getSimpleName(String className) {
         if(className.length() < 3){
             return "";
@@ -236,4 +244,5 @@ public class DexUtils {
         }
         return className;
     }
+    public static final String DALVIK_MEMBER = "Ldalvik/annotation/MemberClasses;";
 }

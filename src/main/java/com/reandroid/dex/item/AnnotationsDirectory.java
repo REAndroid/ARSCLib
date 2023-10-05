@@ -16,39 +16,43 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.base.BlockRefresh;
+import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.*;
+import com.reandroid.dex.base.DexBlockItem;
+import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.index.ItemOffsetReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class AnnotationsDirectory extends DataItemEntry {
+public class AnnotationsDirectory extends DataSectionEntry {
 
     private final Header header;
 
-    private final SparseSectionArray<AnnotationSet> fieldsOffset;
-    private final SparseSectionArray<AnnotationSet> methodsOffset;
-    private final SparseSectionArray<AnnotationGroup> parametersOffset;
+
+    private final DirectoryMap<FieldDef, AnnotationSet> fieldsAnnotationMap;
+    private final DirectoryMap<MethodDef, AnnotationSet> methodsAnnotationMap;
+    private final DirectoryMap<MethodDef, AnnotationGroup> parametersAnnotationMap;
 
     public AnnotationsDirectory() {
         super(4);
         this.header = new Header();
 
-        this.fieldsOffset = new SparseSectionArray<>(SectionType.ANNOTATION_SET, header.fieldCount);
-        this.methodsOffset = new SparseSectionArray<>(SectionType.ANNOTATION_SET, header.methodCount);
-
-        this.parametersOffset = new SparseSectionArray<>(SectionType.ANNOTATION_GROUP, header.parameterCount);
+        this.fieldsAnnotationMap = new DirectoryMap<>(header.fieldCount, CREATOR_FIELDS);
+        this.methodsAnnotationMap = new DirectoryMap<>(header.methodCount, CREATOR_METHODS);
+        this.parametersAnnotationMap = new DirectoryMap<>(header.parameterCount, CREATOR_PARAMS);
 
         addChild(0, header);
 
-        addChild(1, fieldsOffset);
-        addChild(2, methodsOffset);
-        addChild(3, parametersOffset);
+        addChild(1, fieldsAnnotationMap);
+        addChild(2, methodsAnnotationMap);
+        addChild(3, parametersAnnotationMap);
+    }
+
+    public AnnotationSet getOrCreateClassAnnotations(){
+        return header.classAnnotation.getOrCreate();
     }
     public AnnotationSet getClassAnnotations(){
         return header.classAnnotation.getItem();
@@ -56,31 +60,101 @@ public class AnnotationsDirectory extends DataItemEntry {
     public void setClassAnnotations(AnnotationSet annotationSet){
         header.classAnnotation.setItem(annotationSet);
     }
+
     public boolean isEmpty(){
-        return header.isEmpty();
+        return getClassAnnotations() == null ||
+                fieldsAnnotationMap.isEmpty() ||
+                methodsAnnotationMap.isEmpty() ||
+                parametersAnnotationMap.isEmpty();
+    }
+    public int countField(){
+        return  fieldsAnnotationMap.getCount() ;
+    }
+    public int countMethod(){
+        return  methodsAnnotationMap.getCount() +
+                parametersAnnotationMap.getCount();
     }
 
-    public Iterator<AnnotationSet> getFieldsAnnotation(int index){
-        return fieldsOffset.getItems(index);
+
+    public void sortFields() {
+        fieldsAnnotationMap.sort();
     }
-    public void addFieldAnnotationSet(int index, AnnotationSet annotationSet){
-        fieldsOffset.addItem(index, annotationSet);
+    public void sortMethods() {
+        methodsAnnotationMap.sort();
+        parametersAnnotationMap.sort();
+    }
+    public void link(Def<?> def) {
+        if(def instanceof FieldDef){
+            linkField((FieldDef) def);
+        }else if(def instanceof MethodDef){
+            linkMethod((MethodDef) def);
+        }
+    }
+    public void linkField(FieldDef def) {
+        fieldsAnnotationMap.link(def);
+    }
+    public void linkMethod(MethodDef def) {
+        methodsAnnotationMap.link(def);
+        parametersAnnotationMap.link(def);
+    }
+    public void remove(Def<?> def) {
+        if(def instanceof FieldDef){
+            removeField((FieldDef) def);
+        }else if(def instanceof MethodDef){
+            removeMethod((MethodDef) def);
+        }
+    }
+    public void removeField(FieldDef def) {
+        fieldsAnnotationMap.remove(def);
+    }
+    public void removeMethod(MethodDef def) {
+        methodsAnnotationMap.remove(def);
+        parametersAnnotationMap.remove(def);
+    }
+    public Iterator<AnnotationSet> getAnnotations(Def<?> def){
+        if(def.getClass() == FieldDef.class){
+            return getFieldsAnnotation((FieldDef) def);
+        }
+        if(def.getClass() == MethodDef.class){
+            return getMethodAnnotation((MethodDef) def);
+        }
+        throw new IllegalArgumentException("Unknown class type: " + def.getClass());
+    }
+    public Iterator<AnnotationSet> getFieldsAnnotation(FieldDef fieldDef){
+        return fieldsAnnotationMap.getValues(fieldDef);
+    }
+    public Iterator<AnnotationSet> getFieldsAnnotation(int index){
+        return fieldsAnnotationMap.getValues(index);
     }
     public Iterator<AnnotationSet> getMethodAnnotation(int index){
-        return methodsOffset.getItems(index);
+        return methodsAnnotationMap.getValues(index);
     }
-    public void addMethodAnnotationSet(int index, AnnotationSet annotationSet){
-        methodsOffset.addItem(index, annotationSet);
+    public Iterator<AnnotationSet> getMethodAnnotation(MethodDef methodDef){
+        return methodsAnnotationMap.getValues(methodDef);
+    }
+    public Iterator<AnnotationGroup> getParameterAnnotation(MethodDef methodDef){
+        return parametersAnnotationMap.getValues(methodDef);
+    }
+    public Iterator<DirectoryEntry<MethodDef, AnnotationGroup>> getParameterEntries(MethodDef methodDef){
+        return parametersAnnotationMap.getEntries(methodDef);
     }
     public Iterator<AnnotationGroup> getParameterAnnotation(int methodIndex){
-        return parametersOffset.getItems(methodIndex);
+        return parametersAnnotationMap.getValues(methodIndex);
+    }
+    public Iterator<AnnotationSet> getParameterAnnotation(MethodDef methodDef, int parameterIndex){
+        return ComputeIterator.of(getParameterAnnotation(methodDef),
+                annotationGroup -> annotationGroup.getItem(parameterIndex));
     }
     public Iterator<AnnotationSet> getParameterAnnotation(int methodIndex, int parameterIndex){
         return ComputeIterator.of(getParameterAnnotation(methodIndex),
                 annotationGroup -> annotationGroup.getItem(parameterIndex));
     }
-    public void addParameterAnnotation(int methodIndex, AnnotationGroup annotationGroup){
-        parametersOffset.addItem(methodIndex, annotationGroup);
+    public void editParameterAnnotations(MethodDef methodDef){
+        Iterator<AnnotationGroup> iterator = getParameterAnnotation(methodDef);
+        while (iterator.hasNext()){
+            AnnotationGroup group = iterator.next();
+
+        }
     }
 
 
@@ -93,95 +167,9 @@ public class AnnotationsDirectory extends DataItemEntry {
     @Override
     public String toString() {
         return  header +
-                ", fieldsOffset=" + fieldsOffset +
-                ", methodsOffset=" + methodsOffset +
-                ", parametersOffset=" + parametersOffset;
-    }
-
-    static class SparseSectionArray<T extends DataItemEntry> extends IndexAndOffsetArray implements BlockRefresh {
-        private final SectionType<T> sectionType;
-        private int[] indexArray;
-        private T[] items;
-
-        public SparseSectionArray(SectionType<T> sectionType, IntegerReference itemCount) {
-            super(itemCount);
-            this.sectionType = sectionType;
-        }
-
-        public Iterator<T> getItems(int index){
-            int[] indexArray = this.indexArray;
-            if(indexArray == null || indexArray.length == 0){
-                return EmptyIterator.of();
-            }
-            T[] annotationSets = this.items;
-            return new Iterator<T>() {
-                private final int size = SparseSectionArray.this.size();
-                private int position;
-                private T mCurrent;
-                @Override
-                public boolean hasNext() {
-                    return getCurrent() != null;
-                }
-                @Override
-                public T next() {
-                    T current = this.mCurrent;
-                    this.mCurrent = null;
-                    return current;
-                }
-                private T getCurrent(){
-                    while (mCurrent == null && position < size){
-                        if(indexArray[position] == index){
-                            mCurrent = annotationSets[position];
-                        }
-                        position ++;
-                    }
-                    return mCurrent;
-                }
-            };
-        }
-
-        public void addItem(int index, T item){
-            int offset = 0;
-            if(item != null){
-                offset = item.getOffsetReference().get();
-            }
-            int position = size();
-            setSize(position + 1);
-            setIndexEntry(position, index);
-            setOffset(position, offset);
-            cacheItems();
-        }
-
-        @Override
-        public void refresh() {
-            int[] indexArray = this.indexArray;
-            if(indexArray == null || indexArray.length == 0){
-                setSize(0);
-                return;
-            }
-            int length = indexArray.length;
-            setSize(length);
-            T[] items = this.items;
-            for(int i = 0; i < length; i++){
-                int offset = 0;
-                T item = items[i];
-                if(item != null){
-                    offset = item.getOffsetReference().get();
-                }
-                setIndexEntry(i, indexArray[i]);
-                setOffset(i, offset);
-            }
-        }
-        private void cacheItems(){
-            indexArray = getIndexEntries();
-            items = getAt(sectionType, getOffsets());
-        }
-
-        @Override
-        public void onReadBytes(BlockReader reader) throws IOException {
-            super.onReadBytes(reader);
-            cacheItems();
-        }
+                ", fields=" + fieldsAnnotationMap +
+                ", methods=" + methodsAnnotationMap +
+                ", parameters=" + parametersAnnotationMap;
     }
 
     static class Header extends DexBlockItem implements BlockRefresh {
@@ -194,11 +182,10 @@ public class AnnotationsDirectory extends DataItemEntry {
         public Header() {
             super(16);
 
-            int offset = -4;
-            this.classAnnotation = new ItemOffsetReference<>(SectionType.ANNOTATION_SET, this, offset += 4);
-            this.fieldCount = new IndirectInteger(this, offset += 4);
-            this.methodCount = new IndirectInteger(this, offset += 4);
-            this.parameterCount = new IndirectInteger(this, offset += 4);
+            this.classAnnotation = new ItemOffsetReference<>(SectionType.ANNOTATION_SET, this, 0);
+            this.fieldCount = new IndirectInteger(this, 4);
+            this.methodCount = new IndirectInteger(this, 8);
+            this.parameterCount = new IndirectInteger(this, 12);
         }
 
         public boolean isEmpty(){
@@ -223,11 +210,46 @@ public class AnnotationsDirectory extends DataItemEntry {
 
         @Override
         public String toString() {
-            return  "classAnnotation=" + classAnnotation +
-                    ", fieldCount=" + fieldCount +
-                    ", methodCount=" + methodCount +
-                    ", parameterCount=" + parameterCount;
+            return  "class=" + classAnnotation +
+                    ", fields=" + fieldCount +
+                    ", methods=" + methodCount +
+                    ", parameters=" + parameterCount;
         }
 
     }
+    @SuppressWarnings("unchecked")
+    private static final Creator<DirectoryEntry<FieldDef, AnnotationSet>> CREATOR_FIELDS = new Creator<DirectoryEntry<FieldDef, AnnotationSet>>() {
+        @Override
+        public DirectoryEntry<FieldDef, AnnotationSet>[] newInstance(int length) {
+            return new DirectoryEntry[length];
+        }
+        @Override
+        public DirectoryEntry<FieldDef, AnnotationSet> newInstance() {
+            return new DirectoryEntry<>(SectionType.ANNOTATION_SET);
+        }
+    };
+
+    @SuppressWarnings("unchecked")
+    private static final Creator<DirectoryEntry<MethodDef, AnnotationSet>> CREATOR_METHODS = new Creator<DirectoryEntry<MethodDef, AnnotationSet>>() {
+        @Override
+        public DirectoryEntry<MethodDef, AnnotationSet>[] newInstance(int length) {
+            return new DirectoryEntry[length];
+        }
+        @Override
+        public DirectoryEntry<MethodDef, AnnotationSet> newInstance() {
+            return new DirectoryEntry<>(SectionType.ANNOTATION_SET);
+        }
+    };
+
+    @SuppressWarnings("unchecked")
+    private static final Creator<DirectoryEntry<MethodDef, AnnotationGroup>> CREATOR_PARAMS = new Creator<DirectoryEntry<MethodDef, AnnotationGroup>>() {
+        @Override
+        public DirectoryEntry<MethodDef, AnnotationGroup>[] newInstance(int length) {
+            return new DirectoryEntry[length];
+        }
+        @Override
+        public DirectoryEntry<MethodDef, AnnotationGroup> newInstance() {
+            return new DirectoryEntry<>(SectionType.ANNOTATION_GROUP);
+        }
+    };
 }

@@ -17,21 +17,23 @@ package com.reandroid.dex.model;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
+import com.reandroid.dex.base.DexException;
+import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.index.FieldId;
+import com.reandroid.dex.index.StringId;
 import com.reandroid.dex.index.TypeId;
-import com.reandroid.dex.ins.Ins;
-import com.reandroid.dex.ins.Ins21c;
-import com.reandroid.dex.ins.InsConst;
-import com.reandroid.dex.ins.Opcode;
+import com.reandroid.dex.ins.*;
 import com.reandroid.dex.item.ClassData;
 import com.reandroid.dex.item.MethodDef;
 import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.pool.DexIdPool;
@@ -76,6 +78,13 @@ public class DexFile implements VisitableInteger {
         this.mTag = tag;
     }
 
+    public String getSimpleName() {
+        return getDexFileBlock().getSimpleName();
+    }
+    public void setSimpleName(String simpleName){
+        getDexFileBlock().setSimpleName(simpleName);
+    }
+
     public void replaceRFields(){
         Map<Integer, RField> map = RField.mapRFields(listRFields().iterator());
         IntegerVisitor visitor = new IntegerVisitor() {
@@ -110,6 +119,25 @@ public class DexFile implements VisitableInteger {
     public DexClass get(String typeName){
         return get(new TypeKey(typeName));
     }
+    public void loadRClass(TableBlock tableBlock){
+        for(PackageBlock packageBlock : tableBlock.listPackages()){
+            loadRClass(packageBlock);
+        }
+    }
+    public void loadRClass(PackageBlock packageBlock){
+        String name = DexUtils.toDalvikName(packageBlock.getName() + ".R");
+        RClassParent rClassParent = getOrCreateRParent(name);
+        rClassParent.initialize();
+        rClassParent.load(packageBlock);
+        rClassParent.replaceConstIds();
+        System.err.println(name);
+    }
+    public RClassParent getOrCreateRParent(String type){
+        ClassId classId = getOrCreateClassId(new TypeKey(type));
+        RClassParent rClassParent = new RClassParent(this, classId);
+        rClassParent.initialize();
+        return rClassParent;
+    }
     public RClass getOrCreateRClass(TypeKey typeKey){
         ClassId classId = getOrCreateClassId(typeKey);
         return createRClass(classId);
@@ -124,7 +152,7 @@ public class DexFile implements VisitableInteger {
     }
     public DexClass get(TypeKey key){
         Section<ClassId> section = getDexFileBlock().get(SectionType.CLASS_ID);
-        ClassId classId = section.getPool().get(key);
+        ClassId classId = section.get(key);
         if(classId == null) {
             return null;
         }
@@ -137,13 +165,20 @@ public class DexFile implements VisitableInteger {
         if(classId != null) {
             return classId;
         }
-        classId = section.createIdItem();
-        classId.setClassType(key);
-        pool.add(classId);
+        classId = pool.getOrCreate(key);
         classId.getOrCreateClassData();
         classId.setSuperClass("Ljava/lang/Object;");
         classId.setSourceFile(DexUtils.toSourceName(key.getType()));
+        classId.addAccessFlag(AccessFlag.PUBLIC);
+        System.err.println("Created: " + key);
         return classId;
+    }
+    public ClassId getClassId(Key key){
+        Section<ClassId> section = getDexFileBlock().get(SectionType.CLASS_ID);
+        if(section != null){
+            return section.get(key);
+        }
+        return null;
     }
     private DexClass create(ClassId classId) {
         return new DexClass(this, classId);
@@ -179,6 +214,9 @@ public class DexFile implements VisitableInteger {
             classData.visitIntegers(visitor);
         }
     }
+    public void refreshFull() throws DexException {
+        getDexFileBlock().refreshFull();;
+    }
     public void sortSection(SectionType<?>[] order){
         refresh();
         getDexFileBlock().sortSection(order);
@@ -187,22 +225,29 @@ public class DexFile implements VisitableInteger {
     public void sortStrings(){
         getDexFileBlock().sortStrings();
     }
-    public Iterator<StringData> unusedStrings(){
-        return getStringsWithUsage(StringData.USAGE_NONE);
+    public Iterator<StringId> unusedStrings(){
+        return getStringsWithUsage(StringId.USAGE_NONE);
     }
     public Iterator<StringData> getStringsContainsUsage(int usage){
         return FilterIterator.of(getStringData(),
                 stringData -> stringData.containsUsage(usage));
     }
-    public Iterator<StringData> getStringsWithUsage(int usage){
-        return FilterIterator.of(getStringData(),
-                stringData -> stringData.getStringUsage() == usage);
+    public Iterator<StringId> getStringsWithUsage(int usage){
+        return FilterIterator.of(getStringIds(),
+                stringId -> stringId.getUsageType() == usage);
     }
     public Iterator<String> getClassNames(){
         return ComputeIterator.of(getClassIds(), ClassId::getName);
     }
     Iterator<ClassId> getClassIds(){
         Section<ClassId> section = get(SectionType.CLASS_ID);
+        if(section != null){
+            return section.iterator();
+        }
+        return EmptyIterator.of();
+    }
+    public Iterator<StringId> getStringIds(){
+        Section<StringId> section = get(SectionType.STRING_ID);
         if(section != null){
             return section.iterator();
         }
@@ -290,11 +335,14 @@ public class DexFile implements VisitableInteger {
         if(rField.getClassName().equals(methodDef.getClassName())){
             return;
         }
+        FieldId fieldId = rField.getOrCreate(dexFile);
+        if((fieldId.getIndex() & 0xffff0000) != 0){
+            return;
+        }
         Ins21c ins = Opcode.SGET.newInstance();
         ins.setRegister(0, insConst.getRegister(0));
         insConst.replace(ins);
-        FieldId fieldId = rField.getOrCreate(dexFile);
-        ins.setData(fieldId.getIndex());
+        ins.setSectionItem(fieldId);
     }
     public static DexFile read(byte[] dexBytes) throws IOException {
         return read(new BlockReader(dexBytes));

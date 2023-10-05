@@ -15,12 +15,13 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.dex.index.IndexItemEntry;
+import com.reandroid.dex.index.IdSectionEntry;
+import com.reandroid.dex.item.AnnotationElement;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 
-public abstract class SectionIdValue<T extends IndexItemEntry> extends SectionValue<T> {
+public abstract class SectionIdValue<T extends IdSectionEntry> extends SectionValue<T> {
 
     public SectionIdValue(SectionType<T> sectionType, DexValueType<?> type) {
         super(sectionType, type);
@@ -30,6 +31,14 @@ public abstract class SectionIdValue<T extends IndexItemEntry> extends SectionVa
         if(section != null){
             set(section.getOrCreate(key));
         }
+    }
+    @Override
+    public Key getKey(){
+        T item = get();
+        if(item != null){
+            return item.getKey();
+        }
+        return null;
     }
     @Override
     int getSectionValue(T data){
@@ -43,6 +52,28 @@ public abstract class SectionIdValue<T extends IndexItemEntry> extends SectionVa
         return section.get(value);
     }
 
+    @Override
+    void onDataRefreshed(T data){
+        super.onDataRefreshed(data);
+        addUsageType(data);
+    }
+    @Override
+    void onDataUpdated(T data){
+        super.onDataUpdated(data);
+        addUsageType(data);
+    }
+
+    private void addUsageType(T data) {
+        if(data != null){
+            int usage;
+            if(getParent(AnnotationElement.class) != null){
+                usage = IdSectionEntry.USAGE_ANNOTATION;
+            }else {
+                usage = IdSectionEntry.USAGE_ENCODED_VALUE;
+            }
+            data.addUsageType(usage);
+        }
+    }
     @Override
     public String getAsString() {
         T data = get();

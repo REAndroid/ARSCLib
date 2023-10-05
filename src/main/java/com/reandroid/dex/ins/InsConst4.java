@@ -15,34 +15,37 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.utils.HexUtil;
+public class InsConst4 extends Size2Ins implements RegistersSet {
 
-public class Ins20t extends Size4Ins implements Label{
-    public Ins20t(Opcode<?> opcode) {
-        super(opcode);
+    public InsConst4() {
+        super(Opcode.CONST_4);
     }
+
     @Override
     public int getData(){
-        return getShort(2);
+        return getNibble(3);
     }
     @Override
-    public void setData(int data){
-        setShort(2, data);
+    public void setData(int data) {
+        setNibble(3, data);
     }
     @Override
-    public int getTargetAddress() {
-        return getAddress() + getShort(2);
+    public int getRegistersCount() {
+        return 1;
     }
     @Override
-    public void setTargetAddress(int targetAddress){
-        setShort(2, targetAddress - getAddress());
+    public void setRegistersCount(int count) {
     }
     @Override
-    public int getSortOrder() {
-        return ExtraLine.ORDER_INSTRUCTION_LABEL;
+    public int getRegister(int index) {
+        return getNibble(2);
     }
     @Override
-    public String getLabelName() {
-        return HexUtil.toHex(":cond_", getTargetAddress(), 1);
+    public void setRegister(int index, int value) {
+        setNibble(2, value);
+    }
+    @Override
+    public int getRegistersLimit(){
+        return 0x0f;
     }
 }

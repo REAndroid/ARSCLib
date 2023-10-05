@@ -15,8 +15,47 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins35ms extends Size6Ins {
+public class Ins35ms extends Size6Ins implements RegistersSet {
+
     public Ins35ms(Opcode<?> opcode) {
         super(opcode);
+    }
+
+    @Override
+    public int getRegistersCount() {
+        return getNibble(3);
+    }
+    @Override
+    public void setRegistersCount(int count) {
+        setNibble(3, count);
+    }
+
+    @Override
+    public int getRegister(int index) {
+        if(index < 4){
+            return getNibble(8 + index);
+        }
+        return getNibble(2);
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        if(index < 4){
+            setNibble(8 + index, value);
+        }else {
+            setNibble(2, value);
+        }
+    }
+    @Override
+    public int getRegistersLimit(){
+        return 0x0f;
+    }
+
+    @Override
+    public int getData(){
+        return getShortUnsigned(2);
+    }
+    @Override
+    public void setData(int data){
+        setShort(2, data);
     }
 }

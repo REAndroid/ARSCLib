@@ -15,8 +15,30 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins22s extends Size4Ins {
+public class Ins22s extends Ins22 {
     public Ins22s(Opcode<?> opcode) {
         super(opcode);
+    }
+
+    @Override
+    public int getRegister(int index) {
+        return getNibble(2 + index);
+    }
+    @Override
+    public void setRegister(int index, int value) {
+        setNibble(2 + index, value);
+    }
+    @Override
+    public int getRegistersLimit(){
+        return 0x0f;
+    }
+
+    @Override
+    public int getData(){
+        return getShortSigned();
+    }
+    @Override
+    public void setData(int data){
+        setShort(2, data);
     }
 }

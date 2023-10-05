@@ -17,6 +17,7 @@ package com.reandroid.dex.model;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.index.ClassId;
 import com.reandroid.dex.item.ClassData;
@@ -40,6 +41,17 @@ public class RClass extends DexClass {
         super(dexFile, classId);
     }
 
+
+    public void load(ResourceEntry resourceEntry){
+        if(resourceEntry.isEmpty()){
+            return;
+        }
+        String name = RField.sanitizeResourceName(resourceEntry.getName());
+        FieldKey fieldKey = new FieldKey(getClassName(), name, "I");
+        RField rField = getOrCreateStaticField(fieldKey);
+        rField.setResourceId(resourceEntry.getResourceId());
+        //System.err.println(rField.getFieldId().getIndex() + " " + rField);
+    }
     public String toJavaDeclare() {
         return toJavaDeclare(true);
     }
@@ -87,6 +99,12 @@ public class RClass extends DexClass {
     @Override
     public Iterator<DexField> getFields() {
         return super.getFields();
+    }
+    public void initialize(){
+        ClassId classId = getClassId();
+        classId.setSuperClass("Ljava/lang/Object;");
+        classId.setSourceFile("R.java");
+        classId.getOrCreateClassData();
     }
 
     @Override

@@ -22,23 +22,27 @@ import com.reandroid.arsc.item.IntegerArrayBlock;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.common.IntegerArray;
+import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.OffsetReceiver;
 import com.reandroid.dex.base.PositionedItem;
 
 import java.io.IOException;
 
-public class IntegerList extends DataItemEntry implements
+public class IntegerList extends DataSectionEntry implements
         IntegerArray, PositionedItem, OffsetSupplier, OffsetReceiver {
 
+    private final DexPositionAlign positionAlign;
     private final IntegerReference itemCount;
     private final IntegerArray arrayBlock;
 
     IntegerList(int childesCount, IntegerArray arrayBlock){
-        super(childesCount + 2);
+        super(childesCount + 3);
+        this.positionAlign = new DexPositionAlign();
         this.itemCount = new IntegerItem();
         this.arrayBlock = arrayBlock;
         addChild(0, (Block) itemCount);
         addChild(1, (Block) arrayBlock);
+        addChild(2, positionAlign);
 
     }
     public IntegerList(IntegerReference itemCount){
@@ -46,9 +50,14 @@ public class IntegerList extends DataItemEntry implements
         this.itemCount = itemCount;
         this.arrayBlock = new IntegerArrayBlock();
         addChild(0, (Block) arrayBlock);
+        this.positionAlign = null;
     }
     public IntegerList(){
         this(0, new IntegerArrayBlock());
+    }
+
+    public DexPositionAlign getPositionAlign() {
+        return positionAlign;
     }
 
     public int[] toArray(){

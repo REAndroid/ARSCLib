@@ -112,6 +112,11 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
             return;
         }
         List<AnnotationItem> annotationItems = getKotlin();
+        if(annotationItems.isEmpty()){
+            return;
+        }
+        AnnotationsDirectory directory = classId.getUniqueAnnotationsDirectory();
+        annotationSet = directory.getClassAnnotations();
         for(AnnotationItem annotationItem : annotationItems){
             annotationSet.remove(annotationItem);
         }

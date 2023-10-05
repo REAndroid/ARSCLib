@@ -19,75 +19,134 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.CountedArray;
+import com.reandroid.dex.base.DexPositionAlign;
+import com.reandroid.dex.base.ParallelReference;
+import com.reandroid.dex.base.PositionAlignedItem;
 import com.reandroid.dex.header.CountAndOffset;
 import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.item.DataItemEntry;
+import com.reandroid.dex.item.DataSectionEntry;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Iterator;
 
-public class MapList extends DataItemEntry
-        implements Iterable<MapItem> {
+public class MapList extends DataSectionEntry
+        implements Iterable<MapItem>, PositionAlignedItem {
 
     private final CountedArray<MapItem> itemArray;
+    private final DexPositionAlign positionAlign;
+
+    private final ParallelReference fileSize;
+    private final ParallelReference dataStart;
+    private final ParallelReference dataSize;
 
     public MapList(IntegerReference offsetReference) {
-        super(2);
+        super(3);
         IntegerItem mapItemsCount = new IntegerItem();
         this.itemArray = new CountedArray<>(mapItemsCount, CREATOR);
-        addChild(0, mapItemsCount);
-        addChild(1, itemArray);
+        this.positionAlign = new DexPositionAlign();
+
+        addChild(0, positionAlign);
+        addChild(1, mapItemsCount);
+        addChild(2, itemArray);
+
         setOffsetReference(offsetReference);
+
+        this.fileSize = new ParallelReference(new FileSizeReference(this));
+        this.dataStart = new ParallelReference(new DataStartReference(this));
+        this.dataSize = new ParallelReference(new DataSizeReference(this));
+    }
+
+    public ParallelReference getFileSize(){
+        return fileSize;
+    }
+    public ParallelReference getDataStart() {
+        return dataStart;
+    }
+    public ParallelReference getDataSize() {
+        return dataSize;
     }
 
     public void sortMapItems(SectionType<?>[] order){
-        itemArray.sort(new OrderBasedComparator(order));
+        itemArray.sort(SectionType.comparator(order, MapItem::getMapType));
     }
 
-    public void updateHeader(DexHeader dexHeader){
+    public void linkHeader(DexHeader dexHeader){
+
         MapItem mapItem = get(SectionType.STRING_ID);
         if(mapItem != null){
-            CountAndOffset countAndOffset = dexHeader.strings;
-            countAndOffset.setCount(mapItem.getCount().get());
-            countAndOffset.setOffset(mapItem.getOffset().get());
+            mapItem.getCountAndOffset().setReference2(dexHeader.string_id);
         }
         mapItem = get(SectionType.TYPE_ID);
         if(mapItem != null){
-            CountAndOffset countAndOffset = dexHeader.type;
-            countAndOffset.setCount(mapItem.getCount().get());
-            countAndOffset.setOffset(mapItem.getOffset().get());
+            mapItem.getCountAndOffset().setReference2(dexHeader.type_id);
         }
         mapItem = get(SectionType.PROTO_ID);
         if(mapItem != null){
-            CountAndOffset countAndOffset = dexHeader.proto;
-            countAndOffset.setCount(mapItem.getCount().get());
-            countAndOffset.setOffset(mapItem.getOffset().get());
+            mapItem.getCountAndOffset().setReference2(dexHeader.proto_id);
         }
         mapItem = get(SectionType.FIELD_ID);
         if(mapItem != null){
-            CountAndOffset countAndOffset = dexHeader.field;
-            countAndOffset.setCount(mapItem.getCount().get());
-            countAndOffset.setOffset(mapItem.getOffset().get());
+            mapItem.getCountAndOffset().setReference2(dexHeader.field_id);
         }
         mapItem = get(SectionType.METHOD_ID);
         if(mapItem != null){
-            CountAndOffset countAndOffset = dexHeader.method;
-            countAndOffset.setCount(mapItem.getCount().get());
-            countAndOffset.setOffset(mapItem.getOffset().get());
+            mapItem.getCountAndOffset().setReference2(dexHeader.method_id);
         }
         mapItem = get(SectionType.CLASS_ID);
         if(mapItem != null){
-            CountAndOffset countAndOffset = dexHeader.class_def;
-            countAndOffset.setCount(mapItem.getCount().get());
-            countAndOffset.setOffset(mapItem.getOffset().get());
+            mapItem.getCountAndOffset().setReference2(dexHeader.class_id);
         }
-        mapItem = getDataStart();
+        mapItem = get(SectionType.MAP_LIST);
         if(mapItem != null){
-            //TODO: this is not right way
+            mapItem.getCount().set(1);
+            mapItem.getOffset().setReference2(dexHeader.map);
+        }
+        getFileSize().setReference2(dexHeader.fileSize);
+        getDataSize().setReference2(dexHeader.data.getFirst());
+        getDataStart().setReference2(dexHeader.data.getSecond());
+    }
+    public void updateHeader(DexHeader dexHeader){
+        MapItem mapItem = get(SectionType.STRING_ID);
+        if(mapItem != null){
+            CountAndOffset countAndOffset = dexHeader.string_id;
+            countAndOffset.setCount(mapItem.getCountValue());
+            countAndOffset.setOffset(mapItem.getOffsetValue());
+        }
+        mapItem = get(SectionType.TYPE_ID);
+        if(mapItem != null){
+            CountAndOffset countAndOffset = dexHeader.type_id;
+            countAndOffset.setCount(mapItem.getCountValue());
+            countAndOffset.setOffset(mapItem.getOffsetValue());
+        }
+        mapItem = get(SectionType.PROTO_ID);
+        if(mapItem != null){
+            CountAndOffset countAndOffset = dexHeader.proto_id;
+            countAndOffset.setCount(mapItem.getCountValue());
+            countAndOffset.setOffset(mapItem.getOffsetValue());
+        }
+        mapItem = get(SectionType.FIELD_ID);
+        if(mapItem != null){
+            CountAndOffset countAndOffset = dexHeader.field_id;
+            countAndOffset.setCount(mapItem.getCountValue());
+            countAndOffset.setOffset(mapItem.getOffsetValue());
+        }
+        mapItem = get(SectionType.METHOD_ID);
+        if(mapItem != null){
+            CountAndOffset countAndOffset = dexHeader.method_id;
+            countAndOffset.setCount(mapItem.getCountValue());
+            countAndOffset.setOffset(mapItem.getOffsetValue());
+        }
+        mapItem = get(SectionType.CLASS_ID);
+        if(mapItem != null){
+            CountAndOffset countAndOffset = dexHeader.class_id;
+            countAndOffset.setCount(mapItem.getCountValue());
+            countAndOffset.setOffset(mapItem.getOffsetValue());
+        }
+        mapItem = getDataStartItem();
+        if(mapItem != null){
             CountAndOffset countAndOffset = dexHeader.data;
-            countAndOffset.setCount(dexHeader.fileSize.get() - mapItem.getOffset().get());
-            countAndOffset.setOffset(mapItem.getOffset().get());
+            countAndOffset.setCount(dexHeader.fileSize.get() - mapItem.getOffsetValue());
+            countAndOffset.setOffset(mapItem.getOffsetValue());
         }
         mapItem = get(SectionType.MAP_LIST);
         if(mapItem != null){
@@ -95,14 +154,15 @@ public class MapList extends DataItemEntry
             mapItem.getOffset().set(dexHeader.map.get());
         }
     }
-    public MapItem getDataStart(){
+    public MapItem getDataStartItem(){
         boolean headerFound = false;
         for(MapItem mapItem : this){
             SectionType<?> sectionType = mapItem.getMapType();
             if(!headerFound){
                 headerFound = sectionType == SectionType.HEADER;
+                continue;
             }
-            if(!sectionType.isIndexSection()){
+            if(sectionType.isDataSection()){
                 return mapItem;
             }
         }
@@ -116,6 +176,15 @@ public class MapList extends DataItemEntry
         }
         return null;
     }
+    public MapItem getOrCreate(SectionType<?> type){
+        MapItem mapItem = get(type);
+        if(mapItem != null){
+            return null;
+        }
+        mapItem = itemArray.createNext();
+        mapItem.setType(type);
+        return mapItem;
+    }
     @Override
     public Iterator<MapItem> iterator() {
         return itemArray.iterator();
@@ -123,8 +192,18 @@ public class MapList extends DataItemEntry
 
     public MapItem[] getReadSorted(){
         MapItem[] mapItemList = itemArray.getChildes().clone();
-        Arrays.sort(mapItemList, MapItem.READ_COMPARATOR);
+        Arrays.sort(mapItemList, SectionType.comparator(SectionType.getReadOrderList(), MapItem::getMapType));
         return mapItemList;
+    }
+
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+
+        getFileSize().refresh();
+        getDataStart().refresh();
+        getDataSize().refresh();
+
     }
 
     @Override
@@ -145,6 +224,11 @@ public class MapList extends DataItemEntry
         return builder.toString();
     }
 
+    @Override
+    public DexPositionAlign getPositionAlign() {
+        return positionAlign;
+    }
+
     private static final Creator<MapItem> CREATOR = new Creator<MapItem>() {
         @Override
         public MapItem[] newInstance(int length) {
@@ -156,25 +240,61 @@ public class MapList extends DataItemEntry
         }
     };
 
-    static class OrderBasedComparator implements Comparator<MapItem> {
-        private final SectionType<?>[] sortOrder;
-        OrderBasedComparator(SectionType<?>[] sortOrder){
-            this.sortOrder = sortOrder;
+    static class DataStartReference implements IntegerReference {
+
+        private final MapList mapList;
+
+        private DataStartReference(MapList mapList) {
+            this.mapList = mapList;
         }
-        private int getOrder(SectionType<?> sectionType){
-            SectionType<?>[] sortOrder = this.sortOrder;
-            int length = sortOrder.length;
-            for(int i = 0; i < length; i++){
-                if(sortOrder[i] == sectionType){
-                    return i;
-                }
+
+        @Override
+        public int get() {
+            MapItem mapItem = mapList.getDataStartItem();
+            if(mapItem != null){
+                return mapItem.getOffset().get();
             }
-            return length - 2;
+            return 0;
         }
         @Override
-        public int compare(MapItem mapItem1, MapItem mapItem2) {
-            return Integer.compare(getOrder(mapItem1.getMapType()),
-                    getOrder(mapItem2.getMapType()));
+        public void set(int value) {
+        }
+    }
+
+    static class DataSizeReference implements IntegerReference {
+
+        private final MapList mapList;
+
+        private DataSizeReference(MapList mapList) {
+            this.mapList = mapList;
+        }
+
+        @Override
+        public int get() {
+            MapItem mapItem = mapList.getDataStartItem();
+            if(mapItem != null){
+                return mapList.getFileSize().get() - mapItem.getOffset().get();
+            }
+            return 0;
+        }
+        @Override
+        public void set(int value) {
+        }
+    }
+
+    static class FileSizeReference implements IntegerReference {
+
+        private final MapList mapList;
+
+        private FileSizeReference(MapList mapList) {
+            this.mapList = mapList;
+        }
+        @Override
+        public int get() {
+            return mapList.getOffset() + mapList.countBytes();
+        }
+        @Override
+        public void set(int value) {
         }
     }
 }

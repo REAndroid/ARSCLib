@@ -15,32 +15,32 @@
  */
 package com.reandroid.dex.index;
 
-import com.reandroid.dex.base.StringKeyItemCreate;
+import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.item.StringData;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
+import java.util.Objects;
 
-public class TypeId extends IndexItemEntry implements Comparable<TypeId>, StringKeyItemCreate {
+public class TypeId extends IdSectionEntry implements Comparable<TypeId>, KeyItemCreate {
 
     private final StringReference nameReference;
+    private final TypeIdKey typeIdKey;
 
     private TypeName typeName;
     public TypeId() {
         super(4);
-        this.nameReference = new StringReference(this, 0, StringData.USAGE_TYPE);
+        this.nameReference = new StringReference(this, 0, StringId.USAGE_TYPE_NAME);
+        this.typeIdKey = new TypeIdKey(this);
     }
 
     @Override
     public TypeKey getKey(){
-        String name = getName();
-        if(name != null){
-            return new TypeKey(name);
-        }
-        return null;
+        return typeIdKey;
     }
     @Override
     public void setKey(Key key){
@@ -65,10 +65,6 @@ public class TypeId extends IndexItemEntry implements Comparable<TypeId>, String
 
     public StringReference getNameReference() {
         return nameReference;
-    }
-
-    public void setName(StringData name){
-        nameReference.setItem(name);
     }
 
     public TypeName getTypeName(){
@@ -101,7 +97,7 @@ public class TypeId extends IndexItemEntry implements Comparable<TypeId>, String
     }
     @Override
     void cacheItems(){
-        nameReference.getItem();
+        nameReference.cacheItem();
     }
 
     @Override
@@ -134,5 +130,30 @@ public class TypeId extends IndexItemEntry implements Comparable<TypeId>, String
             return false;
         }
         return CompareUtil.compare(typeId1.getName(), typeId2.getName()) == 0;
+    }
+    static class TypeIdKey extends TypeKey {
+
+        private final TypeId typeId;
+
+        public TypeIdKey(TypeId typeId) {
+            super(null);
+            this.typeId = typeId;
+        }
+
+        @Override
+        public String getType() {
+            return typeId.getName();
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if(!(obj instanceof TypeKey) || typeId.getParent() == null) {
+                return false;
+            }
+            TypeKey key = (TypeKey) obj;
+            return Objects.equals(getType(), key.getType());
+        }
     }
 }

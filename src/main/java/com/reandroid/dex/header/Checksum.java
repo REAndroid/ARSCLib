@@ -18,9 +18,6 @@ package com.reandroid.dex.header;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.utils.HexUtil;
 
-import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.zip.Adler32;
 
 public class Checksum extends HeaderPiece {
@@ -29,22 +26,21 @@ public class Checksum extends HeaderPiece {
         super(4);
     }
 
-    public int getChecksum(){
+    public int getValue(){
         return getInteger(0);
     }
-    public void setChecksum(int checksum){
+    public void setValue(long checksum){
         setSize(4);
-        putInteger(0, checksum);
+        putInteger(0, (int)checksum);
     }
     public void update(Block parent, byte[] bytes) {
         int start = parent.countUpTo(this) + countBytes();
         Adler32 adler32 = new Adler32();
         adler32.update(bytes, start, bytes.length - start);
-        setChecksum((int) adler32.getValue());
+        setValue(adler32.getValue());
     }
-
     @Override
     public String toString(){
-        return HexUtil.toHex8(getChecksum());
+        return HexUtil.toHex8(getValue());
     }
 }

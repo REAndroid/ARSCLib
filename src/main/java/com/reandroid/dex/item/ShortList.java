@@ -16,22 +16,24 @@
 package com.reandroid.dex.item;
 
 import com.reandroid.arsc.item.ShortArrayBlock;
+import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.PositionAlignedItem;
+import com.reandroid.utils.HexUtil;
 
 public class ShortList extends IntegerList implements PositionAlignedItem {
-    private final DexPositionAlign positionAlign;
     public ShortList(){
-        super(1, new ShortArrayBlock());
-        this.positionAlign = new DexPositionAlign();
-        addChild(2, positionAlign);
+        super(0, new ShortArrayBlock());
     }
 
     @Override
-    public DexPositionAlign getPositionAlign(){
-        return positionAlign;
+    public void put(int index, int value){
+        if((value & 0xffff0000) != 0){
+            throw new DexException("Short value out of range "
+                    + HexUtil.toHex(value, 4) + " > 0xffff");
+        }
+        super.put(index, value);
     }
-
     @Override
     public String toString() {
         DexPositionAlign dexPositionAlign = getPositionAlign();

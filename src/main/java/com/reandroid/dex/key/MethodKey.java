@@ -49,6 +49,10 @@ public class MethodKey implements Key{
         return new TypeKey(getReturnType());
     }
 
+    public MethodKeyLocal getLocal(){
+        return new MethodKeyLocal(getName(), getParameters(), getReturnType());
+    }
+
     public String getDefining() {
         return defining;
     }
@@ -94,7 +98,8 @@ public class MethodKey implements Key{
         MethodKey methodKey = (MethodKey) obj;
         return Objects.equals(getDefining(), methodKey.getDefining()) &&
                 Objects.equals(getName(), methodKey.getName()) &&
-                CompareUtil.compare(getParameters(), methodKey.getParameters()) == 0;
+                CompareUtil.compare(getParameters(), methodKey.getParameters()) == 0 &&
+        Objects.equals(getName(), methodKey.getName());
     }
 
     @Override
@@ -110,6 +115,10 @@ public class MethodKey implements Key{
             for(String param : parameters){
                 hash = hash * 31 + param.hashCode();
             }
+        }
+        String returnType = getReturnType();
+        if (returnType != null){
+            hash = hash * 31 + returnType.hashCode();
         }
         return hash;
     }

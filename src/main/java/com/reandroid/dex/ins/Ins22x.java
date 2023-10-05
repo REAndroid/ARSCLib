@@ -18,15 +18,11 @@ package com.reandroid.dex.ins;
 import com.reandroid.dex.writer.SmaliWriter;
 
 
-public class Ins22x extends Size4Ins {
+public class Ins22x extends Ins22 {
     public Ins22x(Opcode<?> opcode) {
         super(opcode);
     }
 
-    @Override
-    public int getRegistersCount() {
-        return 2;
-    }
     @Override
     public int getRegister(int index) {
         return getByteUnsigned(1 + index);
@@ -34,6 +30,10 @@ public class Ins22x extends Size4Ins {
     @Override
     public void setRegister(int index, int value) {
         setByte(1 + index, value);
+    }
+    @Override
+    public int getRegistersLimit(){
+        return 0xff;
     }
 
     @Override

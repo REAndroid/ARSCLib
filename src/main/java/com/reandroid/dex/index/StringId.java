@@ -17,11 +17,15 @@ package com.reandroid.dex.index;
 
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyItemCreate;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class StringId extends IndexItemEntry implements IntegerReference, Comparable<StringId> {
+public class StringId extends IdSectionEntry implements IntegerReference, Comparable<StringId>, KeyItemCreate {
 
     private StringData stringData;
 
@@ -30,42 +34,53 @@ public class StringId extends IndexItemEntry implements IntegerReference, Compar
     }
 
     @Override
+    public StringKey getKey(){
+        StringData stringData = getStringData();
+        if(stringData != null){
+            return stringData.getKey();
+        }
+        return null;
+    }
+    @Override
+    public void setKey(Key key){
+        StringData stringData = getStringData();
+        if(stringData == null){
+            stringData = getOrCreateSection(SectionType.STRING_DATA).createItem();
+            linkStringData(stringData);
+        }
+        stringData.setKey(key);
+    }
+    @Override
     public void removeSelf() {
         StringData stringData = this.stringData;
-        this.stringData = null;
         if(stringData != null){
-            stringData.removeSelf();
-        }else {
-            super.removeSelf();
+            int usage = stringData.getUsageType();
+            stringData.clearUsageType();
+            usage = usage >>> 1;
+            stringData.addUsageType(usage);
+            if(usage == 0){
+                stringData.removeSelf(this);
+            }
         }
+        super.removeSelf();
+        this.stringData = null;
     }
 
     public StringData getStringData() {
         return stringData;
     }
-    public void setStringData(StringData stringData) {
+    public void linkStringData(StringData stringData) {
+        if(this.stringData == stringData){
+            return;
+        }
+        if(this.stringData != null){
+            throw new IllegalArgumentException("String data already linked");
+        }
         this.stringData = stringData;
+        int usage = stringData.getUsageType();
+        stringData.addUsageType((usage << 1) | 1);
     }
-    public boolean containsUsage(int usage){
-        StringData stringData = getStringData();
-        if(stringData != null){
-            return stringData.containsUsage(usage);
-        }
-        return false;
-    }
-    public int getStringUsage() {
-        StringData stringData = getStringData();
-        if(stringData != null){
-            return stringData.getStringUsage();
-        }
-        return StringData.USAGE_NONE;
-    }
-    public void addStringUsage(int usage){
-        StringData stringData = getStringData();
-        if(stringData != null){
-            stringData.addStringUsage(usage);
-        }
-    }
+
     @Override
     public void set(int value) {
         putInteger(getBytesInternal(), 0, value);
@@ -76,7 +91,7 @@ public class StringId extends IndexItemEntry implements IntegerReference, Compar
     }
     @Override
     public void refresh() {
-
+        set(stringData.getOffset());
     }
     @Override
     void cacheItems() {

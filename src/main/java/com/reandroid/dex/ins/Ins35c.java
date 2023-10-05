@@ -15,22 +15,18 @@
  */
 package com.reandroid.dex.ins;
 
-public class Ins35c extends Size6Ins implements RegisterNumber{
+public class Ins35c extends Size6Ins implements RegistersSet{
     public Ins35c(Opcode<?> opcode) {
         super(opcode);
-    }
-    @Override
-    public int getData(){
-        return getValueBytes().getShortUnsigned(2);
-    }
-    public void setData(int data){
-        getValueBytes().putShort(2, data);
-        cacheSectionItem();
     }
 
     @Override
     public int getRegistersCount() {
         return getNibble(3);
+    }
+    @Override
+    public void setRegistersCount(int count) {
+        setNibble(3, count);
     }
 
     @Override
@@ -40,12 +36,25 @@ public class Ins35c extends Size6Ins implements RegisterNumber{
         }
         return getNibble(2);
     }
-
     @Override
     public void setRegister(int index, int value) {
         if(index < 4){
             setNibble(8 + index, value);
+        }else {
+            setNibble(2, value);
         }
-        setNibble(2, value);
+    }
+    @Override
+    public int getRegistersLimit(){
+        return 0x0f;
+    }
+
+    @Override
+    public int getData(){
+        return getShortUnsigned(2);
+    }
+    @Override
+    public void setData(int data){
+        setShort(2, data);
     }
 }

@@ -46,7 +46,6 @@ public class Rename implements Iterable<RenameInfo<?>>{
             renameInfo.apply(sectionList);
         }
         lookStrings(sectionList.get(SectionType.STRING_DATA));
-
     }
     private void lookStrings(Section<StringData> sectionString){
         List<RenameInfo<?>> renameInfoList = CollectionUtil.toList(FilterIterator.of(

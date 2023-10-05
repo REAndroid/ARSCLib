@@ -13,11 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.base;
+package com.reandroid.dex.ins;
 
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.KeyItem;
+public abstract class Ins22 extends Size4Ins implements RegistersSet {
 
-public interface StringKeyItemCreate extends KeyItem {
-    void setKey(Key key);
+    public Ins22(Opcode<?> opcode) {
+        super(opcode);
+    }
+
+    @Override
+    public final int getRegistersCount() {
+        return 2;
+    }
+    @Override
+    public final void setRegistersCount(int count) {
+    }
+    @Override
+    public abstract int getRegister(int index);
+    @Override
+    public abstract void setRegister(int index, int value);
+    @Override
+    public abstract int getRegistersLimit();
+
 }
