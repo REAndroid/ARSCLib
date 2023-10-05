@@ -184,6 +184,25 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
             trimNullBlocks();
         }
     }
+    public boolean needsSort(Comparator<? super T> comparator) {
+        T[] elementData = this.elementData;
+        if(comparator == null){
+            return false;
+        }
+        int length = elementData.length;
+        if(length < 2){
+            return false;
+        }
+        T previous = elementData[0];
+        for(int i = 1; i < length; i++){
+            T item = elementData[i];
+            if(comparator.compare(previous, item) > 0){
+                return true;
+            }
+            previous = item;
+        }
+        return false;
+    }
     public boolean sort(Comparator<? super T> comparator){
         T[] elementData = this.elementData;
         if(comparator == null || elementData.length < 2){
