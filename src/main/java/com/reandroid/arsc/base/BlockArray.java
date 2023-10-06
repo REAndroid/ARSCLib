@@ -238,6 +238,31 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         item.setParent(this);
         item.setIndex(index);
     }
+    public void insertItem(int index, T[] itemsArray){
+        int count = getChildesCount();
+        if(count < index){
+            count = index;
+        }
+        int itemsLength = itemsArray.length;
+        ensureSize(count + itemsLength);
+        T[] childes = getChildes();
+        int lastIndex = childes.length - itemsLength - 1;
+        for(int i = lastIndex; i >= index; i--){
+            T exist = childes[i];
+            childes[i] = null;
+            int newIndex = i + itemsLength;
+            childes[newIndex] = exist;
+            if(exist != null){
+                exist.setIndex(newIndex);
+            }
+        }
+        for(int i = 0; i < itemsLength; i++){
+            T item = itemsArray[i];
+            childes[index + i] = item;
+            item.setParent(this);
+            item.setIndex(index);
+        }
+    }
     public void setItem(int index, T item){
         ensureSize(index + 1);
         elementData[index] = item;
