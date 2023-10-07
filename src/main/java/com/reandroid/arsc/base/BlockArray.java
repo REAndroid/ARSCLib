@@ -258,9 +258,10 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         }
         for(int i = 0; i < itemsLength; i++){
             T item = itemsArray[i];
-            childes[index + i] = item;
+            int newIndex = index + i;
+            childes[newIndex] = item;
             item.setParent(this);
-            item.setIndex(index);
+            item.setIndex(newIndex);
         }
     }
     public void setItem(int index, T item){
