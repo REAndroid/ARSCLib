@@ -26,12 +26,22 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
     private int size;
     private int mLastGrow;
 
+    public ArrayCollection(int initialCapacity){
+        Object[] elements;
+        if(initialCapacity == 0){
+            elements = EMPTY;
+        }else {
+            elements = new Object[initialCapacity];
+        }
+        this.mElements = elements;
+        this.size = 0;
+    }
     public ArrayCollection(T[] elements){
         this.mElements = elements;
         this.size = elements.length;
     }
     public ArrayCollection(){
-        mElements = EMPTY;
+        this(0);
     }
 
     @SuppressWarnings("unchecked")
