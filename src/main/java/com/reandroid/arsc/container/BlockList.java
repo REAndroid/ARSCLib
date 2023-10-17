@@ -65,7 +65,11 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
             item.setParent(null);
             item.setIndex(-1);
         }
-        return mItems.remove(item);
+        boolean removed = mItems.remove(item);
+        if(removed){
+            updateIndex();
+        }
+        return removed;
     }
     public void add(int index, T item){
         if(item == null){

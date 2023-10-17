@@ -16,6 +16,7 @@
 package com.reandroid.arsc.base;
 
 import com.reandroid.common.ArraySupplier;
+import com.reandroid.utils.collection.ArrayIterator;
 import com.reandroid.utils.collection.SingleIterator;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -418,23 +419,47 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         return result;
     }
 
+    public Iterator<T> arrayIterator() {
+        if(getChildesCount() == 0){
+            return EmptyIterator.of();
+        }
+        return new ArrayIterator<>(getChildes());
+    }
+    public Iterator<T> clonedIterator() {
+        if(getChildesCount() == 0){
+            return EmptyIterator.of();
+        }
+        return new ArrayIterator<>(getChildes().clone());
+    }
     public Iterator<T> iterator() {
         return iterator(false);
     }
     public Iterator<T> iterator(boolean skipNullBlock) {
+        return iterator(skipNullBlock, 0, getChildesCount());
+    }
+    public Iterator<T> iterator(int start, int size) {
+        return iterator(false, start, size);
+    }
+    public Iterator<T> iterator(boolean skipNullBlock, int start, int size) {
         trimAllocatedFreeSpace();
-        int count = getChildesCount();
-        if(count == 0){
+        if(start < 0){
+            start = 0;
+        }
+        int count = getChildesCount() - start;
+        if(size > count){
+            size = count;
+        }
+        if(size == 0){
             return EmptyIterator.of();
         }
-        if(count == 1){
-            T item = get(0);
+        if(size == 1){
+            T item = get(start);
             if(skipNullBlock && (item == null || item.isNull())){
                 return EmptyIterator.of();
             }
             return SingleIterator.of(item);
         }
-        return new BlockIterator(skipNullBlock);
+        return new BlockIterator(skipNullBlock, start, size);
     }
     public Iterator<T> iterator(Predicate<? super T> tester) {
         trimAllocatedFreeSpace();
@@ -631,14 +656,17 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
     }
 
     private class BlockIterator implements Iterator<T> {
+
         private int mCursor;
-        private final int mMaxSize;
+        private final int mMaxPosition;
         private final boolean mSkipNullBlock;
-        BlockIterator(boolean skipNullBlock){
-            mSkipNullBlock=skipNullBlock;
-            mCursor=0;
-            mMaxSize=BlockArray.this.getChildesCount();
+
+        BlockIterator(boolean skipNullBlock, int start, int size){
+            mSkipNullBlock = skipNullBlock;
+            this.mCursor = start;
+            this.mMaxPosition = start + size;
         }
+
         @Override
         public boolean hasNext() {
             checkCursor();
@@ -647,7 +675,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         @Override
         public T next() {
             if(!isFinished()){
-                T item=BlockArray.this.get(mCursor);
+                T item = BlockArray.this.get(mCursor);
                 mCursor++;
                 checkCursor();
                 return item;
@@ -655,7 +683,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
             return null;
         }
         private boolean isFinished(){
-            return mCursor>=mMaxSize;
+            return mCursor>= mMaxPosition;
         }
         private void checkCursor(){
             if(!mSkipNullBlock || isFinished()){
@@ -665,7 +693,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
             while (item == null || item.isNull()){
                 mCursor++;
                 item = BlockArray.this.get(mCursor);
-                if(mCursor>=mMaxSize){
+                if(mCursor >= mMaxPosition){
                     break;
                 }
             }

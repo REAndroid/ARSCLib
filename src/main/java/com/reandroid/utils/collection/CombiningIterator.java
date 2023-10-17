@@ -21,100 +21,128 @@ import java.util.NoSuchElementException;
 public class CombiningIterator<T, E extends T> implements Iterator<T> {
     private Iterator<? extends T> iterator1;
     private Iterator<? extends T> iterator2;
+    private Iterator<? extends T> iterator3;
+    private Iterator<? extends T> iterator4;
     private Iterator<Iterator<E>> iteratorIterator;
-    private boolean mFirstFinished;
-    private boolean mSecondFinished;
-    private Iterator<? extends T> mSecond;
-    private Iterator<? extends T> mCurrent;
 
-    public CombiningIterator(Iterator<? extends T> iterator1, Iterator<? extends T> iterator2){
+    private Iterator<? extends T> mCurrentIterator;
+    private T mCurrentItem;
+
+
+    public CombiningIterator(Iterator<? extends T> iterator1, Iterator<? extends T> iterator2, Iterator<? extends T> iterator3, Iterator<Iterator<E>> iteratorIterator){
         this.iterator1 = iterator1;
         this.iterator2 = iterator2;
-        this.iteratorIterator = null;
+        this.iterator3 = iterator3;
+        this.iteratorIterator = iteratorIterator;
+    }
+    public CombiningIterator(Iterator<? extends T> iterator1, Iterator<? extends T> iterator2, Iterator<? extends T> iterator3){
+        this(iterator1, iterator2, iterator3, null);
+    }
+    public CombiningIterator(Iterator<? extends T> iterator1, Iterator<? extends T> iterator2){
+        this(iterator1, iterator2, null, null);
+    }
+    public CombiningIterator(Iterator<? extends T> iterator1, Iterator<Iterator<E>> iteratorIterator, Void ignored){
+        this(iterator1, null, null, iteratorIterator);
+    }
+    public CombiningIterator(Iterator<Iterator<E>> iteratorIterator){
+        this(null, null, null, iteratorIterator);
     }
 
     @Override
     public boolean hasNext() {
-        return getCurrent() != null;
+        return getCurrentItem() != null;
     }
     @Override
     public T next() {
-        Iterator<? extends T> current = getCurrent();
-        if(current == null){
+        T item = getCurrentItem();
+        if(item == null){
             throw new NoSuchElementException();
         }
-        mCurrent = null;
-        return current.next();
+        this.mCurrentItem = null;
+        return item;
     }
-    private Iterator<? extends T> getCurrent() {
-        Iterator<? extends T> current = mCurrent;
-        if(current == null){
-            current = loadCurrent();
-            mCurrent = current;
+    private T getCurrentItem(){
+        T item = mCurrentItem;
+        if(item == null){
+            item = readNext();
+            this.mCurrentItem = item;
         }
-        return current;
+        return item;
     }
-    private Iterator<? extends T> loadCurrent() {
-        Iterator<? extends T> current = getFirst();
-        if(current == null){
-            current = getSecond();
+    private T readNext(){
+        Iterator<? extends T> iterator = this.iterator1;
+        if(iterator != null){
+            while (iterator.hasNext()){
+                T item = iterator.next();
+                if(item != null){
+                    return item;
+                }
+            }
+            this.iterator1 = null;
         }
-        return current;
+        iterator = this.iterator2;
+        if(iterator != null){
+            while (iterator.hasNext()){
+                T item = iterator.next();
+                if(item != null){
+                    return item;
+                }
+            }
+            this.iterator2 = null;
+        }
+        iterator = this.iterator3;
+        if(iterator != null){
+            while (iterator.hasNext()){
+                T item = iterator.next();
+                if(item != null){
+                    return item;
+                }
+            }
+            this.iterator3 = null;
+        }
+        iterator = this.iterator4;
+        if(iterator != null){
+            while (iterator.hasNext()){
+                T item = iterator.next();
+                if(item != null){
+                    return item;
+                }
+            }
+            this.iterator4 = null;
+        }
+        return readCurrentIterator();
+    }
+    private T readCurrentIterator(){
+        Iterator<? extends T> iterator = getCurrentIterator();
+        while (iterator != null){
+            while (iterator.hasNext()){
+                T item = iterator.next();
+                if(item != null){
+                    return item;
+                }
+            }
+            this.mCurrentIterator = null;
+            iterator = getCurrentIterator();
+        }
+        return null;
     }
 
-    private Iterator<? extends T> getSecond() {
-        if(mSecondFinished){
-            return null;
-        }
-        Iterator<? extends T> second = mSecond;
-        if(second == null && iterator2 != null){
-            second = iterator2;
-            if(!second.hasNext()){
-                iterator2 = null;
-                mSecondFinished = true;
-                return null;
-            }
-            return second;
-        }
-        second = iterator2;
-        if(second != null){
-            if(second.hasNext()){
-                return second;
-            }
-            iterator2 = null;
-            mSecondFinished = true;
-            return null;
+    private Iterator<? extends T> getCurrentIterator() {
+        if(mCurrentIterator != null){
+            return mCurrentIterator;
         }
         Iterator<Iterator<E>> iteratorIterator = this.iteratorIterator;
         if(iteratorIterator == null){
-            mSecondFinished = true;
             return null;
         }
-        second = mSecond;
-        while (second == null || !second.hasNext()){
-            if(!iteratorIterator.hasNext()){
-                this.iteratorIterator = null;
-                mSecond = null;
-                mSecondFinished = true;
-                return null;
-            }
-            second = iteratorIterator.next();
+        Iterator<? extends T> iterator = null;
+        while (iteratorIterator.hasNext() && iterator == null){
+            iterator = iteratorIterator.next();
         }
-        mSecond = second;
-        return second;
+        mCurrentIterator = iterator;
+        return iterator;
     }
-    private Iterator<? extends T> getFirst() {
-        if(mFirstFinished){
-            return null;
-        }
-        Iterator<? extends T> first = iterator1;
-        if(first == null || !first.hasNext()){
-            iterator1 = null;
-            mFirstFinished = true;
-            return null;
-        }
-        return first;
-    }
+
 
     public static<T1, E1 extends T1> Iterator<T1> of(Iterator<T1> iterator1, Iterator<Iterator<E1>> iteratorIterator){
         if(!iteratorIterator.hasNext()){
@@ -122,6 +150,60 @@ public class CombiningIterator<T, E extends T> implements Iterator<T> {
         }
         CombiningIterator<T1, E1> iterator = new CombiningIterator<>(iterator1, null);
         iterator.iteratorIterator = iteratorIterator;
+        return iterator;
+    }
+    public static<T1, E1 extends T1> Iterator<T1> of(T1 item, Iterator<Iterator<E1>> iteratorIterator){
+        if(!iteratorIterator.hasNext()){
+            return SingleIterator.of(item);
+        }
+        CombiningIterator<T1, E1> iterator = new CombiningIterator<>(null, null);
+        iterator.mCurrentItem = item;
+        iterator.iteratorIterator = iteratorIterator;
+        return iterator;
+    }
+    @SuppressWarnings("unchecked")
+    public static<T1> Iterator<T1> two(Iterator<? extends T1> iterator1, Iterator<? extends T1> iterator2){
+        if(!iterator1.hasNext()){
+            return (Iterator<T1>) iterator2;
+        }
+        if(!iterator2.hasNext()){
+            return (Iterator<T1>) iterator1;
+        }
+        return new CombiningIterator<>(iterator1, iterator2);
+    }
+    public static<T1> Iterator<T1> three(Iterator<? extends T1> iterator1, Iterator<? extends T1> iterator2, Iterator<? extends T1> iterator3){
+        return new CombiningIterator<>(iterator1, iterator2, iterator3);
+    }
+    public static<T1> Iterator<T1> four(Iterator<? extends T1> iterator1, Iterator<? extends T1> iterator2, Iterator<? extends T1> iterator3, Iterator<? extends T1> iterator4){
+        CombiningIterator<T1, T1> iterator = new CombiningIterator<>(iterator1, iterator2, iterator3);
+        iterator.iterator4 = iterator4;
+        return iterator;
+    }
+    @SuppressWarnings("unchecked")
+    public static<T1> Iterator<T1> singleOne(T1 item, Iterator<? extends T1> iterator1){
+        if(item == null){
+            return (Iterator<T1>) iterator1;
+        }
+        CombiningIterator<T1, T1> iterator = new CombiningIterator<>(iterator1, null);
+        iterator.mCurrentItem = item;
+        return iterator;
+    }
+    @SuppressWarnings("unchecked")
+    public static<T1> Iterator<T1> singleTwo(T1 item, Iterator<? extends T1> iterator1, Iterator<? extends T1> iterator2){
+        if(item == null){
+            return (Iterator<T1>) iterator1;
+        }
+        CombiningIterator<T1, T1> iterator = new CombiningIterator<>(iterator1, iterator2);
+        iterator.mCurrentItem = item;
+        return iterator;
+    }
+    @SuppressWarnings("unchecked")
+    public static<T1> Iterator<T1> singleThree(T1 item, Iterator<? extends T1> iterator1, Iterator<? extends T1> iterator2, Iterator<? extends T1> iterator3){
+        if(item == null){
+            return (Iterator<T1>) iterator1;
+        }
+        CombiningIterator<T1, T1> iterator = new CombiningIterator<>(iterator1, iterator2, iterator3);
+        iterator.mCurrentItem = item;
         return iterator;
     }
 }
