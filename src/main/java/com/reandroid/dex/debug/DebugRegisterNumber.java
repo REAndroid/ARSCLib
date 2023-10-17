@@ -20,7 +20,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-class DebugRegisterNumber extends DebugElement {
+abstract class DebugRegisterNumber extends DebugElement {
 
     private final Ule128Item registerNumber;
 
@@ -40,6 +40,7 @@ class DebugRegisterNumber extends DebugElement {
         this.registerNumber.set(registerNumber);
     }
 
+    @Override
     public void appendExtra(SmaliWriter writer) throws IOException {
         writer.append(getElementType().getOpcode());
         writer.append(" v");

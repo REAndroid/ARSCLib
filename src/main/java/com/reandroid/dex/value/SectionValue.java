@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
+import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
@@ -55,7 +56,9 @@ public abstract class SectionValue<T extends Block> extends DexValueBlock<Number
         onDataUpdated(data);
     }
     public void set(Key key){
-        T item = getSection().getPool().getOrCreate(key);
+        Section<T> section = getSection();
+        DexSectionPool<T> pool = section.getPool();
+        T item = pool.getOrCreate(key);
         set(item);
     }
     @Override

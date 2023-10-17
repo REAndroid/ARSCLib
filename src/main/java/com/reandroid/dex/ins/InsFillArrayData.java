@@ -15,9 +15,24 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.dex.data.InstructionList;
+
 public class InsFillArrayData extends Ins31t{
+
     public InsFillArrayData() {
         super(Opcode.FILL_ARRAY_DATA);
+    }
+
+    public InsArrayData getInsArrayData(){
+        InstructionList instructionList = getInstructionList();
+        if(instructionList == null){
+            return null;
+        }
+        Ins ins = instructionList.getAtAddress(getTargetAddress());
+        if(ins instanceof InsArrayData){
+            return (InsArrayData) ins;
+        }
+        return null;
     }
     @Override
     String getLabelPrefix(){

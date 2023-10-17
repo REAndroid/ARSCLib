@@ -58,4 +58,19 @@ public class StringKey implements Key{
     public String toString() {
         return DexUtils.quoteString(getString());
     }
+
+    public static StringKey create(String text){
+        if(text == null){
+            return null;
+        }
+        if(text.length() == 0){
+            return EMPTY;
+        }
+        return new StringKey(text);
+    }
+
+    public static final StringKey EMPTY = new StringKey("");
+
+    // Yes not final, to minimize multiple 'String' Objects
+    public static String EMPTY_STRING = "";
 }

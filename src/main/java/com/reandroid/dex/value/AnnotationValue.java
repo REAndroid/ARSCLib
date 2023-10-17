@@ -1,6 +1,6 @@
 package com.reandroid.dex.value;
 
-import com.reandroid.dex.item.AnnotationItem;
+import com.reandroid.dex.data.AnnotationItem;
 import com.reandroid.dex.key.AnnotationKey;
 
 public class AnnotationValue extends DexValueBlock<AnnotationItem> {

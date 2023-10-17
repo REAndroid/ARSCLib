@@ -15,7 +15,10 @@
  */
 package com.reandroid.dex.refactor;
 
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.model.DexDirectory;
+import com.reandroid.dex.model.DexFile;
 import com.reandroid.dex.sections.DexFileBlock;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
@@ -39,26 +42,38 @@ public class Rename implements Iterable<RenameInfo<?>>{
         this.renameInfoList = new ArrayList<>();
     }
 
+    public void apply(DexDirectory directory){
+        for(RenameInfo<?> info : this){
+            info.apply(directory);
+        }
+    }
+    public void apply(DexFile dexFile){
+        apply(dexFile.getDexFileBlock());
+        dexFile.clearPools();
+    }
     public void apply(DexFileBlock dexFileBlock){
         dexFileBlock.linkTypeSignature();
         SectionList sectionList = dexFileBlock.getSectionList();
+        sectionList.get(SectionType.METHOD_ID).getPool();
         for(RenameInfo<?> renameInfo : this){
             renameInfo.apply(sectionList);
         }
-        lookStrings(sectionList.get(SectionType.STRING_DATA));
+        lookStrings(sectionList.get(SectionType.STRING_ID));
     }
-    private void lookStrings(Section<StringData> sectionString){
+    private void lookStrings(Section<StringId> sectionString){
+        lookStrings(sectionString.iterator());
+    }
+    private void lookStrings(Iterator<StringId> iterator){
         List<RenameInfo<?>> renameInfoList = CollectionUtil.toList(FilterIterator.of(
                 getAll(), RenameInfo::looksStrings));
         if(renameInfoList.isEmpty()){
             return;
         }
-        Iterator<StringData> iterator = sectionString.iterator();
         while (iterator.hasNext()){
             lookString(renameInfoList, iterator.next());
         }
     }
-    private void lookString(List<RenameInfo<?>> renameInfoList, StringData stringData){
+    private void lookString(List<RenameInfo<?>> renameInfoList, StringId stringData){
         for(RenameInfo<?> renameInfo : renameInfoList){
             if(renameInfo.lookString(stringData)){
                 return;
@@ -73,8 +88,11 @@ public class Rename implements Iterable<RenameInfo<?>>{
     public void addClass(String search, String replace){
         add(new RenameInfoClass(search, replace));
     }
-    public void addMethod(String typeName, String parameters, String search, String replace){
+    public void addMethod(String typeName, String[] parameters, String search, String replace){
         add(new RenameInfoMethodName(typeName, parameters, search, replace));
+    }
+    public void addMethod(MethodKey methodKey, String replace){
+        add(new RenameInfoMethodName(methodKey, replace));
     }
     public void addAnnotation(String typeName, String search, String replace){
         add(new RenameInfoAnnotationName(typeName, search, replace));

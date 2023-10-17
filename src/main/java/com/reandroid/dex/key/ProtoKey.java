@@ -1,6 +1,6 @@
 package com.reandroid.dex.key;
 
-import com.reandroid.dex.index.ProtoId;
+import com.reandroid.dex.id.ProtoId;
 import com.reandroid.utils.CompareUtil;
 
 import java.util.Objects;
@@ -10,20 +10,43 @@ public class ProtoKey implements Key{
     private final String[] parameters;
     private final String returnType;
 
+    private int mHash;
+
     public ProtoKey(String[] parameters, String returnType){
         this.parameters = parameters;
         this.returnType = returnType;
+    }
+
+    public ProtoKey removeParameter(int index){
+        TypeListKey typeListKey = getParametersKey();
+        if(typeListKey != null){
+            typeListKey = typeListKey.removeParameter(index);
+        }
+        return create(typeListKey, getReturnType());
     }
 
     public TypeKey getReturnTypeKey() {
         return new TypeKey(getReturnType());
     }
     public TypeListKey getParametersKey() {
-        return new TypeListKey(getParameters());
+        return TypeListKey.create(getParameters());
     }
 
     public String[] getParameters() {
         return parameters;
+    }
+    public int getParametersCount() {
+        String[] parameters = getParameters();
+        if(parameters != null){
+            return parameters.length;
+        }
+        return 0;
+    }
+    public String getParameter(int i){
+        return getParameters()[i];
+    }
+    public TypeKey getParameterType(int i){
+        return TypeKey.create(getParameter(i));
     }
     public String getReturnType() {
         return returnType;
@@ -68,7 +91,11 @@ public class ProtoKey implements Key{
 
     @Override
     public int hashCode() {
-        int hash = 1;
+        int hash = mHash;
+        if(hash != 0){
+            return hash;
+        }
+        hash = 1;
         String type = getReturnType();
         if(type != null){
             hash += type.hashCode();
@@ -79,6 +106,7 @@ public class ProtoKey implements Key{
                 hash = hash * 31 + param.hashCode();
             }
         }
+        mHash = hash;
         return hash;
     }
     @Override
@@ -106,6 +134,16 @@ public class ProtoKey implements Key{
             return null;
         }
         return new ProtoKey(protoId.getParameterNames(), returnType);
+    }
+    public static ProtoKey create(TypeListKey typeListKey, String returnType){
+        if(returnType == null){
+            return null;
+        }
+        String[] parameters = null;
+        if(typeListKey != null){
+            parameters = typeListKey.getParameters();
+        }
+        return new ProtoKey(parameters, returnType);
     }
 
     private static char toShorty(String typeName) {

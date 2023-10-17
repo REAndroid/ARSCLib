@@ -15,8 +15,8 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.index.StringId;
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.key.StringKey;
 
 public class InsConstString extends Ins21c {

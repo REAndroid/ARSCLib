@@ -17,16 +17,18 @@ package com.reandroid.dex.model;
 
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.utils.StringsUtil;
 
 public abstract class DexDef extends DexModel {
 
-    public boolean isAccessibleTo(DexDef dexDef) {
-        if(this.getClassName().equals(dexDef.getClassName())){
+    public boolean isAccessibleTo(TypeKey typeKey) {
+        if(this.getDefining().equals(typeKey)){
             return true;
         }
         if(isInternal()) {
-            return this.getPackageName().equals(dexDef.getPackageName());
+            return this.getPackageName().equals(typeKey.getPackageName());
         }
         return !isPrivate();
     }
@@ -51,14 +53,21 @@ public abstract class DexDef extends DexModel {
 
     public abstract String getAccessFlags();
     abstract int getAccessFlagsValue();
-    abstract String getKey();
-    public abstract String getClassName();
+    abstract Key getKey();
+    public String getClassName(){
+        TypeKey typeKey = getDefining();
+        if(typeKey != null){
+            return typeKey.getType();
+        }
+        return null;
+    }
+    public abstract TypeKey getDefining();
     public String getPackageName() {
-        return DexUtils.getPackageName(getClassName());
+        return getDefining().getPackageName();
     }
     @Override
     public int hashCode() {
-        String key = getKey();
+        Key key = getKey();
         if(key != null){
             return key.hashCode();
         }
@@ -74,8 +83,8 @@ public abstract class DexDef extends DexModel {
         }
         String className = getClassName();
         builder.append(className);
-        String key = getKey();
-        if(!key.equals(className)){
+        Key key = getKey();
+        if(!key.toString().contains(className)){
             builder.append("->");
             builder.append(getKey());
         }

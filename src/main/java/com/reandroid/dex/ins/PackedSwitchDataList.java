@@ -20,7 +20,7 @@ import com.reandroid.common.ArraySupplier;
 import com.reandroid.utils.collection.ArraySupplierIterator;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
-import com.reandroid.dex.item.IntegerList;
+import com.reandroid.dex.data.IntegerList;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;

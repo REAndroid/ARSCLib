@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.dex.index.ProtoId;
+import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.sections.SectionType;
 
 public class ProtoValue extends SectionIdValue<ProtoId> {

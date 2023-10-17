@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.key;
 
+
 public interface Key extends Comparable<Object> {
 
 }

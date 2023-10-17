@@ -37,7 +37,7 @@ public class IntValue extends PrimitiveValue implements IntegerReference, Visita
     }
     @Override
     public void set(int value) {
-        getValueContainer().setNumberValue(value);
+        setNumberValue(value);
     }
     @Override
     public DexValueType<?> getValueType() {

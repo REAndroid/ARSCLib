@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.index.ProtoId;
+import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;

@@ -19,4 +19,9 @@ public class DebugRestartLocal extends DebugRegisterNumber {
     public DebugRestartLocal() {
         super(0, DebugElementType.RESTART_LOCAL);
     }
+
+    @Override
+    public DebugElementType<DebugRestartLocal> getElementType() {
+        return DebugElementType.RESTART_LOCAL;
+    }
 }

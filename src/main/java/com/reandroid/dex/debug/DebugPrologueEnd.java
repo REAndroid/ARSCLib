@@ -15,8 +15,14 @@
  */
 package com.reandroid.dex.debug;
 
-public class DebugPrologueEnd extends DebugEmptyElement{
+public class DebugPrologueEnd extends DebugElement{
+
     public DebugPrologueEnd() {
         super(DebugElementType.PROLOGUE_END);
+    }
+
+    @Override
+    public DebugElementType<DebugPrologueEnd> getElementType() {
+        return DebugElementType.PROLOGUE_END;
     }
 }

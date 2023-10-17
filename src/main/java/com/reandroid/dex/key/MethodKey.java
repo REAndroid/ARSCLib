@@ -16,11 +16,9 @@
 package com.reandroid.dex.key;
 
 import com.reandroid.dex.common.DexUtils;
-import com.reandroid.dex.index.MethodId;
+import com.reandroid.dex.id.MethodId;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
-
-import java.util.Objects;
 
 public class MethodKey implements Key{
 
@@ -29,6 +27,8 @@ public class MethodKey implements Key{
     private final String[] parameters;
     private final String returnType;
 
+    private int mParamsHash;
+
     public MethodKey(String defining, String name, String[] parameters, String returnType){
         this.defining = defining;
         this.name = name;
@@ -36,6 +36,33 @@ public class MethodKey implements Key{
         this.returnType = returnType;
     }
 
+
+    public MethodKey changeDefining(TypeKey typeKey){
+        return changeDefining(typeKey.getType());
+    }
+    public MethodKey changeDefining(String defining){
+        if(defining.equals(getDefining())){
+            return this;
+        }
+        return new MethodKey(defining, getName(), getParameters(), getReturnType());
+    }
+    public MethodKey changeName(String name){
+        if(name.equals(getName())){
+            return this;
+        }
+        return new MethodKey(getDefining(), name, getParameters(), getReturnType());
+    }
+    public MethodKey changeParameters(String[] parameters){
+        if(parameters == getParameters()){
+            return this;
+        }
+        return new MethodKey(getDefining(), getName(), parameters, getReturnType());
+    }
+    public MethodKey removeParameter(int index){
+        ProtoKey protoKey = getProtoKey();
+        protoKey = protoKey.removeParameter(index);
+        return new MethodKey(getDefining(), getName(), protoKey.getParameters(), getReturnType());
+    }
     public TypeKey getDefiningKey() {
         return new TypeKey(getDefining());
     }
@@ -49,10 +76,6 @@ public class MethodKey implements Key{
         return new TypeKey(getReturnType());
     }
 
-    public MethodKeyLocal getLocal(){
-        return new MethodKeyLocal(getName(), getParameters(), getReturnType());
-    }
-
     public String getDefining() {
         return defining;
     }
@@ -61,6 +84,19 @@ public class MethodKey implements Key{
     }
     public String[] getParameters() {
         return parameters;
+    }
+    public int getParametersCount() {
+        String[] parameters = getParameters();
+        if(parameters != null){
+            return parameters.length;
+        }
+        return 0;
+    }
+    public String getParameter(int i){
+        return getParameters()[i];
+    }
+    public TypeKey getParameterType(int i){
+        return TypeKey.create(getParameter(i));
     }
     public String getReturnType() {
         return returnType;
@@ -86,9 +122,34 @@ public class MethodKey implements Key{
         }
         return CompareUtil.compare(getReturnType(), key.getReturnType());
     }
+    public int compareTo(Object obj, boolean checkDefining) {
+        if(obj == null){
+            return -1;
+        }
+        MethodKey key = (MethodKey) obj;
+        int i;
+        if(checkDefining){
+            i = CompareUtil.compare(getDefining(), key.getDefining());
+            if(i != 0) {
+                return i;
+            }
+        }
+        i = CompareUtil.compare(getName(), key.getName());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getParameters(), key.getParameters());
+        if(i != 0) {
+            return i;
+        }
+        return CompareUtil.compare(getReturnType(), key.getReturnType());
+    }
 
     @Override
     public boolean equals(Object obj) {
+        return equals(obj, true, false);
+    }
+    public boolean equals(Object obj, boolean checkDefining, boolean checkType) {
         if (this == obj) {
             return true;
         }
@@ -96,11 +157,27 @@ public class MethodKey implements Key{
             return false;
         }
         MethodKey methodKey = (MethodKey) obj;
-        return Objects.equals(getDefining(), methodKey.getDefining()) &&
-                Objects.equals(getName(), methodKey.getName()) &&
-                CompareUtil.compare(getParameters(), methodKey.getParameters()) == 0 &&
-        Objects.equals(getName(), methodKey.getName());
+        if(getNameParamsHashCode() != methodKey.getNameParamsHashCode()){
+            return false;
+        }
+        if(!KeyUtil.matches(getName(), methodKey.getName())){
+            return false;
+        }
+        int i = CompareUtil.compare(getParameters(), methodKey.getParameters());
+        if(i != 0) {
+            return false;
+        }
+        if(checkDefining){
+            if(!KeyUtil.matches(getDefining(), methodKey.getDefining())){
+                return false;
+            }
+        }
+        if(checkType){
+            return KeyUtil.matches(getReturnType(), methodKey.getReturnType());
+        }
+        return true;
     }
+
 
     @Override
     public int hashCode() {
@@ -109,17 +186,22 @@ public class MethodKey implements Key{
         if(defining != null){
             hash += defining.hashCode();
         }
-        hash = hash * 31 + getName().hashCode();
+        hash = hash * 31 + getNameParamsHashCode();
+        return hash;
+    }
+    private int getNameParamsHashCode() {
+        int hash = mParamsHash;
+        if(hash != 0){
+            return hash;
+        }
+        hash = 31 + getName().hashCode();
         String[] parameters = getParameters();
         if(parameters != null){
             for(String param : parameters){
                 hash = hash * 31 + param.hashCode();
             }
         }
-        String returnType = getReturnType();
-        if (returnType != null){
-            hash = hash * 31 + returnType.hashCode();
-        }
+        mParamsHash = hash;
         return hash;
     }
     @Override

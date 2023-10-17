@@ -17,6 +17,8 @@ package com.reandroid.dex.base;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.ins.InstructionException;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
@@ -86,6 +88,57 @@ public class NumberArray extends DexBlockItem {
     public int getByteUnsigned(int index){
         return getBytesInternal()[index * getWidth()] & 0xff;
     }
+    public void put(int[] values){
+        int index = size();
+        int length = values.length;
+        ensureSize(index + length);
+        for(int i = 0; i < length; i++){
+            put(index + i, values[i]);
+        }
+    }
+    public void put(int index, int value){
+        validateValueRange(value);
+        ensureSize(index + 1);
+        int width = getWidth();
+        index = index * width;
+        byte[] bytes = getBytesInternal();
+        if(width < 2){
+            getBytesInternal()[index] = (byte) value;
+        }else if(width < 4){
+            putShort(bytes, index, value);
+        }else if(width == 4){
+            putInteger(bytes, index, value);
+        }else {
+            putLong(bytes, index, 0x00000000ffffffffL & value);
+        }
+    }
+    private void validateValueRange(int value){
+        int count = 0;
+        int shift = value;
+        while (shift != 0){
+            shift = shift >>> 8;
+            count ++;
+        }
+        if(count <= getWidth()){
+            return;
+        }
+        throw new DexException("Value out of range width = " + getWidth()
+                + ", value = " + HexUtil.toHex(value, 1));
+    }
+    public void putLong(long[] values){
+        int index = size();
+        int length = values.length;
+        ensureSize(index + length);
+        for(int i = 0; i < length; i++){
+            putLong(index + i, values[i]);
+        }
+    }
+    public void putLong(int index, long value){
+        ensureSize(index + 1);
+        int width = getWidth();
+        index = index * width;
+        putLong(getBytesInternal(), index, value);
+    }
     public int getShortUnsigned(int index){
         return getShortUnsigned(getBytesInternal(), index * getWidth());
     }
@@ -128,8 +181,34 @@ public class NumberArray extends DexBlockItem {
         }
         return getLong(getBytesInternal(), offset);
     }
+    public int getAsInteger(int index){
+        int width = getWidth();
+        if(width < 2){
+            return getByteUnsigned(index);
+        }
+        if(width < 4){
+            return getShortUnsigned(index);
+        }
+        if(width == 4){
+            return getInteger(index);
+        }
+        return (int) getLong(index);
+    }
+    public int[] getAsIntegers(){
+        int size = size();
+        int[] results = new int[size];
+        for(int i = 0; i < size; i++){
+            results[i] = getAsInteger(i);
+        }
+        return results;
+    }
     public int size(){
         return countBytes() / getWidth();
+    }
+    public void ensureSize(int size){
+        if(size > size()){
+            setSize(size);
+        }
     }
     public void setSize(int size){
         setBytesLength(size * getWidth(), false);
@@ -141,6 +220,32 @@ public class NumberArray extends DexBlockItem {
             width = 1;
         }
         return width;
+    }
+    public void setWidth(int width){
+        if(width == widthReference.get()){
+            return;
+        }
+        if(size() == 0 ){
+            widthReference.set(width);
+        }else if(getWidth() > 4){
+            changeWidthOfLong(width);
+        }else {
+            changeWidthOfInt(width);
+        }
+    }
+    private void changeWidthOfInt(int width){
+        int[] backup = getAsIntegers();
+        this.setSize(0);
+        this.widthReference.set(width);
+        ensureSize(backup.length);
+        put(backup);
+    }
+    private void changeWidthOfLong(int width){
+        long[] backup = getLongArray();
+        this.setSize(0);
+        this.widthReference.set(width);
+        ensureSize(backup.length);
+        putLong(backup);
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
@@ -161,6 +266,7 @@ public class NumberArray extends DexBlockItem {
     }
 
     static class Data implements IntegerReference {
+
         private final NumberArray numberArray;
         private final int index;
 
@@ -170,11 +276,11 @@ public class NumberArray extends DexBlockItem {
         }
         @Override
         public int get() {
-            return numberArray.getInteger(index);
+            return numberArray.getAsInteger(index);
         }
         @Override
         public void set(int value) {
-            numberArray.setInteger(index, value);
+            numberArray.put(index, value);
         }
     }
 }

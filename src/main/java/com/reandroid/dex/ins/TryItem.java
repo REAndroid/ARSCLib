@@ -20,7 +20,8 @@ import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Sle128Item;
-import com.reandroid.dex.item.DexContainerItem;
+import com.reandroid.dex.data.DexContainerItem;
+import com.reandroid.dex.data.InstructionList;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
@@ -31,25 +32,33 @@ import java.util.function.Function;
 public class TryItem extends DexContainerItem implements Iterable<Label>{
     private final HandlerOffsetArray handlerOffsetArray;
 
-    private final Sle128Item handlersCount;
-    private final BlockList<TryHandler> tryHandlerList;
+    final Sle128Item handlersCount;
+    private final BlockList<CatchTypedHandler> catchTypedHandlerList;
     private CatchAllHandler catchAllHandler;
 
     public TryItem(HandlerOffsetArray handlerOffsetArray) {
         super(3);
+
         this.handlerOffsetArray = handlerOffsetArray;
         this.handlersCount = new Sle128Item();
-        this.tryHandlerList = new BlockList<>();
+        this.catchTypedHandlerList = new BlockList<>();
 
         addChild(0, handlersCount);
-        addChild(1, tryHandlerList);
+        addChild(1, catchTypedHandlerList);
     }
     private TryItem() {
         super(0);
         this.handlerOffsetArray = null;
 
         this.handlersCount = null;
-        this.tryHandlerList = null;
+        this.catchTypedHandlerList = null;
+    }
+
+    InstructionList getInstructionList(){
+        return getTryBlock().getInstructionList();
+    }
+    TryBlock getTryBlock(){
+        return getParent(TryBlock.class);
     }
 
     TryItem newCopy(){
@@ -61,14 +70,11 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
     HandlerOffsetArray getHandlerOffsetArray(){
         return handlerOffsetArray;
     }
-    BlockList<TryHandler> getTryHandlerBlockList(){
-        return tryHandlerList;
+    BlockList<CatchTypedHandler> getCatchTypedHandlerBlockList(){
+        return catchTypedHandlerList;
     }
-    Iterator<TryHandler> getTryHandlers(){
-        return tryHandlerList.iterator();
-    }
-    Sle128Item getHandlersCountItem(){
-        return handlersCount;
+    Iterator<CatchTypedHandler> getCatchTypedHandlers(){
+        return catchTypedHandlerList.iterator();
     }
     TryItem getTryItem(){
         return this;
@@ -84,7 +90,7 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
         if(handler != null){
             iterator1 = SingleIterator.of(handler);
         }
-        return new CombiningIterator<>(getTryHandlers(), iterator1);
+        return new CombiningIterator<>(getCatchTypedHandlers(), iterator1);
     }
     public int getStartAddress(){
         return getHandlerOffset().getStartAddress();
@@ -96,6 +102,9 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
         return getHandlerOffset().getCatchCodeUnit();
     }
 
+    public boolean hasCatchAllHandler(){
+        return getCatchAllHandler() != null;
+    }
     public CatchAllHandler getCatchAllHandler(){
         return catchAllHandler;
     }
@@ -117,17 +126,16 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
         int position = handlerOffsetArray.getItemsStart()
                 + handlerOffsetArray.getOffset(this.getIndex());
         reader.seek(position);
-        Sle128Item countItem = getHandlersCountItem();
-        countItem.readBytes(reader);
-        int count = countItem.get();
+        this.handlersCount.readBytes(reader);
+        int count = this.handlersCount.get();
         boolean hasCatchAll = false;
         if(count <= 0){
             count = -count;
             hasCatchAll = true;
         }
-        BlockList<TryHandler> handlerList = this.getTryHandlerBlockList();
+        BlockList<CatchTypedHandler> handlerList = this.getCatchTypedHandlerBlockList();
         for(int i = 0; i < count; i++){
-            TryHandler handler = new TryHandler();
+            CatchTypedHandler handler = new CatchTypedHandler();
             handlerList.add(handler);
             handler.readBytes(reader);
         }
@@ -135,6 +143,7 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
             initCatchAllHandler().readBytes(reader);
         }
         if(maxPosition > reader.getPosition()){
+            // Should never reach here
             reader.seek(maxPosition);
         }
     }
@@ -172,6 +181,12 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
             super();
             this.tryItem = tryItem;
         }
+
+        @Override
+        TryBlock getTryBlock() {
+            return tryItem.getTryBlock();
+        }
+
         @Override
         TryItem newCopy() {
             return tryItem.newCopy();
@@ -181,19 +196,15 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
             return tryItem.getHandlerOffsetArray();
         }
         @Override
-        Iterator<TryHandler> getTryHandlers(){
-            return ComputeIterator.of(tryItem.getTryHandlers(), new Function<TryHandler, TryHandler>() {
+        Iterator<CatchTypedHandler> getCatchTypedHandlers(){
+            return ComputeIterator.of(tryItem.getCatchTypedHandlers(), new Function<CatchTypedHandler, CatchTypedHandler>() {
                 @Override
-                public TryHandler apply(TryHandler tryHandler) {
-                    TryHandler copy = tryHandler.newCopy();
+                public CatchTypedHandler apply(CatchTypedHandler catchTypedHandler) {
+                    CatchTypedHandler copy = catchTypedHandler.newCopy();
                     copy.setParent(Copy.this);
                     return copy;
                 }
             });
-        }
-        @Override
-        Sle128Item getHandlersCountItem(){
-            return tryItem.getHandlersCountItem();
         }
         @Override
         TryItem getTryItem(){

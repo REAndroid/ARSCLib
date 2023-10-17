@@ -19,9 +19,9 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.dex.common.DexUtils;
-import com.reandroid.dex.index.ClassId;
-import com.reandroid.dex.item.ClassData;
-import com.reandroid.dex.item.FieldDef;
+import com.reandroid.dex.id.ClassId;
+import com.reandroid.dex.data.ClassData;
+import com.reandroid.dex.data.FieldDef;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ComputeIterator;
@@ -42,15 +42,15 @@ public class RClass extends DexClass {
     }
 
 
-    public void load(ResourceEntry resourceEntry){
+    public RField load(ResourceEntry resourceEntry){
         if(resourceEntry.isEmpty()){
-            return;
+            return null;
         }
         String name = RField.sanitizeResourceName(resourceEntry.getName());
         FieldKey fieldKey = new FieldKey(getClassName(), name, "I");
         RField rField = getOrCreateStaticField(fieldKey);
         rField.setResourceId(resourceEntry.getResourceId());
-        //System.err.println(rField.getFieldId().getIndex() + " " + rField);
+        return rField;
     }
     public String toJavaDeclare() {
         return toJavaDeclare(true);
@@ -83,13 +83,12 @@ public class RClass extends DexClass {
         ClassData classData = getClassData();
         if(classData != null){
             return ComputeIterator.of(classData
-                    .getStaticFields().iterator(), this::createRField);
+                    .getStaticFieldsArray().iterator(), this::createRField);
         }
         return EmptyIterator.of();
     }
     private RField createRField(FieldDef fieldDef){
         if(fieldDef.isStatic()){
-            fieldDef.setClassId(getClassId());
             if(RField.isResourceIdValue(fieldDef.getStaticInitialValue())){
                 return new RField(this, fieldDef);
             }
@@ -104,7 +103,15 @@ public class RClass extends DexClass {
         ClassId classId = getClassId();
         classId.setSuperClass("Ljava/lang/Object;");
         classId.setSourceFile("R.java");
-        classId.getOrCreateClassData();
+
+
+        initializeAnnotations();
+
+    }
+    private void initializeAnnotations(){
+        ClassId classId = getClassId();
+        classId.getOrCreateEnclosingClass();
+        classId.getOrCreateInnerClass();
     }
 
     @Override

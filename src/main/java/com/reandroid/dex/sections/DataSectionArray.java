@@ -20,13 +20,13 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.PositionAlignedItem;
-import com.reandroid.dex.item.DataSectionEntry;
+import com.reandroid.dex.data.DataItem;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DataSectionArray<T extends DataSectionEntry> extends SectionArray<T> {
+public class DataSectionArray<T extends DataItem> extends SectionArray<T> {
 
     private Map<Integer, T> offsetMap = new HashMap<>();
 

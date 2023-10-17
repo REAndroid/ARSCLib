@@ -19,10 +19,94 @@ package com.reandroid.dex.common;
 
 import com.reandroid.utils.StringsUtil;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Function;
 
 public class DexUtils {
 
+    public static List<File> listDexFiles(File dir){
+        List<File> results = new ArrayList<>();
+        if(!dir.isDirectory()){
+            return results;
+        }
+        File[] files = dir.listFiles();
+        if(files == null){
+            return results;
+        }
+        for(File file : files){
+            if(file.isFile() && file.getName().endsWith(".dex")){
+                results.add(file);
+            }
+        }
+        results.sort(getDexPathComparator());
+        return results;
+    }
+    public static<T> Comparator<T> getDexPathComparator(){
+        return DexUtils::compareDex;
+    }
+    public static<T, E> Comparator<T> getDexPathComparator(Function<T, E> function){
+        return (dex1, dex2) -> compareDex(function, dex1, dex2);
+    }
+    public static<T, E> int compareDex(Function<T, E> function, T dexPath1, T dexPath2){
+        return compareDex(function.apply(dexPath1), function.apply(dexPath2));
+    }
+    public static int compareDex(Object dexPath1, Object dexPath2){
+        if(dexPath1 == dexPath2){
+            return 0;
+        }
+        if(dexPath1 == null){
+            return 1;
+        }
+        if(dexPath2 == null){
+            return -1;
+        }
+        return compareDexPath(dexPath1.toString(), dexPath2.toString());
+    }
+    public static int compareDexPath(String path1, String path2){
+        if(path1 == null){
+            return 1;
+        }
+        if(path2 == null){
+            return -1;
+        }
+        if(path1.equals(path2)){
+            return 0;
+        }
+        return Integer.compare(getDexNumber(path1), getDexNumber(path2));
+    }
+    private static int getDexNumber(String path){
+        int i = path.lastIndexOf('/');
+        if(i < 0){
+            i = path.lastIndexOf(File.separatorChar);
+        }
+        if(i >= 0){
+            path = path.substring(i + 1);
+        }
+        String name = "classes";
+        if(path.equals(name)){
+            return 0;
+        }
+        if(!path.startsWith(name)){
+            return 0xffff;
+        }
+        path = path.substring(name.length());
+        i = path.indexOf('.');
+        if(i == 0){
+            return 0;
+        }else if(i < 0){
+            return 0xffff;
+        }
+        path = path.substring(0, i);
+        try{
+            return Integer.parseInt(path);
+        }catch (NumberFormatException ignored){
+            return 0xffff;
+        }
+    }
     public static String[] splitParameters(String parameters) {
         if(StringsUtil.isEmpty(parameters)){
             return null;
@@ -139,6 +223,137 @@ public class DexUtils {
         appendable.append(Character.forDigit(ch & 0x0f, 16));
         appendable.append('\'');
     }
+    public static boolean isJavaFramework(String name){
+        return name.startsWith("Ljava/");
+    }
+
+    public static String toSignatureType(String type){
+        if(type == null){
+            return null;
+        }
+        int length = type.length();
+        if(length == 0){
+            return type;
+        }
+        int i = 0;
+        while (type.charAt(i) == '['){
+            i++;
+        }
+        length = length - 1;
+        if(i == length || type.charAt(length) == '<' || type.charAt(length) != ';'){
+            if(i != 0){
+                return type.substring(i);
+            }
+            return type;
+        }
+        StringBuilder builder = new StringBuilder(length - i);
+        builder.append(type, i, length);
+        builder.append('<');
+        return builder.toString();
+    }
+    public static String toMainType(String type){
+        if(type == null){
+            return null;
+        }
+        int length = type.length();
+        if(length == 0){
+            return type;
+        }
+        int i = 0;
+        while (type.charAt(i) == '['){
+            i++;
+        }
+        length = length - 1;
+        if(i == length || type.charAt(length) == ';' || type.charAt(length) != '<'){
+            if(i != 0){
+                return type.substring(i);
+            }
+            return type;
+        }
+        StringBuilder builder = new StringBuilder(length - i);
+        builder.append(type, i, length);
+        builder.append(';');
+        return builder.toString();
+    }
+    public static String makeArrayType(String type, int dimension){
+        if(type == null){
+            return null;
+        }
+        int length = type.length();
+        if(length == 0){
+            return type;
+        }
+        int i = 0;
+        while (type.charAt(i) == '['){
+            i++;
+        }
+        if(i == dimension){
+            return type;
+        }
+        if(i > dimension){
+            i = i - dimension;
+            return type.substring(i);
+        }
+        i = dimension - i;
+        StringBuilder builder = new StringBuilder(length + i);
+        while (i > 0){
+            builder.append('[');
+            i--;
+        }
+        builder.append(type);
+        return builder.toString();
+    }
+    public static int countArrayPrefix(String type){
+        if(type == null){
+            return 0;
+        }
+        int length = type.length();
+        if(length < 2){
+            return 0;
+        }
+        int i = 0;
+        while (type.charAt(i) == '['){
+            i++;
+        }
+        return i;
+    }
+    public static boolean isTypeArray(String type){
+        if(type == null){
+            return false;
+        }
+        int length = type.length();
+        if(length < 2){
+            return false;
+        }
+        int i = 0;
+        while (type.charAt(i) == '['){
+            i++;
+        }
+        if(i == 0){
+            return false;
+        }
+        length = length - 1;
+        if(i == length){
+            return isPrimitive(type.charAt(i));
+        }
+        return type.charAt(i) == 'L' && type.charAt(length) == ';';
+    }
+    public static boolean isTypeSignature(String type){
+        if(type == null){
+            return false;
+        }
+        int length = type.length();
+        if(length < 3){
+            return false;
+        }
+        return type.charAt(0) == 'L' && type.charAt(length - 1) == '<';
+    }
+    public static boolean isTypeObject(String type){
+        if(type == null){
+            return false;
+        }
+        return type.indexOf('L') >= 0;
+    }
     public static boolean isPrimitive(String type){
         if(type == null){
             return false;
@@ -198,18 +413,17 @@ public class DexUtils {
         if(className.length() < 3){
             return "";
         }
-        int i = 0;
+        int i = className.lastIndexOf('/');
+        if(i >= 0){
+            return className.substring(0, i + 1);
+        }
+        i = 0;
         while (className.charAt(i) == '[') {
             i++;
         }
-        if(className.charAt(i) != 'L'){
-            return "";
+        if(className.charAt(i) == 'L'){
+            i++;
         }
-        i = className.lastIndexOf('/');
-        if (i < 0){
-            i = 0;
-        }
-        i++;
         return className.substring(0, i);
     }
     public static String toSourceName(String className){
@@ -229,8 +443,9 @@ public class DexUtils {
         return className;
     }
     public static String getSimpleName(String className) {
-        if(className.length() < 3){
-            return "";
+        className = trimArrayPrefix(className);
+        if(className.length() < 2){
+            return className;
         }
         int i = className.lastIndexOf('/');
         if (i < 0){
@@ -243,6 +458,16 @@ public class DexUtils {
             className = className.substring(0, i);
         }
         return className;
+    }
+    public static String trimArrayPrefix(String className) {
+        int i = 0;
+        while (i < className.length() && className.charAt(i) == '['){
+            i++;
+        }
+        if(i == 0){
+            return className;
+        }
+        return className.substring(i);
     }
     public static final String DALVIK_MEMBER = "Ldalvik/annotation/MemberClasses;";
 }

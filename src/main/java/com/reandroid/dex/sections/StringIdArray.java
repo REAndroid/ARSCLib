@@ -17,8 +17,8 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.dex.base.IntegerPair;
-import com.reandroid.dex.index.StringId;
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.data.StringData;
 
 public class StringIdArray extends IdSectionArray<StringId> {
 

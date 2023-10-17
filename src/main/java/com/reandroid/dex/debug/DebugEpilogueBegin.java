@@ -15,8 +15,14 @@
  */
 package com.reandroid.dex.debug;
 
-public class DebugEpilogueBegin extends DebugEmptyElement{
+public class DebugEpilogueBegin extends DebugElement{
+
     public DebugEpilogueBegin() {
         super(DebugElementType.EPILOGUE_BEGIN);
+    }
+
+    @Override
+    public DebugElementType<DebugEpilogueBegin> getElementType() {
+        return DebugElementType.EPILOGUE_BEGIN;
     }
 }

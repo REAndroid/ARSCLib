@@ -17,10 +17,12 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.base.BlockCreator;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.index.IdSectionEntry;
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.CombiningIterator;
 
 import java.io.IOException;
 import java.util.*;
@@ -285,7 +287,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
 
     public static final Opcode<InsPackedSwitchData> PACKED_SWITCH_PAYLOAD;
     public static final Opcode<InsSparseSwitchData> SPARSE_SWITCH_PAYLOAD;
-    public static final Opcode<InsArray> ARRAY_PAYLOAD;
+    public static final Opcode<InsArrayData> ARRAY_PAYLOAD;
 
     public static final Opcode<Ins22cs> IPUT_BOOLEAN_QUICK;
     public static final Opcode<Ins22cs> IPUT_CHAR_QUICK;
@@ -2007,7 +2009,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
         PAYLOADS[0] = PACKED_SWITCH_PAYLOAD;
         SPARSE_SWITCH_PAYLOAD = new Opcode<>(0x200, -1, "sparse-switch-payload", InsSparseSwitchData::new);
         PAYLOADS[1] = SPARSE_SWITCH_PAYLOAD;
-        ARRAY_PAYLOAD = new Opcode<>(0x300, -1, "array-data", InsArray::new);
+        ARRAY_PAYLOAD = new Opcode<>(0x300, -1, "array-data", InsArrayData::new);
         PAYLOADS[2] = ARRAY_PAYLOAD;
 
 
@@ -2088,7 +2090,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
             }
         });
         VALUES_2[10] = INVOKE_CUSTOM_RANGE;
-        CONST_METHOD_HANDLE = new Opcode<>(0xfe, 4, "const-method-handle", new BlockCreator<Ins21c>() {
+        CONST_METHOD_HANDLE = new Opcode<>(0xfe, 4, "const-method-handle", SectionType.METHOD_HANDLE, new BlockCreator<Ins21c>() {
             @Override
             public Ins21c newInstance() {
                 return new Ins21c(CONST_METHOD_HANDLE);
@@ -2097,7 +2099,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
         VALUES_2[11] = CONST_METHOD_HANDLE;
 
 
-        IGET_BYTE_QUICK = new Opcode<>(0xf0, 4, "iget-byte-quick", new BlockCreator<Ins22cs>() {
+        IGET_BYTE_QUICK = new Opcode<>(0xf0, 4, "iget-byte-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
             @Override
             public Ins22cs newInstance() {
                 return new Ins22cs(IGET_BYTE_QUICK);
@@ -2131,11 +2133,11 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
     private final int size;
     private final String name;
     private final BlockCreator<T> creator;
-    private final SectionType<? extends IdSectionEntry> sectionType;
+    private final SectionType<? extends IdItem> sectionType;
 
     private final int width;
 
-    private Opcode(int value, int size, String name, SectionType<? extends IdSectionEntry> sectionType, BlockCreator<T> creator){
+    private Opcode(int value, int size, String name, SectionType<? extends IdItem> sectionType, BlockCreator<T> creator){
         this.value = value;
         this.size = size;
         this.name = name;
@@ -2164,13 +2166,80 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
         return name;
     }
     public boolean hasOutRegisters(){
-        return hasOutRegisters(this);
+        if(getSectionType() == SectionType.METHOD_ID){
+            return true;
+        }
+        return this == FILLED_NEW_ARRAY || this == FILLED_NEW_ARRAY_RANGE;
+    }
+    public boolean isFieldAccess(){
+        return getSectionType() == SectionType.FIELD_ID;
+    }
+    public boolean isFieldGet(){
+        if(getSectionType() != SectionType.FIELD_ID){
+            return false;
+        }
+        return getName().charAt(1) == 'g';
+    }
+    public boolean isFieldPut(){
+        if(getSectionType() != SectionType.FIELD_ID){
+            return false;
+        }
+        return getName().charAt(1) == 'p';
+    }
+    public boolean isFieldAccessStatic(){
+        if(getSectionType() != SectionType.FIELD_ID){
+            return false;
+        }
+        return getName().charAt(0) == 's';
+    }
+    public boolean isFieldAccessVirtual(){
+        if(getSectionType() != SectionType.FIELD_ID){
+            return false;
+        }
+        return getName().charAt(0) == 'i';
+    }
+    public boolean isFieldStaticGet(){
+        if(getSectionType() != SectionType.FIELD_ID){
+            return false;
+        }
+        String name = getName();
+        return name.charAt(0) == 's' && name.charAt(1) == 'g';
+    }
+    public boolean isFieldStaticPut(){
+        if(getSectionType() != SectionType.FIELD_ID){
+            return false;
+        }
+        String name = getName();
+        return name.charAt(0) == 's' && name.charAt(1) == 'p';
+    }
+    public boolean isFieldVirtualGet(){
+        if(getSectionType() != SectionType.FIELD_ID){
+            return false;
+        }
+        String name = getName();
+        return name.charAt(0) == 'i' && name.charAt(1) == 'g';
+    }
+    public boolean isFieldVirtualPut(){
+        if(getSectionType() != SectionType.FIELD_ID){
+            return false;
+        }
+        String name = getName();
+        return name.charAt(0) == 'i' && name.charAt(1) == 'p';
+    }
+    public boolean isMethodInvoke(){
+        return getSectionType() == SectionType.METHOD_ID;
+    }
+    public boolean isMethodInvokeStatic(){
+        if(getSectionType() != SectionType.METHOD_ID){
+            return false;
+        }
+        return getName().charAt(8) == 't';
     }
 
     public int getWidth() {
         return width;
     }
-    public SectionType<? extends IdSectionEntry> getSectionType(){
+    public SectionType<? extends IdItem> getSectionType(){
         return sectionType;
     }
     @Override
@@ -2197,13 +2266,13 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
         return NAME_MAP.get(name);
     }
 
-    private static boolean hasOutRegisters(Opcode<?> opcode){
-        if(opcode.getSectionType() == SectionType.METHOD_ID){
-            return true;
-        }
-        return opcode == FILLED_NEW_ARRAY || opcode == FILLED_NEW_ARRAY_RANGE;
+    public static Iterator<Opcode<?>> values(){
+        return CombiningIterator.four(
+                new ArrayIterator<>(VALUES),
+                new ArrayIterator<>(PAYLOADS),
+                new ArrayIterator<>(VALUES_2),
+                new ArrayIterator<>(VALUES_3));
     }
-
     public static Opcode<?> read(BlockReader reader) throws IOException {
         int value = reader.read();
         if(value == 0){

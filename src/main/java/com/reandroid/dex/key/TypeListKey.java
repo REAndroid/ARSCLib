@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.key;
 
-import com.reandroid.dex.item.TypeList;
+import com.reandroid.dex.data.TypeList;
 import com.reandroid.utils.CompareUtil;
 
 public class TypeListKey implements Key {
@@ -25,24 +25,44 @@ public class TypeListKey implements Key {
     public TypeListKey(String[] parameters){
         this.parameters = parameters;
     }
-    
-    public TypeKey[] getParametersKey() {
+
+
+    public TypeListKey removeParameter(int index){
         String[] parameters = getParameters();
-        if(parameters == null){
+        if(parameters == null || parameters.length < 2){
             return null;
         }
         int length = parameters.length;
-        TypeKey[] results = new TypeKey[length];
-        for(int i = 0; i < length; i++){
-            results[i] = new TypeKey(parameters[i]);
+        if(index < 0 || index >= length){
+            return this;
         }
-        return results;
+        String[] results = new String[length - 1];
+        int count = 0;
+        for(int i = 0; i < length; i++){
+            if(i != index){
+                results[count] = parameters[i];
+                count ++;
+            }
+        }
+        return new TypeListKey(results);
     }
 
     public String[] getParameters() {
         return parameters;
     }
-
+    public int getParametersCount() {
+        String[] parameters = getParameters();
+        if(parameters != null){
+            return parameters.length;
+        }
+        return 0;
+    }
+    public String getParameter(int i){
+        return getParameters()[i];
+    }
+    public TypeKey getParameterType(int i){
+        return TypeKey.create(getParameter(i));
+    }
     @Override
     public int compareTo(Object obj) {
         if(obj == null){
@@ -91,6 +111,12 @@ public class TypeListKey implements Key {
 
 
     public static TypeListKey create(TypeList typeList){
-        return new TypeListKey(typeList.getNames());
+        return create(typeList.getNames());
+    }
+    public static TypeListKey create(String[] parameters){
+        if(parameters == null || parameters.length == 0){
+            return null;
+        }
+        return new TypeListKey(parameters);
     }
 }

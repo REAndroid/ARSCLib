@@ -19,7 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.dex.io.ByteReader;
 import com.reandroid.dex.io.StreamUtil;
-import com.reandroid.dex.pool.DexIdPool;
+import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
@@ -58,11 +58,14 @@ public abstract class DexBlockItem extends BlockItem {
         return null;
     }
     public<T1 extends Block> Section<T1> getSection(SectionType<T1> sectionType){
-        SectionList sectionList = getParent(SectionList.class);
+        SectionList sectionList = getSectionList();
         if(sectionList != null){
             return sectionList.get(sectionType);
         }
         return null;
+    }
+    public SectionList getSectionList(){
+        return getParent(SectionList.class);
     }
     public<T1 extends Block> Section<T1> getOrCreateSection(SectionType<T1> sectionType){
         SectionList sectionList = getParent(SectionList.class);
@@ -72,7 +75,7 @@ public abstract class DexBlockItem extends BlockItem {
         return null;
     }
 
-    public<T1 extends Block> DexIdPool<T1> getPool(SectionType<T1> sectionType){
+    public<T1 extends Block> DexSectionPool<T1> getPool(SectionType<T1> sectionType){
         Section<T1> section = getSection(sectionType);
         if(section != null){
             return section.getPool();

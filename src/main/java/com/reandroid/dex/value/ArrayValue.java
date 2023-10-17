@@ -17,7 +17,7 @@ package com.reandroid.dex.value;
 
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
-import com.reandroid.dex.item.EncodedArray;
+import com.reandroid.dex.data.EncodedArray;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;

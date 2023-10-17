@@ -15,41 +15,45 @@
  */
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.index.StringId;
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 
 public class DebugSetSourceFile extends DebugElement {
-    private final Base1Ule128Item<StringId> nameData;
+
+    private final Base1Ule128IdItemReference<StringId> mName;
 
     public DebugSetSourceFile() {
         super(1, DebugElementType.SET_SOURCE_FILE);
-        this.nameData = new Base1Ule128Item<>(SectionType.STRING_ID);
-        addChild(1, nameData);
+        this.mName = new Base1Ule128IdItemReference<>(SectionType.STRING_ID);
+        addChild(1, mName);
     }
 
-    public StringData getName(){
-        StringId stringId = nameData.getItem();
+    public String getName(){
+        StringId stringId = mName.getItem();
         if(stringId != null){
-            return stringId.getStringData();
+            return stringId.getString();
         }
         return null;
+    }
+    public StringKey getNameKey(){
+        return (StringKey) mName.getKey();
+    }
+    public void setName(String name){
+        mName.setItem(StringKey.create(name));
+    }
+    public void setName(StringKey key){
+        mName.setItem(key);
+    }
+
+    @Override
+    public DebugElementType<DebugSetSourceFile> getElementType() {
+        return DebugElementType.SET_SOURCE_FILE;
     }
 
     @Override
     public String toString() {
-        StringData stringData = getName();
-        StringBuilder builder = new StringBuilder();
-        builder.append(super.toString());
-        builder.append(", ");
-        if(stringData == null){
-            builder.append("name index = ");
-            builder.append(nameData.get());
-        }else {
-            builder.append('"');
-            builder.append(stringData.getString());
-            builder.append('"');
-        }
-        return builder.toString();
+        return super.toString() + ", " + mName;
     }
 }

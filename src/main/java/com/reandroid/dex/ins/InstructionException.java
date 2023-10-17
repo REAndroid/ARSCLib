@@ -16,10 +16,10 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.dex.base.DexException;
-import com.reandroid.dex.index.MethodId;
-import com.reandroid.dex.item.CodeItem;
-import com.reandroid.dex.item.InstructionList;
-import com.reandroid.dex.item.MethodDef;
+import com.reandroid.dex.id.MethodId;
+import com.reandroid.dex.data.CodeItem;
+import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.data.MethodDef;
 import com.reandroid.dex.sections.DexFileBlock;
 
 public class InstructionException extends DexException {

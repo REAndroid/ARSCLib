@@ -16,7 +16,13 @@
 package com.reandroid.dex.debug;
 
 public class DebugEndLocal extends DebugRegisterNumber {
+
     public DebugEndLocal() {
         super(0, DebugElementType.END_LOCAL);
+    }
+
+    @Override
+    public DebugElementType<DebugEndLocal> getElementType() {
+        return DebugElementType.END_LOCAL;
     }
 }

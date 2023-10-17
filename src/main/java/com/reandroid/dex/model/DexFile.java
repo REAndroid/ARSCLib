@@ -19,29 +19,24 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.base.DexException;
+import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.DexUtils;
-import com.reandroid.dex.index.ClassId;
-import com.reandroid.dex.index.FieldId;
-import com.reandroid.dex.index.StringId;
-import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.id.ClassId;
+import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.ins.*;
-import com.reandroid.dex.item.ClassData;
-import com.reandroid.dex.item.MethodDef;
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.data.*;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.pool.DexIdPool;
-import com.reandroid.dex.sections.DexFileBlock;
-import com.reandroid.dex.sections.Marker;
-import com.reandroid.dex.sections.Section;
-import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.pool.DexSectionPool;
+import com.reandroid.dex.sections.*;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.IOUtil;
 import org.xmlpull.v1.XmlSerializer;
@@ -49,22 +44,70 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.*;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 public class DexFile implements VisitableInteger {
 
     private final DexFileBlock dexFileBlock;
+    private DexDirectory dexDirectory;
     private Object mTag;
 
     public DexFile(DexFileBlock dexFileBlock){
         this.dexFileBlock = dexFileBlock;
     }
 
+    public void cleanDuplicateDebugLines(){
+        Section<CodeItem> section = get(SectionType.CODE);
+        if(section == null){
+            return;
+        }
+        for(CodeItem codeItem : section){
+            DebugInfo debugInfo = codeItem.getDebugInfo();
+            if(debugInfo == null){
+                continue;
+            }
+            debugInfo.getDebugSequence().cleanDuplicates();
+        }
+    }
+
+    public DexDirectory getDexDirectory() {
+        return dexDirectory;
+    }
+    public void setDexDirectory(DexDirectory dexDirectory) {
+        this.dexDirectory = dexDirectory;
+    }
+
+    public Iterator<DexClass> getSubTypeClasses(TypeKey typeKey){
+        return ComputeIterator.of(getSubTypeClassIds(typeKey), this::create);
+    }
+    public Iterator<DexClass> getExtendingClasses(TypeKey typeKey){
+        return ComputeIterator.of(getExtendingClassIds(typeKey), this::create);
+    }
+    public Iterator<DexClass> getImplementClasses(TypeKey typeKey){
+        return ComputeIterator.of(getImplementationIds(typeKey), this::create);
+    }
+    public Iterator<ClassId> getSubTypeClassIds(TypeKey superClass){
+        return getDexFileBlock().getSubTypes(superClass);
+    }
+    public Iterator<ClassId> getExtendingClassIds(TypeKey superClass){
+        return getDexFileBlock().getExtendingClassIds(superClass);
+    }
+    public Iterator<ClassId> getImplementationIds(TypeKey interfaceClass){
+        return getDexFileBlock().getImplementationIds(interfaceClass);
+    }
+    public void loadSuperTypesMap(){
+        getDexFileBlock().loadSuperTypesMap();
+    }
+    public void loadExtendingClassMap(){
+        getDexFileBlock().loadExtendingClassMap();
+    }
+    public void loadInterfacesMap(){
+        getDexFileBlock().loadInterfacesMap();
+    }
     public DexClass getOrCreateClass(String type){
         return getOrCreateClass(new TypeKey(type));
     }
     public DexClass getOrCreateClass(TypeKey key){
-        DexClass dexClass = get(key);
+        DexClass dexClass = search(key);
         if(dexClass != null){
             return dexClass;
         }
@@ -85,16 +128,6 @@ public class DexFile implements VisitableInteger {
         getDexFileBlock().setSimpleName(simpleName);
     }
 
-    public void replaceRFields(){
-        Map<Integer, RField> map = RField.mapRFields(listRFields().iterator());
-        IntegerVisitor visitor = new IntegerVisitor() {
-            @Override
-            public void visit(Object sender, IntegerReference reference) {
-                replaceRFields(DexFile.this, map, reference);
-            }
-        };
-        this.visitIntegers(visitor);
-    }
     public List<RField> listRFields() {
         List<RField> fieldList = CollectionUtil.toUniqueList(getRFields());
         fieldList.sort(CompareUtil.getComparableComparator());
@@ -116,6 +149,31 @@ public class DexFile implements VisitableInteger {
     public Iterator<DexClass> getDexClasses() {
         return ComputeIterator.of(getClassIds(), this::create);
     }
+
+    public Iterator<DexClass> searchExtending(TypeKey typeKey){
+        DexDirectory directory = getDexDirectory();
+        if(directory != null){
+            return directory.searchExtending(typeKey);
+        }
+        return getExtendingClasses(typeKey);
+    }
+    public Iterator<DexClass> searchImplementations(TypeKey typeKey){
+        DexDirectory directory = getDexDirectory();
+        if(directory != null){
+            return directory.searchImplementations(typeKey);
+        }
+        return getImplementClasses(typeKey);
+    }
+    public DexClass search(String typeName){
+        return search(TypeKey.create(typeName));
+    }
+    public DexClass search(TypeKey typeKey){
+        DexDirectory directory = getDexDirectory();
+        if(directory != null){
+            return directory.getDexClass(typeKey);
+        }
+        return get(typeKey);
+    }
     public DexClass get(String typeName){
         return get(new TypeKey(typeName));
     }
@@ -124,13 +182,16 @@ public class DexFile implements VisitableInteger {
             loadRClass(packageBlock);
         }
     }
-    public void loadRClass(PackageBlock packageBlock){
-        String name = DexUtils.toDalvikName(packageBlock.getName() + ".R");
+    public RClassParent loadRClass(PackageBlock packageBlock){
+        String name = packageBlock.getName();
+        if("android".equals(name)){
+            name = "android_res";
+        }
+        name = DexUtils.toDalvikName(name + ".R");
         RClassParent rClassParent = getOrCreateRParent(name);
         rClassParent.initialize();
         rClassParent.load(packageBlock);
-        rClassParent.replaceConstIds();
-        System.err.println(name);
+        return rClassParent;
     }
     public RClassParent getOrCreateRParent(String type){
         ClassId classId = getOrCreateClassId(new TypeKey(type));
@@ -150,6 +211,9 @@ public class DexFile implements VisitableInteger {
         }
         return createRClass(classId);
     }
+    public boolean contains(Key key){
+        return getDexFileBlock().getSectionList().contains(key);
+    }
     public DexClass get(TypeKey key){
         Section<ClassId> section = getDexFileBlock().get(SectionType.CLASS_ID);
         ClassId classId = section.get(key);
@@ -160,7 +224,7 @@ public class DexFile implements VisitableInteger {
     }
     public ClassId getOrCreateClassId(TypeKey key){
         Section<ClassId> section = getDexFileBlock().get(SectionType.CLASS_ID);
-        DexIdPool<ClassId> pool = section.getPool();
+        DexSectionPool<ClassId> pool = section.getPool();
         ClassId classId = pool.get(key);
         if(classId != null) {
             return classId;
@@ -215,60 +279,100 @@ public class DexFile implements VisitableInteger {
         }
     }
     public void refreshFull() throws DexException {
-        getDexFileBlock().refreshFull();;
+        getDexFileBlock().refreshFull();
     }
     public void sortSection(SectionType<?>[] order){
         refresh();
         getDexFileBlock().sortSection(order);
         refresh();
     }
+    public void clearPools(){
+        getDexFileBlock().clearPools();
+    }
     public void sortStrings(){
         getDexFileBlock().sortStrings();
     }
     public Iterator<StringId> unusedStrings(){
-        return getStringsWithUsage(StringId.USAGE_NONE);
+        return unused(SectionType.STRING_ID);
     }
-    public Iterator<StringData> getStringsContainsUsage(int usage){
-        return FilterIterator.of(getStringData(),
-                stringData -> stringData.containsUsage(usage));
+    public<T1 extends Block> Iterator<T1> unused(SectionType<T1> sectionType){
+        return getWithUsage(sectionType, UsageMarker.USAGE_NONE);
+    }
+    public<T1 extends Block> Iterator<T1> getWithUsage(SectionType<T1> sectionType, int usage){
+        return FilterIterator.of(get(sectionType).iterator(),
+                item -> ((UsageMarker)item).containsUsage(usage));
     }
     public Iterator<StringId> getStringsWithUsage(int usage){
         return FilterIterator.of(getStringIds(),
-                stringId -> stringId.getUsageType() == usage);
+                stringId -> stringId.containsUsage(usage));
     }
     public Iterator<String> getClassNames(){
         return ComputeIterator.of(getClassIds(), ClassId::getName);
     }
-    Iterator<ClassId> getClassIds(){
-        Section<ClassId> section = get(SectionType.CLASS_ID);
-        if(section != null){
-            return section.iterator();
-        }
-        return EmptyIterator.of();
+
+    public Iterator<Ins> getInstructions(){
+        return new IterableIterator<ClassData, Ins>(getClassData()){
+            @Override
+            public Iterator<Ins> iterator(ClassData element) {
+                return element.getInstructions();
+            }
+        };
+    }
+    public Iterator<MethodDef> getMethods(){
+        return new IterableIterator<ClassData, MethodDef>(getClassData()){
+            @Override
+            public Iterator<MethodDef> iterator(ClassData element) {
+                return element.getMethods();
+            }
+        };
+    }
+    public Iterator<FieldDef> getFields(){
+        return new IterableIterator<ClassData, FieldDef>(getClassData()){
+            @Override
+            public Iterator<FieldDef> iterator(ClassData element) {
+                return element.getFields();
+            }
+        };
+    }
+    public Iterator<FieldDef> getStaticFields(){
+        return new IterableIterator<ClassData, FieldDef>(getClassData()){
+            @Override
+            public Iterator<FieldDef> iterator(ClassData element) {
+                return element.getStaticFields();
+            }
+        };
+    }
+    public Iterator<FieldDef> getInstanceFields(){
+        return new IterableIterator<ClassData, FieldDef>(getClassData()){
+            @Override
+            public Iterator<FieldDef> iterator(ClassData element) {
+                return element.getInstanceFields();
+            }
+        };
+    }
+    public Iterator<ClassData> getClassData(){
+        return ComputeIterator.of(getClassIds(), ClassId::getClassData);
+    }
+    public Iterator<ClassId> getClassIds(){
+        return getItems(SectionType.CLASS_ID);
     }
     public Iterator<StringId> getStringIds(){
-        Section<StringId> section = get(SectionType.STRING_ID);
-        if(section != null){
-            return section.iterator();
-        }
-        return EmptyIterator.of();
+        return getItems(SectionType.STRING_ID);
     }
     public Iterator<StringData> getStringData(){
-        Section<StringData> section = get(SectionType.STRING_DATA);
-        if(section != null){
-            return section.iterator();
-        }
-        return EmptyIterator.of();
+        return getItems(SectionType.STRING_DATA);
     }
-    public Iterator<String> getTypeNames(){
-        return ComputeIterator.of(getTypes(), TypeId::getName);
+    public<T1 extends Block> Iterator<T1> getItems(SectionType<T1> sectionType) {
+        return getDexFileBlock().getItems(sectionType);
     }
     public Iterator<TypeId> getTypes(){
-        Section<TypeId> section = get(SectionType.TYPE_ID);
-        if(section != null){
-            return section.iterator();
-        }
-        return EmptyIterator.of();
+        return getItems(SectionType.TYPE_ID);
+    }
+    public <T1 extends Block> Iterator<T1> getAll(SectionType<T1> sectionType, Key key){
+        return getDexFileBlock().getAll(sectionType, key);
+    }
+    public <T1 extends Block> T1 get(SectionType<T1> sectionType, Key key){
+        return getDexFileBlock().get(sectionType, key);
     }
     public <T1 extends Block> Section<T1> get(SectionType<T1> sectionType){
         return getDexFileBlock().get(sectionType);
@@ -318,32 +422,24 @@ public class DexFile implements VisitableInteger {
         return getDexFileBlock().getMapList().toString();
     }
 
-    public static void replaceRFields(DexFile dexFile, Map<Integer, RField> map, IntegerReference reference){
-        if(!(reference instanceof InsConst)){
-            return;
-        }
-        InsConst insConst = (InsConst) reference;
-        int id = reference.get();
-        RField rField = map.get(id);
-        if(rField == null){
-            return;
+    public static boolean replaceRFields(RField rField, SizeXIns insConst){
+        if(insConst == null || rField == null){
+            return false;
         }
         MethodDef methodDef = insConst.getMethodDef();
         if(methodDef == null){
-            return;
+            return false;
         }
         if(rField.getClassName().equals(methodDef.getClassName())){
-            return;
-        }
-        FieldId fieldId = rField.getOrCreate(dexFile);
-        if((fieldId.getIndex() & 0xffff0000) != 0){
-            return;
+            return false;
         }
         Ins21c ins = Opcode.SGET.newInstance();
-        ins.setRegister(0, insConst.getRegister(0));
+        ins.setRegister(0, ((RegistersSet)insConst).getRegister(0));
         insConst.replace(ins);
-        ins.setSectionItem(fieldId);
+        ins.setSectionItem(rField.getFieldKey());
+        return true;
     }
+
     public static DexFile read(byte[] dexBytes) throws IOException {
         return read(new BlockReader(dexBytes));
     }

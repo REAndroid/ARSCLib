@@ -21,21 +21,28 @@ import com.reandroid.arsc.group.ItemGroup;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.common.BytesOutputStream;
 import com.reandroid.dex.base.DexException;
+import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.header.Checksum;
 import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.index.StringId;
-import com.reandroid.dex.item.AnnotationElement;
-import com.reandroid.dex.item.AnnotationItem;
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.id.ClassId;
+import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.data.AnnotationElement;
+import com.reandroid.dex.data.AnnotationItem;
+import com.reandroid.dex.data.TypeList;
 import com.reandroid.dex.key.AnnotationKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.pool.KeyItemGroup;
+import com.reandroid.dex.pool.KeyPool;
 import com.reandroid.dex.value.ArrayValue;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.StringValue;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.*;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 public class DexFileBlock extends FixedBlockContainer {
 
@@ -43,29 +50,97 @@ public class DexFileBlock extends FixedBlockContainer {
 
     private String mSimpleName;
 
+    private final KeyPool<ClassId> extendingClassMap;
+    private final KeyPool<ClassId> interfaceMap;
+
     public DexFileBlock() {
         super(1);
         this.sectionList = new SectionList();
         addChild(0, sectionList);
+
+        this.extendingClassMap = new KeyPool<>(SectionType.CLASS_ID, 2000);
+        this.interfaceMap = new KeyPool<>(SectionType.CLASS_ID, 2000);
     }
 
-    public Iterator<StringData> unusedStrings(){
+
+    public Iterator<ClassId> getSubTypes(TypeKey typeKey){
+        Iterator<ClassId> iterator = CombiningIterator.two(getExtendingClassIds(typeKey),
+                getImplementationIds(typeKey));
+        return new IterableIterator<ClassId, ClassId>(iterator) {
+            @Override
+            public Iterator<ClassId> iterator(ClassId element) {
+                return CombiningIterator.two(SingleIterator.of(element), getSubTypes(element.getKey()));
+            }
+        };
+    }
+    public Iterator<ClassId> getExtendingClassIds(TypeKey typeKey){
+        return this.extendingClassMap.getIterator(typeKey);
+    }
+    public Iterator<ClassId> getImplementationIds(TypeKey interfaceClass){
+        return this.interfaceMap.getIterator(interfaceClass);
+    }
+
+    public void loadSuperTypesMap(){
+        loadExtendingClassMap();
+        loadInterfacesMap();
+    }
+    public void loadExtendingClassMap(){
+        KeyPool<ClassId> superClassMap = this.extendingClassMap;
+        superClassMap.clear();
+        Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);
+        while (iterator.hasNext()){
+            ClassId classId = iterator.next();
+            String superName = classId.getSuperClassName();
+            if(DexUtils.isJavaFramework(superName)){
+                continue;
+            }
+            TypeKey typeKey = TypeKey.create(superName);
+            superClassMap.put(typeKey, classId);
+        }
+        superClassMap.trimToSize();
+    }
+    public void loadInterfacesMap(){
+        KeyPool<ClassId> interfaceMap = this.interfaceMap;
+        interfaceMap.clear();
+        Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);
+        while (iterator.hasNext()){
+            ClassId classId = iterator.next();
+            TypeList typeList = classId.getInterfaces();
+            if(typeList == null){
+                continue;
+            }
+            Iterator<TypeKey> typeListIterator = typeList.getTypeKeys();
+            while (typeListIterator.hasNext()){
+                TypeKey typeKey = typeListIterator.next();
+                if(DexUtils.isJavaFramework(typeKey.getType())){
+                    continue;
+                }
+                interfaceMap.put(typeKey, classId);
+            }
+        }
+        interfaceMap.trimToSize();
+    }
+
+    public Iterator<StringId> unusedStrings(){
         return getStringsWithUsage(StringId.USAGE_NONE);
     }
-    public Iterator<StringData> getStringsContainsUsage(int usage){
+    public Iterator<StringId> getStringsContainsUsage(int usage){
         return FilterIterator.of(getStrings(),
                 stringData -> stringData.containsUsage(usage));
     }
-    public Iterator<StringData> getStringsWithUsage(int usage){
+    public Iterator<StringId> getStringsWithUsage(int usage){
         return FilterIterator.of(getStrings(),
                 stringData -> stringData.getUsageType() == usage);
     }
-    public Iterator<StringData> getStrings(){
-        Section<StringData> stringSection = get(SectionType.STRING_DATA);
-        if(stringSection == null){
-            return EmptyIterator.of();
+    public Iterator<StringId> getStrings(){
+        return getItems(SectionType.STRING_ID);
+    }
+    public<T1 extends Block> Iterator<T1> getItems(SectionType<T1> sectionType) {
+        Section<T1> section = getSectionList().get(sectionType);
+        if(section != null){
+            return section.iterator();
         }
-        return stringSection.iterator();
+        return EmptyIterator.of();
     }
     public void refreshFull() throws DexException{
         Checksum checksum = getHeader().checksum;
@@ -87,6 +162,9 @@ public class DexFileBlock extends FixedBlockContainer {
         getSectionList().sortSection(order);
         refresh();
     }
+    public void clearPools(){
+        getSectionList().clearPools();
+    }
     public void sortStrings(){
         getSectionList().sortStrings();
     }
@@ -95,7 +173,7 @@ public class DexFileBlock extends FixedBlockContainer {
         if(annotationSection == null){
             return;
         }
-        ItemGroup<AnnotationItem> group = annotationSection.getPool().getGroup(ANNOTATION_SIG_KEY);
+        Iterable<AnnotationItem> group = annotationSection.getPool().getGroup(ANNOTATION_SIG_KEY);
         if(group == null){
             return;
         }
@@ -124,6 +202,20 @@ public class DexFileBlock extends FixedBlockContainer {
         }
     }
 
+    public <T1 extends Block> Iterator<T1> getAll(SectionType<T1> sectionType, Key key){
+        Section<T1> section = get(sectionType);
+        if(section != null){
+            return section.getAll(key);
+        }
+        return EmptyIterator.of();
+    }
+    public <T1 extends Block> T1 get(SectionType<T1> sectionType, Key key){
+        Section<T1> section = get(sectionType);
+        if(section != null){
+            return section.get(key);
+        }
+        return null;
+    }
     public<T1 extends Block> Section<T1> get(SectionType<T1> sectionType){
         return getSectionList().get(sectionType);
     }

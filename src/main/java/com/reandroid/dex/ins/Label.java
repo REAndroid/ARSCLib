@@ -21,8 +21,6 @@ import java.io.IOException;
 
 public interface Label extends ExtraLine{
     int getAddress();
-    int getTargetAddress();
-    void setTargetAddress(int targetAddress);
     String getLabelName();
     @Override
     default void appendExtra(SmaliWriter writer) throws IOException {

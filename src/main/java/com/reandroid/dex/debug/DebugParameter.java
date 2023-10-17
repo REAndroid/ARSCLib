@@ -15,40 +15,56 @@
  */
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.index.StringId;
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 
 import java.io.IOException;
 
-public class DebugParameter extends Base1Ule128Item<StringId> implements SmaliFormat {
+public class DebugParameter extends Base1Ule128IdItemReference<StringId> implements SmaliFormat {
     public DebugParameter(){
         super(SectionType.STRING_ID);
     }
-    public StringData getParameterName(){
-        StringId stringId = getItem();
+
+    public String getName(){
+        StringId stringId = getNameId();
         if(stringId != null){
-            return stringId.getStringData();
+            return stringId.getString();
         }
         return null;
     }
+    public void setName(String name){
+        if(name == null || name.length() == 0){
+            setItem((StringId) null);
+        }else {
+            setItem(new StringKey(name));
+        }
+    }
+    public StringId getNameId(){
+        return getItem();
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        StringData stringData = getParameterName();
-        if(stringData == null){
+        StringId stringId = getNameId();
+        if(stringId == null){
             return;
         }
         writer.newLine();
         writer.append(".param p");
         writer.append(getIndex());
         writer.append(", ");
-        stringData.append(writer);
+        stringId.append(writer);
     }
 
     @Override
     public String toString() {
-        return  ".param p" + getIndex() + ", \"" + getParameterName() + "\"";
+        if(getItem() == null){
+            return super.toString();
+        }
+        return  ".param p" + getIndex() + ", \"" + getNameId() + "\"";
     }
 }

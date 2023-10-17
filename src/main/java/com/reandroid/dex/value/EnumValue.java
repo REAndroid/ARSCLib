@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.dex.index.FieldId;
+import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 

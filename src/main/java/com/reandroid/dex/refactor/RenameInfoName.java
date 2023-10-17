@@ -24,9 +24,9 @@ import java.util.List;
 public abstract class RenameInfoName<T extends Block> extends RenameInfo<T> {
 
     private final String typeName;
-    private final String parameters;
+    private final String[] parameters;
 
-    public RenameInfoName(String typeName, String parameters, String search, String replace) {
+    public RenameInfoName(String typeName, String[] parameters, String search, String replace) {
         super(search, replace);
         this.typeName = typeName;
         this.parameters = parameters;
@@ -35,7 +35,7 @@ public abstract class RenameInfoName<T extends Block> extends RenameInfo<T> {
     public String getTypeName() {
         return typeName;
     }
-    public String getParameters() {
+    public String[] getParameters() {
         return parameters;
     }
 

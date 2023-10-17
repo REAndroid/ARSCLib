@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.sections;
 
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.model.DexFile;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;

@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.dex.index.MethodId;
+import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.sections.SectionType;
 
 

@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.index.IdSectionEntry;
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
@@ -67,7 +67,7 @@ public class Ins51l extends Size10Ins implements RegistersSet {
     void appendCodeData(SmaliWriter writer) throws IOException {
         writer.append(", ");
         long data = getDataLong();
-        IdSectionEntry sectionItem = getSectionItem();
+        IdItem sectionItem = getSectionItem();
         if(sectionItem != null){
             sectionItem.append(writer);
         }else {

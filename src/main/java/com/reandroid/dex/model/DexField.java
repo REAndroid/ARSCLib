@@ -16,19 +16,20 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.index.FieldId;
-import com.reandroid.dex.item.AnnotationSet;
-import com.reandroid.dex.item.FieldDef;
-import com.reandroid.dex.pool.DexIdPool;
+import com.reandroid.dex.id.FieldId;
+import com.reandroid.dex.data.AnnotationSet;
+import com.reandroid.dex.data.FieldDef;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
 public class DexField extends DexDef {
 
@@ -42,18 +43,7 @@ public class DexField extends DexDef {
 
     public FieldId getOrCreate(DexFile dexFile){
         Section<FieldId> section = dexFile.get(SectionType.FIELD_ID);
-        DexIdPool<FieldId> pool = section.getPool();
-        FieldId fieldId = pool.get(this.getFieldId().getKey());
-        if(fieldId != null){
-            return fieldId;
-        }
-        fieldId = section.createItem();
-        fieldId.setName(getName());
-        fieldId.setClassType(getClassName());
-        fieldId.setFieldType(getFieldType());
-        pool.add(fieldId);
-        System.err.println("Created: " + fieldId);
-        return fieldId;
+        return section.getOrCreate(getFieldKey());
     }
     public String getAccessFlags() {
         return AccessFlag.formatForField(getFieldDef().getAccessFlagsValue());
@@ -87,12 +77,15 @@ public class DexField extends DexDef {
     }
 
     @Override
-    public String getKey(){
-        return getFieldId().getName();
+    public FieldKey getKey(){
+        return getFieldId().getKey();
+    }
+    public FieldKey getFieldKey(){
+        return getFieldId().getKey();
     }
     @Override
-    public String getClassName() {
-        return getFieldId().getClassName();
+    public TypeKey getDefining(){
+        return getFieldKey().getDefiningKey();
     }
     public FieldId getFieldId() {
         return getFieldDef().getFieldId();
@@ -104,7 +97,6 @@ public class DexField extends DexDef {
         return fieldDef;
     }
     public Iterator<AnnotationSet> getAnnotations(){
-        getFieldDef().setClassId(getDexClass().getClassId());
         return getFieldDef().getAnnotations();
     }
 
@@ -123,5 +115,17 @@ public class DexField extends DexDef {
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getFieldDef().append(writer);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        String flags = getAccessFlags();
+        if(!StringsUtil.isEmpty(flags)){
+            builder.append(flags);
+            builder.append(' ');
+        }
+        builder.append(getKey());
+        return builder.toString();
     }
 }

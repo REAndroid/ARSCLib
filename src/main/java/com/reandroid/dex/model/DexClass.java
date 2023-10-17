@@ -16,19 +16,19 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.index.ClassId;
-import com.reandroid.dex.index.ItemOffsetReference;
+import com.reandroid.dex.id.ClassId;
+import com.reandroid.dex.reference.DataItemIndirectReference;
 import com.reandroid.dex.ins.Ins;
-import com.reandroid.dex.item.StringData;
-import com.reandroid.dex.item.*;
-import com.reandroid.dex.key.AnnotationKey;
-import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.data.StringData;
+import com.reandroid.dex.data.*;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.value.StringValue;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.collection.*;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class DexClass extends DexDef implements Comparable<DexClass> {
@@ -75,11 +75,11 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
         if(classData == null){
             return;
         }
-        MethodDefArray defArray = classData.getDirectMethods();
+        MethodDefArray defArray = classData.getDirectMethodsArray();
         for(MethodDef methodDef : defArray.getChildes()){
             cleanKotlinIntrinsics(methodDef);
         }
-        defArray = classData.getVirtualMethods();
+        defArray = classData.getVirtualMethodsArray();
         for(MethodDef methodDef : defArray.getChildes()){
             cleanKotlinIntrinsics(methodDef);
         }
@@ -142,47 +142,59 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
         return CollectionUtil.toList(iterator);
     }
     ///////////////////////////////////////////
-    public DexField getField(String fieldKey) {
+    public DexField getField(FieldKey fieldKey) {
+        if(!isAccessibleTo(fieldKey.getDefiningKey())){
+            return null;
+        }
         DexField dexField = getDefinedField(fieldKey);
         if(dexField != null) {
             return dexField;
         }
-        Iterator<DexClass> iterator = getSuperClasses();
-        while (iterator.hasNext()) {
-            DexClass dexClass = iterator.next();
-            dexField = dexClass.getDefinedField(fieldKey);
-            if(dexField == null){
-                continue;
+        DexClass superClass = getSuperClass();
+        if (superClass != null){
+            dexField = superClass.getField(fieldKey);
+            if(dexField != null){
+                if(dexField.isAccessibleTo(getDefining())){
+                    return dexField;
+                }else {
+                    return null;
+                }
             }
-            if(dexField.isAccessibleTo(this)) {
-                return dexField;
+        }
+        Iterator<DexClass> iterator = getInterfaceClasses();
+        while (iterator.hasNext()) {
+            dexField = iterator.next().getField(fieldKey);
+            if(dexField != null){
+                if(dexField.isAccessibleTo(getDefining())){
+                    return dexField;
+                }
             }
         }
         return null;
     }
-    public DexField getDefinedField(String fieldKey) {
+    public DexField getDefinedField(FieldKey fieldKey) {
         Iterator<DexField> iterator = getFields();
         while (iterator.hasNext()){
             DexField dexField = iterator.next();
-            if(fieldKey.equals(dexField.getKey())){
+            if(fieldKey.equals(dexField.getFieldKey(), false, true)){
                 return dexField;
             }
         }
         return null;
     }
-    public DexMethod getMethod(String methodKey) {
+    public DexMethod getMethod(MethodKey methodKey) {
         DexMethod dexMethod = getDefinedMethod(methodKey);
         if(dexMethod != null) {
             return dexMethod;
         }
-        Iterator<DexClass> iterator = getSuperClasses();
+        Iterator<DexClass> iterator = getSuperTypes();
         while (iterator.hasNext()) {
             DexClass dexClass = iterator.next();
             dexMethod = dexClass.getDefinedMethod(methodKey);
             if(dexMethod == null){
                 continue;
             }
-            if(!dexMethod.isAccessibleTo(this)) {
+            if(!dexMethod.isAccessibleTo(methodKey.getDefiningKey())) {
                 // TODO: should not reach here ?
                 continue;
             }
@@ -190,53 +202,94 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
         }
         return null;
     }
-    public DexMethod getDefinedMethod(String methodKey) {
+    public Iterator<DexMethod> getMethods(MethodKey methodKey) {
+        return CombiningIterator.two(getDefinedMethods(methodKey),
+                ComputeIterator.of(getSuperTypes(), dexClass -> {
+                    DexMethod method = dexClass.getDefinedMethod(methodKey);
+                    if (method != null && method.isAccessibleTo(methodKey.getDefiningKey())) {
+                        return method;
+                    }
+                    return null;
+                }));
+    }
+    public Iterator<DexMethod> getExtending(MethodKey methodKey) {
+        return CombiningIterator.of(getDefinedMethod(methodKey),
+                ComputeIterator.of(getExtending(),
+                        dexClass -> dexClass.getExtending(methodKey)));
+    }
+    public Iterator<DexMethod> getImplementations(MethodKey methodKey) {
+        return CombiningIterator.of(getDefinedMethod(methodKey),
+         ComputeIterator.of(getImplementations(),
+                dexClass -> dexClass.getImplementations(methodKey)));
+    }
+    public Iterator<MethodKey> getOverridingKeys(MethodKey methodKey) {
+        MethodKey key = methodKey.changeDefining(getKey());
+        return CombiningIterator.of(CombiningIterator.singleOne(
+                key,
+                SingleIterator.of(getBridged(methodKey))
+                ),
+                ComputeIterator.of(getOverriding(),
+                        dexClass -> dexClass.getOverridingKeys(key)));
+    }
+    private MethodKey getBridged(MethodKey methodKey){
+        DexMethod dexMethod = getDefinedMethod(methodKey);
+        if(dexMethod == null){
+            return null;
+        }
+        dexMethod = dexMethod.getBridged();
+        if(dexMethod == null){
+            return null;
+        }
+        return dexMethod.getKey();
+    }
+    public DexMethod getDefinedMethod(MethodKey methodKey) {
         Iterator<DexMethod> iterator = getMethods();
         while (iterator.hasNext()){
             DexMethod dexMethod = iterator.next();
-            if(methodKey.equals(dexMethod.getKey())){
+            MethodKey key = dexMethod.getKey();
+            if(methodKey.equals(key, false, false)){
                 return dexMethod;
             }
         }
         return null;
     }
-    public Iterator<DexClass> getSuperClasses(){
-        return listSuperClasses().iterator();
+    public Iterator<DexMethod> getDefinedMethods(MethodKey methodKey) {
+        return FilterIterator.of(getMethods(),
+                dexMethod -> methodKey.equals(dexMethod.getKey(), false, false));
     }
-    public Set<DexClass> listSuperClasses(){
-        Set<DexClass> results = new HashSet<>();
-        listSuperClasses(results);
-        return results;
+    public Iterator<DexClass> getOverridingAndSuperTypes(){
+        return CombiningIterator.two(getOverriding(), getSuperTypes());
     }
-    private void listSuperClasses(Set<DexClass> results) {
-        DexClass dexClass = getSuperClass();
-        if(dexClass != null && !results.contains(dexClass)){
-            results.add(dexClass);
-            dexClass.listSuperClasses(results);
-        }
-        Iterator<String> interfaceNames = getInterfaces();
-        while (interfaceNames.hasNext()){
-            dexClass = dexFile.get(interfaceNames.next());
-            if(dexClass != null && !results.contains(dexClass)){
-                results.add(dexClass);
-                dexClass.listSuperClasses(results);
+    public Iterator<DexClass> getSuperTypes(){
+        final TypeKey overflow = getDefining();
+        Iterator<DexClass> iterator = CombiningIterator.two(SingleIterator.of(getSuperClass()),
+                getInterfaceClasses());
+        return new IterableIterator<DexClass, DexClass>(iterator) {
+            @Override
+            public Iterator<DexClass> iterator(DexClass element) {
+                if(overflow.equals(element.getDefining())){
+                    throw new IllegalArgumentException("Recursive class super: " + overflow);
+                }
+                return CombiningIterator.two(SingleIterator.of(element), element.getSuperTypes());
             }
-        }
+        };
     }
-
+    public Iterator<DexClass> getOverriding(){
+        return CombiningIterator.two(getExtending(), getImplementations());
+    }
+    public Iterator<DexClass> getExtending(){
+        return getDexFile().searchExtending(getKey());
+    }
+    public Iterator<DexClass> getImplementations(){
+        return getDexFile().searchImplementations(getKey());
+    }
     public DexClass getSuperClass() {
-        return dexFile.get(getSuperClassName());
+        return search(getSuperClassName());
     }
     public Iterator<DexField> getFields() {
-        return new CombiningIterator<>(getStaticFields(), getInstanceFields());
+        return CombiningIterator.two(getStaticFields(), getInstanceFields());
     }
-    FieldDef getStatic(FieldKey fieldKey){
-        ClassData classData = getClassData();
-        if(classData != null){
-            return classData.getStaticFields().get(fieldKey);
-        }
-        return null;
-    }
+
     public DexField getOrCreateStaticField(FieldKey fieldKey){
         return createField(getOrCreateStatic(fieldKey));
     }
@@ -245,30 +298,37 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
     }
     public Iterator<? extends DexField> getStaticFields() {
         ClassData classData = getClassData();
-        if(classData != null){
-            return ComputeIterator.of(classData
-                    .getStaticFields().iterator(), this::createField);
+        if(classData == null){
+            return EmptyIterator.of();
         }
-        return EmptyIterator.of();
+        return ComputeIterator.of(classData.getStaticFieldsArray().iterator(), this::createField);
     }
     public Iterator<DexField> getInstanceFields() {
-        return ComputeIterator.of(getClassData()
-                .getInstanceFields().iterator(), this::createField);
+        ClassData classData = getClassData();
+        if(classData == null){
+            return EmptyIterator.of();
+        }
+        return ComputeIterator.of(classData.getInstanceFieldsArray().iterator(), this::createField);
     }
     public Iterator<DexMethod> getMethods() {
         return new CombiningIterator<>(getDirectMethods(), getVirtualMethods());
     }
     public Iterator<DexMethod> getDirectMethods() {
-        return ComputeIterator.of(getClassData()
-                .getDirectMethods().iterator(), this::createMethod);
+        ClassData classData = getClassData();
+        if(classData == null){
+            return EmptyIterator.of();
+        }
+        return ComputeIterator.of(classData.getDirectMethods(), this::createMethod);
     }
     public Iterator<DexMethod> getVirtualMethods() {
-        return ComputeIterator.of(getClassData()
-                .getVirtualMethods().iterator(), this::createMethod);
+        ClassData classData = getClassData();
+        if(classData == null){
+            return EmptyIterator.of();
+        }
+        return ComputeIterator.of(classData.getVirtualMethods(), this::createMethod);
     }
 
     DexField createField(FieldDef fieldDef){
-        fieldDef.setClassId(getClassId());
         return new DexField(this, fieldDef);
     }
     DexMethod createMethod(MethodDef methodDef){
@@ -297,7 +357,7 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
         outputStream.close();
     }
     private String toFilePath(){
-        String name = getClassName();
+        String name = getDefining().getType();
         name = name.substring(1, name.length()-1);
         name = name.replace('/', File.separatorChar);
         return name + ".smali";
@@ -313,15 +373,15 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
         return classId;
     }
     @Override
-    public String getKey() {
-        return getClassName();
+    public TypeKey getKey() {
+        return getClassId().getKey();
     }
     @Override
-    public String getClassName() {
-        return getClassId().getName();
+    public TypeKey getDefining(){
+        return getClassId().getKey();
     }
     public String getSuperClassName(){
-        return getClassId().getSuperClass().getName();
+        return getClassId().getSuperClassId().getName();
     }
     public void setSuperClass(String superClass){
         getClassId().setSuperClass(superClass);
@@ -338,7 +398,10 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
     }
 
     public Iterator<DexClass> getInterfaceClasses(){
-        return ComputeIterator.of(getInterfaces(), DexClass.this.dexFile::get);
+        return ComputeIterator.of(getInterfaces(), this::search);
+    }
+    DexClass search(String typeName){
+        return getDexFile().search(typeName);
     }
     public Iterator<String> getInterfaces(){
         TypeList typeList = getClassId().getInterfaces();
@@ -348,18 +411,18 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
         return EmptyIterator.of();
     }
     public void addInterface(String typeName) {
-        ItemOffsetReference<TypeList> reference = getClassId().getInterfacesReference();
+        DataItemIndirectReference<TypeList> reference = getClassId().getInterfacesReference();
         TypeList typeList = reference.getOrCreate();
         typeList.add(typeName);
     }
     public void addInterfaces(Iterator<String> iterator){
-        ItemOffsetReference<TypeList> reference = getClassId().getInterfacesReference();
+        DataItemIndirectReference<TypeList> reference = getClassId().getInterfacesReference();
         TypeList typeList = reference.getOrCreate();
         typeList.addAll(iterator);
     }
     public void clearInterfaces() {
-        ItemOffsetReference<TypeList> reference = getClassId().getInterfacesReference();
-        reference.setItem(null);
+        DataItemIndirectReference<TypeList> reference = getClassId().getInterfacesReference();
+        reference.setItem((TypeList) null);
     }
 
     public void removeAnnotations(Predicate<AnnotationItem> filter) {
@@ -389,12 +452,7 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
         return getClassId().getOrCreateClassData();
     }
     ClassData getClassData(){
-        ClassId classId = getClassId();
-        ClassData classData = classId.getClassData();
-        if(classData != null){
-            classData.setClassId(classId);
-        }
-        return classData;
+        return getClassId().getClassData();
     }
     EncodedArray getStaticValues(){
         return getClassId().getStaticValues();

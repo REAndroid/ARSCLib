@@ -17,23 +17,22 @@ package com.reandroid.dex.debug;
 
 import com.reandroid.dex.base.Sle128Item;
 
-public class DebugAdvanceLine extends DebugSkip{
-    private final Sle128Item lineDiff;
-    public DebugAdvanceLine() {
-        super(1, DebugElementType.ADVANCE_LINE);
-        this.lineDiff = new Sle128Item();
-        addChild(1, lineDiff);
-    }
+public class DebugAdvanceLine extends DebugAdvance{
 
-    public int getLineDiff() {
-        return lineDiff.get();
-    }
-    public void setLineDiff(int lineDiff) {
-        this.lineDiff.set(lineDiff);
+    public DebugAdvanceLine() {
+        super(DebugElementType.ADVANCE_LINE, new Sle128Item());
     }
 
     @Override
-    public String toString() {
-        return "lineDiff=" + lineDiff;
+    public int getLineDiff() {
+        return getAdvance();
+    }
+    public void setLineDiff(int lineDiff) {
+        setAdvance(lineDiff);
+    }
+
+    @Override
+    public DebugElementType<DebugAdvanceLine> getElementType() {
+        return DebugElementType.ADVANCE_LINE;
     }
 }

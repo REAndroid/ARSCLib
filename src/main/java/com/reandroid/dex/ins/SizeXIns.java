@@ -17,8 +17,8 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
-import com.reandroid.dex.index.IdSectionEntry;
-import com.reandroid.dex.item.InstructionList;
+import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
@@ -30,7 +30,7 @@ import java.io.IOException;
 public class SizeXIns extends Ins {
 
     private final ByteArray valueBytes;
-    private IdSectionEntry mSectionItem;
+    private IdItem mSectionItem;
 
     public SizeXIns(Opcode<?> opcode) {
         super(opcode);
@@ -40,7 +40,7 @@ public class SizeXIns extends Ins {
         valueBytes.putShort(0, opcode.getValue());
     }
 
-    public SectionType<? extends IdSectionEntry> getSectionType(){
+    public SectionType<? extends IdItem> getSectionType(){
         return getOpcode().getSectionType();
     }
 
@@ -117,26 +117,32 @@ public class SizeXIns extends Ins {
         cacheSectionItem();
     }
     void cacheSectionItem(){
-        SectionType<? extends IdSectionEntry> sectionType = getSectionType();
+        SectionType<? extends IdItem> sectionType = getSectionType();
         if(sectionType == null){
             return;
         }
         int data = getData();
         this.mSectionItem = get(sectionType, data);
         if(this.mSectionItem != null){
-            this.mSectionItem.addUsageType(IdSectionEntry.USAGE_INSTRUCTION);
+            this.mSectionItem.addUsageType(IdItem.USAGE_INSTRUCTION);
         }
     }
-    public IdSectionEntry getSectionItem() {
+    public IdItem getSectionItem() {
         return mSectionItem;
     }
-
+    public Key getSectionItemKey() {
+        IdItem entry = getSectionItem();
+        if(entry != null){
+            return entry.getKey();
+        }
+        return null;
+    }
     public void setSectionItem(Key key){
-        Section<? extends IdSectionEntry> section = getSection(getSectionType());
-        IdSectionEntry item = section.getOrCreate(key);
+        Section<? extends IdItem> section = getSection(getSectionType());
+        IdItem item = section.getOrCreate(key);
         setSectionItem(item);
     }
-    public void setSectionItem(IdSectionEntry item){
+    public void setSectionItem(IdItem item){
         this.mSectionItem = item;
         setData(item.getIndex());
     }
@@ -151,6 +157,13 @@ public class SizeXIns extends Ins {
     public void setData(int data){
         setShort(2, data);
     }
+    @Override
+    public int getOutSize(){
+        if(getOpcode().hasOutRegisters()){
+            return ((RegistersSet) this).getRegistersCount();
+        }
+        return 0;
+    }
 
     @Override
     protected void onRefreshed() {
@@ -158,10 +171,10 @@ public class SizeXIns extends Ins {
         updateSectionItem();
     }
     void updateSectionItem(){
-        IdSectionEntry itemId = this.mSectionItem;
+        IdItem itemId = this.mSectionItem;
         if(itemId != null){
             setData(itemId.getIndex());
-            itemId.addUsageType(IdSectionEntry.USAGE_INSTRUCTION);
+            itemId.addUsageType(IdItem.USAGE_INSTRUCTION);
         }
     }
 
@@ -204,7 +217,7 @@ public class SizeXIns extends Ins {
     void appendCodeData(SmaliWriter writer) throws IOException {
         writer.append(", ");
         int data = getData();
-        IdSectionEntry sectionItem = getSectionItem();
+        IdItem sectionItem = getSectionItem();
         if(sectionItem != null){
             sectionItem.append(writer);
         }else {

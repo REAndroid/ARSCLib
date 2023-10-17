@@ -19,10 +19,10 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.PositionAlignedItem;
-import com.reandroid.dex.item.DataSectionEntry;
+import com.reandroid.dex.data.DataItem;
 
 
-public class DataSection<T extends DataSectionEntry> extends Section<T> {
+public class DataSection<T extends DataItem> extends Section<T> {
 
     public DataSection(IntegerPair countAndOffset, SectionType<T> sectionType) {
         super(sectionType, new DataSectionArray<>(countAndOffset, sectionType.getCreator()));

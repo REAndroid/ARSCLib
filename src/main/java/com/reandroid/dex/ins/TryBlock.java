@@ -18,12 +18,12 @@ package com.reandroid.dex.ins;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
-import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.CountedArray;
-import com.reandroid.dex.base.DexBlockAlign;
 import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.dex.item.DexContainerItem;
+import com.reandroid.dex.data.CodeItem;
+import com.reandroid.dex.data.DexContainerItem;
+import com.reandroid.dex.data.InstructionList;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.ExpandIterator;
 
@@ -32,19 +32,25 @@ import java.util.Iterator;
 
 public class TryBlock extends DexContainerItem implements
         Creator<TryItem>, Iterable<TryItem>, LabelsSet {
-    private final IntegerReference totalCount;
 
+    private final CodeItem codeItem;
     private HandlerOffsetArray handlerOffsetArray;
     private Ule128Item tryItemsCount;
     private ByteArray unknownBytes;
     private CountedArray<TryItem> tryItemArray;
     private DexPositionAlign positionAlign;
 
-    public TryBlock(IntegerReference totalCount) {
+    public TryBlock(CodeItem codeItem) {
         super(5);
-        this.totalCount = totalCount;
+        this.codeItem = codeItem;
     }
 
+    InstructionList getInstructionList(){
+        return getCodeItem().getInstructionList();
+    }
+    private CodeItem getCodeItem(){
+        return codeItem;
+    }
     public int getTryItemCount() {
         return tryItemArray.getCount();
     }
@@ -89,7 +95,7 @@ public class TryBlock extends DexContainerItem implements
 
     private HandlerOffsetArray initHandlersOffset() {
         if(handlerOffsetArray == null){
-            handlerOffsetArray = new HandlerOffsetArray(totalCount);
+            handlerOffsetArray = new HandlerOffsetArray(getCodeItem().getTryCountReference());
             addChild(INDEX_offsetArray, handlerOffsetArray);
         }
         return handlerOffsetArray;
@@ -100,7 +106,7 @@ public class TryBlock extends DexContainerItem implements
         }
         tryItemsCount = new Ule128Item();
         addChild(INDEX_itemsCount, tryItemsCount);
-        tryItemArray = new CountedArray<>(totalCount, this);
+        tryItemArray = new CountedArray<>(getCodeItem().getTryCountReference(), this);
         addChild(INDEX_itemArray, tryItemArray);
     }
     @Override
@@ -157,7 +163,7 @@ public class TryBlock extends DexContainerItem implements
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        boolean is_null = totalCount.get() == 0;
+        boolean is_null = getCodeItem().getTryCountReference().get() == 0;
         setNull(is_null);
         if(is_null){
             return;

@@ -16,17 +16,14 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.chunk.TableBlock;
-import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.common.DexUtils;
-import com.reandroid.dex.index.ClassId;
+import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.ins.Ins35c;
 import com.reandroid.dex.ins.Opcode;
-import com.reandroid.dex.item.*;
+import com.reandroid.dex.data.*;
 import com.reandroid.dex.key.AnnotationKey;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
@@ -43,46 +40,41 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.IOException;
 import java.util.*;
 
-public class RClassParent extends DexClass implements IntegerVisitor {
+public class RClassParent extends DexClass {
 
     private final Map<String, RClass> mMembers;
-    private final Map<Integer, RField> mFieldsMap;
+    private final Set<PackageBlock> mPackageBlocks;
 
     public RClassParent(DexFile dexFile, ClassId classId) {
         super(dexFile, classId);
         this.mMembers = new HashMap<>();
-        this.mFieldsMap = new HashMap<>();
+        this.mPackageBlocks = new HashSet<>();
     }
 
-    @Override
-    public void visit(Object sender, IntegerReference reference) {
-        DexFile.replaceRFields(getDexFile(), mFieldsMap, reference);
+    public RField getRField(int resourceId){
+        return load(getEntry(resourceId));
     }
-    public void replaceConstIds(){
-        updateFields();
-        getDexFile().visitIntegers(this);
+    public boolean hasRField(int resourceId){
+        return getEntry(resourceId) != null;
     }
-    private void updateFields(){
-        Map<Integer, RField> map = this.mFieldsMap;
-        map.clear();
-        for(RClass rClass : mMembers.values()){
-            Iterator<RField> iterator = rClass.getStaticFields();
-            while (iterator.hasNext()){
-                RField rField = iterator.next();
-                map.put(rField.getResourceId(), rField);
+    private ResourceEntry getEntry(int resourceId){
+        for(PackageBlock packageBlock : mPackageBlocks){
+            ResourceEntry entry = packageBlock.getResource(resourceId);
+            if(entry != null){
+                return entry;
             }
         }
+        return null;
     }
-
     public void load(PackageBlock packageBlock){
-        Iterator<ResourceEntry> iterator = packageBlock.getResources();
-        while (iterator.hasNext()){
-            load(iterator.next());
-        }
+        this.mPackageBlocks.add(packageBlock);
     }
-    private void load(ResourceEntry entry){
+    private RField load(ResourceEntry entry){
+        if(entry == null || entry.isEmpty()){
+            return null;
+        }
         RClass rClass = getOrCreateMember(entry.getType());
-        rClass.load(entry);
+        return rClass.load(entry);
     }
     public RClass getOrCreateMember(String simpleName){
         String type = toMemberName(simpleName);
@@ -160,10 +152,10 @@ public class RClassParent extends DexClass implements IntegerVisitor {
         classId.addAccessFlag(AccessFlag.PUBLIC);
         ClassData classData = classId.getOrCreateClassData();
         MethodKey methodKey = new MethodKey(classId.getName(), "<init>", null, "V");
-        if(classData.getDirectMethods().get(methodKey) != null){
+        if(classData.getDirectMethodsArray().get(methodKey) != null){
             return;
         }
-        MethodDef methodDef = classData.getDirectMethods().getOrCreate(methodKey);
+        MethodDef methodDef = classData.getDirectMethodsArray().getOrCreate(methodKey);
         methodDef.addAccessFlags(AccessFlag.PUBLIC, AccessFlag.CONSTRUCTOR);
         InstructionList insList = methodDef.getOrCreateInstructionList();
         Ins35c ins = insList.createNext(Opcode.INVOKE_DIRECT);

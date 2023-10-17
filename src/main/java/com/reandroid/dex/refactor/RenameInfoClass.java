@@ -15,40 +15,38 @@
  */
 package com.reandroid.dex.refactor;
 
-import com.reandroid.arsc.group.ItemGroup;
 import com.reandroid.dex.common.DexUtils;
-import com.reandroid.dex.index.StringId;
-import com.reandroid.dex.item.StringData;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.EmptyList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class RenameInfoClass extends RenameInfo<StringData> {
+public class RenameInfoClass extends RenameInfo<StringId> {
 
     public RenameInfoClass(String search, String replace) {
         super(search, replace);
     }
 
     @Override
-    SectionType<StringData> getSectionType() {
-        return SectionType.STRING_DATA;
+    SectionType<StringId> getSectionType() {
+        return SectionType.STRING_ID;
     }
     @Override
-    void apply(ItemGroup<StringData> group){
+    void apply(Iterable<StringId> group){
         String replace = getReplace();
-        for(StringData stringData : group){
-            if(!stringData.containsUsage(StringId.USAGE_TYPE_NAME)){
+        for(StringId stringId : group){
+            if(!stringId.containsUsage(StringId.USAGE_TYPE_NAME)){
                 continue;
             }
-            stringData.setString(replace);
+            stringId.setString(replace);
         }
     }
     @Override
-    public TypeKey getKey(){
-        return new TypeKey(getSearch());
+    public StringKey getKey(){
+        return StringKey.create(getSearch());
     }
     @Override
     List<RenameInfo<?>> createChildRenames() {
@@ -111,7 +109,7 @@ public class RenameInfoClass extends RenameInfo<StringData> {
             this.parent = parent;
         }
         @Override
-        public boolean lookString(StringData stringData){
+        public boolean lookString(StringId stringData){
             if(stringData.getUsageType() != StringId.USAGE_TYPE_NAME){
                 return false;
             }
@@ -126,7 +124,7 @@ public class RenameInfoClass extends RenameInfo<StringData> {
             return true;
         }
         @Override
-        void apply(ItemGroup<StringData> group){
+        void apply(Iterable<StringId> group){
         }
         @Override
         public String getSearch() {
@@ -202,27 +200,27 @@ public class RenameInfoClass extends RenameInfo<StringData> {
         }
 
         @Override
-        void apply(ItemGroup<StringData> group){
+        void apply(Iterable<StringId> group){
             String replace = getReplace();
-            for(StringData stringData : group){
-                if(stringData.getUsageType() != StringId.USAGE_INSTRUCTION){
+            for(StringId stringId : group){
+                if(stringId.containsUsage(StringId.USAGE_INSTRUCTION)){
                     continue;
                 }
-                stringData.setString(replace);
+                stringId.setString(replace);
             }
         }
         @Override
-        public boolean lookString(StringData stringData){
-            if(stringData.getUsageType() != StringId.USAGE_INSTRUCTION){
+        public boolean lookString(StringId stringId){
+            if(stringId.getUsageType() != StringId.USAGE_INSTRUCTION){
                 return false;
             }
-            String text = stringData.getString();
+            String text = stringId.getString();
             String search = getSearch();
             if(!text.startsWith(search)){
                 return false;
             }
             text = text.replace(search, getReplace());
-            stringData.setString(text);
+            stringId.setString(text);
             addRenameCount();
             return true;
         }

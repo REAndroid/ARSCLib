@@ -18,7 +18,7 @@ package com.reandroid.dex.sections;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.IntegerPair;
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.data.StringData;
 
 import java.io.IOException;
 

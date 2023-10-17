@@ -21,38 +21,25 @@ import com.reandroid.dex.io.StreamUtil;
 
 import java.io.IOException;
 
-public class Sle128Item extends DexBlockItem implements IntegerReference {
-    private int value;
+public class Sle128Item extends Le128 {
+
     public Sle128Item() {
-        super(0);
+        super();
     }
     @Override
-    public int get() {
-        return value;
-    }
-    @Override
-    public void set(int value) {
-        if(this.value == value){
-            return;
-        }
-        this.value = value;
+    protected void writeValue(int value) {
         setBytesLength(5, false);
         int length = writeSleb128(getBytesInternal(), 0, value);
         setBytesLength(length, false);
     }
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    protected int readLe128(BlockReader reader) throws IOException {
         int position = reader.getPosition();
         int value = readSleb128(StreamUtil.createByteReader(reader));
         int length = reader.getPosition() - position;
         reader.seek(position);
         setBytesLength(length, false);
         reader.readFully(getBytesInternal());
-        this.value = value;
-    }
-
-    @Override
-    public String toString() {
-        return Integer.toString(get());
+        return value;
     }
 }

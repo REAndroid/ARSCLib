@@ -21,18 +21,14 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.pool.DexIdPool;
-import com.reandroid.dex.pool.StringIdPool;
+import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.function.Predicate;
 
 public class Section<T extends Block>  extends FixedDexContainer
         implements DexArraySupplier<T>, OffsetSupplier,
@@ -42,7 +38,7 @@ public class Section<T extends Block>  extends FixedDexContainer
     private final DexPositionAlign sectionAlign;
     private final DexItemArray<T> itemArray;
 
-    private DexIdPool<T> dexIdPool;
+    private DexSectionPool<T> dexSectionPool;
 
     Section(SectionType<T> sectionType, DexItemArray<T> itemArray){
         super(2);
@@ -67,30 +63,48 @@ public class Section<T extends Block>  extends FixedDexContainer
             UsageMarker.clearUsageTypes(iterator());
         }
     }
+    public void clearPool(){
+        DexSectionPool<T> dexSectionPool = this.dexSectionPool;
+        if(dexSectionPool != null){
+            dexSectionPool.clear();
+            this.dexSectionPool = null;
+        }
+    }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         sectionAlign.setAlignment(0);
         super.onReadBytes(reader);
     }
 
+    public boolean contains(Key key){
+        return getPool().contains(key);
+    }
+    public Iterator<T> getAll(Key key) {
+        return getPool().getAll(key);
+    }
     public T get(Key key) {
         return getPool().get(key);
     }
-    public DexIdPool<T> getPool(){
-        DexIdPool<T> dexIdPool = this.dexIdPool;
-        if(dexIdPool == null){
-            dexIdPool = createPool();
-            this.dexIdPool = dexIdPool;
-            dexIdPool.load();
+    boolean keyChanged(Key key){
+        DexSectionPool<T> dexSectionPool = this.dexSectionPool;
+        if(dexSectionPool != null){
+            return dexSectionPool.update(key);
         }
-        return dexIdPool;
+        return false;
     }
-    public boolean isPoolLoaded(){
-        return dexIdPool != null;
+    public DexSectionPool<T> getPool(){
+        DexSectionPool<T> dexSectionPool = this.dexSectionPool;
+        if(dexSectionPool == null){
+            dexSectionPool = createPool();
+            this.dexSectionPool = dexSectionPool;
+            dexSectionPool.load();
+        }
+        return dexSectionPool;
     }
+
     @SuppressWarnings("unchecked")
-    private DexIdPool<T> createPool(){
-        return new DexIdPool<>(this);
+    private DexSectionPool<T> createPool(){
+        return new DexSectionPool<>(this);
     }
     public void add(T item){
         itemArray.add(item);
@@ -164,6 +178,12 @@ public class Section<T extends Block>  extends FixedDexContainer
         }
         return null;
     }
+    int compareOffset(Section<?> section){
+        if(section == null){
+            return 1;
+        }
+        return Integer.compare(getOffset(), section.getOffset());
+    }
 
 
     @Override
@@ -181,6 +201,11 @@ public class Section<T extends Block>  extends FixedDexContainer
         position += sectionAlign.size();
         getOffsetReference().set(position);
         onRefreshed(position);
+        DexSectionPool<T> dexSectionPool = this.dexSectionPool;
+        if(dexSectionPool != null){
+            dexSectionPool.clear();
+            this.dexSectionPool = null;
+        }
     }
     void alignSection(DexPositionAlign positionAlign, int position){
         if(isPositionAlignedItem()){
@@ -197,9 +222,9 @@ public class Section<T extends Block>  extends FixedDexContainer
         return get(0) instanceof UsageMarker;
     }
     void onRemoving(T item){
-        DexIdPool<T> dexIdPool = this.dexIdPool;
-        if(dexIdPool != null){
-            dexIdPool.onRemoving(item);
+        DexSectionPool<T> dexSectionPool = this.dexSectionPool;
+        if(dexSectionPool != null){
+            dexSectionPool.remove(item);
         }
     }
     @Override

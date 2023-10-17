@@ -16,37 +16,31 @@
 package com.reandroid.dex.pool;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockArrayCreator;
-import com.reandroid.arsc.group.ItemGroup;
+import com.reandroid.common.ArraySupplier;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
 import com.reandroid.utils.CompareUtil;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Objects;
+import java.util.*;
 
-public class KeyItemGroup<T extends Block> extends ItemGroup<T> implements Comparator<T> {
+public class KeyItemGroup<T extends Block> extends ArrayCollection<T> implements ArraySupplier<T>, Comparator<T> {
 
     private boolean sorted;
 
-    public KeyItemGroup(BlockArrayCreator<T> blockArrayCreator, T firstItem) {
-        super(blockArrayCreator, EMPTY, firstItem);
+    public KeyItemGroup() {
+        super();
     }
 
-    public boolean isEmpty(){
-        return size() == 0;
-    }
     public T matching(Key key){
         sort();
-        T[] items = getItems();
-        int length = items.length;
+        int length = size();
         if(length == 0){
             return null;
         }
-        T best = items[0];
+        T best = get(0);
         for(int i = 1; i < length; i++) {
-            T item = items[i];
+            T item = get(i);
             Key itemKey = ((KeyItem)item).getKey();
             int compare = CompareUtil.compare(key, itemKey);
             if(compare == 0){
@@ -59,27 +53,32 @@ public class KeyItemGroup<T extends Block> extends ItemGroup<T> implements Compa
         return best;
     }
     public Key getKey(){
-        T first = first();
+        int size = size();
+        if(size == 0){
+            return null;
+        }
+        T first = get(0);
         if(first instanceof KeyItem){
             return ((KeyItem) first).getKey();
         }
         return null;
     }
     @Override
-    public void add(T block) {
-        super.add(block);
+    public boolean add(T block) {
+        boolean result = super.add(block);
         sorted = false;
+        return result;
     }
     private void sort(){
         if(sorted){
             return;
         }
         sorted = true;
-        T[] items = getItems();
-        if(items.length < 2){
+        int size = size();
+        if(size < 2){
             return;
         }
-        Arrays.sort(items, this);
+        super.sort(this);
     }
 
     @Override
@@ -93,7 +92,11 @@ public class KeyItemGroup<T extends Block> extends ItemGroup<T> implements Compa
         if(item2 == null){
             return 1;
         }
-        return CompareUtil.compare(((KeyItem)item1).getKey(), ((KeyItem)item2).getKey());
+        int i = CompareUtil.compare(((KeyItem)item1).getKey(), ((KeyItem)item2).getKey());
+        if(i != 0){
+            return i;
+        }
+        return Integer.compare(item1.getIndex(), item2.getIndex());
     }
 
     @Override
@@ -118,15 +121,8 @@ public class KeyItemGroup<T extends Block> extends ItemGroup<T> implements Compa
 
     @Override
     public String toString() {
-        Object obj = null;
         Key key = getKey();
-        if(key != null){
-            obj = key;
-        }
-        if(obj == null){
-            obj = first();
-        }
-        return size() + " {" + obj + "}";
+        return size() + " {" + key + "}";
     }
 
     public static String EMPTY = "";

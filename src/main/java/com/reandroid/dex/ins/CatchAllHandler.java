@@ -16,7 +16,7 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.dex.index.TypeId;
+import com.reandroid.dex.id.TypeId;
 
 public class CatchAllHandler extends ExceptionHandler {
     public CatchAllHandler() {

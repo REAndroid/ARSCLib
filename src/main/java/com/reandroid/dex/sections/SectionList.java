@@ -25,10 +25,9 @@ import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.NumberIntegerReference;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.index.IdSectionEntry;
-import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.dex.key.*;
 import com.reandroid.utils.collection.ArraySupplierIterator;
-import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.CombiningIterator;
 
 import java.io.IOException;
 import java.util.*;
@@ -87,19 +86,10 @@ public class SectionList extends FixedBlockContainer
     }
 
     public void clearUsageTypes(){
-        for (Section<?> section : this) {
-            section.clearUsageTypes();
+        Iterator<Section<?>> iterator = getSections();
+        while (iterator.hasNext()) {
+            iterator.next().clearUsageTypes();
         }
-    }
-    @SuppressWarnings("unchecked")
-    public Iterator<Section<IdSectionEntry>> getIndexSections(){
-        Iterator<Section<?>> iterator = iterator();
-        return ComputeIterator.of(iterator, section -> {
-            if(section.getSectionType().isIdSection()){
-                return (Section<IdSectionEntry>) section;
-            }
-            return null;
-        });
     }
     public void updateHeader() {
         Block parent = getParentInstance(DexFileBlock.class);
@@ -112,25 +102,12 @@ public class SectionList extends FixedBlockContainer
     @Override
     protected void onPreRefresh() {
         super.onPreRefresh();
-        updateIdCounts();
     }
 
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
         mapList.refresh();
-        //mapList.updateHeader(dexHeader);
-    }
-    private void updateIdCounts(){
-        for(Section<?> section : this){
-            Section<?> idSection = get(
-                    section.getSectionType().getIdSectionType());
-            if(idSection == null){
-                continue;
-            }
-            idSection.getItemArray()
-                    .setChildesCount(section.getCount());
-        }
     }
 
     @Override
@@ -147,8 +124,8 @@ public class SectionList extends FixedBlockContainer
             }
             loadSection(mapItem, reader);
         }
-        idSectionList.sort(getIdOffsetComparator());
-        dataSectionList.sort(getDataOffsetComparator());
+        idSectionList.sort(getOffsetComparator());
+        dataSectionList.sort(getOffsetComparator());
         mapList.linkHeader(dexHeader);
     }
     private void loadSection(MapItem mapItem, BlockReader reader) throws IOException {
@@ -182,6 +159,11 @@ public class SectionList extends FixedBlockContainer
         return mapList;
     }
 
+    public void clearPools(){
+        for(Section<?> section : this){
+            section.clearPool();
+        }
+    }
     public void sortSection(SectionType<?>[] order){
         idSectionList.sort(SectionType.comparator(order, Section::getSectionType));
         dataSectionList.sort(SectionType.comparator(order, Section::getSectionType));
@@ -273,6 +255,59 @@ public class SectionList extends FixedBlockContainer
         }
         return dataSectionList.get(i - 1 - idSectionList.size());
     }
+
+    public boolean contains(Key key){
+        if(key == null){
+            return false;
+        }
+        if(key instanceof StringKey){
+            return contains(SectionType.STRING_ID, key);
+        }
+        if(key instanceof TypeKey){
+            return contains(SectionType.TYPE_ID, key);
+        }
+        if(key instanceof FieldKey){
+            return contains(SectionType.FIELD_ID, key);
+        }
+        if(key instanceof ProtoKey){
+            return contains(SectionType.PROTO_ID, key);
+        }
+        if(key instanceof MethodKey){
+            return contains(SectionType.METHOD_ID, key);
+        }
+        if(key instanceof TypeListKey){
+            return contains(SectionType.TYPE_LIST, key);
+        }
+        throw new IllegalArgumentException("Unknown key type: " + key.getClass() + ", '" + key + "'");
+    }
+    private boolean contains(SectionType<?> sectionType, Key key){
+        Section<?> section = get(sectionType);
+        if(section != null){
+            return section.contains(key);
+        }
+        return false;
+    }
+    public void keyChanged(SectionType<?> sectionType, Key oldKey){
+        Section<?> section = get(sectionType);
+        if(section == null){
+            return;
+        }
+        boolean updated = section.keyChanged(oldKey);
+        if(!updated || (!(oldKey instanceof TypeKey))){
+            return;
+        }
+        TypeKey typeKey = (TypeKey) oldKey;
+        //TODO: notify to all uses TypeKey
+    }
+    public Iterator<Section<?>> getSections() {
+        return new CombiningIterator<>(getIdSections(), getDataSections());
+    }
+    public Iterator<IdSection<?>> getIdSections() {
+        return idSectionList.iterator();
+    }
+    public Iterator<DataSection<?>> getDataSections() {
+        return dataSectionList.iterator();
+    }
     @Override
     public int getCount(){
         return 2 + idSectionList.size() + dataSectionList.size();
@@ -286,20 +321,15 @@ public class SectionList extends FixedBlockContainer
         return baseOffset;
     }
 
-    private static Comparator<IdSection<?>> getIdOffsetComparator() {
-        return new Comparator<IdSection<?>>() {
-            @Override
-            public int compare(IdSection<?> section1, IdSection<?> section2) {
-                return Integer.compare(section1.getOffset(), section2.getOffset());
+    private static<T1 extends Section<?>> Comparator<T1> getOffsetComparator() {
+        return (section1, section2) -> {
+            if(section1 == section2){
+                return 0;
             }
-        };
-    }
-    private static Comparator<DataSection<?>> getDataOffsetComparator() {
-        return new Comparator<DataSection<?>>() {
-            @Override
-            public int compare(DataSection<?> section1, DataSection<?> section2) {
-                return Integer.compare(section1.getOffset(), section2.getOffset());
+            if(section1 == null){
+                return 1;
             }
+            return section1.compareOffset(section2);
         };
     }
 }

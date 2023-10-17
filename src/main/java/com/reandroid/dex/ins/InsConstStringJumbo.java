@@ -15,10 +15,9 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.index.StringId;
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.key.StringKey;
-import com.reandroid.utils.HexUtil;
 
 public class InsConstStringJumbo extends Ins31c {
 

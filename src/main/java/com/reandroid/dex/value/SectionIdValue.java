@@ -15,13 +15,13 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.dex.index.IdSectionEntry;
-import com.reandroid.dex.item.AnnotationElement;
+import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.data.AnnotationElement;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 
-public abstract class SectionIdValue<T extends IdSectionEntry> extends SectionValue<T> {
+public abstract class SectionIdValue<T extends IdItem> extends SectionValue<T> {
 
     public SectionIdValue(SectionType<T> sectionType, DexValueType<?> type) {
         super(sectionType, type);
@@ -67,9 +67,9 @@ public abstract class SectionIdValue<T extends IdSectionEntry> extends SectionVa
         if(data != null){
             int usage;
             if(getParent(AnnotationElement.class) != null){
-                usage = IdSectionEntry.USAGE_ANNOTATION;
+                usage = IdItem.USAGE_ANNOTATION;
             }else {
-                usage = IdSectionEntry.USAGE_ENCODED_VALUE;
+                usage = IdItem.USAGE_ENCODED_VALUE;
             }
             data.addUsageType(usage);
         }

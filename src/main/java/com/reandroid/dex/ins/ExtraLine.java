@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.Comparator;
 
 public interface ExtraLine {
+    int getTargetAddress();
+    void setTargetAddress(int targetAddress);
     void appendExtra(SmaliWriter writer) throws IOException;
     boolean isEqualExtraLine(Object obj);
     int getSortOrder();

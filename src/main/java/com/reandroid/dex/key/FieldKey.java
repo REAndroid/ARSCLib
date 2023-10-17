@@ -15,13 +15,13 @@
  */
 package com.reandroid.dex.key;
 
-import com.reandroid.dex.index.FieldId;
+import com.reandroid.dex.id.FieldId;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
 
-import java.util.Objects;
 
 public class FieldKey implements Key {
+
     private final String defining;
     private final String name;
     private final String type;
@@ -31,6 +31,23 @@ public class FieldKey implements Key {
         this.name = name;
         this.type = type;
     }
+
+    public FieldKey changeDefining(TypeKey typeKey){
+        return changeDefining(typeKey.getType());
+    }
+    public FieldKey changeDefining(String defining){
+        if(defining.equals(getDefining())){
+            return this;
+        }
+        return new FieldKey(defining, getName(), getType());
+    }
+    public FieldKey changeName(String name){
+        if(name.equals(getName())){
+            return this;
+        }
+        return new FieldKey(getDefining(), name, getType());
+    }
+
     public TypeKey getDefiningKey() {
         return new TypeKey(getDefining());
     }
@@ -53,13 +70,19 @@ public class FieldKey implements Key {
 
     @Override
     public int compareTo(Object obj) {
+        return compareTo(obj, true);
+    }
+    public int compareTo(Object obj, boolean compareDefining) {
         if(obj == null){
             return -1;
         }
         FieldKey key = (FieldKey) obj;
-        int i = CompareUtil.compare(getDefining(), key.getDefining());
-        if(i != 0) {
-            return i;
+        int i;
+        if(compareDefining){
+            i = CompareUtil.compare(getDefining(), key.getDefining());
+            if(i != 0) {
+                return i;
+            }
         }
         i = CompareUtil.compare(getName(), key.getName());
         if(i != 0) {
@@ -80,6 +103,9 @@ public class FieldKey implements Key {
 
     @Override
     public boolean equals(Object obj) {
+        return equals(obj, true, true);
+    }
+    public boolean equals(Object obj, boolean checkDefining, boolean checkType) {
         if (this == obj) {
             return true;
         }
@@ -87,8 +113,18 @@ public class FieldKey implements Key {
             return false;
         }
         FieldKey fieldKey = (FieldKey) obj;
-        return Objects.equals(getDefining(), fieldKey.getDefining()) &&
-                getName().equals(fieldKey.getName());
+        if(!KeyUtil.matches(getName(), fieldKey.getName())){
+            return false;
+        }
+        if(checkDefining){
+            if(!KeyUtil.matches(getDefining(), fieldKey.getDefining())){
+                return false;
+            }
+        }
+        if(checkType){
+            return KeyUtil.matches(getType(), fieldKey.getType());
+        }
+        return true;
     }
 
     @Override

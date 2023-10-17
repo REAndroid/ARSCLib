@@ -15,8 +15,8 @@
  */
 package com.reandroid.dex.refactor;
 
-import com.reandroid.dex.index.StringId;
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.base.UsageMarker;
+import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.EmptyList;
@@ -33,21 +33,21 @@ public class RenameInfoPackage extends RenameInfoClass {
     public void apply(SectionList sectionList){
     }
     @Override
-    SectionType<StringData> getSectionType() {
+    SectionType<StringId> getSectionType() {
         return null;
     }
     @Override
-    public boolean lookString(StringData stringData){
-        if(stringData.getUsageType() != StringId.USAGE_TYPE_NAME){
+    public boolean lookString(StringId stringId){
+        if(!stringId.containsUsage(UsageMarker.USAGE_TYPE_NAME)){
             return false;
         }
-        String text = stringData.getString();
+        String text = stringId.getString();
         String search = getSearch();
         if(!text.startsWith(search)){
             return false;
         }
         text = text.replace(search, getReplace());
-        stringData.setString(text);
+        stringId.setString(text);
         addRenameCount();
         return true;
     }

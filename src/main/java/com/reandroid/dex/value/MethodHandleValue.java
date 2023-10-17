@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.dex.index.MethodHandle;
+import com.reandroid.dex.id.MethodHandle;
 import com.reandroid.dex.sections.SectionType;
 
 public class MethodHandleValue extends SectionIdValue<MethodHandle> {

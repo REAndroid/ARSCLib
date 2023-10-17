@@ -48,6 +48,19 @@ public class FixedDexContainer extends FixedBlockContainer {
             block.readBytes(reader);
         }
     }
+    protected void nonCheckRead(BlockReader reader) throws IOException {
+        Block[] childes = getChildes();
+        if(childes == null){
+            return;
+        }
+        int length = childes.length;
+        for(int i = 0; i < length; i++){
+            Block block = childes[i];
+            if(block != null){
+                block.readBytes(reader);
+            }
+        }
+    }
     private boolean skipReading(Block block, BlockReader reader){
         if(!(block instanceof OffsetSupplier)){
             return false;

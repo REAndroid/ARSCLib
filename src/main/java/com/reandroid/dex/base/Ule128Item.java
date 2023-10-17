@@ -21,43 +21,33 @@ import com.reandroid.dex.io.StreamUtil;
 
 import java.io.IOException;
 
-public class Ule128Item extends DexBlockItem implements IntegerReference {
+public class Ule128Item extends Le128 implements IntegerReference {
+
     private final boolean large;
-    private int value;
+
     public Ule128Item(boolean large) {
-        super(1);
+        super();
         this.large = large;
     }
     public Ule128Item() {
         this(false);
     }
+
     @Override
-    public int get() {
-        return value;
-    }
-    @Override
-    public void set(int value) {
-        if(this.value == value){
-            return;
-        }
-        this.value = value;
+    protected void writeValue(int value) {
         setBytesLength((large ? 5 : 4), false);
         int length = writeUleb128(getBytesInternal(), 0, value);
         setBytesLength(length, false);
     }
+
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
+    protected int readLe128(BlockReader reader) throws IOException {
         int position = reader.getPosition();
         int value = readUleb128(StreamUtil.createByteReader(reader), (large ? 5 : 4));
         int length = reader.getPosition() - position;
         reader.seek(position);
         setBytesLength(length, false);
         reader.readFully(getBytesInternal());
-        this.value = value;
-    }
-
-    @Override
-    public String toString() {
-        return Integer.toString(get());
+        return value;
     }
 }

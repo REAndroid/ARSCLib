@@ -24,12 +24,12 @@ import com.reandroid.dex.base.ParallelReference;
 import com.reandroid.dex.base.PositionAlignedItem;
 import com.reandroid.dex.header.CountAndOffset;
 import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.item.DataSectionEntry;
+import com.reandroid.dex.data.DataItem;
 
 import java.util.Arrays;
 import java.util.Iterator;
 
-public class MapList extends DataSectionEntry
+public class MapList extends DataItem
         implements Iterable<MapItem>, PositionAlignedItem {
 
     private final CountedArray<MapItem> itemArray;

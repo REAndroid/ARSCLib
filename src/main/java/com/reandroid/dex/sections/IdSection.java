@@ -17,9 +17,9 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.dex.base.DexItemArray;
 import com.reandroid.dex.base.IntegerPair;
-import com.reandroid.dex.index.IdSectionEntry;
+import com.reandroid.dex.id.IdItem;
 
-public class IdSection<T extends IdSectionEntry> extends Section<T> {
+public class IdSection<T extends IdItem> extends Section<T> {
 
     public IdSection(IntegerPair countAndOffset, SectionType<T> sectionType) {
         super(sectionType, new IdSectionArray<>(countAndOffset, sectionType.getCreator()));

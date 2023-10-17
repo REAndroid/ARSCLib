@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.index.IdSectionEntry;
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.sections.SectionType;
 
 public class Ins20bc extends Size4Ins {
@@ -39,7 +39,7 @@ public class Ins20bc extends Size4Ins {
         setByte (1, value);
     }
     @Override
-    public SectionType<? extends IdSectionEntry> getSectionType(){
+    public SectionType<? extends IdItem> getSectionType(){
         return SectionType.getReferenceType(getReferenceTypeValue());
     }
     public void setSectionType(SectionType<?> sectionType){

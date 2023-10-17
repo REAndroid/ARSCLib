@@ -16,7 +16,7 @@
 package com.reandroid.dex.sections;
 
 import com.reandroid.dex.base.IntegerPair;
-import com.reandroid.dex.index.StringId;
+import com.reandroid.dex.id.StringId;
 
 public class StringIdSection extends IdSection<StringId> {
 

@@ -15,9 +15,8 @@
  */
 package com.reandroid.dex.refactor;
 
-import com.reandroid.arsc.group.ItemGroup;
-import com.reandroid.dex.item.AnnotationElement;
-import com.reandroid.dex.item.AnnotationItem;
+import com.reandroid.dex.data.AnnotationElement;
+import com.reandroid.dex.data.AnnotationItem;
 import com.reandroid.dex.key.AnnotationKey;
 import com.reandroid.dex.sections.SectionType;
 
@@ -35,7 +34,7 @@ public class RenameInfoAnnotationName extends RenameInfoName<AnnotationItem> {
         return SectionType.ANNOTATION;
     }
     @Override
-    void apply(ItemGroup<AnnotationItem> group){
+    void apply(Iterable<AnnotationItem> group){
         String replace = getReplace();
         for(AnnotationItem annotationItem : group){
             AnnotationElement element = annotationItem.getElement(0);

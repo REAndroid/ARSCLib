@@ -32,6 +32,10 @@ public class Reg implements SmaliFormat {
         this.index = index;
     }
 
+    public Editor toEditor(){
+        return new Editor(this);
+    }
+
     public int getNumber() {
         int register = getRegister();
         int local = getLocalRegistersCount();
@@ -41,7 +45,10 @@ public class Reg implements SmaliFormat {
         return register;
     }
     public int getRegister(){
-        return registersSet.getRegister(getIndex());
+        return getRegistersSet().getRegister(getIndex());
+    }
+    public void setRegister(int register){
+        getRegistersSet().setRegister(getIndex(), register);
     }
     public int getIndex() {
         return index;
@@ -51,8 +58,16 @@ public class Reg implements SmaliFormat {
     }
 
     public int getLocalRegistersCount(){
-        return registersTable.getRegistersCount() - registersTable.getParameterRegistersCount();
+        RegistersTable table = getRegistersTable();
+        return table.getRegistersCount() - table.getParameterRegistersCount();
     }
+    public RegistersSet getRegistersSet() {
+        return registersSet;
+    }
+    public RegistersTable getRegistersTable() {
+        return registersTable;
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         if(isParameter()){
@@ -69,5 +84,62 @@ public class Reg implements SmaliFormat {
             return "p" + getNumber();
         }
         return "v" + getNumber();
+    }
+
+    public static class Editor extends Reg{
+
+        private final Reg mBaseReg;
+        private final int number;
+        private final boolean parameter;
+
+        public Editor(Reg reg) {
+            super(null, null, reg.getIndex());
+            this.mBaseReg = reg;
+            this.number = reg.getNumber();
+            this.parameter = reg.isParameter();
+        }
+
+        public void apply(){
+            Reg baseReg = getBaseReg();
+            baseReg.setRegister(getRegister());
+        }
+        private boolean isChanged(){
+            Reg baseReg = getBaseReg();
+            return this.isParameter() == baseReg.isParameter() &&
+                    this.getNumber() == baseReg.getNumber() &&
+                    this.getRegister() == baseReg.getRegister();
+        }
+        @Override
+        public int getRegister() {
+            int register = getNumber();
+            if(isParameter()){
+                register += getLocalRegistersCount();
+            }
+            return register;
+        }
+
+        @Override
+        public int getNumber() {
+            return this.number;
+        }
+        @Override
+        public boolean isParameter() {
+            return this.parameter;
+        }
+        @Override
+        public int getIndex() {
+            return getBaseReg().getIndex();
+        }
+        @Override
+        public RegistersTable getRegistersTable() {
+            return getBaseReg().getRegistersTable();
+        }
+        @Override
+        public RegistersSet getRegistersSet() {
+            return getBaseReg().getRegistersSet();
+        }
+        public Reg getBaseReg() {
+            return mBaseReg;
+        }
     }
 }

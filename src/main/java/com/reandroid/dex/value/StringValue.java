@@ -16,8 +16,8 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.dex.common.DexUtils;
-import com.reandroid.dex.index.StringId;
-import com.reandroid.dex.item.StringData;
+import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.sections.SectionType;
 
 public class StringValue extends SectionIdValue<StringId> {

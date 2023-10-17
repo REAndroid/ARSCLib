@@ -21,11 +21,10 @@ import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.WarpedIntegerReference;
 import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.index.*;
-import com.reandroid.dex.item.*;
+import com.reandroid.dex.id.*;
+import com.reandroid.dex.data.*;
 import com.reandroid.utils.HexUtil;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.function.Function;
 
@@ -46,7 +45,7 @@ public class SectionType<T extends Block> {
     public static final SectionType<FieldId> FIELD_ID;
     public static final SectionType<MethodId> METHOD_ID;
     public static final SectionType<ClassId> CLASS_ID;
-    public static final SectionType<IdSectionEntry> CALL_SITE_ID;
+    public static final SectionType<IdItem> CALL_SITE_ID;
     public static final SectionType<MethodHandle> METHOD_HANDLE;
 
     public static final SectionType<MapList> MAP_LIST;
@@ -60,7 +59,7 @@ public class SectionType<T extends Block> {
     public static final SectionType<AnnotationItem> ANNOTATION;
     public static final SectionType<EncodedArray> ENCODED_ARRAY;
     public static final SectionType<AnnotationsDirectory> ANNOTATIONS_DIRECTORY;
-    public static final SectionType<DataSectionEntry> HIDDEN_API;
+    public static final SectionType<DataItem> HIDDEN_API;
 
     static {
 
@@ -383,9 +382,6 @@ public class SectionType<T extends Block> {
     public int getType() {
         return type;
     }
-    public SectionType<?> getIdSectionType() {
-        return null;
-    }
     public int getReadOrder() {
         return readOrder;
     }
@@ -448,7 +444,7 @@ public class SectionType<T extends Block> {
         }
         return null;
     }
-    public static SectionType<? extends IdSectionEntry> getReferenceType(int reference){
+    public static SectionType<? extends IdItem> getReferenceType(int reference){
         switch (reference){
             case 0:
                 return STRING_ID;
@@ -482,7 +478,7 @@ public class SectionType<T extends Block> {
         return READ_ORDER.clone();
     }
 
-    private static class IdSectionType<T1 extends IdSectionEntry> extends SectionType<T1> {
+    private static class IdSectionType<T1 extends IdItem> extends SectionType<T1> {
 
         private final int referenceType;
 
@@ -512,7 +508,7 @@ public class SectionType<T extends Block> {
             return new StringIdSection(countAndOffset, this);
         }
     }
-    private static class DataSectionType<T1 extends DataSectionEntry> extends SectionType<T1> {
+    private static class DataSectionType<T1 extends DataItem> extends SectionType<T1> {
         DataSectionType(String name, int type, int readOrder, Creator<T1> creator) {
             super(name, type, readOrder, creator);
         }

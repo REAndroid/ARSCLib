@@ -55,4 +55,5 @@ public class NullValue extends DexValueBlock<Block> {
         }
     }
     private static NullValue sInstance;
+    public static final NullValue PLACE_HOLDER = new NullValue();
 }
