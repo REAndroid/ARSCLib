@@ -36,7 +36,6 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.*;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.IOUtil;
 import org.xmlpull.v1.XmlSerializer;
@@ -253,22 +252,24 @@ public class DexFile implements VisitableInteger {
             return marker;
         }
         marker = Marker.createR8();
-        Section<StringData> stringSection = get(SectionType.STRING_DATA);
-        StringData stringData = stringSection.getPool().getOrCreate(new StringKey(marker.buildString()));
-        marker.setStringData(stringData);
+        Section<StringId> stringSection = get(SectionType.STRING_ID);
+
+        StringId stringId = stringSection.getPool().getOrCreate(
+                new StringKey(marker.buildString()));
+        marker.setStringId(stringId);
+
         marker.save();
-        sortStrings();
-        refresh();
+
         return marker;
     }
     public Iterator<Marker> getMarkers() {
         return Marker.parse(this);
     }
     public void clearMarkers(){
-        List<StringData> removeList = CollectionUtil.toList(
-                ComputeIterator.of(getMarkers(), Marker::getStringData));
-        for(StringData stringData : removeList){
-            stringData.removeSelf();
+        List<StringId> removeList = CollectionUtil.toList(
+                ComputeIterator.of(getMarkers(), Marker::getStringId));
+        for(StringId stringId : removeList){
+            stringId.removeSelf();
         }
     }
     @Override

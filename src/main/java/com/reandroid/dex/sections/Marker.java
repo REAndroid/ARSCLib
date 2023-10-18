@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.sections;
 
-import com.reandroid.dex.data.StringData;
+import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.model.DexFile;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
@@ -42,25 +42,35 @@ public class Marker {
     private static final String D8_PREFIX = PREFIX + Tool.D8 + "{";
     private static final String R8_PREFIX = PREFIX + Tool.R8 + "{";
     private static final String L8_PREFIX = PREFIX + Tool.L8 + "{";
-    private final JSONObject jsonObject;
-    private final Tool tool;
-    private StringData stringData;
+    private JSONObject jsonObject;
+    private Tool tool;
+    private StringId stringId;
     public Marker(Tool tool) {
         this(tool, new JSONObject());
     }
-    private Marker(Tool tool, JSONObject jsonObject) {
+    public Marker(Tool tool, JSONObject jsonObject) {
         this.tool = tool;
         this.jsonObject = jsonObject;
     }
 
-    public StringData getStringData() {
-        return stringData;
+    public JSONObject getJsonObject() {
+        return jsonObject;
     }
-    public void setStringData(StringData stringData) {
-        this.stringData = stringData;
+    public void setJsonObject(JSONObject jsonObject) {
+        this.jsonObject = jsonObject;
+    }
+    public void setTool(Tool tool) {
+        this.tool = tool;
+    }
+
+    public StringId getStringId() {
+        return stringId;
+    }
+    public void setStringId(StringId stringId) {
+        this.stringId = stringId;
     }
     public void save(){
-        StringData stringData = getStringData();
+        StringId stringData = getStringId();
         if(stringData != null){
             stringData.setString(buildString());
         }
@@ -82,7 +92,7 @@ public class Marker {
         return tool == Tool.Relocator;
     }
     public String getVersion() {
-        return jsonObject.getString(VERSION);
+        return jsonObject.optString(VERSION, null);
     }
     public Marker setVersion(String version) {
         jsonObject.put(VERSION, version);
@@ -117,8 +127,11 @@ public class Marker {
         }
         return new String[0];
     }
-    public Marker setDesugaredLibraryIdentifiers(String... identifiers) {
-        assert !jsonObject.has(DESUGARED_LIBRARY_IDENTIFIERS);
+    public Marker setDesugaredLibraryIdentifiers(String[] identifiers) {
+        if(identifiers == null || identifiers.length == 0){
+            jsonObject.remove(DESUGARED_LIBRARY_IDENTIFIERS);
+            return this;
+        }
         JSONArray jsonIdentifiers = new JSONArray();
         for (String identifier : identifiers) {
             jsonIdentifiers.put(identifier);
@@ -127,23 +140,21 @@ public class Marker {
         return this;
     }
     public String getSha1() {
-        return jsonObject.getString(SHA1);
+        return jsonObject.optString(SHA1, null);
     }
     public Marker setSha1(String sha1) {
-        assert !jsonObject.has(SHA1);
         jsonObject.put(SHA1, sha1);
         return this;
     }
     public String getCompilationMode() {
-        return jsonObject.getString(COMPILATION_MODE);
+        return jsonObject.optString(COMPILATION_MODE, null);
     }
-    /*
-    public Marker setCompilationMode(CompilationMode mode) {
-        assert !jsonObject.has(COMPILATION_MODE);
-        jsonObject.put(COMPILATION_MODE, StringsUtil.toLowercase(mode.toString()));
+
+    public Marker setCompilationMode(String mode) {
+        jsonObject.put(COMPILATION_MODE, mode);
         return this;
     }
-    */
+
     public boolean hasBackend() {
         return jsonObject.has(BACKEND);
     }
@@ -163,23 +174,27 @@ public class Marker {
         return getBackend().equals(StringsUtil.toLowercase(Backend.DEX.name()));
     }
     public Marker setBackend(Backend backend) {
-        assert !hasBackend();
-        jsonObject.put(BACKEND, StringsUtil.toLowercase(backend.name()));
+        if(backend == null){
+            jsonObject.remove(BACKEND);
+        }else {
+            jsonObject.put(BACKEND, StringsUtil.toLowercase(backend.name()));
+        }
         return this;
     }
-    public boolean getHasChecksums() {
-        return jsonObject.getBoolean(HAS_CHECKSUMS);
+    public Boolean getHasChecksums() {
+        if(jsonObject.has(HAS_CHECKSUMS)){
+            return jsonObject.getBoolean(HAS_CHECKSUMS);
+        }
+        return null;
     }
-    public Marker setHasChecksums(boolean hasChecksums) {
-        assert !jsonObject.has(HAS_CHECKSUMS);
+    public Marker setHasChecksums(Boolean hasChecksums) {
         jsonObject.put(HAS_CHECKSUMS, hasChecksums);
         return this;
     }
     public String getPgMapId() {
-        return jsonObject.getString(PG_MAP_ID);
+        return jsonObject.optString(PG_MAP_ID, null);
     }
     public Marker setPgMapId(String pgMapId) {
-        assert !jsonObject.has(PG_MAP_ID);
         jsonObject.put(PG_MAP_ID, pgMapId);
         return this;
     }
@@ -187,13 +202,14 @@ public class Marker {
         return jsonObject.getString(R8_MODE);
     }
     public Marker setR8Mode(String r8Mode) {
-        assert !jsonObject.has(R8_MODE);
         jsonObject.put(R8_MODE, r8Mode);
         return this;
     }
-    public boolean isAndroidPlatformBuild() {
-        return jsonObject.has(ANDROID_PLATFORM_BUILD)
-                && jsonObject.getBoolean(ANDROID_PLATFORM_BUILD);
+    public Boolean isAndroidPlatformBuild() {
+        if(jsonObject.has(ANDROID_PLATFORM_BUILD)){
+            return jsonObject.getBoolean(ANDROID_PLATFORM_BUILD);
+        }
+        return null;
     }
     public Marker setAndroidPlatformBuild(Boolean value) {
         jsonObject.put(ANDROID_PLATFORM_BUILD, value);
@@ -221,10 +237,10 @@ public class Marker {
     }
 
     public static Iterator<Marker> parse(DexFile dexFile){
-        return ComputeIterator.of(dexFile.getStringData(), Marker::parse);
+        return ComputeIterator.of(dexFile.getStringIds(), Marker::parse);
     }
-    public static Marker parse(StringData stringData) {
-        String str = stringData.getString();
+    public static Marker parse(StringId stringId) {
+        String str = stringId.getString();
         if (hasMarkerPrefix(str)) {
             Marker marker = null;
             if (str.startsWith(D8_PREFIX)) {
@@ -235,7 +251,7 @@ public class Marker {
                 marker = internalParse(Tool.L8, str.substring(L8_PREFIX.length() - 1));
             }
             if(marker != null){
-                marker.setStringData(stringData);
+                marker.setStringId(stringId);
             }
             return marker;
         }
@@ -292,7 +308,7 @@ public class Marker {
         DEX
     }
 
-    private static final String R8_TEMPLATE = "~~R8{\"backend\":\"dex\",\"compilation-mode\":\"release\",\"has-checksums\":false,\"r8-mode\":\"compatibility\",\"version\":\"3.2.74\"}";
-    private static final String D8_TEMPLATE = "~~D8{\"backend\":\"dex\",\"compilation-mode\":\"release\",\"has-checksums\":false,\"min-api\":24,\"version\":\"4.0.48\"}";
+    public static final String R8_TEMPLATE = "~~R8{\"backend\":\"dex\",\"compilation-mode\":\"release\",\"has-checksums\":false,\"r8-mode\":\"compatibility\",\"version\":\"3.2.74\"}";
+    public static final String D8_TEMPLATE = "~~D8{\"backend\":\"dex\",\"compilation-mode\":\"release\",\"has-checksums\":false,\"min-api\":24,\"version\":\"4.0.48\"}";
 }
 

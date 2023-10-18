@@ -99,60 +99,13 @@ public class MapList extends DataItem
         mapItem = get(SectionType.MAP_LIST);
         if(mapItem != null){
             mapItem.getCount().set(1);
-            mapItem.getOffset().setReference2(dexHeader.map);
+            Section<MapList> section = getSection(SectionType.MAP_LIST);
+            ParallelReference reference = (ParallelReference) section.getOffsetReference();
+            reference.setReference2(mapItem.getOffset());
         }
         getFileSize().setReference2(dexHeader.fileSize);
         getDataSize().setReference2(dexHeader.data.getFirst());
         getDataStart().setReference2(dexHeader.data.getSecond());
-    }
-    public void updateHeader(DexHeader dexHeader){
-        MapItem mapItem = get(SectionType.STRING_ID);
-        if(mapItem != null){
-            CountAndOffset countAndOffset = dexHeader.string_id;
-            countAndOffset.setCount(mapItem.getCountValue());
-            countAndOffset.setOffset(mapItem.getOffsetValue());
-        }
-        mapItem = get(SectionType.TYPE_ID);
-        if(mapItem != null){
-            CountAndOffset countAndOffset = dexHeader.type_id;
-            countAndOffset.setCount(mapItem.getCountValue());
-            countAndOffset.setOffset(mapItem.getOffsetValue());
-        }
-        mapItem = get(SectionType.PROTO_ID);
-        if(mapItem != null){
-            CountAndOffset countAndOffset = dexHeader.proto_id;
-            countAndOffset.setCount(mapItem.getCountValue());
-            countAndOffset.setOffset(mapItem.getOffsetValue());
-        }
-        mapItem = get(SectionType.FIELD_ID);
-        if(mapItem != null){
-            CountAndOffset countAndOffset = dexHeader.field_id;
-            countAndOffset.setCount(mapItem.getCountValue());
-            countAndOffset.setOffset(mapItem.getOffsetValue());
-        }
-        mapItem = get(SectionType.METHOD_ID);
-        if(mapItem != null){
-            CountAndOffset countAndOffset = dexHeader.method_id;
-            countAndOffset.setCount(mapItem.getCountValue());
-            countAndOffset.setOffset(mapItem.getOffsetValue());
-        }
-        mapItem = get(SectionType.CLASS_ID);
-        if(mapItem != null){
-            CountAndOffset countAndOffset = dexHeader.class_id;
-            countAndOffset.setCount(mapItem.getCountValue());
-            countAndOffset.setOffset(mapItem.getOffsetValue());
-        }
-        mapItem = getDataStartItem();
-        if(mapItem != null){
-            CountAndOffset countAndOffset = dexHeader.data;
-            countAndOffset.setCount(dexHeader.fileSize.get() - mapItem.getOffsetValue());
-            countAndOffset.setOffset(mapItem.getOffsetValue());
-        }
-        mapItem = get(SectionType.MAP_LIST);
-        if(mapItem != null){
-            mapItem.getCount().set(1);
-            mapItem.getOffset().set(dexHeader.map.get());
-        }
     }
     public MapItem getDataStartItem(){
         boolean headerFound = false;

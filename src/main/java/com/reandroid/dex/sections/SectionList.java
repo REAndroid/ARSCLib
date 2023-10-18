@@ -24,6 +24,7 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.NumberIntegerReference;
 import com.reandroid.arsc.base.OffsetSupplier;
+import com.reandroid.dex.base.ParallelReference;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.key.*;
 import com.reandroid.utils.collection.ArraySupplierIterator;
@@ -63,7 +64,7 @@ public class SectionList extends FixedBlockContainer
 
         IntegerPair mapListCountAndOffset = IntegerPair.of(
                 new NumberIntegerReference(),
-                dexHeader.map);
+                new ParallelReference(dexHeader.map));
         mapListCountAndOffset.getFirst().set(1);
 
         Section<MapList> mapListSection = new Section<>(mapListCountAndOffset, SectionType.MAP_LIST);
