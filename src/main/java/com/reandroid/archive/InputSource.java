@@ -166,6 +166,13 @@ public abstract class InputSource {
     }
 
     public static int getDexNumber(String name){
+        int i = name.lastIndexOf('/');
+        if(i < 0){
+            i = name.lastIndexOf('\\');
+        }
+        if(i >= 0){
+            name = name.substring(i + 1);
+        }
         if(name.equals("classes.dex")){
             return 0;
         }
