@@ -28,6 +28,8 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
 
     private int mHashCode;
 
+    private boolean mLocked;
+
     public ArrayCollection(int initialCapacity){
         Object[] elements;
         if(initialCapacity == 0){
@@ -55,11 +57,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         Comparator<Object> cmp = (Comparator<Object>) comparator;
         Arrays.sort(mElements, cmp);
         onChanged();
-    }
-
-    public Object[] getElements() {
-        trimToSize();
-        return mElements;
     }
 
     @Override
@@ -168,8 +165,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         if(result == null){
             return null;
         }
-        this.size --;
-        Object[] update = new Object[this.size];
+        Object[] update = new Object[this.size - 1];
         int count = 0;
         for(int i = 0; i < length; i++){
             Object obj = elements[i];
@@ -204,12 +200,14 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
     public boolean addAll(Collection<? extends T> collection) {
         int size = this.size();
         if(size == 0){
-            this.mElements = collection.toArray();
-            this.size = mElements.length;
+            Object[] elements = collection.toArray();
+            this.size = elements.length;
+            this.mElements = elements;
             return true;
         }
         size = collection.size();
         boolean result = false;
+        mLocked = true;
         for (T item : collection) {
             if (availableCapacity() == 0) {
                 ensureCapacity(size);
@@ -219,6 +217,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
                 result = true;
             }
         }
+        mLocked = false;
         return result;
     }
 
@@ -275,6 +274,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
 
     @Override
     public void clear() {
+        this.size = 0;
         this.mElements = EMPTY_OBJECTS;
         this.mLastGrow = 0;
         onChanged();
@@ -309,13 +309,14 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         if(result == 0){
             return;
         }
-        this.size -= result;
+        int endSize = this.size - result;
         onChanged();
-        if(this.size == 0){
+        if(endSize == 0){
             this.mElements = EMPTY_OBJECTS;
+            this.size = 0;
             return;
         }
-        Object[] update = new Object[this.size];
+        Object[] update = new Object[endSize];
         int count = 0;
         for(int i = 0; i < length; i++){
             Object obj = elements[i];
@@ -333,14 +334,17 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         if (item == null || containsFast(item)){
             return false;
         }
+        boolean locked = mLocked;
+        mLocked = true;
         ensureCapacity();
         this.mElements[size] = item;
         this.size ++;
+        mLocked = locked;
         onChanged();
         return true;
     }
     public void trimToSize(){
-        if(availableCapacity() == 0){
+        if(mLocked || availableCapacity() == 0){
             return;
         }
         int size = this.size;
@@ -455,10 +459,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
     static final Object[] EMPTY_OBJECTS = new Object[0];
 
     private static final ArrayCollection<?> EMPTY = new ArrayCollection<Object>(){
-        @Override
-        public Object[] getElements() {
-            return EMPTY_OBJECTS;
-        }
         @Override
         public Object[] toArray() {
             return EMPTY_OBJECTS;
