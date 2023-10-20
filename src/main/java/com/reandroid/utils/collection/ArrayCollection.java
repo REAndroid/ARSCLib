@@ -26,17 +26,19 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
     private int size;
     private int mLastGrow;
 
+    private int mHashCode;
+
     public ArrayCollection(int initialCapacity){
         Object[] elements;
         if(initialCapacity == 0){
-            elements = EMPTY;
+            elements = EMPTY_OBJECTS;
         }else {
             elements = new Object[initialCapacity];
         }
         this.mElements = elements;
         this.size = 0;
     }
-    public ArrayCollection(T[] elements){
+    public ArrayCollection(Object[] elements){
         this.mElements = elements;
         this.size = elements.length;
     }
@@ -45,13 +47,14 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
     }
 
     @SuppressWarnings("unchecked")
-    public void sort(Comparator<? extends T> comparator){
+    public void sort(Comparator<? super T> comparator){
         trimToSize();
         if(size() < 2){
             return;
         }
-        Comparator<? super Object> cmp = (Comparator<? super Object>) comparator;
+        Comparator<Object> cmp = (Comparator<Object>) comparator;
         Arrays.sort(mElements, cmp);
+        onChanged();
     }
 
     public Object[] getElements() {
@@ -64,12 +67,29 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         if(obj == null){
             return false;
         }
-        Object[] elements = this.mElements;
-        if(elements == null){
+        return containsFast(obj) || containsEquals(obj);
+    }
+    public boolean containsEquals(Object obj) {
+        if(obj == null){
             return false;
         }
-        for(Object element : elements){
-            if(obj.equals(element)){
+        Object[] elements = this.mElements;
+        int length = size();
+        for(int i = 0; i < length; i++){
+            if(obj.equals(elements[i])){
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean containsFast(Object item){
+        if (item == null){
+            return false;
+        }
+        Object[] elements = this.mElements;
+        int length = this.size;
+        for(int i = 0; i < length; i++){
+            if(item == elements[i]){
                 return true;
             }
         }
@@ -82,11 +102,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
     @SuppressWarnings("unchecked")
     @Override
     public T get(int i){
-        Object[] elements = this.mElements;
-        if(elements != null){
-            return (T) elements[i];
-        }
-        return null;
+        return (T)mElements[i];
     }
     public int size(){
         return size;
@@ -165,6 +181,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         }
         this.size = count;
         this.mElements = update;
+        onChanged();
         return result;
     }
 
@@ -178,6 +195,11 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         return !collection.isEmpty();
     }
 
+    public void addAll(Iterator<? extends T> iterator){
+        while (iterator.hasNext()){
+            add(iterator.next());
+        }
+    }
     @Override
     public boolean addAll(Collection<? extends T> collection) {
         int size = this.size();
@@ -228,7 +250,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         }
         this.size -= result;
         if(this.size == 0){
-            this.mElements = EMPTY;
+            this.mElements = EMPTY_OBJECTS;
             return true;
         }
         Object[] update = new Object[this.size];
@@ -253,8 +275,9 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
 
     @Override
     public void clear() {
-        this.mElements = EMPTY;
+        this.mElements = EMPTY_OBJECTS;
         this.mLastGrow = 0;
+        onChanged();
     }
 
 
@@ -287,8 +310,9 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
             return;
         }
         this.size -= result;
+        onChanged();
         if(this.size == 0){
-            this.mElements = EMPTY;
+            this.mElements = EMPTY_OBJECTS;
             return;
         }
         Object[] update = new Object[this.size];
@@ -304,35 +328,16 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         this.size = count;
         this.mElements = update;
     }
-    public void add(Iterator<? extends T> iterator){
-        while (iterator.hasNext()){
-            add(iterator.next());
-        }
-    }
     @Override
     public boolean add(T item){
-        if (item == null || replace(item)){
+        if (item == null || containsFast(item)){
             return false;
         }
         ensureCapacity();
         this.mElements[size] = item;
         this.size ++;
+        onChanged();
         return true;
-    }
-    public boolean replace(T item){
-        if (item == null){
-            return false;
-        }
-        Object[] elements = this.mElements;
-        int length = this.size;
-        for(int i = 0; i < length; i++){
-            Object obj = elements[i];
-            if(item == obj){
-                elements[i] = item;
-                return true;
-            }
-        }
-        return false;
     }
     public void trimToSize(){
         if(availableCapacity() == 0){
@@ -340,7 +345,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         }
         int size = this.size;
         if(size == 0){
-            this.mElements = EMPTY;
+            this.mElements = EMPTY_OBJECTS;
             return;
         }
         Object[] update = new Object[size];
@@ -395,6 +400,29 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         return this.mElements.length - size;
     }
 
+    private void onChanged(){
+        mHashCode = 0;
+    }
+    @Override
+    public int hashCode(){
+        if(mHashCode != 0){
+            return mHashCode;
+        }
+        int size = size();
+        if(size == 0){
+            return 0;
+        }
+        int hashSum = 1;
+        this.mHashCode = hashSum;
+        Object[] elements = this.mElements;
+        for(int i = 0; i < size; i++){
+            Object obj = elements[i];
+            int hash = obj == null ? 0 : obj.hashCode();
+            hashSum = 31 * hashSum + hash;
+        }
+        this.mHashCode = hashSum;
+        return hashSum;
+    }
     @Override
     public String toString() {
         if(size() == 0){
@@ -409,16 +437,89 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
             collection.addAll((Collection<? extends T>) iterable);
             return collection;
         }
-        collection.add(iterable.iterator());
+        collection.addAll(iterable.iterator());
         collection.trimToSize();
         return collection;
     }
     public static<T> ArrayCollection<T> of(Iterator<? extends T> iterator){
         ArrayCollection<T> collection = new ArrayCollection<>();
-        collection.add(iterator);
+        collection.addAll(iterator);
         collection.trimToSize();
         return collection;
     }
 
-    private static final Object[] EMPTY = new Object[0];
+    @SuppressWarnings("unchecked")
+    public static<T> ArrayCollection<T> empty(){
+        return (ArrayCollection<T>) EMPTY;
+    }
+    static final Object[] EMPTY_OBJECTS = new Object[0];
+
+    private static final ArrayCollection<?> EMPTY = new ArrayCollection<Object>(){
+        @Override
+        public Object[] getElements() {
+            return EMPTY_OBJECTS;
+        }
+        @Override
+        public Object[] toArray() {
+            return EMPTY_OBJECTS;
+        }
+        @Override
+        public void ensureCapacity(int capacity) {
+        }
+        @Override
+        public void trimToSize() {
+        }
+        @Override
+        public void addAll(Iterator<?> iterator) {
+            throw new IllegalArgumentException("Empty ArrayCollection!");
+        }
+        @Override
+        public boolean contains(Object obj) {
+            return false;
+        }
+        @Override
+        public boolean containsAll(Collection<?> collection) {
+            return false;
+        }
+        @Override
+        public void clear() {
+        }
+        @Override
+        public boolean addAll(Collection<?> collection) {
+            throw new IllegalArgumentException("Empty ArrayCollection!");
+        }
+        @Override
+        public boolean add(Object item) {
+            throw new IllegalArgumentException("Empty ArrayCollection!");
+        }
+        @Override
+        public Iterator<Object> iterator() {
+            return EmptyIterator.of();
+        }
+        @Override
+        public boolean isEmpty() {
+            return true;
+        }
+        @Override
+        public int size() {
+            return 0;
+        }
+        @Override
+        public void sort(Comparator<? super Object> comparator) {
+        }
+        @Override
+        public int hashCode() {
+            return 0;
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if(obj == this){
+                return true;
+            }
+            if(obj instanceof Collection){
+                return ((Collection<?>) obj).size() == 0;
+            }
+            return false;
+        }
+    };
 }

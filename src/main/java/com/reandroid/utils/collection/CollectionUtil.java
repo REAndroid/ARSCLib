@@ -111,6 +111,18 @@ public class CollectionUtil {
         }
         return !iterator.hasNext();
     }
+    public static<T> Collection<T> collect(Iterator<? extends T> iterator){
+        boolean hasNext = iterator.hasNext();
+        if(!hasNext){
+            return ArrayCollection.empty();
+        }
+        ArrayCollection<T> results = new ArrayCollection<>();
+        results.addAll(iterator);
+        if(results.size() > 1000){
+            results.trimToSize();
+        }
+        return results;
+    }
     public static<T> List<T> toList(Iterator<? extends T> iterator){
         boolean hasNext = iterator.hasNext();
         if(!hasNext){
