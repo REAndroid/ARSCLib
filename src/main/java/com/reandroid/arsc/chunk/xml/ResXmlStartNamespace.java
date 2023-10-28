@@ -16,6 +16,9 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.ChunkType;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.model.ResourceLibrary;
+import com.reandroid.common.Namespace;
 import com.reandroid.xml.XMLNamespace;
 
 import java.util.HashSet;
@@ -108,6 +111,27 @@ public class ResXmlStartNamespace extends ResXmlNamespaceChunk {
             return null;
         }
         return new XMLNamespace(uri, prefix);
+    }
+    boolean fixEmpty(){
+        boolean changed = fixEmptyPrefix();
+        if(fixEmptyUri()){
+            changed = true;
+        }
+        return changed;
+    }
+    private boolean fixEmptyPrefix(){
+        if(!isEmpty(getPrefix())){
+            return false;
+        }
+        setPrefix("ns" + getIndex());
+        return true;
+    }
+    private boolean fixEmptyUri(){
+        if(!isEmpty(getUri())){
+            return false;
+        }
+        setUri(ResourceLibrary.URI_RES_AUTO);
+        return true;
     }
     private boolean isEmpty(String txt){
         if(txt==null){

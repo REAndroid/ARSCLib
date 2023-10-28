@@ -190,7 +190,19 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
                 changedCount += ((ResXmlElement)child).autoSetAttributeNamespaces();
             }
         }
+        if(fixEmptyNamespaces()){
+            changedCount ++;
+        }
         return changedCount;
+    }
+    public boolean fixEmptyNamespaces(){
+        boolean changed = false;
+        for(ResXmlStartNamespace ns : getStartNamespaceList()){
+            if(ns.fixEmpty()){
+                changed = true;
+            }
+        }
+        return changed;
     }
     public int autoSetAttributeNames(){
         int changedCount = 0;
