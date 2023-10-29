@@ -15,13 +15,35 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.ShortItem;
 
 public class PayloadData extends Ins {
+
     public PayloadData(int childesCount, Opcode<?> opcode) {
         super(childesCount + 1, opcode);
         ShortItem opcodeItem = new ShortItem();
         opcodeItem.set(opcode.getValue());
         addChild(0, opcodeItem);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == this){
+            return true;
+        }
+        if(obj == null || getClass() != obj.getClass()){
+            return false;
+        }
+        PayloadData payloadData = (PayloadData) obj;
+        if(getIndex() != payloadData.getIndex()){
+            return false;
+        }
+        return Block.areEqual(getChildes(), payloadData.getChildes());
+    }
+
+    @Override
+    public int hashCode() {
+        return Block.hashCodeOf(getChildes()) + getIndex();
     }
 }

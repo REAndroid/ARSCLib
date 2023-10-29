@@ -52,6 +52,13 @@ public class DexContainerItem extends FixedDexContainer {
         }
         return null;
     }
+    public<T1 extends Block> Section<T1> getOrCreateSection(SectionType<T1> sectionType){
+        SectionList sectionList = getSectionList();
+        if(sectionList != null){
+            return sectionList.getOrCreate(sectionType);
+        }
+        return null;
+    }
     public SectionList getSectionList(){
         return getParent(SectionList.class);
     }

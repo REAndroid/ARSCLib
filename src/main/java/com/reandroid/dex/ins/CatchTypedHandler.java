@@ -18,8 +18,11 @@ package com.reandroid.dex.ins;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.TypeId;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
+
+import java.util.Objects;
 
 public class CatchTypedHandler extends ExceptionHandler {
 
@@ -45,6 +48,9 @@ public class CatchTypedHandler extends ExceptionHandler {
     public TypeId getTypeId(){
         return getTypeUle128().getItem();
     }
+    public TypeKey getTypeKey(){
+        return (TypeKey) getTypeUle128().getKey();
+    }
     Ule128IdItemReference<TypeId> getTypeUle128(){
         return typeId;
     }
@@ -53,6 +59,31 @@ public class CatchTypedHandler extends ExceptionHandler {
         return "catch";
     }
 
+    @Override
+    public void onRemove() {
+        super.onRemove();
+        this.typeId.setItem((TypeId) null);
+    }
+
+    @Override
+    public void merge(ExceptionHandler handler){
+        super.merge(handler);
+        CatchTypedHandler typedHandler = (CatchTypedHandler) handler;
+        typeId.setItem(typedHandler.typeId.getKey());
+    }
+
+    @Override
+    boolean isTypeEqual(ExceptionHandler handler){
+        return Objects.equals(getTypeKey(), ((CatchTypedHandler) handler).getTypeKey());
+    }
+    @Override
+    int getTypeHashCode(){
+        TypeKey typeKey = getTypeKey();
+        if(typeKey != null){
+            return typeKey.hashCode();
+        }
+        return 0;
+    }
     static class Copy extends CatchTypedHandler {
         private final CatchTypedHandler catchTypedHandler;
 
@@ -68,6 +99,10 @@ public class CatchTypedHandler extends ExceptionHandler {
         @Override
         Ule128Item getCatchAddressUle128(){
             return catchTypedHandler.getCatchAddressUle128();
+        }
+
+        @Override
+        public void merge(ExceptionHandler handler){
         }
     }
 }

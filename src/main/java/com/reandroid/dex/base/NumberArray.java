@@ -17,7 +17,6 @@ package com.reandroid.dex.base;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.ins.InstructionException;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.StringsUtil;
 
@@ -258,6 +257,16 @@ public class NumberArray extends DexBlockItem {
         }
         setBytesLength(count * width, false);
         super.onReadBytes(reader);
+    }
+    public void merge(NumberArray array){
+        setWidth(array.getWidth());
+        setSize(array.size());
+        byte[] coming = array.getBytesInternal();
+        byte[] bytes = getBytesInternal();
+        int length = coming.length;
+        for(int i = 0; i < length; i++){
+            bytes[i] = coming[i];
+        }
     }
 
     @Override

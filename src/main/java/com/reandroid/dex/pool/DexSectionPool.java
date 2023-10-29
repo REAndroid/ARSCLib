@@ -16,6 +16,7 @@
 package com.reandroid.dex.pool;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
 import com.reandroid.dex.key.KeyItemCreate;
@@ -30,9 +31,12 @@ public class DexSectionPool<T extends Block> extends KeyPool<T>{
     private boolean keyItemsCreate;
     private boolean keyItemsChecked;
 
-    public DexSectionPool(Section<T> section){
-        super(section.getSectionType(), section.getCount());
+    DexSectionPool(Section<T> section, int initialCapacity){
+        super(section.getSectionType(), initialCapacity);
         this.section = section;
+    }
+    public DexSectionPool(Section<T> section){
+        this(section, section.getCount());
     }
 
     @Override
@@ -41,41 +45,66 @@ public class DexSectionPool<T extends Block> extends KeyPool<T>{
             super.remove(item);
         }
     }
+    @SuppressWarnings("unchecked")
     public boolean update(Key key){
-        KeyItemGroup<T> group = remove(key);
-        if(group == null || group.size() == 0){
+        Object obj = getItem(key);
+        if(obj == null){
+            return false;
+        }
+        remove(key);
+        if(!(obj instanceof KeyItemGroup)){
+            T item = (T)obj;
+            key = ((KeyItem) item).getKey();
+            put(key, item);
+            return true;
+        }
+        KeyItemGroup<T> group = (KeyItemGroup<T>) obj;
+        if(group.size() == 0){
             return false;
         }
         key = group.getKey();
         put(key, group);
         return true;
     }
+    @SuppressWarnings("unchecked")
     public T getOrCreate(Key key){
         if(key == null || !isKeyItemsCreate()){
             return null;
         }
-        KeyItemGroup<T> exist = getGroup(key);
-        if(exist == null) {
-            T item = section.createItem();
-            ((KeyItemCreate)item).setKey(key);
-            exist = add(item);
+        Object obj = getItem(key);
+        if(obj != null){
+            if(obj instanceof KeyItemGroup){
+                return  ((KeyItemGroup<T>)obj).matching(key);
+            }else {
+                return (T) obj;
+            }
         }
-        return exist.matching(key);
+        T item = createNext(key);
+        add(item);
+        return item;
     }
     public void load(){
         if(!isKeyItems()){
             return;
         }
-        Section<T> section = this.section;
-        T[] items = section.getItemArray().getChildes();
-        int length = items.length;
+        Section<T> section = this.getSection();
+        BlockListArray<T> itemArray = section.getItemArray();
+        int length = itemArray.size();
         reInitialize(length);
         for(int i = 0; i < length; i++){
-            add(items[i]);
+            add(itemArray.get(i));
         }
         trimToSize();
     }
-    private boolean isKeyItemsCreate(){
+    T createNext(Key key){
+        T item = getSection().createItem();
+        ((KeyItemCreate) item).setKey(key);
+        return item;
+    }
+    Section<T> getSection(){
+        return this.section;
+    }
+    boolean isKeyItemsCreate(){
         isKeyItems();
         return keyItemsCreate;
     }

@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.debug;
 
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.StringKey;
@@ -22,8 +23,12 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.Objects;
 
 public class DebugStartLocal extends DebugRegisterNumber {
 
@@ -98,6 +103,47 @@ public class DebugStartLocal extends DebugRegisterNumber {
         return DebugElementType.START_LOCAL;
     }
 
+
+    @Override
+    public Iterator<IdItem> usedIds(){
+        return CombiningIterator.two(SingleIterator.of(mName.getItem()),
+                SingleIterator.of(mType.getItem()));
+    }
+    @Override
+    public void merge(DebugElement element){
+        super.merge(element);
+        DebugStartLocal coming = (DebugStartLocal) element;
+        this.mName.setItem(coming.mName.getKey());
+        this.mType.setItem(coming.mType.getKey());
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        DebugStartLocal debug = (DebugStartLocal) obj;
+        return getFlag() == debug.getFlag() &&
+                Objects.equals(getName(), debug.getName()) &&
+                Objects.equals(getType(), debug.getType());
+    }
+    @Override
+    public int hashCode() {
+        int hash = getFlag();
+        hash = hash * 31;
+        String text = getName();
+        if(text != null){
+            hash = hash + text.hashCode();
+        }
+        hash = hash * 31;
+        text = getType();
+        if(text != null){
+            hash = hash + text.hashCode();
+        }
+        return hash;
+    }
     @Override
     public String toString() {
         return super.toString() + ", " + mName + ':' + mType;

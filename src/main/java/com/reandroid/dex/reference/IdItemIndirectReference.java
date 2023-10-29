@@ -74,9 +74,8 @@ public class IdItemIndirectReference<T extends IdItem> extends IndirectItem<DexB
         updateItemUsage();
     }
     @Override
-    public void setItem(Key item){
-        DexSectionPool<T> pool = getBlockItem().getPool(sectionType);
-        setItem(pool.getOrCreate(item));
+    public void setItem(Key key){
+        setItem(getBlockItem().getOrCreate(getSectionType(), key));
     }
     @Override
     public SectionType<T> getSectionType() {
@@ -109,6 +108,10 @@ public class IdItemIndirectReference<T extends IdItem> extends IndirectItem<DexB
         if(item != null){
             item.addUsageType(usageType);
         }
+    }
+    public void unlink(){
+        this.item = null;
+        set(0);
     }
 
     @Override

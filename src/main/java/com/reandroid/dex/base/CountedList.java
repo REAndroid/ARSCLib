@@ -17,21 +17,24 @@ package com.reandroid.dex.base;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 
 import java.io.IOException;
 
-public class CountedArray<T extends Block> extends CreatorArray<T> {
+public class CountedList<T extends Block> extends BlockList<T> {
+
     private final IntegerReference itemCount;
-    public CountedArray(IntegerReference itemCount, Creator<T> creator){
+
+    public CountedList(IntegerReference itemCount, Creator<T> creator){
         super(creator);
         this.itemCount = itemCount;
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
-        super.onReadBytes(reader);
+        setSize(itemCount.get());
+        super.readChildes(reader);
     }
     @Override
     protected void onRefreshed() {

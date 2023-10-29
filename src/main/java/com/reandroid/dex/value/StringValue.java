@@ -15,9 +15,8 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.data.StringData;
+import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.SectionType;
 
 public class StringValue extends SectionIdValue<StringId> {
@@ -26,30 +25,18 @@ public class StringValue extends SectionIdValue<StringId> {
         super(SectionType.STRING_ID, DexValueType.STRING);
     }
 
+    public String getString() {
+        StringId stringId = get();
+        if(stringId != null) {
+            return stringId.getString();
+        }
+        return null;
+    }
+    public void set(String value){
+        setKey(StringKey.create(value));
+    }
     @Override
     public DexValueType<?> getValueType() {
         return DexValueType.STRING;
-    }
-    public StringData getStringData(){
-        StringId stringId = get();
-        if(stringId != null) {
-            return stringId.getStringData();
-        }
-        return null;
-    }
-    public String getString() {
-        StringData stringData = getStringData();
-        if(stringData != null) {
-            return stringData.getString();
-        }
-        return null;
-    }
-    @Override
-    public String getAsString() {
-        StringData stringData = getStringData();
-        if(stringData != null) {
-            return DexUtils.quoteString(stringData.getString());
-        }
-        return null;
     }
 }

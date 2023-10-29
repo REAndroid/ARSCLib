@@ -54,6 +54,21 @@ public class DexFile implements VisitableInteger {
         this.dexFileBlock = dexFileBlock;
     }
 
+    public void clearDuplicateData(){
+        getDexFileBlock().getSectionList().clearDuplicateData();
+    }
+    public void clearDebug(){
+        Section<DebugInfo> debugInfoSection = get(SectionType.DEBUG_INFO);
+        if(debugInfoSection != null){
+            debugInfoSection.removeSelf();
+        }
+        Section<CodeItem> section = get(SectionType.CODE);
+        if(section == null){
+            return;
+        }
+        section.clearPool();
+        section.refresh();
+    }
     public void cleanDuplicateDebugLines(){
         Section<CodeItem> section = get(SectionType.CODE);
         if(section == null){
@@ -384,7 +399,21 @@ public class DexFile implements VisitableInteger {
     public DexFileBlock getDexFileBlock() {
         return dexFileBlock;
     }
+
+    public boolean isEmpty(){
+        return getDexFileBlock().isEmpty();
+    }
+    public boolean merge(DexFile dexFile){
+        if(dexFile == null || dexFile.isEmpty()){
+            return false;
+        }
+        return getDexFileBlock().merge(dexFile.getDexFileBlock());
+    }
+
     public byte[] getBytes() {
+        if(isEmpty()){
+            return new byte[0];
+        }
         return getDexFileBlock().getBytes();
     }
     public void write(File file) throws IOException {

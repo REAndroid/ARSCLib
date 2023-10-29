@@ -27,6 +27,7 @@ import com.reandroid.utils.collection.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class TryItem extends DexContainerItem implements Iterable<Label>{
@@ -54,6 +55,9 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
         this.catchTypedHandlerList = null;
     }
 
+    public boolean isCopy(){
+        return false;
+    }
     InstructionList getInstructionList(){
         return getTryBlock().getInstructionList();
     }
@@ -67,6 +71,9 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
     HandlerOffset getHandlerOffset() {
         return getHandlerOffsetArray().get(getIndex());
     }
+    HandlerOffset getOrCreateHandlerOffset() {
+        return getHandlerOffsetArray().getOrCreate(getIndex());
+    }
     HandlerOffsetArray getHandlerOffsetArray(){
         return handlerOffsetArray;
     }
@@ -78,6 +85,17 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
     }
     TryItem getTryItem(){
         return this;
+    }
+    void updateCount(){
+        Sle128Item handlersCount = this.handlersCount;
+        if(handlersCount == null){
+            return;
+        }
+        int count = catchTypedHandlerList.size();
+        if(hasCatchAllHandler()){
+            count = -count;
+        }
+        handlersCount.set(count);
     }
 
     @Override
@@ -116,6 +134,12 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
             this.catchAllHandler = catchAllHandler;
         }
         return catchAllHandler;
+    }
+
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        updateCount();
     }
 
     @Override
@@ -162,6 +186,78 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
         }
         super.onCountUpTo(counter);
     }
+    public void onRemove(){
+        BlockList<CatchTypedHandler> list = this.catchTypedHandlerList;
+        if(list != null){
+            int size = list.size();
+            for(int i = 0; i < size; i++){
+                CatchTypedHandler handler = list.get(i);
+                handler.onRemove();
+                handler.setParent(null);
+            }
+            list.destroy();
+        }
+        CatchAllHandler handler = this.catchAllHandler;
+        if(handler != null){
+            handler.onRemove();
+            this.catchAllHandler = null;
+        }
+    }
+    public void merge(TryItem tryItem){
+        mergeOffset(tryItem);
+        mergeHandlers(tryItem);
+    }
+    void mergeHandlers(TryItem tryItem){
+        Iterator<CatchTypedHandler> iterator = tryItem.getCatchTypedHandlers();
+        BlockList<CatchTypedHandler> handlerList = this.getCatchTypedHandlerBlockList();
+        while (iterator.hasNext()){
+            CatchTypedHandler coming = iterator.next();
+            CatchTypedHandler handler = new CatchTypedHandler();
+            handlerList.add(handler);
+            handler.merge(coming);
+        }
+        if(tryItem.hasCatchAllHandler()){
+            initCatchAllHandler().merge(tryItem.getCatchAllHandler());
+        }
+        updateCount();
+    }
+    void mergeOffset(TryItem tryItem){
+
+        HandlerOffset coming = tryItem.getHandlerOffset();
+        HandlerOffset handlerOffset = getOrCreateHandlerOffset();
+
+        handlerOffset.setCatchCodeUnit(coming.getCatchCodeUnit());
+        handlerOffset.setStartAddress(coming.getStartAddress());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        TryItem tryItem = (TryItem) obj;
+        return Objects.equals(catchTypedHandlerList, tryItem.catchTypedHandlerList) &&
+                Objects.equals(catchAllHandler, tryItem.catchAllHandler);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 1;
+        hash = hash * 31;
+        Object obj = catchTypedHandlerList;
+        if(obj != null){
+            hash = hash * 31 + obj.hashCode();
+        }
+        hash = hash * 31;
+        obj = catchAllHandler;
+        if(obj != null){
+            hash = hash * 31 + obj.hashCode();
+        }
+        return hash;
+    }
 
     @Override
     public String toString() {
@@ -182,6 +278,10 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
             this.tryItem = tryItem;
         }
 
+        @Override
+        public boolean isCopy(){
+            return true;
+        }
         @Override
         TryBlock getTryBlock() {
             return tryItem.getTryBlock();
@@ -242,6 +342,12 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
 
         @Override
         public void onReadBytes(BlockReader reader) throws IOException {
+        }
+        @Override
+        void updateCount(){
+        }
+        @Override
+        void mergeHandlers(TryItem tryItem){
         }
     }
 }

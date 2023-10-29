@@ -50,6 +50,13 @@ public abstract class PrimitiveValue extends DexValueBlock<NumberValue> {
         container.setSize(getValueSize() + 1);
         container.readBytes(reader);
     }
+
+    @Override
+    public void merge(DexValueBlock<?> valueBlock){
+        super.merge(valueBlock);
+        PrimitiveValue coming = (PrimitiveValue) valueBlock;
+        getValueContainer().merge(coming.getValueContainer());
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append(getHex());

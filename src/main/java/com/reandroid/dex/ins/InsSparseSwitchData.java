@@ -99,6 +99,21 @@ public class InsSparseSwitchData extends PayloadData implements BlockLoad,
         }
     }
     @Override
+    public void merge(Ins ins){
+        InsSparseSwitchData switchData = (InsSparseSwitchData) ins;
+        int size = switchData.elements.size();
+        this.elements.setSize(size);
+        for(int i = 0; i < size; i++){
+            this.elements.put(i, switchData.elements.get(i));
+        }
+        size = switchData.keys.size();
+        this.keys.setSize(size);
+        for(int i = 0; i < size; i++){
+            this.keys.put(i, switchData.keys.get(i));
+        }
+        this.elementCount.set(switchData.elementCount.get());
+    }
+    @Override
     void appendCode(SmaliWriter writer) throws IOException {
         int size = getCount();
         writer.indentPlus();

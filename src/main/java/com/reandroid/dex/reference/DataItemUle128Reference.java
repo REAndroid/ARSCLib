@@ -63,8 +63,7 @@ public class DataItemUle128Reference<T extends DataItem> extends Ule128Item impl
     }
     @Override
     public void setItem(Key key){
-        DexSectionPool<T> pool = getPool(getSectionType());
-        setItem(pool.getOrCreate(key));
+        setItem(getOrCreate(getSectionType(), key));
     }
     @Override
     public Key getKey() {
@@ -86,10 +85,24 @@ public class DataItemUle128Reference<T extends DataItem> extends Ule128Item impl
     @Override
     public void refresh() {
         T item = getItem();
+        int value = 0;
         if(item != null){
-            set(item.getOffset());
+            item = item.getReplace();
         }
+        if(item != null){
+            value = item.getOffset();
+            if(value == 0){
+                item = null;
+            }
+        }
+        this.item = item;
+        set(value);
         updateItemUsage();
+    }
+    @Override
+    public void unlink(){
+        this.item = null;
+        set(0);
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {

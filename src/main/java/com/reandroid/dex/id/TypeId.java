@@ -22,8 +22,10 @@ import com.reandroid.dex.reference.IndirectStringReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Objects;
 
 public class TypeId extends IdItem implements Comparable<TypeId>, KeyItemCreate {
@@ -36,8 +38,15 @@ public class TypeId extends IdItem implements Comparable<TypeId>, KeyItemCreate 
     }
 
     @Override
+    public Iterator<IdItem> usedIds(){
+        return EmptyIterator.of();
+    }
+    public SectionType<TypeId> getSectionType(){
+        return SectionType.TYPE_ID;
+    }
+    @Override
     public TypeKey getKey(){
-        return checkKey(SectionType.TYPE_ID, TypeKey.create(getName()));
+        return checkKey(TypeKey.create(getName()));
     }
     @Override
     public void setKey(Key key){
@@ -50,7 +59,7 @@ public class TypeId extends IdItem implements Comparable<TypeId>, KeyItemCreate 
             return;
         }
         setName(key.getType());
-        keyChanged(SectionType.TYPE_ID, old);
+        keyChanged(old);
     }
     public String getName(){
         StringId stringId = getNameId();

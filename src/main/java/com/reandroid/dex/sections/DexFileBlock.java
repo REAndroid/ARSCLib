@@ -17,7 +17,6 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.FixedBlockContainer;
-import com.reandroid.arsc.group.ItemGroup;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.common.BytesOutputStream;
 import com.reandroid.dex.base.DexException;
@@ -29,10 +28,8 @@ import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.data.AnnotationElement;
 import com.reandroid.dex.data.AnnotationItem;
 import com.reandroid.dex.data.TypeList;
-import com.reandroid.dex.key.AnnotationKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.pool.KeyItemGroup;
 import com.reandroid.dex.pool.KeyPool;
 import com.reandroid.dex.value.ArrayValue;
 import com.reandroid.dex.value.DexValueBlock;
@@ -40,9 +37,7 @@ import com.reandroid.dex.value.StringValue;
 import com.reandroid.utils.collection.*;
 
 import java.io.*;
-import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 
 public class DexFileBlock extends FixedBlockContainer {
 
@@ -74,12 +69,17 @@ public class DexFileBlock extends FixedBlockContainer {
         };
     }
     public Iterator<ClassId> getExtendingClassIds(TypeKey typeKey){
-        return this.extendingClassMap.getIterator(typeKey);
+        return this.extendingClassMap.getAll(typeKey);
     }
     public Iterator<ClassId> getImplementationIds(TypeKey interfaceClass){
-        return this.interfaceMap.getIterator(interfaceClass);
+        return this.interfaceMap.getAll(interfaceClass);
     }
 
+    public void clear(){
+        extendingClassMap.clear();
+        interfaceMap.clear();
+        getSectionList().clear();
+    }
     public void loadSuperTypesMap(){
         loadExtendingClassMap();
         loadInterfacesMap();
@@ -120,18 +120,6 @@ public class DexFileBlock extends FixedBlockContainer {
         }
         interfaceMap.trimToSize();
     }
-
-    public Iterator<StringId> unusedStrings(){
-        return getStringsWithUsage(StringId.USAGE_NONE);
-    }
-    public Iterator<StringId> getStringsContainsUsage(int usage){
-        return FilterIterator.of(getStrings(),
-                stringData -> stringData.containsUsage(usage));
-    }
-    public Iterator<StringId> getStringsWithUsage(int usage){
-        return FilterIterator.of(getStrings(),
-                stringData -> stringData.getUsageType() == usage);
-    }
     public Iterator<StringId> getStrings(){
         return getItems(SectionType.STRING_ID);
     }
@@ -168,17 +156,22 @@ public class DexFileBlock extends FixedBlockContainer {
     public void sortStrings(){
         getSectionList().sortStrings();
     }
+
     public void linkTypeSignature(){
-        Section<AnnotationItem> annotationSection = getSectionList().get(SectionType.ANNOTATION);
+
+        Section<AnnotationItem> annotationSection = get(SectionType.ANNOTATION_ITEM);
+
         if(annotationSection == null){
             return;
         }
-        Iterable<AnnotationItem> group = annotationSection.getPool().getGroup(ANNOTATION_SIG_KEY);
-        if(group == null){
-            return;
-        }
-        for(AnnotationItem item : group){
-            AnnotationElement element = item.getElement(0);
+
+        Iterator<AnnotationItem> iterator = annotationSection.iterator(
+                item -> TYPE_Signature.equals(item.getTypeKey()) &&
+                item.containsName(NAME_value));
+
+        while (iterator.hasNext()){
+            AnnotationItem item = iterator.next();
+            AnnotationElement element = item.getElement(NAME_value);
             if(element == null){
                 continue;
             }
@@ -236,6 +229,16 @@ public class DexFileBlock extends FixedBlockContainer {
     @Override
     protected void onRefreshed() {
         sectionList.updateHeader();
+    }
+    public boolean isEmpty(){
+        Section<ClassId> section = get(SectionType.CLASS_ID);
+        return section == null || section.getCount() == 0;
+    }
+    public boolean merge(DexFileBlock dexFile){
+        if(dexFile == this){
+            return false;
+        }
+        return getSectionList().merge(dexFile.getSectionList(), true);
     }
     @Override
     public byte[] getBytes(){
@@ -314,6 +317,6 @@ public class DexFileBlock extends FixedBlockContainer {
         return version > 0 && version < 1000;
     }
 
-    public static final AnnotationKey ANNOTATION_SIG_KEY = new AnnotationKey(
-            "Ldalvik/annotation/Signature;","value");
+    public static final String NAME_value = "value";
+    public static final TypeKey TYPE_Signature = TypeKey.create("Ldalvik/annotation/Signature;");
 }

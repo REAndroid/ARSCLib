@@ -59,6 +59,11 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet {
     }
 
     @Override
+    public void merge(Ins ins){
+        InsPackedSwitchData switchData = (InsPackedSwitchData) ins;
+        elements.merge(switchData.elements);
+    }
+    @Override
     void appendCode(SmaliWriter writer) throws IOException {
         writer.newLine();
         writer.append('.');

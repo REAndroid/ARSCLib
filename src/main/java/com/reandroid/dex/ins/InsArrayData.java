@@ -30,6 +30,7 @@ import java.util.Iterator;
 public class InsArrayData extends PayloadData implements VisitableInteger {
 
     private final NumberArray numberArray;
+    private final DexBlockAlign blockAlign;
 
     public InsArrayData() {
         super(4, Opcode.ARRAY_PAYLOAD);
@@ -37,13 +38,13 @@ public class InsArrayData extends PayloadData implements VisitableInteger {
         IntegerItem elementCount = new IntegerItem();
         this.numberArray = new NumberArray(elementWidth, elementCount);
 
-        DexBlockAlign blockAlign = new DexBlockAlign(this.numberArray);
-        blockAlign.setAlignment(2);
+        this.blockAlign = new DexBlockAlign(this.numberArray);
+        this.blockAlign.setAlignment(2);
 
         addChild(1, elementWidth);
         addChild(2, elementCount);
         addChild(3, this.numberArray);
-        addChild(4, blockAlign);
+        addChild(4, this.blockAlign);
     }
 
     public Iterator<InsFillArrayData> getInsFillArrayData(){
@@ -123,5 +124,12 @@ public class InsArrayData extends PayloadData implements VisitableInteger {
             builder.newLine();
             builder.append(HexUtil.toHex(num, 1));
         }
+    }
+
+    @Override
+    public void merge(Ins ins){
+        InsArrayData coming = (InsArrayData) ins;
+        getNumberArray().merge(coming.getNumberArray());
+        this.blockAlign.setSize(coming.blockAlign.size());
     }
 }

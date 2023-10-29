@@ -17,31 +17,31 @@ package com.reandroid.dex.debug;
 
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.CreatorArray;
 import com.reandroid.dex.base.FixedDexContainer;
 import com.reandroid.dex.data.InstructionList;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.dex.id.IdItem;
+import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public class DebugSequence extends FixedDexContainer implements Collection<DebugElement> {
 
     private final IntegerReference lineStart;
-    private final BlockArray<DebugElement> elementArray;
+    private final BlockList<DebugElement> elementArray;
     private final DebugEndSequence endSequence;
 
     public DebugSequence(IntegerReference lineStart){
         super(2);
         this.lineStart = lineStart;
-        this.elementArray = new CreatorArray<>(CREATOR);
+        this.elementArray = new BlockList<>();
         this.endSequence = new DebugEndSequence();
         addChild(0, elementArray);
         addChild(1, endSequence);
@@ -165,14 +165,14 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
             count++;
         }
         reader.seek(position);
-        elementArray.setChildesCount(count);
+        elementArray.ensureCapacity(count);
         int i = 0;
         DebugElement element = readNext(reader, i);
         while (element.getElementType() != DebugElementType.END_SEQUENCE){
             i++;
             element = readNext(reader, i);
         }
-        elementArray.setChildesCount(i);
+        elementArray.trimToSize();
         cacheValues();
     }
 
@@ -183,7 +183,7 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
             debugElement = this.endSequence;
         }else {
             debugElement = type.newInstance();
-            elementArray.setItem(i, debugElement);
+            elementArray.add(debugElement);
         }
         debugElement.readBytes(reader);
         return debugElement;
@@ -210,7 +210,7 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
         return elementArray.get(i);
     }
     public void add(int i, DebugElement element) {
-        elementArray.insertItem(i, element);
+        elementArray.add(i, element);
     }
     @SuppressWarnings("unchecked")
     public<T1 extends DebugElement> Iterator<T1> iterator(DebugElementType<T1> type) {
@@ -243,7 +243,7 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
     }
     @Override
     public Object[] toArray() {
-        return elementArray.getChildes();
+        return elementArray.toArray();
     }
     @Override
     public <T> T[] toArray(T[] ts) {
@@ -269,16 +269,21 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
     }
     @Override
     public boolean addAll(Collection<? extends DebugElement> collection) {
-        throw new IllegalArgumentException("Not implemented");
+        for(DebugElement coming : collection){
+            DebugElement element = createNext(coming.getElementType());
+            element.merge(coming);
+        }
+        cacheValues();
+        return collection.size() != 0;
     }
     @SuppressWarnings("unchecked")
     @Override
     public boolean removeAll(Collection<?> collection) {
-        boolean removed = elementArray.remove((Collection<DebugElement>) collection) != 0;
+        /*boolean removed = elementArray.re((Collection<DebugElement>) collection) != 0;
         if(removed){
             updateValues();
-        }
-        return removed;
+        }*/
+        return false;
     }
     @Override
     public boolean retainAll(Collection<?> collection) {
@@ -287,6 +292,47 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
     @Override
     public void clear() {
         elementArray.clearChildes();
+    }
+
+
+    public Iterator<IdItem> usedIds(){
+        return new IterableIterator<DebugElement, IdItem>(iterator()) {
+            @Override
+            public Iterator<IdItem> iterator(DebugElement element) {
+                return element.usedIds();
+            }
+        };
+    }
+    public void merge(DebugSequence sequence){
+        this.lineStart.set(sequence.lineStart.get());
+        int size = sequence.size();
+        if(size > 1){
+            size = 1;
+        }
+        elementArray.ensureCapacity(size);
+        for(int i = 0; i < size; i++){
+            DebugElement coming = sequence.get(i);
+            DebugElement element = createNext(coming.getElementType());
+            element.merge(coming);
+        }
+        cacheValues();
+        elementArray.trimToSize();
+    }
+
+    @Override
+    public int hashCode() {
+        return elementArray.hashCode();
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        DebugSequence sequence = (DebugSequence) obj;
+        return elementArray.equals(sequence.elementArray);
     }
 
     @Override

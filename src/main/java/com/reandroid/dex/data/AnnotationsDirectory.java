@@ -20,14 +20,22 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.base.IndirectInteger;
+import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.DataKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.reference.DataItemIndirectReference;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Objects;
 
-public class AnnotationsDirectory extends DataItem {
+public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
 
     private final Header header;
 
@@ -35,6 +43,8 @@ public class AnnotationsDirectory extends DataItem {
     private final DirectoryMap<FieldDef, AnnotationSet> fieldsAnnotationMap;
     private final DirectoryMap<MethodDef, AnnotationSet> methodsAnnotationMap;
     private final DirectoryMap<MethodDef, AnnotationGroup> parametersAnnotationMap;
+
+    private final DataKey<AnnotationsDirectory> mKey;
 
     public AnnotationsDirectory() {
         super(4);
@@ -44,11 +54,24 @@ public class AnnotationsDirectory extends DataItem {
         this.methodsAnnotationMap = new DirectoryMap<>(header.methodCount, CREATOR_METHODS);
         this.parametersAnnotationMap = new DirectoryMap<>(header.parameterCount, CREATOR_PARAMS);
 
+        this.mKey = new DataKey<>(this);
+
         addChild(0, header);
 
         addChild(1, fieldsAnnotationMap);
         addChild(2, methodsAnnotationMap);
         addChild(3, parametersAnnotationMap);
+    }
+
+    @Override
+    public DataKey<AnnotationsDirectory> getKey() {
+        return mKey;
+    }
+    @SuppressWarnings("unchecked")
+    @Override
+    public void setKey(Key key){
+        DataKey<AnnotationsDirectory> dataKey = (DataKey<AnnotationsDirectory>) key;
+        merge(dataKey.getItem());
     }
 
     public AnnotationSet getOrCreateClassAnnotations(){
@@ -111,6 +134,28 @@ public class AnnotationsDirectory extends DataItem {
         methodsAnnotationMap.remove(def);
         parametersAnnotationMap.remove(def);
     }
+    public void addAnnotation(Def<?> def, AnnotationSet annotationSet){
+        if(def instanceof FieldDef){
+            addFieldAnnotation((FieldDef) def, annotationSet);
+        }else if(def instanceof MethodDef){
+            addMethodAnnotation((MethodDef) def, annotationSet);
+        }
+    }
+    public void addFieldAnnotation(FieldDef fieldDef, AnnotationSet annotationSet){
+        fieldsAnnotationMap.add(fieldDef, ensureSameContext(annotationSet));
+    }
+    public void addMethodAnnotation(MethodDef methodDef, AnnotationSet annotationSet){
+        methodsAnnotationMap.add(methodDef, ensureSameContext(annotationSet));
+    }
+    private AnnotationSet ensureSameContext(AnnotationSet annotationSet){
+        if(isSameContext(annotationSet)){
+            return annotationSet;
+        }
+        AnnotationSet mySet = getOrCreateSection(SectionType.ANNOTATION_SET)
+                .createItem();
+        mySet.merge(annotationSet);
+        return mySet;
+    }
     public Iterator<AnnotationSet> getAnnotations(Def<?> def){
         if(def.getClass() == FieldDef.class){
             return getFieldsAnnotation((FieldDef) def);
@@ -131,6 +176,16 @@ public class AnnotationsDirectory extends DataItem {
     }
     public Iterator<AnnotationSet> getMethodAnnotation(MethodDef methodDef){
         return methodsAnnotationMap.getValues(methodDef);
+    }
+    public void addParameterAnnotation(MethodDef methodDef, AnnotationGroup annotationGroup){
+        parametersAnnotationMap.add(methodDef, ensureSameContext(annotationGroup));
+    }
+    private AnnotationGroup ensureSameContext(AnnotationGroup annotationGroup){
+        if(isSameContext(annotationGroup)){
+            return annotationGroup;
+        }
+        return getOrCreateSection(SectionType.ANNOTATION_GROUP)
+                .getOrCreate(annotationGroup.getKey());
     }
     public Iterator<AnnotationGroup> getParameterAnnotation(MethodDef methodDef){
         return parametersAnnotationMap.getValues(methodDef);
@@ -157,11 +212,79 @@ public class AnnotationsDirectory extends DataItem {
         }
     }
 
+    public Iterator<IdItem> usedIds(){
+        AnnotationSet classAnnotation = getClassAnnotations();
+        Iterator<IdItem> iterator1;
+        if(classAnnotation == null){
+            iterator1 = EmptyIterator.of();
+        }else {
+            iterator1 = classAnnotation.usedIds();
+        }
+        Iterator<IdItem> iterator2 = new IterableIterator<AnnotationSet, IdItem>(fieldsAnnotationMap.getValues()) {
+            @Override
+            public Iterator<IdItem> iterator(AnnotationSet element) {
+                return element.usedIds();
+            }
+        };
+        Iterator<IdItem> iterator3 = new IterableIterator<AnnotationSet, IdItem>(methodsAnnotationMap.getValues()) {
+            @Override
+            public Iterator<IdItem> iterator(AnnotationSet element) {
+                return element.usedIds();
+            }
+        };
+        Iterator<IdItem> iterator4 = new IterableIterator<AnnotationGroup, IdItem>(parametersAnnotationMap.getValues()) {
+            @Override
+            public Iterator<IdItem> iterator(AnnotationGroup element) {
+                return element.usedIds();
+            }
+        };
+        return CombiningIterator.four(
+                iterator1,
+                iterator2,
+                iterator3,
+                iterator4
+        );
+    }
 
     @Override
     protected void onPreRefresh() {
         header.refresh();
         super.onPreRefresh();
+    }
+
+    public void merge(AnnotationsDirectory directory){
+        if(directory == this){
+            return;
+        }
+        header.merge(directory.header);
+        fieldsAnnotationMap.merge(directory.fieldsAnnotationMap);
+        methodsAnnotationMap.merge(directory.methodsAnnotationMap);
+        parametersAnnotationMap.merge(directory.parametersAnnotationMap);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        AnnotationsDirectory directory = (AnnotationsDirectory) obj;
+        return Objects.equals(header, directory.header) &&
+                Objects.equals(fieldsAnnotationMap, directory.fieldsAnnotationMap) &&
+                Objects.equals(methodsAnnotationMap, directory.methodsAnnotationMap) &&
+                Objects.equals(parametersAnnotationMap, directory.parametersAnnotationMap);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 1;
+        hash = hash * 31 + header.hashCode();
+        hash = hash * 31 + fieldsAnnotationMap.hashCode();
+        hash = hash * 31 + methodsAnnotationMap.hashCode();
+        hash = hash * 31 + parametersAnnotationMap.hashCode();
+        return hash;
     }
 
     @Override
@@ -206,6 +329,32 @@ public class AnnotationsDirectory extends DataItem {
         @Override
         public void refresh() {
             this.classAnnotation.refresh();
+        }
+
+        public void merge(Header header){
+            classAnnotation.setItem(header.classAnnotation.getKey());
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+            Header header = (Header) obj;
+            return Objects.equals(classAnnotation.getItem(), header.classAnnotation.getItem());
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 1;
+            Object obj = classAnnotation.getItem();
+            hash = hash * 31;
+            if(obj != null){
+                hash = hash + obj.hashCode();
+            }
+            return hash;
         }
 
         @Override

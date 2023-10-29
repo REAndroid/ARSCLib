@@ -19,14 +19,15 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.util.*;
 
 public class KeyPool<T extends Block> {
 
     private final SectionType<T> sectionType;
-    private Map<Key, KeyItemGroup<T>> itemsMap;
+    private Map<Key, Object> itemsMap;
 
     public KeyPool(SectionType<T> sectionType, int initialSize){
         this.sectionType = sectionType;
@@ -34,26 +35,34 @@ public class KeyPool<T extends Block> {
     }
 
     public void trimToSize(){
-        for(KeyItemGroup<T> group : itemsMap.values()){
-            group.trimToSize();
+        for(Object obj : itemsMap.values()){
+            if(obj instanceof KeyItemGroup){
+                ((KeyItemGroup<?>)obj).trimToSize();
+            }
         }
     }
     public SectionType<T> getSectionType(){
         return sectionType;
     }
-    public Iterable<T> put(Key key, T item){
+    @SuppressWarnings("unchecked")
+    public void put(Key key, T item){
         if(key == null || item == null){
-            return null;
+            return;
         }
-        KeyItemGroup<T> group = itemsMap.get(key);
-        if(group == null){
-            group = new KeyItemGroup<>();
-            group.add(item);
+        Object obj = getItem(key);
+        if(obj == null){
+            itemsMap.put(key, item);
+            return;
+        }
+        KeyItemGroup<T> group;
+        if(!(obj instanceof KeyItemGroup)){
+            group = new KeyItemGroup<>((T) obj);
+            itemsMap.remove(key);
             itemsMap.put(key, group);
         }else {
-            group.add(item);
+            group = (KeyItemGroup<T>) obj;
         }
-        return group;
+        group.add(item);
     }
     public void put(Key key, KeyItemGroup<T> group){
         if(key != null && group != null){
@@ -70,73 +79,103 @@ public class KeyPool<T extends Block> {
         itemsMap.clear();
         itemsMap = new HashMap<>(capacity);
     }
-    KeyItemGroup<T> add(T item){
+    @SuppressWarnings("unchecked")
+    void add(T item){
         if(item == null){
-            return null;
+            return;
         }
         Key key = ((KeyItem)item).getKey();
         if(key == null){
-            return null;
+            return;
         }
-        KeyItemGroup<T> group = itemsMap.get(key);
-        if(group == null){
-            group = new KeyItemGroup<>();
-            group.add(item);
+        Object obj = getItem(key);
+        if(obj == null){
+            itemsMap.put(key, item);
+            return;
+        }
+
+        KeyItemGroup<T> group;
+        if(!(obj instanceof KeyItemGroup)){
+            group = new KeyItemGroup<>((T) obj);
             itemsMap.put(key, group);
         }else {
-            group.add(item);
+            group = (KeyItemGroup<T>) obj;
         }
-        return group;
+        group.add(item);
     }
+    @SuppressWarnings("unchecked")
     public void remove(T item){
         if(item == null){
             return;
         }
         Key key = ((KeyItem)item).getKey();
-        KeyItemGroup<T> group = getGroup(key);
-        if(group == null){
+        Object obj = getItem(key);
+        if(obj == null){
             return;
         }
+        if(!(obj instanceof KeyItemGroup)){
+            remove(key);
+            return;
+        }
+        KeyItemGroup<T> group = (KeyItemGroup<T>) obj;
         group.remove(item);
         if(group.isEmpty()){
             remove(key);
         }
     }
-    KeyItemGroup<T> remove(Key key){
+    void remove(Key key){
         if(key == null){
-            return null;
+            return;
         }
-        return itemsMap.remove(key);
+        itemsMap.remove(key);
     }
     public boolean contains(Key key){
         return itemsMap.containsKey(key);
     }
+    @SuppressWarnings("unchecked")
     public T get(Key key){
-        KeyItemGroup<T> group = getGroup(key);
-        if(group != null){
-            return group.matching(key);
+        Object obj = getItem(key);
+        if(!(obj instanceof KeyItemGroup)){
+            return (T) obj;
         }
-        return null;
+        KeyItemGroup<T> group = (KeyItemGroup<T>) obj;
+        return group.matching(key);
     }
+    @SuppressWarnings("unchecked")
     public Iterator<T> getAll(Key key){
-        KeyItemGroup<T> group = getGroup(key);
-        if(group != null){
-            return group.iterator();
+        Object obj = getItem(key);
+        if(!(obj instanceof KeyItemGroup)){
+            return SingleIterator.of((T) obj);
         }
-        return EmptyIterator.of();
+        KeyItemGroup<T> group = (KeyItemGroup<T>) obj;
+        return group.iterator();
     }
+    @SuppressWarnings("unchecked")
     public KeyItemGroup<T> getGroup(Key key){
         if(key == null){
             return null;
         }
+        Object item = getItem(key);
+        if(item == null){
+            return null;
+        }
+        if(item instanceof KeyItemGroup){
+            return (KeyItemGroup<T>) item;
+        }
+        return new KeyItemGroup<>((T)item);
+    }
+    Object getItem(Key key){
         return itemsMap.get(key);
     }
-    public Iterator<T> getIterator(Key key){
-        KeyItemGroup<T> group = getGroup(key);
-        if(group == null){
-            return EmptyIterator.of();
-        }
-        return group.iterator();
+
+    @SuppressWarnings("unchecked")
+    Iterator<KeyItemGroup<T>> groupIterator(){
+        return ComputeIterator.of(itemsMap.values().iterator(), obj -> {
+            if(obj instanceof KeyItemGroup){
+                return (KeyItemGroup<T>) obj;
+            }
+            return null;
+        });
     }
 
     @Override

@@ -20,6 +20,7 @@ import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.PositionAlignedItem;
 import com.reandroid.dex.data.DataItem;
+import com.reandroid.dex.pool.DataSectionPool;
 
 
 public class DataSection<T extends DataItem> extends Section<T> {
@@ -43,8 +44,16 @@ public class DataSection<T extends DataItem> extends Section<T> {
         int position = estimateLastOffset();
         T item = getItemArray().createNext();
         item.setPosition(position);
-        getItemArray().registerOffset(item);
         return item;
+    }
+
+    @Override
+    public DataSectionPool<T> getPool() {
+        return (DataSectionPool<T>) super.getPool();
+    }
+    @Override
+    DataSectionPool<T> createPool(){
+        return new DataSectionPool<>(this);
     }
     @Override
     public DataSectionArray<T> getItemArray() {
@@ -103,5 +112,9 @@ public class DataSection<T extends DataItem> extends Section<T> {
         DataSectionArray<T> array = getItemArray();
         position = array.updateItemOffsets(position);
         updateNextSection(position);
+    }
+    @Override
+    int getDiffCount(Section<T> section){
+        return getCount();
     }
 }

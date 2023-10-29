@@ -13,31 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.debug;
+package com.reandroid.dex.key;
 
-import com.reandroid.dex.base.Le128;
+import com.reandroid.dex.data.DataItem;
 
-public abstract class DebugAdvance extends DebugElement{
+public class DataKey<T extends DataItem> implements Key{
+    private final T item;
 
-    private final Le128 advance;
-
-    DebugAdvance(DebugElementType<?> elementType, Le128 advance) {
-        super(1, elementType);
-        this.advance = advance;
-        addChild(1, advance);
+    public DataKey(T item){
+        this.item = item;
     }
-    public int getAdvance(){
-        return advance.get();
+
+    public T getItem() {
+        return item;
     }
-    public void setAdvance(int advance){
-        this.advance.set(advance);
+    private int getOffset(){
+        return getItem().getOffset();
     }
 
     @Override
-    public void merge(DebugElement element){
-        super.merge(element);
-        DebugAdvance coming = (DebugAdvance) element;
-        this.advance.set(coming.advance.get());
+    public int compareTo(Object obj) {
+        if(obj == null || getClass() != obj.getClass()){
+            return 1;
+        }
+        DataKey<?> key = (DataKey<?>) obj;
+        if(getItem().getClass() == key.getItem().getClass()){
+            return 0;
+        }
+        return 1;
     }
 
     @Override
@@ -48,18 +51,16 @@ public abstract class DebugAdvance extends DebugElement{
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        DebugAdvance debugAdvance = (DebugAdvance) obj;
-        return getFlag() == debugAdvance.getFlag() &&
-                advance.get() == debugAdvance.advance.get();
+        DataKey<?> key = (DataKey<?>) obj;
+        return item.equals(key.item);
     }
     @Override
     public int hashCode() {
-        int hash = getFlag();
-        hash = hash * 31 + advance.get();
-        return hash;
+        return item.hashCode();
     }
+
     @Override
     public String toString() {
-        return "advance=" + advance;
+        return getOffset() + ": {" + getItem() +"}";
     }
 }

@@ -194,6 +194,8 @@ public class TypeKey implements Key{
                 return TYPE_J;
             case 'S':
                 return TYPE_S;
+            case 'V':
+                return TYPE_V;
             case 'Z':
                 return TYPE_Z;
             default:
@@ -208,6 +210,7 @@ public class TypeKey implements Key{
     public static final TypeKey TYPE_I = new TypeKey("I");
     public static final TypeKey TYPE_J = new TypeKey("J");
     public static final TypeKey TYPE_S = new TypeKey("S");
+    public static final TypeKey TYPE_V = new TypeKey("V");
     public static final TypeKey TYPE_Z = new TypeKey("Z");
 
 }

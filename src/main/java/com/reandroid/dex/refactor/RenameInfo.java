@@ -24,6 +24,7 @@ import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.SingleIterator;
@@ -113,7 +114,7 @@ public abstract class RenameInfo<T extends Block> implements KeyItem {
         }
         List<RenameInfo<?>> renameInfoList = listChildRenames();
         if(renameInfoList == null || renameInfoList.isEmpty()){
-            renameInfoList = new ArrayList<>();
+            renameInfoList = new ArrayCollection<>();
         }
         renameInfoList.add(renameInfo);
     }

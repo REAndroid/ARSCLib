@@ -22,7 +22,6 @@ import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.data.DataItem;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.SectionType;
 
 public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<DexBlockItem>
@@ -71,8 +70,7 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
     }
     @Override
     public void setItem(Key key){
-        DexSectionPool<T> pool = getBlockItem().getPool(getSectionType());
-        setItem(pool.getOrCreate(key));
+        setItem(getBlockItem().getOrCreate(getSectionType(), key));
     }
     @Override
     public Key getKey() {
@@ -103,13 +101,22 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
         T item = getItem();
         int value = 0;
         if(item != null){
+            item = item.getReplace();
+        }
+        if(item != null){
             value = item.getOffset();
             if(value == 0){
-                this.item = null;
+                item = null;
             }
         }
+        this.item = item;
         set(value);
         updateItemUsage();
+    }
+    @Override
+    public void unlink(){
+        this.item = null;
+        set(0);
     }
 
     private void updateItemUsage(){

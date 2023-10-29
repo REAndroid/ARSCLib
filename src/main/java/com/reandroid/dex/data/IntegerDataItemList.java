@@ -15,10 +15,12 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.ArrayIterator;
 
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public class IntegerDataItemList<T extends DataItem> extends IntegerList implements Iterable<T>{
@@ -29,10 +31,18 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
         super();
         this.sectionType = sectionType;
     }
-    public T addNew(){
-        T item = getSection(sectionType).createItem();
+    public T addNew(Key key){
+        T item = getOrCreateSection(sectionType).getOrCreate(key);
         add(item.getOffset());
         return item;
+    }
+    public T addNew(){
+        T item = getOrCreateSection(sectionType).createItem();
+        add(item.getOffset());
+        return item;
+    }
+    public void addNull(){
+        add(0);
     }
 
     @Override
@@ -128,7 +138,7 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
     @Override
     void onChanged() {
         super.onChanged();
-        updateItems();
+        cacheItems();
     }
 
     @Override
@@ -166,7 +176,7 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
         }
         return item.getOffset();
     }
-    private void updateItems(){
+    private void cacheItems(){
         items = get(sectionType, toArray());
     }
     private boolean isEmpty(T[] items){
@@ -175,6 +185,42 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
         }
         for(int i = 0; i < items.length; i++){
             if(items[i] != null){
+                return false;
+            }
+        }
+        return true;
+    }
+    @Override
+    public int hashCode() {
+        int hash = 1;
+        int size = size();
+        for(int i = 0; i < size; i++){
+            hash = hash * 31;
+            Object item = getItem(i);
+            if(item != null){
+                hash = hash + item.hashCode();
+            }
+        }
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == this){
+            return true;
+        }
+        if(obj == null || getClass() != obj.getClass()){
+            return false;
+        }
+        IntegerDataItemList<?> itemList = (IntegerDataItemList<?>)obj;
+        int size = size();
+        if(size != itemList.size()){
+            return false;
+        }
+        for(int i = 0; i < size; i++){
+            Object item1 = getItem(i);
+            Object item2 = itemList.getItem(i);
+            if(!Objects.equals(item1, item2)){
                 return false;
             }
         }

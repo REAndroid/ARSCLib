@@ -24,9 +24,11 @@ import com.reandroid.dex.debug.DebugSequence;
 import com.reandroid.dex.data.DexContainerItem;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.data.MethodDef;
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.InstanceIterator;
 
 import java.io.IOException;
@@ -206,6 +208,12 @@ public class Ins extends DexContainerItem implements SmaliFormat {
         clearExtraLines();
     }
 
+    public Iterator<IdItem> usedIds(){
+        return EmptyIterator.of();
+    }
+    public void merge(Ins ins){
+
+    }
     @Override
     public final void append(SmaliWriter writer) throws IOException {
         appendExtraLines(writer);

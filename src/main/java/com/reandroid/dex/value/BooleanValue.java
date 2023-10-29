@@ -42,6 +42,25 @@ public class BooleanValue extends DexValueBlock<Block> {
     public String getAsString() {
         return Boolean.toString(get());
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 1;
+        hash = hash * 31 + getValueType().getType();
+        hash = hash * 31 + getValueSize();
+        return hash;
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        BooleanValue value = (BooleanValue) obj;
+        return get() == value.get();
+    }
     @Override
     public String toString(){
         return getAsString();

@@ -21,10 +21,12 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.id.ClassId;
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -132,7 +134,9 @@ public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implemen
             return;
         }
         this.mClassId = classId;
-        linkAnnotation();
+        if(classId != null){
+            linkAnnotation();
+        }
     }
     @Override
     protected void onPreRefresh() {
@@ -185,10 +189,37 @@ public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implemen
         }
         return classId.getUniqueAnnotationsDirectory();
     }
+
+    @Override
+    public void clearChildes() {
+        for(Def<?> def : this){
+            //def.onRemove();
+        }
+        super.clearChildes();
+    }
+
     private void resetIndex(){
         for(T def : this){
             def.resetIndex();
         }
+    }
+    public Iterator<IdItem> usedIds(){
+        return new IterableIterator<Def<?>, IdItem>(iterator()) {
+            @Override
+            public Iterator<IdItem> iterator(Def<?> element) {
+                return element.usedIds();
+            }
+        };
+    }
+    public void merge(DefArray<?> defArray){
+        int count = defArray.getCount();
+        setChildesCount(count);
+        for(int i = 0; i < count; i++){
+            Def<?> coming = defArray.get(i);
+            get(i).merge(coming);
+        }
+        itemCount.set(count);
+        linkAnnotation();
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {

@@ -157,4 +157,5 @@ public interface UsageMarker {
     int USAGE_METHOD = 1 << 14;
     int USAGE_PROTO = 15;
     int USAGE_INTERFACE = 1 << 16;
+    int USAGE_CALL_SITE = 1 << 17;
 }

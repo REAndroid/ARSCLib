@@ -1,11 +1,11 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.common.ArraySupplier;
+import com.reandroid.utils.collection.ArraySort;
 import com.reandroid.utils.collection.ArraySupplierIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.InstanceIterator;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
 public class ExtraLineList implements ArraySupplier<ExtraLine>, Iterable<ExtraLine> {
@@ -63,7 +63,7 @@ public class ExtraLineList implements ArraySupplier<ExtraLine>, Iterable<ExtraLi
             this.sorted = true;
             return;
         }
-        Arrays.sort(elements, 0, this.size, ExtraLine.COMPARATOR);
+        ArraySort.sort(elements, 0, this.size, ExtraLine.COMPARATOR);
         this.sorted = true;
     }
     public void add(Iterator<ExtraLine> iterator){

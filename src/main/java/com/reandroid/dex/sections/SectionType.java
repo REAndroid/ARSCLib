@@ -17,7 +17,6 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.WarpedIntegerReference;
 import com.reandroid.dex.header.DexHeader;
@@ -33,6 +32,7 @@ public class SectionType<T extends Block> {
 
     public static final SectionType<?>[] VALUES;
     private static final SectionType<?>[] READ_ORDER;
+    private static final SectionType<?>[] DATA_REMOVE_ORDER;
 
     private static final SectionType<?>[] R8_ORDER;
     private static final SectionType<?>[] DEX_LIB2_ORDER;
@@ -45,20 +45,20 @@ public class SectionType<T extends Block> {
     public static final SectionType<FieldId> FIELD_ID;
     public static final SectionType<MethodId> METHOD_ID;
     public static final SectionType<ClassId> CLASS_ID;
-    public static final SectionType<IdItem> CALL_SITE_ID;
+    public static final SectionType<CallSiteId> CALL_SITE_ID;
     public static final SectionType<MethodHandle> METHOD_HANDLE;
 
     public static final SectionType<MapList> MAP_LIST;
     public static final SectionType<TypeList> TYPE_LIST;
-    public static final SectionType<AnnotationGroup> ANNOTATION_GROUP;
+    public static final SectionType<AnnotationItem> ANNOTATION_ITEM;
     public static final SectionType<AnnotationSet> ANNOTATION_SET;
+    public static final SectionType<AnnotationGroup> ANNOTATION_GROUP;
+    public static final SectionType<AnnotationsDirectory> ANNOTATION_DIRECTORY;
     public static final SectionType<ClassData> CLASS_DATA;
     public static final SectionType<CodeItem> CODE;
     public static final SectionType<StringData> STRING_DATA;
     public static final SectionType<DebugInfo> DEBUG_INFO;
-    public static final SectionType<AnnotationItem> ANNOTATION;
     public static final SectionType<EncodedArray> ENCODED_ARRAY;
-    public static final SectionType<AnnotationsDirectory> ANNOTATIONS_DIRECTORY;
     public static final SectionType<DataItem> HIDDEN_API;
 
     static {
@@ -66,7 +66,7 @@ public class SectionType<T extends Block> {
         VALUES = new SectionType[21];
         int index = 0;
 
-        HEADER = new SectionType<>("HEADER", 0x0000, index, new Creator<DexHeader>() {
+        HEADER = new SectionType<>("HEADER", 0x0000, new Creator<DexHeader>() {
             @Override
             public DexHeader[] newInstance(int length) {
                 return new DexHeader[length];
@@ -78,7 +78,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = HEADER;
 
-        MAP_LIST = new DataSectionType<>("MAP_LIST", 0x1000, index, new Creator<MapList>() {
+        MAP_LIST = new DataSectionType<>("MAP_LIST", 0x1000, new Creator<MapList>() {
             @Override
             public MapList[] newInstance(int length) {
                 return new MapList[length];
@@ -102,7 +102,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = STRING_ID;
 
-        STRING_DATA = new StringDataSectionType("STRING_DATA", 0x2002, index, new Creator<StringData>() {
+        STRING_DATA = new StringDataSectionType("STRING_DATA", 0x2002, new Creator<StringData>() {
             @Override
             public StringData[] newInstance(int length) {
                 return new StringData[length];
@@ -114,7 +114,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = STRING_DATA;
 
-        TYPE_ID = new IdSectionType<>("TYPE_ID", 0x0002, index, 1,  new Creator<TypeId>() {
+        TYPE_ID = new IdSectionType<>("TYPE_ID", 0x0002, 1,  new Creator<TypeId>() {
             @Override
             public TypeId[] newInstance(int length) {
                 return new TypeId[length];
@@ -126,7 +126,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = TYPE_ID;
 
-        TYPE_LIST = new DataSectionType<>("TYPE_LIST", 0x1001, index, new Creator<TypeList>() {
+        TYPE_LIST = new DataSectionType<>("TYPE_LIST", 0x1001, new Creator<TypeList>() {
             @Override
             public TypeList[] newInstance(int length) {
                 return new TypeList[length];
@@ -138,7 +138,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = TYPE_LIST;
 
-        PROTO_ID = new IdSectionType<>("PROTO_ID", 0x0003, index, 4, new Creator<ProtoId>() {
+        PROTO_ID = new IdSectionType<>("PROTO_ID", 0x0003, 4, new Creator<ProtoId>() {
             @Override
             public ProtoId[] newInstance(int length) {
                 return new ProtoId[length];
@@ -150,7 +150,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = PROTO_ID;
 
-        FIELD_ID = new IdSectionType<>("FIELD_ID", 0x0004, index, 2, new Creator<FieldId>() {
+        FIELD_ID = new IdSectionType<>("FIELD_ID", 0x0004, 2, new Creator<FieldId>() {
             @Override
             public FieldId[] newInstance(int length) {
                 return new FieldId[length];
@@ -163,7 +163,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = FIELD_ID;
 
-        METHOD_ID = new IdSectionType<>("METHOD_ID", 0x0005, index, 3, new Creator<MethodId>() {
+        METHOD_ID = new IdSectionType<>("METHOD_ID", 0x0005, 3, new Creator<MethodId>() {
             @Override
             public MethodId[] newInstance(int length) {
                 return new MethodId[length];
@@ -175,7 +175,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = METHOD_ID;
 
-        ANNOTATION = new DataSectionType<>("ANNOTATION", 0x2004, index, new Creator<AnnotationItem>() {
+        ANNOTATION_ITEM = new DataSectionType<>("ANNOTATION_ITEM", 0x2004, new Creator<AnnotationItem>() {
             @Override
             public AnnotationItem[] newInstance(int length) {
                 return new AnnotationItem[length];
@@ -185,9 +185,9 @@ public class SectionType<T extends Block> {
                 return new AnnotationItem();
             }
         });
-        VALUES[index++] = ANNOTATION;
+        VALUES[index++] = ANNOTATION_ITEM;
 
-        ANNOTATION_SET = new DataSectionType<>("ANNOTATION_SET", 0x1003, index, new Creator<AnnotationSet>() {
+        ANNOTATION_SET = new DataSectionType<>("ANNOTATION_SET", 0x1003, new Creator<AnnotationSet>() {
             @Override
             public AnnotationSet[] newInstance(int length) {
                 return new AnnotationSet[length];
@@ -199,7 +199,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = ANNOTATION_SET;
 
-        ANNOTATION_GROUP = new DataSectionType<>("ANNOTATION_GROUP", 0x1002, index, new Creator<AnnotationGroup>() {
+        ANNOTATION_GROUP = new DataSectionType<>("ANNOTATION_GROUP", 0x1002, new Creator<AnnotationGroup>() {
             @Override
             public AnnotationGroup[] newInstance(int length) {
                 return new AnnotationGroup[length];
@@ -212,7 +212,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = ANNOTATION_GROUP;
 
-        ANNOTATIONS_DIRECTORY = new DataSectionType<>("ANNOTATIONS_DIRECTORY", 0x2006, index, new Creator<AnnotationsDirectory>() {
+        ANNOTATION_DIRECTORY = new DataSectionType<>("ANNOTATIONS_DIRECTORY", 0x2006, new Creator<AnnotationsDirectory>() {
             @Override
             public AnnotationsDirectory[] newInstance(int length) {
                 return new AnnotationsDirectory[length];
@@ -222,16 +222,34 @@ public class SectionType<T extends Block> {
                 return new AnnotationsDirectory();
             }
         });
-        VALUES[index++] = ANNOTATIONS_DIRECTORY;
+        VALUES[index++] = ANNOTATION_DIRECTORY;
 
-        CALL_SITE_ID = new IdSectionType<>("CALL_SITE_ID", 0x0007, index, 5, null);
+        CALL_SITE_ID = new IdSectionType<>("CALL_SITE_ID", 0x0007, 5, new Creator<CallSiteId>() {
+            @Override
+            public CallSiteId[] newInstance(int length) {
+                return new CallSiteId[length];
+            }
+            @Override
+            public CallSiteId newInstance() {
+                return new CallSiteId();
+            }
+        });
         VALUES[index++] = CALL_SITE_ID;
 
-        METHOD_HANDLE = new IdSectionType<>("METHOD_HANDLE", 0x0008, index, 6, null);
+        METHOD_HANDLE = new IdSectionType<>("METHOD_HANDLE", 0x0008, 6, new Creator<MethodHandle>() {
+            @Override
+            public MethodHandle[] newInstance(int length) {
+                return new MethodHandle[length];
+            }
+            @Override
+            public MethodHandle newInstance() {
+                return new MethodHandle();
+            }
+        });
         VALUES[index++] = METHOD_HANDLE;
 
 
-        DEBUG_INFO = new DataSectionType<>("DEBUG_INFO", 0x2003, index, new Creator<DebugInfo>() {
+        DEBUG_INFO = new DataSectionType<>("DEBUG_INFO", 0x2003, new Creator<DebugInfo>() {
             @Override
             public DebugInfo[] newInstance(int length) {
                 return new DebugInfo[length];
@@ -243,7 +261,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = DEBUG_INFO;
 
-        CODE = new DataSectionType<>("CODE", 0x2001, index, new Creator<CodeItem>() {
+        CODE = new DataSectionType<>("CODE", 0x2001, new Creator<CodeItem>() {
             @Override
             public CodeItem[] newInstance(int length) {
                 return new CodeItem[length];
@@ -256,7 +274,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = CODE;
 
-        ENCODED_ARRAY = new DataSectionType<>("ENCODED_ARRAY", 0x2005, index,  new Creator<EncodedArray>() {
+        ENCODED_ARRAY = new DataSectionType<>("ENCODED_ARRAY", 0x2005, new Creator<EncodedArray>() {
             @Override
             public EncodedArray[] newInstance(int length) {
                 return new EncodedArray[length];
@@ -268,7 +286,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = ENCODED_ARRAY;
 
-        CLASS_DATA = new DataSectionType<>("CLASS_DATA", 0x2000, index, new Creator<ClassData>() {
+        CLASS_DATA = new DataSectionType<>("CLASS_DATA", 0x2000, new Creator<ClassData>() {
             @Override
             public ClassData[] newInstance(int length) {
                 return new ClassData[length];
@@ -280,7 +298,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = CLASS_DATA;
 
-        CLASS_ID = new IdSectionType<>("CLASS_ID", 0x0006, index, 7, new Creator<ClassId>() {
+        CLASS_ID = new IdSectionType<>("CLASS_ID", 0x0006, 7, new Creator<ClassId>() {
             @Override
             public ClassId[] newInstance(int length) {
                 return new ClassId[length];
@@ -292,7 +310,7 @@ public class SectionType<T extends Block> {
         });
         VALUES[index++] = CLASS_ID;
 
-        HIDDEN_API = new DataSectionType<>("HIDDEN_API", 0xF000, index, null);
+        HIDDEN_API = new DataSectionType<>("HIDDEN_API", 0xF000, null);
         VALUES[index] = HIDDEN_API;
 
         READ_ORDER = new SectionType[]{
@@ -305,18 +323,29 @@ public class SectionType<T extends Block> {
                 PROTO_ID,
                 FIELD_ID,
                 METHOD_ID,
-                ANNOTATION,
+                METHOD_HANDLE,
+                ANNOTATION_ITEM,
                 ANNOTATION_SET,
                 ANNOTATION_GROUP,
-                ANNOTATIONS_DIRECTORY,
+                ANNOTATION_DIRECTORY,
+                ENCODED_ARRAY,
                 CALL_SITE_ID,
-                METHOD_HANDLE,
                 DEBUG_INFO,
                 CODE,
-                ENCODED_ARRAY,
                 CLASS_DATA,
                 CLASS_ID,
                 HIDDEN_API
+        };
+
+        DATA_REMOVE_ORDER = new SectionType[]{
+                CLASS_DATA,
+                CODE,
+                DEBUG_INFO,
+                ANNOTATION_DIRECTORY,
+                ANNOTATION_GROUP,
+                ANNOTATION_SET,
+                ANNOTATION_ITEM,
+                ENCODED_ARRAY
         };
 
         R8_ORDER = new SectionType[]{
@@ -331,12 +360,12 @@ public class SectionType<T extends Block> {
                 DEBUG_INFO,
                 TYPE_LIST,
                 STRING_DATA,
-                ANNOTATION,
+                ANNOTATION_ITEM,
                 CLASS_DATA,
                 ENCODED_ARRAY,
                 ANNOTATION_SET,
                 ANNOTATION_GROUP,
-                ANNOTATIONS_DIRECTORY,
+                ANNOTATION_DIRECTORY,
                 MAP_LIST
         };
 
@@ -351,10 +380,10 @@ public class SectionType<T extends Block> {
                 STRING_DATA,
                 TYPE_LIST,
                 ENCODED_ARRAY,
-                ANNOTATION,
+                ANNOTATION_ITEM,
                 ANNOTATION_SET,
                 ANNOTATION_GROUP,
-                ANNOTATIONS_DIRECTORY,
+                ANNOTATION_DIRECTORY,
                 DEBUG_INFO,
                 CODE,
                 CLASS_DATA,
@@ -366,14 +395,11 @@ public class SectionType<T extends Block> {
     private final String name;
     private final int type;
     private final Creator<T> creator;
-    private final int readOrder;
-    private Boolean offsetType;
 
-    private SectionType(String name, int type, int readOrder, Creator<T> creator){
+    private SectionType(String name, int type, Creator<T> creator){
         this.name = name;
         this.type = type;
         this.creator = creator;
-        this.readOrder = readOrder;
     }
 
     public String getName() {
@@ -381,22 +407,6 @@ public class SectionType<T extends Block> {
     }
     public int getType() {
         return type;
-    }
-    public int getReadOrder() {
-        return readOrder;
-    }
-    public boolean isOffsetType(){
-        if(offsetType != null){
-            return offsetType;
-        }
-        synchronized (this){
-            if(creator != null){
-                offsetType = (creator.newInstance() instanceof OffsetSupplier);
-            }else {
-                offsetType = false;
-            }
-            return offsetType;
-        }
     }
     public boolean isIdSection(){
         return false;
@@ -426,13 +436,6 @@ public class SectionType<T extends Block> {
 
     public Creator<T> getCreator() {
         return creator;
-    }
-
-    public int compareReadOrder(SectionType<?> sectionType) {
-        if(sectionType == null){
-            return -1;
-        }
-        return Integer.compare(getReadOrder(), sectionType.getReadOrder());
     }
 
     @SuppressWarnings("unchecked")
@@ -477,13 +480,16 @@ public class SectionType<T extends Block> {
     public static SectionType<?>[] getReadOrderList() {
         return READ_ORDER.clone();
     }
+    public static SectionType<?>[] getRemoveOrderList() {
+        return DATA_REMOVE_ORDER.clone();
+    }
 
     private static class IdSectionType<T1 extends IdItem> extends SectionType<T1> {
 
         private final int referenceType;
 
-        private IdSectionType(String name, int type, int readOrder, int referenceType, Creator<T1> creator) {
-            super(name, type, readOrder, creator);
+        private IdSectionType(String name, int type, int referenceType, Creator<T1> creator) {
+            super(name, type, creator);
             this.referenceType = referenceType;
         }
         @Override
@@ -501,7 +507,7 @@ public class SectionType<T extends Block> {
     }
     private static class StringIdSectionType extends IdSectionType<StringId> {
         StringIdSectionType(String name, int type, int readOrder, int referenceType, Creator<StringId> creator) {
-            super(name, type, readOrder, referenceType, creator);
+            super(name, type, referenceType, creator);
         }
         @Override
         public StringIdSection createSection(IntegerPair countAndOffset){
@@ -509,8 +515,8 @@ public class SectionType<T extends Block> {
         }
     }
     private static class DataSectionType<T1 extends DataItem> extends SectionType<T1> {
-        DataSectionType(String name, int type, int readOrder, Creator<T1> creator) {
-            super(name, type, readOrder, creator);
+        DataSectionType(String name, int type, Creator<T1> creator) {
+            super(name, type, creator);
         }
 
         @Override
@@ -523,8 +529,8 @@ public class SectionType<T extends Block> {
         }
     }
     private static class StringDataSectionType extends DataSectionType<StringData> {
-        StringDataSectionType(String name, int type, int readOrder, Creator<StringData> creator) {
-            super(name, type, readOrder, creator);
+        StringDataSectionType(String name, int type, Creator<StringData> creator) {
+            super(name, type, creator);
         }
         @Override
         public StringDataSection createSection(IntegerPair countAndOffset){

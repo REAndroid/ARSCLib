@@ -29,6 +29,7 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
@@ -97,6 +98,17 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
     public MethodKey getKey(){
         return (MethodKey) super.getKey();
     }
+
+    @Override
+    void onRemove() {
+        CodeItem codeItem = codeOffset.getItem();
+        if(codeItem != null){
+            codeItem.setMethodDef(null);
+            this.codeOffset.setItem((CodeItem) null);
+        }
+        super.onRemove();
+    }
+
     public void removeParameter(int index){
         Parameter parameter = getParameter(index);
         if(parameter == null){
@@ -281,6 +293,38 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
             writer.indentMinus();
             writer.newLine();
             writer.append(".end param");
+        }
+    }
+
+    @Override
+    public Iterator<IdItem> usedIds(){
+        Iterator<IdItem> iterator;
+        CodeItem codeItem = getCodeItem();
+        if(codeItem == null){
+            iterator = EmptyIterator.of();
+        }else {
+            iterator = codeItem.usedIds();
+        }
+        return CombiningIterator.singleOne(getItem(), iterator);
+    }
+    @Override
+    public void merge(Def<?> def){
+        super.merge(def);
+        MethodDef comingMethod = (MethodDef) def;
+        CodeItem comingCode = comingMethod.getCodeItem();
+        if(comingCode != null){
+            this.codeOffset.setItem(comingCode.getKey());
+        }
+    }
+    private void mergeParameterAnnotations(MethodDef methodDef){
+        Iterator<AnnotationGroup> comingIterator = methodDef.getParameterAnnotations();
+        AnnotationsDirectory directory = null;
+        while (comingIterator.hasNext()){
+            if(directory == null){
+                directory = getOrCreateUniqueAnnotationsDirectory();
+            }
+            AnnotationGroup comingGroup = comingIterator.next();
+            directory.addParameterAnnotation(this, comingGroup);
         }
     }
 

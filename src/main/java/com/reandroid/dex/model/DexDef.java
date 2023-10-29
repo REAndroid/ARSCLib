@@ -16,7 +16,6 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.utils.StringsUtil;

@@ -15,16 +15,20 @@
  */
 package com.reandroid.dex.debug;
 
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class DebugParameter extends Base1Ule128IdItemReference<StringId> implements SmaliFormat {
+
     public DebugParameter(){
         super(SectionType.STRING_ID);
     }
@@ -58,6 +62,13 @@ public class DebugParameter extends Base1Ule128IdItemReference<StringId> impleme
         writer.append(getIndex());
         writer.append(", ");
         stringId.append(writer);
+    }
+
+    public Iterator<IdItem> usedIds(){
+        return SingleIterator.of(getItem());
+    }
+    public void merge(DebugParameter parameter){
+        setItem(parameter.getKey());
     }
 
     @Override

@@ -116,6 +116,11 @@ public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
         }
         return CompareUtil.compare(getFieldId(), fieldDef.getFieldId());
     }
+
+    @Override
+    public void merge(Def<?> def){
+        super.merge(def);
+    }
     @Override
     public String toString() {
         FieldId fieldId = getFieldId();

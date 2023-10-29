@@ -17,14 +17,15 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
-import com.reandroid.dex.base.DexItemArray;
+import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.dex.base.IntegerPair;
 
-public class SectionArray<T extends Block> extends DexItemArray<T> {
+public class SectionArray<T extends Block> extends BlockListArray<T>{
 
     public SectionArray(IntegerPair countAndOffset, Creator<T> creator) {
         super(countAndOffset, creator);
     }
+
     @Override
     public void onPreRemove(T item) {
         super.onPreRemove(item);
@@ -39,5 +40,10 @@ public class SectionArray<T extends Block> extends DexItemArray<T> {
     @SuppressWarnings("unchecked")
     Section<T> getParentSection(){
         return getParentInstance(Section.class);
+    }
+
+    public void clear(){
+        clearChildes();
+        destroy();
     }
 }

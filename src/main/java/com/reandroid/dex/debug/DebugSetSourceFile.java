@@ -15,10 +15,14 @@
  */
 package com.reandroid.dex.debug;
 
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.collection.SingleIterator;
+
+import java.util.Iterator;
 
 public class DebugSetSourceFile extends DebugElement {
 
@@ -50,6 +54,18 @@ public class DebugSetSourceFile extends DebugElement {
     @Override
     public DebugElementType<DebugSetSourceFile> getElementType() {
         return DebugElementType.SET_SOURCE_FILE;
+    }
+
+
+    @Override
+    public Iterator<IdItem> usedIds(){
+        return SingleIterator.of(mName.getItem());
+    }
+    @Override
+    public void merge(DebugElement element){
+        super.merge(element);
+        DebugSetSourceFile coming = (DebugSetSourceFile) element;
+        this.mName.setItem(coming.mName.getKey());
     }
 
     @Override

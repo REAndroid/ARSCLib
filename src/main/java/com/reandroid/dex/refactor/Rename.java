@@ -23,10 +23,7 @@ import com.reandroid.dex.sections.DexFileBlock;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.FilterIterator;
-import com.reandroid.utils.collection.MergingIterator;
+import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -39,7 +36,7 @@ public class Rename implements Iterable<RenameInfo<?>>{
     private final List<RenameInfo<?>> renameInfoList;
 
     public Rename(){
-        this.renameInfoList = new ArrayList<>();
+        this.renameInfoList = new ArrayCollection<>();
     }
 
     public void apply(DexDirectory directory){

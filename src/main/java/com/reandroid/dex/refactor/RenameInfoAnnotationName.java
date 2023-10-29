@@ -17,8 +17,9 @@ package com.reandroid.dex.refactor;
 
 import com.reandroid.dex.data.AnnotationElement;
 import com.reandroid.dex.data.AnnotationItem;
-import com.reandroid.dex.key.AnnotationKey;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.collection.ArrayCollection;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +32,7 @@ public class RenameInfoAnnotationName extends RenameInfoName<AnnotationItem> {
 
     @Override
     SectionType<AnnotationItem> getSectionType() {
-        return SectionType.ANNOTATION;
+        return SectionType.ANNOTATION_ITEM;
     }
     @Override
     void apply(Iterable<AnnotationItem> group){
@@ -42,12 +43,12 @@ public class RenameInfoAnnotationName extends RenameInfoName<AnnotationItem> {
         }
     }
     @Override
-    public AnnotationKey getKey(){
-        return new AnnotationKey(getTypeName(), getSearch(), null);
+    public Key getKey(){
+        throw new IllegalArgumentException("Not implemented yet!");
     }
     @Override
     List<RenameInfo<?>> createChildRenames() {
-        List<RenameInfo<?>> results = new ArrayList<>(1);
+        List<RenameInfo<?>> results = new ArrayCollection<>(1);
         RenameInfoMethodName methodName = new RenameInfoMethodName(
                 getTypeName(), null, getSearch(), getReplace());
         results.add(methodName);

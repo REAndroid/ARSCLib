@@ -22,11 +22,12 @@ import com.reandroid.dex.base.CountedArray;
 import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.ParallelReference;
 import com.reandroid.dex.base.PositionAlignedItem;
-import com.reandroid.dex.header.CountAndOffset;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.data.DataItem;
+import com.reandroid.utils.collection.ArraySort;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 
 public class MapList extends DataItem
@@ -121,6 +122,18 @@ public class MapList extends DataItem
         }
         return null;
     }
+    public void remove(SectionType<?> sectionType){
+        remove(get(sectionType));
+    }
+    public void remove(MapItem mapItem){
+        if(mapItem == null){
+            return;
+        }
+        mapItem.getCountAndOffset().setReference2(null);
+        itemArray.remove(mapItem);
+        mapItem.setParent(null);
+        mapItem.setIndex(-1);
+    }
     public MapItem get(SectionType<?> type){
         for(MapItem mapItem:this){
             if(type == mapItem.getMapType()){
@@ -145,7 +158,9 @@ public class MapList extends DataItem
 
     public MapItem[] getReadSorted(){
         MapItem[] mapItemList = itemArray.getChildes().clone();
-        Arrays.sort(mapItemList, SectionType.comparator(SectionType.getReadOrderList(), MapItem::getMapType));
+        Comparator<MapItem> comparator = SectionType.comparator(
+                SectionType.getReadOrderList(), MapItem::getMapType);
+        ArraySort.sort(mapItemList, comparator);
         return mapItemList;
     }
 

@@ -21,12 +21,16 @@ import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.NumberIntegerReference;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.dex.base.ParallelReference;
 import com.reandroid.dex.header.DexHeader;
+import com.reandroid.dex.id.ClassId;
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.*;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArraySupplierIterator;
 import com.reandroid.utils.collection.CombiningIterator;
 
@@ -86,6 +90,20 @@ public class SectionList extends FixedBlockContainer
         typeMap.put(SectionType.MAP_LIST, mapListSection);
     }
 
+    public void clearDuplicateData(){
+        SectionType<?>[] remove = SectionType.getRemoveOrderList();
+        for (SectionType<?> sectionType : remove) {
+            DataSection<?> section = (DataSection<?>) get(sectionType);
+            if(section == null){
+                continue;
+            }
+            int count = section.getPool().clearDuplicates();
+            if(count == 0){
+                continue;
+            }
+            section.refresh();
+        }
+    }
     public void clearUsageTypes(){
         Iterator<Section<?>> iterator = getSections();
         while (iterator.hasNext()) {
@@ -125,6 +143,10 @@ public class SectionList extends FixedBlockContainer
             }
             loadSection(mapItem, reader);
         }
+
+        idSectionList.trimToSize();
+        dataSectionList.trimToSize();
+
         idSectionList.sort(getOffsetComparator());
         dataSectionList.sort(getOffsetComparator());
         mapList.linkHeader(dexHeader);
@@ -160,6 +182,31 @@ public class SectionList extends FixedBlockContainer
         return mapList;
     }
 
+    public void remove(Section<?> section){
+        if(section == null){
+            return;
+        }
+        SectionType<?> sectionType = section.getSectionType();
+        if(typeMap.remove(sectionType) != section){
+            return;
+        }
+        section.onRemove(this);
+        if(sectionType.isDataSection()){
+            dataSectionList.remove((DataSection<?>) section);
+        }else if(sectionType.isIdSection()){
+            idSectionList.remove((IdSection<?>) section);
+        }
+    }
+    public void clear(){
+        Iterator<Section<?>> iterator = getSections();
+        while (iterator.hasNext()){
+            Section<?> section = iterator.next();
+            section.onRemove(this);
+        }
+        idSectionList.clearChildes();
+        dataSectionList.clearChildes();
+        typeMap.clear();
+    }
     public void clearPools(){
         for(Section<?> section : this){
             section.clearPool();
@@ -322,6 +369,80 @@ public class SectionList extends FixedBlockContainer
         return baseOffset;
     }
 
+    private<T1 extends Block> int getSectionDiffCount(Section<T1> section){
+        if(section.getSectionList() == this){
+            return section.getCount();
+        }
+        Section<T1> mySection = get(section.getSectionType());
+        if(mySection != null){
+            return mySection.getDiffCount(section);
+        }
+        return 0;
+    }
+    private boolean canAddAll(SectionList sectionList){
+        Iterator<IdSection<?>> iterator = sectionList.getIdSections();
+        while (iterator.hasNext()){
+            Section<?> section = iterator.next();
+            int count = getSectionDiffCount(section);
+            if((count & 0xffff0000) != 0){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean canAdd(Collection<IdItem> usedIds) {
+        Iterator<IdSection<?>> idSections = getIdSections();
+        while (idSections.hasNext()){
+            IdSection<?> section = idSections.next();
+            if(!section.canAdd(usedIds)){
+                return false;
+            }
+        }
+        return true;
+    }
+    public boolean merge(SectionList sectionList, boolean relocateMode){
+        if(sectionList == this){
+            return false;
+        }
+        Section<ClassId> comingSection = sectionList.get(SectionType.CLASS_ID);
+        if(comingSection == null || comingSection.getCount() == 0){
+            return false;
+        }
+        boolean result = true;
+        Section<ClassId> mySection = getOrCreate(SectionType.CLASS_ID);
+        BlockListArray<ClassId> comingArray = comingSection.getItemArray();
+        int size = comingArray.size() - 1;
+        for (int i = size; i >= 0; i--){
+            ClassId coming = comingArray.get(i);
+            TypeKey key = coming.getKey();
+            if(mySection.contains(key)){
+                throw new IllegalArgumentException("Can't add duplicate class: " + key);
+            }
+            ArrayCollection<IdItem> collection = coming.listUsedIds();
+            if(!canAdd(collection)){
+                result = false;
+                break;
+            }
+            ClassId classId = mySection.getOrCreate(coming.getKey());
+            classId.merge(coming);
+            if(relocateMode){
+                coming.removeSelf();
+            }
+        }
+        if(comingSection.getCount() == 0){
+            SectionList comingSectionSectionList = comingSection.getSectionList();
+            DexFileBlock dexFileBlock = comingSectionSectionList.getParentInstance(DexFileBlock.class);
+            dexFileBlock.clear();
+            refresh();
+            sortStrings();
+        }else if(!result){
+            refresh();
+            sortStrings();
+        }
+        refresh();
+        return result;
+    }
     private static<T1 extends Section<?>> Comparator<T1> getOffsetComparator() {
         return (section1, section2) -> {
             if(section1 == section2){

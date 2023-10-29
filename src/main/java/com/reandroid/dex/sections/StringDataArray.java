@@ -29,7 +29,7 @@ public class StringDataArray extends DataSectionArray<StringData> {
     }
 
     @Override
-    protected void readChildes(BlockReader reader) throws IOException {
+    public void readChildes(BlockReader reader) throws IOException {
         super.readChildes(reader);
         StringIdArray idArray = getStringIdArray();
         idArray.link(this);
@@ -37,7 +37,7 @@ public class StringDataArray extends DataSectionArray<StringData> {
 
 
     private StringIdArray getStringIdArray(){
-        SectionList sectionList = getParentInstance(SectionList.class);
+        SectionList sectionList = getParent(SectionList.class);
         if(sectionList != null){
             StringIdSection section = (StringIdSection) sectionList.get(SectionType.STRING_ID);
             if(section != null){

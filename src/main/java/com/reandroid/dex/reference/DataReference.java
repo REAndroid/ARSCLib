@@ -19,4 +19,5 @@ import com.reandroid.dex.data.DataItem;
 
 public interface DataReference<T extends DataItem> extends DexReference<T>{
     T getOrCreate();
+    void unlink();
 }

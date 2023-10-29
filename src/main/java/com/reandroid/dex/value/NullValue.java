@@ -32,6 +32,10 @@ public class NullValue extends DexValueBlock<Block> {
     }
 
     @Override
+    public void merge(DexValueBlock<?> valueBlock){
+        super.merge(valueBlock);
+    }
+    @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append("null");
     }
@@ -39,21 +43,22 @@ public class NullValue extends DexValueBlock<Block> {
     public String getAsString() {
         return "null";
     }
+
+    @Override
+    public int hashCode() {
+        return getValueType().getType();
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        return obj != null && getClass() == obj.getClass();
+    }
     @Override
     public String toString() {
         return "NullValue";
     }
-    public static NullValue getInstance(){
-        if(sInstance != null){
-            return sInstance;
-        }
-        synchronized (NullValue.class){
-            if(sInstance == null){
-                sInstance = new NullValue();
-            }
-            return sInstance;
-        }
-    }
-    private static NullValue sInstance;
+
     public static final NullValue PLACE_HOLDER = new NullValue();
 }

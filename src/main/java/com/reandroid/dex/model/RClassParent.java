@@ -24,7 +24,6 @@ import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.ins.Ins35c;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.data.*;
-import com.reandroid.dex.key.AnnotationKey;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.value.ArrayValue;
@@ -32,6 +31,7 @@ import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.TypeValue;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.FilterIterator;
 import com.reandroid.utils.io.IOUtil;
@@ -124,14 +124,13 @@ public class RClassParent extends DexClass {
     }
     private AnnotationItem getOrCreateMemberAnnotation(){
         AnnotationSet annotationSet = getOrCreateClassAnnotations();
-        AnnotationKey key = new AnnotationKey(DexUtils.DALVIK_MEMBER, "value");
-        AnnotationItem item = annotationSet.get(key);
-        if(item != null){
+        String name = "value";
+        AnnotationItem item = annotationSet.getOrCreate(DexUtils.DALVIK_MEMBER, name);
+        AnnotationElement element = item.getElement(name);
+        if(element.getValueType() == DexValueType.ARRAY){
             return item;
         }
-        item = annotationSet.getOrCreate(key);
         item.setVisibility(AnnotationVisibility.SYSTEM);
-        AnnotationElement element = item.getElement(key.getName());
         ArrayValue array = DexValueType.ARRAY.newInstance();
         element.setValue(array);
         return item;
@@ -181,7 +180,8 @@ public class RClassParent extends DexClass {
         serializer.text("\n");
         serializer.startTag(null, PackageBlock.TAG_resources);
 
-        List<RField> fieldList = new ArrayList<>(rFields);
+        List<RField> fieldList = new ArrayCollection<>();
+        fieldList.addAll(rFields);
         fieldList.sort(CompareUtil.getComparableComparator());
         for(RField rField : fieldList) {
             rField.serializePublicXml(serializer);

@@ -15,41 +15,43 @@
  */
 package com.reandroid.dex.data;
 
-import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.base.CreatorArray;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.debug.DebugSequence;
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.ins.*;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public class InstructionList extends FixedBlockContainer implements
         Iterable<Ins>, SmaliFormat, VisitableInteger {
 
     private final CodeItem codeItem;
-    private final BlockArray<Ins> insArray;
+    private final BlockList<Ins> insArray;
     private final DexPositionAlign blockAlign;
 
     public InstructionList(CodeItem codeItem){
         super(2);
         this.codeItem = codeItem;
 
-        this.insArray = new CreatorArray<>(CREATOR);
+        this.insArray = new BlockList<>();
         this.blockAlign = new DexPositionAlign();
 
         addChild(0, insArray);
@@ -122,7 +124,7 @@ public class InstructionList extends FixedBlockContainer implements
         return this.iterator(insStart.getIndex(), count);
     }
 
-    private BlockArray<Ins> getInsArray() {
+    private BlockList<Ins> getInsArray() {
         return insArray;
     }
 
@@ -133,7 +135,7 @@ public class InstructionList extends FixedBlockContainer implements
         return getInsArray().getCount();
     }
     public void add(Ins ins){
-        BlockArray<Ins> array = getInsArray();
+        BlockList<Ins> array = getInsArray();
         array.add(ins);
         Ins previous = array.get(ins.getIndex() - 1);
         int address;
@@ -146,14 +148,14 @@ public class InstructionList extends FixedBlockContainer implements
     }
     public void add(int index, Ins item) {
         reBuildExtraLines();
-        getInsArray().insertItem(index, item);
+        getInsArray().add(index, item);
         updateAddresses();
         updateLabelAddress();
         reBuildExtraLines();
     }
     public void add(int index, Ins[] insArray) {
         reBuildExtraLines();
-        getInsArray().insertItem(index, insArray);
+        getInsArray().addAll(index, insArray);
         updateAddresses();
         updateLabelAddress();
         reBuildExtraLines();
@@ -237,7 +239,7 @@ public class InstructionList extends FixedBlockContainer implements
         int index = old.getIndex();
         old.transferExtraLines(item);
         item.setAddress(old.getAddress());
-        getInsArray().setItem(index, item);
+        getInsArray().set(index, item);
         old.setParent(null);
         old.setIndex(-1);
         updateAddresses();
@@ -261,7 +263,6 @@ public class InstructionList extends FixedBlockContainer implements
         }
         this.codeItem.getInstructionCodeUnitsReference().set(address);
         this.codeItem.getInstructionOutsReference().set(outSize);
-
     }
 
     @Override
@@ -317,19 +318,17 @@ public class InstructionList extends FixedBlockContainer implements
         int zeroPosition = reader.getPosition();
 
         int count = (insCodeUnits + 1) / 2;
-        BlockArray<Ins> insBlockArray = getInsArray();
-        insBlockArray.setChildesCount(count);
-        int index = 0;
+        BlockList<Ins> insBlockArray = getInsArray();
+        insBlockArray.ensureCapacity(count);
 
         while (reader.getPosition() < position){
             Opcode<?> opcode = Opcode.read(reader);
             Ins ins = opcode.newInstance();
             ins.setAddress((reader.getPosition() - zeroPosition) / 2);
-            insBlockArray.setItem(index, ins);
-            index ++;
+            insBlockArray.add(ins);
             ins.readBytes(reader);
         }
-        insBlockArray.setChildesCount(index);
+        insBlockArray.trimToSize();
         if(position != reader.getPosition()){
             // should not reach here
             reader.seek(position);
@@ -413,6 +412,45 @@ public class InstructionList extends FixedBlockContainer implements
                 target.addExtraLine(element);
             }
         }
+    }
+    public void onRemove(){
+        clearExtraLines();
+        getInsArray().clearChildes();
+        getInsArray().destroy();
+    }
+    public Iterator<IdItem> usedIds(){
+        return new IterableIterator<Ins, IdItem>(iterator()) {
+            @Override
+            public Iterator<IdItem> iterator(Ins element) {
+                return element.usedIds();
+            }
+        };
+    }
+    public void merge(InstructionList instructionList){
+        getInsArray().ensureCapacity(instructionList.getCount());
+        for(Ins coming : instructionList){
+            Ins ins = createNext(coming.getOpcode());
+            ins.merge(coming);
+        }
+        getInsArray().trimToSize();
+        updateAddresses();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        InstructionList list = (InstructionList) obj;
+        return insArray.equals(list.insArray);
+    }
+
+    @Override
+    public int hashCode() {
+        return insArray.hashCode();
     }
 
     @Override

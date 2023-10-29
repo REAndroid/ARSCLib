@@ -31,14 +31,6 @@ public class EnumValue extends SectionIdValue<FieldId> {
         return DexValueType.ENUM;
     }
     @Override
-    public String getTypeName(){
-        FieldId fieldId = get();
-        if(fieldId == null){
-            return toString();
-        }
-        return fieldId.getFieldType().getName();
-    }
-    @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append(".enum ");
         super.append(writer);

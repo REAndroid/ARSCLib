@@ -82,6 +82,34 @@ public class NumberValue extends DexBlockItem {
     public String toHex(){
         return HexUtil.toHex(getNumberValue(), getSize());
     }
+
+    public void merge(NumberValue value){
+        byte[] coming = value.getBytes();
+        int length = coming.length;
+        setBytesLength(length, false);
+        byte[] bytes = getBytesInternal();
+
+        for(int i = 0; i < length; i++){
+            bytes[i] = coming[i];
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(getNumberValue());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        return getNumberValue() == ((NumberValue) obj).getNumberValue();
+    }
+
     @Override
     public String toString() {
         return getSize() + ":" + toHex() + ":" + getSignedValue();

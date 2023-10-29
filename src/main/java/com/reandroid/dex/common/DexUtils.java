@@ -18,10 +18,10 @@
 package com.reandroid.dex.common;
 
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
@@ -29,7 +29,7 @@ import java.util.function.Function;
 public class DexUtils {
 
     public static List<File> listDexFiles(File dir){
-        List<File> results = new ArrayList<>();
+        ArrayCollection<File> results = new ArrayCollection<>();
         if(!dir.isDirectory()){
             return results;
         }
@@ -380,6 +380,7 @@ public class DexUtils {
             case 'I':
             case 'J':
             case 'S':
+            case 'V':
             case 'Z':
                 return true;
             default:

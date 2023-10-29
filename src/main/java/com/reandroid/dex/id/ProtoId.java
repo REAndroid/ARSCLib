@@ -27,7 +27,9 @@ import com.reandroid.dex.reference.IndirectStringReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -47,9 +49,29 @@ public class ProtoId extends IdItem implements Comparable<ProtoId>, KeyItemCreat
         this.parameters = new DataItemIndirectReference<>(SectionType.TYPE_LIST, this, 8);
     }
 
+
+    @Override
+    public Iterator<IdItem> usedIds(){
+        TypeList typeList = parameters.getItem();
+        Iterator<? extends IdItem> iterator;
+        if(typeList == null){
+            iterator = EmptyIterator.of();
+        }else {
+            iterator = typeList.iterator();
+        }
+        return CombiningIterator.three(
+                SingleIterator.of(shorty.getItem()),
+                SingleIterator.of(returnType.getItem()),
+                iterator
+        );
+    }
+    @Override
+    public SectionType<ProtoId> getSectionType(){
+        return SectionType.PROTO_ID;
+    }
     @Override
     public ProtoKey getKey(){
-        return checkKey(SectionType.PROTO_ID, ProtoKey.create(this));
+        return checkKey(ProtoKey.create(this));
     }
     @Override
     public void setKey(Key key){
@@ -63,7 +85,7 @@ public class ProtoId extends IdItem implements Comparable<ProtoId>, KeyItemCreat
         returnType.setItem(key.getReturnTypeKey());
         parameters.setItem(key.getParametersKey());
         shorty.setString(key.getShorty());
-        keyChanged(SectionType.PROTO_ID, old);
+        keyChanged(old);
     }
     public String getKey(boolean appendReturnType){
         StringBuilder builder = new StringBuilder();

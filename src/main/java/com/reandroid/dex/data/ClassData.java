@@ -20,8 +20,10 @@ import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.id.ClassId;
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.Opcode;
+import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
@@ -203,6 +205,31 @@ public class ClassData extends DataItem
         instanceFields.sort(CompareUtil.getComparableComparator());
         directMethods.sort(CompareUtil.getComparableComparator());
         virtualMethods.sort(CompareUtil.getComparableComparator());
+    }
+
+    @Override
+    public void removeSelf() {
+        super.removeSelf();
+        staticFields.clearChildes();
+        instanceFields.clearChildes();
+        directMethods.clearChildes();
+        virtualMethods.clearChildes();
+        setClassId(null);
+    }
+
+    public Iterator<IdItem> usedIds(){
+        return CombiningIterator.four(
+                staticFields.usedIds(),
+                instanceFields.usedIds(),
+                directMethods.usedIds(),
+                virtualMethods.usedIds()
+        );
+    }
+    public void merge(ClassData classData){
+        staticFields.merge(classData.staticFields);
+        instanceFields.merge(classData.instanceFields);
+        directMethods.merge(classData.directMethods);
+        virtualMethods.merge(classData.virtualMethods);
     }
 
     @Override

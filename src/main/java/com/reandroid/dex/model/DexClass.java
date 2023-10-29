@@ -16,19 +16,20 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.id.ClassId;
-import com.reandroid.dex.reference.DataItemIndirectReference;
-import com.reandroid.dex.ins.Ins;
-import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.data.*;
-import com.reandroid.dex.key.*;
-import com.reandroid.dex.value.StringValue;
+import com.reandroid.dex.id.ClassId;
+import com.reandroid.dex.ins.Ins;
+import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.reference.DataItemIndirectReference;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.collection.*;
 
 import java.io.*;
-import java.util.*;
-import java.util.function.Function;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public class DexClass extends DexDef implements Comparable<DexClass> {
@@ -40,31 +41,6 @@ public class DexClass extends DexDef implements Comparable<DexClass> {
         this.classId = classId;
     }
 
-    public void logAnnotation(){
-        getClassData();
-        AnnotationSet annotationSet = getAnnotations();
-        if(annotationSet == null){
-            return;
-        }
-        AnnotationKey key = new AnnotationKey("Lkotlin/coroutines/jvm/internal/f;", "c");
-        AnnotationItem item = annotationSet.get(key);
-        if(item == null){
-            return;
-        }
-        AnnotationElement element = item.getElement("c");
-        String value = ((StringValue)element.getValue()).getString();
-        int i = value.lastIndexOf('.');
-        value = value.substring(0, i + 1);
-        value = value.replace('.', '/');
-        value = "L"+value;
-
-        String pkg = getPackageName();
-        if(pkg.equals(value)){
-            return;
-        }
-        String msg = pkg + "=" + value;
-        System.err.println(msg);
-    }
     public void cleanKotlin(){
         getClassData();
         cleanKotlinAnnotation();

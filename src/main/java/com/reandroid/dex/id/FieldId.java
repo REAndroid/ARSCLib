@@ -23,8 +23,12 @@ import com.reandroid.dex.reference.IndirectStringReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Objects;
 
 public class FieldId extends IdItem implements KeyItemCreate, Comparable<FieldId>{
@@ -39,6 +43,14 @@ public class FieldId extends IdItem implements KeyItemCreate, Comparable<FieldId
         this.nameReference = new IndirectStringReference( this, 4, USAGE_FIELD_NAME);
     }
 
+    @Override
+    public Iterator<IdItem> usedIds(){
+        return CombiningIterator.three(
+                SingleIterator.of(classType.getItem()),
+                SingleIterator.of(fieldType.getItem()),
+                SingleIterator.of(nameReference.getItem())
+        );
+    }
     public String getName() {
         return nameReference.getString();
     }
@@ -99,8 +111,12 @@ public class FieldId extends IdItem implements KeyItemCreate, Comparable<FieldId
     }
 
     @Override
+    public SectionType<FieldId> getSectionType(){
+        return SectionType.FIELD_ID;
+    }
+    @Override
     public FieldKey getKey(){
-        return checkKey(SectionType.FIELD_ID, FieldKey.create(this));
+        return checkKey(FieldKey.create(this));
     }
 
     @Override
@@ -115,7 +131,7 @@ public class FieldId extends IdItem implements KeyItemCreate, Comparable<FieldId
         classType.setItem(key.getDefiningKey());
         nameReference.setString(key.getName());
         fieldType.setItem(key.getTypeKey());
-        keyChanged(SectionType.FIELD_ID, old);
+        keyChanged(old);
     }
     public String key(boolean appendFieldType) {
         StringBuilder builder = new StringBuilder();

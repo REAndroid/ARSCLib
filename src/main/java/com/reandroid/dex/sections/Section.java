@@ -24,11 +24,11 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 public class Section<T extends Block>  extends FixedDexContainer
         implements DexArraySupplier<T>, OffsetSupplier,
@@ -36,11 +36,11 @@ public class Section<T extends Block>  extends FixedDexContainer
 
     private final SectionType<T> sectionType;
     private final DexPositionAlign sectionAlign;
-    private final DexItemArray<T> itemArray;
+    private final SectionArray<T> itemArray;
 
     private DexSectionPool<T> dexSectionPool;
 
-    Section(SectionType<T> sectionType, DexItemArray<T> itemArray){
+    Section(SectionType<T> sectionType, SectionArray<T> itemArray){
         super(2);
         this.sectionType = sectionType;
         this.itemArray = itemArray;
@@ -49,22 +49,38 @@ public class Section<T extends Block>  extends FixedDexContainer
         addChild(1, itemArray);
     }
     public Section(IntegerPair countAndOffset, SectionType<T> sectionType){
-        this(sectionType, new DexItemArray<>(countAndOffset, sectionType.getCreator()));
+        this(sectionType, new SectionArray<>(countAndOffset, sectionType.getCreator()));
     }
 
     public Iterator<T> getWithUsage(int usage){
         if(!hasUsageMarker()){
             return EmptyIterator.of();
         }
-        return FilterIterator.of(iterator(), item -> ((UsageMarker) item).containsUsage(usage));
+        return iterator(item -> ((UsageMarker) item).containsUsage(usage));
     }
     public void clearUsageTypes(){
         if(hasUsageMarker()){
             UsageMarker.clearUsageTypes(iterator());
         }
     }
+    public void removeSelf(){
+        SectionList sectionList = getSectionList();
+        if(sectionList != null){
+            sectionList.remove(this);
+        }
+    }
+    void onRemove(SectionList sectionList){
+        clear();
+        sectionList.getMapList().remove(getSectionType());
+        setParent(null);
+        setIndex(-1);
+    }
+    public void clear(){
+        clearPool();
+        getItemArray().clear();
+    }
     public void clearPool(){
-        DexSectionPool<T> dexSectionPool = this.dexSectionPool;
+        DexSectionPool<T> dexSectionPool = this.getLoadedPool();
         if(dexSectionPool != null){
             dexSectionPool.clear();
             this.dexSectionPool = null;
@@ -86,7 +102,7 @@ public class Section<T extends Block>  extends FixedDexContainer
         return getPool().get(key);
     }
     boolean keyChanged(Key key){
-        DexSectionPool<T> dexSectionPool = this.dexSectionPool;
+        DexSectionPool<T> dexSectionPool = this.getLoadedPool();
         if(dexSectionPool != null){
             return dexSectionPool.update(key);
         }
@@ -101,13 +117,15 @@ public class Section<T extends Block>  extends FixedDexContainer
         }
         return dexSectionPool;
     }
+    public DexSectionPool<T> getLoadedPool(){
+        return dexSectionPool;
+    }
 
-    @SuppressWarnings("unchecked")
-    private DexSectionPool<T> createPool(){
+    DexSectionPool<T> createPool(){
         return new DexSectionPool<>(this);
     }
     public void add(T item){
-        itemArray.add(item);
+        getItemArray().add(item);
     }
 
     public SectionType<T> getSectionType() {
@@ -138,7 +156,7 @@ public class Section<T extends Block>  extends FixedDexContainer
     public IntegerReference getOffsetReference(){
         return getItemArray().getOffsetReference();
     }
-    public DexItemArray<T> getItemArray() {
+    public SectionArray<T> getItemArray() {
         return itemArray;
     }
     public void sort() throws ClassCastException {
@@ -152,6 +170,12 @@ public class Section<T extends Block>  extends FixedDexContainer
     public Iterator<T> iterator() {
         return getItemArray().iterator();
     }
+    public Iterator<T> iterator(Predicate<? super T> filter) {
+        return getItemArray().iterator(filter);
+    }
+    public Iterator<T> arrayIterator() {
+        return getItemArray().arrayIterator();
+    }
     void updateNextSection(int position){
         Section<?> next = getNextSection();
         if(next != null){
@@ -159,7 +183,7 @@ public class Section<T extends Block>  extends FixedDexContainer
         }
     }
     Section<?> getNextSection(){
-        SectionList sectionList = getParentInstance(SectionList.class);
+        SectionList sectionList = getSectionList();
         if(sectionList != null){
             int i = sectionList.indexOf(this);
             if(i >= 0){
@@ -169,7 +193,7 @@ public class Section<T extends Block>  extends FixedDexContainer
         return null;
     }
     Section<?> getPreviousSection(){
-        SectionList sectionList = getParentInstance(SectionList.class);
+        SectionList sectionList = getSectionList();
         if(sectionList != null){
             int i = sectionList.indexOf(this);
             if(i >= 0){
@@ -177,6 +201,9 @@ public class Section<T extends Block>  extends FixedDexContainer
             }
         }
         return null;
+    }
+    public SectionList getSectionList(){
+        return getParent(SectionList.class);
     }
     int compareOffset(Section<?> section){
         if(section == null){
@@ -201,11 +228,7 @@ public class Section<T extends Block>  extends FixedDexContainer
         position += sectionAlign.size();
         getOffsetReference().set(position);
         onRefreshed(position);
-        DexSectionPool<T> dexSectionPool = this.dexSectionPool;
-        if(dexSectionPool != null){
-            dexSectionPool.clear();
-            this.dexSectionPool = null;
-        }
+        clearPool();
     }
     void alignSection(DexPositionAlign positionAlign, int position){
         if(isPositionAlignedItem()){
@@ -226,6 +249,9 @@ public class Section<T extends Block>  extends FixedDexContainer
         if(dexSectionPool != null){
             dexSectionPool.remove(item);
         }
+    }
+    int getDiffCount(Section<T> section){
+        return getCount();
     }
     @Override
     public String toString() {

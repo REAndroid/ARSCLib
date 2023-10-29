@@ -17,12 +17,11 @@ package com.reandroid.dex.value;
 
 import com.reandroid.arsc.base.BlockCreator;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T> {
 
@@ -53,70 +52,70 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
         DexValueType<?>[] valueTypes = new DexValueType[0x1f + 1];
         VALUES = valueTypes;
 
-        BYTE = new DexValueType<>("BYTE", 0x00, 0, true,
-                "B", ByteValue::new);
+        BYTE = new DexValueType<>("BYTE", 0x00, 0,
+                ByteValue::new);
         valueTypes[0x00] = BYTE;
-        SHORT = new DexValueType<>("SHORT", 0x02, 1, true,
-                "S", ShortValue::new);
+        SHORT = new DexValueType<>("SHORT", 0x02, 1,
+                ShortValue::new);
         valueTypes[0x02] = SHORT;
-        CHAR = new DexValueType<>("CHAR", 0x03, 1, true,
-                "C", CharValue::new);
+        CHAR = new DexValueType<>("CHAR", 0x03, 1,
+                CharValue::new);
         valueTypes[0x03] = CHAR;
-        INT = new DexValueType<>("INT", 0x04, 3, true,
-                "I", IntValue::new);
+        INT = new DexValueType<>("INT", 0x04, 3,
+                IntValue::new);
         valueTypes[0x04] = INT;
-        LONG = new DexValueType<>("LONG", 0x06, 7, true,
-                "J", LongValue::new);
+        LONG = new DexValueType<>("LONG", 0x06, 7,
+                LongValue::new);
         valueTypes[0x06] = LONG;
-        FLOAT = new DexValueType<>("FLOAT", 0x10, 3, true,
-                "F", FloatValue::new);
+        FLOAT = new DexValueType<>("FLOAT", 0x10, 3,
+                FloatValue::new);
         valueTypes[0x10] = FLOAT;
-        DOUBLE = new DexValueType<>("DOUBLE", 0x11, 7, true,
-                "D", DoubleValue::new);
+        DOUBLE = new DexValueType<>("DOUBLE", 0x11, 7,
+                DoubleValue::new);
         valueTypes[0x11] = DOUBLE;
 
-        PROTO = new DexValueType<>("PROTO", 0x15, 3, false,
-                DexUtils.toDalvikName(Method.class.getName()), ProtoValue::new);
+        PROTO = new DexValueType<>("PROTO", 0x15, 3,
+                ProtoValue::new);
         valueTypes[0x15] = PROTO;
 
-        METHOD_HANDLE = new DexValueType<>("METHOD_HANDLE", 0x16, 3, false,
-                DexUtils.toDalvikName(Method.class.getName()), MethodHandleValue::new);
+        METHOD_HANDLE = new DexValueType<>("METHOD_HANDLE", 0x16, 3,
+                MethodHandleValue::new);
         valueTypes[0x16] = METHOD_HANDLE;
 
-        STRING = new DexValueType<>("STRING", 0x17, 3, true,
-                DexUtils.toDalvikName(String.class.getName()), StringValue::new);
+        STRING = new DexValueType<>("STRING", 0x17, 3,
+                StringValue::new);
         valueTypes[0x17] = STRING;
 
-        TYPE = new DexValueType<>("TYPE", 0x18, 3, true,
-                DexUtils.toDalvikName(Class.class.getName()), TypeValue::new);
+        TYPE = new DexValueType<>("TYPE", 0x18, 3,
+                TypeValue::new);
         valueTypes[0x18] = TYPE;
 
-        FIELD = new DexValueType<>("FIELD", 0x19, 3, false,
-                DexUtils.toDalvikName(Field.class.getName()), FieldIdValue::new);
+        FIELD = new DexValueType<>("FIELD", 0x19, 3,
+                FieldIdValue::new);
         valueTypes[0x19] = FIELD;
 
-        METHOD = new DexValueType<>("METHOD", 0x1a, 3, false,
-                DexUtils.toDalvikName(Method.class.getName()), MethodIdValue::new);
+        METHOD = new DexValueType<>("METHOD", 0x1a, 3,
+                MethodIdValue::new);
         valueTypes[0x1a] = METHOD;
 
-        ENUM = new DexValueType<>("ENUM", 0x1b, 3, false,
-                "", EnumValue::new);
+        ENUM = new DexValueType<>("ENUM", 0x1b, 3,
+                EnumValue::new);
         valueTypes[0x1b] = ENUM;
 
-        ARRAY = new DexValueType<>("ARRAY", 0x1c, 0, false,
-                "[", ArrayValue::new);
+        ARRAY = new DexValueType<>("ARRAY", 0x1c, 0,
+                ArrayValue::new);
         valueTypes[0x1c] = ARRAY;
 
-        ANNOTATION = new DexValueType<>("ANNOTATION", 0x1d, 0, false,
-                "", AnnotationValue::new);
+        ANNOTATION = new DexValueType<>("ANNOTATION", 0x1d, 0,
+                AnnotationValue::new);
         valueTypes[0x1d] = ANNOTATION;
 
-        NULL = new DexValueType<>("NULL", 0x1e, 0, false,
-                "null", NullValue::new);
+        NULL = new DexValueType<>("NULL", 0x1e, 0,
+                NullValue::new);
         valueTypes[0x1e] = NULL;
 
-        BOOLEAN = new DexValueType<>("BOOLEAN", 0x1f, 1, false,
-                "Z", BooleanValue::new);
+        BOOLEAN = new DexValueType<>("BOOLEAN", 0x1f, 1,
+                BooleanValue::new);
         valueTypes[0x1f] = BOOLEAN;
 
         int index = 0;
@@ -139,17 +138,13 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
     private final String name;
     private final int type;
     private final int size;
-    private final boolean number;
-    private final String typeName;
     private final BlockCreator<T> creator;
     private final int flag;
 
-    private DexValueType(String name, int type, int size, boolean number, String typeName, BlockCreator<T> creator){
+    private DexValueType(String name, int type, int size, BlockCreator<T> creator){
         this.name = name;
         this.type = type;
         this.size = size;
-        this.number = number;
-        this.typeName = typeName;
         this.creator = creator;
 
         flag = (size << 5) | type;
@@ -161,9 +156,6 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
     public int getType() {
         return type;
     }
-    public boolean isNumber() {
-        return number;
-    }
 
     public int getFlag(){
         return flag;
@@ -172,9 +164,6 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
         return (size << 5) | type;
     }
 
-    public String getTypeName() {
-        return typeName;
-    }
     @Override
     public T newInstance() {
         return creator.newInstance();
@@ -207,12 +196,31 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
         }
         return valueType.newInstance();
     }
-
     public static int decodeSize(int flag){
         return flag >>> 5;
     }
-
     public static DexValueType<?>[] values() {
         return VALUES_COPY;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static<T1 extends IdItem> DexValueType<? extends SectionValue<T1>> get(SectionType<T1> sectionType){
+        Object obj = null;
+        if(sectionType == SectionType.STRING_ID){
+            obj = STRING;
+        }
+        if(sectionType == SectionType.TYPE_ID){
+            obj = TYPE;
+        }
+        if(sectionType == SectionType.FIELD_ID){
+            obj = FIELD;
+        }
+        if(sectionType == SectionType.METHOD_ID){
+            obj = METHOD;
+        }
+        if(sectionType == SectionType.METHOD_HANDLE){
+            obj = METHOD_HANDLE;
+        }
+        return (DexValueType<? extends SectionValue<T1>>) obj;
     }
 }

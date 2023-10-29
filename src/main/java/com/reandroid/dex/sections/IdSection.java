@@ -15,9 +15,13 @@
  */
 package com.reandroid.dex.sections;
 
-import com.reandroid.dex.base.DexItemArray;
+import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.Key;
+
+import java.util.Collection;
+import java.util.Iterator;
 
 public class IdSection<T extends IdItem> extends Section<T> {
 
@@ -37,7 +41,7 @@ public class IdSection<T extends IdItem> extends Section<T> {
         if(indexes == null || indexes.length == 0){
             return null;
         }
-        DexItemArray<T> itemArray = getItemArray();
+        BlockListArray<T> itemArray = getItemArray();
         int length = indexes.length;
         T[] results = itemArray.newInstance(indexes.length);
         for(int i = 0; i < length; i++){
@@ -53,5 +57,40 @@ public class IdSection<T extends IdItem> extends Section<T> {
         position += getItemArray().countBytes();
         updateNextSection(position);
     }
-
+    @Override
+    int getDiffCount(Section<T> section){
+        int count = getCount();
+        if(section == this || section == null){
+            return count;
+        }
+        for(T item : section){
+            if(!contains(item.getKey())){
+                count ++;
+            }
+        }
+        return count;
+    }
+    public boolean canAdd(Collection<IdItem> collection){
+        int count = getCount();
+        int check = count + collection.size();
+        if((check & 0xffff0000) == 0){
+            return true;
+        }
+        SectionType<T> sectionType = getSectionType();
+        Iterator<IdItem> iterator = collection.iterator();
+        while (iterator.hasNext()){
+            IdItem item = iterator.next();
+            if(item.getSectionType() != sectionType){
+                continue;
+            }
+            Key key = item.getKey();
+            if(!contains(key)){
+                count++;
+            }
+            if((count & 0xffff0000) != 0){
+                return false;
+            }
+        }
+        return (count & 0xffff0000) == 0;
+    }
 }

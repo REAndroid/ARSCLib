@@ -16,6 +16,7 @@
 package com.reandroid.dex.debug;
 
 public class DebugRestartLocal extends DebugRegisterNumber {
+
     public DebugRestartLocal() {
         super(0, DebugElementType.RESTART_LOCAL);
     }

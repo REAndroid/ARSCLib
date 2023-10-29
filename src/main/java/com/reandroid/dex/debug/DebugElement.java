@@ -18,11 +18,15 @@ package com.reandroid.dex.debug;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.base.DexException;
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.ins.ExtraLine;
 import com.reandroid.dex.data.DexContainerItem;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.Objects;
 
 public abstract class DebugElement extends DexContainerItem implements ExtraLine {
     private final ByteItem elementType;
@@ -183,6 +187,30 @@ public abstract class DebugElement extends DexContainerItem implements ExtraLine
     public int getSortOrder() {
         return ExtraLine.ORDER_DEBUG_LINE;
     }
+
+    public Iterator<IdItem> usedIds(){
+        return EmptyIterator.of();
+    }
+    public void merge(DebugElement element){
+        this.elementType.set(element.elementType.get());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        DebugElement element = (DebugElement) obj;
+        return elementType.get() == element.elementType.get();
+    }
+    @Override
+    public int hashCode() {
+        return elementType.get();
+    }
+
     @Override
     public String toString() {
         return "Type = " + getElementType();

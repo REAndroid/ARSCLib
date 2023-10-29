@@ -46,6 +46,32 @@ abstract class DebugRegisterNumber extends DebugElement {
         writer.append(" v");
         writer.append(getRegisterNumber());
     }
+
+    @Override
+    public void merge(DebugElement element){
+        super.merge(element);
+        DebugRegisterNumber coming = (DebugRegisterNumber) element;
+        this.registerNumber.set(coming.registerNumber.get());
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        DebugRegisterNumber debug = (DebugRegisterNumber) obj;
+        return getFlag() == debug.getFlag() &&
+                registerNumber.get() == debug.registerNumber.get();
+    }
+    @Override
+    public int hashCode() {
+        int hash = getFlag();
+        hash = hash * 31 + registerNumber.get();
+        return hash;
+    }
+
     @Override
     public String toString() {
         return getElementType() + " v" + getRegisterNumber();

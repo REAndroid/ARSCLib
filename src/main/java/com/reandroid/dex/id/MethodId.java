@@ -26,7 +26,9 @@ import com.reandroid.dex.reference.IndirectStringReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -45,6 +47,14 @@ public class MethodId extends IdItem implements Comparable<MethodId>, KeyItemCre
         this.nameReference = new IndirectStringReference(this, 4, StringId.USAGE_METHOD_NAME);
     }
 
+    @Override
+    public Iterator<IdItem> usedIds(){
+        return CombiningIterator.three(
+                SingleIterator.of(classType.getItem()),
+                proto.getItem().usedIds(),
+                SingleIterator.of(nameReference.getItem())
+        );
+    }
     public String getName(){
         StringData stringData = getNameString();
         if(stringData != null){
@@ -133,8 +143,12 @@ public class MethodId extends IdItem implements Comparable<MethodId>, KeyItemCre
     }
 
     @Override
+    public SectionType<MethodId> getSectionType(){
+        return SectionType.METHOD_ID;
+    }
+    @Override
     public MethodKey getKey() {
-        return checkKey(SectionType.METHOD_ID, MethodKey.create(this));
+        return checkKey(MethodKey.create(this));
     }
     @Override
     public void setKey(Key key){
@@ -148,7 +162,7 @@ public class MethodId extends IdItem implements Comparable<MethodId>, KeyItemCre
         classType.setItem(key.getDefiningKey());
         nameReference.setString(key.getName());
         proto.setItem(key.getProtoKey());
-        keyChanged(SectionType.PROTO_ID, old);
+        keyChanged(old);
     }
     public String getKey(boolean appendType, boolean appendReturnType){
         StringBuilder builder = new StringBuilder();

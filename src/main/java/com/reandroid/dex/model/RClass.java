@@ -24,6 +24,7 @@ import com.reandroid.dex.data.ClassData;
 import com.reandroid.dex.data.FieldDef;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.io.IOUtil;
@@ -148,7 +149,8 @@ public class RClass extends DexClass {
         serializer.text("\n");
         serializer.startTag(null, PackageBlock.TAG_resources);
 
-        List<RField> fieldList = new ArrayList<>(rFields);
+        List<RField> fieldList = new ArrayCollection<>();
+        fieldList.addAll(rFields);
         fieldList.sort(CompareUtil.getComparableComparator());
         for(RField rField : fieldList) {
             rField.serializePublicXml(serializer);

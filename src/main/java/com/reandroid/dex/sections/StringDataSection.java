@@ -17,6 +17,8 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.data.StringData;
+import com.reandroid.dex.pool.DataSectionPool;
+import com.reandroid.dex.pool.StringDataPool;
 
 public class StringDataSection extends DataSection<StringData> {
 
@@ -24,4 +26,12 @@ public class StringDataSection extends DataSection<StringData> {
         super(sectionType, new StringDataArray(countAndOffset, sectionType.getCreator()));
     }
 
+    @Override
+    public StringDataPool getPool() {
+        return (StringDataPool) super.getPool();
+    }
+    @Override
+    StringDataPool createPool() {
+        return new StringDataPool(this);
+    }
 }

@@ -23,7 +23,6 @@ import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.dex.common.DexUtils;
-import com.reandroid.dex.debug.DebugSequence;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.MethodId;
@@ -53,7 +52,7 @@ public class DexDirectory implements Iterable<DexFile>, VisitableInteger, Intege
     private final Set<RClassParent> mRParents;
 
     public DexDirectory() {
-        this.dexFileList = new ArrayList<>();
+        this.dexFileList = new ArrayCollection<>();
         this.mRParents = new HashSet<>();
     }
 
@@ -64,36 +63,44 @@ public class DexDirectory implements Iterable<DexFile>, VisitableInteger, Intege
         this.mTag = tag;
     }
 
-
-    public void cleanDuplicateDebugLines(String className){
-        DexClass dexClass = getDexClass(TypeKey.create(className));
-        if(dexClass == null){
+    public void merge(){
+        if(size() < 2){
             return;
         }
         int i = 0;
-        Iterator<DexMethod> iterator = dexClass.getMethods();
-        while (iterator.hasNext()){
-            i += 2;
-            DexMethod dexMethod = iterator.next();
-            CodeItem codeItem = dexMethod.getMethodDef().getCodeItem();
-            if(codeItem == null){
-                continue;
+        while (true){
+            DexFile dexFile = get(i);
+            DexFile last = getLastNonEmpty(i);
+            if(dexFile == null || last == null){
+                break;
             }
-            DebugInfo debugInfo = codeItem.getDebugInfo();
-            if(debugInfo == null){
-                continue;
-            }
-            DebugSequence debugSequence = debugInfo.getDebugSequence();
-            if(debugSequence != null){
-                debugSequence.removeInvalid(codeItem.getInstructionList());
-                debugSequence.setLineStart(i);
-                i += debugSequence.getLast() - debugSequence.getLineStart();
+            log("Merging from: " + last.getSimpleName() + ", to " + dexFile.getSimpleName());
+            if(!dexFile.merge(last)){
+                i ++;
             }
         }
         for(DexFile dexFile : this){
-            dexFile.cleanDuplicateDebugLines();
+            log("Clear duplicate data from: " + dexFile.getSimpleName());
+            dexFile.refresh();
+            dexFile.clearDuplicateData();
         }
     }
+    private DexFile getLastNonEmpty(int limit){
+        int size = size() - 1;
+        for(int i = size; i > limit; i--){
+            DexFile dexFile = get(i);
+            if(!dexFile.isEmpty()){
+                return dexFile;
+            }
+        }
+        return null;
+    }
+    public void clearDebug(){
+        for(DexFile dexFile : this){
+            dexFile.clearDebug();
+        }
+    }
+
     public void cleanDuplicateDebugLines(){
         for(DexFile dexFile : this){
             dexFile.cleanDuplicateDebugLines();
@@ -737,7 +744,7 @@ public class DexDirectory implements Iterable<DexFile>, VisitableInteger, Intege
             return EmptyList.of();
         }
         ArrayCollection<MethodId> methodIdList = new ArrayCollection<>();
-        methodIdList.add(getMethods(methodKey));
+        methodIdList.addAll(getMethods(methodKey));
         if(methodIdList.size() == 0){
             return EmptyList.of();
         }
@@ -747,7 +754,7 @@ public class DexDirectory implements Iterable<DexFile>, VisitableInteger, Intege
                 throw new IllegalArgumentException("Duplicate: " + renamed);
             }
         }
-        List<MethodKey> results = new ArrayList<>(methodIdList.size());
+        List<MethodKey> results = new ArrayCollection<>(methodIdList.size());
         for(MethodId methodId : methodIdList){
             System.err.println(methodIdList.size()+"  RENAMED: " + methodId.getKey());
             methodId.setName(name);

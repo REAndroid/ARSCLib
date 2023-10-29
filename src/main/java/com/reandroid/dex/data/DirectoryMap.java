@@ -16,22 +16,18 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.CountedArray;
+import com.reandroid.dex.base.CountedList;
 import com.reandroid.dex.key.Key;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.FilterIterator;
 
-import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Predicate;
 
 public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
-        extends CountedArray<DirectoryEntry<DEFINITION, VALUE>>
+        extends CountedList<DirectoryEntry<DEFINITION, VALUE>>
         implements Iterable<DirectoryEntry<DEFINITION, VALUE>> {
 
     public DirectoryMap(IntegerReference itemCount, Creator<DirectoryEntry<DEFINITION, VALUE>> creator) {
@@ -39,14 +35,14 @@ public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
     }
 
     public boolean isEmpty(){
-        return getCount() == 0;
+        return size() == 0;
     }
 
     public boolean sort(){
         return super.sort(CompareUtil.getComparableComparator());
     }
     public void add(DEFINITION definition, VALUE value){
-        if(contains(definition, value)){
+        if(!contains(definition, value)){
             DirectoryEntry<DEFINITION, VALUE> entry = createNext();
             entry.set(definition, value);
         }
@@ -82,19 +78,10 @@ public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
         return false;
     }
     public void remove(DEFINITION definition) {
-        removeAll(getEntries(definition));
+        super.remove(entry -> entry.equalsDefIndex(definition));
     }
     public void remove(DEFINITION definition, Predicate<VALUE> filter) {
-        removeAll(
-                FilterIterator.of(iterator(),
-                entry -> entry.equalsDefIndex(definition) && filter.test(entry.getValue()))
-        );
-    }
-    private void removeAll(Iterator<DirectoryEntry<DEFINITION, VALUE>> iterator){
-        List<DirectoryEntry<DEFINITION, VALUE>> removeList = CollectionUtil.toList(iterator);
-        if(!removeList.isEmpty()){
-            super.remove(removeList);
-        }
+        super.remove(entry -> entry.equalsDefIndex(definition) && filter.test(entry.getValue()));
     }
     public void link(DEFINITION definition){
         for(DirectoryEntry<DEFINITION, VALUE> entry : this){
@@ -110,6 +97,9 @@ public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
     public Iterator<VALUE> getValues(DEFINITION definition){
         return ComputeIterator.of(getEntries(definition), DirectoryEntry::getValue);
     }
+    public Iterator<VALUE> getValues(){
+        return ComputeIterator.of(iterator(), DirectoryEntry::getValue);
+    }
     public Iterator<DirectoryEntry<DEFINITION, VALUE>> getEntries(DEFINITION definition){
         return FilterIterator.of(iterator(), entry -> entry.equalsDefIndex(definition));
     }
@@ -122,9 +112,17 @@ public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
         return getCount() * DirectoryEntry.SIZE;
     }
 
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public void merge(DirectoryMap<DEFINITION, VALUE> directoryMap){
+        if(directoryMap == this){
+            return;
+        }
+        int size = directoryMap.size();
+        ensureCapacity(size);
+        for(int i = 0; i < size; i++){
+            DirectoryEntry<DEFINITION, VALUE> coming = directoryMap.get(i);
+            DirectoryEntry<DEFINITION, VALUE> item = createNext();
+            item.merge(coming);
+        }
     }
 
 }

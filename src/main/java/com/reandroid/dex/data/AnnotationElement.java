@@ -2,34 +2,37 @@ package com.reandroid.dex.data;
 
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.key.AnnotationKey;
+import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.reference.StringUle128Reference;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.NullValue;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.collection.CombiningIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.Objects;
 
 public class AnnotationElement extends DataItem implements SmaliFormat {
 
     private final StringUle128Reference elementName;
 
+    private final DataKey<AnnotationElement> mKey;
+
     public AnnotationElement() {
         super(2);
         this.elementName = new StringUle128Reference(StringId.USAGE_METHOD_NAME);
         addChild(0, elementName);
+        this.mKey = new DataKey<>(this);
     }
 
     @Override
-    public AnnotationKey getKey(){
-        AnnotationItem parentItem = getParent(AnnotationItem.class);
-        if(parentItem != null){
-            return new AnnotationKey(parentItem.getTypeId().getName(), getName(), null);
-        }
-        return null;
+    public DataKey<AnnotationElement> getKey(){
+        return mKey;
     }
     public DexValueBlock<?> getValue(){
         return (DexValueBlock<?>) getChildes()[1];
@@ -72,12 +75,55 @@ public class AnnotationElement extends DataItem implements SmaliFormat {
         value.onReadBytes(reader);
     }
 
+    public Iterator<IdItem> usedIds(){
+        return CombiningIterator.singleOne(getNameId(), getValue().usedIds());
+    }
+    public void merge(AnnotationElement element){
+        if(element == this){
+            return;
+        }
+        setName(element.getName());
+        DexValueBlock<?> coming = element.getValue();
+        DexValueBlock<?> value = getOrCreateValue(coming.getValueType());
+        value.merge(coming);
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append(getName());
         writer.append(" = ");
         getValue().append(writer);
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 1;
+        Object obj = getName();
+        hash = hash * 31;
+        if(obj != null){
+            hash += obj.hashCode();
+        }
+        obj = getValue();
+        hash = hash * 31;
+        if(obj != null){
+            hash = hash + obj.hashCode();
+        }
+        return hash;
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        AnnotationElement element = (AnnotationElement) obj;
+        if(!Objects.equals(getName(), element.getName())){
+            return false;
+        }
+        return Objects.equals(getValue(), element.getValue());
+    }
+
     @Override
     public String toString() {
         return getName() + " = " + getValue();

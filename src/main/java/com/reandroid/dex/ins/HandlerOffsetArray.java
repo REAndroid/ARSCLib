@@ -15,11 +15,13 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexBlockItem;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class HandlerOffsetArray extends DexBlockItem {
 
@@ -109,6 +111,33 @@ public class HandlerOffsetArray extends DexBlockItem {
         setBytesLength(itemCount.get() * 8, false);
         super.onReadBytes(reader);
         itemsStart = reader.getPosition();
+    }
+
+    public void merge(HandlerOffsetArray array){
+        byte[] coming = array.getBytesInternal();
+        int length = coming.length;
+        setBytesLength(length, false);
+        byte[] bytes = getBytesInternal();
+        for(int i = 0; i < length; i++){
+            bytes[i] = coming[i];
+        }
+        itemCount.set(array.itemCount.get());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        HandlerOffsetArray offsetArray = (HandlerOffsetArray) obj;
+        return Block.areEqual(getBytesInternal(), offsetArray.getBytesInternal());
+    }
+    @Override
+    public int hashCode() {
+        return Block.hashCodeOf(getBytesInternal());
     }
 
     @Override

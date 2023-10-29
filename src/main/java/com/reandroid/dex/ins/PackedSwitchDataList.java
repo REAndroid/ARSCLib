@@ -64,6 +64,16 @@ public class PackedSwitchDataList extends IntegerList
     public Data getData(int index){
         return new Data(this, index);
     }
+
+    public void merge(PackedSwitchDataList dataList){
+        firstKey.set(dataList.firstKey.get());
+        int size = dataList.size();
+        setSize(size);
+        for(int i = 0; i < size; i++){
+            put(i, dataList.get(i));
+        }
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         int size = size();

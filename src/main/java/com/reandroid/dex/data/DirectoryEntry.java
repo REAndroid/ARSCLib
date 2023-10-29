@@ -34,6 +34,7 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
 
     private DEFINITION mDefinition;
     private VALUE mValue;
+    private Key mDefinitionKey;
 
     public DirectoryEntry(SectionType<VALUE> sectionType) {
         super(SIZE);
@@ -62,19 +63,33 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
         if(definition == null || this.mDefinition != null){
             return;
         }
-        if(getDefinitionIndexValue() == definition.getDefinitionIndex()){
+        Key key = getDefinitionKey();
+        if(key != null){
+            if(key.equals(definition.getKey())){
+                this.mDefinition = definition;
+                setDefinitionIndexValue(definition.getDefinitionIndex());
+            }
+        }else if(getDefinitionIndexValue() == definition.getDefinitionIndex()){
             this.mDefinition = definition;
         }
     }
     public void setDefinition(DEFINITION definition){
         this.mDefinition = definition;
+        Key key = null;
+        if(definition != null){
+            key = definition.getKey();
+        }
+        setDefinitionKey(key);
     }
     public Key getDefinitionKey(){
         DEFINITION definition = getDefinition();
         if(definition != null){
-            return definition.getKey();
+            mDefinitionKey = definition.getKey();
         }
-        return null;
+        return mDefinitionKey;
+    }
+    public void setDefinitionKey(Key key) {
+        this.mDefinitionKey = key;
     }
 
     public VALUE getValue() {
@@ -119,11 +134,24 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
         if(definition != null){
             setDefinitionIndexValue(definition.getDefinitionIndex());
         }
-        VALUE value = getValue();
+        VALUE value = refreshValue();
+        int offset = 0;
         if(value != null){
-            IntegerReference reference = value.getOffsetReference();
-            setValueOffset(reference.get());
+            offset = value.getOffset();
         }
+        setValueOffset(offset);
+    }
+    private VALUE refreshValue(){
+        VALUE value = getValue();
+        if(value == null){
+            return null;
+        }
+        value = value.getReplace();
+        if(value.isRemoved() || value.getOffset() == 0){
+            value = null;
+        }
+        this.mValue = value;
+        return value;
     }
     public boolean equalsDefIndex(int defIndex) {
         return getDefinitionIndexValue() == defIndex;
@@ -151,6 +179,45 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
     public int compareTo(DirectoryEntry<?, ?> entry) {
         return compareDefIndex(getDefinition(), entry.getDefinition());
     }
+
+    public void merge(DirectoryEntry<DEFINITION, VALUE> entry){
+        if(entry == this){
+            return;
+        }
+        setDefinitionKey(entry.getDefinitionKey());
+        setValue(entry.getValueKey());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        DirectoryEntry<?, ?> entry = (DirectoryEntry<?, ?>) obj;
+
+        return Objects.equals(getDefinitionKey(), entry.getDefinitionKey()) &&
+                Objects.equals(getValue(), entry.getValue());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 1;
+        Object obj = getDefinitionKey();
+        hash = hash * 31;
+        if(obj != null){
+            hash = hash + obj.hashCode();
+        }
+        obj = getValue();
+        hash = hash * 31;
+        if(obj != null){
+            hash = hash + obj.hashCode();
+        }
+        return hash;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();

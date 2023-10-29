@@ -104,23 +104,7 @@ public class MethodKey implements Key{
 
     @Override
     public int compareTo(Object obj) {
-        if(obj == null){
-            return -1;
-        }
-        MethodKey key = (MethodKey) obj;
-        int i = CompareUtil.compare(getDefining(), key.getDefining());
-        if(i != 0) {
-            return i;
-        }
-        i = CompareUtil.compare(getName(), key.getName());
-        if(i != 0) {
-            return i;
-        }
-        i = CompareUtil.compare(getParameters(), key.getParameters());
-        if(i != 0) {
-            return i;
-        }
-        return CompareUtil.compare(getReturnType(), key.getReturnType());
+        return compareTo(obj, true);
     }
     public int compareTo(Object obj, boolean checkDefining) {
         if(obj == null){

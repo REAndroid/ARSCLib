@@ -17,6 +17,7 @@ package com.reandroid.dex.pool;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.common.ArraySupplier;
+import com.reandroid.dex.id.MethodId;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
@@ -31,26 +32,28 @@ public class KeyItemGroup<T extends Block> extends ArrayCollection<T> implements
     public KeyItemGroup() {
         super();
     }
+    public KeyItemGroup(T item) {
+        super(new Object[]{item});
+    }
 
     public T matching(Key key){
-        sort();
         int length = size();
         if(length == 0){
             return null;
         }
-        T best = get(0);
-        for(int i = 1; i < length; i++) {
+        T result = null;
+        for(int i = 0; i < length; i++) {
             T item = get(i);
+            if(result == null){
+                result = item;
+            }
             Key itemKey = ((KeyItem)item).getKey();
             int compare = CompareUtil.compare(key, itemKey);
             if(compare == 0){
                 return item;
             }
-            if(compare < 0){
-                best = item;
-            }
         }
-        return best;
+        return result;
     }
     public Key getKey(){
         int size = size();
@@ -63,12 +66,6 @@ public class KeyItemGroup<T extends Block> extends ArrayCollection<T> implements
         }
         return null;
     }
-    @Override
-    public boolean add(T block) {
-        boolean result = super.add(block);
-        sorted = false;
-        return result;
-    }
     private void sort(){
         if(sorted){
             return;
@@ -79,6 +76,7 @@ public class KeyItemGroup<T extends Block> extends ArrayCollection<T> implements
             return;
         }
         super.sort(this);
+        sorted = true;
     }
 
     @Override
@@ -111,6 +109,11 @@ public class KeyItemGroup<T extends Block> extends ArrayCollection<T> implements
     }
 
     @Override
+    public void onChanged(){
+        super.onChanged();
+        sorted = false;
+    }
+    @Override
     public int hashCode() {
         Key key = getKey();
         if(key != null){
@@ -124,6 +127,4 @@ public class KeyItemGroup<T extends Block> extends ArrayCollection<T> implements
         Key key = getKey();
         return size() + " {" + key + "}";
     }
-
-    public static String EMPTY = "";
 }

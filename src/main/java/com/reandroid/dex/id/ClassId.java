@@ -32,8 +32,10 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.*;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Objects;
 
 public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreate {
@@ -56,7 +58,7 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
         this.superClass = new IdItemIndirectReference<>(SectionType.TYPE_ID, this, offset += 4, USAGE_SUPER_CLASS);
         this.interfaces = new DataItemIndirectReference<>(SectionType.TYPE_LIST, this, offset += 4);
         this.sourceFile = new IndirectStringReference(this, offset += 4, USAGE_SOURCE);
-        this.annotationsDirectory = new DataItemIndirectReference<>(SectionType.ANNOTATIONS_DIRECTORY, this, offset += 4, USAGE_DEFINITION);
+        this.annotationsDirectory = new DataItemIndirectReference<>(SectionType.ANNOTATION_DIRECTORY, this, offset += 4, USAGE_DEFINITION);
         this.classData = new DataItemIndirectReference<>(SectionType.CLASS_DATA, this, offset += 4, USAGE_DEFINITION);
         this.staticValues = new DataItemIndirectReference<>(SectionType.ENCODED_ARRAY, this, offset += 4, USAGE_DEFINITION);
         addUsageType(UsageMarker.USAGE_DEFINITION);
@@ -72,8 +74,12 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
         staticValues.getUniqueItem(this);
     }
     @Override
+    public SectionType<ClassId> getSectionType(){
+        return SectionType.CLASS_ID;
+    }
+    @Override
     public TypeKey getKey(){
-        return checkKey(SectionType.CLASS_ID, TypeKey.create(getName()));
+        return checkKey(TypeKey.create(getName()));
     }
     @Override
     public void setKey(Key key){
@@ -82,7 +88,7 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
             return;
         }
         this.classType.setItem(key);
-        keyChanged(SectionType.CLASS_ID, old);
+        keyChanged(old);
     }
     public String getName(){
         TypeId typeId = getClassType();
@@ -170,7 +176,7 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
     }
     public AnnotationItem getOrCreateInnerClass(int flags, String name){
         AnnotationSet annotationSet = getOrCreateClassAnnotations();
-        AnnotationItem item = annotationSet.getOrCreate(key_InnerClass);
+        AnnotationItem item = annotationSet.getOrCreateByType(key_InnerClass);
         item.setVisibility(AnnotationVisibility.SYSTEM);
 
         AnnotationElement accessFlags = item.getOrCreateElement("accessFlags");
@@ -204,7 +210,7 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
             return null;
         }
         AnnotationSet annotationSet = getOrCreateClassAnnotations();
-        AnnotationItem item = annotationSet.getOrCreate(key_EnclosingClass);
+        AnnotationItem item = annotationSet.getOrCreateByType(key_EnclosingClass);
         item.setVisibility(AnnotationVisibility.SYSTEM);
         AnnotationElement element = item.getOrCreateElement("value");
         TypeValue typeValue = element.getOrCreateValue(DexValueType.TYPE);
@@ -253,6 +259,9 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
     }
     public AnnotationsDirectory getUniqueAnnotationsDirectory(){
         return annotationsDirectory.getUniqueItem(this);
+    }
+    public AnnotationsDirectory getOrCreateUniqueAnnotationsDirectory(){
+        return annotationsDirectory.getOrCreateUniqueItem(this);
     }
     public AnnotationsDirectory getAnnotationsDirectory(){
         return annotationsDirectory.getItem();
@@ -332,6 +341,69 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
     private void linkClassData(ClassData classData){
         if(classData != null){
             classData.setClassId(this);
+        }
+    }
+
+    @Override
+    public void removeSelf() {
+        super.removeSelf();
+        this.classType.unlink();
+        this.superClass.unlink();
+        this.sourceFile.unlink();
+        this.classData.unlink();
+        this.annotationsDirectory.unlink();
+        this.staticValues.unlink();
+    }
+
+    @Override
+    public Iterator<IdItem> usedIds(){
+        return listUsedIds().iterator();
+    }
+    public ArrayCollection<IdItem> listUsedIds(){
+
+        ArrayCollection<IdItem> collection = new ArrayCollection<>(200);
+        collection.add(classType.getItem());
+        collection.add(superClass.getItem());
+        collection.add(sourceFile.getItem());
+
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if(directory != null){
+            collection.addAll(directory.usedIds());
+        }
+        ClassData classData = getClassData();
+        if(classData != null){
+            collection.addAll(classData.usedIds());
+        }
+        EncodedArray encodedArray = getStaticValues();
+        if(encodedArray != null){
+            collection.addAll(encodedArray.usedIds());
+        }
+        int size = collection.size();
+        for (int i = 0; i < size; i++){
+            IdItem idItem = collection.get(i);
+            collection.addAll(idItem.usedIds());
+        }
+        return collection;
+    }
+
+    public void merge(ClassId classId){
+        if(classId == this){
+            return;
+        }
+        accessFlagValue.set(classId.accessFlagValue.get());
+        superClass.setItem(classId.superClass.getKey());
+        sourceFile.setItem(classId.sourceFile.getKey());
+        interfaces.setItem(classId.interfaces.getKey());
+        annotationsDirectory.setItem(classId.annotationsDirectory.getKey());
+        ClassData comingData = classId.getClassData();
+        if(comingData != null){
+            ClassData classData = getOrCreateClassData();
+            classData.merge(comingData);
+        }
+        EncodedArray comingArray = classId.getStaticValues();
+        if(comingArray != null){
+            EncodedArray encodedArray = staticValues.getOrCreate();
+            encodedArray.merge(comingArray);
         }
     }
 

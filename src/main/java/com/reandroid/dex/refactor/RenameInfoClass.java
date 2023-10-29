@@ -19,6 +19,7 @@ import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.EmptyList;
 
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ public class RenameInfoClass extends RenameInfo<StringId> {
     }
     @Override
     List<RenameInfo<?>> createChildRenames() {
-        List<RenameInfo<?>> results = new ArrayList<>(6);
+        List<RenameInfo<?>> results = new ArrayCollection<>(6);
         addClassAnnotation(results);
         addClassInner(results);
         addArrays(results);
@@ -239,7 +240,7 @@ public class RenameInfoClass extends RenameInfo<StringId> {
         }
         @Override
         List<RenameInfo<?>> createChildRenames() {
-            List<RenameInfo<?>> results = new ArrayList<>(1);
+            List<RenameInfo<?>> results = new ArrayCollection<>(1);
             results.add(new RenameInfoClassJavaInner(this));
             return results;
         }

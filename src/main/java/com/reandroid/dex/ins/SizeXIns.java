@@ -24,8 +24,11 @@ import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.Objects;
 
 public class SizeXIns extends Ins {
 
@@ -146,10 +149,6 @@ public class SizeXIns extends Ins {
         this.mSectionItem = item;
         setData(item.getIndex());
     }
-    public void setSectionIndex(int index){
-        setData(index);
-        cacheSectionItem();
-    }
 
     public int getData(){
         return getShortUnsigned(2);
@@ -223,5 +222,96 @@ public class SizeXIns extends Ins {
         }else {
             writer.append(HexUtil.toHex(data, 1));
         }
+    }
+
+    @Override
+    public Iterator<IdItem> usedIds(){
+        return SingleIterator.of(getSectionItem());
+    }
+    public void merge(Ins ins){
+        SizeXIns coming = (SizeXIns) ins;
+        SectionType<? extends IdItem> sectionType = coming.getSectionType();
+        if(sectionType == null){
+            this.valueBytes.set(coming.valueBytes.getBytes().clone());
+            return;
+        }
+        setSectionItem(coming.getSectionItemKey());
+        RegistersSet comingSet = (RegistersSet) coming;
+        RegistersSet set = (RegistersSet) this;
+        int count = comingSet.getRegistersCount();
+        set.setRegistersCount(count);
+        for(int i = 0; i < count; i++){
+            set.setRegister(i, comingSet.getRegister(i));
+        }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        SizeXIns sizeXIns = (SizeXIns) obj;
+        if(getIndex() != sizeXIns.getIndex()){
+            return false;
+        }
+        if(getOpcode() != sizeXIns.getOpcode()){
+            return false;
+        }
+        if(this instanceof RegistersSet){
+            if(!areEqual((RegistersSet) this, (RegistersSet) sizeXIns)){
+                return false;
+            }
+        }
+        if(getSectionType() != null){
+            return Objects.equals(getSectionItemKey(), sizeXIns.getSectionItemKey());
+        }else {
+            return getData() == sizeXIns.getData();
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 1;
+        hash = hash + getIndex();
+        hash = hash * 31 + getOpcode().getValue();
+        if(this instanceof RegistersSet){
+            RegistersSet set = (RegistersSet) this;
+            int count = set.getRegistersCount();
+            hash = hash * 31 + count;
+            for(int i = 0; i < count; i++){
+                hash = hash * 31 + set.getRegister(i);
+            }
+        }
+        hash = hash * 31;
+        if(getSectionType() != null){
+            Key key = getSectionItemKey();
+            if(key != null){
+                hash = hash + key.hashCode();
+            }
+        }else {
+            hash = hash + getData();
+        }
+        return hash;
+    }
+    private static boolean areEqual(RegistersSet set1, RegistersSet set2){
+        if(set1 == set2){
+            return true;
+        }
+        if(set1 == null){
+            return false;
+        }
+        int count = set1.getRegistersCount();
+        if(count != set2.getRegistersCount()){
+            return false;
+        }
+        for(int i = 0; i < count; i++){
+            if(set1.getRegister(i) != set2.getRegister(i)){
+                return false;
+            }
+        }
+        return true;
     }
 }

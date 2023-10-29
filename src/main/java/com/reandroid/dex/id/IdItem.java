@@ -17,17 +17,16 @@ package com.reandroid.dex.id;
 
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.base.DexBlockItem;
-import com.reandroid.dex.base.DexItemArray;
-import com.reandroid.dex.base.FixedSizeBlock;
-import com.reandroid.dex.base.UsageMarker;
+import com.reandroid.dex.base.*;
 import com.reandroid.dex.key.KeyItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public abstract class IdItem extends DexBlockItem
         implements SmaliFormat, BlockRefresh, KeyItem, FixedSizeBlock, UsageMarker {
@@ -39,26 +38,32 @@ public abstract class IdItem extends DexBlockItem
         super(bytesLength);
     }
 
+    public abstract Iterator<IdItem> usedIds();
+    public boolean isSameContext(IdItem idItem){
+        return getSectionList() == idItem.getSectionList();
+    }
+
     @SuppressWarnings("unchecked")
     public void removeSelf(){
-        DexItemArray<IdItem> itemArray = getParentInstance(DexItemArray.class);
+        BlockListArray<IdItem> itemArray = getParentInstance(BlockListArray.class);
         if(itemArray != null){
             itemArray.remove(this);
             setParent(null);
             setIndex(-1);
         }
     }
+    public abstract SectionType<? extends IdItem> getSectionType();
     @Override
     public Key getKey(){
         return null;
     }
 
     @SuppressWarnings("unchecked")
-    <T1 extends Key> T1 checkKey(SectionType<?> sectionType, T1 newKey){
+    <T1 extends Key> T1 checkKey(T1 newKey){
         Key lastKey = this.mLastKey;
         if(lastKey == null || !lastKey.equals(newKey)){
             this.mLastKey = newKey;
-            keyChanged(sectionType, lastKey);
+            keyChanged(lastKey);
             lastKey = newKey;
         }
         return (T1) lastKey;
@@ -66,13 +71,13 @@ public abstract class IdItem extends DexBlockItem
 
     public void setKey(Key key){
     }
-    void keyChanged(SectionType<?> sectionType, Key oldKey){
+    void keyChanged(Key oldKey){
         if(oldKey == null){
             return;
         }
         SectionList sectionList = getSectionList();
         if(sectionList != null){
-            sectionList.keyChanged(sectionType, oldKey);
+            sectionList.keyChanged(getSectionType(), oldKey);
         }
     }
     abstract void cacheItems();

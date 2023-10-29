@@ -20,6 +20,9 @@ import com.reandroid.dex.data.AnnotationElement;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.collection.SingleIterator;
+
+import java.util.Iterator;
 
 public abstract class SectionIdValue<T extends IdItem> extends SectionValue<T> {
 
@@ -74,16 +77,10 @@ public abstract class SectionIdValue<T extends IdItem> extends SectionValue<T> {
             data.addUsageType(usage);
         }
     }
+
     @Override
-    public String getAsString() {
-        T data = get();
-        if(data != null){
-            Key key = data.getKey();
-            if(key != null){
-                return key.toString();
-            }
-            return null;
-        }
-        return null;
+    public Iterator<IdItem> usedIds(){
+        return SingleIterator.of(get());
     }
+
 }

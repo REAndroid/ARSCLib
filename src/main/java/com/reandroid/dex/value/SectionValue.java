@@ -28,6 +28,7 @@ import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public abstract class SectionValue<T extends Block> extends DexValueBlock<NumberValue>
         implements SmaliFormat, KeyItem {
@@ -66,11 +67,21 @@ public abstract class SectionValue<T extends Block> extends DexValueBlock<Number
     abstract int getSectionValue(T data);
     abstract T getSectionData(Section<T> section, int value);
     Section<T> getSection(){
-        SectionList sectionList = getParentInstance(SectionList.class);
+        SectionList sectionList = getParent(SectionList.class);
         if(sectionList != null) {
-            return sectionList.get(sectionType);
+            return sectionList.get(getSectionType());
         }
         return null;
+    }
+    public SectionType<T> getSectionType() {
+        return sectionType;
+    }
+    @SuppressWarnings("unchecked")
+    @Override
+    public void merge(DexValueBlock<?> valueBlock){
+        super.merge(valueBlock);
+        SectionValue<T> value = (SectionValue<T>) valueBlock;
+        set(value.getKey());
     }
 
     @Override
@@ -111,9 +122,9 @@ public abstract class SectionValue<T extends Block> extends DexValueBlock<Number
 
     @Override
     public String getAsString() {
-        T data = get();
-        if(data instanceof KeyItem){
-            return ((KeyItem) data).toString();
+        Key key = getKey();
+        if(key != null){
+            return key.toString();
         }
         return null;
     }
@@ -122,7 +133,7 @@ public abstract class SectionValue<T extends Block> extends DexValueBlock<Number
         T data = get();
         if(data == null){
             writer.append("value error: ");
-            writer.append(sectionType.toString());
+            writer.append(getSectionType().getName());
             writer.append(' ');
             writer.append(HexUtil.toHex(getValueContainer().getNumberValue(), getValueSize()));
         }else {
@@ -131,12 +142,31 @@ public abstract class SectionValue<T extends Block> extends DexValueBlock<Number
     }
 
     @Override
+    public int hashCode() {
+        Key key = getKey();
+        if(key != null){
+            return key.hashCode();
+        }
+        return 0;
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        SectionValue<?> value = (SectionValue<?>)obj;
+        return Objects.equals(getKey(), value.getKey());
+    }
+    @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         T data = get();
         if(data == null){
             builder.append("value error: ");
-            builder.append(sectionType);
+            builder.append(getSectionType());
             builder.append(' ');
             builder.append(HexUtil.toHex(getValueContainer().getNumberValue(), getValueSize()));
         }else {

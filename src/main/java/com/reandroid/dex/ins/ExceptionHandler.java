@@ -26,6 +26,7 @@ import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Objects;
 
 public abstract class ExceptionHandler extends DexContainerItem
         implements Iterable<Label>, LabelsSet {
@@ -37,7 +38,7 @@ public abstract class ExceptionHandler extends DexContainerItem
     private final ExceptionLabel handlerLabel;
     private final ExceptionLabel catchLabel;
 
-    private final Label[] mLabels;
+    private Label[] mLabels;
 
 
     private ExceptionHandler(int childesCount, Ule128Item catchAddress, int index) {
@@ -147,6 +148,45 @@ public abstract class ExceptionHandler extends DexContainerItem
     }
     TryItem getTryItem(){
         return getParentInstance(TryItem.class);
+    }
+
+    public void onRemove(){
+        mLabels = null;
+        setParent(null);
+    }
+    public void merge(ExceptionHandler handler){
+        catchAddress.set(handler.catchAddress.get());
+    }
+
+    boolean isTypeEqual(ExceptionHandler handler){
+        return true;
+    }
+    int getTypeHashCode(){
+        return 0;
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        ExceptionHandler handler = (ExceptionHandler) obj;
+        return getStartAddress() == handler.getStartAddress() &&
+                getAddress() == handler.getAddress() &&
+                getCatchAddress() == handler.getCatchAddress() &&
+                isTypeEqual(handler);
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 1;
+        hash = hash * 31 + getStartAddress();
+        hash = hash * 31 + getAddress();
+        hash = hash * 31 + getCatchAddress();
+        hash = hash * 31 + getTypeHashCode();
+        return hash;
     }
 
     @Override

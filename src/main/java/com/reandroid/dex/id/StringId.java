@@ -22,8 +22,10 @@ import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class StringId extends IdItem implements IntegerReference, Comparable<StringId>, KeyItemCreate {
 
@@ -34,10 +36,18 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
     }
 
     @Override
+    public Iterator<IdItem> usedIds(){
+        return EmptyIterator.of();
+    }
+    @Override
+    public SectionType<StringId> getSectionType(){
+        return SectionType.STRING_ID;
+    }
+    @Override
     public StringKey getKey(){
         StringData stringData = getStringData();
         if(stringData != null){
-            return checkKey(SectionType.STRING_ID, stringData.getKey());
+            return checkKey(stringData.getKey());
         }
         return null;
     }
@@ -51,7 +61,7 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
             old = null;
         }
         stringData.setKey(key);
-        keyChanged(SectionType.STRING_ID, old);
+        keyChanged(old);
     }
     @Override
     public void removeSelf() {
@@ -123,7 +133,7 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
             old = null;
         }
         stringData.setKey(StringKey.create(text));
-        keyChanged(SectionType.STRING_ID, old);
+        keyChanged(old);
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {

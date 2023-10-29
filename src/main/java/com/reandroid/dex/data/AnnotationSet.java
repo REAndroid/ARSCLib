@@ -16,28 +16,47 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.dex.base.PositionAlignedItem;
-import com.reandroid.dex.key.AnnotationKey;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
-import java.util.function.Predicate;
 
 public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
-        implements SmaliFormat, PositionAlignedItem {
+        implements KeyItemCreate, SmaliFormat, PositionAlignedItem {
+
+    private final DataKey<AnnotationSet> mKey;
 
     public AnnotationSet(){
-        super(SectionType.ANNOTATION);
+        super(SectionType.ANNOTATION_ITEM);
+        this.mKey = new DataKey<>(this);
     }
 
+    @Override
+    public DataKey<AnnotationSet> getKey() {
+        return mKey;
+    }
+    @SuppressWarnings("unchecked")
+    @Override
+    public void setKey(Key key){
+        DataKey<AnnotationSet> dataKey = (DataKey<AnnotationSet>) key;
+        merge(dataKey.getItem());
+    }
 
-    public AnnotationItem getOrCreate(TypeKey typeKey){
+    public AnnotationItem getOrCreate(Key key){
+        AnnotationItem item = getItemByKey(key);
+        if(item != null){
+            return item;
+        }
+        return addNew(key);
+    }
+    public AnnotationItem getOrCreateByType(TypeKey typeKey){
         AnnotationItem item = CollectionUtil.getFirst(getItemsByType(typeKey));
         if(item != null){
             return item;
@@ -50,16 +69,19 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         return item;
     }
 
+    public AnnotationItem getItemByKey(Key key) {
+        for(AnnotationItem item : this){
+            if(key.equals(item.getKey())){
+                return item;
+            }
+        }
+        return null;
+    }
     public AnnotationItem getItemByType(TypeKey typeKey) {
         return CollectionUtil.getFirst(getItemsByType(typeKey));
     }
     public Iterator<AnnotationItem> getItemsByType(String typeName) {
-        return FilterIterator.of(iterator(), new Predicate<AnnotationItem>() {
-            @Override
-            public boolean test(AnnotationItem item) {
-                return typeName.equals(item.getTypeName());
-            }
-        });
+        return FilterIterator.of(iterator(), item -> typeName.equals(item.getTypeName()));
     }
     public Iterator<AnnotationItem> getItemsByType(TypeKey typeKey) {
         return FilterIterator.of(iterator(), item -> item.equalsType(typeKey));
@@ -72,16 +94,29 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         }
         return false;
     }
-    public AnnotationItem getOrCreate(AnnotationKey key){
-        AnnotationItem item = get(key);
+    public AnnotationItem getOrCreate(String type, String name){
+        AnnotationItem item = get(type, name);
         if(item != null){
             return item;
         }
-        item = addNew();
-        item.setKey(key);
+        return addNew(type, name);
+    }
+    public AnnotationItem addNew(String type, String name){
+        AnnotationItem item = addNew();
+        item.setType(type);
+        item.getOrCreateElement(name);
         return item;
     }
-    public AnnotationItem get(AnnotationKey key){
+    public AnnotationItem get(String type, String name){
+        for (AnnotationItem item : this) {
+            if (type.equals(item.getTypeName())
+                    && item.containsName(name)) {
+                return item;
+            }
+        }
+        return null;
+    }
+    public AnnotationItem get(DataKey<AnnotationItem> key){
         if(key == null){
             return null;
         }
@@ -92,18 +127,22 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         }
         return null;
     }
-    @Override
-    public AnnotationKey getKey(){
-        return null;
-    }
-    public AnnotationKey getKeyOld(){
-        for(AnnotationItem item : this){
-            AnnotationKey key = item.getKey();
-            if(key != null){
-                return key;
+
+    public Iterator<IdItem> usedIds(){
+        return new IterableIterator<AnnotationItem, IdItem>(iterator()) {
+            @Override
+            public Iterator<IdItem> iterator(AnnotationItem element) {
+                return element.usedIds();
             }
+        };
+    }
+    public void merge(AnnotationSet annotationSet){
+        if(annotationSet == this){
+            return;
         }
-        return null;
+        for(AnnotationItem coming : annotationSet){
+            addNew(coming.getKey());
+        }
     }
 
     @Override
@@ -135,83 +174,5 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
             appendOnce = true;
         }
         return builder.toString();
-    }
-    static class AnnotationSetBlockKey extends AnnotationKey {
-
-        private final AnnotationSet annotationSet;
-
-        public AnnotationSetBlockKey(AnnotationSet annotationSet) {
-            super(null, null);
-            this.annotationSet = annotationSet;
-        }
-        @Override
-        public String getDefining() {
-            for(AnnotationItem annotationItem : annotationSet){
-                AnnotationKey key = annotationItem.getKey();
-                if(key != null){
-                    return key.getDefining();
-                }
-            }
-            return null;
-        }
-        public boolean containsDefining(String defining) {
-            if(defining == null){
-                return false;
-            }
-            for(AnnotationItem annotationItem : annotationSet){
-                AnnotationKey key = annotationItem.getKey();
-                if(key != null && defining.equals(key.getDefining())){
-                    return true;
-                }
-            }
-            return false;
-        }
-        @Override
-        public String getName() {
-            for(AnnotationItem annotationItem : annotationSet){
-                AnnotationKey key = annotationItem.getKey();
-                if(key != null){
-                    return key.getName();
-                }
-            }
-            return null;
-        }
-        @Override
-        public String[] getOtherNames() {
-            for(AnnotationItem annotationItem : annotationSet){
-                AnnotationKey key = annotationItem.getKey();
-                if(key != null){
-                    return key.getOtherNames();
-                }
-            }
-            return null;
-        }
-
-        private int mHash;
-        @Override
-        public int hashCode() {
-            if(mHash == 0 || mHash == 1){
-                mHash = super.hashCode();
-            }
-            return mHash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (!(obj instanceof AnnotationKey)) {
-                return false;
-            }
-            AnnotationKey key = (AnnotationKey) obj;
-            return containsDefining(key.getDefining()) &&
-                    (Objects.equals(getName(), key.getName()) || containsName(key.getName()));
-        }
-
-        @Override
-        public String toString() {
-            return hashCode() + " " + super.toString();
-        }
     }
 }

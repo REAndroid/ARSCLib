@@ -20,13 +20,18 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.CreatorArray;
 import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.NullValue;
+import com.reandroid.dex.value.SectionValue;
 import com.reandroid.utils.collection.InstanceIterator;
+import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>> {
@@ -45,12 +50,15 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
     public DexValueBlock<?> get(int i){
         return getElementsArray().get(i);
     }
+    public<T1 extends IdItem> SectionValue<T1> getOrCreate(SectionType<T1> sectionType, int i){
+        return getOrCreate(DexValueType.get(sectionType), i);
+    }
     @SuppressWarnings("unchecked")
     public<T1 extends DexValueBlock<?>> T1 getOrCreate(DexValueType<T1> valueType, int i){
         BlockArray<DexValueBlock<?>> array = getElementsArray();
         array.ensureSize(i + 1);
         DexValueBlock<?> value = array.get(i);
-        if(value == NullValue.PLACE_HOLDER || value.getValueType() != valueType){
+        if(value == null || value == NullValue.PLACE_HOLDER || value.getValueType() != valueType){
             value = valueType.newInstance();
             array.setItem(i, value);
         }
@@ -86,6 +94,7 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
 
     public void setSize(int size) {
         getElementsArray().setChildesCount(size);
+        elementCount.set(size);
     }
     @Override
     public Iterator<DexValueBlock<?>> iterator(){
@@ -121,25 +130,66 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
         this.elementCount.set(size());
     }
 
+    public Iterator<IdItem> usedIds(){
+        return new IterableIterator<DexValueBlock<?>, IdItem>(iterator()) {
+            @Override
+            public Iterator<IdItem> iterator(DexValueBlock<?> element) {
+                return element.usedIds();
+            }
+        };
+    }
+    @Override
+    public int hashCode() {
+        int hash = 1;
+        int size = size();
+        for(int i = 0; i < size; i++){
+            hash = hash * 31 + get(i).hashCode();
+        }
+        return hash;
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        EncodedArray array = (EncodedArray) obj;
+        int size = size();
+        if(size != array.size()){
+            return false;
+        }
+        for(int i = 0; i < size; i++){
+            if(!Objects.equals(get(i), array.get(i))){
+                return false;
+            }
+        }
+        return true;
+    }
+    public void merge(EncodedArray array){
+        int size = array.size();
+        setSize(size);
+        for(int i = 0; i < size; i++){
+            DexValueBlock<?> coming = array.get(i);
+            DexValueBlock<?> valueBlock = getOrCreate(coming.getValueType(), i);
+            valueBlock.merge(coming);
+        }
+    }
     @Override
     public String toString(){
         StringBuilder builder = new StringBuilder();
-        builder.append('{');
+        builder.append('[');
         Iterator<DexValueBlock<?>> iterator = iterator();
         boolean appendOnce = false;
         while (iterator.hasNext()){
             if(appendOnce){
-                builder.append(',');
+                builder.append(", ");
             }
-            builder.append('\n');
-            builder.append("    ");
             builder.append(iterator.next());
             appendOnce = true;
         }
-        if(appendOnce){
-            builder.append('\n');
-        }
-        builder.append('}');
+        builder.append(']');
         return builder.toString();
     }
     private static final Creator<DexValueBlock<?>> CREATOR = new Creator<DexValueBlock<?>>() {

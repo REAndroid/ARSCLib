@@ -29,6 +29,7 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.writer.SmaliFormat;
 import com.reandroid.dex.writer.SmaliWriter;
 import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -57,6 +58,11 @@ public class Def<T extends IdItem> extends DexContainerItem implements
             array.remove(this);
         }
     }
+    void onRemove(){
+        mCachedIndexUpdated = true;
+        mItem = null;
+        relativeId.set(0);
+    }
     public Key getKey(){
         T item = getItem();
         if(item != null){
@@ -71,6 +77,13 @@ public class Def<T extends IdItem> extends DexContainerItem implements
     public void visitIntegers(IntegerVisitor visitor) {
     }
 
+    public void addAnnotationSet(AnnotationSet annotationSet){
+        AnnotationsDirectory directory = getOrCreateUniqueAnnotationsDirectory();
+        addAnnotationSet(directory, annotationSet);
+    }
+    void addAnnotationSet(AnnotationsDirectory directory, AnnotationSet annotationSet){
+
+    }
     public Iterator<AnnotationSet> getAnnotations(){
         AnnotationsDirectory directory = getAnnotationsDirectory();
         if(directory != null){
@@ -82,6 +95,13 @@ public class Def<T extends IdItem> extends DexContainerItem implements
         ClassId classId = getClassId();
         if(classId != null){
             return classId.getAnnotationsDirectory();
+        }
+        return null;
+    }
+    public AnnotationsDirectory getOrCreateUniqueAnnotationsDirectory(){
+        ClassId classId = getClassId();
+        if(classId != null){
+            return classId.getOrCreateUniqueAnnotationsDirectory();
         }
         return null;
     }
@@ -275,4 +295,12 @@ public class Def<T extends IdItem> extends DexContainerItem implements
 
     }
 
+    public Iterator<IdItem> usedIds(){
+        return SingleIterator.of(getItem());
+    }
+
+    public void merge(Def<?> def){
+        setItem(def.getKey());
+        setAccessFlagsValue(def.getAccessFlagsValue());
+    }
 }

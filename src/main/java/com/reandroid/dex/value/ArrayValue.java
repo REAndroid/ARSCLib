@@ -18,7 +18,9 @@ package com.reandroid.dex.value;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.data.EncodedArray;
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -70,15 +72,21 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
     public DexValueType<?> getValueType() {
         return DexValueType.ARRAY;
     }
+
     @Override
-    public String getTypeName(){
-        StringBuilder builder = new StringBuilder();
-        builder.append('[');
-        Iterator<DexValueBlock<?>> iterator = iterator();
-        if(iterator.hasNext()){
-            builder.append(iterator.next().getTypeName());
-        }
-        return builder.toString();
+    public Iterator<IdItem> usedIds(){
+        return new IterableIterator<DexValueBlock<?>, IdItem>(iterator()) {
+            @Override
+            public Iterator<IdItem> iterator(DexValueBlock<?> element) {
+                return element.usedIds();
+            }
+        };
+    }
+    @Override
+    public void merge(DexValueBlock<?> valueBlock){
+        super.merge(valueBlock);
+        ArrayValue coming = (ArrayValue) valueBlock;
+        getValueContainer().merge(coming.getValueContainer());
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {

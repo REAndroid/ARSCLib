@@ -16,11 +16,14 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.base.OffsetSupplier;
+import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.*;
+import com.reandroid.dex.base.NumberIntegerReference;
+import com.reandroid.dex.base.OffsetReceiver;
+import com.reandroid.dex.base.PositionedItem;
+import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
@@ -39,12 +42,39 @@ public class DataItem extends DexContainerItem
     private int mUsageType;
 
     private Key mLastKey;
+    private DataItem mReplace;
 
     public DataItem(int childesCount) {
         super(childesCount);
     }
 
+    @SuppressWarnings("unchecked")
+    public<T1 extends DataItem> T1 getReplace() {
+        if(mReplace == null){
+            return (T1) this;
+        }
+        return mReplace.getReplace();
+    }
+    public void setReplace(DataItem replace) {
+        if(replace == this){
+            return;
+        }
+        if(replace != null && getClass() != replace.getClass()){
+            throw new IllegalArgumentException("Incompatible replace: "
+                    + getClass() + ", " + replace.getClass());
+        }
+        if(replace != null && replace.getParent() == null){
+            replace = null;
+        }
+        this.mReplace = replace;
+    }
+    public boolean isRemoved(){
+        return getParent() == null;
+    }
 
+    public boolean isSameContext(DataItem dataItem){
+        return getSectionList() == dataItem.getSectionList();
+    }
     public void copyFrom(DataItem item){
         if(item == null){
             return;
@@ -68,15 +98,17 @@ public class DataItem extends DexContainerItem
             mUserClassId = classId;
         }
     }
+    @SuppressWarnings("unchecked")
     public void removeSelf() {
         Block parent = getParent();
-        if(!(parent instanceof DexItemArray<?>)){
+        if(parent == null){
             return;
         }
-        BlockArray<DataItem> itemArray = (BlockArray<DataItem>) parent;
-        setParent(null);
+        BlockList<DataItem> itemArray = (BlockList<DataItem>)parent;
         itemArray.remove(this);
         setPosition(0);
+        mUserClassId = null;
+        mLastKey = null;
     }
     @Override
     public Key getKey() {
@@ -149,5 +181,13 @@ public class DataItem extends DexContainerItem
     }
     public void removeLastAlign(){
 
+    }
+
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        if(mUserClassId != null && mUserClassId.getParent() == null){
+            mUserClassId = null;
+        }
     }
 }
