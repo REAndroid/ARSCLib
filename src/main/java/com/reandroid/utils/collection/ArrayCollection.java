@@ -20,15 +20,17 @@ import com.reandroid.common.ArraySupplier;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collection<T> {
+public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
 
     private Object[] mElements;
+    private Initializer<T> mInitializer;
     private int size;
     private int mLastGrow;
 
     private int mHashCode;
-
     private boolean mLocked;
+
+    private Monitor<T> mMonitor;
 
     public ArrayCollection(int initialCapacity){
         Object[] elements;
@@ -41,6 +43,9 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         this.size = 0;
     }
     public ArrayCollection(Object[] elements){
+        if(elements == null || elements.length == 0){
+            elements = EMPTY_OBJECTS;
+        }
         this.mElements = elements;
         this.size = elements.length;
     }
@@ -48,15 +53,95 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         this(0);
     }
 
+    public Monitor<T> getMonitor() {
+        return mMonitor;
+    }
+    public void setMonitor(Monitor<T> monitor) {
+        this.mMonitor = monitor;
+    }
+
+    public Initializer<T> getInitializer() {
+        return mInitializer;
+    }
+    public void setInitializer(Initializer<T> initializer) {
+        this.mInitializer = initializer;
+    }
+
+    public ArrayCollection<T> copy(){
+        return new ArrayCollection<>(toArray().clone());
+    }
+    public ArrayCollection<T> filter(Predicate<? super T> filter){
+        int count = count(filter);
+        if(count == size()){
+            return this;
+        }
+        ArrayCollection<T> collection = new ArrayCollection<>(count);
+        collection.addAll(this.iterator(filter));
+        return collection;
+    }
+    @SuppressWarnings("unchecked")
+    public<T1 extends T> ArrayCollection<T1> filter(Class<T1> instance){
+        int count = count(instance);
+        if(count == size()){
+            return (ArrayCollection<T1>) this;
+        }
+        ArrayCollection<T1> collection = new ArrayCollection<>(count);
+        collection.addAll(this.iterator(instance));
+        return collection;
+    }
+    public int count(Predicate<? super T> filter){
+        return count(filter, size());
+    }
+    public int count(Predicate<? super T> filter, int limit){
+        int result = 0;
+        int size = size();
+        for(int i = 0; i < size; i++){
+            if(result >= limit){
+                break;
+            }
+            if(filter.test(get(i))){
+                result ++;
+            }
+        }
+        return result;
+    }
+    public int count(Class<?> instance){
+        return count(instance, size());
+    }
+    public int count(Class<?> instance, int limit){
+        int result = 0;
+        int size = size();
+        Object[] elements = this.mElements;
+        for(int i = 0; i < size; i++){
+            if(result >= limit){
+                break;
+            }
+            Object obj = elements[i];
+            if(instance.isInstance(obj)){
+                result ++;
+            }
+        }
+        return result;
+    }
     @SuppressWarnings("unchecked")
     public void sort(Comparator<? super T> comparator){
-        trimToSize();
-        if(size() < 2){
+        if(mLocked){
             return;
         }
-        Comparator<Object> cmp = (Comparator<Object>) comparator;
-        Arrays.sort(mElements, cmp);
-        onChanged();
+        int size = size();
+        if(size < 2){
+            return;
+        }
+        ArraySort.ObjectSort sort = new ArraySort.ObjectSort(mElements, comparator, 0, size){
+            @Override
+            public void onSwap(int i, int j) {
+                super.onSwap(i, j);
+                ArrayCollection.this.notifySwap(i, j);
+            }
+        };
+        if(sort.sort()){
+            onChanged();
+        }
     }
 
     @Override
@@ -67,56 +152,124 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         return containsFast(obj) || containsEquals(obj);
     }
     public boolean containsEquals(Object obj) {
-        if(obj == null){
-            return false;
-        }
-        Object[] elements = this.mElements;
-        int length = size();
-        for(int i = 0; i < length; i++){
-            if(obj.equals(elements[i])){
-                return true;
-            }
-        }
-        return false;
+        return indexOf(obj) >= 0;
     }
     public boolean containsFast(Object item){
-        if (item == null){
-            return false;
-        }
-        Object[] elements = this.mElements;
-        int length = this.size;
-        for(int i = 0; i < length; i++){
-            if(item == elements[i]){
-                return true;
-            }
-        }
-        return false;
+        return indexOfFast(item) >= 0;
     }
+    @Override
     public boolean isEmpty(){
         return size() == 0;
     }
+    public boolean isImmutableEmpty(){
+        return false;
+    }
 
+    public T getFirst(){
+        if(size() == 0){
+            return null;
+        }
+        return get(0);
+    }
+    public T getLast(){
+        int size = size();
+        if(size == 0){
+            return null;
+        }
+        return get(size - 1);
+    }
     @SuppressWarnings("unchecked")
     @Override
     public T get(int i){
         return (T)mElements[i];
     }
+    @Override
     public int size(){
         return size;
+    }
+    public void ensureSize(int size){
+        if(size > size()){
+            setSize(size);
+        }
+    }
+    public void setSize(int size){
+        int start = this.size;
+        if(size == start){
+            return;
+        }
+        if(size < start){
+            this.size = size;
+            onChanged();
+            notifyShrink(size);
+            return;
+        }
+        boolean locked = this.mLocked;
+        this.mLocked = true;
+        int length = size - start;
+        ensureCapacity(length);
+        this.size = size;
+        fillElements(this.mElements, start, length);
+        this.mLocked = locked;
+        onChanged();
+    }
+    private void fillElements(Object[] elements, int start, int length){
+        Initializer<T> initializer = getInitializer();
+        if(initializer == null){
+            return;
+        }
+        for(int i = start; i < length; i++){
+            T item = initializer.createNewItem(i);
+            elements[i] = item;
+            notifyAdd(i, item);
+        }
     }
     @Override
     public int getCount() {
         return size();
     }
+
+    public<T1 extends T> Iterator<T1> iterator(Class<T1> instance){
+        return InstanceIterator.of(iterator(), instance);
+    }
+    public Iterator<T> iterator(Predicate<? super T> filter){
+        return FilterIterator.of(iterator(), filter);
+    }
     @Override
     public Iterator<T> iterator() {
         return ArraySupplierIterator.of(this);
     }
+    public Iterator<T> iterator(int start) {
+        return iterator(start, size() - start);
+    }
+    public Iterator<T> iterator(int start, int length) {
+        return ArraySupplierIterator.of(this, start, length);
+    }
+    public Iterator<T> arrayIterator() {
+        return ArrayIterator.of(this.mElements, 0, size());
+    }
+    public Iterator<T> clonedIterator() {
+        if(isEmpty()){
+            return EmptyIterator.of();
+        }
+        return ArrayIterator.of(this.mElements.clone(), 0, size());
+    }
 
     @Override
     public Object[] toArray() {
-        trimToSize();
+        return trimToSize(getElements(), size());
+    }
+    public Object[] getElements() {
         return this.mElements;
+    }
+    public void setElements(Object[] elements) {
+        setElements(elements, elements.length);
+    }
+    @SuppressWarnings("unchecked")
+    public void setElements(Object[] elements, int size) {
+        this.mElements = elements;
+        this.size = size;
+        onChanged();
+        notifySet(elements, size);
     }
 
     @SuppressWarnings("unchecked")
@@ -137,50 +290,212 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         return (T1[]) Arrays.copyOf(elements, size, out.getClass());
     }
 
-    @SuppressWarnings("unchecked")
     public T removeItem(Object item){
-        if (item == null){
+        int i = indexOf(item);
+        if (i < 0){
             return null;
         }
-        Object[] elements = this.mElements;
-        if(elements == null){
-            return null;
-        }
-        int length = this.size;
-        if(length == 0){
-            return null;
-        }
-        T result = null;
-        for(int i = 0; i < length; i++){
-            Object obj = elements[i];
-            if(obj == null){
-                continue;
-            }
-            if(item.equals(obj)){
-                elements[i] = null;
-                result = (T) obj;
-                break;
-            }
-        }
-        if(result == null){
-            return null;
-        }
-        Object[] update = new Object[this.size - 1];
-        int count = 0;
-        for(int i = 0; i < length; i++){
-            Object obj = elements[i];
-            if(obj == null){
-                continue;
-            }
-            update[count] = obj;
-            count++;
-        }
-        this.size = count;
-        this.mElements = update;
+        T result = get(i);
+        remove(i);
         onChanged();
         return result;
     }
 
+
+    @Override
+    public List<T> subList(int start, int length) {
+        int end = start + length;
+        int size = size();
+        if(end > size){
+            end = size;
+        }
+        if(start == 0 && end == size){
+            return this;
+        }
+        Object[] result = getNewArray(length);
+        Object[] elements = this.mElements;
+        for(int i = start; i < end; i ++){
+            result[i] = elements[i];
+        }
+        return new ArrayCollection<>(result);
+    }
+
+    @Override
+    public int indexOf(Object item){
+        return indexOf(item, 0, false);
+    }
+    public int indexOfFast(Object item){
+        return indexOf(item, 0, true);
+    }
+    public int indexOf(Object item, int start){
+        return indexOf(item, start, false);
+    }
+    public int indexOfFast(Object item, int start){
+        return indexOf(item, start, true);
+    }
+    public int lastIndexOf(Object item){
+        return lastIndexOf(item, false);
+    }
+
+    @Override
+    public Spliterator<T> spliterator() {
+        throw new IllegalArgumentException("Not implemented");
+    }
+    @Override
+    public ListIterator<T> listIterator() {
+        return listIterator(0);
+    }
+    @Override
+    public ListIterator<T> listIterator(int start) {
+        return new ListIterator<T>() {
+
+            int mIndex = start;
+
+            @Override
+            public boolean hasNext() {
+                return mIndex + 1 < ArrayCollection.this.size();
+            }
+            @Override
+            public T next() {
+                int i = mIndex;
+                mIndex ++;
+                return ArrayCollection.this.get(i);
+            }
+            @Override
+            public boolean hasPrevious() {
+                return mIndex - 1 >= 0;
+            }
+            @Override
+            public T previous() {
+                int i = mIndex;
+                mIndex --;
+                return ArrayCollection.this.get(i);
+            }
+            @Override
+            public int nextIndex() {
+                return mIndex + 1;
+            }
+            @Override
+            public int previousIndex() {
+                return mIndex - 1;
+            }
+            @Override
+            public void remove() {
+            }
+            @Override
+            public void set(T t) {
+            }
+            @Override
+            public void add(T t) {
+            }
+        };
+    }
+
+    public int lastIndexOfFast(Object item){
+        return lastIndexOf(item, true);
+    }
+
+    private int indexOf(Object item, int start, boolean fast){
+        if(item == null){
+            return -1;
+        }
+        if(start < 0){
+            start = 0;
+        }
+        int size = this.size;
+        if(size == 0){
+            return -1;
+        }
+        Object[] elements = this.mElements;
+        for(int i = start; i < size; i++){
+            if(matches(item, elements[i], fast)){
+                return i;
+            }
+        }
+        return -1;
+    }
+    private int indexOfOld(Object item, int start, boolean fast){
+        if(item == null){
+            return -1;
+        }
+        if(start < 0){
+            start = 0;
+        }
+        int size = this.size;
+        if(size == 0){
+            return -1;
+        }
+        int trials = 1;
+        Object[] elements = this.mElements;
+        if(matches(item, elements[start], fast)){
+            return start;
+        }
+        if(size == 1){
+            return -1;
+        }
+        int end = size - 1;
+        size = size - start;
+        int half = size / 2 ;
+        int index = start + half;
+        trials ++;
+        if(matches(item, elements[index], fast)){
+            return index;
+        }
+        for(int i = 1; i < half; i++){
+            trials++;
+            int pos = index - i;
+            Object obj = elements[pos];
+            if(matches(item, obj, fast)){
+                return pos;
+            }
+            trials++;
+            pos = index + i;
+            obj = elements[pos];
+            if(matches(item, obj, fast)){
+                return pos;
+            }
+        }
+        if(size % 2 != 0){
+            if(matches(item, elements[end], fast)){
+                return end;
+            }
+        }
+        return -1;
+    }
+    private boolean matches(Object item, Object obj, boolean fast){
+        if(obj == null){
+            return false;
+        }
+        if(item == obj){
+            return true;
+        }
+        if(fast){
+            return false;
+        }
+        return item.equals(obj);
+    }
+    private int lastIndexOf(Object item, boolean fast){
+        if(item == null){
+            return -1;
+        }
+        int result = -1;
+        Object[] elements = this.mElements;
+        int length = this.size;
+        for(int i = 0; i < length; i++){
+            Object obj = elements[i];
+            if(obj == null){
+                continue;
+            }
+            if(fast){
+                if(item == obj){
+                    result = i;
+                }
+            }else if(item.equals(obj)){
+                result = i;
+            }
+        }
+        return result;
+    }
     @Override
     public boolean containsAll(Collection<?> collection) {
         for(Object obj : collection){
@@ -191,18 +506,58 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         return !collection.isEmpty();
     }
 
+    public void addAll(int index, T[] items){
+        if(items == null){
+            return;
+        }
+        if(size() == 0){
+            setElements(items);
+            return;
+        }
+        int size = items.length;
+        ensureCapacity(size);
+        for(int i = 0; i < size; i++){
+            add(index + i, items[i]);
+        }
+    }
+    public void addAll(T[] items){
+        if(items == null){
+            return;
+        }
+        addAll(size(), items);
+    }
     public void addAll(Iterator<? extends T> iterator){
+        if(iterator == null){
+            return;
+        }
+        if(iterator instanceof SizedIterator){
+            int size = ((SizedIterator) iterator).getRemainingSize();
+            ensureCapacity(size);
+        }
         while (iterator.hasNext()){
             add(iterator.next());
         }
     }
+    @SuppressWarnings("unchecked")
+    public void addIterable(Iterable<? extends T> iterable){
+        if(iterable == null){
+            return;
+        }
+        if(iterable instanceof Collection){
+            addAll((Collection<? extends T>) iterable);
+            return;
+        }
+        addAll(iterable.iterator());
+    }
     @Override
     public boolean addAll(Collection<? extends T> collection) {
+        if(collection == null){
+            return false;
+        }
         int size = this.size();
         if(size == 0){
-            Object[] elements = collection.toArray();
-            this.size = elements.length;
-            this.mElements = elements;
+            Object[] elements = getNewArray(collection.toArray(), collection.size());
+            setElements(elements);
             return true;
         }
         size = collection.size();
@@ -221,6 +576,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public boolean removeAll(Collection<?> collection) {
         Object[] elements = this.mElements;
@@ -240,6 +596,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
                 Object item = elements[i];
                 if(item == obj){
                     elements[i] = null;
+                    notifyRemoved(i, (T)elements);
                     result ++;
                 }
             }
@@ -252,7 +609,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
             this.mElements = EMPTY_OBJECTS;
             return true;
         }
-        Object[] update = new Object[this.size];
+        Object[] update = getNewArray(this.size);
         int count = 0;
         for(int i = 0; i < length; i++){
             Object obj = elements[i];
@@ -266,7 +623,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         this.mElements = update;
         return true;
     }
-
     @Override
     public boolean retainAll(Collection<?> collection) {
         return false;
@@ -274,10 +630,17 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
 
     @Override
     public void clear() {
+        int size = this.size;
         this.size = 0;
+        Object[] elements = this.mElements;
         this.mElements = EMPTY_OBJECTS;
         this.mLastGrow = 0;
+        this.mLocked = false;
+        for(int i = 0; i < size; i++){
+            elements[i] = null;
+        }
         onChanged();
+        notifyShrink(0);
     }
 
 
@@ -285,139 +648,312 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
     public boolean remove(Object obj) {
         return removeItem(obj) != null;
     }
-    @SuppressWarnings("unchecked")
     public void remove(Predicate<? super T> filter){
-        Object[] elements = this.mElements;
-        if(elements == null){
-            return;
-        }
-        int length = this.size;
-        if(length == 0){
-            return;
-        }
-        int result = 0;
-        for(int i = 0; i < length; i++){
-            Object obj = elements[i];
-            if(obj == null){
-                continue;
-            }
-            if(filter.test((T)obj)){
-                elements[i] = null;
-                result ++;
+        for(int i = 0; i < this.size(); i++){
+            if(filter.test(get(i))){
+                remove(i);
+                i--;
             }
         }
-        if(result == 0){
-            return;
-        }
-        int endSize = this.size - result;
-        onChanged();
-        if(endSize == 0){
-            this.mElements = EMPTY_OBJECTS;
-            this.size = 0;
-            return;
-        }
-        Object[] update = new Object[endSize];
-        int count = 0;
-        for(int i = 0; i < length; i++){
-            Object obj = elements[i];
-            if(obj == null){
-                continue;
-            }
-            update[count] = obj;
-            count++;
-        }
-        this.size = count;
-        this.mElements = update;
     }
     @Override
     public boolean add(T item){
-        if (item == null || containsFast(item)){
+        if (item == null ){
             return false;
         }
         boolean locked = mLocked;
         mLocked = true;
         ensureCapacity();
-        this.mElements[size] = item;
+        int index = this.size;
+        this.mElements[index] = item;
         this.size ++;
         mLocked = locked;
         onChanged();
+        notifyAdd(index, item);
         return true;
+    }
+    @Override
+    public void add(int i, T item){
+        if(item == null){
+            return;
+        }
+        boolean locked = mLocked;
+        this.mLocked = true;
+        slideRight(i, 1);
+        this.mElements[i] = item;
+        notifyAdd(i, item);
+        this.mLocked = locked;
+        onChanged();
+    }
+    @SuppressWarnings("unchecked")
+    @Override
+    public T set(int i, T item){
+        if(item == null || i < 0){
+            return null;
+        }
+        ensureSize(i + 1);
+        T existing = (T)this.mElements[i];
+        this.mElements[i] = item;
+        if(item != existing){
+            onChanged();
+            notifySet(i, item);
+        }
+        return existing;
+    }
+    @Override
+    public boolean addAll(int index, Collection<? extends T> collection){
+        if(collection == null){
+            return false;
+        }
+        int length = collection.size();
+        if(length == 0){
+            return false;
+        }
+        boolean locked = mLocked;
+        this.mLocked = true;
+        slideRight(index, length);
+        Object[] elements = this.mElements;
+        int i = index;
+        for(T item : collection){
+            if(item == null || containsFast(item)){
+                continue;
+            }
+            elements[i] = item;
+            notifyAdd(i, item);
+            i ++;
+        }
+        int duplicates = length - (i - index);
+        slideLeft(i, duplicates);
+        this.mLocked = locked;
+        return duplicates < length;
+    }
+    @Override
+    public T remove(int index){
+        T result = get(index);
+        slideLeft(index, 1);
+        notifyRemoved(index, result);
+        return result;
+    }
+    private void slideLeft(int position, int amount){
+        if(amount == 0 || position < 0){
+            return;
+        }
+        boolean locked = mLocked;
+        this.mLocked = true;
+        Object[] elements = this.mElements;
+        int size = this.size;
+        int length = size - amount;
+        for(int i = position; i < length; i++){
+            elements[i] = elements[i + amount];
+        }
+        for(int i = length; i < size; i++){
+            elements[i] = null;
+        }
+        this.size = length;
+        this.mLocked = locked;
+        onChanged();
+    }
+    private void slideRight(int position, int amount){
+        boolean locked = mLocked;
+        this.mLocked = true;
+        ensureCapacity(amount);
+        Object[] elements = this.mElements;
+        int size = this.size;
+        int i = size - 1;
+        while (i >= position){
+            elements[i + amount] = elements[i];
+            i--;
+        }
+        this.size = size + amount;
+        amount = position + amount;
+        for(i = position; i < amount; i++){
+            elements[i] = null;
+        }
+        this.mLocked = locked;
+        onChanged();
     }
     public void trimToSize(){
         if(mLocked || availableCapacity() == 0){
+            if(mLastGrow == 0){
+                mLastGrow = size() / 3;
+            }
             return;
         }
-        int size = this.size;
+        this.mElements = trimToSize(this.mElements, this.size);
+        this.mLastGrow = this.size / 4;
+    }
+
+    private Object[] trimToSize(Object[] elements, int size){
+        if(size >= elements.length){
+            return elements;
+        }
         if(size == 0){
-            this.mElements = EMPTY_OBJECTS;
-            return;
+            return getNewArray(0);
         }
-        Object[] update = new Object[size];
-        System.arraycopy(this.mElements, 0, update, 0, size);
-        this.mElements = update;
+        Object[] update = getNewArray(size);
+        arrayCopy(elements, update, size);
+        return update;
+    }
+    private void arrayCopy(Object[] source, Object[] destination, int length){
+        for(int i = 0; i < length; i++){
+            destination[i] = source[i];
+        }
+    }
+    private Object[] getNewArray(Object[] source, int length){
+        Object[] result = getNewArray(length);
+        arrayCopy(source, result, length);
+        return result;
+    }
+    private Object[] getNewArray(int length){
+        Initializer<T> initializer = getInitializer();
+        if(initializer != null){
+            return initializer.newArray(length);
+        }
+        if(length == 0){
+            return EMPTY_OBJECTS;
+        }
+        return new Object[length];
     }
     private void ensureCapacity(){
         if(availableCapacity() > 0){
             return;
         }
-        int amount;
-        if(this.size == 0){
-            amount = 1;
-        }else {
-            amount = this.mLastGrow;
-            if(amount == 0){
-                amount = 1;
-            }
-            amount = amount << 1;
-            if(amount > 32){
-                amount = amount << 1;
-            }
-            if(amount > 32 && amount < 256){
-                amount = amount << 1;
-            }
-            if((amount & 0xffff0000) != 0){
-                amount = 0xffff;
-            }
-            mLastGrow = amount;
-            if(this.size < 4){
-                amount = 1;
-            }
-        }
-        ensureCapacity(amount);
+        ensureCapacity(calculateGrow());
     }
     public void ensureCapacity(int capacity) {
-        if(availableCapacity() >= capacity){
+        if(capacity <= 0){
+            return;
+        }
+        capacity = capacity - availableCapacity();
+        if(capacity <= 0){
             return;
         }
         int size = this.size;
         int length = size + capacity;
-        Object[] update = new Object[length];
+        Object[] update = getNewArray(length);
         Object[] elements = this.mElements;
         if(elements.length == 0 || size == 0){
             this.mElements = update;
+            notifyGrow(length);
             return;
         }
-        System.arraycopy(elements, 0, update, 0, size);
+        arrayCopy(elements, update, size);
         this.mElements = update;
+        notifyGrow(length);
     }
-    private int availableCapacity(){
+    public int availableCapacity(){
         return this.mElements.length - size;
     }
 
-    private void onChanged(){
+    private int calculateGrow(){
+        if(this.size == 0){
+            return 1;
+        }
+        int amount = this.mLastGrow;
+        if(amount >= GROW_LIMIT){
+            return amount;
+        }
+        if(amount == 0){
+            amount = 1;
+        }
+        amount = amount << 1;
+        if(amount > 32){
+            amount = amount << 1;
+        }
+        if(amount > 32 && amount < 256){
+            amount = amount << 1;
+        }
+        if(amount > GROW_LIMIT){
+            amount = GROW_LIMIT;
+        }
+        this.mLastGrow = amount;
+        if(this.size < 4){
+            amount = 1;
+        }
+        return amount;
+    }
+
+    public void onChanged(){
         mHashCode = 0;
+    }
+    private void notifyAdd(int i, T item){
+        Monitor<T> monitor = getMonitor();
+        if(monitor != null){
+            monitor.onAdd(i, item);
+        }
+    }
+    private void notifyRemoved(int i, T item){
+        Monitor<T> monitor = getMonitor();
+        if(monitor != null){
+            monitor.onRemoved(i, item);
+        }
+    }
+    private void notifySet(int i, T item){
+        Monitor<T> monitor = getMonitor();
+        if(monitor != null){
+            monitor.onSet(i, item);
+        }
+    }
+    private void notifySet(Object[] elements, int size){
+        Monitor<T> monitor = getMonitor();
+        if(monitor != null){
+            monitor.onSet(elements, size);
+        }
+    }
+    private void notifyGrow(int size){
+        Monitor<T> monitor = getMonitor();
+        if(monitor != null){
+            monitor.onGrow(size);
+        }
+    }
+    private void notifyShrink(int size){
+        Monitor<T> monitor = getMonitor();
+        if(monitor != null){
+            monitor.onShrink(size);
+        }
+    }
+    void notifySwap(int i, int j){
+        Monitor<T> monitor = getMonitor();
+        if(monitor != null){
+            monitor.onSwap(i, j);
+        }
     }
     @Override
     public int hashCode(){
         if(mHashCode != 0){
             return mHashCode;
         }
+        this.mHashCode = computeHashCode();
+        return mHashCode;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        ArrayCollection<?> collection = (ArrayCollection<?>) obj;
+        int size = this.size();
+        if(size != collection.size() || hashCode() != collection.hashCode()){
+            return false;
+        }
+        for(int i = 0; i < size; i++){
+            if(!Objects.equals(get(i), collection.get(i))){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public int computeHashCode(){
         int size = size();
         if(size == 0){
             return 0;
         }
         int hashSum = 1;
-        this.mHashCode = hashSum;
         Object[] elements = this.mElements;
         for(int i = 0; i < size; i++){
             Object obj = elements[i];
@@ -434,14 +970,12 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         }
         return size() + "{" + get(0) + "}";
     }
-    @SuppressWarnings("unchecked")
     public static<T> ArrayCollection<T> of(Iterable<? extends T> iterable){
-        ArrayCollection<T> collection = new ArrayCollection<>();
-        if(iterable instanceof Collection){
-            collection.addAll((Collection<? extends T>) iterable);
-            return collection;
+        if(iterable == null){
+            return empty();
         }
-        collection.addAll(iterable.iterator());
+        ArrayCollection<T> collection = new ArrayCollection<>();
+        collection.addIterable(iterable);
         collection.trimToSize();
         return collection;
     }
@@ -456,7 +990,10 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
     public static<T> ArrayCollection<T> empty(){
         return (ArrayCollection<T>) EMPTY;
     }
+
     static final Object[] EMPTY_OBJECTS = new Object[0];
+
+    private static final int GROW_LIMIT = 8192;
 
     private static final ArrayCollection<?> EMPTY = new ArrayCollection<Object>(){
         @Override
@@ -493,6 +1030,14 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
             throw new IllegalArgumentException("Empty ArrayCollection!");
         }
         @Override
+        public Object set(int i, Object item) {
+            throw new IllegalArgumentException("Empty ArrayCollection!");
+        }
+        @Override
+        public void add(int i, Object item) {
+            throw new IllegalArgumentException("Empty ArrayCollection!");
+        }
+        @Override
         public Iterator<Object> iterator() {
             return EmptyIterator.of();
         }
@@ -500,12 +1045,31 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
         public boolean isEmpty() {
             return true;
         }
+        public boolean isImmutableEmpty(){
+            return true;
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> collection) {
+            return false;
+        }
+        @Override
+        public Object remove(int index) {
+            return null;
+        }
+        @Override
+        public boolean remove(Object obj) {
+            return false;
+        }
         @Override
         public int size() {
             return 0;
         }
         @Override
         public void sort(Comparator<? super Object> comparator) {
+        }
+        @Override
+        public void setSize(int size) {
         }
         @Override
         public int hashCode() {
@@ -522,4 +1086,19 @@ public class ArrayCollection<T> implements ArraySupplier<T>, Iterable<T>, Collec
             return false;
         }
     };
+
+    public interface Initializer<T1> {
+        T1 createNewItem(int index);
+        T1[] newArray(int length);
+    }
+    public interface Monitor<T> {
+
+        void onAdd(int i, T item);
+        void onRemoved(int i, T item);
+        void onSet(int i, T item);
+        void onSet(Object[] elements, int size);
+        void onGrow(int size);
+        void onShrink(int size);
+        void onSwap(int i, int j);
+    }
 }

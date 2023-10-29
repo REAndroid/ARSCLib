@@ -228,4 +228,99 @@ public abstract class Block {
         System.arraycopy(bytes2, 0, result, start, bytes2.length);
         return result;
     }
+
+    public static boolean areEqual(Block[] blocks1, Block[] blocks2){
+        if(blocks1 == blocks2){
+            return true;
+        }
+        if(blocks1 == null){
+            return blocks2.length == 0;
+        }
+        int length = blocks1.length;
+        if(length != blocks2.length){
+            return false;
+        }
+        for(int i = 0; i < length; i++){
+            if(!areEqual(blocks1[i], blocks2[i])){
+                return false;
+            }
+        }
+        return true;
+    }
+    public static boolean areEqual(Block block1, Block block2){
+        if(block1 == block2){
+            return true;
+        }
+        byte[] bytes1 = block1 == null ? null : block1.getBytes();
+        byte[] bytes2 = block2 == null ? null : block2.getBytes();
+        return areEqual(bytes1, bytes2);
+    }
+    public static boolean areEqual(byte[] bytes1, byte[] bytes2){
+        if(bytes1 == bytes2){
+            return true;
+        }
+        if(bytes1 == null){
+            return bytes2.length == 0;
+        }
+        int length = bytes1.length;
+        if(length != bytes2.length){
+            return false;
+        }
+        for(int i = 0; i < length; i++){
+            if(bytes1[i] != bytes2[i]){
+                return false;
+            }
+        }
+        return true;
+    }
+    public static int hashCodeOf(Block[] blocks){
+        if(blocks == null){
+            return 0;
+        }
+        return hashCodeOf(blocks, 0, blocks.length);
+    }
+    public static int hashCodeOf(Block[] blocks, int start, int length){
+        if(blocks == null || blocks.length == 0){
+            return 0;
+        }
+        int hash = 1;
+        for(int i = start; i < length; i++){
+            hash = hash * 31 + hashCodeOf(blocks[i]);
+        }
+        return hash;
+    }
+    public static int hashCodeOf(Block block){
+        if(block == null){
+            return 0;
+        }
+        return hashCodeOf(block.getBytes());
+    }
+    public static int hashCodeOf(byte[] bytes){
+        if(bytes == null){
+            return 0;
+        }
+        int length = bytes.length;
+        if(length == 0){
+            return 0;
+        }
+        int hash = 1;
+        for(int i = 0; i < length; i++){
+            hash = hash * 31 + (bytes[i] & 0xff);
+        }
+        return hash;
+    }
+    public static long longHashCode(byte[] bytes){
+        if(bytes == null){
+            return 0;
+        }
+        int length = bytes.length;
+        if(length == 0){
+            return 0;
+        }
+        long hash = 1;
+        for(int i = 0; i < length; i++){
+            hash = hash * 31 + (bytes[i] & 0xff);
+        }
+        return hash;
+    }
 }

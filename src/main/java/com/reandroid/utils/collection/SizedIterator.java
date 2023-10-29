@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.key;
+package com.reandroid.utils.collection;
 
-public interface DefKey{
-    TypeKey getDefiningKey();
+public interface SizedIterator {
+    int getRemainingSize();
 }

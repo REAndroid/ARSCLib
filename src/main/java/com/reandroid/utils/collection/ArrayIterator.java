@@ -19,26 +19,39 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 
-public class ArrayIterator<T> implements Iterator<T>, SizedItem{
-    private final T[] elements;
-    private final Predicate<T> mTester;
+public class ArrayIterator<T> implements Iterator<T>, SizedItem, SizedIterator{
+
+    private final Object[] elements;
+    private final int mStart;
+    private final int mLength;
+    private final Predicate<? super T> mFilter;
     private int index;
     private T mNext;
 
-    public ArrayIterator(T[] elements, Predicate<T> tester){
+    public ArrayIterator(Object[] elements, int start, int length, Predicate<? super T> filter){
         this.elements = elements;
-        this.mTester = tester;
+        this.mStart = start;
+        this.mLength = length;
+        this.mFilter = filter;
     }
-    public ArrayIterator(T[] elements){
+    public ArrayIterator(Object[] elements, int start, int length){
+        this(elements, start, length, null);
+    }
+    public ArrayIterator(Object[] elements, Predicate<? super T> filter){
+        this(elements, 0, elements.length, filter);
+    }
+    public ArrayIterator(Object[] elements){
         this(elements, null);
     }
 
+
+    @Override
+    public int getRemainingSize() {
+        return mLength - index;
+    }
     @Override
     public int size(){
-        if(elements != null){
-            return elements.length;
-        }
-        return 0;
+        return mLength;
     }
     @Override
     public boolean hasNext() {
@@ -53,11 +66,12 @@ public class ArrayIterator<T> implements Iterator<T>, SizedItem{
         mNext = null;
         return item;
     }
+    @SuppressWarnings("unchecked")
     private T getNext(){
-        T[] elements = this.elements;
+        Object[] elements = this.elements;
         if(mNext == null && elements != null) {
-            while (index < elements.length) {
-                T item = elements[index];
+            while (index < mLength) {
+                T item = (T)elements[mStart + index];
                 index ++;
                 if (testAll(item)) {
                     mNext = item;
@@ -71,13 +85,25 @@ public class ArrayIterator<T> implements Iterator<T>, SizedItem{
         if(item == null){
             return false;
         }
-        return mTester == null || mTester.test(item);
+        return mFilter == null || mFilter.test(item);
     }
-    public static<T1> Iterator<T1> of(T1[] elements){
+    public static<T1> Iterator<T1> of(Object[] elements){
         if(isEmpty(elements)){
             return EmptyIterator.of();
         }
         return new ArrayIterator<>(elements);
+    }
+    public static<T1> Iterator<T1> of(Object[] elements, Predicate<? super T1> filter){
+        if(isEmpty(elements)){
+            return EmptyIterator.of();
+        }
+        return new ArrayIterator<>(elements, filter);
+    }
+    public static<T1> Iterator<T1> of(Object[] elements, int start, int length){
+        if(isEmpty(elements)){
+            return EmptyIterator.of();
+        }
+        return new ArrayIterator<>(elements, start, length);
     }
     private static boolean isEmpty(Object[] elements){
         if(elements == null || elements.length == 0){
