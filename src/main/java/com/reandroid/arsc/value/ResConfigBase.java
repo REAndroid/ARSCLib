@@ -158,11 +158,11 @@ class ResConfigBase extends FixedBlockContainer
     public int getInputFlagsValue(){
         return mValuesContainer.getByteValue(OFFSET_inputFlags);
     }
-    public void setInputPad0(int value){
-        mValuesContainer.setByteValue(OFFSET_inputPad0, value);
+    public void setGenderValue(int value){
+        mValuesContainer.setByteValue(OFFSET_gender, value);
     }
-    public int getInputPad0(){
-        return mValuesContainer.getByteValue(OFFSET_inputPad0);
+    public int getGenderValue(){
+        return mValuesContainer.getByteValue(OFFSET_gender);
     }
     public void setScreenWidth(int value){
         mValuesContainer.setShortValue(OFFSET_screenWidth, value);
@@ -458,7 +458,7 @@ class ResConfigBase extends FixedBlockContainer
     private static final int OFFSET_keyboard = 12;
     private static final int OFFSET_navigation = 13;
     private static final int OFFSET_inputFlags = 14;
-    private static final int OFFSET_inputPad0 = 15;
+    private static final int OFFSET_gender = 15;
     private static final int OFFSET_screenWidth = 16;
     private static final int OFFSET_screenHeight = 18;
     private static final int OFFSET_sdkVersion = 20;
@@ -496,7 +496,7 @@ class ResConfigBase extends FixedBlockContainer
     public static final String NAME_navigation = "navigation";
     public static final String NAME_input_flags_keys_hidden = "input_flags_keys_hidden";
     public static final String NAME_input_flags_nav_hidden = "input_flags_nav_hidden";
-    public static final String NAME_inputPad0 = "inputPad0";
+    public static final String NAME_gender = "gender";
     public static final String NAME_screenWidth = "screenWidth";
     public static final String NAME_screenHeight = "screenHeight";
     public static final String NAME_sdkVersion = "sdkVersion";

@@ -43,6 +43,9 @@ public class ResConfigTest {
             "-normal",
             "-night",
             "-long",
+            "-neuter",
+            "-feminine",
+            "-masculine",
             "-mcc10-mnc20-en-rUS-xxhdpi-480x1024-v26-long-night-sw180dp-h480dp-"
                     + ResConfig.UNKNOWN_BYTES + "001a2b34",
     };

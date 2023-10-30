@@ -189,6 +189,12 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
     public void setInputFlagsNavHidden(InputFlagsNavHidden navHidden){
         setInputFlags(InputFlagsNavHidden.update(navHidden, getInputFlagsValue()));
     }
+    public Gender getGender(){
+        return Gender.valueOf(getGenderValue());
+    }
+    public void setGender(Gender gender){
+        setGenderValue(Gender.update(gender, getGenderValue()));
+    }
     public void setScreenSize(int width, int height){
         this.setScreenWidth(width);
         this.setScreenHeight(height);
@@ -394,10 +400,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         jsonObject.put(NAME_navigation, Flag.toString(getNavigation()));
         jsonObject.put(NAME_input_flags_keys_hidden, Flag.toString(getInputFlagsKeysHidden()));
         jsonObject.put(NAME_input_flags_nav_hidden, Flag.toString(getInputFlagsNavHidden()));
-        val = getInputPad0();
-        if(val!= 0){
-            jsonObject.put(NAME_inputPad0, val);
-        }
+        jsonObject.put(NAME_gender, Flag.toString(getGender()));
         val = getScreenWidth();
         if(val!= 0){
             jsonObject.put(NAME_screenWidth, val);
@@ -472,7 +475,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         setNavigation(Navigation.valueOf(json.optString(NAME_navigation)));
         setInputFlagsKeysHidden(InputFlagsKeysHidden.valueOf(json.optString(NAME_input_flags_keys_hidden)));
         setInputFlagsNavHidden(InputFlagsNavHidden.valueOf(json.optString(NAME_input_flags_nav_hidden)));
-        setInputPad0(json.optInt(NAME_inputPad0));
+        setGender(Gender.valueOf(json.optString(NAME_gender)));
         setScreenWidth(json.optInt(NAME_screenWidth));
         setScreenHeight(json.optInt(NAME_screenHeight));
         setSdkVersion(json.optInt(NAME_sdkVersion));
@@ -853,6 +856,36 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             return Flag.update(MASK, flag, value);
         }
     }
+    public static final class Gender extends Flag{
+        public static final int MASK = 0b11;
+
+        public static final Gender NEUTER = new Gender("neuter", 1);
+        public static final Gender FEMININE = new Gender("feminine", 2);
+        public static final Gender MASCULINE = new Gender("masculine", 3);
+        public static final Gender[] VALUES = new Gender[]{
+                NEUTER,
+                FEMININE,
+                MASCULINE
+        };
+        private Gender(String name, int flag) {
+            super(name, flag);
+        }
+        public static Gender valueOf(int flag){
+            return Flag.valueOf(VALUES, MASK, flag);
+        }
+        public static Gender valueOf(String name){
+            return Flag.valueOf(VALUES, name);
+        }
+        public static Gender fromQualifiers(String qualifiers){
+            return Flag.fromQualifiers(VALUES, qualifiers);
+        }
+        public static Gender fromQualifiers(String[] qualifiers){
+            return Flag.fromQualifiers(VALUES, qualifiers);
+        }
+        public static int update(Gender flag, int value){
+            return Flag.update(MASK, flag, value);
+        }
+    }
     public static final class UiModeType extends Flag{
         public static final int MASK = 0x0f;
 
@@ -1204,6 +1237,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             appendFlag(resConfig.getNavigation());
             appendFlag(resConfig.getInputFlagsKeysHidden());
             appendFlag(resConfig.getInputFlagsNavHidden());
+            appendFlag(resConfig.getGender());
 
             appendScreenWidthHeight();
 
@@ -1372,6 +1406,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             }
             resConfig.setInputFlagsKeysHidden(ResConfig.InputFlagsKeysHidden.fromQualifiers(qualifiers));
             resConfig.setInputFlagsNavHidden(ResConfig.InputFlagsNavHidden.fromQualifiers(qualifiers));
+            resConfig.setGender(ResConfig.Gender.fromQualifiers(qualifiers));
             resConfig.setScreenLayoutSize(ResConfig.ScreenLayoutSize.fromQualifiers(qualifiers));
             resConfig.setScreenLayoutLong(ResConfig.ScreenLayoutLong.fromQualifiers(qualifiers));
             resConfig.setScreenLayoutDir(ResConfig.ScreenLayoutDir.fromQualifiers(qualifiers));
