@@ -2,7 +2,7 @@
  * Copyright (c) 2002 JSON.org (now "Public Domain")
  * This is NOT property of REAndroid
  * This package is renamed from org.json.* to avoid class conflict when used on anroid platforms
-*/
+ */
 package com.reandroid.json;
 
 import com.reandroid.common.FileChannelInputStream;
@@ -18,7 +18,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.regex.Pattern;
 
 public class JSONObject extends JSONItem {
 
@@ -49,13 +48,13 @@ public class JSONObject extends JSONItem {
         for (;;) {
             c = x.nextClean();
             switch (c) {
-            case 0:
-                throw x.syntaxError("A JSONObject text must end with '}'");
-            case '}':
-                return;
-            default:
-                x.back();
-                key = x.nextValue().toString();
+                case 0:
+                    throw x.syntaxError("A JSONObject text must end with '}'");
+                case '}':
+                    return;
+                default:
+                    x.back();
+                    key = x.nextValue().toString();
             }
 
             // The key is followed by ':'.
@@ -64,9 +63,9 @@ public class JSONObject extends JSONItem {
             if (c != ':') {
                 throw x.syntaxError("Expected a ':' after a key");
             }
-            
+
             // Use syntaxError(..) to include error location
-            
+
             if (key != null) {
                 // Check if key exists
                 if (this.opt(key) != null) {
@@ -83,30 +82,30 @@ public class JSONObject extends JSONItem {
             // Pairs are separated by ','.
 
             switch (x.nextClean()) {
-            case ';':
-            case ',':
-                if (x.nextClean() == '}') {
+                case ';':
+                case ',':
+                    if (x.nextClean() == '}') {
+                        return;
+                    }
+                    x.back();
+                    break;
+                case '}':
                     return;
-                }
-                x.back();
-                break;
-            case '}':
-                return;
-            default:
-                throw x.syntaxError("Expected a ',' or '}'");
+                default:
+                    throw x.syntaxError("Expected a ',' or '}'");
             }
         }
     }
 
     public JSONObject(Map<?, ?> m) {
         if (m == null) {
-            this.map = new LinkedHashMap<String, Object>();
+            this.map = new LinkedHashMap<>();
         } else {
-            this.map = new LinkedHashMap<String, Object>(m.size());
-        	for (final Entry<?, ?> e : m.entrySet()) {
-        	    if(e.getKey() == null) {
-        	        throw new NullPointerException("Null key.");
-        	    }
+            this.map = new LinkedHashMap<>(m.size());
+            for (final Entry<?, ?> e : m.entrySet()) {
+                if(e.getKey() == null) {
+                    throw new NullPointerException("Null key.");
+                }
                 final Object value = e.getValue();
                 if (value != null) {
                     this.map.put(String.valueOf(e.getKey()), wrap(value));
@@ -156,10 +155,10 @@ public class JSONObject extends JSONItem {
             }
         }
     }
-    
+
 
     protected JSONObject(int initialCapacity){
-        this.map = new LinkedHashMap<String, Object>(initialCapacity);
+        this.map = new LinkedHashMap<>(initialCapacity);
     }
 
 
@@ -272,11 +271,11 @@ public class JSONObject extends JSONItem {
         Object object = this.get(key);
         if (object.equals(Boolean.FALSE)
                 || (object instanceof String && ((String) object)
-                        .equalsIgnoreCase("false"))) {
+                .equalsIgnoreCase("false"))) {
             return false;
         } else if (object.equals(Boolean.TRUE)
                 || (object instanceof String && ((String) object)
-                        .equalsIgnoreCase("true"))) {
+                .equalsIgnoreCase("true"))) {
             return true;
         }
         throw wrongValueFormatException(key, "Boolean", null);
@@ -459,9 +458,9 @@ public class JSONObject extends JSONItem {
     }
 
     public JSONArray names() {
-    	if(this.map.isEmpty()) {
-    		return null;
-    	}
+        if(this.map.isEmpty()) {
+            return null;
+        }
         return new JSONArray(this.map.keySet());
     }
 
@@ -653,10 +652,10 @@ public class JSONObject extends JSONItem {
         if (val == null) {
             return defaultValue;
         }
-        
+
         return val.longValue();
     }
-    
+
 
     public Number optNumber(String key) {
         return this.optNumber(key, null);
@@ -670,14 +669,14 @@ public class JSONObject extends JSONItem {
         if (val instanceof Number){
             return (Number) val;
         }
-        
+
         try {
             return stringToNumber(val.toString());
         } catch (Exception e) {
             return defaultValue;
         }
     }
-    
+
 
     public String optString(String key) {
         return this.optString(key, "");
@@ -868,7 +867,7 @@ public class JSONObject extends JSONItem {
     public JSONObject put(String key, double value) throws JSONException {
         return this.put(key, Double.valueOf(value));
     }
-    
+
 
     public JSONObject put(String key, float value) throws JSONException {
         return this.put(key, Float.valueOf(value));
@@ -923,12 +922,12 @@ public class JSONObject extends JSONItem {
     public Object query(JSONPointer jsonPointer) {
         return jsonPointer.queryFrom(this);
     }
-    
+
 
     public Object optQuery(String jsonPointer) {
-    	return optQuery(new JSONPointer(jsonPointer));
+        return optQuery(new JSONPointer(jsonPointer));
     }
-    
+
 
     public Object optQuery(JSONPointer jsonPointer) {
         try {
@@ -955,10 +954,10 @@ public class JSONObject extends JSONItem {
                 Object valueThis = entry.getValue();
                 Object valueOther = ((JSONObject)other).get(name);
                 if(valueThis == valueOther) {
-                	continue;
+                    continue;
                 }
                 if(valueThis == null) {
-                	return false;
+                    return false;
                 }
                 if (valueThis instanceof JSONObject) {
                     if (!((JSONObject)valueThis).similar(valueOther)) {
@@ -977,13 +976,13 @@ public class JSONObject extends JSONItem {
             return false;
         }
     }
-    
+
 
     protected static boolean isDecimalNotation(final String val) {
         return val.indexOf('.') > -1 || val.indexOf('e') > -1
                 || val.indexOf('E') > -1 || "-0".equals(val);
     }
-    
+
 
     protected static Number stringToNumber(final String val) throws NumberFormatException {
         char initial = val.charAt(0);
@@ -1028,7 +1027,7 @@ public class JSONObject extends JSONItem {
             // integer representation.
             // This will narrow any values to the smallest reasonable Object representation
             // (Integer, Long, or BigInteger)
-            
+
             // BigInteger down conversion: We use a similar bitLenth compare as
             // BigInteger#intValueExact uses. Increases GC, but objects hold
             // only what they need. i.e. Less runtime overhead if the value is
@@ -1092,45 +1091,30 @@ public class JSONObject extends JSONItem {
     public Writer write(Writer writer, int indentFactor, int indent) throws JSONException {
         try {
             boolean needsComma = false;
-            final int length = this.length();
             writer.write('{');
-
-            if (length == 1) {
-            	final Entry<String,?> entry = this.entrySet().iterator().next();
+            final int newIndent = indent + indentFactor;
+            for (final Entry<String,?> entry : this.entrySet()) {
+                if (needsComma) {
+                    writer.write(',');
+                }
+                if (indentFactor > 0) {
+                    writer.write('\n');
+                }
+                indent(writer, newIndent);
                 final String key = entry.getKey();
                 writer.write(quote(key));
                 writer.write(':');
                 if (indentFactor > 0) {
                     writer.write(' ');
                 }
-                try{
-                    writeValue(writer, entry.getValue(), indentFactor, indent);
+                try {
+                    writeValue(writer, entry.getValue(), indentFactor, newIndent);
                 } catch (Exception e) {
                     throw new JSONException("Unable to write JSONObject value for key: " + key, e);
                 }
-            } else if (length != 0) {
-                final int newIndent = indent + indentFactor;
-                for (final Entry<String,?> entry : this.entrySet()) {
-                    if (needsComma) {
-                        writer.write(',');
-                    }
-                    if (indentFactor > 0) {
-                        writer.write('\n');
-                    }
-                    indent(writer, newIndent);
-                    final String key = entry.getKey();
-                    writer.write(quote(key));
-                    writer.write(':');
-                    if (indentFactor > 0) {
-                        writer.write(' ');
-                    }
-                    try {
-                        writeValue(writer, entry.getValue(), indentFactor, newIndent);
-                    } catch (Exception e) {
-                        throw new JSONException("Unable to write JSONObject value for key: " + key, e);
-                    }
-                    needsComma = true;
-                }
+                needsComma = true;
+            }
+            if(needsComma){
                 if (indentFactor > 0) {
                     writer.write('\n');
                 }
@@ -1144,7 +1128,7 @@ public class JSONObject extends JSONItem {
     }
 
     public LinkedHashMap<String, Object> toMap() {
-        LinkedHashMap<String, Object> results = new LinkedHashMap<String, Object>();
+        LinkedHashMap<String, Object> results = new LinkedHashMap<>();
         for (Entry<String, Object> entry : this.entrySet()) {
             Object value;
             if (entry.getValue() == null || NULL.equals(entry.getValue())) {
@@ -1160,7 +1144,7 @@ public class JSONObject extends JSONItem {
         }
         return results;
     }
-    
+
 
     private static JSONException wrongValueFormatException(
             String key,
@@ -1170,7 +1154,7 @@ public class JSONObject extends JSONItem {
                 "JSONObject[" + quote(key) + "] is not a " + valueType + "."
                 , cause);
     }
-    
+
 
     private static JSONException wrongValueFormatException(
             String key,

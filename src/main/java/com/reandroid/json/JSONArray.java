@@ -23,7 +23,7 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
     private final ArrayList<Object> myArrayList;
 
     public JSONArray() {
-        this.myArrayList = new ArrayList<Object>();
+        this.myArrayList = new ArrayList<>();
     }
 
     public JSONArray(JSONTokener x) throws JSONException {
@@ -77,10 +77,11 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
 
     public JSONArray(Collection<?> collection) {
         if (collection == null) {
-            this.myArrayList = new ArrayList<Object>();
+            this.myArrayList = new ArrayList<>();
         } else {
-            this.myArrayList = new ArrayList<Object>(collection.size());
+            this.myArrayList = new ArrayList<>(collection.size());
             this.addAll(collection, true);
+            this.myArrayList.trimToSize();
         }
     }
 
@@ -94,11 +95,11 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
 
     public JSONArray(JSONArray array) {
         if (array == null) {
-            this.myArrayList = new ArrayList<Object>();
+            this.myArrayList = new ArrayList<>();
         } else {
             // shallow copy directly the internal array lists as any wrapping
             // should have been done already in the original JSONArray
-            this.myArrayList = new ArrayList<Object>(array.myArrayList);
+            this.myArrayList = new ArrayList<>(array.myArrayList);
         }
     }
 
@@ -116,7 +117,7 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
             throw new JSONException(
                     "JSONArray initial capacity cannot be negative.");
     	}
-    	this.myArrayList = new ArrayList<Object>(initialCapacity);
+    	this.myArrayList = new ArrayList<>(initialCapacity);
     }
 
     public JSONArray(File file) throws IOException {
@@ -131,6 +132,9 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
             inputStream.close();
         } catch (IOException ignored) {
         }
+    }
+    public void trimToSize(){
+        myArrayList.trimToSize();
     }
     public ArrayList<Object> getArrayList(){
         return myArrayList;
@@ -639,39 +643,31 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
             throws JSONException {
         try {
             boolean needsComma = false;
-            int length = this.length();
             writer.write('[');
-
-            if (length == 1) {
-                try {
-                    writeValue(writer, this.myArrayList.get(0),
-                            indentFactor, indent);
-                } catch (Exception e) {
-                    throw new JSONException("Unable to write JSONArray value at index: 0", e);
-                }
-            } else if (length != 0) {
-                final int newIndent = indent + indentFactor;
-
-                for (int i = 0; i < length; i += 1) {
-                    if (needsComma) {
-                        writer.write(',');
-                    }
-                    if (indentFactor > 0) {
-                        writer.write('\n');
-                    }
-                    JSONObject.indent(writer, newIndent);
-                    try {
-                        writeValue(writer, this.myArrayList.get(i),
-                                indentFactor, newIndent);
-                    } catch (Exception e) {
-                        throw new JSONException("Unable to write JSONArray value at index: " + i, e);
-                    }
-                    needsComma = true;
+            final int newIndent = indent + indentFactor;
+            ArrayList<?> arrayList = this.myArrayList;
+            int length = arrayList.size();
+            for (int i = 0; i < length; i += 1) {
+                if (needsComma) {
+                    writer.write(',');
                 }
                 if (indentFactor > 0) {
                     writer.write('\n');
                 }
-                JSONObject.indent(writer, indent);
+                indent(writer, newIndent);
+                try {
+                    writeValue(writer, arrayList.get(i),
+                            indentFactor, newIndent);
+                } catch (Exception e) {
+                    throw new JSONException("Unable to write JSONArray value at index: " + i, e);
+                }
+                needsComma = true;
+            }
+            if(needsComma){
+                if (indentFactor > 0) {
+                    writer.write('\n');
+                }
+                indent(writer, indent);
             }
             writer.write(']');
             return writer;
@@ -681,7 +677,7 @@ public class JSONArray extends JSONItem implements Iterable<Object> {
     }
 
     public List<Object> toList() {
-        List<Object> results = new ArrayList<Object>(this.myArrayList.size());
+        List<Object> results = new ArrayList<>(this.myArrayList.size());
         for (Object element : this.myArrayList) {
             if (element == null || JSONObject.NULL.equals(element)) {
                 results.add(null);
