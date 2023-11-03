@@ -267,7 +267,12 @@ public class JSONTokener {
         switch (c) {
         case '"':
         case '\'':
-            return this.nextString(c);
+            string = this.nextString(c);
+            byte[] bytes = JsonUtil.parseBase64(string);
+            if(bytes == null){
+                return string;
+            }
+            return bytes;
         case '{':
             this.back();
             return new JSONObject(this);

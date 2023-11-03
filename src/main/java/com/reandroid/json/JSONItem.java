@@ -19,6 +19,7 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Map;
 
@@ -28,6 +29,7 @@ public abstract class JSONItem {
     public void write(File file) throws IOException{
         write(file, INDENT_FACTOR);
     }
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void write(File file, int indentFactor) throws IOException{
         File dir = file.getParentFile();
         if(dir != null && !dir.exists()){
@@ -91,6 +93,8 @@ public abstract class JSONItem {
         } else if (value instanceof Collection) {
             Collection<?> coll = (Collection<?>) value;
             new JSONArray(coll).write(writer, indentFactor, indent);
+        } else if (value.getClass() == byte[].class) {
+            writeBase64(writer, (byte[]) value);
         } else if (value.getClass().isArray()) {
             new JSONArray(value).write(writer, indentFactor, indent);
         } else {
@@ -244,26 +248,38 @@ public abstract class JSONItem {
             return null;
         }
     }
+    private static void writeBase64(Writer writer, byte[] bytes) throws IOException {
+        writer.write("\"");
+        writer.write(MIME_BIN_BASE64);
+        try{
+            Base64.Encoder encoder = Base64.getUrlEncoder();
+            String base64 = encoder.encodeToString(bytes);
+            writer.write(base64);
+        }catch (IOException exception){
+            throw exception;
+        }catch (Throwable throwable){
+            throw new JSONException(throwable);
+        }
+        writer.write("\"");
+    }
 
     static boolean isNull(Object obj){
         return obj == null || obj == NULL;
     }
+    @SuppressWarnings("all")
     private static final class Null {
         @Override
-        protected final Object clone() {
+        public final Object clone() {
             return this;
         }
-
         @Override
         public boolean equals(Object object) {
             return object == null || object == this;
         }
-
         @Override
         public int hashCode() {
             return 0;
         }
-
         @Override
         public String toString() {
             return "null";
@@ -274,4 +290,6 @@ public abstract class JSONItem {
     public static final Object NULL = new Null();
 
     private static final int INDENT_FACTOR = 2;
+
+    public static final String MIME_BIN_BASE64 = "data:binary/octet-stream;base64,";
 }

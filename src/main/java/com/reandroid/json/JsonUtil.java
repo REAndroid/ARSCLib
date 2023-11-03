@@ -7,9 +7,21 @@ package com.reandroid.json;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 public class JsonUtil {
 
+    public static byte[] parseBase64(String text){
+        if(text == null || !text.startsWith(JSONItem.MIME_BIN_BASE64)){
+            return null;
+        }
+        text = text.substring(JSONItem.MIME_BIN_BASE64.length());
+        try{
+            return Base64.getUrlDecoder().decode(text);
+        }catch (Throwable throwable){
+            throw new JSONException(throwable);
+        }
+    }
     public static void readJSONObject(File file, JSONConvert<JSONObject> jsonConvert) throws IOException {
         FileInputStream inputStream=new FileInputStream(file);
         readJSONObject(inputStream, jsonConvert);
