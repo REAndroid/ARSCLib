@@ -15,8 +15,6 @@
  */
 package com.reandroid.xml;
 
-import org.xmlpull.v1.XmlSerializer;
-
 import java.io.IOException;
 
 public class StyleText extends XMLText implements StyleNode{
@@ -46,7 +44,7 @@ public class StyleText extends XMLText implements StyleNode{
     }
     @Override
     public StyleNode getParentStyle() {
-        return (StyleNode) getParent();
+        return (StyleNode) getParentNode();
     }
     @Override
     public void addStyleNode(StyleNode styleNode){

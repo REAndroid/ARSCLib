@@ -232,7 +232,7 @@ public class XMLTableBlockEncoder {
     }
     private void initializeFrameworkFromBinaryManifest() throws IOException {
         ApkModule apkModule = getApkModule();
-        if(!apkModule.hasTableBlock() || !apkModule.hasAndroidManifestBlock()){
+        if(!apkModule.hasTableBlock() || !apkModule.hasAndroidManifest()){
             return;
         }
         logMessage("Initialize framework from binary manifest ...");

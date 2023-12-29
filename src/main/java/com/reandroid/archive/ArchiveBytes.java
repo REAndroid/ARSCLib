@@ -17,6 +17,7 @@ package com.reandroid.archive;
 
 import com.reandroid.archive.io.ArchiveByteEntrySource;
 import com.reandroid.archive.io.ZipByteInput;
+import com.reandroid.utils.io.FileUtil;
 import com.reandroid.utils.io.IOUtil;
 
 import java.io.File;
@@ -40,10 +41,7 @@ public class ArchiveBytes extends Archive<ZipByteInput>{
     }
     @Override
     void extractStored(File file, ArchiveEntry archiveEntry) throws IOException {
-        File dir = file.getParentFile();
-        if(dir != null && !dir.exists()){
-            dir.mkdirs();
-        }
+        FileUtil.ensureParentDirectory(file);
         InputStream inputStream = getZipInput().getInputStream(archiveEntry.getFileOffset(),
                 archiveEntry.getDataSize());
         FileOutputStream outputStream = new FileOutputStream(file);

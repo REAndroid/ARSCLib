@@ -52,8 +52,8 @@ import java.util.zip.ZipEntry;
         }
         FrameworkTable frameworkTable = getFrameworkTable();
         AndroidManifestBlock manifestBlock = null;
-        if(frameworkApk.hasAndroidManifestBlock()){
-            manifestBlock = frameworkApk.getAndroidManifestBlock();
+        if(frameworkApk.hasAndroidManifest()){
+            manifestBlock = frameworkApk.getAndroidManifest();
         }
         optimizeTable(frameworkTable, manifestBlock);
         UncompressedFiles uncompressedFiles = frameworkApk.getUncompressedFiles();
@@ -130,7 +130,7 @@ import java.util.zip.ZipEntry;
     private void compressManifest(AndroidManifestBlock manifestBlock){
         logMessage("Compressing manifest ...");
         int prev = manifestBlock.countBytes();
-        ResXmlElement manifest = manifestBlock.getResXmlElement();
+        ResXmlElement manifest = manifestBlock.getDocumentElement();
         List<ResXmlNode> removeList = getManifestElementToRemove(manifest);
         for(ResXmlNode node:removeList){
             manifest.removeNode(node);
@@ -177,7 +177,7 @@ import java.util.zip.ZipEntry;
             }
         }
 
-        ResXmlElement element = manifestBlock.getResXmlElement();
+        ResXmlElement element = manifestBlock.getDocumentElement();
         backupAttributeValues(tableBlock, element);
 
         if(iconAttribute!=null){

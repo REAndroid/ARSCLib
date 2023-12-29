@@ -21,6 +21,8 @@ import java.util.List;
 
 public class StringsUtil {
 
+    public static final String EMPTY = ObjectsUtil.of("");
+
     public static boolean isDigits(String text){
         if(isEmpty(text)){
             return false;
@@ -202,6 +204,36 @@ public class StringsUtil {
         }
         return builder.toString();
     }
+    public static String[] removeEmpty(String[] strings){
+        if(strings == null){
+            return null;
+        }
+        int length = strings.length;
+        if(length == 0){
+            return strings;
+        }
+        int count = 0;
+        for(int i = 0; i < length; i++){
+            if(isEmpty(strings[i])){
+                strings[i] = null;
+            }else {
+                count ++;
+            }
+        }
+        if(count == length){
+            return strings;
+        }
+        String[] results = new String[count];
+        int index = 0;
+        for(int i = 0; i < length; i++){
+            String str = strings[i];
+            if(str != null){
+                results[index] = str;
+                index ++;
+            }
+        }
+        return results;
+    }
     public static String[] split(String text, char search){
         return split(text, search, true);
     }
@@ -251,9 +283,10 @@ public class StringsUtil {
         String[] results = new String[count + 1];
         int index = 0;
         StringBuilder builder = new StringBuilder();
-        char[] chars = text.toCharArray();
         boolean previousMatch = false;
-        for(char ch : chars){
+        int length = text.length();
+        for(int i = 0; i < length; i++){
+            char ch = text.charAt(i);
             if(ch == search){
                 if(!previousMatch || !skipConsecutive){
                     previousMatch = true;
@@ -275,10 +308,11 @@ public class StringsUtil {
         if(text == null || text.length() == 0){
             return 0;
         }
-        char[] chars = text.toCharArray();
+        int length = text.length();
         int result = 0;
         boolean previousMatch = false;
-        for(char ch : chars){
+        for(int i = 0; i < length; i++){
+            char ch = text.charAt(i);
             if(contains(search, ch)){
                 if(!previousMatch || !skipConsecutive){
                     result ++;
@@ -294,10 +328,11 @@ public class StringsUtil {
         if(text == null || text.length() == 0){
             return 0;
         }
-        char[] chars = text.toCharArray();
+        int length = text.length();
         int result = 0;
         boolean previousMatch = false;
-        for(char ch : chars){
+        for(int i = 0; i < length; i++){
+            char ch = text.charAt(i);
             if(ch == search){
                 if(!previousMatch || !skipConsecutive){
                     result ++;
@@ -495,6 +530,10 @@ public class StringsUtil {
     }
     public static int compareStrings(String s1, String s2) {
         return CompareUtil.compare(s1, s2);
+    }
+
+    public static String of(String s){
+        return s;
     }
 
     private static final int MAX_STRING_APPEND = 5;

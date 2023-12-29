@@ -20,6 +20,7 @@ import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.MergingIterator;
 import com.reandroid.utils.collection.SingleIterator;
@@ -28,7 +29,7 @@ import java.util.*;
 
 public class PathTree<T> implements Comparable<PathTree<?>>, Iterable<PathTree<T>>, JSONConvert<JSONObject> {
     private T item;
-    private final String name;
+    private String name;
     private PathTree<T> parent;
     private final LinkedHashMap<String, PathTree<T>> elementsMap;
 
@@ -42,11 +43,27 @@ public class PathTree<T> implements Comparable<PathTree<?>>, Iterable<PathTree<T
     }
 
     public PathTree<T> copy(){
-        PathTree<T> pathTree = new PathTree<>(getItem(), getName());
+        return copy(getName());
+    }
+    public PathTree<T> copy(String newName){
+        PathTree<T> pathTree = new PathTree<>(getItem(), newName);
+        pathTree.setItem(getItem());
         for(PathTree<T> element : this){
             pathTree.add(element.copy());
         }
         return pathTree;
+    }
+    public void setName(String name){
+        String old = this.name;
+        if(old.equals(name)){
+            return;
+        }
+        this.name = name;
+        PathTree<T> parent = this.parent;
+        if(parent != null){
+            parent.elementsMap.remove(old);
+            parent.elementsMap.put(name, this);
+        }
     }
 
     public void sort(){
@@ -73,6 +90,9 @@ public class PathTree<T> implements Comparable<PathTree<?>>, Iterable<PathTree<T
         for(PathTree<?> pathTree : elements){
             pathTree.sort(comparator, true);
         }
+    }
+    public List<PathTree<T>> toList(){
+        return ArrayCollection.of(elementsMap.values());
     }
     @Override
     public Iterator<PathTree<T>> iterator(){

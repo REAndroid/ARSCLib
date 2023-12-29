@@ -16,13 +16,9 @@
 package com.reandroid.arsc.group;
 
 import com.reandroid.arsc.base.BlockArrayCreator;
-import com.reandroid.arsc.item.ReferenceItem;
 import com.reandroid.arsc.item.StringItem;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
 
 public class StringGroup<T extends StringItem> extends ItemGroup<T>
         implements Comparator<StringItem>{

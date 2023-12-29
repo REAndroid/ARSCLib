@@ -28,7 +28,7 @@ public class ResValueMapArray extends CompoundItemArray<ResValueMap> {
     }
 
     @Override
-    public ResValueMap[] newInstance(int len) {
+    public ResValueMap[] newArrayInstance(int len) {
         if(len == 0){
             return empty_elements;
         }

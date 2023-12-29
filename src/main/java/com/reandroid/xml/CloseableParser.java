@@ -15,7 +15,7 @@
  */
 package com.reandroid.xml;
 
-import com.android.org.kxml2.io.KXmlParser;
+import com.reandroid.xml.kxml2.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 

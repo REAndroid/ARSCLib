@@ -25,8 +25,8 @@ public abstract class AttributeValue extends ValueItem{
     public AttributeValue(int bytesLength, int sizeOffset) {
         super(bytesLength, sizeOffset);
     }
-    public abstract int getNameResourceID();
-    public abstract void setNameResourceID(int resourceId);
+    public abstract int getNameId();
+    public abstract void setNameId(int resourceId);
     public abstract String decodePrefix();
     public abstract String decodeName(boolean includePrefix);
 
@@ -34,7 +34,7 @@ public abstract class AttributeValue extends ValueItem{
         return decodeName(true);
     }
     public ResourceEntry resolveName(){
-        return resolve(getNameResourceID());
+        return resolve(getNameId());
     }
     public EncodeResult encodeStyleValue(ResourceEntry nameEntry, String value){
         return encodeStyleValue(false, nameEntry, value);
@@ -104,7 +104,7 @@ public abstract class AttributeValue extends ValueItem{
         return false;
     }
     public void setName(String name, int nameId){
-        setNameResourceID(nameId);
+        setNameId(nameId);
     }
     @Override
     public String decodeValue(){

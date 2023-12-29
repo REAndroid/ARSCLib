@@ -85,7 +85,7 @@ public class ResXmlIDArray extends BlockArray<ResXmlID>  {
         return new ResXmlID();
     }
     @Override
-    public ResXmlID[] newInstance(int len) {
+    public ResXmlID[] newArrayInstance(int len) {
         mUpdated=false;
         return new ResXmlID[len];
     }

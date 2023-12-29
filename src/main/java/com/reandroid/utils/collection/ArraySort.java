@@ -23,16 +23,16 @@ public class ArraySort {
         IntSort sorter = new IntSort(elements, start, length);
         return sorter.sort();
     }
-    public static boolean sort(Object[] elements, Comparator<?> comparator){
-        ObjectSort sorter = new ObjectSort(elements, comparator, 0, elements.length);
+    public static<T> boolean sort(Object[] elements, Comparator<T> comparator){
+        ObjectSort sorter = new ObjectSort(elements, 0, elements.length, comparator);
         return sorter.sort();
     }
     public static boolean sort(Object[] elements, Comparator<?> comparator, int length){
-        ObjectSort sorter = new ObjectSort(elements, comparator, 0, length);
+        ObjectSort sorter = new ObjectSort(elements, 0, length, comparator);
         return sorter.sort();
     }
-    public static boolean sort(Object[] elements, Comparator<?> comparator, int start, int length){
-        ObjectSort sorter = new ObjectSort(elements, comparator, start, length);
+    public static boolean sort(Object[] elements, int start, int length, Comparator<?> comparator){
+        ObjectSort sorter = new ObjectSort(elements, start, length, comparator);
         return sorter.sort();
     }
     public static boolean sort(int[] elements){
@@ -92,7 +92,7 @@ public class ArraySort {
         private Object mid;
 
         @SuppressWarnings("unchecked")
-        public ObjectSort(Object[] elementData, Comparator<?> comparator, int start, int length){
+        public ObjectSort(Object[] elementData, int start, int length, Comparator<?> comparator){
             this.elementData = elementData;
             this.comparator = (Comparator<Object>) comparator;
             this.start = start;

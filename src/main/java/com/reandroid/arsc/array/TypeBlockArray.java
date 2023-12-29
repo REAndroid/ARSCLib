@@ -160,7 +160,24 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return null;
     }
     public TypeBlock getTypeBlock(ResConfig config){
-        return getTypeBlock(config, false);
+        if(config==null){
+            return null;
+        }
+        TypeBlock[] items = getChildes();
+        if(items == null){
+            return null;
+        }
+        int length = items.length;
+        for(int i = 0; i < length; i++){
+            TypeBlock typeBlock = items[i];
+            if(typeBlock == null){
+                continue;
+            }
+            if(config.equals(typeBlock.getResConfig())){
+                return typeBlock;
+            }
+        }
+        return null;
     }
     public TypeBlock getTypeBlock(ResConfig config, boolean sparse){
         if(config==null){
@@ -290,7 +307,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return typeBlock;
     }
     @Override
-    public TypeBlock[] newInstance(int len) {
+    public TypeBlock[] newArrayInstance(int len) {
         return new TypeBlock[len];
     }
     public TypeBlock createNext(boolean sparse){

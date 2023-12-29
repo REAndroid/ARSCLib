@@ -13,30 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.base;
+package com.reandroid.xml.base;
 
-import com.reandroid.arsc.item.IntegerReference;
+import org.xmlpull.v1.XmlSerializer;
 
-public class NumberIntegerReference implements IntegerReference {
-    private int value;
+import java.io.IOException;
 
-    public NumberIntegerReference(int value){
-        this.value = value;
-    }
-    public NumberIntegerReference(){
-        this(0);
-    }
+public interface Node {
 
-    @Override
-    public int get() {
-        return this.value;
-    }
-    @Override
-    public void set(int value) {
-        this.value = value;
-    }
-    @Override
-    public String toString() {
-        return Integer.toString(get());
-    }
+    Node getParentNode();
+    void setParentNode();
+
+    int getLineNumber();
+    void setLineNumber(int lineNumber);
+    int getColumnNumber();
+    void setColumnNumber(int columnNumber);
+
+    void serialize(XmlSerializer serializer) throws IOException;
 }

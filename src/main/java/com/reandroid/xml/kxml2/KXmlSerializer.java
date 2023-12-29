@@ -18,7 +18,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE. */
 
-package com.android.org.kxml2.io;
+package com.reandroid.xml.kxml2;
 
 import java.io.*;
 import java.util.Arrays;

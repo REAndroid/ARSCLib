@@ -38,7 +38,7 @@ public abstract class CommonHeader extends ZipHeader {
         this.offsetGeneralPurpose = offsetGeneralPurpose;
         this.generalPurposeFlag = new GeneralPurposeFlag(this, offsetGeneralPurpose);
         this.generalPurposeFlag.setUtf8(true, false);
-        setDosTime(0x2210820);
+        setDosTime(0x2210821);
     }
     public long getFileOffset() {
         return mFileOffset;
@@ -108,6 +108,9 @@ public abstract class CommonHeader extends ZipHeader {
     public void setVersionMadeBy(int value){
         putShort(OFFSET_versionMadeBy, value);
     }
+    public void setVersionExtract(int value){
+
+    }
     public int getPlatform(){
         return getByteUnsigned(OFFSET_platform);
     }
@@ -127,16 +130,18 @@ public abstract class CommonHeader extends ZipHeader {
         return getIntegerUnsigned(offsetGeneralPurpose + 4);
     }
     public void setDosTime(long value){
-        putInteger(offsetGeneralPurpose + 4, value);
+        if(value != -1){
+            putInteger(offsetGeneralPurpose + 4, value);
+        }
     }
     public Date getDate(){
-        return dosToJavaDate(getDosTime());
+        return Archive.dosToJavaDate(getDosTime());
     }
     public void setDate(Date date){
-        setDate(date==null ? 0L : date.getTime());
+        setDosTime(Archive.javaToDosTime(date));
     }
     public void setDate(long date){
-        setDosTime(javaToDosTime(date));
+        setDosTime(Archive.javaToDosTime(date));
     }
     public long getCrc(){
         return getIntegerUnsigned(offsetGeneralPurpose + 8);
@@ -360,44 +365,13 @@ public abstract class CommonHeader extends ZipHeader {
         builder.append(", platform=").append(HexUtil.toHex2((byte) getPlatform()));
         builder.append(", GP={").append(getGeneralPurposeFlag()).append("}");
         builder.append(", method=").append(getMethod());
-        builder.append(", date=").append(getDate());
+        builder.append(", date=").append(HexUtil.toHex(getDosTime(), 1));
         builder.append(", crc=").append(HexUtil.toHex8(getCrc()));
         builder.append(", cSize=").append(getCompressedSize());
         builder.append(", size=").append(getSize());
         builder.append(", fileNameLength=").append(getFileNameLength());
         builder.append(", extraLength=").append(getExtraLength());
         return builder.toString();
-    }
-
-    private static Date dosToJavaDate(final long dosTime) {
-        final Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.YEAR, (int) ((dosTime >> 25) & 0x7f) + 1980);
-        cal.set(Calendar.MONTH, (int) ((dosTime >> 21) & 0x0f) - 1);
-        cal.set(Calendar.DATE, (int) (dosTime >> 16) & 0x1f);
-        cal.set(Calendar.HOUR_OF_DAY, (int) (dosTime >> 11) & 0x1f);
-        cal.set(Calendar.MINUTE, (int) (dosTime >> 5) & 0x3f);
-        cal.set(Calendar.SECOND, (int) (dosTime << 1) & 0x3e);
-        cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTime();
-    }
-    private static long javaToDosTime(long javaTime) {
-        int date;
-        int time;
-        GregorianCalendar cal = new GregorianCalendar();
-        cal.setTime(new Date(javaTime));
-        int year = cal.get(Calendar.YEAR);
-        if (year < 1980) {
-            date = 0x21;
-            time = 0;
-        } else {
-            date = cal.get(Calendar.DATE);
-            date = (cal.get(Calendar.MONTH) + 1 << 5) | date;
-            date = ((cal.get(Calendar.YEAR) - 1980) << 9) | date;
-            time = cal.get(Calendar.SECOND) >> 1;
-            time = (cal.get(Calendar.MINUTE) << 5) | time;
-            time = (cal.get(Calendar.HOUR_OF_DAY) << 11) | time;
-        }
-        return ((long) date << 16) | time;
     }
 
     static boolean isZip64Value(long value){
@@ -478,17 +452,5 @@ public abstract class CommonHeader extends ZipHeader {
 
     private static final int OFFSET_versionMadeBy = 4;
     private static final int OFFSET_platform = 5;
-
-    private static final int OFFSET_general_purpose = 6;
-
-    private static final int OFFSET_method = 8;
-    private static final int OFFSET_dos_time = 10;
-    private static final int OFFSET_crc = 14;
-    private static final int OFFSET_compressed_size = 18;
-    private static final int OFFSET_size = 22;
-    private static final int OFFSET_fileNameLength = 26;
-    private static final int OFFSET_extraLength = 28;
-
-    private static final int OFFSET_fileName = 30;
 
 }

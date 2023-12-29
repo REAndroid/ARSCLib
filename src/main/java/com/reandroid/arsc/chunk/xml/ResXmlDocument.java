@@ -43,7 +43,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         implements MainChunk, ParentChunk, JSONConvert<JSONObject> {
     private final ResXmlStringPool mResXmlStringPool;
     private final ResXmlIDMap mResXmlIDMap;
-    private ResXmlElement mResXmlElement;
+    private ResXmlElement mDocumentElement;
     private final SingleBlockContainer<ResXmlElement> mResXmlElementContainer;
     private ApkFile mApkFile;
     private PackageBlock mPackageBlock;
@@ -53,9 +53,9 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         super(new HeaderBlock(ChunkType.XML),3);
         this.mResXmlStringPool=new ResXmlStringPool(true);
         this.mResXmlIDMap=new ResXmlIDMap();
-        this.mResXmlElement=new ResXmlElement();
+        this.mDocumentElement =new ResXmlElement();
         this.mResXmlElementContainer=new SingleBlockContainer<>();
-        this.mResXmlElementContainer.setItem(mResXmlElement);
+        this.mResXmlElementContainer.setItem(mDocumentElement);
         addChild(mResXmlStringPool);
         addChild(mResXmlIDMap);
         addChild(mResXmlElementContainer);
@@ -65,7 +65,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
      * Iterates every attribute on root element and on child elements recursively
      * */
     public Iterator<ResXmlAttribute> recursiveAttributes() throws ConcurrentModificationException{
-        ResXmlElement element = getResXmlElement();
+        ResXmlElement element = getDocumentElement();
         if(element != null){
             return element.recursiveAttributes();
         }
@@ -75,7 +75,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
      * Iterates every xml node and child node recursively
      * */
     public Iterator<ResXmlNode> recursiveXmlNodes() throws ConcurrentModificationException{
-        ResXmlElement element = getResXmlElement();
+        ResXmlElement element = getDocumentElement();
         if(element != null){
             return element.recursiveXmlNodes();
         }
@@ -85,7 +85,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
      * Iterates every element and child elements recursively
      * */
     public Iterator<ResXmlElement> recursiveElements() throws ConcurrentModificationException{
-        ResXmlElement element = getResXmlElement();
+        ResXmlElement element = getDocumentElement();
         if(element != null){
             return element.recursiveElements();
         }
@@ -93,7 +93,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     }
 
     public int autoSetAttributeNamespaces(){
-        ResXmlElement root = getResXmlElement();
+        ResXmlElement root = getDocumentElement();
         if(root == null){
             return 0;
         }
@@ -105,7 +105,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         return changedCount;
     }
     public int autoSetAttributeNames(){
-        ResXmlElement root = getResXmlElement();
+        ResXmlElement root = getDocumentElement();
         if(root == null){
             return 0;
         }
@@ -117,14 +117,14 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         return changedCount;
     }
     public void autoSetLineNumber(){
-        ResXmlElement root = getResXmlElement();
+        ResXmlElement root = getDocumentElement();
         if(root == null){
             return;
         }
         root.autoSetLineNumber();
     }
     public int removeUnusedNamespaces(){
-        ResXmlElement root = getResXmlElement();
+        ResXmlElement root = getDocumentElement();
         if(root != null){
             return root.removeUnusedNamespaces();
         }
@@ -134,7 +134,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         int sizeOld = getHeaderBlock().getChunkSize();
         StringBuilder message = new StringBuilder();
         boolean appendOnce = false;
-        ResXmlElement root = getResXmlElement();
+        ResXmlElement root = getDocumentElement();
         int count;
         if(root != null){
             count = root.removeUndefinedAttributes();
@@ -185,10 +185,10 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
                 return;
             }
             mDestroyed = true;
-            ResXmlElement root = getResXmlElement();
+            ResXmlElement root = getDocumentElement();
             if(root != null){
                 root.clearChildes();
-                setResXmlElement(null);
+                setDocumentElement(null);
             }
             getResXmlIDMap().destroy();
             getStringPool().destroy();
@@ -196,13 +196,13 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         }
     }
     public void setAttributesUnitSize(int size, boolean setToAll){
-        ResXmlElement root = getResXmlElement();
+        ResXmlElement root = getDocumentElement();
         if(root!=null){
             root.setAttributesUnitSize(size, setToAll);
         }
     }
     public ResXmlElement getOrCreateElement(String tag){
-        ResXmlElement element = getResXmlElement();
+        ResXmlElement element = getDocumentElement();
         if(element == null){
             element = createRootElement(tag);
         }else if(tag != null){
@@ -215,7 +215,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         ResXmlElement resXmlElement=new ResXmlElement();
         resXmlElement.newStartElement(lineNo);
 
-        setResXmlElement(resXmlElement);
+        setDocumentElement(resXmlElement);
 
         if(tag != null){
             resXmlElement.setName(tag);
@@ -223,7 +223,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         return resXmlElement;
     }
     void linkStringReferences(){
-        ResXmlElement element=getResXmlElement();
+        ResXmlElement element= getDocumentElement();
         if(element!=null){
             element.linkStringReferences();
         }
@@ -386,16 +386,26 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     public ResXmlIDMap getResXmlIDMap(){
         return mResXmlIDMap;
     }
+    // Use: getDocumentElement()
+    @Deprecated
     public ResXmlElement getResXmlElement(){
-        return mResXmlElement;
+        return getDocumentElement();
     }
+    public ResXmlElement getDocumentElement(){
+        return mDocumentElement;
+    }
+    // Use: setDocumentElement()
+    @Deprecated
     public void setResXmlElement(ResXmlElement resXmlElement){
-        this.mResXmlElement=resXmlElement;
+        setDocumentElement(resXmlElement);
+    }
+    public void setDocumentElement(ResXmlElement resXmlElement){
+        this.mDocumentElement = resXmlElement;
         this.mResXmlElementContainer.setItem(resXmlElement);
     }
     @Override
     protected void onPreRefresh(){
-        ResXmlElement root = getResXmlElement();
+        ResXmlElement root = getDocumentElement();
         if(root != null){
             root.refresh();
         }
@@ -437,7 +447,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         setPackageBlock(packageBlock);
         int event = parser.getEventType();
         if(event == XmlPullParser.START_DOCUMENT){
-            setResXmlElement(null);
+            setDocumentElement(null);
             event = parser.next();
         }
         while (event != XmlPullParser.START_TAG && event != XmlPullParser.END_DOCUMENT){
@@ -469,7 +479,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         }
         ResXmlElement.setIndent(serializer, true);
         serializer.startDocument("utf-8", null);
-        ResXmlElement element = getResXmlElement();
+        ResXmlElement element = getDocumentElement();
         if(element != null){
             autoSetAttributeNamespaces();
             element.serialize(serializer);
@@ -479,7 +489,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();
-        jsonObject.put(ResXmlDocument.NAME_element, getResXmlElement().toJson());
+        jsonObject.put(ResXmlDocument.NAME_element, getDocumentElement().toJson());
         JSONArray pool = getStringPool().toJson();
         if(pool!=null){
             jsonObject.put(ResXmlDocument.NAME_styled_strings, pool);
@@ -489,13 +499,13 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     @Override
     public void fromJson(JSONObject json) {
         onFromJson(json);
-        ResXmlElement xmlElement=getResXmlElement();
+        ResXmlElement xmlElement= getDocumentElement();
         xmlElement.fromJson(json.optJSONObject(ResXmlDocument.NAME_element));
         refresh();
     }
     public XMLDocument decodeToXml() {
         XMLDocument xmlDocument = new XMLDocument();
-        XMLElement xmlElement = getResXmlElement()
+        XMLElement xmlElement = getDocumentElement()
                 .decodeToXml();
         xmlDocument.setDocumentElement(xmlElement);
         return xmlDocument;
@@ -583,7 +593,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         }
     }
     void addEvents(ParserEventList parserEventList){
-        ResXmlElement xmlElement = getResXmlElement();
+        ResXmlElement xmlElement = getDocumentElement();
         parserEventList.add(new ParserEvent(ParserEvent.START_DOCUMENT, xmlElement));
         if(xmlElement!=null){
             xmlElement.addEvents(parserEventList);

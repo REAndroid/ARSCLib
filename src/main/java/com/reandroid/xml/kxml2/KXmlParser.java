@@ -20,7 +20,7 @@
 
 // Contributors: Paul Hackenberger (unterminated entity handling in relaxed mode)
 
-package com.android.org.kxml2.io;
+package com.reandroid.xml.kxml2;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.Map;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
-
 
 public class KXmlParser implements XmlPullParser, Closeable {
 

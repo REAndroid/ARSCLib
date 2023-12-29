@@ -55,7 +55,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     }
 
     public boolean autoSetNamespace(){
-        if(getNameResourceID() == 0){
+        if(getNameId() == 0){
             return setNamespace(null, null);
         }
         ResourceEntry nameEntry = resolveName();
@@ -66,8 +66,8 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         return setNamespace(packageBlock.getUri(), packageBlock.getPrefix());
     }
     public boolean autoSetName(){
-        int resourceId = getNameResourceID();
-        if(getNameResourceID() == 0){
+        int resourceId = getNameId();
+        if(getNameId() == 0){
             return setNamespace(null, null);
         }
         ResourceEntry nameEntry = resolveName();
@@ -124,7 +124,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     }
     @Override
     public String decodePrefix(){
-        int resourceId = getNameResourceID();
+        int resourceId = getNameId();
         if(resourceId == 0){
             return null;
         }
@@ -132,7 +132,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     }
     @Override
     public String decodeName(boolean includePrefix){
-        int resourceId = getNameResourceID();
+        int resourceId = getNameId();
         if(resourceId == 0){
             return getName();
         }
@@ -173,12 +173,11 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
             setNamespace(null, null);
         }
     }
-    // WARN! Careful this is not real value
     public String getValueString(){
         return getString(getValueStringReference());
     }
     @Override
-    public int getNameResourceID(){
+    public int getNameId(){
         ResXmlID xmlID = getResXmlID();
         if(xmlID != null){
             return xmlID.get();
@@ -186,7 +185,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         return 0;
     }
     @Override
-    public void setNameResourceID(int resourceId){
+    public void setNameId(int resourceId){
         ResXmlIDMap xmlIDMap=getResXmlIDMap();
         if(xmlIDMap==null){
             return;
@@ -195,7 +194,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         setNameReference(xmlID.getIndex());
     }
     public void setName(String name, int resourceId){
-        if(Objects.equals(name, getName()) && resourceId==getNameResourceID()){
+        if(Objects.equals(name, getName()) && resourceId== getNameId()){
             return;
         }
         unlink(mNameReference);
@@ -499,8 +498,8 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     }
     @Override
     public int compareTo(ResXmlAttribute other) {
-        int id1=getNameResourceID();
-        int id2=other.getNameResourceID();
+        int id1= getNameId();
+        int id2=other.getNameId();
         if(id1==0 && id2!=0){
             return 1;
         }
@@ -524,7 +523,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         String value;
         if(getValueType() == ValueType.STRING){
             value = XmlSanitizer.escapeSpecialCharacter(getValueAsString());
-            if(getNameResourceID() == 0 || resolveName() == null){
+            if(getNameId() == 0 || resolveName() == null){
                 value = XmlSanitizer.escapeDecodedValue(value);
             }
         }else {
@@ -614,7 +613,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     public JSONObject toJson() {
         JSONObject jsonObject= new JSONObject();
         jsonObject.put(NAME_name, getName());
-        jsonObject.put(NAME_id, getNameResourceID());
+        jsonObject.put(NAME_id, getNameId());
         jsonObject.put(NAME_namespace_uri, getUri());
         ValueType valueType=getValueType();
         jsonObject.put(NAME_value_type, valueType.name());
@@ -660,7 +659,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     public String toString(){
         String fullName = getName(true);
         if(fullName!=null ){
-            int id=getNameResourceID();
+            int id= getNameId();
             if(id!=0){
                 fullName=fullName+"(@"+ HexUtil.toHex8(id)+")";
             }

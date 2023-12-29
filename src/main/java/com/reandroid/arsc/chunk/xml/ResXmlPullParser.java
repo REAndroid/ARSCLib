@@ -143,7 +143,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     public int getAttributeNameResource(int index) {
         ResXmlAttribute attribute = getResXmlAttributeAt(index);
         if(attribute!=null){
-            return attribute.getNameResourceID();
+            return attribute.getNameId();
         }
         return 0;
     }
@@ -314,7 +314,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         if(currentElement != null){
             ResXmlAttribute attribute = currentElement.getIdAttribute();
             if(attribute != null){
-                return attribute.getNameResourceID();
+                return attribute.getNameId();
             }
         }
         return 0;
@@ -325,7 +325,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         if(currentElement != null){
             ResXmlAttribute attribute = currentElement.getStyleAttribute();
             if(attribute != null){
-                return attribute.getNameResourceID();
+                return attribute.getNameId();
             }
         }
         return 0;

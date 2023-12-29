@@ -16,6 +16,7 @@
 package com.reandroid.xml;
 
 import com.reandroid.common.Namespace;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.IndexIterator;
 import com.reandroid.utils.collection.SizedSupplier;
@@ -29,10 +30,10 @@ import java.util.*;
 import java.util.function.Predicate;
 
 public class XMLElement extends XMLNodeTree{
-    private ArrayList<XMLAttribute> mAttributes;
+    private ArrayCollection<XMLAttribute> mAttributes;
     private String mName;
     private XMLNamespace mNamespace;
-    private ArrayList<XMLNamespace> mNamespaceList;
+    private ArrayCollection<XMLNamespace> mNamespaceList;
     public XMLElement(){
         super();
         mAttributes = EMPTY_ATTRIBUTES;
@@ -129,7 +130,7 @@ public class XMLElement extends XMLNodeTree{
     public void addNamespace(XMLNamespace namespace){
         if(namespace != null && !mNamespaceList.contains(namespace)){
             if(mNamespaceList == EMPTY_NAMESPACES){
-                mNamespaceList = new ArrayList<>(2);
+                mNamespaceList = new ArrayCollection<>();
             }else if(mNamespaceList.contains(namespace)){
                 return;
             }
@@ -249,7 +250,7 @@ public class XMLElement extends XMLNodeTree{
         }
         for(int i = 0; i < mAttributes.size(); i++){
             XMLAttribute attribute = mAttributes.get(i);
-            attribute.setParent(null);
+            attribute.setParentNode(null);
         }
         mAttributes.clear();
         mAttributes.trimToSize();
@@ -257,20 +258,20 @@ public class XMLElement extends XMLNodeTree{
     public XMLAttribute removeAttribute(String name){
         XMLAttribute attribute = getAttribute(name);
         if(attribute != null){
-            attribute.setParent(null);
+            attribute.setParentNode(null);
         }
         return attribute;
     }
     public XMLAttribute removeAttribute(XMLAttribute attribute){
         if( mAttributes.remove(attribute) && attribute != null){
-            attribute.setParent(null);
+            attribute.setParentNode(null);
         }
         return attribute;
     }
     public XMLAttribute removeAttributeAt(int index){
         XMLAttribute attribute = mAttributes.remove(index);
         if(attribute != null){
-            attribute.setParent(null);
+            attribute.setParentNode(null);
         }
         return attribute;
     }
@@ -321,13 +322,13 @@ public class XMLElement extends XMLNodeTree{
             return;
         }
         if(mAttributes == EMPTY_ATTRIBUTES){
-            mAttributes = new ArrayList<>(1);
+            mAttributes = new ArrayCollection<>();
         }
         mAttributes.add(xmlAttribute);
-        xmlAttribute.setParent(this);
+        xmlAttribute.setParentNode(this);
     }
     public XMLElement getParentElement(){
-        XMLNode parent = getParent();
+        XMLNode parent = getParentNode();
         if(parent instanceof XMLElement){
             return (XMLElement) parent;
         }
@@ -342,7 +343,7 @@ public class XMLElement extends XMLNodeTree{
     }
     public XMLDocument getParentDocument(){
         XMLElement root = getRootElement();
-        XMLNode parent = root.getParent();
+        XMLNode parent = root.getParentNode();
         if(parent instanceof XMLDocument){
             return (XMLDocument) parent;
         }
@@ -633,6 +634,6 @@ public class XMLElement extends XMLNodeTree{
         };
     }
 
-    private static final ArrayList<XMLAttribute> EMPTY_ATTRIBUTES = new ArrayList<>();
-    private static final ArrayList<XMLNamespace> EMPTY_NAMESPACES = new ArrayList<>();
+    private static final ArrayCollection<XMLAttribute> EMPTY_ATTRIBUTES = ArrayCollection.empty();
+    private static final ArrayCollection<XMLNamespace> EMPTY_NAMESPACES = ArrayCollection.empty();
 }

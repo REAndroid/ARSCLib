@@ -38,13 +38,14 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class StringItem extends BlockItem implements JSONConvert<JSONObject>, Comparable<StringItem> {
-    private String mCache;
+public class StringItem extends StringBlock implements JSONConvert<JSONObject>, Comparable<StringItem> {
+
     private boolean mUtf8;
     private final Set<ReferenceItem> mReferencedList;
     private StyleItem mStyleToRemove;
+
     public StringItem(boolean utf8) {
-        super(0);
+        super();
         this.mUtf8=utf8;
         this.mReferencedList = new HashSet<>();
     }
@@ -185,9 +186,6 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject>, Co
         }
         return styleItem.applyStyle(text, true, escapeXmlText);
     }
-    public String get(){
-        return mCache;
-    }
     public void set(String str){
         String old=get();
         if(str==null){
@@ -203,8 +201,7 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject>, Co
                 styleItem.clearStyle();
             }
         }
-        byte[] bts=encodeString(str);
-        setBytesInternal(bts);
+        setBytesInternal(encodeString(str));
     }
 
     public boolean isUtf8(){
@@ -216,11 +213,6 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject>, Co
         }
         mUtf8=utf8;
         onBytesChanged();
-    }
-    @Override
-    protected void onBytesChanged() {
-        // To save cpu/memory usage, better to decode once only when bytes changed
-        mCache=decodeString();
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
@@ -237,22 +229,24 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject>, Co
         if(reader.available()<4){
             return reader.available();
         }
-        byte[] bts=new byte[4];
+        byte[] bts = new byte[4];
         reader.readFully(bts);
         reader.offset(-4);
-        int[] len;
+        int[] lengthResult;
         if(isUtf8()){
-            len=decodeUtf8StringByteLength(bts);
+            lengthResult = decodeUtf8StringByteLength(bts);
         }else {
-            len=decodeUtf16StringByteLength(bts);
+            lengthResult = decodeUtf16StringByteLength(bts);
         }
-        int add=isUtf8()?1:2;
-        return len[0]+len[1]+add;
+        int add = isUtf8()? 1:2;
+        return lengthResult[0] + lengthResult[1] + add;
     }
-    String decodeString(){
-        return decodeString(getBytesInternal(), mUtf8);
+    @Override
+    protected String decodeString(byte[] bytes){
+        return decodeString(bytes, mUtf8);
     }
-    byte[] encodeString(String str){
+    @Override
+    protected byte[] encodeString(String str){
         if(mUtf8){
             return encodeUtf8ToBytes(str);
         }else {
@@ -521,7 +515,6 @@ public class StringItem extends BlockItem implements JSONConvert<JSONObject>, Co
     }
 
     private static final CharsetDecoder UTF16LE_DECODER = StandardCharsets.UTF_16LE.newDecoder();
-    private static final CharsetDecoder UTF8_DECODER = StandardCharsets.UTF_8.newDecoder();
     private static final CharsetDecoder DECODER_3B = ThreeByteCharsetDecoder.INSTANCE;
 
     public static final String NAME_string="string";

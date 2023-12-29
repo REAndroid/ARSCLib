@@ -31,9 +31,9 @@ import java.util.function.Predicate;
 
 public class BlockList<T extends Block> extends Block implements BlockRefresh {
     private ArrayCollection<T> mItems;
-    private Creator<T> mCreator;
+    private Creator<? extends T> mCreator;
 
-    public BlockList(Creator<T> creator){
+    public BlockList(Creator<? extends T> creator){
         super();
         mItems = ArrayCollection.empty();
         this.mCreator = creator;
@@ -42,7 +42,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         this(null);
     }
 
-    public Creator<T> getCreator() {
+    public Creator<? extends T> getCreator() {
         return mCreator;
     }
     public void setCreator(Creator<T> creator) {
@@ -60,10 +60,13 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
     public void setSize(int size){
         if(size == 0){
             lockList();
-        }else if(mCreator != null){
+        }else if(mCreator != null || size < size()){
             unlockList();
             mItems.setSize(size);
         }
+    }
+    public void removeAll(){
+        mItems.removeAll();
     }
     public void setElements(T[] elements){
         if(elements == null || elements.length == 0){
@@ -71,12 +74,12 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
             return;
         }
         unlockList();
-        Creator<T> creator = getCreator();
+        Creator<? extends T> creator = getCreator();
         int length = elements.length;
         for(int i = 0; i < length; i++){
             T item = elements[i];
             if(item == null && creator != null){
-                item = creator.newInstance();
+                item = creator.newInstanceAt(i);
                 elements[i] = item;
             }
             onItemCreated(i, item);
@@ -92,15 +95,15 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         item.setParent(this);
     }
     public T createAt(int index){
-        Creator<T> creator = getCreator();
+        Creator<? extends T> creator = getCreator();
         ensureSize(index);
-        T item = creator.newInstance();
+        T item = creator.newInstanceAt(index);
         add(index, item);
         return item;
     }
     public T createNext(){
-        Creator<T> creator = getCreator();
-        T item = creator.newInstance();
+        Creator<? extends T> creator = getCreator();
+        T item = creator.newInstanceAt(size());
         add(item);
         return item;
     }
@@ -160,8 +163,10 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         if(size() < 2){
             return false;
         }
-        mItems.sort(comparator);
-        return updateIndex();
+        if(mItems.sortItems(comparator)){
+            return updateIndex();
+        }
+        return false;
     }
     public boolean needsSort(Comparator<? super T> comparator) {
         if(comparator == null){
@@ -239,6 +244,104 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
     public void onPreRemove(T item){
 
     }
+
+    public void sortSingle(T element, Comparator<? super T> comparator){
+        int count = getCount();
+        if(count < 2){
+            return;
+        }
+        int attempts = 0;
+        mItems.remove(element);
+        int speedLimit = count / 20;
+        int prev = 0;
+        int speed = 0;
+        int acceleration = 1;
+        boolean skipAcceleration = false;
+        for(int i = 0; i < count; i++){
+            attempts ++;
+            T item = get(i);
+            if(element == item){
+                continue;
+            }
+            int compare = comparator.compare(item, element);
+            if(compare == 0){
+                add(i, element);
+                return;
+            }
+            if(compare > 0){
+                if(i == 0 || attempts < 0){
+                    add(i, element);
+                    return;
+                }
+                if(prev > 0){
+                    i = prev - 1;
+                    prev = -1;
+                    continue;
+                }
+                add(i, element);
+                return;
+            }
+            if(prev < 0){
+                continue;
+            }
+            prev = i;
+            if(attempts % 8 == 0){
+                speed = speed + acceleration;
+            }
+            if(attempts % (16 + acceleration) == 0){
+                if(!skipAcceleration){
+                    acceleration = acceleration + 1;
+                    skipAcceleration = true;
+                }else {
+                    skipAcceleration = false;
+                }
+            }
+            if(speed > speedLimit){
+                speed = speedLimit;
+            }
+            i += speed;
+            if(i >= count){
+                i = prev - 1;
+                prev = -1;
+            }
+        }
+        add(element);
+    }
+    private void sortSingleBack(T element, Comparator<? super T> comparator, int start){
+        for(int i = start; i >= 0; i--){
+            T item = get(i);
+            if(element == item){
+                continue;
+            }
+            int compare = comparator.compare(item, element);
+            if(compare < 0){
+                if(i != start){
+                    i++;
+                }
+                add(i, element);
+                return;
+            }
+        }
+        add(start, element);
+    }
+    public void swap(T item1, T item2){
+        if(item1 == item2){
+            return;
+        }
+        int i1 = item1.getIndex();
+        int i2 = item2.getIndex();
+        mItems.swap(i1, i2);
+        item1.setIndex(i2);
+        item2.setIndex(i1);
+    }
+    public void moveTo(T item, int index){
+        if(index < 0){
+            index = 0;
+        }
+        int i = item.getIndex();
+        mItems.move(i, index);
+        updateIndex(i, index);
+    }
     public void set(int index, T item){
         if(item == null){
             return;
@@ -286,13 +389,26 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         return updateIndex(0);
     }
     private boolean updateIndex(int start){
+        return updateIndex(start, size());
+    }
+    private boolean updateIndex(int start, int end){
         if(start < 0){
             start = 0;
         }
+        if(start > end){
+            int i = start;
+            start = end;
+            end = i;
+        }
+        end = end + 1;
         boolean changed = false;
         int count = size();
-        for (int i = start; i < count; i++){
-            T item = get(i);
+        if(end > count){
+            end = count;
+        }
+        List<T> items = this.getChildes();
+        for (int i = start; i < end; i++){
+            T item = items.get(i);
             if(item.getIndex() != i){
                 item.setIndex(i);
                 changed = true;
@@ -361,7 +477,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         updateCreator();
     }
     private void updateCreator(){
-        Creator<T> creator = getCreator();
+        Creator<? extends T> creator = getCreator();
         if(creator == null){
             mItems.setInitializer(null);
             return;
@@ -369,13 +485,13 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         ArrayCollection.Initializer<T> initializer = new ArrayCollection.Initializer<T>() {
             @Override
             public T createNewItem(int index) {
-                T item = creator.newInstance();
+                T item = creator.newInstanceAt(index);
                 onItemCreated(index, item);
                 return item;
             }
             @Override
             public T[] newArray(int length) {
-                return creator.newInstance(length);
+                return creator.newArrayInstance(length);
             }
         };
         mItems.setInitializer(initializer);
@@ -491,4 +607,39 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
     public String toString() {
         return "size=" + size();
     }
+
+    public static boolean isImmutableEmpty(Object blockList){
+        return empty_list == blockList;
+    }
+    @SuppressWarnings("unchecked")
+    public static<T1 extends Block> BlockList<T1> empty(){
+        return (BlockList<T1>) empty_list;
+    }
+
+    private static final BlockList<?> empty_list = new BlockList<Block>(){
+        @Override
+        public boolean add(Block item) {
+            throw new IllegalArgumentException("Empty BlockList");
+        }
+        @Override
+        public void add(int index, Block item) {
+            throw new IllegalArgumentException("Empty BlockList");
+        }
+        @Override
+        public void ensureCapacity(int capacity) {
+            if(capacity != 0){
+                throw new IllegalArgumentException("Empty BlockList");
+            }
+        }
+        @Override
+        public void setSize(int size) {
+            if(size != 0){
+                throw new IllegalArgumentException("Empty BlockList");
+            }
+        }
+        @Override
+        public int size() {
+            return 0;
+        }
+    };
 }

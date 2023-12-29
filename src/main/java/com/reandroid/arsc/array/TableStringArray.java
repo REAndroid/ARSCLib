@@ -31,7 +31,7 @@ public class TableStringArray extends StringArray<TableString> {
         return new TableString(isUtf8());
     }
     @Override
-    public TableString[] newInstance(int len) {
+    public TableString[] newArrayInstance(int len) {
         if(len == 0){
             return EMPTY;
         }

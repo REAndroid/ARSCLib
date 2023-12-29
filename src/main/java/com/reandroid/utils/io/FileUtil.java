@@ -16,15 +16,70 @@
 package com.reandroid.utils.io;
 
 import com.reandroid.arsc.ARSCLib;
+import com.reandroid.utils.StringsUtil;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class FileUtil {
 
+    public static void writeUtf8(File file, String content) throws IOException {
+        ensureParentDirectory(file);
+        OutputStream outputStream = outputStream(file);
+        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
+        outputStream.write(bytes, 0, bytes.length);
+        outputStream.close();
+    }
+    public static String combineFilePath(String parent, String name){
+        return combinePath(File.separatorChar, parent, name);
+    }
+    public static String combineUnixPath(String parent, String name){
+        return combinePath('/', parent, name);
+    }
+    public static String combinePath(char separator, String parent, String name){
+        if(StringsUtil.isEmpty(parent)){
+            return name;
+        }
+        if(StringsUtil.isEmpty(name)){
+            return parent;
+        }
+        StringBuilder builder = new StringBuilder(parent.length() + name.length() + 1);
+        builder.append(parent);
+        if(parent.charAt(parent.length() - 1) != separator){
+            builder.append(separator);
+        }
+        builder.append(name);
+        return builder.toString();
+    }
+    public static String getParent(String path){
+        if(StringsUtil.isEmpty(path)){
+            return StringsUtil.EMPTY;
+        }
+        int i = path.lastIndexOf('/');
+        if(i < 0){
+            i = path.lastIndexOf('\\');
+        }
+        if(i <= 0){
+            return StringsUtil.EMPTY;
+        }
+        return path.substring(0, i);
+    }
+    public static String getFileName(String path){
+        if(path == null){
+            return null;
+        }
+        int i = path.lastIndexOf('/');
+        if(i < 0){
+            i = path.lastIndexOf('\\');
+        }
+        if(i >= 0){
+            return path.substring(i + 1);
+        }
+        return path;
+    }
     public static String toReadableFileSize(long size){
         if(size < 0){
             return Long.toString(size);
@@ -52,6 +107,29 @@ public class FileUtil {
             return result + unit;
         }
         return result + "." + dec + unit;
+    }
+    public static InputStream inputStream(File file) throws IOException{
+        if(!file.isFile()){
+            throw new FileNotFoundException("No such file: " + file);
+        }
+        return new FileInputStream(file);
+    }
+    public static OutputStream outputStream(File file) throws IOException{
+        ensureParentDirectory(file);
+        return new FileOutputStream(file);
+    }
+    public static void ensureParentDirectory(File file){
+        File dir = file.getParentFile();
+        if(dir != null && !dir.exists()){
+            dir.mkdirs();
+        }
+    }
+    public static void createNewFile(File file) throws IOException {
+        ensureParentDirectory(file);
+        if(file.isFile()){
+            file.delete();
+        }
+        file.createNewFile();
     }
     public static void deleteDirectory(File dir){
         if(dir.isFile()){

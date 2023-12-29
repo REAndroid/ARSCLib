@@ -85,6 +85,9 @@ public class ArchiveEntry {
     public void setComment(String comment){
         getCentralEntryHeader().setComment(comment);
     }
+    public boolean isFile() {
+        return !isDirectory();
+    }
     public boolean isDirectory() {
         return this.getName().endsWith("/");
     }
@@ -99,6 +102,17 @@ public class ArchiveEntry {
     public LocalFileHeader getLocalFileHeader() {
         return localFileHeader;
     }
+    public long getDosTime(){
+        return getCentralEntryHeader().getDosTime();
+    }
+    public void setDosTime(long dosTime){
+        getCentralEntryHeader().setDosTime(dosTime);
+        getLocalFileHeader().setDosTime(dosTime);
+    }
+    public int getIndex(){
+        return getCentralEntryHeader().getIndex();
+    }
+    @Override
     public String toString(){
         return "["+ getFileOffset()+"] " + getName() + getComment()
                 + HexUtil.toHex(" 0x", getCrc(), 8);

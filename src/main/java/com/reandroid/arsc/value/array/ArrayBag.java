@@ -79,7 +79,7 @@
      }
 
      private void setIndex(ResValueMap valueMap, int index) {
-         valueMap.setName(0x01000001 + index);
+         valueMap.setNameId(0x01000001 + index);
      }
 
      @Override
@@ -153,7 +153,7 @@
 
          for (int i = 0; i < items.length; i++) {
              ResValueMap resValueMap = items[i];
-             int name = resValueMap.getName();
+             int name = resValueMap.getNameId();
              int high = (name >> 16) & 0xffff;
              if(high!=0x0100){
                  return false;

@@ -78,6 +78,9 @@ public class ZipFileInput extends ZipInput {
             return fileChannel;
         }
         synchronized (this){
+            if(!file.isFile()){
+                throw new FileNotFoundException("No such file: " + file);
+            }
             fileChannel = FileChannel.open(this.file.toPath(), StandardOpenOption.READ);
             this.fileChannel = fileChannel;
             return fileChannel;

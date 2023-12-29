@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,5 +16,5 @@
 package com.reandroid.arsc.base;
 
 public interface BlockArrayCreator<T extends Block> extends BlockCreator<T>{
-    T[] newInstance(int len);
+    T[] newArrayInstance(int len);
 }

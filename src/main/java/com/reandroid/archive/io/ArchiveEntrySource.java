@@ -25,8 +25,10 @@ import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
 public class ArchiveEntrySource<T extends ZipInput> extends InputSource {
+
     private final T zipInput;
     private final ArchiveEntry archiveEntry;
+
     public ArchiveEntrySource(T zipInput, ArchiveEntry archiveEntry){
         super(archiveEntry.getSanitizedName());
         this.zipInput = zipInput;

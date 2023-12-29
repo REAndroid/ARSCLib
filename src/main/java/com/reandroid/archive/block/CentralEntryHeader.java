@@ -65,6 +65,7 @@ public class CentralEntryHeader extends CommonHeader {
     public int getVersionExtract(){
         return getShortUnsigned(OFFSET_versionExtract);
     }
+    @Override
     public void setVersionExtract(int value){
         putShort(OFFSET_versionExtract, value);
     }
@@ -173,7 +174,7 @@ public class CentralEntryHeader extends CommonHeader {
         builder.append(", versionExtract=").append(HexUtil.toHex4((short) getVersionExtract()));
         builder.append(", GP={").append(getGeneralPurposeFlag()).append("}");
         builder.append(", method=").append(getMethod());
-        builder.append(", date=").append(getDate());
+        builder.append(", date=").append(HexUtil.toHex(getDosTime(), 1));
         builder.append(", crc=").append(HexUtil.toHex8(getCrc()));
         builder.append(", cSize=").append(getCompressedSize());
         builder.append(", size=").append(getSize());

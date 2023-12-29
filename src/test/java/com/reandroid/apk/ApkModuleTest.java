@@ -2,7 +2,6 @@ package com.reandroid.apk;
 
 import com.reandroid.TestUtils;
 import com.reandroid.archive.ByteInputSource;
-import com.reandroid.archive.InputSource;
 import com.reandroid.archive.ArchiveBytes;
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.chunk.PackageBlock;
@@ -14,7 +13,6 @@ import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.*;
-import com.reandroid.utils.io.FileUtil;
 import com.reandroid.xml.*;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -24,7 +22,6 @@ import org.junit.runners.MethodSorters;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.zip.ZipEntry;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -38,7 +35,7 @@ public class ApkModuleTest {
         }
         ApkModule apkModule = createApkModule();
 
-        Assert.assertNotNull("Manifest block", apkModule.getAndroidManifestBlock());
+        Assert.assertNotNull("Manifest block", apkModule.getAndroidManifest());
         Assert.assertNotNull("Table block", apkModule.getTableBlock());
 
         ApkModuleXmlDecoder decoder = new ApkModuleXmlDecoder(apkModule);

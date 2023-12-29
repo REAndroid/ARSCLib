@@ -123,7 +123,7 @@ public class PackageArray extends BlockArray<PackageBlock>
     }
 
     @Override
-    public PackageBlock[] newInstance(int len) {
+    public PackageBlock[] newArrayInstance(int len) {
         return new PackageBlock[len];
     }
 

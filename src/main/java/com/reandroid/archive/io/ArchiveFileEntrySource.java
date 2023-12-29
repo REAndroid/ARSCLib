@@ -25,8 +25,10 @@ import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 
 public class ArchiveFileEntrySource extends ArchiveEntrySource<ZipFileInput> {
+
     public ArchiveFileEntrySource(ZipFileInput zipInput, ArchiveEntry archiveEntry){
         super(zipInput, archiveEntry);
+        setSort(archiveEntry.getIndex());
     }
 
     @Override

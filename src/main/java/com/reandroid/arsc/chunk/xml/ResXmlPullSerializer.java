@@ -91,7 +91,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
         ResXmlElement element = mCurrentElement;
         if(element == null){
             ResXmlDocument document =  getCurrentDocument();
-            element = document.getResXmlElement();
+            element = document.getDocumentElement();
             if(element == null){
                 element = document.createRootElement(null);
             }

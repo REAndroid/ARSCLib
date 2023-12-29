@@ -58,7 +58,7 @@ public class StyleBagItem extends BagItem {
         if (mBagItem == null) {
             return 0;
         }
-        return mBagItem.getName();
+        return mBagItem.getNameId();
     }
 
     public boolean hasAttributeValue() {

@@ -20,8 +20,10 @@ import com.reandroid.archive.block.*;
 import com.reandroid.archive.io.*;
 import com.reandroid.archive.model.CentralFileDirectory;
 import com.reandroid.archive.model.LocalFileDirectory;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayIterator;
-import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.io.FileUtil;
 import com.reandroid.utils.io.IOUtil;
 
@@ -32,6 +34,7 @@ import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
 public abstract class Archive<T extends ZipInput> implements Closeable {
+
     private final T zipInput;
     private final ArchiveEntry[] entryList;
     private final EndRecord endRecord;
@@ -53,63 +56,31 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
     }
 
     public InputSource[] getInputSources(){
-        ArchiveEntry[] entryList = this.entryList;
-        int length = entryList.length;
-        InputSource[] sources = new InputSource[length];
-        int dirCount = 0;
-        for(int i = 0; i < length; i++){
-            ArchiveEntry entry = entryList[i];
-            if(entry.isDirectory()){
-                //TODO: make InputSource for directory
-                dirCount++;
-                continue;
-            }
-            InputSource inputSource = createInputSource(entry);
-            inputSource.setSort(i);
-            sources[i] = inputSource;
-        }
-        if(dirCount == 0){
-            return sources;
-        }
-        InputSource[] filtered = new InputSource[length - dirCount];
-        int index = 0;
-        for(int i = 0; i < length; i++){
-            InputSource inputSource = sources[i];
-            if(inputSource == null){
-                continue;
-            }
-            filtered[index] = inputSource;
-            index++;
-        }
-        return filtered;
+        // TODO: make InputSource for directory entry
+        return getInputSources(ArchiveEntry::isFile);
+    }
+    public InputSource[] getInputSources(Predicate<? super ArchiveEntry> filter){
+        Iterator<InputSource> iterator = ComputeIterator.of(iterator(filter), this::createInputSource);
+        List<InputSource> sourceList = CollectionUtil.toList(iterator);
+        return sourceList.toArray(new InputSource[sourceList.size()]);
     }
 
     public PathTree<InputSource> getPathTree(){
         PathTree<InputSource> root = PathTree.newRoot();
-        ArchiveEntry[] entryList = this.entryList;
-        int length = entryList.length;
-        for(int i = 0; i < length; i++){
-            ArchiveEntry entry = entryList[i];
-            if(entry.isDirectory()){
-                continue;
-            }
+        Iterator<ArchiveEntry> iterator = getFiles();
+        while (iterator.hasNext()){
+            ArchiveEntry entry = iterator.next();
             InputSource inputSource = createInputSource(entry);
-            inputSource.setSort(i);
             root.add(inputSource.getAlias(), inputSource);
         }
         return root;
     }
     public LinkedHashMap<String, InputSource> mapEntrySource(){
-        ArchiveEntry[] entryList = this.entryList;
-        int length = entryList.length;
-        LinkedHashMap<String, InputSource> map = new LinkedHashMap<>(length);
-        for(int i = 0; i < length; i++){
-            ArchiveEntry entry = entryList[i];
-            if(entry.isDirectory()){
-                continue;
-            }
+        LinkedHashMap<String, InputSource> map = new LinkedHashMap<>(size());
+        Iterator<ArchiveEntry> iterator = getFiles();
+        while (iterator.hasNext()){
+            ArchiveEntry entry = iterator.next();
             InputSource inputSource = createInputSource(entry);
-            inputSource.setSort(i);
             map.put(inputSource.getAlias(), inputSource);
         }
         return map;
@@ -148,8 +119,17 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
         return new InflaterInputStream(rawInputStream,
                 new Inflater(true), 1024*1000);
     }
+    public Iterator<ArchiveEntry> getFiles() {
+        return iterator(ArchiveEntry::isFile);
+    }
     public Iterator<ArchiveEntry> iterator() {
         return new ArrayIterator<>(entryList);
+    }
+    public Iterator<ArchiveEntry> iterator(Predicate<? super ArchiveEntry> filter) {
+        return new ArrayIterator<>(entryList, filter);
+    }
+    public int size(){
+        return entryList.length;
     }
     public ApkSignatureBlock getApkSignatureBlock() {
         return apkSignatureBlock;
@@ -168,13 +148,7 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
         return extractAll(dir, filter, null);
     }
     public int extractAll(File dir, Predicate<ArchiveEntry> filter, APKLogger logger) throws IOException {
-        FilterIterator<ArchiveEntry> iterator =
-                new FilterIterator<ArchiveEntry>(this.iterator(), filter){
-                    @Override
-                    public boolean test(ArchiveEntry archiveEntry){
-                        return archiveEntry != null && !archiveEntry.isDirectory();
-                    }
-                };
+        Iterator<ArchiveEntry> iterator = iterator(filter);
         int result = 0;
         while (iterator.hasNext()){
             ArchiveEntry archiveEntry = iterator.next();
@@ -187,10 +161,7 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
         extract(file, archiveEntry, null);
     }
     public void extract(File file, ArchiveEntry archiveEntry, APKLogger logger) throws IOException{
-        File parent = file.getParentFile();
-        if(parent != null && !parent.exists()){
-            parent.mkdirs();
-        }
+        FileUtil.ensureParentDirectory(file);
         if(logger != null){
             long size = archiveEntry.getDataSize();
             if(size > LOG_LARGE_FILE_SIZE){
@@ -229,9 +200,42 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
         return root;
     }
 
+    public static Date dosToJavaDate(long dosTime) {
+        final Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.YEAR, (int) ((dosTime >> 25) & 0x7f) + 1980);
+        cal.set(Calendar.MONTH, (int) ((dosTime >> 21) & 0x0f) - 1);
+        cal.set(Calendar.DATE, (int) (dosTime >> 16) & 0x1f);
+        cal.set(Calendar.HOUR_OF_DAY, (int) (dosTime >> 11) & 0x1f);
+        cal.set(Calendar.MINUTE, (int) (dosTime >> 5) & 0x3f);
+        cal.set(Calendar.SECOND, (int) (dosTime << 1) & 0x3e);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
+    }
+    public static long javaToDosTime(long javaTime) {
+        return javaToDosTime(new Date(javaTime));
+    }
+    public static long javaToDosTime(Date date) {
+        if(date == null || date.getTime() == 0){
+            return 0;
+        }
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTime(date);
+        int year = cal.get(Calendar.YEAR);
+        if(year < 1980){
+            return 0;
+        }
+        int result = cal.get(Calendar.DATE);
+        result = (cal.get(Calendar.MONTH) + 1 << 5) | result;
+        result = ((cal.get(Calendar.YEAR) - 1980) << 9) | result;
+        int time = cal.get(Calendar.SECOND) >> 1;
+        time = (cal.get(Calendar.MINUTE) << 5) | time;
+        time = (cal.get(Calendar.HOUR_OF_DAY) << 11) | time;
+        return ((long) result << 16) | time;
+    }
+
     private static final long LOG_LARGE_FILE_SIZE = 1024 * 1000 * 20;
 
 
-    public static final int STORED = 0;
-    public static final int DEFLATED = 8;
+    public static final int STORED = ObjectsUtil.of(0);
+    public static final int DEFLATED = ObjectsUtil.of(8);
 }

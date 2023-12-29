@@ -18,7 +18,9 @@ package com.reandroid.archive.io;
 import com.reandroid.archive.ArchiveEntry;
 
 public class ArchiveByteEntrySource extends ArchiveEntrySource<ZipByteInput> {
+
     public ArchiveByteEntrySource(ZipByteInput zipInput, ArchiveEntry archiveEntry){
         super(zipInput, archiveEntry);
+        setSort(archiveEntry.getIndex());
     }
 }

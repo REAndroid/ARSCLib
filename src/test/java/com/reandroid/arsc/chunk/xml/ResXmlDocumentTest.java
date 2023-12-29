@@ -121,7 +121,7 @@ public class ResXmlDocumentTest {
         XmlPullParser parser = XMLFactory.newPullParser(XML_STRING);
         document.parse(parser);
 
-        ResXmlElement root = document.getResXmlElement();
+        ResXmlElement root = document.getDocumentElement();
         Assert.assertNotNull(root);
         Assert.assertEquals(3, root.countElements());
         Assert.assertEquals(2, root.getNamespaceCount());

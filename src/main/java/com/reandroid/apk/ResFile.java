@@ -220,14 +220,17 @@ public class ResFile {
         if(isBinaryXml()){
             return ".xml";
         }
-        String path=getFilePath();
-        int i=path.lastIndexOf('.');
-        if(i>0){
+        String path = getFilePath();
+        if(path.endsWith(".9.png")){
+            return ".9.png";
+        }
+        int i = path.lastIndexOf('.');
+        if(i > 0){
             return path.substring(i);
         }
         try {
-            String magicExt=FileMagic.getExtensionFromMagic(getInputSource());
-            if(magicExt!=null){
+            String magicExt = FileMagic.getExtensionFromMagic(getInputSource());
+            if(magicExt != null){
                 return magicExt;
             }
         } catch (IOException ignored) {

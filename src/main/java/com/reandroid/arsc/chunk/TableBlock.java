@@ -30,6 +30,7 @@ import com.reandroid.common.ReferenceResolver;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.*;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -485,7 +486,17 @@ public class TableBlock extends Chunk<TableHeader>
         return getPackageArray().getChildesCount();
     }
     public boolean isEmpty(){
-        return countPackages() == 0;
+        if(countPackages() == 0){
+            return true;
+        }
+        Iterator<PackageBlock> iterator = getPackages();
+        while (iterator.hasNext()){
+            PackageBlock packageBlock = iterator.next();
+            if(!packageBlock.isEmpty()){
+                return false;
+            }
+        }
+        return true;
     }
 
     public PackageBlock pickOne(){
@@ -814,15 +825,17 @@ public class TableBlock extends Chunk<TableHeader>
         ChunkType chunkType=headerBlock.getChunkType();
         return chunkType==ChunkType.TABLE;
     }
-    public static final String FILE_NAME = "resources.arsc";
-    public static final String FILE_NAME_JSON = "resources.arsc.json";
+    public static final String FILE_NAME = ObjectsUtil.of("resources.arsc");
+    public static final String FILE_NAME_JSON = ObjectsUtil.of("resources.arsc.json");
 
-    private static final String NAME_packages = "packages";
-    public static final String NAME_styled_strings = "styled_strings";
+    private static final String NAME_packages = ObjectsUtil.of("packages");
+    public static final String NAME_styled_strings = ObjectsUtil.of("styled_strings");
 
-    public static final String JSON_FILE_NAME = "resources.arsc.json";
-    public static final String DIRECTORY_NAME = "resources";
+    public static final String JSON_FILE_NAME = ObjectsUtil.of("resources.arsc.json");
+    public static final String DIRECTORY_NAME = ObjectsUtil.of("resources");
 
-    public static final String RES_JSON_DIRECTORY_NAME = "res-json";
-    public static final String RES_FILES_DIRECTORY_NAME = "res-files";
+    public static final String RES_JSON_DIRECTORY_NAME = ObjectsUtil.of("res-json");
+    public static final String RES_FILES_DIRECTORY_NAME = ObjectsUtil.of("res-files");
+
+    public static final String ATTR_null_table = ObjectsUtil.of("null-table");
 }

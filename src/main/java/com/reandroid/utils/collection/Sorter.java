@@ -25,6 +25,9 @@ public abstract class Sorter {
     }
 
     private void runSort(int begin, int end) {
+        if(end <= begin){
+            return;
+        }
         int i = begin;
         int j = end;
         setMid(begin + (end - begin) / 2);

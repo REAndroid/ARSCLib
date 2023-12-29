@@ -41,14 +41,19 @@ public abstract class BlockItem extends Block {
         return mBytes;
     }
     void setBytesInternal(byte[] bytes){
-        if(bytes == null){
+        setBytesInternal(bytes, true);
+    }
+    void setBytesInternal(byte[] bytes, boolean notify){
+        if(bytes == null || bytes.length == 0){
             bytes = EMPTY;
         }
         if(bytes == mBytes){
             return;
         }
         mBytes = bytes;
-        onBytesChanged();
+        if(notify){
+            onBytesChanged();
+        }
     }
     final void setBytesLength(int length){
         setBytesLength(length, true);

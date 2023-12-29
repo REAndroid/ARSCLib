@@ -16,6 +16,6 @@
 package com.reandroid.arsc.item;
 
 public interface IntegerReference {
-    void set(int val);
     int get();
+    void set(int value);
 }

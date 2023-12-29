@@ -58,6 +58,15 @@ public class CompareUtil {
     private static boolean isEmpty(Object[] objects){
         return objects == null || objects.length == 0;
     }
+    public static int compare(int i1, int i2){
+        if(i1 == i2){
+            return 0;
+        }
+        if(i1 > i2){
+            return 1;
+        }
+        return -1;
+    }
     public static<T extends Comparable<? super T>> int compare(T item1, T item2) {
         if(item1 == item2){
             return 0;

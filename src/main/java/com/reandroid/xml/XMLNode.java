@@ -33,10 +33,16 @@ public abstract class XMLNode {
         return 0;
     }
     abstract XMLNode clone(XMLNode parent);
-    public XMLNode getParent(){
+    public XMLNode getParentNode(){
         return mParent;
     }
-    void setParent(XMLNode parent){
+    public void removeSelf(){
+        XMLNode parent = getParentNode();
+        if(parent instanceof XMLNodeTree){
+            ((XMLNodeTree) parent).remove(this);
+        }
+    }
+    void setParentNode(XMLNode parent){
         if(parent != this){
             this.mParent = parent;
         }
@@ -59,9 +65,6 @@ public abstract class XMLNode {
     public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
     }
     abstract void write(Appendable writer, boolean xml, boolean escapeXmlText) throws IOException;
-    public String toText(){
-        return toText(true, false);
-    }
     public String toText(boolean xml, boolean escapeXmlText){
         StringWriter writer = new StringWriter();
         try {

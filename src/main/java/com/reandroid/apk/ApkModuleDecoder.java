@@ -15,12 +15,18 @@
  */
 package com.reandroid.apk;
 
+import com.reandroid.archive.ArchiveInfo;
 import com.reandroid.archive.InputSource;
+import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.archive.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.dex.model.DexDirectory;
+import com.reandroid.dex.sections.Marker;
 import com.reandroid.identifiers.PackageIdentifier;
 import com.reandroid.identifiers.TableIdentifier;
+import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +49,12 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
     }
     public final void decode(File mainDirectory) throws IOException{
         initialize();
+        decodeArchiveInfo(mainDirectory);
         decodeUncompressedFiles(mainDirectory);
+
+        // For next release
+        // decodeDexInfo(mainDirectory);
+
         decodeAndroidManifest(mainDirectory);
         decodeResourceTable(mainDirectory);
         decodeDexFiles(mainDirectory);
@@ -64,6 +75,29 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
             extractRootFile(rootDir, inputSource);
             addDecodedPath(inputSource.getAlias());
         }
+    }
+    public void decodeDexInfo(File mainDirectory)
+            throws IOException {
+        File file = new File(mainDirectory, "dex-info.json");
+        logMessage("Decode: " + file.getName());
+        ZipEntryMap zipEntryMap = apkModule.getZipEntryMap();
+        DexDirectory dexDirectory = DexDirectory.readStrings(zipEntryMap);
+        JSONObject jsonObject = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
+        List<Marker> markersList = dexDirectory.getMarkers();
+        for(Marker marker : markersList){
+            jsonArray.put(marker.getJsonObject());
+        }
+        jsonObject.put("markers", jsonArray);
+        jsonObject.write(file);
+    }
+    public void decodeArchiveInfo(File mainDirectory)
+            throws IOException {
+        File file = new File(mainDirectory, ArchiveInfo.JSON_FILE);
+        logMessage("Decode: " + file.getName());
+        ZipEntryMap zipEntryMap = apkModule.getZipEntryMap();
+        ArchiveInfo archiveInfo = zipEntryMap.getOrCreateArchiveInfo();
+        archiveInfo.writeToDirectory(mainDirectory);
     }
     public void decodeUncompressedFiles(File mainDirectory)
             throws IOException {
@@ -199,6 +233,18 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
     }
     void initialize(){
         mDecodedPaths.clear();
+        ensureTableBlock();
+    }
+    private void ensureTableBlock(){
+        ApkModule apkModule = getApkModule();
+        if(apkModule.hasTableBlock()){
+            return;
+        }
+        TableBlock tableBlock = new TableBlock();
+        tableBlock.pickOrEmptyPackage();
+        apkModule.setTableBlock(tableBlock);
+        tableBlock.setNull(true);
+        logMessage("Missing " + TableBlock.FILE_NAME + ", created empty");
     }
 
     public boolean isLogErrors() {

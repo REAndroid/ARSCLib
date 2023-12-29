@@ -105,9 +105,13 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
         }
         StringGroup<ResXmlString> group = get(str);
         if(group!=null){
-            Iterator<ResXmlString> itr = group.iterator();
-            while (itr.hasNext()){
-                ResXmlString xmlString = itr.next();
+            for (int i = 0; i < group.size(); i++){
+                ResXmlString xmlString = group.get(i);
+                if(xmlString.getParent() == null){
+                    group.remove(xmlString);
+                    i--;
+                    continue;
+                }
                 int index = xmlString.getIndex();
                 if(index > position || (position==0 && position == index)){
                     return xmlString;

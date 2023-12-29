@@ -15,7 +15,7 @@
   */
 package com.reandroid.xml;
 
-import com.android.org.kxml2.io.KXmlSerializer;
+import com.reandroid.xml.kxml2.KXmlSerializer;
 
 import java.io.*;
 

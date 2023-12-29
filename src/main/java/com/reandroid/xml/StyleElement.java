@@ -23,9 +23,7 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 public class StyleElement extends XMLElement implements StyleNode{
     public StyleElement(String name){
@@ -101,7 +99,7 @@ public class StyleElement extends XMLElement implements StyleNode{
         return writer.toString();
     }
     public int getStart(){
-        XMLNode parent = getParent();
+        XMLNode parent = getParentNode();
         if(parent == null){
             return 0;
         }
@@ -174,7 +172,7 @@ public class StyleElement extends XMLElement implements StyleNode{
     }
     @Override
     public StyleNode getParentStyle() {
-        return (StyleNode) getParent();
+        return (StyleNode) getParentNode();
     }
     @Override
     public void addStyleNode(StyleNode styleNode){

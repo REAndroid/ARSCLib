@@ -16,6 +16,24 @@
 package com.reandroid.utils;
 
 public class HexUtil {
+    public static String toSignedHex(long num){
+        boolean negative = num < 0;
+        String prefix = "0x";
+        if(negative){
+            num = -num;
+            prefix = "-0x";
+        }
+        return toHex(prefix, num, 1);
+    }
+    public static String toSignedHex(int num){
+        boolean negative = num < 0;
+        String prefix = "0x";
+        if(negative){
+            num = -num;
+            prefix = "-0x";
+        }
+        return toHex(prefix, num, 1);
+    }
     public static String toHex2(byte num){
         return toHex((long)(num & 0x00000000000000ffL), 2);
     }

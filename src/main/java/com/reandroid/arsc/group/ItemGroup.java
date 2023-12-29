@@ -34,10 +34,10 @@ public class ItemGroup<T extends Block> implements Iterable<T>{
         this.name = name;
         T[] items;
         if(firstItem != null){
-            items = blockArrayCreator.newInstance(1);
+            items = blockArrayCreator.newArrayInstance(1);
             items[0] = firstItem;
         }else {
-            items = blockArrayCreator.newInstance(0);
+            items = blockArrayCreator.newArrayInstance(0);
         }
         this.items = items;
     }
@@ -182,7 +182,7 @@ public class ItemGroup<T extends Block> implements Iterable<T>{
         return result;
     }
     private T[] createNew(int len){
-        return mBlockArrayCreator.newInstance(len);
+        return mBlockArrayCreator.newArrayInstance(len);
     }
     @Override
     public int hashCode(){

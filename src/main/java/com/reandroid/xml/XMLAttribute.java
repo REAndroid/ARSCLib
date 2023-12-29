@@ -18,7 +18,6 @@ package com.reandroid.xml;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Objects;
 
 public class XMLAttribute extends XMLNode {
@@ -36,7 +35,7 @@ public class XMLAttribute extends XMLNode {
     @Override
     XMLAttribute clone(XMLNode parent){
         XMLAttribute attribute = new XMLAttribute();
-        attribute.setParent(parent);
+        attribute.setParentNode(parent);
         attribute.setName(getUri(), getPrefix(), getName(false));
         if(parent instanceof XMLElement){
             ((XMLElement)parent).addAttribute(attribute);
@@ -44,8 +43,8 @@ public class XMLAttribute extends XMLNode {
         return attribute;
     }
     @Override
-    public XMLElement getParent(){
-        return (XMLElement) super.getParent();
+    public XMLElement getParentNode(){
+        return (XMLElement) super.getParentNode();
     }
     public boolean equalsName(String name){
         if(name == null){
@@ -78,7 +77,7 @@ public class XMLAttribute extends XMLNode {
         this.mNamespace = namespace;
     }
     public void setNamespace(String uri, String prefix){
-        XMLElement element = getParent();
+        XMLElement element = getParentNode();
         if(element == null){
             throw new IllegalArgumentException("Parent element is null");
         }
@@ -136,7 +135,7 @@ public class XMLAttribute extends XMLNode {
         if(XMLUtil.isEmpty(uri)){
             uri = null;
         }
-        XMLElement element = getParent();
+        XMLElement element = getParentNode();
         if(element == null){
             throw new IllegalArgumentException("Parent element is null");
         }
@@ -166,7 +165,7 @@ public class XMLAttribute extends XMLNode {
         if(Objects.equals(prefix, getPrefix())){
             return;
         }
-        XMLElement element = getParent();
+        XMLElement element = getParentNode();
         if(element == null){
             throw new IllegalArgumentException("Parent element is null");
         }

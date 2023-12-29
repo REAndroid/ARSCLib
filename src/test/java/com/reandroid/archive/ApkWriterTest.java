@@ -18,7 +18,7 @@ public class ApkWriterTest {
         byte[] bytes = apkModule_1.writeApkBytes();
         ApkModule apkModule2 = ApkModule.readApkBytes(bytes);
         Assert.assertNotNull("Null ApkModule loaded from byte array", apkModule_1);
-        AndroidManifestBlock manifestBlock = apkModule2.getAndroidManifestBlock();
+        AndroidManifestBlock manifestBlock = apkModule2.getAndroidManifest();
         Assert.assertNotNull("Null manifest block", manifestBlock);
         TableBlock tableBlock = apkModule2.getTableBlock();
         Assert.assertNotNull("Null table block", tableBlock);
@@ -33,7 +33,7 @@ public class ApkWriterTest {
 
         ApkModule apkModule2 = ApkModule.readApkBytes(outputStream.toByteArray());
 
-        AndroidManifestBlock manifestBlock = apkModule2.getAndroidManifestBlock();
+        AndroidManifestBlock manifestBlock = apkModule2.getAndroidManifest();
         Assert.assertNotNull("Missing manifest", manifestBlock);
         TableBlock tableBlock = apkModule2.getTableBlock();
         Assert.assertNotNull("Missing table",tableBlock);

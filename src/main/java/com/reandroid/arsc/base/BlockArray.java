@@ -16,10 +16,7 @@
 package com.reandroid.arsc.base;
 
 import com.reandroid.common.ArraySupplier;
-import com.reandroid.utils.collection.ArrayIterator;
-import com.reandroid.utils.collection.SingleIterator;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.*;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -30,7 +27,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
     private int mFreeSpace;
     private int mAllocateStep;
     public BlockArray(){
-        elementData = newInstance(0);
+        elementData = newArrayInstance(0);
     }
     public BlockArray(T[] elementData){
         this.elementData = elementData;
@@ -74,7 +71,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
             start = 0;
         }
         if(start >= length){
-            return newInstance(0);
+            return newArrayInstance(0);
         }
         int end = count;
         if(end < 0){
@@ -85,7 +82,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
                 end=length;
             }
         }
-        T[] results = newInstance(end - start);
+        T[] results = newArrayInstance(end - start);
         int index = 0;
         for(int i = start; i < end; i++){
             results[index] = items[i];
@@ -152,7 +149,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
             block.setParent(null);
             elementData[i]=null;
         }
-        this.elementData = newInstance(0);
+        this.elementData = newArrayInstance(0);
     }
     public void addAll(T[] blocks){
         if(blocks == null || blocks.length == 0){
@@ -164,7 +161,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
             oldLength = old.length;
         }
         int len = blocks.length;
-        T[] update = newInstance(oldLength + len);
+        T[] update = newArrayInstance(oldLength + len);
         if(oldLength > 0){
             System.arraycopy(old, 0, update, 0, oldLength);
         }
@@ -209,7 +206,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         if(comparator == null || elementData.length < 2){
             return false;
         }
-        Arrays.sort(elementData, 0, elementData.length, comparator);
+        ArraySort.sort(elementData, comparator);
         boolean changed = false;
         for(int i=0 ; i < elementData.length; i++){
             T item = elementData[i];
@@ -318,7 +315,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         }
         T[] oldElementData = elementData;
         int index = oldElementData.length;
-        elementData = newInstance(index+1);
+        elementData = newArrayInstance(index+1);
         if(index>0){
             System.arraycopy(oldElementData, 0, elementData, 0, index);
         }
@@ -358,7 +355,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
             return;
         }
         int length = elementData.length - mFreeSpace;
-        T[] update = newInstance(length);
+        T[] update = newArrayInstance(length);
         if (length > 0) {
             System.arraycopy(elementData, 0, update, 0, length);
         }
@@ -559,7 +556,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         if(count==len){
             return;
         }
-        T[] update=newInstance(count);
+        T[] update= newArrayInstance(count);
         int index=0;
         for(int i=0;i<len;i++){
             T block=items[i];
@@ -596,7 +593,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
             index = old.length;
         }
         int size = index + amount;
-        T[] update = newInstance(size);
+        T[] update = newArrayInstance(size);
         int end;
         if(index>size){
             end=size;
@@ -631,7 +628,7 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         T[] old = elementData;
         int index = old.length;
         int size = index + amount;
-        T[] update = newInstance(size);
+        T[] update = newArrayInstance(size);
         if(index == 0){
             elementData = update;
             return;

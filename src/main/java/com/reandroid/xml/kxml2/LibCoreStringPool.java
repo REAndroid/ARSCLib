@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.org.kxml2.io;
+package com.reandroid.xml.kxml2;
 
 // Taken from libcore.internal.StringPool
 

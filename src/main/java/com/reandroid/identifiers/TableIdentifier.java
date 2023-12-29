@@ -35,6 +35,9 @@ public class TableIdentifier{
     }
 
     public void load(TableBlock tableBlock){
+        if(tableBlock == null){
+            return;
+        }
         for(PackageBlock packageBlock : tableBlock.listPackages()){
             load(packageBlock);
         }

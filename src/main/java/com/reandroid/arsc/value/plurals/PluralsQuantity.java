@@ -54,7 +54,7 @@ package com.reandroid.arsc.value.plurals;
         if (valueMap == null) {
             return null;
         }
-        int low = valueMap.getName() & 0xffff;
+        int low = valueMap.getNameId() & 0xffff;
         return valueOf((short) low);
     }
     public static PluralsQuantity value(String name){

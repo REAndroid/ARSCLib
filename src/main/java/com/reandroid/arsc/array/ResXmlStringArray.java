@@ -57,7 +57,7 @@ public class ResXmlStringArray extends StringArray<ResXmlString> {
         return new ResXmlString(isUtf8());
     }
     @Override
-    public ResXmlString[] newInstance(int length) {
+    public ResXmlString[] newArrayInstance(int length) {
         if(length == 0){
             return EMPTY;
         }

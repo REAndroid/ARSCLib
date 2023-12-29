@@ -19,6 +19,14 @@ import java.util.*;
 
 public class CollectionUtil {
 
+    public static void walk(Iterator<?> iterator){
+        if(iterator == null){
+            return;
+        }
+        while (iterator.hasNext()){
+            iterator.next();
+        }
+    }
     public static<T> List<T> toUniqueList(Iterator<? extends T> iterator) {
         return new ArrayList<>(toHashSet(iterator));
     }
@@ -43,6 +51,17 @@ public class CollectionUtil {
             result = iterator.next();
         }
         return result;
+    }
+    public static boolean contains(Iterator<?> iterator, Object obj){
+        if(iterator == null){
+            return false;
+        }
+        while (iterator.hasNext()){
+            if(obj.equals(iterator.next())){
+                return true;
+            }
+        }
+        return false;
     }
     public static<T> T getFirst(Iterator<T> iterator){
         if(iterator == null || !iterator.hasNext()){
@@ -128,7 +147,7 @@ public class CollectionUtil {
         if(!hasNext){
             return EmptyList.of();
         }
-        ArrayList<T> results = new ArrayList<>(2);
+        ArrayCollection<T> results = new ArrayCollection<>(2);
         while (hasNext){
             results.add(iterator.next());
             hasNext = iterator.hasNext();

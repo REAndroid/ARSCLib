@@ -21,6 +21,6 @@ import org.xmlpull.v1.XmlPullParser;
 
 public interface XmlResourceParser extends XmlPullParser, AttributeSet, AutoCloseable {
     String getAttributeNamespace (int index);
-    public void close();
+    void close();
 }
 

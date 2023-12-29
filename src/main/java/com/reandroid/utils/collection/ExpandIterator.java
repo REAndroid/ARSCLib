@@ -18,8 +18,10 @@ package com.reandroid.utils.collection;
 import java.util.Iterator;
 
 public class ExpandIterator<T> implements Iterator<T> {
+
     private final Iterator<? extends Iterable<? extends T>> iterator;
     private Iterator<? extends T> mCurrent;
+
     public ExpandIterator(Iterator<? extends Iterable<? extends T>> iterator){
         this.iterator = iterator;
     }
@@ -49,5 +51,11 @@ public class ExpandIterator<T> implements Iterator<T> {
             }
         }
         return mCurrent;
+    }
+    public static<T1> Iterator<T1> of(Iterator<? extends Iterable<? extends T1>> iterator){
+        if(!iterator.hasNext()){
+            return EmptyIterator.of();
+        }
+        return new ExpandIterator<>(iterator);
     }
 }

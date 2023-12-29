@@ -15,11 +15,15 @@
  */
 package com.reandroid.apk;
 
+import com.reandroid.app.AndroidManifest;
+import com.reandroid.archive.ArchiveInfo;
 import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.archive.FileInputSource;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.block.ApkSignatureBlock;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.arsc.chunk.xml.ResXmlElement;
 import com.reandroid.json.JSONArray;
 
 import java.io.File;
@@ -35,6 +39,7 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
     public void scanDirectory(File mainDirectory) throws IOException{
         logMessage("Scanning: " + mainDirectory.getName());
         encodeBinaryManifest(mainDirectory);
+        loadArchiveInfo(mainDirectory);
         loadUncompressedFiles(mainDirectory);
         buildResources(mainDirectory);
         encodeDexFiles(mainDirectory);
@@ -43,6 +48,8 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
         restoreSignatures(mainDirectory);
         sortFiles();
         refreshTable();
+        dropEmptyManifest();
+        droNullTableBlock();
     }
     public void encodeBinaryManifest(File mainDirectory){
         File file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME_BIN);
@@ -62,6 +69,30 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
         logMessage("Refreshing resource table ...");
         getApkModule().refreshTable();
         logMessage(getApkModule().getTableBlock().toString());
+    }
+    private void dropEmptyManifest(){
+        ApkModule apkModule = getApkModule();
+        if(!apkModule.hasAndroidManifest()){
+            return;
+        }
+        AndroidManifestBlock manifestBlock = apkModule.getAndroidManifest();
+        ResXmlElement element = manifestBlock.getDocumentElement();
+        if(element.equalsName(AndroidManifest.EMPTY_MANIFEST_TAG) &&
+                element.countElements() == 0){
+            apkModule.setManifest(null);
+            logMessage("Removed empty: " + AndroidManifest.FILE_NAME);
+        }
+    }
+    private void droNullTableBlock(){
+        ApkModule apkModule = getApkModule();
+        if(!apkModule.hasTableBlock()){
+            return;
+        }
+        TableBlock tableBlock = apkModule.getTableBlock();
+        if(tableBlock.isEmpty() && tableBlock.isNull()){
+            apkModule.setTableBlock(null);
+            logMessage("Removed null: " + TableBlock.FILE_NAME);
+        }
     }
     private void sortFiles(){
         logMessage("Sorting files ...");
@@ -126,6 +157,10 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
         this.mDexEncoder = dexEncoder;
     }
 
+    void loadArchiveInfo(File mainDirectory) throws IOException {
+        ZipEntryMap zipEntryMap = getApkModule().getZipEntryMap();
+        zipEntryMap.setArchiveInfo(ArchiveInfo.readJson(mainDirectory));
+    }
     void loadUncompressedFiles(File mainDirectory) throws IOException {
         File file = new File(mainDirectory, UncompressedFiles.JSON_FILE);
         UncompressedFiles uncompressedFiles = getApkModule().getUncompressedFiles();

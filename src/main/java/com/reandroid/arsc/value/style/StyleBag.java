@@ -69,13 +69,13 @@ public class StyleBag extends MapBag<Integer, StyleBagItem> {
     protected ResValueMap newKey(Integer attrId) {
         ResValueMap valueMap = new ResValueMap();
         valueMap.setParent(getMapArray());
-        valueMap.setName(attrId);
+        valueMap.setNameId(attrId);
         return valueMap;
     }
 
     @Override
     protected Integer getKeyFor(ResValueMap valueMap) {
-        return valueMap.getName();
+        return valueMap.getNameId();
     }
 
     public static int resolve(TableBlock tableBlock, String name) {
@@ -128,7 +128,7 @@ public class StyleBag extends MapBag<Integer, StyleBagItem> {
         }
 
         for (ResValueMap item : items) {
-            if (item == null || tableBlock.getResource(item.getNameResourceID()) == null) {
+            if (item == null || tableBlock.getResource(item.getNameId()) == null) {
                 return false;
             }
         }

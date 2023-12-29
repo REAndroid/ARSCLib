@@ -55,6 +55,14 @@ public class XMLDocument extends XMLNodeTree{
         clear();
         add(element);
     }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
+    }
+    public void setStandalone(Boolean standalone) {
+        this.standalone = standalone;
+    }
+
     public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
         encoding = null;
         standalone = null;
@@ -113,6 +121,14 @@ public class XMLDocument extends XMLNodeTree{
     }
     @Override
     void endSerialize(XmlSerializer serializer) {
+        if(encoding == null){
+            return;
+        }
+        try {
+            serializer.endDocument();
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        }
     }
     void appendDocument(Appendable appendable, boolean xml) throws IOException {
         if(encoding == null || !xml){
@@ -123,8 +139,9 @@ public class XMLDocument extends XMLNodeTree{
         appendable.append("'?>");
     }
     @Override
-    void write(Appendable writer, boolean xml, boolean escapeXmlText) throws IOException{
-
+    void write(Appendable appendable, boolean xml, boolean escapeXmlText) throws IOException{
+        appendDocument(appendable, xml);
+        getDocumentElement().write(appendable, xml, escapeXmlText);
     }
     @Override
     int appendDebugText(Appendable appendable, int limit, int length) throws IOException {

@@ -31,15 +31,14 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
         super(12, OFFSET_SIZE);
     }
 
-
     public void setArrayIndex(){
         setArrayIndex(getIndex() + 1);
     }
     public void setArrayIndex(int index){
-        setName(0x01000000 | index);
+        setNameId(0x01000000 | index);
     }
     public int getArrayIndex(){
-        int name = getName();
+        int name = getNameId();
         int high = name & 0xffff0000;
         if(high != 0x01000000 && high != 0x02000000){
             return -1;
@@ -80,7 +79,7 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
     }
     @Override
     public String decodeName(boolean includePrefix){
-        int resourceId = getNameResourceID();
+        int resourceId = getNameId();
         if(!PackageBlock.isResourceId(resourceId)){
             if(resourceId != 0 && getAttributeType() == null){
                 return ValueCoder.decodeUnknownNameId(resourceId);
@@ -122,10 +121,10 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
         return resourceEntry.getPackageName();
     }
     public AttributeType getAttributeType(){
-        return AttributeType.valueOf(getNameResourceID());
+        return AttributeType.valueOf(getNameId());
     }
     public void setAttributeType(AttributeType attributeType){
-        setNameResourceID(attributeType.getId());
+        setNameId(attributeType.getId());
         if(attributeType == AttributeType.FORMATS && getValueType() == ValueType.NULL){
             setValueType(ValueType.DEC);
         }
@@ -173,20 +172,13 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
         return getParentInstance(Entry.class);
     }
 
-    public int getName(){
+    @Override
+    public int getNameId() {
         return getInteger(getBytesInternal(), OFFSET_NAME);
     }
-    public void setName(int name){
-        putInteger(getBytesInternal(), OFFSET_NAME, name);
-    }
-
     @Override
-    public int getNameResourceID() {
-        return getName();
-    }
-    @Override
-    public void setNameResourceID(int resourceId){
-        setName(resourceId);
+    public void setNameId(int id){
+        putInteger(getBytesInternal(), OFFSET_NAME, id);
     }
 
     @Override
@@ -195,24 +187,24 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
         if(jsonObject==null){
             return null;
         }
-        jsonObject.put(NAME_name, getName());
+        jsonObject.put(NAME_name, getNameId());
         return jsonObject;
     }
     @Override
     public void fromJson(JSONObject json) {
         super.fromJson(json);
-        setName(json.getInt(NAME_name));
+        setNameId(json.getInt(NAME_name));
     }
 
     public void setNameHigh(short val){
-        int name = getName() & 0xffff;
+        int name = getNameId() & 0xffff;
         name = ((val & 0xffff) <<16 ) | name;
-        setName(name);
+        setNameId(name);
     }
     public void setNameLow(short val){
-        int name = getName() & 0xffff0000;
+        int name = getNameId() & 0xffff0000;
         name = (val & 0xffff) | name;
-        setName(name);
+        setNameId(name);
     }
     public void setDataHigh(short val){
         int data = getData() & 0xffff;
@@ -231,7 +223,7 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
         }
         ResValueMap resValueMap = (ResValueMap) valueItem;
         super.merge(resValueMap);
-        setName(resValueMap.getName());
+        setNameId(resValueMap.getNameId());
     }
     @Override
     public int compareTo(ResValueMap valueMap) {
@@ -241,8 +233,8 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
         if(valueMap == this){
             return 0;
         }
-        int id1 = getNameResourceID();
-        int id2 = valueMap.getNameResourceID();
+        int id1 = getNameId();
+        int id2 = valueMap.getNameId();
         if(id1 == id2){
             return 0;
         }
@@ -261,7 +253,7 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
         if(name != null && data != null){
             return name + "=\"" + data + "\"";
         }
-        return "name=" + HexUtil.toHex8(getName())
+        return "name=" + HexUtil.toHex8(getNameId())
                 +", " + super.toString();
     }
 

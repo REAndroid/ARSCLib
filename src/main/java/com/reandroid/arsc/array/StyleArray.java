@@ -92,7 +92,7 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
         return new StyleItem();
     }
     @Override
-    public StyleItem[] newInstance(int len) {
+    public StyleItem[] newArrayInstance(int len) {
         return new StyleItem[len];
     }
 

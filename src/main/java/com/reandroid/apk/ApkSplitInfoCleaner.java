@@ -33,14 +33,14 @@ import java.util.List;
 public class ApkSplitInfoCleaner {
 
     public static void cleanSplitInfo(ApkModule apkModule){
-        AndroidManifestBlock manifestBlock = apkModule.getAndroidManifestBlock();
+        AndroidManifestBlock manifestBlock = apkModule.getAndroidManifest();
         cleanSplitInfoAttributes(manifestBlock.getManifestElement());
         cleanSplitInfoMeta(apkModule);
         cleanActivities(apkModule);
     }
 
     private static void cleanActivities(ApkModule apkModule){
-        AndroidManifestBlock manifestBlock = apkModule.getAndroidManifestBlock();
+        AndroidManifestBlock manifestBlock = apkModule.getAndroidManifest();
         ResXmlElement manifest = manifestBlock.getManifestElement();
         List<ResXmlElement> removeList = CollectionUtil.toList(
                 FilterIterator.of(manifest.recursiveElements(), ApkSplitInfoCleaner::isSplitElement));
@@ -49,7 +49,7 @@ public class ApkSplitInfoCleaner {
         }
     }
     private static void cleanSplitInfoMeta(ApkModule apkModule){
-        AndroidManifestBlock manifestBlock = apkModule.getAndroidManifestBlock();
+        AndroidManifestBlock manifestBlock = apkModule.getAndroidManifest();
         ResXmlElement manifest = manifestBlock.getManifestElement();
         List<ResXmlElement> removeList = CollectionUtil.toList(
                 FilterIterator.of(manifest.recursiveElements(), ApkSplitInfoCleaner::isSplitMetaElement));
@@ -92,9 +92,15 @@ public class ApkSplitInfoCleaner {
     private static void cleanSplitInfoAttributes(ResXmlElement manifest){
         List<ResXmlAttribute> removeList = CollectionUtil.toList(
                 FilterIterator.of(manifest.recursiveAttributes(), attribute -> {
-                    int resourceId = attribute.getNameResourceID();
-                    return resourceId == AndroidManifestBlock.ID_isSplitRequired
-                            || resourceId == AndroidManifestBlock.ID_extractNativeLibs;
+                    int resourceId = attribute.getNameId();
+                    if(resourceId != 0){
+                        return resourceId == AndroidManifestBlock.ID_isSplitRequired ||
+                                resourceId == AndroidManifestBlock.ID_isFeatureSplit ||
+                                resourceId == AndroidManifestBlock.ID_extractNativeLibs;
+                    }
+                    return attribute.equalsName(AndroidManifestBlock.NAME_requiredSplitTypes) ||
+                            attribute.equalsName(AndroidManifestBlock.NAME_splitTypes);
+
                 }));
         for(ResXmlAttribute attribute : removeList){
             attribute.removeSelf();

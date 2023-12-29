@@ -32,7 +32,7 @@ public class TypeStringArray extends StringArray<TypeString> {
         return typeString;
     }
     @Override
-    public TypeString[] newInstance(int len) {
+    public TypeString[] newArrayInstance(int len) {
         return new TypeString[len];
     }
 }

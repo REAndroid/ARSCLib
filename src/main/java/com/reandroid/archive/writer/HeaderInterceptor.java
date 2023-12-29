@@ -22,5 +22,5 @@ import com.reandroid.archive.block.LocalFileHeader;
 public interface HeaderInterceptor {
     void onWriteLfh(LocalFileHeader localFileHeader);
     void onWriteDD(DataDescriptor dataDescriptor);
-    void onWriteCeh(CentralEntryHeader centralEntryHeader);
+    void onWriteCeh(CentralEntryHeader header);
 }

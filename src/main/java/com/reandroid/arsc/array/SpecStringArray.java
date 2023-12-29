@@ -31,7 +31,7 @@ public class SpecStringArray extends StringArray<SpecString> {
         return new SpecString(isUtf8());
     }
     @Override
-    public SpecString[] newInstance(int length) {
+    public SpecString[] newArrayInstance(int length) {
         if(length == 0){
             return EMPTY;
         }

@@ -99,8 +99,8 @@ public class FrameworkApk extends ApkModule{
         this.packageName = null;
     }
     private void initValues() {
-        if(hasAndroidManifestBlock()){
-            AndroidManifestBlock manifest = getAndroidManifestBlock();
+        if(hasAndroidManifest()){
+            AndroidManifestBlock manifest = getAndroidManifest();
             Integer code = manifest.getVersionCode();
             if(code != null){
                 this.versionCode = code;
@@ -253,10 +253,10 @@ public class FrameworkApk extends ApkModule{
         return frameworkApk;
     }
     public static boolean isFramework(ApkModule apkModule) {
-        if(!apkModule.hasAndroidManifestBlock()){
+        if(!apkModule.hasAndroidManifest()){
             return false;
         }
-        return isFramework(apkModule.getAndroidManifestBlock());
+        return isFramework(apkModule.getAndroidManifest());
     }
     public static boolean isFramework(AndroidManifestBlock manifestBlock){
         ResXmlElement root = manifestBlock.getManifestElement();

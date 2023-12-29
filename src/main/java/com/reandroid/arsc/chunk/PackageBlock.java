@@ -640,6 +640,10 @@ public class PackageBlock extends Chunk<PackageHeader>
         if(id != 0){
             serializer.attribute(null, ATTR_id, HexUtil.toHex2((byte)id));
         }
+        TableBlock tableBlock = getTableBlock();
+        if(tableBlock !=null && tableBlock.isEmpty() && tableBlock.isNull()){
+            serializer.attribute(null, TableBlock.ATTR_null_table, "true");
+        }
     }
     public void parsePublicXml(XmlPullParser parser) throws IOException,
             XmlPullParserException {
@@ -761,7 +765,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         changePackageIdValue(packageIdOld, packageIdNew, valueItem);
     }
     private static void changePackageIdName(int packageIdOld, int packageIdNew, AttributeValue value){
-        int resourceId = value.getNameResourceID();
+        int resourceId = value.getNameId();
         if(!isResourceId(resourceId)){
             return;
         }
@@ -772,7 +776,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         resourceId = resourceId & 0xffffff;
         id = packageIdNew << 24;
         resourceId = id | resourceId;
-        value.setNameResourceID(resourceId);
+        value.setNameId(resourceId);
     }
     private static void changePackageIdValue(int packageIdOld, int packageIdNew, ValueItem valueItem){
         ValueType valueType = valueItem.getValueType();
@@ -903,7 +907,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         private void parseResourcesAttributes(XMLElement element) throws IOException {
             String packageName = element.getAttributeValue(PackageBlock.ATTR_package);
-            if(!StringsUtil.isWhiteSpace(packageName)){
+            if(!StringsUtil.isWhiteSpace(packageName) && !EMPTY_PACKAGE_NAME.equals(packageName)){
                 packageBlock.setName(packageName);
             }
             String id = element.getAttributeValue(PackageBlock.ATTR_id);
@@ -914,6 +918,10 @@ public class PackageBlock extends Chunk<PackageHeader>
                     throw new XmlEncodeException("Invalid id value: '" + element.getDebugText() + "'");
                 }
                 packageBlock.setId(encodeResult.value);
+            }
+            String nullTable = element.getAttributeValue(TableBlock.ATTR_null_table);
+            if("true".equals(nullTable)){
+                packageBlock.getTableBlock().setNull(true);
             }
         }
     }
@@ -944,7 +952,7 @@ public class PackageBlock extends Chunk<PackageHeader>
             }
             @Override
             public String getName(){
-                return "EmptyPackage";
+                return PackageBlock.EMPTY_PACKAGE_NAME;
             }
             @Override
             public void setName(String name) {
@@ -977,25 +985,27 @@ public class PackageBlock extends Chunk<PackageHeader>
         return packageBlock;
     }
 
-    public static final String NAME_package_id = "package_id";
-    public static final String NAME_package_name = "package_name";
-    private static final String NAME_specs = "specs";
-    public static final String NAME_libraries = "libraries";
-    public static final String NAME_staged_aliases = "staged_aliases";
-    public static final String NAME_overlaybles = "overlaybles";
+    public static final String NAME_package_id = ObjectsUtil.of("package_id");
+    public static final String NAME_package_name = ObjectsUtil.of("package_name");
+    private static final String NAME_specs = ObjectsUtil.of("specs");
+    public static final String NAME_libraries = ObjectsUtil.of("libraries");
+    public static final String NAME_staged_aliases = ObjectsUtil.of("staged_aliases");
+    public static final String NAME_overlaybles = ObjectsUtil.of("overlaybles");
 
-    public static final String JSON_FILE_NAME = "package.json";
-    public static final String DIRECTORY_NAME_PREFIX = "package_";
-    public static final String RES_DIRECTORY_NAME = "res";
-    public static final String VALUES_DIRECTORY_NAME = "values";
+    public static final String JSON_FILE_NAME = ObjectsUtil.of("package.json");
+    public static final String DIRECTORY_NAME_PREFIX = ObjectsUtil.of("package_");
+    public static final String RES_DIRECTORY_NAME = ObjectsUtil.of("res");
+    public static final String VALUES_DIRECTORY_NAME = ObjectsUtil.of("values");
 
-    public static final String PUBLIC_XML = "public.xml";
+    public static final String PUBLIC_XML = ObjectsUtil.of("public.xml");
 
-    public static final String TAG_public = "public";
-    public static final String TAG_resources = "resources";
-    public static final String ATTR_package = "package";
-    public static final String ATTR_id = "id";
-    public static final String ATTR_type = "type";
-    public static final String ATTR_name = "name";
+    public static final String TAG_public = ObjectsUtil.of("public");
+    public static final String TAG_resources = ObjectsUtil.of("resources");
+    public static final String ATTR_package = ObjectsUtil.of("package");
+    public static final String ATTR_id = ObjectsUtil.of("id");
+    public static final String ATTR_type = ObjectsUtil.of("type");
+    public static final String ATTR_name = ObjectsUtil.of("name");
+
+    public static final String EMPTY_PACKAGE_NAME = ObjectsUtil.of("empty-package");
 
 }

@@ -20,30 +20,30 @@ import com.reandroid.utils.StringsUtil;
 
 import java.nio.charset.StandardCharsets;
 
-public class FixedLengthString  extends StringItem{
+public class FixedLengthString  extends StringItem {
     private final int bytesLength;
     public FixedLengthString(int bytesLength){
         super(true);
-        this.bytesLength=bytesLength;
+        this.bytesLength = bytesLength;
         setBytesLength(bytesLength);
     }
     @Override
-    byte[] encodeString(String str){
-        if(str==null){
+    protected byte[] encodeString(String text){
+        if(text == null){
             return new byte[bytesLength];
         }
-        byte[] bts=getUtf16Bytes(str);
-        byte[] results=new byte[bytesLength];
-        int len=bts.length;
-        if(len>bytesLength){
-            len=bytesLength;
+        byte[] bytes = getUtf16Bytes(text);
+        byte[] results = new byte[this.bytesLength];
+        int length = bytes.length;
+        if(length > this.bytesLength){
+            length = this.bytesLength;
         }
-        System.arraycopy(bts, 0, results, 0, len);
+        System.arraycopy(bytes, 0, results, 0, length);
         return results;
     }
     @Override
-    String decodeString(){
-        return decodeUtf16Bytes(getBytesInternal());
+    protected String decodeString(byte[] bytes){
+        return decodeUtf16Bytes(bytes);
     }
     @Override
     public StyleItem getStyle(){
@@ -64,33 +64,33 @@ public class FixedLengthString  extends StringItem{
     public String toString(){
         return "FIXED-" + bytesLength + " {" + get() + "}";
     }
-    private static String decodeUtf16Bytes(byte[] bts){
-        if(isNullBytes(bts)){
+    private static String decodeUtf16Bytes(byte[] bytes){
+        if(isNullBytes(bytes)){
             return null;
         }
-        int len=getEndNullPosition(bts);
-        return new String(bts,0, len, StandardCharsets.UTF_16LE);
+        int length = getEndNullPosition(bytes);
+        return new String(bytes,0, length, StandardCharsets.UTF_16LE);
     }
-    private static int getEndNullPosition(byte[] bts){
-        int max=bts.length;
-        int result=0;
-        boolean found=false;
-        for(int i=1; i<max;i++){
-            byte b0=bts[i-1];
-            byte b1=bts[i];
-            if(b0==0 && b1==0){
+    private static int getEndNullPosition(byte[] bytes){
+        int length = bytes.length;
+        int result = 0;
+        boolean found = false;
+        for(int i = 1; i < length; i++){
+            byte b0 = bytes[i - 1];
+            byte b1 = bytes[i];
+            if(b0 == 0 && b1 == 0){
                 if(!found){
-                    result=i;
-                    found=true;
+                    result = i;
+                    found = true;
                 }else if(result<i-1){
                     return result;
                 }
             }else {
-                found=false;
+                found = false;
             }
         }
         if(!found){
-            return max;
+            return length;
         }
         return result;
     }

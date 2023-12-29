@@ -64,7 +64,7 @@ public class LibraryInfoArray extends BlockArray<LibraryInfo> implements JSONCon
         return new LibraryInfo();
     }
     @Override
-    public LibraryInfo[] newInstance(int len) {
+    public LibraryInfo[] newArrayInstance(int len) {
         return new LibraryInfo[len];
     }
     @Override

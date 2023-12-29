@@ -89,7 +89,7 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         return new ResXmlAttribute(mAttributesUnitSize.unsignedInt());
     }
     @Override
-    public ResXmlAttribute[] newInstance(int len) {
+    public ResXmlAttribute[] newArrayInstance(int len) {
         if(len == 0){
             return EMPTY;
         }

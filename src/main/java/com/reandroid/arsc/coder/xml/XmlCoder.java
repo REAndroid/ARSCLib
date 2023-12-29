@@ -446,7 +446,7 @@ public class XmlCoder {
                 String name = valueMap.decodeName(true);
                 boolean escapeValue = false;
                 if(name == null){
-                    name = ValueCoder.decodeUnknownNameId(valueMap.getNameResourceID());
+                    name = ValueCoder.decodeUnknownNameId(valueMap.getNameId());
                     escapeValue = true;
                 }
                 serializer.attribute(null, ATTR_name, name);

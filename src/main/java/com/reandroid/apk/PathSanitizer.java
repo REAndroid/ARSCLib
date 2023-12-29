@@ -18,6 +18,7 @@ package com.reandroid.apk;
 import com.reandroid.archive.InputSource;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.identifiers.Identifier;
+import com.reandroid.utils.StringsUtil;
 
 import java.util.*;
 
@@ -145,14 +146,19 @@ public class PathSanitizer {
 
     private String sanitize(String name, int depth, boolean fixedDepth){
         StringBuilder builder = new StringBuilder();
-        String[] nameSplit = name.split("/");
+
+        String[] nameSplit = StringsUtil.split(name, '/');
+
+        boolean is_assets = false;
 
         boolean pathIsLong = name.length() >= MAX_PATH_LENGTH;
         int length = nameSplit.length;
-        for(int i=0;i<length;i++){
+        for(int i=0; i < length; i++){
             String split = nameSplit[i];
-            boolean good = isGoodSimpleName(split);
-            if(!good || (pathIsLong && i>=depth)){
+            if(i == 0){
+                is_assets = "assets".equals(split);
+            }
+            if(!isGoodSimpleName(split, is_assets) || (pathIsLong && i>=depth)){
                 split = createUniqueName(name);
                 appendPathName(builder, split);
                 break;
@@ -201,33 +207,62 @@ public class PathSanitizer {
         int hash = name.hashCode();
         return "alias_" + HexUtil.toHexNoPrefix8(hash);
     }
-    private static boolean isGoodSimpleName(String name){
-        if(name==null){
+    private static boolean isGoodSimpleName(String name, boolean ignoreSpace){
+        if(name == null){
             return false;
         }
-        String alias = sanitizeSimpleName(name);
-        return name.equals(alias);
+        int length = name.length();
+        if(length == 0 || length >= MAX_NAME_LENGTH){
+            return false;
+        }
+        boolean spaceFound = false;
+        boolean symbolFound = false;
+        for(int i = 0; i < length; i++){
+            char ch = name.charAt(i);
+            if(ignoreSpace && ch == ' '){
+                if(spaceFound || i == 0 || i == (length - 1)){
+                    return false;
+                }
+                spaceFound = true;
+                continue;
+            }
+            spaceFound = false;
+            if(isGoodFileNameChar(ch)){
+                symbolFound = false;
+                continue;
+            }
+            if(isGoodFileNameSymbol(ch)){
+                if(symbolFound){
+                    return false;
+                }
+                symbolFound = true;
+                continue;
+            }
+            return false;
+        }
+        return true;
     }
+
     public static String sanitizeSimpleName(String name){
-        if(name==null){
+        if(name == null){
             return null;
         }
-        StringBuilder builder = new StringBuilder();
-        char[] chars = name.toCharArray();
         boolean skipNext = true;
-        int length = 0;
+        int currentLength = 0;
         int lengthMax = MAX_NAME_LENGTH;
-        for(int i=0;i<chars.length;i++){
-            if(length>=lengthMax){
+        int length = name.length();
+        StringBuilder builder = new StringBuilder(length);
+        for(int i = 0; i < length; i++){
+            if(currentLength >= lengthMax){
                 break;
             }
-            char ch = chars[i];
+            char ch = name.charAt(i);
             if(isGoodFileNameSymbol(ch)){
                 if(!skipNext){
                     builder.append(ch);
-                    length++;
+                    currentLength++;
                 }
-                skipNext=true;
+                skipNext = true;
                 continue;
             }
             if(!isGoodFileNameChar(ch)){
@@ -235,10 +270,10 @@ public class PathSanitizer {
                 continue;
             }
             builder.append(ch);
-            length++;
-            skipNext=false;
+            currentLength ++;
+            skipNext = false;
         }
-        if(length==0){
+        if(currentLength == 0){
             return null;
         }
         return builder.toString();

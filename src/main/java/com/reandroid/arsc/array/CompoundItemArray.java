@@ -87,7 +87,7 @@ public abstract class CompoundItemArray<T extends ResValueMap>
     }
     public T getByName(int name){
         for(T resValueMap : getChildes()){
-            if(resValueMap != null && name == resValueMap.getName()){
+            if(resValueMap != null && name == resValueMap.getNameId()){
                 return resValueMap;
             }
         }

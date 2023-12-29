@@ -22,7 +22,7 @@ import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import java.io.IOException;
 
 public interface ApkFile {
-    AndroidManifestBlock getAndroidManifestBlock();
+    AndroidManifestBlock getAndroidManifest();
     TableBlock getTableBlock();
     TableBlock getLoadedTableBlock();
     ResXmlDocument loadResXmlDocument(String path) throws IOException;

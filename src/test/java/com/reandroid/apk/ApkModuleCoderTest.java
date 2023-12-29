@@ -36,11 +36,11 @@ public class ApkModuleCoderTest {
         ApkModuleXmlEncoder encoder = new ApkModuleXmlEncoder();
         encoder.scanDirectory(mDir_xml);
         ApkModule apkModule_encoded = encoder.getApkModule();
-        Assert.assertNotNull(apkModule_encoded.getAndroidManifestBlock());
-        apkModule_encoded.getAndroidManifestBlock().refreshFull();
-        apkModule.getAndroidManifestBlock().removeUnusedNamespaces();
-        apkModule.getAndroidManifestBlock().getStringPool().removeUnusedStrings();
-        apkModule.getAndroidManifestBlock().refreshFull();
+        Assert.assertNotNull(apkModule_encoded.getAndroidManifest());
+        apkModule_encoded.getAndroidManifest().refreshFull();
+        apkModule.getAndroidManifest().removeUnusedNamespaces();
+        apkModule.getAndroidManifest().getStringPool().removeUnusedStrings();
+        apkModule.getAndroidManifest().refreshFull();
         File apk = new File(mDir_xml.getParentFile(), "encoded_xml.apk");
         apkModule_encoded.writeApk(apk);
         apkModule_encoded = ApkModule.loadApkFile(apk);
@@ -66,11 +66,11 @@ public class ApkModuleCoderTest {
         ApkModuleJsonEncoder encoder = new ApkModuleJsonEncoder();
         encoder.scanDirectory(mDir_json);
         ApkModule apkModule_encoded = encoder.getApkModule();
-        Assert.assertNotNull(apkModule_encoded.getAndroidManifestBlock());
-        apkModule_encoded.getAndroidManifestBlock().refreshFull();
-        apkModule.getAndroidManifestBlock().removeUnusedNamespaces();
-        apkModule.getAndroidManifestBlock().getStringPool().removeUnusedStrings();
-        apkModule.getAndroidManifestBlock().refreshFull();
+        Assert.assertNotNull(apkModule_encoded.getAndroidManifest());
+        apkModule_encoded.getAndroidManifest().refreshFull();
+        apkModule.getAndroidManifest().removeUnusedNamespaces();
+        apkModule.getAndroidManifest().getStringPool().removeUnusedStrings();
+        apkModule.getAndroidManifest().refreshFull();
         File apk = new File(mDir_json.getParentFile(), "encoded_json.apk");
         apkModule_encoded.writeApk(apk);
         apkModule_encoded = ApkModule.loadApkFile(apk);
@@ -84,7 +84,7 @@ public class ApkModuleCoderTest {
 
         compareTableBlock(module1.getTableBlock(), module2.getTableBlock());
 
-        compareManifest(module1.getAndroidManifestBlock(), module2.getAndroidManifestBlock());
+        compareManifest(module1.getAndroidManifest(), module2.getAndroidManifest());
     }
     private void compareTableBlock(TableBlock tableBlock1, TableBlock tableBlock2) {
 

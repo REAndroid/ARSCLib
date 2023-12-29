@@ -283,6 +283,10 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
             group.add(item);
         }else {
             item = group.get(0);
+            if(item != null && item.getParent() == null){
+                group.remove(item);
+                return getOrCreate(str);
+            }
         }
         return item;
     }

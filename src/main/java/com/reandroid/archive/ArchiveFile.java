@@ -17,6 +17,7 @@ package com.reandroid.archive;
 
 import com.reandroid.archive.io.ArchiveFileEntrySource;
 import com.reandroid.archive.io.ZipFileInput;
+import com.reandroid.utils.io.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 
 public class ArchiveFile extends Archive<ZipFileInput>{
+
     public ArchiveFile(ZipFileInput zipInput) throws IOException {
         super(zipInput);
     }
@@ -37,10 +39,7 @@ public class ArchiveFile extends Archive<ZipFileInput>{
     }
     @Override
     void extractStored(File file, ArchiveEntry archiveEntry) throws IOException {
-        if(file.isFile()){
-            file.delete();
-        }
-        file.createNewFile();
+        FileUtil.createNewFile(file);
         StandardOpenOption openOption = StandardOpenOption.WRITE;
         FileChannel outputChannel = FileChannel.open(file.toPath(), openOption);
         FileChannel fileChannel = getZipInput().getFileChannel();
@@ -48,5 +47,4 @@ public class ArchiveFile extends Archive<ZipFileInput>{
         outputChannel.transferFrom(fileChannel, 0, archiveEntry.getDataSize());
         outputChannel.close();
     }
-
 }

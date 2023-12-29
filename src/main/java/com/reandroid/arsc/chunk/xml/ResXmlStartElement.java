@@ -154,7 +154,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
         Iterator<ResXmlAttribute> iterator = iterator();
         while (iterator.hasNext()){
             ResXmlAttribute attribute = iterator.next();
-            if(resourceId == attribute.getNameResourceID()){
+            if(resourceId == attribute.getNameId()){
                 return attribute;
             }
         }
@@ -164,7 +164,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
         Iterator<ResXmlAttribute> iterator = iterator();
         while (iterator.hasNext()){
             ResXmlAttribute attribute = iterator.next();
-            if(attribute.getNameResourceID()!=0){
+            if(attribute.getNameId()!=0){
                 continue;
             }
             if(name.equals(attribute.getName())){
@@ -202,7 +202,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
         while (iterator.hasNext()){
             ResXmlAttribute attribute = iterator.next();
             if(attribute.equalsName(name)){
-                if(attribute.getNameResourceID() != 0){
+                if(attribute.getNameId() != 0){
                     withIdAttribute = attribute;
                     continue;
                 }
@@ -218,7 +218,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
         Iterator<ResXmlAttribute> iterator = iterator();
         while (iterator.hasNext()){
             ResXmlAttribute attribute = iterator.next();
-            if(resourceId == attribute.getNameResourceID()){
+            if(resourceId == attribute.getNameId()){
                 return attribute;
             }
         }

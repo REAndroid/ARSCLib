@@ -66,7 +66,7 @@
          updateCount();
      }
      @Override
-     public StagedAliasEntry[] newInstance(int len) {
+     public StagedAliasEntry[] newArrayInstance(int len) {
          return new StagedAliasEntry[len];
      }
      @Override

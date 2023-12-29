@@ -708,11 +708,11 @@ public class ResXmlElement extends ResXmlNode implements JSONConvert<JSONObject>
         return EmptyIterator.of();
     }
     public Iterator<ResXmlAttribute> getAttributesWithId(int resourceId){
-        return getAttributes(attribute -> attribute.getNameResourceID() == resourceId);
+        return getAttributes(attribute -> attribute.getNameId() == resourceId);
     }
     public Iterator<ResXmlAttribute> getAttributesWithName(String name){
         return getAttributes(attribute ->
-                attribute.getNameResourceID() == 0 && attribute.equalsName(name));
+                attribute.getNameId() == 0 && attribute.equalsName(name));
     }
     public int getAttributeCount() {
         ResXmlStartElement startElement=getStartElement();
