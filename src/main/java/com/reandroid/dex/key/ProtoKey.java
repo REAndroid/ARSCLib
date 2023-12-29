@@ -2,7 +2,12 @@ package com.reandroid.dex.key;
 
 import com.reandroid.dex.id.ProtoId;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
+import java.util.Iterator;
 import java.util.Objects;
 
 public class ProtoKey implements Key{
@@ -17,50 +22,107 @@ public class ProtoKey implements Key{
         this.returnType = returnType;
     }
 
-    public ProtoKey removeParameter(int index){
-        TypeListKey typeListKey = getParametersKey();
-        if(typeListKey != null){
-            typeListKey = typeListKey.removeParameter(index);
+    public int getRegister(int index) {
+        int result = 0;
+        int size = getParametersCount();
+        if(index < size){
+            size = index;
         }
-        return create(typeListKey, getReturnType());
+        for(int i = 0; i < size; i++){
+            TypeKey typeKey = getParameter(i);
+            result ++;
+            if(typeKey.equals(TypeKey.TYPE_D) || typeKey.equals(TypeKey.TYPE_J)){
+                result ++;
+            }
+        }
+        return result;
+    }
+    public ProtoKey removeParameter(int index){
+        TypeListKey typeListKey = getParameterListKey();
+        if(typeListKey != null){
+            typeListKey = typeListKey.remove(index);
+        }
+        return create(typeListKey, getReturnTypeName());
+    }
+    public ProtoKey changeReturnType(TypeKey typeKey){
+        return changeReturnType(typeKey.getTypeName());
+    }
+    public ProtoKey changeReturnType(String type){
+        if(type.equals(getReturnTypeName())){
+            return this;
+        }
+        return new ProtoKey(getParameterNames(), type);
     }
 
-    public TypeKey getReturnTypeKey() {
-        return new TypeKey(getReturnType());
+    public TypeListKey getParameterListKey() {
+        return TypeListKey.create(getParameterNames());
     }
-    public TypeListKey getParametersKey() {
-        return TypeListKey.create(getParameters());
+    public TypeKey getReturnType() {
+        return new TypeKey(getReturnTypeName());
+    }
+    public String getReturnTypeName() {
+        return returnType;
     }
 
-    public String[] getParameters() {
-        return parameters;
-    }
     public int getParametersCount() {
-        String[] parameters = getParameters();
+        String[] parameters = getParameterNames();
         if(parameters != null){
             return parameters.length;
         }
         return 0;
     }
-    public String getParameter(int i){
-        return getParameters()[i];
+    public String[] getParameterNames() {
+        return parameters;
     }
-    public TypeKey getParameterType(int i){
-        return TypeKey.create(getParameter(i));
+    public String getParameterName(int i){
+        return getParameterNames()[i];
     }
-    public String getReturnType() {
-        return returnType;
+    public TypeKey getParameter(int i){
+        return TypeKey.create(getParameterName(i));
+    }
+    public Iterator<TypeKey> getParameters(){
+        return ComputeIterator.of(ArrayIterator.of(getParameterNames()), TypeKey::create);
     }
     public String getShorty(){
         StringBuilder builder = new StringBuilder();
-        builder.append(toShorty(getReturnType()));
-        String[] parameters = getParameters();
+        builder.append(toShorty(getReturnTypeName()));
+        String[] parameters = getParameterNames();
         if(parameters != null){
             for(String param : parameters){
                 builder.append(toShorty(param));
             }
         }
         return builder.toString();
+    }
+    @Override
+    public Iterator<Key> mentionedKeys() {
+        return CombiningIterator.singleThree(
+                ProtoKey.this,
+                SingleIterator.of(StringKey.create(getShorty())),
+                getParameters(),
+                SingleIterator.of(getReturnType()));
+    }
+    @Override
+    public Key replaceKey(Key search, Key replace) {
+        ProtoKey result = this;
+        if(search.equals(result)){
+            return replace;
+        }
+        if(search.equals(result.getReturnType())){
+            result = result.changeReturnType((TypeKey) replace);
+        }
+        String[] parameters = this.getParameterNames();
+        if(parameters != null && search instanceof TypeKey){
+            TypeKey searchType = (TypeKey) search;
+            String replaceType = ((TypeKey) replace).getTypeName();
+            int length = parameters.length;
+            for(int i = 0; i < length; i++){
+                if(searchType.equals(new TypeKey(parameters[i]))){
+                    parameters[i] = replaceType;
+                }
+            }
+        }
+        return result;
     }
 
     @Override
@@ -69,11 +131,11 @@ public class ProtoKey implements Key{
             return -1;
         }
         ProtoKey key = (ProtoKey) obj;
-        int i = CompareUtil.compare(getParameters(), key.getParameters());
+        int i = CompareUtil.compare(getParameterNames(), key.getParameterNames());
         if(i != 0) {
             return i;
         }
-        return CompareUtil.compare(getReturnType(), key.getReturnType());
+        return CompareUtil.compare(getReturnTypeName(), key.getReturnTypeName());
     }
 
     @Override
@@ -84,9 +146,9 @@ public class ProtoKey implements Key{
         if (!(obj instanceof ProtoKey)) {
             return false;
         }
-        ProtoKey methodKey = (ProtoKey) obj;
-        return Objects.equals(getReturnType(), methodKey.getReturnType()) &&
-                CompareUtil.compare(getParameters(), methodKey.getParameters()) == 0;
+        ProtoKey protoKey = (ProtoKey) obj;
+        return Objects.equals(getReturnTypeName(), protoKey.getReturnTypeName()) &&
+                CompareUtil.compare(getParameterNames(), protoKey.getParameterNames()) == 0;
     }
 
     @Override
@@ -96,11 +158,11 @@ public class ProtoKey implements Key{
             return hash;
         }
         hash = 1;
-        String type = getReturnType();
+        String type = getReturnTypeName();
         if(type != null){
             hash += type.hashCode();
         }
-        String[] parameters = getParameters();
+        String[] parameters = getParameterNames();
         if(parameters != null){
             for(String param : parameters){
                 hash = hash * 31 + param.hashCode();
@@ -113,14 +175,14 @@ public class ProtoKey implements Key{
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append('(');
-        String[] parameters = getParameters();
+        String[] parameters = getParameterNames();
         if(parameters != null){
             for (String parameter : parameters) {
                 builder.append(parameter);
             }
         }
         builder.append(')');
-        String type = getReturnType();
+        String type = getReturnTypeName();
         if(type != null){
             builder.append(type);
         }
@@ -129,11 +191,11 @@ public class ProtoKey implements Key{
 
 
     public static ProtoKey create(ProtoId protoId){
-        String returnType = protoId.getReturnType();
+        TypeKey returnType = protoId.getReturnType();
         if(returnType == null){
             return null;
         }
-        return new ProtoKey(protoId.getParameterNames(), returnType);
+        return new ProtoKey(protoId.getParameterNames(), returnType.getTypeName());
     }
     public static ProtoKey create(TypeListKey typeListKey, String returnType){
         if(returnType == null){
@@ -141,7 +203,7 @@ public class ProtoKey implements Key{
         }
         String[] parameters = null;
         if(typeListKey != null){
-            parameters = typeListKey.getParameters();
+            parameters = typeListKey.getParameterNames();
         }
         return new ProtoKey(parameters, returnType);
     }
@@ -149,6 +211,9 @@ public class ProtoKey implements Key{
     private static char toShorty(String typeName) {
         if(typeName.length() == 1){
             return typeName.charAt(0);
+        }
+        if(typeName.length() == 0){
+            throw new RuntimeException();
         }
         return 'L';
     }

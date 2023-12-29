@@ -17,10 +17,11 @@ package com.reandroid.dex.data;
 
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexBlockItem;
+import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.DexSectionPool;
+import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 
 import java.io.IOException;
@@ -96,7 +97,8 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
         return mValue;
     }
     public void setValue(Key key){
-        DexSectionPool<VALUE> pool = getPool(sectionType);
+        Section<VALUE> section = getOrCreateSection(sectionType);
+        DexSectionPool<VALUE> pool = section.getPool();
         VALUE value = pool.getOrCreate(key);
         setValue(value);
     }
@@ -125,7 +127,10 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
         cacheItem();
     }
     private void cacheItem(){
-        this.mValue = get(sectionType, getValueOffset());
+        this.mValue = getSectionItem(sectionType, getValueOffset());
+        if(this.mValue != null){
+            this.mValue.addUsageType(UsageMarker.USAGE_ANNOTATION);
+        }
     }
 
     @Override
@@ -147,10 +152,10 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
             return null;
         }
         value = value.getReplace();
-        if(value.isRemoved() || value.getOffset() == 0){
-            value = null;
-        }
         this.mValue = value;
+        if(value != null){
+            value.addUsageType(UsageMarker.USAGE_ANNOTATION);
+        }
         return value;
     }
     public boolean equalsDefIndex(int defIndex) {

@@ -213,7 +213,9 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
             obj = TYPE;
         }
         if(sectionType == SectionType.FIELD_ID){
-            obj = FIELD;
+            // TODO: ambiguous stage could be DexValueType.ENUM or DexValueType.FIELD,
+            //  lets favour the most common ENUM for now
+            obj = ENUM;
         }
         if(sectionType == SectionType.METHOD_ID){
             obj = METHOD;

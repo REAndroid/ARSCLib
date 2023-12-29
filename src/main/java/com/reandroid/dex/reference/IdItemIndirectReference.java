@@ -17,27 +17,29 @@ package com.reandroid.dex.reference;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.IndirectItem;
-import com.reandroid.dex.base.DexBlockItem;
+import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.base.UsageMarker;
+import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.SectionType;
 
-public class IdItemIndirectReference<T extends IdItem> extends IndirectItem<DexBlockItem>
-        implements IdReference<T> {
+import java.lang.reflect.Field;
+
+public class IdItemIndirectReference<T extends IdItem> extends IndirectItem<SectionItem>
+        implements IdReference<T>, Comparable<IdReference<T>>{
 
     private final SectionType<T> sectionType;
     private final int usageType;
     private T item;
 
-    public IdItemIndirectReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset, int usage) {
+    public IdItemIndirectReference(SectionType<T> sectionType, SectionItem blockItem, int offset, int usage) {
         super(blockItem, offset);
         this.sectionType = sectionType;
         this.usageType = usage;
-        Block.putInteger(getBytesInternal(), getOffset(), 0xffffff);
+        Block.putInteger(getBytesInternal(), getOffset(), -1);
     }
-    public IdItemIndirectReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset) {
+    public IdItemIndirectReference(SectionType<T> sectionType, SectionItem blockItem, int offset) {
         this(sectionType, blockItem, offset, IdItem.USAGE_NONE);
     }
 
@@ -51,9 +53,6 @@ public class IdItemIndirectReference<T extends IdItem> extends IndirectItem<DexB
     }
     @Override
     public T getItem() {
-        if(item == null){
-            updateItem();
-        }
         return item;
     }
     @Override
@@ -61,21 +60,22 @@ public class IdItemIndirectReference<T extends IdItem> extends IndirectItem<DexB
         if(item == this.item){
             return;
         }
-        if(item == null){
-            throw new NullPointerException("Can't set null for reference of: " + getSectionType().getName());
-        }
-        set(item.getIndex());
+        int index = getItemIndex(item);
+        set(index);
         this.item = item;
         updateItemUsage();
     }
     @Override
-    public void updateItem(){
-        this.item = getBlockItem().get(sectionType, get());
+    public void pullItem(){
+        this.item = pullItem(get());
         updateItemUsage();
+    }
+    protected T pullItem(int i){
+        return getBlockItem().getSectionItem(getSectionType(), i);
     }
     @Override
     public void setItem(Key key){
-        setItem(getBlockItem().getOrCreate(getSectionType(), key));
+        setItem(getBlockItem().getOrCreateSectionItem(getSectionType(), key));
     }
     @Override
     public SectionType<T> getSectionType() {
@@ -95,9 +95,54 @@ public class IdItemIndirectReference<T extends IdItem> extends IndirectItem<DexB
     public void refresh() {
         T item = getItem();
         if(item != null){
-            set(item.getIndex());
+            item = item.getReplace();
         }
+        checkNonNullItem(item);
+        if(item != null){
+            set(item.getIdx());
+        }
+        this.item = item;
         updateItemUsage();
+    }
+
+    @Override
+    public void checkNonNullItem(T item) {
+        if(item != null){
+            return;
+        }
+        throw new NullPointerException(buildMessage());
+    }
+
+    private String buildMessage(){
+        SectionItem blockItem = getBlockItem();
+        StringBuilder builder = new StringBuilder();
+        builder.append("Parent = ");
+        builder.append(blockItem);
+        Class<?> clazz = blockItem.getClass();
+        Field[] fields = clazz.getFields();
+        for(Field field : fields){
+            try {
+                field.setAccessible(true);
+                Object obj = field.get(blockItem);
+                if(obj == this){
+                    builder.append(", Field = ");
+                    builder.append(field.getName());
+                    break;
+                }
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
+        }
+        builder.append(", section = ");
+        builder.append(getSectionType().getName());
+        return builder.toString();
+    }
+
+    protected int getItemIndex(T item) {
+        if(item == null){
+            throw new NullPointerException("Can't set null for reference of: " + getSectionType().getName());
+        }
+        return item.getIdx();
     }
     private void updateItemUsage(){
         int usageType = this.usageType;
@@ -114,6 +159,21 @@ public class IdItemIndirectReference<T extends IdItem> extends IndirectItem<DexB
         set(0);
     }
 
+    public void replaceKeys(Key search, Key replace){
+        Key key = getKey();
+        if(key == null){
+            return;
+        }
+        Key key2 = key.replaceKey(search, replace);
+        if(key != key2){
+            setItem(key2);
+        }
+    }
+
+    @Override
+    public int compareTo(IdReference<T> reference) {
+        return SectionTool.compareIdx(getItem(), reference.getItem());
+    }
     @Override
     public String toString() {
         if(item != null){

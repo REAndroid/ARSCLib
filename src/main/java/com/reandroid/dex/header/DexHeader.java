@@ -22,13 +22,14 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.FixedDexContainer;
-import com.reandroid.dex.base.NumberIntegerReference;
+import com.reandroid.arsc.item.NumberIntegerReference;
+import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.sections.SpecialItem;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-public class DexHeader extends FixedDexContainer implements OffsetSupplier, BlockLoad {
+public class DexHeader extends SpecialItem implements OffsetSupplier, BlockLoad {
 
     private final IntegerReference offsetReference;
 
@@ -99,11 +100,44 @@ public class DexHeader extends FixedDexContainer implements OffsetSupplier, Bloc
 
 
         headerSize.setBlockLoad(this);
+        setOffsetReference(offsetReference);
     }
     public DexHeader(){
         this(new NumberIntegerReference(0));
     }
 
+    @Override
+    public SectionType<DexHeader> getSectionType() {
+        return SectionType.HEADER;
+    }
+
+    public int getVersion(){
+        return version.getVersionAsInteger();
+    }
+    public void setVersion(int version){
+        this.version.setVersionAsInteger(version);
+    }
+    public CountAndOffset get(SectionType<?> sectionType){
+        if(sectionType == SectionType.STRING_ID){
+            return string_id;
+        }
+        if(sectionType == SectionType.TYPE_ID){
+            return type_id;
+        }
+        if(sectionType == SectionType.PROTO_ID){
+            return proto_id;
+        }
+        if(sectionType == SectionType.FIELD_ID){
+            return field_id;
+        }
+        if(sectionType == SectionType.METHOD_ID){
+            return method_id;
+        }
+        if(sectionType == SectionType.CLASS_ID){
+            return class_id;
+        }
+        return null;
+    }
     public void updateHeaderInternal(Block parent){
         byte[] bytes = parent.getBytes();
         headerSize.set(countBytes());
@@ -111,7 +145,6 @@ public class DexHeader extends FixedDexContainer implements OffsetSupplier, Bloc
         signature.update(parent, bytes);
         checksum.update(parent, bytes);
     }
-
     @Override
     public IntegerReference getOffsetReference() {
         return offsetReference;
@@ -126,6 +159,9 @@ public class DexHeader extends FixedDexContainer implements OffsetSupplier, Bloc
         if(sender == headerSize){
             unknown.setSize(headerSize.get() - countBytes());
         }
+    }
+    public boolean isClassDefinitionOrderEnforced(){
+        return version.isClassDefinitionOrderEnforced();
     }
 
     @Override

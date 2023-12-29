@@ -18,19 +18,14 @@ package com.reandroid.dex.sections;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.CountedArray;
-import com.reandroid.dex.base.DexPositionAlign;
-import com.reandroid.dex.base.ParallelReference;
-import com.reandroid.dex.base.PositionAlignedItem;
+import com.reandroid.dex.base.*;
 import com.reandroid.dex.header.DexHeader;
-import com.reandroid.dex.data.DataItem;
 import com.reandroid.utils.collection.ArraySort;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 
-public class MapList extends DataItem
+public class MapList extends SpecialItem
         implements Iterable<MapItem>, PositionAlignedItem {
 
     private final CountedArray<MapItem> itemArray;
@@ -57,6 +52,11 @@ public class MapList extends DataItem
         this.dataSize = new ParallelReference(new DataSizeReference(this));
     }
 
+    @Override
+    public SectionType<MapList> getSectionType() {
+        return SectionType.MAP_LIST;
+    }
+
     public ParallelReference getFileSize(){
         return fileSize;
     }
@@ -68,50 +68,40 @@ public class MapList extends DataItem
     }
 
     public void sortMapItems(SectionType<?>[] order){
-        itemArray.sort(SectionType.comparator(order, MapItem::getMapType));
+        itemArray.sort(SectionType.comparator(order, MapItem::getSectionType));
     }
 
     public void linkHeader(DexHeader dexHeader){
-
-        MapItem mapItem = get(SectionType.STRING_ID);
-        if(mapItem != null){
-            mapItem.getCountAndOffset().setReference2(dexHeader.string_id);
-        }
-        mapItem = get(SectionType.TYPE_ID);
-        if(mapItem != null){
-            mapItem.getCountAndOffset().setReference2(dexHeader.type_id);
-        }
-        mapItem = get(SectionType.PROTO_ID);
-        if(mapItem != null){
-            mapItem.getCountAndOffset().setReference2(dexHeader.proto_id);
-        }
-        mapItem = get(SectionType.FIELD_ID);
-        if(mapItem != null){
-            mapItem.getCountAndOffset().setReference2(dexHeader.field_id);
-        }
-        mapItem = get(SectionType.METHOD_ID);
-        if(mapItem != null){
-            mapItem.getCountAndOffset().setReference2(dexHeader.method_id);
-        }
-        mapItem = get(SectionType.CLASS_ID);
-        if(mapItem != null){
-            mapItem.getCountAndOffset().setReference2(dexHeader.class_id);
-        }
-        mapItem = get(SectionType.MAP_LIST);
-        if(mapItem != null){
-            mapItem.getCount().set(1);
-            Section<MapList> section = getSection(SectionType.MAP_LIST);
-            ParallelReference reference = (ParallelReference) section.getOffsetReference();
-            reference.setReference2(mapItem.getOffset());
-        }
+        linkSpecialReference(SectionType.HEADER);
+        linkSpecialReference(SectionType.MAP_LIST);
+        linkIdTypesHeader(dexHeader);
         getFileSize().setReference2(dexHeader.fileSize);
         getDataSize().setReference2(dexHeader.data.getFirst());
         getDataStart().setReference2(dexHeader.data.getSecond());
     }
+    private void linkSpecialReference(SectionType<?> sectionType){
+        MapItem mapItem = get(sectionType);
+        Section<?> section = getSection(sectionType);
+        ParallelIntegerPair pair = (ParallelIntegerPair) section.getItemArray()
+                .getCountAndOffset();
+        pair.setReference2(mapItem.getCountAndOffset());
+        pair.refresh();
+    }
+    private void linkIdTypesHeader(DexHeader dexHeader){
+        Iterator<SectionType<?>> iterator = SectionType.getIdSectionTypes();
+        while (iterator.hasNext()){
+            SectionType<?> sectionType = iterator.next();
+            MapItem mapItem = get(sectionType);
+            if(mapItem == null){
+                continue;
+            }
+            mapItem.link(dexHeader);
+        }
+    }
     public MapItem getDataStartItem(){
         boolean headerFound = false;
         for(MapItem mapItem : this){
-            SectionType<?> sectionType = mapItem.getMapType();
+            SectionType<?> sectionType = mapItem.getSectionType();
             if(!headerFound){
                 headerFound = sectionType == SectionType.HEADER;
                 continue;
@@ -136,7 +126,7 @@ public class MapList extends DataItem
     }
     public MapItem get(SectionType<?> type){
         for(MapItem mapItem:this){
-            if(type == mapItem.getMapType()){
+            if(type == mapItem.getSectionType()){
                 return mapItem;
             }
         }
@@ -159,7 +149,7 @@ public class MapList extends DataItem
     public MapItem[] getReadSorted(){
         MapItem[] mapItemList = itemArray.getChildes().clone();
         Comparator<MapItem> comparator = SectionType.comparator(
-                SectionType.getReadOrderList(), MapItem::getMapType);
+                SectionType.getReadOrderList(), MapItem::getSectionType);
         ArraySort.sort(mapItemList, comparator);
         return mapItemList;
     }
@@ -167,11 +157,9 @@ public class MapList extends DataItem
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
-
         getFileSize().refresh();
         getDataStart().refresh();
         getDataSize().refresh();
-
     }
 
     @Override
@@ -199,7 +187,7 @@ public class MapList extends DataItem
 
     private static final Creator<MapItem> CREATOR = new Creator<MapItem>() {
         @Override
-        public MapItem[] newInstance(int length) {
+        public MapItem[] newArrayInstance(int length) {
             return new MapItem[length];
         }
         @Override

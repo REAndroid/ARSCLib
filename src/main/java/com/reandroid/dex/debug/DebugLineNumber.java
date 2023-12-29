@@ -16,7 +16,7 @@
 package com.reandroid.dex.debug;
 
 import com.reandroid.dex.ins.ExtraLine;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
@@ -38,6 +38,9 @@ public class DebugLineNumber extends DebugElement {
             DebugAdvancePc advancePc = getOrCreateDebugAdvancePc();
             advancePc.setAddressDiff(diff);
             offset = lineDiff + 4;
+        }
+        if(offset < 0){
+            offset = 0;
         }
         setFlagOffset(offset);
     }
@@ -178,6 +181,10 @@ public class DebugLineNumber extends DebugElement {
     @Override
     public int getSortOrder() {
         return ExtraLine.ORDER_DEBUG_LINE_NUMBER;
+    }
+    @Override
+    public int getSortOrderFine(){
+        return getLineNumber();
     }
 
 

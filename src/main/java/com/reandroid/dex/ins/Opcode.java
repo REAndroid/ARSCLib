@@ -60,7 +60,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
     public static final Opcode<InsConst16High> CONST_HIGH16;
     public static final Opcode<Ins21s> CONST_WIDE_16;
     public static final Opcode<Ins31i> CONST_WIDE_32;
-    public static final Opcode<Ins51l> CONST_WIDE;
+    public static final Opcode<InsConstWide> CONST_WIDE;
     public static final Opcode<Ins21lh> CONST_WIDE_HIGH16;
     public static final Opcode<InsConstString> CONST_STRING;
     public static final Opcode<InsConstStringJumbo> CONST_STRING_JUMBO;
@@ -460,12 +460,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
             }
         });
         VALUES[0x17] = CONST_WIDE_32;
-        CONST_WIDE = new Opcode<>(0x18, 10, "const-wide", new BlockCreator<Ins51l>() {
-            @Override
-            public Ins51l newInstance() {
-                return new Ins51l(CONST_WIDE);
-            }
-        });
+        CONST_WIDE = new Opcode<>(0x18, 10, "const-wide", InsConstWide::new);
         VALUES[0x18] = CONST_WIDE;
         CONST_WIDE_HIGH16 = new Opcode<>(0x19, 4, "const-wide/high16", new BlockCreator<Ins21lh>() {
             @Override
@@ -2234,6 +2229,16 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
             return false;
         }
         return getName().charAt(8) == 't';
+    }
+    public boolean isReturning(){
+        String name = getName();
+        return name.charAt(0) == 'r' &&
+                name.charAt(2) == 't';
+    }
+    public boolean isMoveResultValue(){
+        String name = getName();
+        return name.charAt(0) == 'm' &&
+                name.charAt(5) == 'r';
     }
 
     public int getWidth() {

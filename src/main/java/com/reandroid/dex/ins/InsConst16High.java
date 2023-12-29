@@ -15,19 +15,12 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.arsc.item.IntegerVisitor;
-import com.reandroid.arsc.item.VisitableInteger;
+public class InsConst16High extends Ins21ih implements RegistersSet, ConstNumber {
 
-public class InsConst16High extends Ins21ih implements RegistersSet, IntegerReference, VisitableInteger {
     public InsConst16High() {
         super(Opcode.CONST_HIGH16);
     }
 
-    @Override
-    public void visitIntegers(IntegerVisitor visitor) {
-        visitor.visit(this, this);
-    }
     @Override
     public int get() {
         return getData();
@@ -35,5 +28,14 @@ public class InsConst16High extends Ins21ih implements RegistersSet, IntegerRefe
     @Override
     public void set(int value) {
         setData(value);
+    }
+
+    @Override
+    public int getRegister() {
+        return getRegister(0);
+    }
+    @Override
+    public void setRegister(int register) {
+        setRegister(0, register);
     }
 }

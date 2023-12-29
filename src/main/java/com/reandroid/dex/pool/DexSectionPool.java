@@ -15,15 +15,17 @@
  */
 package com.reandroid.dex.pool;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.base.BlockListArray;
+import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
 import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.sections.Section;
+import com.reandroid.utils.collection.ArrayCollection;
 
+import java.util.Iterator;
 
-public class DexSectionPool<T extends Block> extends KeyPool<T>{
+public class DexSectionPool<T extends SectionItem> extends KeyPool<T>{
 
     private final Section<T> section;
 
@@ -104,6 +106,58 @@ public class DexSectionPool<T extends Block> extends KeyPool<T>{
     Section<T> getSection(){
         return this.section;
     }
+    public int clearDuplicates(){
+        ArrayCollection<T> result = new ArrayCollection<>(size() / 10);
+        Iterator<KeyItemGroup<T>> iterator = groupIterator();
+        while (iterator.hasNext()){
+            replaceDuplicates(result, iterator.next());
+        }
+        Section<T> section = getSection();
+        int size = result.size();
+        section.removeEntries(item -> {
+            int i = result.indexOfFast(item);
+            if(i < 0){
+                return false;
+            }
+            result.remove(i);
+            return true;
+        });
+
+        result.clear();
+        return size;
+    }
+    private void replaceDuplicates(ArrayCollection<T> result, KeyItemGroup<T> group){
+        int size = group.size();
+        if(size < 2){
+            return;
+        }
+        T first = group.getFirst();
+        if(first.isRemoved() || first.getReplace() != first){
+            return;
+        }
+        Iterator<T> iterator = group.iterator(1);
+        int start = result.size();
+        while (iterator.hasNext()){
+            T item = iterator.next();
+            if(start < result.size() && result.indexOf(item, start) < 0 ||
+                    (start == result.size() && !first.equalsKey(item))){
+                undoSetReplace(result, start);
+                return;
+            }
+            if(item != first){
+                item.setReplace(first);
+                result.add(item);
+            }
+        }
+    }
+    private void undoSetReplace(ArrayCollection<T> result, int start){
+        Iterator<T> iterator = result.iterator(start);
+        while (iterator.hasNext()){
+            T item = iterator.next();
+            item.setReplace(null);
+        }
+        result.setSize(start);
+    }
     boolean isKeyItemsCreate(){
         isKeyItems();
         return keyItemsCreate;
@@ -111,6 +165,12 @@ public class DexSectionPool<T extends Block> extends KeyPool<T>{
     private boolean isKeyItems(){
         if(keyItemsChecked){
             return keyItems;
+        }
+        if(getSectionType().isIdSection()){
+            keyItemsChecked = true;
+            keyItems = true;
+            keyItemsCreate = true;
+            return true;
         }
         T sample = getSectionType().getCreator().newInstance();
         keyItemsChecked = true;

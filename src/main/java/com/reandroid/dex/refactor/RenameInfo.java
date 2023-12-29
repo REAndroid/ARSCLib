@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.refactor;
 
-import com.reandroid.arsc.base.Block;
+import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.KeyItem;
 import com.reandroid.dex.key.Key;
@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
 
-public abstract class RenameInfo<T extends Block> implements KeyItem {
+public abstract class RenameInfo<T extends SectionItem> implements KeyItem {
     private final String search;
     private final String replace;
     private List<RenameInfo<?>> childRenames;
@@ -48,7 +48,7 @@ public abstract class RenameInfo<T extends Block> implements KeyItem {
 
     }
     public void apply(SectionList sectionList){
-        apply(sectionList.get(getSectionType()));
+        apply(sectionList.getSection(getSectionType()));
         Iterator<RenameInfo<?>> iterator = getChildRenames();
         while (iterator.hasNext()){
             RenameInfo<?> renameInfo = iterator.next();
@@ -195,9 +195,6 @@ public abstract class RenameInfo<T extends Block> implements KeyItem {
     }
     private String getLogTag(){
         return "[" + getClass().getSimpleName() + "] ";
-    }
-    void log(Object msg){
-        System.err.println(getLogTag() + msg);
     }
     @Override
     public String toString() {

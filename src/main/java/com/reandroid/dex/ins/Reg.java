@@ -15,8 +15,8 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
@@ -76,6 +76,28 @@ public class Reg implements SmaliFormat {
             writer.append('v');
         }
         writer.append(getNumber());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Reg reg = (Reg) obj;
+        return isParameter() == reg.isParameter() &&
+                getNumber() == reg.getNumber();
+    }
+    @Override
+    public int hashCode() {
+        int hash = 31;
+        if(isParameter()){
+            hash = hash + 1;
+        }
+        hash = hash * 31 + getNumber();
+        return hash;
     }
 
     @Override

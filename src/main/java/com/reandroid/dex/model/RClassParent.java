@@ -77,15 +77,15 @@ public class RClassParent extends DexClass {
         return rClass.load(entry);
     }
     public RClass getOrCreateMember(String simpleName){
-        String type = toMemberName(simpleName);
-        RClass rClass = mMembers.get(type);
+        TypeKey typeKey = getKey().createInnerClass(simpleName);
+        RClass rClass = mMembers.get(typeKey.getTypeName());
         if(rClass != null){
             return rClass;
         }
         addMemberAnnotation(simpleName);
-        ClassId classId = getDexFile().getOrCreateClassId(new TypeKey(type));
+        ClassId classId = getDexFile().getOrCreateClassId(typeKey);
         rClass = new RClass(getDexFile(), classId);
-        mMembers.put(type, rClass);
+        mMembers.put(typeKey.getTypeName(), rClass);
         rClass.initialize();
         return rClass;
     }
@@ -95,21 +95,15 @@ public class RClassParent extends DexClass {
         if(iterator.hasNext()){
             return;
         }
-        String type = toMemberName(simpleName);
         TypeValue typeValue = arrayValue.createNext(DexValueType.TYPE);
-        typeValue.set(new TypeKey(type));
+        typeValue.setItem(getKey().createInnerClass(simpleName));
     }
     public Iterator<String> getMemberSimpleNames(){
-        return ComputeIterator.of(getMemberNames(), DexUtils::getInnerSimpleName);
-    }
-    private String toMemberName(String simpleName){
-        String type = getClassName();
-        type = type.substring(0, type.length() - 1);
-        return type + "$" + simpleName + ";";
+        return ComputeIterator.of(getMemberNames(), DexUtils::getSimpleInnerName);
     }
     public Iterator<String> getMemberNames(){
         ArrayValue arrayValue = getOrCreateMembersArray();
-        return ComputeIterator.of(arrayValue.iterator(TypeValue.class), TypeValue::getType);
+        return ComputeIterator.of(arrayValue.iterator(TypeValue.class), typeValue -> getKey().getTypeName());
     }
     private ArrayValue getOrCreateMembersArray(){
         AnnotationItem item = getOrCreateMemberAnnotation();
@@ -140,25 +134,25 @@ public class RClassParent extends DexClass {
         if(annotationSet != null){
             return annotationSet;
         }
-        annotationSet = getClassId().getOrCreateClassAnnotations();
+        annotationSet = getId().getOrCreateClassAnnotations();
         return annotationSet;
     }
     private AnnotationSet getClassAnnotations() {
-        return getClassId().getClassAnnotations();
+        return getId().getClassAnnotations();
     }
     public void initialize(){
-        ClassId classId = getClassId();
+        ClassId classId = getId();
         classId.addAccessFlag(AccessFlag.PUBLIC);
         ClassData classData = classId.getOrCreateClassData();
         MethodKey methodKey = new MethodKey(classId.getName(), "<init>", null, "V");
-        if(classData.getDirectMethodsArray().get(methodKey) != null){
+        if(classData.getMethod(methodKey) != null){
             return;
         }
-        MethodDef methodDef = classData.getDirectMethodsArray().getOrCreate(methodKey);
+        MethodDef methodDef = classData.getOrCreateDirect(methodKey);
         methodDef.addAccessFlags(AccessFlag.PUBLIC, AccessFlag.CONSTRUCTOR);
         InstructionList insList = methodDef.getOrCreateInstructionList();
         Ins35c ins = insList.createNext(Opcode.INVOKE_DIRECT);
-        ins.setSectionItem(MethodKey.parse("Ljava/lang/Object;-><init>()V"));
+        ins.setSectionIdKey(MethodKey.parse("Ljava/lang/Object;-><init>()V"));
         ins.setRegistersCount(1);
         ins.setRegister(0, 0);
         insList.createNext(Opcode.RETURN_VOID);

@@ -15,22 +15,24 @@
  */
 package com.reandroid.dex.data;
 
-import com.reandroid.arsc.item.IntegerVisitor;
-import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.FieldId;
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
-import com.reandroid.dex.writer.SmaliWriter;
-import com.reandroid.utils.CompareUtil;
+import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
-public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
-    private DexValueBlock<?> tmpValue;
+public class FieldDef extends Def<FieldId> {
+
+    private DexValueBlock<?> staticInitialValue;
+
     public FieldDef() {
         super(0, SectionType.FIELD_ID);
     }
@@ -40,96 +42,69 @@ public class FieldDef extends Def<FieldId> implements Comparable<FieldDef>{
         return (FieldKey) super.getKey();
     }
 
-    @Override
-    public void visitIntegers(IntegerVisitor visitor) {
-        DexValueBlock<?> valueBlock = getStaticInitialValue();
-        if(valueBlock instanceof VisitableInteger){
-            ((VisitableInteger) valueBlock).visitIntegers(visitor);
-        }
-    }
-
     public DexValueBlock<?> getStaticInitialValue(){
-        if(isStatic()){
-            ClassId classId = getClassId();
-            if(classId != null){
-                return classId.getStaticValue(getIndex());
-            }
-        }
-        return null;
+        return staticInitialValue;
     }
+
+    @SuppressWarnings("unchecked")
     public<T1 extends DexValueBlock<?>> T1 getOrCreateStaticValue(DexValueType<T1> valueType){
-        return getClassId().getOrCreateStaticValue(valueType, getIndex());
+        DexValueBlock<?> valueBlock = this.staticInitialValue;
+        if(valueBlock == null || !valueBlock.is(valueType)){
+            valueBlock =  getClassId().getOrCreateStaticValue(valueType, getIndex());
+            holdStaticInitialValue(valueBlock);
+        }
+        return (T1) valueBlock;
     }
 
     @Override
-    public String getClassName(){
-        FieldId fieldId = getFieldId();
-        if(fieldId != null){
-            return fieldId.getClassName();
-        }
-        return null;
+    public AccessFlag[] getAccessFlags(){
+        return AccessFlag.getForField(getAccessFlagsValue());
     }
 
-    public FieldId getFieldId(){
-        return getItem();
+    void holdStaticInitialValue(DexValueBlock<?> staticInitialValue) {
+        this.staticInitialValue = staticInitialValue;
     }
 
-    DexValueBlock<?> getTmpValue() {
-        return tmpValue;
-    }
-    void setTmpValue(DexValueBlock<?> tmpValue) {
-        this.tmpValue = tmpValue;
-    }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.newLine();
-        writer.append(".field ");
-        AccessFlag[] accessFlags = AccessFlag.getForField(getAccessFlagsValue());
-        for(AccessFlag af:accessFlags){
-            writer.append(af.toString());
-            writer.append(' ');
-        }
-        FieldId fieldId = getFieldId();
-        writer.append(fieldId.getNameString().getString());
-        writer.append(':');
-        fieldId.getFieldType().append(writer);
-        if(isStatic()){
-            DexValueBlock<?> value = getClassId().getStaticValue(getIndex());
-            if(value != null && value.getValueType() != DexValueType.NULL){
-                writer.append(" = ");
-                value.append(writer);
-            }
+        getSmaliDirective().append(writer);
+
+        AccessFlag.append(writer, getAccessFlags());
+        HiddenApiFlag.append(writer, getHiddenApiFlags());
+
+        getId().append(writer, false);
+        DexValueBlock<?> value = getStaticInitialValue();
+        if(value != null){
+            writer.append(" = ");
+            value.append(writer);
         }
         writer.indentPlus();
         boolean hasAnnotation = appendAnnotations(writer);
         writer.indentMinus();
         if(hasAnnotation){
-            writer.newLine();
-            writer.append(".end field");
+            getSmaliDirective().appendEnd(writer);
         }
     }
     @Override
-    public int compareTo(FieldDef fieldDef) {
-        if(fieldDef == null){
-            return -1;
-        }
-        return CompareUtil.compare(getFieldId(), fieldDef.getFieldId());
+    public Iterator<IdItem> usedIds(){
+        return SingleIterator.of(getId());
     }
-
     @Override
-    public void merge(Def<?> def){
-        super.merge(def);
+    public SmaliDirective getSmaliDirective() {
+        return SmaliDirective.FIELD;
     }
     @Override
     public String toString() {
-        FieldId fieldId = getFieldId();
-        if(fieldId != null){
-            return ".field " + AccessFlag.formatForField(getAccessFlagsValue())
-                    + " " + fieldId.toString();
+        if(isReading()){
+            return getSmaliDirective() + " " + getKey();
         }
-        return ".field " + AccessFlag.formatForField(getAccessFlagsValue())
+        FieldId fieldId = getId();
+        if(fieldId != null){
+            return SmaliWriter.toStringSafe(this);
+        }
+        return getSmaliDirective() + " " + AccessFlag.formatForField(getAccessFlagsValue())
                 + " " + getRelativeIdValue();
     }
-
 }

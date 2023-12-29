@@ -16,32 +16,35 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.common.AccessFlag;
+import com.reandroid.dex.common.IdDefinition;
+import com.reandroid.dex.common.IdUsageIterator;
+import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.pool.DexSectionPool;
+import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliRegion;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class Def<T extends IdItem> extends DexContainerItem implements
-        SmaliFormat, VisitableInteger, DefIndex {
+public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool implements
+        IdDefinition<T>, Comparable<Def<T>>, SmaliRegion, DefIndex, IdUsageIterator {
     private final SectionType<T> sectionType;
     private final Ule128Item relativeId;
     private final Ule128Item accessFlags;
-    private T mItem;
+    private T mDefId;
     private int mCachedIndex;
     private boolean mCachedIndexUpdated;
+    private HiddenApiFlagValue hiddenApiFlagValue;
     
     public Def(int childesCount, SectionType<T> sectionType) {
         super(childesCount + 2);
@@ -52,6 +55,20 @@ public class Def<T extends IdItem> extends DexContainerItem implements
         addChild(1, accessFlags);
     }
 
+    public HiddenApiFlag[] getHiddenApiFlags(){
+        HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
+        if(flagValue != null){
+            return flagValue.getFlags();
+        }
+        return null;
+    }
+    public HiddenApiFlagValue getHiddenApiFlagValue() {
+        return hiddenApiFlagValue;
+    }
+    public void setHiddenApiFlagValue(HiddenApiFlagValue hiddenApiFlagValue) {
+        this.hiddenApiFlagValue = hiddenApiFlagValue;
+    }
+
     public void removeSelf(){
         DefArray<Def<T>> array = getParentArray();
         if(array != null){
@@ -60,11 +77,12 @@ public class Def<T extends IdItem> extends DexContainerItem implements
     }
     void onRemove(){
         mCachedIndexUpdated = true;
-        mItem = null;
+        mDefId = null;
         relativeId.set(0);
     }
+    @Override
     public Key getKey(){
-        T item = getItem();
+        T item = getId();
         if(item != null){
             return item.getKey();
         }
@@ -73,16 +91,13 @@ public class Def<T extends IdItem> extends DexContainerItem implements
     public void setKey(Key key){
         setItem(key);
     }
-    @Override
-    public void visitIntegers(IntegerVisitor visitor) {
-    }
 
     public void addAnnotationSet(AnnotationSet annotationSet){
         AnnotationsDirectory directory = getOrCreateUniqueAnnotationsDirectory();
         addAnnotationSet(directory, annotationSet);
     }
     void addAnnotationSet(AnnotationsDirectory directory, AnnotationSet annotationSet){
-
+        directory.addAnnotation(this, annotationSet);
     }
     public Iterator<AnnotationSet> getAnnotations(){
         AnnotationsDirectory directory = getAnnotationsDirectory();
@@ -129,15 +144,19 @@ public class Def<T extends IdItem> extends DexContainerItem implements
                 return classId;
             }
         }
-        String className = getClassName();
-        if(className == null){
+        SectionList sectionList = getSectionList();
+        if(sectionList == null || sectionList.isReading()){
+            return null;
+        }
+        TypeKey defining = getDefining();
+        if(defining == null){
             return null;
         }
         DexSectionPool<ClassId> pool = getPool(SectionType.CLASS_ID);
         if(pool == null){
             return null;
         }
-        ClassId classId = pool.get(TypeKey.create(className));
+        ClassId classId = pool.get(defining);
         if(classId == null) {
             return null;
         }
@@ -148,12 +167,17 @@ public class Def<T extends IdItem> extends DexContainerItem implements
         classData.setClassId(classId);
         return classId;
     }
-    public String getClassName(){
+    public TypeKey getDefining(){
+        Key key = getKey();
+        if(key != null){
+            return key.getDeclaring();
+        }
         return null;
     }
     public int getRelativeIdValue() {
         return relativeId.get();
     }
+    @Override
     public int getAccessFlagsValue() {
         return accessFlags.get();
     }
@@ -202,20 +226,26 @@ public class Def<T extends IdItem> extends DexContainerItem implements
     public boolean isFinal(){
         return AccessFlag.FINAL.isSet(getAccessFlagsValue());
     }
-
-    T getItem(){
-        return mItem;
+    public boolean isConstructor(){
+        return AccessFlag.CONSTRUCTOR.isSet(getAccessFlagsValue());
+    }
+    public boolean isDirect(){
+        return false;
+    }
+    @Override
+    public T getId(){
+        return mDefId;
     }
     void setItem(Key key) {
-        T item = getItem();
+        T item = getId();
         if(item != null && key.equals(item.getKey())){
             return;
         }
-        item = getSection(sectionType).getOrCreate(key);
+        item = getOrCreateSection(sectionType).getOrCreate(key);
         setItem(item);
     }
     void setItem(T item) {
-        this.mItem = item;
+        this.mDefId = item;
         updateIndex();
     }
 
@@ -265,9 +295,9 @@ public class Def<T extends IdItem> extends DexContainerItem implements
         cacheItem();
     }
     private void cacheItem(){
-        this.mItem = get(sectionType, getDefinitionIndex());
-        if(this.mItem != null){
-            this.mItem.addUsageType(IdItem.USAGE_DEFINITION);
+        this.mDefId = getSectionItem(sectionType, getDefinitionIndex());
+        if(this.mDefId != null){
+            this.mDefId.addUsageType(IdItem.USAGE_DEFINITION);
         }
     }
     @Override
@@ -277,10 +307,9 @@ public class Def<T extends IdItem> extends DexContainerItem implements
     }
     private void updateIndex(){
         resetIndex();
-        T item = this.mItem;
-        if(item == null){
-            return;
-        }
+        T item = this.mDefId;
+        item = item.getReplace();
+        this.mDefId = item;
         int index = getPreviousIdIndex();
         index = item.getIndex() - index;
         relativeId.set(index);
@@ -290,17 +319,26 @@ public class Def<T extends IdItem> extends DexContainerItem implements
         mCachedIndexUpdated = false;
     }
 
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
-
+    public void replaceKeys(Key search, Key replace){
+        Key key = getKey();
+        Key key2 = key.replaceKey(search, replace);
+        if(key != key2){
+            setItem(key2);
+        }
     }
-
     public Iterator<IdItem> usedIds(){
-        return SingleIterator.of(getItem());
+        return SingleIterator.of(getId());
     }
 
     public void merge(Def<?> def){
         setItem(def.getKey());
         setAccessFlagsValue(def.getAccessFlagsValue());
+    }
+    @Override
+    public int compareTo(Def<T> other) {
+        if(other == null){
+            return -1;
+        }
+        return SectionTool.compareIdx(getId(), other.getId());
     }
 }

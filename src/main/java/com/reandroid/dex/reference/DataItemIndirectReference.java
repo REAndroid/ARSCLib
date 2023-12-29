@@ -17,14 +17,14 @@ package com.reandroid.dex.reference;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.IndirectItem;
-import com.reandroid.dex.base.DexBlockItem;
+import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.data.DataItem;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.SectionType;
 
-public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<DexBlockItem>
+public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<SectionItem>
         implements DataReference<T> {
 
     private final SectionType<T> sectionType;
@@ -32,13 +32,10 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
 
     private T item;
 
-    public DataItemIndirectReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset, int usageType) {
+    public DataItemIndirectReference(SectionType<T> sectionType, SectionItem blockItem, int offset, int usageType) {
         super(blockItem, offset);
         this.sectionType = sectionType;
         this.usageType = usageType;
-    }
-    public DataItemIndirectReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset) {
-        this(sectionType, blockItem, offset, UsageMarker.USAGE_NONE);
     }
 
     @Override
@@ -51,7 +48,7 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
         if(item != null) {
             return item;
         }
-        item = getBlockItem().createItem(getSectionType());
+        item = getBlockItem().createSectionItem(getSectionType());
         setItem(item);
         return item;
     }
@@ -62,7 +59,7 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
         }
         int value = 0;
         if(item != null){
-            value = item.getOffset();
+            value = item.getIdx();
         }
         set(value);
         this.item = item;
@@ -70,7 +67,7 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
     }
     @Override
     public void setItem(Key key){
-        setItem(getBlockItem().getOrCreate(getSectionType(), key));
+        setItem(getBlockItem().getOrCreateSectionItem(getSectionType(), key));
     }
     @Override
     public Key getKey() {
@@ -85,13 +82,13 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
         return sectionType;
     }
     @Override
-    public void updateItem(){
+    public void pullItem(){
         int i = get();
         T item;
         if(i == 0){
             item = null;
         }else {
-            item = getBlockItem().get(getSectionType(), i);
+            item = getBlockItem().getSectionItem(getSectionType(), i);
         }
         this.item = item;
         updateItemUsage();
@@ -104,9 +101,9 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
             item = item.getReplace();
         }
         if(item != null){
-            value = item.getOffset();
+            value = item.getIdx();
             if(value == 0){
-                item = null;
+                throw new RuntimeException("Invalid reference");
             }
         }
         this.item = item;
@@ -136,8 +133,8 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
         }
         if(item.isSharedUsage()){
             item = createNewCopy();
-            item.addClassUsage(classId);
         }
+        item.addClassUsage(classId);
         return item;
     }
     public T getOrCreateUniqueItem(ClassId classId) {
@@ -145,7 +142,7 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
         if(item != null) {
             return item;
         }
-        item = getBlockItem().createItem(getSectionType());
+        item = getBlockItem().createSectionItem(getSectionType());
         setItem(item);
         addClassUsage(classId);
         return item;
@@ -175,7 +172,7 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
     }
 
     private T createNewCopy() {
-        T itemNew = getBlockItem().createItem(getSectionType());
+        T itemNew = getBlockItem().createSectionItem(getSectionType());
         copyToIfPresent(itemNew);
         setItem(itemNew);
         return itemNew;
@@ -184,6 +181,17 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
         T item = this.getItem();
         if(item != null){
             itemNew.copyFrom(item);
+        }
+    }
+
+    public void replaceKeys(Key search, Key replace){
+        Key key = getKey();
+        if(key == null){
+            return;
+        }
+        Key key2 = key.replaceKey(search, replace);
+        if(key != key2){
+            setItem(key2);
         }
     }
     @Override

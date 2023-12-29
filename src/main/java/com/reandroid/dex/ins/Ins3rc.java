@@ -48,20 +48,22 @@ public class Ins3rc extends Size6Ins implements RegistersSet {
 
     @Override
     public void setRegister(int index, int value) {
-        if(index != 0) {
-            setByte(1, value + 1);
-        }else {
+        if(index == 0){
             setShort(4, value);
+            return;
+        }
+        int count = index + 1;
+        if(count > getRegistersCount()) {
+            setByte(1, count);
         }
     }
     @Override
     public boolean isRegistersRange(){
         return true;
     }
-
     @Override
     public String toString() {
-        return getOpcode() + " {" + getRegistersIterator() + "}, " + getSectionItem();
+        return getOpcode() + " {" + getRegistersIterator() + "}, " + getSectionId();
     }
 
 }

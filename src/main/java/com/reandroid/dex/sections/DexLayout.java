@@ -15,31 +15,27 @@
  */
 package com.reandroid.dex.sections;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.common.BytesOutputStream;
 import com.reandroid.dex.base.DexException;
+import com.reandroid.dex.common.FullRefresh;
+import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.header.Checksum;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.data.AnnotationElement;
-import com.reandroid.dex.data.AnnotationItem;
-import com.reandroid.dex.data.TypeList;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.pool.KeyPool;
-import com.reandroid.dex.value.ArrayValue;
-import com.reandroid.dex.value.DexValueBlock;
-import com.reandroid.dex.value.StringValue;
 import com.reandroid.utils.collection.*;
+import com.reandroid.utils.io.FileUtil;
 
 import java.io.*;
 import java.util.Iterator;
 
-public class DexFileBlock extends FixedBlockContainer {
+public class DexLayout extends FixedBlockContainer implements FullRefresh {
 
     private final SectionList sectionList;
 
@@ -48,7 +44,9 @@ public class DexFileBlock extends FixedBlockContainer {
     private final KeyPool<ClassId> extendingClassMap;
     private final KeyPool<ClassId> interfaceMap;
 
-    public DexFileBlock() {
+    private Object mTag;
+
+    public DexLayout() {
         super(1);
         this.sectionList = new SectionList();
         addChild(0, sectionList);
@@ -57,6 +55,15 @@ public class DexFileBlock extends FixedBlockContainer {
         this.interfaceMap = new KeyPool<>(SectionType.CLASS_ID, 2000);
     }
 
+    public int getVersion(){
+        return getHeader().getVersion();
+    }
+    public void setVersion(int version){
+        getHeader().setVersion(version);
+    }
+    public Iterator<Marker> getMarkers(){
+        return Marker.parse(get(SectionType.STRING_ID));
+    }
 
     public Iterator<ClassId> getSubTypes(TypeKey typeKey){
         Iterator<ClassId> iterator = CombiningIterator.two(getExtendingClassIds(typeKey),
@@ -69,9 +76,15 @@ public class DexFileBlock extends FixedBlockContainer {
         };
     }
     public Iterator<ClassId> getExtendingClassIds(TypeKey typeKey){
+        if(extendingClassMap.size() == 0){
+            loadExtendingClassMap();
+        }
         return this.extendingClassMap.getAll(typeKey);
     }
     public Iterator<ClassId> getImplementationIds(TypeKey interfaceClass){
+        if(interfaceMap.size() == 0){
+            loadInterfacesMap();
+        }
         return this.interfaceMap.getAll(interfaceClass);
     }
 
@@ -80,17 +93,13 @@ public class DexFileBlock extends FixedBlockContainer {
         interfaceMap.clear();
         getSectionList().clear();
     }
-    public void loadSuperTypesMap(){
-        loadExtendingClassMap();
-        loadInterfacesMap();
-    }
-    public void loadExtendingClassMap(){
+    private void loadExtendingClassMap(){
         KeyPool<ClassId> superClassMap = this.extendingClassMap;
         superClassMap.clear();
         Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);
         while (iterator.hasNext()){
             ClassId classId = iterator.next();
-            String superName = classId.getSuperClassName();
+            String superName = classId.getSuperClassKey().getTypeName();
             if(DexUtils.isJavaFramework(superName)){
                 continue;
             }
@@ -99,20 +108,16 @@ public class DexFileBlock extends FixedBlockContainer {
         }
         superClassMap.trimToSize();
     }
-    public void loadInterfacesMap(){
+    private void loadInterfacesMap(){
         KeyPool<ClassId> interfaceMap = this.interfaceMap;
         interfaceMap.clear();
         Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);
         while (iterator.hasNext()){
             ClassId classId = iterator.next();
-            TypeList typeList = classId.getInterfaces();
-            if(typeList == null){
-                continue;
-            }
-            Iterator<TypeKey> typeListIterator = typeList.getTypeKeys();
-            while (typeListIterator.hasNext()){
-                TypeKey typeKey = typeListIterator.next();
-                if(DexUtils.isJavaFramework(typeKey.getType())){
+            Iterator<TypeKey> interfaceKeys = classId.getInterfaceKeys();
+            while (interfaceKeys.hasNext()){
+                TypeKey typeKey = interfaceKeys.next();
+                if(DexUtils.isJavaFramework(typeKey.getTypeName())){
                     continue;
                 }
                 interfaceMap.put(typeKey, classId);
@@ -123,14 +128,23 @@ public class DexFileBlock extends FixedBlockContainer {
     public Iterator<StringId> getStrings(){
         return getItems(SectionType.STRING_ID);
     }
-    public<T1 extends Block> Iterator<T1> getItems(SectionType<T1> sectionType) {
-        Section<T1> section = getSectionList().get(sectionType);
+    public<T1 extends SectionItem> Iterator<T1> getClonedItems(SectionType<T1> sectionType) {
+        Section<T1> section = getSectionList().getSection(sectionType);
+        if(section != null){
+            return section.clonedIterator();
+        }
+        return EmptyIterator.of();
+    }
+    public<T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType) {
+        Section<T1> section = getSectionList().getSection(sectionType);
         if(section != null){
             return section.iterator();
         }
         return EmptyIterator.of();
     }
+    @Override
     public void refreshFull() throws DexException{
+        getSectionList().refreshFull();
         Checksum checksum = getHeader().checksum;
         int previousSum = checksum.getValue();
         int max_trials = 10;
@@ -157,60 +171,22 @@ public class DexFileBlock extends FixedBlockContainer {
         getSectionList().sortStrings();
     }
 
-    public void linkTypeSignature(){
-
-        Section<AnnotationItem> annotationSection = get(SectionType.ANNOTATION_ITEM);
-
-        if(annotationSection == null){
-            return;
-        }
-
-        Iterator<AnnotationItem> iterator = annotationSection.iterator(
-                item -> TYPE_Signature.equals(item.getTypeKey()) &&
-                item.containsName(NAME_value));
-
-        while (iterator.hasNext()){
-            AnnotationItem item = iterator.next();
-            AnnotationElement element = item.getElement(NAME_value);
-            if(element == null){
-                continue;
-            }
-            DexValueBlock<?> dexValue = element.getValue();
-            if(!(dexValue instanceof ArrayValue)){
-                continue;
-            }
-            ArrayValue arrayValue = (ArrayValue) dexValue;
-            linkTypeSignature(arrayValue);
-        }
-    }
-    private void linkTypeSignature(ArrayValue arrayValue){
-        for(DexValueBlock<?> value : arrayValue){
-            if(!(value instanceof StringValue)){
-                continue;
-            }
-            StringId stringId = ((StringValue) value).get();
-            if(stringId != null){
-                stringId.addUsageType(StringId.USAGE_TYPE_NAME);
-            }
-        }
-    }
-
-    public <T1 extends Block> Iterator<T1> getAll(SectionType<T1> sectionType, Key key){
+    public <T1 extends SectionItem> Iterator<T1> getAll(SectionType<T1> sectionType, Key key){
         Section<T1> section = get(sectionType);
         if(section != null){
             return section.getAll(key);
         }
         return EmptyIterator.of();
     }
-    public <T1 extends Block> T1 get(SectionType<T1> sectionType, Key key){
+    public <T1 extends SectionItem> T1 get(SectionType<T1> sectionType, Key key){
         Section<T1> section = get(sectionType);
         if(section != null){
-            return section.get(key);
+            return section.getSectionItem(key);
         }
         return null;
     }
-    public<T1 extends Block> Section<T1> get(SectionType<T1> sectionType){
-        return getSectionList().get(sectionType);
+    public<T1 extends SectionItem> Section<T1> get(SectionType<T1> sectionType){
+        return getSectionList().getSection(sectionType);
     }
     public DexHeader getHeader() {
         return getSectionList().getHeader();
@@ -225,6 +201,8 @@ public class DexFileBlock extends FixedBlockContainer {
     @Override
     protected void onPreRefresh() {
         sectionList.refresh();
+        interfaceMap.clear();
+        extendingClassMap.clear();
     }
     @Override
     protected void onRefreshed() {
@@ -234,11 +212,15 @@ public class DexFileBlock extends FixedBlockContainer {
         Section<ClassId> section = get(SectionType.CLASS_ID);
         return section == null || section.getCount() == 0;
     }
-    public boolean merge(DexFileBlock dexFile){
+    public boolean merge(MergeOptions options, ClassId classId){
+        return getSectionList().merge(options, classId);
+    }
+    public boolean merge(MergeOptions options, DexLayout dexFile){
         if(dexFile == this){
+            options.onMergeError(this, getSectionList(), "Can not merge dex file to self");
             return false;
         }
-        return getSectionList().merge(dexFile.getSectionList(), true);
+        return getSectionList().merge(options, dexFile.getSectionList());
     }
     @Override
     public byte[] getBytes(){
@@ -262,21 +244,36 @@ public class DexFileBlock extends FixedBlockContainer {
         readBytes(reader);
         reader.close();
     }
+    public void readStrings(InputStream inputStream) throws IOException {
+        BlockReader reader = new BlockReader(inputStream);
+        readStrings(reader);
+    }
+    public void readStrings(BlockReader reader) throws IOException {
+
+        getSectionList().readSections(reader, sectionType ->
+                sectionType == SectionType.STRING_ID ||
+                        sectionType == SectionType.STRING_DATA);
+
+        reader.close();
+    }
     public void read(File file) throws IOException {
         BlockReader reader = new BlockReader(file);
         readBytes(reader);
         reader.close();
     }
     public void write(File file) throws IOException {
-        File dir = file.getParentFile();
-        if(dir != null && !dir.exists()){
-            dir.mkdirs();
-        }
-        FileOutputStream outputStream = new FileOutputStream(file);
+        OutputStream outputStream = FileUtil.outputStream(file);
         writeBytes(outputStream);
         outputStream.close();
     }
 
+
+    public Object getTag() {
+        return mTag;
+    }
+    public void setTag(Object tag) {
+        this.mTag = tag;
+    }
     public String getSimpleName() {
         return mSimpleName;
     }
@@ -284,13 +281,28 @@ public class DexFileBlock extends FixedBlockContainer {
         this.mSimpleName = simpleName;
     }
 
+    public static DexLayout createDefault(){
+        DexLayout dexLayout = new DexLayout();
+        SectionList sectionList = dexLayout.getSectionList();
+        MapList mapList = sectionList.getMapList();
+        mapList.getOrCreate(SectionType.HEADER);
+        mapList.getOrCreate(SectionType.MAP_LIST);
+        SectionType<?>[] commonTypes = SectionType.getR8Order();
+        for(SectionType<?> sectionType : commonTypes){
+            sectionList.getOrCreateSection(sectionType);
+        }
+
+        sectionList.getMapList().linkHeader(sectionList.getHeader());
+
+        return dexLayout;
+    }
     public static boolean isDexFile(File file){
         if(file == null || !file.isFile()){
             return false;
         }
         DexHeader dexHeader = null;
         try {
-            InputStream inputStream = new FileInputStream(file);
+            InputStream inputStream = FileUtil.inputStream(file);
             dexHeader = DexHeader.readHeader(inputStream);
             inputStream.close();
         } catch (IOException ignored) {
@@ -313,10 +325,7 @@ public class DexFileBlock extends FixedBlockContainer {
         if(dexHeader.magic.isDefault()){
             return false;
         }
-        int version = dexHeader.version.getVersionAsInteger();
+        int version = dexHeader.getVersion();
         return version > 0 && version < 1000;
     }
-
-    public static final String NAME_value = "value";
-    public static final TypeKey TYPE_Signature = TypeKey.create("Ldalvik/annotation/Signature;");
 }

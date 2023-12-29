@@ -17,7 +17,6 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.data.StringData;
-import com.reandroid.dex.pool.DataSectionPool;
 import com.reandroid.dex.pool.StringDataPool;
 
 public class StringDataSection extends DataSection<StringData> {

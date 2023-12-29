@@ -17,6 +17,7 @@
 // originally copied from JesusFreke/smali
 package com.reandroid.dex.common;
 
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 
@@ -201,6 +202,7 @@ public class DexUtils {
             }
             appendable.append(ch);
             appendable.append('\'');
+            return;
         } else if (ch <= 0x7f) {
             switch (ch) {
                 case '\n':
@@ -251,7 +253,7 @@ public class DexUtils {
         builder.append('<');
         return builder.toString();
     }
-    public static String toMainType(String type){
+    public static String toDeclaringType(String type){
         if(type == null){
             return null;
         }
@@ -348,11 +350,54 @@ public class DexUtils {
         }
         return type.charAt(0) == 'L' && type.charAt(length - 1) == '<';
     }
-    public static boolean isTypeObject(String type){
+    public static boolean isTypeOrSignature(String type){
         if(type == null){
             return false;
         }
-        return type.indexOf('L') >= 0;
+        int length = type.length();
+        if(length < 3){
+            return false;
+        }
+        char last = type.charAt(length - 1);
+        return type.charAt(0) == 'L' && (last == '<' || last == ';');
+    }
+    public static boolean isTypeObject(String type){
+        if(type == null || type.length() < 2){
+            return false;
+        }
+        char ch = type.charAt(0);
+        return ch == 'L' || ch == '[';
+    }
+    public static boolean isPlatform(TypeKey typeKey){
+        if(typeKey == null){
+            return false;
+        }
+        return isPlatform(typeKey.getTypeName());
+    }
+    public static boolean isPlatform(String type){
+        if(type == null){
+            return false;
+        }
+        int length = type.length();
+        if(length == 0){
+            return false;
+        }
+        int i = 0;
+        while (i < length && type.charAt(i) == '['){
+            i++;
+        }
+        if(i >= length){
+            return false;
+        }
+        if(i != 0){
+            type = type.substring(i);
+        }
+        for(String platformPackage : PLATFORM_PACKAGES){
+            if(type.startsWith(platformPackage)){
+                return true;
+            }
+        }
+        return false;
     }
     public static boolean isPrimitive(String type){
         if(type == null){
@@ -395,20 +440,20 @@ public class DexUtils {
         return name.charAt(0) == 'L' && name.charAt(length - 1) == '<';
     }
 
-    public static String toJavaName(String dalvikName){
-        int i = dalvikName.indexOf('L');
-        dalvikName = dalvikName.substring(i + 1);
-        i = dalvikName.indexOf(';');
+    public static String toSourceName(String binaryName){
+        int i = binaryName.indexOf('L');
+        binaryName = binaryName.substring(i + 1);
+        i = binaryName.indexOf(';');
         if(i < 0){
-            i = dalvikName.indexOf('<');
+            i = binaryName.indexOf('<');
         }
         if(i > 0){
-            dalvikName = dalvikName.substring(0, i);
+            binaryName = binaryName.substring(0, i);
         }
-        return dalvikName.replace('/', '.');
+        return binaryName.replace('/', '.');
     }
-    public static String toDalvikName(String javaName){
-        return 'L' + javaName.replace('.', '/') + ';';
+    public static String toBinaryName(String sourceName){
+        return 'L' + sourceName.replace('.', '/') + ';';
     }
     public static String getPackageName(String className) {
         if(className.length() < 3){
@@ -427,21 +472,13 @@ public class DexUtils {
         }
         return className.substring(0, i);
     }
-    public static String toSourceName(String className){
+    public static String toSourceFileName(String className){
         String simple = getSimpleName(className);
         int i = simple.indexOf('$');
         if(i > 0){
             simple = simple.substring(0, i);
         }
         return simple + ".java";
-    }
-    public static String getInnerSimpleName(String className) {
-        className = getSimpleName(className);
-        int i = className.lastIndexOf('$');
-        if(i > 0){
-            return className.substring(i + 1);
-        }
-        return className;
     }
     public static String getSimpleName(String className) {
         className = trimArrayPrefix(className);
@@ -460,6 +497,64 @@ public class DexUtils {
         }
         return className;
     }
+    public static String getSimpleInnerName(String className) {
+        className = trimArrayPrefix(className);
+        if(className.length() < 2){
+            return className;
+        }
+        int i = className.lastIndexOf('/');
+        if (i < 0){
+            i = 0;
+        }
+        i++;
+        className = className.substring(i);
+        i = className.length() - 1;
+        if(className.charAt(i) == ';' || className.charAt(i) == '<'){
+            className = className.substring(0, i);
+        }
+        i = className.indexOf('$');
+        if(i < 0){
+            return className;
+        }
+        String[] split = StringsUtil.split(className, '$', true);
+        split = StringsUtil.removeEmpty(split);
+        i = split.length;
+        if(i == 0){
+            return className;
+        }
+        return split[i - 1];
+    }
+    public static String getParentClassName(String className) {
+        className = trimArrayPrefix(className);
+        if(className.length() < 2){
+            return className;
+        }
+        int i = className.lastIndexOf('/');
+        if (i < 0){
+            i = 0;
+        }
+        int j = className.lastIndexOf('$');
+        if(j < i){
+            return className;
+        }
+        className = className.substring(0, j);
+        while (className.length() > 0 && className.charAt(className.length() - 1) == '$'){
+            className = className.substring(0, className.length() - 1);
+        }
+        return className + ";";
+    }
+    public static String createChildClass(String type, String simpleName){
+        int i = type.length();
+        if(i < 2){
+            return type;
+        }
+        i = i - 1;
+        char ch = type.charAt(i);
+        if(ch == ';' || ch == '<'){
+            type = type.substring(0, i);
+        }
+        return type + "$" + simpleName + ";";
+    }
     public static String trimArrayPrefix(String className) {
         int i = 0;
         while (i < className.length() && className.charAt(i) == '['){
@@ -471,4 +566,12 @@ public class DexUtils {
         return className.substring(i);
     }
     public static final String DALVIK_MEMBER = "Ldalvik/annotation/MemberClasses;";
+
+    public static final String[] PLATFORM_PACKAGES = new String[]{
+            "Ljava/",
+            "Landroid/",
+            "Ldalvik/",
+            "Lorg/json/",
+            "Lorg/xmlpull/",
+    };
 }

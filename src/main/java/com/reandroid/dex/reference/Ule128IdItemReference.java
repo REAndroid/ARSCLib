@@ -45,7 +45,7 @@ public class Ule128IdItemReference<T extends IdItem> extends Ule128Item implemen
     public void setItem(T item) {
         int index = 0;
         if(item != null){
-            index = item.getIndex();
+            index = item.getIdx();
             item.addUsageType(usageType);
         }
         this.item = item;
@@ -69,16 +69,21 @@ public class Ule128IdItemReference<T extends IdItem> extends Ule128Item implemen
         return sectionType;
     }
     @Override
-    public void updateItem(){
-        this.item = get(getSectionType(), get());
+    public void pullItem(){
+        this.item = getSectionItem(getSectionType(), get());
         updateItemUsage();
     }
     @Override
     public void refresh() {
         T item = getItem();
         if(item != null){
-            set(item.getIndex());
+            item = item.getReplace();
         }
+        checkNonNullItem(item);
+        if(item != null){
+            set(item.getIdx());
+        }
+        this.item = item;
         updateItemUsage();
     }
     private void updateItemUsage(){
@@ -90,7 +95,7 @@ public class Ule128IdItemReference<T extends IdItem> extends Ule128Item implemen
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
-        updateItem();
+        pullItem();
     }
 
     @Override

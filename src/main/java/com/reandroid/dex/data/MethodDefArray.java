@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.utils.collection.FilterIterator;
 
@@ -22,7 +23,7 @@ import java.util.Iterator;
 
 public class MethodDefArray extends DefArray<MethodDef> {
     public MethodDefArray(IntegerReference itemCount){
-        super(itemCount);
+        super(itemCount, CREATOR);
     }
 
     @Override
@@ -37,16 +38,15 @@ public class MethodDefArray extends DefArray<MethodDef> {
             directory.sortMethods();
         }
     }
-    public Iterator<MethodDef> getConstructors() {
-        return FilterIterator.of(iterator(), MethodDef::isConstructor);
-    }
 
-    @Override
-    public MethodDef[] newInstance(int length) {
-        return new MethodDef[length];
-    }
-    @Override
-    public MethodDef newInstance() {
-        return new MethodDef();
-    }
+    private static final Creator<MethodDef> CREATOR = new Creator<MethodDef>() {
+        @Override
+        public MethodDef[] newArrayInstance(int length) {
+            return new MethodDef[length];
+        }
+        @Override
+        public MethodDef newInstance() {
+            return new MethodDef();
+        }
+    };
 }

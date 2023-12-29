@@ -15,8 +15,7 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
@@ -28,7 +27,9 @@ public class FloatValue extends PrimitiveValue {
     }
 
     public float get(){
-        return Float.intBitsToFloat((int) getNumberValue());
+        int shift = (3 - getValueSize()) * 8;
+        int value = (int) getNumberValue();
+        return Float.intBitsToFloat(value << shift);
     }
     public void set(float value){
         setNumberValue(Float.floatToIntBits(value));
@@ -43,14 +44,8 @@ public class FloatValue extends PrimitiveValue {
     }
 
     @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
-    }
-
-    @Override
     public void append(SmaliWriter writer) throws IOException {
-        super.append(writer);
-        writer.appendComment(Float.toString(get()));
+        writer.append(get());
     }
     @Override
     public String toString() {

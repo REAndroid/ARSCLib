@@ -20,8 +20,8 @@ import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;

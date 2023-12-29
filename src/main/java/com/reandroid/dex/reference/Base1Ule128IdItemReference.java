@@ -21,8 +21,8 @@ import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
@@ -48,9 +48,12 @@ public class Base1Ule128IdItemReference<T extends IdItem> extends Ule128Item imp
     }
     @Override
     public void setItem(T item) {
+        if(item != null){
+            item = item.getReplace();
+        }
         int index;
         if(item != null){
-            index = item.getIndex() + 1;
+            index = item.getIdx() + 1;
         }else {
             index = 0;
         }
@@ -83,13 +86,15 @@ public class Base1Ule128IdItemReference<T extends IdItem> extends Ule128Item imp
         return sectionType;
     }
     @Override
-    public void updateItem(){
+    public void pullItem(){
         int index = get();
         T item;
         if(index == 0){
             item = null;
         }else {
-            item = get(getSectionType(), index - 1);
+            item = getSectionItem(getSectionType(), index - 1);
+            //TODO: remove this for peaceful dex loading
+            checkNonNullItem(item, index - 1);
         }
         this.item = item;
         updateItemUsage();
@@ -97,21 +102,21 @@ public class Base1Ule128IdItemReference<T extends IdItem> extends Ule128Item imp
     @Override
     public void refresh() {
         T item = getItem();
-        int index = 0;
         if(item != null){
-            if(item.getParent() == null){
-                this.item = null;
-            }else {
-                index = item.getIndex() + 1;
-                item.addUsageType(UsageMarker.USAGE_DEBUG);
-            }
+            item = item.getReplace();
         }
-        set(index);
+        int idx = 0;
+        if(item != null){
+            idx = item.getIdx() + 1;
+        }
+        this.item = null;
+        set(idx);
+        updateItemUsage();
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
-        updateItem();
+        pullItem();
     }
 
     private void updateItemUsage(){

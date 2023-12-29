@@ -15,30 +15,47 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 import java.util.Comparator;
 
-public interface ExtraLine {
+public interface ExtraLine{
     int getTargetAddress();
     void setTargetAddress(int targetAddress);
     void appendExtra(SmaliWriter writer) throws IOException;
     boolean isEqualExtraLine(Object obj);
     int getSortOrder();
-
-    Comparator<ExtraLine> COMPARATOR = new Comparator<ExtraLine>() {
-        @Override
-        public int compare(ExtraLine extraLine1, ExtraLine extraLine2) {
-            return Integer.compare(extraLine1.getSortOrder(), extraLine2.getSortOrder());
+    default int getSortOrderFine(){
+        return 0;
+    }
+    default int compareExtraLine(ExtraLine other){
+        int order1 = this.getSortOrder();
+        int order2 = other.getSortOrder();
+        if(order1 < order2){
+            return -1;
         }
-    };
+        if(order2 < order1){
+            return 1;
+        }
+        order1 = this.getSortOrderFine();
+        order2 = other.getSortOrderFine();
+        if(order1 < order2){
+            return -1;
+        }
+        if(order2 < order1){
+            return 1;
+        }
+        return 0;
+    }
+
+    Comparator<ExtraLine> COMPARATOR = ExtraLine::compareExtraLine;
 
     int ORDER_DEBUG_LINE_NUMBER = 0;
     int ORDER_DEBUG_LINE = 1;
-    int ORDER_INSTRUCTION_LABEL = 2;
-    int ORDER_TRY_START = 3;
-    int ORDER_TRY_END = 4;
-    int ORDER_EXCEPTION_HANDLER = 5;
-    int ORDER_CATCH = 6;
+    int ORDER_TRY_END = 2;
+    int ORDER_EXCEPTION_HANDLER = 3;
+    int ORDER_CATCH = 4;
+    int ORDER_INSTRUCTION_LABEL = 5;
+    int ORDER_TRY_START = 6;
 }

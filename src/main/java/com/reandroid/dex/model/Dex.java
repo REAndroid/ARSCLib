@@ -15,27 +15,18 @@
  */
 package com.reandroid.dex.model;
 
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
-import java.io.StringWriter;
 
-public class DexModel implements SmaliFormat {
+public abstract class Dex implements SmaliFormat {
+
+    public abstract DexClassRepository getClassRepository();
     @Override
-    public void append(SmaliWriter writer) throws IOException {
-
-    }
+    public abstract void append(SmaliWriter writer) throws IOException;
     @Override
     public String toString() {
-        StringWriter writer = new StringWriter();
-        SmaliWriter smaliWriter = new SmaliWriter(writer);
-        try {
-            append(smaliWriter);
-            smaliWriter.close();
-        } catch (IOException exception) {
-            return exception.toString();
-        }
-        return writer.toString();
+        return SmaliWriter.toStringSafe(this);
     }
 }

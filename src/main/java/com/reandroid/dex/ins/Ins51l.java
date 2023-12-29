@@ -15,17 +15,12 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.writer.SmaliWriter;
-import com.reandroid.utils.HexUtil;
-
-import java.io.IOException;
 
 public class Ins51l extends Size10Ins implements RegistersSet {
+
     public Ins51l(Opcode<?> opcode) {
         super(opcode);
     }
-
 
     @Override
     public int getRegistersCount() {
@@ -49,29 +44,22 @@ public class Ins51l extends Size10Ins implements RegistersSet {
 
     @Override
     public int getData() {
-        return (int) getDataLong();
+        return (int) getLong();
     }
-    public long getDataLong() {
-        return getLong();
+    public long getLong() {
+        return super.getLong();
+    }
+    @Override
+    public void setLong(long data) {
+        super.setLong(data);
     }
 
     @Override
     public void setData(int data) {
-        setDataLong((long) data);
+        setLong((long) data);
     }
-    public void setDataLong(long data) {
+    public void setData(long data) {
         setLong(data);
     }
 
-
-    void appendCodeData(SmaliWriter writer) throws IOException {
-        writer.append(", ");
-        long data = getDataLong();
-        IdItem sectionItem = getSectionItem();
-        if(sectionItem != null){
-            sectionItem.append(writer);
-        }else {
-            writer.append(HexUtil.toHex(data, 1));
-        }
-    }
 }

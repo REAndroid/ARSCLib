@@ -19,11 +19,10 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
-import com.reandroid.dex.base.CountedArray;
 import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.data.CodeItem;
-import com.reandroid.dex.data.DexContainerItem;
+import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.ExpandIterator;
@@ -32,7 +31,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class TryBlock extends DexContainerItem implements
+public class TryBlock extends FixedDexContainerWithTool implements
         Creator<TryItem>, Iterable<TryItem>, LabelsSet {
 
     private final CodeItem codeItem;
@@ -232,7 +231,7 @@ public class TryBlock extends DexContainerItem implements
         this.handlerOffsetArray.onReadBytes(reader);
         this.tryItemsCount.onReadBytes(reader);
         readUnknownBytes(reader);
-        this.tryItemArray.setElements(newInstance(handlerOffsetArray.size()));
+        this.tryItemArray.setSize(handlerOffsetArray.size());
         this.tryItemArray.readChildes(reader);
         this.positionAlign.onReadBytes(reader);
     }
@@ -270,8 +269,7 @@ public class TryBlock extends DexContainerItem implements
     public DexPositionAlign getPositionAlign(){
         return positionAlign;
     }
-    @Override
-    public TryItem[] newInstance(int length) {
+    public TryItem[] newArrayInstanceOld(int length) {
         HandlerOffsetArray offsetArray = initHandlersOffset();
         int count = offsetArray.size();
         TryItem[] results = new TryItem[length];
@@ -296,6 +294,30 @@ public class TryBlock extends DexContainerItem implements
     @Override
     public TryItem newInstance() {
         return new TryItem(initHandlersOffset());
+    }
+    public TryItem[] newArrayInstance(int length) {
+        return new TryItem[length];
+    }
+    @Override
+    public TryItem newInstanceAt(int index) {
+        BlockList<TryItem> tryItemArray = this.tryItemArray;
+        HandlerOffsetArray offsetArray = initHandlersOffset();
+        if(tryItemArray.size() < 2){
+            return new TryItem(offsetArray);
+        }
+        int offset = offsetArray.getOffset(index);
+        int i = offsetArray.indexOf(offset);
+        TryItem tryItem = null;
+        if(i >= 0 && i < index){
+            tryItem = tryItemArray.get(i);
+            if(tryItem != null){
+                tryItem = tryItem.newCopy();
+            }
+        }
+        if(tryItem == null){
+            tryItem = new TryItem(offsetArray);
+        }
+        return tryItem;
     }
 
     public void merge(TryBlock tryBlock){

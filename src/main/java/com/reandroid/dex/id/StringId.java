@@ -16,18 +16,19 @@
 package com.reandroid.dex.id;
 
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.base.UsageMarker;
+import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class StringId extends IdItem implements IntegerReference, Comparable<StringId>, KeyItemCreate {
+public class StringId extends IdItem implements IntegerReference, Comparable<StringId> {
 
     private StringData stringData;
 
@@ -47,29 +48,26 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
     public StringKey getKey(){
         StringData stringData = getStringData();
         if(stringData != null){
-            return checkKey(stringData.getKey());
+            return stringData.getKey();
         }
         return null;
     }
     @Override
     public void setKey(Key key){
-        Key old = getKey();
-        StringData stringData = getStringData();
-        if(stringData == null){
-            stringData = getOrCreateSection(SectionType.STRING_DATA).createItem();
-            linkStringData(stringData);
-            old = null;
-        }
+        StringKey old = getKey();
+        StringData stringData = ensureStringData();
         stringData.setKey(key);
-        keyChanged(old);
+        if(old != null && !old.equals(getKey())){
+            keyChanged(old);
+        }
     }
     @Override
     public void removeSelf() {
         StringData stringData = this.stringData;
         if(stringData != null){
             int usage = stringData.getUsageType();
+            usage = usage - 1;
             stringData.clearUsageType();
-            usage = usage >>> 1;
             stringData.addUsageType(usage);
             if(usage == 0){
                 stringData.removeSelf(this);
@@ -91,7 +89,15 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
         }
         this.stringData = stringData;
         int usage = stringData.getUsageType();
-        stringData.addUsageType((usage << 1) | 1);
+        stringData.addUsageType(usage + 1);
+    }
+    private StringData ensureStringData(){
+        StringData stringData = getStringData();
+        if(stringData == null){
+            stringData = getOrCreateSection(SectionType.STRING_DATA).createItem();
+            linkStringData(stringData);
+        }
+        return stringData;
     }
 
     @Override
@@ -104,7 +110,11 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
     }
     @Override
     public void refresh() {
+        StringData stringData = this.stringData;
         set(stringData.getOffset());
+        int usage = stringData.getUsageType();
+        stringData.clearUsageType();
+        stringData.addUsageType(usage + 1);
     }
     @Override
     void cacheItems() {
@@ -125,16 +135,40 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
         return null;
     }
     public void setString(String text){
-        Key old = getKey();
-        StringData stringData = getStringData();
-        if(stringData == null){
-            stringData = getOrCreateSection(SectionType.STRING_DATA).createItem();
-            linkStringData(stringData);
-            old = null;
+        StringKey old = getKey();
+        StringData stringData = ensureStringData();
+        stringData.setString(text);
+        if(old != null && !old.equals(getKey())){
+            keyChanged(old);
         }
-        stringData.setKey(StringKey.create(text));
-        keyChanged(old);
     }
+
+    @Override
+    protected void keyChanged(Key oldKey) {
+        super.keyChanged(oldKey);
+        StringKey current = getKey();
+        if(current != null){
+            current.setSignature(containsUsage(UsageMarker.USAGE_SIGNATURE_TYPE));
+        }
+    }
+
+    @Override
+    public void addUsageType(int usage) {
+        super.addUsageType(usage);
+        if(usage == UsageMarker.USAGE_SIGNATURE_TYPE){
+            getKey().setSignature(true);
+        }
+    }
+
+    @Override
+    public void clearUsageType() {
+        super.clearUsageType();
+        StringKey key = getKey();
+        if(key != null){
+            key.setSignature(false);
+        }
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         StringData stringData = getStringData();
@@ -150,7 +184,7 @@ public class StringId extends IdItem implements IntegerReference, Comparable<Str
         if(stringId == this){
             return 0;
         }
-        return Integer.compare(getStringData().getIndex(), stringId.getStringData().getIndex());
+        return SectionTool.compareIdx(getStringData(), stringId.getStringData());
     }
 
     @Override

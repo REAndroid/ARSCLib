@@ -15,22 +15,37 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.ArraySort;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Predicate;
 
 public class IntegerDataItemList<T extends DataItem> extends IntegerList implements Iterable<T>{
     private final SectionType<T> sectionType;
+    private final int usageType;
     private T[] items;
 
-    public IntegerDataItemList(SectionType<T> sectionType) {
+    public IntegerDataItemList(SectionType<T> sectionType, int usageType) {
         super();
         this.sectionType = sectionType;
+        this.usageType = usageType;
     }
+    public IntegerDataItemList(SectionType<T> sectionType) {
+        this(sectionType, UsageMarker.USAGE_NONE);
+    }
+    public IntegerDataItemList(IntegerReference itemCount, SectionType<T> sectionType, int usageType) {
+        super(itemCount);
+        this.sectionType = sectionType;
+        this.usageType = usageType;
+    }
+
     public T addNew(Key key){
         T item = getOrCreateSection(sectionType).getOrCreate(key);
         add(item.getOffset());
@@ -89,7 +104,7 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
             return;
         }
         T[] update = sectionType.getCreator()
-                .newInstance(length - count);
+                .newArrayInstance(length - count);
         int index = 0;
         for(int i  = 0; i < length; i++){
             T element = items[i];
@@ -131,8 +146,34 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
         for(int i = 0; i < length; i++){
             T item = items[i];
             put(i, getData(item));
+            updateUsage(item);
         }
         this.items = items;
+    }
+    public boolean sort(Comparator<? super T> comparator){
+        T[] items = this.items;
+        if(items == null || items.length < 2){
+            return false;
+        }
+        boolean sorted = ArraySort.sort(items, comparator);
+        if(sorted){
+            setItems(items.clone());
+        }
+        return sorted;
+    }
+    private void updateUsage(T[] items){
+        if(items == null){
+            return;
+        }
+        for(T item : items){
+            updateUsage(item);
+        }
+    }
+    private void updateUsage(T item){
+        if(item == null){
+            return;
+        }
+        item.addUsageType(usageType);
     }
 
     @Override
@@ -159,12 +200,17 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
         boolean found = false;
         for(int i = 0; i < length; i++){
             T item = items[i];
+            if(item != null){
+                item = item.getReplace();
+                items[i] = item;
+            }
             int data = getData(item);
             put(i, getData(item));
             if(data == 0) {
                 items[i] = null;
                 found = true;
             }
+            updateUsage(item);
         }
         if(found){
             removeNulls();
@@ -177,7 +223,8 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
         return item.getOffset();
     }
     private void cacheItems(){
-        items = get(sectionType, toArray());
+        items = getSectionItem(sectionType, toArray());
+        updateUsage(items);
     }
     private boolean isEmpty(T[] items){
         if(items == null || items.length == 0){

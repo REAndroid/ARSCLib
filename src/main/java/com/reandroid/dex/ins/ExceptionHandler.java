@@ -17,18 +17,17 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.id.TypeId;
-import com.reandroid.dex.data.DexContainerItem;
+import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.ArrayIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
-public abstract class ExceptionHandler extends DexContainerItem
+public abstract class ExceptionHandler extends FixedDexContainerWithTool
         implements Iterable<Label>, LabelsSet {
 
     private final Ule128Item catchAddress;
@@ -362,7 +361,8 @@ public abstract class ExceptionHandler extends DexContainerItem
         }
         @Override
         public String getLabelName() {
-            return HexUtil.toHex(":try_end_", getTargetAddress(), 1);
+            int startAddress = handler.getStartLabel().getTargetAddress();
+            return HexUtil.toHex(":try_end_", startAddress, 1);
         }
 
         @Override
@@ -434,7 +434,8 @@ public abstract class ExceptionHandler extends DexContainerItem
             if(handler == label.handler){
                 return true;
             }
-            return getTargetAddress() == label.getTargetAddress();
+            return getTargetAddress() == label.getTargetAddress() &&
+                    getHandler().getOpcodeName().equals(label.getHandler().getOpcodeName());
         }
         @Override
         public String toString() {

@@ -16,7 +16,6 @@
 package com.reandroid.dex.reference;
 
 import com.reandroid.arsc.base.BlockRefresh;
-import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.SectionType;
@@ -29,13 +28,6 @@ public class StringUle128Reference extends Ule128IdItemReference<StringId> imple
         super(SectionType.STRING_ID, usageType);
     }
 
-    public StringData getStringData(){
-        StringId stringId = getItem();
-        if(stringId != null){
-            return stringId.getStringData();
-        }
-        return null;
-    }
     public String getString(){
         StringId stringId = getItem();
         if(stringId != null){

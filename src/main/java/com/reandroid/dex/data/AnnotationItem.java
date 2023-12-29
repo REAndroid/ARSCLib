@@ -18,25 +18,28 @@ package com.reandroid.dex.data;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.AnnotationVisibility;
+import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.reference.Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliRegion;
+import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Predicate;
 
 public class AnnotationItem extends DataItem
-        implements Iterable<AnnotationElement>, KeyItemCreate, SmaliFormat {
+        implements Comparable<AnnotationItem>, Iterable<AnnotationElement>,
+        KeyItemCreate, SmaliRegion {
 
     private final ByteItem visibility;
     private final Ule128IdItemReference<TypeId> typeId;
@@ -75,6 +78,10 @@ public class AnnotationItem extends DataItem
         this(false);
     }
 
+    @Override
+    public SectionType<AnnotationItem> getSectionType() {
+        return SectionType.ANNOTATION_ITEM;
+    }
     public void remove(Predicate<AnnotationElement> filter){
         annotationElements.remove(filter);
     }
@@ -101,6 +108,13 @@ public class AnnotationItem extends DataItem
             }
         }
         return false;
+    }
+    public DexValueBlock<?> getElementValue(String name){
+        AnnotationElement element = getElement(name);
+        if(element != null){
+            return element.getValue();
+        }
+        return null;
     }
     public AnnotationElement getElement(String name){
         for(AnnotationElement element : this){
@@ -178,9 +192,6 @@ public class AnnotationItem extends DataItem
         }
         return null;
     }
-    public boolean equalsType(TypeKey typeKey){
-        return typeKey.equals(getTypeKey());
-    }
     public TypeKey getTypeKey(){
         return (TypeKey) typeId.getKey();
     }
@@ -194,6 +205,11 @@ public class AnnotationItem extends DataItem
         typeId.setItem(typeKey);
     }
 
+    public void replaceKeys(Key search, Key replace){
+        for(AnnotationElement element : this){
+            element.replaceKeys(search, replace);
+        }
+    }
     public Iterator<IdItem> usedIds(){
         return CombiningIterator.singleOne(getTypeId(),
                 new IterableIterator<AnnotationElement, IdItem>(iterator()) {
@@ -216,10 +232,7 @@ public class AnnotationItem extends DataItem
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        String tag = getTagName();
-        writer.append('.');
-        writer.append(tag);
-        writer.append(' ');
+        getSmaliDirective().append(writer);
         AnnotationVisibility visibility = getVisibility();
         if(visibility != null){
             writer.append(visibility.getName());
@@ -233,17 +246,26 @@ public class AnnotationItem extends DataItem
             iterator.next().append(writer);
         }
         writer.indentMinus();
-        writer.newLine();
-        writer.append(".end ");
-        writer.append(tag);
+        getSmaliDirective().appendEnd(writer);
     }
-    private String getTagName(){
+    @Override
+    public SmaliDirective getSmaliDirective() {
         if(isValueEntry()){
-            return "subannotation";
+            return SmaliDirective.SUB_ANNOTATION;
         }
-        return "annotation";
+        return SmaliDirective.ANNOTATION;
     }
 
+    @Override
+    public int compareTo(AnnotationItem other){
+        if(other == null){
+            return -1;
+        }
+        if(other == this){
+            return 0;
+        }
+        return SectionTool.compareIdx(getTypeId(), other.getTypeId());
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -256,7 +278,7 @@ public class AnnotationItem extends DataItem
         if(!Objects.equals(this.getTypeName(), item.getTypeName())){
             return false;
         }
-        return Objects.equals(this.annotationElements, item.annotationElements);
+        return this.annotationElements.equals(item.annotationElements);
     }
 
     @Override

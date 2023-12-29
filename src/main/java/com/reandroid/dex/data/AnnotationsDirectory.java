@@ -18,8 +18,9 @@ package com.reandroid.dex.data;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.base.IndirectInteger;
+import com.reandroid.dex.common.SectionItem;
+import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
@@ -72,6 +73,11 @@ public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
     public void setKey(Key key){
         DataKey<AnnotationsDirectory> dataKey = (DataKey<AnnotationsDirectory>) key;
         merge(dataKey.getItem());
+    }
+
+    @Override
+    public SectionType<AnnotationsDirectory> getSectionType() {
+        return SectionType.ANNOTATION_DIRECTORY;
     }
 
     public AnnotationSet getOrCreateClassAnnotations(){
@@ -212,6 +218,24 @@ public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
         }
     }
 
+    public void replaceKeys(Key search, Key replace){
+        AnnotationSet set = getClassAnnotations();
+        if(set != null){
+            set.replaceKeys(search, replace);
+        }
+        Iterator<AnnotationSet> iterator = fieldsAnnotationMap.getValues();
+        while (iterator.hasNext()){
+            iterator.next().replaceKeys(search, replace);
+        }
+        iterator = methodsAnnotationMap.getValues();
+        while (iterator.hasNext()){
+            iterator.next().replaceKeys(search, replace);
+        }
+        Iterator<AnnotationGroup> groupIterator = parametersAnnotationMap.getValues();
+        while (groupIterator.hasNext()){
+            groupIterator.next().replaceKeys(search, replace);
+        }
+    }
     public Iterator<IdItem> usedIds(){
         AnnotationSet classAnnotation = getClassAnnotations();
         Iterator<IdItem> iterator1;
@@ -295,7 +319,7 @@ public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
                 ", parameters=" + parametersAnnotationMap;
     }
 
-    static class Header extends DexBlockItem implements BlockRefresh {
+    static class Header extends SectionItem implements BlockRefresh {
 
         final DataItemIndirectReference<AnnotationSet> classAnnotation;
         final IndirectInteger fieldCount;
@@ -305,7 +329,8 @@ public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
         public Header() {
             super(16);
 
-            this.classAnnotation = new DataItemIndirectReference<>(SectionType.ANNOTATION_SET, this, 0);
+            this.classAnnotation = new DataItemIndirectReference<>(SectionType.ANNOTATION_SET,
+                    this, 0, UsageMarker.USAGE_ANNOTATION);
             this.fieldCount = new IndirectInteger(this, 4);
             this.methodCount = new IndirectInteger(this, 8);
             this.parameterCount = new IndirectInteger(this, 12);
@@ -323,7 +348,7 @@ public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
             cacheItems();
         }
         private void cacheItems(){
-            this.classAnnotation.updateItem();
+            this.classAnnotation.pullItem();
         }
 
         @Override
@@ -369,7 +394,7 @@ public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
     @SuppressWarnings("unchecked")
     private static final Creator<DirectoryEntry<FieldDef, AnnotationSet>> CREATOR_FIELDS = new Creator<DirectoryEntry<FieldDef, AnnotationSet>>() {
         @Override
-        public DirectoryEntry<FieldDef, AnnotationSet>[] newInstance(int length) {
+        public DirectoryEntry<FieldDef, AnnotationSet>[] newArrayInstance(int length) {
             return new DirectoryEntry[length];
         }
         @Override
@@ -381,7 +406,7 @@ public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
     @SuppressWarnings("unchecked")
     private static final Creator<DirectoryEntry<MethodDef, AnnotationSet>> CREATOR_METHODS = new Creator<DirectoryEntry<MethodDef, AnnotationSet>>() {
         @Override
-        public DirectoryEntry<MethodDef, AnnotationSet>[] newInstance(int length) {
+        public DirectoryEntry<MethodDef, AnnotationSet>[] newArrayInstance(int length) {
             return new DirectoryEntry[length];
         }
         @Override
@@ -393,7 +418,7 @@ public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
     @SuppressWarnings("unchecked")
     private static final Creator<DirectoryEntry<MethodDef, AnnotationGroup>> CREATOR_PARAMS = new Creator<DirectoryEntry<MethodDef, AnnotationGroup>>() {
         @Override
-        public DirectoryEntry<MethodDef, AnnotationGroup>[] newInstance(int length) {
+        public DirectoryEntry<MethodDef, AnnotationGroup>[] newArrayInstance(int length) {
             return new DirectoryEntry[length];
         }
         @Override

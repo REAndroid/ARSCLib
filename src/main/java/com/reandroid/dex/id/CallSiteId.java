@@ -21,7 +21,7 @@ import com.reandroid.dex.key.*;
 import com.reandroid.dex.reference.DataItemIndirectReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.*;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 
@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class CallSiteId extends IdItem implements Comparable<CallSiteId>, KeyItemCreate {
+public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
 
     private final DataItemIndirectReference<EncodedArray> encodedArrayReference;
 
@@ -56,7 +56,7 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId>, KeyIte
     public MethodHandle getMethodHandle(){
         return getValue(SectionType.METHOD_HANDLE, 0);
     }
-    public void setMethodHandle(IdKey<MethodHandle> key){
+    public void setMethodHandle(MethodHandleKey key){
         getOrCreateValue(SectionType.METHOD_HANDLE, 0, key);
     }
     public String getMethodName(){
@@ -84,8 +84,8 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId>, KeyIte
     private<T1 extends IdItem> T1 getOrCreateValue(SectionType<T1> sectionType, int index, Key key){
         EncodedArray encodedArray = getOrCreateEncodedArray();
         SectionValue<T1> sectionValue = encodedArray.getOrCreate(sectionType, index);
-        sectionValue.set(key);
-        return sectionValue.get();
+        sectionValue.setItem(key);
+        return sectionValue.getItem();
     }
     @SuppressWarnings("unchecked")
     private<T1 extends IdItem> T1 getValue(SectionType<T1> sectionType, int index){
@@ -101,7 +101,7 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId>, KeyIte
         if(sectionValue.getSectionType() != sectionType){
             return null;
         }
-        return ((SectionValue<T1>)value).get();
+        return ((SectionValue<T1>)value).getItem();
     }
     public EncodedArray getOrCreateEncodedArray(){
         return encodedArrayReference.getOrCreate();
@@ -112,7 +112,7 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId>, KeyIte
 
     @Override
     void cacheItems() {
-        encodedArrayReference.updateItem();
+        encodedArrayReference.pullItem();
     }
     @Override
     public void refresh() {

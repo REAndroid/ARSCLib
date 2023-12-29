@@ -5,7 +5,7 @@ import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
@@ -24,6 +24,10 @@ public class DebugStartLocalExtended extends DebugStartLocal {
         addChild(4, mSignature);
     }
 
+    @Override
+    public boolean isValid(){
+        return mSignature.getItem() != null;
+    }
     public String getSignature(){
         StringId stringId = mSignature.getItem();
         if(stringId != null){

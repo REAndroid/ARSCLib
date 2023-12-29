@@ -15,8 +15,11 @@
  */
 package com.reandroid.dex.value;
 
+import com.reandroid.dex.base.UsageMarker;
+import com.reandroid.dex.data.AnnotationItem;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
 
 public class StringValue extends SectionIdValue<StringId> {
@@ -25,16 +28,36 @@ public class StringValue extends SectionIdValue<StringId> {
         super(SectionType.STRING_ID, DexValueType.STRING);
     }
 
+    @Override
+    public StringKey getKey() {
+        return (StringKey) super.getKey();
+    }
     public String getString() {
-        StringId stringId = get();
-        if(stringId != null) {
-            return stringId.getString();
+        StringKey stringKey = getKey();
+        if(stringKey != null) {
+            return stringKey.getString();
         }
         return null;
     }
-    public void set(String value){
+    public void setString(String value){
         setKey(StringKey.create(value));
     }
+
+    @Override
+    void updateUsageType(StringId stringId) {
+        super.updateUsageType(stringId);
+        if(stringId != null &&
+                stringId.containsUsage(UsageMarker.USAGE_ANNOTATION) &&
+                !stringId.containsUsage(UsageMarker.USAGE_SIGNATURE_TYPE)) {
+
+            AnnotationItem annotationItem = getParentInstance(AnnotationItem.class);
+            if(annotationItem != null &&
+                    TypeKey.DALVIK_Signature.equals(annotationItem.getTypeKey())){
+                stringId.addUsageType(UsageMarker.USAGE_SIGNATURE_TYPE);
+            }
+        }
+    }
+
     @Override
     public DexValueType<?> getValueType() {
         return DexValueType.STRING;

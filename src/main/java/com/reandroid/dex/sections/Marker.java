@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.sections;
 
+import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.model.DexFile;
 import com.reandroid.json.JSONArray;
@@ -22,10 +23,11 @@ import com.reandroid.json.JSONObject;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.util.Iterator;
 
-// Copied partially from Google AOSP
+// Copied partially from AOSP
 public class Marker {
     public static final String VERSION = "version";
     public static final String MIN_API = "min-api";
@@ -68,6 +70,16 @@ public class Marker {
     }
     public void setStringId(StringId stringId) {
         this.stringId = stringId;
+        if(stringId != null){
+            stringId.addUsageType(UsageMarker.USAGE_MARKER);
+        }
+    }
+    public void removeSelf(){
+        StringId stringId = getStringId();
+        if(stringId != null){
+            setStringId(null);
+            stringId.removeSelf();
+        }
     }
     public void save(){
         StringId stringData = getStringId();
@@ -237,7 +249,16 @@ public class Marker {
     }
 
     public static Iterator<Marker> parse(DexFile dexFile){
-        return ComputeIterator.of(dexFile.getStringIds(), Marker::parse);
+        return parse(dexFile.getSection(SectionType.STRING_ID));
+    }
+    public static Iterator<Marker> parse(Section<StringId> stringIdSection){
+        if(stringIdSection == null){
+            return EmptyIterator.of();
+        }
+        return parse(stringIdSection.iterator());
+    }
+    public static Iterator<Marker> parse(Iterator<StringId> iterator){
+        return ComputeIterator.of(iterator, Marker::parse);
     }
     public static Marker parse(StringId stringId) {
         String str = stringId.getString();

@@ -34,6 +34,10 @@ public class DebugSetSourceFile extends DebugElement {
         addChild(1, mName);
     }
 
+    @Override
+    public boolean isValid(){
+        return mName.getItem() != null;
+    }
     public String getName(){
         StringId stringId = mName.getItem();
         if(stringId != null){

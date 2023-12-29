@@ -15,74 +15,61 @@
  */
 package com.reandroid.dex.data;
 
-import com.reandroid.arsc.item.IntegerVisitor;
-import com.reandroid.arsc.item.VisitableInteger;
+import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.Opcode;
-import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.collection.CombiningIterator;
-import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
-public class ClassData extends DataItem
-        implements SmaliFormat, VisitableInteger {
+public class ClassData extends DataItem implements SmaliFormat {
 
     private final Ule128Item staticFieldsCount;
-    private final Ule128Item instanceFieldCount;
-    private final Ule128Item directMethodCount;
+    private final Ule128Item instanceFieldsCount;
+    private final Ule128Item directMethodsCount;
     private final Ule128Item virtualMethodCount;
 
-    private final FieldDefArray staticFields;
-    private final FieldDefArray instanceFields;
-    private final MethodDefArray directMethods;
-    private final MethodDefArray virtualMethods;
+    private StaticFieldDefArray staticFields;
+    private FieldDefArray instanceFields;
+    private MethodDefArray directMethods;
+    private MethodDefArray virtualMethods;
 
     private ClassId mClassId;
 
     public ClassData() {
         super(8);
         this.staticFieldsCount = new Ule128Item();
-        this.instanceFieldCount = new Ule128Item();
-        this.directMethodCount = new Ule128Item();
+        this.instanceFieldsCount = new Ule128Item();
+        this.directMethodsCount = new Ule128Item();
         this.virtualMethodCount = new Ule128Item();
 
-
-        this.staticFields = new StaticFieldDefArray(staticFieldsCount);
-        this.instanceFields = new FieldDefArray(instanceFieldCount);
-        this.directMethods = new MethodDefArray(directMethodCount);
-        this.virtualMethods = new MethodDefArray(virtualMethodCount);
-
-
         addChild(0, staticFieldsCount);
-        addChild(1, instanceFieldCount);
-        addChild(2, directMethodCount);
+        addChild(1, instanceFieldsCount);
+        addChild(2, directMethodsCount);
         addChild(3, virtualMethodCount);
 
-        addChild(4, staticFields);
-        addChild(5, instanceFields);
-        addChild(6, directMethods);
-        addChild(7, virtualMethods);
+        //addChild(4, staticFields);
+        //addChild(5, instanceFields);
+        //addChild(6, directMethods);
+        //addChild(7, virtualMethods);
     }
 
     @Override
-    public void visitIntegers(IntegerVisitor visitor) {
-        getStaticFieldsArray().visitIntegers(visitor);
-        getDirectMethodsArray().visitIntegers(visitor);
-        getVirtualMethodsArray().visitIntegers(visitor);
+    public SectionType<ClassData> getSectionType() {
+        return SectionType.CLASS_DATA;
     }
 
     public void remove(Key key){
@@ -110,40 +97,66 @@ public class ClassData extends DataItem
         if(key instanceof MethodKey){
             return getMethod((MethodKey) key);
         }
+        if(key != null){
+            throw new RuntimeException("Unknown key type: "
+                    + key.getClass() + ", '" + key + "'");
+        }
         return null;
     }
     public FieldDef getField(FieldKey key){
-        FieldDef fieldDef = getStaticFieldsArray().get(key);
+        FieldDef fieldDef = null;
+        FieldDefArray fieldDefArray = this.staticFields;
+        if(fieldDefArray != null){
+            fieldDef = fieldDefArray.get(key);
+        }
         if(fieldDef == null){
-            fieldDef = getInstanceFieldsArray().get(key);
+            fieldDefArray = this.instanceFields;
+            if(fieldDefArray != null){
+                fieldDef = fieldDefArray.get(key);
+            }
         }
         return fieldDef;
     }
     public MethodDef getMethod(MethodKey key){
-        MethodDef methodDef = getDirectMethodsArray().get(key);
+        MethodDef methodDef = null;
+        MethodDefArray methodDefArray = this.directMethods;
+        if(methodDefArray != null){
+            methodDef = methodDefArray.get(key);
+        }
         if(methodDef == null){
-            methodDef = getVirtualMethodsArray().get(key);
+            methodDefArray = this.virtualMethods;
+            if(methodDefArray != null){
+                methodDef = methodDefArray.get(key);
+            }
         }
         return methodDef;
     }
     public FieldDef getOrCreateStatic(FieldKey fieldKey){
-        FieldDef fieldDef = getStaticFieldsArray().getOrCreate(fieldKey);
+        FieldDef fieldDef = initStaticFieldsArray().getOrCreate(fieldKey);
         fieldDef.addAccessFlag(AccessFlag.STATIC);
-        fieldDef.addAccessFlag(AccessFlag.PUBLIC);
-        fieldDef.addAccessFlag(AccessFlag.FINAL);
         return fieldDef;
+    }
+    public FieldDef getOrCreateInstance(FieldKey fieldKey){
+        return initInstanceFieldsArray().getOrCreate(fieldKey);
     }
     public void ensureStaticConstructor(String type){
         MethodKey methodKey = new MethodKey(type, "<clinit>", null, "V");
-        MethodDef methodDef = getDirectMethodsArray().get(methodKey);
+        MethodDef methodDef = getMethod(methodKey);
         if(methodDef != null){
             return;
         }
-        methodDef = getDirectMethodsArray().getOrCreate(methodKey);
+        methodDef = initDirectMethodsArray().getOrCreate(methodKey);
         methodDef.addAccessFlag(AccessFlag.STATIC);
         methodDef.addAccessFlag(AccessFlag.CONSTRUCTOR);
         InstructionList instructionList = methodDef.getCodeItem().getInstructionList();
         instructionList.add(Opcode.RETURN_VOID.newInstance());
+    }
+
+    public MethodDef getOrCreateDirect(MethodKey methodKey){
+        return initDirectMethodsArray().getOrCreate(methodKey);
+    }
+    public MethodDef getOrCreateVirtual(MethodKey methodKey){
+        return initVirtualMethodsArray().getOrCreate(methodKey);
     }
     public Iterator<Ins> getInstructions(){
         return new IterableIterator<MethodDef, Ins>(getMethods()){
@@ -160,29 +173,116 @@ public class ClassData extends DataItem
         return new CombiningIterator<>(getDirectMethods(), getVirtualMethods());
     }
     public Iterator<MethodDef> getDirectMethods(){
-        return getDirectMethodsArray().arrayIterator();
+        MethodDefArray methodDefArray = this.directMethods;
+        if(methodDefArray == null){
+            return EmptyIterator.of();
+        }
+        return methodDefArray.arrayIterator();
     }
+    public Iterator<MethodDef> getConstructors(){
+        return FilterIterator.of(getDirectMethods(), MethodDef::isConstructor);
+    }
+
     public Iterator<MethodDef> getVirtualMethods(){
-        return getVirtualMethodsArray().arrayIterator();
+        MethodDefArray methodDefArray = this.virtualMethods;
+        if(methodDefArray == null){
+            return EmptyIterator.of();
+        }
+        return methodDefArray.arrayIterator();
     }
-    public MethodDefArray getDirectMethodsArray() {
+    public Iterator<FieldDef> getStaticFields(){
+        FieldDefArray fieldDefArray = this.staticFields;
+        if(fieldDefArray == null){
+            return EmptyIterator.of();
+        }
+        return fieldDefArray.arrayIterator();
+    }
+    public Iterator<FieldDef> getInstanceFields(){
+        FieldDefArray fieldDefArray = this.instanceFields;
+        if(fieldDefArray == null){
+            return EmptyIterator.of();
+        }
+        return fieldDefArray.arrayIterator();
+    }
+    public int getStaticFieldsCount() {
+        FieldDefArray fieldDefArray = this.staticFields;
+        if(fieldDefArray == null){
+            return 0;
+        }
+        return fieldDefArray.getCount();
+    }
+    public int getInstanceFieldsCount() {
+        FieldDefArray fieldDefArray = this.instanceFields;
+        if(fieldDefArray == null){
+            return 0;
+        }
+        return fieldDefArray.getCount();
+    }
+    public int getDirectMethodsCount() {
+        MethodDefArray methodDefArray = this.directMethods;
+        if(methodDefArray == null){
+            return 0;
+        }
+        return methodDefArray.getCount();
+    }
+    public int getVirtualMethodsCount() {
+        MethodDefArray methodDefArray = this.virtualMethods;
+        if(methodDefArray == null){
+            return 0;
+        }
+        return methodDefArray.getCount();
+    }
+    public StaticFieldDefArray getStaticFieldsArray(){
+        return staticFields;
+    }
+    public FieldDefArray getInstanceFieldsArray(){
+        return instanceFields;
+    }
+    public MethodDefArray getDirectMethodsArray(){
         return directMethods;
     }
-    public MethodDefArray getVirtualMethodsArray() {
+    public MethodDefArray getVirtualMethodArray(){
         return virtualMethods;
     }
 
-    public Iterator<FieldDef> getStaticFields(){
-        return getStaticFieldsArray().arrayIterator();
+    private FieldDefArray initStaticFieldsArray() {
+        StaticFieldDefArray fieldDefArray = this.staticFields;
+        if(fieldDefArray == null){
+            fieldDefArray = new StaticFieldDefArray(staticFieldsCount);
+            this.staticFields = fieldDefArray;
+            addChild(4, staticFields);
+        }
+        return fieldDefArray;
     }
-    public Iterator<FieldDef> getInstanceFields(){
-        return getInstanceFieldsArray().arrayIterator();
+    private FieldDefArray initInstanceFieldsArray() {
+        FieldDefArray fieldDefArray = this.instanceFields;
+        if(fieldDefArray == null){
+            fieldDefArray = new FieldDefArray(instanceFieldsCount);
+            this.instanceFields = fieldDefArray;
+            addChild(5, instanceFields);
+        }
+        return fieldDefArray;
     }
-    public FieldDefArray getStaticFieldsArray() {
-        return staticFields;
+    private MethodDefArray initDirectMethodsArray() {
+        MethodDefArray methodDefArray = this.directMethods;
+        if(methodDefArray == null){
+            methodDefArray = new MethodDefArray(directMethodsCount);
+            this.directMethods = methodDefArray;
+            addChild(6, methodDefArray);
+        }
+        return methodDefArray;
     }
-    public FieldDefArray getInstanceFieldsArray() {
-        return instanceFields;
+    private MethodDefArray initVirtualMethodsArray() {
+        MethodDefArray methodDefArray = this.virtualMethods;
+        if(methodDefArray == null){
+            methodDefArray = new MethodDefArray(virtualMethodCount);
+            this.virtualMethods = methodDefArray;
+            addChild(7, methodDefArray);
+        }
+        return methodDefArray;
+    }
+    private Iterator<DefArray<?>> getDefArrays() {
+        return ArrayIterator.of(getChildes(), 4, 4);
     }
 
 
@@ -191,59 +291,89 @@ public class ClassData extends DataItem
             return;
         }
         this.mClassId = classId;
+        Iterator<DefArray<?>> iterator = getDefArrays();
+        while (iterator.hasNext()){
+            iterator.next().setClassId(classId);
+        }
+    }
 
-        staticFields.setClassId(classId);
-        instanceFields.setClassId(classId);
-        directMethods.setClassId(classId);
-        virtualMethods.setClassId(classId);
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+        if(staticFieldsCount.get() != 0){
+            initStaticFieldsArray().onReadBytes(reader);
+        }
+        if(instanceFieldsCount.get() != 0){
+            initInstanceFieldsArray().onReadBytes(reader);
+        }
+        if(directMethodsCount.get() != 0){
+            initDirectMethodsArray().onReadBytes(reader);
+        }
+        if(virtualMethodCount.get() != 0){
+            initVirtualMethodsArray().onReadBytes(reader);
+        }
     }
 
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
-        staticFields.sort(CompareUtil.getComparableComparator());
-        instanceFields.sort(CompareUtil.getComparableComparator());
-        directMethods.sort(CompareUtil.getComparableComparator());
-        virtualMethods.sort(CompareUtil.getComparableComparator());
+        Iterator<DefArray<?>> iterator = getDefArrays();
+        while (iterator.hasNext()){
+            iterator.next().sort(CompareUtil.getComparableComparator());
+        }
     }
 
     @Override
     public void removeSelf() {
         super.removeSelf();
-        staticFields.clearChildes();
-        instanceFields.clearChildes();
-        directMethods.clearChildes();
-        virtualMethods.clearChildes();
+        Iterator<DefArray<?>> iterator = getDefArrays();
+        while (iterator.hasNext()){
+            iterator.next().clearChildes();
+        }
         setClassId(null);
     }
-
+    public void replaceKeys(Key search, Key replace){
+        Iterator<DefArray<?>> iterator = getDefArrays();
+        while (iterator.hasNext()){
+            iterator.next().replaceKeys(search, replace);
+        }
+    }
+    @Override
     public Iterator<IdItem> usedIds(){
-        return CombiningIterator.four(
-                staticFields.usedIds(),
-                instanceFields.usedIds(),
-                directMethods.usedIds(),
-                virtualMethods.usedIds()
-        );
+        return new IterableIterator<DefArray<?>, IdItem>(getDefArrays()) {
+            @Override
+            public Iterator<IdItem> iterator(DefArray<?> element) {
+                return element.usedIds();
+            }
+        };
     }
     public void merge(ClassData classData){
-        staticFields.merge(classData.staticFields);
-        instanceFields.merge(classData.instanceFields);
-        directMethods.merge(classData.directMethods);
-        virtualMethods.merge(classData.virtualMethods);
+        if(classData.getStaticFieldsCount() != 0){
+            initStaticFieldsArray().merge(classData.staticFields);
+        }
+        if(classData.getInstanceFieldsCount() != 0){
+            initInstanceFieldsArray().merge(classData.instanceFields);
+        }
+        if(classData.getDirectMethodsCount() != 0){
+            initDirectMethodsArray().merge(classData.directMethods);
+        }
+        if(classData.getVirtualMethodsCount() != 0){
+            initVirtualMethodsArray().merge(classData.virtualMethods);
+        }
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        staticFields.append(writer);
-        instanceFields.append(writer);
-        directMethods.append(writer);
-        virtualMethods.append(writer);
+        writer.appendOptional(staticFields, "static fields");
+        writer.appendOptional(instanceFields, "instance fields");
+        writer.appendOptional(directMethods, "direct methods");
+        writer.appendOptional(virtualMethods, "virtual methods");
     }
     @Override
     public String toString() {
         return "staticFieldsCount=" + staticFieldsCount +
-                ", instanceFieldCount=" + instanceFieldCount +
-                ", directMethodCount=" + directMethodCount +
+                ", instanceFieldCount=" + instanceFieldsCount +
+                ", directMethodCount=" + directMethodsCount +
                 ", virtualMethodCount=" + virtualMethodCount;
     }
 

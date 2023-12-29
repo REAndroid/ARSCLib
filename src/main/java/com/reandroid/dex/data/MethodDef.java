@@ -16,7 +16,6 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.debug.DebugParameter;
@@ -26,9 +25,9 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.reference.DataItemUle128Reference;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
-import com.reandroid.utils.CompareUtil;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliRegion;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
@@ -37,7 +36,7 @@ import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
+public class MethodDef extends Def<MethodId>{
 
     private final DataItemUle128Reference<CodeItem> codeOffset;
 
@@ -46,22 +45,16 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         this.codeOffset = new DataItemUle128Reference<>(SectionType.CODE, UsageMarker.USAGE_DEFINITION);
         addChild(2, codeOffset);
     }
-
-    public boolean isConstructor(){
-        return AccessFlag.CONSTRUCTOR.isSet(getAccessFlagsValue());
-    }
     public boolean isBridge(){
         return AccessFlag.BRIDGE.isSet(getAccessFlagsValue());
     }
+
     @Override
-    public void visitIntegers(IntegerVisitor visitor) {
-        CodeItem codeItem = getCodeItem();
-        if(codeItem != null){
-            codeItem.visitIntegers(visitor);
-        }
+    public boolean isDirect(){
+        return isConstructor() || isPrivate() || isStatic();
     }
     public String getName() {
-        MethodId methodId = getMethodId();
+        MethodId methodId = getId();
         if(methodId != null) {
             return methodId.getName();
         }
@@ -71,20 +64,12 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         if(Objects.equals(getName(), name)){
             return;
         }
-        getMethodId().setName(name);
-    }
-    @Override
-    public String getClassName(){
-        MethodId methodId = getMethodId();
-        if(methodId != null){
-            return methodId.getClassName();
-        }
-        return null;
+        getId().setName(name);
     }
     public int getParametersCount(){
-        ProtoId protoId = getProtoId();
-        if(protoId != null){
-            return protoId.getParametersCount();
+        MethodId methodId = getId();
+        if(methodId != null){
+            return methodId.getParametersCount();
         }
         return 0;
     }
@@ -139,16 +124,12 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         return getOrCreateCodeItem().getOrCreateDebugInfo();
     }
     public ProtoId getProtoId(){
-        MethodId methodId = getMethodId();
+        MethodId methodId = getId();
         if(methodId != null){
             return methodId.getProto();
         }
         return null;
     }
-    public MethodId getMethodId(){
-        return getItem();
-    }
-
     public Iterator<Ins> getInstructions() {
         InstructionList instructionList = getInstructionList();
         if(instructionList != null) {
@@ -224,6 +205,10 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         }
         return directory.getParameterAnnotation(getDefinitionIndex(), parameterIndex);
     }
+    @Override
+    public AccessFlag[] getAccessFlags(){
+        return AccessFlag.getForMethod(getAccessFlagsValue());
+    }
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
@@ -233,30 +218,20 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
+        writer.onWriteMethod(getKey());
         writer.newLine();
-        writer.append(".method ");
-        AccessFlag[] accessFlags = AccessFlag.getForMethod(getAccessFlagsValue());
-        for(AccessFlag af:accessFlags){
-            writer.append(af.toString());
-            writer.append(' ');
-        }
-        MethodId methodId = getMethodId();
-        writer.append(methodId.getNameString().getString());
-        writer.append('(');
-        ProtoId protoId = methodId.getProto();
-        protoId.append(writer);
-        writer.append(')');
-        methodId.getProto().getReturnTypeId().append(writer);
+        getSmaliDirective().append(writer);
+
+        AccessFlag.append(writer, getAccessFlags());
+        HiddenApiFlag.append(writer, getHiddenApiFlags());
+
+        getId().append(writer, false);
         writer.indentPlus();
-        CodeItem codeItem = getCodeItem();
-        if(codeItem != null){
-            codeItem.append(writer);
-        }else {
+        if(!writer.appendOptional(getCodeItem())){
             appendAnnotations(writer);
         }
         writer.indentMinus();
-        writer.newLine();
-        writer.append(".end method");
+        getSmaliDirective().appendEnd(writer);
     }
     void appendParameterAnnotations(SmaliWriter writer, ProtoId protoId) throws IOException {
         if(protoId == null || protoId.getParametersCount() == 0){
@@ -280,9 +255,12 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         while (iterator.hasNext()){
             if(!appendOnce){
                 int param = isStatic() ? 0 : 1;
+                MethodKey methodKey = getKey();
+                param += methodKey.getRegister(index);
                 writer.newLine();
-                writer.append(".param p");
-                writer.append(index + param);
+                SmaliDirective.PARAM.append(writer);
+                writer.append('p');
+                writer.append(param);
                 writer.appendComment(typeId.getName());
                 writer.indentPlus();
             }
@@ -291,11 +269,18 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         }
         if(appendOnce){
             writer.indentMinus();
-            writer.newLine();
-            writer.append(".end param");
+            SmaliDirective.PARAM.appendEnd(writer);
         }
     }
 
+    @Override
+    public void replaceKeys(Key search, Key replace){
+        super.replaceKeys(search, replace);
+        CodeItem codeItem = getCodeItem();
+        if(codeItem != null){
+            codeItem.replaceKeys(search, replace);
+        }
+    }
     @Override
     public Iterator<IdItem> usedIds(){
         Iterator<IdItem> iterator;
@@ -305,7 +290,7 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         }else {
             iterator = codeItem.usedIds();
         }
-        return CombiningIterator.singleOne(getItem(), iterator);
+        return CombiningIterator.singleOne(getId(), iterator);
     }
     @Override
     public void merge(Def<?> def){
@@ -316,37 +301,26 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
             this.codeOffset.setItem(comingCode.getKey());
         }
     }
-    private void mergeParameterAnnotations(MethodDef methodDef){
-        Iterator<AnnotationGroup> comingIterator = methodDef.getParameterAnnotations();
-        AnnotationsDirectory directory = null;
-        while (comingIterator.hasNext()){
-            if(directory == null){
-                directory = getOrCreateUniqueAnnotationsDirectory();
-            }
-            AnnotationGroup comingGroup = comingIterator.next();
-            directory.addParameterAnnotation(this, comingGroup);
-        }
-    }
 
     @Override
-    public int compareTo(MethodDef methodDef) {
-        if(methodDef == null){
-            return -1;
-        }
-        return CompareUtil.compare(getMethodId(), methodDef.getMethodId());
+    public SmaliDirective getSmaliDirective() {
+        return SmaliDirective.METHOD;
     }
+
     @Override
     public String toString() {
-        MethodId methodId = getMethodId();
+        if(isReading()){
+            return getSmaliDirective() + " " + getKey();
+        }
+        MethodId methodId = getId();
         if(methodId != null){
-            return ".method " + AccessFlag.formatForMethod(getAccessFlagsValue())
+            return getSmaliDirective() + " " + AccessFlag.formatForMethod(getAccessFlagsValue())
                     + " " + methodId.toString();
         }
-        return ".method " + AccessFlag.formatForMethod(getAccessFlagsValue())
+        return getSmaliDirective() + " " + AccessFlag.formatForMethod(getAccessFlagsValue())
                 + " " + getRelativeIdValue();
     }
-
-    public static class Parameter implements DefIndex, SmaliFormat {
+    public static class Parameter implements DefIndex, SmaliRegion {
 
         private final MethodDef methodDef;
         private final int index;
@@ -456,7 +430,8 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
                 if(!appendOnce){
                     int param = this.methodDef.isStatic() ? 0 : 1;
                     writer.newLine();
-                    writer.append(".param p");
+                    getSmaliDirective().append(writer);
+                    writer.append('p');
                     writer.append(getDefinitionIndex() + param);
                     writer.appendComment(typeId.getName());
                     writer.indentPlus();
@@ -466,8 +441,7 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
             }
             if(appendOnce){
                 writer.indentMinus();
-                writer.newLine();
-                writer.append(".end param");
+                getSmaliDirective().appendEnd(writer);
             }
         }
         private String getDebugString() throws IOException {
@@ -522,6 +496,10 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
         }
 
         @Override
+        public SmaliDirective getSmaliDirective() {
+            return SmaliDirective.PARAM;
+        }
+        @Override
         public String toString() {
             try {
                 return getDebugString();
@@ -530,5 +508,4 @@ public class MethodDef extends Def<MethodId> implements Comparable<MethodDef>{
             }
         }
     }
-
 }

@@ -20,7 +20,6 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.data.DataItem;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.SectionType;
 
 import java.io.IOException;
@@ -47,7 +46,7 @@ public class DataItemUle128Reference<T extends DataItem> extends Ule128Item impl
         if(item != null) {
             return item;
         }
-        item = createItem(getSectionType());
+        item = createSectionItem(getSectionType());
         setItem(item);
         return item;
     }
@@ -63,7 +62,7 @@ public class DataItemUle128Reference<T extends DataItem> extends Ule128Item impl
     }
     @Override
     public void setItem(Key key){
-        setItem(getOrCreate(getSectionType(), key));
+        setItem(getOrCreateSectionItem(getSectionType(), key));
     }
     @Override
     public Key getKey() {
@@ -74,8 +73,8 @@ public class DataItemUle128Reference<T extends DataItem> extends Ule128Item impl
         return null;
     }
     @Override
-    public void updateItem(){
-        this.item = get(getSectionType(), get());
+    public void pullItem(){
+        this.item = getSectionItem(getSectionType(), get());
         updateItemUsage();
     }
     @Override
@@ -90,10 +89,7 @@ public class DataItemUle128Reference<T extends DataItem> extends Ule128Item impl
             item = item.getReplace();
         }
         if(item != null){
-            value = item.getOffset();
-            if(value == 0){
-                item = null;
-            }
+            value = item.getIdx();
         }
         this.item = item;
         set(value);
@@ -107,7 +103,7 @@ public class DataItemUle128Reference<T extends DataItem> extends Ule128Item impl
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
-        updateItem();
+        pullItem();
     }
     private void updateItemUsage(){
         int usageType = this.usageType;

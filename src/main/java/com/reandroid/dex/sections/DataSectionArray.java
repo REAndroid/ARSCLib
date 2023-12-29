@@ -18,9 +18,7 @@ package com.reandroid.dex.sections;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.IntegerPair;
-import com.reandroid.dex.base.PositionAlignedItem;
 import com.reandroid.dex.data.DataItem;
 
 import java.io.IOException;
@@ -70,13 +68,12 @@ public class DataSectionArray<T extends DataItem> extends SectionArray<T> {
             return null;
         }
         int length = offsets.length;
-        T[] results = newInstance(offsets.length);
+        T[] results = this.newArrayInstance(offsets.length);
         for(int i = 0; i < length; i++){
             results[i] = getAt(offsets[i]);
         }
         return results;
     }
-
     @Override
     public void readChild(BlockReader reader, T item) throws IOException {
         int offset = reader.getPosition();
@@ -91,35 +88,6 @@ public class DataSectionArray<T extends DataItem> extends SectionArray<T> {
         if(reference != null){
             reference.set(0);
         }
-    }
-
-    int updateItemOffsets(int position){
-        int count = this.getCount();
-        this.getCountAndOffset().getFirst().set(count);
-        DexPositionAlign previous = null;
-        for(int i = 0; i < count; i++){
-            T item = this.get(i);
-            if(item == null) {
-                previous = null;
-                continue;
-            }
-            DexPositionAlign itemAlign = null;
-            if(item instanceof PositionAlignedItem){
-                itemAlign = ((PositionAlignedItem) item).getPositionAlign();
-                itemAlign.setSize(0);
-                if(previous != null){
-                    previous.align(position);
-                    position += previous.size();
-                }
-            }
-            if(i == count-1){
-                item.removeLastAlign();
-            }
-            item.setPosition(position);
-            position += item.countBytes();
-            previous = itemAlign;
-        }
-        return position;
     }
 
     private T lazySearch(int offset){
@@ -157,6 +125,8 @@ public class DataSectionArray<T extends DataItem> extends SectionArray<T> {
                     lookChanged = true;
                     lookFront = false;
                     step = 1;
+                }else if(lookBack && i == 0){
+                    return null;
                 }
                 if(!lookChanged){
                     int remain = i/3 + 1;

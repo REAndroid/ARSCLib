@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
@@ -29,7 +30,7 @@ public class AnnotationGroup extends IntegerDataItemList<AnnotationSet> implemen
     private final DataKey<AnnotationGroup> mKey;
 
     public AnnotationGroup() {
-        super(SectionType.ANNOTATION_SET);
+        super(SectionType.ANNOTATION_SET, UsageMarker.USAGE_ANNOTATION);
         this.mKey = new DataKey<>(this);
     }
 
@@ -43,9 +44,17 @@ public class AnnotationGroup extends IntegerDataItemList<AnnotationSet> implemen
         DataKey<AnnotationGroup> dataKey = (DataKey<AnnotationGroup>) key;
         merge(dataKey.getItem());
     }
-
+    @Override
+    public SectionType<AnnotationGroup> getSectionType() {
+        return SectionType.ANNOTATION_GROUP;
+    }
     @Override
     void removeNulls() {
+    }
+    public void replaceKeys(Key search, Key replace){
+        for(AnnotationSet annotationSet : this){
+            annotationSet.replaceKeys(search, replace);
+        }
     }
     public Iterator<IdItem> usedIds(){
         return new IterableIterator<AnnotationSet, IdItem>(iterator()) {

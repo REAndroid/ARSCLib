@@ -33,11 +33,14 @@ public class DataSection<T extends DataItem> extends Section<T> {
     }
 
     @Override
-    public T get(int offset){
+    void clearUnused() {
+    }
+    @Override
+    public T getSectionItem(int offset){
         return getItemArray().getAt(offset);
     }
     @Override
-    public T[] get(int[] offsets){
+    public T[] getSectionItems(int[] offsets){
         return getItemArray().getAt(offsets);
     }
     public T createItem() {
@@ -90,6 +93,11 @@ public class DataSection<T extends DataItem> extends Section<T> {
         if(section != null){
             offset += section.getOffset();
         }
+        if(offset == 0){
+            // Seems like new/empty DexLayout, set non zero value to avoid invalid offset,
+            // anyways it will correct itself on refresh.
+            offset = 1;
+        }
         getOffsetReference().set(offset);
         return offset;
     }
@@ -110,7 +118,7 @@ public class DataSection<T extends DataItem> extends Section<T> {
 
     private void updateItemOffsets(int position){
         DataSectionArray<T> array = getItemArray();
-        position = array.updateItemOffsets(position);
+        position = array.updatePositionedItemOffsets(position);
         updateNextSection(position);
     }
     @Override

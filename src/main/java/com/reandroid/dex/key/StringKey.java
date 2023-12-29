@@ -17,11 +17,17 @@ package com.reandroid.dex.key;
 
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
+import java.util.Iterator;
 import java.util.Objects;
 
 public class StringKey implements Key{
+
     private final String text;
+    private boolean mSignature;
 
     public StringKey(String text) {
         this.text = text;
@@ -32,6 +38,38 @@ public class StringKey implements Key{
     }
 
     @Override
+    public boolean isPlatform() {
+        return false;
+    }
+
+    public boolean isSignature() {
+        return mSignature;
+    }
+    public void setSignature(boolean signature) {
+        this.mSignature = signature;
+    }
+
+    @Override
+    public TypeKey getDeclaring() {
+        if(!isSignature()){
+            return null;
+        }
+        return TypeKey.parseSignature(getString());
+    }
+    @Override
+    public Iterator<Key> mentionedKeys() {
+        return CombiningIterator.singleOne(
+                getDeclaring(),
+                SingleIterator.of(this));
+    }
+    @Override
+    public Key replaceKey(Key search, Key replace) {
+        if(search.equals(this)){
+            return replace;
+        }
+        return this;
+    }
+    @Override
     public int compareTo(Object obj) {
         if(obj == null){
             return -1;
@@ -41,7 +79,7 @@ public class StringKey implements Key{
     }
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
+        if (this == obj || obj == ANY) {
             return true;
         }
         if (!(obj instanceof StringKey)) {
@@ -69,8 +107,20 @@ public class StringKey implements Key{
         return new StringKey(text);
     }
 
-    public static final StringKey EMPTY = new StringKey("");
+    public static final StringKey EMPTY = new StringKey(StringsUtil.EMPTY);
 
-    // Yes not final, to minimize multiple 'String' Objects
-    public static String EMPTY_STRING = "";
+    public static final StringKey ANY = new StringKey(StringsUtil.EMPTY){
+        @Override
+        public boolean equals(Object obj) {
+            return obj == this;
+        }
+        @Override
+        public int hashCode() {
+            return -1;
+        }
+        @Override
+        public String toString() {
+            return StringsUtil.EMPTY;
+        }
+    };
 }

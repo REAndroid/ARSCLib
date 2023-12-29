@@ -17,8 +17,12 @@ package com.reandroid.dex.key;
 
 import com.reandroid.dex.data.TypeList;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.ComputeIterator;
 
-public class TypeListKey implements Key {
+import java.util.Iterator;
+
+public class TypeListKey implements Key, Iterable<String> {
 
     private final String[] parameters;
 
@@ -26,17 +30,21 @@ public class TypeListKey implements Key {
         this.parameters = parameters;
     }
 
-
-    public TypeListKey removeParameter(int index){
-        String[] parameters = getParameters();
-        if(parameters == null || parameters.length < 2){
-            return null;
+    public TypeListKey remove(int index){
+        String[] parameters = getParameterNames();
+        if(parameters == null){
+            return this;
         }
         int length = parameters.length;
         if(index < 0 || index >= length){
             return this;
         }
-        String[] results = new String[length - 1];
+        String[] results;
+        if(length == 1){
+            results = null;
+        }else {
+            results = new String[length - 1];
+        }
         int count = 0;
         for(int i = 0; i < length; i++){
             if(i != index){
@@ -46,30 +54,105 @@ public class TypeListKey implements Key {
         }
         return new TypeListKey(results);
     }
+    public TypeListKey add(String name){
+        int length = 0;
+        String[] parameters = getParameterNames();
+        if(parameters != null){
+            length = parameters.length;
+        }
+        String[] results = new String[length + 1];
+        int count = 0;
+        if(parameters != null){
+            for(int i = 0; i < length; i++){
+                results[count] = parameters[i];
+                count ++;
+            }
+        }
+        results[count] = name;
+        return new TypeListKey(results);
+    }
 
-    public String[] getParameters() {
+    public String[] getParameterNames() {
         return parameters;
     }
-    public int getParametersCount() {
-        String[] parameters = getParameters();
+    public int indexOf(String name){
+        if(name == null){
+            return -1;
+        }
+        String[] parameters = getParameterNames();
+        if(parameters != null){
+            int length = parameters.length;
+            for(int i = 0; i < length; i++){
+                if(name.equals(parameters[i])){
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+    public int indexOf(TypeKey typeKey){
+        if(typeKey == null){
+            return -1;
+        }
+        int size = size();
+        for(int i = 0; i < size; i++){
+            if(typeKey.equals(getType(i))){
+                return i;
+            }
+        }
+        return -1;
+    }
+    public int size() {
+        String[] parameters = getParameterNames();
         if(parameters != null){
             return parameters.length;
         }
         return 0;
     }
-    public String getParameter(int i){
-        return getParameters()[i];
+    public String get(int i){
+        return getParameterNames()[i];
     }
-    public TypeKey getParameterType(int i){
-        return TypeKey.create(getParameter(i));
+    public TypeKey getType(int i){
+        return TypeKey.create(get(i));
     }
+    public Iterator<TypeKey> getTypes(){
+        return ComputeIterator.of(iterator(), TypeKey::create);
+    }
+    @Override
+    public Iterator<String> iterator(){
+        return ArrayIterator.of(getParameterNames());
+    }
+    @Override
+    public Iterator<TypeKey> mentionedKeys() {
+        return getTypes();
+    }
+    @Override
+    public Key replaceKey(Key search, Key replace) {
+        TypeListKey result = this;
+        if(search.equals(result)){
+            return replace;
+        }
+        String[] parameters = this.getParameterNames();
+        if(parameters != null && search instanceof TypeKey){
+            TypeKey searchType = (TypeKey) search;
+            String replaceType = ((TypeKey) replace).getTypeName();
+            int length = parameters.length;
+            for(int i = 0; i < length; i++){
+                if(searchType.equals(new TypeKey(parameters[i]))){
+                    parameters[i] = replaceType;
+                }
+            }
+        }
+        return result;
+    }
+
     @Override
     public int compareTo(Object obj) {
         if(obj == null){
             return -1;
         }
         TypeListKey key = (TypeListKey) obj;
-        return CompareUtil.compare(getParameters(), key.getParameters());
+        return CompareUtil.compare(getParameterNames(), key.getParameterNames());
     }
 
     @Override
@@ -81,13 +164,13 @@ public class TypeListKey implements Key {
             return false;
         }
         TypeListKey key = (TypeListKey) obj;
-        return CompareUtil.compare(getParameters(), key.getParameters()) == 0;
+        return CompareUtil.compare(getParameterNames(), key.getParameterNames()) == 0;
     }
 
     @Override
     public int hashCode() {
         int hash = 1;
-        String[] parameters = getParameters();
+        String[] parameters = getParameterNames();
         if(parameters != null){
             for(String param : parameters){
                 hash = hash * 31 + param.hashCode();
@@ -99,7 +182,7 @@ public class TypeListKey implements Key {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append('(');
-        String[] parameters = getParameters();
+        String[] parameters = getParameterNames();
         if(parameters != null){
             for (String parameter : parameters) {
                 builder.append(parameter);

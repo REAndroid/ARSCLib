@@ -18,53 +18,90 @@ package com.reandroid.dex.key;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.SingleIterator;
+
+import java.util.Iterator;
 
 
 public class FieldKey implements Key {
 
-    private final String defining;
+    private final String declaring;
     private final String name;
     private final String type;
 
-    public FieldKey(String defining, String name, String type) {
-        this.defining = defining;
+    public FieldKey(String declaring, String name, String type) {
+        this.declaring = declaring;
         this.name = name;
         this.type = type;
     }
 
     public FieldKey changeDefining(TypeKey typeKey){
-        return changeDefining(typeKey.getType());
+        return changeDefining(typeKey.getTypeName());
     }
     public FieldKey changeDefining(String defining){
-        if(defining.equals(getDefining())){
+        if(defining.equals(getDeclaringName())){
             return this;
         }
-        return new FieldKey(defining, getName(), getType());
+        return new FieldKey(defining, getName(), getTypeName());
     }
     public FieldKey changeName(String name){
         if(name.equals(getName())){
             return this;
         }
-        return new FieldKey(getDefining(), name, getType());
+        return new FieldKey(getDeclaringName(), name, getTypeName());
+    }
+    public FieldKey changeType(TypeKey typeKey){
+        return changeType(typeKey.getTypeName());
+    }
+    public FieldKey changeType(String type){
+        if(type.equals(getTypeName())){
+            return this;
+        }
+        return new FieldKey(getDeclaringName(), getName(), type);
     }
 
-    public TypeKey getDefiningKey() {
-        return new TypeKey(getDefining());
+    @Override
+    public TypeKey getDeclaring() {
+        return new TypeKey(getDeclaringName());
     }
+    @Override
+    public Iterator<Key> mentionedKeys() {
+        return CombiningIterator.singleThree(
+                FieldKey.this,
+                SingleIterator.of(getDeclaring()),
+                SingleIterator.of(getNameKey()),
+                SingleIterator.of(getType()));
+    }
+    @Override
+    public Key replaceKey(Key search, Key replace) {
+        FieldKey result = this;
+        if(search.equals(result)){
+            return replace;
+        }
+        if(search.equals(result.getDeclaring())){
+            result = result.changeDefining((TypeKey) replace);
+        }
+        if(search.equals(result.getType())){
+            result = result.changeType((TypeKey) replace);
+        }
+        return result;
+    }
+
     public StringKey getNameKey() {
         return new StringKey(getName());
     }
-    public TypeKey getTypeKey() {
-        return new TypeKey(getType());
+    public TypeKey getType() {
+        return new TypeKey(getTypeName());
     }
 
-    public String getDefining() {
-        return defining;
+    public String getDeclaringName() {
+        return declaring;
     }
     public String getName() {
         return name;
     }
-    public String getType() {
+    public String getTypeName() {
         return type;
     }
 
@@ -79,7 +116,7 @@ public class FieldKey implements Key {
         FieldKey key = (FieldKey) obj;
         int i;
         if(compareDefining){
-            i = CompareUtil.compare(getDefining(), key.getDefining());
+            i = CompareUtil.compare(getDeclaringName(), key.getDeclaringName());
             if(i != 0) {
                 return i;
             }
@@ -88,13 +125,13 @@ public class FieldKey implements Key {
         if(i != 0) {
             return i;
         }
-        return CompareUtil.compare(getType(), key.getType());
+        return CompareUtil.compare(getTypeName(), key.getTypeName());
     }
 
     @Override
     public int hashCode() {
         int hash = 1;
-        String defining = getDefining();
+        String defining = getDeclaringName();
         if(defining != null){
             hash += defining.hashCode();
         }
@@ -117,12 +154,12 @@ public class FieldKey implements Key {
             return false;
         }
         if(checkDefining){
-            if(!KeyUtil.matches(getDefining(), fieldKey.getDefining())){
+            if(!KeyUtil.matches(getDeclaringName(), fieldKey.getDeclaringName())){
                 return false;
             }
         }
         if(checkType){
-            return KeyUtil.matches(getType(), fieldKey.getType());
+            return KeyUtil.matches(getTypeName(), fieldKey.getTypeName());
         }
         return true;
     }
@@ -130,13 +167,13 @@ public class FieldKey implements Key {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append(getDefining());
+        builder.append(getDeclaringName());
         builder.append("->");
         builder.append(getName());
-        String type = getType();
+        String type = getTypeName();
         if(type != null){
             builder.append(':');
-            builder.append(getType());
+            builder.append(getTypeName());
         }
         return builder.toString();
     }
@@ -168,7 +205,7 @@ public class FieldKey implements Key {
         return new FieldKey(defining, name, type);
     }
     public static FieldKey create(FieldId fieldId){
-        String defining = fieldId.getClassName();
+        TypeKey defining = fieldId.getDefining();
         if(defining == null){
             return null;
         }
@@ -176,7 +213,11 @@ public class FieldKey implements Key {
         if(name == null) {
             return null;
         }
-        return new FieldKey(defining, name, fieldId.getFieldTypeName());
+        TypeKey fieldType = fieldId.getFieldType();
+        if(fieldType == null){
+            return null;
+        }
+        return new FieldKey(defining.getTypeName(), name, fieldType.getTypeName());
     }
 
 }

@@ -15,19 +15,10 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.arsc.item.IntegerVisitor;
-import com.reandroid.arsc.item.VisitableInteger;
-
-public class InsConst extends Ins31i implements IntegerReference, VisitableInteger {
+public class InsConst extends Ins31i implements ConstNumber {
 
     public InsConst() {
         super(Opcode.CONST);
-    }
-
-    @Override
-    public void visitIntegers(IntegerVisitor visitor) {
-        visitor.visit(this, this);
     }
 
     @Override
@@ -39,4 +30,12 @@ public class InsConst extends Ins31i implements IntegerReference, VisitableInteg
         setData(value);
     }
 
+    @Override
+    public int getRegister() {
+        return getRegister(0);
+    }
+    @Override
+    public void setRegister(int register) {
+        setRegister(0, register);
+    }
 }

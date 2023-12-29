@@ -19,8 +19,9 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
@@ -32,6 +33,8 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
     private final ByteItem valueTypeItem;
     private final T valueContainer;
 
+    private boolean mTemporary;
+
     DexValueBlock(T value, DexValueType<?> type){
         super(2);
         valueTypeItem = new ByteItem();
@@ -42,6 +45,13 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
     }
     DexValueBlock(DexValueType<?> type){
         this(null, type);
+    }
+
+    public boolean isTemporary() {
+        return mTemporary;
+    }
+    public void setTemporary(boolean temporary) {
+        this.mTemporary = temporary;
     }
 
     T getValueContainer(){
@@ -64,6 +74,9 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
         valueTypeItem.set((byte) flag);
     }
 
+
+    public void replaceKeys(Key search, Key replace){
+    }
     public Iterator<IdItem> usedIds(){
         return EmptyIterator.of();
     }
@@ -81,6 +94,9 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
         return String.valueOf(getValueContainer());
     }
 
+    public boolean is(DexValueType<?> dexValueType){
+        return dexValueType == getValueType();
+    }
     @Override
     public int hashCode() {
         int hash = 1;

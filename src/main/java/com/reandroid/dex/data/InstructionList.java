@@ -15,20 +15,18 @@
  */
 package com.reandroid.dex.data;
 
-import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerVisitor;
-import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.debug.DebugElement;
+import com.reandroid.dex.debug.DebugLineNumber;
 import com.reandroid.dex.debug.DebugSequence;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.ins.*;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
-import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.IterableIterator;
@@ -36,16 +34,16 @@ import com.reandroid.utils.collection.IterableIterator;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
 import java.util.function.Predicate;
 
 public class InstructionList extends FixedBlockContainer implements
-        Iterable<Ins>, SmaliFormat, VisitableInteger {
+        Iterable<Ins>, SmaliFormat {
 
     private final CodeItem codeItem;
     private final BlockList<Ins> insArray;
     private final DexPositionAlign blockAlign;
+
+    private boolean mLockExtraLines;
 
     public InstructionList(CodeItem codeItem){
         super(2);
@@ -80,6 +78,9 @@ public class InstructionList extends FixedBlockContainer implements
     }
     public DebugInfo getOrCreateDebugInfo(){
         return getCodeItem().getOrCreateDebugInfo();
+    }
+    public int getLocals(){
+        return getCodeItem().getLocals();
     }
     public CodeItem getCodeItem() {
         return codeItem;
@@ -266,19 +267,11 @@ public class InstructionList extends FixedBlockContainer implements
     }
 
     @Override
-    public void visitIntegers(IntegerVisitor visitor) {
-        List<Ins> insList = CollectionUtil.toList(this.iterator());
-        for(Ins ins : insList) {
-            if(ins instanceof VisitableInteger){
-                ((VisitableInteger)ins).visitIntegers(visitor);
-            }
-        }
-    }
-
-    @Override
     protected void onRefreshed() {
         super.onRefreshed();
         this.blockAlign.align(this);
+        this.codeItem.getCodeUnits().set(getCodeUnits());
+        clearExtraLines();
     }
     public int getCodeUnits() {
         int result = 0;
@@ -318,17 +311,17 @@ public class InstructionList extends FixedBlockContainer implements
         int zeroPosition = reader.getPosition();
 
         int count = (insCodeUnits + 1) / 2;
-        BlockList<Ins> insBlockArray = getInsArray();
-        insBlockArray.ensureCapacity(count);
+        BlockList<Ins> insBlockList = getInsArray();
+        insBlockList.ensureCapacity(count);
 
         while (reader.getPosition() < position){
             Opcode<?> opcode = Opcode.read(reader);
             Ins ins = opcode.newInstance();
             ins.setAddress((reader.getPosition() - zeroPosition) / 2);
-            insBlockArray.add(ins);
+            insBlockList.add(ins);
             ins.readBytes(reader);
         }
-        insBlockArray.trimToSize();
+        insBlockList.trimToSize();
         if(position != reader.getPosition()){
             // should not reach here
             reader.seek(position);
@@ -342,8 +335,12 @@ public class InstructionList extends FixedBlockContainer implements
         for (Ins ins : this) {
             ins.clearExtraLines();
         }
+        mLockExtraLines = false;
     }
     private boolean haveExtraLines() {
+        if(mLockExtraLines){
+            return true;
+        }
         for (Ins ins : this) {
             if(ins.hasExtraLines()){
                 return true;
@@ -355,6 +352,7 @@ public class InstructionList extends FixedBlockContainer implements
         if(haveExtraLines()){
             return;
         }
+        mLockExtraLines = true;
         buildLabels();
         buildTryBlock();
         buildDebugInfo();
@@ -400,8 +398,10 @@ public class InstructionList extends FixedBlockContainer implements
         addLabels(tryBlock.getLabels());
     }
     private void buildDebugInfo(){
+        mLockExtraLines = true;
         DebugInfo debugInfo = codeItem.getDebugInfo();
         if(debugInfo == null){
+            mLockExtraLines = false;
             return;
         }
         Iterator<DebugElement> iterator = debugInfo.getExtraLines();
@@ -412,11 +412,57 @@ public class InstructionList extends FixedBlockContainer implements
                 target.addExtraLine(element);
             }
         }
+        mLockExtraLines = false;
     }
     public void onRemove(){
         clearExtraLines();
         getInsArray().clearChildes();
         getInsArray().destroy();
+    }
+    public boolean cleanInvalidDebugLineNumbers(){
+        DebugInfo debugInfo = getDebugInfo();
+        if(debugInfo == null){
+            return false;
+        }
+        clearExtraLines();
+        boolean result = false;
+        buildDebugInfo();
+        for(Ins ins : this){
+            if(cleanInvalidDebugLineNumbers(ins)){
+                result = true;
+            }
+        }
+        clearExtraLines();
+        return result;
+    }
+    private boolean cleanInvalidDebugLineNumbers(Ins ins){
+        boolean result = false;
+        DebugLineNumber first = null;
+        int address = ins.getAddress();
+        Iterator<DebugLineNumber> iterator = ins.getExtraLines(DebugLineNumber.class);
+        while (iterator.hasNext()){
+            DebugLineNumber lineNumber = iterator.next();
+            if(lineNumber.getParent() == null){
+                continue;
+            }
+            if(lineNumber.getTargetAddress() != address){
+                lineNumber.removeSelf();
+                result = true;
+                continue;
+            }
+            if(first == null){
+                first = lineNumber;
+                continue;
+            }
+            lineNumber.removeSelf();
+            result = true;
+        }
+        return result;
+    }
+    public void replaceKeys(Key search, Key replace){
+        for(Ins ins : this){
+            ins.replaceKeys(search, replace);
+        }
     }
     public Iterator<IdItem> usedIds(){
         return new IterableIterator<Ins, IdItem>(iterator()) {
@@ -466,16 +512,4 @@ public class InstructionList extends FixedBlockContainer implements
         }
         return writer.toString();
     }
-    private static final Creator<Ins> CREATOR = new Creator<Ins>() {
-        @Override
-        public Ins[] newInstance(int length) {
-            return new Ins[length];
-        }
-        @Override
-        public Ins newInstance() {
-            return PLACE_HOLDER;
-        }
-    };
-
-    private static final Ins PLACE_HOLDER = Opcode.NOP.newInstance();
 }

@@ -17,16 +17,17 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexException;
-import com.reandroid.dex.base.NumberIntegerReference;
+import com.reandroid.arsc.item.NumberIntegerReference;
 import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.debug.DebugLineNumber;
 import com.reandroid.dex.debug.DebugSequence;
-import com.reandroid.dex.data.DexContainerItem;
+import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.data.MethodDef;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.InstanceIterator;
@@ -35,7 +36,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
 
-public class Ins extends DexContainerItem implements SmaliFormat {
+public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
 
     private final Opcode<?> opcode;
     private ExtraLineList extraLineList;
@@ -101,6 +102,14 @@ public class Ins extends DexContainerItem implements SmaliFormat {
         }
         instructionList.replace(this, ins);
     }
+    public<T1 extends Ins> T1 replace(Opcode<T1> opcode){
+        InstructionList instructionList = getInstructionList();
+        if(instructionList == null){
+            throw new DexException("Missing parent "
+                    + InstructionList.class.getSimpleName());
+        }
+        return instructionList.replace(this, opcode);
+    }
     public<T1 extends Ins> T1 createNext(Opcode<T1> opcode) {
         InstructionList instructionList = getInstructionList();
         if(instructionList == null){
@@ -114,6 +123,10 @@ public class Ins extends DexContainerItem implements SmaliFormat {
             throw new DexException("Parent " + getClass().getSimpleName() + " == null");
         }
         return instructionList.createAt(getIndex() + 1, opcodeArray);
+    }
+
+    public boolean is(Opcode<?> opcode){
+        return opcode == getOpcode();
     }
 
     public Opcode<?> getOpcode() {
@@ -208,6 +221,9 @@ public class Ins extends DexContainerItem implements SmaliFormat {
         clearExtraLines();
     }
 
+    public void replaceKeys(Key search, Key replace){
+
+    }
     public Iterator<IdItem> usedIds(){
         return EmptyIterator.of();
     }
@@ -240,5 +256,12 @@ public class Ins extends DexContainerItem implements SmaliFormat {
         } catch (Throwable exception) {
             return exception.toString();
         }
+    }
+    static int toSigned(int unsigned, int width){
+        int half = width / 2;
+        if(unsigned <= half){
+            return unsigned;
+        }
+        return unsigned - width - 1;
     }
 }

@@ -15,72 +15,65 @@
  */
 package com.reandroid.dex.id;
 
-import com.reandroid.dex.key.IdKey;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodHandleKey;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.reference.IdItemIndirectReference;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.CombiningIterator;
-import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class MethodHandle extends IdItem implements Comparable<MethodHandle>{
+public class MethodHandle extends IdItem implements Comparable<MethodHandle> {
 
-    private final IdItemIndirectReference<MethodId> methodId;
-    private final IdItemIndirectReference<MethodId> memberId;
-
-    private final IdKey<MethodHandle> mKey;
+    private final IdItemIndirectReference<MethodId> id;
+    private final IdItemIndirectReference<MethodId> member;
 
     public MethodHandle() {
         super(8);
-        this.methodId = new IdItemIndirectReference<>(SectionType.METHOD_ID, this, 0);
-        this.memberId = new IdItemIndirectReference<>(SectionType.METHOD_ID, this, 4);
-        this.mKey = new IdKey<>(this);
+        this.id = new IdItemIndirectReference<>(SectionType.METHOD_ID, this, 0);
+        this.member = new IdItemIndirectReference<>(SectionType.METHOD_ID, this, 4);
     }
 
     @Override
-    public IdKey<MethodHandle> getKey() {
-        return mKey;
+    public MethodHandleKey getKey() {
+        return checkKey(new MethodHandleKey(getIdKey(),
+                getMemberKey()));
     }
-    @SuppressWarnings("unchecked")
     @Override
     public void setKey(Key key) {
-        MethodHandle methodHandle = ((IdKey<MethodHandle>) key).getItem();
-        if(methodHandle == this){
-            return;
-        }
-        setMethodId(methodHandle.getMethodIdKey());
-        setMemberId(methodHandle.getMemberIdKey());
+        MethodHandleKey methodHandle = (MethodHandleKey) key;
+        setId(methodHandle.getId());
+        setMember(methodHandle.getMember());
     }
 
-    public MethodId getMethodId(){
-        return methodId.getItem();
+    public MethodId getId(){
+        return id.getItem();
     }
-    public MethodKey getMethodIdKey(){
-        return (MethodKey) methodId.getKey();
+    public MethodKey getIdKey(){
+        return (MethodKey) id.getKey();
     }
-    public void setMethodId(MethodKey methodKey){
-        methodId.setItem(methodKey);
+    public void setId(MethodKey methodKey){
+        id.setItem(methodKey);
     }
-    public MethodId getMemberId(){
-        return memberId.getItem();
+    public MethodId getMember(){
+        return member.getItem();
     }
-    public MethodKey getMemberIdKey(){
-        return (MethodKey) memberId.getKey();
+    public MethodKey getMemberKey(){
+        return (MethodKey) member.getKey();
     }
-    public void setMemberId(MethodKey methodKey){
-        memberId.setItem(methodKey);
+    public void setMember(MethodKey methodKey){
+        member.setItem(methodKey);
     }
 
     @Override
     public Iterator<IdItem> usedIds(){
         return CombiningIterator.two(
-                getMethodId().usedIds(),
-                getMemberId().usedIds()
+                getId().usedIds(),
+                getMember().usedIds()
         );
     }
     @Override
@@ -89,18 +82,32 @@ public class MethodHandle extends IdItem implements Comparable<MethodHandle>{
     }
     @Override
     public void refresh() {
-        methodId.refresh();
-        memberId.refresh();
+        id.refresh();
+        member.refresh();
     }
     @Override
     void cacheItems() {
-        methodId.updateItem();
-        memberId.updateItem();
+        id.pullItem();
+        member.pullItem();
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-
+        MethodId id = getId();
+        if(id == null){
+            writer.append("error id = ");
+            writer.append(this.id.get());
+        }else {
+            id.append(writer);
+        }
+        writer.append(", ");
+        MethodId member = getMember();
+        if(member == null){
+            writer.append("error member = ");
+            writer.append(this.member.get());
+        }else {
+            member.append(writer);
+        }
     }
 
     @Override
@@ -108,15 +115,15 @@ public class MethodHandle extends IdItem implements Comparable<MethodHandle>{
         if(methodHandle == null){
             return -1;
         }
-        int i = CompareUtil.compare(getMethodId(), methodHandle.getMethodId());
+        int i = CompareUtil.compare(getId(), methodHandle.getId());
         if(i != 0){
             return i;
         }
-        return CompareUtil.compare(getMemberId(), methodHandle.getMemberId());
+        return CompareUtil.compare(getMember(), methodHandle.getMember());
     }
 
     @Override
     public String toString() {
-        return memberId + "->" + getMethodId();
+        return SmaliWriter.toStringSafe(this);
     }
 }

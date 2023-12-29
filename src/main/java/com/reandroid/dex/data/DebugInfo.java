@@ -18,7 +18,6 @@ package com.reandroid.dex.data;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.base.CountedArray;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.debug.DebugSequence;
@@ -27,12 +26,12 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItemCreate;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -59,6 +58,12 @@ public class DebugInfo extends DataItem implements KeyItemCreate {
         this.debugKey = new DataKey<>(this);
     }
 
+    public void removeInvalidElements(){
+        DebugSequence debugSequence = getDebugSequence();
+        if(debugSequence != null){
+            debugSequence.removeInvalid();
+        }
+    }
     @Override
     public DataKey<DebugInfo> getKey() {
         return debugKey;
@@ -68,6 +73,10 @@ public class DebugInfo extends DataItem implements KeyItemCreate {
     public void setKey(Key key){
         DataKey<DebugInfo> debugKey = (DataKey<DebugInfo>) key;
         merge(debugKey.getItem());
+    }
+    @Override
+    public SectionType<DebugInfo> getSectionType() {
+        return SectionType.DEBUG_INFO;
     }
 
     public int getParameterCount(){
@@ -147,6 +156,13 @@ public class DebugInfo extends DataItem implements KeyItemCreate {
         }
         this.debugSequence.clear();
     }
+
+    @Override
+    protected void onPreRefresh() {
+        super.onPreRefresh();
+        removeInvalidElements();
+    }
+
     public Iterator<IdItem> usedIds(){
         Iterator<IdItem> iterator1 = new IterableIterator<DebugParameter, IdItem>(getParameters()) {
             @Override
@@ -214,7 +230,7 @@ public class DebugInfo extends DataItem implements KeyItemCreate {
 
     private static final Creator<DebugParameter> CREATOR = new Creator<DebugParameter>() {
         @Override
-        public DebugParameter[] newInstance(int length) {
+        public DebugParameter[] newArrayInstance(int length) {
             if(length == 0){
                 return EMPTY;
             }

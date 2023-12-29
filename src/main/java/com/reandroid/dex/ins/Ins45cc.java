@@ -19,7 +19,7 @@ import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
@@ -96,18 +96,17 @@ public class Ins45cc extends Size8Ins implements RegistersSet {
     }
 
     @Override
-    void updateSectionItem() {
-        super.updateSectionItem();
-        updateProtoId();
+    protected void onRefreshed() {
+        super.onRefreshed();
+        refreshProtoId();
     }
-    private void updateProtoId() {
+    private void refreshProtoId() {
         ProtoId protoId = this.mProtoId;
-        if(protoId != null){
-            setProtoIndex(protoId.getIndex());
-        }
+        protoId = protoId.getReplace();
+        setProtoIndex(protoId.getIndex());
     }
     private void cacheProto() {
-        mProtoId = get(SectionType.PROTO_ID, getProtoIndex());
+        mProtoId = getSectionItem(SectionType.PROTO_ID, getProtoIndex());
     }
     @Override
     void appendCode(SmaliWriter writer) throws IOException {

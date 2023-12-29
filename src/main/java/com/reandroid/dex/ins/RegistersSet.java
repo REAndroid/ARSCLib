@@ -27,4 +27,10 @@ public interface RegistersSet {
         return false;
     }
     int getRegistersLimit();
+    default int getRegister() {
+        return getRegister(0);
+    }
+    default void setRegister(int register){
+        setRegister(0, register);
+    }
 }

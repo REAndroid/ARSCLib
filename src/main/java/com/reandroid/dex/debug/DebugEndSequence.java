@@ -25,4 +25,6 @@ public class DebugEndSequence extends DebugElement{
     public DebugElementType<DebugEndSequence> getElementType() {
         return DebugElementType.END_SEQUENCE;
     }
+
+    public static final DebugEndSequence INSTANCE = new DebugEndSequence();
 }

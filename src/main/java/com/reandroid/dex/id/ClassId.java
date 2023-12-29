@@ -19,32 +19,33 @@ import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.AnnotationVisibility;
+import com.reandroid.dex.common.IdDefinition;
+import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.data.*;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.reference.DataItemIndirectReference;
-import com.reandroid.dex.reference.IdItemIndirectReference;
-import com.reandroid.dex.reference.IndirectStringReference;
+import com.reandroid.dex.reference.TypeListReference;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.*;
-import com.reandroid.dex.writer.SmaliWriter;
-import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreate {
+public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<ClassId> {
 
-    private final IdItemIndirectReference<TypeId> classType;
+    private final ClassTypeId classTypeId;
     private final IndirectInteger accessFlagValue;
-    private final IdItemIndirectReference<TypeId> superClass;
-    private final DataItemIndirectReference<TypeList> interfaces;
-    private final IndirectStringReference sourceFile;
+    private final SuperClassId superClassId;
+    private final TypeListReference interfaces;
+    private final SourceFile sourceFile;
     private final DataItemIndirectReference<AnnotationsDirectory> annotationsDirectory;
     private final DataItemIndirectReference<ClassData> classData;
     private final DataItemIndirectReference<EncodedArray> staticValues;
@@ -53,14 +54,14 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
         super(SIZE);
         int offset = -4;
         
-        this.classType = new IdItemIndirectReference<>(SectionType.TYPE_ID, this, offset += 4, USAGE_DEFINITION);
+        this.classTypeId = new ClassTypeId(this, offset += 4);
         this.accessFlagValue = new IndirectInteger(this, offset += 4);
-        this.superClass = new IdItemIndirectReference<>(SectionType.TYPE_ID, this, offset += 4, USAGE_SUPER_CLASS);
-        this.interfaces = new DataItemIndirectReference<>(SectionType.TYPE_LIST, this, offset += 4);
-        this.sourceFile = new IndirectStringReference(this, offset += 4, USAGE_SOURCE);
-        this.annotationsDirectory = new DataItemIndirectReference<>(SectionType.ANNOTATION_DIRECTORY, this, offset += 4, USAGE_DEFINITION);
-        this.classData = new DataItemIndirectReference<>(SectionType.CLASS_DATA, this, offset += 4, USAGE_DEFINITION);
-        this.staticValues = new DataItemIndirectReference<>(SectionType.ENCODED_ARRAY, this, offset += 4, USAGE_DEFINITION);
+        this.superClassId = new SuperClassId(this, offset += 4);
+        this.interfaces = new TypeListReference(this, offset += 4, USAGE_INTERFACE);
+        this.sourceFile = new SourceFile(this, offset += 4);
+        this.annotationsDirectory = new DataItemIndirectReference<>(SectionType.ANNOTATION_DIRECTORY, this, offset += 4, UsageMarker.USAGE_DEFINITION);
+        this.classData = new DataItemIndirectReference<>(SectionType.CLASS_DATA, this, offset += 4, UsageMarker.USAGE_DEFINITION);
+        this.staticValues = new DataItemIndirectReference<>(SectionType.ENCODED_ARRAY, this, offset += 4, UsageMarker.USAGE_STATIC_VALUES);
         addUsageType(UsageMarker.USAGE_DEFINITION);
     }
 
@@ -68,7 +69,7 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
     public void clearUsageType() {
     }
 
-    public void ensureAllUnique(){
+    public void edit(){
         annotationsDirectory.getUniqueItem(this);
         classData.getUniqueItem(this);
         staticValues.getUniqueItem(this);
@@ -87,28 +88,37 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
         if(Objects.equals(old, key)){
             return;
         }
-        this.classType.setItem(key);
+        this.classTypeId.setItem(key);
         keyChanged(old);
     }
     public String getName(){
-        TypeId typeId = getClassType();
+        TypeId typeId = getId();
         if(typeId != null){
             return typeId.getName();
         }
         return null;
     }
-
-    public TypeId getClassType(){
-        return classType.getItem();
-    }
-    public void setClassType(String typeName){
+    public void setName(String typeName){
         setKey(new TypeKey(typeName));
     }
-    public void setClassType(TypeId typeId){
-        this.classType.setItem(typeId);
+
+    public ClassTypeId getClassTypeId(){
+        return classTypeId;
     }
+    @Override
+    public TypeId getId(){
+        return getClassTypeId().getItem();
+    }
+    @Override
     public int getAccessFlagsValue() {
         return accessFlagValue.get();
+    }
+    @Override
+    public AccessFlag[] getAccessFlags(){
+        return AccessFlag.getAccessFlagsForClass(getAccessFlagsValue());
+    }
+    public void setId(TypeId typeId){
+        this.classTypeId.setItem(typeId);
     }
     public void setAccessFlagsValue(int value) {
         accessFlagValue.set(value);
@@ -116,128 +126,187 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
     public void addAccessFlag(AccessFlag flag) {
         setAccessFlagsValue(getAccessFlagsValue() | flag.getValue());
     }
-    public AccessFlag[] getAccessFlags(){
-        return AccessFlag.getAccessFlagsForClass(getAccessFlagsValue());
+    public SuperClassId getSuperClassId(){
+        return superClassId;
     }
-    public TypeId getSuperClassId(){
-        return superClass.getItem();
+    public TypeId getSuperClassType(){
+        return getSuperClassId().getItem();
     }
-    public String getSuperClassName(){
-        TypeId typeId = getSuperClassId();
-        if(typeId != null){
-            return typeId.getName();
-        }
-        return null;
+    public TypeKey getSuperClassKey(){
+        return getSuperClassId().getKey();
     }
-    public void setSuperClass(TypeId typeId){
-        this.superClass.setItem(typeId);
+    public void setSuperClass(TypeKey typeKey){
+        this.superClassId.setItem(typeKey);
     }
     public void setSuperClass(String superClass){
-        this.superClass.setItem(new TypeKey(superClass));
+        this.superClassId.setItem(new TypeKey(superClass));
     }
-    public StringData getSourceFile(){
-        return sourceFile.getStringData();
+    public SourceFile getSourceFile(){
+        return sourceFile;
+    }
+    public String getSourceFileName(){
+        return getSourceFile().getString();
     }
     public void setSourceFile(String sourceFile){
-        this.sourceFile.setString(sourceFile);
+        getSourceFile().setString(sourceFile);
     }
-    public TypeId[] getInterfaceTypeIds(){
-        TypeList interfaceList = getInterfaces();
+
+    public Iterator<TypeKey> getInstanceKeys(){
+        return CombiningIterator.singleOne(getSuperClassKey(), getInterfaceKeys());
+    }
+    public Iterator<TypeKey> getInterfaceKeys(){
+        TypeList interfaceList = getInterfaceTypeList();
         if(interfaceList != null){
-            return interfaceList.getTypeIds();
+            return interfaceList.getTypeKeys();
+        }
+        return EmptyIterator.of();
+    }
+    public TypeList getInterfaceTypeList(){
+        return interfaces.getItem();
+    }
+    public TypeListReference getInterfacesReference() {
+        return this.interfaces;
+    }
+    public void setInterfaces(TypeListKey typeListKey){
+        this.interfaces.setItem(typeListKey);
+    }
+
+    public Key getDalvikEnclosing(){
+        TypeValue typeValue = getDalvikEnclosingClass();
+        if(typeValue != null){
+            return typeValue.getKey();
+        }
+        MethodIdValue methodIdValue = getDalvikEnclosingMethodId();
+        if(methodIdValue != null){
+            return methodIdValue.getKey();
         }
         return null;
     }
-    public TypeList getInterfaces(){
-        return interfaces.getItem();
-    }
-    public DataItemIndirectReference<TypeList> getInterfacesReference() {
-        return this.interfaces;
-    }
-    public void setInterfaces(TypeList interfaces){
-        this.interfaces.setItem(interfaces);
-    }
-
-    public AnnotationItem getOrCreateInnerClass(){
-        String inner = getName();
-        if(inner != null){
-            int i = inner.lastIndexOf('$');
-            if(i > 0){
-                inner = inner.substring(i + 1, inner.length() - 1);
-                // TODO: check if it is anonymous instead
-                if(inner.length() < 3){
-                    inner = null;
-                }
-            }else {
-                inner = null;
+    public MethodIdValue getDalvikEnclosingMethodId(){
+        AnnotationItem annotationItem = getDalvikEnclosingMethod();
+        if(annotationItem != null){
+            DexValueBlock<?> value = annotationItem.getElementValue(Key.DALVIK_value);
+            if(value instanceof MethodIdValue){
+                return (MethodIdValue) value;
             }
         }
-        return getOrCreateInnerClass(0x19, inner);
+        return null;
     }
-    public AnnotationItem getOrCreateInnerClass(int flags, String name){
+    public Iterator<TypeKey> getMemberClassKeys(){
+        return ComputeIterator.of(getDalvikMemberClasses(), TypeValue::getKey);
+    }
+    public Iterator<TypeValue> getDalvikMemberClasses(){
+        AnnotationItem annotationItem = getDalvikMemberClass();
+        if(annotationItem != null){
+            DexValueBlock<?> value = annotationItem.getElementValue(Key.DALVIK_value);
+            if(value instanceof ArrayValue){
+                return ((ArrayValue)value).iterator(TypeValue.class);
+            }
+        }
+        return EmptyIterator.of();
+    }
+    public AnnotationItem getDalvikEnclosingMethod(){
+        return getClassAnnotation(TypeKey.DALVIK_EnclosingMethod);
+    }
+    public AnnotationItem getDalvikMemberClass(){
+        return getClassAnnotation(TypeKey.DALVIK_MemberClass);
+    }
+    public AnnotationItem getDalvikInnerClass(){
+        AnnotationSet annotationSet = getClassAnnotations();
+        if(annotationSet == null){
+            return null;
+        }
+        return annotationSet.get(TypeKey.DALVIK_InnerClass);
+    }
+    public AnnotationItem getOrCreateDalvikInnerClass(){
+        TypeKey typeKey = getKey();
+        if(typeKey == null){
+            return null;
+        }
+        String inner = typeKey.getSimpleInnerName();
+        if(AccessFlag.SYNTHETIC.isSet(getAccessFlagsValue())
+                || inner.equals(typeKey.getSimpleName())
+                || StringsUtil.isDigits(inner)){
+            inner = null;
+        }
+        return getOrCreateDalvikInnerClass(getAccessFlagsValue(), inner);
+    }
+    public AnnotationItem getOrCreateDalvikInnerClass(int flags, String name){
         AnnotationSet annotationSet = getOrCreateClassAnnotations();
-        AnnotationItem item = annotationSet.getOrCreateByType(key_InnerClass);
+        AnnotationItem item = annotationSet.getOrCreate(TypeKey.DALVIK_InnerClass);
         item.setVisibility(AnnotationVisibility.SYSTEM);
 
-        AnnotationElement accessFlags = item.getOrCreateElement("accessFlags");
+        AnnotationElement accessFlags = item.getOrCreateElement(Key.DALVIK_accessFlags);
         IntValue accessFlagsValue = accessFlags.getOrCreateValue(DexValueType.INT);
         accessFlagsValue.set(flags);
 
-        AnnotationElement nameElement = item.getOrCreateElement("name");
+        AnnotationElement nameElement = item.getOrCreateElement(Key.DALVIK_name);
 
         if(name != null){
             StringValue stringValue = nameElement.getOrCreateValue(DexValueType.STRING);
-            stringValue.set(new StringKey(name));
+            stringValue.setItem(new StringKey(name));
         }else {
             nameElement.getOrCreateValue(DexValueType.NULL);
         }
         return item;
     }
-    public TypeValue getOrCreateEnclosingClass(){
-        String enclosing = getName();
-        if(enclosing != null){
-            int i = enclosing.lastIndexOf('$');
-            if(i > 0){
-                enclosing = enclosing.substring(0, i) + ";";
-            }else {
-                enclosing = null;
+    public TypeValue getOrCreateDalvikEnclosingClass(){
+        TypeKey key = getKey();
+        if(key != null){
+            TypeKey enclosing = key.getEnclosingClass();
+            if(!key.equals(enclosing)){
+                return getOrCreateDalvikEnclosingClass(enclosing);
             }
         }
-        return getOrCreateEnclosingClass(TypeKey.create(enclosing));
+        return null;
     }
-    public TypeValue getOrCreateEnclosingClass(TypeKey enclosing){
+    public TypeValue getOrCreateDalvikEnclosingClass(TypeKey enclosing){
         if(enclosing == null){
             return null;
         }
         AnnotationSet annotationSet = getOrCreateClassAnnotations();
-        AnnotationItem item = annotationSet.getOrCreateByType(key_EnclosingClass);
+        AnnotationItem item = annotationSet.getOrCreate(TypeKey.DALVIK_EnclosingClass);
         item.setVisibility(AnnotationVisibility.SYSTEM);
-        AnnotationElement element = item.getOrCreateElement("value");
+        AnnotationElement element = item.getOrCreateElement(Key.DALVIK_value);
         TypeValue typeValue = element.getOrCreateValue(DexValueType.TYPE);
         typeValue.setKey(enclosing);
         return typeValue;
     }
-    public TypeValue getEnclosingClass(){
-        AnnotationItem item = getEnclosingClassAnnotation();
+    public TypeValue getDalvikEnclosingClass(){
+        AnnotationItem item = getDalvikEnclosingClassAnnotation();
         if(item == null){
             return null;
         }
-        AnnotationElement element = item.getElement("value");
+        AnnotationElement element = item.getElement(Key.DALVIK_value);
         DexValueBlock<?> value = element.getValue();
         if(value instanceof TypeValue){
             return (TypeValue) value;
         }
         return null;
     }
-    public AnnotationItem getEnclosingClassAnnotation(){
+    public AnnotationItem getDalvikEnclosingClassAnnotation(){
         AnnotationSet annotationSet = getClassAnnotations();
         if(annotationSet != null){
-            return annotationSet.getItemByType(key_EnclosingClass);
+            return annotationSet.get(TypeKey.DALVIK_EnclosingClass);
         }
         return null;
     }
     public AnnotationSet getOrCreateClassAnnotations(){
         return getOrCreateAnnotationsDirectory().getOrCreateClassAnnotations();
+    }
+    public AnnotationItem getClassAnnotation(TypeKey typeKey){
+        AnnotationSet classAnnotations = getClassAnnotations();
+        if(classAnnotations != null){
+            return classAnnotations.get(typeKey);
+        }
+        return null;
+    }
+    public Iterator<AnnotationItem> getClassAnnotations(TypeKey typeKey){
+        AnnotationSet classAnnotations = getClassAnnotations();
+        if(classAnnotations != null){
+            return classAnnotations.getAll(typeKey);
+        }
+        return EmptyIterator.of();
     }
     public AnnotationSet getClassAnnotations(){
         AnnotationsDirectory annotationsDirectory = getAnnotationsDirectory();
@@ -291,8 +360,8 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
     public EncodedArray getStaticValues(){
         return staticValues.getItem();
     }
-    public EncodedArray getOrCreateStaticValues(){
-        return staticValues.getOrCreate();
+    public EncodedArray getOrCreateUniqueStaticValues(){
+        return staticValues.getOrCreateUniqueItem(this);
     }
     public EncodedArray getUniqueStaticValues(){
         return staticValues.getUniqueItem(this);
@@ -305,7 +374,7 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
         return null;
     }
     public<T1 extends DexValueBlock<?>> T1 getOrCreateStaticValue(DexValueType<T1> valueType, int i){
-        return getOrCreateStaticValues().getOrCreate(valueType, i);
+        return getOrCreateUniqueStaticValues().getOrCreate(valueType, i);
     }
     public void setStaticValues(EncodedArray staticValues){
         this.staticValues.setItem(staticValues);
@@ -313,8 +382,13 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
 
     @Override
     public void refresh() {
-        this.classType.refresh();
-        this.superClass.refresh();
+
+        this.annotationsDirectory.addClassUsage(this);
+        this.classData.addClassUsage(this);
+        this.staticValues.addClassUsage(this);
+
+        this.classTypeId.refresh();
+        this.superClassId.refresh();
         this.interfaces.refresh();
         this.sourceFile.refresh();
         this.annotationsDirectory.refresh();
@@ -324,13 +398,13 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
     @Override
     void cacheItems(){
 
-        this.classType.updateItem();
-        this.superClass.updateItem();
-        this.interfaces.updateItem();
-        this.sourceFile.updateItem();
-        this.annotationsDirectory.updateItem();
-        this.classData.updateItem();
-        this.staticValues.updateItem();
+        this.classTypeId.pullItem();
+        this.superClassId.pullItem();
+        this.interfaces.pullItem();
+        this.sourceFile.pullItem();
+        this.annotationsDirectory.pullItem();
+        this.classData.pullItem();
+        this.staticValues.pullItem();
 
         this.annotationsDirectory.addClassUsage(this);
         this.classData.addClassUsage(this);
@@ -347,14 +421,28 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
     @Override
     public void removeSelf() {
         super.removeSelf();
-        this.classType.unlink();
-        this.superClass.unlink();
+        this.classTypeId.unlink();
+        this.superClassId.unlink();
         this.sourceFile.unlink();
         this.classData.unlink();
         this.annotationsDirectory.unlink();
         this.staticValues.unlink();
     }
 
+    public void replaceKeys(Key search, Key replace){
+        classTypeId.replaceKeys(search, replace);
+        superClassId.replaceKeys(search, replace);
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if(directory != null){
+            directory = getUniqueAnnotationsDirectory();
+            directory.replaceKeys(search, replace);
+        }
+        interfaces.replaceKeys(search, replace);
+        ClassData classData = getClassData();
+        if(classData != null){
+            classData.replaceKeys(search, replace);
+        }
+    }
     @Override
     public Iterator<IdItem> usedIds(){
         return listUsedIds().iterator();
@@ -362,8 +450,8 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
     public ArrayCollection<IdItem> listUsedIds(){
 
         ArrayCollection<IdItem> collection = new ArrayCollection<>(200);
-        collection.add(classType.getItem());
-        collection.add(superClass.getItem());
+        collection.add(classTypeId.getItem());
+        collection.add(superClassId.getItem());
         collection.add(sourceFile.getItem());
 
         AnnotationsDirectory directory = getAnnotationsDirectory();
@@ -391,60 +479,40 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
             return;
         }
         accessFlagValue.set(classId.accessFlagValue.get());
-        superClass.setItem(classId.superClass.getKey());
+        superClassId.setItem(classId.superClassId.getKey());
         sourceFile.setItem(classId.sourceFile.getKey());
         interfaces.setItem(classId.interfaces.getKey());
         annotationsDirectory.setItem(classId.annotationsDirectory.getKey());
-        ClassData comingData = classId.getClassData();
-        if(comingData != null){
-            ClassData classData = getOrCreateClassData();
-            classData.merge(comingData);
-        }
         EncodedArray comingArray = classId.getStaticValues();
         if(comingArray != null){
             EncodedArray encodedArray = staticValues.getOrCreate();
             encodedArray.merge(comingArray);
         }
+        ClassData comingData = classId.getClassData();
+        if(comingData != null){
+            ClassData classData = getOrCreateClassData();
+            classData.merge(comingData);
+        }
     }
-
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(".class ");
-        AccessFlag[] accessFlags = getAccessFlags();
-        for(AccessFlag af:accessFlags){
-            writer.append(af.toString());
-            writer.append(' ');
-        }
-        getClassType().append(writer);
-        writer.newLine();
-        writer.append(".super ");
+        getClassTypeId().append(writer);
         getSuperClassId().append(writer);
+        getSourceFile().append(writer);
         writer.newLine();
-        StringData sourceFile = getSourceFile();
-        if(sourceFile != null){
-            writer.append(".source ");
-            sourceFile.append(writer);
-        }
-        writer.newLine();
-        TypeList interfaces = getInterfaces();
-        if(interfaces != null && interfaces.size() > 0){
-            writer.newLine();
-            writer.append("# interfaces");
-            for(TypeId typeId : interfaces){
-                writer.newLine();
-                writer.append(".implements ");
-                typeId.append(writer);
-            }
+        TypeList interfaces = getInterfaceTypeList();
+        if(interfaces != null){
+            interfaces.appendInterfaces(writer);
         }
         AnnotationSet annotationSet = getClassAnnotations();
         if(annotationSet != null){
             writer.newLine();
             writer.newLine();
-            writer.append("# annotations");
+            writer.appendComment("annotations");
             annotationSet.append(writer);
+            writer.newLine();
         }
-        writer.newLine();
         ClassData classData = getClassData();
         if(classData != null){
             classData.append(writer);
@@ -452,45 +520,24 @@ public class ClassId extends IdItem implements Comparable<ClassId>, KeyItemCreat
             writer.appendComment("Null class data: " + this.classData.get());
         }
     }
-
     @Override
     public int compareTo(ClassId classId) {
         if(classId == null){
             return -1;
         }
-        return CompareUtil.compare(getClassType(), classId.getClassType());
+        if(classId == this){
+            return 0;
+        }
+        return SectionTool.compareIdx(getId(), classId.getId());
     }
-
     @Override
     public String toString(){
-        StringBuilder builder = new StringBuilder();
-        builder.append("\n.class ");
-        AccessFlag[] accessFlags = getAccessFlags();
-        for(AccessFlag af:accessFlags){
-            builder.append(af);
-            builder.append(" ");
+        if(isReading()){
+            return ".class " + getKey();
         }
-        builder.append(getClassType());
-        builder.append("\n.super ").append(getSuperClassId());
-        StringData sourceFile = getSourceFile();
-        if(sourceFile != null){
-            builder.append("\n.source \"").append(sourceFile.getString()).append("\"");
-        }
-        builder.append("\n");
-        TypeList interfaces = getInterfaces();
-        if(interfaces != null){
-            builder.append("\n# interfaces");
-            for(TypeId typeId : interfaces){
-                builder.append("\n.implements ").append(typeId);
-            }
-        }
-        return builder.toString();
+        return SmaliWriter.toStringSafe(this);
     }
 
 
     private static final int SIZE = 32;
-
-    public static final TypeKey key_EnclosingClass = TypeKey.create("Ldalvik/annotation/EnclosingClass;");
-
-    public static final TypeKey key_InnerClass = TypeKey.create("Ldalvik/annotation/InnerClass;");
 }

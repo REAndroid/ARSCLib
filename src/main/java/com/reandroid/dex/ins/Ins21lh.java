@@ -15,7 +15,13 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.HexUtil;
+
+import java.io.IOException;
+
 public class Ins21lh extends Size4Ins implements RegistersSet {
+    private InsConstWide mReplaced;
     public Ins21lh(Opcode<?> opcode) {
         super(opcode);
     }
@@ -42,17 +48,47 @@ public class Ins21lh extends Size4Ins implements RegistersSet {
 
     @Override
     public int getData() {
+        InsConstWide insConstWide = mReplaced;
+        if(insConstWide != null){
+            return insConstWide.getData();
+        }
         return getShortUnsigned(2);
     }
     @Override
     public void setData(int data) {
-        setShort(2, data);
+        if((data & 0xffff0000) != 0){
+            replaceIns(data);
+        }else {
+            setShort(2, data);
+        }
     }
     public long getDataLong(){
+        InsConstWide insConstWide = mReplaced;
+        if(insConstWide != null){
+            return insConstWide.getLong();
+        }
         return (long) getData() << 48;
     }
     public void setDataLong(long data){
-        setData((int) (data >>> 48));
+        InsConstWide insConstWide = mReplaced;
+        if(insConstWide != null){
+            insConstWide.setData(data);
+        }
+        if((data & 0xffffffff0000L) != 0){
+            replaceIns(data);
+        }else {
+            setData((int) (data >>> 48));
+        }
     }
 
+    private void replaceIns(long data){
+        InsConstWide insConstWide = replace(Opcode.CONST_WIDE);
+        insConstWide.setRegister(this.getRegister());
+        insConstWide.setData(data);
+        this.mReplaced = insConstWide;
+    }
+    @Override
+    void appendHexData(SmaliWriter writer) throws IOException {
+        writer.appendHex(getDataLong());
+    }
 }

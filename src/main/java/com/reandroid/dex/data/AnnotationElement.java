@@ -2,22 +2,24 @@ package com.reandroid.dex.data;
 
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.DataKey;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.reference.StringUle128Reference;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.NullValue;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CombiningIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class AnnotationElement extends DataItem implements SmaliFormat {
+public class AnnotationElement extends DataItem implements Comparable<AnnotationElement>, SmaliFormat {
 
     private final StringUle128Reference elementName;
 
@@ -50,6 +52,9 @@ public class AnnotationElement extends DataItem implements SmaliFormat {
     public void setValue(DexValueBlock<?> dexValue){
         addChild(1, dexValue);
     }
+    public boolean is(DexValueType<?> valueType){
+        return getValueType() == valueType;
+    }
     public DexValueType<?> getValueType(){
         DexValueBlock<?> value = getValue();
         if(value != null){
@@ -75,6 +80,10 @@ public class AnnotationElement extends DataItem implements SmaliFormat {
         value.onReadBytes(reader);
     }
 
+    public void replaceKeys(Key search, Key replace){
+        getValue().replaceKeys(search, replace);
+    }
+    @Override
     public Iterator<IdItem> usedIds(){
         return CombiningIterator.singleOne(getNameId(), getValue().usedIds());
     }
@@ -94,6 +103,17 @@ public class AnnotationElement extends DataItem implements SmaliFormat {
         getValue().append(writer);
     }
 
+
+    @Override
+    public int compareTo(AnnotationElement other) {
+        if(other == null){
+            return -1;
+        }
+        if(other == this){
+            return 0;
+        }
+        return SectionTool.compareIdx(getNameId(), other.getNameId());
+    }
     @Override
     public int hashCode() {
         int hash = 1;
@@ -131,7 +151,7 @@ public class AnnotationElement extends DataItem implements SmaliFormat {
 
     public static final Creator<AnnotationElement> CREATOR = new Creator<AnnotationElement>() {
         @Override
-        public AnnotationElement[] newInstance(int length) {
+        public AnnotationElement[] newArrayInstance(int length) {
             if(length == 0){
                 return EMPTY;
             }

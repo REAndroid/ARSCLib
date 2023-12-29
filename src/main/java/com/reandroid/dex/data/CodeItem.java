@@ -16,11 +16,10 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.arsc.base.BlockRefresh;
-import com.reandroid.arsc.item.IntegerVisitor;
-import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
+import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.debug.DebugParameter;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.DataKey;
@@ -31,8 +30,8 @@ import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.ins.RegistersTable;
 import com.reandroid.dex.ins.TryBlock;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
@@ -41,7 +40,7 @@ import java.util.Iterator;
 import java.util.Objects;
 
 public class CodeItem extends DataItem implements RegistersTable, PositionAlignedItem, KeyItemCreate,
-        SmaliFormat, VisitableInteger {
+        SmaliFormat {
 
     private final Header header;
     private final InstructionList instructionList;
@@ -73,11 +72,11 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         DataKey<CodeItem> codeItemKey = (DataKey<CodeItem>) key;
         merge(codeItemKey.getItem());
     }
-
     @Override
-    public void visitIntegers(IntegerVisitor visitor) {
-        getInstructionList().visitIntegers(visitor);
+    public SectionType<CodeItem> getSectionType() {
+        return SectionType.CODE;
     }
+
     @Override
     public int getRegistersCount(){
         return header.registersCount.get();
@@ -94,12 +93,17 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
     public void setParameterRegistersCount(int count){
         header.parameterRegisters.set(count);
     }
-
+    public int getLocals(){
+        return getRegistersCount() - getParameterRegistersCount();
+    }
     public DebugInfo getDebugInfo(){
         return header.debugInfoOffset.getItem();
     }
     public DebugInfo getOrCreateDebugInfo(){
         return header.debugInfoOffset.getOrCreate();
+    }
+    public void removeDebugInfo(){
+        setDebugInfo(null);
     }
     public void setDebugInfo(DebugInfo debugInfo){
         header.debugInfoOffset.setItem(debugInfo);
@@ -117,7 +121,15 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         initTryBlock();
         return tryBlock;
     }
-
+    public void removeTryBlock(){
+        TryBlock tryBlock = this.tryBlock;
+        if(tryBlock == null){
+            return;
+        }
+        this.tryBlock = null;
+        this.header.tryBlockCount.set(0);
+        tryBlock.setParent(null);
+    }
     public MethodDef getMethodDef() {
         return methodDef;
     }
@@ -155,18 +167,20 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         }
     }
 
-    @Override
-    public void removeSelf() {
-        super.removeSelf();
-        //TryBlock tryBlock = this.tryBlock;
-        //if(tryBlock != null){
-          //  this.tryBlock = null;
-            //tryBlock.onRemove();
-        //}
-        //this.instructionList.onRemove();
-        //this.header.onRemove();
+    IntegerReference getCodeUnits(){
+        return header.instructionCodeUnits;
     }
 
+    public boolean cleanInvalidDebugLineNumbers(){
+        InstructionList instructionList = getInstructionList();
+        if(instructionList == null){
+            return false;
+        }
+        return instructionList.cleanInvalidDebugLineNumbers();
+    }
+    public void replaceKeys(Key search, Key replace){
+        getInstructionList().replaceKeys(search, replace);
+    }
     public Iterator<IdItem> usedIds(){
         DebugInfo debugInfo = getDebugInfo();
         Iterator<IdItem> iterator1;
@@ -193,13 +207,11 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
     public void append(SmaliWriter writer) throws IOException {
         MethodDef methodDef = getMethodDef();
         DebugInfo debugInfo = getDebugInfo();
-        ProtoId proto = methodDef.getMethodId().getProto();
         writer.newLine();
         writer.append(".locals ");
         InstructionList instructionList = getInstructionList();
-        int count = getRegistersCount() - getParameterRegistersCount();
-        writer.append(count);
-        methodDef.appendParameterAnnotations(writer, proto);
+        writer.append(getLocals());
+        methodDef.appendParameterAnnotations(writer, methodDef.getProtoId());
         if(debugInfo != null){
             Iterator<DebugParameter> iterator = debugInfo.getParameters();
             while (iterator.hasNext()){
@@ -247,7 +259,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
                 + "\n debug=" + getDebugInfo();
     }
 
-    static class Header extends DexBlockItem implements BlockRefresh {
+    static class Header extends SectionItem implements BlockRefresh {
 
         private final CodeItem codeItem;
 
@@ -279,7 +291,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         @Override
         public void onReadBytes(BlockReader reader) throws IOException {
             super.onReadBytes(reader);
-            this.debugInfoOffset.updateItem();
+            this.debugInfoOffset.pullItem();
             if(this.tryBlockCount.get() != 0){
                 this.codeItem.initTryBlock();
             }

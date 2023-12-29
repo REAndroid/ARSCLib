@@ -39,7 +39,7 @@ public class StringDataArray extends DataSectionArray<StringData> {
     private StringIdArray getStringIdArray(){
         SectionList sectionList = getParent(SectionList.class);
         if(sectionList != null){
-            StringIdSection section = (StringIdSection) sectionList.get(SectionType.STRING_ID);
+            StringIdSection section = (StringIdSection) sectionList.getSection(SectionType.STRING_ID);
             if(section != null){
                 return section.getItemArray();
             }

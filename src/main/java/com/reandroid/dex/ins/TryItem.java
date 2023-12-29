@@ -20,7 +20,7 @@ import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Sle128Item;
-import com.reandroid.dex.data.DexContainerItem;
+import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.utils.collection.*;
 
@@ -30,7 +30,7 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Function;
 
-public class TryItem extends DexContainerItem implements Iterable<Label>{
+public class TryItem extends FixedDexContainerWithTool implements Iterable<Label>{
     private final HandlerOffsetArray handlerOffsetArray;
 
     final Sle128Item handlersCount;
@@ -158,6 +158,7 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
             hasCatchAll = true;
         }
         BlockList<CatchTypedHandler> handlerList = this.getCatchTypedHandlerBlockList();
+        handlerList.ensureCapacity(count);
         for(int i = 0; i < count; i++){
             CatchTypedHandler handler = new CatchTypedHandler();
             handlerList.add(handler);
@@ -170,6 +171,7 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
             // Should never reach here
             reader.seek(maxPosition);
         }
+
     }
     @Override
     public void onCountUpTo(BlockCounter counter) {
@@ -208,10 +210,12 @@ public class TryItem extends DexContainerItem implements Iterable<Label>{
         mergeHandlers(tryItem);
     }
     void mergeHandlers(TryItem tryItem){
-        Iterator<CatchTypedHandler> iterator = tryItem.getCatchTypedHandlers();
+        BlockList<CatchTypedHandler> comingList = tryItem.getCatchTypedHandlerBlockList();
+        int size = comingList.size();
         BlockList<CatchTypedHandler> handlerList = this.getCatchTypedHandlerBlockList();
-        while (iterator.hasNext()){
-            CatchTypedHandler coming = iterator.next();
+        handlerList.ensureCapacity(size);
+        for (int i = 0; i < size; i++){
+            CatchTypedHandler coming = comingList.get(i);
             CatchTypedHandler handler = new CatchTypedHandler();
             handlerList.add(handler);
             handler.merge(coming);

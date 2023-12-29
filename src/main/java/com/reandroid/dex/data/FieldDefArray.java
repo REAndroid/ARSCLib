@@ -15,14 +15,14 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.IntegerReference;
 
 public class FieldDefArray extends DefArray<FieldDef> {
 
     public FieldDefArray(IntegerReference itemCount){
-        super(itemCount);
+        super(itemCount, CREATOR);
     }
-
 
     @Override
     void sortAnnotations(){
@@ -32,12 +32,14 @@ public class FieldDefArray extends DefArray<FieldDef> {
         }
     }
 
-    @Override
-    public FieldDef[] newInstance(int length) {
-        return new FieldDef[length];
-    }
-    @Override
-    public FieldDef newInstance() {
-        return new FieldDef();
-    }
+    private static final Creator<FieldDef> CREATOR = new Creator<FieldDef>() {
+        @Override
+        public FieldDef[] newArrayInstance(int length) {
+            return new FieldDef[length];
+        }
+        @Override
+        public FieldDef newInstance() {
+            return new FieldDef();
+        }
+    };
 }

@@ -15,30 +15,17 @@
  */
 package com.reandroid.dex.reference;
 
-import com.reandroid.dex.base.DexBlockItem;
-import com.reandroid.dex.data.StringData;
+import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.StringKey;
-import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.utils.CompareUtil;
 
-import java.util.Objects;
+public class IndirectStringReference extends IdItemIndirectReference<StringId>{
 
-public class IndirectStringReference extends IdItemIndirectReference<StringId> implements
-        Comparable<IndirectStringReference> {
-
-    public IndirectStringReference(DexBlockItem blockItem, int offset, int usage) {
+    public IndirectStringReference(SectionItem blockItem, int offset, int usage) {
         super(SectionType.STRING_ID, blockItem, offset, usage);
     }
 
-    public StringData getStringData(){
-        StringId stringId = getItem();
-        if(stringId != null){
-            return stringId.getStringData();
-        }
-        return null;
-    }
     public String getString(){
         StringId stringId = getItem();
         if(stringId != null){
@@ -48,39 +35,6 @@ public class IndirectStringReference extends IdItemIndirectReference<StringId> i
     }
     public void setString(String text) {
         setItem(StringKey.create(text));
-    }
-    public void setString(String text, boolean overwrite) {
-        StringKey key = new StringKey(text);
-        StringId stringId = this.getItem();
-        String oldText = null;
-        if(stringId != null) {
-            oldText = stringId.getString();
-        }
-        if(Objects.equals(text, oldText)){
-            return;
-        }
-        DexSectionPool<StringId> pool = getBlockItem().getPool(SectionType.STRING_ID);
-        if(pool == null){
-            return;
-        }
-        if(!overwrite || stringId == null){
-            stringId = pool.getOrCreate(key);
-            if(stringId.getStringData()==null){
-                stringId = pool.getOrCreate(key);
-            }
-        }
-        setItem(stringId);
-        if(overwrite){
-            pool.update(StringKey.create(oldText));
-        }
-    }
-
-    @Override
-    public int compareTo(IndirectStringReference reference) {
-        if(reference == null){
-            return -1;
-        }
-        return CompareUtil.compare(getItem(), reference.getItem());
     }
 
     public static boolean equals(IndirectStringReference reference1, IndirectStringReference reference2) {

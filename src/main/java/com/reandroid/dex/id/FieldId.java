@@ -15,40 +15,39 @@
  */
 package com.reandroid.dex.id;
 
-import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.reference.IdItemIndirectReference;
 import com.reandroid.dex.reference.IdItemIndirectShortReference;
 import com.reandroid.dex.reference.IndirectStringReference;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.CombiningIterator;
-import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class FieldId extends IdItem implements KeyItemCreate, Comparable<FieldId>{
-    private final IdItemIndirectReference<TypeId> classType;
+public class FieldId extends IdItem implements Comparable<FieldId>{
+    private final IdItemIndirectReference<TypeId> defining;
     private final IdItemIndirectReference<TypeId> fieldType;
     private final IndirectStringReference nameReference;
 
     public FieldId() {
         super(8);
-        this.classType = new IdItemIndirectShortReference<>(SectionType.TYPE_ID, this, 0, USAGE_FIELD_CLASS);
+        this.defining = new IdItemIndirectShortReference<>(SectionType.TYPE_ID, this, 0, USAGE_FIELD_CLASS);
         this.fieldType = new IdItemIndirectShortReference<>(SectionType.TYPE_ID, this, 2, USAGE_FIELD_TYPE);
         this.nameReference = new IndirectStringReference( this, 4, USAGE_FIELD_NAME);
     }
 
     @Override
     public Iterator<IdItem> usedIds(){
-        return CombiningIterator.three(
-                SingleIterator.of(classType.getItem()),
-                SingleIterator.of(fieldType.getItem()),
-                SingleIterator.of(nameReference.getItem())
+        return CombiningIterator.singleThree(
+                this,
+                SingleIterator.of(defining.getItem()),
+                SingleIterator.of(nameReference.getItem()),
+                SingleIterator.of(fieldType.getItem())
         );
     }
     public String getName() {
@@ -57,57 +56,56 @@ public class FieldId extends IdItem implements KeyItemCreate, Comparable<FieldId
     public void setName(String name){
         this.nameReference.setString(name);
     }
-    public StringData getNameString(){
-        return nameReference.getStringData();
+    public StringId getNameId(){
+        return nameReference.getItem();
     }
     IndirectStringReference getNameReference() {
         return nameReference;
     }
     public String getClassName(){
-        TypeId typeId = getClassType();
+        TypeId typeId = getDefiningId();
         if(typeId != null){
             return typeId.getName();
         }
         return null;
     }
-    public TypeId getClassType(){
-        return classType.getItem();
+    public TypeKey getDefining(){
+        return (TypeKey) defining.getKey();
     }
-    public void setClassType(TypeId typeId){
-        classType.setItem(typeId);
+    public void setDefining(TypeKey typeKey){
+        defining.setItem(typeKey);
     }
-    public void setClassType(String type) {
-        classType.setItem(new TypeKey(type));
+    public TypeId getDefiningId(){
+        return defining.getItem();
+    }
+    public void setDefining(TypeId typeId){
+        defining.setItem(typeId);
     }
 
-    public String getFieldTypeName(){
-        TypeId typeId = getFieldType();
-        if(typeId != null){
-            return typeId.getName();
-        }
-        return null;
+    public TypeKey getFieldType(){
+        return (TypeKey) fieldType.getKey();
     }
-    public TypeId getFieldType(){
+    public void setFieldType(TypeKey typeKey) {
+        fieldType.setItem(typeKey);
+    }
+    public TypeId getFieldTypeId(){
         return fieldType.getItem();
     }
     public void setFieldType(TypeId typeId) {
         fieldType.setItem(typeId);
     }
-    public void setFieldType(String type) {
-        fieldType.setItem(new TypeKey(type));
-    }
 
     @Override
     public void refresh() {
-        classType.refresh();
+        defining.refresh();
         fieldType.refresh();
         nameReference.refresh();
     }
     @Override
     void cacheItems(){
-        classType.updateItem();
-        fieldType.updateItem();
-        nameReference.updateItem();
+        defining.pullItem();
+        fieldType.pullItem();
+        nameReference.pullItem();
     }
 
     @Override
@@ -128,42 +126,23 @@ public class FieldId extends IdItem implements KeyItemCreate, Comparable<FieldId
         if(Objects.equals(key, old)){
             return;
         }
-        classType.setItem(key.getDefiningKey());
+        defining.setItem(key.getDeclaring());
         nameReference.setString(key.getName());
-        fieldType.setItem(key.getTypeKey());
+        fieldType.setItem(key.getType());
         keyChanged(old);
     }
-    public String key(boolean appendFieldType) {
-        StringBuilder builder = new StringBuilder();
-        String type = getClassName();
-        if(type == null){
-            return null;
-        }
-        builder.append(type);
-        builder.append("->");
-        String name = getName();
-        if(name == null){
-            return null;
-        }
-        builder.append(name);
-        if(appendFieldType) {
-            builder.append(':');
-            String fieldType = getFieldTypeName();
-            if(fieldType == null) {
-                return null;
-            }
-            builder.append(fieldType);
-        }
-        return builder.toString();
-    }
-
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        getClassType().append(writer);
-        writer.append("->");
-        writer.append(getNameString().getString());
+        append(writer, true);
+    }
+    public void append(SmaliWriter writer, boolean appendDefining) throws IOException {
+        if(appendDefining){
+            writer.appendRequired(getDefiningId());
+            writer.append("->");
+        }
+        writer.append(getName());
         writer.append(':');
-        getFieldType().append(writer);
+        writer.appendRequired(getFieldTypeId());
     }
 
     @Override
@@ -171,7 +150,7 @@ public class FieldId extends IdItem implements KeyItemCreate, Comparable<FieldId
         if(fieldId == null){
             return -1;
         }
-        int i = CompareUtil.compare(getClassType(), fieldId.getClassType());
+        int i = CompareUtil.compare(getDefiningId(), fieldId.getDefiningId());
         if(i != 0){
             return i;
         }
@@ -179,16 +158,15 @@ public class FieldId extends IdItem implements KeyItemCreate, Comparable<FieldId
         if(i != 0){
             return i;
         }
-        return CompareUtil.compare(getFieldType(), fieldId.getFieldType());
+        return CompareUtil.compare(getFieldTypeId(), fieldId.getFieldTypeId());
     }
-
     @Override
     public String toString(){
         FieldKey key = getKey();
         if(key != null){
             return key.toString();
         }
-        return getClassType() + "->" + getNameString() + ":" + getFieldType();
+        return getDefiningId() + "->" + getNameId() + ":" + getFieldTypeId();
     }
     public static boolean equals(FieldId fieldId1, FieldId fieldId2) {
         return equals(false, fieldId1, fieldId2);
@@ -203,6 +181,6 @@ public class FieldId extends IdItem implements KeyItemCreate, Comparable<FieldId
         if(!IndirectStringReference.equals(fieldId1.getNameReference(), fieldId2.getNameReference())){
             return false;
         }
-        return ignoreClass || TypeId.equals(fieldId1.getClassType(), fieldId2.getClassType());
+        return ignoreClass || TypeId.equals(fieldId1.getDefiningId(), fieldId2.getDefiningId());
     }
 }

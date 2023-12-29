@@ -21,8 +21,8 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.common.ArraySupplier;
 import com.reandroid.utils.collection.ArraySupplierIterator;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
@@ -115,12 +115,19 @@ public class InsSparseSwitchData extends PayloadData implements BlockLoad,
     }
     @Override
     void appendCode(SmaliWriter writer) throws IOException {
+        writer.newLine();
+        writer.append('.');
+        String name = "sparse-switch";
+        writer.append(name);
         int size = getCount();
         writer.indentPlus();
         for(int i = 0; i < size; i++){
             get(i).append(writer);
         }
         writer.indentMinus();
+        writer.newLine();
+        writer.append(".end ");
+        writer.append(name);
     }
 
     public static class Data implements IntegerReference, Label, SmaliFormat {

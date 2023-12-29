@@ -16,7 +16,7 @@
 package com.reandroid.dex.debug;
 
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 

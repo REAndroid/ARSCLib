@@ -16,55 +16,54 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.key.StringKey;
 
-public class InsConstString extends Ins21c {
+public class InsConstString extends Ins21c implements ConstString{
 
     public InsConstString() {
         super(Opcode.CONST_STRING);
     }
 
+    @Override
     public String getString(){
-        StringData stringData = getStringData();
-        if(stringData != null){
-            return stringData.getString();
-        }
-        return null;
-    }
-    public void setString(String string){
-        super.setSectionItem(new StringKey(string));
-    }
-    public StringData getStringData(){
-        StringId stringId = getSectionItem();
+        StringId stringId = getStringId();
         if(stringId != null){
-            return stringId.getStringData();
+            return stringId.getString();
         }
         return null;
-    }
-    public int getRegister(){
-        return super.getRegister(0);
-    }
-    public void setRegister(int register){
-        super.setRegister(0, register);
     }
     @Override
-    public StringId getSectionItem() {
-        return (StringId) super.getSectionItem();
+    public void setString(String string){
+        super.setSectionIdKey(StringKey.create(string));
+    }
+    @Override
+    public int getRegister() {
+        return getRegister(0);
+    }
+    @Override
+    public void setRegister(int register) {
+        setRegister(0, register);
+    }
+    public StringId getStringId(){
+        return getSectionId();
+    }
+    @Override
+    public StringId getSectionId() {
+        return (StringId) super.getSectionId();
     }
     public InsConstStringJumbo toConstStringJumbo(){
-        StringId stringId = getSectionItem();
-        if(stringId == null || !shouldConvertToConstStringJumbo(stringId)){
+        StringId stringId = getSectionId();
+        if(stringId == null || !needsConvertToConstStringJumbo(stringId)){
             return null;
         }
         InsConstStringJumbo stringJumbo = Opcode.CONST_STRING_JUMBO.newInstance();
         stringJumbo.setRegister(getRegister());
         this.replace(stringJumbo);
-        stringJumbo.setSectionItem(stringId);
+        stringJumbo.setSectionId(stringId);
         return stringJumbo;
     }
 
-    private boolean shouldConvertToConstStringJumbo(StringId stringId){
+    private boolean needsConvertToConstStringJumbo(StringId stringId){
         int index = stringId.getIndex();
         return index != (index & 0xffff);
     }

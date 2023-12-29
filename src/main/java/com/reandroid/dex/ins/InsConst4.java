@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
-public class InsConst4 extends Size2Ins implements RegistersSet {
+public class InsConst4 extends Size2Ins implements RegistersSet, ConstNumber {
 
     public InsConst4() {
         super(Opcode.CONST_4);
@@ -25,6 +25,12 @@ public class InsConst4 extends Size2Ins implements RegistersSet {
     public int getData(){
         return getNibble(3);
     }
+
+    @Override
+    public int getSignedData() {
+        return toSigned(getData(), 0xf);
+    }
+
     @Override
     public void setData(int data) {
         setNibble(3, data);
@@ -47,5 +53,22 @@ public class InsConst4 extends Size2Ins implements RegistersSet {
     @Override
     public int getRegistersLimit(){
         return 0x0f;
+    }
+
+    @Override
+    public int get() {
+        return getData();
+    }
+    @Override
+    public void set(int value) {
+        setData(value);
+    }
+    @Override
+    public int getRegister() {
+        return getRegister(0);
+    }
+    @Override
+    public void setRegister(int register) {
+        setRegister(0, register);
     }
 }

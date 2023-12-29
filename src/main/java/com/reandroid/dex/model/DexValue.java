@@ -15,14 +15,20 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.PrimitiveValue;
 
-public class DexValue {
+import java.io.IOException;
+
+public class DexValue extends Dex {
+
+    private final DexDeclaration dexDeclaration;
     private final DexValueBlock<?> dexValueBlock;
 
-    public DexValue(DexValueBlock<?> dexValueBlock) {
+    public DexValue(DexDeclaration dexDeclaration, DexValueBlock<?> dexValueBlock) {
+        this.dexDeclaration = dexDeclaration;
         this.dexValueBlock = dexValueBlock;
     }
 
@@ -45,8 +51,27 @@ public class DexValue {
     public DexValueBlock<?> getDexValueBlock() {
         return dexValueBlock;
     }
+
+    public DexDeclaration getDexDef() {
+        return dexDeclaration;
+    }
+    @Override
+    public DexClassRepository getClassRepository() {
+        return getDexDef().getClassRepository();
+    }
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        getDexValueBlock().append(writer);
+    }
     @Override
     public String toString() {
         return getAsString();
+    }
+
+    public static DexValue create(DexDeclaration dexDeclaration, DexValueBlock<?> valueBlock){
+        if(valueBlock != null){
+            return new DexValue(dexDeclaration, valueBlock);
+        }
+        return null;
     }
 }

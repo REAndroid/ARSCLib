@@ -20,6 +20,8 @@ import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
+import com.reandroid.dex.common.FullRefresh;
+import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.utils.CompareUtil;
@@ -30,9 +32,9 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class Section<T extends Block>  extends FixedDexContainer
+public class Section<T extends SectionItem>  extends FixedDexContainer
         implements DexArraySupplier<T>, OffsetSupplier,
-        Iterable<T>{
+        Iterable<T>, FullRefresh {
 
     private final SectionType<T> sectionType;
     private final DexPositionAlign sectionAlign;
@@ -53,15 +55,32 @@ public class Section<T extends Block>  extends FixedDexContainer
     }
 
     public Iterator<T> getWithUsage(int usage){
-        if(!hasUsageMarker()){
-            return EmptyIterator.of();
-        }
         return iterator(item -> ((UsageMarker) item).containsUsage(usage));
     }
-    public void clearUsageTypes(){
-        if(hasUsageMarker()){
-            UsageMarker.clearUsageTypes(iterator());
-        }
+
+    @Override
+    public void refreshFull() {
+        clearPool();
+        SectionArray<T> array = getItemArray();
+        array.refreshFull();
+        sort();
+        refresh();
+    }
+
+    void clearUnused(){
+        removeEntries(item -> item.getUsageType() == UsageMarker.USAGE_NONE);
+    }
+    public boolean remove(Key key){
+        return false;
+    }
+    public Iterator<Key> removeAll(Predicate<? super Key> filter){
+        return EmptyIterator.of();
+    }
+    public void removeEntries(Predicate<? super T> filter){
+        getItemArray().remove(filter);
+    }
+    void clearUsageTypes(){
+        UsageMarker.clearUsageTypes(iterator());
     }
     public void removeSelf(){
         SectionList sectionList = getSectionList();
@@ -98,15 +117,26 @@ public class Section<T extends Block>  extends FixedDexContainer
     public Iterator<T> getAll(Key key) {
         return getPool().getAll(key);
     }
-    public T get(Key key) {
+    public T getSectionItem(Key key) {
         return getPool().get(key);
     }
-    boolean keyChanged(Key key){
+    public T getLoaded(Key key) {
+        DexSectionPool<T> pool = getLoadedPool();
+        if(pool != null){
+            return pool.get(key);
+        }
+        return null;
+    }
+    boolean keyChanged(Block block, Key key, boolean immediateIdSort){
         DexSectionPool<T> dexSectionPool = this.getLoadedPool();
         if(dexSectionPool != null){
             return dexSectionPool.update(key);
         }
         return false;
+    }
+    void sortImmediate(T item){
+        SectionArray<T> array = getItemArray();
+        array.sortSingle(item, CompareUtil.getComparatorUnchecked());
     }
     public DexSectionPool<T> getPool(){
         DexSectionPool<T> dexSectionPool = this.dexSectionPool;
@@ -132,11 +162,10 @@ public class Section<T extends Block>  extends FixedDexContainer
         return sectionType;
     }
 
-    @Override
-    public T get(int i){
+    public T getSectionItem(int idx){
         return null;
     }
-    public T[] get(int[] indexes){
+    public T[] getSectionItems(int[] indexes){
         return null;
     }
     public T getOrCreate(Key key) {
@@ -144,6 +173,14 @@ public class Section<T extends Block>  extends FixedDexContainer
     }
     public T createItem() {
         return getItemArray().createNext();
+    }
+
+    public T get(Key key){
+        return getPool().get(key);
+    }
+    @Override
+    public T get(int i) {
+        return getItemArray().get(i);
     }
     @Override
     public int getCount(){
@@ -159,13 +196,20 @@ public class Section<T extends Block>  extends FixedDexContainer
     public SectionArray<T> getItemArray() {
         return itemArray;
     }
-    public void sort() throws ClassCastException {
-        sort(CompareUtil.getComparatorUnchecked());
+    public boolean sort() throws ClassCastException {
+        Object first = getItemArray().getFirst();
+        if(!(first instanceof Comparable)){
+            return false;
+        }
+        return sort(CompareUtil.getComparatorUnchecked());
     }
-    public void sort(Comparator<? super T> comparator){
-        getItemArray().sort(comparator);
+    public boolean sort(Comparator<? super T> comparator){
+        return getItemArray().sort(comparator);
     }
 
+    public Iterator<T> clonedIterator() {
+        return getItemArray().clonedIterator();
+    }
     @Override
     public Iterator<T> iterator() {
         return getItemArray().iterator();
@@ -239,10 +283,10 @@ public class Section<T extends Block>  extends FixedDexContainer
     private boolean isPositionAlignedItem(){
         return getItemArray().get(0) instanceof PositionAlignedItem;
     }
+
     void onRefreshed(int position){
-    }
-    public boolean hasUsageMarker() {
-        return get(0) instanceof UsageMarker;
+        position += this.getItemArray().countBytes();
+        this.updateNextSection(position);
     }
     void onRemoving(T item){
         DexSectionPool<T> dexSectionPool = this.dexSectionPool;

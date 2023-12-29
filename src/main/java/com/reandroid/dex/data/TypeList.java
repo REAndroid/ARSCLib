@@ -16,21 +16,23 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.dex.base.UsageMarker;
+import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ArrayIterator;
 import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
-public class TypeList extends ShortList implements KeyItemCreate, SmaliFormat, Iterable<TypeId>, Comparable<TypeList> {
+public class TypeList extends ShortList implements KeyItemCreate,
+        SmaliFormat, Iterable<TypeId>, Comparable<TypeList> {
 
     private TypeId[] typeIds;
 
@@ -40,7 +42,7 @@ public class TypeList extends ShortList implements KeyItemCreate, SmaliFormat, I
 
     @Override
     public TypeListKey getKey(){
-        return checkKey(SectionType.TYPE_LIST, TypeListKey.create(this));
+        return checkKey(TypeListKey.create(this));
     }
     @Override
     public void setKey(Key key){
@@ -48,58 +50,61 @@ public class TypeList extends ShortList implements KeyItemCreate, SmaliFormat, I
     }
     public void setKey(TypeListKey key){
         TypeListKey old = getKey();
-        if(Objects.equals(old, key)){
+        if(key.equals(old)){
             return;
         }
-        String[] names = key.getParameters();;
+        String[] names = key.getParameterNames();;
         if(names == null){
             setSize(0);
             return;
         }
         setSize(0);
-        DexSectionPool<TypeId> pool = getPool(SectionType.TYPE_ID);
-        if(pool == null) {
-            return;
-        }
+        DexSectionPool<TypeId> pool = getOrCreatePool(SectionType.TYPE_ID);
         for(String name : names){
             TypeId typeId = pool.getOrCreate(TypeKey.create(name));
             add(typeId);
         }
-        keyChanged(SectionType.TYPE_LIST, old);
+        keyChanged(old);
+    }
+
+    @Override
+    public SectionType<TypeList> getSectionType() {
+        return SectionType.TYPE_LIST;
     }
     public void addAll(Iterator<String> iterator) {
-        if(!iterator.hasNext()) {
-            return;
-        }
-        DexSectionPool<TypeId> pool = getPool(SectionType.TYPE_ID);
-        if(pool == null) {
-            return;
-        }
         while (iterator.hasNext()){
-            TypeId typeId = pool.getOrCreate(new TypeKey(iterator.next()));
-            add(typeId);
+            add(iterator.next());
+        }
+    }
+    public void add(Iterator<TypeKey> iterator) {
+        while (iterator.hasNext()){
+            add(iterator.next());
         }
     }
     public void add(String typeName) {
-        if(typeName == null){
-            return;
-        }
-        DexSectionPool<TypeId> pool = getPool(SectionType.TYPE_ID);
-        if(pool != null){
-            add(pool.getOrCreate(new TypeKey(typeName)));
+        add(TypeKey.create(typeName));
+    }
+    public void add(TypeKey typeKey) {
+        if(typeKey != null){
+            TypeId typeId = getOrCreateSectionItem(SectionType.TYPE_ID, typeKey);
+            add(typeId);
         }
     }
     public void add(TypeId typeId){
         if(typeId != null) {
-            add(typeId.getIndex());
+            add(typeId.getIdx());
         }else {
             add(0);
         }
     }
-    public void remove(TypeId typeId){
+    public boolean remove(TypeId typeId){
         if(typeId != null){
-            remove(indexOf(typeId.getIndex()));
+            return remove(indexOf(typeId.getIdx()));
         }
+        return false;
+    }
+    public boolean remove(TypeKey typeKey){
+        return remove(get(typeKey));
     }
     public Iterator<TypeKey> getTypeKeys() {
         return ComputeIterator.of(iterator(), TypeId::getKey);
@@ -115,6 +120,27 @@ public class TypeList extends ShortList implements KeyItemCreate, SmaliFormat, I
     public int size() {
         return super.size();
     }
+    public boolean contains(TypeKey typeKey){
+        if(typeKey != null){
+            for(TypeId typeId : this){
+                if(typeKey.equals(typeId.getKey())){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    public TypeId get(TypeKey typeKey){
+        if(typeKey != null){
+            for(TypeId typeId : this){
+                if(typeKey.equals(typeId.getKey())){
+                    return typeId;
+                }
+            }
+        }
+        return null;
+    }
+
     public TypeId[] getTypeIds(){
         return typeIds;
     }
@@ -139,10 +165,10 @@ public class TypeList extends ShortList implements KeyItemCreate, SmaliFormat, I
     }
     @Override
     void onChanged(){
-        updateTypeIds();
+        cacheTypeIds();
     }
-    private void updateTypeIds(){
-        typeIds = get(SectionType.TYPE_ID, toArray());
+    private void cacheTypeIds(){
+        typeIds = getSectionItem(SectionType.TYPE_ID, toArray());
         if(typeIds == null){
             return;
         }
@@ -164,9 +190,10 @@ public class TypeList extends ShortList implements KeyItemCreate, SmaliFormat, I
         int length = typeIds.length;
         setSize(length, false);
         for(int i = 0; i < length; i++){
-            TypeId typeId = typeIds[i];
+            TypeId typeId = typeIds[i].getReplace();
+            typeIds[i] = typeId;
             typeId.addUsageType(UsageMarker.USAGE_INTERFACE);
-            put(i, typeIds[i].getIndex());
+            put(i, typeIds[i].getIdx());
         }
     }
 
@@ -176,13 +203,29 @@ public class TypeList extends ShortList implements KeyItemCreate, SmaliFormat, I
             typeId.append(writer);
         }
     }
+    public void appendInterfaces(SmaliWriter writer) throws IOException {
+        boolean appendOnce = false;
+        SmaliDirective smaliDirective = null;
+        for(TypeId typeId : this){
+            writer.newLine();
+            if(!appendOnce){
+                writer.newLine();
+                writer.appendComment("interfaces");
+                writer.newLine();
+                appendOnce = true;
+                smaliDirective = SmaliDirective.IMPLEMENTS;
+            }
+            smaliDirective.append(writer);
+            typeId.append(writer);
+        }
+    }
 
     @Override
     public int compareTo(TypeList typeList) {
         if(typeList == null){
             return -1;
         }
-        return CompareUtil.compare(getTypeIds(), typeList.getTypeIds());
+        return SectionTool.compareIdx(iterator(), typeList.iterator());
     }
 
     @Override

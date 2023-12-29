@@ -15,16 +15,16 @@
  */
 package com.reandroid.dex.data;
 
-import com.reandroid.arsc.base.BlockArray;
+import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.arsc.item.IntegerVisitor;
-import com.reandroid.arsc.item.VisitableInteger;
+import com.reandroid.dex.common.IdUsageIterator;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.IterableIterator;
 
@@ -32,14 +32,15 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
 
-public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implements Iterable<T>, SmaliFormat, VisitableInteger {
+public abstract class DefArray<T extends Def<?>> extends BlockList<T> implements
+        Iterable<T>, SmaliFormat, IdUsageIterator {
 
     private final IntegerReference itemCount;
 
     private ClassId mClassId;
 
-    public DefArray(IntegerReference itemCount){
-        super();
+    public DefArray(IntegerReference itemCount, Creator<T> creator){
+        super(creator);
         this.itemCount = itemCount;
     }
 
@@ -50,11 +51,11 @@ public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implemen
             directory.remove(def);
         }
         boolean removed = super.remove(def);
-        if(removed && directory != null){
-            sortAnnotations();
-        }
         if(removed){
             resetIndex();
+            if(directory != null){
+                sortAnnotations();
+            }
         }
         updateCount();
         return removed;
@@ -62,6 +63,7 @@ public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implemen
     @Override
     public final boolean sort(Comparator<? super T> comparator) {
         if(!needsSort(comparator)){
+            sortAnnotations();
             return false;
         }
         onPreSort();
@@ -99,13 +101,6 @@ public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implemen
             }
         }
         return null;
-    }
-    @Override
-    public void visitIntegers(IntegerVisitor visitor) {
-        Iterator<T> iterator = iterator();
-        while (iterator.hasNext()) {
-            iterator.next().visitIntegers(visitor);
-        }
     }
 
     @Override
@@ -152,7 +147,7 @@ public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implemen
     protected void onRefreshed() {
         updateCount();
     }
-    public void updateCount(){
+    private void updateCount(){
         itemCount.set(getCount());
     }
     public ClassData getClassData(){
@@ -160,8 +155,8 @@ public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implemen
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
-        super.onReadBytes(reader);
+        setSize(itemCount.get());
+        super.readChildes(reader);
     }
     private void linkAnnotation(){
         if(getCount() == 0){
@@ -190,19 +185,17 @@ public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implemen
         return classId.getUniqueAnnotationsDirectory();
     }
 
-    @Override
-    public void clearChildes() {
-        for(Def<?> def : this){
-            //def.onRemove();
-        }
-        super.clearChildes();
-    }
-
     private void resetIndex(){
         for(T def : this){
             def.resetIndex();
         }
     }
+    public void replaceKeys(Key search, Key replace){
+        for(Def<?> def : this){
+            def.replaceKeys(search, replace);
+        }
+    }
+    @Override
     public Iterator<IdItem> usedIds(){
         return new IterableIterator<Def<?>, IdItem>(iterator()) {
             @Override
@@ -213,7 +206,7 @@ public abstract class DefArray<T extends Def<?>> extends BlockArray<T>  implemen
     }
     public void merge(DefArray<?> defArray){
         int count = defArray.getCount();
-        setChildesCount(count);
+        setSize(count);
         for(int i = 0; i < count; i++){
             Def<?> coming = defArray.get(i);
             get(i).merge(coming);

@@ -15,11 +15,10 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.arsc.item.IntegerVisitor;
-import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.data.EncodedArray;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
@@ -27,20 +26,12 @@ import java.util.Iterator;
 import java.util.function.Predicate;
 
 public class ArrayValue extends DexValueBlock<EncodedArray>
-        implements Iterable<DexValueBlock<?>>, VisitableInteger {
+        implements Iterable<DexValueBlock<?>> {
 
     public ArrayValue() {
         super(new EncodedArray(), DexValueType.ARRAY);
     }
 
-    @Override
-    public void visitIntegers(IntegerVisitor visitor) {
-        for(DexValueBlock<?> dexValue : this){
-            if(dexValue instanceof VisitableInteger){
-                ((VisitableInteger)dexValue).visitIntegers(visitor);
-            }
-        }
-    }
     public DexValueBlock<?> get(int i){
         return getValueContainer().get(i);
     }
@@ -82,6 +73,13 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
             }
         };
     }
+    @Override
+    public void replaceKeys(Key search, Key replace) {
+        for(DexValueBlock<?> valueBlock : this){
+            valueBlock.replaceKeys(search, replace);
+        }
+    }
+
     @Override
     public void merge(DexValueBlock<?> valueBlock){
         super.merge(valueBlock);

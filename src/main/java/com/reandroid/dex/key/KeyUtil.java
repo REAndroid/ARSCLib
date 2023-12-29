@@ -15,7 +15,11 @@
  */
 package com.reandroid.dex.key;
 
+import com.reandroid.utils.StringsUtil;
+
 public class KeyUtil {
+
+    public static final String ANY_NAME = StringsUtil.of("*");
 
     public static boolean matches(String name1, String name2){
         if(name1 == null){
@@ -24,9 +28,12 @@ public class KeyUtil {
             }
             return name2.equals(ANY_NAME);
         }
-        return name1.equals(name2) || name1.equals(ANY_NAME);
+        if(name2 == null){
+            return false;
+        }
+        return name1.equals(name2) ||
+                name1.equals(ANY_NAME) ||
+                name2.equals(ANY_NAME);
     }
-
-    public static String ANY_NAME = "*";
 
 }

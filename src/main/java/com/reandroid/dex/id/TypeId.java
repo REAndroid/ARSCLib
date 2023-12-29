@@ -15,12 +15,11 @@
  */
 package com.reandroid.dex.id;
 
-import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.IndirectStringReference;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 
@@ -28,7 +27,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class TypeId extends IdItem implements Comparable<TypeId>, KeyItemCreate {
+public class TypeId extends IdItem implements Comparable<TypeId> {
 
     private final IndirectStringReference nameReference;
 
@@ -58,7 +57,7 @@ public class TypeId extends IdItem implements Comparable<TypeId>, KeyItemCreate 
         if(Objects.equals(key, old)){
             return;
         }
-        setName(key.getType());
+        nameReference.setString(key.getTypeName());
         keyChanged(old);
     }
     public String getName(){
@@ -68,11 +67,8 @@ public class TypeId extends IdItem implements Comparable<TypeId>, KeyItemCreate 
         }
         return null;
     }
-    public void setName(String name){
-        getNameReference().setString(name);
-    }
     public StringId getNameId(){
-        return getNameReference().getItem();
+        return nameReference.getItem();
     }
 
     public IndirectStringReference getNameReference() {
@@ -85,7 +81,7 @@ public class TypeId extends IdItem implements Comparable<TypeId>, KeyItemCreate 
     }
     @Override
     void cacheItems(){
-        nameReference.updateItem();
+        nameReference.pullItem();
     }
 
     @Override
@@ -98,7 +94,7 @@ public class TypeId extends IdItem implements Comparable<TypeId>, KeyItemCreate 
         if(typeId == null){
             return -1;
         }
-        return CompareUtil.compare(this.getNameReference(), typeId.getNameReference());
+        return nameReference.compareTo(typeId.nameReference);
     }
 
     @Override

@@ -17,13 +17,15 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ShortItem;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliRegion;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class InsPackedSwitchData extends PayloadData implements LabelsSet {
+public class InsPackedSwitchData extends PayloadData implements LabelsSet, SmaliRegion {
     private final ShortItem elementCount;
     private final IntegerItem firstKey;
     private final PackedSwitchDataList elements;
@@ -54,6 +56,11 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet {
     }
 
     @Override
+    public SmaliDirective getSmaliDirective() {
+        return SmaliDirective.PACKED_SWITCH;
+    }
+
+    @Override
     public Iterator<PackedSwitchDataList.Data> getLabels() {
         return elements.getLabels();
     }
@@ -66,16 +73,12 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet {
     @Override
     void appendCode(SmaliWriter writer) throws IOException {
         writer.newLine();
-        writer.append('.');
-        writer.append(getOpcode().getName());
-        writer.append(' ');
+        getSmaliDirective().append(writer);
         writer.append(HexUtil.toHex(firstKey.get(), 1));
         writer.indentPlus();
         elements.append(writer);
         writer.indentMinus();
-        writer.newLine();
-        writer.append(".end ");
-        writer.append(getOpcode().getName());
+        getSmaliDirective().appendEnd(writer);
     }
 
     @Override

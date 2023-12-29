@@ -23,7 +23,7 @@ public class CreatorArray<T extends Block> extends BlockArray<T> {
     private final Creator<T> creator;
 
     public CreatorArray(Creator<T> creator){
-        super(creator.newInstance(0));
+        super(creator.newArrayInstance(0));
         this.creator = creator;
     }
 
@@ -31,8 +31,8 @@ public class CreatorArray<T extends Block> extends BlockArray<T> {
     protected void onRefreshed() {
     }
     @Override
-    public T[] newInstance(int length) {
-        return creator.newInstance(length);
+    public T[] newArrayInstance(int length) {
+        return creator.newArrayInstance(length);
     }
     @Override
     public T newInstance() {

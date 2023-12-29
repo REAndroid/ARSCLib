@@ -16,53 +16,43 @@
 package com.reandroid.dex.id;
 
 import com.reandroid.dex.base.UsageMarker;
-import com.reandroid.dex.data.StringData;
+import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.data.TypeList;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.KeyItemCreate;
-import com.reandroid.dex.key.ProtoKey;
-import com.reandroid.dex.reference.DataItemIndirectReference;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.reference.IdItemIndirectReference;
 import com.reandroid.dex.reference.IndirectStringReference;
+import com.reandroid.dex.reference.TypeListReference;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliWriter;
-import com.reandroid.utils.CompareUtil;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
-public class ProtoId extends IdItem implements Comparable<ProtoId>, KeyItemCreate {
+public class ProtoId extends IdItem implements Comparable<ProtoId> {
 
     private final IndirectStringReference shorty;
     private final IdItemIndirectReference<TypeId> returnType;
-    private final DataItemIndirectReference<TypeList> parameters;
+    private final TypeListReference parameters;
 
     public ProtoId() {
         super(SIZE);
 
         this.shorty = new IndirectStringReference(this, 0, UsageMarker.USAGE_SHORTY);
         this.returnType = new IdItemIndirectReference<>(SectionType.TYPE_ID, this, 4, UsageMarker.USAGE_PROTO);
-        this.parameters = new DataItemIndirectReference<>(SectionType.TYPE_LIST, this, 8);
+        this.parameters = new TypeListReference(this, 8, UsageMarker.USAGE_PROTO);
     }
 
 
     @Override
     public Iterator<IdItem> usedIds(){
-        TypeList typeList = parameters.getItem();
-        Iterator<? extends IdItem> iterator;
-        if(typeList == null){
-            iterator = EmptyIterator.of();
-        }else {
-            iterator = typeList.iterator();
-        }
-        return CombiningIterator.three(
-                SingleIterator.of(shorty.getItem()),
+        return CombiningIterator.singleThree(
+                this,
                 SingleIterator.of(returnType.getItem()),
-                iterator
+                getParameterIds(),
+                SingleIterator.of(shorty.getItem())
         );
     }
     @Override
@@ -79,35 +69,25 @@ public class ProtoId extends IdItem implements Comparable<ProtoId>, KeyItemCreat
     }
     public void setKey(ProtoKey key){
         ProtoKey old = getKey();
-        if(Objects.equals(key, old)){
+        if(key.equals(old)){
             return;
         }
-        returnType.setItem(key.getReturnTypeKey());
-        parameters.setItem(key.getParametersKey());
         shorty.setString(key.getShorty());
+        returnType.setItem(key.getReturnType());
+        parameters.setItem(key.getParameterListKey());
         keyChanged(old);
     }
-    public String getKey(boolean appendReturnType){
-        StringBuilder builder = new StringBuilder();
-        builder.append('(');
-        builder.append(buildMethodParameters());
-        builder.append(')');
-        if(appendReturnType){
-            builder.append(getReturnTypeId().getName());
-        }
-        return builder.toString();
-    }
-
     public int getParameterRegistersCount(){
         TypeList typeList = getTypeList();
         if(typeList == null){
             return 0;
         }
         int result = 0;
-        Iterator<String> iterator = typeList.getTypeNames();
-        while (iterator.hasNext()){
-            String name = iterator.next();
-            if("J".equals(name) || "D".equals(name)){
+        TypeId[] iterator = typeList.getTypeIds();
+        for (TypeId typeId : iterator){
+            TypeKey key = typeId.getKey();
+            if(TypeKey.TYPE_J.equals(key) ||
+                    TypeKey.TYPE_D.equals(key)){
                 result ++;
             }
             result ++;
@@ -123,11 +103,7 @@ public class ProtoId extends IdItem implements Comparable<ProtoId>, KeyItemCreat
         return 0;
     }
     public TypeId getParameter(int index) {
-        TypeList typeList = getTypeList();
-        if(typeList != null){
-            return typeList.getTypeId(index);
-        }
-        return null;
+        return parameters.get(index);
     }
     public String[] getParameterNames(){
         TypeList typeList = getTypeList();
@@ -136,7 +112,7 @@ public class ProtoId extends IdItem implements Comparable<ProtoId>, KeyItemCreat
         }
         return null;
     }
-    public Iterator<TypeId> getParameters(){
+    public Iterator<TypeId> getParameterIds(){
         TypeList typeList = getTypeList();
         if(typeList != null){
             return typeList.iterator();
@@ -146,27 +122,32 @@ public class ProtoId extends IdItem implements Comparable<ProtoId>, KeyItemCreat
     public TypeList getTypeList() {
         return parameters.getItem();
     }
-    public void setParameters(TypeList typeList){
-        parameters.setItem(typeList);
+    public TypeListReference getParametersReference(){
+        return parameters;
     }
-    public String getReturnType(){
-        TypeId typeId = getReturnTypeId();
-        if(typeId != null){
-            return typeId.getName();
-        }
-        return null;
+    public void setParameters(TypeListKey key){
+        parameters.setItem(key);
+    }
+    public TypeListKey getParameters(){
+        return parameters.getKey();
+    }
+    public TypeKey getReturnType(){
+        return (TypeKey) returnType.getKey();
     }
     public TypeId getReturnTypeId(){
         return returnType.getItem();
     }
-    public void setReturnTypeId(TypeId typeId){
-        returnType.setItem(typeId);
+    public String getShorty(){
+        return shorty.getString();
     }
-    public StringData getShorty(){
-        return shorty.getStringData();
+    public void setShorty(StringKey key){
+        shorty.setItem(key);
     }
     public void setShorty(String shortyString){
         shorty.setString(shortyString);
+    }
+    public void rebuildShorty(){
+        shorty.setString(getKey().getShorty());
     }
 
     @Override
@@ -177,48 +158,43 @@ public class ProtoId extends IdItem implements Comparable<ProtoId>, KeyItemCreat
     }
     @Override
     void cacheItems(){
-        shorty.updateItem();
-        returnType.updateItem();
-        parameters.updateItem();
-    }
-
-    public String buildMethodParameters(){
-        TypeList typeList = getTypeList();
-        if(typeList == null || typeList.size() == 0){
-            return "";
-        }
-        StringBuilder builder = new StringBuilder();
-        for(TypeId typeId : typeList){
-            builder.append(typeId.getName());
-        }
-        return builder.toString();
+        shorty.pullItem();
+        returnType.pullItem();
+        parameters.pullItem();
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        TypeList typeList = getTypeList();
-        if(typeList == null || typeList.size() == 0){
-            return;
+        writer.append('(');
+        Iterator<TypeId> iterator = getParameterIds();
+        while (iterator.hasNext()){
+            iterator.next().append(writer);
         }
-        for(TypeId typeId : typeList){
-            typeId.append(writer);
-        }
+        writer.append(')');
+        writer.appendRequired(getReturnTypeId());
     }
-
     @Override
     public int compareTo(ProtoId protoId) {
+        if(protoId == this){
+            return 0;
+        }
         if(protoId == null) {
             return -1;
         }
-        int i = CompareUtil.compare(getReturnTypeId(), protoId.getReturnTypeId());
+
+        int i = SectionTool.compareIdx(getReturnTypeId(), protoId.getReturnTypeId());
         if(i != 0){
             return i;
         }
-        return CompareUtil.compare(getTypeList(), protoId.getTypeList());
+        return SectionTool.compareIdx(getParameterIds(), protoId.getParameterIds());
     }
 
     @Override
     public String toString() {
-        return getKey(true);
+        ProtoKey key = getKey();
+        if(key != null){
+            return key.toString();
+        }
+        return "(" + getTypeList() + ")" + getReturnTypeId();
     }
 
     private static final int SIZE = 12;

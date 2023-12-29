@@ -16,10 +16,7 @@
 package com.reandroid.dex.pool;
 
 import com.reandroid.dex.data.DataItem;
-import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.sections.DataSection;
-import com.reandroid.dex.sections.Section;
-import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.util.Iterator;
@@ -36,35 +33,6 @@ public class DataSectionPool<T extends DataItem> extends DexSectionPool<T>{
     @Override
     DataSection<T> getSection() {
         return (DataSection<T>) super.getSection();
-    }
-    public int clearDuplicates(){
-        ArrayCollection<T> result = new ArrayCollection<>(size() / 10);
-        Iterator<KeyItemGroup<T>> iterator = groupIterator();
-        while (iterator.hasNext()){
-            replaceDuplicates(result, iterator.next());
-        }
-        int size = result.size();
-        for(T item : result){
-            item.removeSelf();
-        }
-        result.clear();
-        return size;
-    }
-    private void replaceDuplicates(ArrayCollection<T> result, KeyItemGroup<T> group){
-        int size = group.size();
-        if(size < 2){
-            return;
-        }
-        T first = group.getFirst();
-        Iterator<T> iterator = group.iterator(1);
-        while (iterator.hasNext()){
-            T item = iterator.next();
-            if(item == first){
-                continue;
-            }
-            item.setReplace(first);
-            result.add(item);
-        }
     }
 
     public Iterator<T> findDuplicates(){

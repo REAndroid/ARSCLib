@@ -18,18 +18,23 @@ package com.reandroid.dex.header;
 import com.reandroid.arsc.item.ByteArray;
 
 public class Version extends HeaderPiece {
+    private int mCache;
     public Version(){
         super();
         super.set(DEFAULT_BYTES.clone());
     }
     public int getVersionAsInteger(){
+        if(mCache != 0){
+            return mCache;
+        }
         byte[] bytes = getBytesInternal();
         if(bytes == null || bytes.length != 4){
             return -1;
         }
-        return ((bytes[0] & 0xff) - 0x30) * 100
+        mCache = ((bytes[0] & 0xff) - 0x30) * 100
                 + ((bytes[1] & 0xff) - 0x30) * 10
                 + ((bytes[2] & 0xff) - 0x30);
+        return mCache;
     }
     public void setVersionAsInteger(int version){
         setSize(4);
@@ -46,12 +51,19 @@ public class Version extends HeaderPiece {
         i = version;
         bytes[2] = (byte)((i & 0xff) + 0x30);
         bytes[3] = 0;
+        mCache = 0;
     }
-    public void resetDefault(){
-        super.set(DEFAULT_BYTES.clone());
+
+    @Override
+    protected void onBytesChanged() {
+        mCache = 0;
     }
+
     public boolean isDefault(){
         return ByteArray.equals(getBytesInternal(), DEFAULT_BYTES);
+    }
+    public boolean isClassDefinitionOrderEnforced(){
+        return getVersionAsInteger() >= ClassDefinitionOrderEnforcedVersion;
     }
     @Override
     public String toString(){
@@ -62,6 +74,7 @@ public class Version extends HeaderPiece {
         return String.valueOf(version);
     }
 
-    public static final byte[] DEFAULT_BYTES = new byte[]{(byte)'0', (byte)'3', (byte)'5', (byte)0x00};
+    private static final byte[] DEFAULT_BYTES = new byte[]{(byte)'0', (byte)'3', (byte)'5', (byte)0x00};
 
+    public static final int ClassDefinitionOrderEnforcedVersion = 37;
 }

@@ -51,7 +51,7 @@ public class Ins3rms extends Size6Ins implements RegistersSet {
 
     @Override
     public String toString() {
-        return getOpcode() + " {" + getRegistersIterator() + "}, " + getSectionItem();
+        return getOpcode() + " {" + getRegistersIterator() + "}, " + getSectionId();
     }
 
 }

@@ -24,6 +24,7 @@ public class SmaliReader {
     public SmaliReader(byte[] array) {
         this.array = array;
     }
+
     public int position() {
         return position;
     }
@@ -54,7 +55,6 @@ public class SmaliReader {
         return bytes;
     }
 
-
     public byte[] getBytes(int length){
         byte[] result = new byte[length];
         int pos = position();
@@ -63,8 +63,32 @@ public class SmaliReader {
         }
         return result;
     }
+    public boolean startsWith(byte[] bytes){
+        int pos = position();
+        int length = length() - pos;
+        if(length < bytes.length){
+            return false;
+        }
+        length = bytes.length;
+        for(int i = 0; i < length; i++){
+            if(bytes[i] != get(pos + i)){
+                return false;
+            }
+        }
+        return true;
+    }
     public int indexOf(char ch){
         return indexOf((byte) ch);
+    }
+    public int indexOfWhiteSpace(){
+        int pos = position();
+        int length = length();
+        for(int i = pos; i < length; i++){
+            if(isWhiteSpace(get(i))){
+                return i;
+            }
+        }
+        return length;
     }
     public int indexOf(byte b){
         int pos = position();
@@ -87,6 +111,13 @@ public class SmaliReader {
         }
         position(pos);
     }
+    public void skip(int amount){
+        int available = length() - position();
+        if(amount > available){
+            amount = available;
+        }
+        position(amount + position());
+    }
 
     @Override
     public String toString() {
@@ -103,5 +134,8 @@ public class SmaliReader {
             default:
                 return false;
         }
+    }
+    public static SmaliReader of(String text){
+        return new SmaliReader(text.getBytes(StandardCharsets.UTF_8));
     }
 }

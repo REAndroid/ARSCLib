@@ -29,32 +29,31 @@ import com.reandroid.dex.io.ByteReader;
 import com.reandroid.dex.io.StreamUtil;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.StringKey;
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Objects;
 
 public class StringData extends DataItem
         implements SmaliFormat, BlockRefresh,
         OffsetSupplier, OffsetReceiver, Comparable<StringData> {
 
-    static String EMPTY_STRING = StringKey.EMPTY_STRING;
+    private static final String EMPTY_STRING = StringsUtil.EMPTY;
+
     private final StringDataContainer mDataContainer;
     private String mCache;
-    private final StringDataKey mKey;
-
-    private boolean mInitialized;
+    private StringKey mKey;
 
     public StringData() {
         super(1);
         this.mDataContainer = new StringDataContainer(this);
         addChild(0, mDataContainer);
         this.mCache = EMPTY_STRING;
-        this.mKey = new StringDataKey(this);
     }
 
     public void removeSelf(){
@@ -68,24 +67,25 @@ public class StringData extends DataItem
 
     @Override
     public StringKey getKey(){
-        if(this.mInitialized){
-            return mKey;
-        }
-        return null;
+        return mKey;
     }
     public void setKey(Key key){
+        StringKey stringKey = (StringKey) key;
         String text = null;
-        if(key != null) {
-            text = ((StringKey)key).getString();
+        if(stringKey != null) {
+            text = stringKey.getString();
         }
         setString(text);
+    }
+    @Override
+    public SectionType<StringData> getSectionType() {
+        return SectionType.STRING_DATA;
     }
     public String getString(){
         return mCache;
     }
     public void setString(String value){
-        mInitialized = true;
-        if(mCache.equals(value)){
+        if(mCache.equals(value) && mKey != null){
             return;
         }
         if(value == null || value.length() == 0){
@@ -93,14 +93,27 @@ public class StringData extends DataItem
         }
         mCache = value;
         encodeString(value);
+        StringKey key;
+        if(value.length() == 0){
+            key = StringKey.EMPTY;
+        }else {
+            key = new StringKey(value);
+        }
+        this.mKey = key;
     }
     public String getQuotedString() {
         return DexUtils.quoteString(getString());
     }
 
-    void onBytesChanged() {
-        mCache = decodeString();
-        mInitialized = true;
+    void onStringBytesChanged() {
+        String cache = decodeString();
+        StringKey key;
+        if(cache.length() == 0){
+            key = StringKey.EMPTY;
+        }else {
+            key = new StringKey(cache);
+        }
+        this.mKey = key;
     }
 
     @Override
@@ -141,7 +154,13 @@ public class StringData extends DataItem
         byte[] bytes = mDataContainer.getBytesInternal();
         reader.readFully(bytes);
         mCache = text;
-        mInitialized = true;
+        StringKey key;
+        if(text.length() == 0){
+            key = StringKey.EMPTY;
+        }else {
+            key = new StringKey(text);
+        }
+        this.mKey = key;
     }
 
     @Override
@@ -297,41 +316,11 @@ public class StringData extends DataItem
         }
         @Override
         protected void onBytesChanged() {
-            stringData.onBytesChanged();
+            stringData.onStringBytesChanged();
         }
         @Override
         public int onWriteBytes(OutputStream stream) throws IOException {
             return super.onWriteBytes(stream);
-        }
-    }
-    static class StringDataKey extends StringKey{
-
-        private final StringData stringData;
-
-        public StringDataKey(StringData stringData) {
-            super(null);
-            this.stringData = stringData;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if(!(obj instanceof StringKey) || stringData.getParent() == null) {
-                return false;
-            }
-            if(obj instanceof StringDataKey) {
-                if(((StringDataKey)obj).stringData.getParent() == null){
-                    return false;
-                }
-            }
-            StringKey key = (StringKey) obj;
-            return Objects.equals(getString(), key.getString());
-        }
-        @Override
-        public String getString() {
-            return stringData.getString();
         }
     }
 }

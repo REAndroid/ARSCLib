@@ -15,17 +15,62 @@
  */
 package com.reandroid.dex.sections;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
-import com.reandroid.dex.base.BlockListArray;
-import com.reandroid.dex.base.IntegerPair;
+import com.reandroid.dex.base.*;
+import com.reandroid.dex.common.FullRefresh;
+import com.reandroid.dex.common.SectionItem;
 
-public class SectionArray<T extends Block> extends BlockListArray<T>{
+import java.util.Iterator;
+
+public class SectionArray<T extends SectionItem> extends BlockListArray<T> implements FullRefresh {
 
     public SectionArray(IntegerPair countAndOffset, Creator<T> creator) {
         super(countAndOffset, creator);
     }
 
+    @Override
+    public void refreshFull() {
+        if(!(getFirst() instanceof FullRefresh)){
+            return;
+        }
+        Iterator<?> iterator = iterator();
+        while (iterator.hasNext()){
+            FullRefresh refreshFull = (FullRefresh) iterator.next();
+            refreshFull.refreshFull();
+        }
+    }
+
+    int updatePositionedItemOffsets(int position){
+        int count = this.getCount();
+        this.getCountAndOffset().getFirst().set(count);
+        if(!(getFirst() instanceof PositionedItem)){
+            return position;
+        }
+        DexPositionAlign previous = null;
+        for(int i = 0; i < count; i++){
+            T item = this.get(i);
+            if(item == null) {
+                previous = null;
+                continue;
+            }
+            DexPositionAlign itemAlign = null;
+            if(item instanceof PositionAlignedItem){
+                itemAlign = ((PositionAlignedItem) item).getPositionAlign();
+                itemAlign.setSize(0);
+                if(previous != null){
+                    previous.align(position);
+                    position += previous.size();
+                }
+            }
+            if(i == count-1){
+                ((PositionedItem)item).removeLastAlign();
+            }
+            ((PositionedItem)item).setPosition(position);
+            position += item.countBytes();
+            previous = itemAlign;
+        }
+        return position;
+    }
     @Override
     public void onPreRemove(T item) {
         super.onPreRemove(item);

@@ -38,6 +38,12 @@ public class Ins22b extends Ins22 implements RegistersSet {
     public int getData(){
         return getByteUnsigned(3);
     }
+
+    @Override
+    public int getSignedData() {
+        return toSigned(getData(), 0xff);
+    }
+
     @Override
     public void setData(int data){
         setByte(3, data);

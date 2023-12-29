@@ -15,8 +15,8 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.writer.SmaliFormat;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.IndexIterator;
 import com.reandroid.utils.collection.SizedSupplier;
 
@@ -71,6 +71,36 @@ public class RegistersIterator implements SizedSupplier<Reg>, Iterable<Reg>, Sma
             }
             get(i).append(writer);
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof RegistersIterator)) {
+            return false;
+        }
+        RegistersIterator iterator = (RegistersIterator) obj;
+        int size = size();
+        if(size != iterator.size()){
+            return false;
+        }
+        for(int i = 0; i < size; i++){
+            if(!get(i).equals(iterator.get(i))){
+                return false;
+            }
+        }
+        return true;
+    }
+    @Override
+    public int hashCode() {
+        int hash = 1;
+        int size = size();
+        for(int i = 0; i < size; i++){
+            hash = hash * 31 + get(i).hashCode();
+        }
+        return hash;
     }
 
     @Override

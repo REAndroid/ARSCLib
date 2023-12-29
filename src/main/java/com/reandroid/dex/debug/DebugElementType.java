@@ -115,6 +115,9 @@ public class DebugElementType<T extends DebugElement> implements BlockCreator<T>
         return creator.newInstance();
     }
 
+    public boolean is(DebugElementType<?> type){
+        return type == this;
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

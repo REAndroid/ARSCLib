@@ -17,27 +17,32 @@ package com.reandroid.dex.key;
 
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.SingleIterator;
+
+import java.util.Iterator;
 
 public class TypeKey implements Key{
 
-    private final String type;
+    private final String typeName;
     private String packageName;
     private String simpleName;
 
-    public TypeKey(String type) {
-        this.type = type;
+    public TypeKey(String typeName) {
+        this.typeName = typeName;
     }
 
     public String[] generateTypeNames(){
         if(!isTypeObject()){
             return new String[0];
         }
-        TypeKey main = getMainType();
+        TypeKey main = getDeclaring();
         if(main != this){
             return main.generateTypeNames();
         }
         return new String[]{
-                getMainTypeName(),
+                getDeclaringName(),
                 getSignatureTypeName(),
                 getArrayType(1),
                 getArrayType(2),
@@ -48,11 +53,11 @@ public class TypeKey implements Key{
         if(!isTypeObject()){
             return new String[0];
         }
-        TypeKey main = getMainType();
+        TypeKey main = getDeclaring();
         if(main != this){
             return main.generateInnerTypePrefix();
         }
-        String type = getType();
+        String type = getTypeName();
         return new String[]{
                 type.replace(';', '$'),
                 getArrayType(1).replace(';', '$'),
@@ -61,61 +66,98 @@ public class TypeKey implements Key{
         };
     }
 
-    public String getType() {
-        return type;
+    public String getTypeName() {
+        return typeName;
     }
 
-    public String toJavaType(){
-        return DexUtils.toJavaName(getMainTypeName());
+    public String getSourceName(){
+        return DexUtils.toSourceName(getDeclaringName());
     }
-    public TypeKey getMainType(){
-        String main = getMainTypeName();
-        if(main.equals(getType())){
+    @Override
+    public TypeKey getDeclaring(){
+        String main = getDeclaringName();
+        if(main.equals(getTypeName())){
             return this;
         }
         return TypeKey.create(main);
     }
-    public String getMainTypeName() {
-        return DexUtils.toMainType(getType());
+    @Override
+    public Iterator<TypeKey> mentionedKeys() {
+        return SingleIterator.of(this);
+    }
+
+    @Override
+    public Key replaceKey(Key search, Key replace) {
+        if(search.equals(this)){
+            return replace;
+        }
+        return this;
+    }
+
+    public String getDeclaringName() {
+        return DexUtils.toDeclaringType(getTypeName());
     }
     public String getSignatureTypeName() {
-        return DexUtils.toSignatureType(getType());
+        return DexUtils.toSignatureType(getTypeName());
     }
     public String getArrayType(int dimension){
-        return DexUtils.makeArrayType(getType(), dimension);
+        return DexUtils.makeArrayType(getTypeName(), dimension);
     }
     public int getArrayDimension(){
-        return DexUtils.countArrayPrefix(getType());
+        return DexUtils.countArrayPrefix(getTypeName());
     }
     public boolean isTypeSignature(){
-        return DexUtils.isTypeSignature(getType());
+        return DexUtils.isTypeSignature(getTypeName());
     }
     public boolean isTypeArray(){
-        return DexUtils.isTypeArray(getType());
+        return DexUtils.isTypeArray(getTypeName());
     }
     public boolean isTypeObject(){
-        return DexUtils.isTypeObject(getType());
+        return DexUtils.isTypeObject(getTypeName());
     }
     public boolean isPrimitive(){
-        return DexUtils.isPrimitive(getType());
+        return DexUtils.isPrimitive(getTypeName());
     }
 
     public TypeKey changePackageName(String packageName){
-        String type = getType();
+        String type = getTypeName();
         return new TypeKey(packageName + type.substring(getPackageName().length()));
     }
     public String getSimpleName() {
         if(simpleName == null){
-            simpleName = DexUtils.getSimpleName(getType());
+            simpleName = DexUtils.getSimpleName(getTypeName());
         }
         return simpleName;
     }
+    public String getSimpleInnerName(){
+        return DexUtils.getSimpleInnerName(getTypeName());
+    }
+    public boolean isInnerName(){
+        return !getSimpleName().equals(getSimpleInnerName());
+    }
     public String getPackageName() {
         if(packageName == null){
-            packageName = DexUtils.getPackageName(getType());
+            packageName = DexUtils.getPackageName(getTypeName());
         }
         return packageName;
     }
+    public TypeKey getEnclosingClass(){
+        String type = getTypeName();
+        String parent = DexUtils.getParentClassName(type);
+        if(type.equals(parent)){
+            return this;
+        }
+        return new TypeKey(parent);
+    }
+    public TypeKey createInnerClass(String simpleName){
+        String type = getTypeName();
+        String child = DexUtils.createChildClass(type, simpleName);
+        if(type.equals(child)){
+            return this;
+        }
+        return new TypeKey(child);
+    }
+
     @Override
     public int compareTo(Object obj) {
         if(obj == null){
@@ -125,7 +167,7 @@ public class TypeKey implements Key{
             return 0;
         }
         TypeKey key = (TypeKey) obj;
-        return CompareUtil.compare(getType(), key.getType());
+        return CompareUtil.compare(getTypeName(), key.getTypeName());
     }
     @Override
     public boolean equals(Object obj) {
@@ -136,15 +178,15 @@ public class TypeKey implements Key{
             return false;
         }
         TypeKey key = (TypeKey) obj;
-        return getType().equals(key.getType());
+        return getTypeName().equals(key.getTypeName());
     }
     @Override
     public int hashCode() {
-        return getType().hashCode();
+        return getTypeName().hashCode();
     }
     @Override
     public String toString() {
-        return getType();
+        return getTypeName();
     }
 
     public TypeKey parse(String text) {
@@ -162,6 +204,40 @@ public class TypeKey implements Key{
             return null;
         }
         return new TypeKey(text);
+    }
+
+    public TypeKey fromSourceName(String sourceName){
+        if(sourceName == null || sourceName.length() == 0){
+            return null;
+        }
+        if(sourceName.indexOf('.') >= 0){
+            return create(DexUtils.toBinaryName(sourceName));
+        }
+        if(sourceName.equals(TYPE_B.getSourceName())){
+            return TYPE_B;
+        }
+        if(sourceName.equals(TYPE_D.getSourceName())){
+            return TYPE_D;
+        }
+        if(sourceName.equals(TYPE_F.getSourceName())){
+            return TYPE_F;
+        }
+        if(sourceName.equals(TYPE_I.getSourceName())){
+            return TYPE_I;
+        }
+        if(sourceName.equals(TYPE_J.getSourceName())){
+            return TYPE_J;
+        }
+        if(sourceName.equals(TYPE_S.getSourceName())){
+            return TYPE_S;
+        }
+        if(sourceName.equals(TYPE_V.getSourceName())){
+            return TYPE_V;
+        }
+        if(sourceName.equals(TYPE_Z.getSourceName())){
+            return TYPE_Z;
+        }
+        return create(DexUtils.toBinaryName(sourceName));
     }
 
     public static TypeKey create(String typeName){
@@ -203,14 +279,99 @@ public class TypeKey implements Key{
         }
     }
 
-    public static final TypeKey TYPE_B = new TypeKey("B");
-    public static final TypeKey TYPE_C = new TypeKey("C");
-    public static final TypeKey TYPE_D = new TypeKey("D");
-    public static final TypeKey TYPE_F = new TypeKey("F");
-    public static final TypeKey TYPE_I = new TypeKey("I");
-    public static final TypeKey TYPE_J = new TypeKey("J");
-    public static final TypeKey TYPE_S = new TypeKey("S");
-    public static final TypeKey TYPE_V = new TypeKey("V");
-    public static final TypeKey TYPE_Z = new TypeKey("Z");
 
+    public static TypeKey parseSignature(String type){
+        if(DexUtils.isTypeOrSignature(type)){
+            return new TypeKey(type);
+        }
+        return null;
+    }
+    public static final TypeKey NULL = new TypeKey("00"){
+        @Override
+        public boolean isPlatform() {
+            return false;
+        }
+        @Override
+        public boolean isPrimitive() {
+            return false;
+        }
+        @Override
+        public boolean isTypeArray() {
+            return false;
+        }
+        @Override
+        public boolean isTypeObject() {
+            return false;
+        }
+        @Override
+        public TypeKey getDeclaring() {
+            return this;
+        }
+        @Override
+        public String getTypeName() {
+            return StringsUtil.EMPTY;
+        }
+        @Override
+        public Iterator<TypeKey> mentionedKeys() {
+            return EmptyIterator.of();
+        }
+        @Override
+        public Key replaceKey(Key search, Key replace) {
+            return this;
+        }
+    };
+    private static final class PrimitiveTypeKey extends TypeKey {
+        private final String sourceName;
+        public PrimitiveTypeKey(String type, String sourceName) {
+            super(type);
+            this.sourceName = sourceName;
+        }
+        @Override
+        public String getSourceName() {
+            return sourceName;
+        }
+        @Override
+        public TypeKey getDeclaring() {
+            return this;
+        }
+        @Override
+        public boolean isPrimitive() {
+            return true;
+        }
+        @Override
+        public boolean isTypeObject() {
+            return false;
+        }
+        @Override
+        public boolean isTypeArray() {
+            return false;
+        }
+        @Override
+        public boolean isInnerName() {
+            return false;
+        }
+        @Override
+        public boolean isTypeSignature() {
+            return false;
+        }
+    }
+
+    public static final TypeKey TYPE_B = new PrimitiveTypeKey("B", "byte");
+    public static final TypeKey TYPE_C = new PrimitiveTypeKey("C", "char");
+    public static final TypeKey TYPE_D = new PrimitiveTypeKey("D", "double");
+    public static final TypeKey TYPE_F = new PrimitiveTypeKey("F", "float");
+    public static final TypeKey TYPE_I = new PrimitiveTypeKey("I", "int");
+    public static final TypeKey TYPE_J = new PrimitiveTypeKey("J", "long");
+    public static final TypeKey TYPE_S = new PrimitiveTypeKey("S", "short");
+    public static final TypeKey TYPE_V = new PrimitiveTypeKey("V", "void");
+    public static final TypeKey TYPE_Z = new PrimitiveTypeKey("Z", "boolean");
+
+    public static final TypeKey OBJECT = new TypeKey("Ljava/lang/Object;");
+    public static final TypeKey STRING = new TypeKey("Ljava/lang/String;");
+
+    public static final TypeKey DALVIK_EnclosingClass = new TypeKey("Ldalvik/annotation/EnclosingClass;");
+    public static final TypeKey DALVIK_EnclosingMethod = new TypeKey("Ldalvik/annotation/EnclosingMethod;");
+    public static final TypeKey DALVIK_InnerClass = new TypeKey("Ldalvik/annotation/InnerClass;");
+    public static final TypeKey DALVIK_MemberClass = new TypeKey("Ldalvik/annotation/MemberClasses;");
+    public static final TypeKey DALVIK_Signature = new TypeKey("Ldalvik/annotation/Signature;");
 }

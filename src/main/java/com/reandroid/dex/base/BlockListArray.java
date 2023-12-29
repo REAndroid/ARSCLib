@@ -105,14 +105,17 @@ public class BlockListArray<T extends Block> extends BlockList<T>
     }
     @Override
     protected void onRefreshed() {
+        updateCount();
+        super.onRefreshed();
+    }
+    protected void updateCount() {
         IntegerReference count = getCountAndOffset().getFirst();
         count.set(size());
-        super.onRefreshed();
     }
 
     @Override
-    public T[] newInstance(int length) {
-        return getCreator().newInstance(length);
+    public T[] newArrayInstance(int length) {
+        return getCreator().newArrayInstance(length);
     }
 
     @Override

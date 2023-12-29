@@ -16,16 +16,15 @@
 package com.reandroid.dex.reference;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.dex.base.DexBlockItem;
 import com.reandroid.dex.base.DexException;
+import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.reference.IdItemIndirectReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.HexUtil;
 
 public class IdItemIndirectShortReference<T extends IdItem> extends IdItemIndirectReference<T> {
 
-    public IdItemIndirectShortReference(SectionType<T> sectionType, DexBlockItem blockItem, int offset, int usage) {
+    public IdItemIndirectShortReference(SectionType<T> sectionType, SectionItem blockItem, int offset, int usage) {
         super(sectionType, blockItem, offset, usage);
         Block.putShort(getBytesInternal(), getOffset(), 0xffff);
     }
@@ -41,5 +40,13 @@ public class IdItemIndirectShortReference<T extends IdItem> extends IdItemIndire
                     + HexUtil.toHex(value, 4) + " > 0xffff");
         }
         Block.putShort(getBytesInternal(), getOffset(), value);
+    }
+
+    @Override
+    protected T pullItem(int i) {
+        if(i == 0xffff){
+            return null;
+        }
+        return super.pullItem(i);
     }
 }

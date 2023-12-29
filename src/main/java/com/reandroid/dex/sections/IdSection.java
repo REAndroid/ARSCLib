@@ -15,13 +15,16 @@
  */
 package com.reandroid.dex.sections;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
+import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 public class IdSection<T extends IdItem> extends Section<T> {
 
@@ -32,20 +35,65 @@ public class IdSection<T extends IdItem> extends Section<T> {
         super(sectionType, itemArray);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public T get(int i){
-        return getItemArray().get(i);
+    boolean keyChanged(Block block, Key key, boolean immediateSort) {
+        boolean changed = super.keyChanged(block, key, immediateSort);
+        if(!immediateSort){
+            return changed;
+        }
+        T item = (T) block;
+        sortImmediate(item);
+        return changed;
+    }
+
+    @Override
+    protected void onPreRefresh() {
+        super.onPreRefresh();
+        sort();
     }
     @Override
-    public T[] get(int[] indexes){
+    public boolean remove(Key key){
+        T item = getSectionItem(key);
+        if(item != null && item.getParent() != null){
+            item.removeSelf();
+            return true;
+        }
+        return false;
+    }
+    @Override
+    public Iterator<Key> removeAll(Predicate<? super Key> filter){
+        Iterator<T> iterator = getItemArray().clonedIterator();
+        return ComputeIterator.of(iterator, item -> {
+            Key key = item.getKey();
+            if(filter.test(key)){
+                item.removeSelf();
+                return key;
+            }
+            return null;
+        });
+    }
+    @Override
+    public T getSectionItem(int i){
+        T result = getItemArray().get(i);
+        if(i >= 0 && result == null){
+            throw new NullPointerException("Null id: " + i);
+        }
+        return result;
+    }
+    @Override
+    public T[] getSectionItems(int[] indexes){
         if(indexes == null || indexes.length == 0){
             return null;
         }
         BlockListArray<T> itemArray = getItemArray();
         int length = indexes.length;
-        T[] results = itemArray.newInstance(indexes.length);
+        T[] results = itemArray.newArrayInstance(indexes.length);
         for(int i = 0; i < length; i++){
             results[i] = itemArray.get(indexes[i]);
+            if(results[i] == null){
+                throw new NullPointerException("Null id: " + i);
+            }
         }
         return results;
     }
@@ -71,7 +119,7 @@ public class IdSection<T extends IdItem> extends Section<T> {
         return count;
     }
     public boolean canAdd(Collection<IdItem> collection){
-        int count = getCount();
+        int count = getCount() + 200;
         int check = count + collection.size();
         if((check & 0xffff0000) == 0){
             return true;

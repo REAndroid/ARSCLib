@@ -16,7 +16,7 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 

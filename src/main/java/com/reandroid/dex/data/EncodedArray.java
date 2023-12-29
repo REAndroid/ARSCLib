@@ -15,10 +15,9 @@
  */
 package com.reandroid.dex.data;
 
-import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.base.CreatorArray;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.sections.SectionType;
@@ -30,59 +29,75 @@ import com.reandroid.utils.collection.InstanceIterator;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Predicate;
 
 public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>> {
 
-    private final Ule128Item elementCount;
-    private final BlockArray<DexValueBlock<?>> elementsArray;
+    private final Ule128Item valuesCountReference;
+    private final BlockList<DexValueBlock<?>> valueList;
 
     public EncodedArray() {
         super(2);
-        this.elementCount = new Ule128Item();
-        this.elementsArray = new CreatorArray<>(CREATOR);
-        addChild(0, elementCount);
-        addChild(1, elementsArray);
+        this.valuesCountReference = new Ule128Item();
+        this.valueList = new BlockList<>();
+        this.valueList.setCreator(CREATOR);
+        addChild(0, valuesCountReference);
+        addChild(1, valueList);
+    }
+
+    @Override
+    public SectionType<EncodedArray> getSectionType() {
+        return SectionType.ENCODED_ARRAY;
     }
 
     public DexValueBlock<?> get(int i){
-        return getElementsArray().get(i);
+        return getValueList().get(i);
     }
     public<T1 extends IdItem> SectionValue<T1> getOrCreate(SectionType<T1> sectionType, int i){
         return getOrCreate(DexValueType.get(sectionType), i);
     }
     @SuppressWarnings("unchecked")
     public<T1 extends DexValueBlock<?>> T1 getOrCreate(DexValueType<T1> valueType, int i){
-        BlockArray<DexValueBlock<?>> array = getElementsArray();
+        BlockList<DexValueBlock<?>> array = getValueList();
         array.ensureSize(i + 1);
         DexValueBlock<?> value = array.get(i);
         if(value == null || value == NullValue.PLACE_HOLDER || value.getValueType() != valueType){
             value = valueType.newInstance();
-            array.setItem(i, value);
+            array.set(i, value);
         }
         return (T1) value;
     }
     public int size(){
-        return getElementsArray().getCount();
+        return getValueList().getCount();
     }
     public void add(DexValueBlock<?> value){
-       getElementsArray().add(value);
+       getValueList().add(value);
     }
     public void remove(DexValueBlock<?> value){
-        getElementsArray().remove(value);
+        getValueList().remove(value);
     }
     public void set(int i, DexValueBlock<?> value){
-        getElementsArray().setItem(i, value);
+        ensureSize(i + 1);
+        getValueList().set(i, value);
+    }
+    public void clear(){
+        getValueList().clearChildes();
+    }
+    public void removeAll(){
+        getValueList().removeAll();
+    }
+    public void sort(Comparator<? super DexValueBlock<?>> comparator){
+        getValueList().sort(comparator);
     }
     public void trimNull(){
         int size = size();
         int updatedSize = 0;
-        NullValue placeHolder = NullValue.PLACE_HOLDER;
         for(int i = 0; i < size; i++){
             DexValueBlock<?> value = get(i);
-            if(value != null && value != placeHolder) {
+            if(value != null && !value.is(DexValueType.NULL) && !value.isTemporary()) {
                 updatedSize = i + 1;
             }
         }
@@ -92,13 +107,38 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
     }
 
 
+    public void ensureSize(int size){
+        if(size > size()){
+            setSize(size);
+        }
+    }
     public void setSize(int size) {
-        getElementsArray().setChildesCount(size);
-        elementCount.set(size);
+        if(size < 0){
+            throw new IndexOutOfBoundsException("Invalid size: " + size);
+        }
+        valuesCountReference.set(size);
+        BlockList<DexValueBlock<?>> valueList = this.getValueList();
+        if(size == 0){
+            valueList.removeAll();
+            return;
+        }
+        int current = valueList.size();
+        if(size <= current){
+            if(size < current){
+                valueList.setSize(size);
+            }
+            return;
+        }
+        NullValue placeHolder = NullValue.PLACE_HOLDER;
+        int remain = size - current;
+        valueList.ensureCapacity(remain);
+        for(int i = 0; i < remain; i++){
+            valueList.add(placeHolder);
+        }
     }
     @Override
     public Iterator<DexValueBlock<?>> iterator(){
-        return getElementsArray().iterator();
+        return getValueList().iterator();
     }
     public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance){
         return InstanceIterator.of(iterator(), instance);
@@ -107,19 +147,19 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
         return InstanceIterator.of(iterator(), instance, filter);
     }
 
-    private BlockArray<DexValueBlock<?>> getElementsArray() {
-        return elementsArray;
+    private BlockList<DexValueBlock<?>> getValueList() {
+        return valueList;
     }
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException{
-        this.elementCount.onReadBytes(reader);
-        BlockArray<DexValueBlock<?>> array = getElementsArray();
-        int count = this.elementCount.get();
-        array.setChildesCount(count);
+        this.valuesCountReference.onReadBytes(reader);
+        BlockList<DexValueBlock<?>> valueList = getValueList();
+        int count = this.valuesCountReference.get();
+        valueList.ensureCapacity(count);
         for(int i = 0; i < count; i++){
             DexValueBlock<?> dexValue = DexValueType.create(reader);
-            array.setItem(i, dexValue);
+            valueList.add(dexValue);
             dexValue.onReadBytes(reader);
         }
     }
@@ -127,7 +167,7 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
-        this.elementCount.set(size());
+        this.valuesCountReference.set(size());
     }
 
     public Iterator<IdItem> usedIds(){
@@ -137,6 +177,22 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
                 return element.usedIds();
             }
         };
+    }
+
+    @Override
+    public void copyFrom(DataItem item) {
+        EncodedArray other = (EncodedArray) item;
+        merge(other);
+    }
+
+    public void merge(EncodedArray array){
+        int size = array.size();
+        getValueList().ensureCapacity(size);
+        for(int i = 0; i < size; i++){
+            DexValueBlock<?> coming = array.get(i);
+            DexValueBlock<?> valueBlock = getOrCreate(coming.getValueType(), i);
+            valueBlock.merge(coming);
+        }
     }
     @Override
     public int hashCode() {
@@ -167,15 +223,6 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
         }
         return true;
     }
-    public void merge(EncodedArray array){
-        int size = array.size();
-        setSize(size);
-        for(int i = 0; i < size; i++){
-            DexValueBlock<?> coming = array.get(i);
-            DexValueBlock<?> valueBlock = getOrCreate(coming.getValueType(), i);
-            valueBlock.merge(coming);
-        }
-    }
     @Override
     public String toString(){
         StringBuilder builder = new StringBuilder();
@@ -194,7 +241,7 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
     }
     private static final Creator<DexValueBlock<?>> CREATOR = new Creator<DexValueBlock<?>>() {
         @Override
-        public DexValueBlock<?>[] newInstance(int length) {
+        public DexValueBlock<?>[] newArrayInstance(int length) {
             if(length == 0){
                 return EncodedArray.EMPTY;
             }

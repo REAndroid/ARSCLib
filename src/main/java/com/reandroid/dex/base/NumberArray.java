@@ -141,6 +141,12 @@ public class NumberArray extends DexBlockItem {
     public int getShortUnsigned(int index){
         return getShortUnsigned(getBytesInternal(), index * getWidth());
     }
+    public byte getByte(int index){
+        return getBytesInternal()[index * getWidth()];
+    }
+    public short getShort(int index){
+        return getShort(getBytesInternal(), index * getWidth());
+    }
     public int getInteger(int index){
         return getInteger(getBytesInternal(), index * getWidth());
     }

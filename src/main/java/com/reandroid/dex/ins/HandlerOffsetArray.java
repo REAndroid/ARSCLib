@@ -48,6 +48,9 @@ public class HandlerOffsetArray extends DexBlockItem {
         return new HandlerOffset(this, index);
     }
     public int getOffset(int i) {
+        if(i >= size()){
+            return -1;
+        }
         return getShortUnsigned(getBytesInternal(), i * 8 + 6);
     }
     public void setOffset(int index, int value) {

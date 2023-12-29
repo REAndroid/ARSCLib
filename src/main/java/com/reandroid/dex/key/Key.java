@@ -16,6 +16,27 @@
 package com.reandroid.dex.key;
 
 
+import com.reandroid.dex.common.DexUtils;
+import com.reandroid.utils.ObjectsUtil;
+
+import java.util.Iterator;
+
 public interface Key extends Comparable<Object> {
 
+    default TypeKey getDeclaring(){
+        return TypeKey.NULL;
+    }
+    default Iterator<? extends Key> mentionedKeys(){
+        throw new RuntimeException("Method 'mentionedKeys()' Not implemented for: " + getClass());
+    }
+    default Key replaceKey(Key search, Key replace){
+        return this;
+    }
+    default boolean isPlatform(){
+        return DexUtils.isPlatform(getDeclaring());
+    }
+
+    String DALVIK_accessFlags = ObjectsUtil.of("accessFlags");
+    String DALVIK_name = ObjectsUtil.of("name");
+    String DALVIK_value = ObjectsUtil.of("value");
 }

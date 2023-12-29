@@ -55,6 +55,13 @@ public class ParallelReference implements IntegerReference, BlockRefresh {
     public void refresh() {
         set(get());
     }
+    public int get2() {
+        IntegerReference ref2 = this.reference2;
+        if(ref2 != null){
+            return ref2.get();
+        }
+        return reference1.get();
+    }
 
     @Override
     public String toString() {

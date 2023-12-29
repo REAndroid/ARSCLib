@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
@@ -36,5 +36,17 @@ public interface Label extends ExtraLine{
         }
         Label label = (Label) obj;
         return getLabelName().equals(label.getLabelName());
+    }
+    @Override
+    default int compareExtraLine(ExtraLine other) {
+        int i = ExtraLine.super.compareExtraLine(other);
+        if(i != 0){
+            return i;
+        }
+        if(!(other instanceof Label)){
+            return 0;
+        }
+        Label label = (Label) other;
+        return getLabelName().compareTo(label.getLabelName());
     }
 }

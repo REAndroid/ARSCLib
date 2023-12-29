@@ -15,18 +15,17 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.ins.Ins;
-import com.reandroid.dex.ins.Opcode;
-import com.reandroid.dex.ins.RegistersSet;
-import com.reandroid.dex.ins.SizeXIns;
+import com.reandroid.dex.ins.*;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
-public class DexInstruction extends DexModel{
+public class DexInstruction extends Dex {
+
     private final DexMethod dexMethod;
     private final Ins mIns;
 
@@ -34,11 +33,10 @@ public class DexInstruction extends DexModel{
         this.dexMethod = dexMethod;
         this.mIns = ins;
     }
-
     public String getString(){
-        StringId stringId = (StringId) getIdSectionEntry();
-        if(stringId != null){
-            return stringId.getString();
+        IdItem idItem = getIdSectionEntry();
+        if(idItem instanceof StringId){
+            return ((StringId) idItem).getString();
         }
         return null;
     }
@@ -49,10 +47,16 @@ public class DexInstruction extends DexModel{
         }
         return null;
     }
+    public void setKey(Key key){
+        Ins ins = getIns();
+        if(ins instanceof SizeXIns){
+            ((SizeXIns) ins).setSectionIdKey(key);
+        }
+    }
     public IdItem getIdSectionEntry(){
         Ins ins = getIns();
         if(ins instanceof SizeXIns){
-            return  ((SizeXIns) ins).getSectionItem();
+            return  ((SizeXIns) ins).getSectionId();
         }
         return null;
     }
@@ -70,12 +74,57 @@ public class DexInstruction extends DexModel{
         }
         return -1;
     }
+    public int getRegister(){
+        return getRegister(0);
+    }
     public int getRegistersCount(){
         Ins ins = getIns();
         if(ins instanceof RegistersSet){
             return ((RegistersSet) ins).getRegistersCount();
         }
         return 0;
+    }
+    public void setRegister(int register){
+        setRegister(0, register);
+    }
+    public void setRegister(int i, int register){
+        Ins ins = getIns();
+        if(ins instanceof RegistersSet){
+            ((RegistersSet) ins).setRegister(i, register);
+        }
+    }
+    public void setRegistersCount(int count){
+        Ins ins = getIns();
+        if(ins instanceof RegistersSet){
+            ((RegistersSet) ins).setRegistersCount(count);
+        }
+    }
+    public boolean is(Opcode<?> opcode){
+        return opcode == getOpcode();
+    }
+    public boolean isConstString(){
+        return getIns() instanceof ConstString;
+    }
+    public boolean isNumber(){
+        return getIns() instanceof ConstNumber;
+    }
+    public Integer getAsInteger(){
+        Ins ins = getIns();
+        if(ins instanceof ConstNumber){
+            return ((ConstNumber) ins).get();
+        }
+        return null;
+    }
+    public DexInstruction replace(Opcode<?> opcode){
+        return new DexInstruction(getDexMethod(), getIns().replace(opcode));
+    }
+    public boolean removeSelf(){
+        Ins ins = getIns();
+        InstructionList instructionList = ins.getInstructionList();
+        if(instructionList != null){
+            return instructionList.remove(ins);
+        }
+        return false;
     }
     public Opcode<?> getOpcode(){
         return getIns().getOpcode();
@@ -88,6 +137,22 @@ public class DexInstruction extends DexModel{
     }
     public DexClass getDexClass(){
         return getDexMethod().getDexClass();
+    }
+
+    public DexDeclaration findDeclaration(){
+        Key key = getKey();
+        if(key != null){
+            DexClassRepository dexClassRepository = getClassRepository();
+            if(dexClassRepository != null){
+                return dexClassRepository.getDexDeclaration(key);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public DexClassRepository getClassRepository() {
+        return getDexMethod().getClassRepository();
     }
 
     @Override

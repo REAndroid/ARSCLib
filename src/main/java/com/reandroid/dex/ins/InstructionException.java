@@ -20,7 +20,7 @@ import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.data.CodeItem;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.data.MethodDef;
-import com.reandroid.dex.sections.DexFileBlock;
+import com.reandroid.dex.sections.DexLayout;
 
 public class InstructionException extends DexException {
 
@@ -56,12 +56,12 @@ public class InstructionException extends DexException {
         if(methodDef == null){
             return false;
         }
-        MethodId methodId = methodDef.getMethodId();
+        MethodId methodId = methodDef.getId();
         if(methodId == null){
             return false;
         }
         builder.append("class = ");
-        builder.append(methodId.getClassName());
+        builder.append(methodId.getDefining());
         builder.append(", method = ");
         builder.append(methodId.getName());
         builder.append(methodId.getProto());
@@ -71,11 +71,11 @@ public class InstructionException extends DexException {
         return true;
     }
     private void appendDex(StringBuilder builder){
-        DexFileBlock dexFileBlock = getIns().getParentInstance(DexFileBlock.class);
-        if(dexFileBlock == null){
+        DexLayout dexLayout = getIns().getParentInstance(DexLayout.class);
+        if(dexLayout == null){
             return;
         }
-        String simpleName = dexFileBlock.getSimpleName();
+        String simpleName = dexLayout.getSimpleName();
         if(simpleName == null){
             return;
         }

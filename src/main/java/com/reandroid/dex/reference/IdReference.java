@@ -18,5 +18,14 @@ package com.reandroid.dex.reference;
 import com.reandroid.dex.id.IdItem;
 
 public interface IdReference<T extends IdItem> extends DexReference<T> {
-
+    default void checkNonNullItem(T item) {
+        if(item == null){
+            throw new NullPointerException("Null item for: " + getSectionType().getName());
+        }
+    }
+    default void checkNonNullItem(T item, int i) {
+        if(item == null){
+            throw new NullPointerException("Null item " + "(" + i + ")" + getSectionType().getName());
+        }
+    }
 }

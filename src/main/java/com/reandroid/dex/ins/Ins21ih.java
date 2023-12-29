@@ -16,10 +16,11 @@
 package com.reandroid.dex.ins;
 
 public class Ins21ih extends Size4Ins implements RegistersSet {
+    private InsConst mReplaced;
+
     public Ins21ih(Opcode<?> opcode) {
         super(opcode);
     }
-
 
     @Override
     public int getRegistersCount() {
@@ -44,11 +45,30 @@ public class Ins21ih extends Size4Ins implements RegistersSet {
 
     @Override
     public int getData() {
+        InsConst insConst = this.mReplaced;
+        if(insConst != null){
+            return insConst.getData();
+        }
         return getShortUnsigned(2) << 16;
     }
     @Override
     public void setData(int data) {
-        setShort(2, data >>> 16);
+        InsConst insConst = this.mReplaced;
+        if(insConst != null){
+            insConst.setData(data);
+            return;
+        }
+        if((data & 0x0000ffff) != 0){
+            replaceIns(data);
+        }else {
+            setShort(2, data >>> 16);
+        }
+    }
+    private void replaceIns(int data){
+        InsConst insConst = replace(Opcode.CONST);
+        insConst.setRegister(this.getRegister());
+        insConst.setData(data);
+        this.mReplaced = insConst;
     }
 
 }

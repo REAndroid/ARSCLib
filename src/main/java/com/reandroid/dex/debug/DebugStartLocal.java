@@ -22,7 +22,7 @@ import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
@@ -51,6 +51,10 @@ public class DebugStartLocal extends DebugRegisterNumber {
         this(0, DebugElementType.START_LOCAL.getFlag());
     }
 
+    @Override
+    public boolean isValid(){
+        return mName.getItem() != null && mType.getItem() != null;
+    }
     public String getName(){
         StringId stringId = mName.getItem();
         if(stringId != null){

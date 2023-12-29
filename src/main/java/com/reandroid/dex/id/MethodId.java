@@ -15,75 +15,69 @@
  */
 package com.reandroid.dex.id;
 
-import com.reandroid.dex.key.KeyItemCreate;
-import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.data.TypeList;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.IdItemIndirectReference;
 import com.reandroid.dex.reference.IdItemIndirectShortReference;
 import com.reandroid.dex.reference.IndirectStringReference;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliWriter;
-import com.reandroid.utils.CompareUtil;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CombiningIterator;
-import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
-public class MethodId extends IdItem implements Comparable<MethodId>, KeyItemCreate {
+public class MethodId extends IdItem implements Comparable<MethodId> {
 
-    private final IdItemIndirectReference<TypeId> classType;
+    private final IdItemIndirectReference<TypeId> defining;
     private final IdItemIndirectReference<ProtoId> proto;
     private final IndirectStringReference nameReference;
 
     public MethodId() {
         super(SIZE);
-        this.classType = new IdItemIndirectShortReference<>(SectionType.TYPE_ID, this, 0, USAGE_METHOD);
+        this.defining = new IdItemIndirectShortReference<>(SectionType.TYPE_ID, this, 0, USAGE_METHOD);
         this.proto = new IdItemIndirectShortReference<>(SectionType.PROTO_ID, this, 2, USAGE_METHOD);
         this.nameReference = new IndirectStringReference(this, 4, StringId.USAGE_METHOD_NAME);
     }
 
     @Override
     public Iterator<IdItem> usedIds(){
-        return CombiningIterator.three(
-                SingleIterator.of(classType.getItem()),
-                proto.getItem().usedIds(),
-                SingleIterator.of(nameReference.getItem())
+        return CombiningIterator.singleThree(
+                this,
+                SingleIterator.of(defining.getItem()),
+                SingleIterator.of(nameReference.getItem()),
+                proto.getItem().usedIds()
         );
     }
     public String getName(){
-        StringData stringData = getNameString();
-        if(stringData != null){
-            return stringData.getString();
-        }
-        return null;
+        return nameReference.getString();
     }
     public void setName(String name){
         nameReference.setString(name);
     }
-    public StringData getNameString(){
-        return nameReference.getStringData();
+    public void setName(StringKey key){
+        nameReference.setItem(key);
     }
+
     IndirectStringReference getNameReference(){
         return nameReference;
     }
 
-    public TypeId getClassType(){
-        return classType.getItem();
+    public TypeKey getDefining(){
+        return (TypeKey) defining.getKey();
     }
-    public void setClassType(TypeId typeId){
-        classType.setItem(typeId);
+    public void setDefining(TypeKey typeKey){
+        defining.setItem(typeKey);
     }
-    public String getClassName() {
-        TypeId typeId = getClassType();
-        if(typeId != null){
-            return typeId.getName();
-        }
-        return null;
+    public TypeId getDefiningId(){
+        return defining.getItem();
+    }
+    public void setDefining(TypeId typeId){
+        defining.setItem(typeId);
     }
     public int getParametersCount() {
         ProtoId protoId = getProto();
@@ -106,13 +100,6 @@ public class MethodId extends IdItem implements Comparable<MethodId>, KeyItemCre
         }
         return null;
     }
-    public Iterator<TypeId> getParameters(){
-        ProtoId protoId = getProto();
-        if(protoId != null){
-            return protoId.getParameters();
-        }
-        return EmptyIterator.of();
-    }
     public TypeList getParameterTypes(){
         ProtoId protoId = getProto();
         if(protoId != null){
@@ -127,17 +114,17 @@ public class MethodId extends IdItem implements Comparable<MethodId>, KeyItemCre
         proto.setItem(protoId);
     }
 
-    public String getReturnType() {
-        TypeId typeId = getReturnTypeId();
-        if(typeId != null){
-            return typeId.getName();
+    public String getReturnTypeName() {
+        TypeKey typeKey = getReturnType();
+        if(typeKey != null){
+            return typeKey.getTypeName();
         }
         return null;
     }
-    public TypeId getReturnTypeId() {
+    public TypeKey getReturnType() {
         ProtoId protoId = getProto();
         if(protoId != null){
-            return protoId.getReturnTypeId();
+            return protoId.getReturnType();
         }
         return null;
     }
@@ -156,53 +143,38 @@ public class MethodId extends IdItem implements Comparable<MethodId>, KeyItemCre
     }
     public void setKey(MethodKey key){
         MethodKey old = getKey();
-        if(Objects.equals(key, old)){
+        if(key.equals(old)){
             return;
         }
-        classType.setItem(key.getDefiningKey());
+        defining.setItem(key.getDeclaring());
         nameReference.setString(key.getName());
         proto.setItem(key.getProtoKey());
         keyChanged(old);
     }
-    public String getKey(boolean appendType, boolean appendReturnType){
-        StringBuilder builder = new StringBuilder();
-        String type = getClassName();
-        if(type == null && appendType){
-            return null;
-        }
-        if(appendType){
-            builder.append(type);
-            builder.append("->");
-        }
-        builder.append(getName());
-        ProtoId protoId = getProto();
-        if(protoId != null){
-            builder.append(protoId.getKey(appendReturnType));
-        }
-        return builder.toString();
-    }
     @Override
     public void refresh() {
-        classType.refresh();
+        defining.refresh();
         proto.refresh();
         nameReference.refresh();
     }
     @Override
     void cacheItems(){
-        classType.updateItem();
-        proto.updateItem();
-        nameReference.updateItem();
+        defining.pullItem();
+        proto.pullItem();
+        nameReference.pullItem();
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        getClassType().append(writer);
-        writer.append("->");
-        writer.append(getNameString().getString());
-        writer.append('(');
-        getProto().append(writer);
-        writer.append(')');
-        getProto().getReturnTypeId().append(writer);
+        append(writer, true);
+    }
+    public void append(SmaliWriter writer, boolean appendDefining) throws IOException {
+        if(appendDefining){
+            getDefiningId().append(writer);
+            writer.append("->");
+        }
+        writer.append(getName());
+        writer.appendRequired(getProto());
     }
 
     @Override
@@ -210,41 +182,41 @@ public class MethodId extends IdItem implements Comparable<MethodId>, KeyItemCre
         if(methodId == null){
             return -1;
         }
-        int i = CompareUtil.compare(getClassType(), methodId.getClassType());
+        int i = defining.compareTo(methodId.defining);
         if(i != 0){
             return i;
         }
-        i = CompareUtil.compare(getNameReference(), methodId.getNameReference());
+        i = nameReference.compareTo(methodId.nameReference);
         if(i != 0){
             return i;
         }
-        return CompareUtil.compare(getProto(), methodId.getProto());
+        return proto.compareTo(methodId.proto);
     }
 
     @Override
     public String toString() {
-        return getClassType() + "->" + getNameString() + getProto();
+        return getDefiningId() + "->" + getName() + getProto();
     }
 
-    public static boolean equals(MethodId methodId1, MethodId methodId2) {
-        return equals(false, methodId1, methodId2);
+    public static boolean equals(MethodId methodId, MethodId other) {
+        return equals(false, methodId, other);
     }
-    public static boolean equals(boolean ignoreClass, MethodId methodId1, MethodId methodId2) {
-        if(methodId1 == methodId2){
+    public static boolean equals(boolean ignoreClass, MethodId methodId, MethodId other) {
+        if(methodId == other){
             return true;
         }
-        if(methodId1 == null){
+        if(methodId == null){
             return false;
         }
-        if(!IndirectStringReference.equals(methodId1.getNameReference(), methodId1.getNameReference())){
+        if(!IndirectStringReference.equals(methodId.getNameReference(), other.getNameReference())){
             return false;
         }
         if(!ignoreClass) {
-            if(!TypeId.equals(methodId1.getClassType(), methodId2.getClassType())){
+            if(!TypeId.equals(methodId.getDefiningId(), other.getDefiningId())){
                 return false;
             }
         }
-        return TypeList.equals(methodId1.getParameterTypes(), methodId2.getParameterTypes());
+        return TypeList.equals(methodId.getParameterTypes(), other.getParameterTypes());
     }
 
     private static final int SIZE = 8;

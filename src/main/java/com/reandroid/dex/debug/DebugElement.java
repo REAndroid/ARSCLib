@@ -20,15 +20,14 @@ import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.ins.ExtraLine;
-import com.reandroid.dex.data.DexContainerItem;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.data.FixedDexContainerWithTool;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
-public abstract class DebugElement extends DexContainerItem implements ExtraLine {
+public abstract class DebugElement extends FixedDexContainerWithTool implements ExtraLine {
     private final ByteItem elementType;
     private int address;
     private int lineNumber;
@@ -53,6 +52,9 @@ public abstract class DebugElement extends DexContainerItem implements ExtraLine
         if(debugSequence != null){
             debugSequence.remove(this);
         }
+    }
+    public boolean isValid(){
+        return getParent() != null;
     }
 
     int getAddressDiff(){
@@ -89,6 +91,9 @@ public abstract class DebugElement extends DexContainerItem implements ExtraLine
             diff = 0;
         }else {
             diff = address - previous.getTargetAddress();
+            if(diff < 0){
+                diff = 0;
+            }
         }
         setAddressDiff(diff);
         this.address = address;
@@ -168,6 +173,46 @@ public abstract class DebugElement extends DexContainerItem implements ExtraLine
         int lineDiff = getLineNumber() - line;
         setAddressDiff(addressDiff);
         setLineDiff(lineDiff);
+    }
+    void onPreRemove(DebugSequence debugSequence){
+        transferLineOffset(debugSequence);
+    }
+    private void transferLineOffset(DebugSequence debugSequence){
+        int diff = getLineDiff();
+        if(diff == 0){
+            return;
+        }
+        DebugElement prev = debugSequence.get(getIndex() - 1);
+        if(prev == null){
+            debugSequence.setLineStart(debugSequence.getLineStart() + diff);
+            return;
+        }
+        int available = 245 - prev.getLineDiff();
+        if(available > 0){
+            if(diff > available){
+                prev.setLineDiff(prev.getLineDiff() + available);
+                diff = diff - available;
+            }else {
+                prev.setLineDiff(prev.getLineDiff() + diff);
+                diff = 0;
+            }
+        }
+        if(diff == 0){
+            return;
+        }
+        DebugElement next = debugSequence.get(getIndex() + 1);
+        if(next == null){
+            return;
+        }
+        available = 245 - next.getLineDiff();
+        if(available > 0){
+            if(diff > available){
+                next.setLineDiff(prev.getLineDiff() + available);
+            }else {
+                next.setLineDiff(prev.getLineDiff() + diff);
+            }
+        }
+
     }
 
     @Override

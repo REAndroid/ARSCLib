@@ -13,10 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.writer;
 
-import java.io.IOException;
+// originally copied from JesusFreke/smali
+package com.reandroid.dex.common;
 
-public interface SmaliFormat {
-    void append(SmaliWriter writer) throws IOException;
+import com.reandroid.dex.id.IdItem;
+
+import java.util.Iterator;
+
+public interface IdUsageIterator {
+    Iterator<IdItem> usedIds();
 }

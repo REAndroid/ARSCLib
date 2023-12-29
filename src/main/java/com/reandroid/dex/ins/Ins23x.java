@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 
 public class Ins23x extends Size4Ins implements RegistersSet {
 

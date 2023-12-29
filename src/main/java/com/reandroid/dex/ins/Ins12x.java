@@ -15,9 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.writer.SmaliWriter;
-
-import java.io.IOException;
+import com.reandroid.dex.smali.SmaliWriter;
 
 public class Ins12x extends Size2Ins implements RegistersSet {
     public Ins12x(Opcode<?> opcode) {

@@ -20,9 +20,9 @@ import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.sections.Section;
+import com.reandroid.dex.reference.InsIdSectionReference;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.writer.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.SingleIterator;
 
@@ -33,14 +33,23 @@ import java.util.Objects;
 public class SizeXIns extends Ins {
 
     private final ByteArray valueBytes;
-    private IdItem mSectionItem;
+    private final InsIdSectionReference sectionReference;
 
     public SizeXIns(Opcode<?> opcode) {
         super(opcode);
         this.valueBytes = new ByteArray();
+
         addChild(0, valueBytes);
         valueBytes.setSize(opcode.size());
         valueBytes.putShort(0, opcode.getValue());
+
+        InsIdSectionReference sectionReference;
+        if(opcode.getSectionType() != null){
+            sectionReference = new InsIdSectionReference(this);
+        }else {
+            sectionReference = null;
+        }
+        this.sectionReference = sectionReference;
     }
 
     public SectionType<? extends IdItem> getSectionType(){
@@ -120,38 +129,37 @@ public class SizeXIns extends Ins {
         cacheSectionItem();
     }
     void cacheSectionItem(){
-        SectionType<? extends IdItem> sectionType = getSectionType();
-        if(sectionType == null){
-            return;
-        }
-        int data = getData();
-        this.mSectionItem = get(sectionType, data);
-        if(this.mSectionItem != null){
-            this.mSectionItem.addUsageType(IdItem.USAGE_INSTRUCTION);
+        InsIdSectionReference sectionReference = this.sectionReference;
+        if(sectionReference != null){
+            sectionReference.pullItem();
         }
     }
-    public IdItem getSectionItem() {
-        return mSectionItem;
+    public IdItem getSectionId() {
+        InsIdSectionReference sectionReference = this.sectionReference;
+        if(sectionReference != null){
+            return sectionReference.getItem();
+        }
+        return null;
     }
-    public Key getSectionItemKey() {
-        IdItem entry = getSectionItem();
+    public void setSectionId(IdItem item){
+        sectionReference.setItem(item);
+    }
+    public Key getSectionIdKey() {
+        IdItem entry = getSectionId();
         if(entry != null){
             return entry.getKey();
         }
         return null;
     }
-    public void setSectionItem(Key key){
-        Section<? extends IdItem> section = getSection(getSectionType());
-        IdItem item = section.getOrCreate(key);
-        setSectionItem(item);
-    }
-    public void setSectionItem(IdItem item){
-        this.mSectionItem = item;
-        setData(item.getIndex());
+    public void setSectionIdKey(Key key){
+        sectionReference.setItem(key);
     }
 
     public int getData(){
         return getShortUnsigned(2);
+    }
+    public int getSignedData(){
+        return getData();
     }
     public void setData(int data){
         setShort(2, data);
@@ -167,13 +175,9 @@ public class SizeXIns extends Ins {
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
-        updateSectionItem();
-    }
-    void updateSectionItem(){
-        IdItem itemId = this.mSectionItem;
-        if(itemId != null){
-            setData(itemId.getIndex());
-            itemId.addUsageType(IdItem.USAGE_INSTRUCTION);
+        InsIdSectionReference sectionItem = this.sectionReference;
+        if(sectionItem != null){
+            sectionItem.refresh();
         }
     }
 
@@ -215,18 +219,31 @@ public class SizeXIns extends Ins {
     }
     void appendCodeData(SmaliWriter writer) throws IOException {
         writer.append(", ");
-        int data = getData();
-        IdItem sectionItem = getSectionItem();
+        IdItem sectionItem = getSectionId();
         if(sectionItem != null){
             sectionItem.append(writer);
         }else {
-            writer.append(HexUtil.toHex(data, 1));
+            appendHexData(writer);
         }
+    }
+    void appendHexData(SmaliWriter writer) throws IOException {
+        writer.appendHex(getSignedData());
     }
 
     @Override
+    public void replaceKeys(Key search, Key replace){
+        Key key = getSectionIdKey();
+        if(key == null){
+            return;
+        }
+        Key key2 = key.replaceKey(search, replace);
+        if(key != key2){
+            setSectionIdKey(key2);
+        }
+    }
+    @Override
     public Iterator<IdItem> usedIds(){
-        return SingleIterator.of(getSectionItem());
+        return SingleIterator.of(getSectionId());
     }
     public void merge(Ins ins){
         SizeXIns coming = (SizeXIns) ins;
@@ -235,7 +252,8 @@ public class SizeXIns extends Ins {
             this.valueBytes.set(coming.valueBytes.getBytes().clone());
             return;
         }
-        setSectionItem(coming.getSectionItemKey());
+        setSectionIdKey(coming.getSectionIdKey());
+        this.sectionReference.validate();
         RegistersSet comingSet = (RegistersSet) coming;
         RegistersSet set = (RegistersSet) this;
         int count = comingSet.getRegistersCount();
@@ -243,6 +261,15 @@ public class SizeXIns extends Ins {
         for(int i = 0; i < count; i++){
             set.setRegister(i, comingSet.getRegister(i));
         }
+    }
+
+    public boolean isEqualRegisters(SizeXIns sizeXIns){
+        RegistersIterator iterator1 =  getRegistersIterator();
+        RegistersIterator iterator2 =  sizeXIns.getRegistersIterator();
+        if(iterator1 == null){
+            return iterator2 == null;
+        }
+        return iterator1.equals(iterator2);
     }
 
     @Override
@@ -266,7 +293,7 @@ public class SizeXIns extends Ins {
             }
         }
         if(getSectionType() != null){
-            return Objects.equals(getSectionItemKey(), sizeXIns.getSectionItemKey());
+            return Objects.equals(getSectionIdKey(), sizeXIns.getSectionIdKey());
         }else {
             return getData() == sizeXIns.getData();
         }
@@ -286,11 +313,9 @@ public class SizeXIns extends Ins {
             }
         }
         hash = hash * 31;
-        if(getSectionType() != null){
-            Key key = getSectionItemKey();
-            if(key != null){
-                hash = hash + key.hashCode();
-            }
+        Key key = getSectionIdKey();
+        if(key != null){
+            hash = hash + key.hashCode();
         }else {
             hash = hash + getData();
         }

@@ -17,4 +17,5 @@ package com.reandroid.dex.base;
 
 public interface PositionedItem {
     void setPosition(int position);
+    void removeLastAlign();
 }

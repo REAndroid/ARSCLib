@@ -121,7 +121,7 @@ public class StringDataPool extends DataSectionPool<StringData> {
         StringDataSection section = getSection();
         SectionList sectionList = section.getSectionList();
         if(sectionList != null){
-            return sectionList.get(SectionType.STRING_ID);
+            return sectionList.getSection(SectionType.STRING_ID);
         }
         return null;
     }

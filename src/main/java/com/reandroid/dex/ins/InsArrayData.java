@@ -19,15 +19,16 @@ import com.reandroid.arsc.item.*;
 import com.reandroid.dex.base.DexBlockAlign;
 import com.reandroid.dex.base.NumberArray;
 import com.reandroid.dex.data.InstructionList;
-import com.reandroid.dex.writer.SmaliWriter;
-import com.reandroid.utils.HexUtil;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliRegion;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.InstanceIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class InsArrayData extends PayloadData implements VisitableInteger {
+public class InsArrayData extends PayloadData implements VisitableInteger, SmaliRegion {
 
     private final NumberArray numberArray;
     private final DexBlockAlign blockAlign;
@@ -93,36 +94,37 @@ public class InsArrayData extends PayloadData implements VisitableInteger {
     @Override
     void appendCode(SmaliWriter writer) throws IOException {
         writer.newLine();
-        writer.append('.');
-        writer.append(getOpcode().getName());
-        writer.append(' ');
+        getSmaliDirective().append(writer);
         writer.append(getWidth());
         writer.indentPlus();
         appendData(writer);
         writer.indentMinus();
-        writer.newLine();
-        writer.append(".end ");
-        writer.append(getOpcode().getName());
+        getSmaliDirective().appendEnd(writer);
     }
     private void appendData(SmaliWriter writer) throws IOException {
         NumberArray numberArray = getNumberArray();
         int width = numberArray.getWidth();
-        if(width < 5){
-            buildHex(writer, numberArray.getAsIntegers());
+        int size = numberArray.size();
+        if(width < 2){
+            for(int i = 0; i < size; i++){
+                writer.newLine();
+                writer.appendHex(numberArray.getByte(i));
+            }
+        }else if(width < 4){
+            for(int i = 0; i < size; i++){
+                writer.newLine();
+                writer.appendHex(numberArray.getShort(i));
+            }
+        }else if(width == 4){
+            for(int i = 0; i < size; i++){
+                writer.newLine();
+                writer.appendHex(numberArray.getInteger(i));
+            }
         }else {
-            buildHex(writer, numberArray.getLongArray());
-        }
-    }
-    private void buildHex(SmaliWriter builder, int[] numbers) throws IOException {
-        for(int num : numbers){
-            builder.newLine();
-            builder.append(HexUtil.toHex(num, 1));
-        }
-    }
-    private void buildHex(SmaliWriter builder, long[] numbers) throws IOException {
-        for(long num : numbers){
-            builder.newLine();
-            builder.append(HexUtil.toHex(num, 1));
+            for(int i = 0; i < size; i++){
+                writer.newLine();
+                writer.appendHex(numberArray.getLong(i));
+            }
         }
     }
 
@@ -131,5 +133,10 @@ public class InsArrayData extends PayloadData implements VisitableInteger {
         InsArrayData coming = (InsArrayData) ins;
         getNumberArray().merge(coming.getNumberArray());
         this.blockAlign.setSize(coming.blockAlign.size());
+    }
+
+    @Override
+    public SmaliDirective getSmaliDirective() {
+        return SmaliDirective.ARRAY_DATA;
     }
 }

@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.base;
 
+import com.reandroid.utils.ObjectsUtil;
+
 import java.util.Iterator;
 
 public interface UsageMarker {
@@ -57,6 +59,12 @@ public interface UsageMarker {
                 builder.append('|');
             }
             builder.append("TYPE_NAME");
+        }
+        if(containsUsage(usages, USAGE_SIGNATURE_TYPE)){
+            if(builder.length() != 0){
+                builder.append('|');
+            }
+            builder.append("SIGNATURE_TYPE");
         }
         if(containsUsage(usages, USAGE_FIELD_NAME)){
             if(builder.length() != 0){
@@ -130,6 +138,12 @@ public interface UsageMarker {
             }
             builder.append("INTERFACE");
         }
+        if(containsUsage(usages, USAGE_MARKER)){
+            if(builder.length() != 0){
+                builder.append('|');
+            }
+            builder.append("MARKER");
+        }
         return builder.toString();
     }
 
@@ -139,23 +153,26 @@ public interface UsageMarker {
         }
         return (usages & usage) == usage;
     }
-    int USAGE_NONE = 0x0000;
+    int USAGE_NONE = ObjectsUtil.of(0x0000);
 
-    int USAGE_INSTRUCTION = 1;
-    int USAGE_ENCODED_VALUE = 1 << 1;
-    int USAGE_ANNOTATION = 1 << 2;
-    int USAGE_TYPE_NAME = 1 << 4;
-    int USAGE_FIELD_NAME = 1 << 5;
-    int USAGE_METHOD_NAME = 1 << 6;
-    int USAGE_SHORTY = 4 << 7;
-    int USAGE_SOURCE = 1 << 8;
-    int USAGE_DEBUG = 1 << 9;
-    int USAGE_DEFINITION = 1 << 10;
-    int USAGE_SUPER_CLASS = 1 << 11;
-    int USAGE_FIELD_CLASS = 1 << 12;
-    int USAGE_FIELD_TYPE = 1 << 13;
-    int USAGE_METHOD = 1 << 14;
-    int USAGE_PROTO = 15;
-    int USAGE_INTERFACE = 1 << 16;
-    int USAGE_CALL_SITE = 1 << 17;
+    int USAGE_INSTRUCTION = ObjectsUtil.of(1);
+    int USAGE_ENCODED_VALUE = ObjectsUtil.of(1 << 1);
+    int USAGE_ANNOTATION = ObjectsUtil.of(1 << 2);
+    int USAGE_TYPE_NAME = ObjectsUtil.of(1 << 3);
+    int USAGE_SIGNATURE_TYPE = ObjectsUtil.of(1 << 4);
+    int USAGE_FIELD_NAME = ObjectsUtil.of(1 << 5);
+    int USAGE_METHOD_NAME = ObjectsUtil.of(1 << 6);
+    int USAGE_SHORTY = ObjectsUtil.of(4 << 7);
+    int USAGE_SOURCE = ObjectsUtil.of(1 << 8);
+    int USAGE_DEBUG = ObjectsUtil.of(1 << 9);
+    int USAGE_DEFINITION = ObjectsUtil.of(1 << 10);
+    int USAGE_SUPER_CLASS = ObjectsUtil.of(1 << 11);
+    int USAGE_FIELD_CLASS = ObjectsUtil.of(1 << 12);
+    int USAGE_FIELD_TYPE = ObjectsUtil.of(1 << 13);
+    int USAGE_METHOD = ObjectsUtil.of(1 << 14);
+    int USAGE_PROTO = ObjectsUtil.of(15);
+    int USAGE_INTERFACE = ObjectsUtil.of(1 << 16);
+    int USAGE_CALL_SITE = ObjectsUtil.of(1 << 17);
+    int USAGE_STATIC_VALUES = ObjectsUtil.of(1 << 18);
+    int USAGE_MARKER = ObjectsUtil.of(1 << 19);
 }

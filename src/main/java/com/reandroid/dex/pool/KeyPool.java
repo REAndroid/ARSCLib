@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.pool;
 
-import com.reandroid.arsc.base.Block;
+import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
 import com.reandroid.dex.sections.SectionType;
@@ -24,7 +24,7 @@ import com.reandroid.utils.collection.SingleIterator;
 
 import java.util.*;
 
-public class KeyPool<T extends Block> {
+public class KeyPool<T extends SectionItem> {
 
     private final SectionType<T> sectionType;
     private Map<Key, Object> itemsMap;

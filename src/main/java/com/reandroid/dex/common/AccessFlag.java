@@ -14,32 +14,88 @@
  * limitations under the License.
  */
 
-// originally copied from JesusFreke/smali
 package com.reandroid.dex.common;
 
+import com.reandroid.dex.smali.SmaliWriter;
+
+import java.io.IOException;
 import java.util.HashMap;
 
-public enum AccessFlag
+public class AccessFlag
 {
-    PUBLIC(0x1, "public", true, true, true),
-    PRIVATE(0x2, "private", true, true, true),
-    PROTECTED(0x4, "protected", true, true, true),
-    STATIC(0x8, "static", true, true, true),
-    FINAL(0x10, "final", true, true, true),
-    SYNCHRONIZED(0x20, "synchronized", false, true, false),
-    VOLATILE(0x40, "volatile", false, false, true),
-    BRIDGE(0x40, "bridge", false, true, false),
-    TRANSIENT(0x80, "transient", false, false, true),
-    VARARGS(0x80, "varargs", false, true, false),
-    NATIVE(0x100, "native", false, true, false),
-    INTERFACE(0x200, "interface", true, false, false),
-    ABSTRACT(0x400, "abstract", true, true, false),
-    STRICTFP(0x800, "strictfp", false, true, false),
-    SYNTHETIC(0x1000, "synthetic", true, true, true),
-    ANNOTATION(0x2000, "annotation", true, false, false),
-    ENUM(0x4000, "enum", true, false, true),
-    CONSTRUCTOR(0x10000, "constructor", false, true, false),
-    DECLARED_SYNCHRONIZED(0x20000, "declared-synchronized", false, true, false);
+
+    public static final AccessFlag PUBLIC;
+    public static final AccessFlag PRIVATE;
+    public static final AccessFlag PROTECTED;
+    public static final AccessFlag STATIC;
+    public static final AccessFlag FINAL;
+    public static final AccessFlag SYNCHRONIZED;
+    public static final AccessFlag VOLATILE;
+    public static final AccessFlag BRIDGE;
+    public static final AccessFlag TRANSIENT;
+    public static final AccessFlag VARARGS;
+    public static final AccessFlag NATIVE;
+    public static final AccessFlag INTERFACE;
+    public static final AccessFlag ABSTRACT;
+    public static final AccessFlag STRICTFP;
+    public static final AccessFlag SYNTHETIC;
+    public static final AccessFlag ANNOTATION;
+    public static final AccessFlag ENUM;
+    public static final AccessFlag CONSTRUCTOR;
+    public static final AccessFlag DECLARED_SYNCHRONIZED;
+
+    private static final AccessFlag[] VALUES;
+
+    private static final HashMap<String, AccessFlag> accessFlagsByName;
+
+    static {
+        PUBLIC = new AccessFlag(0x1, "public", true, true, true);
+        PRIVATE = new AccessFlag(0x2, "private", true, true, true);
+        PROTECTED = new AccessFlag(0x4, "protected", true, true, true);
+        STATIC = new AccessFlag(0x8, "static", true, true, true);
+        FINAL = new AccessFlag(0x10, "final", true, true, true);
+        SYNCHRONIZED = new AccessFlag(0x20, "synchronized", false, true, false);
+        VOLATILE = new AccessFlag(0x40, "volatile", false, false, true);
+        BRIDGE = new AccessFlag(0x40, "bridge", false, true, false);
+        TRANSIENT = new AccessFlag(0x80, "transient", false, false, true);
+        VARARGS = new AccessFlag(0x80, "varargs", false, true, false);
+        NATIVE = new AccessFlag(0x100, "native", false, true, false);
+        INTERFACE = new AccessFlag(0x200, "interface", true, false, false);
+        ABSTRACT = new AccessFlag(0x400, "abstract", true, true, false);
+        STRICTFP = new AccessFlag(0x800, "strictfp", false, true, false);
+        SYNTHETIC = new AccessFlag(0x1000, "synthetic", true, true, true);
+        ANNOTATION = new AccessFlag(0x2000, "annotation", true, false, false);
+        ENUM = new AccessFlag(0x4000, "enum", true, false, true);
+        CONSTRUCTOR = new AccessFlag(0x10000, "constructor", false, true, false);
+        DECLARED_SYNCHRONIZED = new AccessFlag(0x20000, "declared-synchronized", false, true, false);
+
+        VALUES = new AccessFlag[]{
+                PUBLIC,
+                PRIVATE,
+                PROTECTED,
+                STATIC,
+                FINAL,
+                SYNCHRONIZED,
+                VOLATILE,
+                BRIDGE,
+                TRANSIENT,
+                VARARGS,
+                NATIVE,
+                INTERFACE,
+                ABSTRACT,
+                STRICTFP,
+                SYNTHETIC,
+                ANNOTATION,
+                ENUM,
+                CONSTRUCTOR,
+                DECLARED_SYNCHRONIZED
+        };
+
+        accessFlagsByName = new HashMap<>();
+        for (AccessFlag accessFlag : VALUES) {
+            accessFlagsByName.put(accessFlag.accessFlagName, accessFlag);
+        }
+    }
 
     private final int value;
     private final String accessFlagName;
@@ -47,21 +103,7 @@ public enum AccessFlag
     private final boolean validForMethod;
     private final boolean validForField;
 
-    //cache the array of all AccessFlag, because .values() allocates a new array for every call
-    private final static AccessFlag[] allFlags;
-
-    private static final HashMap<String, AccessFlag> accessFlagsByName;
-
-    static {
-        allFlags = AccessFlag.values();
-
-        accessFlagsByName = new HashMap<>();
-        for (AccessFlag accessFlag : allFlags) {
-            accessFlagsByName.put(accessFlag.accessFlagName, accessFlag);
-        }
-    }
-
-    AccessFlag(int value, String accessFlagName, boolean validForClass, boolean validForMethod,
+    private AccessFlag(int value, String accessFlagName, boolean validForClass, boolean validForMethod,
                boolean validForField) {
         this.value = value;
         this.accessFlagName = accessFlagName;
@@ -78,13 +120,22 @@ public enum AccessFlag
         return value;
     }
 
+    @Override
+    public int hashCode(){
+        return value;
+    }
+    @Override
+    public boolean equals(Object obj){
+        return obj == this;
+    }
+    @Override
     public String toString() {
         return accessFlagName;
     }
 
     public static AccessFlag[] getAccessFlagsForClass(int accessFlagValue) {
         int size = 0;
-        for (AccessFlag accessFlag: allFlags) {
+        for (AccessFlag accessFlag: VALUES) {
             if (accessFlag.validForClass && (accessFlagValue & accessFlag.value) != 0) {
                 size++;
             }
@@ -92,7 +143,7 @@ public enum AccessFlag
 
         AccessFlag[] accessFlags = new AccessFlag[size];
         int accessFlagsPosition = 0;
-        for (AccessFlag accessFlag: allFlags) {
+        for (AccessFlag accessFlag : VALUES) {
             if (accessFlag.validForClass && (accessFlagValue & accessFlag.value) != 0) {
                 accessFlags[accessFlagsPosition++] = accessFlag;
             }
@@ -115,6 +166,18 @@ public enum AccessFlag
         }
         return builder.toString();
     }
+    public static void append(SmaliWriter writer, AccessFlag[] accessFlags) throws IOException {
+        if(accessFlags == null){
+            return;
+        }
+        for (int i = 0; i < accessFlags.length; i++) {
+            AccessFlag flag = accessFlags[i];
+            if(flag != null){
+                writer.append(flag.toString());
+                writer.append(' ');
+            }
+        }
+    }
 
     public static String formatForClass(int accessFlagValue) {
         return format(getAccessFlagsForClass(accessFlagValue));
@@ -122,7 +185,7 @@ public enum AccessFlag
 
     public static AccessFlag[] getForMethod(int accessFlagValue) {
         int size = 0;
-        for (AccessFlag accessFlag: allFlags) {
+        for (AccessFlag accessFlag : VALUES) {
             if (accessFlag.validForMethod && (accessFlagValue & accessFlag.value) != 0) {
                 size++;
             }
@@ -130,7 +193,7 @@ public enum AccessFlag
 
         AccessFlag[] accessFlags = new AccessFlag[size];
         int accessFlagsPosition = 0;
-        for (AccessFlag accessFlag: allFlags) {
+        for (AccessFlag accessFlag : VALUES) {
             if (accessFlag.validForMethod && (accessFlagValue & accessFlag.value) != 0) {
                 accessFlags[accessFlagsPosition++] = accessFlag;
             }
@@ -144,7 +207,7 @@ public enum AccessFlag
 
     public static AccessFlag[] getForField(int accessFlagValue) {
         int size = 0;
-        for (AccessFlag accessFlag: allFlags) {
+        for (AccessFlag accessFlag : VALUES) {
             if (accessFlag.validForField && (accessFlagValue & accessFlag.value) != 0) {
                 size++;
             }
@@ -152,7 +215,7 @@ public enum AccessFlag
 
         AccessFlag[] accessFlags = new AccessFlag[size];
         int accessFlagPosition = 0;
-        for (AccessFlag accessFlag: allFlags) {
+        for (AccessFlag accessFlag : VALUES) {
             if (accessFlag.validForField && (accessFlagValue & accessFlag.value) != 0) {
                 accessFlags[accessFlagPosition++] = accessFlag;
             }
@@ -167,5 +230,4 @@ public enum AccessFlag
     public static AccessFlag getAccessFlag(String accessFlag) {
         return accessFlagsByName.get(accessFlag);
     }
-
 }

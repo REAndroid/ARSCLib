@@ -23,6 +23,7 @@ import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.data.ClassData;
 import com.reandroid.dex.data.FieldDef;
 import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ComputeIterator;
@@ -31,7 +32,6 @@ import com.reandroid.utils.io.IOUtil;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -42,13 +42,12 @@ public class RClass extends DexClass {
         super(dexFile, classId);
     }
 
-
     public RField load(ResourceEntry resourceEntry){
         if(resourceEntry.isEmpty()){
             return null;
         }
         String name = RField.sanitizeResourceName(resourceEntry.getName());
-        FieldKey fieldKey = new FieldKey(getClassName(), name, "I");
+        FieldKey fieldKey = new FieldKey(getKey().getTypeName(), name, TypeKey.TYPE_I.getTypeName());
         RField rField = getOrCreateStaticField(fieldKey);
         rField.setResourceId(resourceEntry.getResourceId());
         return rField;
@@ -72,7 +71,7 @@ public class RClass extends DexClass {
         return builder.toString();
     }
     public String getResourceType(){
-        return toResourceTypeName(getClassName());
+        return toResourceTypeName(getDefining().getTypeName());
     }
 
     @Override
@@ -84,7 +83,7 @@ public class RClass extends DexClass {
         ClassData classData = getClassData();
         if(classData != null){
             return ComputeIterator.of(classData
-                    .getStaticFieldsArray().iterator(), this::createRField);
+                    .getStaticFields(), this::createRField);
         }
         return EmptyIterator.of();
     }
@@ -96,13 +95,9 @@ public class RClass extends DexClass {
         }
         return null;
     }
-    @Override
-    public Iterator<DexField> getFields() {
-        return super.getFields();
-    }
     public void initialize(){
-        ClassId classId = getClassId();
-        classId.setSuperClass("Ljava/lang/Object;");
+        ClassId classId = getId();
+        classId.setSuperClass(TypeKey.OBJECT);
         classId.setSourceFile("R.java");
 
 
@@ -110,9 +105,9 @@ public class RClass extends DexClass {
 
     }
     private void initializeAnnotations(){
-        ClassId classId = getClassId();
-        classId.getOrCreateEnclosingClass();
-        classId.getOrCreateInnerClass();
+        ClassId classId = getId();
+        classId.getOrCreateDalvikEnclosingClass();
+        classId.getOrCreateDalvikInnerClass();
     }
 
     @Override
