@@ -34,6 +34,7 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.*;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArraySupplierIterator;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 
 import java.io.IOException;
@@ -116,6 +117,12 @@ public class SectionList extends FixedBlockContainer
         Iterator<Section<?>> iterator = getSections();
         while (iterator.hasNext()) {
             iterator.next().clearUnused();
+        }
+    }
+    public void clearEmptySections(){
+        List<Section<?>> sections = CollectionUtil.toList(getSections());
+        for (Section<?> section : sections) {
+            section.removeIfEmpty();
         }
     }
     private void clearUsageTypes(){

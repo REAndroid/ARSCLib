@@ -41,9 +41,6 @@ public class RField extends DexField implements Comparable<RField> {
         super(rClass, fieldDef);
     }
 
-    public void addAccessFlag(AccessFlag accessFlag){
-        getDefinition().addAccessFlag(accessFlag);
-    }
     public void serializePublicXml(XmlSerializer serializer) throws IOException {
         ResourceEntry resourceEntry = toResourceEntry();
         resourceEntry.serializePublicXml(serializer);

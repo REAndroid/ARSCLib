@@ -88,6 +88,13 @@ public abstract class DexDeclaration extends Dex {
     public AccessFlag[] getAccessFlags(){
         return getDefinition().getAccessFlags();
     }
+    public void addAccessFlag(AccessFlag accessFlag){
+        getDefinition().addAccessFlag(accessFlag);
+    }
+    public void removeAccessFlag(AccessFlag accessFlag){
+        getDefinition().removeAccessFlag(accessFlag);
+    }
+
     int getAccessFlagsValue(){
         return getDefinition().getAccessFlagsValue();
     }

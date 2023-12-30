@@ -181,36 +181,6 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     public int getAccessFlagsValue() {
         return accessFlags.get();
     }
-
-    public void addAccessFlag(AccessFlag flag) {
-        setAccessFlagsValue(getAccessFlagsValue() | flag.getValue());
-    }
-    public void addAccessFlags(AccessFlag flag1, AccessFlag flag2) {
-        int value = getAccessFlagsValue();
-        if(flag1 != null){
-            value |= flag1.getValue();
-        }
-        if(flag2 != null){
-            value |= flag2.getValue();
-        }
-        setAccessFlagsValue(value);
-    }
-    public void addAccessFlags(AccessFlag flag1, AccessFlag flag2, AccessFlag flag3) {
-        int value = getAccessFlagsValue();
-        if(flag1 != null){
-            value |= flag1.getValue();
-        }
-        if(flag2 != null){
-            value |= flag2.getValue();
-        }
-        if(flag3 != null){
-            value |= flag3.getValue();
-        }
-        setAccessFlagsValue(value);
-    }
-    public void removeAccessFlag(AccessFlag accessFlag){
-        setAccessFlagsValue(getAccessFlagsValue() & ~accessFlag.getValue());
-    }
     public void setAccessFlagsValue(int value) {
         accessFlags.set(value);
     }

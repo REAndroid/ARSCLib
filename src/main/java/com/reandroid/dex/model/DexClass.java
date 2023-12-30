@@ -22,7 +22,6 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.reference.TypeListReference;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.smali.SmaliWriterSetting;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.NullValue;
@@ -80,7 +79,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     }
     public DexMethod getStaticConstructor(){
         MethodKey methodKey = MethodKey.STATIC_CONSTRUCTOR
-                .changeDefining(getDefining());
+                .changeDeclaring(getDefining());
         return getDeclaredMethod(methodKey);
     }
     public DexField getField(FieldKey fieldKey) {
@@ -164,7 +163,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
                 dexClass -> dexClass.getImplementations(methodKey)));
     }
     public Iterator<MethodKey> getOverridingKeys(MethodKey methodKey) {
-        MethodKey key = methodKey.changeDefining(getKey());
+        MethodKey key = methodKey.changeDeclaring(getKey());
         return CombiningIterator.of(CombiningIterator.singleOne(
                 key,
                 SingleIterator.of(getBridgedMethod(methodKey))
@@ -324,9 +323,6 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     @Override
     public DexFile getDexFile() {
         return dexFile;
-    }
-    public void addAccessFlag(AccessFlag accessFlag){
-        getId().addAccessFlag(accessFlag);
     }
     @Override
     public ClassId getId() {

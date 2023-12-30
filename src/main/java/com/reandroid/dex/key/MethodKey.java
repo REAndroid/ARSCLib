@@ -17,6 +17,7 @@ package com.reandroid.dex.key;
 
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.id.MethodId;
+import com.reandroid.dex.id.ProtoId;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayIterator;
@@ -51,14 +52,14 @@ public class MethodKey implements Key{
     public int getRegister(int index) {
         return getProtoKey().getRegister(index);
     }
-    public MethodKey changeDefining(TypeKey typeKey){
-        return changeDefining(typeKey.getTypeName());
+    public MethodKey changeDeclaring(TypeKey typeKey){
+        return changeDeclaring(typeKey.getTypeName());
     }
-    public MethodKey changeDefining(String defining){
-        if(defining.equals(getDeclaringName())){
+    public MethodKey changeDeclaring(String declaring){
+        if(declaring.equals(getDeclaringName())){
             return this;
         }
-        return new MethodKey(defining, getName(), getParameterNames(), getReturnTypeName());
+        return new MethodKey(declaring, getName(), getParameterNames(), getReturnTypeName());
     }
     public MethodKey changeName(String name){
         if(name.equals(getName())){
@@ -129,6 +130,9 @@ public class MethodKey implements Key{
     public String getReturnTypeName() {
         return returnType;
     }
+    public int getParameterRegistersCount(){
+        return getProtoKey().getParameterRegistersCount();
+    }
     @Override
     public Iterator<Key> mentionedKeys() {
         return CombiningIterator.singleTwo(
@@ -143,7 +147,7 @@ public class MethodKey implements Key{
             return replace;
         }
         if(search.equals(result.getDeclaring())){
-            result = result.changeDefining((TypeKey) replace);
+            result = result.changeDeclaring((TypeKey) replace);
         }
         if(search.equals(result.getReturnType())){
             result = result.changeReturnType((TypeKey) replace);
@@ -345,4 +349,14 @@ public class MethodKey implements Key{
             "toString",
             null,
             TypeKey.STRING.getTypeName());
+    public static final MethodKey CONSTRUCTOR = new MethodKey(
+            TypeKey.OBJECT.getTypeName(),
+            "<init>",
+            null,
+            TypeKey.TYPE_V.getTypeName());
+    public static final MethodKey CONSTRUCTOR_STATIC = new MethodKey(
+            TypeKey.OBJECT.getTypeName(),
+            "<clinit>",
+            null,
+            TypeKey.TYPE_V.getTypeName());
 }

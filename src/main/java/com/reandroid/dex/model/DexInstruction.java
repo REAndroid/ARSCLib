@@ -115,6 +115,12 @@ public class DexInstruction extends Dex {
         }
         return null;
     }
+    public void setAsInteger(int value){
+        Ins ins = getIns();
+        if(ins instanceof ConstNumber){
+            ((ConstNumber) ins).set(value);
+        }
+    }
     public DexInstruction replace(Opcode<?> opcode){
         return new DexInstruction(getDexMethod(), getIns().replace(opcode));
     }

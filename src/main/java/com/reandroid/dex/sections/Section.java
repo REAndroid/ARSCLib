@@ -82,6 +82,16 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     void clearUsageTypes(){
         UsageMarker.clearUsageTypes(iterator());
     }
+    public boolean isEmpty(){
+        return getCount() == 0;
+    }
+    public boolean removeIfEmpty(){
+        if(isEmpty()){
+            removeSelf();
+            return true;
+        }
+        return false;
+    }
     public void removeSelf(){
         SectionList sectionList = getSectionList();
         if(sectionList != null){

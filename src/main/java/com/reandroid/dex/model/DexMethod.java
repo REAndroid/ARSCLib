@@ -16,12 +16,10 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.data.AnnotationItem;
-import com.reandroid.dex.data.AnnotationSet;
+import com.reandroid.dex.data.*;
 import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.Opcode;
-import com.reandroid.dex.data.MethodDef;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
@@ -155,8 +153,23 @@ public class DexMethod extends DexDeclaration {
     public DexInstruction getInstruction(int i){
         return create(getDefinition().getInstruction(i));
     }
+    public DexInstruction addInstruction(Opcode<?> opcode){
+        return create(getDefinition().getOrCreateInstructionList().createNext(opcode));
+    }
     public int getInstructionsCount(){
         return getDefinition().getInstructionsCount();
+    }
+    public void setParameterRegistersCount(int count){
+        CodeItem codeItem = getDefinition().getOrCreateCodeItem();
+        if(codeItem != null){
+            codeItem.setParameterRegistersCount(count);
+        }
+    }
+    public void setLocalRegistersCount(int count){
+        CodeItem codeItem = getDefinition().getOrCreateCodeItem();
+        if(codeItem != null){
+            codeItem.setRegistersCount(codeItem.getParameterRegistersCount() + count);
+        }
     }
     private DexInstruction create(Ins ins){
         if(ins != null){

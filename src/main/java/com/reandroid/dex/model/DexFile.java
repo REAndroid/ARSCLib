@@ -118,6 +118,9 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
     public void clearUnused(){
         getDexLayout().getSectionList().clearUnused();
     }
+    public void clearEmptySections(){
+        getDexLayout().getSectionList().clearEmptySections();
+    }
 
 
     public DexClassRepository getClassRepository(){
@@ -343,7 +346,7 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
         }
         classId = pool.getOrCreate(key);
         classId.getOrCreateClassData();
-        classId.setSuperClass("Ljava/lang/Object;");
+        classId.setSuperClass(TypeKey.OBJECT);
         classId.setSourceFile(DexUtils.toSourceFileName(key.getTypeName()));
         classId.addAccessFlag(AccessFlag.PUBLIC);
         return classId;

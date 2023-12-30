@@ -23,4 +23,11 @@ public interface IdDefinition<T extends IdItem> {
     T getId();
     int getAccessFlagsValue();
     AccessFlag[] getAccessFlags();
+    void setAccessFlagsValue(int value);
+    default void addAccessFlag(AccessFlag flag) {
+        setAccessFlagsValue(getAccessFlagsValue() | flag.getValue());
+    }
+    default void removeAccessFlag(AccessFlag flag) {
+        setAccessFlagsValue(getAccessFlagsValue() & ~flag.getValue());
+    }
 }

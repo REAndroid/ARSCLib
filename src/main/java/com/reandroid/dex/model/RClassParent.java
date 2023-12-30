@@ -149,7 +149,8 @@ public class RClassParent extends DexClass {
             return;
         }
         MethodDef methodDef = classData.getOrCreateDirect(methodKey);
-        methodDef.addAccessFlags(AccessFlag.PUBLIC, AccessFlag.CONSTRUCTOR);
+        methodDef.addAccessFlag(AccessFlag.PUBLIC);
+        methodDef.addAccessFlag(AccessFlag.CONSTRUCTOR);
         InstructionList insList = methodDef.getOrCreateInstructionList();
         Ins35c ins = insList.createNext(Opcode.INVOKE_DIRECT);
         ins.setSectionIdKey(MethodKey.parse("Ljava/lang/Object;-><init>()V"));

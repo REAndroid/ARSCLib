@@ -94,6 +94,19 @@ public class ProtoKey implements Key{
         }
         return builder.toString();
     }
+    public int getParameterRegistersCount(){
+        int result = 0;
+        Iterator<TypeKey> iterator = getParameters();
+        while (iterator.hasNext()){
+            TypeKey key = iterator.next();
+            if(TypeKey.TYPE_J.equals(key) ||
+                    TypeKey.TYPE_D.equals(key)){
+                result ++;
+            }
+            result ++;
+        }
+        return result;
+    }
     @Override
     public Iterator<Key> mentionedKeys() {
         return CombiningIterator.singleThree(

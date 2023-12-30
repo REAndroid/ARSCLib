@@ -117,14 +117,12 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
     public AccessFlag[] getAccessFlags(){
         return AccessFlag.getAccessFlagsForClass(getAccessFlagsValue());
     }
-    public void setId(TypeId typeId){
-        this.classTypeId.setItem(typeId);
-    }
+    @Override
     public void setAccessFlagsValue(int value) {
         accessFlagValue.set(value);
     }
-    public void addAccessFlag(AccessFlag flag) {
-        setAccessFlagsValue(getAccessFlagsValue() | flag.getValue());
+    public void setId(TypeId typeId){
+        this.classTypeId.setItem(typeId);
     }
     public SuperClassId getSuperClassId(){
         return superClassId;
