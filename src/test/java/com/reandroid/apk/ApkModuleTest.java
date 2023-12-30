@@ -7,12 +7,17 @@ import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
+import com.reandroid.arsc.chunk.xml.ResXmlDocument;
+import com.reandroid.arsc.chunk.xml.ResXmlElement;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.*;
+import com.reandroid.dex.SampleDexFileCreator;
+import com.reandroid.dex.model.DexFile;
 import com.reandroid.xml.*;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -69,13 +74,59 @@ public class ApkModuleTest {
 
         apkModule.add(tableSource);
         tableSource.setMethod(ZipEntry.STORED);
-        apkModule.getTableBlock();
 
-        apkModule.add(new ByteInputSource(EMPTY_DEX_FILE, "classes.dex"));
+        int mainActivityLayoutId = createMainActivityContentViewXml(apkModule);
+
+        apkModule.getTableBlock().refreshFull();
+
+        String appClass = AndroidManifestBlock.getAndroidNameValue(manifestBlock.getApplicationElement());
+        String mainActivity = AndroidManifestBlock.getAndroidNameValue(manifestBlock.getMainActivity());
+
+        DexFile dexFile = SampleDexFileCreator.createApplicationClass(appClass, mainActivity, mainActivityLayoutId);
+        byte[] bytes = dexFile.getBytes();
+        apkModule.add(new ByteInputSource(bytes, "classes.dex"));
 
         last_apkModule = apkModule;
 
         return apkModule;
+    }
+    private int createMainActivityContentViewXml(ApkModule apkModule){
+        ResXmlDocument document = new ResXmlDocument();
+        ResXmlElement root = document.getDocumentElement();
+        root.setName("LinearLayout");
+
+        ResXmlAttribute attribute = root.getOrCreateAndroidAttribute("layout_width", 0x010100f4);
+        attribute.setTypeAndData(ValueType.DEC, -1); // match_parent
+
+        attribute = root.getOrCreateAndroidAttribute("layout_height", 0x010100f5);
+        attribute.setTypeAndData(ValueType.DEC, -1); // match_parent
+
+        attribute = root.getOrCreateAndroidAttribute("orientation", 0x010100c4);
+        attribute.setTypeAndData(ValueType.DEC, 1); // vertical
+
+        ResXmlElement textView = root.createChildElement("TextView");
+        attribute = textView.getOrCreateAndroidAttribute("layout_width", 0x010100f4);
+        attribute.setTypeAndData(ValueType.DEC, -2); // wrap_content
+
+        attribute = textView.getOrCreateAndroidAttribute("layout_height", 0x010100f5);
+        attribute.setTypeAndData(ValueType.DEC, -2); // wrap_content
+
+        attribute = textView.getOrCreateAndroidAttribute("text", 0x0101014f);
+        attribute.setValueAsString("Hello World!");
+
+        document.refreshFull();
+
+        String path = "res/layout/activity_main.xml";
+
+        ByteInputSource source = new ByteInputSource(document.getBytes(), path);
+        apkModule.add(source);
+
+        TableBlock tableBlock = apkModule.getTableBlock();
+        Entry entry = tableBlock.pickOne().getOrCreate("", "layout", "activity_main");
+        entry.setValueAsString(path);
+
+
+        return entry.getResourceId();
     }
     private TableBlock createTableBlock(AndroidManifestBlock manifestBlock){
         TableBlock tableBlock = new TableBlock();
@@ -323,7 +374,7 @@ public class ApkModuleTest {
         manifestBlock.addUsesPermission("android.permission.INTERNET");
         manifestBlock.addUsesPermission("android.permission.READ_EXTERNAL_STORAGE");
 
-        manifestBlock.getOrCreateMainActivity("android.app.Activity");
+        manifestBlock.getOrCreateMainActivity(manifestBlock.getPackageName() + ".MyActivity");
 
         manifestBlock.refresh();
 
@@ -355,26 +406,4 @@ public class ApkModuleTest {
         return last_apkModule;
     }
 
-    private static final byte[] EMPTY_DEX_FILE =  new byte[]{
-            (byte)0x64, (byte)0x65, (byte)0x78, (byte)0x0A, (byte)0x30, (byte)0x33, (byte)0x35, (byte)0x00,
-            (byte)0xE0, (byte)0x0E, (byte)0x82, (byte)0xEC, (byte)0xC5, (byte)0xCC, (byte)0x6A, (byte)0xFF,
-            (byte)0x1E, (byte)0x65, (byte)0xE2, (byte)0x24, (byte)0x9A, (byte)0x48, (byte)0x13, (byte)0x52,
-            (byte)0x4C, (byte)0xEE, (byte)0xA2, (byte)0xA1, (byte)0x71, (byte)0x9D, (byte)0x67, (byte)0xE6,
-            (byte)0x9C, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x70, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x78, (byte)0x56, (byte)0x34, (byte)0x12, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x74, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x2C, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x70, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x03, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x03, (byte)0x10, (byte)0x00, (byte)0x00,
-            (byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x70, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x00, (byte)0x10, (byte)0x00, (byte)0x00, (byte)0x01, (byte)0x00, (byte)0x00, (byte)0x00,
-            (byte)0x74, (byte)0x00, (byte)0x00, (byte)0x00
-    };
 }
