@@ -41,7 +41,7 @@ public class KXmlParser implements XmlPullParser, Closeable {
     private static final String PROPERTY_LOCATION = "http://xmlpull.org/v1/doc/properties.html#location";
     private static final String FEATURE_RELAXED = "http://xmlpull.org/v1/doc/features.html#relaxed";
 
-    private static final Map<String, String> DEFAULT_ENTITIES = new HashMap<String, String>();
+    private static final Map<String, String> DEFAULT_ENTITIES = new HashMap<>();
     static {
         DEFAULT_ENTITIES.put("lt", "<");
         DEFAULT_ENTITIES.put("gt", ">");
@@ -175,6 +175,9 @@ public class KXmlParser implements XmlPullParser, Closeable {
 
     private boolean unresolved;
 
+
+    public KXmlParser(){
+    }
 
     /**
      * Retains namespace attributes like {@code xmlns="http://foo"} or {@code xmlns:foo="http:foo"}

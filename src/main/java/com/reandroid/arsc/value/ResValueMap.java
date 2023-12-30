@@ -54,7 +54,7 @@ public class ResValueMap extends AttributeValue implements Comparable<ResValueMa
             return new EncodeResult("Missing attribute name");
         }
         return encodeStyle(validate, xmlAttribute.getPrefix(),
-                xmlAttribute.getValue(),
+                xmlAttribute.getValueAsString(),
                 xmlElement.getTextContent());
     }
     public EncodeResult encodeStyle(boolean validate, String name, String value){

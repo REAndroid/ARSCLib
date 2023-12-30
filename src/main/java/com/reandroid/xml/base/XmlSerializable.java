@@ -15,21 +15,10 @@
  */
 package com.reandroid.xml.base;
 
-import com.reandroid.common.Namespace;
+import org.xmlpull.v1.XmlSerializer;
 
-import java.util.Iterator;
+import java.io.IOException;
 
-public interface Element<T extends Node>
-        extends NodeTree<T>, NamedNode, NodeFactory{
-
-    int getAttributeCount();
-    Attribute getAttributeAt(int i);
-    Iterator<? extends Attribute> getAttributes();
-    void addAttribute(Attribute attribute);
-    void addAttribute(int i, Attribute attribute);
-
-    int getNamespaceCount();
-    Namespace getNamespaceAt(int i);
-    Iterator<? extends Namespace> getNamespaces();
-    Element<T> newElement();
+public interface XmlSerializable {
+    void serialize(XmlSerializer serializer) throws IOException;
 }

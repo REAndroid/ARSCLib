@@ -635,7 +635,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         if(uri!=null){
             ResXmlNamespace ns = getParentResXmlElement().getStartNamespaceByUri(uri);
             if(ns==null){
-                ns = getParentResXmlElement().getRootResXmlElement()
+                ns = getParentResXmlElement().getRootElement()
                         .getOrCreateNamespace(uri, "");
             }
             setNamespaceReference(ns.getUriReference());

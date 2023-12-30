@@ -15,21 +15,9 @@
  */
 package com.reandroid.xml.base;
 
-import com.reandroid.common.Namespace;
+public interface Comment extends Node{
 
-import java.util.Iterator;
+    String getText();
+    void setText(String text);
 
-public interface Element<T extends Node>
-        extends NodeTree<T>, NamedNode, NodeFactory{
-
-    int getAttributeCount();
-    Attribute getAttributeAt(int i);
-    Iterator<? extends Attribute> getAttributes();
-    void addAttribute(Attribute attribute);
-    void addAttribute(int i, Attribute attribute);
-
-    int getNamespaceCount();
-    Namespace getNamespaceAt(int i);
-    Iterator<? extends Namespace> getNamespaces();
-    Element<T> newElement();
 }

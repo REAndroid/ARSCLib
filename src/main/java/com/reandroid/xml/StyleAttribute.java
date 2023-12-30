@@ -22,7 +22,7 @@ import java.io.IOException;
 public class StyleAttribute extends XMLAttribute {
 
     public StyleAttribute(XMLAttribute xmlAttribute){
-        super(xmlAttribute.getName(true), xmlAttribute.getValue(false));
+        super(xmlAttribute.getName(true), xmlAttribute.getValueAsString(false));
     }
     public StyleAttribute(String name, String value){
         super(name, value);
@@ -32,6 +32,6 @@ public class StyleAttribute extends XMLAttribute {
     }
     @Override
     public void serialize(XmlSerializer serializer) throws IOException {
-        serializer.attribute(null, getName(), getValue());
+        serializer.attribute(null, getName(), getValueAsString());
     }
 }

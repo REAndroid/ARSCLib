@@ -15,14 +15,15 @@
   */
 package com.reandroid.xml;
 
+import com.reandroid.xml.base.Node;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.io.StringWriter;
 
-public abstract class XMLNode {
+public abstract class XMLNode implements Node {
+
     private XMLNode mParent;
     private int mLineNumber;
     private int mColumnNumber;
@@ -32,7 +33,7 @@ public abstract class XMLNode {
     int getLength(){
         return 0;
     }
-    abstract XMLNode clone(XMLNode parent);
+    abstract XMLNode newCopy(XMLNode parent);
     public XMLNode getParentNode(){
         return mParent;
     }
@@ -61,7 +62,6 @@ public abstract class XMLNode {
         this.mLineNumber = lineNumber;
     }
 
-    public abstract void serialize(XmlSerializer serializer) throws IOException;
     public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
     }
     abstract void write(Appendable writer, boolean xml, boolean escapeXmlText) throws IOException;

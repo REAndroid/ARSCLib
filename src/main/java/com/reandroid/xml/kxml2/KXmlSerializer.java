@@ -43,6 +43,8 @@ public class KXmlSerializer implements XmlSerializer {
     private boolean unicode;
     private String encoding;
 
+    public KXmlSerializer(){
+    }
     private void append(char c) throws IOException {
         if(mPos >= BUFFER_LEN){
             flushBuffer();

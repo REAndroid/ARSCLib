@@ -28,7 +28,7 @@ public class XMLNamespace implements Namespace, Cloneable {
         this.prefix = prefix;
     }
 
-    XMLNamespace clone(XMLNode parent){
+    XMLNamespace newCopy(XMLNode parent){
         XMLNamespace xmlNamespace = new XMLNamespace(getUri(), getPrefix());
         if(parent instanceof XMLElement){
             ((XMLElement)parent).addNamespace(xmlNamespace);

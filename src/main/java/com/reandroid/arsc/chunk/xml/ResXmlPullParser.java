@@ -392,7 +392,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         }
         ResXmlElement element = getCurrentElement();
         while(element!=null && element.getDepth()>depth){
-            element=element.getParentResXmlElement();
+            element=element.getParentElement();
         }
         if(element!=null){
             return element.getNamespaceCount();
@@ -496,7 +496,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     public boolean isEmptyElementTag() throws XmlPullParserException {
         ResXmlElement element = getCurrentElement();
         if(element!=null){
-            return element.countResXmlNodes() == 0 && element.getAttributeCount()==0;
+            return element.size() == 0 && element.getAttributeCount()==0;
         }
         return true;
     }

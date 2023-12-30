@@ -15,19 +15,12 @@
  */
 package com.reandroid.xml.base;
 
-import org.xmlpull.v1.XmlSerializer;
-
-import java.io.IOException;
-
-public interface Node {
+public interface Node extends XmlSerializable, XmlReader{
 
     Node getParentNode();
-    void setParentNode();
 
     int getLineNumber();
     void setLineNumber(int lineNumber);
     int getColumnNumber();
     void setColumnNumber(int columnNumber);
-
-    void serialize(XmlSerializer serializer) throws IOException;
 }

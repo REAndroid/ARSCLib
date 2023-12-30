@@ -15,7 +15,7 @@
  */
 package com.reandroid.xml.base;
 
-public interface Document extends Node{
-    Element getDocumentElement();
-    void setDocumentElement(Element element);
+public interface Document<E extends Element<?>> extends Node, NodeFactory{
+    E getDocumentElement();
+    void setDocumentElement(E element);
 }

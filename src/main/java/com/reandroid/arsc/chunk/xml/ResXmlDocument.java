@@ -465,8 +465,9 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         StringWriter writer = new StringWriter();
         XmlSerializer serializer = XMLFactory.newSerializer(writer);
         serialize(serializer);
-        writer.close();
+        serializer.flush();
         writer.flush();
+        writer.close();
         return writer.toString();
     }
     public void serialize(XmlSerializer serializer) throws IOException {

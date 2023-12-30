@@ -271,7 +271,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
         return size();
     }
 
-    public<T1 extends T> Iterator<T1> iterator(Class<T1> instance){
+    public<T1> Iterator<T1> iterator(Class<T1> instance){
         return InstanceIterator.of(iterator(), instance);
     }
     public Iterator<T> iterator(Predicate<? super T> filter){

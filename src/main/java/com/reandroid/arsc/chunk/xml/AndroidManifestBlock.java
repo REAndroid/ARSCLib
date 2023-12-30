@@ -429,7 +429,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         if(manifest==null){
             return null;
         }
-        ResXmlElement usesSdk = manifest.getElementByTagName(TAG_uses_sdk);
+        ResXmlElement usesSdk = manifest.getElement(TAG_uses_sdk);
         if(usesSdk==null){
             return null;
         }
@@ -442,7 +442,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
     @Override
     public void setMinSdkVersion(int version){
         ResXmlElement manifest = getOrCreateManifestElement();
-        ResXmlElement usesSdk = manifest.getElementByTagName(TAG_uses_sdk);
+        ResXmlElement usesSdk = manifest.getElement(TAG_uses_sdk);
         if(usesSdk == null){
             usesSdk = manifest.createChildElement(TAG_uses_sdk);
         }
@@ -455,7 +455,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         if(manifest==null){
             return null;
         }
-        ResXmlElement usesSdk = manifest.getElementByTagName(TAG_uses_sdk);
+        ResXmlElement usesSdk = manifest.getElement(TAG_uses_sdk);
         if(usesSdk==null){
             return null;
         }
@@ -468,7 +468,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
     @Override
     public void setTargetSdkVersion(int version){
         ResXmlElement manifest = getOrCreateManifestElement();
-        ResXmlElement usesSdk = manifest.getElementByTagName(TAG_uses_sdk);
+        ResXmlElement usesSdk = manifest.getElement(TAG_uses_sdk);
         if(usesSdk == null){
             usesSdk = manifest.createChildElement(TAG_uses_sdk);
         }
@@ -528,7 +528,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
     }
     public ResXmlElement getOrCreateApplicationElement(){
         ResXmlElement manifestElement = getOrCreateManifestElement();
-        ResXmlElement application = manifestElement.getElementByTagName(TAG_application);
+        ResXmlElement application = manifestElement.getElement(TAG_application);
         if(application == null){
             application = manifestElement.createChildElement(TAG_application);
         }
@@ -539,7 +539,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         if(manifestElement==null){
             return null;
         }
-        return manifestElement.getElementByTagName(TAG_application);
+        return manifestElement.getElement(TAG_application);
     }
     public ResXmlElement getManifestElement(){
         ResXmlElement manifestElement= getDocumentElement();

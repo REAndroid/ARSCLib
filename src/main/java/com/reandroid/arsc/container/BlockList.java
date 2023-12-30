@@ -21,6 +21,7 @@ import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.InstanceIterator;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -143,6 +144,9 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
     public Iterator<T> iterator(Predicate<? super T> filter){
         return mItems.iterator(filter);
     }
+    public<T1> Iterator<T1> iterator(Class<T1> instance){
+        return mItems.iterator(instance);
+    }
     public void clearChildes(){
         if(mItems.isEmpty()){
             return;
@@ -186,7 +190,8 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         }
         return false;
     }
-    public void remove(Predicate<? super T> filter){
+    public int remove(Predicate<? super T> filter){
+        int count = 0;
         int minIndex = size();
         for(int i = 0; i < size(); i++){
             T item = get(i);
@@ -195,10 +200,12 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
                 if(i < minIndex){
                     minIndex = i;
                 }
+                count ++;
                 i --;
             }
         }
         updateIndex(minIndex);
+        return count;
     }
     public T remove(int index){
         return remove(index, true);

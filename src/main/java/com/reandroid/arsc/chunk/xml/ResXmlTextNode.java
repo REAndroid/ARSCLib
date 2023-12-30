@@ -81,7 +81,7 @@ public class ResXmlTextNode extends ResXmlNode {
     private boolean isNextElement(){
         ResXmlElement parent = getParentResXmlElement();
         if(parent != null){
-            return parent.getResXmlNode(getIndex() + 1) instanceof ResXmlElement;
+            return parent.get(getIndex() + 1) instanceof ResXmlElement;
         }
         return false;
     }

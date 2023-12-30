@@ -15,14 +15,29 @@
  */
 package com.reandroid.xml.base;
 
-import java.util.Iterator;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.InstanceIterator;
 
-public interface NodeTree extends Node {
-    boolean add(Node node);
-    boolean add(int i, Node node);
-    boolean remove(Node node);
-    boolean remove(int i);
-    Node get(int i);
+import java.util.Iterator;
+import java.util.function.Predicate;
+
+public interface NodeTree<T extends Node> extends Node {
+
+    boolean add(T node);
+    void add(int i, T node);
+    boolean remove(T node);
+    T remove(int i);
+    T get(int i);
     int size();
-    Iterator<? extends Node> iterator();
+    Iterator<? extends T> iterator();
+
+    default <T1 extends Node> int countNodesWithType(Class<T1> instance){
+        return CollectionUtil.count(iterator(instance));
+    }
+    default  <T1 extends Node> Iterator<T1> iterator(Class<T1> instance) {
+        return iterator(instance, null);
+    }
+    default  <T1 extends Node> Iterator<T1> iterator(Class<T1> instance, Predicate<T1> filter) {
+        return new InstanceIterator<>(iterator(), instance, filter);
+    }
 }

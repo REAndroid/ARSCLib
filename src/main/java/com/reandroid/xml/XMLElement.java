@@ -20,6 +20,8 @@ import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.IndexIterator;
 import com.reandroid.utils.collection.SizedSupplier;
+import com.reandroid.xml.base.Attribute;
+import com.reandroid.xml.base.Element;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -29,11 +31,13 @@ import java.io.StringWriter;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class XMLElement extends XMLNodeTree{
+public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
+
     private ArrayCollection<XMLAttribute> mAttributes;
     private String mName;
     private XMLNamespace mNamespace;
     private ArrayCollection<XMLNamespace> mNamespaceList;
+
     public XMLElement(){
         super();
         mAttributes = EMPTY_ATTRIBUTES;
@@ -44,23 +48,23 @@ public class XMLElement extends XMLNodeTree{
         setName(tagName);
     }
     @Override
-    XMLElement clone(XMLNode parent){
+    XMLElement newCopy(XMLNode parent){
         XMLElement element = newElement();
         if(parent instanceof XMLNodeTree){
             ((XMLNodeTree)parent).add(element);
         }
         int count = getNamespaceCount();
         for(int i = 0; i < count; i++){
-            getNamespaceAt(i).clone(element);
+            getNamespaceAt(i).newCopy(element);
         }
         setName(getUri(), getPrefix(), getName(false));
         count = getAttributeCount();
         for(int i = 0; i < count; i++){
-            element.addAttribute(getAttributeAt(i).clone(element));
+            element.addAttribute(getAttributeAt(i).newCopy(element));
         }
         Iterator<XMLNode> iterator = iterator();
         while(iterator.hasNext()){
-            iterator.next().clone(element);
+            iterator.next().newCopy(element);
         }
         return element;
     }
@@ -121,11 +125,34 @@ public class XMLElement extends XMLNodeTree{
     public XMLNamespace getNamespaceAt(int index){
         return mNamespaceList.get(index);
     }
+
+    @Override
+    public Iterator<? extends XMLNamespace> getNamespaces() {
+        return mNamespaceList.iterator();
+    }
+
+    @Override
+    public XMLNamespace newNamespace(String uri, String prefix) {
+        return new XMLNamespace(uri, prefix);
+    }
+    @Override
+    public XMLAttribute newAttribute() {
+        return new XMLAttribute();
+    }
+    @Override
+    public XMLElement newElement() {
+        return new XMLElement();
+    }
+    @Override
+    public XMLText newText() {
+        return super.newText();
+    }
+
     public void addNamespace(String uri, String prefix){
         if(uri == null || prefix == null){
             return;
         }
-        addNamespace(new XMLNamespace(uri, prefix));
+        addNamespace(newNamespace(uri, prefix));
     }
     public void addNamespace(XMLNamespace namespace){
         if(namespace != null && !mNamespaceList.contains(namespace)){
@@ -145,7 +172,7 @@ public class XMLElement extends XMLNodeTree{
         if(namespace != null){
             return namespace;
         }
-        namespace = new XMLNamespace(uri, prefix);
+        namespace = newNamespace(uri, prefix);
         getRootElement().addNamespace(namespace);
         return namespace;
     }
@@ -204,7 +231,7 @@ public class XMLElement extends XMLNodeTree{
         return mAttributes;
     }
     public int getChildElementsCount(){
-        return super.size(XMLElement.class);
+        return super.countNodesWithType(XMLElement.class);
     }
     public List<XMLElement> getChildElementList(){
         return CollectionUtil.toList(iterator(XMLElement.class));
@@ -227,7 +254,7 @@ public class XMLElement extends XMLNodeTree{
     public String getAttributeValue(String name){
         XMLAttribute attribute = getAttribute(name);
         if(attribute != null){
-            return attribute.getValue();
+            return attribute.getValueAsString();
         }
         return null;
     }
@@ -282,7 +309,7 @@ public class XMLElement extends XMLNodeTree{
         XMLAttribute xmlAttribute = getAttribute(name);
         if(xmlAttribute == null){
             if(XMLNamespace.looksNamespace(name, value)){
-                XMLNamespace namespace = new XMLNamespace(value, XMLUtil.splitName(name));
+                XMLNamespace namespace = newNamespace(value, XMLUtil.splitName(name));
                 addNamespace(namespace);
             }else{
                 addAttribute(newAttribute().set(name,value));
@@ -297,7 +324,7 @@ public class XMLElement extends XMLNodeTree{
             return;
         }
         if(XMLNamespace.looksNamespace(name, value)){
-            XMLNamespace namespace = new XMLNamespace(value, XMLUtil.splitName(name));
+            XMLNamespace namespace = newNamespace(value, XMLUtil.splitName(name));
             addNamespace(namespace);
         }else{
             addAttribute(newAttribute().set(name,value));
@@ -308,7 +335,7 @@ public class XMLElement extends XMLNodeTree{
             return;
         }
         if(XMLNamespace.looksNamespace(name, value)){
-            XMLNamespace namespace = new XMLNamespace(value, XMLUtil.splitName(name));
+            XMLNamespace namespace = newNamespace(value, XMLUtil.splitName(name));
             addNamespace(namespace);
         }else{
             XMLAttribute attribute = new XMLAttribute();
@@ -317,14 +344,26 @@ public class XMLElement extends XMLNodeTree{
             attribute.setValue(value);
         }
     }
-    public void addAttribute(XMLAttribute xmlAttribute){
-        if(xmlAttribute == null){
+    public void addAttribute(Attribute attribute){
+        if(attribute == null){
             return;
         }
+        XMLAttribute xmlAttribute = (XMLAttribute) attribute;
         if(mAttributes == EMPTY_ATTRIBUTES){
             mAttributes = new ArrayCollection<>();
         }
         mAttributes.add(xmlAttribute);
+        xmlAttribute.setParentNode(this);
+    }
+    public void addAttribute(int i, Attribute attribute){
+        if(attribute == null){
+            return;
+        }
+        XMLAttribute xmlAttribute = (XMLAttribute) attribute;
+        if(mAttributes == EMPTY_ATTRIBUTES){
+            mAttributes = new ArrayCollection<>();
+        }
+        mAttributes.add(i, xmlAttribute);
         xmlAttribute.setParentNode(this);
     }
     public XMLElement getParentElement(){

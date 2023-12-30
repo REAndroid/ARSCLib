@@ -482,7 +482,7 @@ public class XmlCoder {
             XMLAttribute attribute = child.getAttribute(ATTR_name);
 
             ResourceEntry resourceEntry = valueMap.encodeIdName(attribute.getPrefix(),
-                    attribute.getValue());
+                    attribute.getValueAsString());
             if(resourceEntry == null){
                 throw new XmlEncodeException("Unknown " + dataFormat.getName()
                         + " name: " + child.getDebugText());
@@ -627,7 +627,7 @@ public class XmlCoder {
                 throw new XmlEncodeException("Unknown root attribute: " + xmlAttribute.getDebugText());
             }
             encode(xmlAttribute.getName(false),
-                    xmlAttribute.getValue(false), entry);
+                    xmlAttribute.getValueAsString(false), entry);
         }
         public void encode(String name, String value, Entry entry) throws IOException{
             if(name.equals(ATTR_name)){

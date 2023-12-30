@@ -223,7 +223,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
             element = element.createChildElement(name);
             mCurrentElement = element;
         }
-        element.setTagNamespace(namespace, prefix);
+        element.setNamespace(namespace, prefix);
         mCurrentElement = element;
         return this;
     }
@@ -252,7 +252,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
     public ResXmlPullSerializer endTag(String namespace, String name) throws IOException, IllegalArgumentException, IllegalStateException {
         flushText();
         mCurrentElement.calculateAttributesOrder();
-        mCurrentElement = mCurrentElement.getParentResXmlElement();
+        mCurrentElement = mCurrentElement.getParentElement();
         return this;
     }
 

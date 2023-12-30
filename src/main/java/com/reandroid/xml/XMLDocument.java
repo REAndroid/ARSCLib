@@ -16,6 +16,7 @@
 package com.reandroid.xml;
 
 import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.xml.base.Document;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -23,7 +24,7 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.*;
 import java.util.Iterator;
 
-public class XMLDocument extends XMLNodeTree{
+public class XMLDocument extends XMLNodeTree implements Document<XMLElement> {
     private String encoding;
     private Boolean standalone;
     public XMLDocument(String elementName){
@@ -36,14 +37,14 @@ public class XMLDocument extends XMLNodeTree{
     }
 
     @Override
-    XMLDocument clone(XMLNode parent) {
+    XMLDocument newCopy(XMLNode parent) {
 
         XMLDocument document = new XMLDocument();
         document.encoding = encoding;
         document.standalone = standalone;
         Iterator<XMLNode> iterator = iterator();
         while(iterator.hasNext()){
-            iterator.next().clone(document);
+            iterator.next().newCopy(document);
         }
         return document;
     }

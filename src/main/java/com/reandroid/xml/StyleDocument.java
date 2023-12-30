@@ -135,19 +135,19 @@ public class StyleDocument extends XMLDocument implements StyleNode, Comparable<
     }
 
     @Override
-    StyleElement newElement(){
+    public StyleElement newElement(){
         return new StyleElement();
     }
     @Override
-    StyleText newText(){
+    public StyleText newText(){
         return new StyleText();
     }
     @Override
-    XMLComment newComment(){
+    public XMLComment newComment(){
         return null;
     }
     @Override
-    StyleAttribute newAttribute(){
+    public StyleAttribute newAttribute(){
         return new StyleAttribute();
     }
 
