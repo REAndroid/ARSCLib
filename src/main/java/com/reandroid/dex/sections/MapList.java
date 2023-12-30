@@ -119,7 +119,10 @@ public class MapList extends SpecialItem
         if(mapItem == null){
             return;
         }
-        mapItem.getCountAndOffset().setReference2(null);
+        ParallelIntegerPair pair = mapItem.getCountAndOffset();
+        pair.getFirst().set(0);
+        pair.getSecond().set(0);
+        pair.setReference2(null);
         itemArray.remove(mapItem);
         mapItem.setParent(null);
         mapItem.setIndex(-1);
