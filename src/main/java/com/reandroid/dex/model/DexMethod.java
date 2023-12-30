@@ -171,6 +171,12 @@ public class DexMethod extends DexDeclaration {
             codeItem.setRegistersCount(codeItem.getParameterRegistersCount() + count);
         }
     }
+    public void refreshInstructions(){
+        InstructionList instructionList = getDefinition().getInstructionList();
+        if(instructionList != null){
+            instructionList.updateAddresses();
+        }
+    }
     private DexInstruction create(Ins ins){
         if(ins != null){
             return new DexInstruction(this, ins);

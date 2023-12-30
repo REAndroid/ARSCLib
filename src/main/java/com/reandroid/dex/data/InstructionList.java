@@ -251,7 +251,7 @@ public class InstructionList extends FixedBlockContainer implements
             ins.updateLabelAddress();
         }
     }
-    private void updateAddresses() {
+    public void updateAddresses() {
         int outSize = 0;
         int address = 0;
         for(Ins ins : this) {
