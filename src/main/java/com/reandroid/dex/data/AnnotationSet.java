@@ -20,6 +20,7 @@ import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.*;
+import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -191,5 +192,19 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
             appendOnce = true;
         }
         return builder.toString();
+    }
+    public static class EmptyAnnotationSet extends AnnotationSet{
+
+        public EmptyAnnotationSet(){
+            super();
+        }
+        @Override
+        protected void onRefreshed() {
+            super.onRefreshed();
+            Section<AnnotationSet> section = getSection(getSectionType());
+            if(section.getCount() == 1){
+                addUsageType(UsageMarker.USAGE_ANNOTATION);
+            }
+        }
     }
 }

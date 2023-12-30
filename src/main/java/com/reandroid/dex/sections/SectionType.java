@@ -195,7 +195,7 @@ public class SectionType<T extends SectionItem> {
         });
         VALUES[index++] = ANNOTATION_ITEM;
 
-        ANNOTATION_SET = new DataSectionType<>("ANNOTATION_SET", 0x1003, new Creator<AnnotationSet>() {
+        ANNOTATION_SET = new AnnotationSetSectionType("ANNOTATION_SET", 0x1003, new Creator<AnnotationSet>() {
             @Override
             public AnnotationSet[] newArrayInstance(int length) {
                 return new AnnotationSet[length];
@@ -631,6 +631,15 @@ public class SectionType<T extends SectionItem> {
         @Override
         public StringDataSection createSection(IntegerPair countAndOffset){
             return new StringDataSection(countAndOffset, this);
+        }
+    }
+    private static class AnnotationSetSectionType extends DataSectionType<AnnotationSet> {
+        AnnotationSetSectionType(String name, int type, Creator<AnnotationSet> creator) {
+            super(name, type, creator);
+        }
+        @Override
+        public AnnotationSetSection createSection(IntegerPair countAndOffset){
+            return new AnnotationSetSection(countAndOffset, this);
         }
     }
 
