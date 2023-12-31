@@ -251,7 +251,7 @@ public class InstructionList extends FixedBlockContainer implements
             ins.updateLabelAddress();
         }
     }
-    public void updateAddresses() {
+    private void updateAddresses() {
         int outSize = 0;
         int address = 0;
         for(Ins ins : this) {
@@ -271,7 +271,23 @@ public class InstructionList extends FixedBlockContainer implements
         super.onRefreshed();
         this.blockAlign.align(this);
         this.codeItem.getCodeUnits().set(getCodeUnits());
-        clearExtraLines();
+        clearAndUpdateAddresses();
+    }
+    private void clearAndUpdateAddresses() {
+        int outSize = 0;
+        int address = 0;
+        for(Ins ins : this) {
+            ins.clearExtraLines();
+            ins.setAddress(address);
+            address += ins.getCodeUnits();
+            int out = ins.getOutSize();
+            if(out > outSize){
+                outSize = out;
+            }
+        }
+        this.codeItem.getInstructionCodeUnitsReference().set(address);
+        this.codeItem.getInstructionOutsReference().set(outSize);
+        this.mLockExtraLines = false;
     }
     public int getCodeUnits() {
         int result = 0;

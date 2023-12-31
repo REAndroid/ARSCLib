@@ -10,11 +10,9 @@ import com.reandroid.dex.model.DexFile;
 import com.reandroid.dex.model.DexInstruction;
 import com.reandroid.dex.model.DexMethod;
 
-import java.io.IOException;
-
 public class SampleDexFileCreator {
 
-    public static DexFile createApplicationClass(String appSourceName, String activitySourceName, int contentViewResourceId) throws IOException {
+    public static DexFile createApplicationClass(String appSourceName, String activitySourceName, int contentViewResourceId) {
         DexFile dexFile = DexFile.createDefault();
         createApplicationClass(dexFile, appSourceName);
         createActivityClass(dexFile, activitySourceName, contentViewResourceId);
@@ -67,7 +65,6 @@ public class SampleDexFileCreator {
         invokeSuper.setRegister(0); // p0 (this)
 
         constructor.addInstruction(Opcode.RETURN_VOID);
-        constructor.refreshInstructions();
     }
 
     private static void create_onCreate(DexClass dexClass, int contentViewResourceId){
@@ -105,6 +102,5 @@ public class SampleDexFileCreator {
         invokeVirtual.setRegister(1, constInstruction.getRegister()); // v0
 
         onCreate.addInstruction(Opcode.RETURN_VOID);
-        onCreate.refreshInstructions();
     }
 }
