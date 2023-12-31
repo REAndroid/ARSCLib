@@ -41,13 +41,18 @@ public class ApkModuleCoderTest {
         apkModule.getAndroidManifest().removeUnusedNamespaces();
         apkModule.getAndroidManifest().getStringPool().removeUnusedStrings();
         apkModule.getAndroidManifest().refreshFull();
-        File apk = new File(mDir_xml.getParentFile(), "encoded_xml.apk");
+
+        // Preserve generated apk for signing and install on device
+        File curDir = new File("test-apk");
+        File apk = new File(curDir, "encoded_xml.apk");
+
         apkModule_encoded.writeApk(apk);
         apkModule_encoded = ApkModule.loadApkFile(apk);
+        System.err.println("Generated apk: " + apk.getAbsolutePath());
+
         FileUtil.deleteDirectory(mDir_xml);
         Assert.assertFalse("Failed to delete: " + mDir_xml, mDir_xml.exists());
         compare(apkModule, apkModule_encoded);
-        apk.delete();
     }
     @Test
     public void c_testDecodeToJson() throws IOException {
@@ -71,13 +76,18 @@ public class ApkModuleCoderTest {
         apkModule.getAndroidManifest().removeUnusedNamespaces();
         apkModule.getAndroidManifest().getStringPool().removeUnusedStrings();
         apkModule.getAndroidManifest().refreshFull();
-        File apk = new File(mDir_json.getParentFile(), "encoded_json.apk");
+
+        // Preserve generated apk for signing and install on device
+        File curDir = new File("test-apk");
+        File apk = new File(curDir, "encoded_json.apk");
+
         apkModule_encoded.writeApk(apk);
+        System.err.println("Generated apk: " + apk.getAbsolutePath());
+
         apkModule_encoded = ApkModule.loadApkFile(apk);
         FileUtil.deleteDirectory(mDir_json);
         Assert.assertFalse("Failed to delete: " + mDir_json, mDir_json.exists());
         compare(apkModule, apkModule_encoded);
-        apk.delete();
     }
     private void compare(ApkModule module1, ApkModule module2) throws IOException {
         Assert.assertEquals(module1.getZipEntryMap().size(), module2.getZipEntryMap().size());
