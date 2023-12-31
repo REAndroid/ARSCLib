@@ -16,6 +16,7 @@
 package com.reandroid.utils.collection;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 public class CollectionUtil {
 
@@ -28,7 +29,7 @@ public class CollectionUtil {
         }
     }
     public static<T> List<T> toUniqueList(Iterator<? extends T> iterator) {
-        return new ArrayList<>(toHashSet(iterator));
+        return new ArrayCollection<>(toHashSet(iterator));
     }
     public static<T> HashSet<T> toHashSet(Iterator<? extends T> iterator) {
         HashSet<T> results = new HashSet<>();
@@ -162,15 +163,12 @@ public class CollectionUtil {
         if(!hasNext){
             return EmptyIterator.of();
         }
-        ArrayList<T> results = new ArrayList<>(2);
-        while (hasNext){
-            results.add(iterator.next());
-            hasNext = iterator.hasNext();
-        }
-        if(results.size() > 1000){
-            results.trimToSize();
-        }
+        List<T> results = toList(iterator);
         return results.iterator();
+    }
+    @SuppressWarnings("unchecked")
+    public static<T> Predicate<T> getAcceptAll(){
+        return (Predicate<T>) ACCEPT_ALL;
     }
     @SuppressWarnings("unchecked")
     public static<T extends Comparable<T>> Comparator<T> getComparator(){
@@ -183,4 +181,6 @@ public class CollectionUtil {
             return c1.compareTo(c2);
         }
     };
+
+    private static final Predicate<?> ACCEPT_ALL = (Predicate<Object>) o -> true;
 }

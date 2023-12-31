@@ -15,7 +15,9 @@
  */
 package com.reandroid.utils.io;
 
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArraySort;
+import com.reandroid.utils.collection.CollectionUtil;
 
 import java.io.File;
 import java.util.Comparator;
@@ -81,10 +83,8 @@ public class FileIterator implements Iterator<File> {
         if(index == -2){
             index = -1;
             File file = this.file;
-            if(file.isFile()){
-                if(matches(file)){
-                    return file;
-                }
+            if(matchesFile(file)){
+                return file;
             }
         }
         FileIterator fileIterator = getCurrentIterator();
@@ -119,7 +119,29 @@ public class FileIterator implements Iterator<File> {
         this.currentIterator = currentIterator;
         return currentIterator;
     }
-    private boolean matches(File file){
+    private boolean matchesFile(File file){
+        if(!file.isFile()){
+            return false;
+        }
         return filter == null || filter.test(file);
+    }
+
+    public static final Comparator<File> NAME_COMPARATOR = (file1, file2) -> {
+        boolean is_file1 = file1.isFile();
+        boolean is_file2 = file2.isFile();
+        if(is_file1 && !is_file2){
+            return -1;
+        }
+        if(!is_file1 && is_file2){
+            return 1;
+        }
+        return StringsUtil.toUpperCase(file1.getName())
+                .compareTo(StringsUtil.toUpperCase(file2.getName()));
+    };
+    public static Predicate<File> getExtensionFilter(String extension){
+        if(extension == null){
+            return CollectionUtil.getAcceptAll();
+        }
+        return file -> extension.equalsIgnoreCase(FileUtil.getExtension(file));
     }
 }

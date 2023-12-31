@@ -80,6 +80,33 @@ public class FileUtil {
         }
         return path;
     }
+    public static String getNameWoExtension(File file){
+        return getNameWoExtensionForSimpleName(file.getName());
+    }
+    public static String getNameWoExtension(String name){
+        return getNameWoExtensionForSimpleName(getFileName(name));
+    }
+    private static String getNameWoExtensionForSimpleName(String simpleName){
+        int i = simpleName.lastIndexOf('.');
+        if(i < 0){
+            return simpleName;
+        }
+        return simpleName.substring(0, i);
+    }
+
+    public static String getExtension(File file){
+        return getExtensionForSimpleName(file.getName());
+    }
+    public static String getExtension(String name){
+        return getExtensionForSimpleName(getFileName(name));
+    }
+    private static String getExtensionForSimpleName(String simpleName){
+        int i = simpleName.lastIndexOf('.');
+        if(i < 0){
+            return StringsUtil.EMPTY;
+        }
+        return simpleName.substring(i);
+    }
     public static String toReadableFileSize(long size){
         if(size < 0){
             return Long.toString(size);

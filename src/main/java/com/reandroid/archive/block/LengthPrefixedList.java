@@ -26,10 +26,11 @@ import com.reandroid.arsc.item.LongItem;
 
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 public abstract class LengthPrefixedList<T extends Block> extends FixedBlockContainer
-        implements BlockCreator<T> {
+        implements BlockCreator<T>, Iterable<T> {
     private final Block numberBlock;
     private final BlockList<T> elements;
     private final SingleBlockContainer<Block> bottomContainer;
@@ -63,8 +64,12 @@ public abstract class LengthPrefixedList<T extends Block> extends FixedBlockCont
             ((IntegerItem)numberBlock).set((int) dataSize);
         }
     }
-    public int getElementsCount(){
-        return getElements().size();
+    public int size(){
+        return elements.size();
+    }
+    @Override
+    public Iterator<T> iterator() {
+        return elements.iterator();
     }
     public List<T> getElements() {
         return elements.getChildes();
@@ -121,6 +126,6 @@ public abstract class LengthPrefixedList<T extends Block> extends FixedBlockCont
 
     @Override
     public String toString(){
-        return "size=" + numberBlock + ", count=" + getElementsCount();
+        return "size=" + numberBlock + ", count=" + size();
     }
 }

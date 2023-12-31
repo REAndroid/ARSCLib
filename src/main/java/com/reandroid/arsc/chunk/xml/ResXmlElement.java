@@ -152,14 +152,13 @@ public class ResXmlElement extends ResXmlNode implements
      * Iterates every attribute on this element and on child elements recursively
      * */
     public Iterator<ResXmlAttribute> recursiveAttributes() throws ConcurrentModificationException{
-        return new MergingIterator<>(new ComputeIterator<>(recursiveElements(), RECURSIVE_ATTRIBUTES));
+        return RecursiveIterator.compute(this, ResXmlElement::getElements, ResXmlElement::getAttributes);
     }
     /**
      * Iterates every element and child elements recursively
      * */
     public Iterator<ResXmlElement> recursiveElements(){
-        return CombiningIterator.of(SingleIterator.of(this),
-                ComputeIterator.of(getElements(), RECURSIVE_ELEMENTS));
+        return RecursiveIterator.of(this, ResXmlElement::getElements);
     }
     public ResXmlAttribute getIdAttribute(){
         ResXmlStartElement startElement = getStartElement();
