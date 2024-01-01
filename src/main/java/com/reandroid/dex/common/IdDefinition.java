@@ -19,10 +19,15 @@ package com.reandroid.dex.common;
 
 import com.reandroid.dex.id.IdItem;
 
+import java.util.Iterator;
+
 public interface IdDefinition<T extends IdItem> {
     T getId();
     int getAccessFlagsValue();
-    AccessFlag[] getAccessFlags();
+    Iterator<? extends Modifier> getAccessFlags();
+    default Iterator<? extends Modifier> getModifiers(){
+        return getAccessFlags();
+    }
     void setAccessFlagsValue(int value);
     default void addAccessFlag(AccessFlag flag) {
         setAccessFlagsValue(getAccessFlagsValue() | flag.getValue());

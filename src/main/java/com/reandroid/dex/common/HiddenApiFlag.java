@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.data;
+package com.reandroid.dex.common;
 
 import com.reandroid.dex.smali.SmaliFormat;
-import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.ArrayIterator;
 
-import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Predicate;
 
-public class HiddenApiFlag implements SmaliFormat {
+public class HiddenApiFlag extends Modifier implements SmaliFormat {
 
     public static final HiddenApiFlag WHITELIST;
     public static final HiddenApiFlag GREYLIST;
@@ -37,8 +38,10 @@ public class HiddenApiFlag implements SmaliFormat {
     public static final int NO_RESTRICTION;
 
     public static final HiddenApiFlag TEST_API;
-    private static final HiddenApiFlag[] VALUES;
+    private static final HiddenApiFlag[] RESTRICTION_VALUES;
     private static final HiddenApiFlag[] DOMAIN_VALUES;
+
+    private static final HiddenApiFlag[] VALUES;
 
     private static final Map<String, HiddenApiFlag> NAME_MAP;
 
@@ -57,7 +60,7 @@ public class HiddenApiFlag implements SmaliFormat {
 
         NO_RESTRICTION = ObjectsUtil.of(0x7);
 
-        VALUES = new HiddenApiFlag[]{
+        RESTRICTION_VALUES = new HiddenApiFlag[]{
                 WHITELIST,
                 GREYLIST,
                 BLACKLIST,
@@ -70,74 +73,56 @@ public class HiddenApiFlag implements SmaliFormat {
                 CORE_PLATFORM_API,
                 TEST_API
         };
+        VALUES = new HiddenApiFlag[RESTRICTION_VALUES.length + DOMAIN_VALUES.length];
 
         Map<String, HiddenApiFlag> map = new HashMap<>();
-        for(HiddenApiFlag apiFlag : VALUES){
-            map.put(apiFlag.name, apiFlag);
+        int index = 0;
+        for(HiddenApiFlag flag : RESTRICTION_VALUES){
+            VALUES[index++] = flag;
+            map.put(flag.getName(), flag);
         }
-        for(HiddenApiFlag apiFlag : DOMAIN_VALUES){
-            map.put(apiFlag.name, apiFlag);
+        for(HiddenApiFlag flag : DOMAIN_VALUES){
+            VALUES[index++] = flag;
+            map.put(flag.getName(), flag);
         }
         NAME_MAP = map;
     }
 
-    private final int flag;
-    private final String name;
     private final boolean domainFlag;
 
-    private HiddenApiFlag(int flag, String name, boolean domainFlag){
-        this.flag = flag;
-        this.name = name;
+    private HiddenApiFlag(int value, String name, boolean domainFlag){
+        super(value, name);
         this.domainFlag = domainFlag;
     }
-    private HiddenApiFlag(int flag, String name){
-        this(flag, name, false);
+    private HiddenApiFlag(int value, String name){
+        this(value, name, false);
     }
 
-    public String getName() {
-        return name;
-    }
-    public int getFlag() {
-        return flag;
+    @Override
+    public boolean isSet(int value) {
+        int v = getValue();
+        if (domainFlag) {
+            return (value & v) == v;
+        } else {
+            return (value & NO_RESTRICTION) == v;
+        }
     }
     public boolean isDomainFlag() {
         return domainFlag;
-    }
-    public boolean isSet(int value) {
-        if (domainFlag) {
-            return (value & this.flag) == this.flag;
-        } else {
-            return (value & NO_RESTRICTION) == this.flag;
-        }
-    }
-
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
-        writer.append(getName());
-        writer.append(' ');
-    }
-    @Override
-    public boolean equals(Object obj) {
-        return obj == this;
-    }
-    @Override
-    public int hashCode() {
-        return flag;
-    }
-    @Override
-    public String toString() {
-        return getName();
     }
 
     public static HiddenApiFlag valueOf(String name){
         return NAME_MAP.get(name);
     }
 
-    public static HiddenApiFlag[] getAllFlags(int value) {
+    public static Iterator<HiddenApiFlag> valuesOf(int value) {
+        return getValues(hiddenApiFlag -> hiddenApiFlag.isSet(value));
+    }
+    public static HiddenApiFlag[] valuesOf1(int value) {
         if((value & NO_RESTRICTION) == NO_RESTRICTION){
             return null;
         }
-        HiddenApiFlag normalRestriction = VALUES[value & NO_RESTRICTION];
+        HiddenApiFlag normalRestriction = RESTRICTION_VALUES[value & NO_RESTRICTION];
 
         int domainSpecificPart = (value & ~NO_RESTRICTION);
         if (domainSpecificPart == 0) {
@@ -161,24 +146,10 @@ public class HiddenApiFlag implements SmaliFormat {
         }
         return results;
     }
-
-    public static void append(SmaliWriter writer, HiddenApiFlag[] flags) throws IOException {
-        if(flags == null){
-            return;
-        }
-        for(HiddenApiFlag apiFlag : flags){
-            apiFlag.append(writer);
-        }
+    public static Iterator<HiddenApiFlag> getValues(){
+        return getValues(null);
     }
-    public static String toString(HiddenApiFlag[] flags) {
-        if(flags == null){
-            return "";
-        }
-        StringBuilder builder = new StringBuilder();
-        for(HiddenApiFlag apiFlag : flags){
-            builder.append(apiFlag.getName());
-            builder.append(' ');
-        }
-        return builder.toString();
+    public static Iterator<HiddenApiFlag> getValues(Predicate<HiddenApiFlag> filter){
+        return new ArrayIterator<>(VALUES, filter);
     }
 }

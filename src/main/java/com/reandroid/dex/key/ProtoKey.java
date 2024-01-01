@@ -31,7 +31,7 @@ public class ProtoKey implements Key{
         for(int i = 0; i < size; i++){
             TypeKey typeKey = getParameter(i);
             result ++;
-            if(typeKey.equals(TypeKey.TYPE_D) || typeKey.equals(TypeKey.TYPE_J)){
+            if(typeKey.isWide()){
                 result ++;
             }
         }
@@ -99,11 +99,10 @@ public class ProtoKey implements Key{
         Iterator<TypeKey> iterator = getParameters();
         while (iterator.hasNext()){
             TypeKey key = iterator.next();
-            if(TypeKey.TYPE_J.equals(key) ||
-                    TypeKey.TYPE_D.equals(key)){
+            result ++;
+            if(key.isWide()){
                 result ++;
             }
-            result ++;
         }
         return result;
     }

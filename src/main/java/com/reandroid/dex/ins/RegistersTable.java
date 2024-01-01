@@ -15,11 +15,26 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.dex.common.Register;
+
 public interface RegistersTable {
 
     int getRegistersCount();
     int getParameterRegistersCount();
     void setRegistersCount(int count);
     void setParameterRegistersCount(int count);
+
+    default int getLocalRegistersCount(){
+        return getRegistersCount() - getParameterRegistersCount();
+    }
+    default Register getRegisterFor(int registerValue) {
+        boolean parameter = false;
+        int local = getLocalRegistersCount();
+        if(registerValue >= local){
+            registerValue = registerValue - local;
+            parameter = true;
+        }
+        return new Register(registerValue, parameter);
+    }
 
 }

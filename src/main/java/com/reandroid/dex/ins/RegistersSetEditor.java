@@ -21,16 +21,16 @@ import com.reandroid.utils.collection.EmptyIterator;
 
 import java.util.Iterator;
 
-public class RegistersSetEditor implements ArraySupplier<Reg.Editor>, Iterable<Reg.Editor> {
+public class RegistersSetEditor implements ArraySupplier<RegisterReference.Editor>, Iterable<RegisterReference.Editor> {
 
-    private Reg.Editor[] elements;
+    private RegisterReference.Editor[] elements;
     private int size;
 
     public RegistersSetEditor(){
         
     }
     public void apply(){
-        for(Reg.Editor editor : this){
+        for(RegisterReference.Editor editor : this){
             editor.apply();
         }
     }
@@ -38,11 +38,11 @@ public class RegistersSetEditor implements ArraySupplier<Reg.Editor>, Iterable<R
         if(obj == null){
             return false;
         }
-        Reg.Editor[] elements = this.elements;
+        RegisterReference.Editor[] elements = this.elements;
         if(elements == null){
             return false;
         }
-        for(Reg.Editor reg : elements){
+        for(RegisterReference.Editor reg : elements){
             if(obj.equals(reg)){
                 return true;
             }
@@ -53,11 +53,11 @@ public class RegistersSetEditor implements ArraySupplier<Reg.Editor>, Iterable<R
         return getCount() != 0;
     }
     @Override
-    public Iterator<Reg.Editor> iterator() {
+    public Iterator<RegisterReference.Editor> iterator() {
         return ArraySupplierIterator.of(this);
     }
     @Override
-    public Reg.Editor get(int i){
+    public RegisterReference.Editor get(int i){
         if(elements != null){
             return elements[i];
         }
@@ -67,12 +67,12 @@ public class RegistersSetEditor implements ArraySupplier<Reg.Editor>, Iterable<R
     public int getCount(){
         return size;
     }
-    public void add(Iterator<Reg.Editor> iterator){
+    public void add(Iterator<RegisterReference.Editor> iterator){
         while (iterator.hasNext()){
             add(iterator.next());
         }
     }
-    public void add(Reg.Editor editor){
+    public void add(RegisterReference.Editor editor){
         if (editor == null){
             return;
         }
@@ -89,7 +89,7 @@ public class RegistersSetEditor implements ArraySupplier<Reg.Editor>, Iterable<R
             this.elements = null;
             return;
         }
-        Reg.Editor[] update = new Reg.Editor[size];
+        RegisterReference.Editor[] update = new RegisterReference.Editor[size];
         System.arraycopy(this.elements, 0, update, 0, size);
         this.elements = update;
     }
@@ -108,8 +108,8 @@ public class RegistersSetEditor implements ArraySupplier<Reg.Editor>, Iterable<R
         }
         int size = this.size;
         int length = size + capacity;
-        Reg.Editor[] update = new Reg.Editor[length];
-        Reg.Editor[] elements = this.elements;
+        RegisterReference.Editor[] update = new RegisterReference.Editor[length];
+        RegisterReference.Editor[] elements = this.elements;
         if(elements == null || size == 0){
             this.elements = update;
             return;
@@ -118,7 +118,7 @@ public class RegistersSetEditor implements ArraySupplier<Reg.Editor>, Iterable<R
         this.elements = update;
     }
     private int availableCapacity(){
-        Reg.Editor[] elements = this.elements;
+        RegisterReference.Editor[] elements = this.elements;
         if(elements != null){
             return elements.length - size;
         }
@@ -136,8 +136,8 @@ public class RegistersSetEditor implements ArraySupplier<Reg.Editor>, Iterable<R
         RegistersSetEditor registersSetEditor = new RegistersSetEditor();
         registersSetEditor.ensureCapacity(count);
         for(int i = 0; i < count; i++){
-            Reg reg = new Reg(registersTable, registersSet, i);
-            registersSetEditor.add(reg.toEditor());
+            RegisterReference registerReference = new RegisterReference(registersTable, registersSet, i);
+            registersSetEditor.add(registerReference.toEditor());
         }
         return registersSetEditor;
     }
@@ -146,20 +146,20 @@ public class RegistersSetEditor implements ArraySupplier<Reg.Editor>, Iterable<R
     public static final RegistersSetEditor EMPTY = new RegistersSetEditor(){
 
         @Override
-        public void add(Iterator<Reg.Editor> iterator) {
+        public void add(Iterator<RegisterReference.Editor> iterator) {
             if(iterator == null || !iterator.hasNext()){
                 return;
             }
             throw new IllegalArgumentException("Empty RegistersList");
         }
         @Override
-        public void add(Reg.Editor reg) {
+        public void add(RegisterReference.Editor reg) {
             if(reg != null){
                 throw new IllegalArgumentException("Empty RegistersList");
             }
         }
         @Override
-        public Iterator<Reg.Editor> iterator() {
+        public Iterator<RegisterReference.Editor> iterator() {
             return EmptyIterator.of();
         }
 
@@ -172,7 +172,7 @@ public class RegistersSetEditor implements ArraySupplier<Reg.Editor>, Iterable<R
             return true;
         }
         @Override
-        public Reg.Editor get(int i) {
+        public RegisterReference.Editor get(int i) {
             throw new IllegalArgumentException("Empty RegistersList");
         }
         @Override

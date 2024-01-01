@@ -79,20 +79,10 @@ public class ProtoId extends IdItem implements Comparable<ProtoId> {
     }
     public int getParameterRegistersCount(){
         TypeList typeList = getTypeList();
-        if(typeList == null){
-            return 0;
+        if(typeList != null){
+            return typeList.getParameterRegistersCount();
         }
-        int result = 0;
-        TypeId[] iterator = typeList.getTypeIds();
-        for (TypeId typeId : iterator){
-            TypeKey key = typeId.getKey();
-            if(TypeKey.TYPE_J.equals(key) ||
-                    TypeKey.TYPE_D.equals(key)){
-                result ++;
-            }
-            result ++;
-        }
-        return result;
+        return 0;
     }
 
     public int getParametersCount(){
@@ -104,6 +94,9 @@ public class ProtoId extends IdItem implements Comparable<ProtoId> {
     }
     public TypeId getParameter(int index) {
         return parameters.get(index);
+    }
+    public TypeId getForRegister(int register) {
+        return parameters.getForRegister(register);
     }
     public String[] getParameterNames(){
         TypeList typeList = getTypeList();

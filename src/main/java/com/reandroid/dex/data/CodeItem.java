@@ -20,16 +20,15 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.SectionItem;
-import com.reandroid.dex.debug.DebugParameter;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.reference.DataItemIndirectReference;
-import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.ins.RegistersTable;
 import com.reandroid.dex.ins.TryBlock;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CombiningIterator;
@@ -93,9 +92,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
     public void setParameterRegistersCount(int count){
         header.parameterRegisters.set(count);
     }
-    public int getLocals(){
-        return getRegistersCount() - getParameterRegistersCount();
-    }
+
     public DebugInfo getDebugInfo(){
         return header.debugInfoOffset.getItem();
     }
@@ -205,21 +202,15 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
+        writer.setCurrentRegistersTable(this);
         MethodDef methodDef = getMethodDef();
-        DebugInfo debugInfo = getDebugInfo();
         writer.newLine();
-        writer.append(".locals ");
-        InstructionList instructionList = getInstructionList();
-        writer.append(getLocals());
-        methodDef.appendParameterAnnotations(writer, methodDef.getProtoId());
-        if(debugInfo != null){
-            Iterator<DebugParameter> iterator = debugInfo.getParameters();
-            while (iterator.hasNext()){
-                iterator.next().append(writer);
-            }
-        }
-        methodDef.appendAnnotations(writer);
-        instructionList.append(writer);
+        SmaliDirective.LOCALS.append(writer);
+        writer.append(getLocalRegistersCount());
+        writer.appendAll(methodDef.getParameters());
+        writer.appendAll(methodDef.getAnnotations());
+        getInstructionList().append(writer);
+        writer.setCurrentRegistersTable(null);
     }
 
     @Override

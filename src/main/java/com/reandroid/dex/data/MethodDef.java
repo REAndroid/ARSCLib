@@ -16,8 +16,10 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.common.ArraySupplier;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.AccessFlag;
+import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.debug.DebugParameter;
 import com.reandroid.dex.id.*;
 import com.reandroid.dex.ins.Ins;
@@ -28,11 +30,11 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.collection.ArraySupplierIterator;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -78,6 +80,21 @@ public class MethodDef extends Def<MethodId>{
             return null;
         }
         return new Parameter(this, index);
+    }
+    public Iterator<Parameter> getParameters(){
+        if(getParametersCount() == 0){
+            return EmptyIterator.of();
+        }
+        return ArraySupplierIterator.of(new ArraySupplier<Parameter>() {
+            @Override
+            public Parameter get(int i) {
+                return MethodDef.this.getParameter(i);
+            }
+            @Override
+            public int getCount() {
+                return MethodDef.this.getParametersCount();
+            }
+        });
     }
     @Override
     public MethodKey getKey(){
@@ -206,8 +223,8 @@ public class MethodDef extends Def<MethodId>{
         return directory.getParameterAnnotation(getDefinitionIndex(), parameterIndex);
     }
     @Override
-    public AccessFlag[] getAccessFlags(){
-        return AccessFlag.getForMethod(getAccessFlagsValue());
+    public Iterator<? extends Modifier> getAccessFlags(){
+        return AccessFlag.valuesOfMethod(getAccessFlagsValue());
     }
 
     @Override
@@ -222,57 +239,17 @@ public class MethodDef extends Def<MethodId>{
         writer.newLine();
         getSmaliDirective().append(writer);
 
-        AccessFlag.append(writer, getAccessFlags());
-        HiddenApiFlag.append(writer, getHiddenApiFlags());
+        writer.appendModifiers(getModifiers());
 
         getId().append(writer, false);
         writer.indentPlus();
         if(!writer.appendOptional(getCodeItem())){
-            appendAnnotations(writer);
+            writer.appendAll(getParameters());
+            writer.appendAll(getAnnotations());
         }
         writer.indentMinus();
         getSmaliDirective().appendEnd(writer);
     }
-    void appendParameterAnnotations(SmaliWriter writer, ProtoId protoId) throws IOException {
-        if(protoId == null || protoId.getParametersCount() == 0){
-            return;
-        }
-        TypeList typeList = protoId.getTypeList();
-        TypeId[] parameters = typeList.getTypeIds();
-        if(parameters == null){
-            return;
-        }
-        for(int i = 0; i < parameters.length; i++){
-            appendParameterAnnotations(writer, parameters[i], i);
-        }
-    }
-    private void appendParameterAnnotations(SmaliWriter writer, TypeId typeId, int index) throws IOException {
-        if(typeId == null){
-            return;
-        }
-        Iterator<AnnotationSet> iterator = getParameterAnnotations(index);
-        boolean appendOnce = false;
-        while (iterator.hasNext()){
-            if(!appendOnce){
-                int param = isStatic() ? 0 : 1;
-                MethodKey methodKey = getKey();
-                param += methodKey.getRegister(index);
-                writer.newLine();
-                SmaliDirective.PARAM.append(writer);
-                writer.append('p');
-                writer.append(param);
-                writer.appendComment(typeId.getName());
-                writer.indentPlus();
-            }
-            iterator.next().append(writer);
-            appendOnce = true;
-        }
-        if(appendOnce){
-            writer.indentMinus();
-            SmaliDirective.PARAM.appendEnd(writer);
-        }
-    }
-
     @Override
     public void replaceKeys(Key search, Key replace){
         super.replaceKeys(search, replace);
@@ -314,10 +291,10 @@ public class MethodDef extends Def<MethodId>{
         }
         MethodId methodId = getId();
         if(methodId != null){
-            return getSmaliDirective() + " " + AccessFlag.formatForMethod(getAccessFlagsValue())
+            return getSmaliDirective() + " " + Modifier.toString(getAccessFlags())
                     + " " + methodId.toString();
         }
-        return getSmaliDirective() + " " + AccessFlag.formatForMethod(getAccessFlagsValue())
+        return getSmaliDirective() + " " + Modifier.toString(getAccessFlags())
                 + " " + getRelativeIdValue();
     }
     public static class Parameter implements DefIndex, SmaliRegion {
@@ -377,6 +354,17 @@ public class MethodDef extends Def<MethodId>{
         public int getDefinitionIndex() {
             return index;
         }
+        public int getRegister() {
+            MethodDef methodDef = this.methodDef;
+            int reg;
+            if(methodDef.isStatic()){
+                reg = 0;
+            }else {
+                reg = 1;
+            }
+            reg += methodDef.getKey().getRegister(getDefinitionIndex());
+            return reg;
+        }
         public void clearDebugParameter(){
             DebugInfo debugInfo = methodDef.getDebugInfo();
             if(debugInfo != null){
@@ -420,64 +408,28 @@ public class MethodDef extends Def<MethodId>{
         }
         @Override
         public void append(SmaliWriter writer) throws IOException {
-            TypeId typeId = getTypeId();
-            if(typeId == null){
+            DebugParameter debugParameter = getDebugParameter();
+            boolean has_debug = debugParameter != null &&
+                    debugParameter.getNameId() != null;
+            Iterator<AnnotationSet> annotations = getAnnotations();
+            boolean has_annotation = annotations.hasNext();
+            if(!has_debug && !has_annotation){
                 return;
             }
-            Iterator<AnnotationSet> iterator = getAnnotations();
-            boolean appendOnce = false;
-            while (iterator.hasNext()){
-                if(!appendOnce){
-                    int param = this.methodDef.isStatic() ? 0 : 1;
-                    writer.newLine();
-                    getSmaliDirective().append(writer);
-                    writer.append('p');
-                    writer.append(getDefinitionIndex() + param);
-                    writer.appendComment(typeId.getName());
-                    writer.indentPlus();
-                }
-                iterator.next().append(writer);
-                appendOnce = true;
+            getSmaliDirective().append(writer);
+            writer.append('p');
+            writer.append(getRegister());
+            if(has_debug){
+                debugParameter.append(writer);
             }
-            if(appendOnce){
-                writer.indentMinus();
-                getSmaliDirective().appendEnd(writer);
+            writer.appendComment(getTypeId().getName());
+            if(!has_annotation){
+                return;
             }
-        }
-        private String getDebugString() throws IOException {
-            StringWriter writer = new StringWriter();
-            SmaliWriter smaliWriter = new SmaliWriter(writer);
-            TypeId typeId = getTypeId();
-            int param = this.methodDef.isStatic() ? 0 : 1;
-            param += getDefinitionIndex();
-            smaliWriter.newLine();
-            smaliWriter.append("p");
-            smaliWriter.append(param);
-            smaliWriter.append(", ");
-            String typeName = null;
-            if(typeId != null){
-                typeName = typeId.getName();
-            }
-            if(typeName != null){
-                smaliWriter.append(typeName);
-            }else {
-                smaliWriter.append("null");
-            }
-            Iterator<AnnotationSet> iterator = getAnnotations();
-            boolean appendOnce = false;
-            while (iterator.hasNext()){
-                if(!appendOnce){
-                    smaliWriter.newLine();
-                    smaliWriter.indentPlus();
-                    appendOnce = true;
-                }
-                iterator.next().append(smaliWriter);
-            }
-            if(appendOnce){
-                smaliWriter.indentMinus();
-            }
-            smaliWriter.close();
-            return writer.toString();
+            writer.indentPlus();
+            writer.appendAll(annotations);
+            writer.indentMinus();
+            getSmaliDirective().appendEnd(writer);
         }
         @Override
         public int hashCode() {
@@ -501,11 +453,7 @@ public class MethodDef extends Def<MethodId>{
         }
         @Override
         public String toString() {
-            try {
-                return getDebugString();
-            } catch (IOException exception) {
-                return exception.toString();
-            }
+            return SmaliWriter.toStringSafe(this);
         }
     }
 }

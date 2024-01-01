@@ -109,7 +109,7 @@ public class Base1Ule128IdItemReference<T extends IdItem> extends Ule128Item imp
         if(item != null){
             idx = item.getIdx() + 1;
         }
-        this.item = null;
+        this.item = item;
         set(idx);
         updateItemUsage();
     }

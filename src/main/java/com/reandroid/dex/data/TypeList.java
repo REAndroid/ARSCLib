@@ -163,6 +163,36 @@ public class TypeList extends ShortList implements KeyItemCreate,
         }
         return null;
     }
+    public TypeId getTypeIdForRegister(int register){
+        TypeId[] typeIds = getTypeIds();
+        if(typeIds == null){
+            return null;
+        }
+        int count = 0;
+        for (TypeId typeId : typeIds) {
+            if (count == register) {
+                return typeId;
+            }
+            count++;
+            if (typeId.isWide()) {
+                count++;
+            }
+        }
+        return null;
+    }
+    public int getParameterRegistersCount(){
+        TypeId[] typeIds = getTypeIds();
+        int count = 0;
+        if(typeIds != null){
+            for (TypeId typeId : typeIds) {
+                count++;
+                if (typeId.isWide()) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
     @Override
     void onChanged(){
         cacheTypeIds();
@@ -204,19 +234,19 @@ public class TypeList extends ShortList implements KeyItemCreate,
         }
     }
     public void appendInterfaces(SmaliWriter writer) throws IOException {
-        boolean appendOnce = false;
         SmaliDirective smaliDirective = null;
         for(TypeId typeId : this){
             writer.newLine();
-            if(!appendOnce){
-                writer.newLine();
+            if(smaliDirective == null){
                 writer.appendComment("interfaces");
                 writer.newLine();
-                appendOnce = true;
                 smaliDirective = SmaliDirective.IMPLEMENTS;
             }
             smaliDirective.append(writer);
             typeId.append(writer);
+        }
+        if(smaliDirective != null){
+            writer.newLine();
         }
     }
 

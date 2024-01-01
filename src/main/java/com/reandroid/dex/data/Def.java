@@ -17,10 +17,7 @@ package com.reandroid.dex.data;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
-import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.common.IdDefinition;
-import com.reandroid.dex.common.IdUsageIterator;
-import com.reandroid.dex.common.SectionTool;
+import com.reandroid.dex.common.*;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
@@ -29,7 +26,7 @@ import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliRegion;
-import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
@@ -38,6 +35,7 @@ import java.util.Iterator;
 
 public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool implements
         IdDefinition<T>, Comparable<Def<T>>, SmaliRegion, DefIndex, IdUsageIterator {
+
     private final SectionType<T> sectionType;
     private final Ule128Item relativeId;
     private final Ule128Item accessFlags;
@@ -55,12 +53,16 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         addChild(1, accessFlags);
     }
 
-    public HiddenApiFlag[] getHiddenApiFlags(){
+    @Override
+    public Iterator<? extends Modifier> getModifiers() {
+        return CombiningIterator.two(getAccessFlags(), getHiddenApiFlags());
+    }
+    public Iterator<HiddenApiFlag> getHiddenApiFlags(){
         HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
         if(flagValue != null){
             return flagValue.getFlags();
         }
-        return null;
+        return EmptyIterator.of();
     }
     public HiddenApiFlagValue getHiddenApiFlagValue() {
         return hiddenApiFlagValue;
@@ -126,15 +128,6 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
             return classId.getUniqueAnnotationsDirectory();
         }
         return null;
-    }
-    public boolean appendAnnotations(SmaliWriter writer) throws IOException {
-        boolean appendOnce = false;
-        Iterator<AnnotationSet> iterator = getAnnotations();
-        while (iterator.hasNext()){
-            iterator.next().append(writer);
-            appendOnce = true;
-        }
-        return appendOnce;
     }
     public ClassId getClassId() {
         DefArray<Def<T>> array = getParentArray();

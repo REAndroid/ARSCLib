@@ -63,6 +63,13 @@ public class TypeListReference extends DataItemIndirectReference<TypeList>{
         }
         return null;
     }
+    public TypeId getForRegister(int register){
+        TypeList typeList = getItem();
+        if(typeList != null){
+            return typeList.getTypeIdForRegister(register);
+        }
+        return null;
+    }
     public int size(){
         TypeList typeList = getItem();
         if(typeList != null){

@@ -235,16 +235,11 @@ public class AnnotationItem extends DataItem
         getSmaliDirective().append(writer);
         AnnotationVisibility visibility = getVisibility();
         if(visibility != null){
-            writer.append(visibility.getName());
-            writer.append(' ');
+            visibility.append(writer);
         }
         getTypeId().append(writer);
-        Iterator<AnnotationElement> iterator = iterator();
         writer.indentPlus();
-        while (iterator.hasNext()){
-            writer.newLine();
-            iterator.next().append(writer);
-        }
+        writer.appendAll(iterator());
         writer.indentMinus();
         getSmaliDirective().appendEnd(writer);
     }

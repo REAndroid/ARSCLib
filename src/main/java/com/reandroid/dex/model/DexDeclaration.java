@@ -17,12 +17,12 @@ package com.reandroid.dex.model;
 
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.IdDefinition;
+import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.data.AnnotationElement;
 import com.reandroid.dex.data.AnnotationItem;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.utils.StringsUtil;
 
 import java.util.Iterator;
 
@@ -85,7 +85,7 @@ public abstract class DexDeclaration extends Dex {
         return null;
     }
 
-    public AccessFlag[] getAccessFlags(){
+    public Iterator<? extends Modifier> getAccessFlags(){
         return getDefinition().getAccessFlags();
     }
     public void addAccessFlag(AccessFlag accessFlag){
@@ -170,13 +170,6 @@ public abstract class DexDeclaration extends Dex {
     }
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        String flags = AccessFlag.format(getAccessFlags());
-        if(!StringsUtil.isEmpty(flags)){
-            builder.append(flags);
-            builder.append(' ');
-        }
-        builder.append(getKey());
-        return builder.toString();
+        return Modifier.toString(getAccessFlags()) + getKey();
     }
 }

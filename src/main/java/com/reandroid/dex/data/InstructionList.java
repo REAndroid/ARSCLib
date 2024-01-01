@@ -80,7 +80,7 @@ public class InstructionList extends FixedBlockContainer implements
         return getCodeItem().getOrCreateDebugInfo();
     }
     public int getLocals(){
-        return getCodeItem().getLocals();
+        return getCodeItem().getLocalRegistersCount();
     }
     public CodeItem getCodeItem() {
         return codeItem;

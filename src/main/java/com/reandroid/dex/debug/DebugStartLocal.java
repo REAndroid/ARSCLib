@@ -94,8 +94,8 @@ public class DebugStartLocal extends DebugRegisterNumber {
     @Override
     public void appendExtra(SmaliWriter writer) throws IOException {
         writer.append(getElementType().getOpcode());
-        writer.append(" v");
-        writer.append(getRegisterNumber());
+        writer.append(' ');
+        writer.appendRegister(getRegisterNumber());
         writer.append(", ");
         this.mName.append(writer);
         writer.append(':');

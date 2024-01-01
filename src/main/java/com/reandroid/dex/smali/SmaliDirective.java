@@ -137,9 +137,9 @@ public class SmaliDirective implements SmaliFormat {
             reader.skip(END_BYTES.length);
             reader.skipWhitespaces();
         }
-        return defOf(reader);
+        return directiveOf(reader);
     }
-    private static SmaliDirective defOf(SmaliReader reader){
+    private static SmaliDirective directiveOf(SmaliReader reader){
         for(SmaliDirective smaliDirective : VALUES){
             if(smaliDirective.readMatches(reader)){
                 return smaliDirective;

@@ -17,10 +17,7 @@ package com.reandroid.dex.id;
 
 import com.reandroid.dex.base.IndirectInteger;
 import com.reandroid.dex.base.UsageMarker;
-import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.common.AnnotationVisibility;
-import com.reandroid.dex.common.IdDefinition;
-import com.reandroid.dex.common.SectionTool;
+import com.reandroid.dex.common.*;
 import com.reandroid.dex.data.*;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.StringKey;
@@ -114,8 +111,8 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         return accessFlagValue.get();
     }
     @Override
-    public AccessFlag[] getAccessFlags(){
-        return AccessFlag.getAccessFlagsForClass(getAccessFlagsValue());
+    public Iterator<? extends Modifier> getAccessFlags(){
+        return AccessFlag.valuesOfClass(getAccessFlagsValue());
     }
     @Override
     public void setAccessFlagsValue(int value) {

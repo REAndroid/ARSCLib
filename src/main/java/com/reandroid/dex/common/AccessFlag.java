@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.reandroid.dex.common;
 
-import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.collection.ArrayIterator;
 
-import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.function.Predicate;
 
-public class AccessFlag
-{
+public class AccessFlag extends Modifier{
 
     public static final AccessFlag PUBLIC;
     public static final AccessFlag PRIVATE;
@@ -49,6 +48,7 @@ public class AccessFlag
     private static final HashMap<String, AccessFlag> accessFlagsByName;
 
     static {
+
         PUBLIC = new AccessFlag(0x1, "public", true, true, true);
         PRIVATE = new AccessFlag(0x2, "private", true, true, true);
         PROTECTED = new AccessFlag(0x4, "protected", true, true, true);
@@ -93,141 +93,53 @@ public class AccessFlag
 
         accessFlagsByName = new HashMap<>();
         for (AccessFlag accessFlag : VALUES) {
-            accessFlagsByName.put(accessFlag.accessFlagName, accessFlag);
+            accessFlagsByName.put(accessFlag.getName(), accessFlag);
         }
+
     }
 
-    private final int value;
-    private final String accessFlagName;
     private final boolean validForClass;
     private final boolean validForMethod;
     private final boolean validForField;
 
-    private AccessFlag(int value, String accessFlagName, boolean validForClass, boolean validForMethod,
-               boolean validForField) {
-        this.value = value;
-        this.accessFlagName = accessFlagName;
+    private AccessFlag(int value, String name, boolean validForClass, boolean validForMethod,
+                       boolean validForField) {
+        super(value, name);
         this.validForClass = validForClass;
         this.validForMethod = validForMethod;
         this.validForField = validForField;
     }
 
+    @Override
     public boolean isSet(int accessFlags) {
-        return (this.value & accessFlags) != 0;
+        return (getValue() & accessFlags) != 0;
+    }
+    private boolean isSetForField(int value) {
+        return validForField && (getValue() & value) != 0;
+    }
+    private boolean isSetForMethod(int value) {
+        return validForMethod && (getValue() & value) != 0;
+    }
+    private boolean isSetForClass(int value) {
+        return validForClass && (getValue() & value) != 0;
     }
 
-    public int getValue() {
-        return value;
+    public static Iterator<AccessFlag> valuesOfClass(int value) {
+        return getValues(accessFlag -> accessFlag.isSetForClass(value));
     }
-
-    @Override
-    public int hashCode(){
-        return value;
+    public static Iterator<AccessFlag> valuesOfMethod(int value) {
+        return getValues(accessFlag -> accessFlag.isSetForMethod(value));
     }
-    @Override
-    public boolean equals(Object obj){
-        return obj == this;
+    public static Iterator<AccessFlag> valuesOfField(int value) {
+        return getValues(accessFlag -> accessFlag.isSetForField(value));
     }
-    @Override
-    public String toString() {
-        return accessFlagName;
+    public static AccessFlag valueOf(String name) {
+        return accessFlagsByName.get(name);
     }
-
-    public static AccessFlag[] getAccessFlagsForClass(int accessFlagValue) {
-        int size = 0;
-        for (AccessFlag accessFlag: VALUES) {
-            if (accessFlag.validForClass && (accessFlagValue & accessFlag.value) != 0) {
-                size++;
-            }
-        }
-
-        AccessFlag[] accessFlags = new AccessFlag[size];
-        int accessFlagsPosition = 0;
-        for (AccessFlag accessFlag : VALUES) {
-            if (accessFlag.validForClass && (accessFlagValue & accessFlag.value) != 0) {
-                accessFlags[accessFlagsPosition++] = accessFlag;
-            }
-        }
-        return accessFlags;
+    public static Iterator<AccessFlag> getValues(){
+        return getValues(null);
     }
-
-    public static String format(AccessFlag[] accessFlags) {
-        int size = 0;
-        for (AccessFlag accessFlag: accessFlags) {
-            size += accessFlag.toString().length() + 1;
-        }
-
-        StringBuilder builder = new StringBuilder(size);
-        for (int i = 0; i < accessFlags.length; i++) {
-            if(i != 0){
-                builder.append(' ');
-            }
-            builder.append(accessFlags[i].toString());
-        }
-        return builder.toString();
-    }
-    public static void append(SmaliWriter writer, AccessFlag[] accessFlags) throws IOException {
-        if(accessFlags == null){
-            return;
-        }
-        for (int i = 0; i < accessFlags.length; i++) {
-            AccessFlag flag = accessFlags[i];
-            if(flag != null){
-                writer.append(flag.toString());
-                writer.append(' ');
-            }
-        }
-    }
-
-    public static String formatForClass(int accessFlagValue) {
-        return format(getAccessFlagsForClass(accessFlagValue));
-    }
-
-    public static AccessFlag[] getForMethod(int accessFlagValue) {
-        int size = 0;
-        for (AccessFlag accessFlag : VALUES) {
-            if (accessFlag.validForMethod && (accessFlagValue & accessFlag.value) != 0) {
-                size++;
-            }
-        }
-
-        AccessFlag[] accessFlags = new AccessFlag[size];
-        int accessFlagsPosition = 0;
-        for (AccessFlag accessFlag : VALUES) {
-            if (accessFlag.validForMethod && (accessFlagValue & accessFlag.value) != 0) {
-                accessFlags[accessFlagsPosition++] = accessFlag;
-            }
-        }
-        return accessFlags;
-    }
-
-    public static String formatForMethod(int accessFlagValue) {
-        return format(getForMethod(accessFlagValue));
-    }
-
-    public static AccessFlag[] getForField(int accessFlagValue) {
-        int size = 0;
-        for (AccessFlag accessFlag : VALUES) {
-            if (accessFlag.validForField && (accessFlagValue & accessFlag.value) != 0) {
-                size++;
-            }
-        }
-
-        AccessFlag[] accessFlags = new AccessFlag[size];
-        int accessFlagPosition = 0;
-        for (AccessFlag accessFlag : VALUES) {
-            if (accessFlag.validForField && (accessFlagValue & accessFlag.value) != 0) {
-                accessFlags[accessFlagPosition++] = accessFlag;
-            }
-        }
-        return accessFlags;
-    }
-
-    public static String formatForField(int accessFlagValue) {
-        return format(getForField(accessFlagValue));
-    }
-
-    public static AccessFlag getAccessFlag(String accessFlag) {
-        return accessFlagsByName.get(accessFlag);
+    public static Iterator<AccessFlag> getValues(Predicate<AccessFlag> filter){
+        return new ArrayIterator<>(VALUES, filter);
     }
 }

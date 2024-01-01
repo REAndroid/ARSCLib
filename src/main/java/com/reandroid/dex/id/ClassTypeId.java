@@ -16,7 +16,6 @@
 package com.reandroid.dex.id;
 
 import com.reandroid.dex.base.UsageMarker;
-import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.IdItemIndirectReference;
 import com.reandroid.dex.sections.SectionType;
@@ -45,7 +44,7 @@ public class ClassTypeId extends IdItemIndirectReference<TypeId> implements Smal
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
-        AccessFlag.append(writer, getBlockItem().getAccessFlags());
+        writer.appendModifiers(getBlockItem().getAccessFlags());
         getItem().append(writer);
     }
 

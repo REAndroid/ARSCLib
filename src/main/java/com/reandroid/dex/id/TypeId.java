@@ -20,7 +20,7 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.IndirectStringReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
@@ -66,6 +66,13 @@ public class TypeId extends IdItem implements Comparable<TypeId> {
             return stringId.getString();
         }
         return null;
+    }
+    public boolean isWide(){
+        TypeKey key = getKey();
+        if(key != null){
+            return key.isWide();
+        }
+        return false;
     }
     public StringId getNameId(){
         return nameReference.getItem();
@@ -113,6 +120,6 @@ public class TypeId extends IdItem implements Comparable<TypeId> {
         if(typeId1 == null){
             return false;
         }
-        return CompareUtil.compare(typeId1.getName(), typeId2.getName()) == 0;
+        return ObjectsUtil.equals(typeId1.getName(), typeId2.getName());
     }
 }

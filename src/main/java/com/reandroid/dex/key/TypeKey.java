@@ -118,6 +118,13 @@ public class TypeKey implements Key{
     public boolean isPrimitive(){
         return DexUtils.isPrimitive(getTypeName());
     }
+    public boolean isWide(){
+        String name = getTypeName();
+        if(name.length() != 1){
+            return false;
+        }
+        return name.equals(TYPE_D.getTypeName()) || name.equals(TYPE_J.getTypeName());
+    }
 
     public TypeKey changePackageName(String packageName){
         String type = getTypeName();
@@ -320,7 +327,7 @@ public class TypeKey implements Key{
             return this;
         }
     };
-    private static final class PrimitiveTypeKey extends TypeKey {
+    static class PrimitiveTypeKey extends TypeKey {
         private final String sourceName;
         public PrimitiveTypeKey(String type, String sourceName) {
             super(type);
@@ -337,6 +344,10 @@ public class TypeKey implements Key{
         @Override
         public boolean isPrimitive() {
             return true;
+        }
+        @Override
+        public boolean isWide() {
+            return false;
         }
         @Override
         public boolean isTypeObject() {
@@ -358,10 +369,20 @@ public class TypeKey implements Key{
 
     public static final TypeKey TYPE_B = new PrimitiveTypeKey("B", "byte");
     public static final TypeKey TYPE_C = new PrimitiveTypeKey("C", "char");
-    public static final TypeKey TYPE_D = new PrimitiveTypeKey("D", "double");
+    public static final TypeKey TYPE_D = new PrimitiveTypeKey("D", "double"){
+        @Override
+        public boolean isWide() {
+            return true;
+        }
+    };
     public static final TypeKey TYPE_F = new PrimitiveTypeKey("F", "float");
     public static final TypeKey TYPE_I = new PrimitiveTypeKey("I", "int");
-    public static final TypeKey TYPE_J = new PrimitiveTypeKey("J", "long");
+    public static final TypeKey TYPE_J = new PrimitiveTypeKey("J", "long"){
+        @Override
+        public boolean isWide() {
+            return true;
+        }
+    };
     public static final TypeKey TYPE_S = new PrimitiveTypeKey("S", "short");
     public static final TypeKey TYPE_V = new PrimitiveTypeKey("V", "void");
     public static final TypeKey TYPE_Z = new PrimitiveTypeKey("Z", "boolean");

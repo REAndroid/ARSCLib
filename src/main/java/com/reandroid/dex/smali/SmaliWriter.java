@@ -15,6 +15,9 @@
  */
 package com.reandroid.dex.smali;
 
+import com.reandroid.dex.common.Modifier;
+import com.reandroid.dex.common.Register;
+import com.reandroid.dex.ins.RegistersTable;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.utils.HexUtil;
 
@@ -22,6 +25,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Iterator;
 
 public class SmaliWriter implements Appendable, Closeable {
 
@@ -29,16 +33,20 @@ public class SmaliWriter implements Appendable, Closeable {
     private int indent;
     private int lineNumber;
     private int columnNumber;
+    private boolean state_new_line;
     private StringBuilder comment;
+
+    private RegistersTable currentRegistersTable;
 
     private SmaliWriterSetting writerSetting;
 
     public SmaliWriter(Writer writer){
         this();
         this.writer = writer;
-        this.lineNumber = 1;
     }
     public SmaliWriter(){
+        this.lineNumber = 1;
+        this.state_new_line = true;
     }
 
 
@@ -69,6 +77,31 @@ public class SmaliWriter implements Appendable, Closeable {
     public SmaliWriter append(char ch) throws IOException {
         write(ch);
         return this;
+    }
+    public void appendRegister(int registerValue) throws IOException {
+        RegistersTable registersTable = getCurrentRegistersTable();
+        if(registersTable == null){
+            throw new IOException("Current registers table not set");
+        }
+        Register register = registersTable.getRegisterFor(registerValue);
+        register.append(this);
+    }
+
+    public void appendAll(Iterator<? extends SmaliFormat> iterator) throws IOException {
+        while (iterator.hasNext()) {
+            if(!state_new_line) {
+                newLine();
+            }
+            if(indent == 0){
+                newLine();
+            }
+            iterator.next().append(this);
+        }
+    }
+    public void appendModifiers(Iterator<? extends Modifier> iterator) throws IOException {
+        while (iterator.hasNext()) {
+            iterator.next().append(this);
+        }
     }
     public boolean appendOptional(SmaliFormat smaliFormat) throws IOException {
         if(smaliFormat != null){
@@ -136,6 +169,7 @@ public class SmaliWriter implements Appendable, Closeable {
         columnNumber = 0;
         writeIndent();
         lineNumber ++;
+        state_new_line = true;
     }
     private void writeIndent() throws IOException {
         Writer writer = this.writer;
@@ -198,6 +232,7 @@ public class SmaliWriter implements Appendable, Closeable {
     private void write(char ch) throws IOException {
         this.writer.append(ch);
         this.columnNumber ++;
+        this.state_new_line = false;
     }
 
     public SmaliWriterSetting getWriterSetting() {
@@ -221,6 +256,14 @@ public class SmaliWriter implements Appendable, Closeable {
         this.columnNumber = 0;
         this.comment = null;
     }
+
+    public RegistersTable getCurrentRegistersTable() {
+        return currentRegistersTable;
+    }
+    public void setCurrentRegistersTable(RegistersTable currentRegistersTable) {
+        this.currentRegistersTable = currentRegistersTable;
+    }
+
     @Override
     public String toString(){
         return "line = " + getLineNumber() + ", column = " + getColumnNumber();

@@ -15,18 +15,16 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.dex.smali.SmaliFormat;
-import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.common.Register;
 
-import java.io.IOException;
-
-public class Reg implements SmaliFormat {
+public class RegisterReference extends Register {
 
     private final RegistersTable registersTable;
     private final RegistersSet registersSet;
     private final int index;
 
-    public Reg(RegistersTable registersTable, RegistersSet registersSet, int index){
+    public RegisterReference(RegistersTable registersTable, RegistersSet registersSet, int index){
+        super(0, false);
         this.registersTable = registersTable;
         this.registersSet = registersSet;
         this.index = index;
@@ -36,25 +34,27 @@ public class Reg implements SmaliFormat {
         return new Editor(this);
     }
 
+    @Override
     public int getNumber() {
-        int register = getRegister();
+        int register = getRegisterValue();
         int local = getLocalRegistersCount();
         if(register >= local){
             register = register - local;
         }
         return register;
     }
-    public int getRegister(){
+    @Override
+    public boolean isParameter() {
+        return getRegisterValue() >= getLocalRegistersCount();
+    }
+    public int getRegisterValue(){
         return getRegistersSet().getRegister(getIndex());
     }
-    public void setRegister(int register){
+    public void setRegisterValue(int register){
         getRegistersSet().setRegister(getIndex(), register);
     }
     public int getIndex() {
         return index;
-    }
-    public boolean isParameter() {
-        return getRegister() >= getLocalRegistersCount();
     }
 
     public int getLocalRegistersCount(){
@@ -68,15 +68,6 @@ public class Reg implements SmaliFormat {
         return registersTable;
     }
 
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
-        if(isParameter()){
-            writer.append('p');
-        }else {
-            writer.append('v');
-        }
-        writer.append(getNumber());
-    }
 
     @Override
     public boolean equals(Object obj) {
@@ -86,53 +77,36 @@ public class Reg implements SmaliFormat {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        Reg reg = (Reg) obj;
-        return isParameter() == reg.isParameter() &&
-                getNumber() == reg.getNumber();
-    }
-    @Override
-    public int hashCode() {
-        int hash = 31;
-        if(isParameter()){
-            hash = hash + 1;
-        }
-        hash = hash * 31 + getNumber();
-        return hash;
+        RegisterReference registerReference = (RegisterReference) obj;
+        return isParameter() == registerReference.isParameter() &&
+                getNumber() == registerReference.getNumber();
     }
 
-    @Override
-    public String toString() {
-        if(isParameter()){
-            return "p" + getNumber();
-        }
-        return "v" + getNumber();
-    }
+    public static class Editor extends RegisterReference {
 
-    public static class Editor extends Reg{
-
-        private final Reg mBaseReg;
+        private final RegisterReference mBaseRegisterReference;
         private final int number;
         private final boolean parameter;
 
-        public Editor(Reg reg) {
-            super(null, null, reg.getIndex());
-            this.mBaseReg = reg;
-            this.number = reg.getNumber();
-            this.parameter = reg.isParameter();
+        public Editor(RegisterReference registerReference) {
+            super(null, null, registerReference.getIndex());
+            this.mBaseRegisterReference = registerReference;
+            this.number = registerReference.getNumber();
+            this.parameter = registerReference.isParameter();
         }
 
         public void apply(){
-            Reg baseReg = getBaseReg();
-            baseReg.setRegister(getRegister());
+            RegisterReference baseRegisterReference = getBaseReg();
+            baseRegisterReference.setRegisterValue(getRegisterValue());
         }
         private boolean isChanged(){
-            Reg baseReg = getBaseReg();
-            return this.isParameter() == baseReg.isParameter() &&
-                    this.getNumber() == baseReg.getNumber() &&
-                    this.getRegister() == baseReg.getRegister();
+            RegisterReference baseRegisterReference = getBaseReg();
+            return this.isParameter() == baseRegisterReference.isParameter() &&
+                    this.getNumber() == baseRegisterReference.getNumber() &&
+                    this.getRegisterValue() == baseRegisterReference.getRegisterValue();
         }
         @Override
-        public int getRegister() {
+        public int getRegisterValue() {
             int register = getNumber();
             if(isParameter()){
                 register += getLocalRegistersCount();
@@ -160,8 +134,8 @@ public class Reg implements SmaliFormat {
         public RegistersSet getRegistersSet() {
             return getBaseReg().getRegistersSet();
         }
-        public Reg getBaseReg() {
-            return mBaseReg;
+        public RegisterReference getBaseReg() {
+            return mBaseRegisterReference;
         }
     }
 }

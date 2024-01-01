@@ -57,9 +57,6 @@ public class DebugParameter extends Base1Ule128IdItemReference<StringId> impleme
         if(stringId == null){
             return;
         }
-        writer.newLine();
-        writer.append(".param p");
-        writer.append(getIndex());
         writer.append(", ");
         stringId.append(writer);
     }
@@ -76,6 +73,6 @@ public class DebugParameter extends Base1Ule128IdItemReference<StringId> impleme
         if(getItem() == null){
             return super.toString();
         }
-        return  ".param p" + getIndex() + ", \"" + getNameId() + "\"";
+        return  ".param p **" + ", \"" + getNameId() + "\"";
     }
 }

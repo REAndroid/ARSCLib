@@ -23,7 +23,7 @@ import com.reandroid.utils.collection.SizedSupplier;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class RegistersIterator implements SizedSupplier<Reg>, Iterable<Reg>, SmaliFormat {
+public class RegistersIterator implements SizedSupplier<RegisterReference>, Iterable<RegisterReference>, SmaliFormat {
 
     private final RegistersTable registersTable;
     private final RegistersSet registersSet;
@@ -34,15 +34,15 @@ public class RegistersIterator implements SizedSupplier<Reg>, Iterable<Reg>, Sma
     }
 
     @Override
-    public Reg get(int index) {
-        return new Reg(getRegistersTable(), getRegistersSet(), index);
+    public RegisterReference get(int index) {
+        return new RegisterReference(getRegistersTable(), getRegistersSet(), index);
     }
     @Override
     public int size() {
         return getRegistersSet().getRegistersCount();
     }
     @Override
-    public Iterator<Reg> iterator() {
+    public Iterator<RegisterReference> iterator() {
         return new IndexIterator<>(this);
     }
     public RegistersSet getRegistersSet() {

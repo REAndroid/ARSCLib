@@ -16,6 +16,7 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.dex.common.AccessFlag;
+import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.FieldKey;
@@ -57,8 +58,8 @@ public class FieldDef extends Def<FieldId> {
     }
 
     @Override
-    public AccessFlag[] getAccessFlags(){
-        return AccessFlag.getForField(getAccessFlagsValue());
+    public Iterator<? extends Modifier> getAccessFlags(){
+        return AccessFlag.valuesOfField(getAccessFlagsValue());
     }
 
     void holdStaticInitialValue(DexValueBlock<?> staticInitialValue) {
@@ -69,23 +70,24 @@ public class FieldDef extends Def<FieldId> {
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.newLine();
+
         getSmaliDirective().append(writer);
-
-        AccessFlag.append(writer, getAccessFlags());
-        HiddenApiFlag.append(writer, getHiddenApiFlags());
-
+        writer.appendModifiers(getModifiers());
         getId().append(writer, false);
+
         DexValueBlock<?> value = getStaticInitialValue();
         if(value != null){
             writer.append(" = ");
             value.append(writer);
         }
-        writer.indentPlus();
-        boolean hasAnnotation = appendAnnotations(writer);
-        writer.indentMinus();
-        if(hasAnnotation){
-            getSmaliDirective().appendEnd(writer);
+        Iterator<AnnotationSet> annotations = getAnnotations();
+        if(!annotations.hasNext()){
+            return;
         }
+        writer.indentPlus();
+        writer.appendAll(annotations);
+        writer.indentMinus();
+        getSmaliDirective().appendEnd(writer);
     }
     @Override
     public Iterator<IdItem> usedIds(){
@@ -104,7 +106,7 @@ public class FieldDef extends Def<FieldId> {
         if(fieldId != null){
             return SmaliWriter.toStringSafe(this);
         }
-        return getSmaliDirective() + " " + AccessFlag.formatForField(getAccessFlagsValue())
+        return getSmaliDirective() + " " + Modifier.toString(getAccessFlags())
                 + " " + getRelativeIdValue();
     }
 }

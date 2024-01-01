@@ -17,12 +17,15 @@ package com.reandroid.dex.data;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.dex.common.HiddenApiFlag;
+import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
 
 public class HiddenApiFlagValue extends Ule128Item
         implements SmaliFormat, Comparable<HiddenApiFlagValue> {
@@ -42,13 +45,13 @@ public class HiddenApiFlagValue extends Ule128Item
         def.setHiddenApiFlagValue(this);
     }
 
-    public HiddenApiFlag[] getFlags(){
-        return HiddenApiFlag.getAllFlags(get());
+    public Iterator<HiddenApiFlag> getFlags(){
+        return HiddenApiFlag.valuesOf(get());
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        HiddenApiFlag.append(writer, getFlags());
+        writer.appendModifiers(getFlags());
     }
 
     @Override
@@ -81,7 +84,7 @@ public class HiddenApiFlagValue extends Ule128Item
 
     @Override
     public String toString() {
-        return HiddenApiFlag.toString(getFlags());
+        return Modifier.toString(getFlags());
     }
 
     static class Copy extends HiddenApiFlagValue {
