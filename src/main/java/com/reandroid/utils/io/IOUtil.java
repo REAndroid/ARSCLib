@@ -27,6 +27,9 @@ public class IOUtil {
             outputStream.write(buffer, 0, read);
         }
     }
+    public static byte[] readFully(File file) throws IOException{
+        return readFully(FileUtil.inputStream(file));
+    }
     public static byte[] readFully(InputStream inputStream) throws IOException{
         byte[] buffer = new byte[1024 * 1000];
         int length;

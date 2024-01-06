@@ -23,6 +23,14 @@ public class StringsUtil {
 
     public static final String EMPTY = ObjectsUtil.of("");
 
+    public static byte[] getASCII(String text){
+        int length = text.length();
+        byte[] results = new byte[length];
+        for(int i = 0; i < length; i++){
+            results[i] = (byte) text.charAt(i);
+        }
+        return results;
+    }
     public static boolean isDigits(String text){
         if(isEmpty(text)){
             return false;
