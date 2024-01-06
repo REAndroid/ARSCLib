@@ -85,7 +85,7 @@ public class FieldDef extends Def<FieldId> {
             return;
         }
         writer.indentPlus();
-        writer.appendAll(annotations);
+        writer.appendAllWithDoubleNewLine(annotations);
         writer.indentMinus();
         getSmaliDirective().appendEnd(writer);
     }

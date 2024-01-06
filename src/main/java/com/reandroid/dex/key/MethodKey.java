@@ -17,7 +17,9 @@ package com.reandroid.dex.key;
 
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.id.MethodId;
-import com.reandroid.dex.id.ProtoId;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayIterator;
@@ -25,6 +27,7 @@ import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 public class MethodKey implements Key{
@@ -164,6 +167,14 @@ public class MethodKey implements Key{
             }
         }
         return result;
+    }
+
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        getDeclaring().append(writer);
+        writer.append("->");
+        writer.append(getName());
+        getProtoKey().append(writer);
     }
 
     @Override
@@ -324,6 +335,29 @@ public class MethodKey implements Key{
             return null;
         }
         return new MethodKey(defining, name, methodId.getParameterNames(), methodId.getReturnTypeName());
+    }
+
+    public static MethodKey read(SmaliReader reader) throws IOException {
+        TypeKey declaring = TypeKey.read(reader);
+        if(reader.readASCII() != '-'){
+            reader.skip(-1);
+            throw new SmaliParseException("Invalid method key, missing '-'", reader);
+        }
+        if(reader.readASCII() != '>'){
+            reader.skip(-1);
+            throw new SmaliParseException("Invalid method key, missing '>'", reader);
+        }
+        int i = reader.indexOfBeforeLineEnd('(');
+        if(i < 0){
+            throw new SmaliParseException("Invalid method key, missing '('", reader);
+        }
+        String name = reader.readString(i - reader.position());
+        ProtoKey protoKey = ProtoKey.parse(reader);
+        return new MethodKey(
+                declaring.getTypeName(),
+                name,
+                protoKey.getParameterNames(),
+                protoKey.getReturnTypeName());
     }
 
     public static final MethodKey STATIC_CONSTRUCTOR = new MethodKey(

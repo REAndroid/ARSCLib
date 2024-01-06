@@ -16,11 +16,15 @@
 package com.reandroid.dex.key;
 
 import com.reandroid.dex.id.FieldId;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 
@@ -103,6 +107,15 @@ public class FieldKey implements Key {
     }
     public String getTypeName() {
         return type;
+    }
+
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.appendOptional(getDeclaring());
+        writer.append("->");
+        writer.append(getName());
+        writer.append(':');
+        writer.appendOptional(getType());
     }
 
     @Override
@@ -218,6 +231,26 @@ public class FieldKey implements Key {
             return null;
         }
         return new FieldKey(defining.getTypeName(), name, fieldType.getTypeName());
+    }
+
+    public static FieldKey read(SmaliReader reader) throws IOException {
+        TypeKey declaring = TypeKey.read(reader);
+        if(reader.readASCII() != '-'){
+            reader.skip(-1);
+            throw new SmaliParseException("Invalid field key, missing '-'", reader);
+        }
+        if(reader.readASCII() != '>'){
+            reader.skip(-1);
+            throw new SmaliParseException("Invalid field key, missing '>'", reader);
+        }
+        int i = reader.indexOfBeforeLineEnd(':');
+        if(i < 0){
+            throw new SmaliParseException("Invalid field key, missing ':'", reader);
+        }
+        String name = reader.readString(i - reader.position());
+        reader.skip(1); // :
+        TypeKey type = TypeKey.read(reader);
+        return new FieldKey(declaring.getTypeName(), name, type.getTypeName());
     }
 
 }

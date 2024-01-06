@@ -19,7 +19,9 @@ import com.reandroid.arsc.base.BlockCreator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayIterator;
 import com.reandroid.utils.collection.CombiningIterator;
@@ -27,7 +29,7 @@ import com.reandroid.utils.collection.CombiningIterator;
 import java.io.IOException;
 import java.util.*;
 
-public class Opcode<T extends Ins> implements BlockCreator<T> {
+public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
 
     public static final Opcode<?>[] VALUES;
     public static final Opcode<?>[] PAYLOADS;
@@ -2252,6 +2254,11 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
         return creator.newInstance();
     }
     @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.append(getName());
+        writer.append(' ');
+    }
+    @Override
     public String toString() {
         return getName();
     }
@@ -2288,14 +2295,19 @@ public class Opcode<T extends Ins> implements BlockCreator<T> {
         return valueOf(value);
     }
 
-    public static Opcode<?> parseSmali(SmaliReader parser) throws IOException {
-        parser.skipWhitespaces();
-        if(!isPrefix(parser.get())){
+    public static Opcode<?> parseSmali(SmaliReader reader, boolean skip) {
+        reader.skipWhitespaces();
+        if(!isPrefix(reader.get())){
             return null;
         }
-        int i = parser.indexOf(' ');
-        i = i - parser.position();
-        String name = parser.readString(i);
+        int i = reader.indexOfWhiteSpaceOrComment();
+        i = i - reader.position();
+        String name;
+        if(skip){
+            name = reader.readString(i);
+        }else {
+            name = reader.getString(i);
+        }
         return valueOf(name);
     }
     public static Opcode<?> parse(String line){

@@ -15,10 +15,13 @@
  */
 package com.reandroid.dex.common;
 
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArrayIterator;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Predicate;
 
 public class AccessFlag extends Modifier{
@@ -141,5 +144,31 @@ public class AccessFlag extends Modifier{
     }
     public static Iterator<AccessFlag> getValues(Predicate<AccessFlag> filter){
         return new ArrayIterator<>(VALUES, filter);
+    }
+    public static AccessFlag[] parse(SmaliReader reader){
+        List<AccessFlag> accessFlags = new ArrayCollection<>();
+        AccessFlag flag;
+        while ((flag = parseNext(reader)) != null){
+            accessFlags.add(flag);
+        }
+        int size = accessFlags.size();
+        if(size == 0){
+            return null;
+        }
+        reader.skipWhitespaces();
+        return accessFlags.toArray(new AccessFlag[size]);
+    }
+    private static AccessFlag parseNext(SmaliReader reader){
+        reader.skipWhitespaces();
+        int i = reader.indexOf(' ');
+        if(i < 0 || i > reader.indexOf('\n')){
+            return null;
+        }
+        int position = reader.position();
+        AccessFlag accessFlag = valueOf(reader.readString(i - reader.position()));
+        if(accessFlag == null){
+            reader.position(position);
+        }
+        return accessFlag;
     }
 }

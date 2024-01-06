@@ -35,6 +35,6 @@ public class ByteValue extends PrimitiveValue {
     }
     @Override
     public String getHex() {
-        return HexUtil.toHex(getNumberValue(), 1) + "B";
+        return HexUtil.toHex(getNumberValue(), 1) + "t";
     }
 }

@@ -239,7 +239,7 @@ public class AnnotationItem extends DataItem
         }
         getTypeId().append(writer);
         writer.indentPlus();
-        writer.appendAll(iterator());
+        writer.appendAllWithDoubleNewLine(iterator());
         writer.indentMinus();
         getSmaliDirective().appendEnd(writer);
     }

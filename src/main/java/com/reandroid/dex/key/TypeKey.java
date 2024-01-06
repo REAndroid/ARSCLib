@@ -16,11 +16,15 @@
 package com.reandroid.dex.key;
 
 import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 public class TypeKey implements Key{
@@ -166,6 +170,11 @@ public class TypeKey implements Key{
     }
 
     @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.append(getTypeName());
+    }
+
+    @Override
     public int compareTo(Object obj) {
         if(obj == null){
             return -1;
@@ -260,6 +269,32 @@ public class TypeKey implements Key{
         }
         return primitiveType(typeName.charAt(0));
     }
+    public static TypeKey read(SmaliReader reader) throws IOException {
+        reader.skipSpaces();
+        int position = reader.position();
+        StringBuilder builder = new StringBuilder();
+        while (reader.get() == '['){
+            builder.append(reader.readASCII());
+        }
+        byte b = reader.get();
+        if(b != 'L'){
+            builder.append(reader.readASCII());
+        }else {
+            int i = reader.indexOfBeforeLineEnd(';');
+            if(i < 0){
+                reader.position(position);
+                throw new SmaliParseException("Invalid type, missing ';'", reader);
+            }
+            i = i + 1;
+            builder.append(reader.readString(i - reader.position()));
+        }
+        TypeKey typeKey = TypeKey.create(builder.toString());
+        if(typeKey == null){
+            reader.position(position);
+            throw new SmaliParseException("Invalid type", reader);
+        }
+        return typeKey;
+    }
 
     public static TypeKey primitiveType(char ch){
         switch (ch){
@@ -325,6 +360,10 @@ public class TypeKey implements Key{
         @Override
         public Key replaceKey(Key search, Key replace) {
             return this;
+        }
+
+        @Override
+        public void append(SmaliWriter writer) {
         }
     };
     static class PrimitiveTypeKey extends TypeKey {

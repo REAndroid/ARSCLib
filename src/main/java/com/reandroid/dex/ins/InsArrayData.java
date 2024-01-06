@@ -95,7 +95,7 @@ public class InsArrayData extends PayloadData implements VisitableInteger, Smali
     void appendCode(SmaliWriter writer) throws IOException {
         writer.newLine();
         getSmaliDirective().append(writer);
-        writer.append(getWidth());
+        writer.appendInteger(getWidth());
         writer.indentPlus();
         appendData(writer);
         writer.indentMinus();

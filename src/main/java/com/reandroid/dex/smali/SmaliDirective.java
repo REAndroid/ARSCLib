@@ -15,8 +15,9 @@
  */
 package com.reandroid.dex.smali;
 
+import com.reandroid.utils.StringsUtil;
+
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 public class SmaliDirective implements SmaliFormat {
 
@@ -29,19 +30,31 @@ public class SmaliDirective implements SmaliFormat {
     public static final SmaliDirective SUB_ANNOTATION;
     public static final SmaliDirective FIELD;
     public static final SmaliDirective METHOD;
+    public static final SmaliDirective ENUM;
 
+    public static final SmaliDirective CATCH_ALL;
     public static final SmaliDirective CATCH;
     public static final SmaliDirective LOCALS;
 
     public static final SmaliDirective ARRAY_DATA;
     public static final SmaliDirective PACKED_SWITCH;
+    public static final SmaliDirective SPARSE_SWITCH;
     public static final SmaliDirective PARAM;
+    public static final SmaliDirective END_LOCAL;
+    public static final SmaliDirective LOCAL;
+
+    public static final SmaliDirective LINE;
+    public static final SmaliDirective RESTART_LOCAL;
+    public static final SmaliDirective PROLOGUE_END;
+    public static final SmaliDirective EPILOGUE_BEGIN;
+    public static final SmaliDirective SET_SOURCE_FILE;
+
 
     private static final SmaliDirective[] VALUES;
 
     static {
 
-        END_BYTES = new byte[]{'e', 'n', 'd'};
+        END_BYTES = new byte[]{'.', 'e', 'n', 'd'};
 
         CLASS = new SmaliDirective("class");
         SUPER = new SmaliDirective("super");
@@ -51,13 +64,24 @@ public class SmaliDirective implements SmaliFormat {
         SUB_ANNOTATION = new SmaliDirective("subannotation");
         FIELD = new SmaliDirective("field");
         METHOD = new SmaliDirective("method");
+        ENUM = new SmaliDirective("enum");
 
         LOCALS = new SmaliDirective("locals");
-        CATCH = new SmaliDirective("catch");
-        ARRAY_DATA = new SmaliDirective("array-data");
-        PACKED_SWITCH = new SmaliDirective("packed-switch");
+        CATCH = new SmaliDirective("catch", true);
+        CATCH_ALL = new SmaliDirective("catchall", true);
+        ARRAY_DATA = new SmaliDirective("array-data", true);
+        PACKED_SWITCH = new SmaliDirective("packed-switch", true);
+        SPARSE_SWITCH = new SmaliDirective("sparse-switch", true);
 
-        PARAM = new SmaliDirective("param");
+        LINE = new SmaliDirective("line", true);
+        RESTART_LOCAL = new SmaliDirective("restart local", true);
+
+        PARAM = new SmaliDirective("param", true);
+        END_LOCAL = new SmaliDirective("end local", true);
+        LOCAL = new SmaliDirective("local", true);
+        PROLOGUE_END = new SmaliDirective("prologue end", true);
+        EPILOGUE_BEGIN = new SmaliDirective("prologue begin", true);
+        SET_SOURCE_FILE = new SmaliDirective("set source file", true);
 
 
         VALUES = new SmaliDirective[]{
@@ -69,34 +93,54 @@ public class SmaliDirective implements SmaliFormat {
                 SUB_ANNOTATION,
                 FIELD,
                 METHOD,
+                ENUM,
                 LOCALS,
+                CATCH_ALL,
                 CATCH,
                 ARRAY_DATA,
                 PACKED_SWITCH,
-                PARAM
+                SPARSE_SWITCH,
+                LINE,
+                RESTART_LOCAL,
+                PROLOGUE_END,
+                EPILOGUE_BEGIN,
+                SET_SOURCE_FILE,
+                PARAM,
+                END_LOCAL,
+                LOCAL
         };
     }
 
     private final String name;
     private final byte[] nameBytes;
+    private final boolean methodCode;
 
-    SmaliDirective(String name, byte[] nameBytes){
+    SmaliDirective(String name, byte[] nameBytes, boolean methodCode){
         this.name = name;
         this.nameBytes = nameBytes;
+        this.methodCode = methodCode;
+    }
+    SmaliDirective(String name, boolean methodCode){
+        this(name, StringsUtil.getASCII(name), methodCode);
     }
     SmaliDirective(String name){
-        this(name, name.getBytes(StandardCharsets.UTF_8));
+        this(name, StringsUtil.getASCII(name), false);
     }
 
     public String getName() {
         return name;
     }
+    public boolean isMethodCode() {
+        return methodCode;
+    }
+
     public boolean is(SmaliDirective smaliDirective) {
         return smaliDirective == this;
     }
     boolean readMatches(SmaliReader reader){
-        if(reader.startsWith(nameBytes)){
-            reader.skip(nameBytes.length);
+        int length = reader.startsWithSqueezeSpaces(nameBytes);
+        if(length > 0){
+            reader.skip(length);
             return true;
         }
         return false;
@@ -114,6 +158,13 @@ public class SmaliDirective implements SmaliFormat {
         writer.append(getName());
     }
 
+    public boolean isEnd(SmaliReader reader){
+        if(!reader.startsWith(END_BYTES)){
+            return false;
+        }
+        return parse(reader, false) == this;
+    }
+
     @Override
     public boolean equals(Object obj) {
         return obj == this;
@@ -127,17 +178,44 @@ public class SmaliDirective implements SmaliFormat {
     public String toString() {
         return "." + getName();
     }
+    public String toString(boolean end) {
+        if(end){
+            return ".end " + getName();
+        }
+        return "." + getName();
+    }
 
     public static SmaliDirective parse(SmaliReader reader){
-        if(reader.get() != '.'){
+        return parse(reader, true);
+    }
+    public static SmaliDirective parse(SmaliReader reader, boolean skip){
+        if(reader == null){
             return null;
         }
-        reader.skip(1);
-        if(reader.startsWith(END_BYTES)){
-            reader.skip(END_BYTES.length);
-            reader.skipWhitespaces();
+        int position = reader.position();
+        reader.skipWhitespaces();
+        if(reader.get() != '.'){
+            reader.position(position);
+            return null;
         }
-        return directiveOf(reader);
+        if(reader.startsWith(END_BYTES)){
+            reader.skip(1);
+            if(END_LOCAL.readMatches(reader)){
+                if(!skip){
+                    reader.position(position);
+                }
+                return END_LOCAL;
+            }
+            reader.skip(END_BYTES.length - 1);
+            reader.skipWhitespaces();
+        }else {
+            reader.skip(1);
+        }
+        SmaliDirective directive = directiveOf(reader);
+        if(!skip){
+            reader.position(position);
+        }
+        return directive;
     }
     private static SmaliDirective directiveOf(SmaliReader reader){
         for(SmaliDirective smaliDirective : VALUES){

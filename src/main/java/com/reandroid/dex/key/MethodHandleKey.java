@@ -16,9 +16,11 @@
 package com.reandroid.dex.key;
 
 
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -61,6 +63,13 @@ public class MethodHandleKey implements Key{
             return new MethodHandleKey(id, member);
         }
         return this;
+    }
+
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        getId().append(writer);
+        writer.append(", ");
+        getMember().append(writer);
     }
 
     @Override

@@ -171,7 +171,7 @@ public class DebugLineNumber extends DebugElement {
             return;
         }
         writer.append(".line ");
-        writer.append(lineNum);
+        writer.appendInteger(lineNum);
     }
     @Override
     public DebugElementType<DebugLineNumber> getElementType() {

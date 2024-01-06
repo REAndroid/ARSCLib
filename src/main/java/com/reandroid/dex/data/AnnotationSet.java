@@ -165,7 +165,7 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.appendAll(iterator());
+        writer.appendAllWithDoubleNewLine(iterator());
     }
     @Override
     public String toString() {

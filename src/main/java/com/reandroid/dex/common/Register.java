@@ -46,7 +46,7 @@ public class Register implements SmaliFormat {
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append(getSymbol());
-        writer.append(getNumber());
+        writer.appendInteger(getNumber());
     }
 
     @Override

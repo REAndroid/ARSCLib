@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.common;
 
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.utils.StringsUtil;
 
 public class AnnotationVisibility extends Modifier{
@@ -65,5 +66,15 @@ public class AnnotationVisibility extends Modifier{
             return SYSTEM;
         }
         return null;
+    }
+    public static AnnotationVisibility parse(SmaliReader reader){
+        reader.skipSpaces();
+        int position = reader.position();
+        int length = reader.indexOfWhiteSpace() - position;
+        AnnotationVisibility visibility = valueOf(reader.readString(length));
+        if(visibility == null){
+            reader.position(position);
+        }
+        return visibility;
     }
 }

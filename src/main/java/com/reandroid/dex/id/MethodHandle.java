@@ -96,7 +96,7 @@ public class MethodHandle extends IdItem implements Comparable<MethodHandle> {
         MethodId id = getId();
         if(id == null){
             writer.append("error id = ");
-            writer.append(this.id.get());
+            writer.appendInteger(this.id.get());
         }else {
             id.append(writer);
         }
@@ -104,7 +104,7 @@ public class MethodHandle extends IdItem implements Comparable<MethodHandle> {
         MethodId member = getMember();
         if(member == null){
             writer.append("error member = ");
-            writer.append(this.member.get());
+            writer.appendInteger(this.member.get());
         }else {
             member.append(writer);
         }

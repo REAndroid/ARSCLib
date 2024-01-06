@@ -16,11 +16,16 @@
 package com.reandroid.dex.key;
 
 import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
@@ -69,6 +74,9 @@ public class StringKey implements Key{
         }
         return this;
     }
+    public void append(SmaliWriter writer) throws IOException{
+        writer.append(DexUtils.quoteString(getString()));
+    }
     @Override
     public int compareTo(Object obj) {
         if(obj == null){
@@ -106,7 +114,59 @@ public class StringKey implements Key{
         }
         return new StringKey(text);
     }
-
+    public static StringKey read(SmaliReader reader) throws IOException{
+        reader.skipSpaces();
+        if(reader.readASCII() != '"'){
+            throw new SmaliParseException("Invalid string key, missing begin quote '\"'", reader);
+        }
+        int i = reader.indexOf('\n');
+        if(i < 0){
+            throw new SmaliParseException("Invalid string key, missing end quote '\"'", reader);
+        }
+        i = i - reader.position();
+        StringBuilder builder = new StringBuilder(i);
+        boolean skipped = false;
+        while (true){
+            if(reader.get() == '\n'){
+                reader.skip(-1);
+                throw new SmaliParseException("Invalid string key, missing end quote '\"'", reader);
+            }
+            char ch = reader.readASCII();
+            if(skipped){
+                builder.append(decodeSkipped(reader, ch));
+                skipped = false;
+                continue;
+            }
+            if(ch == '\\'){
+                skipped = true;
+                continue;
+            }
+            if(ch == '"'){
+                break;
+            }
+            builder.append(ch);
+        }
+        return new StringKey(builder.toString());
+    }
+    private static char decodeSkipped(SmaliReader reader, char ch){
+        switch (ch){
+            case 'n':
+                return '\n';
+            case 'r':
+                return  '\r';
+            case 't':
+                return '\t';
+            case 'u':
+                return decodeHex(reader);
+            default:
+                return ch;
+        }
+    }
+    private static char decodeHex(SmaliReader reader){
+        String hex = reader.readString(4);
+        int i = HexUtil.parseHex(hex);
+        return (char) i;
+    }
     public static final StringKey EMPTY = new StringKey(StringsUtil.EMPTY);
 
     public static final StringKey ANY = new StringKey(StringsUtil.EMPTY){

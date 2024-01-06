@@ -244,8 +244,8 @@ public class MethodDef extends Def<MethodId>{
         getId().append(writer, false);
         writer.indentPlus();
         if(!writer.appendOptional(getCodeItem())){
-            writer.appendAll(getParameters());
-            writer.appendAll(getAnnotations());
+            writer.appendAllWithDoubleNewLine(getParameters());
+            writer.appendAllWithDoubleNewLine(getAnnotations());
         }
         writer.indentMinus();
         getSmaliDirective().appendEnd(writer);
@@ -418,7 +418,7 @@ public class MethodDef extends Def<MethodId>{
             }
             getSmaliDirective().append(writer);
             writer.append('p');
-            writer.append(getRegister());
+            writer.appendInteger(getRegister());
             if(has_debug){
                 debugParameter.append(writer);
             }
@@ -427,7 +427,7 @@ public class MethodDef extends Def<MethodId>{
                 return;
             }
             writer.indentPlus();
-            writer.appendAll(annotations);
+            writer.appendAllWithDoubleNewLine(annotations);
             writer.indentMinus();
             getSmaliDirective().appendEnd(writer);
         }

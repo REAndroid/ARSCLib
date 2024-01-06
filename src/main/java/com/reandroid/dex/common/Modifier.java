@@ -72,6 +72,17 @@ public abstract class Modifier implements SmaliFormat {
             }
         }
     }
+    public static boolean contains(Modifier[] modifiers, Modifier modifier) {
+        if(modifiers == null || modifier == null){
+            return false;
+        }
+        for (Modifier m : modifiers) {
+            if (modifier == m) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static String toString(Iterator<? extends Modifier> iterator) {
         StringBuilder builder = new StringBuilder();

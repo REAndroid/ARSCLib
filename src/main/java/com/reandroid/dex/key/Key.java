@@ -17,11 +17,14 @@ package com.reandroid.dex.key;
 
 
 import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
 
+import java.io.IOException;
 import java.util.Iterator;
 
-public interface Key extends Comparable<Object> {
+public interface Key extends Comparable<Object>, SmaliFormat {
 
     default TypeKey getDeclaring(){
         return TypeKey.NULL;
@@ -34,6 +37,9 @@ public interface Key extends Comparable<Object> {
     }
     default boolean isPlatform(){
         return DexUtils.isPlatform(getDeclaring());
+    }
+    default void append(SmaliWriter writer) throws IOException{
+        writer.append(toString());
     }
 
     String DALVIK_accessFlags = ObjectsUtil.of("accessFlags");

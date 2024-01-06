@@ -1,13 +1,15 @@
 package com.reandroid.dex.key;
 
 import com.reandroid.dex.id.ProtoId;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.collection.ArrayIterator;
-import com.reandroid.utils.collection.CombiningIterator;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.SingleIterator;
+import com.reandroid.utils.collection.*;
 
+import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 public class ProtoKey implements Key{
@@ -138,6 +140,14 @@ public class ProtoKey implements Key{
     }
 
     @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.append('(');
+        writer.appendAll(getParameters(), false);
+        writer.append(')');
+        getReturnType().append(writer);
+    }
+
+    @Override
     public int compareTo(Object obj) {
         if(obj == null){
             return -1;
@@ -218,6 +228,35 @@ public class ProtoKey implements Key{
             parameters = typeListKey.getParameterNames();
         }
         return new ProtoKey(parameters, returnType);
+    }
+
+    public static ProtoKey parse(SmaliReader reader) throws IOException {
+        int position = reader.position();
+        if(reader.readASCII() != '('){
+            reader.position(position);
+            throw new SmaliParseException("Invalid proto key, missing '('", reader);
+        }
+        List<TypeKey> parameterKeys = new ArrayCollection<>();
+        while (reader.get() != ')' && !reader.isLineEnd()){
+            parameterKeys.add(TypeKey.read(reader));
+        }
+        if(reader.readASCII() != ')'){
+            reader.position(position);
+            throw new SmaliParseException("Invalid proto key, missing ')'", reader);
+        }
+        TypeKey returnType = TypeKey.read(reader);
+
+        int size = parameterKeys.size();
+        String[] parameters;
+        if(size == 0){
+            parameters = null;
+        }else {
+            parameters = new String[size];
+            for(int i = 0; i < size; i++){
+                parameters[i] = parameterKeys.get(i).getTypeName();
+            }
+        }
+        return new ProtoKey(parameters, returnType.getTypeName());
     }
 
     private static char toShorty(String typeName) {

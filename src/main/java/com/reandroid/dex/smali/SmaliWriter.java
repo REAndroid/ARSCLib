@@ -87,7 +87,7 @@ public class SmaliWriter implements Appendable, Closeable {
         register.append(this);
     }
 
-    public void appendAll(Iterator<? extends SmaliFormat> iterator) throws IOException {
+    public void appendAllWithDoubleNewLine(Iterator<? extends SmaliFormat> iterator) throws IOException {
         while (iterator.hasNext()) {
             if(!state_new_line) {
                 newLine();
@@ -96,6 +96,33 @@ public class SmaliWriter implements Appendable, Closeable {
                 newLine();
             }
             iterator.next().append(this);
+        }
+    }
+    public void appendAllWithIndent(Iterator<? extends SmaliFormat> iterator) throws IOException {
+        boolean appendOnce = false;
+        while (iterator.hasNext()) {
+            if(!appendOnce){
+                indentPlus();
+            }
+            newLine();
+            iterator.next().append(this);
+            appendOnce = true;
+        }
+        if(appendOnce){
+            indentMinus();
+        }
+    }
+    public void appendAll(Iterator<? extends SmaliFormat> iterator) throws IOException {
+        appendAll(iterator, true);
+    }
+    public void appendAll(Iterator<? extends SmaliFormat> iterator, boolean newLine) throws IOException {
+        boolean appendOnce = false;
+        while (iterator.hasNext()) {
+            if(newLine && appendOnce){
+                newLine();
+            }
+            iterator.next().append(this);
+            appendOnce = true;
         }
     }
     public void appendModifiers(Iterator<? extends Modifier> iterator) throws IOException {
@@ -133,7 +160,7 @@ public class SmaliWriter implements Appendable, Closeable {
         append(Float.toString(f));
         append('f');
     }
-    public void append(int i) throws IOException {
+    public void appendInteger(int i) throws IOException {
         append(Integer.toString(i));
     }
     public void appendHex(byte b) throws IOException {
@@ -142,10 +169,6 @@ public class SmaliWriter implements Appendable, Closeable {
     }
     public void appendHex(short s) throws IOException {
         append(HexUtil.toSignedHex(s));
-        append('S');
-    }
-    public void appendHex(char c) throws IOException {
-        append(HexUtil.toSignedHex(c));
         append('S');
     }
     public void appendHex(int i) throws IOException {
@@ -163,13 +186,24 @@ public class SmaliWriter implements Appendable, Closeable {
             setting.writeResourceIdComment(this, l);
         }
     }
+    public void newLineDouble() throws IOException {
+        newLine(2);
+    }
     public void newLine() throws IOException {
+        newLine(1);
+    }
+    public void newLine(int amount) throws IOException {
+        if(lineNumber == 1 && columnNumber == 0 || amount == 0){
+            return;
+        }
         flushComment();
-        writer.append('\n');
+        for(int i = 0; i < amount; i++){
+            writer.append('\n');
+        }
         columnNumber = 0;
-        writeIndent();
-        lineNumber ++;
+        lineNumber += amount;
         state_new_line = true;
+        writeIndent();
     }
     private void writeIndent() throws IOException {
         Writer writer = this.writer;
@@ -191,8 +225,10 @@ public class SmaliWriter implements Appendable, Closeable {
             }
             comment.append('#');
             comment.append(' ');
+            columnNumber += 2;
         }
         comment.append(text);
+        columnNumber += text.length();
     }
     private void flushComment() throws IOException {
         StringBuilder comment = this.comment;
