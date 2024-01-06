@@ -90,8 +90,101 @@ public class HexUtil {
         return builder.toString();
     }
     public static int parseHex(String hexString){
+        return (int) parseHexLong(hexString);
+    }
+    public static byte parseHexByte(String hex){
+        String hexString = hex;
+        boolean negative = false;
+        if(hexString.charAt(0) == '-'){
+            hexString = hexString.substring(1);
+            negative = true;
+        }
+        if(hexString.charAt(0) == '+'){
+            hexString = hexString.substring(1);
+        }
+        int i = hexString.length() - 1;
+        if(hexString.charAt(i) == 't'){
+            hexString = hexString.substring(0, i);
+        }
         hexString = trim0x(hexString);
-        return (int) Long.parseLong(hexString, 16);
+        i = Integer.parseInt(hexString, 16);
+        if((i & 0xff) != i){
+            throw new NumberFormatException("Invalid byte hex '" + hex + "'");
+        }
+        if(negative){
+            i = -i;
+        }
+        return (byte) i;
+    }
+    public static short parseHexShort(String hex){
+        String hexString = hex;
+        boolean negative = false;
+        if(hexString.charAt(0) == '-'){
+            hexString = hexString.substring(1);
+            negative = true;
+        }
+        if(hexString.charAt(0) == '+'){
+            hexString = hexString.substring(1);
+        }
+        int i = hexString.length() - 1;
+        char postfix = hexString.charAt(i);
+        if(postfix == 'S' || postfix == 's'){
+            hexString = hexString.substring(0, i);
+        }
+        hexString = trim0x(hexString);
+        i = Integer.parseInt(hexString, 16);
+        if((i & 0xffff) != i){
+            throw new NumberFormatException("Invalid short hex '" + hex + "'");
+        }
+        if(negative){
+            i = -i;
+        }
+        return (short) i;
+    }
+    public static int parseHexInteger(String hex){
+        return (int) parseHexLong(hex);
+    }
+    public static long parseHexLong(String hex){
+        String hexString = hex;
+        boolean negative = false;
+        if(hexString.charAt(0) == '-'){
+            hexString = hexString.substring(1);
+            negative = true;
+        }
+        if(hexString.charAt(0) == '+'){
+            hexString = hexString.substring(1);
+        }
+        int i = hexString.length() - 1;
+        if(hexString.charAt(i) == 'L'){
+            hexString = hexString.substring(0, i);
+        }
+        hexString = trim0x(hexString);
+        long result = 0;
+        int length = hexString.length();
+        for(i = 0; i < length; i++){
+            result = result << 4;
+            int v = decodeHex(hexString.charAt(i));
+            if(v == -1){
+                throw new NumberFormatException("Invalid hex char for string '" + hexString + "'");
+            }
+            result = result | v;
+        }
+        if(negative){
+            result = -result;
+        }
+        return result;
+    }
+    private static int decodeHex(char ch){
+        if(ch <= '9' && ch >= '0'){
+            return ch - '0';
+        }
+        if(ch <= 'f' && ch >= 'a'){
+            return 10 + (ch - 'a');
+        }
+        if(ch <= 'F' && ch >= 'A'){
+            return 10 + (ch - 'A');
+        }
+        return -1;
     }
     private static String trim0x(String hexString){
         if(hexString == null || hexString.length() < 3){
