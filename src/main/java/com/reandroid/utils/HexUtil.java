@@ -163,7 +163,7 @@ public class HexUtil {
         int length = hexString.length();
         for(i = 0; i < length; i++){
             result = result << 4;
-            int v = decodeHex(hexString.charAt(i));
+            int v = decodeHexChar(hexString.charAt(i));
             if(v == -1){
                 throw new NumberFormatException("Invalid hex char for string '" + hexString + "'");
             }
@@ -174,7 +174,10 @@ public class HexUtil {
         }
         return result;
     }
-    private static int decodeHex(char ch){
+    public static int decodeHexChar(byte b){
+        return decodeHexChar((char) (0xff & b));
+    }
+    public static int decodeHexChar(char ch){
         if(ch <= '9' && ch >= '0'){
             return ch - '0';
         }
