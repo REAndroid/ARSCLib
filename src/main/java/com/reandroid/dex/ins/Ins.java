@@ -15,9 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.DexException;
-import com.reandroid.arsc.item.NumberIntegerReference;
 import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.debug.DebugLineNumber;
 import com.reandroid.dex.debug.DebugSequence;
@@ -40,14 +38,12 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
 
     private final Opcode<?> opcode;
     private ExtraLineList extraLineList;
-    private final IntegerReference address;
-
+    private int address;
 
     Ins(int childesCount, Opcode<?> opcode) {
         super(childesCount);
         this.opcode = opcode;
         this.extraLineList = ExtraLineList.EMPTY;
-        this.address = new NumberIntegerReference();
     }
     Ins(Opcode<?> opcode) {
         this(1, opcode);
@@ -139,14 +135,11 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
     public int getOutSize(){
         return 0;
     }
-    public IntegerReference getAddressReference() {
+    public int getAddress() {
         return address;
     }
-    public int getAddress() {
-        return address.get();
-    }
     public void setAddress(int address) {
-        this.address.set(address);
+        this.address = address;
     }
 
     public boolean isLonelyInTryCatch(){

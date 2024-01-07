@@ -183,7 +183,10 @@ public class SizeXIns extends Ins {
 
     public RegistersIterator getRegistersIterator() {
         if(this instanceof RegistersSet){
-            return new RegistersIterator(getRegistersTable(), (RegistersSet) this);
+            RegistersTable table = getRegistersTable();
+            if(table != null){
+                return new RegistersIterator(table, (RegistersSet) this);
+            }
         }
         return null;
     }
@@ -261,15 +264,6 @@ public class SizeXIns extends Ins {
         for(int i = 0; i < count; i++){
             set.setRegister(i, comingSet.getRegister(i));
         }
-    }
-
-    public boolean isEqualRegisters(SizeXIns sizeXIns){
-        RegistersIterator iterator1 =  getRegistersIterator();
-        RegistersIterator iterator2 =  sizeXIns.getRegistersIterator();
-        if(iterator1 == null){
-            return iterator2 == null;
-        }
-        return iterator1.equals(iterator2);
     }
 
     @Override
