@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
@@ -108,6 +109,11 @@ public class SmaliInstruction extends SmaliCode{
     public void parse(SmaliReader reader) throws IOException {
         parseOpcode(reader);
         Opcode<?> opcode = getOpcode();
+        if(opcode == Opcode.CONST_4){
+            Ins ins = opcode.newInstance();
+            String a=ins.toString();
+            System.err.println(a);
+        }
         while (!reader.isLineEnd()){
             if(getOperand() != SmaliInstructionOperand.NO_OPERAND || opcode == Opcode.NOP){
                 throw new SmaliParseException("Unrecognized state", reader);

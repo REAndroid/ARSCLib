@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali;
 
+import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.io.IOUtil;
 
 import java.io.File;
@@ -53,9 +54,6 @@ public class SmaliReader {
     public boolean finished() {
         return available() == 0;
     }
-    public boolean hasMore() {
-        return available() != 0;
-    }
     public void offset(int amount){
         position(position() + amount);
     }
@@ -83,6 +81,32 @@ public class SmaliReader {
     }
     public String readString(int length){
         return new String(readBytes(length), StandardCharsets.UTF_8);
+    }
+    public String readEscapedString(char stopChar) throws IOException{
+        StringBuilder builder = new StringBuilder();
+        boolean skipped = false;
+        while (true){
+            if(finished() || get() == '\n'){
+                skip(-1);
+                throw new SmaliParseException("Missing character '" + stopChar + "'", this);
+            }
+            char ch = readASCII();
+            if(skipped){
+                builder.append(decodeSkipped(this, ch));
+                skipped = false;
+                continue;
+            }
+            if(ch == '\\'){
+                skipped = true;
+                continue;
+            }
+            if(ch == stopChar){
+                skip(-1);
+                break;
+            }
+            builder.append(ch);
+        }
+        return builder.toString();
     }
     public String readStringForNumber(){
         int pos = position();
@@ -135,23 +159,6 @@ public class SmaliReader {
             value = -value;
         }
         return value;
-    }
-    public String readDigits(){
-        StringBuilder builder = new StringBuilder();
-        int pos = position();
-        int end = pos + available();
-        int count = 0;
-        for(int i = pos; i < end; i++){
-            byte b = get(i);
-            if(!isDigit(b)){
-                break;
-            }
-            char ch = (char) b;
-            builder.append(ch);
-            count ++;
-        }
-        offset(count);
-        return builder.toString();
     }
     public byte[] readBytes(int length){
         byte[] bytes = getBytes(length);
@@ -354,18 +361,6 @@ public class SmaliReader {
         }
         position(i);
     }
-    public void skipCharWithSpaces(char ch){
-        skipSpaces();
-        if(hasMore() && get() == ch){
-            skip(1);
-            skipSpaces();
-        }
-    }
-    public void skipChar(char ch){
-        if(hasMore() && get() == ch){
-            skip(1);
-        }
-    }
     public void skip(int amount){
         int available = available();
         if(amount > available){
@@ -398,7 +393,8 @@ public class SmaliReader {
     }
     public String getPositionPointer() {
         StringBuilder builder = new StringBuilder();
-        int lineStart = position();
+        int pos = position();
+        int lineStart = pos;
         while (get(lineStart) != '\n'){
             if(lineStart == 0){
                 break;
@@ -408,10 +404,13 @@ public class SmaliReader {
         if(get(lineStart) == '\n'){
             lineStart ++;
         }
+        int limit = 38;
+        if(pos - lineStart > limit){
+            lineStart = pos - limit;
+        }
         int end = indexOf(lineStart, (byte) '\n');
-        int pos = position();
-        if(end - pos > 100){
-            end = pos + 100;
+        if(end - pos > limit){
+            end = pos + limit;
         }
         for(int i = lineStart; i < end; i++){
             builder.append(getASCII(i));
@@ -431,13 +430,6 @@ public class SmaliReader {
     @Override
     public String toString() {
         return getPositionPointer();
-    }
-    public String toString1() {
-        int length = 10;
-        if(length > available()){
-            length = available();
-        }
-        return position() + "/" + available() + " '" + getString(length) + "'";
     }
 
     public static boolean isWhiteSpaceOrComment(byte b){
@@ -494,6 +486,27 @@ public class SmaliReader {
             default:
                 return false;
         }
+    }
+    private static char decodeSkipped(SmaliReader reader, char ch){
+        switch (ch){
+            case 'n':
+                return '\n';
+            case 'r':
+                return  '\r';
+            case 't':
+                return '\t';
+            case 'u':
+                return decodeFourHex(reader);
+            default:
+                return ch;
+        }
+    }
+    private static char decodeFourHex(SmaliReader reader){
+        int i = HexUtil.decodeHexChar(reader.read()) << 4;
+        i |= HexUtil.decodeHexChar(reader.read()) << 4;
+        i |= HexUtil.decodeHexChar(reader.read()) << 4;
+        i |= HexUtil.decodeHexChar(reader.read()) << 4;
+        return (char) i;
     }
     public static SmaliReader of(String text){
         return new SmaliReader(text.getBytes(StandardCharsets.UTF_8));

@@ -17,6 +17,8 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.base.BlockCreator;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.common.OperandType;
+import com.reandroid.dex.common.RegisterFormat;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
@@ -314,1794 +316,539 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         Map<String, Opcode<?>> map = new HashMap<>();
         NAME_MAP = map;
 
-        NOP = new Opcode<>(0x00, 2, "nop", InsNop::new);
+        NOP = new Opcode<>(0x00, 2, "nop", new InsNopCreator(0x0));
         VALUES[0x00] = NOP;
-        MOVE = new Opcode<>(0x01, 2, "move", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(MOVE);
-            }
-        });
+        MOVE = new Opcode<>(0x01, 2, "move", new Ins12xCreator(0x1));
         VALUES[0x01] = MOVE;
-        MOVE_FROM16 = new Opcode<>(0x02, 4, "move/from16", new BlockCreator<Ins22x>() {
-            @Override
-            public Ins22x newInstance() {
-                return new Ins22x(MOVE_FROM16);
-            }
-        });
+        MOVE_FROM16 = new Opcode<>(0x02, 4, "move/from16", new Ins22xCreator(0x2));
         VALUES[0x02] = MOVE_FROM16;
-        MOVE_16 = new Opcode<>(0x03, 6, "move/16", new BlockCreator<Ins32x>() {
-            @Override
-            public Ins32x newInstance() {
-                return new Ins32x(MOVE_16);
-            }
-        });
+        MOVE_16 = new Opcode<>(0x03, 6, "move/16", new Ins32xCreator(0x3));
         VALUES[0x03] = MOVE_16;
-        MOVE_WIDE = new Opcode<>(0x04, 2, "move-wide", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(MOVE_WIDE);
-            }
-        });
+        MOVE_WIDE = new Opcode<>(0x04, 2, "move-wide", new Ins12xCreator(0x4));
         VALUES[0x04] = MOVE_WIDE;
-        MOVE_WIDE_FROM16 = new Opcode<>(0x05, 4, "move-wide/from16", new BlockCreator<Ins22x>() {
-            @Override
-            public Ins22x newInstance() {
-                return new Ins22x(MOVE_WIDE_FROM16);
-            }
-        });
+        MOVE_WIDE_FROM16 = new Opcode<>(0x05, 4, "move-wide/from16", new Ins22xCreator(0x5));
         VALUES[0x05] = MOVE_WIDE_FROM16;
-        MOVE_WIDE_16 = new Opcode<>(0x06, 6, "move-wide/16", new BlockCreator<Ins32x>() {
-            @Override
-            public Ins32x newInstance() {
-                return new Ins32x(MOVE_WIDE_16);
-            }
-        });
+        MOVE_WIDE_16 = new Opcode<>(0x06, 6, "move-wide/16", new Ins32xCreator(0x6));
         VALUES[0x06] = MOVE_WIDE_16;
-        MOVE_OBJECT = new Opcode<>(0x07, 2, "move-object", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(MOVE_OBJECT);
-            }
-        });
+        MOVE_OBJECT = new Opcode<>(0x07, 2, "move-object", new Ins12xCreator(0x7));
         VALUES[0x07] = MOVE_OBJECT;
-        MOVE_OBJECT_FROM16 = new Opcode<>(0x08, 4, "move-object/from16", new BlockCreator<Ins22x>() {
-            @Override
-            public Ins22x newInstance() {
-                return new Ins22x(MOVE_OBJECT_FROM16);
-            }
-        });
+        MOVE_OBJECT_FROM16 = new Opcode<>(0x08, 4, "move-object/from16", new Ins22xCreator(0x8));
         VALUES[0x08] = MOVE_OBJECT_FROM16;
-        MOVE_OBJECT_16 = new Opcode<>(0x09, 6, "move-object/16", new BlockCreator<Ins32x>() {
-            @Override
-            public Ins32x newInstance() {
-                return new Ins32x(MOVE_OBJECT_16);
-            }
-        });
+        MOVE_OBJECT_16 = new Opcode<>(0x09, 6, "move-object/16", new Ins32xCreator(0x9));
         VALUES[0x09] = MOVE_OBJECT_16;
-        MOVE_RESULT = new Opcode<>(0x0a, 2, "move-result", new BlockCreator<Ins11x>() {
-            @Override
-            public Ins11x newInstance() {
-                return new Ins11x(MOVE_RESULT);
-            }
-        });
+        MOVE_RESULT = new Opcode<>(0x0a, 2, "move-result", new Ins11xwCreator(0xa));
         VALUES[0x0a] = MOVE_RESULT;
-        MOVE_RESULT_WIDE = new Opcode<>(0x0b, 2, "move-result-wide", new BlockCreator<Ins11x>() {
-            @Override
-            public Ins11x newInstance() {
-                return new Ins11x(MOVE_RESULT_WIDE);
-            }
-        });
+        MOVE_RESULT_WIDE = new Opcode<>(0x0b, 2, "move-result-wide", new Ins11xwCreator(0xb));
         VALUES[0x0b] = MOVE_RESULT_WIDE;
-        MOVE_RESULT_OBJECT = new Opcode<>(0x0c, 2, "move-result-object", new BlockCreator<Ins11x>() {
-            @Override
-            public Ins11x newInstance() {
-                return new Ins11x(MOVE_RESULT_OBJECT);
-            }
-        });
+        MOVE_RESULT_OBJECT = new Opcode<>(0x0c, 2, "move-result-object", new Ins11xwCreator(0xc));
         VALUES[0x0c] = MOVE_RESULT_OBJECT;
-        MOVE_EXCEPTION = new Opcode<>(0x0d, 2, "move-exception", new BlockCreator<Ins11x>() {
-            @Override
-            public Ins11x newInstance() {
-                return new Ins11x(MOVE_EXCEPTION);
-            }
-        });
+        MOVE_EXCEPTION = new Opcode<>(0x0d, 2, "move-exception", new Ins11xwCreator(0xd));
         VALUES[0x0d] = MOVE_EXCEPTION;
-        RETURN_VOID = new Opcode<>(0x0e, 2, "return-void", new BlockCreator<Ins10x>() {
-            @Override
-            public Ins10x newInstance() {
-                return new Ins10x(RETURN_VOID);
-            }
-        });
+        RETURN_VOID = new Opcode<>(0x0e, 2, "return-void", new Ins10xCreator(0xe));
         VALUES[0x0e] = RETURN_VOID;
-        RETURN = new Opcode<>(0x0f, 2, "return", new BlockCreator<Ins11x>() {
-            @Override
-            public Ins11x newInstance() {
-                return new Ins11x(RETURN);
-            }
-        });
+        RETURN = new Opcode<>(0x0f, 2, "return", new Ins11xCreator(0xf));
         VALUES[0x0f] = RETURN;
-        RETURN_WIDE = new Opcode<>(0x10, 2, "return-wide", new BlockCreator<Ins11x>() {
-            @Override
-            public Ins11x newInstance() {
-                return new Ins11x(RETURN_WIDE);
-            }
-        });
+        RETURN_WIDE = new Opcode<>(0x10, 2, "return-wide", new Ins11xCreator(0x10));
         VALUES[0x10] = RETURN_WIDE;
-        RETURN_OBJECT = new Opcode<>(0x11, 2, "return-object", new BlockCreator<Ins11x>() {
-            @Override
-            public Ins11x newInstance() {
-                return new Ins11x(RETURN_OBJECT);
-            }
-        });
+        RETURN_OBJECT = new Opcode<>(0x11, 2, "return-object", new Ins11xCreator(0x11));
         VALUES[0x11] = RETURN_OBJECT;
-        CONST_4 = new Opcode<>(0x12, 2, "const/4", InsConst4::new);
+        CONST_4 = new Opcode<>(0x12, 2, "const/4", new InsConst4Creator(0x12));
         VALUES[0x12] = CONST_4;
-        CONST_16 = new Opcode<>(0x13, 4, "const/16", new BlockCreator<Ins21s>() {
-            @Override
-            public Ins21s newInstance() {
-                return new Ins21s(CONST_16);
-            }
-        });
+        CONST_16 = new Opcode<>(0x13, 4, "const/16", new Ins21sCreator(0x13));
         VALUES[0x13] = CONST_16;
-        CONST = new Opcode<>(0x14, 6, "const", InsConst::new);
+        CONST = new Opcode<>(0x14, 6, "const", new InsConstCreator(0x14));
         VALUES[0x14] = CONST;
-        CONST_HIGH16 = new Opcode<>(0x15, 4, "const/high16", InsConst16High::new);
+        CONST_HIGH16 = new Opcode<>(0x15, 4, "const/high16", new InsConst16HighCreator(0x15));
         VALUES[0x15] = CONST_HIGH16;
-        CONST_WIDE_16 = new Opcode<>(0x16, 4, "const-wide/16", new BlockCreator<Ins21s>() {
-            @Override
-            public Ins21s newInstance() {
-                return new Ins21s(CONST_WIDE_16);
-            }
-        });
+        CONST_WIDE_16 = new Opcode<>(0x16, 4, "const-wide/16", new Ins21sCreator(0x16));
         VALUES[0x16] = CONST_WIDE_16;
-        CONST_WIDE_32 = new Opcode<>(0x17, 6, "const-wide/32", new BlockCreator<Ins31i>() {
-            @Override
-            public Ins31i newInstance() {
-                return new Ins31i(CONST_WIDE_32);
-            }
-        });
+        CONST_WIDE_32 = new Opcode<>(0x17, 6, "const-wide/32", new Ins31iCreator(0x17));
         VALUES[0x17] = CONST_WIDE_32;
-        CONST_WIDE = new Opcode<>(0x18, 10, "const-wide", InsConstWide::new);
+        CONST_WIDE = new Opcode<>(0x18, 10, "const-wide", new InsConstWideCreator(0x18));
         VALUES[0x18] = CONST_WIDE;
-        CONST_WIDE_HIGH16 = new Opcode<>(0x19, 4, "const-wide/high16", new BlockCreator<Ins21lh>() {
-            @Override
-            public Ins21lh newInstance() {
-                return new Ins21lh(CONST_WIDE_HIGH16);
-            }
-        });
+        CONST_WIDE_HIGH16 = new Opcode<>(0x19, 4, "const-wide/high16", new Ins21lhCreator(0x19));
         VALUES[0x19] = CONST_WIDE_HIGH16;
-        CONST_STRING = new Opcode<>(0x1a, 4, "const-string", SectionType.STRING_ID, InsConstString::new);
+        CONST_STRING = new Opcode<>(0x1a, 4, "const-string", SectionType.STRING_ID, new InsConstStringCreator(0x1a));
         VALUES[0x1a] = CONST_STRING;
-        CONST_STRING_JUMBO = new Opcode<>(0x1b, 6, "const-string/jumbo", SectionType.STRING_ID, InsConstStringJumbo::new);
+        CONST_STRING_JUMBO = new Opcode<>(0x1b, 6, "const-string/jumbo", SectionType.STRING_ID, new InsConstStringJumboCreator(0x1b));
         VALUES[0x1b] = CONST_STRING_JUMBO;
-        CONST_CLASS = new Opcode<>(0x1c, 4, "const-class", SectionType.TYPE_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(CONST_CLASS);
-            }
-        });
+        CONST_CLASS = new Opcode<>(0x1c, 4, "const-class", SectionType.TYPE_ID, new Ins21cCreator(0x1c));
         VALUES[0x1c] = CONST_CLASS;
-        MONITOR_ENTER = new Opcode<>(0x1d, 2, "monitor-enter", new BlockCreator<Ins11x>() {
-            @Override
-            public Ins11x newInstance() {
-                return new Ins11x(MONITOR_ENTER);
-            }
-        });
+        MONITOR_ENTER = new Opcode<>(0x1d, 2, "monitor-enter", new Ins11xCreator(0x1d));
         VALUES[0x1d] = MONITOR_ENTER;
-        MONITOR_EXIT = new Opcode<>(0x1e, 2, "monitor-exit", new BlockCreator<Ins11x>() {
-            @Override
-            public Ins11x newInstance() {
-                return new Ins11x(MONITOR_EXIT);
-            }
-        });
+        MONITOR_EXIT = new Opcode<>(0x1e, 2, "monitor-exit", new Ins11xCreator(0x1e));
         VALUES[0x1e] = MONITOR_EXIT;
-        CHECK_CAST = new Opcode<>(0x1f, 4, "check-cast", SectionType.TYPE_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(CHECK_CAST);
-            }
-        });
+        CHECK_CAST = new Opcode<>(0x1f, 4, "check-cast", SectionType.TYPE_ID, new Ins21cCreator(0x1f));
         VALUES[0x1f] = CHECK_CAST;
-        INSTANCE_OF = new Opcode<>(0x20, 4, "instance-of", SectionType.TYPE_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(INSTANCE_OF);
-            }
-        });
+        INSTANCE_OF = new Opcode<>(0x20, 4, "instance-of", SectionType.TYPE_ID, new Ins22cCreator(0x20));
         VALUES[0x20] = INSTANCE_OF;
-        ARRAY_LENGTH = new Opcode<>(0x21, 2, "array-length", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(ARRAY_LENGTH);
-            }
-        });
+        ARRAY_LENGTH = new Opcode<>(0x21, 2, "array-length", new Ins12xCreator(0x21));
         VALUES[0x21] = ARRAY_LENGTH;
-        NEW_INSTANCE = new Opcode<>(0x22, 4, "new-instance", SectionType.TYPE_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(NEW_INSTANCE);
-            }
-        });
+        NEW_INSTANCE = new Opcode<>(0x22, 4, "new-instance", SectionType.TYPE_ID, new Ins21cCreator(0x22));
         VALUES[0x22] = NEW_INSTANCE;
-        NEW_ARRAY = new Opcode<>(0x23, 4, "new-array", SectionType.TYPE_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(NEW_ARRAY);
-            }
-        });
+        NEW_ARRAY = new Opcode<>(0x23, 4, "new-array", SectionType.TYPE_ID, new Ins22cCreator(0x23));
         VALUES[0x23] = NEW_ARRAY;
-        FILLED_NEW_ARRAY = new Opcode<>(0x24, 6, "filled-new-array", SectionType.TYPE_ID, new BlockCreator<Ins35c>() {
-            @Override
-            public Ins35c newInstance() {
-                return new Ins35c(FILLED_NEW_ARRAY);
-            }
-        });
+        FILLED_NEW_ARRAY = new Opcode<>(0x24, 6, "filled-new-array", SectionType.TYPE_ID, new Ins35cCreator(0x24));
         VALUES[0x24] = FILLED_NEW_ARRAY;
-        FILLED_NEW_ARRAY_RANGE = new Opcode<>(0x25, 6, "filled-new-array/range", SectionType.TYPE_ID, new BlockCreator<Ins3rc>() {
-            @Override
-            public Ins3rc newInstance() {
-                return new Ins3rc(FILLED_NEW_ARRAY_RANGE);
-            }
-        });
+        FILLED_NEW_ARRAY_RANGE = new Opcode<>(0x25, 6, "filled-new-array/range", SectionType.TYPE_ID, new Ins3rcCreator(0x25));
         VALUES[0x25] = FILLED_NEW_ARRAY_RANGE;
-        FILL_ARRAY_DATA = new Opcode<>(0x26, 6, "fill-array-data", InsFillArrayData::new);
+        FILL_ARRAY_DATA = new Opcode<>(0x26, 6, "fill-array-data", new InsFillArrayDataCreator(0x26));
         VALUES[0x26] = FILL_ARRAY_DATA;
-        THROW = new Opcode<>(0x27, 2, "throw", new BlockCreator<Ins11x>() {
-            @Override
-            public Ins11x newInstance() {
-                return new Ins11x(THROW);
-            }
-        });
+        THROW = new Opcode<>(0x27, 2, "throw", new Ins11xCreator(0x27));
         VALUES[0x27] = THROW;
-        GOTO = new Opcode<>(0x28, 2, "goto", new BlockCreator<InsGoto>() {
-            @Override
-            public InsGoto newInstance() {
-                return new InsGoto(GOTO);
-            }
-        });
+        GOTO = new Opcode<>(0x28, 2, "goto", new InsGotoCreator(0x28));
         VALUES[0x28] = GOTO;
-        GOTO_16 = new Opcode<>(0x29, 4, "goto/16", new BlockCreator<InsGoto>() {
-            @Override
-            public InsGoto newInstance() {
-                return new InsGoto(GOTO_16);
-            }
-        });
+        GOTO_16 = new Opcode<>(0x29, 4, "goto/16", new InsGotoCreator(0x29));
         VALUES[0x29] = GOTO_16;
-        GOTO_32 = new Opcode<>(0x2a, 6, "goto/32", new BlockCreator<InsGoto>() {
-            @Override
-            public InsGoto newInstance() {
-                return new InsGoto(GOTO_32);
-            }
-        });
+        GOTO_32 = new Opcode<>(0x2a, 6, "goto/32", new InsGotoCreator(0x2a));
         VALUES[0x2a] = GOTO_32;
-        PACKED_SWITCH = new Opcode<>(0x2b, 6, "packed-switch", InsPackedSwitch::new);
+        PACKED_SWITCH = new Opcode<>(0x2b, 6, "packed-switch", new InsPackedSwitchCreator(0x2b));
         VALUES[0x2b] = PACKED_SWITCH;
-        SPARSE_SWITCH = new Opcode<>(0x2c, 6, "sparse-switch", InsSparseSwitch::new);
+        SPARSE_SWITCH = new Opcode<>(0x2c, 6, "sparse-switch", new InsSparseSwitchCreator(0x2c));
         VALUES[0x2c] = SPARSE_SWITCH;
-        CMPL_FLOAT = new Opcode<>(0x2d, 4, "cmpl-float", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(CMPL_FLOAT);
-            }
-        });
+        CMPL_FLOAT = new Opcode<>(0x2d, 4, "cmpl-float", new Ins23xCreator(0x2d));
         VALUES[0x2d] = CMPL_FLOAT;
-        CMPG_FLOAT = new Opcode<>(0x2e, 4, "cmpg-float", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(CMPG_FLOAT);
-            }
-        });
+        CMPG_FLOAT = new Opcode<>(0x2e, 4, "cmpg-float", new Ins23xCreator(0x2e));
         VALUES[0x2e] = CMPG_FLOAT;
-        CMPL_DOUBLE = new Opcode<>(0x2f, 4, "cmpl-double", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(CMPL_DOUBLE);
-            }
-        });
+        CMPL_DOUBLE = new Opcode<>(0x2f, 4, "cmpl-double", new Ins23xCreator(0x2f));
         VALUES[0x2f] = CMPL_DOUBLE;
-        CMPG_DOUBLE = new Opcode<>(0x30, 4, "cmpg-double", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(CMPG_DOUBLE);
-            }
-        });
+        CMPG_DOUBLE = new Opcode<>(0x30, 4, "cmpg-double", new Ins23xCreator(0x30));
         VALUES[0x30] = CMPG_DOUBLE;
-        CMP_LONG = new Opcode<>(0x31, 4, "cmp-long", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(CMP_LONG);
-            }
-        });
+        CMP_LONG = new Opcode<>(0x31, 4, "cmp-long", new Ins23xCreator(0x31));
         VALUES[0x31] = CMP_LONG;
-        IF_EQ = new Opcode<>(0x32, 4, "if-eq", new BlockCreator<Ins22t>() {
-            @Override
-            public Ins22t newInstance() {
-                return new Ins22t(IF_EQ);
-            }
-        });
+        IF_EQ = new Opcode<>(0x32, 4, "if-eq", new Ins22tCreator(0x32));
         VALUES[0x32] = IF_EQ;
-        IF_NE = new Opcode<>(0x33, 4, "if-ne", new BlockCreator<Ins22t>() {
-            @Override
-            public Ins22t newInstance() {
-                return new Ins22t(IF_NE);
-            }
-        });
+        IF_NE = new Opcode<>(0x33, 4, "if-ne", new Ins22tCreator(0x33));
         VALUES[0x33] = IF_NE;
-        IF_LT = new Opcode<>(0x34, 4, "if-lt", new BlockCreator<Ins22t>() {
-            @Override
-            public Ins22t newInstance() {
-                return new Ins22t(IF_LT);
-            }
-        });
+        IF_LT = new Opcode<>(0x34, 4, "if-lt", new Ins22tCreator(0x34));
         VALUES[0x34] = IF_LT;
-        IF_GE = new Opcode<>(0x35, 4, "if-ge", new BlockCreator<Ins22t>() {
-            @Override
-            public Ins22t newInstance() {
-                return new Ins22t(IF_GE);
-            }
-        });
+        IF_GE = new Opcode<>(0x35, 4, "if-ge", new Ins22tCreator(0x35));
         VALUES[0x35] = IF_GE;
-        IF_GT = new Opcode<>(0x36, 4, "if-gt", new BlockCreator<Ins22t>() {
-            @Override
-            public Ins22t newInstance() {
-                return new Ins22t(IF_GT);
-            }
-        });
+        IF_GT = new Opcode<>(0x36, 4, "if-gt", new Ins22tCreator(0x36));
         VALUES[0x36] = IF_GT;
-        IF_LE = new Opcode<>(0x37, 4, "if-le", new BlockCreator<Ins22t>() {
-            @Override
-            public Ins22t newInstance() {
-                return new Ins22t(IF_LE);
-            }
-        });
+        IF_LE = new Opcode<>(0x37, 4, "if-le", new Ins22tCreator(0x37));
         VALUES[0x37] = IF_LE;
-        IF_EQZ = new Opcode<>(0x38, 4, "if-eqz", new BlockCreator<Ins21t>() {
-            @Override
-            public Ins21t newInstance() {
-                return new Ins21t(IF_EQZ);
-            }
-        });
+        IF_EQZ = new Opcode<>(0x38, 4, "if-eqz", new Ins21tCreator(0x38));
         VALUES[0x38] = IF_EQZ;
-        IF_NEZ = new Opcode<>(0x39, 4, "if-nez", new BlockCreator<Ins21t>() {
-            @Override
-            public Ins21t newInstance() {
-                return new Ins21t(IF_NEZ);
-            }
-        });
+        IF_NEZ = new Opcode<>(0x39, 4, "if-nez", new Ins21tCreator(0x39));
         VALUES[0x39] = IF_NEZ;
-        IF_LTZ = new Opcode<>(0x3a, 4, "if-ltz", new BlockCreator<Ins21t>() {
-            @Override
-            public Ins21t newInstance() {
-                return new Ins21t(IF_LTZ);
-            }
-        });
+        IF_LTZ = new Opcode<>(0x3a, 4, "if-ltz", new Ins21tCreator(0x3a));
         VALUES[0x3a] = IF_LTZ;
-        IF_GEZ = new Opcode<>(0x3b, 4, "if-gez", new BlockCreator<Ins21t>() {
-            @Override
-            public Ins21t newInstance() {
-                return new Ins21t(IF_GEZ);
-            }
-        });
+        IF_GEZ = new Opcode<>(0x3b, 4, "if-gez", new Ins21tCreator(0x3b));
         VALUES[0x3b] = IF_GEZ;
-        IF_GTZ = new Opcode<>(0x3c, 4, "if-gtz", new BlockCreator<Ins21t>() {
-            @Override
-            public Ins21t newInstance() {
-                return new Ins21t(IF_GTZ);
-            }
-        });
+        IF_GTZ = new Opcode<>(0x3c, 4, "if-gtz", new Ins21tCreator(0x3c));
         VALUES[0x3c] = IF_GTZ;
-        IF_LEZ = new Opcode<>(0x3d, 4, "if-lez", new BlockCreator<Ins21t>() {
-            @Override
-            public Ins21t newInstance() {
-                return new Ins21t(IF_LEZ);
-            }
-        });
+        IF_LEZ = new Opcode<>(0x3d, 4, "if-lez", new Ins21tCreator(0x3d));
         VALUES[0x3d] = IF_LEZ;
-        AGET = new Opcode<>(0x44, 4, "aget", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(AGET);
-            }
-        });
+        AGET = new Opcode<>(0x44, 4, "aget", new Ins23xCreator(0x44));
         VALUES[0x44] = AGET;
-        AGET_WIDE = new Opcode<>(0x45, 4, "aget-wide", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(AGET_WIDE);
-            }
-        });
+        AGET_WIDE = new Opcode<>(0x45, 4, "aget-wide", new Ins23xCreator(0x45));
         VALUES[0x45] = AGET_WIDE;
-        AGET_OBJECT = new Opcode<>(0x46, 4, "aget-object", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(AGET_OBJECT);
-            }
-        });
+        AGET_OBJECT = new Opcode<>(0x46, 4, "aget-object", new Ins23xCreator(0x46));
         VALUES[0x46] = AGET_OBJECT;
-        AGET_BOOLEAN = new Opcode<>(0x47, 4, "aget-boolean", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(AGET_BOOLEAN);
-            }
-        });
+        AGET_BOOLEAN = new Opcode<>(0x47, 4, "aget-boolean", new Ins23xCreator(0x47));
         VALUES[0x47] = AGET_BOOLEAN;
-        AGET_BYTE = new Opcode<>(0x48, 4, "aget-byte", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(AGET_BYTE);
-            }
-        });
+        AGET_BYTE = new Opcode<>(0x48, 4, "aget-byte", new Ins23xCreator(0x48));
         VALUES[0x48] = AGET_BYTE;
-        AGET_CHAR = new Opcode<>(0x49, 4, "aget-char", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(AGET_CHAR);
-            }
-        });
+        AGET_CHAR = new Opcode<>(0x49, 4, "aget-char", new Ins23xCreator(0x49));
         VALUES[0x49] = AGET_CHAR;
-        AGET_SHORT = new Opcode<>(0x4a, 4, "aget-short", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(AGET_SHORT);
-            }
-        });
+        AGET_SHORT = new Opcode<>(0x4a, 4, "aget-short", new Ins23xCreator(0x4a));
         VALUES[0x4a] = AGET_SHORT;
-        APUT = new Opcode<>(0x4b, 4, "aput", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(APUT);
-            }
-        });
+        APUT = new Opcode<>(0x4b, 4, "aput", new Ins23xCreator(0x4b));
         VALUES[0x4b] = APUT;
-        APUT_WIDE = new Opcode<>(0x4c, 4, "aput-wide", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(APUT_WIDE);
-            }
-        });
+        APUT_WIDE = new Opcode<>(0x4c, 4, "aput-wide", new Ins23xCreator(0x4c));
         VALUES[0x4c] = APUT_WIDE;
-        APUT_OBJECT = new Opcode<>(0x4d, 4, "aput-object", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(APUT_OBJECT);
-            }
-        });
+        APUT_OBJECT = new Opcode<>(0x4d, 4, "aput-object", new Ins23xCreator(0x4d));
         VALUES[0x4d] = APUT_OBJECT;
-        APUT_BOOLEAN = new Opcode<>(0x4e, 4, "aput-boolean", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(APUT_BOOLEAN);
-            }
-        });
+        APUT_BOOLEAN = new Opcode<>(0x4e, 4, "aput-boolean", new Ins23xCreator(0x4e));
         VALUES[0x4e] = APUT_BOOLEAN;
-        APUT_BYTE = new Opcode<>(0x4f, 4, "aput-byte", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(APUT_BYTE);
-            }
-        });
+        APUT_BYTE = new Opcode<>(0x4f, 4, "aput-byte", new Ins23xCreator(0x4f));
         VALUES[0x4f] = APUT_BYTE;
-        APUT_CHAR = new Opcode<>(0x50, 4, "aput-char", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(APUT_CHAR);
-            }
-        });
+        APUT_CHAR = new Opcode<>(0x50, 4, "aput-char", new Ins23xCreator(0x50));
         VALUES[0x50] = APUT_CHAR;
-        APUT_SHORT = new Opcode<>(0x51, 4, "aput-short", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(APUT_SHORT);
-            }
-        });
+        APUT_SHORT = new Opcode<>(0x51, 4, "aput-short", new Ins23xCreator(0x51));
         VALUES[0x51] = APUT_SHORT;
-        IGET = new Opcode<>(0x52, 4, "iget", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IGET);
-            }
-        });
+        IGET = new Opcode<>(0x52, 4, "iget", SectionType.FIELD_ID, new Ins22cCreator(0x52));
         VALUES[0x52] = IGET;
-        IGET_WIDE = new Opcode<>(0x53, 4, "iget-wide", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IGET_WIDE);
-            }
-        });
+        IGET_WIDE = new Opcode<>(0x53, 4, "iget-wide", SectionType.FIELD_ID, new Ins22cCreator(0x53));
         VALUES[0x53] = IGET_WIDE;
-        IGET_OBJECT = new Opcode<>(0x54, 4, "iget-object", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IGET_OBJECT);
-            }
-        });
+        IGET_OBJECT = new Opcode<>(0x54, 4, "iget-object", SectionType.FIELD_ID, new Ins22cCreator(0x54));
         VALUES[0x54] = IGET_OBJECT;
-        IGET_BOOLEAN = new Opcode<>(0x55, 4, "iget-boolean", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IGET_BOOLEAN);
-            }
-        });
+        IGET_BOOLEAN = new Opcode<>(0x55, 4, "iget-boolean", SectionType.FIELD_ID, new Ins22cCreator(0x55));
         VALUES[0x55] = IGET_BOOLEAN;
-        IGET_BYTE = new Opcode<>(0x56, 4, "iget-byte", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IGET_BYTE);
-            }
-        });
+        IGET_BYTE = new Opcode<>(0x56, 4, "iget-byte", SectionType.FIELD_ID, new Ins22cCreator(0x56));
         VALUES[0x56] = IGET_BYTE;
-        IGET_CHAR = new Opcode<>(0x57, 4, "iget-char", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IGET_CHAR);
-            }
-        });
+        IGET_CHAR = new Opcode<>(0x57, 4, "iget-char", SectionType.FIELD_ID, new Ins22cCreator(0x57));
         VALUES[0x57] = IGET_CHAR;
-        IGET_SHORT = new Opcode<>(0x58, 4, "iget-short", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IGET_SHORT);
-            }
-        });
+        IGET_SHORT = new Opcode<>(0x58, 4, "iget-short", SectionType.FIELD_ID, new Ins22cCreator(0x58));
         VALUES[0x58] = IGET_SHORT;
-        IPUT = new Opcode<>(0x59, 4, "iput", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IPUT);
-            }
-        });
+        IPUT = new Opcode<>(0x59, 4, "iput", SectionType.FIELD_ID, new Ins22cCreator(0x59));
         VALUES[0x59] = IPUT;
-        IPUT_WIDE = new Opcode<>(0x5a, 4, "iput-wide", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IPUT_WIDE);
-            }
-        });
+        IPUT_WIDE = new Opcode<>(0x5a, 4, "iput-wide", SectionType.FIELD_ID, new Ins22cCreator(0x5a));
         VALUES[0x5a] = IPUT_WIDE;
-        IPUT_OBJECT = new Opcode<>(0x5b, 4, "iput-object", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IPUT_OBJECT);
-            }
-        });
+        IPUT_OBJECT = new Opcode<>(0x5b, 4, "iput-object", SectionType.FIELD_ID, new Ins22cCreator(0x5b));
         VALUES[0x5b] = IPUT_OBJECT;
-        IPUT_BOOLEAN = new Opcode<>(0x5c, 4, "iput-boolean", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IPUT_BOOLEAN);
-            }
-        });
+        IPUT_BOOLEAN = new Opcode<>(0x5c, 4, "iput-boolean", SectionType.FIELD_ID, new Ins22cCreator(0x5c));
         VALUES[0x5c] = IPUT_BOOLEAN;
-        IPUT_BYTE = new Opcode<>(0x5d, 4, "iput-byte", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IPUT_BYTE);
-            }
-        });
+        IPUT_BYTE = new Opcode<>(0x5d, 4, "iput-byte", SectionType.FIELD_ID, new Ins22cCreator(0x5d));
         VALUES[0x5d] = IPUT_BYTE;
-        IPUT_CHAR = new Opcode<>(0x5e, 4, "iput-char", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IPUT_CHAR);
-            }
-        });
+        IPUT_CHAR = new Opcode<>(0x5e, 4, "iput-char", SectionType.FIELD_ID, new Ins22cCreator(0x5e));
         VALUES[0x5e] = IPUT_CHAR;
-        IPUT_SHORT = new Opcode<>(0x5f, 4, "iput-short", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IPUT_SHORT);
-            }
-        });
+        IPUT_SHORT = new Opcode<>(0x5f, 4, "iput-short", SectionType.FIELD_ID, new Ins22cCreator(0x5f));
         VALUES[0x5f] = IPUT_SHORT;
-        SGET = new Opcode<>(0x60, 4, "sget", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SGET);
-            }
-        });
+        SGET = new Opcode<>(0x60, 4, "sget", SectionType.FIELD_ID, new Ins21cCreator(0x60));
         VALUES[0x60] = SGET;
-        SGET_WIDE = new Opcode<>(0x61, 4, "sget-wide", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SGET_WIDE);
-            }
-        });
+        SGET_WIDE = new Opcode<>(0x61, 4, "sget-wide", SectionType.FIELD_ID, new Ins21cCreator(0x61));
         VALUES[0x61] = SGET_WIDE;
-        SGET_OBJECT = new Opcode<>(0x62, 4, "sget-object", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SGET_OBJECT);
-            }
-        });
+        SGET_OBJECT = new Opcode<>(0x62, 4, "sget-object", SectionType.FIELD_ID, new Ins21cCreator(0x62));
         VALUES[0x62] = SGET_OBJECT;
-        SGET_BOOLEAN = new Opcode<>(0x63, 4, "sget-boolean", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SGET_BOOLEAN);
-            }
-        });
+        SGET_BOOLEAN = new Opcode<>(0x63, 4, "sget-boolean", SectionType.FIELD_ID, new Ins21cCreator(0x63));
         VALUES[0x63] = SGET_BOOLEAN;
-        SGET_BYTE = new Opcode<>(0x64, 4, "sget-byte", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SGET_BYTE);
-            }
-        });
+        SGET_BYTE = new Opcode<>(0x64, 4, "sget-byte", SectionType.FIELD_ID, new Ins21cCreator(0x64));
         VALUES[0x64] = SGET_BYTE;
-        SGET_CHAR = new Opcode<>(0x65, 4, "sget-char", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SGET_CHAR);
-            }
-        });
+        SGET_CHAR = new Opcode<>(0x65, 4, "sget-char", SectionType.FIELD_ID, new Ins21cCreator(0x65));
         VALUES[0x65] = SGET_CHAR;
-        SGET_SHORT = new Opcode<>(0x66, 4, "sget-short", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SGET_SHORT);
-            }
-        });
+        SGET_SHORT = new Opcode<>(0x66, 4, "sget-short", SectionType.FIELD_ID, new Ins21cCreator(0x66));
         VALUES[0x66] = SGET_SHORT;
-        SPUT = new Opcode<>(0x67, 4, "sput", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SPUT);
-            }
-        });
+        SPUT = new Opcode<>(0x67, 4, "sput", SectionType.FIELD_ID, new Ins21cCreator(0x67));
         VALUES[0x67] = SPUT;
-        SPUT_WIDE = new Opcode<>(0x68, 4, "sput-wide", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SPUT_WIDE);
-            }
-        });
+        SPUT_WIDE = new Opcode<>(0x68, 4, "sput-wide", SectionType.FIELD_ID, new Ins21cCreator(0x68));
         VALUES[0x68] = SPUT_WIDE;
-        SPUT_OBJECT = new Opcode<>(0x69, 4, "sput-object", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SPUT_OBJECT);
-            }
-        });
+        SPUT_OBJECT = new Opcode<>(0x69, 4, "sput-object", SectionType.FIELD_ID, new Ins21cCreator(0x69));
         VALUES[0x69] = SPUT_OBJECT;
-        SPUT_BOOLEAN = new Opcode<>(0x6a, 4, "sput-boolean", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SPUT_BOOLEAN);
-            }
-        });
+        SPUT_BOOLEAN = new Opcode<>(0x6a, 4, "sput-boolean", SectionType.FIELD_ID, new Ins21cCreator(0x6a));
         VALUES[0x6a] = SPUT_BOOLEAN;
-        SPUT_BYTE = new Opcode<>(0x6b, 4, "sput-byte", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SPUT_BYTE);
-            }
-        });
+        SPUT_BYTE = new Opcode<>(0x6b, 4, "sput-byte", SectionType.FIELD_ID, new Ins21cCreator(0x6b));
         VALUES[0x6b] = SPUT_BYTE;
-        SPUT_CHAR = new Opcode<>(0x6c, 4, "sput-char", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SPUT_CHAR);
-            }
-        });
+        SPUT_CHAR = new Opcode<>(0x6c, 4, "sput-char", SectionType.FIELD_ID, new Ins21cCreator(0x6c));
         VALUES[0x6c] = SPUT_CHAR;
-        SPUT_SHORT = new Opcode<>(0x6d, 4, "sput-short", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SPUT_SHORT);
-            }
-        });
+        SPUT_SHORT = new Opcode<>(0x6d, 4, "sput-short", SectionType.FIELD_ID, new Ins21cCreator(0x6d));
         VALUES[0x6d] = SPUT_SHORT;
-        INVOKE_VIRTUAL = new Opcode<>(0x6e, 6, "invoke-virtual", SectionType.METHOD_ID, new BlockCreator<Ins35c>() {
-            @Override
-            public Ins35c newInstance() {
-                return new Ins35c(INVOKE_VIRTUAL);
-            }
-        });
+        INVOKE_VIRTUAL = new Opcode<>(0x6e, 6, "invoke-virtual", SectionType.METHOD_ID, new Ins35cCreator(0x6e));
         VALUES[0x6e] = INVOKE_VIRTUAL;
-        INVOKE_SUPER = new Opcode<>(0x6f, 6, "invoke-super", SectionType.METHOD_ID, new BlockCreator<Ins35c>() {
-            @Override
-            public Ins35c newInstance() {
-                return new Ins35c(INVOKE_SUPER);
-            }
-        });
+        INVOKE_SUPER = new Opcode<>(0x6f, 6, "invoke-super", SectionType.METHOD_ID, new Ins35cCreator(0x6f));
         VALUES[0x6f] = INVOKE_SUPER;
-        INVOKE_DIRECT = new Opcode<>(0x70, 6, "invoke-direct", SectionType.METHOD_ID, new BlockCreator<Ins35c>() {
-            @Override
-            public Ins35c newInstance() {
-                return new Ins35c(INVOKE_DIRECT);
-            }
-        });
+        INVOKE_DIRECT = new Opcode<>(0x70, 6, "invoke-direct", SectionType.METHOD_ID, new Ins35cCreator(0x70));
         VALUES[0x70] = INVOKE_DIRECT;
-        INVOKE_STATIC = new Opcode<>(0x71, 6, "invoke-static", SectionType.METHOD_ID, new BlockCreator<Ins35c>() {
-            @Override
-            public Ins35c newInstance() {
-                return new Ins35c(INVOKE_STATIC);
-            }
-        });
+        INVOKE_STATIC = new Opcode<>(0x71, 6, "invoke-static", SectionType.METHOD_ID, new Ins35cCreator(0x71));
         VALUES[0x71] = INVOKE_STATIC;
-        INVOKE_INTERFACE = new Opcode<>(0x72, 6, "invoke-interface", SectionType.METHOD_ID, new BlockCreator<Ins35c>() {
-            @Override
-            public Ins35c newInstance() {
-                return new Ins35c(INVOKE_INTERFACE);
-            }
-        });
+        INVOKE_INTERFACE = new Opcode<>(0x72, 6, "invoke-interface", SectionType.METHOD_ID, new Ins35cCreator(0x72));
         VALUES[0x72] = INVOKE_INTERFACE;
-        RETURN_VOID_NO_BARRIER = new Opcode<>(0x73, 2, "return-void-no-barrier", new BlockCreator<Ins10x>() {
-            @Override
-            public Ins10x newInstance() {
-                return new Ins10x(RETURN_VOID_NO_BARRIER);
-            }
-        });
+        RETURN_VOID_NO_BARRIER = new Opcode<>(0x73, 2, "return-void-no-barrier", new Ins10xCreator(0x73));
         VALUES[0x73] = RETURN_VOID_NO_BARRIER;
-        INVOKE_VIRTUAL_RANGE = new Opcode<>(0x74, 6, "invoke-virtual/range", SectionType.METHOD_ID, new BlockCreator<Ins3rc>() {
-            @Override
-            public Ins3rc newInstance() {
-                return new Ins3rc(INVOKE_VIRTUAL_RANGE);
-            }
-        });
+        INVOKE_VIRTUAL_RANGE = new Opcode<>(0x74, 6, "invoke-virtual/range", SectionType.METHOD_ID, new Ins3rcCreator(0x74));
         VALUES[0x74] = INVOKE_VIRTUAL_RANGE;
-        INVOKE_SUPER_RANGE = new Opcode<>(0x75, 6, "invoke-super/range", SectionType.METHOD_ID, new BlockCreator<Ins3rc>() {
-            @Override
-            public Ins3rc newInstance() {
-                return new Ins3rc(INVOKE_SUPER_RANGE);
-            }
-        });
+        INVOKE_SUPER_RANGE = new Opcode<>(0x75, 6, "invoke-super/range", SectionType.METHOD_ID, new Ins3rcCreator(0x75));
         VALUES[0x75] = INVOKE_SUPER_RANGE;
-        INVOKE_DIRECT_RANGE = new Opcode<>(0x76, 6, "invoke-direct/range", SectionType.METHOD_ID, new BlockCreator<Ins3rc>() {
-            @Override
-            public Ins3rc newInstance() {
-                return new Ins3rc(INVOKE_DIRECT_RANGE);
-            }
-        });
+        INVOKE_DIRECT_RANGE = new Opcode<>(0x76, 6, "invoke-direct/range", SectionType.METHOD_ID, new Ins3rcCreator(0x76));
         VALUES[0x76] = INVOKE_DIRECT_RANGE;
-        INVOKE_STATIC_RANGE = new Opcode<>(0x77, 6, "invoke-static/range", SectionType.METHOD_ID, new BlockCreator<Ins3rc>() {
-            @Override
-            public Ins3rc newInstance() {
-                return new Ins3rc(INVOKE_STATIC_RANGE);
-            }
-        });
+        INVOKE_STATIC_RANGE = new Opcode<>(0x77, 6, "invoke-static/range", SectionType.METHOD_ID, new Ins3rcCreator(0x77));
         VALUES[0x77] = INVOKE_STATIC_RANGE;
-        INVOKE_INTERFACE_RANGE = new Opcode<>(0x78, 6, "invoke-interface/range", SectionType.METHOD_ID, new BlockCreator<Ins3rc>() {
-            @Override
-            public Ins3rc newInstance() {
-                return new Ins3rc(INVOKE_INTERFACE_RANGE);
-            }
-        });
+        INVOKE_INTERFACE_RANGE = new Opcode<>(0x78, 6, "invoke-interface/range", SectionType.METHOD_ID, new Ins3rcCreator(0x78));
         VALUES[0x78] = INVOKE_INTERFACE_RANGE;
-        NEG_INT = new Opcode<>(0x7b, 2, "neg-int", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(NEG_INT);
-            }
-        });
+        NEG_INT = new Opcode<>(0x7b, 2, "neg-int", new Ins12xCreator(0x7b));
         VALUES[0x7b] = NEG_INT;
-        NOT_INT = new Opcode<>(0x7c, 2, "not-int", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(NOT_INT);
-            }
-        });
+        NOT_INT = new Opcode<>(0x7c, 2, "not-int", new Ins12xCreator(0x7c));
         VALUES[0x7c] = NOT_INT;
-        NEG_LONG = new Opcode<>(0x7d, 2, "neg-long", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(NEG_LONG);
-            }
-        });
+        NEG_LONG = new Opcode<>(0x7d, 2, "neg-long", new Ins12xCreator(0x7d));
         VALUES[0x7d] = NEG_LONG;
-        NOT_LONG = new Opcode<>(0x7e, 2, "not-long", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(NOT_LONG);
-            }
-        });
+        NOT_LONG = new Opcode<>(0x7e, 2, "not-long", new Ins12xCreator(0x7e));
         VALUES[0x7e] = NOT_LONG;
-        NEG_FLOAT = new Opcode<>(0x7f, 2, "neg-float", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(NEG_FLOAT);
-            }
-        });
+        NEG_FLOAT = new Opcode<>(0x7f, 2, "neg-float", new Ins12xCreator(0x7f));
         VALUES[0x7f] = NEG_FLOAT;
-        NEG_DOUBLE = new Opcode<>(0x80, 2, "neg-double", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(NEG_DOUBLE);
-            }
-        });
+        NEG_DOUBLE = new Opcode<>(0x80, 2, "neg-double", new Ins12xCreator(0x80));
         VALUES[0x80] = NEG_DOUBLE;
-        INT_TO_LONG = new Opcode<>(0x81, 2, "int-to-long", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(INT_TO_LONG);
-            }
-        });
+        INT_TO_LONG = new Opcode<>(0x81, 2, "int-to-long", new Ins12xCreator(0x81));
         VALUES[0x81] = INT_TO_LONG;
-        INT_TO_FLOAT = new Opcode<>(0x82, 2, "int-to-float", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(INT_TO_FLOAT);
-            }
-        });
+        INT_TO_FLOAT = new Opcode<>(0x82, 2, "int-to-float", new Ins12xCreator(0x82));
         VALUES[0x82] = INT_TO_FLOAT;
-        INT_TO_DOUBLE = new Opcode<>(0x83, 2, "int-to-double", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(INT_TO_DOUBLE);
-            }
-        });
+        INT_TO_DOUBLE = new Opcode<>(0x83, 2, "int-to-double", new Ins12xCreator(0x83));
         VALUES[0x83] = INT_TO_DOUBLE;
-        LONG_TO_INT = new Opcode<>(0x84, 2, "long-to-int", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(LONG_TO_INT);
-            }
-        });
+        LONG_TO_INT = new Opcode<>(0x84, 2, "long-to-int", new Ins12xCreator(0x84));
         VALUES[0x84] = LONG_TO_INT;
-        LONG_TO_FLOAT = new Opcode<>(0x85, 2, "long-to-float", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(LONG_TO_FLOAT);
-            }
-        });
+        LONG_TO_FLOAT = new Opcode<>(0x85, 2, "long-to-float", new Ins12xCreator(0x85));
         VALUES[0x85] = LONG_TO_FLOAT;
-        LONG_TO_DOUBLE = new Opcode<>(0x86, 2, "long-to-double", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(LONG_TO_DOUBLE);
-            }
-        });
+        LONG_TO_DOUBLE = new Opcode<>(0x86, 2, "long-to-double", new Ins12xCreator(0x86));
         VALUES[0x86] = LONG_TO_DOUBLE;
-        FLOAT_TO_INT = new Opcode<>(0x87, 2, "float-to-int", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(FLOAT_TO_INT);
-            }
-        });
+        FLOAT_TO_INT = new Opcode<>(0x87, 2, "float-to-int", new Ins12xCreator(0x87));
         VALUES[0x87] = FLOAT_TO_INT;
-        FLOAT_TO_LONG = new Opcode<>(0x88, 2, "float-to-long", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(FLOAT_TO_LONG);
-            }
-        });
+        FLOAT_TO_LONG = new Opcode<>(0x88, 2, "float-to-long", new Ins12xCreator(0x88));
         VALUES[0x88] = FLOAT_TO_LONG;
-        FLOAT_TO_DOUBLE = new Opcode<>(0x89, 2, "float-to-double", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(FLOAT_TO_DOUBLE);
-            }
-        });
+        FLOAT_TO_DOUBLE = new Opcode<>(0x89, 2, "float-to-double", new Ins12xCreator(0x89));
         VALUES[0x89] = FLOAT_TO_DOUBLE;
-        DOUBLE_TO_INT = new Opcode<>(0x8a, 2, "double-to-int", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(DOUBLE_TO_INT);
-            }
-        });
+        DOUBLE_TO_INT = new Opcode<>(0x8a, 2, "double-to-int", new Ins12xCreator(0x8a));
         VALUES[0x8a] = DOUBLE_TO_INT;
-        DOUBLE_TO_LONG = new Opcode<>(0x8b, 2, "double-to-long", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(DOUBLE_TO_LONG);
-            }
-        });
+        DOUBLE_TO_LONG = new Opcode<>(0x8b, 2, "double-to-long", new Ins12xCreator(0x8b));
         VALUES[0x8b] = DOUBLE_TO_LONG;
-        DOUBLE_TO_FLOAT = new Opcode<>(0x8c, 2, "double-to-float", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(DOUBLE_TO_FLOAT);
-            }
-        });
+        DOUBLE_TO_FLOAT = new Opcode<>(0x8c, 2, "double-to-float", new Ins12xCreator(0x8c));
         VALUES[0x8c] = DOUBLE_TO_FLOAT;
-        INT_TO_BYTE = new Opcode<>(0x8d, 2, "int-to-byte", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(INT_TO_BYTE);
-            }
-        });
+        INT_TO_BYTE = new Opcode<>(0x8d, 2, "int-to-byte", new Ins12xCreator(0x8d));
         VALUES[0x8d] = INT_TO_BYTE;
-        INT_TO_CHAR = new Opcode<>(0x8e, 2, "int-to-char", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(INT_TO_CHAR);
-            }
-        });
+        INT_TO_CHAR = new Opcode<>(0x8e, 2, "int-to-char", new Ins12xCreator(0x8e));
         VALUES[0x8e] = INT_TO_CHAR;
-        INT_TO_SHORT = new Opcode<>(0x8f, 2, "int-to-short", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(INT_TO_SHORT);
-            }
-        });
+        INT_TO_SHORT = new Opcode<>(0x8f, 2, "int-to-short", new Ins12xCreator(0x8f));
         VALUES[0x8f] = INT_TO_SHORT;
-        ADD_INT = new Opcode<>(0x90, 4, "add-int", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(ADD_INT);
-            }
-        });
+        ADD_INT = new Opcode<>(0x90, 4, "add-int", new Ins23xCreator(0x90));
         VALUES[0x90] = ADD_INT;
-        SUB_INT = new Opcode<>(0x91, 4, "sub-int", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(SUB_INT);
-            }
-        });
+        SUB_INT = new Opcode<>(0x91, 4, "sub-int", new Ins23xCreator(0x91));
         VALUES[0x91] = SUB_INT;
-        MUL_INT = new Opcode<>(0x92, 4, "mul-int", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(MUL_INT);
-            }
-        });
+        MUL_INT = new Opcode<>(0x92, 4, "mul-int", new Ins23xCreator(0x92));
         VALUES[0x92] = MUL_INT;
-        DIV_INT = new Opcode<>(0x93, 4, "div-int", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(DIV_INT);
-            }
-        });
+        DIV_INT = new Opcode<>(0x93, 4, "div-int", new Ins23xCreator(0x93));
         VALUES[0x93] = DIV_INT;
-        REM_INT = new Opcode<>(0x94, 4, "rem-int", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(REM_INT);
-            }
-        });
+        REM_INT = new Opcode<>(0x94, 4, "rem-int", new Ins23xCreator(0x94));
         VALUES[0x94] = REM_INT;
-        AND_INT = new Opcode<>(0x95, 4, "and-int", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(AND_INT);
-            }
-        });
+        AND_INT = new Opcode<>(0x95, 4, "and-int", new Ins23xCreator(0x95));
         VALUES[0x95] = AND_INT;
-        OR_INT = new Opcode<>(0x96, 4, "or-int", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(OR_INT);
-            }
-        });
+        OR_INT = new Opcode<>(0x96, 4, "or-int", new Ins23xCreator(0x96));
         VALUES[0x96] = OR_INT;
-        XOR_INT = new Opcode<>(0x97, 4, "xor-int", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(XOR_INT);
-            }
-        });
+        XOR_INT = new Opcode<>(0x97, 4, "xor-int", new Ins23xCreator(0x97));
         VALUES[0x97] = XOR_INT;
-        SHL_INT = new Opcode<>(0x98, 4, "shl-int", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(SHL_INT);
-            }
-        });
+        SHL_INT = new Opcode<>(0x98, 4, "shl-int", new Ins23xCreator(0x98));
         VALUES[0x98] = SHL_INT;
-        SHR_INT = new Opcode<>(0x99, 4, "shr-int", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(SHR_INT);
-            }
-        });
+        SHR_INT = new Opcode<>(0x99, 4, "shr-int", new Ins23xCreator(0x99));
         VALUES[0x99] = SHR_INT;
-        USHR_INT = new Opcode<>(0x9a, 4, "ushr-int", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(USHR_INT);
-            }
-        });
+        USHR_INT = new Opcode<>(0x9a, 4, "ushr-int", new Ins23xCreator(0x9a));
         VALUES[0x9a] = USHR_INT;
-        ADD_LONG = new Opcode<>(0x9b, 4, "add-long", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(ADD_LONG);
-            }
-        });
+        ADD_LONG = new Opcode<>(0x9b, 4, "add-long", new Ins23xCreator(0x9b));
         VALUES[0x9b] = ADD_LONG;
-        SUB_LONG = new Opcode<>(0x9c, 4, "sub-long", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(SUB_LONG);
-            }
-        });
+        SUB_LONG = new Opcode<>(0x9c, 4, "sub-long", new Ins23xCreator(0x9c));
         VALUES[0x9c] = SUB_LONG;
-        MUL_LONG = new Opcode<>(0x9d, 4, "mul-long", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(MUL_LONG);
-            }
-        });
+        MUL_LONG = new Opcode<>(0x9d, 4, "mul-long", new Ins23xCreator(0x9d));
         VALUES[0x9d] = MUL_LONG;
-        DIV_LONG = new Opcode<>(0x9e, 4, "div-long", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(DIV_LONG);
-            }
-        });
+        DIV_LONG = new Opcode<>(0x9e, 4, "div-long", new Ins23xCreator(0x9e));
         VALUES[0x9e] = DIV_LONG;
-        REM_LONG = new Opcode<>(0x9f, 4, "rem-long", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(REM_LONG);
-            }
-        });
+        REM_LONG = new Opcode<>(0x9f, 4, "rem-long", new Ins23xCreator(0x9f));
         VALUES[0x9f] = REM_LONG;
-        AND_LONG = new Opcode<>(0xa0, 4, "and-long", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(AND_LONG);
-            }
-        });
+        AND_LONG = new Opcode<>(0xa0, 4, "and-long", new Ins23xCreator(0xa0));
         VALUES[0xa0] = AND_LONG;
-        OR_LONG = new Opcode<>(0xa1, 4, "or-long", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(OR_LONG);
-            }
-        });
+        OR_LONG = new Opcode<>(0xa1, 4, "or-long", new Ins23xCreator(0xa1));
         VALUES[0xa1] = OR_LONG;
-        XOR_LONG = new Opcode<>(0xa2, 4, "xor-long", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(XOR_LONG);
-            }
-        });
+        XOR_LONG = new Opcode<>(0xa2, 4, "xor-long", new Ins23xCreator(0xa2));
         VALUES[0xa2] = XOR_LONG;
-        SHL_LONG = new Opcode<>(0xa3, 4, "shl-long", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(SHL_LONG);
-            }
-        });
+        SHL_LONG = new Opcode<>(0xa3, 4, "shl-long", new Ins23xCreator(0xa3));
         VALUES[0xa3] = SHL_LONG;
-        SHR_LONG = new Opcode<>(0xa4, 4, "shr-long", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(SHR_LONG);
-            }
-        });
+        SHR_LONG = new Opcode<>(0xa4, 4, "shr-long", new Ins23xCreator(0xa4));
         VALUES[0xa4] = SHR_LONG;
-        USHR_LONG = new Opcode<>(0xa5, 4, "ushr-long", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(USHR_LONG);
-            }
-        });
+        USHR_LONG = new Opcode<>(0xa5, 4, "ushr-long", new Ins23xCreator(0xa5));
         VALUES[0xa5] = USHR_LONG;
-        ADD_FLOAT = new Opcode<>(0xa6, 4, "add-float", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(ADD_FLOAT);
-            }
-        });
+        ADD_FLOAT = new Opcode<>(0xa6, 4, "add-float", new Ins23xCreator(0xa6));
         VALUES[0xa6] = ADD_FLOAT;
-        SUB_FLOAT = new Opcode<>(0xa7, 4, "sub-float", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(SUB_FLOAT);
-            }
-        });
+        SUB_FLOAT = new Opcode<>(0xa7, 4, "sub-float", new Ins23xCreator(0xa7));
         VALUES[0xa7] = SUB_FLOAT;
-        MUL_FLOAT = new Opcode<>(0xa8, 4, "mul-float", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(MUL_FLOAT);
-            }
-        });
+        MUL_FLOAT = new Opcode<>(0xa8, 4, "mul-float", new Ins23xCreator(0xa8));
         VALUES[0xa8] = MUL_FLOAT;
-        DIV_FLOAT = new Opcode<>(0xa9, 4, "div-float", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(DIV_FLOAT);
-            }
-        });
+        DIV_FLOAT = new Opcode<>(0xa9, 4, "div-float", new Ins23xCreator(0xa9));
         VALUES[0xa9] = DIV_FLOAT;
-        REM_FLOAT = new Opcode<>(0xaa, 4, "rem-float", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(REM_FLOAT);
-            }
-        });
+        REM_FLOAT = new Opcode<>(0xaa, 4, "rem-float", new Ins23xCreator(0xaa));
         VALUES[0xaa] = REM_FLOAT;
-        ADD_DOUBLE = new Opcode<>(0xab, 4, "add-double", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(ADD_DOUBLE);
-            }
-        });
+        ADD_DOUBLE = new Opcode<>(0xab, 4, "add-double", new Ins23xCreator(0xab));
         VALUES[0xab] = ADD_DOUBLE;
-        SUB_DOUBLE = new Opcode<>(0xac, 4, "sub-double", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(SUB_DOUBLE);
-            }
-        });
+        SUB_DOUBLE = new Opcode<>(0xac, 4, "sub-double", new Ins23xCreator(0xac));
         VALUES[0xac] = SUB_DOUBLE;
-        MUL_DOUBLE = new Opcode<>(0xad, 4, "mul-double", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(MUL_DOUBLE);
-            }
-        });
+        MUL_DOUBLE = new Opcode<>(0xad, 4, "mul-double", new Ins23xCreator(0xad));
         VALUES[0xad] = MUL_DOUBLE;
-        DIV_DOUBLE = new Opcode<>(0xae, 4, "div-double", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(DIV_DOUBLE);
-            }
-        });
+        DIV_DOUBLE = new Opcode<>(0xae, 4, "div-double", new Ins23xCreator(0xae));
         VALUES[0xae] = DIV_DOUBLE;
-        REM_DOUBLE = new Opcode<>(0xaf, 4, "rem-double", new BlockCreator<Ins23x>() {
-            @Override
-            public Ins23x newInstance() {
-                return new Ins23x(REM_DOUBLE);
-            }
-        });
+        REM_DOUBLE = new Opcode<>(0xaf, 4, "rem-double", new Ins23xCreator(0xaf));
         VALUES[0xaf] = REM_DOUBLE;
-        ADD_INT_2ADDR = new Opcode<>(0xb0, 2, "add-int/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(ADD_INT_2ADDR);
-            }
-        });
+        ADD_INT_2ADDR = new Opcode<>(0xb0, 2, "add-int/2addr", new Ins12xCreator(0xb0));
         VALUES[0xb0] = ADD_INT_2ADDR;
-        SUB_INT_2ADDR = new Opcode<>(0xb1, 2, "sub-int/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(SUB_INT_2ADDR);
-            }
-        });
+        SUB_INT_2ADDR = new Opcode<>(0xb1, 2, "sub-int/2addr", new Ins12xCreator(0xb1));
         VALUES[0xb1] = SUB_INT_2ADDR;
-        MUL_INT_2ADDR = new Opcode<>(0xb2, 2, "mul-int/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(MUL_INT_2ADDR);
-            }
-        });
+        MUL_INT_2ADDR = new Opcode<>(0xb2, 2, "mul-int/2addr", new Ins12xCreator(0xb2));
         VALUES[0xb2] = MUL_INT_2ADDR;
-        DIV_INT_2ADDR = new Opcode<>(0xb3, 2, "div-int/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(DIV_INT_2ADDR);
-            }
-        });
+        DIV_INT_2ADDR = new Opcode<>(0xb3, 2, "div-int/2addr", new Ins12xCreator(0xb3));
         VALUES[0xb3] = DIV_INT_2ADDR;
-        REM_INT_2ADDR = new Opcode<>(0xb4, 2, "rem-int/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(REM_INT_2ADDR);
-            }
-        });
+        REM_INT_2ADDR = new Opcode<>(0xb4, 2, "rem-int/2addr", new Ins12xCreator(0xb4));
         VALUES[0xb4] = REM_INT_2ADDR;
-        AND_INT_2ADDR = new Opcode<>(0xb5, 2, "and-int/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(AND_INT_2ADDR);
-            }
-        });
+        AND_INT_2ADDR = new Opcode<>(0xb5, 2, "and-int/2addr", new Ins12xCreator(0xb5));
         VALUES[0xb5] = AND_INT_2ADDR;
-        OR_INT_2ADDR = new Opcode<>(0xb6, 2, "or-int/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(OR_INT_2ADDR);
-            }
-        });
+        OR_INT_2ADDR = new Opcode<>(0xb6, 2, "or-int/2addr", new Ins12xCreator(0xb6));
         VALUES[0xb6] = OR_INT_2ADDR;
-        XOR_INT_2ADDR = new Opcode<>(0xb7, 2, "xor-int/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(XOR_INT_2ADDR);
-            }
-        });
+        XOR_INT_2ADDR = new Opcode<>(0xb7, 2, "xor-int/2addr", new Ins12xCreator(0xb7));
         VALUES[0xb7] = XOR_INT_2ADDR;
-        SHL_INT_2ADDR = new Opcode<>(0xb8, 2, "shl-int/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(SHL_INT_2ADDR);
-            }
-        });
+        SHL_INT_2ADDR = new Opcode<>(0xb8, 2, "shl-int/2addr", new Ins12xCreator(0xb8));
         VALUES[0xb8] = SHL_INT_2ADDR;
-        SHR_INT_2ADDR = new Opcode<>(0xb9, 2, "shr-int/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(SHR_INT_2ADDR);
-            }
-        });
+        SHR_INT_2ADDR = new Opcode<>(0xb9, 2, "shr-int/2addr", new Ins12xCreator(0xb9));
         VALUES[0xb9] = SHR_INT_2ADDR;
-        USHR_INT_2ADDR = new Opcode<>(0xba, 2, "ushr-int/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(USHR_INT_2ADDR);
-            }
-        });
+        USHR_INT_2ADDR = new Opcode<>(0xba, 2, "ushr-int/2addr", new Ins12xCreator(0xba));
         VALUES[0xba] = USHR_INT_2ADDR;
-        ADD_LONG_2ADDR = new Opcode<>(0xbb, 2, "add-long/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(ADD_LONG_2ADDR);
-            }
-        });
+        ADD_LONG_2ADDR = new Opcode<>(0xbb, 2, "add-long/2addr", new Ins12xCreator(0xbb));
         VALUES[0xbb] = ADD_LONG_2ADDR;
-        SUB_LONG_2ADDR = new Opcode<>(0xbc, 2, "sub-long/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(SUB_LONG_2ADDR);
-            }
-        });
+        SUB_LONG_2ADDR = new Opcode<>(0xbc, 2, "sub-long/2addr", new Ins12xCreator(0xbc));
         VALUES[0xbc] = SUB_LONG_2ADDR;
-        MUL_LONG_2ADDR = new Opcode<>(0xbd, 2, "mul-long/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(MUL_LONG_2ADDR);
-            }
-        });
+        MUL_LONG_2ADDR = new Opcode<>(0xbd, 2, "mul-long/2addr", new Ins12xCreator(0xbd));
         VALUES[0xbd] = MUL_LONG_2ADDR;
-        DIV_LONG_2ADDR = new Opcode<>(0xbe, 2, "div-long/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(DIV_LONG_2ADDR);
-            }
-        });
+        DIV_LONG_2ADDR = new Opcode<>(0xbe, 2, "div-long/2addr", new Ins12xCreator(0xbe));
         VALUES[0xbe] = DIV_LONG_2ADDR;
-        REM_LONG_2ADDR = new Opcode<>(0xbf, 2, "rem-long/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(REM_LONG_2ADDR);
-            }
-        });
+        REM_LONG_2ADDR = new Opcode<>(0xbf, 2, "rem-long/2addr", new Ins12xCreator(0xbf));
         VALUES[0xbf] = REM_LONG_2ADDR;
-        AND_LONG_2ADDR = new Opcode<>(0xc0, 2, "and-long/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(AND_LONG_2ADDR);
-            }
-        });
+        AND_LONG_2ADDR = new Opcode<>(0xc0, 2, "and-long/2addr", new Ins12xCreator(0xc0));
         VALUES[0xc0] = AND_LONG_2ADDR;
-        OR_LONG_2ADDR = new Opcode<>(0xc1, 2, "or-long/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(OR_LONG_2ADDR);
-            }
-        });
+        OR_LONG_2ADDR = new Opcode<>(0xc1, 2, "or-long/2addr", new Ins12xCreator(0xc1));
         VALUES[0xc1] = OR_LONG_2ADDR;
-        XOR_LONG_2ADDR = new Opcode<>(0xc2, 2, "xor-long/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(XOR_LONG_2ADDR);
-            }
-        });
+        XOR_LONG_2ADDR = new Opcode<>(0xc2, 2, "xor-long/2addr", new Ins12xCreator(0xc2));
         VALUES[0xc2] = XOR_LONG_2ADDR;
-        SHL_LONG_2ADDR = new Opcode<>(0xc3, 2, "shl-long/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(SHL_LONG_2ADDR);
-            }
-        });
+        SHL_LONG_2ADDR = new Opcode<>(0xc3, 2, "shl-long/2addr", new Ins12xCreator(0xc3));
         VALUES[0xc3] = SHL_LONG_2ADDR;
-        SHR_LONG_2ADDR = new Opcode<>(0xc4, 2, "shr-long/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(SHR_LONG_2ADDR);
-            }
-        });
+        SHR_LONG_2ADDR = new Opcode<>(0xc4, 2, "shr-long/2addr", new Ins12xCreator(0xc4));
         VALUES[0xc4] = SHR_LONG_2ADDR;
-        USHR_LONG_2ADDR = new Opcode<>(0xc5, 2, "ushr-long/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(USHR_LONG_2ADDR);
-            }
-        });
+        USHR_LONG_2ADDR = new Opcode<>(0xc5, 2, "ushr-long/2addr", new Ins12xCreator(0xc5));
         VALUES[0xc5] = USHR_LONG_2ADDR;
-        ADD_FLOAT_2ADDR = new Opcode<>(0xc6, 2, "add-float/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(ADD_FLOAT_2ADDR);
-            }
-        });
+        ADD_FLOAT_2ADDR = new Opcode<>(0xc6, 2, "add-float/2addr", new Ins12xCreator(0xc6));
         VALUES[0xc6] = ADD_FLOAT_2ADDR;
-        SUB_FLOAT_2ADDR = new Opcode<>(0xc7, 2, "sub-float/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(SUB_FLOAT_2ADDR);
-            }
-        });
+        SUB_FLOAT_2ADDR = new Opcode<>(0xc7, 2, "sub-float/2addr", new Ins12xCreator(0xc7));
         VALUES[0xc7] = SUB_FLOAT_2ADDR;
-        MUL_FLOAT_2ADDR = new Opcode<>(0xc8, 2, "mul-float/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(MUL_FLOAT_2ADDR);
-            }
-        });
+        MUL_FLOAT_2ADDR = new Opcode<>(0xc8, 2, "mul-float/2addr", new Ins12xCreator(0xc8));
         VALUES[0xc8] = MUL_FLOAT_2ADDR;
-        DIV_FLOAT_2ADDR = new Opcode<>(0xc9, 2, "div-float/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(DIV_FLOAT_2ADDR);
-            }
-        });
+        DIV_FLOAT_2ADDR = new Opcode<>(0xc9, 2, "div-float/2addr", new Ins12xCreator(0xc9));
         VALUES[0xc9] = DIV_FLOAT_2ADDR;
-        REM_FLOAT_2ADDR = new Opcode<>(0xca, 2, "rem-float/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(REM_FLOAT_2ADDR);
-            }
-        });
+        REM_FLOAT_2ADDR = new Opcode<>(0xca, 2, "rem-float/2addr", new Ins12xCreator(0xca));
         VALUES[0xca] = REM_FLOAT_2ADDR;
-        ADD_DOUBLE_2ADDR = new Opcode<>(0xcb, 2, "add-double/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(ADD_DOUBLE_2ADDR);
-            }
-        });
+        ADD_DOUBLE_2ADDR = new Opcode<>(0xcb, 2, "add-double/2addr", new Ins12xCreator(0xcb));
         VALUES[0xcb] = ADD_DOUBLE_2ADDR;
-        SUB_DOUBLE_2ADDR = new Opcode<>(0xcc, 2, "sub-double/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(SUB_DOUBLE_2ADDR);
-            }
-        });
+        SUB_DOUBLE_2ADDR = new Opcode<>(0xcc, 2, "sub-double/2addr", new Ins12xCreator(0xcc));
         VALUES[0xcc] = SUB_DOUBLE_2ADDR;
-        MUL_DOUBLE_2ADDR = new Opcode<>(0xcd, 2, "mul-double/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(MUL_DOUBLE_2ADDR);
-            }
-        });
+        MUL_DOUBLE_2ADDR = new Opcode<>(0xcd, 2, "mul-double/2addr", new Ins12xCreator(0xcd));
         VALUES[0xcd] = MUL_DOUBLE_2ADDR;
-        DIV_DOUBLE_2ADDR = new Opcode<>(0xce, 2, "div-double/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(DIV_DOUBLE_2ADDR);
-            }
-        });
+        DIV_DOUBLE_2ADDR = new Opcode<>(0xce, 2, "div-double/2addr", new Ins12xCreator(0xce));
         VALUES[0xce] = DIV_DOUBLE_2ADDR;
-        REM_DOUBLE_2ADDR = new Opcode<>(0xcf, 2, "rem-double/2addr", new BlockCreator<Ins12x>() {
-            @Override
-            public Ins12x newInstance() {
-                return new Ins12x(REM_DOUBLE_2ADDR);
-            }
-        });
+        REM_DOUBLE_2ADDR = new Opcode<>(0xcf, 2, "rem-double/2addr", new Ins12xCreator(0xcf));
         VALUES[0xcf] = REM_DOUBLE_2ADDR;
-        ADD_INT_LIT16 = new Opcode<>(0xd0, 4, "add-int/lit16", new BlockCreator<Ins22s>() {
-            @Override
-            public Ins22s newInstance() {
-                return new Ins22s(ADD_INT_LIT16);
-            }
-        });
+        ADD_INT_LIT16 = new Opcode<>(0xd0, 4, "add-int/lit16", new Ins22sCreator(0xd0));
         VALUES[0xd0] = ADD_INT_LIT16;
-        RSUB_INT = new Opcode<>(0xd1, 4, "rsub-int", new BlockCreator<Ins22s>() {
-            @Override
-            public Ins22s newInstance() {
-                return new Ins22s(RSUB_INT);
-            }
-        });
+        RSUB_INT = new Opcode<>(0xd1, 4, "rsub-int", new Ins22sCreator(0xd1));
         VALUES[0xd1] = RSUB_INT;
-        MUL_INT_LIT16 = new Opcode<>(0xd2, 4, "mul-int/lit16", new BlockCreator<Ins22s>() {
-            @Override
-            public Ins22s newInstance() {
-                return new Ins22s(MUL_INT_LIT16);
-            }
-        });
+        MUL_INT_LIT16 = new Opcode<>(0xd2, 4, "mul-int/lit16", new Ins22sCreator(0xd2));
         VALUES[0xd2] = MUL_INT_LIT16;
-        DIV_INT_LIT16 = new Opcode<>(0xd3, 4, "div-int/lit16", new BlockCreator<Ins22s>() {
-            @Override
-            public Ins22s newInstance() {
-                return new Ins22s(DIV_INT_LIT16);
-            }
-        });
+        DIV_INT_LIT16 = new Opcode<>(0xd3, 4, "div-int/lit16", new Ins22sCreator(0xd3));
         VALUES[0xd3] = DIV_INT_LIT16;
-        REM_INT_LIT16 = new Opcode<>(0xd4, 4, "rem-int/lit16", new BlockCreator<Ins22s>() {
-            @Override
-            public Ins22s newInstance() {
-                return new Ins22s(REM_INT_LIT16);
-            }
-        });
+        REM_INT_LIT16 = new Opcode<>(0xd4, 4, "rem-int/lit16", new Ins22sCreator(0xd4));
         VALUES[0xd4] = REM_INT_LIT16;
-        AND_INT_LIT16 = new Opcode<>(0xd5, 4, "and-int/lit16", new BlockCreator<Ins22s>() {
-            @Override
-            public Ins22s newInstance() {
-                return new Ins22s(AND_INT_LIT16);
-            }
-        });
+        AND_INT_LIT16 = new Opcode<>(0xd5, 4, "and-int/lit16", new Ins22sCreator(0xd5));
         VALUES[0xd5] = AND_INT_LIT16;
-        OR_INT_LIT16 = new Opcode<>(0xd6, 4, "or-int/lit16", new BlockCreator<Ins22s>() {
-            @Override
-            public Ins22s newInstance() {
-                return new Ins22s(OR_INT_LIT16);
-            }
-        });
+        OR_INT_LIT16 = new Opcode<>(0xd6, 4, "or-int/lit16", new Ins22sCreator(0xd6));
         VALUES[0xd6] = OR_INT_LIT16;
-        XOR_INT_LIT16 = new Opcode<>(0xd7, 4, "xor-int/lit16", new BlockCreator<Ins22s>() {
-            @Override
-            public Ins22s newInstance() {
-                return new Ins22s(XOR_INT_LIT16);
-            }
-        });
+        XOR_INT_LIT16 = new Opcode<>(0xd7, 4, "xor-int/lit16", new Ins22sCreator(0xd7));
         VALUES[0xd7] = XOR_INT_LIT16;
-        ADD_INT_LIT8 = new Opcode<>(0xd8, 4, "add-int/lit8", new BlockCreator<Ins22b>() {
-            @Override
-            public Ins22b newInstance() {
-                return new Ins22b(ADD_INT_LIT8);
-            }
-        });
+        ADD_INT_LIT8 = new Opcode<>(0xd8, 4, "add-int/lit8", new Ins22bCreator(0xd8));
         VALUES[0xd8] = ADD_INT_LIT8;
-        RSUB_INT_LIT8 = new Opcode<>(0xd9, 4, "rsub-int/lit8", new BlockCreator<Ins22b>() {
-            @Override
-            public Ins22b newInstance() {
-                return new Ins22b(RSUB_INT_LIT8);
-            }
-        });
+        RSUB_INT_LIT8 = new Opcode<>(0xd9, 4, "rsub-int/lit8", new Ins22bCreator(0xd9));
         VALUES[0xd9] = RSUB_INT_LIT8;
-        MUL_INT_LIT8 = new Opcode<>(0xda, 4, "mul-int/lit8", new BlockCreator<Ins22b>() {
-            @Override
-            public Ins22b newInstance() {
-                return new Ins22b(MUL_INT_LIT8);
-            }
-        });
+        MUL_INT_LIT8 = new Opcode<>(0xda, 4, "mul-int/lit8", new Ins22bCreator(0xda));
         VALUES[0xda] = MUL_INT_LIT8;
-        DIV_INT_LIT8 = new Opcode<>(0xdb, 4, "div-int/lit8", new BlockCreator<Ins22b>() {
-            @Override
-            public Ins22b newInstance() {
-                return new Ins22b(DIV_INT_LIT8);
-            }
-        });
+        DIV_INT_LIT8 = new Opcode<>(0xdb, 4, "div-int/lit8", new Ins22bCreator(0xdb));
         VALUES[0xdb] = DIV_INT_LIT8;
-        REM_INT_LIT8 = new Opcode<>(0xdc, 4, "rem-int/lit8", new BlockCreator<Ins22b>() {
-            @Override
-            public Ins22b newInstance() {
-                return new Ins22b(REM_INT_LIT8);
-            }
-        });
+        REM_INT_LIT8 = new Opcode<>(0xdc, 4, "rem-int/lit8", new Ins22bCreator(0xdc));
         VALUES[0xdc] = REM_INT_LIT8;
-        AND_INT_LIT8 = new Opcode<>(0xdd, 4, "and-int/lit8", new BlockCreator<Ins22b>() {
-            @Override
-            public Ins22b newInstance() {
-                return new Ins22b(AND_INT_LIT8);
-            }
-        });
+        AND_INT_LIT8 = new Opcode<>(0xdd, 4, "and-int/lit8", new Ins22bCreator(0xdd));
         VALUES[0xdd] = AND_INT_LIT8;
-        OR_INT_LIT8 = new Opcode<>(0xde, 4, "or-int/lit8", new BlockCreator<Ins22b>() {
-            @Override
-            public Ins22b newInstance() {
-                return new Ins22b(OR_INT_LIT8);
-            }
-        });
+        OR_INT_LIT8 = new Opcode<>(0xde, 4, "or-int/lit8", new Ins22bCreator(0xde));
         VALUES[0xde] = OR_INT_LIT8;
-        XOR_INT_LIT8 = new Opcode<>(0xdf, 4, "xor-int/lit8", new BlockCreator<Ins22b>() {
-            @Override
-            public Ins22b newInstance() {
-                return new Ins22b(XOR_INT_LIT8);
-            }
-        });
+        XOR_INT_LIT8 = new Opcode<>(0xdf, 4, "xor-int/lit8", new Ins22bCreator(0xdf));
         VALUES[0xdf] = XOR_INT_LIT8;
-        SHL_INT_LIT8 = new Opcode<>(0xe0, 4, "shl-int/lit8", new BlockCreator<Ins22b>() {
-            @Override
-            public Ins22b newInstance() {
-                return new Ins22b(SHL_INT_LIT8);
-            }
-        });
+        SHL_INT_LIT8 = new Opcode<>(0xe0, 4, "shl-int/lit8", new Ins22bCreator(0xe0));
         VALUES[0xe0] = SHL_INT_LIT8;
-        SHR_INT_LIT8 = new Opcode<>(0xe1, 4, "shr-int/lit8", new BlockCreator<Ins22b>() {
-            @Override
-            public Ins22b newInstance() {
-                return new Ins22b(SHR_INT_LIT8);
-            }
-        });
+        SHR_INT_LIT8 = new Opcode<>(0xe1, 4, "shr-int/lit8", new Ins22bCreator(0xe1));
         VALUES[0xe1] = SHR_INT_LIT8;
-        USHR_INT_LIT8 = new Opcode<>(0xe2, 4, "ushr-int/lit8", new BlockCreator<Ins22b>() {
-            @Override
-            public Ins22b newInstance() {
-                return new Ins22b(USHR_INT_LIT8);
-            }
-        });
+        USHR_INT_LIT8 = new Opcode<>(0xe2, 4, "ushr-int/lit8", new Ins22bCreator(0xe2));
         VALUES[0xe2] = USHR_INT_LIT8;
-        IGET_VOLATILE = new Opcode<>(0xe3, 4, "iget-volatile", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IGET_VOLATILE);
-            }
-        });
+        IGET_VOLATILE = new Opcode<>(0xe3, 4, "iget-volatile", SectionType.FIELD_ID, new Ins22cCreator(0xe3));
         VALUES[0xe3] = IGET_VOLATILE;
-        IPUT_VOLATILE = new Opcode<>(0xe4, 4, "iput-volatile", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IPUT_VOLATILE);
-            }
-        });
+        IPUT_VOLATILE = new Opcode<>(0xe4, 4, "iput-volatile", SectionType.FIELD_ID, new Ins22cCreator(0xe4));
         VALUES[0xe4] = IPUT_VOLATILE;
-        SGET_VOLATILE = new Opcode<>(0xe5, 4, "sget-volatile", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SGET_VOLATILE);
-            }
-        });
+        SGET_VOLATILE = new Opcode<>(0xe5, 4, "sget-volatile", SectionType.FIELD_ID, new Ins21cCreator(0xe5));
         VALUES[0xe5] = SGET_VOLATILE;
-        SPUT_VOLATILE = new Opcode<>(0xe6, 4, "sput-volatile", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SPUT_VOLATILE);
-            }
-        });
+        SPUT_VOLATILE = new Opcode<>(0xe6, 4, "sput-volatile", SectionType.FIELD_ID, new Ins21cCreator(0xe6));
         VALUES[0xe6] = SPUT_VOLATILE;
-        IGET_OBJECT_VOLATILE = new Opcode<>(0xe7, 4, "iget-object-volatile", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IGET_OBJECT_VOLATILE);
-            }
-        });
+        IGET_OBJECT_VOLATILE = new Opcode<>(0xe7, 4, "iget-object-volatile", SectionType.FIELD_ID, new Ins22cCreator(0xe7));
         VALUES[0xe7] = IGET_OBJECT_VOLATILE;
-        IGET_WIDE_VOLATILE = new Opcode<>(0xe8, 4, "iget-wide-volatile", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IGET_WIDE_VOLATILE);
-            }
-        });
+        IGET_WIDE_VOLATILE = new Opcode<>(0xe8, 4, "iget-wide-volatile", SectionType.FIELD_ID, new Ins22cCreator(0xe8));
         VALUES[0xe8] = IGET_WIDE_VOLATILE;
-        IPUT_WIDE_VOLATILE = new Opcode<>(0xe9, 4, "iput-wide-volatile", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IPUT_WIDE_VOLATILE);
-            }
-        });
+        IPUT_WIDE_VOLATILE = new Opcode<>(0xe9, 4, "iput-wide-volatile", SectionType.FIELD_ID, new Ins22cCreator(0xe9));
         VALUES[0xe9] = IPUT_WIDE_VOLATILE;
-        SGET_WIDE_VOLATILE = new Opcode<>(0xea, 4, "sget-wide-volatile", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SGET_WIDE_VOLATILE);
-            }
-        });
+        SGET_WIDE_VOLATILE = new Opcode<>(0xea, 4, "sget-wide-volatile", SectionType.FIELD_ID, new Ins21cCreator(0xea));
         VALUES[0xea] = SGET_WIDE_VOLATILE;
-        SPUT_WIDE_VOLATILE = new Opcode<>(0xeb, 4, "sput-wide-volatile", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SPUT_WIDE_VOLATILE);
-            }
-        });
+        SPUT_WIDE_VOLATILE = new Opcode<>(0xeb, 4, "sput-wide-volatile", SectionType.FIELD_ID, new Ins21cCreator(0xeb));
         VALUES[0xeb] = SPUT_WIDE_VOLATILE;
-        IPUT_BYTE_QUICK = new Opcode<>(0xec, 4, "iput-byte-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IPUT_BYTE_QUICK);
-            }
-        });
+        IPUT_BYTE_QUICK = new Opcode<>(0xec, 4, "iput-byte-quick", SectionType.FIELD_ID, new Ins22csCreator(0xec));
         VALUES[0xec] = IPUT_BYTE_QUICK;
-        THROW_VERIFICATION_ERROR = new Opcode<>(0xed, 4, "throw-verification-error", new BlockCreator<Ins20bc>() {
-            @Override
-            public Ins20bc newInstance() {
-                return new Ins20bc(THROW_VERIFICATION_ERROR);
-            }
-        });
+        THROW_VERIFICATION_ERROR = new Opcode<>(0xed, 4, "throw-verification-error", new Ins20bcCreator(0xed));
         VALUES[0xed] = THROW_VERIFICATION_ERROR;
-        EXECUTE_INLINE = new Opcode<>(0xee, 6, "execute-inline", new BlockCreator<Ins35mi>() {
-            @Override
-            public Ins35mi newInstance() {
-                return new Ins35mi(EXECUTE_INLINE);
-            }
-        });
+        EXECUTE_INLINE = new Opcode<>(0xee, 6, "execute-inline", new Ins35miCreator(0xee));
         VALUES[0xee] = EXECUTE_INLINE;
-        EXECUTE_INLINE_RANGE = new Opcode<>(0xef, 6, "execute-inline/range", new BlockCreator<Ins3rmi>() {
-            @Override
-            public Ins3rmi newInstance() {
-                return new Ins3rmi(EXECUTE_INLINE_RANGE);
-            }
-        });
+        EXECUTE_INLINE_RANGE = new Opcode<>(0xef, 6, "execute-inline/range", new Ins3rmiCreator(0xef));
         VALUES[0xef] = EXECUTE_INLINE_RANGE;
-        INVOKE_DIRECT_EMPTY = new Opcode<>(0xf0, 6, "invoke-direct-empty", SectionType.METHOD_ID, new BlockCreator<Ins35c>() {
-            @Override
-            public Ins35c newInstance() {
-                return new Ins35c(INVOKE_DIRECT_EMPTY);
-            }
-        });
+        INVOKE_DIRECT_EMPTY = new Opcode<>(0xf0, 6, "invoke-direct-empty", SectionType.METHOD_ID, new Ins35cCreator(0xf0));
         VALUES[0xf0] = INVOKE_DIRECT_EMPTY;
-        RETURN_VOID_BARRIER = new Opcode<>(0xf1, 2, "return-void-barrier", new BlockCreator<Ins10x>() {
-            @Override
-            public Ins10x newInstance() {
-                return new Ins10x(RETURN_VOID_BARRIER);
-            }
-        });
+        RETURN_VOID_BARRIER = new Opcode<>(0xf1, 2, "return-void-barrier", new Ins10xCreator(0xf1));
         VALUES[0xf1] = RETURN_VOID_BARRIER;
-        IGET_QUICK = new Opcode<>(0xf2, 4, "iget-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IGET_QUICK);
-            }
-        });
+        IGET_QUICK = new Opcode<>(0xf2, 4, "iget-quick", SectionType.FIELD_ID, new Ins22csCreator(0xf2));
         VALUES[0xf2] = IGET_QUICK;
-        IGET_WIDE_QUICK = new Opcode<>(0xf3, 4, "iget-wide-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IGET_WIDE_QUICK);
-            }
-        });
+        IGET_WIDE_QUICK = new Opcode<>(0xf3, 4, "iget-wide-quick", SectionType.FIELD_ID, new Ins22csCreator(0xf3));
         VALUES[0xf3] = IGET_WIDE_QUICK;
-        IGET_OBJECT_QUICK = new Opcode<>(0xf4, 4, "iget-object-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IGET_OBJECT_QUICK);
-            }
-        });
+        IGET_OBJECT_QUICK = new Opcode<>(0xf4, 4, "iget-object-quick", SectionType.FIELD_ID, new Ins22csCreator(0xf4));
         VALUES[0xf4] = IGET_OBJECT_QUICK;
-        IPUT_QUICK = new Opcode<>(0xf5, 4, "iput-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IPUT_QUICK);
-            }
-        });
+        IPUT_QUICK = new Opcode<>(0xf5, 4, "iput-quick", SectionType.FIELD_ID, new Ins22csCreator(0xf5));
         VALUES[0xf5] = IPUT_QUICK;
-        IPUT_WIDE_QUICK = new Opcode<>(0xf6, 4, "iput-wide-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IPUT_WIDE_QUICK);
-            }
-        });
+        IPUT_WIDE_QUICK = new Opcode<>(0xf6, 4, "iput-wide-quick", SectionType.FIELD_ID, new Ins22csCreator(0xf6));
         VALUES[0xf6] = IPUT_WIDE_QUICK;
-        IPUT_OBJECT_QUICK = new Opcode<>(0xf7, 4, "iput-object-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IPUT_OBJECT_QUICK);
-            }
-        });
+        IPUT_OBJECT_QUICK = new Opcode<>(0xf7, 4, "iput-object-quick", SectionType.FIELD_ID, new Ins22csCreator(0xf7));
         VALUES[0xf7] = IPUT_OBJECT_QUICK;
-        INVOKE_VIRTUAL_QUICK = new Opcode<>(0xf8, 6, "invoke-virtual-quick", SectionType.METHOD_ID, new BlockCreator<Ins35ms>() {
-            @Override
-            public Ins35ms newInstance() {
-                return new Ins35ms(INVOKE_VIRTUAL_QUICK);
-            }
-        });
+        INVOKE_VIRTUAL_QUICK = new Opcode<>(0xf8, 6, "invoke-virtual-quick", SectionType.METHOD_ID, new Ins35msCreator(0xf8));
         VALUES[0xf8] = INVOKE_VIRTUAL_QUICK;
-        INVOKE_VIRTUAL_QUICK_RANGE = new Opcode<>(0xf9, 6, "invoke-virtual-quick/range", SectionType.METHOD_ID, new BlockCreator<Ins3rms>() {
-            @Override
-            public Ins3rms newInstance() {
-                return new Ins3rms(INVOKE_VIRTUAL_QUICK_RANGE);
-            }
-        });
+        INVOKE_VIRTUAL_QUICK_RANGE = new Opcode<>(0xf9, 6, "invoke-virtual-quick/range", SectionType.METHOD_ID, new Ins3rmsCreator(0xf9));
         VALUES[0xf9] = INVOKE_VIRTUAL_QUICK_RANGE;
-        INVOKE_SUPER_QUICK = new Opcode<>(0xfa, 6, "invoke-super-quick", SectionType.METHOD_ID, new BlockCreator<Ins35ms>() {
-            @Override
-            public Ins35ms newInstance() {
-                return new Ins35ms(INVOKE_SUPER_QUICK);
-            }
-        });
+        INVOKE_SUPER_QUICK = new Opcode<>(0xfa, 6, "invoke-super-quick", SectionType.METHOD_ID, new Ins35msCreator(0xfa));
         VALUES[0xfa] = INVOKE_SUPER_QUICK;
-        INVOKE_SUPER_QUICK_RANGE = new Opcode<>(0xfb, 6, "invoke-super-quick/range", SectionType.METHOD_ID, new BlockCreator<Ins3rms>() {
-            @Override
-            public Ins3rms newInstance() {
-                return new Ins3rms(INVOKE_SUPER_QUICK_RANGE);
-            }
-        });
+        INVOKE_SUPER_QUICK_RANGE = new Opcode<>(0xfb, 6, "invoke-super-quick/range", SectionType.METHOD_ID, new Ins3rmsCreator(0xfb));
         VALUES[0xfb] = INVOKE_SUPER_QUICK_RANGE;
-        IPUT_OBJECT_VOLATILE = new Opcode<>(0xfc, 4, "iput-object-volatile", SectionType.FIELD_ID, new BlockCreator<Ins22c>() {
-            @Override
-            public Ins22c newInstance() {
-                return new Ins22c(IPUT_OBJECT_VOLATILE);
-            }
-        });
+        IPUT_OBJECT_VOLATILE = new Opcode<>(0xfc, 4, "iput-object-volatile", SectionType.FIELD_ID, new Ins22cCreator(0xfc));
         VALUES[0xfc] = IPUT_OBJECT_VOLATILE;
-        SGET_OBJECT_VOLATILE = new Opcode<>(0xfd, 4, "sget-object-volatile", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SGET_OBJECT_VOLATILE);
-            }
-        });
+        SGET_OBJECT_VOLATILE = new Opcode<>(0xfd, 4, "sget-object-volatile", SectionType.FIELD_ID, new Ins21cCreator(0xfd));
         VALUES[0xfd] = SGET_OBJECT_VOLATILE;
-        SPUT_OBJECT_VOLATILE = new Opcode<>(0xfe, 4, "sput-object-volatile", SectionType.FIELD_ID, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(SPUT_OBJECT_VOLATILE);
-            }
-        });
+        SPUT_OBJECT_VOLATILE = new Opcode<>(0xfe, 4, "sput-object-volatile", SectionType.FIELD_ID, new Ins21cCreator(0xfe));
         VALUES[0xfe] = SPUT_OBJECT_VOLATILE;
-        CONST_METHOD_TYPE = new Opcode<>(0xff, 4, "const-method-type", new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(CONST_METHOD_TYPE);
-            }
-        });
+        CONST_METHOD_TYPE = new Opcode<>(0xff, 4, "const-method-type", new Ins21cCreator(0xff));
         VALUES[0xff] = CONST_METHOD_TYPE;
 
 
-        PACKED_SWITCH_PAYLOAD = new Opcode<>(0x100, -1, "packed-switch", InsPackedSwitchData::new);
+        PACKED_SWITCH_PAYLOAD = new Opcode<>(0x100, -1, "packed-switch-payload", new InsPackedSwitchDataCreator(0x100));
         PAYLOADS[0] = PACKED_SWITCH_PAYLOAD;
-        SPARSE_SWITCH_PAYLOAD = new Opcode<>(0x200, -1, "sparse-switch-payload", InsSparseSwitchData::new);
+        SPARSE_SWITCH_PAYLOAD = new Opcode<>(0x200, -1, "sparse-switch-payload", new InsSparseSwitchDataCreator(0x200));
         PAYLOADS[1] = SPARSE_SWITCH_PAYLOAD;
-        ARRAY_PAYLOAD = new Opcode<>(0x300, -1, "array-data", InsArrayData::new);
+        ARRAY_PAYLOAD = new Opcode<>(0x300, -1, "array-data", new InsArrayDataCreator(0x300));
         PAYLOADS[2] = ARRAY_PAYLOAD;
 
 
-        IPUT_BOOLEAN_QUICK = new Opcode<>(0xeb, 4, "iput-boolean-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IPUT_BOOLEAN_QUICK);
-            }
-        });
+        IPUT_BOOLEAN_QUICK = new Opcode<>(0xeb, 4, "iput-boolean-quick", SectionType.FIELD_ID, new Ins22csCreator(0xeb));
         VALUES_2[0] = IPUT_BOOLEAN_QUICK;
-        IPUT_CHAR_QUICK = new Opcode<>(0xed, 4, "iput-char-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IPUT_CHAR_QUICK);
-            }
-        });
+        IPUT_CHAR_QUICK = new Opcode<>(0xed, 4, "iput-char-quick", SectionType.FIELD_ID, new Ins22csCreator(0xed));
         VALUES_2[1] = IPUT_CHAR_QUICK;
-        IPUT_SHORT_QUICK = new Opcode<>(0xee, 4, "iput-short-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IPUT_SHORT_QUICK);
-            }
-        });
+        IPUT_SHORT_QUICK = new Opcode<>(0xee, 4, "iput-short-quick", SectionType.FIELD_ID, new Ins22csCreator(0xee));
         VALUES_2[2] = IPUT_SHORT_QUICK;
-        IGET_BOOLEAN_QUICK = new Opcode<>(0xef, 4, "iget-boolean-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IGET_BOOLEAN_QUICK);
-            }
-        });
+        IGET_BOOLEAN_QUICK = new Opcode<>(0xef, 4, "iget-boolean-quick", SectionType.FIELD_ID, new Ins22csCreator(0xef));
         VALUES_2[3] = IGET_BOOLEAN_QUICK;
-        INVOKE_OBJECT_INIT_RANGE = new Opcode<>(0xf0, 6, "invoke-object-init/range", SectionType.METHOD_ID, new BlockCreator<Ins3rc>() {
-            @Override
-            public Ins3rc newInstance() {
-                return new Ins3rc(INVOKE_OBJECT_INIT_RANGE);
-            }
-        });
+        INVOKE_OBJECT_INIT_RANGE = new Opcode<>(0xf0, 6, "invoke-object-init/range", SectionType.METHOD_ID, new Ins3rcCreator(0xf0));
         VALUES_2[4] = INVOKE_OBJECT_INIT_RANGE;
-        IGET_CHAR_QUICK = new Opcode<>(0xf1, 4, "iget-char-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IGET_CHAR_QUICK);
-            }
-        });
+        IGET_CHAR_QUICK = new Opcode<>(0xf1, 4, "iget-char-quick", SectionType.FIELD_ID, new Ins22csCreator(0xf1));
         VALUES_2[5] = IGET_CHAR_QUICK;
-        IGET_SHORT_QUICK = new Opcode<>(0xf2, 4, "iget-short-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IGET_SHORT_QUICK);
-            }
-        });
+        IGET_SHORT_QUICK = new Opcode<>(0xf2, 4, "iget-short-quick", SectionType.FIELD_ID, new Ins22csCreator(0xf2));
         VALUES_2[6] = IGET_SHORT_QUICK;
-        INVOKE_POLYMORPHIC = new Opcode<>(0xfa, 8, "invoke-polymorphic", SectionType.METHOD_ID, new BlockCreator<Ins45cc>() {
-            @Override
-            public Ins45cc newInstance() {
-                return new Ins45cc(INVOKE_POLYMORPHIC);
-            }
-        });
+        INVOKE_POLYMORPHIC = new Opcode<>(0xfa, 8, "invoke-polymorphic", SectionType.METHOD_ID, new Ins45ccCreator(0xfa));
         VALUES_2[7] = INVOKE_POLYMORPHIC;
-        INVOKE_POLYMORPHIC_RANGE = new Opcode<>(0xfb, 8, "invoke-polymorphic/range", SectionType.METHOD_ID, new BlockCreator<Ins4rcc>() {
-            @Override
-            public Ins4rcc newInstance() {
-                return new Ins4rcc(INVOKE_POLYMORPHIC_RANGE);
-            }
-        });
+        INVOKE_POLYMORPHIC_RANGE = new Opcode<>(0xfb, 8, "invoke-polymorphic/range", SectionType.METHOD_ID, new Ins4rccCreator(0xfb));
         VALUES_2[8] = INVOKE_POLYMORPHIC_RANGE;
-        INVOKE_CUSTOM = new Opcode<>(0xfc, 6, "invoke-custom", SectionType.METHOD_ID, new BlockCreator<Ins35c>() {
-            @Override
-            public Ins35c newInstance() {
-                return new Ins35c(INVOKE_CUSTOM);
-            }
-        });
+        INVOKE_CUSTOM = new Opcode<>(0xfc, 6, "invoke-custom", SectionType.METHOD_ID, new Ins35cCreator(0xfc));
         VALUES_2[9] = INVOKE_CUSTOM;
-        INVOKE_CUSTOM_RANGE = new Opcode<>(0xfd, 6, "invoke-custom/range", SectionType.METHOD_ID, new BlockCreator<Ins3rc>() {
-            @Override
-            public Ins3rc newInstance() {
-                return new Ins3rc(INVOKE_CUSTOM_RANGE);
-            }
-        });
+        INVOKE_CUSTOM_RANGE = new Opcode<>(0xfd, 6, "invoke-custom/range", SectionType.METHOD_ID, new Ins3rcCreator(0xfd));
         VALUES_2[10] = INVOKE_CUSTOM_RANGE;
-        CONST_METHOD_HANDLE = new Opcode<>(0xfe, 4, "const-method-handle", SectionType.METHOD_HANDLE, new BlockCreator<Ins21c>() {
-            @Override
-            public Ins21c newInstance() {
-                return new Ins21c(CONST_METHOD_HANDLE);
-            }
-        });
+        CONST_METHOD_HANDLE = new Opcode<>(0xfe, 4, "const-method-handle", SectionType.METHOD_HANDLE, new Ins21cCreator(0xfe));
         VALUES_2[11] = CONST_METHOD_HANDLE;
 
 
-        IGET_BYTE_QUICK = new Opcode<>(0xf0, 4, "iget-byte-quick", SectionType.FIELD_ID, new BlockCreator<Ins22cs>() {
-            @Override
-            public Ins22cs newInstance() {
-                return new Ins22cs(IGET_BYTE_QUICK);
-            }
-        });
+        IGET_BYTE_QUICK = new Opcode<>(0xf0, 4, "iget-byte-quick", SectionType.FIELD_ID, new Ins22csCreator(0xf0));
         VALUES_3[0] = IGET_BYTE_QUICK;
 
         for(Opcode<?> opcode : VALUES){
@@ -2129,12 +876,13 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
     private final int value;
     private final int size;
     private final String name;
-    private final BlockCreator<T> creator;
     private final SectionType<? extends IdItem> sectionType;
+    private final InsCreator<T> creator;
 
     private final int width;
 
-    private Opcode(int value, int size, String name, SectionType<? extends IdItem> sectionType, BlockCreator<T> creator){
+
+    private Opcode(int value, int size, String name, SectionType<? extends IdItem> sectionType, InsCreator<T> creator){
         this.value = value;
         this.size = size;
         this.name = name;
@@ -2148,7 +896,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         }
         this.width = width;
     }
-    private Opcode(int value, int size, String name, BlockCreator<T> creator){
+    private Opcode(int value, int size, String name, InsCreator<T> creator){
         this(value, size, name, null, creator);
     }
 
@@ -2249,6 +997,12 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
     public SectionType<? extends IdItem> getSectionType(){
         return sectionType;
     }
+    public RegisterFormat getRegisterFormat(){
+        return creator.getRegisterFormat();
+    }
+    public OperandType getOperandType(){
+        return creator.getOperandType();
+    }
     @Override
     public T newInstance(){
         return creator.newInstance();
@@ -2348,4 +1102,733 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
                 return false;
         }
     }
+    static abstract class InsCreator<T extends Ins> implements BlockCreator<T> {
+        private final int opcodeValue;
+        private Opcode<?> opcode;
+        InsCreator(int opcodeValue){
+            this.opcodeValue = opcodeValue;
+        }
+        Opcode<?> getOpcode(){
+            if(opcode == null){
+                opcode = Opcode.valueOf(opcodeValue);
+            }
+            return opcode;
+        }
+        public abstract RegisterFormat getRegisterFormat();
+        public abstract OperandType getOperandType();
+    }
+
+    static class Ins10xCreator extends InsCreator<Ins10x> {
+        Ins10xCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.NONE;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public Ins10x newInstance() {
+            return new Ins10x(getOpcode());
+        }
+    }
+    static class Ins11xCreator extends InsCreator<Ins11x> {
+        Ins11xCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public Ins11x newInstance() {
+            return new Ins11x(getOpcode());
+        }
+    }
+    static class Ins11xwCreator extends Ins11xCreator {
+        Ins11xwCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE;
+        }
+    }
+    static class Ins12xCreator extends InsCreator<Ins12x> {
+        Ins12xCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public Ins12x newInstance() {
+            return new Ins12x(getOpcode());
+        }
+    }
+    static class Ins20bcCreator extends InsCreator<Ins20bc> {
+        Ins20bcCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public Ins20bc newInstance() {
+            return new Ins20bc(getOpcode());
+        }
+    }
+    static class Ins21cCreator extends InsCreator<Ins21c> {
+        Ins21cCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.KEY;
+        }
+        @Override
+        public Ins21c newInstance() {
+            return new Ins21c(getOpcode());
+        }
+    }
+    static class Ins21lhCreator extends InsCreator<Ins21lh> {
+        Ins21lhCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NUMBER;
+        }
+        @Override
+        public Ins21lh newInstance() {
+            return new Ins21lh(getOpcode());
+        }
+    }
+    static class Ins21sCreator extends InsCreator<Ins21s> {
+        Ins21sCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NUMBER;
+        }
+        @Override
+        public Ins21s newInstance() {
+            return new Ins21s(getOpcode());
+        }
+    }
+    static class Ins21tCreator extends InsCreator<Ins21t> {
+        Ins21tCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.LABEL;
+        }
+        @Override
+        public Ins21t newInstance() {
+            return new Ins21t(getOpcode());
+        }
+    }
+    static class Ins22bCreator extends InsCreator<Ins22b> {
+        Ins22bCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NUMBER;
+        }
+        @Override
+        public Ins22b newInstance() {
+            return new Ins22b(getOpcode());
+        }
+    }
+    static class Ins22cCreator extends InsCreator<Ins22c> {
+        Ins22cCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public Ins22c newInstance() {
+            return new Ins22c(getOpcode());
+        }
+    }
+    static class Ins22csCreator extends InsCreator<Ins22cs> {
+        Ins22csCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.READ_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.KEY;
+        }
+        @Override
+        public Ins22cs newInstance() {
+            return new Ins22cs(getOpcode());
+        }
+    }
+    static class Ins22sCreator extends InsCreator<Ins22s> {
+        Ins22sCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NUMBER;
+        }
+        @Override
+        public Ins22s newInstance() {
+            return new Ins22s(getOpcode());
+        }
+    }
+    static class Ins22tCreator extends InsCreator<Ins22t> {
+        Ins22tCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.LABEL;
+        }
+        @Override
+        public Ins22t newInstance() {
+            return new Ins22t(getOpcode());
+        }
+    }
+    static class Ins22xCreator extends InsCreator<Ins22x> {
+        Ins22xCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public Ins22x newInstance() {
+            return new Ins22x(getOpcode());
+        }
+    }
+    static class Ins23xCreator extends InsCreator<Ins23x> {
+        Ins23xCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public Ins23x newInstance() {
+            return new Ins23x(getOpcode());
+        }
+    }
+    static class Ins31iCreator extends InsCreator<Ins31i> {
+        Ins31iCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NUMBER;
+        }
+        @Override
+        public Ins31i newInstance() {
+            return new Ins31i(getOpcode());
+        }
+    }
+    static class Ins32xCreator extends InsCreator<Ins32x> {
+        Ins32xCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public Ins32x newInstance() {
+            return new Ins32x(getOpcode());
+        }
+    }
+    static class Ins35cCreator extends InsCreator<Ins35c> {
+        Ins35cCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.KEY;
+        }
+        @Override
+        public Ins35c newInstance() {
+            return new Ins35c(getOpcode());
+        }
+    }
+    static class Ins35miCreator extends InsCreator<Ins35mi> {
+        Ins35miCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public Ins35mi newInstance() {
+            return new Ins35mi(getOpcode());
+        }
+    }
+    static class Ins35msCreator extends InsCreator<Ins35ms> {
+        Ins35msCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.METHOD;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.KEY;
+        }
+        @Override
+        public Ins35ms newInstance() {
+            return new Ins35ms(getOpcode());
+        }
+    }
+    static class Ins3rcCreator extends InsCreator<Ins3rc> {
+        Ins3rcCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.KEY;
+        }
+        @Override
+        public Ins3rc newInstance() {
+            return new Ins3rc(getOpcode());
+        }
+    }
+    static class Ins3rmiCreator extends InsCreator<Ins3rmi> {
+        Ins3rmiCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public Ins3rmi newInstance() {
+            return new Ins3rmi(getOpcode());
+        }
+    }
+    static class Ins3rmsCreator extends InsCreator<Ins3rms> {
+        Ins3rmsCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.METHOD_RANGE;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.KEY;
+        }
+        @Override
+        public Ins3rms newInstance() {
+            return new Ins3rms(getOpcode());
+        }
+    }
+    static class Ins45ccCreator extends InsCreator<Ins45cc> {
+        Ins45ccCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.METHOD;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.KEY;
+        }
+        @Override
+        public Ins45cc newInstance() {
+            return new Ins45cc(getOpcode());
+        }
+    }
+    static class Ins4rccCreator extends InsCreator<Ins4rcc> {
+        Ins4rccCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.METHOD_RANGE;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.KEY;
+        }
+        @Override
+        public Ins4rcc newInstance() {
+            return new Ins4rcc(getOpcode());
+        }
+    }
+    static class InsArrayDataCreator extends InsCreator<InsArrayData> {
+        InsArrayDataCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.NONE;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public InsArrayData newInstance() {
+            return new InsArrayData();
+        }
+    }
+    static class InsConst16HighCreator extends InsCreator<InsConst16High> {
+        InsConst16HighCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NUMBER;
+        }
+        @Override
+        public InsConst16High newInstance() {
+            return new InsConst16High();
+        }
+    }
+    static class InsConst4Creator extends InsCreator<InsConst4> {
+        InsConst4Creator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NUMBER;
+        }
+        @Override
+        public InsConst4 newInstance() {
+            return new InsConst4();
+        }
+    }
+    static class InsConstCreator extends InsCreator<InsConst> {
+        InsConstCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NUMBER;
+        }
+        @Override
+        public InsConst newInstance() {
+            return new InsConst();
+        }
+    }
+    static class InsConstStringCreator extends InsCreator<InsConstString> {
+        InsConstStringCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.KEY;
+        }
+        @Override
+        public InsConstString newInstance() {
+            return new InsConstString();
+        }
+    }
+    static class InsConstStringJumboCreator extends InsCreator<InsConstStringJumbo> {
+        InsConstStringJumboCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.KEY;
+        }
+        @Override
+        public InsConstStringJumbo newInstance() {
+            return new InsConstStringJumbo();
+        }
+    }
+    static class InsConstWideCreator extends InsCreator<InsConstWide> {
+        InsConstWideCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NUMBER;
+        }
+        @Override
+        public InsConstWide newInstance() {
+            return new InsConstWide();
+        }
+    }
+    static class InsFillArrayDataCreator extends InsCreator<InsFillArrayData> {
+        InsFillArrayDataCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.KEY;
+        }
+        @Override
+        public InsFillArrayData newInstance() {
+            return new InsFillArrayData();
+        }
+    }
+    static class InsGotoCreator extends InsCreator<InsGoto> {
+        InsGotoCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE_READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.LABEL;
+        }
+        @Override
+        public InsGoto newInstance() {
+            return new InsGoto(getOpcode());
+        }
+    }
+    static class InsNopCreator extends InsCreator<InsNop> {
+        InsNopCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.NONE;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public InsNop newInstance() {
+            return new InsNop();
+        }
+    }
+    static class InsPackedSwitchCreator extends InsCreator<InsPackedSwitch> {
+        InsPackedSwitchCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.LABEL;
+        }
+        @Override
+        public InsPackedSwitch newInstance() {
+            return new InsPackedSwitch();
+        }
+    }
+    static class InsPackedSwitchDataCreator extends InsCreator<InsPackedSwitchData> {
+        InsPackedSwitchDataCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.NONE;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public InsPackedSwitchData newInstance() {
+            return new InsPackedSwitchData();
+        }
+    }
+    static class InsSparseSwitchCreator extends InsCreator<InsSparseSwitch> {
+        InsSparseSwitchCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.READ;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.LABEL;
+        }
+        @Override
+        public InsSparseSwitch newInstance() {
+            return new InsSparseSwitch();
+        }
+    }
+    static class InsSparseSwitchDataCreator extends InsCreator<InsSparseSwitchData> {
+        InsSparseSwitchDataCreator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.NONE;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
+        }
+        @Override
+        public InsSparseSwitchData newInstance() {
+            return new InsSparseSwitchData();
+        }
+    }
+
 }

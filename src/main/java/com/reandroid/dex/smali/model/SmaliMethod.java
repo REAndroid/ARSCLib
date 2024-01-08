@@ -165,7 +165,7 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
     }
     private void parseProto(SmaliReader reader) throws IOException {
         reader.skipWhitespaces();
-        setProtoKey(ProtoKey.parse(reader));
+        setProtoKey(ProtoKey.read(reader));
     }
 
     @Override

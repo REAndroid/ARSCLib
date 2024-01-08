@@ -270,7 +270,7 @@ public class TypeKey implements Key{
         return primitiveType(typeName.charAt(0));
     }
     public static TypeKey read(SmaliReader reader) throws IOException {
-        reader.skipSpaces();
+        reader.skipWhitespacesOrComment();
         int position = reader.position();
         StringBuilder builder = new StringBuilder();
         while (reader.get() == '['){

@@ -339,20 +339,12 @@ public class MethodKey implements Key{
 
     public static MethodKey read(SmaliReader reader) throws IOException {
         TypeKey declaring = TypeKey.read(reader);
-        if(reader.readASCII() != '-'){
-            reader.skip(-1);
-            throw new SmaliParseException("Invalid method key, missing '-'", reader);
-        }
-        if(reader.readASCII() != '>'){
-            reader.skip(-1);
-            throw new SmaliParseException("Invalid method key, missing '>'", reader);
-        }
-        int i = reader.indexOfBeforeLineEnd('(');
-        if(i < 0){
-            throw new SmaliParseException("Invalid method key, missing '('", reader);
-        }
-        String name = reader.readString(i - reader.position());
-        ProtoKey protoKey = ProtoKey.parse(reader);
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, '-');
+        SmaliParseException.expect(reader, '>');
+        reader.skipWhitespacesOrComment();
+        String name = reader.readEscapedString('(');
+        ProtoKey protoKey = ProtoKey.read(reader);
         return new MethodKey(
                 declaring.getTypeName(),
                 name,

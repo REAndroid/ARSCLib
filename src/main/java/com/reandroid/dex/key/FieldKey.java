@@ -235,20 +235,25 @@ public class FieldKey implements Key {
 
     public static FieldKey read(SmaliReader reader) throws IOException {
         TypeKey declaring = TypeKey.read(reader);
-        if(reader.readASCII() != '-'){
-            reader.skip(-1);
-            throw new SmaliParseException("Invalid field key, missing '-'", reader);
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, '-');
+        SmaliParseException.expect(reader, '>');
+        reader.skipWhitespacesOrComment();
+        int i;
+        int i1 = reader.indexOfBeforeLineEnd(':');
+        int i2 = reader.indexOfWhiteSpaceOrComment();
+        if(i1 < 0 && i2 < 0){
+            throw new SmaliParseException("Expecting ':'", reader);
         }
-        if(reader.readASCII() != '>'){
-            reader.skip(-1);
-            throw new SmaliParseException("Invalid field key, missing '>'", reader);
+        if(i1 < 0 || i2 >= 0 && i2 < i1){
+            i = i2;
+        }else {
+            i = i1;
         }
-        int i = reader.indexOfBeforeLineEnd(':');
-        if(i < 0){
-            throw new SmaliParseException("Invalid field key, missing ':'", reader);
-        }
-        String name = reader.readString(i - reader.position());
-        reader.skip(1); // :
+        char stop = reader.getASCII(i);
+        String name = reader.readEscapedString(stop);
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, ':');
         TypeKey type = TypeKey.read(reader);
         return new FieldKey(declaring.getTypeName(), name, type.getTypeName());
     }

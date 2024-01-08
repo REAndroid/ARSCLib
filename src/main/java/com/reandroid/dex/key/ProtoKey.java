@@ -230,20 +230,16 @@ public class ProtoKey implements Key{
         return new ProtoKey(parameters, returnType);
     }
 
-    public static ProtoKey parse(SmaliReader reader) throws IOException {
-        int position = reader.position();
-        if(reader.readASCII() != '('){
-            reader.position(position);
-            throw new SmaliParseException("Invalid proto key, missing '('", reader);
-        }
+    public static ProtoKey read(SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, '(');
+        reader.skipWhitespacesOrComment();
         List<TypeKey> parameterKeys = new ArrayCollection<>();
-        while (reader.get() != ')' && !reader.isLineEnd()){
+        while (!reader.finished() && reader.get() != ')'){
             parameterKeys.add(TypeKey.read(reader));
+            reader.skipWhitespacesOrComment();
         }
-        if(reader.readASCII() != ')'){
-            reader.position(position);
-            throw new SmaliParseException("Invalid proto key, missing ')'", reader);
-        }
+        SmaliParseException.expect(reader, ')');
         TypeKey returnType = TypeKey.read(reader);
 
         int size = parameterKeys.size();
