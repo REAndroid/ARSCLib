@@ -1,6 +1,7 @@
 package com.reandroid.apk;
 
 import com.reandroid.TestUtils;
+import com.reandroid.app.AndroidManifest;
 import com.reandroid.archive.ByteInputSource;
 import com.reandroid.archive.ArchiveBytes;
 import com.reandroid.arsc.array.ResValueMapArray;
@@ -12,12 +13,14 @@ import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlElement;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.*;
 import com.reandroid.dex.SampleDexFileCreator;
 import com.reandroid.dex.model.DexFile;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.xml.*;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -27,6 +30,7 @@ import org.junit.runners.MethodSorters;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -374,6 +378,8 @@ public class ApkModuleTest {
         manifestBlock.addUsesPermission("android.permission.INTERNET");
         manifestBlock.addUsesPermission("android.permission.READ_EXTERNAL_STORAGE");
 
+        addEmptyAttributeValue(manifestBlock);
+
         manifestBlock.getOrCreateMainActivity(manifestBlock.getPackageName() + ".MyActivity");
 
         manifestBlock.refresh();
@@ -399,11 +405,45 @@ public class ApkModuleTest {
 
         Assert.assertNull("android.permission.NOTHING",
                 manifestBlock.getUsesPermission("android.permission.NOTHING"));
+        manifestBlock.refreshFull();
+        byte[] bytes = manifestBlock.getBytes();
+        manifestBlock = new AndroidManifestBlock();
+        manifestBlock.readBytes(new BlockReader(bytes));
+
+        ResXmlElement application = manifestBlock.getApplicationElement();
+        Assert.assertNotNull(application);
+        ResXmlElement metaData = CollectionUtil.getFirst(application.getElements(new Predicate<ResXmlElement>() {
+            @Override
+            public boolean test(ResXmlElement element) {
+                if(!element.equalsName(AndroidManifest.TAG_meta_data)){
+                    return false;
+                }
+                ResXmlAttribute attribute = element.searchAttributeByResourceId(AndroidManifest.ID_name);
+                return attribute != null && EMPTY_META_NAME.equals(attribute.getValueAsString());
+            }
+        }));
+        Assert.assertNotNull(metaData);
+        ResXmlAttribute attribute = metaData.searchAttributeByResourceId(AndroidManifest.ID_value);
+        Assert.assertNotNull(attribute);
+        Assert.assertEquals("Test empty attribute value failed ","", attribute.getValueAsString());
 
         return manifestBlock;
+    }
+    private void addEmptyAttributeValue(AndroidManifestBlock manifestBlock){
+        ResXmlElement application = manifestBlock.getOrCreateApplicationElement();
+        ResXmlElement meta = application.createChildElement(AndroidManifest.TAG_meta_data);
+        ResXmlAttribute name = meta.getOrCreateAndroidAttribute(AndroidManifest.NAME_name,
+                AndroidManifest.ID_name);
+        name.setValueAsString(EMPTY_META_NAME);
+
+        ResXmlAttribute value = meta.getOrCreateAndroidAttribute(AndroidManifest.NAME_value,
+                AndroidManifest.ID_value);
+        value.setValueAsString("");
     }
     public static ApkModule getLastApkModule(){
         return last_apkModule;
     }
+
+    static final String EMPTY_META_NAME = "test-empty-attribute";
 
 }
