@@ -33,10 +33,10 @@ public abstract class StringBlock extends BlockItem{
     }
     public void set(String text){
         if(text == null || text.length() == 0){
-            text = EMPTY;
+            text = StringsUtil.EMPTY;
         }
         String old = this.mCache;
-        if(text.equals(old)){
+        if(text.equals(old) && countBytes() != 0){
             return;
         }
         this.mCache = text;
@@ -62,8 +62,6 @@ public abstract class StringBlock extends BlockItem{
     public String toString() {
         return get();
     }
-
-    static String EMPTY = "";
 
     public static final CharsetDecoder UTF8_DECODER = StandardCharsets.UTF_8.newDecoder();
 }

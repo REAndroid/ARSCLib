@@ -186,22 +186,15 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         }
         return styleItem.applyStyle(text, true, escapeXmlText);
     }
+    @Override
     public void set(String str){
-        String old=get();
-        if(str==null){
-            if(old==null){
-                return;
-            }
-        }else if(str.equals(old)){
-            return;
-        }
-        if(str==null){
-            StyleItem styleItem = getStyle();
-            if(styleItem!=null){
-                styleItem.clearStyle();
+        if(str == null){
+            StyleItem style = getStyle();
+            if(style != null){
+                style.clearStyle();
             }
         }
-        setBytesInternal(encodeString(str));
+        super.set(str);
     }
 
     public boolean isUtf8(){
