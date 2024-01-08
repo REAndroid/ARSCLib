@@ -20,6 +20,7 @@ import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.*;
 import com.reandroid.dex.SampleDexFileCreator;
 import com.reandroid.dex.model.DexFile;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.xml.*;
 import org.junit.Assert;
@@ -425,7 +426,7 @@ public class ApkModuleTest {
         Assert.assertNotNull(metaData);
         ResXmlAttribute attribute = metaData.searchAttributeByResourceId(AndroidManifest.ID_value);
         Assert.assertNotNull(attribute);
-        Assert.assertEquals("Test empty attribute value failed ","", attribute.getValueAsString());
+        Assert.assertEquals("Test empty attribute value failed ",StringsUtil.EMPTY, attribute.getValueAsString());
 
         return manifestBlock;
     }
@@ -438,7 +439,7 @@ public class ApkModuleTest {
 
         ResXmlAttribute value = meta.getOrCreateAndroidAttribute(AndroidManifest.NAME_value,
                 AndroidManifest.ID_value);
-        value.setValueAsString("");
+        value.setValueAsString(StringsUtil.EMPTY);
     }
     public static ApkModule getLastApkModule(){
         return last_apkModule;
