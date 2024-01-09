@@ -16,6 +16,8 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.common.Register;
+import com.reandroid.dex.common.RegistersTable;
+import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
@@ -31,7 +33,10 @@ public class SmaliRegister extends Smali{
     }
 
     public Register toRegister(){
-        return new Register(getNumber(), isParameter());
+        return toRegister(null);
+    }
+    public Register toRegister(RegistersTable registersTable){
+        return new Register(getNumber(), isParameter(), registersTable);
     }
     public boolean isParameter() {
         return parameter;
@@ -59,7 +64,8 @@ public class SmaliRegister extends Smali{
     @Override
     public void parse(SmaliReader reader) throws IOException {
         reader.skipSpaces();
-        setParameter(reader.read() == 'p');
+        char ch = SmaliParseException.expect(reader, 'v', 'p');
+        setParameter(ch == 'p');
         setNumber(reader.readInteger());
     }
 }

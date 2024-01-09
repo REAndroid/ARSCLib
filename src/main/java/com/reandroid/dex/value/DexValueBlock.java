@@ -22,6 +22,7 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
@@ -82,6 +83,9 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
     }
     public void merge(DexValueBlock<?> valueBlock){
         valueTypeItem.set(valueBlock.valueTypeItem.get());
+    }
+    public void fromSmali(SmaliValue smaliValue){
+
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {

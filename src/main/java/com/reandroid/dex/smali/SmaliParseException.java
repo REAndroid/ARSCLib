@@ -71,10 +71,10 @@ public class SmaliParseException extends IOException {
         sanitizeStackTrace(exception);
         throw exception;
     }
-    public static void expect(SmaliReader reader, char ch1, char ch2) throws IOException{
+    public static char expect(SmaliReader reader, char ch1, char ch2) throws IOException{
         char ch = reader.readASCII();
         if(ch == ch1 || ch == ch2){
-            return;
+            return ch;
         }
         reader.skip(-1);
         String message = "expecting '" + ch1 + "', or '" + ch2 + "'";

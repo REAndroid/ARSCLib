@@ -16,6 +16,8 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliValue;
+import com.reandroid.dex.smali.model.SmaliValueFloat;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
@@ -41,6 +43,12 @@ public class FloatValue extends PrimitiveValue {
     @Override
     public String getHex() {
         return HexUtil.toHex(getNumberValue(), getValueSize()) + "L";
+    }
+
+    @Override
+    public void fromSmali(SmaliValue smaliValue) {
+        SmaliValueFloat smaliValueFloat = (SmaliValueFloat) smaliValue;
+        set(smaliValueFloat.getValue());
     }
 
     @Override

@@ -19,6 +19,8 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.IntegerVisitor;
 import com.reandroid.arsc.item.VisitableInteger;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliValue;
+import com.reandroid.dex.smali.model.SmaliValueInteger;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
@@ -53,5 +55,10 @@ public class IntValue extends PrimitiveValue implements IntegerReference, Visita
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.appendHex(get());
+    }
+    @Override
+    public void fromSmali(SmaliValue smaliValue) {
+        SmaliValueInteger smaliValueInteger = (SmaliValueInteger) smaliValue;
+        set(smaliValueInteger.getValue());
     }
 }

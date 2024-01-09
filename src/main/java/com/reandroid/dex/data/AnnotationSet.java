@@ -24,6 +24,8 @@ import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliAnnotationItem;
+import com.reandroid.dex.smali.model.SmaliAnnotationSet;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.FilterIterator;
@@ -160,6 +162,14 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         }
         for(AnnotationItem coming : annotationSet){
             addNew(coming.getKey());
+        }
+    }
+    public void fromSmali(SmaliAnnotationSet smaliAnnotationSet){
+        Iterator<SmaliAnnotationItem> iterator = smaliAnnotationSet.iterator();
+        while (iterator.hasNext()){
+            SmaliAnnotationItem smaliAnnotationItem = iterator.next();
+            AnnotationItem annotationItem = addNewItem(smaliAnnotationItem.getType());
+            annotationItem.fromSmali(smaliAnnotationItem);
         }
     }
 

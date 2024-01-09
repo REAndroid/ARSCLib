@@ -26,6 +26,8 @@ import com.reandroid.dex.reference.Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
+import com.reandroid.dex.smali.model.SmaliAnnotationElement;
+import com.reandroid.dex.smali.model.SmaliAnnotationItem;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -228,6 +230,15 @@ public class AnnotationItem extends DataItem
         annotationElements.ensureCapacity(annotationItem.getElementsCount());
         for(AnnotationElement coming : annotationItem){
             createNewElement().merge(coming);
+        }
+    }
+    public void fromSmali(SmaliAnnotationItem smaliAnnotationItem){
+        setType(smaliAnnotationItem.getType());
+        Iterator<SmaliAnnotationElement> iterator = smaliAnnotationItem.iterator();
+        while (iterator.hasNext()){
+            SmaliAnnotationElement smaliAnnotationElement = iterator.next();
+            AnnotationElement element = createNewElement();
+            element.fromSmali(smaliAnnotationElement);
         }
     }
     @Override

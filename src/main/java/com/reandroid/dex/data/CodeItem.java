@@ -25,12 +25,13 @@ import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItemCreate;
 import com.reandroid.dex.reference.DataItemIndirectReference;
-import com.reandroid.dex.ins.RegistersTable;
+import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.ins.TryBlock;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
@@ -199,6 +200,11 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
             TryBlock tryBlock = getOrCreateTryBlock();
             tryBlock.merge(comingTry);
         }
+    }
+    public void fromSmali(SmaliMethod smaliMethod){
+        setRegistersCount(smaliMethod.getRegistersCount());
+        setParameterRegistersCount(smaliMethod.getParameterRegistersCount());
+        getInstructionList().fromSmali(smaliMethod);
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {

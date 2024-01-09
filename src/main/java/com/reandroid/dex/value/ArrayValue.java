@@ -19,6 +19,8 @@ import com.reandroid.dex.data.EncodedArray;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliValue;
+import com.reandroid.dex.smali.model.SmaliValueArray;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
@@ -86,6 +88,16 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
         ArrayValue coming = (ArrayValue) valueBlock;
         getValueContainer().merge(coming.getValueContainer());
     }
+
+    @Override
+    public void fromSmali(SmaliValue smaliValue) {
+        SmaliValueArray smaliValueArray = (SmaliValueArray) smaliValue;
+        for (SmaliValue smaliValueChild : smaliValueArray) {
+            DexValueBlock<?> value = createNext(smaliValueChild.getValueType());
+            value.fromSmali(smaliValueChild);
+        }
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append('{');

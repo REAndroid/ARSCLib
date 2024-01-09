@@ -27,6 +27,8 @@ import com.reandroid.dex.ins.*;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliInstruction;
+import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.IterableIterator;
@@ -493,6 +495,16 @@ public class InstructionList extends FixedBlockContainer implements
         for(Ins coming : instructionList){
             Ins ins = createNext(coming.getOpcode());
             ins.merge(coming);
+        }
+        getInsArray().trimToSize();
+        updateAddresses();
+    }
+    public void fromSmali(SmaliMethod smaliMethod){
+        Iterator<SmaliInstruction> iterator = smaliMethod.getInstructions();
+        while (iterator.hasNext()){
+            SmaliInstruction smaliInstruction = iterator.next();
+            Ins ins = createNext(smaliInstruction.getOpcode());
+            ins.fromSmali(smaliInstruction);
         }
         getInsArray().trimToSize();
         updateAddresses();

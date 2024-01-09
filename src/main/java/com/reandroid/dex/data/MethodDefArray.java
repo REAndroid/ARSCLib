@@ -17,7 +17,7 @@ package com.reandroid.dex.data;
 
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.dex.smali.model.SmaliMethod;
 
 import java.util.Iterator;
 
@@ -37,6 +37,16 @@ public class MethodDefArray extends DefArray<MethodDef> {
         if(directory != null){
             directory.sortMethods();
         }
+    }
+
+    public void fromSmali(Iterator<SmaliMethod> iterator){
+        while (iterator.hasNext()){
+            fromSmali(iterator.next());
+        }
+    }
+    public void fromSmali(SmaliMethod smaliField){
+        MethodDef methodDef = createNext();
+        methodDef.fromSmali(smaliField);
     }
 
     private static final Creator<MethodDef> CREATOR = new Creator<MethodDef>() {

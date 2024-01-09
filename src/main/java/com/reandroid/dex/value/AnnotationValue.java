@@ -2,6 +2,8 @@ package com.reandroid.dex.value;
 
 import com.reandroid.dex.data.AnnotationItem;
 import com.reandroid.dex.key.DataKey;
+import com.reandroid.dex.smali.model.SmaliValue;
+import com.reandroid.dex.smali.model.SmaliValueAnnotation;
 
 public class AnnotationValue extends DexValueBlock<AnnotationItem> {
 
@@ -31,5 +33,12 @@ public class AnnotationValue extends DexValueBlock<AnnotationItem> {
         AnnotationItem item = get();
         item.setType(coming.getTypeKey());
         item.merge(coming);
+    }
+
+    @Override
+    public void fromSmali(SmaliValue smaliValue) {
+        SmaliValueAnnotation smaliValueAnnotation = (SmaliValueAnnotation) smaliValue;
+        AnnotationItem annotationItem = get();
+        annotationItem.fromSmali(smaliValueAnnotation.getValue());
     }
 }

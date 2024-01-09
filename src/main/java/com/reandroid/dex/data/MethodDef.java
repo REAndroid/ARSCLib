@@ -30,6 +30,7 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.collection.ArraySupplierIterator;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -276,6 +277,18 @@ public class MethodDef extends Def<MethodId>{
         CodeItem comingCode = comingMethod.getCodeItem();
         if(comingCode != null){
             this.codeOffset.setItem(comingCode.getKey());
+        }
+    }
+    public void fromSmali(SmaliMethod smaliMethod){
+        setKey(smaliMethod.getKey());
+        setAccessFlagsValue(smaliMethod.getAccessFlagsValue());
+        if(smaliMethod.hasInstructions()){
+            getOrCreateCodeItem().fromSmali(smaliMethod);
+        }
+        if(smaliMethod.hasAnnotation()){
+            AnnotationSet annotationSet = getOrCreateSection(SectionType.ANNOTATION_SET).createItem();
+            annotationSet.fromSmali(smaliMethod.getAnnotation());
+            addAnnotationSet(annotationSet);
         }
     }
 

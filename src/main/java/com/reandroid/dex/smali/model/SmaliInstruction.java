@@ -16,8 +16,10 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.common.OperandType;
+import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegisterFormat;
 import com.reandroid.dex.ins.Opcode;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -39,6 +41,23 @@ public class SmaliInstruction extends SmaliCode{
         this.operand = SmaliInstructionOperand.NO_OPERAND;
     }
 
+    public Key getKey(){
+        SmaliInstructionOperand operand = getOperand();
+        if(operand instanceof SmaliInstructionOperand.KeyOperand){
+            return ((SmaliInstructionOperand.KeyOperand) operand).getKey();
+        }
+        return null;
+    }
+    public Number getData(){
+        SmaliInstructionOperand operand = getOperand();
+        if(operand instanceof SmaliInstructionOperand.HexOperand){
+            return ((SmaliInstructionOperand.HexOperand) operand).getNumber();
+        }
+        if(operand instanceof SmaliInstructionOperand.LabelOperand){
+            return operand.getData() - getAddress();
+        }
+        return null;
+    }
     public int getAddress() {
         return address;
     }
@@ -48,6 +67,12 @@ public class SmaliInstruction extends SmaliCode{
 
     public int getCodeUnits(){
         return getOpcode().size() / 2;
+    }
+    public Register getRegister(){
+        return getRegister(0);
+    }
+    public Register getRegister(int i){
+        return getRegisterSet().getRegister(i);
     }
     public SmaliRegisterSet getRegisterSet() {
         return registerSet;

@@ -16,6 +16,7 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
@@ -69,5 +70,10 @@ public class InsGoto extends SizeXIns implements Label {
     @Override
     public int getSortOrder() {
         return ExtraLine.ORDER_INSTRUCTION_LABEL;
+    }
+
+    @Override
+    public void fromSmali(SmaliInstruction smaliInstruction) {
+        super.fromSmali(smaliInstruction);
     }
 }

@@ -34,8 +34,11 @@ import com.reandroid.dex.data.*;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.*;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.SmaliWriterSetting;
+import com.reandroid.dex.smali.model.SmaliClass;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.FileUtil;
@@ -512,6 +515,18 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
             return false;
         }
         return getDexLayout().merge(options, dexFile.getDexLayout());
+    }
+    public void fromSmali(SmaliReader reader) throws IOException {
+        while (SmaliDirective.parse(reader, false) == SmaliDirective.CLASS){
+            SmaliClass smaliClass = new SmaliClass();
+            smaliClass.parse(reader);
+            fromSmali(smaliClass);
+            reader.skipWhitespacesOrComment();
+        }
+
+    }
+    public void fromSmali(SmaliClass smaliClass){
+        getDexLayout().fromSmali(smaliClass);
     }
 
     public byte[] getBytes() {

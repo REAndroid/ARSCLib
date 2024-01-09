@@ -17,12 +17,16 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.dex.common.Register;
+import com.reandroid.dex.common.RegisterFormat;
+import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.reference.InsIdSectionReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.SingleIterator;
 
@@ -315,6 +319,43 @@ public class SizeXIns extends Ins {
         }
         return hash;
     }
+
+    public void fromSmali(SmaliInstruction smaliInstruction){
+        fromSmaliRegisters(smaliInstruction);
+        fromSmaliKey(smaliInstruction);
+        fromSmaliData(smaliInstruction);
+    }
+    private void fromSmaliRegisters(SmaliInstruction smaliInstruction){
+        if(!(this instanceof RegistersSet)){
+            return;
+        }
+        RegistersSet registersSet = (RegistersSet) this;
+        RegisterFormat format = getOpcode().getRegisterFormat();
+        int count = format.getCount();
+        registersSet.setRegistersCount(count);
+        for(int i = 0; i < count; i++){
+            Register register = smaliInstruction.getRegister(i);
+            registersSet.setRegister(i, register.getValue());
+        }
+    }
+    private void fromSmaliKey(SmaliInstruction smaliInstruction){
+        if(getSectionType() == null){
+            return;
+        }
+        setSectionIdKey(smaliInstruction.getKey());
+    }
+    private void fromSmaliData(SmaliInstruction smaliInstruction){
+        Number data = smaliInstruction.getData();
+        if(data == null){
+            return;
+        }
+        if(data instanceof Long){
+            setLong((Long) data);
+        }else {
+            setData(data.intValue());
+        }
+    }
+
     private static boolean areEqual(RegistersSet set1, RegistersSet set2){
         if(set1 == set2){
             return true;

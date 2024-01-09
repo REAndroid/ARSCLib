@@ -16,6 +16,8 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliValue;
+import com.reandroid.dex.smali.model.SmaliValueDouble;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
@@ -42,6 +44,12 @@ public class DoubleValue extends PrimitiveValue {
     public String getHex() {
         int shift = (7 - getValueSize()) * 8;
         return HexUtil.toHex(getNumberValue() << shift, 8) + "L";
+    }
+
+    @Override
+    public void fromSmali(SmaliValue smaliValue) {
+        SmaliValueDouble smaliValueDouble = (SmaliValueDouble) smaliValue;
+        set(smaliValueDouble.getValue());
     }
 
     @Override

@@ -24,10 +24,15 @@ public class Register implements SmaliFormat {
 
     private final int number;
     private final boolean parameter;
+    private final RegistersTable registersTable;
 
-    public Register(int number, boolean parameter){
+    public Register(int number, boolean parameter, RegistersTable registersTable){
         this.number = number;
         this.parameter = parameter;
+        this.registersTable = registersTable;
+    }
+    public Register(int number, boolean parameter){
+        this(number, parameter, null);
     }
 
     public int getNumber() {
@@ -36,6 +41,18 @@ public class Register implements SmaliFormat {
     public boolean isParameter() {
         return parameter;
     }
+
+    public RegistersTable getRegistersTable() {
+        return registersTable;
+    }
+    public int getValue() throws NullPointerException{
+        RegistersTable registersTable = getRegistersTable();
+        if(registersTable == null){
+            throw new NullPointerException("Missing register table for: " + toString());
+        }
+        return registersTable.getRegisterValue(this);
+    }
+
     public char getSymbol(){
         if(isParameter()){
             return 'p';

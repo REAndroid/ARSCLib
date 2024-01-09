@@ -27,6 +27,7 @@ import com.reandroid.dex.reference.DataItemIndirectReference;
 import com.reandroid.dex.reference.TypeListReference;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.model.SmaliClass;
 import com.reandroid.dex.value.*;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.StringsUtil;
@@ -487,6 +488,20 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         if(comingData != null){
             ClassData classData = getOrCreateClassData();
             classData.merge(comingData);
+        }
+    }
+    public void fromSmali(SmaliClass smaliClass){
+
+        setKey(smaliClass.getKey());
+        setAccessFlagsValue(smaliClass.getAccessFlagsValue());
+        setSuperClass(smaliClass.getSuperClass());
+        setSourceFile(smaliClass.getSourceFileName());
+
+        if(smaliClass.hasClassData()){
+            getOrCreateClassData().fromSmali(smaliClass);
+        }
+        if(smaliClass.hasAnnotation()){
+            getOrCreateClassAnnotations().fromSmali(smaliClass.getAnnotation());
         }
     }
 

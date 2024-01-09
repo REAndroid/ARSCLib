@@ -22,6 +22,7 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.model.SmaliField;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -92,6 +93,15 @@ public class FieldDef extends Def<FieldId> {
     @Override
     public Iterator<IdItem> usedIds(){
         return SingleIterator.of(getId());
+    }
+    public void fromSmali(SmaliField smaliField){
+        setKey(smaliField.getKey());
+        setAccessFlagsValue(smaliField.getAccessFlagsValue());
+        if(smaliField.hasAnnotation()){
+            AnnotationSet annotationSet = getOrCreateSection(SectionType.ANNOTATION_SET).createItem();
+            annotationSet.fromSmali(smaliField.getAnnotation());
+            addAnnotationSet(annotationSet);
+        }
     }
     @Override
     public SmaliDirective getSmaliDirective() {

@@ -8,6 +8,8 @@ import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.reference.StringUle128Reference;
+import com.reandroid.dex.smali.model.SmaliAnnotationElement;
+import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.NullValue;
@@ -95,6 +97,12 @@ public class AnnotationElement extends DataItem implements Comparable<Annotation
         DexValueBlock<?> coming = element.getValue();
         DexValueBlock<?> value = getOrCreateValue(coming.getValueType());
         value.merge(coming);
+    }
+    public void fromSmali(SmaliAnnotationElement element){
+        setName(element.getName());
+        SmaliValue smaliValue = element.getValue();
+        DexValueBlock<?> value = getOrCreateValue(smaliValue.getValueType());
+        value.fromSmali(smaliValue);
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {

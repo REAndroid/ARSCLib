@@ -17,6 +17,9 @@ package com.reandroid.dex.data;
 
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.smali.model.SmaliField;
+
+import java.util.Iterator;
 
 public class FieldDefArray extends DefArray<FieldDef> {
 
@@ -30,6 +33,15 @@ public class FieldDefArray extends DefArray<FieldDef> {
         if(directory != null){
             directory.sortFields();
         }
+    }
+    public void fromSmali(Iterator<SmaliField> iterator){
+        while (iterator.hasNext()){
+            fromSmali(iterator.next());
+        }
+    }
+    public void fromSmali(SmaliField smaliField){
+        FieldDef fieldDef = createNext();
+        fieldDef.fromSmali(smaliField);
     }
 
     private static final Creator<FieldDef> CREATOR = new Creator<FieldDef>() {

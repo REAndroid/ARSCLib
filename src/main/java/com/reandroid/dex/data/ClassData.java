@@ -29,6 +29,9 @@ import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliClass;
+import com.reandroid.dex.smali.model.SmaliField;
+import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.*;
 
@@ -359,6 +362,28 @@ public class ClassData extends DataItem implements SmaliFormat {
         }
         if(classData.getVirtualMethodsCount() != 0){
             initVirtualMethodsArray().merge(classData.virtualMethods);
+        }
+    }
+    public void fromSmali(SmaliClass smaliClass){
+        Iterator<SmaliField> smaliStaticFields = smaliClass.getStaticFields();
+        if(smaliStaticFields.hasNext()){
+            FieldDefArray defArray = initStaticFieldsArray();
+            defArray.fromSmali(smaliStaticFields);
+        }
+        Iterator<SmaliField> smaliInstanceFields = smaliClass.getInstanceFields();
+        if(smaliInstanceFields.hasNext()){
+            FieldDefArray defArray = initInstanceFieldsArray();
+            defArray.fromSmali(smaliInstanceFields);
+        }
+        Iterator<SmaliMethod> smaliDirectMethods = smaliClass.getDirectMethods();
+        if(smaliDirectMethods.hasNext()){
+            MethodDefArray defArray = initDirectMethodsArray();
+            defArray.fromSmali(smaliDirectMethods);
+        }
+        Iterator<SmaliMethod> smaliVirtualMethods = smaliClass.getVirtualMethods();
+        if(smaliVirtualMethods.hasNext()){
+            MethodDefArray defArray = initVirtualMethodsArray();
+            defArray.fromSmali(smaliVirtualMethods);
         }
     }
 

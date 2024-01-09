@@ -16,16 +16,14 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.dex.common.Register;
+import com.reandroid.dex.common.RegistersTable;
 
 public class RegisterReference extends Register {
-
-    private final RegistersTable registersTable;
     private final RegistersSet registersSet;
     private final int index;
 
     public RegisterReference(RegistersTable registersTable, RegistersSet registersSet, int index){
-        super(0, false);
-        this.registersTable = registersTable;
+        super(0, false, registersTable);
         this.registersSet = registersSet;
         this.index = index;
     }
@@ -64,10 +62,6 @@ public class RegisterReference extends Register {
     public RegistersSet getRegistersSet() {
         return registersSet;
     }
-    public RegistersTable getRegistersTable() {
-        return registersTable;
-    }
-
 
     @Override
     public boolean equals(Object obj) {

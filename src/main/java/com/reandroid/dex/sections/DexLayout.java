@@ -29,6 +29,7 @@ import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.pool.KeyPool;
+import com.reandroid.dex.smali.model.SmaliClass;
 import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.FileUtil;
 
@@ -221,6 +222,9 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
             return false;
         }
         return getSectionList().merge(options, dexFile.getSectionList());
+    }
+    public void fromSmali(SmaliClass smaliClass){
+        getSectionList().fromSmali(smaliClass);
     }
     @Override
     public byte[] getBytes(){

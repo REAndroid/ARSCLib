@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.IndexIterator;

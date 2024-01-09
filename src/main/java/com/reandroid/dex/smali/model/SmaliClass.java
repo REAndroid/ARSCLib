@@ -25,6 +25,7 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class SmaliClass extends SmaliDef{
 
@@ -73,9 +74,30 @@ public class SmaliClass extends SmaliDef{
     public void setSourceFile(StringKey sourceFile) {
         this.sourceFile = sourceFile;
     }
-
+    public String getSourceFileName() {
+        StringKey key = getSourceFile();
+        if(key != null){
+            return key.getString();
+        }
+        return null;
+    }
     public SmaliInterfaceSet getInterfaces() {
         return interfaces;
+    }
+    public boolean hasClassData(){
+        return !fields.isEmpty() || !methods.isEmpty();
+    }
+    public Iterator<SmaliField> getStaticFields(){
+        return fields.getStaticFields();
+    }
+    public Iterator<SmaliField> getInstanceFields(){
+        return fields.getInstanceFields();
+    }
+    public Iterator<SmaliMethod> getDirectMethods(){
+        return methods.getDirectMethods();
+    }
+    public Iterator<SmaliMethod> getVirtualMethods(){
+        return methods.getVirtualMethods();
     }
 
     @Override
@@ -105,25 +127,18 @@ public class SmaliClass extends SmaliDef{
         }
         fields.append(writer);
         methods.append(writer);
-
-
     }
 
     @Override
     public void parse(SmaliReader reader) throws IOException {
-        parseClass(reader);
-    }
-    private void parseClass(SmaliReader reader) throws IOException {
-        SmaliDirective directive = SmaliDirective.parse(reader);
-        if(directive != SmaliDirective.CLASS){
-            throw new SmaliParseException("Expecting '" + SmaliDirective.CLASS + "'" , reader);
-        }
-        // TODO: validate directive == SmaliDirective.CLASS
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, SmaliDirective.CLASS);
         setAccessFlags(AccessFlag.parse(reader));
         setKey(TypeKey.read(reader));
         while (parseNext(reader)){
             reader.skipWhitespacesOrComment();
         }
+        reader.skipWhitespacesOrComment();
     }
     private boolean parseNext(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();

@@ -15,7 +15,9 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegisterFormat;
+import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -28,6 +30,7 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
         Iterable<SmaliRegister>{
 
     private final RegisterFormat format;
+    private RegistersTable registersTable;
 
     public SmaliRegisterSet(RegisterFormat format){
         super();
@@ -35,6 +38,24 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
     }
     public SmaliRegisterSet(){
         this(RegisterFormat.READ);
+    }
+
+    public RegistersTable getRegistersTable() {
+        RegistersTable registersTable = this.registersTable;
+        if(registersTable == null){
+            return getParentInstance(SmaliMethod.class);
+        }
+        return registersTable;
+    }
+    public void setRegistersTable(RegistersTable registersTable) {
+        this.registersTable = registersTable;
+    }
+    public Register getRegister(int i){
+        SmaliRegister smaliRegister = get(i);
+        if(smaliRegister != null){
+            return smaliRegister.toRegister(getRegistersTable());
+        }
+        return null;
     }
 
     public RegisterFormat getFormat() {

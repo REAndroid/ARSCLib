@@ -17,7 +17,7 @@ package com.reandroid.dex.smali;
 
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.Register;
-import com.reandroid.dex.ins.RegistersTable;
+import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.utils.HexUtil;
 

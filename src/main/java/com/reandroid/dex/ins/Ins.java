@@ -26,6 +26,7 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.InstanceIterator;
@@ -256,5 +257,8 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
             return unsigned;
         }
         return unsigned - width - 1;
+    }
+
+    public void fromSmali(SmaliInstruction smaliInstruction){
     }
 }

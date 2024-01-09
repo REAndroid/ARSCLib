@@ -38,6 +38,9 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
     public void setAccessFlags(AccessFlag[] accessFlags) {
         this.accessFlags = accessFlags;
     }
+    public int getAccessFlagsValue(){
+        return Modifier.combineValues(getAccessFlags());
+    }
     public String getName() {
         return name;
     }

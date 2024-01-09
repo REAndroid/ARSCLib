@@ -32,6 +32,7 @@ import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.*;
+import com.reandroid.dex.smali.model.SmaliClass;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArraySupplierIterator;
 import com.reandroid.utils.collection.CollectionUtil;
@@ -534,6 +535,10 @@ public class SectionList extends FixedBlockContainer
             refresh();
         }
         return mergedAll;
+    }
+    public void fromSmali(SmaliClass smaliClass){
+        ClassId classId = getOrCreateSectionItem(SectionType.CLASS_ID, smaliClass.getKey());
+        classId.fromSmali(smaliClass);
     }
     private static<T1 extends Section<?>> Comparator<T1> getOffsetComparator() {
         return (section1, section2) -> {

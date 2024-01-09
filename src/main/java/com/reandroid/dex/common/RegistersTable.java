@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.ins;
-
-import com.reandroid.dex.common.Register;
+package com.reandroid.dex.common;
 
 public interface RegistersTable {
 
@@ -35,6 +33,13 @@ public interface RegistersTable {
             parameter = true;
         }
         return new Register(registerValue, parameter);
+    }
+    default int getRegisterValue(Register register) {
+        int result = register.getNumber();
+        if(register.isParameter()){
+            result += getLocalRegistersCount();
+        }
+        return result;
     }
 
 }

@@ -17,7 +17,7 @@ package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
-import com.reandroid.dex.ins.RegistersTable;
+import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.key.TypeKey;
@@ -27,6 +27,7 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class SmaliMethod extends SmaliDef implements RegistersTable{
 
@@ -65,6 +66,12 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
                 protoKey.getReturnType());
     }
 
+    public boolean hasInstructions(){
+        return getInstructions().hasNext();
+    }
+    public Iterator<SmaliInstruction> getInstructions(){
+        return getCodeSet().getInstructions();
+    }
     public Integer getLocals() {
         return locals;
     }
@@ -175,11 +182,12 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
 
     @Override
     public int getParameterRegistersCount() {
+        int count = isStatic() ? 0 : 1;
         ProtoKey protoKey = getProtoKey();
         if(protoKey != null){
-            return protoKey.getParameterRegistersCount();
+            count += protoKey.getParameterRegistersCount();
         }
-        return 0;
+        return count;
     }
     @Override
     public void setRegistersCount(int count) {

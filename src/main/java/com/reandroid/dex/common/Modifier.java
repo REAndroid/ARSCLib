@@ -106,4 +106,16 @@ public abstract class Modifier implements SmaliFormat {
         }
         return builder.toString();
     }
+    public static int combineValues(Modifier[] modifiers){
+        if(modifiers == null){
+            return 0;
+        }
+        int result = 0;
+        for(Modifier modifier : modifiers){
+            if(modifier != null){
+                result |= modifier.getValue();
+            }
+        }
+        return result;
+    }
 }

@@ -16,6 +16,7 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.common.ArraySupplier;
+import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.utils.collection.ArraySupplierIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.InstanceIterator;
