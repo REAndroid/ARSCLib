@@ -18,13 +18,15 @@ package com.reandroid.dex.common;
 public class OperandType {
 
     public static final OperandType NONE;
-    public static final OperandType NUMBER;
+    public static final OperandType HEX;
+    public static final OperandType DECIMAL;
     public static final OperandType LABEL;
     public static final OperandType KEY;
 
     static {
         NONE = new OperandType("NONE");
-        NUMBER = new OperandType("NUMBER");
+        HEX = new OperandType("HEX");
+        DECIMAL = new OperandType("DECIMAL");
         LABEL = new OperandType("LABEL");
         KEY = new OperandType("KEY");
     }

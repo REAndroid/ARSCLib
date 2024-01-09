@@ -15,36 +15,39 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.common.RegisterFormat;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
         Iterable<SmaliRegister>{
 
-    private boolean range;
+    private final RegisterFormat format;
 
-    public SmaliRegisterSet(){
+    public SmaliRegisterSet(RegisterFormat format){
         super();
+        this.format = format;
+    }
+    public SmaliRegisterSet(){
+        this(RegisterFormat.READ);
     }
 
-    public boolean isRange() {
-        return range;
-    }
-    public void setRange(boolean range) {
-        this.range = range;
+    public RegisterFormat getFormat() {
+        return format;
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
         boolean appendOnce = false;
-        String separator;
-        if(isRange()){
-            separator = " .. ";
-        }else {
-            separator = ", ";
+        RegisterFormat format = getFormat();
+        String separator = format.isRange() ? " .. ": ", ";
+        if(format.isOut()){
+            writer.append('{');
         }
         for(SmaliRegister register : this){
             if(appendOnce){
@@ -53,76 +56,99 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
             register.append(writer);
             appendOnce = true;
         }
+        if(format.isOut()){
+            writer.append('}');
+        }
     }
 
     @Override
     public void parse(SmaliReader reader) throws IOException {
-        reader.skipSpaces();
-        boolean brace = reader.get() == '{';
-        if(brace){
-            reader.skip(1);
+        reader.skipWhitespacesOrComment();
+        RegisterFormat format = getFormat();
+        if(format.isRange()){
+            parseOutRangeRegisters(reader);
+        }else if(format.isOut()){
+            parseOutRegisters(reader);
+        }else {
+            parseRegisters(reader);
         }
-        boolean first = true;
-        while (skipNext(reader, first)){
+    }
+    private void parseRegisters(SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        int count = getFormat().getCount();
+        for(int i = 0; i < count; i++){
+            if(i != 0){
+                SmaliParseException.expect(reader, ',');
+                reader.skipWhitespacesOrComment();
+            }
             SmaliRegister register = new SmaliRegister();
             add(register);
             register.parse(reader);
-            first = false;
-        }
-        if(brace){
-            char ch = reader.readASCII();
-            if(ch != '}'){
-                reader.skip(-1);
-                throw new SmaliParseException("Invalid character '" + ch + "'", reader);
-            }
-            reader.skipSpaces();
-            ch = reader.readASCII();
-            if(ch != ','){
-                reader.skip(-1);
-                throw new SmaliParseException("Invalid character '" + ch + "'", reader);
-            }
-            reader.skipSpaces();
+            reader.skipWhitespacesOrComment();
         }
     }
-    private boolean skipNext(SmaliReader reader, boolean first) throws IOException{
-        reader.skipSpaces();
-        if(reader.isLineEnd()){
-            return false;
-        }
-        byte b = reader.get();
-        if(b == ','){
-            reader.offset(1);
-            reader.skipSpaces();
-            b = reader.get();
-        }else if(b == '}'){
-            return false;
-        }else if(reader.startsWith(new byte[]{'.', '.'})){
-            setRange(true);
-            reader.offset(2);
-            reader.skipSpaces();
-            b = reader.get();
-        }else if(!first){
-            throw new SmaliParseException("Invalid character, expecting ','", reader);
-        }
-        return b == 'v' || b == 'p';
-    }
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        boolean appendOnce = false;
-        String separator;
-        if(isRange()){
-            separator = " .. ";
-        }else {
-            separator = ", ";
-        }
-        for(SmaliRegister register : this){
-            if(appendOnce){
-                builder.append(separator);
+    private void parseOutRegisters(SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, '{');
+        reader.skipWhitespacesOrComment();
+        boolean parsedOnce = false;
+        while (!reader.finished() && reader.get() != '}'){
+            if(parsedOnce){
+                SmaliParseException.expect(reader, ',');
+                reader.skipWhitespacesOrComment();
             }
-            builder.append(register);
-            appendOnce = true;
+            SmaliRegister register = new SmaliRegister();
+            add(register);
+            register.parse(reader);
+            reader.skipWhitespacesOrComment();
+            parsedOnce = true;
         }
-        return builder.toString();
+        SmaliParseException.expect(reader, '}');
     }
+    private void parseOutRangeRegisters(SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, '{');
+        reader.skipWhitespacesOrComment();
+
+        SmaliRegister register1 = new SmaliRegister();
+        add(register1);
+        register1.parse(reader);
+
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, '.');
+        SmaliParseException.expect(reader, '.');
+        reader.skipWhitespacesOrComment();
+
+        SmaliRegister register2 = new SmaliRegister();
+        add(register2);
+        register2.parse(reader);
+        reader.skipWhitespacesOrComment();
+
+        SmaliParseException.expect(reader, '}');
+    }
+
+    public static final SmaliRegisterSet NO_REGISTER_SET = new SmaliRegisterSet(RegisterFormat.NONE){
+        @Override
+        public boolean add(SmaliRegister smali) {
+            throw new RuntimeException("NO_REGISTER_SET");
+        }
+        @Override
+        public Iterator<SmaliRegister> iterator() {
+            return EmptyIterator.of();
+        }
+        @Override
+        public int size() {
+            return 0;
+        }
+        @Override
+        public void append(SmaliWriter writer) {
+        }
+        @Override
+        public void parse(SmaliReader reader) {
+        }
+        @Override
+        public String toString() {
+            return "";
+        }
+    };
 }

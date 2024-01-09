@@ -83,12 +83,12 @@ public class SmaliDebugLocal extends SmaliDebug implements SmaliRegion {
         reader.skipSpaces();
         SmaliParseException.expect(reader, getSmaliDirective());
         getRegisterSet().parse(reader);
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, ',');
+        reader.skipWhitespacesOrComment();
         setName(StringKey.read(reader));
         reader.skipSpaces();
-        if(reader.readASCII() != ':'){
-            reader.skip(-1);
-            throw new SmaliParseException("Expecting ':'", reader);
-        }
+        SmaliParseException.expect(reader, ':');
         reader.skipSpaces();
         setType(TypeKey.read(reader));
         reader.skipSpaces();

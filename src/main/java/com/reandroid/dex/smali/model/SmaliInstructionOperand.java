@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.common.OperandType;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.sections.SectionType;
@@ -34,6 +35,7 @@ public abstract class SmaliInstructionOperand extends Smali{
         return getData() & 0x00000000ffffffffL;
     }
     public abstract int getData();
+    public abstract OperandType getOperandType();
     @Override
     public abstract void append(SmaliWriter writer) throws IOException;
 
@@ -60,6 +62,10 @@ public abstract class SmaliInstructionOperand extends Smali{
         @Override
         public int getData() {
             return getLabel().getAddress();
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.LABEL;
         }
 
         @Override
@@ -110,6 +116,10 @@ public abstract class SmaliInstructionOperand extends Smali{
             return i;
         }
         @Override
+        public OperandType getOperandType() {
+            return OperandType.HEX;
+        }
+        @Override
         public long getDataLong() {
             Number number = getNumber();
             if(number instanceof Long){
@@ -131,10 +141,10 @@ public abstract class SmaliInstructionOperand extends Smali{
             value.parse(reader);
         }
     }
-    public static class IntegerOperand extends SmaliInstructionOperand {
+    public static class DecimalOperand extends SmaliInstructionOperand {
         private int number;
 
-        public IntegerOperand(){
+        public DecimalOperand(){
             super();
         }
 
@@ -148,6 +158,10 @@ public abstract class SmaliInstructionOperand extends Smali{
         @Override
         public int getData() {
             return getNumber();
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.DECIMAL;
         }
 
         @Override
@@ -177,6 +191,10 @@ public abstract class SmaliInstructionOperand extends Smali{
         @Override
         public int getData() {
             return -1;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.KEY;
         }
         @Override
         public long getDataLong() {
@@ -212,6 +230,10 @@ public abstract class SmaliInstructionOperand extends Smali{
         @Override
         public int getData() {
             return -1;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.NONE;
         }
         @Override
         public long getDataLong() {

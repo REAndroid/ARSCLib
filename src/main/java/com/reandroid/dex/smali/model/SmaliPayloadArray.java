@@ -24,12 +24,12 @@ import java.io.IOException;
 public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValue> {
 
     public SmaliPayloadArray(){
-        super(new SmaliInstructionOperand.IntegerOperand());
+        super(new SmaliInstructionOperand.DecimalOperand());
     }
 
     @Override
-    public SmaliInstructionOperand.IntegerOperand getOperand() {
-        return (SmaliInstructionOperand.IntegerOperand) super.getOperand();
+    public SmaliInstructionOperand.DecimalOperand getOperand() {
+        return (SmaliInstructionOperand.DecimalOperand) super.getOperand();
     }
 
     public int getWidth() {

@@ -71,6 +71,17 @@ public class SmaliParseException extends IOException {
         sanitizeStackTrace(exception);
         throw exception;
     }
+    public static void expect(SmaliReader reader, char ch1, char ch2) throws IOException{
+        char ch = reader.readASCII();
+        if(ch == ch1 || ch == ch2){
+            return;
+        }
+        reader.skip(-1);
+        String message = "expecting '" + ch1 + "', or '" + ch2 + "'";
+        SmaliParseException exception = new SmaliParseException(message, reader);
+        sanitizeStackTrace(exception);
+        throw exception;
+    }
     private static void sanitizeStackTrace(Exception exception){
         StackTraceElement[] elements = exception.getStackTrace();
         int count = 0;

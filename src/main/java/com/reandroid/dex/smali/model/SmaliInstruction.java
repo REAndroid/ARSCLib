@@ -15,7 +15,8 @@
  */
 package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.ins.Ins;
+import com.reandroid.dex.common.OperandType;
+import com.reandroid.dex.common.RegisterFormat;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
@@ -33,6 +34,8 @@ public class SmaliInstruction extends SmaliCode{
 
     public SmaliInstruction(){
         super();
+        this.opcode = Opcode.NOP;
+        this.registerSet = SmaliRegisterSet.NO_REGISTER_SET;
         this.operand = SmaliInstructionOperand.NO_OPERAND;
     }
 
@@ -58,6 +61,9 @@ public class SmaliInstruction extends SmaliCode{
     public SmaliInstructionOperand getOperand() {
         return operand;
     }
+    public OperandType getOperandType(){
+        return getOperand().getOperandType();
+    }
     public void setOperand(SmaliInstructionOperand operand) {
         this.operand = operand;
         if(operand != null){
@@ -76,8 +82,39 @@ public class SmaliInstruction extends SmaliCode{
     public Opcode<?> getOpcode() {
         return opcode;
     }
-    public void setOpcode(Opcode<?> opcode) {
+    public void initializeOpcode(Opcode<?> opcode) {
         this.opcode = opcode;
+        initRegisterSet(opcode);
+        initOperand(opcode);
+    }
+    private void initRegisterSet(Opcode<?> opcode) {
+        RegisterFormat format = opcode.getRegisterFormat();
+        SmaliRegisterSet registerSet;
+        if(format == RegisterFormat.NONE){
+            registerSet = SmaliRegisterSet.NO_REGISTER_SET;
+        }else {
+            registerSet = new SmaliRegisterSet(format);
+        }
+        setRegisterSet(registerSet);
+    }
+    private void initOperand(Opcode<?> opcode) {
+        OperandType operandType = opcode.getOperandType();
+        SmaliInstructionOperand operand;
+        if(operandType == OperandType.NONE){
+            operand = SmaliInstructionOperand.NO_OPERAND;
+        }else if(operandType == OperandType.HEX){
+            operand = new SmaliInstructionOperand.HexOperand();
+        }else if(operandType == OperandType.KEY){
+            operand = new SmaliInstructionOperand.KeyOperand();
+        }else if(operandType == OperandType.LABEL){
+            operand = new SmaliInstructionOperand.LabelOperand();
+        }else if(operandType == OperandType.DECIMAL){
+            operand = new SmaliInstructionOperand.DecimalOperand();
+        }else {
+            throw new RuntimeException("Unknown operand type: " + operandType
+                    + ", opcode = " + opcode);
+        }
+        setOperand(operand);
     }
 
     @Override
@@ -88,90 +125,35 @@ public class SmaliInstruction extends SmaliCode{
         }
         writer.newLine();
         opcode.append(writer);
-        if(opcode.isMethodInvoke()){
-            writer.append('{');
-        }
         SmaliRegisterSet registerSet = getRegisterSet();
         if(registerSet != null){
             registerSet.append(writer);
         }
-        if(opcode.isMethodInvoke()){
-            writer.append('}');
-        }
-        SmaliInstructionOperand operand = getOperand();
-        if(operand != SmaliInstructionOperand.NO_OPERAND){
+        if(opcode.getRegisterFormat() != RegisterFormat.NONE &&
+                opcode.getOperandType() != OperandType.NONE){
             writer.append(", ");
         }
-        operand.append(writer);
+        getOperand().append(writer);
     }
 
     @Override
     public void parse(SmaliReader reader) throws IOException {
-        parseOpcode(reader);
-        Opcode<?> opcode = getOpcode();
-        if(opcode == Opcode.CONST_4){
-            Ins ins = opcode.newInstance();
-            String a=ins.toString();
-            System.err.println(a);
+        Opcode<?> opcode = parseOpcode(reader);
+        getRegisterSet().parse(reader);
+
+        if(opcode.getRegisterFormat() != RegisterFormat.NONE &&
+                opcode.getOperandType() != OperandType.NONE){
+            reader.skipWhitespacesOrComment();
+            SmaliParseException.expect(reader, ',');
+            reader.skipWhitespacesOrComment();
         }
-        while (!reader.isLineEnd()){
-            if(getOperand() != SmaliInstructionOperand.NO_OPERAND || opcode == Opcode.NOP){
-                throw new SmaliParseException("Unrecognized state", reader);
-            }
-            parseNext(reader);
-            reader.skipSpaces();
-        }
+        getOperand().parse(opcode, reader);
     }
-    private void parseOpcode(SmaliReader reader){
+    private Opcode<?> parseOpcode(SmaliReader reader){
         reader.skipWhitespaces();
         Opcode<?> opcode = Opcode.parseSmali(reader, true);
-        setOpcode(opcode);
+        initializeOpcode(opcode);
         reader.skipSpaces();
-        if(opcode == Opcode.NOP){
-            setOperand(SmaliInstructionOperand.NO_OPERAND);
-        }
-    }
-    private void parseNext(SmaliReader reader) throws IOException {
-        byte b = reader.get();
-        switch (b){
-            case '{':
-            case 'v':
-            case 'p':
-                parseRegisterSet(reader);
-                break;
-            case ':':
-                parseLabel(reader);
-                break;
-            case '-':
-            case '0':
-                parseHex(reader);
-                break;
-            default:
-                if(getOpcode().getSectionType() != null){
-                    parseKey(reader);
-                }else {
-                    throw new SmaliParseException("Unrecognized register/operand", reader);
-                }
-        }
-    }
-    private void parseRegisterSet(SmaliReader reader) throws IOException {
-        SmaliRegisterSet registerSet = new SmaliRegisterSet();
-        setRegisterSet(registerSet);
-        registerSet.parse(reader);
-    }
-    private void parseLabel(SmaliReader reader) throws IOException {
-        SmaliInstructionOperand operand = new SmaliInstructionOperand.LabelOperand();
-        setOperand(operand);
-        operand.parse(getOpcode(), reader);
-    }
-    private void parseKey(SmaliReader reader) throws IOException {
-        SmaliInstructionOperand operand = new SmaliInstructionOperand.KeyOperand();
-        setOperand(operand);
-        operand.parse(getOpcode(), reader);
-    }
-    private void parseHex(SmaliReader reader) throws IOException {
-        SmaliInstructionOperand operand = new SmaliInstructionOperand.HexOperand();
-        setOperand(operand);
-        operand.parse(getOpcode(), reader);
+        return opcode;
     }
 }

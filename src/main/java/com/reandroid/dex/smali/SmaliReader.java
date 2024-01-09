@@ -86,7 +86,7 @@ public class SmaliReader {
         StringBuilder builder = new StringBuilder();
         boolean skipped = false;
         while (true){
-            if(finished() || get() == '\n'){
+            if(finished()){
                 skip(-1);
                 throw new SmaliParseException("Missing character '" + stopChar + "'", this);
             }

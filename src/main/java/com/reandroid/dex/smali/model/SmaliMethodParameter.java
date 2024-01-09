@@ -16,10 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.key.StringKey;
-import com.reandroid.dex.smali.SmaliDirective;
-import com.reandroid.dex.smali.SmaliReader;
-import com.reandroid.dex.smali.SmaliRegion;
-import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.*;
 
 import java.io.IOException;
 
@@ -82,11 +79,13 @@ public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
 
     @Override
     public void parse(SmaliReader reader) throws IOException {
-        SmaliDirective directive = SmaliDirective.parse(reader);
-        if(directive != getSmaliDirective()){
-            // throw
-        }
+        SmaliParseException.expect(reader, getSmaliDirective());
         getRegisterSet().parse(reader);
+        reader.skipWhitespacesOrComment();
+        if(reader.get() == ','){
+            reader.skip(1);
+            reader.skipWhitespacesOrComment();
+        }
         parseName(reader);
         parseAnnotationSet(reader);
     }
