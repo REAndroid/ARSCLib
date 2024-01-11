@@ -25,10 +25,10 @@ public class SmaliPayloadPackedSwitch extends SmaliInstructionPayload<SmaliLabel
         super(new SmaliInstructionOperand.HexOperand());
     }
 
-    public Number getFirstKey() {
-        return getOperand().getNumber();
+    public int getFirstKey() {
+        return getOperand().getIntegerData();
     }
-    public void setFirstKey(Number firstKey) {
+    public void setFirstKey(int firstKey) {
         getOperand().setNumber(firstKey);
     }
 

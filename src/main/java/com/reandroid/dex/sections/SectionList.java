@@ -536,7 +536,7 @@ public class SectionList extends FixedBlockContainer
         }
         return mergedAll;
     }
-    public void fromSmali(SmaliClass smaliClass){
+    public void fromSmali(SmaliClass smaliClass) throws IOException {
         ClassId classId = getOrCreateSectionItem(SectionType.CLASS_ID, smaliClass.getKey());
         classId.fromSmali(smaliClass);
     }

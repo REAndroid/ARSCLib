@@ -19,7 +19,10 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliCodeExceptionHandler;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.ArrayIterator;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -28,7 +31,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public abstract class ExceptionHandler extends FixedDexContainerWithTool
-        implements Iterable<Label>, LabelsSet {
+        implements SmaliRegion, Iterable<Label>, LabelsSet {
 
     private final Ule128Item catchAddress;
 
@@ -80,7 +83,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
     }
 
     abstract TypeId getTypeId();
-    abstract String getOpcodeName();
+    public abstract SmaliDirective getSmaliDirective();
     Ule128Item getCatchAddressUle128(){
         return catchAddress;
     }
@@ -156,6 +159,16 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
     public void merge(ExceptionHandler handler){
         catchAddress.set(handler.catchAddress.get());
     }
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+
+    }
+    public void fromSmali(SmaliCodeExceptionHandler smaliCodeExceptionHandler){
+        getHandlerLabel().setTargetAddress(smaliCodeExceptionHandler.getAddress());
+        getStartLabel().setTargetAddress(smaliCodeExceptionHandler.getStart().getAddress());
+        getEndLabel().setTargetAddress(smaliCodeExceptionHandler.getEnd().getAddress());
+        getCatchLabel().setTargetAddress(smaliCodeExceptionHandler.getCatchLabel().getAddress());
+    }
 
     boolean isTypeEqual(ExceptionHandler handler){
         return true;
@@ -224,7 +237,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
             ExceptionHandler handler = this.handler;
             StringBuilder builder = new StringBuilder();
             builder.append('.');
-            builder.append(handler.getOpcodeName());
+            builder.append(handler.getSmaliDirective().getName());
             builder.append(' ');
             TypeId typeId = handler.getTypeId();
             if(typeId != null){
@@ -258,9 +271,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         @Override
         public void appendExtra(SmaliWriter writer) throws IOException {
             ExceptionHandler handler = this.handler;
-            writer.append('.');
-            writer.append(handler.getOpcodeName());
-            writer.append(' ');
+            handler.getSmaliDirective().append(writer);
             TypeId typeId = handler.getTypeId();
             if(typeId != null){
                 typeId.append(writer);
@@ -416,7 +427,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         }
         @Override
         public String getLabelName() {
-            return HexUtil.toHex(":" + getHandler().getOpcodeName() + "_", getTargetAddress(), 1);
+            return HexUtil.toHex(":" + getHandler().getSmaliDirective() + "_", getTargetAddress(), 1);
         }
         @Override
         public int getSortOrder() {
@@ -435,7 +446,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
                 return true;
             }
             return getTargetAddress() == label.getTargetAddress() &&
-                    getHandler().getOpcodeName().equals(label.getHandler().getOpcodeName());
+                    getHandler().getSmaliDirective().equals(label.getHandler().getSmaliDirective());
         }
         @Override
         public String toString() {

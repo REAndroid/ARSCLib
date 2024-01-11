@@ -364,7 +364,7 @@ public class ClassData extends DataItem implements SmaliFormat {
             initVirtualMethodsArray().merge(classData.virtualMethods);
         }
     }
-    public void fromSmali(SmaliClass smaliClass){
+    public void fromSmali(SmaliClass smaliClass) throws IOException {
         Iterator<SmaliField> smaliStaticFields = smaliClass.getStaticFields();
         if(smaliStaticFields.hasNext()){
             FieldDefArray defArray = initStaticFieldsArray();

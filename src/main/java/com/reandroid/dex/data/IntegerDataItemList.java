@@ -48,12 +48,22 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
 
     public T addNew(Key key){
         T item = getOrCreateSection(sectionType).getOrCreate(key);
-        add(item.getOffset());
+        add(item.getIdx());
         return item;
     }
     public T addNew(){
         T item = getOrCreateSection(sectionType).createItem();
-        add(item.getOffset());
+        add(item.getIdx());
+        return item;
+    }
+    public T getOrCreateAt(int index){
+        T item = getItem(index);
+        if(item == null){
+            ensureSize(index + 1);
+            item = getOrCreateSection(sectionType).createItem();
+            put(index, item.getIdx());
+            onChanged();
+        }
         return item;
     }
     public void addNull(){
@@ -220,7 +230,7 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
         if(item == null){
             return 0;
         }
-        return item.getOffset();
+        return item.getIdx();
     }
     private void cacheItems(){
         items = getSectionItem(sectionType, toArray());

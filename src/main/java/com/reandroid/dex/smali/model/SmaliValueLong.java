@@ -50,6 +50,18 @@ public class SmaliValueLong extends SmaliValueNumber<Long>{
     public void setNumber(Long number) {
         setValue(number);
     }
+    @Override
+    public int getWidth() {
+        return 8;
+    }
+    @Override
+    public int unsignedInt() {
+        return (int) getValue();
+    }
+    @Override
+    public long unsignedLong() {
+        return getValue();
+    }
 
     @Override
     public DexValueType<?> getValueType() {

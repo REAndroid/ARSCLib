@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.smali.model.SmaliMethod;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 public class MethodDefArray extends DefArray<MethodDef> {
@@ -39,12 +40,12 @@ public class MethodDefArray extends DefArray<MethodDef> {
         }
     }
 
-    public void fromSmali(Iterator<SmaliMethod> iterator){
+    public void fromSmali(Iterator<SmaliMethod> iterator) throws IOException {
         while (iterator.hasNext()){
             fromSmali(iterator.next());
         }
     }
-    public void fromSmali(SmaliMethod smaliField){
+    public void fromSmali(SmaliMethod smaliField) throws IOException {
         MethodDef methodDef = createNext();
         methodDef.fromSmali(smaliField);
     }

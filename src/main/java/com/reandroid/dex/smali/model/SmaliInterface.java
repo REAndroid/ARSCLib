@@ -37,6 +37,13 @@ public class SmaliInterface extends Smali implements SmaliRegion {
     public void setType(TypeKey type) {
         this.type = type;
     }
+    public String getTypeName(){
+        TypeKey typeKey = type;
+        if(typeKey != null){
+            return typeKey.getTypeName();
+        }
+        return null;
+    }
 
     @Override
     public SmaliDirective getSmaliDirective() {

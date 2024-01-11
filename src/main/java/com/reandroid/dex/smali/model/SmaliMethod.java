@@ -88,8 +88,14 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
     public SmaliParamSet getParamSet() {
         return paramSet;
     }
+    public Iterator<SmaliMethodParameter> getParameters(){
+        return getParamSet().iterator();
+    }
     public SmaliCodeSet getCodeSet() {
         return codeSet;
+    }
+    public Iterator<SmaliCodeTryItem> getTryItems(){
+        return getCodeSet().iterator(SmaliCodeTryItem.class);
     }
 
     @Override
@@ -202,5 +208,18 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
             return locals;
         }
         return 0;
+    }
+    @Override
+    public String toDebugString() {
+        StringBuilder builder = new StringBuilder();
+        SmaliClass smaliClass = getSmaliClass();
+        if(smaliClass != null){
+            builder.append(smaliClass.toDebugString());
+            builder.append(", ");
+        }
+        builder.append("method = ");
+        builder.append(getName());
+        builder.append(getProtoKey());
+        return builder.toString();
     }
 }

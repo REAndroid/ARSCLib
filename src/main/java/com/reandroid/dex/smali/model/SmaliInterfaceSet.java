@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliRegion;
@@ -22,12 +23,23 @@ import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
-public class SmaliInterfaceSet extends SmaliSet<SmaliInterface> implements SmaliRegion {
+public class SmaliInterfaceSet extends SmaliSet<SmaliInterface> implements SmaliRegion, Iterable<SmaliInterface> {
 
     public SmaliInterfaceSet(){
         super();
     }
 
+    public TypeListKey getKey(){
+        int size = size();
+        if(size == 0){
+            return null;
+        }
+        String[] typeNames = new String[size];
+        for(int i = 0; i < size; i++){
+            typeNames[i] = get(i).getTypeName();
+        }
+        return new TypeListKey(typeNames);
+    }
     @Override
     public SmaliDirective getSmaliDirective() {
         return SmaliDirective.IMPLEMENTS;

@@ -65,6 +65,13 @@ public abstract class Smali implements SmaliFormat, SmaliParser {
 
     }
 
+    public String toDebugString(){
+        try{
+            return toString();
+        }catch (Throwable e){
+            return e.getMessage();
+        }
+    }
     @Override
     public String toString() {
         return SmaliWriter.toStringSafe(this);

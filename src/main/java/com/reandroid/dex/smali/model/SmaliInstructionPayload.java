@@ -64,7 +64,7 @@ public abstract class SmaliInstructionPayload<T extends Smali> extends SmaliInst
         SmaliDirective directive = getSmaliDirective();
         SmaliParseException.expect(reader, directive);
         reader.skipSpaces();
-        getOperand().parse(getOpcode(), reader);
+        parseOperand(getOpcode(), reader);
         reader.skipWhitespacesOrComment();
         SmaliSet<T> entries = getEntries();
         while (!directive.isEnd(reader)){
@@ -75,5 +75,8 @@ public abstract class SmaliInstructionPayload<T extends Smali> extends SmaliInst
         }
         reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, getSmaliDirective(), true);
+    }
+    void parseOperand(Opcode<?> opcode, SmaliReader reader) throws IOException {
+        getOperand().parse(opcode, reader);
     }
 }

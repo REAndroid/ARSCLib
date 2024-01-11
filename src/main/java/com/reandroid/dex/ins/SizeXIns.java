@@ -18,7 +18,6 @@ package com.reandroid.dex.ins;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.dex.common.Register;
-import com.reandroid.dex.common.RegisterFormat;
 import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.data.InstructionList;
@@ -320,7 +319,8 @@ public class SizeXIns extends Ins {
         return hash;
     }
 
-    public void fromSmali(SmaliInstruction smaliInstruction){
+    @Override
+    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
         fromSmaliRegisters(smaliInstruction);
         fromSmaliKey(smaliInstruction);
         fromSmaliData(smaliInstruction);
@@ -329,9 +329,8 @@ public class SizeXIns extends Ins {
         if(!(this instanceof RegistersSet)){
             return;
         }
+        int count = smaliInstruction.getRegistersCount();
         RegistersSet registersSet = (RegistersSet) this;
-        RegisterFormat format = getOpcode().getRegisterFormat();
-        int count = format.getCount();
         registersSet.setRegistersCount(count);
         for(int i = 0; i < count; i++){
             Register register = smaliInstruction.getRegister(i);
@@ -344,7 +343,7 @@ public class SizeXIns extends Ins {
         }
         setSectionIdKey(smaliInstruction.getKey());
     }
-    private void fromSmaliData(SmaliInstruction smaliInstruction){
+    private void fromSmaliData(SmaliInstruction smaliInstruction) throws IOException {
         Number data = smaliInstruction.getData();
         if(data == null){
             return;

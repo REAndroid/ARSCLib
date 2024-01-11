@@ -31,6 +31,8 @@ import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliMethod;
+import com.reandroid.dex.smali.model.SmaliMethodParameter;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArraySupplierIterator;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -279,7 +281,7 @@ public class MethodDef extends Def<MethodId>{
             this.codeOffset.setItem(comingCode.getKey());
         }
     }
-    public void fromSmali(SmaliMethod smaliMethod){
+    public void fromSmali(SmaliMethod smaliMethod) throws IOException {
         setKey(smaliMethod.getKey());
         setAccessFlagsValue(smaliMethod.getAccessFlagsValue());
         if(smaliMethod.hasInstructions()){
@@ -289,6 +291,19 @@ public class MethodDef extends Def<MethodId>{
             AnnotationSet annotationSet = getOrCreateSection(SectionType.ANNOTATION_SET).createItem();
             annotationSet.fromSmali(smaliMethod.getAnnotation());
             addAnnotationSet(annotationSet);
+        }
+        Iterator<SmaliMethodParameter> iterator = smaliMethod.getParameters();
+        while (iterator.hasNext()){
+            SmaliMethodParameter smaliMethodParameter = iterator.next();
+            int index = smaliMethodParameter.getDefinitionIndex();
+            if(index < 0){
+                MethodKey methodKey = smaliMethod.getKey();
+                throw new RuntimeException("Parameter out of range, class = " +
+                        methodKey.getDeclaring() + ", method = " + methodKey.getName() +
+                        methodKey.getProtoKey() + "\n" + smaliMethodParameter);
+            }
+            Parameter parameter = getParameter(index);
+            parameter.fromSmali(smaliMethodParameter);
         }
     }
 
@@ -356,6 +371,14 @@ public class MethodDef extends Def<MethodId>{
             }
             return EmptyIterator.of();
         }
+        public AnnotationSet getOrCreateAnnotationSet(){
+            AnnotationsDirectory directory = this.methodDef.getOrCreateUniqueAnnotationsDirectory();
+            return directory.getOrCreateParameterAnnotation(methodDef, getDefinitionIndex());
+        }
+        public AnnotationSet addNewAnnotationSet(){
+            AnnotationsDirectory directory = this.methodDef.getOrCreateUniqueAnnotationsDirectory();
+            return directory.createNewParameterAnnotation(methodDef, getDefinitionIndex());
+        }
         public TypeId getTypeId() {
             ProtoId protoId = this.methodDef.getProtoId();
             if(protoId != null){
@@ -392,9 +415,15 @@ public class MethodDef extends Def<MethodId>{
             return null;
         }
         public void setDebugName(String name){
+            if(StringsUtil.isEmpty(name)){
+                name = null;
+            }
             DebugInfo debugInfo = methodDef.getDebugInfo();
             if(debugInfo == null){
-                return;
+                if(name == null){
+                    return;
+                }
+                debugInfo = methodDef.getOrCreateDebugInfo();
             }
             if(name == null){
                 debugInfo.removeDebugParameter(getDefinitionIndex());
@@ -418,6 +447,12 @@ public class MethodDef extends Def<MethodId>{
                 return typeId.getKey();
             }
             return null;
+        }
+        public void fromSmali(SmaliMethodParameter smaliMethodParameter){
+            if(smaliMethodParameter.hasAnnotations()){
+                getOrCreateAnnotationSet().fromSmali(smaliMethodParameter.getAnnotationSet());
+            }
+            setDebugName(smaliMethodParameter.getName());
         }
         @Override
         public void append(SmaliWriter writer) throws IOException {

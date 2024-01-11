@@ -17,9 +17,11 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ShortItem;
+import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.*;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
@@ -41,18 +43,48 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet, Smali
         addChild(2, firstKey);
         addChild(3, elements);
     }
+
+    public int getFirstKey() {
+        return firstKey.get();
+    }
+    public void setFirstKey(int firstKey){
+        this.firstKey.set(firstKey);
+    }
+
     public InsPackedSwitch getParentPackedSwitch() {
-        if(insPackedSwitch == null){
-            Iterator<ExtraLine> iterator = getExtraLines();
+        InsPackedSwitch packedSwitch = this.insPackedSwitch;
+        if(packedSwitch == null){
+            packedSwitch = findOnExtraLines();
+            if(packedSwitch == null){
+                packedSwitch = findByAddress();
+            }
+            this.insPackedSwitch = packedSwitch;
+        }
+        return insPackedSwitch;
+    }
+    private InsPackedSwitch findOnExtraLines() {
+        Iterator<ExtraLine> iterator = getExtraLines();
+        while (iterator.hasNext()){
+            ExtraLine extraLine = iterator.next();
+            if(extraLine instanceof InsPackedSwitch){
+                return (InsPackedSwitch) extraLine;
+            }
+        }
+        return null;
+    }
+    private InsPackedSwitch findByAddress() {
+        InstructionList instructionList = getInstructionList();
+        if(instructionList != null){
+            Iterator<InsPackedSwitch> iterator = instructionList.iterator(Opcode.PACKED_SWITCH);
+            int address = getAddress();
             while (iterator.hasNext()){
-                ExtraLine extraLine = iterator.next();
-                if(extraLine instanceof InsPackedSwitch){
-                    insPackedSwitch = (InsPackedSwitch) extraLine;
-                    break;
+                InsPackedSwitch packedSwitch = iterator.next();
+                if(packedSwitch.getTargetAddress() == address){
+                    return packedSwitch;
                 }
             }
         }
-        return insPackedSwitch;
+        return null;
     }
 
     @Override
@@ -70,6 +102,22 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet, Smali
         InsPackedSwitchData switchData = (InsPackedSwitchData) ins;
         elements.merge(switchData.elements);
     }
+
+    @Override
+    public void fromSmali(SmaliInstruction smaliInstruction) {
+        SmaliPayloadPackedSwitch smaliPayloadPackedSwitch = (SmaliPayloadPackedSwitch) smaliInstruction;
+        setFirstKey(smaliPayloadPackedSwitch.getFirstKey());
+        SmaliSet<SmaliLabel> entries = smaliPayloadPackedSwitch.getEntries();
+        int size = entries.size();
+        PackedSwitchDataList dataList = this.elements;
+        dataList.setSize(size);
+        for(int i = 0; i < size; i++){
+            SmaliLabel smaliLabel = entries.get(i);
+            PackedSwitchDataList.Data data = dataList.getData(i);
+            data.setTargetAddress(smaliLabel.getAddress());
+        }
+    }
+
     @Override
     void appendCode(SmaliWriter writer) throws IOException {
         writer.newLine();

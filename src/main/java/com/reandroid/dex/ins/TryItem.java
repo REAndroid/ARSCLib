@@ -22,6 +22,10 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Sle128Item;
 import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.smali.model.SmaliCodeCatch;
+import com.reandroid.dex.smali.model.SmaliCodeCatchAll;
+import com.reandroid.dex.smali.model.SmaliCodeTryItem;
+import com.reandroid.dex.smali.model.SmaliSet;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
@@ -232,6 +236,25 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
 
         handlerOffset.setCatchCodeUnit(coming.getCatchCodeUnit());
         handlerOffset.setStartAddress(coming.getStartAddress());
+    }
+    public void fromSmali(SmaliCodeTryItem smaliCodeTryItem){
+        setStartAddress(smaliCodeTryItem.getStartAddress());
+        SmaliSet<SmaliCodeCatch> smaliCodeCatchSet = smaliCodeTryItem.getCatchSet();
+
+        BlockList<CatchTypedHandler> handlerList = this.getCatchTypedHandlerBlockList();
+        int size = smaliCodeCatchSet.size();
+        for(int i = 0; i < size; i++){
+            SmaliCodeCatch smaliCodeCatch = smaliCodeCatchSet.get(i);
+            CatchTypedHandler handler = new CatchTypedHandler();
+            handlerList.add(handler);
+            handler.fromSmali(smaliCodeCatch);
+        }
+        SmaliCodeCatchAll smaliCodeCatchAll = smaliCodeTryItem.getCatchAll();
+        if(smaliCodeCatchAll != null){
+            CatchAllHandler catchAllHandler = initCatchAllHandler();
+            catchAllHandler.fromSmali(smaliCodeCatchAll);
+        }
+        updateCount();
     }
 
     @Override

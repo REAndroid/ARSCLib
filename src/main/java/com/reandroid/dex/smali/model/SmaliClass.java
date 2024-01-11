@@ -19,6 +19,7 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
@@ -83,6 +84,9 @@ public class SmaliClass extends SmaliDef{
     }
     public SmaliInterfaceSet getInterfaces() {
         return interfaces;
+    }
+    public TypeListKey getInterfacesKey(){
+        return getInterfaces().getKey();
     }
     public boolean hasClassData(){
         return !fields.isEmpty() || !methods.isEmpty();
@@ -180,5 +184,10 @@ public class SmaliClass extends SmaliDef{
         SmaliParseException.expect(reader, SmaliDirective.SOURCE);
         reader.skipSpaces();
         setSourceFile(StringKey.read(reader));
+    }
+
+    @Override
+    public String toDebugString() {
+        return "class = " + getKey();
     }
 }

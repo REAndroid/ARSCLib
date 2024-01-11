@@ -31,6 +31,8 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliCodeExceptionHandler;
+import com.reandroid.dex.smali.model.SmaliCodeTryItem;
 import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -201,10 +203,18 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
             tryBlock.merge(comingTry);
         }
     }
-    public void fromSmali(SmaliMethod smaliMethod){
+    public void fromSmali(SmaliMethod smaliMethod) throws IOException {
         setRegistersCount(smaliMethod.getRegistersCount());
         setParameterRegistersCount(smaliMethod.getParameterRegistersCount());
         getInstructionList().fromSmali(smaliMethod);
+        Iterator<SmaliCodeTryItem> iterator = smaliMethod.getTryItems();
+        TryBlock tryBlock = null;
+        if(iterator.hasNext()){
+            tryBlock = getOrCreateTryBlock();
+        }
+        while (iterator.hasNext()){
+            tryBlock.fromSmali(iterator.next());
+        }
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {

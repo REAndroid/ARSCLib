@@ -21,6 +21,9 @@ import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.model.SmaliCodeCatch;
+import com.reandroid.dex.smali.model.SmaliCodeExceptionHandler;
 
 import java.util.Objects;
 
@@ -55,8 +58,8 @@ public class CatchTypedHandler extends ExceptionHandler {
         return typeId;
     }
     @Override
-    String getOpcodeName(){
-        return "catch";
+    public SmaliDirective getSmaliDirective(){
+        return SmaliDirective.CATCH;
     }
 
     @Override
@@ -70,6 +73,13 @@ public class CatchTypedHandler extends ExceptionHandler {
         super.merge(handler);
         CatchTypedHandler typedHandler = (CatchTypedHandler) handler;
         typeId.setItem(typedHandler.typeId.getKey());
+    }
+
+    @Override
+    public void fromSmali(SmaliCodeExceptionHandler smaliCodeExceptionHandler) {
+        SmaliCodeCatch smaliCodeCatch = (SmaliCodeCatch) smaliCodeExceptionHandler;
+        typeId.setItem(smaliCodeCatch.getType());
+        super.fromSmali(smaliCodeExceptionHandler);
     }
 
     @Override

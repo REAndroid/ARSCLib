@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.smali.*;
 
@@ -31,17 +32,35 @@ public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
         registerSet = new SmaliRegisterSet();
     }
 
-    public SmaliRegisterSet getRegisterSet() {
+    public SmaliRegister getSmaliRegister(){
+        SmaliRegisterSet registerSet = getRegisterSet();
+        if(registerSet.isEmpty()){
+            return null;
+        }
+        return registerSet.get(0);
+    }
+    SmaliRegisterSet getRegisterSet() {
         return registerSet;
     }
 
-    public StringKey getName() {
+    public StringKey getNameKey() {
         return name;
     }
     public void setName(StringKey name) {
         this.name = name;
     }
+    public String getName() {
+        StringKey key = getNameKey();
+        if(key != null){
+            return key.getString();
+        }
+        return null;
+    }
 
+    public boolean hasAnnotations(){
+        SmaliAnnotationSet annotationSet = getAnnotationSet();
+        return annotationSet != null && !annotationSet.isEmpty();
+    }
     public SmaliAnnotationSet getAnnotationSet() {
         return annotationSet;
     }
@@ -50,6 +69,25 @@ public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
         if(annotationSet != null){
             annotationSet.setParent(this);
         }
+    }
+    public int getDefinitionIndex(){
+        SmaliMethod smaliMethod = getParentInstance(SmaliMethod.class);
+        if(smaliMethod == null){
+            return -1;
+        }
+        ProtoKey protoKey = smaliMethod.getProtoKey();
+        if(protoKey == null){
+            return -1;
+        }
+        SmaliRegister smaliRegister = getSmaliRegister();
+        if(smaliRegister == null){
+            return -1;
+        }
+        int index = smaliRegister.getNumber();
+        if(!smaliMethod.isStatic()){
+            index = index - 1;
+        }
+        return protoKey.getParameterIndex(index);
     }
 
     @Override
@@ -62,7 +100,7 @@ public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
         SmaliDirective directive = getSmaliDirective();
         directive.append(writer);
         getRegisterSet().append(writer);
-        StringKey name = getName();
+        StringKey name = getNameKey();
         if(name != null){
             writer.append(", ");
             name.append(writer);

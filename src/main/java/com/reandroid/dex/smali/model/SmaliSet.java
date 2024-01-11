@@ -38,6 +38,9 @@ public class SmaliSet<T extends Smali> extends Smali{
     public Iterator<T> iterator(int start) {
         return body.iterator(start);
     }
+    public<T2> Iterator<T2> iterator(Class<T2> instance) {
+        return body.iterator(instance);
+    }
     public int size(){
         return body.size();
     }

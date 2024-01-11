@@ -50,6 +50,18 @@ public class SmaliValueInteger extends SmaliValueNumber<Integer>{
     public void setNumber(Integer number) {
         setValue(number);
     }
+    @Override
+    public int getWidth() {
+        return 4;
+    }
+    @Override
+    public int unsignedInt() {
+        return getValue();
+    }
+    @Override
+    public long unsignedLong() {
+        return getValue() & 0xffffffffL;
+    }
 
     @Override
     public DexValueType<?> getValueType() {

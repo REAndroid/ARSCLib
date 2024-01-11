@@ -48,6 +48,18 @@ public class SmaliValueFloat extends SmaliValueNumber<Float>{
     public void setNumber(Float number) {
         setValue(number);
     }
+    @Override
+    public int getWidth() {
+        return 4;
+    }
+    @Override
+    public int unsignedInt() {
+        return getNumber().intValue();
+    }
+    @Override
+    public long unsignedLong() {
+        return getNumber().intValue() & 0xffffffffL;
+    }
 
     @Override
     public DexValueType<?> getValueType() {

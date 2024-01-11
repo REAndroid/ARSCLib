@@ -148,4 +148,23 @@ public class SmaliField extends SmaliDef{
             reader.position(position);
         }
     }
+    @Override
+    public String toDebugString() {
+        StringBuilder builder = new StringBuilder();
+        SmaliClass smaliClass = getSmaliClass();
+        if(smaliClass != null){
+            builder.append(smaliClass.toDebugString());
+            builder.append(", ");
+        }
+        builder.append("field = ");
+        builder.append(getName());
+        builder.append(':');
+        builder.append(getType());
+        SmaliValue value = getValue();
+        if(value != null){
+            builder.append(" = ");
+            builder.append(value.toDebugString());
+        }
+        return builder.toString();
+    }
 }

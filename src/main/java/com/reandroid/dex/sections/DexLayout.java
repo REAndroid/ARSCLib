@@ -223,7 +223,7 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
         }
         return getSectionList().merge(options, dexFile.getSectionList());
     }
-    public void fromSmali(SmaliClass smaliClass){
+    public void fromSmali(SmaliClass smaliClass) throws IOException {
         getSectionList().fromSmali(smaliClass);
     }
     @Override
@@ -244,12 +244,22 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
         reader.close();
     }
     public void read(InputStream inputStream) throws IOException {
-        BlockReader reader = new BlockReader(inputStream);
+        BlockReader reader;
+        if(inputStream instanceof BlockReader){
+            reader = (BlockReader) inputStream;
+        }else {
+            reader = new BlockReader(inputStream);
+        }
         readBytes(reader);
         reader.close();
     }
     public void readStrings(InputStream inputStream) throws IOException {
-        BlockReader reader = new BlockReader(inputStream);
+        BlockReader reader;
+        if(inputStream instanceof BlockReader){
+            reader = (BlockReader) inputStream;
+        }else {
+            reader = new BlockReader(inputStream);
+        }
         readStrings(reader);
     }
     public void readStrings(BlockReader reader) throws IOException {

@@ -17,6 +17,7 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.id.TypeId;
+import com.reandroid.dex.smali.SmaliDirective;
 
 public class CatchAllHandler extends ExceptionHandler {
     public CatchAllHandler() {
@@ -37,8 +38,8 @@ public class CatchAllHandler extends ExceptionHandler {
         return null;
     }
     @Override
-    String getOpcodeName(){
-        return "catchall";
+    public SmaliDirective getSmaliDirective(){
+        return SmaliDirective.CATCH_ALL;
     }
 
     static class Copy extends CatchAllHandler {

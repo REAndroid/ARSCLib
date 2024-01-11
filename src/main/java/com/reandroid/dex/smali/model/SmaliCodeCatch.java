@@ -24,16 +24,16 @@ import java.io.IOException;
 
 public class SmaliCodeCatch extends SmaliCodeExceptionHandler{
 
-    private String type;
+    private TypeKey type;
 
     public SmaliCodeCatch(){
         super();
     }
 
-    public String getType() {
+    public TypeKey getType() {
         return type;
     }
-    public void setType(String type) {
+    public void setType(TypeKey type) {
         this.type = type;
     }
     @Override
@@ -43,12 +43,11 @@ public class SmaliCodeCatch extends SmaliCodeExceptionHandler{
 
     @Override
     public void appendType(SmaliWriter writer) throws IOException {
-        writer.append(getType());
+        getType().append(writer);
         writer.append(' ');
     }
     @Override
-    public void parseType(SmaliReader reader) throws IOException {
-        TypeKey typeKey = TypeKey.read(reader);
-        setType(typeKey.getTypeName());
+    void parseType(SmaliReader reader) throws IOException {
+        setType(TypeKey.read(reader));
     }
 }

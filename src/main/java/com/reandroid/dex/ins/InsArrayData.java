@@ -21,14 +21,17 @@ import com.reandroid.dex.base.NumberArray;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
+import com.reandroid.dex.smali.SmaliValidateException;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliInstruction;
+import com.reandroid.dex.smali.model.SmaliPayloadArray;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.InstanceIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class InsArrayData extends PayloadData implements VisitableInteger, SmaliRegion {
+public class InsArrayData extends PayloadData implements SmaliRegion {
 
     private final NumberArray numberArray;
     private final DexBlockAlign blockAlign;
@@ -56,16 +59,6 @@ public class InsArrayData extends PayloadData implements VisitableInteger, Smali
         instructionList.buildExtraLines();
         return InstanceIterator.of(getExtraLines(), InsFillArrayData.class);
     }
-    @Override
-    public void visitIntegers(IntegerVisitor visitor) {
-        if(getWidth() != 4) {
-            return;
-        }
-        int size = size();
-        for(int i = 0; i < size; i++){
-            visitor.visit(this, getReference(i));
-        }
-    }
     public int size(){
         return getNumberArray().size();
     }
@@ -91,6 +84,9 @@ public class InsArrayData extends PayloadData implements VisitableInteger, Smali
         return numberArray;
     }
 
+    public void refreshAlignment(){
+        this.blockAlign.align(this);
+    }
     @Override
     void appendCode(SmaliWriter writer) throws IOException {
         writer.newLine();
@@ -132,9 +128,25 @@ public class InsArrayData extends PayloadData implements VisitableInteger, Smali
     public void merge(Ins ins){
         InsArrayData coming = (InsArrayData) ins;
         getNumberArray().merge(coming.getNumberArray());
-        this.blockAlign.setSize(coming.blockAlign.size());
+        refreshAlignment();
     }
 
+    @Override
+    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException{
+        SmaliPayloadArray smaliPayloadArray = (SmaliPayloadArray) smaliInstruction;
+        int width = smaliPayloadArray.getWidth();
+        if(width < 1 || width > 8){
+            throw new SmaliValidateException("Array values width out of range '" + width + "'", smaliInstruction);
+        }
+        setWidth(width);
+        NumberArray numberArray = getNumberArray();
+        if(width > 4){
+            numberArray.putLong(smaliPayloadArray.unsignedLong());
+        }else {
+            numberArray.put(smaliPayloadArray.unsignedInt());
+        }
+        refreshAlignment();
+    }
     @Override
     public SmaliDirective getSmaliDirective() {
         return SmaliDirective.ARRAY_DATA;

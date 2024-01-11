@@ -17,6 +17,7 @@ package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliValidateException;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
@@ -28,20 +29,36 @@ import java.util.Objects;
 
 public class SmaliLabel extends SmaliCode{
 
-    private String label;
+    private String labelName;
+    private int temporaryAddress;
 
     public SmaliLabel(){
         super();
+        this.temporaryAddress = -1;
     }
 
-    public String getLabel() {
-        return label;
+    public String getLabelName() {
+        return labelName;
     }
-    public void setLabel(String label) {
-        this.label = label;
+    public void setLabelName(String labelName) {
+        this.labelName = labelName;
     }
 
+    public int getIntegerData() throws IOException{
+        int address = getAddress();
+        if(address == -1){
+            throw new SmaliValidateException("Missing target label '" + getLabelName() + "'", this);
+        }
+        return address;
+    }
     public int getAddress(){
+        int address = searchAddress();
+        if(address < 0){
+            address = this.temporaryAddress;
+        }
+        return address;
+    }
+    private int searchAddress(){
         SmaliCodeSet codeSet = getCodeSet();
         if(codeSet == null){
             return -1;
@@ -63,10 +80,14 @@ public class SmaliLabel extends SmaliCode{
         return -1;
     }
 
+    public void setTemporaryAddress(int address) {
+        this.temporaryAddress = address;
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append(':');
-        writer.append(getLabel());
+        writer.append(getLabelName());
     }
 
     @Override
@@ -82,7 +103,7 @@ public class SmaliLabel extends SmaliCode{
             i = i1;
         }
         int length = i - reader.position();
-        setLabel(reader.readString(length));
+        setLabelName(reader.readString(length));
     }
 
     @Override
@@ -94,10 +115,10 @@ public class SmaliLabel extends SmaliCode{
             return false;
         }
         SmaliLabel other = (SmaliLabel) obj;
-        return ObjectsUtil.equals(getLabel(), other.getLabel());
+        return ObjectsUtil.equals(getLabelName(), other.getLabelName());
     }
     @Override
     public int hashCode() {
-        return Objects.hash(getLabel());
+        return Objects.hash(getLabelName());
     }
 }

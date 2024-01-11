@@ -41,6 +41,7 @@ import com.reandroid.dex.smali.SmaliWriterSetting;
 import com.reandroid.dex.smali.model.SmaliClass;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.*;
+import com.reandroid.utils.io.FileIterator;
 import com.reandroid.utils.io.FileUtil;
 
 import java.io.*;
@@ -516,6 +517,22 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
         }
         return getDexLayout().merge(options, dexFile.getDexLayout());
     }
+    public void parseSmaliDirectory(File dir) throws IOException {
+        if(!dir.isDirectory()){
+            throw new FileNotFoundException("No such directory: " + dir);
+        }
+        FileIterator iterator = new FileIterator(dir, FileIterator.getExtensionFilter(".smali"));
+        while (iterator.hasNext()){
+            parseSmaliFile(iterator.next());
+        }
+        refresh();
+        clearUnused();
+        clearDuplicateData();
+        clearEmptySections();
+    }
+    public void parseSmaliFile(File file) throws IOException {
+        fromSmali(SmaliReader.of(file));
+    }
     public void fromSmali(SmaliReader reader) throws IOException {
         while (SmaliDirective.parse(reader, false) == SmaliDirective.CLASS){
             SmaliClass smaliClass = new SmaliClass();
@@ -523,9 +540,8 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
             fromSmali(smaliClass);
             reader.skipWhitespacesOrComment();
         }
-
     }
-    public void fromSmali(SmaliClass smaliClass){
+    public void fromSmali(SmaliClass smaliClass) throws IOException {
         getDexLayout().fromSmali(smaliClass);
     }
 

@@ -39,6 +39,21 @@ public class ProtoKey implements Key{
         }
         return result;
     }
+    public int getParameterIndex(int register) {
+        int size = getParametersCount();
+        int registerCount = 0;
+        for(int i = 0; i < size; i++){
+            if(registerCount == register){
+                return i;
+            }
+            TypeKey typeKey = getParameter(i);
+            registerCount ++;
+            if(typeKey.isWide()){
+                registerCount ++;
+            }
+        }
+        return -1;
+    }
     public ProtoKey removeParameter(int index){
         TypeListKey typeListKey = getParameterListKey();
         if(typeListKey != null){

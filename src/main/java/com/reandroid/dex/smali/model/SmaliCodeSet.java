@@ -81,11 +81,8 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode>{
         if(directive == SmaliDirective.LINE){
             return new SmaliLineNumber();
         }
-        if(directive == SmaliDirective.CATCH){
-            return new SmaliCodeCatch();
-        }
-        if(directive == SmaliDirective.CATCH_ALL){
-            return new SmaliCodeCatchAll();
+        if(directive == SmaliDirective.CATCH || directive == SmaliDirective.CATCH_ALL){
+            return new SmaliCodeTryItem();
         }
         if(directive == SmaliDirective.PARAM){
             return new SmaliMethodParameter();

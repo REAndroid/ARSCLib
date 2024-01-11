@@ -32,6 +32,9 @@ public class SmaliSparseSwitchEntry extends Smali{
         this.label.setParent(this);
     }
 
+    public int getIntegerValue(){
+        return getValueNumber().unsignedInt();
+    }
     public Number getValue() {
         return getValueNumber().getNumber();
     }

@@ -490,12 +490,13 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
             classData.merge(comingData);
         }
     }
-    public void fromSmali(SmaliClass smaliClass){
+    public void fromSmali(SmaliClass smaliClass) throws IOException {
 
         setKey(smaliClass.getKey());
         setAccessFlagsValue(smaliClass.getAccessFlagsValue());
         setSuperClass(smaliClass.getSuperClass());
         setSourceFile(smaliClass.getSourceFileName());
+        setInterfaces(smaliClass.getInterfacesKey());
 
         if(smaliClass.hasClassData()){
             getOrCreateClassData().fromSmali(smaliClass);

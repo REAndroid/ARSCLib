@@ -48,13 +48,13 @@ public class SmaliInstruction extends SmaliCode{
         }
         return null;
     }
-    public Number getData(){
+    public Number getData() throws IOException {
         SmaliInstructionOperand operand = getOperand();
         if(operand instanceof SmaliInstructionOperand.HexOperand){
             return ((SmaliInstructionOperand.HexOperand) operand).getNumber();
         }
         if(operand instanceof SmaliInstructionOperand.LabelOperand){
-            return operand.getData() - getAddress();
+            return operand.getIntegerData() - getAddress();
         }
         return null;
     }
@@ -73,6 +73,9 @@ public class SmaliInstruction extends SmaliCode{
     }
     public Register getRegister(int i){
         return getRegisterSet().getRegister(i);
+    }
+    public int getRegistersCount(){
+        return getRegisterSet().size();
     }
     public SmaliRegisterSet getRegisterSet() {
         return registerSet;

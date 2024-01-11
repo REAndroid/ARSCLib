@@ -21,6 +21,7 @@ import com.reandroid.dex.key.*;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliValidateException;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
@@ -31,10 +32,10 @@ public abstract class SmaliInstructionOperand extends Smali{
         super();
     }
 
-    public long getDataLong(){
-        return getData() & 0x00000000ffffffffL;
+    public long getLongData() throws IOException {
+        return getIntegerData() & 0x00000000ffffffffL;
     }
-    public abstract int getData();
+    public abstract int getIntegerData() throws IOException;
     public abstract OperandType getOperandType();
     @Override
     public abstract void append(SmaliWriter writer) throws IOException;
@@ -60,8 +61,8 @@ public abstract class SmaliInstructionOperand extends Smali{
         }
 
         @Override
-        public int getData() {
-            return getLabel().getAddress();
+        public int getIntegerData() throws IOException{
+            return getLabel().getIntegerData();
         }
         @Override
         public OperandType getOperandType() {
@@ -84,6 +85,7 @@ public abstract class SmaliInstructionOperand extends Smali{
 
         public HexOperand(){
             super();
+            valueNumber = new SmaliValueInteger();
         }
 
         public Number getNumber() {
@@ -104,28 +106,16 @@ public abstract class SmaliInstructionOperand extends Smali{
         }
 
         @Override
-        public int getData() {
-            Number number = getNumber();
-            int i = number.intValue();
-            if(number instanceof Byte){
-                return i & 0xff;
-            }
-            if(number instanceof Short){
-                return i & 0xffff;
-            }
-            return i;
+        public int getIntegerData() {
+            return valueNumber.unsignedInt();
         }
         @Override
         public OperandType getOperandType() {
             return OperandType.HEX;
         }
         @Override
-        public long getDataLong() {
-            Number number = getNumber();
-            if(number instanceof Long){
-                return number.longValue();
-            }
-            return 0x00000000ffffffffL & getData();
+        public long getLongData() {
+            return valueNumber.unsignedLong();
         }
 
         @Override
@@ -156,7 +146,7 @@ public abstract class SmaliInstructionOperand extends Smali{
         }
 
         @Override
-        public int getData() {
+        public int getIntegerData() {
             return getNumber();
         }
         @Override
@@ -189,7 +179,7 @@ public abstract class SmaliInstructionOperand extends Smali{
         }
 
         @Override
-        public int getData() {
+        public int getIntegerData() {
             return -1;
         }
         @Override
@@ -197,7 +187,7 @@ public abstract class SmaliInstructionOperand extends Smali{
             return OperandType.KEY;
         }
         @Override
-        public long getDataLong() {
+        public long getLongData() {
             return -1;
         }
 
@@ -228,7 +218,7 @@ public abstract class SmaliInstructionOperand extends Smali{
     }
     public static final SmaliInstructionOperand NO_OPERAND = new SmaliInstructionOperand() {
         @Override
-        public int getData() {
+        public int getIntegerData() {
             return -1;
         }
         @Override
@@ -236,7 +226,7 @@ public abstract class SmaliInstructionOperand extends Smali{
             return OperandType.NONE;
         }
         @Override
-        public long getDataLong() {
+        public long getLongData() {
             return -1;
         }
 

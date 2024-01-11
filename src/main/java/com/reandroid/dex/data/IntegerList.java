@@ -126,6 +126,11 @@ public class IntegerList extends DataItem implements
             onChanged();
         }
     }
+    void ensureSize(int size){
+        if(size > size()){
+            setSize(size, false);
+        }
+    }
     void onChanged(){
     }
 

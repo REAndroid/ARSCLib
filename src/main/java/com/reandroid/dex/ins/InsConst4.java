@@ -33,7 +33,7 @@ public class InsConst4 extends Size2Ins implements RegistersSet, ConstNumber {
 
     @Override
     public void setData(int data) {
-        setNibble(3, data);
+        setNibble(3, data & 0xf);
     }
     @Override
     public int getRegistersCount() {

@@ -49,6 +49,18 @@ public class SmaliValueDouble extends SmaliValueNumber<Double>{
     public void setNumber(Double number) {
         setValue(number);
     }
+    @Override
+    public int getWidth() {
+        return 8;
+    }
+    @Override
+    public int unsignedInt() {
+        return (int) getNumber().longValue();
+    }
+    @Override
+    public long unsignedLong() {
+        return getNumber().longValue();
+    }
 
     @Override
     public DexValueType<?> getValueType() {

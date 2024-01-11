@@ -52,6 +52,19 @@ public class SmaliValueByte extends SmaliValueNumber<Byte>{
     }
 
     @Override
+    public int getWidth() {
+        return 1;
+    }
+    @Override
+    public int unsignedInt() {
+        return getValue() & 0xff;
+    }
+    @Override
+    public long unsignedLong() {
+        return getValue() & 0xffL;
+    }
+
+    @Override
     public DexValueType<?> getValueType() {
         return DexValueType.BYTE;
     }

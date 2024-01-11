@@ -23,6 +23,7 @@ import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.model.SmaliField;
+import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -101,6 +102,10 @@ public class FieldDef extends Def<FieldId> {
             AnnotationSet annotationSet = getOrCreateSection(SectionType.ANNOTATION_SET).createItem();
             annotationSet.fromSmali(smaliField.getAnnotation());
             addAnnotationSet(annotationSet);
+        }
+        SmaliValue smaliValue = smaliField.getValue();
+        if(smaliValue != null){
+            getOrCreateStaticValue(smaliValue.getValueType()).fromSmali(smaliValue);
         }
     }
     @Override

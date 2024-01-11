@@ -20,6 +20,12 @@ import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.common.ArraySupplier;
+import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.model.SmaliInstruction;
+import com.reandroid.dex.smali.model.SmaliPayloadSparseSwitch;
+import com.reandroid.dex.smali.model.SmaliSet;
+import com.reandroid.dex.smali.model.SmaliSparseSwitchEntry;
 import com.reandroid.utils.collection.ArraySupplierIterator;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -30,7 +36,7 @@ import java.util.Iterator;
 import java.util.Objects;
 
 public class InsSparseSwitchData extends PayloadData implements BlockLoad,
-        ArraySupplier<InsSparseSwitchData.Data>, LabelsSet, SmaliFormat, VisitableInteger {
+        ArraySupplier<InsSparseSwitchData.Data>, LabelsSet, SmaliFormat {
 
     private final ShortItem elementCount;
     final IntegerArrayBlock elements;
@@ -52,18 +58,19 @@ public class InsSparseSwitchData extends PayloadData implements BlockLoad,
     }
 
     @Override
-    public void visitIntegers(IntegerVisitor visitor) {
-        int size = getCount();
-        for(int i = 0; i < size; i++){
-            visitor.visit(this, get(i));
-        }
-    }
-    @Override
     public int getCount(){
         return keys.size();
     }
+    public void setCount(int count){
+        elements.setSize(count);
+        keys.setSize(count);
+        elementCount.set(count);
+    }
     @Override
     public Data get(int i){
+        if(i < 0 || i >= getCount()){
+            return null;
+        }
         return new Data(this, i);
     }
     @Override
@@ -79,18 +86,41 @@ public class InsSparseSwitchData extends PayloadData implements BlockLoad,
         return sparseSwitch.getAddress();
     }
     public InsSparseSwitch getParentSparseSwitch() {
-        if(insSparseSwitch == null){
-            Iterator<ExtraLine> iterator = getExtraLines();
-            while (iterator.hasNext()){
-                ExtraLine extraLine = iterator.next();
-                if(extraLine instanceof InsSparseSwitch){
-                    insSparseSwitch = (InsSparseSwitch) extraLine;
-                    break;
-                }
+        InsSparseSwitch sparseSwitch = this.insSparseSwitch;
+        if(sparseSwitch == null){
+            sparseSwitch = findOnExtraLines();
+            if(sparseSwitch == null){
+                sparseSwitch = findByAddress();
             }
+            this.insSparseSwitch = sparseSwitch;
         }
         return insSparseSwitch;
     }
+    private InsSparseSwitch findOnExtraLines() {
+        Iterator<ExtraLine> iterator = getExtraLines();
+        while (iterator.hasNext()){
+            ExtraLine extraLine = iterator.next();
+            if(extraLine instanceof InsSparseSwitch){
+                return (InsSparseSwitch) extraLine;
+            }
+        }
+        return null;
+    }
+    private InsSparseSwitch findByAddress() {
+        InstructionList instructionList = getInstructionList();
+        if(instructionList != null){
+            Iterator<InsSparseSwitch> iterator = instructionList.iterator(Opcode.SPARSE_SWITCH);
+            int address = getAddress();
+            while (iterator.hasNext()){
+                InsSparseSwitch sparseSwitch = iterator.next();
+                if(sparseSwitch.getTargetAddress() == address){
+                    return sparseSwitch;
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
         if(sender == elementCount){
@@ -113,12 +143,24 @@ public class InsSparseSwitchData extends PayloadData implements BlockLoad,
         }
         this.elementCount.set(switchData.elementCount.get());
     }
+
+    @Override
+    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
+        SmaliPayloadSparseSwitch smaliPayloadSparseSwitch = (SmaliPayloadSparseSwitch) smaliInstruction;
+        SmaliSet<SmaliSparseSwitchEntry> entries = smaliPayloadSparseSwitch.getEntries();
+        int count = entries.size();
+        this.setCount(count);
+        for(int i = 0; i < count; i++){
+            SmaliSparseSwitchEntry smaliEntry = entries.get(i);
+            Data data = get(i);
+            data.fromSmali(smaliEntry);
+        }
+    }
+
     @Override
     void appendCode(SmaliWriter writer) throws IOException {
         writer.newLine();
-        writer.append('.');
-        String name = "sparse-switch";
-        writer.append(name);
+        getSmaliDirective().append(writer);
         int size = getCount();
         writer.indentPlus();
         for(int i = 0; i < size; i++){
@@ -126,8 +168,12 @@ public class InsSparseSwitchData extends PayloadData implements BlockLoad,
         }
         writer.indentMinus();
         writer.newLine();
-        writer.append(".end ");
-        writer.append(name);
+        getSmaliDirective().appendEnd(writer);
+    }
+
+    @Override
+    public SmaliDirective getSmaliDirective() {
+        return SmaliDirective.SPARSE_SWITCH;
     }
 
     public static class Data implements IntegerReference, Label, SmaliFormat {
@@ -178,9 +224,13 @@ public class InsSparseSwitchData extends PayloadData implements BlockLoad,
         @Override
         public void append(SmaliWriter writer) throws IOException {
             writer.newLine();
-            writer.append(HexUtil.toHex8(get()));
+            writer.appendHex(get());
             writer.append(" -> ");
             writer.append(getLabelName());
+        }
+        public void fromSmali(SmaliSparseSwitchEntry smaliEntry) throws IOException{
+            set(smaliEntry.getIntegerValue());
+            setTargetAddress(smaliEntry.getLabel().getIntegerData());
         }
         @Override
         public int hashCode() {

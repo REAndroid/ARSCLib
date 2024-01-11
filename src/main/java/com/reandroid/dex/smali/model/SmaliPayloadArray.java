@@ -21,12 +21,30 @@ import com.reandroid.dex.smali.*;
 
 import java.io.IOException;
 
-public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValue> {
+public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<?>> {
 
     public SmaliPayloadArray(){
         super(new SmaliInstructionOperand.DecimalOperand());
     }
 
+    public int[] unsignedInt(){
+        SmaliSet<SmaliValueNumber<?>> entries = getEntries();
+        int size = entries.size();
+        int[] result = new int[size];
+        for(int i = 0; i < size; i++){
+            result[i] = entries.get(i).unsignedInt();
+        }
+        return result;
+    }
+    public long[] unsignedLong(){
+        SmaliSet<SmaliValueNumber<?>> entries = getEntries();
+        int size = entries.size();
+        long[] result = new long[size];
+        for(int i = 0; i < size; i++){
+            result[i] = entries.get(i).unsignedLong();
+        }
+        return result;
+    }
     @Override
     public SmaliInstructionOperand.DecimalOperand getOperand() {
         return (SmaliInstructionOperand.DecimalOperand) super.getOperand();
@@ -63,7 +81,28 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValue> {
         return Opcode.ARRAY_PAYLOAD;
     }
     @Override
-    public SmaliValue newEntry(SmaliReader reader) throws IOException {
-        return SmaliValue.create(reader);
+    public SmaliValueNumber<?> newEntry(SmaliReader reader) throws IOException {
+        SmaliValue value =  SmaliValue.create(reader);
+        if(!(value instanceof SmaliValueNumber)){
+            throw new SmaliParseException("Unrecognized array data entry", reader);
+        }
+        SmaliValueNumber<?> valueNumber = (SmaliValueNumber<?>) value;
+        if(valueNumber.getWidth() > getWidth()){
+            throw new SmaliParseException("Value out of range", reader);
+        }
+        return valueNumber;
+    }
+
+    @Override
+    void parseOperand(Opcode<?> opcode, SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        int position = reader.position();
+        SmaliInstructionOperand.DecimalOperand operand = getOperand();
+        operand.parse(opcode, reader);
+        int number = operand.getNumber();
+        if(number < 1 || number > 8){
+            reader.position(position);
+            throw new SmaliParseException("Array width out of range (1 .. 8) : '" + number + "'", reader);
+        }
     }
 }

@@ -259,6 +259,6 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
         return unsigned - width - 1;
     }
 
-    public void fromSmali(SmaliInstruction smaliInstruction){
+    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
     }
 }

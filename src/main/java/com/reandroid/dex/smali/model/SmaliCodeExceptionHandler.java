@@ -36,6 +36,13 @@ public abstract class SmaliCodeExceptionHandler extends SmaliCode implements Sma
         this.catchLabel.setParent(this);
     }
 
+    public int getAddress(){
+        SmaliCodeTryItem tryItem = getTryItem();
+        if(tryItem == null){
+            return -1;
+        }
+        return tryItem.getAddress();
+    }
     public SmaliLabel getStart() {
         return start;
     }
@@ -46,6 +53,9 @@ public abstract class SmaliCodeExceptionHandler extends SmaliCode implements Sma
         return catchLabel;
     }
 
+    SmaliCodeTryItem getTryItem(){
+        return getParentInstance(SmaliCodeTryItem.class);
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
@@ -78,6 +88,6 @@ public abstract class SmaliCodeExceptionHandler extends SmaliCode implements Sma
         SmaliParseException.expect(reader, '}');
         getCatchLabel().parse(reader);
     }
-    public void parseType(SmaliReader reader) throws IOException {
+    void parseType(SmaliReader reader) throws IOException {
     }
 }

@@ -183,16 +183,6 @@ public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
     public Iterator<AnnotationSet> getMethodAnnotation(MethodDef methodDef){
         return methodsAnnotationMap.getValues(methodDef);
     }
-    public void addParameterAnnotation(MethodDef methodDef, AnnotationGroup annotationGroup){
-        parametersAnnotationMap.add(methodDef, ensureSameContext(annotationGroup));
-    }
-    private AnnotationGroup ensureSameContext(AnnotationGroup annotationGroup){
-        if(isSameContext(annotationGroup)){
-            return annotationGroup;
-        }
-        return getOrCreateSection(SectionType.ANNOTATION_GROUP)
-                .getOrCreate(annotationGroup.getKey());
-    }
     public Iterator<AnnotationGroup> getParameterAnnotation(MethodDef methodDef){
         return parametersAnnotationMap.getValues(methodDef);
     }
@@ -210,12 +200,36 @@ public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
         return ComputeIterator.of(getParameterAnnotation(methodIndex),
                 annotationGroup -> annotationGroup.getItem(parameterIndex));
     }
-    public void editParameterAnnotations(MethodDef methodDef){
-        Iterator<AnnotationGroup> iterator = getParameterAnnotation(methodDef);
+    public AnnotationSet getOrCreateParameterAnnotation(MethodDef methodDef, int parameterIndex){
+        AnnotationGroup annotationGroup = getOrCreateParameterAnnotationGroup(methodDef);
+        return annotationGroup.getOrCreateAt(parameterIndex);
+    }
+    private AnnotationGroup getOrCreateParameterAnnotationGroup(MethodDef methodDef){
+        AnnotationGroup annotationGroup;
+        Iterator<AnnotationGroup> iterator = parametersAnnotationMap.getValues(methodDef);
+        if(iterator.hasNext()){
+            annotationGroup = iterator.next();
+        }else {
+            annotationGroup = getOrCreateSection(SectionType.ANNOTATION_GROUP).createItem();
+            this.parametersAnnotationMap.add(methodDef, annotationGroup);
+        }
+        return annotationGroup;
+    }
+    public AnnotationSet createNewParameterAnnotation(MethodDef methodDef, int parameterIndex){
+        AnnotationGroup annotationGroup = getEmptyParameterAnnotationGroup(methodDef, parameterIndex);
+        return annotationGroup.getOrCreateAt(parameterIndex);
+    }
+    private AnnotationGroup getEmptyParameterAnnotationGroup(MethodDef methodDef, int parameterIndex){
+        Iterator<AnnotationGroup> iterator = parametersAnnotationMap.getValues(methodDef);
         while (iterator.hasNext()){
             AnnotationGroup group = iterator.next();
-
+            if(group.getItem(parameterIndex) == null){
+                return group;
+            }
         }
+        AnnotationGroup annotationGroup = getOrCreateSection(SectionType.ANNOTATION_GROUP).createItem();
+        parametersAnnotationMap.add(methodDef, annotationGroup);
+        return annotationGroup;
     }
 
     public void replaceKeys(Key search, Key replace){

@@ -24,6 +24,9 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.data.CodeItem;
 import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.model.SmaliCodeExceptionHandler;
+import com.reandroid.dex.smali.model.SmaliCodeTryItem;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.ExpandIterator;
 
@@ -339,6 +342,15 @@ public class TryBlock extends FixedDexContainerWithTool implements
             add(tryItem);
             tryItem.merge(coming);
         }
+        updateHandlerOffsets();
+        updateCount();
+    }
+    public void fromSmali(SmaliCodeTryItem smaliCodeTryItem){
+        initialize();
+        TryItem tryItem = newInstance();
+        add(tryItem);
+        initHandlersOffset().setSize(tryItemArray.size());
+        tryItem.fromSmali(smaliCodeTryItem);
         updateHandlerOffsets();
         updateCount();
     }

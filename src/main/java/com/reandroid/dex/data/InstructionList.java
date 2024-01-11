@@ -499,7 +499,7 @@ public class InstructionList extends FixedBlockContainer implements
         getInsArray().trimToSize();
         updateAddresses();
     }
-    public void fromSmali(SmaliMethod smaliMethod){
+    public void fromSmali(SmaliMethod smaliMethod) throws IOException {
         Iterator<SmaliInstruction> iterator = smaliMethod.getInstructions();
         while (iterator.hasNext()){
             SmaliInstruction smaliInstruction = iterator.next();

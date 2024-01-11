@@ -17,8 +17,12 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.ShortItem;
+import com.reandroid.dex.smali.SmaliRegion;
+import com.reandroid.dex.smali.model.SmaliInstruction;
 
-public class PayloadData extends Ins {
+import java.io.IOException;
+
+public abstract class PayloadData extends Ins implements SmaliRegion {
 
     public PayloadData(int childesCount, Opcode<?> opcode) {
         super(childesCount + 1, opcode);
@@ -26,6 +30,9 @@ public class PayloadData extends Ins {
         opcodeItem.set(opcode.getValue());
         addChild(0, opcodeItem);
     }
+
+    @Override
+    public abstract void fromSmali(SmaliInstruction smaliInstruction) throws IOException;
 
     @Override
     public boolean equals(Object obj) {
