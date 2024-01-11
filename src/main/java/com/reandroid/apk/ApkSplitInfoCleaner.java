@@ -131,13 +131,7 @@ public class ApkSplitInfoCleaner {
             return false;
         }
         return name.startsWith("com.android.vending.")
-                || name.startsWith("com.android.stamp.");
-    }
-    public static String getAndroidNameValue(ResXmlElement element){
-        ResXmlAttribute attribute = element.searchAttributeByResourceId(AndroidManifestBlock.ID_name);
-        if(attribute != null){
-            return attribute.getValueAsString();
-        }
-        return null;
+                || name.startsWith("com.android.stamp.")
+                || name.startsWith("com.android.dynamic.apk.");
     }
 }
