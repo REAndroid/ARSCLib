@@ -17,6 +17,7 @@ package com.reandroid.dex.debug;
 
 import com.reandroid.arsc.base.BlockCreator;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.smali.SmaliDirective;
 
 import java.io.IOException;
 
@@ -53,47 +54,47 @@ public class DebugElementType<T extends DebugElement> implements BlockCreator<T>
                 0x02, DebugAdvanceLine::new);
         VALUES[0x02] = ADVANCE_LINE;
 
-        START_LOCAL = new DebugElementType<>("START_LOCAL", ".local",
+        START_LOCAL = new DebugElementType<>("START_LOCAL", SmaliDirective.LOCAL,
                 0x03, DebugStartLocal::new);
         VALUES[0x03] = START_LOCAL;
 
-        START_LOCAL_EXTENDED = new DebugElementType<>("START_LOCAL_EXTENDED", ".local",
+        START_LOCAL_EXTENDED = new DebugElementType<>("START_LOCAL_EXTENDED", SmaliDirective.LOCAL,
                 0x04, DebugStartLocalExtended::new);
         VALUES[0x04] = START_LOCAL_EXTENDED;
 
-        END_LOCAL = new DebugElementType<>("END_LOCAL", ".end local",
+        END_LOCAL = new DebugElementType<>("END_LOCAL", SmaliDirective.END_LOCAL,
                 0x05, DebugEndLocal::new);
         VALUES[0x05] = END_LOCAL;
 
-        RESTART_LOCAL = new DebugElementType<>("RESTART_LOCAL", ".restart local",
+        RESTART_LOCAL = new DebugElementType<>("RESTART_LOCAL", SmaliDirective.RESTART_LOCAL,
                 0x06, DebugRestartLocal::new);
         VALUES[0x06] = RESTART_LOCAL;
 
-        PROLOGUE_END = new DebugElementType<>("PROLOGUE_END", ".prologue end",
+        PROLOGUE_END = new DebugElementType<>("PROLOGUE_END", SmaliDirective.PROLOGUE,
                 0x07, DebugPrologueEnd::new);
         VALUES[0x07] = PROLOGUE_END;
 
-        EPILOGUE_BEGIN = new DebugElementType<>("EPILOGUE_BEGIN", ".prologue begin",
+        EPILOGUE_BEGIN = new DebugElementType<>("EPILOGUE_BEGIN", SmaliDirective.EPILOGUE,
                 0x08, DebugEpilogueBegin::new);
         VALUES[0x08] = EPILOGUE_BEGIN;
 
-        SET_SOURCE_FILE = new DebugElementType<>("SET_SOURCE_FILE", ".set source file",
+        SET_SOURCE_FILE = new DebugElementType<>("SET_SOURCE_FILE", SmaliDirective.SET_SOURCE_FILE,
                 0x09, DebugSetSourceFile::new);
         VALUES[0x09] = SET_SOURCE_FILE;
 
-        LINE_NUMBER = new DebugElementType<>("LINE_NUMBER", ".line",
+        LINE_NUMBER = new DebugElementType<>("LINE_NUMBER", SmaliDirective.LINE,
                 0x0A, DebugLineNumber::new);
         VALUES[0x0A] = LINE_NUMBER;
     }
 
     private final String name;
-    private final String opcode;
+    private final SmaliDirective directive;
     private final int flag;
     private final BlockCreator<T> creator;
 
-    private DebugElementType(String name, String opcode, int flag, BlockCreator<T> creator){
+    private DebugElementType(String name, SmaliDirective directive, int flag, BlockCreator<T> creator){
         this.name = name;
-        this.opcode = opcode;
+        this.directive = directive;
         this.flag = flag;
         this.creator = creator;
     }
@@ -104,8 +105,8 @@ public class DebugElementType<T extends DebugElement> implements BlockCreator<T>
     public String getName() {
         return name;
     }
-    public String getOpcode() {
-        return opcode;
+    public SmaliDirective getSmaliDirective() {
+        return directive;
     }
     public int getFlag() {
         return flag;
@@ -135,8 +136,8 @@ public class DebugElementType<T extends DebugElement> implements BlockCreator<T>
     }
     @Override
     public String toString() {
-        if(opcode != null){
-            return opcode;
+        if(directive != null){
+            return directive.toString();
         }
         return name;
     }

@@ -13,25 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.debug;
+package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.debug.DebugElementType;
+import com.reandroid.dex.smali.*;
 
 import java.io.IOException;
 
-public class DebugPrologueEnd extends DebugElement{
+public class SmaliDebugPrologue extends SmaliDebug implements SmaliRegion {
 
-    public DebugPrologueEnd() {
-        super(DebugElementType.PROLOGUE_END);
+    public SmaliDebugPrologue(){
+        super();
     }
 
     @Override
-    public void appendExtra(SmaliWriter writer) throws IOException {
-        super.appendExtra(writer);
+    public void append(SmaliWriter writer) throws IOException {
+        getSmaliDirective().append(writer);
     }
 
     @Override
-    public DebugElementType<DebugPrologueEnd> getElementType() {
-        return DebugElementType.PROLOGUE_END;
+    public void parse(SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, getSmaliDirective());
+    }
+
+    @Override
+    public SmaliDirective getSmaliDirective() {
+        return SmaliDirective.PROLOGUE;
     }
 }

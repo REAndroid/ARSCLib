@@ -163,6 +163,16 @@ public class DebugInfo extends DataItem implements KeyItemCreate {
         removeInvalidElements();
     }
 
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        int count = 0;
+        if(debugParametersArray != null){
+            count = debugParametersArray.size();
+        }
+        debugParameterCount.set(count);
+    }
+
     public Iterator<IdItem> usedIds(){
         Iterator<IdItem> iterator1 = new IterableIterator<DebugParameter, IdItem>(getParameters()) {
             @Override
@@ -224,8 +234,8 @@ public class DebugInfo extends DataItem implements KeyItemCreate {
         return "DebugInfo{" +
                 "lineStart=" + lineStart.get() +
                 ", parameterCount=" + debugParameterCount.get() +
-                ", elements=" + debugSequence +
-                '}';
+                ", sequence=(" + debugSequence +
+                ")}";
     }
 
     private static final Creator<DebugParameter> CREATOR = new Creator<DebugParameter>() {

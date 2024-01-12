@@ -17,6 +17,8 @@ package com.reandroid.dex.debug;
 
 import com.reandroid.dex.ins.ExtraLine;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliDebug;
+import com.reandroid.dex.smali.model.SmaliLineNumber;
 
 import java.io.IOException;
 
@@ -31,7 +33,6 @@ public class DebugLineNumber extends DebugElement {
         return getFlagOffset() / 15;
     }
     void setAddressDiff(int diff){
-
         int lineDiff = getLineDiff();
         int offset = (diff * 15) + lineDiff + 4;
         if(offset > 245){
@@ -74,10 +75,24 @@ public class DebugLineNumber extends DebugElement {
         setUpLineNumber(lineNumber);
         super.setLineNumber(lineNumber);
     }
+    private int getPreviousLineNumber(){
+        DebugSequence debugSequence = getDebugSequence();
+        int index = getIndex();
+        if(debugSequence == null || index == 0){
+            return 0;
+        }
+        for(int i = index - 1; i >=0; i--){
+            DebugElement element = debugSequence.get(i);
+            if(!(element instanceof DebugLineNumber)){
+                continue;
+            }
+            DebugLineNumber lineNumber = (DebugLineNumber) element;
+            return lineNumber.getLineNumber();
+        }
+        return 0;
+    }
     private void setUpLineNumber(int lineNumber) {
-        int lineDiff = getLineDiff();
-        int current = getLineNumber() - lineDiff;
-        int diff = lineNumber - current;
+        int diff = lineNumber - getPreviousLineNumber();
         int max = getMaxLineDiff();
         if(diff >= -4 && diff <= max){
             setLineDiff(diff);
@@ -89,10 +104,6 @@ public class DebugLineNumber extends DebugElement {
         }
         if(getIndex() == 0){
             diff = 0;
-            if(lineNumber > 4){
-                lineNumber = lineNumber - 4;
-                diff = -4;
-            }
             debugSequence.setLineStartInternal(lineNumber);
             setLineDiff(diff);
             return;
@@ -101,8 +112,7 @@ public class DebugLineNumber extends DebugElement {
         if(advanceLine == null){
             return;
         }
-        setLineDiff(-4);
-        diff = diff + 4;
+        setLineDiff(0);
         advanceLine.setLineDiff(diff);
     }
     private DebugAdvanceLine getOrCreateAdvanceLine(){
@@ -164,6 +174,14 @@ public class DebugLineNumber extends DebugElement {
         DebugLineNumber debugLineNumber = (DebugLineNumber) obj;
         return getTargetAddress() == debugLineNumber.getTargetAddress();
     }
+
+    @Override
+    public void fromSmali(SmaliDebug smaliDebug) throws IOException {
+        SmaliLineNumber lineNumber = (SmaliLineNumber) smaliDebug;
+        setTargetAddress(lineNumber.getAddress());
+        setLineNumber(lineNumber.getNumber());
+    }
+
     @Override
     public void appendExtra(SmaliWriter writer) throws IOException {
         int lineNum = getLineNumber();

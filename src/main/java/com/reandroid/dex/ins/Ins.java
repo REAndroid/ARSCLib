@@ -224,6 +224,9 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
     public void merge(Ins ins){
 
     }
+    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
+
+    }
     @Override
     public final void append(SmaliWriter writer) throws IOException {
         appendExtraLines(writer);
@@ -257,8 +260,5 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
             return unsigned;
         }
         return unsigned - width - 1;
-    }
-
-    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
     }
 }

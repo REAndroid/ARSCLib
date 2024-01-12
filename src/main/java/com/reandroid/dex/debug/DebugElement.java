@@ -21,7 +21,9 @@ import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.ins.ExtraLine;
 import com.reandroid.dex.data.FixedDexContainerWithTool;
+import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliDebug;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
@@ -88,7 +90,7 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
         DebugElement previous = sequence.get(getIndex() - 1);
         int diff;
         if(previous == null){
-            diff = 0;
+            diff = address;
         }else {
             diff = address - previous.getTargetAddress();
             if(diff < 0){
@@ -138,6 +140,9 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
         elementType.set((byte) value);
     }
     public abstract DebugElementType<?> getElementType();
+    public SmaliDirective getSmaliDirective(){
+        return getElementType().getSmaliDirective();
+    }
     void cacheValues(DebugSequence debugSequence, DebugElement previous){
         int line;
         int address;
@@ -222,7 +227,7 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
 
     @Override
     public void appendExtra(SmaliWriter writer) throws IOException {
-        writer.append(getElementType().getOpcode());
+        getSmaliDirective().append(writer);
     }
     @Override
     public boolean isEqualExtraLine(Object obj) {
@@ -238,6 +243,9 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
     }
     public void merge(DebugElement element){
         this.elementType.set(element.elementType.get());
+    }
+    public void fromSmali(SmaliDebug smaliDebug) throws IOException{
+
     }
 
     @Override

@@ -42,8 +42,7 @@ abstract class DebugRegisterNumber extends DebugElement {
 
     @Override
     public void appendExtra(SmaliWriter writer) throws IOException {
-        writer.append(getElementType().getOpcode());
-        writer.append(' ');
+        getSmaliDirective().append(writer);
         writer.appendRegister(getRegisterNumber());
     }
 

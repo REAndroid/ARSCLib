@@ -21,6 +21,8 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.FixedDexContainer;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.smali.model.SmaliDebug;
+import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
@@ -43,6 +45,32 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
         addChild(1, endSequence);
     }
 
+    public DebugLineNumber getOrCreateAtAddress(int address){
+        DebugLineNumber prev = null;
+        Iterator<DebugLineNumber> iterator = iterator(DebugElementType.LINE_NUMBER);
+        while (iterator.hasNext()){
+            DebugLineNumber lineNumber = iterator.next();
+            int a = lineNumber.getTargetAddress();
+            if(a == address){
+                return lineNumber;
+            }
+            if(a > address){
+                break;
+            }
+            prev = lineNumber;
+        }
+        int index = 0;
+        if(prev != null){
+            index = prev.getIndex() + 1;
+        }
+        DebugLineNumber lineNumber = createAtPosition(DebugElementType.LINE_NUMBER, index);
+        lineNumber.setTargetAddress(address);
+        return lineNumber;
+    }
+    public Iterator<DebugLineNumber> getAtAddress(int address){
+        Iterator<DebugLineNumber> iterator = iterator(DebugElementType.LINE_NUMBER);
+        return FilterIterator.of(iterator, lineNumber -> address == lineNumber.getTargetAddress());
+    }
     public void removeInvalid(){
         elementList.remove(new Predicate<DebugElement>() {
             @Override
@@ -154,15 +182,6 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
         T1 element = type.newInstance();
         add(element);
         return element;
-    }
-
-    public DebugElement getAtAddress(int address){
-        for(DebugElement element : this){
-            if(address == element.getTargetAddress()){
-                return element;
-            }
-        }
-        return null;
     }
 
     @Override
@@ -339,6 +358,18 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
         }
         cacheValues();
         getElementList().trimToSize();
+    }
+    public void fromSmali(SmaliMethod smaliMethod) throws IOException {
+        Iterator<SmaliDebug> iterator = smaliMethod.getDebugs();
+        while (iterator.hasNext()){
+            SmaliDebug smaliDebug = iterator.next();
+            DebugElementType<?> type = smaliDebug.getDebugElementType();
+            if(type == null){
+                continue;
+            }
+            DebugElement element = createNext(type);
+            element.fromSmali(smaliDebug);
+        }
     }
 
     @Override

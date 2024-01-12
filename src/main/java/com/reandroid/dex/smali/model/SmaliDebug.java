@@ -15,8 +15,34 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.debug.DebugElementType;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.InstanceIterator;
+
+import java.util.Iterator;
+
 public class SmaliDebug extends SmaliCode{
     public SmaliDebug(){
         super();
+    }
+
+    public int getAddress(){
+        return searchAddress();
+    }
+    private int searchAddress(){
+        SmaliCodeSet codeSet = getCodeSet();
+        if(codeSet == null){
+            return -1;
+        }
+        Iterator<SmaliCode> iterator = codeSet.iterator(codeSet.indexOf(this) + 1);
+        SmaliInstruction next = CollectionUtil.getFirst(
+                InstanceIterator.of(iterator, SmaliInstruction.class));
+        if(next != null){
+            return next.getAddress();
+        }
+        return -1;
+    }
+    public DebugElementType<?> getDebugElementType(){
+        return null;
     }
 }

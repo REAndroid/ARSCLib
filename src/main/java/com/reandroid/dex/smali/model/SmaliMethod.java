@@ -72,6 +72,12 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
     public Iterator<SmaliInstruction> getInstructions(){
         return getCodeSet().getInstructions();
     }
+    public boolean hasDebugs(){
+        return getDebugs().hasNext();
+    }
+    public Iterator<SmaliDebug> getDebugs(){
+        return getCodeSet().getDebugs();
+    }
     public Integer getLocals() {
         return locals;
     }

@@ -39,14 +39,14 @@ public class SmaliDirective implements SmaliFormat {
     public static final SmaliDirective ARRAY_DATA;
     public static final SmaliDirective PACKED_SWITCH;
     public static final SmaliDirective SPARSE_SWITCH;
+    public static final SmaliDirective PROLOGUE;
     public static final SmaliDirective PARAM;
     public static final SmaliDirective END_LOCAL;
     public static final SmaliDirective LOCAL;
 
     public static final SmaliDirective LINE;
     public static final SmaliDirective RESTART_LOCAL;
-    public static final SmaliDirective PROLOGUE_END;
-    public static final SmaliDirective EPILOGUE_BEGIN;
+    public static final SmaliDirective EPILOGUE;
     public static final SmaliDirective SET_SOURCE_FILE;
 
 
@@ -76,11 +76,11 @@ public class SmaliDirective implements SmaliFormat {
         LINE = new SmaliDirective("line", true);
         RESTART_LOCAL = new SmaliDirective("restart local", true);
 
+        PROLOGUE = new SmaliDirective("prologue", true);
         PARAM = new SmaliDirective("param", true);
         END_LOCAL = new SmaliDirective("end local", true);
         LOCAL = new SmaliDirective("local", true);
-        PROLOGUE_END = new SmaliDirective("prologue end", true);
-        EPILOGUE_BEGIN = new SmaliDirective("prologue begin", true);
+        EPILOGUE = new SmaliDirective("epilogue", true);
         SET_SOURCE_FILE = new SmaliDirective("set source file", true);
 
 
@@ -102,9 +102,9 @@ public class SmaliDirective implements SmaliFormat {
                 SPARSE_SWITCH,
                 LINE,
                 RESTART_LOCAL,
-                PROLOGUE_END,
-                EPILOGUE_BEGIN,
+                EPILOGUE,
                 SET_SOURCE_FILE,
+                PROLOGUE,
                 PARAM,
                 END_LOCAL,
                 LOCAL

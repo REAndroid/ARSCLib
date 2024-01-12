@@ -42,6 +42,9 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode>{
     public Iterator<SmaliInstruction> getInstructions() {
         return InstanceIterator.of(iterator(), SmaliInstruction.class);
     }
+    public Iterator<SmaliDebug> getDebugs() {
+        return InstanceIterator.of(iterator(), SmaliDebug.class);
+    }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
@@ -104,6 +107,9 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode>{
         }
         if(directive == SmaliDirective.SPARSE_SWITCH){
             return new SmaliPayloadSparseSwitch();
+        }
+        if(directive == SmaliDirective.PROLOGUE){
+            return new SmaliDebugPrologue();
         }
         return null;
     }

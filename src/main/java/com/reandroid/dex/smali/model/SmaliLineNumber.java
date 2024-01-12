@@ -15,10 +15,9 @@
  */
 package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.smali.SmaliDirective;
-import com.reandroid.dex.smali.SmaliReader;
-import com.reandroid.dex.smali.SmaliRegion;
-import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.debug.DebugElementType;
+import com.reandroid.dex.debug.DebugLineNumber;
+import com.reandroid.dex.smali.*;
 
 import java.io.IOException;
 
@@ -43,18 +42,19 @@ public class SmaliLineNumber extends SmaliDebug implements SmaliRegion {
     }
 
     @Override
+    public DebugElementType<DebugLineNumber> getDebugElementType() {
+        return DebugElementType.LINE_NUMBER;
+    }
+
+    @Override
     public void append(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
         writer.appendInteger(getNumber());
     }
-
     @Override
     public void parse(SmaliReader reader) throws IOException{
         reader.skipWhitespaces();
-        SmaliDirective directive = SmaliDirective.parse(reader);
-        if(directive != getSmaliDirective()){
-            // throw
-        }
+        SmaliParseException.expect(reader, getSmaliDirective());
         reader.skipWhitespaces();
         setNumber(reader.readInteger());
     }

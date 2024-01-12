@@ -31,7 +31,6 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.smali.model.SmaliCodeExceptionHandler;
 import com.reandroid.dex.smali.model.SmaliCodeTryItem;
 import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.collection.CombiningIterator;
@@ -214,6 +213,10 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         }
         while (iterator.hasNext()){
             tryBlock.fromSmali(iterator.next());
+        }
+        if(smaliMethod.hasDebugs()){
+            DebugInfo debugInfo = getOrCreateDebugInfo();
+            debugInfo.getDebugSequence().fromSmali(smaliMethod);
         }
     }
     @Override
