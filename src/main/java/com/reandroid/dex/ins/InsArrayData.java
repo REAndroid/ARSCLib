@@ -62,17 +62,31 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
     public int size(){
         return getNumberArray().size();
     }
+    public void setSize(int size){
+        getNumberArray().setSize(size);
+    }
     public int getWidth(){
         return getNumberArray().getWidth();
     }
     public void setWidth(int width){
         getNumberArray().setWidth(width);
     }
+    public void set(int[] values){
+        setSize(0);
+        getNumberArray().put(values);
+    }
+    public void set(long[] values){
+        setSize(0);
+        getNumberArray().putLong(values);
+    }
     public IntegerReference getReference(int i){
         return getNumberArray().getReference(i);
     }
     public int getAsInteger(int index){
         return getNumberArray().getAsInteger(index);
+    }
+    public long getLong(int index){
+        return getNumberArray().getLong(index);
     }
     public void put(int index, int value){
         getNumberArray().put(index, value);
@@ -139,11 +153,10 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
             throw new SmaliValidateException("Array values width out of range '" + width + "'", smaliInstruction);
         }
         setWidth(width);
-        NumberArray numberArray = getNumberArray();
         if(width > 4){
-            numberArray.putLong(smaliPayloadArray.unsignedLong());
+            set(smaliPayloadArray.unsignedLong());
         }else {
-            numberArray.put(smaliPayloadArray.unsignedInt());
+            set(smaliPayloadArray.unsignedInt());
         }
         refreshAlignment();
     }
