@@ -111,6 +111,9 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode>{
         if(directive == SmaliDirective.PROLOGUE){
             return new SmaliDebugPrologue();
         }
+        if(directive == SmaliDirective.EPILOGUE){
+            return new SmaliDebugEpilogue();
+        }
         return null;
     }
 }

@@ -16,17 +16,21 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.debug.DebugElementType;
-import com.reandroid.dex.debug.DebugPrologue;
+import com.reandroid.dex.debug.DebugEpilogue;
 import com.reandroid.dex.smali.*;
 
 import java.io.IOException;
 
-public class SmaliDebugPrologue extends SmaliDebug implements SmaliRegion {
+public class SmaliDebugEpilogue extends SmaliDebug implements SmaliRegion {
 
-    public SmaliDebugPrologue(){
+    public SmaliDebugEpilogue(){
         super();
     }
 
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        getSmaliDirective().append(writer);
+    }
     @Override
     public void parse(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
@@ -34,10 +38,10 @@ public class SmaliDebugPrologue extends SmaliDebug implements SmaliRegion {
     }
     @Override
     public SmaliDirective getSmaliDirective() {
-        return SmaliDirective.PROLOGUE;
+        return SmaliDirective.EPILOGUE;
     }
     @Override
-    public DebugElementType<DebugPrologue> getDebugElementType() {
-        return DebugElementType.PROLOGUE;
+    public DebugElementType<DebugEpilogue> getDebugElementType() {
+        return DebugElementType.EPILOGUE;
     }
 }

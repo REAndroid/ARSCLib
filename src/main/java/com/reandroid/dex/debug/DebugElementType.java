@@ -28,8 +28,8 @@ public class DebugElementType<T extends DebugElement> implements BlockCreator<T>
     public static final DebugElementType<DebugStartLocal> START_LOCAL;
     public static final DebugElementType<DebugEndLocal> END_LOCAL;
     public static final DebugElementType<DebugRestartLocal> RESTART_LOCAL;
-    public static final DebugElementType<DebugPrologueEnd> PROLOGUE_END;
-    public static final DebugElementType<DebugEpilogueBegin> EPILOGUE_BEGIN;
+    public static final DebugElementType<DebugPrologue> PROLOGUE;
+    public static final DebugElementType<DebugEpilogue> EPILOGUE;
     public static final DebugElementType<DebugSetSourceFile> SET_SOURCE_FILE;
     public static final DebugElementType<DebugEndSequence> END_SEQUENCE;
     public static final DebugElementType<DebugAdvancePc> ADVANCE_PC;
@@ -70,13 +70,13 @@ public class DebugElementType<T extends DebugElement> implements BlockCreator<T>
                 0x06, DebugRestartLocal::new);
         VALUES[0x06] = RESTART_LOCAL;
 
-        PROLOGUE_END = new DebugElementType<>("PROLOGUE_END", SmaliDirective.PROLOGUE,
-                0x07, DebugPrologueEnd::new);
-        VALUES[0x07] = PROLOGUE_END;
+        PROLOGUE = new DebugElementType<>("PROLOGUE", SmaliDirective.PROLOGUE,
+                0x07, DebugPrologue::new);
+        VALUES[0x07] = PROLOGUE;
 
-        EPILOGUE_BEGIN = new DebugElementType<>("EPILOGUE_BEGIN", SmaliDirective.EPILOGUE,
-                0x08, DebugEpilogueBegin::new);
-        VALUES[0x08] = EPILOGUE_BEGIN;
+        EPILOGUE = new DebugElementType<>("EPILOGUE", SmaliDirective.EPILOGUE,
+                0x08, DebugEpilogue::new);
+        VALUES[0x08] = EPILOGUE;
 
         SET_SOURCE_FILE = new DebugElementType<>("SET_SOURCE_FILE", SmaliDirective.SET_SOURCE_FILE,
                 0x09, DebugSetSourceFile::new);

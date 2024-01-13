@@ -15,23 +15,29 @@
  */
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliDebug;
+import com.reandroid.dex.smali.model.SmaliDebugEpilogue;
 
 import java.io.IOException;
 
-public class DebugPrologueEnd extends DebugElement{
+public class DebugEpilogue extends DebugElement {
 
-    public DebugPrologueEnd() {
-        super(DebugElementType.PROLOGUE_END);
+    public DebugEpilogue() {
+        super(DebugElementType.EPILOGUE);
     }
 
     @Override
-    public void appendExtra(SmaliWriter writer) throws IOException {
-        super.appendExtra(writer);
+    public void fromSmali(SmaliDebug smaliDebug) throws IOException {
+        if(smaliDebug == null){
+            throw new NullPointerException();
+        }
+        if(!(smaliDebug instanceof SmaliDebugEpilogue)){
+            throw new IOException("Mismatch class: " + smaliDebug.getClass() +
+                    ", expecting: " + SmaliDebugEpilogue.class);
+        }
     }
-
     @Override
-    public DebugElementType<DebugPrologueEnd> getElementType() {
-        return DebugElementType.PROLOGUE_END;
+    public DebugElementType<DebugEpilogue> getElementType() {
+        return DebugElementType.EPILOGUE;
     }
 }
