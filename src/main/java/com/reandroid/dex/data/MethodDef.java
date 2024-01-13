@@ -140,6 +140,13 @@ public class MethodDef extends Def<MethodId>{
         }
         return null;
     }
+    public DebugInfo getUniqueDebugInfo(){
+        CodeItem codeItem = getCodeItem();
+        if(codeItem != null){
+            return codeItem.getDebugInfo();
+        }
+        return null;
+    }
     public DebugInfo getOrCreateDebugInfo(){
         return getOrCreateCodeItem().getOrCreateDebugInfo();
     }
@@ -183,9 +190,9 @@ public class MethodDef extends Def<MethodId>{
         return null;
     }
     public CodeItem getOrCreateCodeItem(){
-        CodeItem codeItem = codeOffset.getItem();
-        if(codeItem == null){
-            codeItem = codeOffset.getOrCreate();
+        CodeItem current = codeOffset.getItem();
+        CodeItem codeItem = codeOffset.getOrCreateUniqueItem(this);
+        if(current == null){
             codeItem.setMethodDef(this);
             int parametersCount = getParametersCount();
             int registers = parametersCount;
@@ -204,9 +211,18 @@ public class MethodDef extends Def<MethodId>{
         }
         return codeItem;
     }
+    public CodeItem getUniqueCodeItem(){
+        CodeItem codeItem = codeOffset.getUniqueItem(this);
+        if(codeItem != null){
+            codeItem.setMethodDef(this);
+            codeItem.getUniqueDebugInfo();
+        }
+        return codeItem;
+    }
     private void linkCodeItem(){
         CodeItem codeItem = codeOffset.getItem();
         if(codeItem != null){
+            codeItem.addUniqueUser(this);
             codeItem.setMethodDef(this);
         }
     }
@@ -305,6 +321,7 @@ public class MethodDef extends Def<MethodId>{
             Parameter parameter = getParameter(index);
             parameter.fromSmali(smaliMethodParameter);
         }
+        linkCodeItem();
     }
 
     @Override

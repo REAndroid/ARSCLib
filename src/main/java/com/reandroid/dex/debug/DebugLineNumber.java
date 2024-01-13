@@ -36,8 +36,7 @@ public class DebugLineNumber extends DebugElement {
         int lineDiff = getLineDiff();
         int offset = (diff * 15) + lineDiff + 4;
         if(offset > 245){
-            DebugAdvancePc advancePc = getOrCreateDebugAdvancePc();
-            advancePc.setAddressDiff(diff);
+            super.setAddressDiff(diff);
             offset = lineDiff + 4;
         }
         if(offset < 0){
@@ -139,30 +138,6 @@ public class DebugLineNumber extends DebugElement {
         }
         return null;
     }
-    private DebugAdvancePc getOrCreateDebugAdvancePc(){
-        DebugAdvancePc advancePc = getDebugAdvancePc();
-        if(advancePc != null){
-            return advancePc;
-        }
-        DebugSequence debugSequence = getDebugSequence();
-        if(debugSequence != null){
-            advancePc = debugSequence.createAtPosition(DebugElementType.ADVANCE_PC, getIndex());
-        }
-        return advancePc;
-    }
-    private DebugAdvancePc getDebugAdvancePc(){
-        DebugSequence debugSequence = getDebugSequence();
-        if(debugSequence != null){
-            DebugElement element = debugSequence.get(getIndex() - 1);
-            if(element instanceof DebugAdvanceLine){
-                element = debugSequence.get(element.getIndex() - 1);
-            }
-            if(element instanceof DebugAdvancePc){
-                return (DebugAdvancePc) element;
-            }
-        }
-        return null;
-    }
     @Override
     public boolean isEqualExtraLine(Object obj) {
         if(obj == this){
@@ -177,8 +152,8 @@ public class DebugLineNumber extends DebugElement {
 
     @Override
     public void fromSmali(SmaliDebug smaliDebug) throws IOException {
+        super.fromSmali(smaliDebug);
         SmaliLineNumber lineNumber = (SmaliLineNumber) smaliDebug;
-        setTargetAddress(lineNumber.getAddress());
         setLineNumber(lineNumber.getNumber());
     }
 
@@ -188,7 +163,7 @@ public class DebugLineNumber extends DebugElement {
         if(lineNum == -1){
             return;
         }
-        writer.append(".line ");
+        getSmaliDirective().append(writer);
         writer.appendInteger(lineNum);
     }
     @Override

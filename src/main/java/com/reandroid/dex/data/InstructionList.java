@@ -81,9 +81,6 @@ public class InstructionList extends FixedBlockContainer implements
     public DebugInfo getOrCreateDebugInfo(){
         return getCodeItem().getOrCreateDebugInfo();
     }
-    public int getLocals(){
-        return getCodeItem().getLocalRegistersCount();
-    }
     public CodeItem getCodeItem() {
         return codeItem;
     }
@@ -298,17 +295,6 @@ public class InstructionList extends FixedBlockContainer implements
         }
         return result;
     }
-    public int getOutSize() {
-        int result = 0;
-        for (Ins ins : this) {
-            int count = ins.getOutSize();
-            if(count > result){
-                result = count;
-            }
-        }
-        return result;
-    }
-
     public DexPositionAlign getBlockAlign() {
         return blockAlign;
     }

@@ -43,7 +43,7 @@ public class DebugElementType<T extends DebugElement> implements BlockCreator<T>
         VALUES = new DebugElementType[0x0A + 1];
 
         END_SEQUENCE = new DebugElementType<>("END_SEQUENCE",
-                0x00, DebugEndSequence::new);
+                0x00, () -> DebugEndSequence.INSTANCE);
         VALUES[0x00] = END_SEQUENCE;
 
         ADVANCE_PC = new DebugElementType<>("ADVANCE_PC",

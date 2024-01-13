@@ -26,61 +26,53 @@ import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class DebugSequence extends FixedDexContainer implements Collection<DebugElement> {
+public class DebugSequence extends FixedDexContainer implements Iterable<DebugElement> {
 
     private final IntegerReference lineStart;
     private BlockList<DebugElement> elementList;
-    private final DebugEndSequence endSequence;
 
     public DebugSequence(IntegerReference lineStart){
         super(2);
         this.lineStart = lineStart;
-        this.elementList = BlockList.empty();
-        this.endSequence = DebugEndSequence.INSTANCE;
-        addChild(0, elementList);
-        addChild(1, endSequence);
+        addChild(1, DebugEndSequence.INSTANCE);
     }
 
-    public DebugLineNumber getOrCreateAtAddress(int address){
-        DebugLineNumber prev = null;
-        Iterator<DebugLineNumber> iterator = iterator(DebugElementType.LINE_NUMBER);
+    public<T1 extends DebugElement> T1 getOrCreateAtAddress(DebugElementType<T1> elementType, int address){
+        T1 prev = null;
+        Iterator<T1> iterator = iterator(elementType);
         while (iterator.hasNext()){
-            DebugLineNumber lineNumber = iterator.next();
-            int a = lineNumber.getTargetAddress();
+            T1 element = iterator.next();
+            int a = element.getTargetAddress();
             if(a == address){
-                return lineNumber;
+                return element;
             }
             if(a > address){
                 break;
             }
-            prev = lineNumber;
+            prev = element;
         }
         int index = 0;
         if(prev != null){
             index = prev.getIndex() + 1;
         }
-        DebugLineNumber lineNumber = createAtPosition(DebugElementType.LINE_NUMBER, index);
-        lineNumber.setTargetAddress(address);
-        return lineNumber;
+        T1 element = createAtPosition(elementType, index);
+        element.setTargetAddress(address);
+        return element;
     }
-    public Iterator<DebugLineNumber> getAtAddress(int address){
-        Iterator<DebugLineNumber> iterator = iterator(DebugElementType.LINE_NUMBER);
-        return FilterIterator.of(iterator, lineNumber -> address == lineNumber.getTargetAddress());
+    public Iterator<DebugElement> getAtAddress(int address){
+        return FilterIterator.of(iterator(), element -> address == element.getTargetAddress());
     }
     public void removeInvalid(){
-        elementList.remove(new Predicate<DebugElement>() {
-            @Override
-            public boolean test(DebugElement element) {
-                if(element.isValid()){
-                    return false;
-                }
-                return true;
+        int size = size();
+        for(int i = size - 1; i >= 0; i --){
+            DebugElement element = get(i);
+            if(!element.isValid()){
+                remove(element);
             }
-        });
+        }
     }
     public int getLineStart() {
         return lineStart.get();
@@ -99,17 +91,6 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
     public Iterator<DebugElement> getExtraLines(){
         return new FilterIterator<>(iterator(),
                 element -> (!(element instanceof DebugAdvance)));
-    }
-    public int getLast(){
-        DebugLineNumber previous = null;
-        Iterator<DebugLineNumber> iterator = iterator(DebugElementType.LINE_NUMBER);
-        while (iterator.hasNext()){
-            previous = iterator.next();
-        }
-        if(previous != null){
-            return previous.getLineNumber();
-        }
-        return 0;
     }
     public void fixDebugLineNumbers(){
         Predicate<DebugElement> filter = new Predicate<DebugElement>() {
@@ -147,9 +128,6 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
         }
         return removedOnce;
     }
-    public boolean removeAll(Iterator<? extends DebugElement> collection) {
-        return removeAll(CollectionUtil.toList(collection));
-    }
     public boolean remove(DebugElement element){
         if(element == null || element.getParent(getClass()) != this){
             return false;
@@ -177,7 +155,7 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
     @SuppressWarnings("unchecked")
     public<T1 extends DebugElement> T1 createNext(DebugElementType<T1> type){
         if(type == DebugElementType.END_SEQUENCE){
-            return (T1) this.endSequence;
+            return (T1) DebugEndSequence.INSTANCE;
         }
         T1 element = type.newInstance();
         add(element);
@@ -195,6 +173,7 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
             return;
         }
         reader.seek(position);
+        BlockList<DebugElement> elementList = unlockElementList();
         unlockElementList().ensureCapacity(count);
         DebugElementType<?> type = readNext(reader);
         while (!type.is(DebugElementType.END_SEQUENCE)){
@@ -208,7 +187,7 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
         DebugElementType<?> type = DebugElementType.readFlag(reader);
         DebugElement debugElement;
         if(type == DebugElementType.END_SEQUENCE){
-            debugElement = this.endSequence;
+            debugElement = DebugEndSequence.INSTANCE;
         }else {
             debugElement = type.newInstance();
             unlockElementList().add(debugElement);
@@ -249,18 +228,11 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
             return null;
         });
     }
-    @Override
     public int size() {
         return getElementList().getCount();
     }
-
-    @Override
     public boolean isEmpty() {
         return size() == 0;
-    }
-    @Override
-    public boolean contains(Object obj) {
-        return getElementList().contains(obj);
     }
     @Override
     public Iterator<DebugElement> iterator() {
@@ -269,54 +241,12 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
     public Iterator<DebugElement> clonedIterator() {
         return getElementList().clonedIterator();
     }
-    @Override
-    public Object[] toArray() {
-        return getElementList().toArray();
-    }
-    @Override
-    public <T> T[] toArray(T[] ts) {
-        throw new IllegalArgumentException("Not implemented");
-    }
-    @Override
     public boolean add(DebugElement element) {
-        if(element == null){
-            return false;
-        }
-        if(element.getClass() == DebugEndSequence.class){
+        if(element == null || element.getClass() == DebugEndSequence.class){
             return false;
         }
         return unlockElementList().add(element);
     }
-    @Override
-    public boolean remove(Object obj) {
-        return remove((DebugElement) obj);
-    }
-    @Override
-    public boolean containsAll(Collection<?> collection) {
-        throw new IllegalArgumentException("Not implemented");
-    }
-    @Override
-    public boolean addAll(Collection<? extends DebugElement> collection) {
-        if(collection.size() == 0){
-            return false;
-        }
-        unlockElementList();
-        for(DebugElement coming : collection){
-            DebugElement element = createNext(coming.getElementType());
-            element.merge(coming);
-        }
-        cacheValues();
-        return collection.size() != 0;
-    }
-    @Override
-    public boolean removeAll(Collection<?> collection) {
-        return false;
-    }
-    @Override
-    public boolean retainAll(Collection<?> collection) {
-        throw new IllegalArgumentException("Not implemented");
-    }
-    @Override
     public void clear() {
         getElementList().clearChildes();
     }
@@ -333,7 +263,7 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
 
     private BlockList<DebugElement> unlockElementList() {
         BlockList<DebugElement> elementList = this.elementList;
-        if(BlockList.isImmutableEmpty(elementList)){
+        if(elementList == null || BlockList.isImmutableEmpty(elementList)){
             elementList = new BlockList<>();
             this.elementList = elementList;
             addChild(0, elementList);
@@ -341,6 +271,10 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
         return elementList;
     }
     private BlockList<DebugElement> getElementList() {
+        BlockList<DebugElement> elementList = this.elementList;
+        if(elementList == null){
+            elementList = BlockList.empty();
+        }
         return elementList;
     }
 
@@ -367,14 +301,13 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
             if(type == null){
                 continue;
             }
-            DebugElement element = createNext(type);
-            element.fromSmali(smaliDebug);
+            createNext(type).fromSmali(smaliDebug);
         }
     }
 
     @Override
     public int hashCode() {
-        return elementList.hashCode();
+        return getElementList().hashCode();
     }
     @Override
     public boolean equals(Object obj) {
@@ -385,10 +318,10 @@ public class DebugSequence extends FixedDexContainer implements Collection<Debug
             return false;
         }
         DebugSequence sequence = (DebugSequence) obj;
-        return elementList.equals(sequence.elementList);
+        return getElementList().equals(sequence.getElementList());
     }
     @Override
     public String toString() {
-        return "start=" + lineStart + ", elements=" + elementList;
+        return "start=" + lineStart + ", elements=" + getElementList();
     }
 }

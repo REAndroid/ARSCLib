@@ -17,8 +17,13 @@ package com.reandroid.dex.debug;
 
 public class DebugEndSequence extends DebugElement{
 
-    public DebugEndSequence() {
+    private DebugEndSequence() {
         super(0, DebugElementType.END_SEQUENCE);
+    }
+
+    @Override
+    public boolean isValid() {
+        return true;
     }
 
     @Override

@@ -29,9 +29,7 @@ public class DebugPrologue extends DebugElement{
 
     @Override
     public void fromSmali(SmaliDebug smaliDebug) throws IOException {
-        if(smaliDebug == null){
-            throw new NullPointerException();
-        }
+        super.fromSmali(smaliDebug);
         if(!(smaliDebug instanceof SmaliDebugPrologue)){
             throw new IOException("Mismatch class: " + smaliDebug.getClass() +
                     ", expecting: " + SmaliDebugPrologue.class);

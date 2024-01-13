@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.debug.DebugElementType;
 import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.smali.*;
@@ -94,6 +95,10 @@ public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
     public SmaliDirective getSmaliDirective() {
         return SmaliDirective.PARAM;
     }
+    @Override
+    public DebugElementType<?> getDebugElementType() {
+        return null;
+    }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
@@ -117,7 +122,7 @@ public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
 
     @Override
     public void parse(SmaliReader reader) throws IOException {
-        SmaliParseException.expect(reader, getSmaliDirective());
+        super.parse(reader);
         getRegisterSet().parse(reader);
         reader.skipWhitespacesOrComment();
         if(reader.get() == ','){

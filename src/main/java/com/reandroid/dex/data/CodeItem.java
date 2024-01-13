@@ -33,12 +33,12 @@ import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliCodeTryItem;
 import com.reandroid.dex.smali.model.SmaliMethod;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
 public class CodeItem extends DataItem implements RegistersTable, PositionAlignedItem, KeyItemCreate,
         SmaliFormat {
@@ -98,8 +98,11 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
     public DebugInfo getDebugInfo(){
         return header.debugInfoOffset.getItem();
     }
+    public DebugInfo getUniqueDebugInfo(){
+        return header.debugInfoOffset.getUniqueItem(this);
+    }
     public DebugInfo getOrCreateDebugInfo(){
-        return header.debugInfoOffset.getOrCreate();
+        return header.debugInfoOffset.getOrCreateUniqueItem(this);
     }
     public void removeDebugInfo(){
         setDebugInfo(null);
@@ -243,7 +246,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         CodeItem codeItem = (CodeItem) obj;
         return header.equals(codeItem.header) &&
                 instructionList.equals(codeItem.instructionList) &&
-                Objects.equals(tryBlock, codeItem.tryBlock);
+                ObjectsUtil.equals(tryBlock, codeItem.tryBlock);
     }
 
     @Override
@@ -296,12 +299,14 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
 
         @Override
         public void refresh() {
+            debugInfoOffset.addUniqueUser(this.codeItem);
             debugInfoOffset.refresh();
         }
         @Override
         public void onReadBytes(BlockReader reader) throws IOException {
             super.onReadBytes(reader);
             this.debugInfoOffset.pullItem();
+            this.debugInfoOffset.addUniqueUser(this.codeItem);
             if(this.tryBlockCount.get() != 0){
                 this.codeItem.initTryBlock();
             }
@@ -319,6 +324,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
             DebugInfo comingDebug = header.debugInfoOffset.getItem();
             if(comingDebug != null){
                 debugInfoOffset.setItem(comingDebug.getKey());
+                debugInfoOffset.addUniqueUser(codeItem);
             }
             instructionCodeUnits.set(header.instructionCodeUnits.get());
         }
@@ -337,7 +343,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
                     outs.get() == header.outs.get() &&
                     tryBlockCount.get() == header.tryBlockCount.get() &&
                     instructionCodeUnits.get() == header.instructionCodeUnits.get() &&
-                    Objects.equals(debugInfoOffset.getItem(), header.debugInfoOffset.getItem());
+                    ObjectsUtil.equals(debugInfoOffset.getItem(), header.debugInfoOffset.getItem());
         }
 
         @Override

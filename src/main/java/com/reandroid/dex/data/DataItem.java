@@ -24,7 +24,6 @@ import com.reandroid.dex.base.PositionedItem;
 import com.reandroid.dex.common.IdUsageIterator;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.common.SectionItemContainer;
-import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
@@ -37,7 +36,7 @@ import java.util.Iterator;
 public class DataItem extends SectionItemContainer
         implements PositionedItem, OffsetSupplier, OffsetReceiver, KeyItem, IdUsageIterator {
 
-    private ClassId mUserClassId;
+    private Block mUniqueUser;
     private boolean mShared;
 
     public DataItem(int childesCount) {
@@ -54,7 +53,7 @@ public class DataItem extends SectionItemContainer
         super.setReplace(replace);
         replace = getReplace();
         if(replace != null && replace != this){
-            ((DataItem)replace).addClassUsage(mUserClassId);
+            ((DataItem)replace).addUniqueUser(mUniqueUser);
         }
     }
     public void copyFrom(DataItem item){
@@ -73,17 +72,24 @@ public class DataItem extends SectionItemContainer
             throw new RuntimeException(ex);
         }
     }
-    public boolean isSharedUsage() {
+    public boolean isSharedItem() {
         return mShared;
     }
-    public void addClassUsage(ClassId classId){
-        if(classId == null || mShared || classId == mUserClassId){
+    public boolean isSharedItem(Block uniqueUser) {
+        if(this.isSharedItem()){
+            return true;
+        }
+        Block user = this.mUniqueUser;
+        return user != null && uniqueUser != null && user != uniqueUser;
+    }
+    public void addUniqueUser(Block uniqueUser){
+        if(uniqueUser == null || mShared || uniqueUser == mUniqueUser || uniqueUser == this){
             return;
         }
-        if(mUserClassId != null){
+        if(mUniqueUser != null){
             mShared = true;
         }else {
-            mUserClassId = classId;
+            mUniqueUser = uniqueUser;
         }
     }
     @SuppressWarnings("unchecked")
@@ -95,7 +101,7 @@ public class DataItem extends SectionItemContainer
         BlockList<DataItem> itemArray = (BlockList<DataItem>)parent;
         itemArray.remove(this);
         setPosition(0);
-        mUserClassId = null;
+        mUniqueUser = null;
     }
     @Override
     public Key getKey() {
@@ -109,8 +115,8 @@ public class DataItem extends SectionItemContainer
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
-        if(mUserClassId != null && mUserClassId.getParent() == null){
-            mUserClassId = null;
+        if(mUniqueUser != null && mUniqueUser.getParent() == null){
+            mUniqueUser = null;
         }
     }
 }

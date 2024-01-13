@@ -32,6 +32,10 @@ public abstract class DebugAdvance extends DebugElement{
     public void setAdvance(int advance){
         this.advance.set(advance);
     }
+    @Override
+    public boolean isValid() {
+        return getAdvance() != 0;
+    }
 
     @Override
     public void merge(DebugElement element){

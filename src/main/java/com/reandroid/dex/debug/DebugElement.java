@@ -63,6 +63,11 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
         return 0;
     }
     void setAddressDiff(int diff){
+        if(diff == 0){
+            return;
+        }
+        DebugAdvancePc advancePc = getOrCreateDebugAdvancePc();
+        advancePc.setAddressDiff(diff);
     }
     int getLineDiff(){
         return 0;
@@ -103,6 +108,30 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
         if(next != null){
             next.setTargetAddress(address + next.getAddressDiff());
         }
+    }
+    private DebugAdvancePc getOrCreateDebugAdvancePc(){
+        DebugAdvancePc advancePc = getDebugAdvancePc();
+        if(advancePc != null){
+            return advancePc;
+        }
+        DebugSequence debugSequence = getDebugSequence();
+        if(debugSequence != null){
+            advancePc = debugSequence.createAtPosition(DebugElementType.ADVANCE_PC, getIndex());
+        }
+        return advancePc;
+    }
+    private DebugAdvancePc getDebugAdvancePc(){
+        DebugSequence debugSequence = getDebugSequence();
+        if(debugSequence != null){
+            DebugElement element = debugSequence.get(getIndex() - 1);
+            if(element instanceof DebugAdvanceLine){
+                element = debugSequence.get(element.getIndex() - 1);
+            }
+            if(element instanceof DebugAdvancePc){
+                return (DebugAdvancePc) element;
+            }
+        }
+        return null;
     }
     int getLineNumber(){
         return lineNumber;
@@ -245,7 +274,7 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
         this.elementType.set(element.elementType.get());
     }
     public void fromSmali(SmaliDebug smaliDebug) throws IOException{
-
+        setTargetAddress(smaliDebug.getAddress());
     }
 
     @Override

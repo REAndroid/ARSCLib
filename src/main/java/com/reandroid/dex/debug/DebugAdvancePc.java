@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.debug;
 
+import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.base.Ule128Item;
 
 public class DebugAdvancePc extends DebugAdvance{
@@ -29,6 +30,14 @@ public class DebugAdvancePc extends DebugAdvance{
     }
     public void setAddressDiff(int addressDiff){
         setAdvance(addressDiff);
+    }
+
+    @Override
+    public void setAdvance(int advance) {
+        if(advance < 0){
+            throw new DexException("Can not set negative advance: " + advance);
+        }
+        super.setAdvance(advance);
     }
 
     @Override

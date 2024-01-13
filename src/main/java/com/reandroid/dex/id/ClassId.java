@@ -319,7 +319,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
     }
     public AnnotationsDirectory getOrCreateAnnotationsDirectory(){
         AnnotationsDirectory directory = annotationsDirectory.getOrCreate();
-        directory.addClassUsage(this);
+        directory.addUniqueUser(this);
         return directory;
     }
     public AnnotationsDirectory getUniqueAnnotationsDirectory(){
@@ -379,9 +379,9 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
     @Override
     public void refresh() {
 
-        this.annotationsDirectory.addClassUsage(this);
-        this.classData.addClassUsage(this);
-        this.staticValues.addClassUsage(this);
+        this.annotationsDirectory.addUniqueUser(this);
+        this.classData.addUniqueUser(this);
+        this.staticValues.addUniqueUser(this);
 
         this.classTypeId.refresh();
         this.superClassId.refresh();
@@ -402,9 +402,9 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         this.classData.pullItem();
         this.staticValues.pullItem();
 
-        this.annotationsDirectory.addClassUsage(this);
-        this.classData.addClassUsage(this);
-        this.staticValues.addClassUsage(this);
+        this.annotationsDirectory.addUniqueUser(this);
+        this.classData.addUniqueUser(this);
+        this.staticValues.addUniqueUser(this);
 
         linkClassData(this.classData.getItem());
     }

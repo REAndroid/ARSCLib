@@ -37,18 +37,13 @@ public class SmaliLineNumber extends SmaliDebug implements SmaliRegion {
     }
 
     @Override
-    public SmaliDirective getSmaliDirective() {
-        return SmaliDirective.LINE;
-    }
-
-    @Override
     public DebugElementType<DebugLineNumber> getDebugElementType() {
         return DebugElementType.LINE_NUMBER;
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        getSmaliDirective().append(writer);
+        super.append(writer);
         writer.appendInteger(getNumber());
     }
     @Override

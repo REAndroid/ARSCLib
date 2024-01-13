@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.reference;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.base.UsageMarker;
@@ -113,6 +114,45 @@ public class DataItemUle128Reference<T extends DataItem> extends Ule128Item impl
         T item = this.item;
         if(item != null){
             item.addUsageType(usageType);
+        }
+    }
+    public T getUniqueItem(Block user) {
+        T item = getItem();
+        if(item == null){
+            return null;
+        }
+        if(item.isSharedItem(user)){
+            item = createNewCopy();
+        }
+        item.addUniqueUser(user);
+        return item;
+    }
+    public T getOrCreateUniqueItem(Block user) {
+        T item = getUniqueItem(user);
+        if(item != null) {
+            return item;
+        }
+        item = createSectionItem(getSectionType());
+        setItem(item);
+        addUniqueUser(user);
+        return item;
+    }
+    public void addUniqueUser(Block user){
+        T item = getItem();
+        if(item != null){
+            item.addUniqueUser(user);
+        }
+    }
+    private T createNewCopy() {
+        T itemNew = createSectionItem(getSectionType());
+        copyToIfPresent(itemNew);
+        setItem(itemNew);
+        return itemNew;
+    }
+    private void copyToIfPresent(T itemNew){
+        T item = this.getItem();
+        if(item != null){
+            itemNew.copyFrom(item);
         }
     }
     @Override

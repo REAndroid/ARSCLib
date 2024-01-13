@@ -15,38 +15,17 @@
  */
 package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.smali.*;
+import com.reandroid.dex.debug.DebugElementType;
+import com.reandroid.dex.debug.DebugRestartLocal;
 
-import java.io.IOException;
-
-public class SmaliDebugRestartLocal extends SmaliDebug implements SmaliRegion {
-
-    private final SmaliRegisterSet registerSet;
+public class SmaliDebugRestartLocal extends SmaliDebugRegister {
 
     public SmaliDebugRestartLocal(){
         super();
-        this.registerSet = new SmaliRegisterSet();
-        this.registerSet.setParent(this);
-    }
-
-    public SmaliRegisterSet getRegisterSet() {
-        return registerSet;
     }
 
     @Override
-    public SmaliDirective getSmaliDirective() {
-        return SmaliDirective.RESTART_LOCAL;
-    }
-
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
-        getSmaliDirective().append(writer);
-        getRegisterSet().append(writer);
-    }
-
-    @Override
-    public void parse(SmaliReader reader) throws IOException {
-        SmaliParseException.expect(reader, getSmaliDirective());
-        getRegisterSet().parse(reader);
+    public DebugElementType<DebugRestartLocal> getDebugElementType() {
+        return DebugElementType.RESTART_LOCAL;
     }
 }

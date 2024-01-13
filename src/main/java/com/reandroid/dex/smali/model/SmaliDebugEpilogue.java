@@ -17,29 +17,13 @@ package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.debug.DebugElementType;
 import com.reandroid.dex.debug.DebugEpilogue;
-import com.reandroid.dex.smali.*;
 
-import java.io.IOException;
-
-public class SmaliDebugEpilogue extends SmaliDebug implements SmaliRegion {
+public class SmaliDebugEpilogue extends SmaliDebug {
 
     public SmaliDebugEpilogue(){
         super();
     }
 
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
-        getSmaliDirective().append(writer);
-    }
-    @Override
-    public void parse(SmaliReader reader) throws IOException {
-        reader.skipWhitespacesOrComment();
-        SmaliParseException.expect(reader, getSmaliDirective());
-    }
-    @Override
-    public SmaliDirective getSmaliDirective() {
-        return SmaliDirective.EPILOGUE;
-    }
     @Override
     public DebugElementType<DebugEpilogue> getDebugElementType() {
         return DebugElementType.EPILOGUE;

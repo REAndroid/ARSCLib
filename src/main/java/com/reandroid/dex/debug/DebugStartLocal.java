@@ -23,6 +23,8 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliDebug;
+import com.reandroid.dex.smali.model.SmaliDebugLocal;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
@@ -66,7 +68,7 @@ public class DebugStartLocal extends DebugRegisterNumber {
         return (StringKey) this.mName.getKey();
     }
     public void setName(String name){
-        this.mName.setItem(StringKey.create(name));
+        this.setName(StringKey.create(name));
     }
     public void setName(StringKey key){
         this.mName.setItem(key);
@@ -119,6 +121,15 @@ public class DebugStartLocal extends DebugRegisterNumber {
         this.mName.setItem(coming.mName.getKey());
         this.mType.setItem(coming.mType.getKey());
     }
+
+    @Override
+    public void fromSmali(SmaliDebug smaliDebug) throws IOException {
+        super.fromSmali(smaliDebug);
+        SmaliDebugLocal smaliDebugLocal = (SmaliDebugLocal) smaliDebug;
+        setName(smaliDebugLocal.getName());
+        setType(smaliDebugLocal.getType());
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

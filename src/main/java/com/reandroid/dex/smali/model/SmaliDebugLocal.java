@@ -15,27 +15,22 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.debug.DebugElementType;
+import com.reandroid.dex.debug.DebugStartLocal;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.*;
 
 import java.io.IOException;
 
-public class SmaliDebugLocal extends SmaliDebug implements SmaliRegion {
+public class SmaliDebugLocal extends SmaliDebugRegister{
 
-    private final SmaliRegisterSet registerSet;
     private StringKey name;
     private TypeKey type;
     private StringKey signature;
 
     public SmaliDebugLocal(){
         super();
-        this.registerSet = new SmaliRegisterSet();
-        registerSet.setParent(this);
-    }
-
-    public SmaliRegisterSet getRegisterSet() {
-        return registerSet;
     }
 
     public StringKey getName() {
@@ -57,16 +52,22 @@ public class SmaliDebugLocal extends SmaliDebug implements SmaliRegion {
     public void setSignature(StringKey signature) {
         this.signature = signature;
     }
+    public boolean isExtended(){
+        return signature != null;
+    }
 
     @Override
-    public SmaliDirective getSmaliDirective() {
-        return SmaliDirective.LOCAL;
+    public DebugElementType<? extends DebugStartLocal> getDebugElementType() {
+        if(isExtended()){
+            return DebugElementType.START_LOCAL_EXTENDED;
+        }else {
+            return DebugElementType.START_LOCAL;
+        }
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        getSmaliDirective().append(writer);
-        getRegisterSet().append(writer);
+        super.append(writer);
         writer.append(", ");
         writer.appendOptional(getName());
         writer.append(':');
@@ -80,9 +81,7 @@ public class SmaliDebugLocal extends SmaliDebug implements SmaliRegion {
 
     @Override
     public void parse(SmaliReader reader) throws IOException {
-        reader.skipSpaces();
-        SmaliParseException.expect(reader, getSmaliDirective());
-        getRegisterSet().parse(reader);
+        super.parse(reader);
         reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, ',');
         reader.skipWhitespacesOrComment();
@@ -94,7 +93,7 @@ public class SmaliDebugLocal extends SmaliDebug implements SmaliRegion {
         reader.skipSpaces();
         if(reader.get() == ','){
             reader.skip(1);
-            reader.skipSpaces();
+            reader.skipWhitespacesOrComment();
             setSignature(StringKey.read(reader));
         }
     }

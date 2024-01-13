@@ -126,38 +126,43 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
             item.addUsageType(usageType);
         }
     }
-    public T getUniqueItem(ClassId classId) {
+    public T getUniqueItem(Block user) {
         T item = getItem();
         if(item == null){
             return null;
         }
-        if(item.isSharedUsage()){
+        if(item.isSharedItem(user)){
             item = createNewCopy();
         }
-        item.addClassUsage(classId);
+        item.addUniqueUser(user);
         return item;
     }
-    public T getOrCreateUniqueItem(ClassId classId) {
-        T item = getUniqueItem(classId);
+    public T getOrCreateUniqueItem(Block user) {
+        T item = getUniqueItem(user);
         if(item != null) {
             return item;
         }
         item = getBlockItem().createSectionItem(getSectionType());
         setItem(item);
-        addClassUsage(classId);
+        addUniqueUser(user);
         return item;
     }
-    public boolean isSharedUsage(){
+    public void addUniqueUser(Block user){
         T item = getItem();
         if(item != null){
-            return item.isSharedUsage();
+            item.addUniqueUser(user);
         }
-        return false;
     }
-    public void addClassUsage(ClassId classId){
-        T item = getItem();
+    private T createNewCopy() {
+        T itemNew = getBlockItem().createSectionItem(getSectionType());
+        copyToIfPresent(itemNew);
+        setItem(itemNew);
+        return itemNew;
+    }
+    private void copyToIfPresent(T itemNew){
+        T item = this.getItem();
         if(item != null){
-            item.addClassUsage(classId);
+            itemNew.copyFrom(item);
         }
     }
 
@@ -171,18 +176,6 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
         return Block.getInteger(getBytesInternal(), getOffset());
     }
 
-    private T createNewCopy() {
-        T itemNew = getBlockItem().createSectionItem(getSectionType());
-        copyToIfPresent(itemNew);
-        setItem(itemNew);
-        return itemNew;
-    }
-    private void copyToIfPresent(T itemNew){
-        T item = this.getItem();
-        if(item != null){
-            itemNew.copyFrom(item);
-        }
-    }
 
     public void replaceKeys(Key search, Key replace){
         Key key = getKey();

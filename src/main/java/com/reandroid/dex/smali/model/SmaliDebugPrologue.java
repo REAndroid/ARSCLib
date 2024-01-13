@@ -19,23 +19,12 @@ import com.reandroid.dex.debug.DebugElementType;
 import com.reandroid.dex.debug.DebugPrologue;
 import com.reandroid.dex.smali.*;
 
-import java.io.IOException;
-
 public class SmaliDebugPrologue extends SmaliDebug implements SmaliRegion {
 
     public SmaliDebugPrologue(){
         super();
     }
 
-    @Override
-    public void parse(SmaliReader reader) throws IOException {
-        reader.skipWhitespacesOrComment();
-        SmaliParseException.expect(reader, getSmaliDirective());
-    }
-    @Override
-    public SmaliDirective getSmaliDirective() {
-        return SmaliDirective.PROLOGUE;
-    }
     @Override
     public DebugElementType<DebugPrologue> getDebugElementType() {
         return DebugElementType.PROLOGUE;

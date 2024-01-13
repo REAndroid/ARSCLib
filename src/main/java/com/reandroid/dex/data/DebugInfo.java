@@ -52,7 +52,7 @@ public class DebugInfo extends DataItem implements KeyItemCreate {
 
         addChild(0, lineStart);
         addChild(1, debugParameterCount);
-        // index = 2, parameter names
+        // index = 2, debugParametersArray
         addChild(3, debugSequence);
 
         this.debugKey = new DataKey<>(this);
@@ -81,7 +81,7 @@ public class DebugInfo extends DataItem implements KeyItemCreate {
 
     public int getParameterCount(){
         if(debugParametersArray != null){
-            return debugParametersArray.getCount();
+            return debugParametersArray.size();
         }
         return 0;
     }

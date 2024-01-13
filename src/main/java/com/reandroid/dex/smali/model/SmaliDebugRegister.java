@@ -15,49 +15,40 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.common.Register;
 import com.reandroid.dex.debug.DebugElementType;
 import com.reandroid.dex.smali.*;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.InstanceIterator;
 
 import java.io.IOException;
-import java.util.Iterator;
 
-public abstract class SmaliDebug extends SmaliCode implements SmaliRegion {
-    public SmaliDebug(){
+public abstract class SmaliDebugRegister extends SmaliDebug  implements SmaliRegion {
+
+    private final SmaliRegisterSet registerSet;
+
+    public SmaliDebugRegister(){
         super();
+        this.registerSet = new SmaliRegisterSet();
+        registerSet.setParent(this);
     }
 
-    public int getAddress(){
-        return searchAddress();
+    public SmaliRegisterSet getRegisterSet() {
+        return registerSet;
     }
-    private int searchAddress(){
-        SmaliCodeSet codeSet = getCodeSet();
-        if(codeSet == null){
-            return -1;
-        }
-        Iterator<SmaliCode> iterator = codeSet.iterator(codeSet.indexOf(this) + 1);
-        SmaliInstruction next = CollectionUtil.getFirst(
-                InstanceIterator.of(iterator, SmaliInstruction.class));
-        if(next != null){
-            return next.getAddress();
-        }
-        return -1;
+    public Register getRegister(){
+        return getRegisterSet().getRegister(0);
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        getSmaliDirective().append(writer);
+        super.append(writer);
+        getRegisterSet().append(writer);
     }
 
     @Override
     public void parse(SmaliReader reader) throws IOException {
-        reader.skipWhitespacesOrComment();
-        SmaliParseException.expect(reader, getSmaliDirective());
+        super.parse(reader);
+        getRegisterSet().parse(reader);
     }
 
-    public SmaliDirective getSmaliDirective() {
-        return getDebugElementType().getSmaliDirective();
-    }
     public abstract DebugElementType<?> getDebugElementType();
 }
