@@ -411,6 +411,36 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         StringValue value = (StringValue) valueBlock;
         value.setString(typeKey.getSimpleInnerName());
     }
+    public void fixAccessibility(){
+        ClassId classId = getId();
+        Iterator<IdItem> iterator = classId.usedIds();
+        while (iterator.hasNext()){
+            Key key = iterator.next().getKey();
+            fixAccessibility(key);
+        }
+    }
+    private void fixAccessibility(Key key){
+        if(getKey().equals(key.getDeclaring())){
+            return;
+        }
+        DexFile dexFile = getDexFile();
+        if(dexFile == null){
+            return;
+        }
+        fixAccessibility(dexFile.getDexDeclaration(key));
+    }
+    private void fixAccessibility(DexDeclaration declaration){
+        if(declaration == null){
+            return;
+        }
+        if(!(declaration instanceof DexClass)){
+            fixAccessibility(declaration.getDexClass());
+        }
+        if(declaration.isAccessibleTo(this)){
+            return;
+        }
+        declaration.addAccessFlag(AccessFlag.PUBLIC);
+    }
     public AnnotationItem getDalvikInnerClass(){
         return getId().getDalvikInnerClass();
     }

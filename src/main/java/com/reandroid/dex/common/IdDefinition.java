@@ -30,7 +30,12 @@ public interface IdDefinition<T extends IdItem> {
     }
     void setAccessFlagsValue(int value);
     default void addAccessFlag(AccessFlag flag) {
-        setAccessFlagsValue(getAccessFlagsValue() | flag.getValue());
+        int current = getAccessFlagsValue();
+        int value = flag.getValue();
+        if((value & 0x7) != 0){
+            current = current & ~0x7;
+        }
+        setAccessFlagsValue(current | value);
     }
     default void removeAccessFlag(AccessFlag flag) {
         setAccessFlagsValue(getAccessFlagsValue() & ~flag.getValue());

@@ -37,6 +37,17 @@ public abstract class DexDeclaration extends Dex {
         }
         return !isPrivate();
     }
+    public boolean isAccessibleTo(DexClass dexClass) {
+        DexClass myClass = getDexClass();
+        TypeKey defining = dexClass.getDefining();
+        if(!myClass.isAccessibleTo(defining)){
+            return false;
+        }
+        if(myClass.getDefining().equals(defining)){
+            return true;
+        }
+        return myClass == this || isAccessibleTo(defining);
+    }
     public boolean isInternal() {
         return (getAccessFlagsValue() & 0x7) == 0;
     }
