@@ -35,7 +35,13 @@ public interface DexClassRepository {
     <T1 extends SectionItem> T1 getItem(SectionType<T1> sectionType, Key key);
 
     default Iterator<DexClass> getDexClasses(){
-        return getDexClasses((Predicate<? super TypeKey>)null);
+        return getDexClasses(null);
+    }
+    default Iterator<DexClass> getPackageClasses(String packageName){
+        return getPackageClasses(packageName, true);
+    }
+    default Iterator<DexClass> getPackageClasses(String packageName, boolean includeSubPackages){
+        return getDexClasses(key -> key.isPackage(packageName, includeSubPackages));
     }
     default DexMethod getDeclaredMethod(MethodKey methodKey){
         DexClass dexClass = getDexClass(methodKey.getDeclaring());

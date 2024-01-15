@@ -32,6 +32,7 @@ import com.reandroid.utils.io.FileUtil;
 import java.io.*;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -411,35 +412,32 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         StringValue value = (StringValue) valueBlock;
         value.setString(typeKey.getSimpleInnerName());
     }
-    public void fixAccessibility(){
+    public List<Key> fixAccessibility(){
+        DexClassRepository repository = getClassRepository();
+        if(repository == null){
+            return ArrayCollection.empty();
+        }
+        List<Key> results = new ArrayCollection<>();
         ClassId classId = getId();
+        Set<Key> checked = new HashSet<>();
+        checked.add(classId.getKey());
         Iterator<IdItem> iterator = classId.usedIds();
         while (iterator.hasNext()){
             Key key = iterator.next().getKey();
-            fixAccessibility(key);
+            if(checked.add(key)){
+                if(fixAccessibility(repository.getDexDeclaration(key))){
+                    results.add(key);
+                }
+            }
         }
+        return results;
     }
-    private void fixAccessibility(Key key){
-        if(getKey().equals(key.getDeclaring())){
-            return;
+    private boolean fixAccessibility(DexDeclaration declaration){
+        if(declaration != null && !declaration.isAccessibleTo(this)){
+            declaration.addAccessFlag(AccessFlag.PUBLIC);
+            return true;
         }
-        DexFile dexFile = getDexFile();
-        if(dexFile == null){
-            return;
-        }
-        fixAccessibility(dexFile.getDexDeclaration(key));
-    }
-    private void fixAccessibility(DexDeclaration declaration){
-        if(declaration == null){
-            return;
-        }
-        if(!(declaration instanceof DexClass)){
-            fixAccessibility(declaration.getDexClass());
-        }
-        if(declaration.isAccessibleTo(this)){
-            return;
-        }
-        declaration.addAccessFlag(AccessFlag.PUBLIC);
+        return false;
     }
     public AnnotationItem getDalvikInnerClass(){
         return getId().getDalvikInnerClass();

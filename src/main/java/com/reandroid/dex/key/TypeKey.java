@@ -30,7 +30,6 @@ import java.util.Iterator;
 public class TypeKey implements Key{
 
     private final String typeName;
-    private String packageName;
     private String simpleName;
 
     public TypeKey(String typeName) {
@@ -147,10 +146,20 @@ public class TypeKey implements Key{
         return !getSimpleName().equals(getSimpleInnerName());
     }
     public String getPackageName() {
-        if(packageName == null){
-            packageName = DexUtils.getPackageName(getTypeName());
+        return DexUtils.getPackageName(getTypeName());
+    }
+    public boolean isPackage(String packageName){
+        return isPackage(packageName, true);
+    }
+    public boolean isPackage(String packageName, boolean checkSubPackage) {
+        if(isPrimitive()){
+            return false;
         }
-        return packageName;
+        String name = getPackageName();
+        if(checkSubPackage){
+            return name.startsWith(packageName);
+        }
+        return name.equals(packageName);
     }
     public TypeKey getEnclosingClass(){
         String type = getTypeName();
@@ -362,6 +371,14 @@ public class TypeKey implements Key{
             return this;
         }
 
+        @Override
+        public boolean isPackage(String packageName) {
+            return false;
+        }
+        @Override
+        public boolean isPackage(String packageName, boolean checkSubPackage) {
+            return false;
+        }
         @Override
         public void append(SmaliWriter writer) {
         }
