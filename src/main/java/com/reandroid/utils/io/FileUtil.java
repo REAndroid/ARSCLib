@@ -300,6 +300,7 @@ public class FileUtil {
             " Kb",
             " Mb",
             " Gb",
+            " Tb",
             " Pb"
     };
 }
