@@ -16,6 +16,7 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.dex.base.DexException;
+import com.reandroid.dex.common.RegisterFormat;
 import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.debug.DebugLineNumber;
 import com.reandroid.dex.debug.DebugSequence;
@@ -128,6 +129,9 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
 
     public Opcode<?> getOpcode() {
         return opcode;
+    }
+    public RegisterFormat getRegisterFormat() {
+        return getOpcode().getRegisterFormat();
     }
 
     public int getCodeUnits(){

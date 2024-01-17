@@ -59,6 +59,9 @@ public class RegisterFormat {
     }
 
     public RegisterType get(int i){
+        if(isOut()){
+            return RegisterType.READ;
+        }
         return types[i];
     }
     public int getCount(){

@@ -15,27 +15,26 @@
  */
 package com.reandroid.dex.ins;
 
+public class InsConst16 extends Ins21s implements RegistersSet, ConstNumber {
 
-import com.reandroid.dex.common.RegisterFormat;
-
-public interface RegistersSet {
-    int getRegistersCount();
-    void setRegistersCount(int count);
-
-    int getRegister(int index);
-    void setRegister(int index, int value);
-
-    default boolean isRegistersRange(){
-        return false;
+    public InsConst16() {
+        super(Opcode.CONST_16);
     }
-    int getRegistersLimit();
-    default int getRegister() {
+
+    @Override
+    public int get() {
+        return getData();
+    }
+    @Override
+    public void set(int value) {
+        setData(value);
+    }
+    @Override
+    public int getRegister() {
         return getRegister(0);
     }
-    default void setRegister(int register){
+    @Override
+    public void setRegister(int register) {
         setRegister(0, register);
-    }
-    default RegisterFormat getRegisterFormat(){
-        return null;
     }
 }

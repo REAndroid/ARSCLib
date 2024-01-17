@@ -42,6 +42,12 @@ public class RegistersIterator implements SizedSupplier<RegisterReference>, Iter
     public int size() {
         return getRegistersSet().getRegistersCount();
     }
+    public void setSize(int size){
+        getRegistersSet().setRegistersCount(size);
+    }
+    public boolean isRange(){
+        return getRegistersSet().isRegistersRange();
+    }
     @Override
     public Iterator<RegisterReference> iterator() {
         return new IndexIterator<>(this);

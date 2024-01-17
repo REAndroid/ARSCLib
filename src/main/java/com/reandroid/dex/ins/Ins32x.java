@@ -33,11 +33,11 @@ public class Ins32x extends Size6Ins implements RegistersSet{
     }
     @Override
     public int getRegister(int index) {
-        return getShortUnsigned(2 + index);
+        return getShortUnsigned(2 + index * 2);
     }
     @Override
     public void setRegister(int index, int value) {
-        setShort(2 + index, value);
+        setShort(2 + index * 2, value);
     }
     @Override
     public int getRegistersLimit(){

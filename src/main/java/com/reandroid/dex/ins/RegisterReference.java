@@ -16,6 +16,7 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.dex.common.Register;
+import com.reandroid.dex.common.RegisterType;
 import com.reandroid.dex.common.RegistersTable;
 
 public class RegisterReference extends Register {
@@ -34,7 +35,7 @@ public class RegisterReference extends Register {
 
     @Override
     public int getNumber() {
-        int register = getRegisterValue();
+        int register = getValue();
         int local = getLocalRegistersCount();
         if(register >= local){
             register = register - local;
@@ -43,9 +44,9 @@ public class RegisterReference extends Register {
     }
     @Override
     public boolean isParameter() {
-        return getRegisterValue() >= getLocalRegistersCount();
+        return getValue() >= getLocalRegistersCount();
     }
-    public int getRegisterValue(){
+    public int getValue(){
         return getRegistersSet().getRegister(getIndex());
     }
     public void setRegisterValue(int register){
@@ -61,6 +62,9 @@ public class RegisterReference extends Register {
     }
     public RegistersSet getRegistersSet() {
         return registersSet;
+    }
+    public RegisterType getRegisterType(){
+        return getRegistersSet().getRegisterFormat().get(getIndex());
     }
 
     @Override
@@ -91,16 +95,16 @@ public class RegisterReference extends Register {
 
         public void apply(){
             RegisterReference baseRegisterReference = getBaseReg();
-            baseRegisterReference.setRegisterValue(getRegisterValue());
+            baseRegisterReference.setRegisterValue(getValue());
         }
         private boolean isChanged(){
             RegisterReference baseRegisterReference = getBaseReg();
             return this.isParameter() == baseRegisterReference.isParameter() &&
                     this.getNumber() == baseRegisterReference.getNumber() &&
-                    this.getRegisterValue() == baseRegisterReference.getRegisterValue();
+                    this.getValue() == baseRegisterReference.getValue();
         }
         @Override
-        public int getRegisterValue() {
+        public int getValue() {
             int register = getNumber();
             if(isParameter()){
                 register += getLocalRegistersCount();

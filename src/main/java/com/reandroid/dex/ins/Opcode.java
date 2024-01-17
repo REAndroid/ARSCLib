@@ -59,13 +59,13 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
     public static final Opcode<Ins11x> RETURN_WIDE;
     public static final Opcode<Ins11x> RETURN_OBJECT;
     public static final Opcode<InsConst4> CONST_4;
-    public static final Opcode<Ins21s> CONST_16;
+    public static final Opcode<InsConst16> CONST_16;
     public static final Opcode<InsConst> CONST;
     public static final Opcode<InsConst16High> CONST_HIGH16;
-    public static final Opcode<Ins21s> CONST_WIDE_16;
-    public static final Opcode<Ins31i> CONST_WIDE_32;
+    public static final Opcode<InsConstWide16> CONST_WIDE_16;
+    public static final Opcode<InsConstWide32> CONST_WIDE_32;
     public static final Opcode<InsConstWide> CONST_WIDE;
-    public static final Opcode<Ins21lh> CONST_WIDE_HIGH16;
+    public static final Opcode<InsConstWideHigh16> CONST_WIDE_HIGH16;
     public static final Opcode<InsConstString> CONST_STRING;
     public static final Opcode<InsConstStringJumbo> CONST_STRING_JUMBO;
     public static final Opcode<Ins21c> CONST_CLASS;
@@ -355,19 +355,19 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         values[0x11] = RETURN_OBJECT;
         CONST_4 = new Opcode<>(0x12, 2, "const/4", new InsConst4Creator(0x12));
         values[0x12] = CONST_4;
-        CONST_16 = new Opcode<>(0x13, 4, "const/16", new Ins21sCreator(0x13));
+        CONST_16 = new Opcode<>(0x13, 4, "const/16", new InsConst16Creator(0x13));
         values[0x13] = CONST_16;
         CONST = new Opcode<>(0x14, 6, "const", new InsConstCreator(0x14));
         values[0x14] = CONST;
         CONST_HIGH16 = new Opcode<>(0x15, 4, "const/high16", new InsConst16HighCreator(0x15));
         values[0x15] = CONST_HIGH16;
-        CONST_WIDE_16 = new Opcode<>(0x16, 4, "const-wide/16", new Ins21sCreator(0x16));
+        CONST_WIDE_16 = new Opcode<>(0x16, 4, "const-wide/16", new InsConstWide16Creator(0x16));
         values[0x16] = CONST_WIDE_16;
-        CONST_WIDE_32 = new Opcode<>(0x17, 6, "const-wide/32", new Ins31iCreator(0x17));
+        CONST_WIDE_32 = new Opcode<>(0x17, 6, "const-wide/32", new InsConstWide32Creator(0x17));
         values[0x17] = CONST_WIDE_32;
         CONST_WIDE = new Opcode<>(0x18, 10, "const-wide", new InsConstWideCreator(0x18));
         values[0x18] = CONST_WIDE;
-        CONST_WIDE_HIGH16 = new Opcode<>(0x19, 4, "const-wide/high16", new Ins21lhCreator(0x19));
+        CONST_WIDE_HIGH16 = new Opcode<>(0x19, 4, "const-wide/high16", new InsConstWideHigh16Creator(0x19));
         values[0x19] = CONST_WIDE_HIGH16;
         CONST_STRING = new Opcode<>(0x1a, 4, "const-string", SectionType.STRING_ID, new InsConstStringCreator(0x1a));
         values[0x1a] = CONST_STRING;
@@ -1214,8 +1214,8 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
             return RegisterFormat.READ;
         }
     }
-    static class Ins21lhCreator extends InsCreator<Ins21lh> {
-        Ins21lhCreator(int opcodeValue){
+    static class InsConstWideHigh16Creator extends InsCreator<InsConstWideHigh16> {
+        InsConstWideHigh16Creator(int opcodeValue){
             super(opcodeValue);
         }
 
@@ -1228,8 +1228,12 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
             return OperandType.HEX;
         }
         @Override
-        public Ins21lh newInstance() {
-            return new Ins21lh(getOpcode());
+        public InsConstWideHigh16 newInstance() {
+            return new InsConstWideHigh16();
+        }
+        @Override
+        Opcode<InsConstWideHigh16> getOpcode() {
+            return Opcode.CONST_WIDE_HIGH16;
         }
     }
     static class Ins21sCreator extends InsCreator<Ins21s> {
@@ -1248,6 +1252,52 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         @Override
         public Ins21s newInstance() {
             return new Ins21s(getOpcode());
+        }
+    }
+
+    static class InsConstWide16Creator extends InsCreator<InsConstWide16> {
+        InsConstWide16Creator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.HEX;
+        }
+        @Override
+        public InsConstWide16 newInstance() {
+            return new InsConstWide16();
+        }
+        @Override
+        Opcode<?> getOpcode() {
+            return Opcode.CONST_WIDE_16;
+        }
+    }
+    static class InsConst16Creator extends InsCreator<InsConst16> {
+
+        InsConst16Creator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.HEX;
+        }
+        @Override
+        public InsConst16 newInstance() {
+            return new InsConst16();
+        }
+        @Override
+        Opcode<InsConst16> getOpcode() {
+            return Opcode.CONST_16;
         }
     }
     static class Ins21tCreator extends InsCreator<Ins21t> {
@@ -1443,6 +1493,28 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         @Override
         public Ins31i newInstance() {
             return new Ins31i(getOpcode());
+        }
+    }
+    static class InsConstWide32Creator extends InsCreator<InsConstWide32> {
+        InsConstWide32Creator(int opcodeValue){
+            super(opcodeValue);
+        }
+
+        @Override
+        public RegisterFormat getRegisterFormat() {
+            return RegisterFormat.WRITE;
+        }
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.HEX;
+        }
+        @Override
+        public InsConstWide32 newInstance() {
+            return new InsConstWide32();
+        }
+        @Override
+        Opcode<InsConstWide32> getOpcode() {
+            return Opcode.CONST_WIDE_32;
         }
     }
     static class Ins32xCreator extends InsCreator<Ins32x> {

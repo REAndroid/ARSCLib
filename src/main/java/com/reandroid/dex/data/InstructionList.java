@@ -18,20 +18,25 @@ package com.reandroid.dex.data;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.common.ArraySupplier;
 import com.reandroid.dex.base.DexPositionAlign;
+import com.reandroid.dex.common.Register;
+import com.reandroid.dex.common.RegisterType;
+import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.debug.DebugLineNumber;
 import com.reandroid.dex.debug.DebugSequence;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.ins.*;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliMethod;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -84,6 +89,76 @@ public class InstructionList extends FixedBlockContainer implements
     public CodeItem getCodeItem() {
         return codeItem;
     }
+    public RegistersTable getRegistersTable(){
+        return getCodeItem();
+    }
+    public void addLocalRegisters(int amount){
+        addLocalRegisters(false, amount);
+    }
+    public void addLocalRegisters(boolean start, int amount){
+        RegistersTable registersTable = getRegistersTable();
+        Iterator<RegistersIterator> iterator = getRegistersIterators();
+        while (iterator.hasNext()){
+            RegistersIterator registersIterator = iterator.next();
+            int count;
+            if(registersIterator.isRange()){
+                count = 1;
+            }else {
+                count = registersIterator.size();
+            }
+            for(int i = 0; i < count; i++){
+                RegisterReference reference = registersIterator.get(i);
+                if(start || reference.isParameter()){
+                    reference.setRegisterValue(reference.getValue() + amount);
+                }
+            }
+        }
+        registersTable.setRegistersCount(registersTable.getRegistersCount() + amount);
+    }
+    public Iterator<Register> getLocalFreeRegisters(int startIndex){
+        RegistersTable registersTable = getRegistersTable();
+        int count = registersTable.getLocalRegistersCount();
+        Iterator<Register> iterator = new ArraySupplierIterator<>(new ArraySupplier<Register>() {
+            @Override
+            public Register get(int i) {
+                return new Register(i, false, registersTable);
+            }
+            @Override
+            public int getCount() {
+                return count;
+            }
+        });
+        return FilterIterator.of(iterator, reference -> {
+            int registerValue = reference.getValue();
+            return registerValue < count && isFreeRegister(registerValue, startIndex);
+        });
+    }
+    public boolean isFreeRegister(int registerValue, int startIndex){
+        Iterator<RegistersIterator> iterator = getRegistersIterators(startIndex);
+        while (iterator.hasNext()){
+            RegistersIterator registersIterator = iterator.next();
+            for(RegisterReference reference : registersIterator){
+                if(reference.getValue() == registerValue){
+                    return reference.getRegisterType() == RegisterType.WRITE;
+                }
+            }
+        }
+        return registerValue != getRegistersTable().getLocalRegistersCount();
+    }
+    private Iterator<RegisterReference> getRegisters(int startIndex){
+        return ExpandIterator.of(getRegistersIterators(startIndex));
+    }
+    private Iterator<RegistersIterator> getRegistersIterators(){
+        return getRegistersIterators(0);
+    }
+    private Iterator<RegistersIterator> getRegistersIterators(int start){
+        return ComputeIterator.of(iterator(start), ins -> {
+            if(ins instanceof SizeXIns){
+                return ((SizeXIns) ins).getRegistersIterator();
+            }
+            return null;
+        });
+    }
 
     public<T1 extends Ins> Iterator<T1> iterator(Opcode<T1> opcode){
         return iterator(opcode, null);
@@ -113,6 +188,10 @@ public class InstructionList extends FixedBlockContainer implements
     }
     public Iterator<Ins> iterator(int start, int size) {
         return getInsArray().iterator(start, size);
+    }
+    public Iterator<Ins> iterator(int start) {
+        BlockList<Ins> array = getInsArray();
+        return array.iterator(start, getCount() - start);
     }
     public Iterator<Ins> iteratorByAddress(int startAddress, int codeUnits) {
         Ins insStart = getAtAddress(startAddress);
@@ -159,6 +238,64 @@ public class InstructionList extends FixedBlockContainer implements
         updateAddresses();
         updateLabelAddress();
         reBuildExtraLines();
+    }
+    public ConstNumber createConstIntegerAt(int index, int value) {
+        return createConstIntegerAt(index, 0, value);
+    }
+    public ConstNumber createConstIntegerAt(int index, int register, int value) {
+        ConstNumber constNumber;
+        if(register <= 0x0f && value <= 0x7 && value >= -0x7){
+            constNumber = createAt(index, Opcode.CONST_4);
+        }else if(value <= 0x7fff && value >= -0x7fff){
+            constNumber = createAt(index, Opcode.CONST_16);
+        }else if((value & 0x0000ffff) == 0){
+            constNumber = createAt(index, Opcode.CONST_HIGH16);
+        }else {
+            constNumber = createAt(index, Opcode.CONST);
+        }
+        constNumber.setRegister(register);
+        constNumber.set(value);
+        return constNumber;
+    }
+    public ConstNumberLong createConstLongAt(int index, long value) {
+        return createConstLongAt(index, 0, value);
+    }
+    public ConstNumberLong createConstLongAt(int index, int register, long value) {
+        ConstNumberLong constNumber;
+        if((value & 0xffff00000000L) == 0){
+            constNumber = createAt(index, Opcode.CONST_WIDE_HIGH16);
+        }else if((value & 0xffff) == value){
+            constNumber = createAt(index, Opcode.CONST_WIDE_16);
+        }else if((value & 0xffffffffL) == value){
+            constNumber = createAt(index, Opcode.CONST_WIDE_32);
+        }else {
+            constNumber = createAt(index, Opcode.CONST_WIDE);
+        }
+        constNumber.setRegister(register);
+        constNumber.set(value);
+        return constNumber;
+    }
+    public ConstString createStringAt(int index, StringKey value) {
+        return createStringAt(index, 0, value);
+    }
+    public ConstString createStringAt(int index, String value) {
+        return createStringAt(index, 0, value);
+    }
+    public ConstString createStringAt(int index, int register, String value) {
+        return createStringAt(index, register, StringKey.create(value));
+    }
+    public ConstString createStringAt(int index, int register, StringKey value) {
+        ConstString constNumber;
+        StringId stringId = getCodeItem().getOrCreateSectionItem(SectionType.STRING_ID, value);
+        int id = stringId.getIdx();
+        if((id & 0xffff) == id){
+            constNumber = createAt(index, Opcode.CONST_STRING);
+        }else {
+            constNumber = createAt(index, Opcode.CONST_STRING_JUMBO);
+        }
+        constNumber.setRegister(register);
+        constNumber.setString(stringId);
+        return constNumber;
     }
     public<T1 extends Ins> T1 createAt(int index, Opcode<T1> opcode) {
         T1 item = opcode.newInstance();

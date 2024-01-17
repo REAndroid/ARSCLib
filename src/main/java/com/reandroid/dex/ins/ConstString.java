@@ -15,11 +15,19 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.key.StringKey;
+
 public interface ConstString {
 
     String getString();
-    void setString(String text);
+    void setString(StringKey key);
     int getRegister();
     void setRegister(int register);
-
+    default void setString(String text){
+        setString(StringKey.create(text));
+    }
+    default void setString(StringId id){
+        ((SizeXIns) this).setSectionId(id);
+    }
 }

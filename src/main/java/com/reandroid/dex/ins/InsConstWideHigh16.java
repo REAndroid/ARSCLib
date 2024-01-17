@@ -15,27 +15,35 @@
  */
 package com.reandroid.dex.ins;
 
+public class InsConstWideHigh16 extends Ins21lh implements ConstNumberLong{
 
-import com.reandroid.dex.common.RegisterFormat;
-
-public interface RegistersSet {
-    int getRegistersCount();
-    void setRegistersCount(int count);
-
-    int getRegister(int index);
-    void setRegister(int index, int value);
-
-    default boolean isRegistersRange(){
-        return false;
+    public InsConstWideHigh16(){
+        super(Opcode.CONST_WIDE_HIGH16);
     }
-    int getRegistersLimit();
-    default int getRegister() {
+
+    @Override
+    public int get() {
+        return getData();
+    }
+    @Override
+    public void set(int value) {
+        setData(value);
+    }
+    @Override
+    public void set(long value) {
+        setLong(value);
+    }
+    @Override
+    public long getLong() {
+        return getDataLong();
+    }
+
+    @Override
+    public int getRegister() {
         return getRegister(0);
     }
-    default void setRegister(int register){
+    @Override
+    public void setRegister(int register) {
         setRegister(0, register);
-    }
-    default RegisterFormat getRegisterFormat(){
-        return null;
     }
 }

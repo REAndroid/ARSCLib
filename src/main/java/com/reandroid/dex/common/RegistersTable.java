@@ -15,6 +15,10 @@
  */
 package com.reandroid.dex.common;
 
+import com.reandroid.dex.ins.RegistersSet;
+
+import java.util.Iterator;
+
 public interface RegistersTable {
 
     int getRegistersCount();
@@ -40,6 +44,19 @@ public interface RegistersTable {
             result += getLocalRegistersCount();
         }
         return result;
+    }
+    default Iterator<Register> getRegisters(RegistersSet registersSet) {
+        return new Iterator<Register>() {
+            private int mIndex;
+            @Override
+            public boolean hasNext() {
+                return mIndex < registersSet.getRegistersCount();
+            }
+            @Override
+            public Register next() {
+                return RegistersTable.this.getRegisterFor(registersSet.getRegister(mIndex++));
+            }
+        };
     }
 
 }

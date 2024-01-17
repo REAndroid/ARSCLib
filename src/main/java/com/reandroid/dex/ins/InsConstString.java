@@ -33,9 +33,10 @@ public class InsConstString extends Ins21c implements ConstString{
         return null;
     }
     @Override
-    public void setString(String string){
-        super.setSectionIdKey(StringKey.create(string));
+    public void setString(StringKey key) {
+        super.setSectionIdKey(key);
     }
+
     @Override
     public int getRegister() {
         return getRegister(0);
