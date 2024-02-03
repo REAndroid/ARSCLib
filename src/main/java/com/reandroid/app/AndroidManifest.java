@@ -50,7 +50,7 @@ public interface AndroidManifest {
     }
     default void setPlatformBuild(AndroidApiLevel apiLevel){
         setPlatformBuildVersionCode(apiLevel.getApi());
-        setPlatformBuildVersionName(apiLevel.getName());
+        setPlatformBuildVersionName(apiLevel.getVersion());
     }
     default AndroidApiLevel getCompileSdk(){
         Integer api = getCompileSdkVersion();
@@ -61,98 +61,94 @@ public interface AndroidManifest {
     }
     default void setCompileSdk(AndroidApiLevel apiLevel){
         setCompileSdkVersion(apiLevel.getApi());
-        setCompileSdkVersionCodename(apiLevel.getName());
+        setCompileSdkVersionCodename(apiLevel.getVersion());
     }
 
-    public static final int ID_name = ObjectsUtil.of(0x01010003);
-    public static final int ID_compileSdkVersion = ObjectsUtil.of(0x01010572);
-    public static final int ID_minSdkVersion = ObjectsUtil.of(0x0101020c);
-    public static final int ID_maxSdkVersion = ObjectsUtil.of(0x01010271);
-    public static final int ID_targetSdkVersion = ObjectsUtil.of(0x01010270);
-    public static final int ID_compileSdkVersionCodename = ObjectsUtil.of(0x01010573);
-    public static final int ID_authorities = ObjectsUtil.of(0x01010018);
-    public static final int ID_host = ObjectsUtil.of(0x01010028);
-    public static final int ID_configChanges = ObjectsUtil.of(0x0101001f);
-    public static final int ID_screenOrientation = ObjectsUtil.of(0x0101001e);
-    public static final int ID_extractNativeLibs = ObjectsUtil.of(0x010104ea);
-    public static final int ID_isSplitRequired = ObjectsUtil.of(0x01010591);
-    public static final int ID_isFeatureSplit = ObjectsUtil.of(0x0101055b);
-    public static final int ID_value = ObjectsUtil.of(0x01010024);
-    public static final int ID_resource = ObjectsUtil.of(0x01010025);
-    public static final int ID_versionCode = ObjectsUtil.of(0x0101021b);
-    public static final int ID_versionName = ObjectsUtil.of(0x0101021c);
-    public static final int ID_debuggable = ObjectsUtil.of(0x0101000f);
-    public static final int ID_icon = ObjectsUtil.of(0x01010002);
-    public static final int ID_roundIcon = ObjectsUtil.of(0x0101052c);
-    public static final int ID_label = ObjectsUtil.of(0x01010001);
-    public static final int ID_theme = ObjectsUtil.of(0x01010000);
-    public static final int ID_id = ObjectsUtil.of(0x010100d0);
-    public static final int ID_exported = ObjectsUtil.of(0x01010010);
+    int ID_authorities = ObjectsUtil.of(0x01010018);
+    int ID_compileSdkVersionCodename = ObjectsUtil.of(0x01010573);
+    int ID_compileSdkVersion = ObjectsUtil.of(0x01010572);
+    int ID_configChanges = ObjectsUtil.of(0x0101001f);
+    int ID_debuggable = ObjectsUtil.of(0x0101000f);
+    int ID_exported = ObjectsUtil.of(0x01010010);
+    int ID_extractNativeLibs = ObjectsUtil.of(0x010104ea);
+    int ID_host = ObjectsUtil.of(0x01010028);
+    int ID_icon = ObjectsUtil.of(0x01010002);
+    int ID_id = ObjectsUtil.of(0x010100d0);
+    int ID_isFeatureSplit = ObjectsUtil.of(0x0101055b);
+    int ID_isSplitRequired = ObjectsUtil.of(0x01010591);
+    int ID_label = ObjectsUtil.of(0x01010001);
+    int ID_maxSdkVersion = ObjectsUtil.of(0x01010271);
+    int ID_minSdkVersion = ObjectsUtil.of(0x0101020c);
+    int ID_name = ObjectsUtil.of(0x01010003);
+    int ID_resource = ObjectsUtil.of(0x01010025);
+    int ID_roundIcon = ObjectsUtil.of(0x0101052c);
+    int ID_screenOrientation = ObjectsUtil.of(0x0101001e);
+    int ID_targetActivity = ObjectsUtil.of(0x01010202);
+    int ID_targetSdkVersion = ObjectsUtil.of(0x01010270);
+    int ID_theme = ObjectsUtil.of(0x01010000);
+    int ID_value = ObjectsUtil.of(0x01010024);
+    int ID_versionCode = ObjectsUtil.of(0x0101021b);
+    int ID_versionName = ObjectsUtil.of(0x0101021c);
 
+    String NAME_authorities = ObjectsUtil.of("authorities");
+    String NAME_compileSdkVersionCodename = ObjectsUtil.of("compileSdkVersionCodename");
+    String NAME_compileSdkVersion = ObjectsUtil.of("compileSdkVersion");
+    String NAME_configChanges = ObjectsUtil.of("configChanges");
+    String NAME_coreApp = ObjectsUtil.of("coreApp");
+    String NAME_debuggable = ObjectsUtil.of("debuggable");
+    String NAME_exported = ObjectsUtil.of("exported");
+    String NAME_extractNativeLibs = ObjectsUtil.of("extractNativeLibs");
+    String NAME_host = ObjectsUtil.of("host");
+    String NAME_icon = ObjectsUtil.of("icon");
+    String NAME_id = ObjectsUtil.of("id");
+    String NAME_installLocation = ObjectsUtil.of("installLocation");
+    String NAME_isFeatureSplit = ObjectsUtil.of("isFeatureSplit");
+    String NAME_isSplitRequired = ObjectsUtil.of("isSplitRequired");
+    String NAME_label = ObjectsUtil.of("label");
+    String NAME_maxSdkVersion = ObjectsUtil.of("maxSdkVersion");
+    String NAME_minSdkVersion = ObjectsUtil.of("minSdkVersion");
+    String NAME_name = ObjectsUtil.of("name");
+    String NAME_PACKAGE = ObjectsUtil.of("package");
+    String NAME_platformBuildVersionCode = ObjectsUtil.of("platformBuildVersionCode");
+    String NAME_platformBuildVersionName = ObjectsUtil.of("platformBuildVersionName");
+    String NAME_requiredSplitTypes = ObjectsUtil.of("requiredSplitTypes");
+    String NAME_resource = ObjectsUtil.of("resource");
+    String NAME_roundIcon = ObjectsUtil.of("roundIcon");
+    String NAME_screenOrientation = ObjectsUtil.of("screenOrientation");
+    String NAME_split = ObjectsUtil.of("split");
+    String NAME_splitTypes = ObjectsUtil.of("splitTypes");
+    String NAME_targetActivity = ObjectsUtil.of("targetActivity");
+    String NAME_targetSdkVersion = ObjectsUtil.of("targetSdkVersion");
+    String NAME_theme = ObjectsUtil.of("theme");
+    String NAME_value = ObjectsUtil.of("value");
+    String NAME_versionCode = ObjectsUtil.of("versionCode");
+    String NAME_versionName = ObjectsUtil.of("versionName");
 
-    public static final String NAME_compileSdkVersion = ObjectsUtil.of("compileSdkVersion");
-    public static final String NAME_compileSdkVersionCodename = ObjectsUtil.of("compileSdkVersionCodename");
-    public static final String NAME_installLocation = ObjectsUtil.of("installLocation");
-    public static final String NAME_PACKAGE = ObjectsUtil.of("package");
-    public static final String NAME_split = ObjectsUtil.of("split");
-    public static final String NAME_coreApp = ObjectsUtil.of("coreApp");
-    public static final String NAME_platformBuildVersionCode = ObjectsUtil.of("platformBuildVersionCode");
-    public static final String NAME_platformBuildVersionName = ObjectsUtil.of("platformBuildVersionName");
-    public static final String NAME_versionCode = ObjectsUtil.of("versionCode");
-    public static final String NAME_versionName = ObjectsUtil.of("versionName");
-    public static final String NAME_minSdkVersion = ObjectsUtil.of("minSdkVersion");
-    public static final String NAME_targetSdkVersion = ObjectsUtil.of("targetSdkVersion");
-    public static final String NAME_name = ObjectsUtil.of("name");
-    public static final String NAME_extractNativeLibs = ObjectsUtil.of("extractNativeLibs");
-    public static final String NAME_isSplitRequired = ObjectsUtil.of("isSplitRequired");
-    public static final String NAME_isFeatureSplit = ObjectsUtil.of("isFeatureSplit");
-    public static final String NAME_value = ObjectsUtil.of("value");
-    public static final String NAME_resource = ObjectsUtil.of("resource");
-    public static final String NAME_debuggable = ObjectsUtil.of("debuggable");
-    public static final String NAME_icon = ObjectsUtil.of("icon");
-    public static final String NAME_roundIcon = ObjectsUtil.of("roundIcon");
-    public static final String NAME_label = ObjectsUtil.of("label");
-    public static final String NAME_theme = ObjectsUtil.of("theme");
-    public static final String NAME_id = ObjectsUtil.of("id");
-    public static final String NAME_configChanges = ObjectsUtil.of("configChanges");
-    public static final String NAME_host = ObjectsUtil.of("host");
-    public static final String NAME_authorities = ObjectsUtil.of("authorities");
-    public static final String NAME_screenOrientation = ObjectsUtil.of("screenOrientation");
-    public static final String NAME_exported = ObjectsUtil.of("exported");
-    public static final String NAME_maxSdkVersion = ObjectsUtil.of("maxSdkVersion");
+    String TAG_action = ObjectsUtil.of("action");
+    String TAG_activity_alias = ObjectsUtil.of("activity-alias");
+    String TAG_activity = ObjectsUtil.of("activity");
+    String TAG_application = ObjectsUtil.of("application");
+    String TAG_category = ObjectsUtil.of("category");
+    String TAG_data = ObjectsUtil.of("data");
+    String TAG_intent_filter = ObjectsUtil.of("intent-filter");
+    String TAG_manifest = ObjectsUtil.of("manifest");
+    String TAG_meta_data = ObjectsUtil.of("meta-data");
+    String TAG_package = ObjectsUtil.of("package");
+    String TAG_permission = ObjectsUtil.of("permission");
+    String TAG_provider = ObjectsUtil.of("provider");
+    String TAG_receiver = ObjectsUtil.of("receiver");
+    String TAG_service = ObjectsUtil.of("service");
+    String TAG_uses_feature = ObjectsUtil.of("uses-feature");
+    String TAG_uses_library = ObjectsUtil.of("uses-library");
+    String TAG_uses_permission = ObjectsUtil.of("uses-permission");
+    String TAG_uses_sdk = ObjectsUtil.of("uses-sdk");
 
+    String VALUE_android_intent_action_MAIN = ObjectsUtil.of("android.intent.action.MAIN");
 
-    public static final String NAME_requiredSplitTypes = ObjectsUtil.of("requiredSplitTypes");
-    public static final String NAME_splitTypes = ObjectsUtil.of("splitTypes");
+    String FILE_NAME = ObjectsUtil.of("AndroidManifest.xml");
+    String FILE_NAME_BIN = ObjectsUtil.of("AndroidManifest.xml.bin");
+    String FILE_NAME_JSON = ObjectsUtil.of("AndroidManifest.xml.json");
 
-
-
-    public static final String TAG_action = ObjectsUtil.of("action");
-    public static final String TAG_activity = ObjectsUtil.of("activity");
-    public static final String TAG_activity_alias = ObjectsUtil.of("activity-alias");
-    public static final String TAG_application = ObjectsUtil.of("application");
-    public static final String TAG_category = ObjectsUtil.of("category");
-    public static final String TAG_data = ObjectsUtil.of("data");
-    public static final String TAG_intent_filter = ObjectsUtil.of("intent-filter");
-    public static final String TAG_manifest = ObjectsUtil.of("manifest");
-    public static final String TAG_meta_data = ObjectsUtil.of("meta-data");
-    public static final String TAG_package = ObjectsUtil.of("package");
-    public static final String TAG_permission = ObjectsUtil.of("permission");
-    public static final String TAG_provider = ObjectsUtil.of("provider");
-    public static final String TAG_receiver = ObjectsUtil.of("receiver");
-    public static final String TAG_service = ObjectsUtil.of("service");
-    public static final String TAG_uses_feature = ObjectsUtil.of("uses-feature");
-    public static final String TAG_uses_library = ObjectsUtil.of("uses-library");
-    public static final String TAG_uses_permission = ObjectsUtil.of("uses-permission");
-    public static final String TAG_uses_sdk = ObjectsUtil.of("uses-sdk");
-
-
-    public static final String VALUE_android_intent_action_MAIN = ObjectsUtil.of("android.intent.action.MAIN");
-
-    public static final String FILE_NAME = ObjectsUtil.of("AndroidManifest.xml");
-    public static final String FILE_NAME_BIN = ObjectsUtil.of("AndroidManifest.xml.bin");
-    public static final String FILE_NAME_JSON = ObjectsUtil.of("AndroidManifest.xml.json");
-
-    public static final String EMPTY_MANIFEST_TAG = ObjectsUtil.of("x");
+    String EMPTY_MANIFEST_TAG = ObjectsUtil.of("x");
 
 }
