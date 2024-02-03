@@ -15,6 +15,7 @@
  */
 package com.reandroid.xml;
 
+import com.reandroid.utils.collection.InstanceIterator;
 import com.reandroid.utils.io.IOUtil;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -22,10 +23,10 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.Comparator;
 import java.util.Iterator;
 
-public class StyleDocument extends XMLDocument implements StyleNode, Comparable<StyleDocument>{
+public class StyleDocument extends XMLDocument implements
+        SpanSet<StyleElement>, StyleNode, Comparable<StyleDocument>{
     public StyleDocument(){
         super();
     }
@@ -34,6 +35,15 @@ public class StyleDocument extends XMLDocument implements StyleNode, Comparable<
     }
     public Iterator<StyleElement> getElements(){
         return iterator(StyleElement.class);
+    }
+
+    @Override
+    public Iterator<StyleElement> getSpans() {
+        return InstanceIterator.of(recursiveNodes(), StyleElement.class);
+    }
+    // keep
+    public Iterator<StyleText> getStyleTexts() {
+        return InstanceIterator.of(recursiveNodes(), StyleText.class);
     }
 
     @Override
@@ -180,14 +190,5 @@ public class StyleDocument extends XMLDocument implements StyleNode, Comparable<
         return styleDocument;
     }
 
-    public static final Comparator<StyleDocument> COMPARATOR = (document1, document2) -> {
-        if(document1 == null && document2 == null){
-            return 0;
-        }
-        if(document1 == null){
-            return 1;
-        }
-        return document1.compareTo(document2);
-    };
     private static final XmlPullParser PARSER = XMLFactory.newPullParser();
 }

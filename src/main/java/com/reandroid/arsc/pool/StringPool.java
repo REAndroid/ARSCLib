@@ -109,7 +109,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         }
         StyleItem[] styles = styleArray.getChildes();
         for(StyleItem styleItem : styles){
-            styleItem.linkIfRequiredInternal();
+            styleItem.linkStringsInternal();
         }
     }
 
@@ -268,6 +268,40 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     public final StringGroup<T> get(String str){
         return mUniqueMap.get(str);
     }
+    public T getOrCreateForSpan(String str){
+        if(str == null){
+            str = "";
+        }
+        StringGroup<T> group = mUniqueMap.get(str);
+        T item;
+        if(group == null){
+            item = createNewString(str);
+            group = new StringGroup<>(mArrayStrings, str, item);
+            mUniqueMap.put(str, group);
+        }else if(group.size() == 0){
+            item = createNewString(str);
+            group.add(item);
+        }else {
+            item = null;
+            int styleCount = getStyleArray().getCount();
+            for(int i = 0; i < group.size(); i ++){
+                T groupItem = group.get(i);
+                if(groupItem.getIndex() >= styleCount){
+                    item = groupItem;
+                    break;
+                }
+            }
+            if(item == null){
+                item = createNewString(str);
+                group.add(item);
+            }
+        }
+        if(item.getParent() == null){
+            group.remove(item);
+            return getOrCreateForSpan(str);
+        }
+        return item;
+    }
     public T getOrCreate(String str){
         if(str == null){
             str = "";
@@ -348,7 +382,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         StyleItem[] styles = getStyles();
         if(styles!=null){
             for(StyleItem styleItem:styles){
-                styleItem.onDataLoaded();
+                styleItem.linkStringsInternal();
             }
         }
     }
@@ -378,12 +412,12 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     //Only for styled strings
     @Override
     public void fromJson(JSONArray json) {
-        if(json==null){
+        if(json == null){
             return;
         }
-        JsonStringPoolHelper<T> helper=new JsonStringPoolHelper<>(this);
-        helper.loadStyledStrings(json);
+        getStringsArray().fromJson(json);
         refresh();
+        refreshUniqueIdMap();
     }
 
 }

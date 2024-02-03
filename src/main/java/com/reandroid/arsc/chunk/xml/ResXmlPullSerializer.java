@@ -17,6 +17,7 @@ package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.model.ResourceLibrary;
+import com.reandroid.xml.XMLUtil;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
@@ -274,17 +275,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
 
     @Override
     public void entityRef(String text) throws IOException, IllegalArgumentException, IllegalStateException {
-        String decoded;
-        if("lt".equals(text)){
-            decoded = "<";
-        }else if("gt".equals(text)){
-            decoded = ">";
-        }else if("amp".equals(text)){
-            decoded = "&";
-        }else {
-            decoded = text;
-        }
-        appendText(decoded);
+        appendText(XMLUtil.decodeEntityRef(text));
     }
 
     @Override

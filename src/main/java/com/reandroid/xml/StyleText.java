@@ -29,6 +29,10 @@ public class StyleText extends XMLText implements StyleNode{
     }
     @Override
     public int getLength(){
+        return getTextLength();
+    }
+    @Override
+    public int getTextLength(){
         String text = getText();
         if(text != null){
             return text.length();

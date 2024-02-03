@@ -18,8 +18,8 @@ package com.reandroid.arsc.pool.builder;
 import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.array.StyleArray;
 import com.reandroid.arsc.item.StyleItem;
+import com.reandroid.arsc.item.StyleSpan;
 import com.reandroid.arsc.item.TableString;
-import com.reandroid.arsc.model.StyleSpanInfo;
 import com.reandroid.arsc.pool.TableStringPool;
 
 import java.util.*;
@@ -73,15 +73,8 @@ public class StringPoolMerger implements Comparator<String> {
             StyleItem createdStyle = styleArray.get(createdString.getIndex());
 
             StyleItem styleItem = tableString.getStyle();
-            for(StyleSpanInfo spanInfo:styleItem.getSpanInfoList()){
-                if(spanInfo!=null && createdStyle!=null){
-                    int tagReference = mapTags.get(spanInfo.getTag())
-                            .getIndex();
-                    createdStyle.addStylePiece(
-                            tagReference,
-                            spanInfo.getFirst(),
-                            spanInfo.getLast());
-                }
+            if(styleItem != null && createdStyle != null){
+                createdStyle.merge(styleItem);
             }
         }
         mMergedStyleStrings=styledStrings.size();
@@ -143,9 +136,9 @@ public class StringPoolMerger implements Comparator<String> {
             if(style==null){
                 continue;
             }
-            for(StyleSpanInfo spanInfo:style.getSpanInfoList()){
+            for(StyleSpan spanInfo:style){
                 if(spanInfo!=null){
-                    resultSet.add(spanInfo.getTag());
+                    resultSet.add(spanInfo.getString());
                 }
             }
         }

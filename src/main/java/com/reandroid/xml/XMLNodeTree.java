@@ -15,7 +15,6 @@
  */
 package com.reandroid.xml;
 
-import com.reandroid.common.Namespace;
 import com.reandroid.utils.collection.*;
 import com.reandroid.xml.base.NodeTree;
 import org.xmlpull.v1.XmlSerializer;
@@ -58,6 +57,9 @@ public abstract class XMLNodeTree extends XMLNode implements
     @Override
     public Iterator<XMLNode> iterator(){
         return new IndexIterator<>(this);
+    }
+    public Iterator<XMLNode> recursiveNodes(){
+        return RecursiveIterator.of(this, XMLNode::iterator);
     }
     @Override
     public int size(){

@@ -63,7 +63,7 @@ public class TableStringPool extends StringPool<TableString> {
         StyleItem styleItem = tableString.getStyle();
         styleItem.parse(document);
         updateUniqueIdMap(tableString);
-        styleItem.linkIfRequiredInternal();
+        styleItem.linkStringsInternal();
         return tableString;
     }
     private TableString createStyled(){

@@ -23,9 +23,10 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Collection;
 import java.util.Iterator;
 
-public class StyleElement extends XMLElement implements StyleNode{
+public class StyleElement extends XMLElement implements StyleNode, Span{
     public StyleElement(String name){
         super(name);
     }
@@ -62,6 +63,13 @@ public class StyleElement extends XMLElement implements StyleNode{
     public void addAttribute(StyleAttribute attribute){
         super.addAttribute(attribute);
     }
+    public void addAttributes(Collection<StyleAttribute> attributes){
+        if(attributes != null){
+            for(StyleAttribute attribute : attributes){
+                addAttribute(attribute);
+            }
+        }
+    }
     @Override
     public StyleAttribute getAttribute(String name){
         return (StyleAttribute) super.getAttribute(name);
@@ -75,7 +83,7 @@ public class StyleElement extends XMLElement implements StyleNode{
     }
     @Override
     public Iterator<StyleAttribute> getAttributes() {
-        return new IndexIterator<StyleAttribute>(new SizedSupplier<StyleAttribute>() {
+        return new IndexIterator<>(new SizedSupplier<StyleAttribute>() {
             @Override
             public int size() {
                 return getAttributeCount();
@@ -87,9 +95,54 @@ public class StyleElement extends XMLElement implements StyleNode{
         });
     }
 
-    public String getStyleableTag(){
+    public String getTagString(){
+        return getTagName() + getSpanAttributes();
+    }
+    public String getTagName(){
+        return getName();
+    }
+    public int getFirstChar(){
+        XMLNode parent = getRootParentNode();
+        int result = 0;
+        Iterator<XMLNode> itr = ((XMLNodeTree)parent).recursiveNodes();
+        while (itr.hasNext()){
+            XMLNode child = itr.next();
+            if(child == this){
+                break;
+            }
+            result += child.getTextLength();
+        }
+        return result;
+    }
+    public int getLastChar(){
+        int result = getFirstChar() + getLength();
+        if(result != 0){
+            result = result - 1;
+        }
+        return result;
+    }
+    public int getSpanOrder(){
+        XMLNode parent = getRootParentNode();
+        int result = 0;
+        Iterator<XMLNode> iterator = ((XMLNodeTree)parent).recursiveNodes();
+        while (iterator.hasNext()){
+            XMLNode child = iterator.next();
+            if(child == this){
+                break;
+            }
+            if(child instanceof StyleElement){
+                result ++;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public String getSpanAttributes() {
+        if(getAttributeCount() == 0){
+            return "";
+        }
         StringWriter writer = new StringWriter();
-        writer.write(getName());
         try {
             appendAttributes(writer, false, false);
             writer.flush();
@@ -98,42 +151,13 @@ public class StyleElement extends XMLElement implements StyleNode{
         }
         return writer.toString();
     }
-    public int getStart(){
-        XMLNode parent = getParentNode();
-        if(parent == null){
-            return 0;
-        }
-        int result = 0;
-        Iterator<XMLNode> itr = ((XMLNodeTree)parent).iterator();
-        while (itr.hasNext()){
-            XMLNode child = itr.next();
-            if(child == this){
-                break;
-            }
-            result += child.getLength();
-        }
-        return result;
-    }
-    public int getEnd(){
-        return getEnd(getStart());
-    }
-    private int getEnd(int start){
-        int result = start;
-        Iterator<XMLNode> itr = iterator();
-        while (itr.hasNext()){
-            XMLNode child = itr.next();
-            if(child == this){
-                break;
-            }
-            result += child.getLength();
-        }
-        if(result >= start){
-            result = result - 1;
-        }
-        return result;
-    }
     @Override
-    public int getLength(){
+    public StyleElement toElement() {
+        return this;
+    }
+
+    @Override
+    int getLength(){
         int result = 0;
         Iterator<XMLNode> itr = iterator();
         while (itr.hasNext()){
@@ -241,7 +265,7 @@ public class StyleElement extends XMLElement implements StyleNode{
 
     @Override
     public String toString(){
-        return "[" + getStart() + ", " + getEnd() + "] "
-                + getStyleableTag();
+        return "[" + getFirstChar() + ", " + getLastChar() + "] "
+                + getTagString();
     }
 }

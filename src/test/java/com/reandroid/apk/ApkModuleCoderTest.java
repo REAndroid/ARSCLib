@@ -4,8 +4,11 @@ import com.reandroid.TestUtils;
 import com.reandroid.arsc.base.BlockDiff;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.arsc.value.ResValue;
 import com.reandroid.utils.io.FileUtil;
+import com.reandroid.xml.StyleDocument;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -43,12 +46,16 @@ public class ApkModuleCoderTest {
         apkModule.getAndroidManifest().refreshFull();
 
         // Preserve generated apk for signing and install on device
-        File curDir = new File("test-apk");
-        File apk = new File(curDir, "encoded_xml.apk");
+        File apk = new File(TestUtils.getTesApkDirectory(), "encoded_xml.apk");
+        Entry entry = apkModule.getTableBlock().pickOne().getEntry(ResConfig.getDefault(), "string", "hello_world");
+        ResValue resValue = entry.getResValue();
+        StyleDocument doc = resValue.getValueAsStyleDocument();
+        String xml = doc.getXml();
+        xml.trim();
 
         apkModule_encoded.writeApk(apk);
         apkModule_encoded = ApkModule.loadApkFile(apk);
-        System.err.println("Generated apk: " + apk.getAbsolutePath());
+        TestUtils.log("Generated apk: " + apk.getAbsolutePath());
 
         FileUtil.deleteDirectory(mDir_xml);
         Assert.assertFalse("Failed to delete: " + mDir_xml, mDir_xml.exists());
@@ -78,11 +85,10 @@ public class ApkModuleCoderTest {
         apkModule.getAndroidManifest().refreshFull();
 
         // Preserve generated apk for signing and install on device
-        File curDir = new File("test-apk");
-        File apk = new File(curDir, "encoded_json.apk");
+        File apk = new File(TestUtils.getTesApkDirectory(), "encoded_json.apk");
 
         apkModule_encoded.writeApk(apk);
-        System.err.println("Generated apk: " + apk.getAbsolutePath());
+        TestUtils.log("Generated apk: " + apk.getAbsolutePath());
 
         apkModule_encoded = ApkModule.loadApkFile(apk);
         FileUtil.deleteDirectory(mDir_json);

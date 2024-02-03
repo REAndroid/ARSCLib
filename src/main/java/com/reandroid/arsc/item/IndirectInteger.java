@@ -13,12 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.base;
+package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.item.BlockItem;
-import com.reandroid.arsc.item.IndirectItem;
-import com.reandroid.arsc.item.IntegerReference;
 
 public class IndirectInteger extends IndirectItem<BlockItem> implements IntegerReference {
     public IndirectInteger(BlockItem blockItem, int offset){

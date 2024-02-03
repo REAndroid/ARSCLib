@@ -36,7 +36,7 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
         styleItem = newInstance();
         setItem(index, styleItem);
         styleItem.setNull(true);
-        styleItem.onDataLoaded();
+        styleItem.linkStringsInternal();
     }
     @Override
     public void clearChildes(){

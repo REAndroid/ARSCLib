@@ -17,6 +17,7 @@ package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.StringItem;
+import com.reandroid.arsc.item.StyleItem;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
@@ -137,6 +138,13 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     protected void refreshChildes(){
         // Not required
     }
+    private StyleArray getStyleArray(){
+        StringPool<?> stringPool = getParentInstance(StringPool.class);
+        if(stringPool != null){
+            return stringPool.getStyleArray();
+        }
+        return null;
+    }
     // Only styled strings
     @Override
     public JSONArray toJson() {
@@ -169,16 +177,26 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
     // Only styled strings
     @Override
     public void fromJson(JSONArray json) {
-        throw new IllegalArgumentException(getClass().getSimpleName()+".fromJson() NOT implemented");
+        int length;
+        if(json != null){
+            length = json.length();
+        }else {
+            length = 0;
+        }
+        setChildesCount(length);
+        StyleArray styleArray = getStyleArray();
+        if(styleArray == null){
+            throw new NullPointerException("Null StyleArray");
+        }
+        styleArray.setChildesCount(length);
+        if(length == 0){
+            return;
+        }
+        for(int i = 0; i < length; i++){
+            JSONObject jsonObject = json.getJSONObject(i);
+            StringItem stringItem = get(i);
+            StyleItem styleItem = styleArray.get(i);
+            stringItem.fromJson(jsonObject, styleItem);
+        }
     }
-
-    public static final Comparator<StringItem> COMPARATOR = (stringItem1, stringItem2) -> {
-        if(stringItem1 == stringItem2){
-            return 0;
-        }
-        if(stringItem1 == null){
-            return 1;
-        }
-        return stringItem1.compareTo(stringItem2);
-    };
 }

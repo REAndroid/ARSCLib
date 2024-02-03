@@ -18,11 +18,34 @@ package com.reandroid.xml;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.File;
 import java.io.IOException;
 
 public class XMLUtil {
-    public static String NEW_LINE="\n";
+
+    public static String decodeEntityRef(String text) {
+        if(text == null || text.length() == 0){
+            return "";
+        }
+        if("lt".equals(text)){
+            return "<";
+        }else if("gt".equals(text)){
+            return ">";
+        }else if("amp".equals(text)){
+            return  "&";
+        }else if("quot".equals(text)){
+            return  "\"";
+        }else if("apos".equals(text)){
+            return  "'";
+        }
+        if(text.charAt(0) == '#'){
+            try{
+                char ch = (char) Integer.parseInt(text.substring(1));
+                return String.valueOf(ch);
+            }catch (NumberFormatException ignored){
+            }
+        }
+        return text;
+    }
 
     public static String splitName(String name){
         if(name == null){
@@ -78,53 +101,6 @@ public class XMLUtil {
         str=str.replaceAll("<", "&lt;");
         str=str.replaceAll(">", "&gt;");
         return str;
-    }
-    public static String escapeQuote(String str){
-        if(str==null){
-            return null;
-        }
-        int i = str.indexOf('"');
-        if(i<0){
-            return str;
-        }
-        str=str.replaceAll("\"", "&quot;");
-        return str;
-    }
-    public static String unEscapeXmlChars(String str){
-        if(str==null){
-            return null;
-        }
-        int i=str.indexOf('&');
-        if(i<0){
-            return str;
-        }
-        str=str.replaceAll("&amp;", "&");
-        str=str.replaceAll("&lt;", "<");
-        str=str.replaceAll("&gt;", ">");
-        str=str.replaceAll("&quot;", "\"");
-        return str;
-    }
-    public static String trimQuote(String txt){
-        if(txt==null){
-            return null;
-        }
-        String tmp=txt.trim();
-        if(tmp.length()==0){
-            return txt;
-        }
-        char c1=tmp.charAt(0);
-        if(c1!='"'){
-            return txt;
-        }
-        int end=tmp.length()-1;
-        c1=tmp.charAt(end);
-        if(c1!='"'){
-            return txt;
-        }
-        if(end<=1){
-            return "";
-        }
-        return tmp.substring(1,end);
     }
     public static String toEventName(int eventType){
         String[] types = EVENT_TYPES;

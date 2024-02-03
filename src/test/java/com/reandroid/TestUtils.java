@@ -7,6 +7,9 @@ import java.io.File;
 
 public class TestUtils {
 
+    public static File getTesApkDirectory(){
+        return new File("test-apk");
+    }
     public static File getTempDir(){
         File dir = null;
         Throwable throwable = null;
@@ -20,5 +23,7 @@ public class TestUtils {
         Assert.assertTrue("Failed to create temp sub dir: " + dir, dir.exists() || dir.mkdirs());
         return dir;
     }
-
+    public static void log(String message){
+        System.out.println(message);
+    }
 }

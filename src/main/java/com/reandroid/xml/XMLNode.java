@@ -15,12 +15,14 @@
   */
 package com.reandroid.xml;
 
+import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.xml.base.Node;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Iterator;
 
 public abstract class XMLNode implements Node {
 
@@ -33,9 +35,22 @@ public abstract class XMLNode implements Node {
     int getLength(){
         return 0;
     }
+    int getTextLength(){
+        return 0;
+    }
     abstract XMLNode newCopy(XMLNode parent);
     public XMLNode getParentNode(){
         return mParent;
+    }
+    public XMLNode getRootParentNode(){
+        XMLNode parent = getParentNode();
+        if(parent != null){
+            return parent.getRootParentNode();
+        }
+        return this;
+    }
+    public Iterator<XMLNode> iterator(){
+        return EmptyIterator.of();
     }
     public void removeSelf(){
         XMLNode parent = getParentNode();

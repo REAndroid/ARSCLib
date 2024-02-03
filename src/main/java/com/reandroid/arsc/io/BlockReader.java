@@ -58,6 +58,13 @@ public class BlockReader extends InputStream {
         seek(pos);
         return toShort(bts, 0);
     }
+    public int readInteger() throws IOException {
+        int pos = getPosition();
+        byte[] bytes = new byte[4];
+        readFully(bytes);
+        seek(pos);
+        return toInt(bytes, 0);
+    }
     public SpecHeader readSpecHeader() throws IOException{
         SpecHeader specHeader = new SpecHeader();
         if(available() < specHeader.countBytes()){

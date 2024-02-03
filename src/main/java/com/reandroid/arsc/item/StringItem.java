@@ -20,6 +20,7 @@ import com.reandroid.arsc.coder.ThreeByteCharsetDecoder;
 import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.StringPool;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -290,7 +291,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         if(styleItem==null){
             return false;
         }
-        return styleItem.getSpanInfoList().size()>0;
+        return styleItem.size()>0;
     }
     public StyleItem getStyle(){
         StringPool<?> stringPool = getParentInstance(StringPool.class);
@@ -355,9 +356,11 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
     }
     @Override
     public void fromJson(JSONObject json) {
-        String str = json.getString(NAME_string);
-        set(str);
         throw new IllegalArgumentException("Not implemented");
+    }
+    public void fromJson(JSONObject json, StyleItem styleItem) {
+        set(json.getString(NAME_string));
+        styleItem.fromJson(json.getJSONObject(NAME_style));
     }
     @Override
     public String toString(){
@@ -510,6 +513,6 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
     private static final CharsetDecoder UTF16LE_DECODER = StandardCharsets.UTF_16LE.newDecoder();
     private static final CharsetDecoder DECODER_3B = ThreeByteCharsetDecoder.INSTANCE;
 
-    public static final String NAME_string="string";
-    public static final String NAME_style="style";
+    public static final String NAME_string = ObjectsUtil.of("string");
+    public static final String NAME_style = ObjectsUtil.of("style");
 }
