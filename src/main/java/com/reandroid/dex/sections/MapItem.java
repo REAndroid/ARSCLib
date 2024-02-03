@@ -16,6 +16,7 @@
 package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.SectionItem;

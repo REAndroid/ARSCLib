@@ -19,7 +19,7 @@ import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.IndirectInteger;
+import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.key.Key;

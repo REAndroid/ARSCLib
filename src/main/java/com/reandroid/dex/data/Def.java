@@ -26,6 +26,7 @@ import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliRegion;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
@@ -94,6 +95,16 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         setItem(key);
     }
 
+    public AnnotationSet getOrCreateAnnotationSet(){
+        AnnotationSet annotationSet = CollectionUtil.getFirst(getAnnotations());
+        if(annotationSet != null){
+            return annotationSet;
+        }
+        AnnotationsDirectory directory = getOrCreateUniqueAnnotationsDirectory();
+        annotationSet = directory.createSectionItem(SectionType.ANNOTATION_SET);
+        directory.addAnnotation(this, annotationSet);
+        return annotationSet;
+    }
     public void addAnnotationSet(AnnotationSet annotationSet){
         AnnotationsDirectory directory = getOrCreateUniqueAnnotationsDirectory();
         addAnnotationSet(directory, annotationSet);

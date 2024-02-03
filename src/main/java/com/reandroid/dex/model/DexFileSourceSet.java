@@ -166,15 +166,15 @@ public class DexFileSourceSet implements Iterable<DexSource<DexFile>>{
             add(file);
         }
     }
-    public void add(File file) throws IOException {
-        add(DexSource.create(file));
+    public DexSource<DexFile> add(File file) throws IOException {
+        return add(DexSource.create(file));
     }
-    public void add(DexSource<DexFile> source) throws IOException {
+    public DexSource<DexFile> add(DexSource<DexFile> source) throws IOException {
         DexSource<DexFile> exist = sourceList.getElement(source);
         if(exist != null){
             if(exist == source){
                 load(source);
-                return;
+                return exist;
             }
             throw new IOException("Duplicate dex source: " + source);
         }
@@ -182,6 +182,7 @@ public class DexFileSourceSet implements Iterable<DexSource<DexFile>>{
         sourceList.remove(source);
         sourceList.add(source);
         sourceList.sort(CompareUtil.getComparableComparator());
+        return source;
     }
     public DexFile getDexFile(int index){
         if(index < 0 || index >= size()){

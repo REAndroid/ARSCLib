@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.id;
 
-import com.reandroid.dex.base.IndirectInteger;
+import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.*;
 import com.reandroid.dex.data.*;

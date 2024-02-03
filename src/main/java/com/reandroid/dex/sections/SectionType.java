@@ -23,7 +23,6 @@ import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.id.*;
 import com.reandroid.dex.data.*;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.ArrayIterator;
 
 import java.util.Comparator;
@@ -589,6 +588,7 @@ public class SectionType<T extends SectionItem> {
         public boolean isIdSection() {
             return true;
         }
+        @SuppressWarnings("unchecked")
         @Override
         public Section<T1> createSection(IntegerPair countAndOffset){
             if(this == SectionType.CLASS_ID){

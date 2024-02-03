@@ -67,7 +67,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
             dexClass.searchRequired(results);
         }
     }
-    private Iterator<TypeKey> usedTypes(){
+    public Iterator<TypeKey> usedTypes(){
         Iterator<Key> iterator = ComputeIterator.of(getId().usedIds(), IdItem::getKey);
         Iterator<Key> mentioned = new IterableIterator<Key, Key>(iterator) {
             @SuppressWarnings("unchecked")
@@ -392,7 +392,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         getId().refresh();
     }
     public void fixDalvikInnerClassName(){
-        AnnotationItem annotationItem = getDalvikInnerClass();
+        AnnotationItem annotationItem = getDalvikInnerClassAnnotation();
         if(annotationItem == null){
             return;
         }
@@ -439,7 +439,14 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         }
         return false;
     }
-    public AnnotationItem getDalvikInnerClass(){
+    public TypeKey getDalvikEnclosingClass(){
+        Key key = getId().getDalvikEnclosing();
+        if(key != null){
+            return key.getDeclaring();
+        }
+        return null;
+    }
+    public AnnotationItem getDalvikInnerClassAnnotation(){
         return getId().getDalvikInnerClass();
     }
 

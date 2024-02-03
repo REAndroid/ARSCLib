@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.base;
 
+import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.arsc.item.IntegerReference;
 

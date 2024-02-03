@@ -712,7 +712,10 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
         }
     }
     public void addFile(File file) throws IOException {
-        getDexSourceSet().add(file);
+        DexSource<DexFile> source = getDexSourceSet().add(file);
+        if(file.isFile()){
+            source.get().setDexDirectory(this);
+        }
     }
     public DexFile createDefault(){
         DexSource<DexFile> source = getDexSourceSet().createNext();
@@ -731,6 +734,9 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
     }
 
     public void rename(TypeKey search, TypeKey replace){
+        if(containsClass(replace)){
+            throw new RuntimeException("Duplicate: " + search + " --> " + replace);
+        }
         int count = 0;
         Iterator<?> iterator = renameTypes(search, replace, true, true);
         while (iterator.hasNext()){

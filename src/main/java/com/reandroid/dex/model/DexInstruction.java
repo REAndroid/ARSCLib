@@ -124,6 +124,9 @@ public class DexInstruction extends Dex {
     public DexInstruction replace(Opcode<?> opcode){
         return new DexInstruction(getDexMethod(), getIns().replace(opcode));
     }
+    public DexInstruction createNext(Opcode<?> opcode){
+        return new DexInstruction(getDexMethod(), getIns().createNext(opcode));
+    }
     public boolean removeSelf(){
         Ins ins = getIns();
         InstructionList instructionList = ins.getInstructionList();

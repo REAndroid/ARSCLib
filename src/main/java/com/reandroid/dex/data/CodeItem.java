@@ -16,6 +16,7 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.arsc.base.BlockRefresh;
+import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;

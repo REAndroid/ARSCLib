@@ -18,7 +18,7 @@ package com.reandroid.dex.data;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.base.IndirectInteger;
+import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.IdItem;

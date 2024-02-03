@@ -140,6 +140,9 @@ public class DexMethod extends DexDeclaration {
     public AnnotationItem getAnnotation(TypeKey typeKey){
         return CollectionUtil.getFirst(getAnnotations(typeKey));
     }
+    public AnnotationItem getOrCreateAnnotation(TypeKey typeKey){
+        return getDefinition().getOrCreateAnnotationSet().getOrCreate(typeKey);
+    }
     public Iterator<DexInstruction> getInstructions(Opcode<?> opcode) {
         return getInstructions(ins -> ins.getOpcode() == opcode);
     }
