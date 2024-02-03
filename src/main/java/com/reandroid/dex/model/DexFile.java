@@ -658,11 +658,23 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
     public static DexFile readStrings(BlockReader reader) throws IOException {
         DexLayout dexLayout = new DexLayout();
         dexLayout.readStrings(reader);
-        reader.close();
+        return new DexFile(dexLayout);
+    }
+    public static DexFile readClassIds(BlockReader reader) throws IOException {
+        DexLayout dexLayout = new DexLayout();
+        dexLayout.readClassIds(reader);
+        return new DexFile(dexLayout);
+    }
+    public static DexFile readSections(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
+        DexLayout dexLayout = new DexLayout();
+        dexLayout.readSections(reader, filter);
         return new DexFile(dexLayout);
     }
     public static DexFile readStrings(InputStream inputStream) throws IOException {
         return readStrings(new BlockReader(inputStream));
+    }
+    public static DexFile readClassIds(InputStream inputStream) throws IOException {
+        return readClassIds(new BlockReader(inputStream));
     }
 
     public static DexFile createDefault(){

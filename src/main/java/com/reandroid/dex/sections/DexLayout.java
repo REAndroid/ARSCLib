@@ -35,6 +35,7 @@ import com.reandroid.utils.io.FileUtil;
 
 import java.io.*;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 public class DexLayout extends FixedBlockContainer implements FullRefresh {
 
@@ -263,11 +264,19 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
         readStrings(reader);
     }
     public void readStrings(BlockReader reader) throws IOException {
-
-        getSectionList().readSections(reader, sectionType ->
+        readSections(reader, sectionType ->
                 sectionType == SectionType.STRING_ID ||
                         sectionType == SectionType.STRING_DATA);
-
+    }
+    public void readClassIds(BlockReader reader) throws IOException {
+        readSections(reader, sectionType ->
+                sectionType == SectionType.STRING_ID ||
+                        sectionType == SectionType.STRING_DATA||
+                        sectionType == SectionType.TYPE_ID||
+                        sectionType == SectionType.CLASS_ID);
+    }
+    public void readSections(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
+        getSectionList().readSections(reader, filter);
         reader.close();
     }
     public void read(File file) throws IOException {
