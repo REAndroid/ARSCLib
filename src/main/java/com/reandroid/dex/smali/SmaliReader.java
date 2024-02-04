@@ -502,10 +502,13 @@ public class SmaliReader {
         }
     }
     private static char decodeFourHex(SmaliReader reader){
-        int i = HexUtil.decodeHexChar(reader.read()) << 4;
-        i |= HexUtil.decodeHexChar(reader.read()) << 4;
-        i |= HexUtil.decodeHexChar(reader.read()) << 4;
-        i |= HexUtil.decodeHexChar(reader.read()) << 4;
+        int i = HexUtil.decodeHexChar(reader.read());
+        i = i << 4;
+        i |= HexUtil.decodeHexChar(reader.read());
+        i = i << 4;
+        i |= HexUtil.decodeHexChar(reader.read());
+        i = i << 4;
+        i |= HexUtil.decodeHexChar(reader.read());
         return (char) i;
     }
     public static SmaliReader of(String text){
