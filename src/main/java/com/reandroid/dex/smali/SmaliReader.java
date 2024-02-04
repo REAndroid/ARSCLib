@@ -127,38 +127,33 @@ public class SmaliReader {
     }
 
     public int readInteger() throws IOException{
-        StringBuilder builder = new StringBuilder();
-        int count = 0;
         byte signByte = get();
         boolean negative = signByte == '-';
         if(negative || signByte == '+'){
-            count ++;
+            skip(1);
         }
-        int pos = position() + count;
-        int end = pos + available();
-        for(int i = pos; i < end; i++){
-            byte b = get(i);
-            if(!isDigit(b)){
+        int result = 0;
+        int pos = position();
+        while (!finished()){
+            int i = base10Digit(read());
+            if(i == -1 || result < 0){
+                skip(-1);
                 break;
             }
-            char ch = (char) b;
-            builder.append(ch);
-            count ++;
+            result = result * 10;
+            result = result + i;
         }
-        offset(count);
-        if(count == 0){
-            throw new SmaliParseException("Not an integer character '" + getASCII(position())+ "'", this);
+        if(pos == position()){
+            throw new SmaliParseException("Invalid integer format", this);
         }
-        int value;
-        try{
-            value = Integer.parseInt(builder.toString());
-        }catch (NumberFormatException ex){
-            throw new SmaliParseException(ex.getMessage(), this);
+        if(result < 0){
+            skip(-1);
+            throw new SmaliParseException("Integer overflow", this);
         }
         if(negative){
-            value = -value;
+            result = -result;
         }
-        return value;
+        return result;
     }
     public byte[] readBytes(int length){
         byte[] bytes = getBytes(length);
@@ -332,12 +327,6 @@ public class SmaliReader {
         }
         return false;
     }
-    public boolean isLineEnd(){
-        if(finished()){
-            return true;
-        }
-        return isLineEnd(get());
-    }
     public boolean skipSpaces(){
         int pos = position();
         int nextPosition = pos;
@@ -392,6 +381,9 @@ public class SmaliReader {
         this.columnNumber = column;
     }
     public String getPositionPointer() {
+        if(finished()){
+            return "EOF";
+        }
         StringBuilder builder = new StringBuilder();
         int pos = position();
         int lineStart = pos;
@@ -409,6 +401,14 @@ public class SmaliReader {
             lineStart = pos - limit;
         }
         int end = indexOf(lineStart, (byte) '\n');
+        if(end < 0){
+            if(pos == 0){
+                end = lineStart;
+            }else {
+                end = pos;
+            }
+            end = end + available();
+        }
         if(end - pos > limit){
             end = pos + limit;
         }
@@ -455,8 +455,12 @@ public class SmaliReader {
                 return false;
         }
     }
-    private static boolean isDigit(byte b){
-        return b >= '0' && b <= '9';
+    private static int base10Digit(byte b){
+        int bound = '0';
+        if(b >= bound && b <= '9'){
+            return b - bound;
+        }
+        return -1;
     }
     private static boolean isNumber(byte b){
         if(b >= '0' && b <= '9'){
@@ -489,6 +493,10 @@ public class SmaliReader {
     }
     private static char decodeSkipped(SmaliReader reader, char ch){
         switch (ch){
+            case 'b':
+                return '\b';
+            case 'f':
+                return  '\f';
             case 'n':
                 return '\n';
             case 'r':

@@ -154,8 +154,20 @@ public class DexUtils {
         }
         return builder.toString();
     }
+    public static String encodeString(String text){
+        StringBuilder builder = new StringBuilder(text.length());
+        try {
+            encodeString(builder, text);
+        } catch (IOException ignored) {
+        }
+        return builder.toString();
+    }
     public static void appendQuotedString(Appendable appendable, String text) throws IOException {
         appendable.append('"');
+        encodeString(appendable, text);
+        appendable.append('"');
+    }
+    public static void encodeString(Appendable appendable, String text) throws IOException {
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
 
@@ -184,7 +196,6 @@ public class DexUtils {
             appendable.append(Character.forDigit((c >> 4) & 0x0f, 16));
             appendable.append(Character.forDigit(c & 0x0f, 16));
         }
-        appendable.append('"');
     }
     public static String quoteChar(char ch){
         StringBuilder builder = new StringBuilder();
@@ -205,6 +216,12 @@ public class DexUtils {
             return;
         } else if (ch <= 0x7f) {
             switch (ch) {
+                case '\b':
+                    appendable.append("'\\b'");
+                    return;
+                case '\f':
+                    appendable.append("'\\f'");
+                    return;
                 case '\n':
                     appendable.append("'\\n'");
                     return;
@@ -224,6 +241,67 @@ public class DexUtils {
         appendable.append(Character.forDigit((ch >> 4) & 0x0f, 16));
         appendable.append(Character.forDigit(ch & 0x0f, 16));
         appendable.append('\'');
+    }
+    public static String decodeString(String text) {
+        if(text.indexOf('\\') < 0){
+            return text;
+        }
+        StringBuilder sb = new StringBuilder();
+        int length = text.length();
+        boolean escaped = false;
+        for(int i = 0; i < length; i++){
+            char ch = text.charAt(i);
+            if(escaped){
+                escaped = false;
+                if(ch == 'u'){
+                    Character character = nextHex(text, i + 1);
+                    if(character != null){
+                        sb.append(character);
+                        i = i + 4;
+                        continue;
+                    }
+                }
+                sb.append(getEscaped(ch));
+            }else if(ch == '\\'){
+                escaped = true;
+            }else {
+                sb.append(ch);
+            }
+        }
+        return sb.toString();
+    }
+    private static char getEscaped(char ch){
+        switch(ch) {
+            case 'b':
+                return '\b';
+            case 'f':
+                return '\f';
+            case 'n':
+                return '\n';
+            case 'r':
+                return '\r';
+            case 't':
+                return '\t';
+            default:
+                return ch;
+        }
+    }
+    private static Character nextHex(String text, int start){
+        int length = text.length();
+        int end = start + 4;
+        if(end > length){
+            return null;
+        }
+        StringBuilder builder = new StringBuilder(4);
+        for(int i = start; i < end; i++){
+            builder.append(text.charAt(i));
+        }
+        try{
+            int i = Integer.parseInt(builder.toString(), 16);
+            return (char) i;
+        }catch (NumberFormatException ignored){
+            return null;
+        }
     }
     public static boolean isJavaFramework(String name){
         return name.startsWith("Ljava/");
@@ -459,18 +537,19 @@ public class DexUtils {
         if(className.length() < 3){
             return "";
         }
+        int start = 0;
+        while (className.charAt(start) == '['){
+            start ++;
+        }
         int i = className.lastIndexOf('/');
-        if(i >= 0){
-            return className.substring(0, i + 1);
+        if(i > start){
+            return className.substring(start, i + 1);
         }
-        i = 0;
-        while (className.charAt(i) == '[') {
-            i++;
-        }
+        i = start;
         if(className.charAt(i) == 'L'){
             i++;
         }
-        return className.substring(0, i);
+        return className.substring(start, i);
     }
     public static String toSourceFileName(String className){
         String simple = getSimpleName(className);

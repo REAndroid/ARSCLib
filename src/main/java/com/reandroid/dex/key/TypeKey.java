@@ -36,39 +36,6 @@ public class TypeKey implements Key{
         this.typeName = typeName;
     }
 
-    public String[] generateTypeNames(){
-        if(!isTypeObject()){
-            return new String[0];
-        }
-        TypeKey main = getDeclaring();
-        if(main != this){
-            return main.generateTypeNames();
-        }
-        return new String[]{
-                getDeclaringName(),
-                getSignatureTypeName(),
-                getArrayType(1),
-                getArrayType(2),
-                getArrayType(3)
-        };
-    }
-    public String[] generateInnerTypePrefix(){
-        if(!isTypeObject()){
-            return new String[0];
-        }
-        TypeKey main = getDeclaring();
-        if(main != this){
-            return main.generateInnerTypePrefix();
-        }
-        String type = getTypeName();
-        return new String[]{
-                type.replace(';', '$'),
-                getArrayType(1).replace(';', '$'),
-                getArrayType(2).replace(';', '$'),
-                getArrayType(3).replace(';', '$'),
-        };
-    }
-
     public String getTypeName() {
         return typeName;
     }
@@ -103,6 +70,12 @@ public class TypeKey implements Key{
     public String getSignatureTypeName() {
         return DexUtils.toSignatureType(getTypeName());
     }
+    public TypeKey setArrayDimension(int dimension){
+        if(dimension == getArrayDimension()){
+            return this;
+        }
+        return new TypeKey(getArrayType(dimension));
+    }
     public String getArrayType(int dimension){
         return DexUtils.makeArrayType(getTypeName(), dimension);
     }
@@ -129,10 +102,6 @@ public class TypeKey implements Key{
         return name.equals(TYPE_D.getTypeName()) || name.equals(TYPE_J.getTypeName());
     }
 
-    public TypeKey changePackageName(String packageName){
-        String type = getTypeName();
-        return new TypeKey(packageName + type.substring(getPackageName().length()));
-    }
     public String getSimpleName() {
         if(simpleName == null){
             simpleName = DexUtils.getSimpleName(getTypeName());
@@ -148,8 +117,49 @@ public class TypeKey implements Key{
     public String getPackageName() {
         return DexUtils.getPackageName(getTypeName());
     }
+    public String getPackageSourceName(){
+        String packageName = getPackageName();
+        int i = packageName.length() - 1;
+        if(i < 1){
+            return StringsUtil.EMPTY;
+        }
+        return packageName.substring(1, i).replace('/', '.');
+    }
+    public TypeKey renamePackage(String from, String to){
+        String packageName = getPackageName();
+        if(packageName.equals(from)){
+            return setPackage(packageName, to);
+        }
+        int i = from.length();
+        if(i == 1 || packageName.length() < i || !packageName.startsWith(from)){
+            return this;
+        }
+        return setPackage(packageName, packageName.replace(from, to));
+    }
+    public TypeKey setPackage(String packageName){
+        return setPackage(getPackageName(), packageName);
+    }
+    private TypeKey setPackage(String myPackage, String packageName){
+        if(myPackage.equals(packageName)){
+            return this;
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append(packageName);
+        int i = packageName.length() - 1;
+        if(i > 0 && packageName.charAt(i) != '/'){
+            builder.append('/');
+        }
+        builder.append(getSimpleName());
+        String name = getTypeName();
+        char postFix = name.charAt(name.length() - 1);
+        if(postFix == ';' || postFix == '<'){
+            builder.append(postFix);
+        }
+        TypeKey typeKey = new TypeKey(builder.toString());
+        return typeKey.setArrayDimension(getArrayDimension());
+    }
     public boolean isPackage(String packageName){
-        return isPackage(packageName, true);
+        return isPackage(packageName, !"L".equals(packageName));
     }
     public boolean isPackage(String packageName, boolean checkSubPackage) {
         if(isPrimitive()){
@@ -379,6 +389,15 @@ public class TypeKey implements Key{
         public boolean isPackage(String packageName, boolean checkSubPackage) {
             return false;
         }
+        @Override
+        public TypeKey setArrayDimension(int dimension) {
+            return this;
+        }
+        @Override
+        public TypeKey setPackage(String packageName) {
+            return this;
+        }
+
         @Override
         public void append(SmaliWriter writer) {
         }

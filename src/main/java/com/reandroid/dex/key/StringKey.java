@@ -40,6 +40,12 @@ public class StringKey implements Key{
     public String getString() {
         return text;
     }
+    public String getEncodedString() {
+        return DexUtils.encodeString(getString());
+    }
+    public String getQuoted() {
+        return DexUtils.quoteString(getString());
+    }
 
     @Override
     public boolean isPlatform() {
@@ -86,7 +92,7 @@ public class StringKey implements Key{
     }
     @Override
     public boolean equals(Object obj) {
-        if (this == obj || obj == ANY) {
+        if (this == obj) {
             return true;
         }
         if (!(obj instanceof StringKey)) {
@@ -101,7 +107,7 @@ public class StringKey implements Key{
     }
     @Override
     public String toString() {
-        return DexUtils.quoteString(getString());
+        return getQuoted();
     }
 
     public static StringKey create(String text){
@@ -111,6 +117,7 @@ public class StringKey implements Key{
         if(text.length() == 0){
             return EMPTY;
         }
+        text = DexUtils.decodeString(text);
         return new StringKey(text);
     }
     public static StringKey read(SmaliReader reader) throws IOException{
@@ -120,20 +127,6 @@ public class StringKey implements Key{
         SmaliParseException.expect(reader, '\"');
         return create(str);
     }
-    public static final StringKey EMPTY = new StringKey(StringsUtil.EMPTY);
 
-    public static final StringKey ANY = new StringKey(StringsUtil.EMPTY){
-        @Override
-        public boolean equals(Object obj) {
-            return obj == this;
-        }
-        @Override
-        public int hashCode() {
-            return -1;
-        }
-        @Override
-        public String toString() {
-            return StringsUtil.EMPTY;
-        }
-    };
+    public static final StringKey EMPTY = new StringKey(StringsUtil.EMPTY);
 }
