@@ -248,7 +248,7 @@ public class DocumentSerializer implements XmlSerializer {
     private void appendText(String text){
         XMLText xmlText = this.currentText;
         if(xmlText == null){
-            xmlText = new XMLText();
+            xmlText = this.document.newText();
             XMLNodeTree nodeTree = getCurrentNode();
             nodeTree.add(xmlText);
             this.currentText = xmlText;
