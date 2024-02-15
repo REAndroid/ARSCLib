@@ -42,7 +42,7 @@ public interface Span {
         boolean quoted = false;
         for (int i = 0; i < length; i++){
             char ch = attributes.charAt(i);
-            if(ch == '='){
+            if(ch == '=' && attribute == null){
                 if(builder != null){
                     attribute = new StyleAttribute(builder.toString(), "");
                     results.add(attribute);
