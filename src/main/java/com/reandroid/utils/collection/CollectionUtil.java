@@ -70,6 +70,16 @@ public class CollectionUtil {
         }
         return iterator.next();
     }
+    public static<T> T getSingle(Iterator<T> iterator){
+        T result = null;
+        if(iterator != null && iterator.hasNext()){
+            result = iterator.next();
+            if(iterator.hasNext()){
+                result = null;
+            }
+        }
+        return result;
+    }
     public static int count(Iterable<?> iterable){
         if(iterable == null || iterable instanceof EmptyItem){
             return 0;
