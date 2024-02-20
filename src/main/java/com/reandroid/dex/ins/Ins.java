@@ -122,6 +122,13 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
         }
         return instructionList.createAt(getIndex() + 1, opcodeArray);
     }
+    public void moveTo(int index){
+        InstructionList instructionList = getInstructionList();
+        if(instructionList == null){
+            throw new DexException("Parent " + getClass().getSimpleName() + " == null");
+        }
+        instructionList.moveTo(this, index);
+    }
 
     public boolean is(Opcode<?> opcode){
         return opcode == getOpcode();

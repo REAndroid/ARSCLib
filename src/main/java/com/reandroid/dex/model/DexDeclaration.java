@@ -72,6 +72,17 @@ public abstract class DexDeclaration extends Dex {
     public boolean isAbstract() {
         return AccessFlag.ABSTRACT.isSet(getAccessFlagsValue());
     }
+    public boolean hasAccessFlag(AccessFlag accessFlag) {
+        return accessFlag.isSet(getAccessFlagsValue());
+    }
+    public boolean hasAccessFlag(AccessFlag flag1, AccessFlag flag2) {
+        return hasAccessFlag(flag1) && hasAccessFlag(flag2);
+    }
+    public boolean hasAccessFlag(AccessFlag flag1, AccessFlag flag2, AccessFlag flag3) {
+        return hasAccessFlag(flag1) &&
+                hasAccessFlag(flag2) &&
+                hasAccessFlag(flag3);
+    }
 
     public abstract IdDefinition<?> getDefinition();
     public abstract Key getKey();

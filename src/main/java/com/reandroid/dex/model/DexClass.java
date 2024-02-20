@@ -302,6 +302,9 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     public boolean isInterface() {
         return AccessFlag.INTERFACE.isSet(getAccessFlagsValue());
     }
+    public boolean isEnum() {
+        return AccessFlag.ENUM.isSet(getAccessFlagsValue());
+    }
     public void decode(SmaliWriter writer, File outDir) throws IOException {
         File file = new File(outDir, toFilePath());
         File dir = file.getParentFile();

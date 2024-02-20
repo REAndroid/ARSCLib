@@ -90,7 +90,15 @@ public class DexInstruction extends Dex {
     public void setRegister(int i, int register){
         Ins ins = getIns();
         if(ins instanceof RegistersSet){
+            ensureRegistersCount(i + 1);
             ((RegistersSet) ins).setRegister(i, register);
+        }
+    }
+    private void ensureRegistersCount(int count){
+        if(count > getRegistersCount()){
+            if(getOpcode().getRegisterFormat().isOut()){
+                setRegistersCount(count);
+            }
         }
     }
     public void setRegistersCount(int count){
@@ -108,6 +116,9 @@ public class DexInstruction extends Dex {
     public boolean isNumber(){
         return getIns() instanceof ConstNumber;
     }
+    public boolean isNumberLong(){
+        return getIns() instanceof ConstNumberLong;
+    }
     public Integer getAsInteger(){
         Ins ins = getIns();
         if(ins instanceof ConstNumber){
@@ -115,10 +126,23 @@ public class DexInstruction extends Dex {
         }
         return null;
     }
+    public Long getAsLong(){
+        Ins ins = getIns();
+        if(ins instanceof ConstNumberLong){
+            return ((ConstNumberLong) ins).getLong();
+        }
+        return null;
+    }
     public void setAsInteger(int value){
         Ins ins = getIns();
         if(ins instanceof ConstNumber){
             ((ConstNumber) ins).set(value);
+        }
+    }
+    public void setAsLong(long value){
+        Ins ins = getIns();
+        if(ins instanceof ConstNumberLong){
+            ((ConstNumberLong) ins).set(value);
         }
     }
     public DexInstruction replace(Opcode<?> opcode){
@@ -157,6 +181,33 @@ public class DexInstruction extends Dex {
             }
         }
         return null;
+    }
+    public DexInstruction getNext(){
+        return getDexMethod().getInstruction(getIndex() + 1);
+    }
+    public DexInstruction getPrevious(){
+        return getDexMethod().getInstruction(getIndex() - 1);
+    }
+    public int getIndex(){
+        return getIns().getIndex();
+    }
+    public void moveBackward(){
+        int index = getIndex();
+        if(index != 0){
+            getIns().moveTo(index - 1);
+        }
+    }
+    public void moveForward(){
+        int index = getIndex() + 1;
+        if(index < getDexMethod().getInstructionsCount()){
+            getIns().moveTo(index);
+        }
+    }
+    public void moveTo(int index){
+        getIns().moveTo(index);
+    }
+    public void merge(DexInstruction other){
+        getIns().merge(other.getIns());
     }
 
     @Override

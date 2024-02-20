@@ -239,6 +239,22 @@ public class InstructionList extends FixedBlockContainer implements
         updateLabelAddress();
         reBuildExtraLines();
     }
+    public void moveTo(Ins ins, int index){
+        if(index == ins.getIndex()){
+            return;
+        }
+        if(index < 0){
+            throw new IndexOutOfBoundsException("Negative index: " + index);
+        }
+        if(index >= getCount()){
+            throw new IndexOutOfBoundsException("Size = " + getCount() + ", " + index);
+        }
+        reBuildExtraLines();
+        getInsArray().moveTo(ins, index);
+        updateAddresses();
+        updateLabelAddress();
+        reBuildExtraLines();
+    }
     public ConstNumber createConstIntegerAt(int index, int value) {
         return createConstIntegerAt(index, 0, value);
     }

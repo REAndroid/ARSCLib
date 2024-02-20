@@ -159,6 +159,9 @@ public class DexMethod extends DexDeclaration {
     public DexInstruction addInstruction(Opcode<?> opcode){
         return create(getDefinition().getOrCreateInstructionList().createNext(opcode));
     }
+    public DexInstruction createInstruction(int index, Opcode<?> opcode){
+        return create(getDefinition().getOrCreateInstructionList().createAt(index, opcode));
+    }
     public int getInstructionsCount(){
         return getDefinition().getInstructionsCount();
     }
