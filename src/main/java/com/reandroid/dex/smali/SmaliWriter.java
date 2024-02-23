@@ -317,7 +317,7 @@ public class SmaliWriter implements Appendable, Closeable {
     }
     public static String toStringSafe(SmaliFormat smaliFormat){
         if(smaliFormat == null){
-            return "null";
+            return "# null";
         }
         StringWriter stringWriter = new StringWriter();
         SmaliWriter writer = new SmaliWriter(stringWriter);
@@ -326,7 +326,7 @@ public class SmaliWriter implements Appendable, Closeable {
             writer.close();
             return stringWriter.toString();
         } catch (IOException exception) {
-            return exception.toString();
+            return "# " + exception.toString();
         }
     }
 
