@@ -25,8 +25,11 @@ public abstract class Dex implements SmaliFormat {
     public abstract DexClassRepository getClassRepository();
     @Override
     public abstract void append(SmaliWriter writer) throws IOException;
+    public String toSmaliString(){
+        return SmaliWriter.toStringSafe(this);
+    }
     @Override
     public String toString() {
-        return SmaliWriter.toStringSafe(this);
+        return toSmaliString();
     }
 }
