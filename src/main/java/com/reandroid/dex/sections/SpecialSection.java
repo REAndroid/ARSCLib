@@ -34,7 +34,8 @@ public class SpecialSection<T extends SpecialItem> extends Section<T> {
     }
 
     @Override
-    void clearUnused() {
+    int clearUnused() {
+        return 0;
     }
     @Override
     void clearUsageTypes() {

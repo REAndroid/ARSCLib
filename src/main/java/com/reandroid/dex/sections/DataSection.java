@@ -33,7 +33,8 @@ public class DataSection<T extends DataItem> extends Section<T> {
     }
 
     @Override
-    void clearUnused() {
+    int clearUnused() {
+        return 0;
     }
     @Override
     public T getSectionItem(int offset){

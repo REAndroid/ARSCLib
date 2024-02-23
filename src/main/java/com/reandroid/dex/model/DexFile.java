@@ -75,11 +75,17 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
             classId.setSourceFile(sourceFile);
         }
     }
-    public void shrink(){
-        getDexLayout().getSectionList().shrink();
+    public int shrink(){
+        return getDexLayout().getSectionList().shrink();
     }
-    public void clearDuplicateData(){
-        getDexLayout().getSectionList().clearDuplicateData();
+    public int clearDuplicateData(){
+        return getDexLayout().getSectionList().clearDuplicateData();
+    }
+    public int clearUnused(){
+        return getDexLayout().getSectionList().clearUnused();
+    }
+    public int clearEmptySections(){
+        return getDexLayout().getSectionList().clearEmptySections();
     }
     public void clearDebug(){
         Section<DebugInfo> debugInfoSection = getSection(SectionType.DEBUG_INFO);
@@ -118,12 +124,6 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
             }
         }
         return result;
-    }
-    public void clearUnused(){
-        getDexLayout().getSectionList().clearUnused();
-    }
-    public void clearEmptySections(){
-        getDexLayout().getSectionList().clearEmptySections();
     }
 
 
@@ -525,10 +525,7 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
         while (iterator.hasNext()){
             parseSmaliFile(iterator.next());
         }
-        refresh();
-        clearUnused();
-        clearDuplicateData();
-        clearEmptySections();
+        shrink();
     }
     public void parseSmaliFile(File file) throws IOException {
         fromSmali(SmaliReader.of(file));

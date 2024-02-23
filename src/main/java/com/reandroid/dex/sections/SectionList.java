@@ -92,12 +92,29 @@ public class SectionList extends FixedBlockContainer
         typeMap.put(SectionType.MAP_LIST, mapListSection);
     }
 
-    public void shrink(){
-        clearUnused();
-        clearDuplicateData();
+    public int shrink(){
+        int result = 0;
+        while (true) {
+            int count = clearUnused();
+            if(count == 0){
+                break;
+            }
+            result += count;
+        }
+        while (true) {
+            int count = clearDuplicateData();
+            if(count == 0){
+                break;
+            }
+            result += count;
+            result += clearUnused();
+        }
+        result += clearEmptySections();
+        return result;
     }
-    public void clearDuplicateData(){
+    public int clearDuplicateData(){
         refresh();
+        int result = 0;
         SectionType<?>[] remove = SectionType.getRemoveOrderList();
         for (SectionType<?> sectionType : remove) {
             Section<?> section = getSection(sectionType);
@@ -105,26 +122,36 @@ public class SectionList extends FixedBlockContainer
                 continue;
             }
             int count = section.getPool().clearDuplicates();
+            result += count;
             if(count == 0){
                 continue;
             }
             section.refresh();
         }
-        refresh();
+        if(result != 0){
+            refresh();
+        }
+        return result;
     }
-    public void clearUnused(){
+    public int clearUnused(){
         clearUsageTypes();
         refresh();
+        int result = 0;
         Iterator<Section<?>> iterator = getSections();
         while (iterator.hasNext()) {
-            iterator.next().clearUnused();
+            result += iterator.next().clearUnused();
         }
+        return result;
     }
-    public void clearEmptySections(){
+    public int clearEmptySections(){
+        int result = 0;
         List<Section<?>> sections = CollectionUtil.toList(getSections());
         for (Section<?> section : sections) {
-            section.removeIfEmpty();
+            if(section.removeIfEmpty()){
+                result ++;
+            }
         }
+        return result;
     }
     private void clearUsageTypes(){
         Iterator<Section<?>> iterator = getSections();

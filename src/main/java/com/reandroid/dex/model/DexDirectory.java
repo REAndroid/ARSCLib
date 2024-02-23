@@ -17,7 +17,6 @@ package com.reandroid.dex.model;
 
 import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.id.*;
@@ -25,16 +24,10 @@ import com.reandroid.dex.sections.Marker;
 import com.reandroid.dex.sections.MergeOptions;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.ins.*;
-import com.reandroid.dex.data.*;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.value.DexValueBlock;
-import com.reandroid.dex.value.DexValueType;
-import com.reandroid.dex.value.IntValue;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.IOUtil;
 import org.xmlpull.v1.XmlSerializer;
@@ -49,11 +42,8 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
     private final DexFileSourceSet dexSourceSet;
     private Object mTag;
 
-    private final Set<RClassParent> mRParents;
-
     public DexDirectory() {
         this.dexSourceSet = new DexFileSourceSet();
-        this.mRParents = new HashSet<>();
     }
 
     public Object getTag() {
@@ -146,10 +136,7 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
                 i ++;
             }
         }
-        for(DexFile dexFile : this){
-            dexFile.refresh();
-            dexFile.shrink();
-        }
+        shrink();
         directory.merge(options);
         getDexSourceSet().merge(directory.getDexSourceSet());
     }
@@ -171,11 +158,7 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
                 i ++;
             }
         }
-        for(DexFile dexFile : this){
-            dexFile.refresh();
-            dexFile.clearDuplicateData();
-            dexFile.clearUnused();
-        }
+        shrink();
     }
     private DexFile getLastNonEmpty(MergeOptions options, int limit){
         int size = size() - 1;
@@ -187,15 +170,26 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
         }
         return null;
     }
-    public void shrink(){
+    public int shrink(){
+        int result = 0;
         for(DexFile dexFile : this){
-            dexFile.shrink();
+            result += dexFile.shrink();
         }
+        return result;
     }
-    public void clearDuplicateData(){
+    public int clearDuplicateData(){
+        int result = 0;
         for(DexFile dexFile : this){
-            dexFile.clearDuplicateData();
+            result += dexFile.clearDuplicateData();
         }
+        return result;
+    }
+    public int clearUnused(){
+        int result = 0;
+        for(DexFile dexFile : this){
+            result += dexFile.clearUnused();
+        }
+        return result;
     }
     public void clearDebug(){
         for(DexFile dexFile : this){
@@ -206,11 +200,6 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
     public void cleanDuplicateDebugLines(){
         for(DexFile dexFile : this){
             dexFile.fixDebugLineNumbers();
-        }
-    }
-    public void clearUnused(){
-        for(DexFile dexFile : this){
-            dexFile.clearUnused();
         }
     }
     public Iterator<FieldKey> findEquivalentFields(FieldKey fieldKey){
@@ -269,270 +258,6 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
                 return element.getImplementClasses(typeKey);
             }
         };
-    }
-    private void replaceRIns(Ins ins) {
-        if(ins instanceof SizeXIns){
-            replaceR((SizeXIns) ins);
-        }else if(ins instanceof InsArrayData){
-            replaceR((InsArrayData) ins);
-        }
-    }
-    int mRCount;
-    private void replaceR(SizeXIns insConst) {
-        RField rField = getRField(insConst.getData());
-        if(rField == null){
-            return;
-        }
-        boolean replaced = DexFile.replaceRFields(rField, insConst);
-        if(!replaced){
-            return;
-        }
-        mRCount ++;
-        log(mRCount + ") " + HexUtil.toHex8(rField.getResourceId()) + " --> " + rField.getKey());
-    }
-
-    int mRArrayCount;
-    private void replaceR(InsArrayData insArrayData) {
-        if(!isAllResourceIds(insArrayData)){
-            return;
-        }
-        replaceFillArray(insArrayData);
-    }
-    private InstructionList mPrevInsList;
-    private int mPrevReg;
-    private void replaceFillArray(InsArrayData insArrayData){
-        InstructionList instructionList = insArrayData.getInstructionList();
-        int reg1 = 0;
-        if(mPrevInsList != instructionList){
-            RegistersEditor editor = instructionList.editRegisters();
-            reg1 = editor.getLocalRegistersCount();
-            if((reg1 & 0xffff00) != 0){
-                mPrevInsList = null;
-                //return;1
-            }
-            editor.addLocalRegistersCount(2);
-            editor.apply();
-        }else {
-            reg1 = mPrevReg;
-            System.err.println("Reuse*************************  " + reg1);
-        }
-        int reg2 = reg1 + 1;
-        mPrevReg = reg1;
-        mPrevInsList = instructionList;
-        int size = insArrayData.size();
-        Iterator<InsFillArrayData> iterator = insArrayData.getInsFillArrayData();
-        ArrayCollection<InsFillArrayData> fillList = ArrayCollection.of(iterator);
-        iterator = fillList.iterator();
-        while (iterator.hasNext()){
-            InsFillArrayData fillArrayData = iterator.next();
-            int fillArrayReg = fillArrayData.getRegister(0);
-            Ins last = fillArrayData;
-            for(int i = 0; i < size; i++){
-                int resourceId = insArrayData.getAsInteger(i);
-                RField rField = getRField(resourceId);
-                if(rField == null){
-                    continue;
-                }
-                Ins[] insArray = last.createNext(new Opcode[]{Opcode.SGET, Opcode.CONST, Opcode.APUT});
-
-                Ins21c insSget = (Ins21c) insArray[0];
-                insSget.setRegister(0, reg1);
-                insSget.setSectionIdKey(rField.getKey());
-
-                InsConst insConst = (InsConst) insArray[1];
-                insConst.setRegister(0, reg2);
-                insConst.setData(i);
-
-                Ins23x aput = (Ins23x) insArray[2];
-                aput.setRegister(0, insSget.getRegister(0));
-                aput.setRegister(1, fillArrayReg);
-                aput.setRegister(2, insConst.getRegister(0));
-
-                last = insArray[insArray.length - 1];
-
-                insArrayData.put(i, 0xfafbfcfe);
-
-                mRArrayCount ++;
-
-                System.err.println(mRArrayCount + ") "
-                        + ": [" + i + "] " + HexUtil.toHex8(resourceId) + " --> " + rField.getKey());
-
-            }
-            instructionList.remove(fillArrayData);
-        }
-        instructionList.remove(insArrayData);
-
-    }
-    private boolean isAllResourceIds(InsArrayData insArrayData){
-        if(insArrayData.getWidth() != 4){
-            return false;
-        }
-        int size = insArrayData.size();
-        if(size == 0){
-            return false;
-        }
-        boolean found = false;
-        for(int i = 0; i < size; i++){
-            int id = insArrayData.getAsInteger(i);
-            if(id == 0){
-                continue;
-            }
-            if(!hasRField(id)){
-                return false;
-            }
-            found = true;
-        }
-        return found;
-    }
-
-    public void replaceRIds(){
-        mRCount = 0;
-        mRArrayCount = 0;
-        log("\n\n --------------------- R ---------------------- \n");
-        replaceObfRFields();
-        log("Searching ins ...");
-        ArrayCollection<Ins> insList = ArrayCollection.of(searchRIns());
-        log("Found ins: " + insList.size());
-        for(Ins ins : insList){
-            replaceRIns(ins);
-        }
-        log("Total R const replaced = " + mRCount);
-        log("Total R array replaced = " + mRArrayCount);
-        log("\n\n --------------------- DONE ---------------------- \n");
-    }
-    private static void log(Object message){
-        System.err.println(message);
-    }
-    private final Map<FieldKey, FieldDef> mObfFields = new HashMap<>();
-    private void replaceObfRFields(){
-        mapObfRFields();
-        ArrayCollection<Ins> invokeList = ArrayCollection.of(FilterIterator.of(getInstructions(), this::isObfRInvoke));
-
-        log("OBF R Invokes = " + invokeList.size());
-        for(Ins ins : invokeList){
-            replaceObfRInvoke(ins);
-        }
-        log("DONE OBF R Invokes = " + invokeList.size());
-    }
-    private void replaceObfRInvoke(Ins ins){
-        Ins21c ins21c = (Ins21c) ins;
-        FieldKey fieldKey = (FieldKey) ins21c.getSectionIdKey();
-        FieldDef fieldDef = mObfFields.get(fieldKey);
-        IntValue intValue = (IntValue) fieldDef.getStaticInitialValue();
-        RField rField = getRField(intValue.get());
-        ins21c.setSectionIdKey(rField.getKey());
-    }
-    boolean isObfRInvoke(Ins ins) {
-        if(ins.getOpcode() != Opcode.SGET){
-            return false;
-        }
-        Ins21c ins21c = (Ins21c) ins;
-        FieldKey key = (FieldKey) ins21c.getSectionIdKey();
-        return mObfFields.containsKey(key);
-    }
-    private void mapObfRFields(){
-        log("Searching OBF R fields ...");
-        Map<FieldKey, FieldDef> obfFields = this.mObfFields;
-        obfFields.clear();
-        Iterator<FieldDef> iterator = new IterableIterator<ClassId, FieldDef>(searchObfRClasses()) {
-            @Override
-            public Iterator<FieldDef> iterator(ClassId element) {
-                return element.getClassData().getStaticFields();
-            }
-        };
-        while (iterator.hasNext()){
-            FieldDef fieldDef = iterator.next();
-            obfFields.put(fieldDef.getKey(), fieldDef);
-        }
-        log("OBF R fields = " + obfFields.size());
-    }
-    private Iterator<ClassId> searchObfRClasses() {
-        return FilterIterator.of(getClassIds(), this::isObfRClass);
-    }
-    boolean isObfRClass(ClassId classId){
-        String name = DexUtils.getSimpleName(classId.getName());
-        if(name.indexOf('$') >= 0 || name.equals("R") ){
-            return false;
-        }
-        ClassData classData = classId.getClassData();
-        if(classData == null){
-            return false;
-        }
-        Iterator<FieldDef> iterator = classData.getFields();
-        boolean found = false;
-        while (iterator.hasNext()){
-            FieldDef fieldDef = iterator.next();
-            if(!isObfRField(fieldDef)){
-                return false;
-            }
-            found = true;
-        }
-        return found;
-    }
-    private boolean isObfRField(FieldDef fieldDef){
-        if(!fieldDef.isStatic() || !fieldDef.isFinal()){
-            return false;
-        }
-        if(!"I".equals(fieldDef.getKey().getTypeName())){
-            return false;
-        }
-        DexValueBlock<?> valueBlock = fieldDef.getStaticInitialValue();
-        if(valueBlock == null || valueBlock.getValueType() != DexValueType.INT){
-            return false;
-        }
-        IntValue intValue = (IntValue) valueBlock;
-        return hasRField(intValue.get());
-    }
-    private Iterator<Ins> searchRIns() {
-        return FilterIterator.of(getInstructions(), this::hasRField);
-    }
-    boolean hasRField(Ins ins){
-        if(ins instanceof InsArrayData){
-            return isAllResourceIds((InsArrayData) ins);
-        }
-        if(!(ins instanceof SizeXIns)){
-            return false;
-        }
-        Opcode<?> opcode = ins.getOpcode();
-        if(opcode != Opcode.CONST && opcode != Opcode.CONST_HIGH16){
-            return false;
-        }
-        SizeXIns sizeXIns = (SizeXIns) ins;
-        return hasRField(sizeXIns.getData());
-    }
-    private boolean hasRField(int resourceId){
-        if(!PackageBlock.isResourceId(resourceId)){
-            return false;
-        }
-        for(RClassParent parent : mRParents){
-            if(parent.hasRField(resourceId)){
-                return true;
-            }
-        }
-        return false;
-    }
-    private RField getRField(int resourceId){
-        if(!PackageBlock.isResourceId(resourceId)){
-            return null;
-        }
-        for(RClassParent parent : mRParents){
-            RField rField = parent.getRField(resourceId);
-            if(rField != null){
-                return rField;
-            }
-        }
-        return null;
-    }
-    public void loadRClass(TableBlock tableBlock){
-        DexFile dexFile = getFirst();
-        if(dexFile == null){
-            return;
-        }
-        System.err.println("Creating R on: " + dexFile.getSimpleName());
-        for(PackageBlock packageBlock : tableBlock.listPackages()){
-            RClassParent rClassParent = dexFile.loadRClass(packageBlock);
-            mRParents.add(rClassParent);
-        }
     }
     public void save(File dir) throws IOException {
         dexSourceSet.saveAll(dir);
@@ -733,7 +458,7 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
         return dexSourceSet;
     }
 
-    public void rename(TypeKey search, TypeKey replace){
+    public int rename(TypeKey search, TypeKey replace){
         if(containsClass(replace)){
             throw new RuntimeException("Duplicate: " + search + " --> " + replace);
         }
@@ -743,11 +468,7 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
             iterator.next();
             count++;
         }
-        if(count == 0){
-            return;
-        }
-        //sortStrings();
-        //refresh();
+        return count;
     }
 
     public Iterator<StringId> renameTypes(TypeKey search, TypeKey replace){
