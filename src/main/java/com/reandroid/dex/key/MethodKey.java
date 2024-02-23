@@ -204,6 +204,89 @@ public class MethodKey implements Key{
         return CompareUtil.compare(getReturnTypeName(), key.getReturnTypeName());
     }
 
+    public boolean equalsIgnoreName(MethodKey other){
+        if(other == null){
+            return false;
+        }
+        if(other == this){
+            return true;
+        }
+        if(!KeyUtil.matches(getDeclaringName(), other.getDeclaringName())){
+            return false;
+        }
+        if(getNameParamsHashCode() != other.getNameParamsHashCode()){
+            return false;
+        }
+        int i = CompareUtil.compare(getParameterNames(), other.getParameterNames());
+        if(i != 0) {
+            return false;
+        }
+        return KeyUtil.matches(getReturnTypeName(), other.getReturnTypeName());
+    }
+    public boolean equalsName(MethodKey other){
+        if(other == null){
+            return false;
+        }
+        if(other == this){
+            return true;
+        }
+        return KeyUtil.matches(getName(), other.getName());
+    }
+    public boolean equalsName(String name){
+        return KeyUtil.matches(getName(), name);
+    }
+    public boolean equalsProto(MethodKey other){
+        if(other == null){
+            return false;
+        }
+        if(other == this){
+            return true;
+        }
+        if(getNameParamsHashCode() != other.getNameParamsHashCode()){
+            return false;
+        }
+        int i = CompareUtil.compare(getParameterNames(), other.getParameterNames());
+        if(i != 0) {
+            return false;
+        }
+        return KeyUtil.matches(getReturnTypeName(), other.getReturnTypeName());
+    }
+    public boolean equalsDeclaring(String declaring){
+        return KeyUtil.matches(getDeclaringName(), declaring);
+    }
+    public boolean equalsDeclaring(TypeKey declaring){
+        if(declaring == null){
+            return false;
+        }
+        return KeyUtil.matches(getDeclaringName(), declaring.getTypeName());
+    }
+    public boolean equalsDeclaring(MethodKey other){
+        if(other == null){
+            return false;
+        }
+        if(other == this){
+            return true;
+        }
+        return KeyUtil.matches(getDeclaringName(), other.getDeclaringName());
+    }
+    public boolean equalsReturnType(String returnTypeName){
+        return KeyUtil.matches(getReturnTypeName(), returnTypeName);
+    }
+    public boolean equalsReturnType(TypeKey returnType){
+        if(returnType == null){
+            return false;
+        }
+        return KeyUtil.matches(getReturnTypeName(), returnType.getTypeName());
+    }
+    public boolean equalsReturnType(MethodKey other){
+        if(other == null){
+            return false;
+        }
+        if(other == this){
+            return true;
+        }
+        return KeyUtil.matches(getReturnTypeName(), other.getReturnTypeName());
+    }
     @Override
     public boolean equals(Object obj) {
         return equals(obj, true, true);

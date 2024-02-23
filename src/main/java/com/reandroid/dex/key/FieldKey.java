@@ -151,6 +151,69 @@ public class FieldKey implements Key {
         return hash * 31 + getName().hashCode();
     }
 
+    public boolean equalsDeclaring(String declaring){
+        if(declaring == null){
+            return false;
+        }
+        return KeyUtil.matches(getDeclaringName(), declaring);
+    }
+    public boolean equalsDeclaring(TypeKey declaring){
+        if(declaring == null){
+            return false;
+        }
+        return KeyUtil.matches(getDeclaringName(), declaring.getTypeName());
+    }
+    public boolean equalsDeclaring(FieldKey other){
+        if(other == null){
+            return false;
+        }
+        if(other == this){
+            return true;
+        }
+        return KeyUtil.matches(getDeclaringName(), other.getDeclaringName());
+    }
+    public boolean equalsIgnoreName(FieldKey other){
+        if(other == null){
+            return false;
+        }
+        if(other == this){
+            return true;
+        }
+        if(!KeyUtil.matches(getDeclaringName(), other.getDeclaringName())){
+            return false;
+        }
+        return KeyUtil.matches(getTypeName(), other.getTypeName());
+    }
+    public boolean equalsName(FieldKey other){
+        if(other == null){
+            return false;
+        }
+        if(other == this){
+            return true;
+        }
+        return KeyUtil.matches(getName(), other.getName());
+    }
+    public boolean equalsName(String name){
+        return KeyUtil.matches(getName(), name);
+    }
+    public boolean equalsType(String returnTypeName){
+        return KeyUtil.matches(getTypeName(), returnTypeName);
+    }
+    public boolean equalsType(TypeKey returnType){
+        if(returnType == null){
+            return false;
+        }
+        return KeyUtil.matches(getTypeName(), returnType.getTypeName());
+    }
+    public boolean equalsType(FieldKey other){
+        if(other == null){
+            return false;
+        }
+        if(other == this){
+            return true;
+        }
+        return KeyUtil.matches(getTypeName(), other.getTypeName());
+    }
     @Override
     public boolean equals(Object obj) {
         return equals(obj, true, true);
