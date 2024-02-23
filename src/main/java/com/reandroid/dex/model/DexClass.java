@@ -262,6 +262,13 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         }
         return ComputeIterator.of(classData.getInstanceFields(), this::createField);
     }
+    public Iterator<DexMethod> getDeclaredMethods(Predicate<DexMethod> filter) {
+        Iterator<DexMethod> iterator = getDeclaredMethods();
+        if(filter == null){
+            return iterator;
+        }
+        return FilterIterator.of(iterator, filter);
+    }
     public Iterator<DexMethod> getDeclaredMethods() {
         return new CombiningIterator<>(getDirectMethods(), getVirtualMethods());
     }
@@ -304,6 +311,17 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     }
     public boolean isEnum() {
         return AccessFlag.ENUM.isSet(getAccessFlagsValue());
+    }
+    public Iterator<DexInstruction> getDexInstructions(){
+        return getDexInstructions(null);
+    }
+    public Iterator<DexInstruction> getDexInstructions(Predicate<DexMethod> filter){
+        return new IterableIterator<DexMethod, DexInstruction>(getDeclaredMethods(filter)) {
+            @Override
+            public Iterator<DexInstruction> iterator(DexMethod element) {
+                return element.getInstructions();
+            }
+        };
     }
     public void decode(SmaliWriter writer, File outDir) throws IOException {
         File file = new File(outDir, toFilePath());
