@@ -181,6 +181,38 @@ public class CollectionUtil {
         return (Predicate<T>) ACCEPT_ALL;
     }
     @SuppressWarnings("unchecked")
+    public static<T> Predicate<T> getRejectAll(){
+        return (Predicate<T>) REJECT_ALL;
+    }
+
+    public static<T> Predicate<T> orFilter(Predicate<T> filter1, Predicate<T> filter2){
+        if(filter1 == null || filter1 == getRejectAll()){
+            return filter2;
+        }
+        if(filter2 == null || filter2 == getRejectAll()){
+            return filter1;
+        }
+        return t -> (filter1.test(t) || filter2.test(t));
+    }
+    public static<T> Predicate<T> andFilter(Predicate<T> filter1, Predicate<T> filter2){
+        if(filter1 == null || filter1 == getAcceptAll()){
+            return filter2;
+        }
+        if(filter2 == null || filter2 == getAcceptAll()){
+            return filter1;
+        }
+        return t -> (filter1.test(t) && filter2.test(t));
+    }
+    public static<T> Predicate<T> negateFilter(Predicate<T> filter){
+        return t -> !filter.test(t);
+    }
+    public static<T> Predicate<T> diffFilter(Predicate<T> filter1, Predicate<T> filter2){
+        return t -> (filter1.test(t) != filter2.test(t));
+    }
+    public static<T> Predicate<T> equalFilter(Predicate<T> filter1, Predicate<T> filter2){
+        return t -> (filter1.test(t) == filter2.test(t));
+    }
+    @SuppressWarnings("unchecked")
     public static<T extends Comparable<T>> Comparator<T> getComparator(){
         return (Comparator<T>) COMPARABLE_COMPARATOR;
     }
@@ -193,4 +225,5 @@ public class CollectionUtil {
     };
 
     private static final Predicate<?> ACCEPT_ALL = (Predicate<Object>) o -> true;
+    private static final Predicate<?> REJECT_ALL = (Predicate<Object>) o -> false;
 }
