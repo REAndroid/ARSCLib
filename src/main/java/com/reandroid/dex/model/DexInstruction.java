@@ -16,10 +16,14 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.ins.*;
+import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
@@ -37,6 +41,20 @@ public class DexInstruction extends Dex {
         IdItem idItem = getIdSectionEntry();
         if(idItem instanceof StringId){
             return ((StringId) idItem).getString();
+        }
+        return null;
+    }
+    public FieldKey getFieldKey(){
+        IdItem idItem = getIdSectionEntry();
+        if(idItem instanceof FieldId){
+            return ((FieldId) idItem).getKey();
+        }
+        return null;
+    }
+    public MethodKey getMethodKey(){
+        IdItem idItem = getIdSectionEntry();
+        if(idItem instanceof MethodId){
+            return ((MethodId) idItem).getKey();
         }
         return null;
     }

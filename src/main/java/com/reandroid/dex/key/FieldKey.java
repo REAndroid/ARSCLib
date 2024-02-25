@@ -26,6 +26,7 @@ import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.function.Function;
 
 
 public class FieldKey implements Key {
@@ -40,10 +41,18 @@ public class FieldKey implements Key {
         this.type = type;
     }
 
+    @Deprecated
     public FieldKey changeDefining(TypeKey typeKey){
-        return changeDefining(typeKey.getTypeName());
+        return changeDeclaring(typeKey);
     }
+    @Deprecated
     public FieldKey changeDefining(String defining){
+        return changeDeclaring(defining);
+    }
+    public FieldKey changeDeclaring(TypeKey typeKey){
+        return changeDeclaring(typeKey.getTypeName());
+    }
+    public FieldKey changeDeclaring(String defining){
         if(defining.equals(getDeclaringName())){
             return this;
         }
@@ -77,6 +86,23 @@ public class FieldKey implements Key {
                 SingleIterator.of(getNameKey()),
                 SingleIterator.of(getType()));
     }
+
+    public FieldKey replaceTypes(Function<TypeKey, TypeKey> function) {
+
+        FieldKey result = this;
+
+        TypeKey typeKey = getDeclaring();
+        typeKey = typeKey.changeTypeName(function.apply(typeKey));
+
+        result = result.changeDeclaring(typeKey);
+
+        typeKey = getType();
+        typeKey = typeKey.changeTypeName(function.apply(typeKey));
+
+        result = result.changeType(typeKey);
+
+        return result;
+    }
     @Override
     public Key replaceKey(Key search, Key replace) {
         FieldKey result = this;
@@ -84,7 +110,7 @@ public class FieldKey implements Key {
             return replace;
         }
         if(search.equals(result.getDeclaring())){
-            result = result.changeDefining((TypeKey) replace);
+            result = result.changeDeclaring((TypeKey) replace);
         }
         if(search.equals(result.getType())){
             result = result.changeType((TypeKey) replace);

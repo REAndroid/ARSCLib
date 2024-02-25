@@ -125,6 +125,15 @@ public class TypeKey implements Key{
         }
         return packageName.substring(1, i).replace('/', '.');
     }
+    public TypeKey changeTypeName(String typeName){
+        return changeTypeName(create(typeName));
+    }
+    public TypeKey changeTypeName(TypeKey typeKey){
+        if(this.equals(typeKey)){
+            return this;
+        }
+        return typeKey.setArrayDimension(getArrayDimension());
+    }
     public TypeKey renamePackage(String from, String to){
         String packageName = getPackageName();
         if(packageName.equals(from)){

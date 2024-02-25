@@ -217,7 +217,7 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
 
         Iterator<FieldKey> subKeys = ComputeIterator.of(getSubTypes(defining.getKey()),
                 dexClass -> {
-                    FieldKey key = definingKey.changeDefining(dexClass.getKey());
+                    FieldKey key = definingKey.changeDeclaring(dexClass.getKey());
                     DexField field = dexClass.getField(key);
                     if(definingKey.equals(field.getKey())){
                         return key;
@@ -674,7 +674,7 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
         Iterator<DexClass> iterator = startClass.getOverridingAndSuperTypes();
         while (iterator.hasNext()){
             DexClass dexClass = iterator.next();
-            FieldKey key = fieldKey.changeDefining(dexClass.getKey());
+            FieldKey key = fieldKey.changeDeclaring(dexClass.getKey());
             if(fieldKey.equals(key)){
                 return true;
             }

@@ -29,6 +29,7 @@ import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.function.Function;
 
 public class MethodKey implements Key{
 
@@ -75,6 +76,20 @@ public class MethodKey implements Key{
             return this;
         }
         return new MethodKey(getDeclaringName(), getName(), parameters, getReturnTypeName());
+    }
+    public MethodKey changeParameter(int index, TypeKey parameter){
+        return changeParameter(index, parameter.getTypeName());
+    }
+    public MethodKey changeParameter(int index, String parameter){
+        if(parameter.equals(getParameter(index))){
+            return this;
+        }
+        String[] update = this.parameters.clone();
+        update[index] = parameter;
+        return new MethodKey(getDeclaringName(),
+                getName(),
+                update,
+                getReturnTypeName());
     }
     public MethodKey changeReturnType(TypeKey typeKey){
         return changeReturnType(typeKey.getTypeName());
@@ -143,6 +158,28 @@ public class MethodKey implements Key{
                 CombiningIterator.singleOne(getDeclaring(), SingleIterator.of(getNameKey())),
                 getProtoKey().mentionedKeys());
     }
+
+    public MethodKey replaceTypes(Function<TypeKey, TypeKey> function) {
+        MethodKey result = this;
+        TypeKey typeKey = getDeclaring();
+        typeKey = typeKey.changeTypeName(function.apply(typeKey));
+
+        result = result.changeDeclaring(typeKey);
+
+        typeKey = getReturnType();
+        typeKey = typeKey.changeTypeName(function.apply(typeKey));
+
+        result = result.changeReturnType(typeKey);
+
+        int count = getParametersCount();
+        for(int i = 0; i < count; i++){
+            typeKey = getParameterType(i);
+            typeKey = typeKey.changeTypeName(function.apply(typeKey));
+            result = result.changeParameter(i, typeKey);
+        }
+        return result;
+    }
+
     @Override
     public Key replaceKey(Key search, Key replace) {
         MethodKey result = this;
@@ -204,6 +241,60 @@ public class MethodKey implements Key{
         return CompareUtil.compare(getReturnTypeName(), key.getReturnTypeName());
     }
 
+    public boolean equalsIgnoreDeclaring(MethodKey other){
+        if(other == null){
+            return false;
+        }
+        if(other == this){
+            return true;
+        }
+        if(!KeyUtil.matches(getName(), other.getName())){
+            return false;
+        }
+        if(getNameParamsHashCode() != other.getNameParamsHashCode()){
+            return false;
+        }
+        int i = CompareUtil.compare(getParameterNames(), other.getParameterNames());
+        if(i != 0) {
+            return false;
+        }
+        return KeyUtil.matches(getReturnTypeName(), other.getReturnTypeName());
+    }
+    public boolean equalsIgnoreReturnType(MethodKey other){
+        if(other == null){
+            return false;
+        }
+        if(other == this){
+            return true;
+        }
+        if(!KeyUtil.matches(getDeclaringName(), other.getDeclaringName())){
+            return false;
+        }
+        if(!KeyUtil.matches(getName(), other.getName())){
+            return false;
+        }
+        if(getNameParamsHashCode() != other.getNameParamsHashCode()){
+            return false;
+        }
+        int i = CompareUtil.compare(getParameterNames(), other.getParameterNames());
+        return i == 0;
+    }
+    public boolean equalsNameAndParameters(MethodKey other){
+        if(other == null){
+            return false;
+        }
+        if(other == this){
+            return true;
+        }
+        if(!KeyUtil.matches(getName(), other.getName())){
+            return false;
+        }
+        if(getNameParamsHashCode() != other.getNameParamsHashCode()){
+            return false;
+        }
+        int i = CompareUtil.compare(getParameterNames(), other.getParameterNames());
+        return i == 0;
+    }
     public boolean equalsIgnoreName(MethodKey other){
         if(other == null){
             return false;
