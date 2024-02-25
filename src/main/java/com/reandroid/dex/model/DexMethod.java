@@ -16,6 +16,8 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.common.AccessFlag;
+import com.reandroid.dex.common.Register;
+import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.data.*;
 import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.ins.Ins;
@@ -28,6 +30,7 @@ import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -164,6 +167,63 @@ public class DexMethod extends DexDeclaration {
     }
     public int getInstructionsCount(){
         return getDefinition().getInstructionsCount();
+    }
+    public RegistersTable getRegistersTable(){
+        return getDefinition().getCodeItem();
+    }
+    public RegistersTable getOrCreateRegistersTable(){
+        return getDefinition().getOrCreateCodeItem();
+    }
+    public List<Register> getLocalFreeRegisters(int instructionIndex){
+        InstructionList instructionList = getInstructionList();
+        if(instructionList != null){
+            return instructionList.getLocalFreeRegisters(instructionIndex);
+        }
+        return EmptyList.of();
+    }
+    public void ensureLocalRegistersCount(int locals){
+        if(locals == 0){
+            return;
+        }
+        RegistersTable registersTable = getRegistersTable();
+        if(registersTable != null){
+            if(locals >= registersTable.getLocalRegistersCount()){
+                return;
+            }
+        }
+        registersTable = getOrCreateRegistersTable();
+        int params = refreshParameterRegistersCount();
+        int current = registersTable.getLocalRegistersCount();
+        int diff = locals - current;
+        InstructionList instructionList = getInstructionList();
+        if(diff > 0){
+            instructionList.addLocalRegisters(diff);
+        }
+        registersTable.setRegistersCount(locals + params);
+    }
+    public int refreshParameterRegistersCount(){
+        RegistersTable registersTable = getRegistersTable();
+        if(registersTable == null){
+            return 0;
+        }
+        int parameterCount = getKey().getParameterRegistersCount();
+        if(!isStatic()){
+            parameterCount = parameterCount + 1;
+        }
+        int locals = registersTable.getLocalRegistersCount();
+        registersTable.setParameterRegistersCount(parameterCount);
+        registersTable.setRegistersCount(locals + parameterCount);
+        return parameterCount;
+    }
+    private InstructionList getInstructionList(){
+        return getDefinition().getInstructionList();
+    }
+    public int getLocalRegistersCount(){
+        RegistersTable registersTable = getRegistersTable();
+        if(registersTable != null){
+            return registersTable.getLocalRegistersCount();
+        }
+        return 0;
     }
     public void setParameterRegistersCount(int count){
         CodeItem codeItem = getDefinition().getOrCreateCodeItem();

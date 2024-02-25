@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.dex.common.Register;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.IdItem;
@@ -27,6 +28,7 @@ import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
+import java.util.List;
 
 public class DexInstruction extends Dex {
 
@@ -36,6 +38,10 @@ public class DexInstruction extends Dex {
     public DexInstruction(DexMethod dexMethod, Ins ins) {
         this.dexMethod = dexMethod;
         this.mIns = ins;
+    }
+
+    public List<Register> getLocalFreeRegisters(){
+        return getDexMethod().getLocalFreeRegisters(getIndex());
     }
     public String getString(){
         IdItem idItem = getIdSectionEntry();

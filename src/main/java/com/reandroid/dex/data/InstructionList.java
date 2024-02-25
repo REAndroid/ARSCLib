@@ -36,11 +36,13 @@ import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliMethod;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Predicate;
 
 public class InstructionList extends FixedBlockContainer implements
@@ -115,7 +117,7 @@ public class InstructionList extends FixedBlockContainer implements
         }
         registersTable.setRegistersCount(registersTable.getRegistersCount() + amount);
     }
-    public Iterator<Register> getLocalFreeRegisters(int startIndex){
+    public List<Register> getLocalFreeRegisters(int startIndex){
         RegistersTable registersTable = getRegistersTable();
         int count = registersTable.getLocalRegistersCount();
         Iterator<Register> iterator = new ArraySupplierIterator<>(new ArraySupplier<Register>() {
@@ -128,10 +130,13 @@ public class InstructionList extends FixedBlockContainer implements
                 return count;
             }
         });
-        return FilterIterator.of(iterator, reference -> {
+        iterator = FilterIterator.of(iterator, reference -> {
             int registerValue = reference.getValue();
             return registerValue < count && isFreeRegister(registerValue, startIndex);
         });
+        List<Register> list = CollectionUtil.toUniqueList(iterator);
+        list.sort(CompareUtil.getComparableComparator());
+        return list;
     }
     public boolean isFreeRegister(int registerValue, int startIndex){
         Iterator<RegistersIterator> iterator = getRegistersIterators(startIndex);

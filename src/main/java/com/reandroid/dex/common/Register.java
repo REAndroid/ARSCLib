@@ -17,10 +17,11 @@ package com.reandroid.dex.common;
 
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
-public class Register implements SmaliFormat {
+public class Register implements SmaliFormat, Comparable<Register> {
 
     private final int number;
     private final boolean parameter;
@@ -66,6 +67,10 @@ public class Register implements SmaliFormat {
         writer.appendInteger(getNumber());
     }
 
+    @Override
+    public int compareTo(Register register) {
+        return CompareUtil.compare(getValue(), register.getValue());
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
