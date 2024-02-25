@@ -15,10 +15,9 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.value.DexValueBlock;
-import com.reandroid.dex.value.DexValueType;
-import com.reandroid.dex.value.PrimitiveValue;
+import com.reandroid.dex.value.*;
 
 import java.io.IOException;
 
@@ -32,6 +31,111 @@ public class DexValue extends Dex {
         this.dexValueBlock = dexValueBlock;
     }
 
+    public Key getKey(){
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof SectionValue){
+            return ((SectionValue<?>)value).getKey();
+        }
+        return null;
+    }
+    public void setKey(Key key){
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof SectionValue){
+            ((SectionValue<?>)value).setItem(key);
+        }
+    }
+    public String getString() {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof StringValue){
+            return ((StringValue)value).getString();
+        }
+        return null;
+    }
+    public void setString(String str) {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof StringValue){
+            ((StringValue)value).setString(str);
+        }
+    }
+    public Integer getInteger() {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof IntValue){
+            return ((IntValue)value).get();
+        }
+        return null;
+    }
+    public void setInteger(int i) {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof IntValue){
+            ((IntValue)value).set(i);
+        }
+    }
+
+    public Byte getByte() {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof ByteValue){
+            return ((ByteValue)value).get();
+        }
+        return null;
+    }
+    public void setByte(byte b) {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof ByteValue){
+            ((ByteValue)value).set(b);
+        }
+    }
+    public Character getCharacter() {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof CharValue){
+            return ((CharValue)value).get();
+        }
+        return null;
+    }
+    public void setCharacter(char c) {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof CharValue){
+            ((CharValue)value).set(c);
+        }
+    }
+    public Long getLong() {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof LongValue){
+            return ((LongValue)value).get();
+        }
+        return null;
+    }
+    public void setLong(long l) {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof LongValue){
+            ((LongValue)value).set(l);
+        }
+    }
+    public Double getDouble() {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof DoubleValue){
+            return ((DoubleValue)value).get();
+        }
+        return null;
+    }
+    public void setDouble(double d) {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof DoubleValue){
+            ((DoubleValue)value).set(d);
+        }
+    }
+    public Float getFloat() {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof FloatValue){
+            return ((FloatValue)value).get();
+        }
+        return null;
+    }
+    public void setFloat(float f) {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof FloatValue){
+            ((FloatValue)value).set(f);
+        }
+    }
     public String getAsString() {
         return getDexValueBlock().getAsString();
     }
