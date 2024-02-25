@@ -33,6 +33,9 @@ public class DexMergeOptions implements MergeOptions {
         this.relocate = relocate;
         this.mergedSet = new HashSet<>();
     }
+    public DexMergeOptions(){
+        this(true);
+    }
 
     @Override
     public boolean skipMerging(ClassId classId, TypeKey typeKey) {
