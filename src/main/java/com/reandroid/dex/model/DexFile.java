@@ -403,6 +403,9 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
         getDexLayout().sortSection(order);
         refresh();
     }
+    public void clearPool(SectionType<?> sectionType){
+        getDexLayout().clearPool(sectionType);
+    }
     public void clearPools(){
         getDexLayout().clearPools();
     }

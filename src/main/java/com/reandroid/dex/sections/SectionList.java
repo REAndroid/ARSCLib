@@ -268,6 +268,12 @@ public class SectionList extends FixedBlockContainer
         dataSectionList.clearChildes();
         typeMap.clear();
     }
+    public void clearPool(SectionType<?> sectionType){
+        Section<?> section = getSection(sectionType);
+        if(section != null){
+            section.clearPool();
+        }
+    }
     public void clearPools(){
         for(Section<?> section : this){
             section.clearPool();

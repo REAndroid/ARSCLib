@@ -404,6 +404,18 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
         return dexSourceSet.getClonedDexFiles();
     }
 
+    // if types changed, this before method rename
+    public void clearMethodPools(){
+        for(DexFile dexFile : this){
+            dexFile.clearPool(SectionType.PROTO_ID);
+            dexFile.clearPool(SectionType.METHOD_ID);
+        }
+    }
+    public void clearPool(SectionType<?> sectionType){
+        for(DexFile dexFile : this){
+            dexFile.clearPool(sectionType);
+        }
+    }
     public void clearPools(){
         for(DexFile dexFile : this){
             dexFile.clearPools();
