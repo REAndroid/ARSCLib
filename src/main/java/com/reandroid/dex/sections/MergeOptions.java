@@ -27,6 +27,11 @@ public interface MergeOptions {
     void onDexFull(DexLayout dexLayout, ClassId classId);
     void onMergeSuccess(ClassId classId, TypeKey key);
     boolean relocateClass();
+    default int getMergeStartDexFile(){
+        return 0;
+    }
+    default void setMergeStartDexFile(int startDexFile){
+    }
     DexLayout onCreateNext(DexLayout last);
     default boolean isEmptyDexFile(DexLayout dexLayout){
         if(dexLayout == null || dexLayout.isEmpty()){

@@ -101,7 +101,7 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
         return result;
     }
     public boolean merge(DexClass dexClass){
-        return merge(new DexMergeOptions(true), dexClass);
+        return merge(new DexMergeOptions(), dexClass);
     }
     public boolean merge(MergeOptions options, DexClass dexClass){
         if(dexClass.isInSameDirectory(this)){
@@ -111,10 +111,17 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
             options.onDuplicate(dexClass.getId());
             return false;
         }
-        for(DexFile dexFile : this){
+        boolean startChanged = false;
+        int start = options.getMergeStartDexFile();
+        for(int i = start; i < size(); i ++){
+            DexFile dexFile = get(i);
             if(dexFile.merge(options, dexClass)){
+                if(startChanged){
+                    options.setMergeStartDexFile(i);
+                }
                 return true;
             }
+            startChanged = true;
         }
         return false;
     }
@@ -125,7 +132,8 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
         if(directory == this){
             throw new IllegalArgumentException("Cyclic merge");
         }
-        int i = 0;
+        int start = options.getMergeStartDexFile();
+        int i = start;
         while (true){
             DexFile dexFile = this.get(i);
             DexFile last = directory.getLastNonEmpty(options,0);
@@ -136,12 +144,15 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
                 i ++;
             }
         }
+        if(i != start){
+            options.setMergeStartDexFile(i);
+        }
         shrink();
         directory.merge(options);
         getDexSourceSet().merge(directory.getDexSourceSet());
     }
     public void merge(){
-        merge(new DexMergeOptions(true));
+        merge(new DexMergeOptions());
     }
     public void merge(MergeOptions options){
         if(size() < 2){
@@ -753,6 +764,15 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
     public DexFile get(int i){
         return dexSourceSet.getDexFile(i);
     }
+    public int indexOf(DexFile dexFile){
+        int size = size();
+        for(int i = 0; i < size; i++){
+            if(dexFile == get(i)){
+                return i;
+            }
+        }
+        return -1;
+    }
     public int size() {
         return dexSourceSet.size();
     }
@@ -797,6 +817,12 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
             dexFile.writeSmali(writer, root);
         }
     }
+
+    @Override
+    public String toString() {
+        return "DexFiles = " + size();
+    }
+
     public static DexDirectory fromZip(ZipEntryMap zipEntryMap) throws IOException {
         DexDirectory dexDirectory = new DexDirectory();
         dexDirectory.getDexSourceSet().addAll(zipEntryMap);

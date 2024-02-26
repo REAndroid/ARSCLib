@@ -28,6 +28,7 @@ public class DexMergeOptions implements MergeOptions {
 
     private final boolean relocate;
     private final Set<TypeKey> mergedSet;
+    private int mergeStartDexFile;
 
     public DexMergeOptions(boolean relocate){
         this.relocate = relocate;
@@ -56,11 +57,11 @@ public class DexMergeOptions implements MergeOptions {
     }
     @Override
     public void onDexFull(DexLayout dexLayout, ClassId classId) {
-        DexFile coming = findDexFile(classId);
+        DexFile coming = DexFile.findDexFile(classId);
         if(coming == null){
             return;
         }
-        DexFile dexFile = findDexFile(dexLayout);
+        DexFile dexFile = DexFile.findDexFile(dexLayout);
         if(dexFile == null){
             return;
         }
@@ -81,8 +82,17 @@ public class DexMergeOptions implements MergeOptions {
         return relocate;
     }
     @Override
+    public int getMergeStartDexFile() {
+        return mergeStartDexFile;
+    }
+    @Override
+    public void setMergeStartDexFile(int mergeStartDexFile) {
+        this.mergeStartDexFile = mergeStartDexFile;
+    }
+
+    @Override
     public DexLayout onCreateNext(DexLayout last) {
-        DexFile dexFile = findDexFile(last);
+        DexFile dexFile = DexFile.findDexFile(last);
         if(dexFile == null){
             return null;
         }
@@ -90,22 +100,8 @@ public class DexMergeOptions implements MergeOptions {
         if(directory == null || directory.getLast() != dexFile){
             return null;
         }
-        return directory.createDefault().getDexLayout();
-    }
-    private static DexFile findDexFile(ClassId classId){
-        if(classId == null){
-            return null;
-        }
-        return findDexFile(classId.getParentInstance(DexLayout.class));
-    }
-    private static DexFile findDexFile(DexLayout dexLayout){
-        if(dexLayout == null){
-            return null;
-        }
-        Object obj = dexLayout.getTag();
-        if(!(obj instanceof DexFile)){
-            return null;
-        }
-        return  (DexFile) obj;
+        dexFile = directory.createDefault();
+        setMergeStartDexFile(dexFile.getIndex());
+        return dexFile.getDexLayout();
     }
 }

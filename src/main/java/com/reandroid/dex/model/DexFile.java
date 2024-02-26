@@ -499,6 +499,13 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
     public boolean isEmpty(){
         return getDexLayout().isEmpty();
     }
+    public int getIndex(){
+        DexDirectory directory = getDexDirectory();
+        if(directory != null){
+            return directory.indexOf(this);
+        }
+        return -1;
+    }
     public boolean merge(DexClass dexClass){
         return merge(new DexMergeOptions(true), dexClass);
     }
@@ -678,6 +685,22 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
         return new DexFile(DexLayout.createDefault());
     }
 
+    public static DexFile findDexFile(ClassId classId){
+        if(classId == null){
+            return null;
+        }
+        return DexFile.findDexFile(classId.getParentInstance(DexLayout.class));
+    }
+    public static DexFile findDexFile(DexLayout dexLayout){
+        if(dexLayout == null){
+            return null;
+        }
+        Object obj = dexLayout.getTag();
+        if(!(obj instanceof DexFile)){
+            return null;
+        }
+        return  (DexFile) obj;
+    }
     public static int getDexFileNumber(String name){
         int i = name.lastIndexOf('/');
         if(i < 0){
