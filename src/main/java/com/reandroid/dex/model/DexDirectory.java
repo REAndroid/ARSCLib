@@ -632,6 +632,23 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
         }
         return false;
     }
+    public List<MethodKey> replace(MethodKey methodKey, String name){
+        List<MethodKey> results = rename(methodKey, name);
+        if(!results.isEmpty()){
+            return results;
+        }
+        List<MethodId> methodIdList = CollectionUtil.toList(getItems(SectionType.METHOD_ID, methodKey));
+        int size = methodIdList.size();
+        if(size == 0){
+            return EmptyList.of();
+        }
+        results = new ArrayCollection<>(size);
+        for(MethodId methodId : methodIdList){
+            methodId.setName(name);
+            results.add(methodId.getKey());
+        }
+        return results;
+    }
     public List<MethodKey> rename(MethodKey methodKey, String name){
         if(containsDeepSearch(methodKey.changeName(name))){
             return EmptyList.of();
@@ -647,12 +664,31 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
                 throw new IllegalArgumentException("Duplicate: " + renamed);
             }
         }
+        List<MethodKey> results = new ArrayCollection<>(methodIdList.size());
         for(MethodId methodId : methodIdList){
             methodId.setName(name);
+            results.add(methodId.getKey());
         }
-        return new ComputeList<>(methodIdList, MethodId::getKey);
+        return results;
     }
-    public Collection<FieldKey> rename(FieldKey fieldKey, String name){
+    public List<FieldKey> replace(FieldKey fieldKey, String name){
+        List<FieldKey> results = rename(fieldKey, name);
+        if(!results.isEmpty()){
+            return results;
+        }
+        List<FieldId> fieldIdList = CollectionUtil.toList(getItems(SectionType.FIELD_ID, fieldKey));
+        int size = fieldIdList.size();
+        if(size == 0){
+            return EmptyList.of();
+        }
+        results = new ArrayCollection<>(size);
+        for(FieldId fieldId : fieldIdList){
+            fieldId.setName(name);
+            results.add(fieldId.getKey());
+        }
+        return results;
+    }
+    public List<FieldKey> rename(FieldKey fieldKey, String name){
         ArrayCollection<FieldKey> existingFields = ArrayCollection.of(findEquivalentFields(fieldKey.changeName(name)));
         ArrayCollection<FieldId> fieldIdList = ArrayCollection.of(getFields(fieldKey));
         if(fieldIdList.isEmpty()){
@@ -667,10 +703,12 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
                 throw new IllegalArgumentException("Duplicate: " + renamed);
             }
         }
+        List<FieldKey> results = new ArrayCollection<>(fieldIdList.size());
         for(FieldId fieldId : fieldIdList){
             fieldId.setName(name);
+            results.add(fieldId.getKey());
         }
-        return new ComputeList<>(fieldIdList, FieldId::getKey);
+        return results;
     }
     public boolean containsDeepSearch(MethodKey methodKey){
         DexClass startClass = getDexClass(methodKey.getDeclaring());
