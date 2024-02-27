@@ -20,13 +20,11 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.id.*;
-import com.reandroid.dex.sections.Marker;
-import com.reandroid.dex.sections.MergeOptions;
+import com.reandroid.dex.sections.*;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.dex.ins.*;
 import com.reandroid.dex.key.*;
-import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.IOUtil;
@@ -815,6 +813,60 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
             }
         }
         return null;
+    }
+
+    public int distributeClasses(int maxClassesPerDex) {
+        if(maxClassesPerDex <= 0){
+            throw new IllegalArgumentException(
+                    "Classes per dex must be greater than zero: " + maxClassesPerDex);
+        }
+        int size = this.size();
+        if(size == 0){
+            return 0;
+        }
+        int count = this.getDexClassesCount();
+        int classesPerDex = count / size;
+        while (classesPerDex > maxClassesPerDex){
+            this.createDefault();
+            int check = this.size();
+            if(check <= size){
+                throw new IllegalArgumentException("Failed to create next dex");
+            }
+            size = check;
+            classesPerDex = count / size;
+        }
+        int result = 0;
+        for(int i = 0; i < size; i++){
+            result += distributeClasses(this.get(i), classesPerDex);
+        }
+        return result;
+    }
+    private int distributeClasses(DexFile source, int classesPerDex){
+        int result = 0;
+        DexDirectory directory = source.getDexDirectory();
+        for(int i = 0; i < directory.size(); i++){
+            result += distributeClasses(source, directory.get(i), classesPerDex);
+        }
+        return result;
+    }
+    private int distributeClasses(DexFile source, DexFile destination, int classesPerDex){
+        int result = 0;
+        if(source.getDexLayout() == destination.getDexLayout()){
+            return result;
+        }
+        Section<ClassId> classSection = source.getSection(SectionType.CLASS_ID);
+        ClassId previous = null;
+        SectionArray<ClassId> array = classSection.getItemArray();
+        while (source.getDexClassesCount() > classesPerDex && destination.getDexClassesCount() < classesPerDex){
+            ClassId classId = array.getLast();
+            if(classId == previous){
+                break;
+            }
+            destination.merge(classId);
+            previous = classId;
+            result ++;
+        }
+        return result;
     }
     public DexFile get(int i){
         return dexSourceSet.getDexFile(i);
