@@ -196,6 +196,36 @@ public class TypeKey implements Key{
         }
         return new TypeKey(child);
     }
+    public Iterator<String> iteratePackageNames(){
+        if(getTypeName().indexOf('/') < 0){
+            return EmptyIterator.of();
+        }
+        String packageName = getPackageName();
+        int last = packageName.length() - 1;
+        if(packageName.charAt(last) == '/'){
+            packageName = packageName.substring(0, last);
+        }
+        String[] splitNames = StringsUtil.split(packageName, '/');
+
+        return new Iterator<String>() {
+            int index;
+            @Override
+            public boolean hasNext() {
+                return index < splitNames.length;
+            }
+            @Override
+            public String next() {
+                int end = splitNames.length - index;
+                StringBuilder builder = new StringBuilder();
+                for(int i = 0; i < end; i++){
+                    builder.append(splitNames[i]);
+                    builder.append('/');
+                }
+                index ++;
+                return builder.toString();
+            }
+        };
+    }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
@@ -249,6 +279,13 @@ public class TypeKey implements Key{
         }
         if(name.indexOf('.') >= 0){
             return create(DexUtils.toBinaryName(name));
+        }
+        int i = 0;
+        while (name.charAt(i) == '[' && i < name.length() - 1){
+            i++;
+        }
+        if(primitiveType(name.charAt(i)) != null){
+            return create(name);
         }
         if(name.equals(TYPE_B.getSourceName())){
             return TYPE_B;
