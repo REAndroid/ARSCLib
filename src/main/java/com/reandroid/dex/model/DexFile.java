@@ -37,7 +37,6 @@ import com.reandroid.dex.sections.*;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.smali.SmaliWriterSetting;
 import com.reandroid.dex.smali.model.SmaliClass;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.*;
@@ -49,10 +48,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefresh {
+public class DexFile implements DexClassRepository, Closeable,
+        Iterable<DexClass>, FullRefresh {
 
     private final DexLayout dexLayout;
     private DexDirectory dexDirectory;
+    private boolean closed;
 
     public DexFile(DexLayout dexLayout){
         this.dexLayout = dexLayout;
@@ -528,6 +529,7 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
         return getDexLayout().merge(options, dexFile.getDexLayout());
     }
     public void parseSmaliDirectory(File dir) throws IOException {
+        requireNotClosed();
         if(!dir.isDirectory()){
             throw new FileNotFoundException("No such directory: " + dir);
         }
@@ -538,9 +540,11 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
         shrink();
     }
     public void parseSmaliFile(File file) throws IOException {
+        requireNotClosed();
         fromSmali(SmaliReader.of(file));
     }
     public void fromSmali(SmaliReader reader) throws IOException {
+        requireNotClosed();
         while (SmaliDirective.parse(reader, false) == SmaliDirective.CLASS){
             SmaliClass smaliClass = new SmaliClass();
             smaliClass.parse(reader);
@@ -549,25 +553,27 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
         }
     }
     public void fromSmali(SmaliClass smaliClass) throws IOException {
+        requireNotClosed();
         getDexLayout().fromSmali(smaliClass);
     }
 
     public byte[] getBytes() {
+        if(isClosed()){
+            return null;
+        }
         if(isEmpty()){
             return new byte[0];
         }
         return getDexLayout().getBytes();
     }
     public void write(File file) throws IOException {
-        File dir = file.getParentFile();
-        if(dir != null && !dir.exists()){
-            dir.mkdirs();
-        }
-        FileOutputStream outputStream = new FileOutputStream(file);
+        requireNotClosed();
+        OutputStream outputStream = FileUtil.outputStream(file);;
         write(outputStream);
         outputStream.close();
     }
     public void write(OutputStream outputStream) throws IOException {
+        requireNotClosed();
         byte[] bytes = getBytes();
         outputStream.write(bytes, 0, bytes.length);
     }
@@ -576,6 +582,7 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
         return getDexLayout().getMapList().toString();
     }
     public void writeSmali(SmaliWriter writer, File root) throws IOException {
+        requireNotClosed();
         File dir = new File(root, buildSmaliDirectoryName());
         for(DexClass dexClass : this){
             dexClass.writeSmali(writer, dir);
@@ -605,6 +612,23 @@ public class DexFile implements DexClassRepository, Iterable<DexClass>, FullRefr
         }
         return FileUtil.getFileName(simpleName);
     }
+
+    private void requireNotClosed() throws IOException {
+        if(isClosed()){
+            throw new IOException("Closed");
+        }
+    }
+    public boolean isClosed() {
+        return closed;
+    }
+    @Override
+    public void close() throws IOException {
+        if(!closed){
+            closed = true;
+            getDexLayout().clear();
+        }
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();

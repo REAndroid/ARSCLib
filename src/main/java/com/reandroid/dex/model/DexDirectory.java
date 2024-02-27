@@ -32,12 +32,14 @@ import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.IOUtil;
 import org.xmlpull.v1.XmlSerializer;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class DexDirectory implements Iterable<DexFile>, DexClassRepository, FullRefresh {
+public class DexDirectory implements Iterable<DexFile>, Closeable,
+        DexClassRepository, FullRefresh {
 
     private final DexFileSourceSet dexSourceSet;
     private Object mTag;
@@ -269,6 +271,9 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
                 return element.getImplementClasses(typeKey);
             }
         };
+    }
+    public void save() throws IOException {
+        dexSourceSet.saveAll();
     }
     public void save(File dir) throws IOException {
         dexSourceSet.saveAll(dir);
@@ -842,6 +847,10 @@ public class DexDirectory implements Iterable<DexFile>, DexClassRepository, Full
     }
     public DexSource<DexFile> getLastSource(){
         return dexSourceSet.getLast();
+    }
+    @Override
+    public void close(){
+        this.dexSourceSet.close();
     }
 
     public void serializePublicXml(XmlSerializer serializer) throws IOException {

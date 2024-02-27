@@ -187,7 +187,7 @@ public class DexMethod extends DexDeclaration {
         }
         RegistersTable registersTable = getRegistersTable();
         if(registersTable != null){
-            if(locals >= registersTable.getLocalRegistersCount()){
+            if(locals <= registersTable.getLocalRegistersCount()){
                 return;
             }
         }

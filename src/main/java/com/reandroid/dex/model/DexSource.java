@@ -22,7 +22,7 @@ import com.reandroid.utils.io.FileUtil;
 
 import java.io.*;
 
-public interface DexSource<T> extends Comparable<DexSource<?>>{
+public interface DexSource<T> extends Comparable<DexSource<?>>, Closeable{
 
     String getName();
     InputStream openStream() throws IOException;
@@ -30,6 +30,9 @@ public interface DexSource<T> extends Comparable<DexSource<?>>{
     boolean delete();
     T get();
     void set(T item);
+    @Override
+    void close() throws IOException;
+    boolean isClosed();
 
     default int getDexFileNumber(){
         return DexFile.getDexFileNumber(getName());
@@ -62,13 +65,30 @@ public interface DexSource<T> extends Comparable<DexSource<?>>{
     abstract class DexSourceImpl<T> implements DexSource<T> {
 
         private T item;
+        private boolean closed;
+
         @Override
         public T get() {
             return item;
         }
         @Override
         public void set(T item) {
+            if(isClosed()){
+                return;
+            }
             this.item = item;
+        }
+        @Override
+        public void close() throws IOException{
+            this.closed = true;
+            T item = this.item;
+            this.item = null;
+            if(item instanceof Closeable){
+                ((Closeable) item).close();
+            }
+        }
+        public boolean isClosed() {
+            return closed;
         }
 
         @Override
@@ -123,19 +143,29 @@ public interface DexSource<T> extends Comparable<DexSource<?>>{
 
         @Override
         boolean onDelete() {
+            if(isClosed()){
+                return false;
+            }
             File file = getFile();
             if(file.isFile()){
                 return file.delete();
             }
             return true;
         }
+
         @Override
         public InputStream openStream() throws IOException {
+            if(isClosed()){
+                throw new IOException("Closed: " + getName());
+            }
             return new FileInputStream(getFile());
         }
 
         @Override
         public void write(byte[] bytes) throws IOException {
+            if(isClosed()){
+                throw new IOException("Closed: " + getName());
+            }
             OutputStream outputStream = FileUtil.outputStream(getFile());
             outputStream.write(bytes, 0, bytes.length);
             outputStream.close();
@@ -143,6 +173,9 @@ public interface DexSource<T> extends Comparable<DexSource<?>>{
 
         @Override
         public FileDexSource<T> createNext(){
+            if(isClosed()){
+                return null;
+            }
             String name = DexFile.getDexName(getDexFileNumber() + 1);
             File dir = getFile().getParentFile();
             File file;
@@ -171,11 +204,17 @@ public interface DexSource<T> extends Comparable<DexSource<?>>{
         }
         @Override
         boolean onDelete() {
+            if(isClosed()){
+                return false;
+            }
             this.zipEntryMap.remove(getName());
             return true;
         }
         @Override
         public InputStream openStream() throws IOException {
+            if(isClosed()){
+                throw new IOException("Closed: " + getName());
+            }
             InputSource inputSource = zipEntryMap.getInputSource(getName());
             if(inputSource == null){
                 throw new IOException("Zip input source not found: " + getName());
@@ -184,12 +223,18 @@ public interface DexSource<T> extends Comparable<DexSource<?>>{
         }
         @Override
         public void write(byte[] bytes) throws IOException {
+            if(isClosed()){
+                throw new IOException("Closed: " + getName());
+            }
             ByteInputSource inputSource = new ByteInputSource(bytes, getName());
             zipEntryMap.add(inputSource);
         }
 
         @Override
         public ZipDexSource<T> createNext(){
+            if(isClosed()){
+                return null;
+            }
             String name = FileUtil.combineUnixPath(FileUtil.getParent(getName()),
                     DexFile.getDexName(getDexFileNumber() + 1));
             return new ZipDexSource<>(zipEntryMap, name);

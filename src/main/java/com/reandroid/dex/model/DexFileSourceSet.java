@@ -22,12 +22,13 @@ import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.io.FileUtil;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class DexFileSourceSet implements Iterable<DexSource<DexFile>>{
+public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable {
 
     private final ArrayCollection<DexSource<DexFile>> sourceList;
     private boolean mReadStringsMode;
@@ -237,6 +238,13 @@ public class DexFileSourceSet implements Iterable<DexSource<DexFile>>{
     public void remove(DexSource<DexFile> dexSource){
         sourceList.remove(dexSource);
         dexSource.set(null);
+    }
+    @Override
+    public void close() throws IOException {
+        for(DexSource<DexFile> dexSource : sourceList){
+            dexSource.close();
+        }
+        sourceList.clear();
     }
 
     public boolean isReadStringsMode() {
