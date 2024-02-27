@@ -233,55 +233,48 @@ public class TypeKey implements Key{
         return getTypeName();
     }
 
-    public TypeKey parse(String text) {
-        if(text == null){
+    public static TypeKey parse(String name){
+        if(name == null || name.length() == 0){
             return null;
         }
-        text = text.trim();
-        if(text.length() < 3){
+        if(name.indexOf('>') > 0 ||
+                name.indexOf('(') > 0 ||
+                name.indexOf('@') > 0){
             return null;
         }
-        if(text.charAt(0) != 'L' || text.charAt(text.length() - 1) != ';'){
-            return null;
+        if(name.indexOf('/') > 0 ||
+                name.indexOf(';') > 0 ||
+                name.charAt(0) == '['){
+            return create(name);
         }
-        if(text.indexOf('>') > 0 || text.indexOf('(') > 0 || text.indexOf('@') > 0){
-            return null;
+        if(name.indexOf('.') >= 0){
+            return create(DexUtils.toBinaryName(name));
         }
-        return new TypeKey(text);
-    }
-
-    public TypeKey fromSourceName(String sourceName){
-        if(sourceName == null || sourceName.length() == 0){
-            return null;
-        }
-        if(sourceName.indexOf('.') >= 0){
-            return create(DexUtils.toBinaryName(sourceName));
-        }
-        if(sourceName.equals(TYPE_B.getSourceName())){
+        if(name.equals(TYPE_B.getSourceName())){
             return TYPE_B;
         }
-        if(sourceName.equals(TYPE_D.getSourceName())){
+        if(name.equals(TYPE_D.getSourceName())){
             return TYPE_D;
         }
-        if(sourceName.equals(TYPE_F.getSourceName())){
+        if(name.equals(TYPE_F.getSourceName())){
             return TYPE_F;
         }
-        if(sourceName.equals(TYPE_I.getSourceName())){
+        if(name.equals(TYPE_I.getSourceName())){
             return TYPE_I;
         }
-        if(sourceName.equals(TYPE_J.getSourceName())){
+        if(name.equals(TYPE_J.getSourceName())){
             return TYPE_J;
         }
-        if(sourceName.equals(TYPE_S.getSourceName())){
+        if(name.equals(TYPE_S.getSourceName())){
             return TYPE_S;
         }
-        if(sourceName.equals(TYPE_V.getSourceName())){
+        if(name.equals(TYPE_V.getSourceName())){
             return TYPE_V;
         }
-        if(sourceName.equals(TYPE_Z.getSourceName())){
+        if(name.equals(TYPE_Z.getSourceName())){
             return TYPE_Z;
         }
-        return create(DexUtils.toBinaryName(sourceName));
+        return create(DexUtils.toBinaryName(name));
     }
 
     public static TypeKey create(String typeName){
