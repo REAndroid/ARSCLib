@@ -849,7 +849,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         return dexSourceSet.getLast();
     }
     @Override
-    public void close(){
+    public void close() throws IOException {
         this.dexSourceSet.close();
     }
 
