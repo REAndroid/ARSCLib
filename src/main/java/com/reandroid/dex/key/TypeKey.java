@@ -201,28 +201,26 @@ public class TypeKey implements Key{
             return EmptyIterator.of();
         }
         String packageName = getPackageName();
-        int last = packageName.length() - 1;
-        if(packageName.charAt(last) == '/'){
-            packageName = packageName.substring(0, last);
-        }
-        String[] splitNames = StringsUtil.split(packageName, '/');
 
         return new Iterator<String>() {
-            int index;
+            String name = packageName;
             @Override
             public boolean hasNext() {
-                return index < splitNames.length;
+                return name.charAt(name.length() - 1) == '/';
             }
             @Override
             public String next() {
-                int end = splitNames.length - index;
-                StringBuilder builder = new StringBuilder();
-                for(int i = 0; i < end; i++){
-                    builder.append(splitNames[i]);
-                    builder.append('/');
+                String result = this.name;
+                String name = result;
+                while (name.charAt(name.length() - 1) == '/'){
+                    name = name.substring(0, name.length() - 1);
                 }
-                index ++;
-                return builder.toString();
+                int i = name.lastIndexOf('/');
+                if(i > 0){
+                    name = name.substring(0, i + 1);
+                }
+                this.name = name;
+                return result;
             }
         };
     }
