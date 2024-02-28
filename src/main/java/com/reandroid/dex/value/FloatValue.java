@@ -28,6 +28,14 @@ public class FloatValue extends PrimitiveValue {
         super(DexValueType.FLOAT);
     }
 
+    @Override
+    public Float getNumber() {
+        return get();
+    }
+    @Override
+    public void setNumber(Number number) {
+        this.set((Float) number);
+    }
     public float get(){
         int shift = (3 - getValueSize()) * 8;
         int value = (int) getNumberValue();

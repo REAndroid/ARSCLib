@@ -28,6 +28,14 @@ public class DoubleValue extends PrimitiveValue {
         super(DexValueType.DOUBLE);
     }
 
+    @Override
+    public Double getNumber() {
+        return get();
+    }
+    @Override
+    public void setNumber(Number number) {
+        this.set((Double) number);
+    }
     public double get(){
         int shift = (7 - getValueSize()) * 8;
         long value = getNumberValue();

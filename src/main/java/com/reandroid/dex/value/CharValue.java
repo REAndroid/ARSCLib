@@ -29,6 +29,38 @@ public class CharValue extends PrimitiveValue {
         super(DexValueType.CHAR);
     }
 
+    @Override
+    public Number getNumber() {
+        int i = (int) getNumberValue();
+        if((i & 0xff) == i){
+            return (byte) i;
+        }
+        if((i & 0xffff) == i){
+            return (short) i;
+        }
+        return i;
+    }
+    @Override
+    public void setNumber(Number number) {
+        if(number == null){
+            throw new NullPointerException();
+        }
+        if(number instanceof Integer){
+            Integer v = (Integer) number;
+            set((char) v.intValue());
+        }else if(number instanceof Short){
+            Short v = (Short) number;
+            int i = v & 0xffff;
+            set((char) i);
+        }else if(number instanceof Byte){
+            Byte v = (Byte) number;
+            int i = v & 0xff;
+            set((char) i);
+        }
+        throw new NumberFormatException("Invalid '"
+                + number.getClass().getSimpleName()
+                + "' value for char " + number);
+    }
     public char get(){
         return (char) getNumberValue();
     }

@@ -31,7 +31,6 @@ import com.reandroid.utils.collection.*;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class DexMethod extends DexDeclaration {
@@ -112,12 +111,7 @@ public class DexMethod extends DexDeclaration {
     }
     public Iterator<MethodKey> getOverridingKeys() {
         return new MergingIterator<>(ComputeIterator.of(getDexClass().getOverriding(),
-                new Function<DexClass, Iterator<MethodKey>>() {
-                    @Override
-                    public Iterator<MethodKey> apply(DexClass dexClass) {
-                        return dexClass.getOverridingKeys(DexMethod.this.getKey());
-                    }
-                }));
+                dexClass -> dexClass.getOverridingKeys(DexMethod.this.getKey())));
     }
 
     public String getName(){
@@ -127,24 +121,29 @@ public class DexMethod extends DexDeclaration {
         getDefinition().setName(name);
     }
 
-    public Iterator<AnnotationSet> getAnnotationSets(){
-        return getDefinition().getAnnotations();
+    @Override
+    public Iterator<DexAnnotation> getAnnotations(){
+        return ComputeIterator.of(ExpandIterator.of(getDefinition().getAnnotations()),
+                annotationItem -> DexAnnotation.create(DexMethod.this, annotationItem));
     }
     @Override
-    public Iterator<AnnotationItem> getAnnotations(){
-        return ExpandIterator.of(getAnnotationSets());
-    }
-    @Override
-    public Iterator<AnnotationItem> getAnnotations(TypeKey typeKey){
+    public Iterator<DexAnnotation> getAnnotations(TypeKey typeKey){
         return FilterIterator.of(getAnnotations(),
-                item -> typeKey.equals(item.getTypeKey()));
+                item -> typeKey.equals(item.getType()));
     }
     @Override
-    public AnnotationItem getAnnotation(TypeKey typeKey){
+    public DexAnnotation getAnnotation(TypeKey typeKey){
         return CollectionUtil.getFirst(getAnnotations(typeKey));
     }
-    public AnnotationItem getOrCreateAnnotation(TypeKey typeKey){
-        return getDefinition().getOrCreateAnnotationSet().getOrCreate(typeKey);
+    @Override
+    public DexAnnotation getOrCreateAnnotation(TypeKey typeKey){
+        return DexAnnotation.create(this,
+                getDefinition().getOrCreateAnnotationSet().getOrCreate(typeKey));
+    }
+    @Override
+    public DexAnnotation newAnnotation(TypeKey typeKey){
+        return DexAnnotation.create(this,
+                getDefinition().getOrCreateAnnotationSet().addNewItem(typeKey));
     }
     public Iterator<DexInstruction> getInstructions(Opcode<?> opcode) {
         return getInstructions(ins -> ins.getOpcode() == opcode);

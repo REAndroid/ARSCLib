@@ -18,8 +18,6 @@ package com.reandroid.dex.model;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.IdDefinition;
 import com.reandroid.dex.common.Modifier;
-import com.reandroid.dex.data.AnnotationElement;
-import com.reandroid.dex.data.AnnotationItem;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
@@ -89,20 +87,23 @@ public abstract class DexDeclaration extends Dex {
     public abstract IdItem getId();
     public abstract DexClass getDexClass();
 
-    public abstract Iterator<AnnotationItem> getAnnotations();
-    public abstract Iterator<AnnotationItem> getAnnotations(TypeKey typeKey);
-    public abstract AnnotationItem getAnnotation(TypeKey typeKey);
-    public AnnotationElement getAnnotationElement(TypeKey typeKey, String name){
-        AnnotationItem annotationItem = getAnnotation(typeKey);
-        if(annotationItem != null){
-            return annotationItem.getElement(name);
+    public abstract Iterator<DexAnnotation> getAnnotations();
+    public abstract Iterator<DexAnnotation> getAnnotations(TypeKey typeKey);
+    public abstract DexAnnotation getAnnotation(TypeKey typeKey);
+    public abstract DexAnnotation getOrCreateAnnotation(TypeKey typeKey);
+    public abstract DexAnnotation newAnnotation(TypeKey typeKey);
+
+    public DexAnnotationElement getAnnotationElement(TypeKey typeKey, String name){
+        DexAnnotation dexAnnotation = getAnnotation(typeKey);
+        if(dexAnnotation != null){
+            return dexAnnotation.get(name);
         }
         return null;
     }
     public DexValue getAnnotationValue(TypeKey typeKey, String name){
-        AnnotationElement element = getAnnotationElement(typeKey, name);
+        DexAnnotationElement element = getAnnotationElement(typeKey, name);
         if(element != null){
-            return DexValue.create(this, element.getValue());
+            return element.getValue();
         }
         return null;
     }

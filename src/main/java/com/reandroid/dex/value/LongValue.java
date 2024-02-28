@@ -28,6 +28,14 @@ public class LongValue extends PrimitiveValue {
         super(DexValueType.LONG);
     }
 
+    @Override
+    public Long getNumber() {
+        return get();
+    }
+    @Override
+    public void setNumber(Number number) {
+        this.set((Long) number);
+    }
     public long get() {
         return getNumberValue();
     }

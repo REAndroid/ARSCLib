@@ -16,6 +16,7 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.value.*;
 
@@ -23,11 +24,11 @@ import java.io.IOException;
 
 public class DexValue extends Dex {
 
-    private final DexDeclaration dexDeclaration;
+    private final Dex declaring;
     private final DexValueBlock<?> dexValueBlock;
 
-    public DexValue(DexDeclaration dexDeclaration, DexValueBlock<?> dexValueBlock) {
-        this.dexDeclaration = dexDeclaration;
+    public DexValue(Dex declaring, DexValueBlock<?> dexValueBlock) {
+        this.declaring = declaring;
         this.dexValueBlock = dexValueBlock;
     }
 
@@ -43,6 +44,13 @@ public class DexValue extends Dex {
         if(value instanceof SectionValue){
             ((SectionValue<?>)value).setItem(key);
         }
+    }
+    public TypeKey getTypeKey(){
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof TypeValue){
+            return ((TypeValue)value).getKey();
+        }
+        return null;
     }
     public String getString() {
         DexValueBlock<?> value = getDexValueBlock();
@@ -82,6 +90,19 @@ public class DexValue extends Dex {
         DexValueBlock<?> value = getDexValueBlock();
         if(value instanceof ByteValue){
             ((ByteValue)value).set(b);
+        }
+    }
+    public Short getShort() {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof ShortValue){
+            return ((ShortValue)value).get();
+        }
+        return null;
+    }
+    public void setShort(short s) {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof ShortValue){
+            ((ShortValue)value).set(s);
         }
     }
     public Character getCharacter() {
@@ -136,6 +157,29 @@ public class DexValue extends Dex {
             ((FloatValue)value).set(f);
         }
     }
+    public Number getNumber() {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof PrimitiveValue){
+            return ((PrimitiveValue)value).getNumber();
+        }
+        return null;
+    }
+    public void setNumber(Number number) {
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof PrimitiveValue){
+            ((PrimitiveValue)value).setNumber(number);
+        }
+    }
+    public DexAnnotation getAnnotation(){
+        DexValueBlock<?> value = getDexValueBlock();
+        if(value instanceof AnnotationValue){
+            AnnotationValue annotationValue = (AnnotationValue) value;
+            return DexAnnotation.create(getDeclaring(), annotationValue.get());
+        }
+        return null;
+    }
+
+
     public String getAsString() {
         return getDexValueBlock().getAsString();
     }
@@ -156,25 +200,51 @@ public class DexValue extends Dex {
         return dexValueBlock;
     }
 
-    public DexDeclaration getDexDef() {
-        return dexDeclaration;
+    public Dex getDeclaring() {
+        return declaring;
     }
     @Override
     public DexClassRepository getClassRepository() {
-        return getDexDef().getClassRepository();
+        return getDeclaring().getClassRepository();
+    }
+    public int getIndex(){
+        return getDexValueBlock().getIndex();
+    }
+    public boolean is(DexValueType<?> valueType){
+        return getValueType() == valueType;
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getDexValueBlock().append(writer);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        DexValue dexValue = (DexValue) obj;
+        return getDexValueBlock() == dexValue.getDexValueBlock();
+    }
+
+    @Override
+    public int hashCode() {
+        return getDexValueBlock().hashCode();
     }
     @Override
     public String toString() {
         return getAsString();
     }
 
-    public static DexValue create(DexDeclaration dexDeclaration, DexValueBlock<?> valueBlock){
-        if(valueBlock != null){
-            return new DexValue(dexDeclaration, valueBlock);
+    public static DexValue create(Dex declaring, DexValueBlock<?> valueBlock){
+        if(declaring != null && valueBlock != null){
+            if(valueBlock instanceof ArrayValue){
+                return new DexValueArray(declaring, (ArrayValue) valueBlock);
+            }
+            return new DexValue(declaring, valueBlock);
         }
         return null;
     }

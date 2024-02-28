@@ -30,6 +30,14 @@ public class IntValue extends PrimitiveValue implements IntegerReference {
     }
 
     @Override
+    public Integer getNumber() {
+        return get();
+    }
+    @Override
+    public void setNumber(Number number) {
+        this.set((Integer) number);
+    }
+    @Override
     public int get() {
         return getValueContainer().getIntegerValue();
     }

@@ -472,31 +472,40 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     }
 
     @Override
-    public Iterator<AnnotationItem> getAnnotations(){
-        AnnotationSet annotationSet = getAnnotationSet();
+    public Iterator<DexAnnotation> getAnnotations(){
+        AnnotationSet annotationSet = getId().getClassAnnotations();
         if(annotationSet != null){
-            return annotationSet.iterator();
+            return ComputeIterator.of(annotationSet.iterator(), annotationItem ->
+                    DexAnnotation.create(DexClass.this, annotationItem));
         }
         return EmptyIterator.of();
     }
     @Override
-    public Iterator<AnnotationItem> getAnnotations(TypeKey typeKey){
-        AnnotationSet annotationSet = getAnnotationSet();
+    public Iterator<DexAnnotation> getAnnotations(TypeKey typeKey){
+        AnnotationSet annotationSet = getId().getClassAnnotations();
         if(annotationSet != null){
-            return annotationSet.getAll(typeKey);
+            return ComputeIterator.of(annotationSet.getAll(typeKey), annotationItem ->
+                    DexAnnotation.create(DexClass.this, annotationItem));
         }
         return EmptyIterator.of();
     }
     @Override
-    public AnnotationItem getAnnotation(TypeKey typeKey){
-        AnnotationSet annotationSet = getAnnotationSet();
+    public DexAnnotation getAnnotation(TypeKey typeKey){
+        AnnotationSet annotationSet = getId().getClassAnnotations();
         if(annotationSet != null){
-            return annotationSet.get(typeKey);
+            return DexAnnotation.create(this, annotationSet.get(typeKey));
         }
         return null;
     }
-    public AnnotationSet getAnnotationSet(){
-        return getId().getClassAnnotations();
+    @Override
+    public DexAnnotation getOrCreateAnnotation(TypeKey typeKey){
+        return DexAnnotation.create(this,
+                getId().getOrCreateClassAnnotations().getOrCreate(typeKey));
+    }
+    @Override
+    public DexAnnotation newAnnotation(TypeKey typeKey){
+        return DexAnnotation.create(this,
+                getId().getOrCreateClassAnnotations().addNewItem(typeKey));
     }
 
     ClassData getOrCreateClassData(){

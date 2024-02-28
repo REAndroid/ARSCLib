@@ -76,8 +76,11 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
     public void add(DexValueBlock<?> value){
        getValueList().add(value);
     }
-    public void remove(DexValueBlock<?> value){
-        getValueList().remove(value);
+    public boolean remove(int index){
+        return getValueList().remove(index) != null;
+    }
+    public boolean remove(DexValueBlock<?> value){
+        return getValueList().remove(value);
     }
     public void set(int i, DexValueBlock<?> value){
         ensureSize(i + 1);
@@ -86,11 +89,8 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
     public void clear(){
         getValueList().clearChildes();
     }
-    public void removeAll(){
-        getValueList().removeAll();
-    }
-    public void sort(Comparator<? super DexValueBlock<?>> comparator){
-        getValueList().sort(comparator);
+    public boolean sort(Comparator<? super DexValueBlock<?>> comparator){
+        return getValueList().sort(comparator);
     }
     public void trimNull(){
         int size = size();
@@ -145,6 +145,9 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
     }
     public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance, Predicate<? super T1> filter){
         return InstanceIterator.of(iterator(), instance, filter);
+    }
+    public Iterator<DexValueBlock<?>> clonedIterator(){
+        return getValueList().clonedIterator();
     }
 
     private BlockList<DexValueBlock<?>> getValueList() {

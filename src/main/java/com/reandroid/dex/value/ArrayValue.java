@@ -24,6 +24,7 @@ import com.reandroid.dex.smali.model.SmaliValueArray;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
@@ -43,13 +44,19 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
     public void add(DexValueBlock<?> value){
         getValueContainer().add(value);
     }
-    public void remove(DexValueBlock<?> value){
-        getValueContainer().remove(value);
+    public boolean remove(int index){
+        return getValueContainer().remove(index);
+    }
+    public boolean remove(DexValueBlock<?> value){
+        return getValueContainer().remove(value);
     }
     public<T1 extends DexValueBlock<?>> T1 createNext(DexValueType<T1> valueType){
         T1 item = valueType.newInstance();
         add(item);
         return item;
+    }
+    public void clear() {
+        getValueContainer().clear();
     }
     @Override
     public Iterator<DexValueBlock<?>> iterator() {
@@ -60,6 +67,12 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
     }
     public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance, Predicate<? super T1> filter){
         return getValueContainer().iterator(instance, filter);
+    }
+    public Iterator<DexValueBlock<?>> clonedIterator() {
+        return getValueContainer().clonedIterator();
+    }
+    public boolean sort(Comparator<? super DexValueBlock<?>> comparator) {
+        return getValueContainer().sort(comparator);
     }
     @Override
     public DexValueType<?> getValueType() {

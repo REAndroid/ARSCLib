@@ -26,6 +26,9 @@ public abstract class PrimitiveValue extends DexValueBlock<NumberValue> {
         super(new NumberValue(), type);
     }
 
+    public abstract Number getNumber();
+    public abstract void setNumber(Number number);
+
     public long getNumberValue(){
         return getValueContainer().getNumberValue();
     }

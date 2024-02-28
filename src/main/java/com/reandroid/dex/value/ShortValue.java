@@ -25,6 +25,14 @@ public class ShortValue extends PrimitiveValue {
         super(DexValueType.SHORT);
     }
 
+    @Override
+    public Short getNumber() {
+        return get();
+    }
+    @Override
+    public void setNumber(Number number) {
+        this.set((Short) number);
+    }
     public short get(){
         return (short) getNumberValue();
     }

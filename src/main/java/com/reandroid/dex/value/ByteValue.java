@@ -25,6 +25,15 @@ public class ByteValue extends PrimitiveValue {
         super(DexValueType.BYTE);
     }
 
+    @Override
+    public Byte getNumber() {
+        return get();
+    }
+    @Override
+    public void setNumber(Number number) {
+        this.set((Byte) number);
+    }
+
     public byte get(){
         return (byte) (getNumberValue() & 0xff);
     }
