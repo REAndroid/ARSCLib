@@ -305,9 +305,6 @@ public class MethodKey implements Key{
         if(!KeyUtil.matches(getDeclaringName(), other.getDeclaringName())){
             return false;
         }
-        if(getNameParamsHashCode() != other.getNameParamsHashCode()){
-            return false;
-        }
         int i = CompareUtil.compare(getParameterNames(), other.getParameterNames());
         if(i != 0) {
             return false;
@@ -332,9 +329,6 @@ public class MethodKey implements Key{
         }
         if(other == this){
             return true;
-        }
-        if(getNameParamsHashCode() != other.getNameParamsHashCode()){
-            return false;
         }
         int i = CompareUtil.compare(getParameterNames(), other.getParameterNames());
         if(i != 0) {
