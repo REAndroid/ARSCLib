@@ -89,6 +89,9 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
     public void clear(){
         getValueList().clearChildes();
     }
+    public void removeAll(){
+        getValueList().removeAll();
+    }
     public boolean sort(Comparator<? super DexValueBlock<?>> comparator){
         return getValueList().sort(comparator);
     }
