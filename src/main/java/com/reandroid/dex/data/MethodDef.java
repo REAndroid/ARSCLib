@@ -25,6 +25,7 @@ import com.reandroid.dex.id.*;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.DataItemUle128Reference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
@@ -36,6 +37,7 @@ import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArraySupplierIterator;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.ExpandIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -381,12 +383,21 @@ public class MethodDef extends Def<MethodId>{
         public boolean hasAnnotations(){
             return getAnnotations().hasNext();
         }
+        public Iterator<AnnotationItem> getAnnotationItems(){
+            return ExpandIterator.of(getAnnotations());
+        }
         public Iterator<AnnotationSet> getAnnotations(){
             AnnotationsDirectory directory = this.methodDef.getAnnotationsDirectory();
             if(directory != null){
                 return directory.getParameterAnnotation(this.methodDef, getDefinitionIndex());
             }
             return EmptyIterator.of();
+        }
+        public AnnotationItem addAnnotationItem(TypeKey typeKey){
+            return getOrCreateAnnotationSet().addNewItem(typeKey);
+        }
+        public AnnotationItem getOrCreateAnnotationItem(TypeKey typeKey){
+            return getOrCreateAnnotationSet().getOrCreate(typeKey);
         }
         public AnnotationSet getOrCreateAnnotationSet(){
             AnnotationsDirectory directory = this.methodDef.getOrCreateUniqueAnnotationsDirectory();
@@ -395,6 +406,13 @@ public class MethodDef extends Def<MethodId>{
         public AnnotationSet addNewAnnotationSet(){
             AnnotationsDirectory directory = this.methodDef.getOrCreateUniqueAnnotationsDirectory();
             return directory.createNewParameterAnnotation(methodDef, getDefinitionIndex());
+        }
+        public TypeKey getType() {
+            TypeId typeId = getTypeId();
+            if(typeId != null){
+                return typeId.getKey();
+            }
+            return null;
         }
         public TypeId getTypeId() {
             ProtoId protoId = this.methodDef.getProtoId();

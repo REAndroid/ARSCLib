@@ -24,7 +24,7 @@ import com.reandroid.dex.key.TypeKey;
 
 import java.util.Iterator;
 
-public abstract class DexDeclaration extends Dex {
+public abstract class DexDeclaration extends Dex implements AnnotatedDex {
 
     public boolean isAccessibleTo(TypeKey typeKey) {
         if(this.getDefining().equals(typeKey)){
@@ -86,27 +86,6 @@ public abstract class DexDeclaration extends Dex {
     public abstract Key getKey();
     public abstract IdItem getId();
     public abstract DexClass getDexClass();
-
-    public abstract Iterator<DexAnnotation> getAnnotations();
-    public abstract Iterator<DexAnnotation> getAnnotations(TypeKey typeKey);
-    public abstract DexAnnotation getAnnotation(TypeKey typeKey);
-    public abstract DexAnnotation getOrCreateAnnotation(TypeKey typeKey);
-    public abstract DexAnnotation newAnnotation(TypeKey typeKey);
-
-    public DexAnnotationElement getAnnotationElement(TypeKey typeKey, String name){
-        DexAnnotation dexAnnotation = getAnnotation(typeKey);
-        if(dexAnnotation != null){
-            return dexAnnotation.get(name);
-        }
-        return null;
-    }
-    public DexValue getAnnotationValue(TypeKey typeKey, String name){
-        DexAnnotationElement element = getAnnotationElement(typeKey, name);
-        if(element != null){
-            return element.getValue();
-        }
-        return null;
-    }
 
     public Iterator<? extends Modifier> getAccessFlags(){
         return getDefinition().getAccessFlags();

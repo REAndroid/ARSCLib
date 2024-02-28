@@ -152,6 +152,9 @@ public class AnnotationItem extends DataItem
     public Iterator<AnnotationElement> iterator(){
         return annotationElements.iterator();
     }
+    public Iterator<AnnotationElement> clonedIterator(){
+        return annotationElements.clonedIterator();
+    }
     public int getElementsCount(){
         return annotationElements.size();
     }

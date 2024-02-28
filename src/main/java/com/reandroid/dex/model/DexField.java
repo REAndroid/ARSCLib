@@ -30,6 +30,7 @@ import com.reandroid.utils.collection.ExpandIterator;
 import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
+import java.lang.annotation.ElementType;
 import java.util.Iterator;
 
 public class DexField extends DexDeclaration {
@@ -110,6 +111,11 @@ public class DexField extends DexDeclaration {
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getDefinition().append(writer);
+    }
+
+    @Override
+    public ElementType getElementType(){
+        return ElementType.FIELD;
     }
 
     @Override

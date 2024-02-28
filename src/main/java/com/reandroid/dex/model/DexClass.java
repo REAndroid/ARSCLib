@@ -30,6 +30,7 @@ import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.FileUtil;
 
 import java.io.*;
+import java.lang.annotation.ElementType;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -413,7 +414,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         getId().refresh();
     }
     public void fixDalvikInnerClassName(){
-        AnnotationItem annotationItem = getDalvikInnerClassAnnotation();
+        AnnotationItem annotationItem = getId().getDalvikInnerClass();
         if(annotationItem == null){
             return;
         }
@@ -467,8 +468,26 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         }
         return null;
     }
-    public AnnotationItem getDalvikInnerClassAnnotation(){
-        return getId().getDalvikInnerClass();
+    public String getDalvikInnerClassName(){
+        DexValue dexValue = getAnnotationValue(TypeKey.DALVIK_InnerClass, "name");
+        if(dexValue != null){
+            return dexValue.getString();
+        }
+        return null;
+    }
+    public void updateDalvikInnerClassName(String name){
+        DexValue dexValue = getAnnotationValue(
+                TypeKey.DALVIK_InnerClass, "name");
+        if(dexValue != null){
+            dexValue.setString(name);
+        }
+    }
+    public void createDalvikInnerClassName(String name){
+        DexValue dexValue = getOrCreateAnnotationValue(
+                TypeKey.DALVIK_InnerClass,
+                "name",
+                DexValueType.STRING);
+        dexValue.setString(name);
     }
 
     @Override
@@ -549,6 +568,11 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     }
     public String toSmali(SmaliWriter writer) throws IOException {
         return SmaliWriter.toString(writer,this);
+    }
+
+    @Override
+    public ElementType getElementType(){
+        return ElementType.TYPE;
     }
 
     @Override

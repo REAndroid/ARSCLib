@@ -29,6 +29,7 @@ import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
+import java.lang.annotation.ElementType;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -269,6 +270,11 @@ public class DexMethod extends DexDeclaration {
         return isConstructor() || isPrivate() || isStatic();
     }
 
+    public Iterator<DexMethodParameter> getParameters(){
+        return ComputeIterator.of(getDefinition().getParameters(),
+                parameter -> DexMethodParameter.create(DexMethod.this, parameter));
+    }
+
     @Override
     public void removeSelf(){
         getDefinition().removeSelf();
@@ -276,6 +282,10 @@ public class DexMethod extends DexDeclaration {
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getDefinition().append(writer);
+    }
+    @Override
+    public ElementType getElementType(){
+        return ElementType.METHOD;
     }
     @Override
     public boolean equals(Object obj) {
