@@ -514,12 +514,6 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     ClassData getClassData(){
         return getId().getClassData();
     }
-    EncodedArray getStaticValues(){
-        return getId().getStaticValues();
-    }
-    AnnotationsDirectory getAnnotationsDirectory(){
-        return getId().getAnnotationsDirectory();
-    }
 
     public void edit(){
         getId().edit();
