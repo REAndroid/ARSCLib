@@ -149,6 +149,7 @@ public abstract class DexDeclaration extends Dex {
     public String getPackageName() {
         return getDefining().getPackageName();
     }
+    public abstract void removeSelf();
     public boolean isInSameFile(DexDeclaration dexDeclaration){
         if(dexDeclaration == null){
             return false;
@@ -163,7 +164,8 @@ public abstract class DexDeclaration extends Dex {
         return dexFile == dexDeclaration.getDexFile();
     }
     public boolean isInSameFile(DexFile dexFile){
-        return dexFile == getDexFile();
+        return dexFile != null &&
+                dexFile.getDexLayout() == getDexFile().getDexLayout();
     }
     public boolean isInSameDirectory(DexDeclaration dexDeclaration){
         if(dexDeclaration == null){

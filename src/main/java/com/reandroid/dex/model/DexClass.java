@@ -514,7 +514,10 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     ClassData getClassData(){
         return getId().getClassData();
     }
-
+    @Override
+    public void removeSelf(){
+        getDefinition().removeSelf();
+    }
     public void edit(){
         getId().edit();
     }

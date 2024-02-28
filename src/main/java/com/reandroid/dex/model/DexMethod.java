@@ -268,6 +268,11 @@ public class DexMethod extends DexDeclaration {
     public boolean isDirect(){
         return isConstructor() || isPrivate() || isStatic();
     }
+
+    @Override
+    public void removeSelf(){
+        getDefinition().removeSelf();
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getDefinition().append(writer);

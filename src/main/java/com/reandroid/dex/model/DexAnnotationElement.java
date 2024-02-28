@@ -33,6 +33,10 @@ public class DexAnnotationElement extends Dex {
                 getAnnotationElement().getOrCreateValue(valueType));
     }
 
+    public void removeSelf(){
+        getAnnotationElement().removeSelf();
+    }
+    
     public AnnotationElement getAnnotationElement() {
         return annotationElement;
     }

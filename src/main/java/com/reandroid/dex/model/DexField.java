@@ -102,6 +102,10 @@ public class DexField extends DexDeclaration {
         return DexAnnotation.create(this,
                 getDefinition().getOrCreateAnnotationSet().addNewItem(typeKey));
     }
+    @Override
+    public void removeSelf(){
+        getDefinition().removeSelf();
+    }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {

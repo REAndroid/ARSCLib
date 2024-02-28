@@ -1,17 +1,15 @@
 package com.reandroid.dex.model;
 
-import com.reandroid.common.ArraySupplier;
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.data.AnnotationItem;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.collection.ArraySupplierIterator;
+import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class DexAnnotation extends Dex
-        implements ArraySupplier<DexAnnotationElement>, Iterable<DexAnnotationElement>{
+public class DexAnnotation extends Dex implements Iterable<DexAnnotationElement>{
 
     private final Dex declaring;
     private final AnnotationItem annotationItem;
@@ -36,18 +34,27 @@ public class DexAnnotation extends Dex
         return DexAnnotationElement.create(this,
                 getAnnotationItem().getElement(name));
     }
-    @Override
     public DexAnnotationElement get(int index){
         return DexAnnotationElement.create(this,
                 getAnnotationItem().getElement(index));
     }
-    @Override
-    public int getCount(){
+    public int size(){
         return getAnnotationItem().getElementsCount();
     }
     @Override
     public Iterator<DexAnnotationElement> iterator() {
-        return ArraySupplierIterator.of(this);
+        return ComputeIterator.of(
+                getAnnotationItem().iterator(),
+                element -> DexAnnotationElement.create(
+                        DexAnnotation.this, element)
+        );
+    }
+    public Iterator<DexAnnotationElement> clonedIterator() {
+        return ComputeIterator.of(
+                getAnnotationItem().clonedIterator(),
+                element -> DexAnnotationElement.create(
+                        DexAnnotation.this, element)
+        );
     }
     public AnnotationVisibility getVisibility(){
         return getAnnotationItem().getVisibility();
@@ -58,6 +65,9 @@ public class DexAnnotation extends Dex
     public DexAnnotationElement getOrCreate(String name){
         return DexAnnotationElement.create(this,
                 getAnnotationItem().getOrCreateElement(name));
+    }
+    public void removeSelf(){
+        getAnnotationItem().removeSelf();
     }
 
     public AnnotationItem getAnnotationItem() {
