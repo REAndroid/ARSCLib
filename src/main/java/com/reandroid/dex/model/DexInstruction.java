@@ -25,6 +25,8 @@ import com.reandroid.dex.ins.*;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
@@ -49,6 +51,23 @@ public class DexInstruction extends Dex {
             return ((StringId) idItem).getString();
         }
         return null;
+    }
+    public void setString(String text){
+        setKey(StringKey.create(text));
+    }
+    public DexInstruction setStringWithJumbo(String text){
+        SizeXIns sizeXIns = (SizeXIns) getIns();
+        StringId stringId = sizeXIns.getOrCreateSectionItem(
+                SectionType.STRING_ID, StringKey.create(text));
+        if((stringId.getIdx() & 0xffff0000) == 0 || !sizeXIns.is(Opcode.CONST_STRING)){
+            sizeXIns.setSectionId(stringId);
+            return this;
+        }
+        int register = ((RegistersSet)sizeXIns).getRegister();
+        InsConstStringJumbo jumbo = sizeXIns.replace(Opcode.CONST_STRING_JUMBO);
+        jumbo.setRegister(register);
+        jumbo.setSectionId(stringId);
+        return new DexInstruction(getDexMethod(), jumbo);
     }
     public FieldKey getFieldKey(){
         IdItem idItem = getIdSectionEntry();
