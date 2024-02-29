@@ -219,12 +219,18 @@ public class DexFile implements DexClassRepository, Closeable,
         }
         return false;
     }
-    public Iterator<Key> removeDexClasses(Predicate<? super Key> filter){
-        Section<ClassId> section = getSection(SectionType.CLASS_ID);
-        if(section != null){
-            return section.removeAll(filter);
-        }
-        return EmptyIterator.of();
+    public Iterator<Key> removeClassesWithKeys(Predicate<Key> filter){
+        return getDexLayout().removeWithKeys(SectionType.CLASS_ID, filter);
+    }
+    public int removeClasses(Predicate<DexClass> filter){
+        Predicate<ClassId> classIdFilter = classId -> filter.test(DexFile.this.create(classId));
+        return getDexLayout().removeEntries(SectionType.CLASS_ID, classIdFilter);
+    }
+    public <T1 extends SectionItem> int removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
+        return getDexLayout().removeEntries(sectionType, filter);
+    }
+    public <T1 extends SectionItem> Iterator<Key> removeWithKeys(SectionType<T1> sectionType, Predicate<Key> filter){
+        return getDexLayout().removeWithKeys(sectionType, filter);
     }
     public<T1 extends SectionItem> Iterator<T1> getClonedItems(SectionType<T1> sectionType) {
         return getDexLayout().getClonedItems(sectionType);
@@ -251,6 +257,10 @@ public class DexFile implements DexClassRepository, Closeable,
     @Override
     public Iterator<DexClass> getDexClasses(Predicate<? super TypeKey> filter) {
         return ComputeIterator.of(getClassIds(filter), this::create);
+    }
+    @Override
+    public Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter) {
+        return ComputeIterator.of(getClassIdsCloned(filter), this::create);
     }
     @Override
     public<T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType) {
@@ -431,11 +441,19 @@ public class DexFile implements DexClassRepository, Closeable,
         return ComputeIterator.of(getClassIds(), ClassId::getName);
     }
 
-    public Iterator<Ins> getInstructions(){
-        return new IterableIterator<ClassData, Ins>(getClassData()){
+    public Iterator<DexInstruction> getDexInstructions(){
+        return new IterableIterator<DexClass, DexInstruction>(getDexClasses()){
             @Override
-            public Iterator<Ins> iterator(ClassData element) {
-                return element.getInstructions();
+            public Iterator<DexInstruction> iterator(DexClass element) {
+                return element.getDexInstructions();
+            }
+        };
+    }
+    public Iterator<DexInstruction> getDexInstructionsCloned(){
+        return new IterableIterator<DexClass, DexInstruction>(getDexClassesCloned()){
+            @Override
+            public Iterator<DexInstruction> iterator(DexClass element) {
+                return element.getDexInstructions();
             }
         };
     }
@@ -479,6 +497,10 @@ public class DexFile implements DexClassRepository, Closeable,
     }
     public Iterator<ClassId> getClassIds(Predicate<? super TypeKey> filter){
         return FilterIterator.of(getItems(SectionType.CLASS_ID),
+                classId -> filter == null || filter.test(classId.getKey()));
+    }
+    public Iterator<ClassId> getClassIdsCloned(Predicate<? super TypeKey> filter){
+        return FilterIterator.of(getClonedItems(SectionType.CLASS_ID),
                 classId -> filter == null || filter.test(classId.getKey()));
     }
     public Iterator<StringId> getStringIds(){

@@ -25,6 +25,7 @@ import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
@@ -73,7 +74,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     public boolean remove(Key key){
         return false;
     }
-    public Iterator<Key> removeAll(Predicate<? super Key> filter){
+    public Iterator<Key> removeWithKeys(Predicate<Key> filter){
         return EmptyIterator.of();
     }
     public int removeEntries(Predicate<? super T> filter){

@@ -62,7 +62,7 @@ public class IdSection<T extends IdItem> extends Section<T> {
         return false;
     }
     @Override
-    public Iterator<Key> removeAll(Predicate<? super Key> filter){
+    public Iterator<Key> removeWithKeys(Predicate<Key> filter){
         Iterator<T> iterator = getItemArray().clonedIterator();
         return ComputeIterator.of(iterator, item -> {
             Key key = item.getKey();

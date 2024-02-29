@@ -183,6 +183,20 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
         }
         return EmptyIterator.of();
     }
+    public <T1 extends SectionItem> int removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
+        Section<T1> section = get(sectionType);
+        if(section != null){
+            return section.removeEntries(filter);
+        }
+        return 0;
+    }
+    public <T1 extends SectionItem> Iterator<Key> removeWithKeys(SectionType<T1> sectionType, Predicate<Key> filter){
+        Section<T1> section = get(sectionType);
+        if(section != null){
+            return section.removeWithKeys(filter);
+        }
+        return EmptyIterator.of();
+    }
     public <T1 extends SectionItem> T1 get(SectionType<T1> sectionType, Key key){
         Section<T1> section = get(sectionType);
         if(section != null){

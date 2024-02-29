@@ -93,6 +93,7 @@ public class DataItem extends SectionItemContainer
         }
     }
     @SuppressWarnings("unchecked")
+    @Override
     public void removeSelf() {
         Block parent = getParent();
         if(parent == null){

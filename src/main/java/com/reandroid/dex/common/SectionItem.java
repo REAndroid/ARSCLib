@@ -124,6 +124,9 @@ public class SectionItem extends BlockItem implements EditableItem, SectionTool,
     public void editInternal(Block user) {
 
     }
+    public void removeSelf(){
+        throw new RuntimeException("Not implemented");
+    }
     public boolean equalsKey(SectionItem sectionItem){
         if(sectionItem == this){
             return true;
@@ -136,6 +139,16 @@ public class SectionItem extends BlockItem implements EditableItem, SectionTool,
             return false;
         }
         return key.equals(sectionItem.getKey());
+    }
+    public boolean equalsKey(Key key){
+        if(key == null){
+            return false;
+        }
+        Key myKey = getKey();
+        if(myKey == null){
+            return false;
+        }
+        return myKey.equals(key);
     }
 
     public String getFieldNameForDebug(Object item){

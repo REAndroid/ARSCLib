@@ -23,7 +23,6 @@ import com.reandroid.dex.id.*;
 import com.reandroid.dex.sections.*;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.dex.ins.*;
 import com.reandroid.dex.key.*;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.*;
@@ -317,11 +316,29 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return false;
     }
-    public Iterator<Key> removeDexClasses(Predicate<? super Key> filter){
-        return new IterableIterator<DexFile, Key>(iterator()) {
+    public <T1 extends SectionItem> int removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
+        Iterator<DexFile> iterator = clonedIterator();
+        int result = 0;
+        while (iterator.hasNext()){
+            DexFile dexFile = iterator.next();
+            result += dexFile.removeEntries(sectionType, filter);
+        }
+        return result;
+    }
+    public int removeClasses(Predicate<DexClass> filter){
+        Iterator<DexFile> iterator = clonedIterator();
+        int result = 0;
+        while (iterator.hasNext()){
+            DexFile dexFile = iterator.next();
+            result += dexFile.removeClasses(filter);
+        }
+        return result;
+    }
+    public Iterator<Key> removeClassesWithKeys(Predicate<Key> filter){
+        return new IterableIterator<DexFile, Key>(clonedIterator()) {
             @Override
             public Iterator<Key> iterator(DexFile element) {
-                return element.removeDexClasses(filter);
+                return element.removeClassesWithKeys(filter);
             }
         };
     }
@@ -364,6 +381,15 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         };
     }
     @Override
+    public Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter) {
+        return new IterableIterator<DexFile, DexClass>(clonedIterator()) {
+            @Override
+            public Iterator<DexClass> iterator(DexFile dexFile) {
+                return dexFile.getDexClassesCloned(filter);
+            }
+        };
+    }
+    @Override
     public<T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType) {
         return new IterableIterator<DexFile, T1>(iterator()) {
             @Override
@@ -391,11 +417,19 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return null;
     }
-    public Iterator<Ins> getInstructions() {
-        return new IterableIterator<DexFile, Ins>(iterator()) {
+    public Iterator<DexInstruction> getDexInstructions() {
+        return new IterableIterator<DexFile, DexInstruction>(iterator()) {
             @Override
-            public Iterator<Ins> iterator(DexFile element) {
-                return element.getInstructions();
+            public Iterator<DexInstruction> iterator(DexFile element) {
+                return element.getDexInstructions();
+            }
+        };
+    }
+    public Iterator<DexInstruction> getDexInstructionsCloned() {
+        return new IterableIterator<DexFile, DexInstruction>(clonedIterator()) {
+            @Override
+            public Iterator<DexInstruction> iterator(DexFile element) {
+                return element.getDexInstructionsCloned();
             }
         };
     }

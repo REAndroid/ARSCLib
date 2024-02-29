@@ -30,12 +30,16 @@ public interface DexClassRepository {
     int getDexClassesCount();
     DexClass getDexClass(TypeKey typeKey);
     Iterator<DexClass> getDexClasses(Predicate<? super TypeKey> filter);
+    Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter);
     <T extends SectionItem> Iterator<T> getItems(SectionType<T> sectionType);
     <T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType, Key key);
     <T1 extends SectionItem> T1 getItem(SectionType<T1> sectionType, Key key);
 
     default Iterator<DexClass> getDexClasses(){
         return getDexClasses(null);
+    }
+    default Iterator<DexClass> getDexClassesCloned(){
+        return getDexClassesCloned(null);
     }
     default Iterator<DexClass> getPackageClasses(String packageName){
         return getPackageClasses(packageName, true);

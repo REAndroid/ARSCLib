@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.id;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.*;
@@ -46,6 +45,7 @@ public abstract class IdItem extends SectionItem
     @Override
     public abstract Iterator<IdItem> usedIds();
     @SuppressWarnings("unchecked")
+    @Override
     public void removeSelf(){
         BlockListArray<IdItem> itemArray = getParentInstance(BlockListArray.class);
         if(itemArray != null){
