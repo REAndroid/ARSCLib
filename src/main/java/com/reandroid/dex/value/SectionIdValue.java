@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.value;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.data.AnnotationElement;
@@ -80,6 +81,11 @@ public abstract class SectionIdValue<T extends IdItem> extends SectionValue<T> {
         if(key != key2){
             setItem(key2);
         }
+    }
+
+    @Override
+    public void editInternal(Block user) {
+        // TODO: what ?
     }
 
     @Override

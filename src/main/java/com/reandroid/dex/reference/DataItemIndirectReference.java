@@ -20,7 +20,6 @@ import com.reandroid.arsc.item.IndirectItem;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.data.DataItem;
-import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.SectionType;
 
@@ -187,6 +186,15 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
             setItem(key2);
         }
     }
+
+    @Override
+    public void editInternal(Block user) {
+        T item = getUniqueItem(user);
+        if(item != null){
+            item.editInternal(user);
+        }
+    }
+
     @Override
     public String toString() {
         if(item != null){

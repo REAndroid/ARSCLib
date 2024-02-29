@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.arsc.io.BlockReader;
@@ -99,9 +100,6 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
     public DebugInfo getDebugInfo(){
         return header.debugInfoOffset.getItem();
     }
-    public DebugInfo getUniqueDebugInfo(){
-        return header.debugInfoOffset.getUniqueItem(this);
-    }
     public DebugInfo getOrCreateDebugInfo(){
         return header.debugInfoOffset.getOrCreateUniqueItem(this);
     }
@@ -184,6 +182,17 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
     public void replaceKeys(Key search, Key replace){
         getInstructionList().replaceKeys(search, replace);
     }
+
+
+    @Override
+    public void edit() {
+        this.editInternal(this);
+    }
+    @Override
+    public void editInternal(Block user) {
+        this.header.editInternal(user);
+    }
+
     public Iterator<IdItem> usedIds(){
         DebugInfo debugInfo = getDebugInfo();
         Iterator<IdItem> iterator1;
@@ -315,6 +324,11 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
 
         public void onRemove(){
             debugInfoOffset.setItem((DebugInfo) null);
+        }
+
+        @Override
+        public void editInternal(Block user) {
+            debugInfoOffset.editInternal(user);
         }
 
         public void merge(Header header){

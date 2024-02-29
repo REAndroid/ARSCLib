@@ -102,6 +102,13 @@ public class DataItemUle128Reference<T extends DataItem> extends Ule128Item impl
         set(0);
     }
     @Override
+    public void editInternal(Block user) {
+        T item = getUniqueItem(user);
+        if(item != null){
+            item.editInternal(user);
+        }
+    }
+    @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
         pullItem();

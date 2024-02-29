@@ -15,9 +15,18 @@
  */
 package com.reandroid.dex.reference;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.id.IdItem;
 
 public interface IdReference<T extends IdItem> extends DexReference<T> {
+
+    @Override
+    default void editInternal(Block user){
+        T item = getItem();
+        if(item != null){
+            item.editInternal(user);
+        }
+    }
     default void checkNonNullItem(T item) {
         if(item == null){
             throw new NullPointerException("Null item for: " + getSectionType().getName());

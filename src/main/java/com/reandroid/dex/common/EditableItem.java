@@ -13,21 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.reference;
 
-import com.reandroid.arsc.base.BlockRefresh;
-import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.common.EditableItem;
-import com.reandroid.dex.common.SectionItem;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.sections.SectionType;
+// originally copied from JesusFreke/smali
+package com.reandroid.dex.common;
 
-public interface DexReference<T extends SectionItem> extends
-        IntegerReference, BlockRefresh, EditableItem {
-    T getItem();
-    void setItem(T item);
-    void setItem(Key item);
-    Key getKey();
-    SectionType<T> getSectionType();
-    void pullItem();
+import com.reandroid.arsc.base.Block;
+
+public interface EditableItem {
+    void editInternal(Block user);
+    default void edit(){
+    }
 }

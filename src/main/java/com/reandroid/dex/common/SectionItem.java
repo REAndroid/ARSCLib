@@ -1,5 +1,6 @@
 package com.reandroid.dex.common;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.key.Key;
@@ -8,7 +9,7 @@ import com.reandroid.dex.sections.SectionType;
 
 import java.lang.reflect.Field;
 
-public class SectionItem extends BlockItem implements SectionTool, UsageMarker {
+public class SectionItem extends BlockItem implements EditableItem, SectionTool, UsageMarker {
 
     private int mUsageType;
     private Key mLastKey;
@@ -117,6 +118,11 @@ public class SectionItem extends BlockItem implements SectionTool, UsageMarker {
     @Override
     public void clearUsageType(){
         this.mUsageType = UsageMarker.USAGE_NONE;
+    }
+
+    @Override
+    public void editInternal(Block user) {
+
     }
     public boolean equalsKey(SectionItem sectionItem){
         if(sectionItem == this){

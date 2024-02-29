@@ -15,10 +15,12 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.common.EditableItem;
 import com.reandroid.dex.common.IdUsageIterator;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
@@ -33,7 +35,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 
 public abstract class DefArray<T extends Def<?>> extends BlockList<T> implements
-        Iterable<T>, SmaliFormat, IdUsageIterator {
+        Iterable<T>, EditableItem, SmaliFormat, IdUsageIterator {
 
     private final IntegerReference itemCount;
 
@@ -195,6 +197,14 @@ public abstract class DefArray<T extends Def<?>> extends BlockList<T> implements
             def.replaceKeys(search, replace);
         }
     }
+
+    @Override
+    public void editInternal(Block user) {
+        for(Def<?> def : this){
+            def.editInternal(user);
+        }
+    }
+
     @Override
     public Iterator<IdItem> usedIds(){
         return new IterableIterator<Def<?>, IdItem>(iterator()) {

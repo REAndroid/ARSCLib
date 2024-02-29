@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.common.ArraySupplier;
 import com.reandroid.dex.base.UsageMarker;
@@ -213,14 +214,6 @@ public class MethodDef extends Def<MethodId>{
         }
         return codeItem;
     }
-    public CodeItem getUniqueCodeItem(){
-        CodeItem codeItem = codeOffset.getUniqueItem(this);
-        if(codeItem != null){
-            codeItem.setMethodDef(this);
-            codeItem.getUniqueDebugInfo();
-        }
-        return codeItem;
-    }
     private void linkCodeItem(){
         CodeItem codeItem = codeOffset.getItem();
         if(codeItem != null){
@@ -279,6 +272,20 @@ public class MethodDef extends Def<MethodId>{
             codeItem.replaceKeys(search, replace);
         }
     }
+
+    @Override
+    public void edit(){
+        CodeItem codeItem = codeOffset.getUniqueItem(this);
+        if(codeItem != null){
+            codeItem.setMethodDef(this);
+            codeItem.edit();
+        }
+    }
+    @Override
+    public void editInternal(Block user) {
+        this.edit();
+    }
+
     @Override
     public Iterator<IdItem> usedIds(){
         Iterator<IdItem> iterator;

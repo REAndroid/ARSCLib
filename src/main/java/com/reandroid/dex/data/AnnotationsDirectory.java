@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
@@ -250,6 +251,12 @@ public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
             groupIterator.next().replaceKeys(search, replace);
         }
     }
+
+    @Override
+    public void editInternal(Block user) {
+        this.header.editInternal(user);
+    }
+
     public Iterator<IdItem> usedIds(){
         AnnotationSet classAnnotation = getClassAnnotations();
         Iterator<IdItem> iterator1;
@@ -373,6 +380,12 @@ public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
         public void merge(Header header){
             classAnnotation.setItem(header.classAnnotation.getKey());
         }
+
+        @Override
+        public void editInternal(Block user) {
+            // TODO: make annotation items unique
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj) {

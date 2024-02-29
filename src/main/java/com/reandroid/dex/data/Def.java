@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.*;
@@ -35,7 +36,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool implements
-        IdDefinition<T>, Comparable<Def<T>>, SmaliRegion, DefIndex, IdUsageIterator {
+        IdDefinition<T>, EditableItem, Comparable<Def<T>>, SmaliRegion, DefIndex, IdUsageIterator {
 
     private final SectionType<T> sectionType;
     private final Ule128Item relativeId;
@@ -300,6 +301,12 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
             setItem(key2);
         }
     }
+
+    @Override
+    public void editInternal(Block user) {
+
+    }
+
     public Iterator<IdItem> usedIds(){
         return SingleIterator.of(getId());
     }

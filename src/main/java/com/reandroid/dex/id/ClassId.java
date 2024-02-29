@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.id;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.*;
@@ -67,11 +68,17 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
     public void clearUsageType() {
     }
 
+    @Override
     public void edit(){
-        annotationsDirectory.getUniqueItem(this);
-        classData.getUniqueItem(this);
-        staticValues.getUniqueItem(this);
+        this.editInternal(this);
     }
+    @Override
+    public void editInternal(Block user) {
+        annotationsDirectory.editInternal(this);
+        classData.editInternal(this);
+        staticValues.editInternal(this);
+    }
+
     @Override
     public SectionType<ClassId> getSectionType(){
         return SectionType.CLASS_ID;

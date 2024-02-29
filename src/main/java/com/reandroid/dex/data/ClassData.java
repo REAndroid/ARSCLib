@@ -15,8 +15,8 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.id.ClassId;
@@ -341,6 +341,23 @@ public class ClassData extends DataItem implements SmaliFormat {
             iterator.next().replaceKeys(search, replace);
         }
     }
+
+    @Override
+    public void editInternal(Block user) {
+        if(staticFields != null){
+            staticFields.editInternal(user);
+        }
+        if(instanceFields != null){
+            instanceFields.editInternal(user);
+        }
+        if(directMethods != null){
+            directMethods.editInternal(user);
+        }
+        if(virtualMethods != null){
+            virtualMethods.editInternal(user);
+        }
+    }
+
     @Override
     public Iterator<IdItem> usedIds(){
         return new IterableIterator<DefArray<?>, IdItem>(getDefArrays()) {

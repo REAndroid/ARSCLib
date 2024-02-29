@@ -15,9 +15,11 @@
  */
 package com.reandroid.dex.id;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.*;
+import com.reandroid.dex.common.EditableItem;
 import com.reandroid.dex.common.IdUsageIterator;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.key.Key;
@@ -29,7 +31,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public abstract class IdItem extends SectionItem
-        implements SmaliFormat, BlockRefresh,
+        implements SmaliFormat, BlockRefresh, EditableItem,
         KeyItemCreate, FixedSizeBlock, IdUsageIterator {
 
     IdItem(int bytesLength) {
