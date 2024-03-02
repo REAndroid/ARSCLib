@@ -420,13 +420,17 @@ public class ApkModuleTest {
 
         addEmptyAttributeValue(manifestBlock);
 
-        manifestBlock.getOrCreateMainActivity(manifestBlock.getPackageName() + ".MyActivity");
+        manifestBlock.setApplicationClassName("android.app.Application");
+        manifestBlock.setMainActivityClassName(".MyActivity");
 
         manifestBlock.refresh();
 
         Assert.assertEquals("package", "com.reandroid.arsc", manifestBlock.getPackageName());
         Assert.assertEquals("versionCode", Integer.valueOf(1), manifestBlock.getVersionCode());
         Assert.assertEquals("versionName", "1.0", manifestBlock.getVersionName());
+
+        Assert.assertEquals("Application class", "android.app.Application", manifestBlock.getApplicationClassName());
+        Assert.assertEquals("Main activity", manifestBlock.getPackageName() + ".MyActivity", manifestBlock.getMainActivityClassName());
 
         Assert.assertEquals("compileSdkVersion",
                 Integer.valueOf(1), manifestBlock.getVersionCode());
