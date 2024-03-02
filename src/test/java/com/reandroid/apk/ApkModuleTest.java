@@ -85,8 +85,8 @@ public class ApkModuleTest {
 
         apkModule.getTableBlock().refreshFull();
 
-        String appClass = AndroidManifestBlock.getAndroidNameValue(manifestBlock.getApplicationElement());
-        String mainActivity = AndroidManifestBlock.getAndroidNameValue(manifestBlock.getMainActivity());
+        String appClass = manifestBlock.getApplicationClassName();
+        String mainActivity = manifestBlock.getMainActivityClassName();
 
         DexFile dexFile = SampleDexFileCreator.createApplicationClass(appClass, mainActivity, mainActivityLayoutId);
         byte[] bytes = dexFile.getBytes();
@@ -420,7 +420,7 @@ public class ApkModuleTest {
 
         addEmptyAttributeValue(manifestBlock);
 
-        manifestBlock.setApplicationClassName("android.app.Application");
+        manifestBlock.setApplicationClassName(manifestBlock.getPackageName() + ".MyApplication");
         manifestBlock.setMainActivityClassName(".MyActivity");
 
         manifestBlock.refresh();
@@ -429,7 +429,7 @@ public class ApkModuleTest {
         Assert.assertEquals("versionCode", Integer.valueOf(1), manifestBlock.getVersionCode());
         Assert.assertEquals("versionName", "1.0", manifestBlock.getVersionName());
 
-        Assert.assertEquals("Application class", "android.app.Application", manifestBlock.getApplicationClassName());
+        Assert.assertEquals("Application class", manifestBlock.getPackageName() + ".MyApplication", manifestBlock.getApplicationClassName());
         Assert.assertEquals("Main activity", manifestBlock.getPackageName() + ".MyActivity", manifestBlock.getMainActivityClassName());
 
         Assert.assertEquals("compileSdkVersion",
