@@ -241,6 +241,8 @@ public class TypeKey implements Key{
         if(diff > 0 && name1.charAt(diff) == '$' && diff > name1.lastIndexOf('/') + 1){
             return CompareUtil.compare(name2, name1);
         }
+        name1 = this.getTypeName();
+        name2 = other.getTypeName();
         return CompareUtil.compare(name1, name2);
     }
     @Override

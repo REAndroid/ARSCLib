@@ -50,11 +50,10 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
         while (iterator.hasNext()){
             StringId stringId = iterator.next();
             String text = map.get(stringId.getString());
-            if(text == null){
-                continue;
+            if(text != null){
+                stringId.setString(text);
+                count ++;
             }
-            stringId.setString(text);
-            count ++;
         }
         return count;
     }
@@ -83,7 +82,7 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
 
         int estimatedSize = 1;
         if(renameSignatures){
-            estimatedSize = estimatedSize + 1;
+            estimatedSize = estimatedSize + 2;
         }
         if(renameSource){
             estimatedSize = estimatedSize + 1;
@@ -109,14 +108,26 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
             map.put(name1, name2);
 
             if(renameSignatures){
+                name1 = first.getTypeName();
+                name2 = second.getTypeName();
+
                 name1 = name1.replace(';', '<');
                 name2 = name2.replace(';', '<');
+
+                map.put(name1, name2);
+
+                name1 = first.getTypeName();
+                name2 = second.getTypeName();
+
+                name1 = name1.substring(0, name1.length() - 1);
+                name2 = name2.substring(0, name2.length() - 1);
+
                 map.put(name1, name2);
             }
 
             for(int j = 1; j < arrayDepth; j++){
                 name1 = first.getArrayType(j);
-                name2 = first.getArrayType(j);
+                name2 = second.getArrayType(j);
                 map.put(name1, name2);
                 if(renameSignatures && j == 1){
                     name1 = name1.replace(';', '<');
