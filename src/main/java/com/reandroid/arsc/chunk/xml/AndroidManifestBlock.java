@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class AndroidManifestBlock extends ResXmlDocument implements AndroidManifest {
     private int mGuessedPackageId;
     public AndroidManifestBlock(){
@@ -408,7 +409,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         setManifestAttributeInt(NAME_platformBuildVersionCode, 0, version);
     }
     @Override
-    public String getPlatformBuildVersionName(){
+    public Object getPlatformBuildVersionName(){
         ResXmlElement manifest = getManifestElement();
         if(manifest == null){
             return null;
@@ -417,11 +418,27 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         if(attribute == null ){
             return null;
         }
-        return attribute.getValueAsString();
+        if(attribute.getValueType() == ValueType.STRING){
+            return attribute.getValueAsString();
+        }
+        return attribute.getData();
     }
     @Override
-    public void setPlatformBuildVersionName(String name){
-        setManifestAttributeString(NAME_platformBuildVersionName, 0, name);
+    public void setPlatformBuildVersionName(Object name){
+        Integer versionNumber = null;
+        if(name instanceof Integer){
+            versionNumber = (Integer) name;
+        }else {
+            try{
+                versionNumber = Integer.parseInt((String) name);
+            }catch (NumberFormatException ignored){
+            }
+        }
+        if(versionNumber != null){
+            setManifestAttributeInt(NAME_platformBuildVersionName, 0, versionNumber);
+        }else{
+            setManifestAttributeString(NAME_platformBuildVersionName, 0, (String) name);
+        }
     }
     @Override
     public Integer getMinSdkVersion(){

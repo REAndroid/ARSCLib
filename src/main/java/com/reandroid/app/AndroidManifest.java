@@ -17,6 +17,7 @@ package com.reandroid.app;
 
 import com.reandroid.utils.ObjectsUtil;
 
+@SuppressWarnings("unused")
 public interface AndroidManifest {
 
     String getPackageName();
@@ -27,8 +28,8 @@ public interface AndroidManifest {
     void setVersionName(String name);
     Integer getPlatformBuildVersionCode();
     void setPlatformBuildVersionCode(int version);
-    String getPlatformBuildVersionName();
-    void setPlatformBuildVersionName(String name);
+    Object getPlatformBuildVersionName();
+    void setPlatformBuildVersionName(Object name);
 
     Integer getCompileSdkVersion();
     void setCompileSdkVersion(int version);
