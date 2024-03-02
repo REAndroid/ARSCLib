@@ -22,6 +22,13 @@ public interface AndroidManifest {
 
     String getPackageName();
     void setPackageName(String packageName);
+
+    String getApplicationClassName();
+    void setApplicationClassName(String className);
+
+    String getMainActivityClassName();
+    void setMainActivityClassName(String className);
+
     Integer getVersionCode();
     void setVersionCode(int version);
     String getVersionName();

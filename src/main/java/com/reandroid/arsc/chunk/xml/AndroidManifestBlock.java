@@ -235,7 +235,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         ResXmlElement activity = getMainActivity();
         if(activity == null){
             ResXmlElement application = getOrCreateApplicationElement();
-            activity = application.createChildElement(TAG_activity);
+            activity = application.createChildElement(0, TAG_activity);
             ResXmlElement intentFilter = activity.createChildElement(TAG_intent_filter);
             ResXmlElement action = intentFilter.createChildElement(TAG_action);
             ResXmlAttribute attribute = action.getOrCreateAndroidAttribute(NAME_name, ID_name);
@@ -371,11 +371,43 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
     public void setPackageName(String packageName){
         ResXmlElement manifestElement = getOrCreateManifestElement();
         ResXmlAttribute attribute = manifestElement.getOrCreateAttribute(NAME_PACKAGE, 0);
-        if(attribute == null){
-            return;
-        }
         attribute.setValueAsString(packageName);
     }
+    @Override
+    public String getApplicationClassName(){
+        ResXmlElement applicationElement = getApplicationElement();
+        if(applicationElement != null){
+            ResXmlAttribute attribute = applicationElement
+                    .searchAttributeByResourceId(ID_name);
+            if(attribute != null){
+                return fullClassName(attribute.getValueAsString());
+            }
+        }
+        return null;
+    }
+    @Override
+    public void setApplicationClassName(String className){
+        ResXmlAttribute attribute = getOrCreateApplicationElement()
+                .getOrCreateAndroidAttribute(NAME_name, ID_name);
+        attribute.setValueAsString(className);
+    }
+    @Override
+    public String getMainActivityClassName(){
+        ResXmlElement mainActivity = getMainActivity();
+        if(mainActivity != null){
+            ResXmlAttribute attribute = mainActivity
+                    .searchAttributeByResourceId(ID_name);
+            if(attribute != null){
+                return fullClassName(attribute.getValueAsString());
+            }
+        }
+        return null;
+    }
+    @Override
+    public void setMainActivityClassName(String className){
+        getOrCreateMainActivity(className);
+    }
+
     @Override
     public Integer getVersionCode(){
         return getManifestAttributeInt(ID_versionCode);
@@ -586,7 +618,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         application.refresh();
     }
     public String fullClassName(String name){
-        if(name == null || !name.startsWith(".")){
+        if(name == null || name.length() == 0 || name.charAt(0) != '.'){
             return name;
         }
         String packageName = getPackageName();
