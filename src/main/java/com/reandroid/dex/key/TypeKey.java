@@ -20,6 +20,7 @@ import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
@@ -230,6 +231,18 @@ public class TypeKey implements Key{
         writer.append(getTypeName());
     }
 
+    public int compareInnerFirst(TypeKey other) {
+        if(this.equals(other)){
+            return 0;
+        }
+        String name1 = this.getSimpleName();
+        String name2 = other.getSimpleName();
+        int diff = StringsUtil.diffStart(name1, name2);
+        if(diff > 0 && name1.charAt(diff) == '$' && diff > name1.lastIndexOf('/') + 1){
+            return CompareUtil.compare(name2, name1);
+        }
+        return CompareUtil.compare(name1, name2);
+    }
     @Override
     public int compareTo(Object obj) {
         if(obj == null){

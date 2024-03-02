@@ -15,64 +15,56 @@
  */
 package com.reandroid.dex.refactor;
 
-import com.reandroid.utils.collection.*;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyPair;
+import com.reandroid.dex.model.DexClassRepository;
+import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
-public class Rename implements Iterable<RenameInfo<?>>{
-    private final List<RenameInfo<?>> renameInfoList;
+public abstract class Rename<T extends Key, R extends Key> {
+
+    private final Set<KeyPair<T, R>> keyPairSet;
 
     public Rename(){
-        this.renameInfoList = new ArrayCollection<>();
+        this.keyPairSet = new HashSet<>();
     }
 
-    public Iterator<RenameInfo<?>> getAll(){
-        return new MergingIterator<>(ComputeIterator.of(iterator(),
-                RenameInfo::iterator));
+    public void add(KeyPair<T, R> keyPair){
+        addToSet(keyPair);
+    }
+    public void addAll(Collection<KeyPair<T, R>> keyPairs){
+        this.addAll(keyPairs.iterator());
+    }
+    public void addAll(Iterator<KeyPair<T, R>> iterator){
+        while (iterator.hasNext()){
+            addToSet(iterator.next());
+        }
+    }
+    private void addToSet(KeyPair<T, R> keyPair){
+        if(keyPair != null && keyPair.isValid()){
+            this.keyPairSet.add(keyPair);
+        }
+    }
+    public int size(){
+        return keyPairSet.size();
+    }
+    public List<KeyPair<T, R>> sortedList(){
+        List<KeyPair<T, R>> results = new ArrayCollection<>(keyPairSet);
+        results.sort(CompareUtil.getComparableComparator());
+        return results;
     }
 
-    public void add(RenameInfo<?> renameInfo){
-        if(renameInfo == null || contains(renameInfo)){
-            return;
-        }
-        this.renameInfoList.add(renameInfo);
+    public abstract int apply(DexClassRepository classRepository);
+
+    public Set<KeyPair<T, R>> getKeyPairSet() {
+        return keyPairSet;
     }
-    public boolean contains(RenameInfo<?> renameInfo){
-        if(renameInfo == null){
-            return false;
-        }
-        if(this.renameInfoList.contains(renameInfo)){
-            return true;
-        }
-        for(RenameInfo<?> info : this){
-            if(info.contains(renameInfo)){
-                return true;
-            }
-        }
-        return false;
-    }
-    @Override
-    public Iterator<RenameInfo<?>> iterator(){
-        return renameInfoList.iterator();
-    }
-    public void write(Writer writer) throws IOException {
-        for(RenameInfo<?> info : this){
-            info.write(writer, true);
-        }
-    }
+
     @Override
     public String toString() {
-        StringWriter writer = new StringWriter();
-        try {
-            write(writer);
-            writer.close();
-        } catch (IOException exception) {
-            return exception.toString();
-        }
-        return writer.toString();
+        return StringsUtil.join(sortedList(), '\n');
     }
 }

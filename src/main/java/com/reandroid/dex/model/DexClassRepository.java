@@ -32,6 +32,7 @@ public interface DexClassRepository {
     Iterator<DexClass> getDexClasses(Predicate<? super TypeKey> filter);
     Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter);
     <T extends SectionItem> Iterator<T> getItems(SectionType<T> sectionType);
+    <T extends SectionItem> Iterator<T> getClonedItems(SectionType<T> sectionType);
     <T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType, Key key);
     <T1 extends SectionItem> T1 getItem(SectionType<T1> sectionType, Key key);
 

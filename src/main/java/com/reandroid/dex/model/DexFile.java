@@ -232,6 +232,7 @@ public class DexFile implements DexClassRepository, Closeable,
     public <T1 extends SectionItem> Iterator<Key> removeWithKeys(SectionType<T1> sectionType, Predicate<Key> filter){
         return getDexLayout().removeWithKeys(sectionType, filter);
     }
+    @Override
     public<T1 extends SectionItem> Iterator<T1> getClonedItems(SectionType<T1> sectionType) {
         return getDexLayout().getClonedItems(sectionType);
     }

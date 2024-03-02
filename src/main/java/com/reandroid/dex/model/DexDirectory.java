@@ -342,6 +342,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
             }
         };
     }
+    @Override
     public<T1 extends SectionItem> Iterator<T1> getClonedItems(SectionType<T1> sectionType) {
         return new IterableIterator<DexFile, T1>(clonedIterator()) {
             @Override
