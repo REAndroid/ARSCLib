@@ -15,6 +15,8 @@
  */
 package com.reandroid.utils;
 
+import com.reandroid.utils.collection.ArrayIterator;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -538,6 +540,40 @@ public class StringsUtil {
     }
     public static int compareStrings(String s1, String s2) {
         return CompareUtil.compare(s1, s2);
+    }
+
+    public static String join(Iterable<?> iterable, Object separator){
+        return join(iterable.iterator(), separator);
+    }
+    public static String join(Object[] items, Object separator){
+        return join(ArrayIterator.of(items), separator);
+    }
+    public static String join(Iterator<?> iterator, Object separator){
+        StringBuilder builder = new StringBuilder();
+        boolean appendOnce = false;
+        while (iterator.hasNext()){
+            if(appendOnce){
+                builder.append(separator);
+            }
+            builder.append(iterator.next());
+            appendOnce = true;
+        }
+        if(appendOnce){
+            return builder.toString();
+        }
+        return EMPTY;
+    }
+    public static int diffStart(String str1, String str2){
+        if(isEmpty(str1) || isEmpty(str2) || str1.equals(str2)){
+            return -1;
+        }
+        int length = NumbersUtil.min(str1.length(), str2.length());
+        for(int i = 0; i < length; i++){
+            if(str1.charAt(i) != str2.charAt(i)){
+                return i;
+            }
+        }
+        return -1;
     }
 
     private static final int MAX_STRING_APPEND = 5;
