@@ -540,9 +540,5 @@ public class StringsUtil {
         return CompareUtil.compare(s1, s2);
     }
 
-    public static String of(String s){
-        return s;
-    }
-
     private static final int MAX_STRING_APPEND = 5;
 }

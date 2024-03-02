@@ -20,7 +20,7 @@ import com.reandroid.dex.reference.IndirectStringReference;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 
@@ -79,5 +79,5 @@ public class SourceFile extends IndirectStringReference implements SmaliRegion {
         return SmaliWriter.toStringSafe(this);
     }
 
-    public static final String SourceFile = StringsUtil.of("SourceFile");
+    public static final String SourceFile = ObjectsUtil.of("SourceFile");
 }
