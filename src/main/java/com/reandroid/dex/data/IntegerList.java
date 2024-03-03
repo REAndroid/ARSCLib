@@ -35,16 +35,16 @@ public class IntegerList extends DataItem implements
     private final IntegerReference itemCount;
     private final IntegerArray arrayBlock;
 
-    IntegerList(int childesCount, IntegerArray arrayBlock){
+    IntegerList(int childesCount, IntegerArray arrayBlock, DexPositionAlign positionAlign){
         super(childesCount + 3);
-        this.positionAlign = new DexPositionAlign();
+        this.positionAlign = positionAlign;
         this.itemCount = new IntegerItem();
         this.arrayBlock = arrayBlock;
         addChild(0, (Block) itemCount);
         addChild(1, (Block) arrayBlock);
         addChild(2, positionAlign);
-
     }
+
     public IntegerList(IntegerReference itemCount){
         super(1);
         this.itemCount = itemCount;
@@ -53,7 +53,10 @@ public class IntegerList extends DataItem implements
         this.positionAlign = null;
     }
     public IntegerList(){
-        this(0, new IntegerArrayBlock());
+        this(0, new IntegerArrayBlock(), new DexPositionAlign());
+    }
+    public IntegerList(DexPositionAlign positionAlign){
+        this(0, new IntegerArrayBlock(), positionAlign);
     }
 
     public DexPositionAlign getPositionAlign() {
@@ -140,7 +143,9 @@ public class IntegerList extends DataItem implements
         if(itemCount instanceof Block){
             Block block = (Block) itemCount;
             if(block.getParent() == this){
+                int position = reader.getPosition();
                 block.readBytes(reader);
+                reader.seek(position);
             }
         }
         arrayBlock.setSize(itemCount.get());

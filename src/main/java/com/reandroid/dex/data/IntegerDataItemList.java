@@ -15,8 +15,7 @@
  */
 package com.reandroid.dex.data;
 
-import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.UsageMarker;
+import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.ArrayIterator;
@@ -32,16 +31,8 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
     private final int usageType;
     private T[] items;
 
-    public IntegerDataItemList(SectionType<T> sectionType, int usageType) {
-        super();
-        this.sectionType = sectionType;
-        this.usageType = usageType;
-    }
-    public IntegerDataItemList(SectionType<T> sectionType) {
-        this(sectionType, UsageMarker.USAGE_NONE);
-    }
-    public IntegerDataItemList(IntegerReference itemCount, SectionType<T> sectionType, int usageType) {
-        super(itemCount);
+    public IntegerDataItemList(SectionType<T> sectionType, int usageType, DexPositionAlign positionAlign) {
+        super(positionAlign);
         this.sectionType = sectionType;
         this.usageType = usageType;
     }

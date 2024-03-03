@@ -56,7 +56,9 @@ public class SectionArray<T extends SectionItem> extends BlockListArray<T> imple
             DexPositionAlign itemAlign = null;
             if(item instanceof PositionAlignedItem){
                 itemAlign = ((PositionAlignedItem) item).getPositionAlign();
-                itemAlign.setSize(0);
+                if(itemAlign != null){
+                    itemAlign.setSize(0);
+                }
                 if(previous != null){
                     previous.align(position);
                     position += previous.size();

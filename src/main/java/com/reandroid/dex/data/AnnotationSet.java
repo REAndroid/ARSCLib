@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.PositionAlignedItem;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.FullRefresh;
@@ -40,7 +41,7 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
     private final DataKey<AnnotationSet> mKey;
 
     public AnnotationSet(){
-        super(SectionType.ANNOTATION_ITEM, UsageMarker.USAGE_ANNOTATION);
+        super(SectionType.ANNOTATION_ITEM, UsageMarker.USAGE_ANNOTATION, new DexPositionAlign());
         this.mKey = new DataKey<>(this);
     }
 

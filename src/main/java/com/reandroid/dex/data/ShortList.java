@@ -23,7 +23,7 @@ import com.reandroid.utils.HexUtil;
 
 public class ShortList extends IntegerList implements PositionAlignedItem {
     public ShortList(){
-        super(0, new ShortArrayBlock());
+        super(0, new ShortArrayBlock(), new DexPositionAlign());
     }
 
     @Override

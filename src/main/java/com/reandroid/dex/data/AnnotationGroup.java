@@ -30,7 +30,7 @@ public class AnnotationGroup extends IntegerDataItemList<AnnotationSet> implemen
     private final DataKey<AnnotationGroup> mKey;
 
     public AnnotationGroup() {
-        super(SectionType.ANNOTATION_SET, UsageMarker.USAGE_ANNOTATION);
+        super(SectionType.ANNOTATION_SET, UsageMarker.USAGE_ANNOTATION, null);
         this.mKey = new DataKey<>(this);
     }
 
