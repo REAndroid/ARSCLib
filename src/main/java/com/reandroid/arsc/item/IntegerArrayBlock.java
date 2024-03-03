@@ -39,7 +39,12 @@ public class IntegerArrayBlock extends ShortArrayBlock{
         if(size < 0){
             size = 0;
         }
-        setBytesLength(size * 4);
+        int length = size * 4;
+        if(length < 0){
+            throw new IndexOutOfBoundsException("Huge integers size = " + size
+                    + ", parent = " + getParent());
+        }
+        setBytesLength(length);
     }
     @Override
     public int get(int index){
