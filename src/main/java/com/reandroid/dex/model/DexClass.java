@@ -50,22 +50,28 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         getId().replaceKeys(search, replace);
     }
     public Set<DexClass> getRequired(){
+        return getRequired(null);
+    }
+    public Set<DexClass> getRequired(Predicate<TypeKey> exclude){
         Set<DexClass> results = new HashSet<>();
         results.add(this);
-        searchRequired(results);
+        searchRequired(exclude, results);
         return results;
     }
-    private void searchRequired(Set<DexClass> results){
+    private void searchRequired(Predicate<TypeKey> exclude, Set<DexClass> results){
         DexClassRepository dexClassRepository = getClassRepository();
         Iterator<TypeKey> iterator = usedTypes();
         while (iterator.hasNext()){
             TypeKey typeKey = iterator.next();
+            if(exclude != null && !exclude.test(typeKey)){
+                continue;
+            }
             DexClass dexClass = dexClassRepository.getDexClass(typeKey);
             if(dexClass == null || results.contains(dexClass)){
                 continue;
             }
             results.add(dexClass);
-            dexClass.searchRequired(results);
+            dexClass.searchRequired(exclude, results);
         }
     }
     public Iterator<TypeKey> usedTypes(){
