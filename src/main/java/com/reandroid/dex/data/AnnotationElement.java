@@ -43,6 +43,14 @@ public class AnnotationElement extends DataItem implements Comparable<Annotation
     }
 
     @SuppressWarnings("unchecked")
+    public<T1 extends DexValueBlock<?>> T1 getValue(DexValueType<T1> valueType){
+        DexValueBlock<?> value = getValue();
+        if(value != null && value.is(valueType)){
+            return (T1) value;
+        }
+        return null;
+    }
+    @SuppressWarnings("unchecked")
     public<T1 extends DexValueBlock<?>> T1 getOrCreateValue(DexValueType<T1> valueType){
         DexValueBlock<?> value = getValue();
         if(value == null || value == NullValue.PLACE_HOLDER || value.getValueType() != valueType){

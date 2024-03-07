@@ -644,6 +644,39 @@ public class DexUtils {
         }
         return className.substring(i);
     }
+    public static String[] splitSignatures(String text){
+        ArrayCollection<String> results = new ArrayCollection<>(5);
+        StringBuilder builder = new StringBuilder();
+        int length = text.length();
+        for(int i = 0; i < length; i++){
+            char ch = text.charAt(i);
+            builder.append(ch);
+            if(isSignatureSymbol(ch)){
+                results.add(builder.toString());
+                builder = new StringBuilder();
+            }
+        }
+        if(builder.length() != 0){
+            results.add(builder.toString());
+        }
+        return results.toArray(new String[results.size()]);
+    }
+    private static boolean isSignatureSymbol(char ch){
+        switch (ch){
+            case '+':
+            case '-':
+            case '*':
+            case ':':
+            case ';':
+            case '<':
+            case '>':
+            case '?':
+                return true;
+            default:
+                return false;
+        }
+    }
+
     public static final String DALVIK_MEMBER = "Ldalvik/annotation/MemberClasses;";
 
     public static final String[] PLATFORM_PACKAGES = new String[]{

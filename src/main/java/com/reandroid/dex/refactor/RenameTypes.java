@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.refactor;
 
+import com.reandroid.dex.base.UsageMarker;
+import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.KeyPair;
 import com.reandroid.dex.key.TypeKey;
@@ -44,18 +46,50 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
 
     @Override
     public int apply(DexClassRepository classRepository) {
-        Map<String, String> map = buildMap();
+        Map<String, String> map = buildRenameMap();
         Iterator<StringId> iterator = classRepository.getClonedItems(SectionType.STRING_ID);
         int count = 0;
         while (iterator.hasNext()){
             StringId stringId = iterator.next();
+            stringId.addUsageType(UsageMarker.USAGE_DEFINITION);
             String text = map.get(stringId.getString());
             if(text != null){
                 stringId.setString(text);
                 count ++;
+            }else if(renameSignatures(map, stringId)){
+                count ++;
             }
         }
         return count;
+    }
+    private boolean renameSignatures(Map<String, String> map, StringId stringId){
+        if(!stringId.containsUsage(UsageMarker.USAGE_SIGNATURE_TYPE)){
+            return false;
+        }
+        String text = stringId.getString();
+        if(text.indexOf('L') < 0){
+            return false;
+        }
+        String[] signatures = DexUtils.splitSignatures(text);
+        int length = signatures.length;
+        boolean found = false;
+        for(int i = 0; i < length; i++){
+            String type = signatures[i];
+            String replace = map.get(type);
+            if(replace != null){
+                signatures[i] = replace;
+                found = true;
+            }
+        }
+        if(!found){
+            return false;
+        }
+        StringBuilder builder = new StringBuilder();
+        for(int i = 0; i < length; i++){
+            builder.append(signatures[i]);
+        }
+        stringId.setString(builder.toString());
+        return true;
     }
 
     public void setArrayDepth(int arrayDepth) {
@@ -74,7 +108,80 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
         this.noRenameSourceForNoPackageClass = noRenameSourceForNoPackageClass;
     }
 
-    private Map<String, String> buildMap() {
+    private Map<String, String> buildRenameMap() {
+        List<KeyPair<TypeKey, TypeKey>> list = sortedList();
+        boolean renameSignatures = this.renameSignatures;
+        boolean renameSource = this.renameSource;
+        boolean noRenameSourceForNoPackageClass = this.noRenameSourceForNoPackageClass;
+
+        int estimatedSize = 1;
+        if(renameSignatures){
+            estimatedSize = estimatedSize + 2;
+        }
+        if(renameSource){
+            estimatedSize = estimatedSize + 1;
+        }
+        if(arrayDepth > 0){
+            estimatedSize = estimatedSize + arrayDepth + 1;
+        }
+        estimatedSize = list.size() * estimatedSize;
+
+        Map<String, String> map = new HashMap<>(estimatedSize);
+
+        int size = list.size();
+        int arrayDepth = this.arrayDepth + 1;
+
+        for(int i = 0; i < size; i++){
+
+            KeyPair<TypeKey, TypeKey> keyPair = list.get(i);
+            TypeKey first = keyPair.getFirst();
+            TypeKey second = keyPair.getSecond();
+
+            String name1 = first.getTypeName();
+            String name2 = second.getTypeName();
+            map.put(name1, name2);
+
+            if(renameSignatures){
+                name1 = first.getTypeName();
+                name2 = second.getTypeName();
+
+                name1 = name1.replace(';', '<');
+                name2 = name2.replace(';', '<');
+
+                map.put(name1, name2);
+
+                name1 = first.getTypeName();
+                name2 = second.getTypeName();
+
+                name1 = name1.substring(0, name1.length() - 1);
+                name2 = name2.substring(0, name2.length() - 1);
+
+                map.put(name1, name2);
+            }
+
+            for(int j = 1; j < arrayDepth; j++){
+                name1 = first.getArrayType(j);
+                name2 = second.getArrayType(j);
+                map.put(name1, name2);
+                if(renameSignatures && j == 1){
+                    name1 = name1.replace(';', '<');
+                    name2 = name2.replace(';', '<');
+                    map.put(name1, name2);
+                }
+            }
+            if(renameSource){
+                name1 = first.getTypeName();
+                if(!noRenameSourceForNoPackageClass || name1.indexOf('/') > 0){
+                    name1 = first.getSourceName();
+                    name2 = second.getSourceName();
+                    map.put(name1, name2);
+                }
+            }
+        }
+        return map;
+    }
+
+    private Map<String, String> buildSignatureRenameMap() {
         List<KeyPair<TypeKey, TypeKey>> list = sortedList();
         boolean renameSignatures = this.renameSignatures;
         boolean renameSource = this.renameSource;
