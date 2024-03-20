@@ -459,7 +459,7 @@ public class ApkModule implements ApkFile, Closeable {
         AndroidManifestBlock manifest;
         try {
             manifest= getAndroidManifest();
-            return manifest.getMainActivity()!=null;
+            return !(manifest.isSplit() || manifest.getMainActivity()==null);
         } catch (Exception ignored) {
             return false;
         }
