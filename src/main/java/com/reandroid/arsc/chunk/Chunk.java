@@ -56,10 +56,13 @@ public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContai
         HeaderBlock headerBlock=reader.readHeaderBlock();
         checkInvalidChunk(headerBlock);
         BlockReader chunkReader = reader.create(headerBlock.getChunkSize());
-        super.onReadBytes(chunkReader);
+        onReadChildes(chunkReader);
         reader.offset(headerBlock.getChunkSize());
         chunkReader.close();
         onChunkLoaded();
+    }
+    protected void onReadChildes(BlockReader reader) throws IOException{
+        super.onReadBytes(reader);
     }
     void checkInvalidChunk(HeaderBlock headerBlock) throws IOException {
         ChunkType chunkType = headerBlock.getChunkType();
