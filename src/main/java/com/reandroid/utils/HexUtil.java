@@ -89,6 +89,30 @@ public class HexUtil {
         builder.append(hex);
         return builder.toString();
     }
+    public static String toHexString(byte[] bytes){
+        int length = bytes.length;
+        StringBuilder builder = new StringBuilder(length * 2);
+        for(int i = 0; i < length; i++){
+            int b = bytes[i];
+            builder.append(toHexChar((b >> 4) & 0xf));
+            builder.append(toHexChar(b & 0xf));
+        }
+        return builder.toString();
+    }
+    public static byte[] fromHexSting(String hexString){
+        int length = hexString.length();
+        if(length % 2 != 0){
+            throw new NumberFormatException("Odd hex string length: " + length);
+        }
+        byte[] results = new byte[length / 2];
+        for(int i = 0; i < length; i++){
+            int value = decodeHexChar(hexString.charAt(i)) << 4;
+            i ++;
+            value |= decodeHexChar(hexString.charAt(i));
+            results[i / 2] = (byte) (value & 0xff);
+        }
+        return results;
+    }
     public static int parseHex(String hexString){
         return (int) parseHexLong(hexString);
     }
@@ -188,6 +212,20 @@ public class HexUtil {
             return 10 + (ch - 'A');
         }
         return -1;
+    }
+    public static char toHexChar(int i){
+        if(i >= 0){
+            if(i < 10){
+                i = i + '0';
+                return (char) i;
+            }
+            if(i <= 16){
+                i = i - 10;
+                i = i + 'a';
+                return (char) i;
+            }
+        }
+        return 0;
     }
     private static String trim0x(String hexString){
         if(hexString == null || hexString.length() < 3){
