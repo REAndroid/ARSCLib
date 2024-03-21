@@ -87,6 +87,23 @@ public class NumberArray extends DexBlockItem {
     public int getByteUnsigned(int index){
         return getBytesInternal()[index * getWidth()] & 0xff;
     }
+
+    public void put(byte[] values){
+        int index = size();
+        int length = values.length;
+        ensureSize(index + length);
+        for(int i = 0; i < length; i++){
+            put(index + i, values[i] & 0xff);
+        }
+    }
+    public void put(short[] values){
+        int index = size();
+        int length = values.length;
+        ensureSize(index + length);
+        for(int i = 0; i < length; i++){
+            put(index + i, values[i] & 0xffff);
+        }
+    }
     public void put(int[] values){
         int index = size();
         int length = values.length;

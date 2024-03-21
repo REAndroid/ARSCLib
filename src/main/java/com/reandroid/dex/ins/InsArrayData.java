@@ -64,20 +64,42 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
     }
     public void setSize(int size){
         getNumberArray().setSize(size);
+        refreshAlignment();
     }
     public int getWidth(){
         return getNumberArray().getWidth();
     }
     public void setWidth(int width){
         getNumberArray().setWidth(width);
+        refreshAlignment();
+    }
+
+    public void set(byte[] values){
+        NumberArray numberArray = getNumberArray();
+        numberArray.setSize(0);
+        numberArray.setWidth(1);
+        numberArray.put(values);
+        refreshAlignment();
+    }
+    public void set(short[] values){
+        NumberArray numberArray = getNumberArray();
+        numberArray.setSize(0);
+        numberArray.setWidth(2);
+        numberArray.put(values);
+        refreshAlignment();
     }
     public void set(int[] values){
-        setSize(0);
-        getNumberArray().put(values);
+        NumberArray numberArray = getNumberArray();
+        numberArray.setSize(0);
+        numberArray.put(values);
+        refreshAlignment();
     }
     public void set(long[] values){
-        setSize(0);
-        getNumberArray().putLong(values);
+        NumberArray numberArray = getNumberArray();
+        numberArray.setSize(0);
+        numberArray.setWidth(8);
+        numberArray.putLong(values);
+        refreshAlignment();
     }
     public IntegerReference getReference(int i){
         return getNumberArray().getReference(i);
