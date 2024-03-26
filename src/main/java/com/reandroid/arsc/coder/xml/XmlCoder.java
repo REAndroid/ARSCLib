@@ -100,9 +100,12 @@ public class XmlCoder {
 
             for (SpecTypePair specTypePair : specs){
                 Set<ResConfig> configs = specTypePair.listResConfig();
+                int size = configs.size();
+                int i = 0;
                 for(ResConfig resConfig : configs){
+                    i ++;
                     TypeBlock typeBlock = specTypePair.getTypeBlock(resConfig);
-                    logVerbose("Decoding", packageBlock.getName()
+                    logVerbose("Decoding", i + "/" + size + " " + packageBlock.getName()
                             + ":" + typeBlock.getTypeName() + resConfig.getQualifiers());
                     XmlSerializer serializer = serializerFactory.createSerializer(typeBlock);
                     int entriesCount = decode(serializer, specTypePair, resConfig, decodedEntries);
