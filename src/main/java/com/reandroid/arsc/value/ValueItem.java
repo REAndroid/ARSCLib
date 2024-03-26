@@ -368,7 +368,10 @@ public abstract class ValueItem extends BlockItem implements Value,
         if(valueItem == null || valueItem==this){
             return;
         }
-        setSize(valueItem.getSize());
+        int size = valueItem.getSize();
+        if(size != 0){
+            setSize(valueItem.getSize());
+        }
         ValueType coming = valueItem.getValueType();
         if(coming == ValueType.STRING){
             setValueAsString(valueItem.getValueAsString());
