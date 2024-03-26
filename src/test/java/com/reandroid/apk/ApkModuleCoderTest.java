@@ -39,6 +39,7 @@ public class ApkModuleCoderTest {
         ApkModuleXmlEncoder encoder = new ApkModuleXmlEncoder();
         encoder.scanDirectory(mDir_xml);
         ApkModule apkModule_encoded = encoder.getApkModule();
+        apkModule_encoded.getTableBlock().getStringPool().sort();
         Assert.assertNotNull(apkModule_encoded.getAndroidManifest());
         apkModule_encoded.getAndroidManifest().refreshFull();
         apkModule.getAndroidManifest().removeUnusedNamespaces();
@@ -47,11 +48,6 @@ public class ApkModuleCoderTest {
 
         // Preserve generated apk for signing and install on device
         File apk = new File(TestUtils.getTesApkDirectory(), "encoded_xml.apk");
-        Entry entry = apkModule.getTableBlock().pickOne().getEntry(ResConfig.getDefault(), "string", "hello_world");
-        ResValue resValue = entry.getResValue();
-        StyleDocument doc = resValue.getValueAsStyleDocument();
-        String xml = doc.getXml();
-        xml.trim();
 
         apkModule_encoded.writeApk(apk);
         apkModule_encoded = ApkModule.loadApkFile(apk);
