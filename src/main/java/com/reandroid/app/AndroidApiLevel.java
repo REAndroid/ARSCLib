@@ -51,6 +51,7 @@ public class AndroidApiLevel implements Comparable<AndroidApiLevel>{
     public static final AndroidApiLevel Sv2;
     public static final AndroidApiLevel T;
     public static final AndroidApiLevel U;
+    public static final AndroidApiLevel V;
 
     public static final AndroidApiLevel ANDROID_PLATFORM;
 
@@ -94,6 +95,7 @@ public class AndroidApiLevel implements Comparable<AndroidApiLevel>{
         Sv2 = new AndroidApiLevel("Sv2", 32, "12.1", "Snow Cone v2");
         T = new AndroidApiLevel("T", 33, "13", "Tiramisu");
         U = new AndroidApiLevel("U", 34, "14", "Upside Down Cake");
+        V = new AndroidApiLevel("V", 35, "15", "Vanilla Ice Cream ");
 
         ANDROID_PLATFORM = new AndroidApiLevel("ANDROID_PLATFORM", 10000, "10000", "ANDROID_PLATFORM");
 
@@ -134,6 +136,7 @@ public class AndroidApiLevel implements Comparable<AndroidApiLevel>{
                 Sv2,
                 T,
                 U,
+                V,
                 ANDROID_PLATFORM
         };
 
