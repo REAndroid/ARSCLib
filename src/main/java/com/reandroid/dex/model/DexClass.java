@@ -389,6 +389,9 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     DexClass search(TypeKey typeKey){
         return getClassRepository().getDexClass(typeKey);
     }
+    public boolean containsInterface(TypeKey typeKey) {
+        return CollectionUtil.contains(getInterfaces(), typeKey);
+    }
     public Iterator<TypeKey> getInterfaces(){
         return getId().getInterfaceKeys();
     }
