@@ -40,7 +40,7 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
     }
     @Override
     public void clearChildes(){
-        for(StyleItem styleItem:listItems()){
+        for(StyleItem styleItem:listItems(true)){
             styleItem.onRemoved();
         }
         super.clearChildes();
