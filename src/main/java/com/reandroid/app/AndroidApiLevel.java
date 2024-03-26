@@ -95,7 +95,7 @@ public class AndroidApiLevel implements Comparable<AndroidApiLevel>{
         Sv2 = new AndroidApiLevel("Sv2", 32, "12.1", "Snow Cone v2");
         T = new AndroidApiLevel("T", 33, "13", "Tiramisu");
         U = new AndroidApiLevel("U", 34, "14", "Upside Down Cake");
-        V = new AndroidApiLevel("V", 35, "15", "Vanilla Ice Cream ");
+        V = new AndroidApiLevel("V", 35, "15", "Vanilla Ice Cream");
 
         ANDROID_PLATFORM = new AndroidApiLevel("ANDROID_PLATFORM", 10000, "10000", "ANDROID_PLATFORM");
 
