@@ -23,9 +23,11 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.coder.ReferenceString;
 import com.reandroid.arsc.coder.xml.XmlCoder;
+import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.json.JSONObject;
+import com.reandroid.xml.StyleDocument;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLFactory;
@@ -90,8 +92,6 @@ public class XMLTableBlockEncoder {
                     + PackageBlock.PUBLIC_XML
                     + "  file found in '" +resourcesDirectory + "'");
         }
-        //preloadStringPool(pubXmlFileList);
-
         loadPublicXmlFiles(pubXmlFileList);
 
         excludeIds(pubXmlFileList);
@@ -272,9 +272,32 @@ public class XMLTableBlockEncoder {
                 + HexUtil.toHex2((byte)packageId) + ", from: " + ref );
     }
     private void encodeResDir(File resDir) throws IOException, XmlPullParserException {
+        preloadStyledStrings(resDir);
         List<File> valuesDirList = ApkUtil.listValuesDirectory(resDir);
         for(File valuesDir : valuesDirList){
             encodeValuesDir(valuesDir);
+        }
+    }
+    private void preloadStyledStrings(File resDir) throws IOException, XmlPullParserException {
+        logVerbose("Preloading styled strings ...");
+        List<File> valuesDirList = ApkUtil.listValuesDirectory(resDir);
+        for(File valuesDir : valuesDirList){
+            List<File> xmlFiles = ApkUtil.listFiles(valuesDir, "strings.xml");
+            for(File file : xmlFiles){
+                preloadStyledStringsXml(file);
+            }
+        }
+    }
+    private void preloadStyledStringsXml(File file) throws IOException, XmlPullParserException {
+        XMLDocument document = XMLDocument.load(file);
+        XMLElement root = document.getDocumentElement();
+        Iterator<? extends XMLElement> iterator = root.getElements();
+        TableStringPool stringPool = getTableBlock().getStringPool();
+        while (iterator.hasNext()) {
+            XMLElement element = iterator.next();
+            if(element.hasChildElements()) {
+                stringPool.getOrCreate(StyleDocument.copyInner(element));
+            }
         }
     }
     private void encodeValuesDir(File valuesDir) throws IOException, XmlPullParserException {
