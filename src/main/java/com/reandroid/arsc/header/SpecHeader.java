@@ -16,11 +16,14 @@
 package com.reandroid.arsc.header;
 
 import com.reandroid.arsc.chunk.ChunkType;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ShortItem;
 
-public class SpecHeader extends HeaderBlock{
+import java.io.IOException;
+
+ public class SpecHeader extends HeaderBlock{
     private final ByteItem id;
     private final IntegerItem entryCount;
     public SpecHeader() {
@@ -49,4 +52,15 @@ public class SpecHeader extends HeaderBlock{
                 +" {id="+getId().toHex()
                 +", entryCount=" + getEntryCount() + '}';
     }
+
+     public static SpecHeader read(BlockReader reader) throws IOException {
+         SpecHeader specHeader = new SpecHeader();
+         if(reader.available() < specHeader.countBytes()){
+             throw new IOException("Too few bytes to read spec header, available = " + reader.available());
+         }
+         int pos = reader.getPosition();
+         specHeader.readBytes(reader);
+         reader.seek(pos);
+         return specHeader;
+     }
 }

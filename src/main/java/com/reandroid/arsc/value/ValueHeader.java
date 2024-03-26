@@ -44,7 +44,7 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         if(mStringReference != null){
             specString.removeReference(mStringReference);
         }
-        ReferenceItem stringReference = new ReferenceBlock<>(this, OFFSET_SPEC_REFERENCE);
+        ReferenceItem stringReference = new ValueHeaderReference(this);
         mStringReference = stringReference;
         specString.addReference(stringReference);
     }
@@ -76,17 +76,54 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
     public boolean isWeak(){
         return getBit(getBytesInternal(), OFFSET_FLAGS,2);
     }
+    // Intentionally made accessible internal, use ResValue#setCompact
+    void setCompact(boolean b){
+        if(b == isCompact()){
+            return;
+        }
+        int key = getKey();
+        putBit(getBytesInternal(), OFFSET_FLAGS, 3, b);
+        writeKey(key, b);
+    }
+    public boolean isCompact(){
+        return getBit(getBytesInternal(), OFFSET_FLAGS,3);
+    }
 
     public int getKey(){
-        return getInteger(getBytesInternal(), OFFSET_SPEC_REFERENCE);
+        if(isCompact()){
+            return getShortUnsigned(getBytesInternal(), 0);
+        }
+        return getData();
     }
     public void setKey(int key){
         if(key == getKey()){
             return;
         }
         unLinkStringReference();
-        putInteger(getBytesInternal(), OFFSET_SPEC_REFERENCE, key);
+        writeKey(key);
         linkStringReference();
+    }
+    void writeKey(int key) {
+        writeKey(key, isCompact());
+    }
+    private void writeKey(int key, boolean compact){
+        if(compact){
+            putShort(getBytesInternal(), 0, key);
+        }else {
+            setData(key);
+        }
+    }
+    int getData(){
+        return getInteger(getBytesInternal(), 4);
+    }
+    void setData(int data){
+        putInteger(getBytesInternal(), 4, data);
+    }
+    byte getType(){
+        return getBytesInternal()[OFFSET_DATA_TYPE];
+    }
+    void setType(byte type){
+        getBytesInternal()[OFFSET_DATA_TYPE] = type;
     }
     public void setKey(StringItem stringItem){
         if(ignoreUpdateKey(stringItem)){
@@ -94,10 +131,10 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         }
         unLinkStringReference();
         int key = -1;
-        if(stringItem!=null){
-            key=stringItem.getIndex();
+        if(stringItem != null){
+            key = stringItem.getIndex();
         }
-        putInteger(getBytesInternal(), OFFSET_SPEC_REFERENCE, key);
+        writeKey(key);
         linkStringReference(stringItem);
     }
     private boolean ignoreUpdateKey(StringItem stringItem){
@@ -112,8 +149,10 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         return getSpecString(key) == stringItem;
     }
     public void setSize(int size){
-        super.setBytesLength(size, false);
-        writeSize();
+        if(!isCompact()){
+            super.setBytesLength(size, false);
+            writeSize();
+        }
     }
     public int getSize(){
         return getBytesInternal().length;
@@ -143,7 +182,7 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         if(stringItem==null){
             return;
         }
-        ReferenceItem stringReference = new ReferenceBlock<>(this, OFFSET_SPEC_REFERENCE);
+        ReferenceItem stringReference = new ValueHeaderReference(this);
         mStringReference = stringReference;
         stringItem.addReference(stringReference);
     }
@@ -184,9 +223,14 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        int size = reader.readUnsignedShort();
-        setBytesLength(size, false);
+        int position = reader.getPosition();
         reader.readFully(getBytesInternal());
+        if(!isCompact()){
+            reader.seek(position);
+            int size = reader.readUnsignedShort();
+            setBytesLength(size, false);
+            reader.readFully(getBytesInternal());
+        }
     }
     private void setName(String name){
         if(name==null){
@@ -252,6 +296,9 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         if(isWeak()){
             builder.append(", weak");
         }
+        if(isCompact()){
+            builder.append(", compact");
+        }
         String name = getName();
         if(name!=null){
             builder.append(", name=").append(name);
@@ -261,8 +308,36 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         return builder.toString();
     }
 
+
+    static class ValueHeaderReference implements ReferenceItem {
+
+        private final ValueHeader valueHeader;
+
+        ValueHeaderReference(ValueHeader valueHeader){
+            this.valueHeader = valueHeader;
+        }
+        @Override
+        public int get() {
+            return valueHeader.getKey();
+        }
+        @Override
+        public void set(int value) {
+            valueHeader.writeKey(value);
+        }
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T1 extends Block> T1 getReferredParent(Class<T1> parentClass) {
+            ValueHeader block = this.valueHeader;
+            if(parentClass.isInstance(block)){
+                return (T1) block;
+            }
+            return block.getParentInstance(parentClass);
+        }
+    }
+
     private static final int OFFSET_SIZE = 0;
     private static final int OFFSET_FLAGS = 2;
+    private static final int OFFSET_DATA_TYPE = 3;
     private static final int OFFSET_SPEC_REFERENCE = 4;
 
 

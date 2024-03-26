@@ -43,6 +43,9 @@ public class EntryHeader extends ValueHeader {
         if(isWeak()){
             builder.append(" weak");
         }
+        if(isCompact()){
+            builder.append(" compact");
+        }
         String name = getName();
         if(name!=null){
             builder.append(" name=").append(name);

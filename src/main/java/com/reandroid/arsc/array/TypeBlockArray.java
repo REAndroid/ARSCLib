@@ -122,12 +122,15 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return getOrCreate(resConfig, false);
     }
     public TypeBlock getOrCreate(ResConfig resConfig, boolean sparse){
+        return getOrCreate(resConfig, sparse, false);
+    }
+    public TypeBlock getOrCreate(ResConfig resConfig, boolean sparse, boolean offset16){
         TypeBlock typeBlock = getTypeBlock(resConfig, sparse);
         if(typeBlock != null){
             return typeBlock;
         }
         byte id = getTypeId();
-        typeBlock = createNext(sparse);
+        typeBlock = createNext(sparse, offset16);
         typeBlock.setTypeId(id);
         ResConfig config = typeBlock.getResConfig();
         config.copyFrom(resConfig);
@@ -302,7 +305,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     @Override
     public TypeBlock newInstance() {
         byte id = getTypeId();
-        TypeBlock typeBlock = new TypeBlock(false);
+        TypeBlock typeBlock = new TypeBlock(false, false);
         typeBlock.setTypeId(id);
         return typeBlock;
     }
@@ -310,9 +313,9 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     public TypeBlock[] newArrayInstance(int len) {
         return new TypeBlock[len];
     }
-    public TypeBlock createNext(boolean sparse){
+    public TypeBlock createNext(boolean sparse, boolean offset16){
         byte id = getTypeId();
-        TypeBlock typeBlock = new TypeBlock(sparse);
+        TypeBlock typeBlock = new TypeBlock(sparse, offset16);
         typeBlock.setTypeId(id);
         add(typeBlock);
         return typeBlock;
@@ -337,7 +340,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         if(chunkType!=ChunkType.TYPE){
             return false;
         }
-        TypeHeader typeHeader = reader.readTypeHeader();
+        TypeHeader typeHeader = TypeHeader.read(reader);
         int id = getTypeId();
         if(id!=0 && typeHeader.getId().unsignedInt() != id){
             return false;
@@ -406,7 +409,8 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         for(int i = 0; i < length; i++){
             JSONObject jsonObject = json.getJSONObject(i);
             TypeBlock typeBlock = createNext(
-                    jsonObject.optBoolean(TypeBlock.NAME_is_sparse, false));
+                    jsonObject.optBoolean(TypeBlock.NAME_is_sparse, false),
+                    jsonObject.optBoolean(TypeBlock.NAME_is_offset16, false));
             typeBlock.fromJson(jsonObject);
         }
     }

@@ -81,11 +81,14 @@ public abstract class ValueItem extends BlockItem implements Value,
     protected void onDataChanged(){
     }
     public void refresh(){
-        writeSize();
+        updateSize();
     }
 
     byte getRes0(){
         return getBytesInternal()[this.sizeOffset + OFFSET_RES0];
+    }
+    void setRes0(byte b){
+        getBytesInternal()[this.sizeOffset + OFFSET_RES0] = b;
     }
     public byte getType(){
         return getBytesInternal()[this.sizeOffset + OFFSET_TYPE];
@@ -107,6 +110,9 @@ public abstract class ValueItem extends BlockItem implements Value,
     public void setSize(int size){
         size = this.sizeOffset + size;
         setBytesLength(size, false);
+        writeSize();
+    }
+    void updateSize(){
         writeSize();
     }
     private void writeSize(){
@@ -139,17 +145,19 @@ public abstract class ValueItem extends BlockItem implements Value,
     }
     @Override
     public void setData(int data){
-        byte[] bts = getBytesInternal();
-        int old = getInteger(bts, this.sizeOffset + OFFSET_DATA);
+        int old = getData();
         if(old == data){
             return;
         }
         unLinkStringReference();
-        putInteger(bts, this.sizeOffset + OFFSET_DATA, data);
+        writeData(data);
         if(ValueType.STRING==getValueType()){
             linkStringReference();
         }
         onDataChanged();
+    }
+    void writeData(int data){
+        putInteger(getBytesInternal(), this.sizeOffset + OFFSET_DATA, data);
     }
 
 
@@ -188,7 +196,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         if(stringReference!=null){
             unLinkStringReference();
         }
-        stringReference = new ReferenceBlock<>(this, this.sizeOffset + OFFSET_DATA);
+        stringReference = new ValueStringReference(this);
         mStringReference = stringReference;
         tableString.addReference(stringReference);
     }
@@ -466,6 +474,31 @@ public abstract class ValueItem extends BlockItem implements Value,
         return builder.toString();
     }
 
+    static class ValueStringReference implements ReferenceItem {
+
+        private final ValueItem valueItem;
+
+        ValueStringReference(ValueItem valueItem){
+            this.valueItem = valueItem;
+        }
+        @Override
+        public int get() {
+            return valueItem.getData();
+        }
+        @Override
+        public void set(int value) {
+            valueItem.writeData(value);
+        }
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T1 extends Block> T1 getReferredParent(Class<T1> parentClass) {
+            ValueItem block = this.valueItem;
+            if(parentClass.isInstance(block)){
+                return (T1) block;
+            }
+            return block.getParentInstance(parentClass);
+        }
+    }
     private static final int OFFSET_SIZE = 0;
     private static final int OFFSET_RES0 = 2;
     private static final int OFFSET_TYPE = 3;

@@ -65,5 +65,16 @@ public class InfoHeader extends HeaderBlock{
         return infoHeader;
     }
 
+    public static InfoHeader read(BlockReader reader) throws IOException {
+        InfoHeader infoHeader = new InfoHeader();
+        if(reader.available() < infoHeader.getMinimumSize()){
+            return null;
+        }
+        int pos = reader.getPosition();
+        infoHeader.readBytes(reader);
+        reader.seek(pos);
+        return infoHeader;
+    }
+
     public static final int INFO_MIN_SIZE = 8;
 }

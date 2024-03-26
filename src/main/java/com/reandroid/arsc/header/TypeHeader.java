@@ -16,18 +16,21 @@
 package com.reandroid.arsc.header;
 
 import com.reandroid.arsc.chunk.ChunkType;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ShortItem;
 import com.reandroid.arsc.value.ResConfig;
 
-public class TypeHeader extends HeaderBlock{
+import java.io.IOException;
+
+ public class TypeHeader extends HeaderBlock{
     private final ByteItem id;
     private final ByteItem flags;
     private final IntegerItem count;
     private final IntegerItem entriesStart;
     private final ResConfig config;
-    public TypeHeader(boolean sparse) {
+    public TypeHeader(boolean sparse, boolean offset16) {
         super(ChunkType.TYPE.ID);
         this.id = new ByteItem();
         this.flags = new ByteItem();
@@ -43,6 +46,11 @@ public class TypeHeader extends HeaderBlock{
         addChild(entriesStart);
         addChild(config);
         setSparse(sparse);
+        setOffset16(offset16);
+    }
+    @Deprecated
+    public TypeHeader(boolean sparse) {
+        this(sparse, false);
     }
     public boolean isSparse(){
         return (getFlags().get() & FLAG_SPARSE) == FLAG_SPARSE;
@@ -53,6 +61,18 @@ public class TypeHeader extends HeaderBlock{
             flag = (byte) (flag | FLAG_SPARSE);
         }else {
             flag = (byte) (flag & (~FLAG_SPARSE & 0xff));
+        }
+        getFlags().set(flag);
+    }
+    public boolean isOffset16(){
+        return getFlags().get()  == FLAG_OFFSET16;
+    }
+    public void setOffset16(boolean offset16){
+        byte flag = getFlags().get();
+        if(offset16){
+            flag = (byte) (flag | FLAG_OFFSET16);
+        }else {
+            flag = (byte) (flag & (~FLAG_OFFSET16 & 0xff));
         }
         getFlags().set(flag);
     }
@@ -89,8 +109,19 @@ public class TypeHeader extends HeaderBlock{
                 +", entriesStart=" + getEntriesStart()
                 +", config=" + getConfig() + '}';
     }
+    public static TypeHeader read(BlockReader reader) throws IOException {
+        TypeHeader typeHeader = new TypeHeader(false, false);
+        if(reader.available() < typeHeader.getMinimumSize()){
+            throw new IOException("Too few bytes to read type header, available = " + reader.available());
+        }
+        int pos = reader.getPosition();
+        typeHeader.readBytes(reader);
+        reader.seek(pos);
+        return typeHeader;
+    }
 
     private static final byte FLAG_SPARSE = 0x1;
+    private static final byte FLAG_OFFSET16 = 0x2;
 
     //typeHeader.countBytes() - getConfig().countBytes() + ResConfig.SIZE_16
     private static final int TYPE_MIN_SIZE = 36;

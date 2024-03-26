@@ -16,14 +16,114 @@
 package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.io.BlockReader;
+
+import java.io.IOException;
 
 public class ResValue extends ValueItem  {
+
     public ResValue() {
         super(8, OFFSET_SIZE);
     }
 
+    public boolean isCompact(){
+        return getHeader().isCompact();
+    }
+    public void setCompact(boolean compact){
+        EntryHeader header = getHeader();
+        if(compact == header.isCompact()){
+            return;
+        }
+        byte type = getType();
+        int data = getData();
+        updateBytesLength(compact);
+        header.setCompact(compact);
+        setType(type);
+        setData(data);
+        if(compact){
+            setRes0((byte) 0);
+        }
+    }
+
+    @Override
+    public int getSize() {
+        if(isCompact()){
+            return 0;
+        }
+        return super.getSize();
+    }
+    @Override
+    public void setSize(int size) {
+        if(!isCompact()){
+            super.setSize(size);
+        }
+    }
+    @Override
+    void updateSize() {
+        if(!isCompact()){
+            super.updateSize();
+        }
+    }
+    private void updateBytesLength(boolean compact){
+        int length;
+        if(compact){
+            length = 0;
+        }else {
+            length = 8;
+        }
+        setBytesLength(length, false);
+    }
+    private EntryHeader getHeader(){
+        ResTableEntry resTableEntry = getParent(ResTableEntry.class);
+        if(resTableEntry != null){
+            return resTableEntry.getHeader();
+        }
+        throw new RuntimeException("Unreachable");
+    }
+
     public Entry getEntry(){
         return getParent(Entry.class);
+    }
+
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        boolean compact = isCompact();
+        updateBytesLength(compact);
+        if(!compact){
+            super.onReadBytes(reader);
+        }
+    }
+    @Override
+    public int getData() {
+        if(isCompact()){
+            return getHeader().getData();
+        }
+        return super.getData();
+    }
+    @Override
+    void writeData(int data) {
+        if(isCompact()){
+            getHeader().setData(data);
+        }else {
+            super.writeData(data);
+        }
+    }
+
+    @Override
+    public byte getType() {
+        if(isCompact()){
+            return getHeader().getType();
+        }
+        return super.getType();
+    }
+
+    @Override
+    public void setType(byte type) {
+        if(isCompact()){
+            getHeader().setType(type);
+        }else {
+            super.setType(type);
+        }
     }
 
     @Override

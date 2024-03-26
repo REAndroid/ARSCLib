@@ -15,9 +15,8 @@
  */
 package com.reandroid.arsc.chunk;
 
-import com.reandroid.arsc.array.EntryArray;
-import com.reandroid.arsc.array.IntegerOffsetArray;
-import com.reandroid.arsc.array.SparseOffsetsArray;
+import com.reandroid.arsc.array.*;
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.item.*;
@@ -44,21 +43,27 @@ public class TypeBlock extends Chunk<TypeHeader>
 
     private final EntryArray mEntryArray;
     private TypeString mTypeString;
-    public TypeBlock(boolean sparse) {
-        super(new TypeHeader(sparse), 2);
+    public TypeBlock(boolean sparse, boolean offset16) {
+        super(new TypeHeader(sparse, offset16), 2);
         TypeHeader header = getHeaderBlock();
 
-        IntegerOffsetArray entryOffsets;
+        OffsetArray entryOffsets;
         if(sparse){
             entryOffsets = new SparseOffsetsArray();
+        }else if(offset16){
+            entryOffsets = new ShortOffsetArray();
         }else {
             entryOffsets = new IntegerOffsetArray();
         }
         this.mEntryArray = new EntryArray(entryOffsets,
                 header.getCountItem(), header.getEntriesStart());
 
-        addChild(entryOffsets);
+        addChild((Block) entryOffsets);
         addChild(mEntryArray);
+    }
+    @Deprecated
+    public TypeBlock(boolean sparse) {
+        this(sparse, false);
     }
 
     public Iterator<ValueItem> allValues(){
@@ -97,6 +102,9 @@ public class TypeBlock extends Chunk<TypeHeader>
     }
     public boolean isSparse(){
         return getHeaderBlock().isSparse();
+    }
+    public boolean isOffset16(){
+        return getHeaderBlock().isOffset16();
     }
     public void destroy(){
         getEntryArray().destroy();
@@ -319,6 +327,9 @@ public class TypeBlock extends Chunk<TypeHeader>
         if(isSparse()){
             jsonObject.put(NAME_is_sparse, true);
         }
+        if(isOffset16()){
+            jsonObject.put(NAME_is_offset16, true);
+        }
         jsonObject.put(NAME_id, getId());
         jsonObject.put(NAME_name, getTypeName());
         jsonObject.put(NAME_config, getResConfig().toJson());
@@ -419,4 +430,5 @@ public class TypeBlock extends Chunk<TypeHeader>
     public static final String NAME_id = "id";
     public static final String NAME_entries = "entries";
     public static final String NAME_is_sparse = "is_sparse";
+    public static final String NAME_is_offset16 = "is_offset16";
 }

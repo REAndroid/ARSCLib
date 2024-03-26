@@ -380,8 +380,9 @@ public class SpecTypePair extends BlockContainer<Block>
         mSpecBlock.readBytes(reader);
     }
     private void readTypeBlock(BlockReader reader) throws IOException {
-        TypeHeader typeHeader = reader.readTypeHeader();
-        TypeBlock typeBlock = mTypeBlockArray.createNext(typeHeader.isSparse());
+        TypeHeader typeHeader = TypeHeader.read(reader);
+        TypeBlock typeBlock = mTypeBlockArray.createNext(
+                typeHeader.isSparse(), typeHeader.isOffset16());
         typeBlock.readBytes(reader);
     }
     private void readUnexpectedNonSpecBlock(BlockReader reader, HeaderBlock headerBlock) throws IOException{
