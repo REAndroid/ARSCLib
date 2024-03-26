@@ -235,7 +235,9 @@ public class ResourceIdentifier extends Identifier{
         return isAtoZ(ch)
                 || isDigits(ch)
                 || ch == '_'
-                || ch == '.';
+                || ch == '.'
+                || ch == '$'
+                || ch == '-';
     }
     private static boolean isGoodFirstChar(char ch){
         return isAtoZ(ch) ||
@@ -253,7 +255,7 @@ public class ResourceIdentifier extends Identifier{
     }
 
 
-    public static final int NAME_LENGTH_MIN = 2;
+    public static final int NAME_LENGTH_MIN = 1;
     public static final int NAME_LENGTH_MAX = 100;
 
 }
