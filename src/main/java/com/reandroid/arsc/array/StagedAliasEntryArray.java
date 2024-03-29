@@ -80,11 +80,11 @@
      @Override
      public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
          if(sender==this.count){
-             setChildesCount(this.count.get());
+             setSize(this.count.get());
          }
      }
      private void updateCount(){
-         this.count.set(getChildesCount());
+         this.count.set(size());
      }
 
      @Override
@@ -101,12 +101,12 @@
      }
      @Override
      public void fromJson(JSONArray json) {
-         clearChildes();
+         clear();
          if(json==null){
              return;
          }
          int length = json.length();
-         setChildesCount(length);
+         setSize(length);
          for(int i=0;i<length;i++){
              get(i).fromJson(json.getJSONObject(i));
          }

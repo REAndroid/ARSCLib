@@ -56,10 +56,10 @@
          stringPool.removeString(xmlString);
      }
      public int countId(){
-         return getResXmlIDArray().getChildesCount();
+         return getResXmlIDArray().size();
      }
      public void destroy(){
-         getResXmlIDArray().clearChildes();
+         getResXmlIDArray().clear();
      }
      public ResXmlIDArray getResXmlIDArray(){
          return mResXmlIDArray;

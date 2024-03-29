@@ -61,11 +61,11 @@ public class FrameworkTable extends TableBlock {
     }
 
     @Override
-    public void destroy(){
+    public void clear(){
         this.frameworkName = null;
         this.versionCode = 0;
         this.mainPackageId = 0;
-        super.destroy();
+        super.clear();
     }
     public int getVersionCode(){
         if(versionCode == 0 && isOptimized()){
@@ -158,7 +158,7 @@ public class FrameworkTable extends TableBlock {
     }
     private void removeEmptyBlocks(SpecTypePair specTypePair){
         TypeBlockArray typeBlockArray = specTypePair.getTypeBlockArray();
-        if(typeBlockArray.getChildesCount()<2){
+        if(typeBlockArray.size()<2){
             return;
         }
         typeBlockArray.removeEmptyBlocks();
@@ -166,7 +166,7 @@ public class FrameworkTable extends TableBlock {
     private void optimizeTableString(){
         removeUnusedTableString();
         shrinkTableString();
-        getStringPool().getStyleArray().clearChildes();
+        getStringPool().getStyleArray().clear();
         removeUnusedTableString();
     }
     private void removeUnusedTableString(){

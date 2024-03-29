@@ -96,7 +96,7 @@ public class ResXmlIDArray extends BlockArray<ResXmlID>  {
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         int count=calculateCountFromHeaderBlock();
-        setChildesCount(count);
+        setSize(count);
         super.onReadBytes(reader);
         updateIdMap();
     }

@@ -40,7 +40,7 @@ public abstract class CompoundItemArray<T extends ResValueMap>
     }
     private void updateCountToHeader(){
         EntryHeaderMap headerMap = getEntryHeaderMap();
-        headerMap.setValuesCount(getChildesCount());
+        headerMap.setValuesCount(size());
     }
     private EntryHeaderMap getEntryHeaderMap(){
         ResTableMapEntry mapEntry = getParent(ResTableMapEntry.class);
@@ -102,9 +102,9 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         }
     }
     @Override
-    public void clearChildes(){
+    public void clear(){
         this.onRemoved();
-        super.clearChildes();
+        super.clear();
     }
     @Override
     public JSONArray toJson() {
@@ -120,7 +120,7 @@ public abstract class CompoundItemArray<T extends ResValueMap>
     }
     @Override
     public void fromJson(JSONArray json){
-        clearChildes();
+        clear();
         if(json==null){
             return;
         }
@@ -134,8 +134,8 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         if(mapArray == null || mapArray == this){
             return;
         }
-        clearChildes();
-        int count = mapArray.getChildesCount();
+        clear();
+        int count = mapArray.size();
         ensureSize(count);
         for(int i=0;i<count;i++){
             ResValueMap coming = mapArray.get(i);

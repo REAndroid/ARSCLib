@@ -121,10 +121,10 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
             return false;
         }
         ResValueMapArray coming = ((ResTableMapEntry) tableEntry).getValue();
-        if(coming.getChildesCount() == 0){
+        if(coming.size() == 0){
             return false;
         }
-        return getValue().getChildesCount() == 0;
+        return getValue().size() == 0;
     }
 
     @Override

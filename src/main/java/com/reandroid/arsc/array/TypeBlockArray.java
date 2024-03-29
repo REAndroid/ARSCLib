@@ -62,7 +62,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
                 typeBlock.destroy();
             }
         }
-        clearChildes();
+        clear();
     }
     public void sort(){
         sort(this);
@@ -363,7 +363,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     public int getHighestEntryCount(){
         int result = 0;
         for(TypeBlock typeBlock:getChildes()){
-            int count = typeBlock.getEntryArray().getChildesCount();
+            int count = typeBlock.getEntryArray().size();
             if(count > result){
                 result = count;
             }

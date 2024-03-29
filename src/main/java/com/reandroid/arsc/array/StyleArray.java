@@ -24,10 +24,13 @@ import com.reandroid.json.JSONArray;
 
 import java.io.IOException;
 
-public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConvert<JSONArray> {
+public class StyleArray extends OffsetBlockArray<StyleItem> implements
+        Iterable<StyleItem>, JSONConvert<JSONArray> {
+
     public StyleArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart) {
         super(offsets, itemCount, itemStart);
     }
+
     protected void onStringShifted(int index){
         StyleItem styleItem = get(index);
         if(styleItem == null || styleItem.getIndex() == index){
@@ -39,11 +42,11 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
         styleItem.linkStringsInternal();
     }
     @Override
-    public void clearChildes(){
+    public void clear(){
         for(StyleItem styleItem:listItems(true)){
             styleItem.onRemoved();
         }
-        super.clearChildes();
+        super.clear();
     }
     @Override
     void refreshAlignment(BlockReader reader, AlignItem alignItem) throws IOException {
@@ -65,7 +68,7 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
     }
     @Override
     void refreshAlignment(AlignItem alignItem) {
-        if(getChildesCount() == 0){
+        if(size() == 0){
             alignItem.clear();
             return;
         }
@@ -98,29 +101,25 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements JSONConve
 
     @Override
     public JSONArray toJson() {
-        if(getChildesCount()==0){
-            return null;
-        }
         return null;
     }
     @Override
     public void fromJson(JSONArray json) {
-
     }
     public void merge(StyleArray styleArray){
-        if(styleArray==null||styleArray==this){
+        if(styleArray == null || styleArray == this){
             return;
         }
-        if(getChildesCount()!=0){
+        if(!isEmpty()){
             return;
         }
-        int count=styleArray.getChildesCount();
+        int count = styleArray.size();
         ensureSize(count);
-        for(int i=0;i<count;i++){
-            StyleItem exist=get(i);
-            StyleItem coming=styleArray.get(i);
+        for(int i = 0; i < count; i++){
+            StyleItem exist = get(i);
+            StyleItem coming = styleArray.get(i);
             exist.merge(coming);
         }
     }
-    private static final byte END_BYTE= (byte) 0xFF;
+    private static final byte END_BYTE = (byte) 0xFF;
 }

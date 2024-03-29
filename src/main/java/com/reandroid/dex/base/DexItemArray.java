@@ -54,7 +54,7 @@ public class DexItemArray<T extends Block> extends CreatorArray<T>
             return;
         }
         positionItem(this, reader);
-        setChildesCount(countAndOffset.getFirst().get());
+        setSize(countAndOffset.getFirst().get());
         readChildes(reader);
     }
     private boolean skipReading(IntegerPair countAndOffset, BlockReader reader){
@@ -123,6 +123,6 @@ public class DexItemArray<T extends Block> extends CreatorArray<T>
     @Override
     protected void onRefreshed() {
         IntegerReference count = getCountAndOffset().getFirst();
-        count.set(getChildesCount());
+        count.set(size());
     }
 }

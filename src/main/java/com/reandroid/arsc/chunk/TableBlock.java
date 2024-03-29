@@ -40,7 +40,7 @@ import java.util.*;
 import java.util.function.Predicate;
 
 public class TableBlock extends Chunk<TableHeader>
-        implements MainChunk, JSONConvert<JSONObject> {
+        implements MainChunk, Iterable<PackageBlock>, JSONConvert<JSONObject> {
     private final TableStringPool mTableStringPool;
     private final PackageArray mPackageArray;
     private final List<TableBlock> mFrameWorks;
@@ -89,7 +89,7 @@ public class TableBlock extends Chunk<TableHeader>
         return new IterableIterator<PackageBlock, ResourceEntry>(getPackages()) {
             @Override
             public Iterator<ResourceEntry> iterator(PackageBlock element) {
-                return element.getResources();
+                return element.iterator();
             }
         };
     }
@@ -349,7 +349,7 @@ public class TableBlock extends Chunk<TableHeader>
         }else {
             current = context;
         }
-        Iterator<PackageBlock> iterator = getPackageArray().iterator();
+        Iterator<PackageBlock> iterator = this.iterator();
         if(current == null){
             return iterator;
         }
@@ -476,17 +476,23 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return resolver.resolveAll(referenceId, filter);
     }
-    public void destroy(){
+    public Iterator<PackageBlock> iterator(){
+        return getPackageArray().iterator();
+    }
+    public PackageBlock get(int index){
+        return getPackageArray().get(index);
+    }
+    public void clear(){
         getPackageArray().destroy();
-        getStringPool().destroy();
+        getStringPool().clear();
         clearFrameworks();
         refresh();
     }
-    public int countPackages(){
-        return getPackageArray().getChildesCount();
+    public int size(){
+        return getPackageArray().size();
     }
     public boolean isEmpty(){
-        if(countPackages() == 0){
+        if(size() == 0){
             return true;
         }
         Iterator<PackageBlock> iterator = getPackages();
@@ -497,6 +503,20 @@ public class TableBlock extends Chunk<TableHeader>
             }
         }
         return true;
+    }
+    /**
+     * Use clear();
+     * **/
+    @Deprecated
+    public void destroy(){
+        clear();
+    }
+    /**
+     * Use size();
+     * **/
+    @Deprecated
+    public int countPackages(){
+        return size();
     }
 
     public PackageBlock pickOne(){
@@ -587,7 +607,7 @@ public class TableBlock extends Chunk<TableHeader>
     }
 
     private void refreshPackageCount(){
-        int count = getPackageArray().getChildesCount();
+        int count = getPackageArray().size();
         getHeaderBlock().getPackageCount().set(count);
     }
     @Override
@@ -614,7 +634,7 @@ public class TableBlock extends Chunk<TableHeader>
         boolean stringPoolLoaded=false;
         InfoHeader infoHeader = reader.readHeaderBlock();
         PackageArray packageArray=mPackageArray;
-        packageArray.clearChildes();
+        packageArray.clear();
         while(infoHeader!=null && reader.isAvailable()){
             ChunkType chunkType=infoHeader.getChunkType();
             if(chunkType==ChunkType.STRING){
@@ -744,7 +764,7 @@ public class TableBlock extends Chunk<TableHeader>
         if(tableBlock==null||tableBlock==this){
             return;
         }
-        if(countPackages()==0 && getStringPool().countStrings()==0){
+        if(size() == 0 && getStringPool().isEmpty()){
             getStringPool().merge(tableBlock.getStringPool());
         }
         getPackageArray().merge(tableBlock.getPackageArray());
@@ -766,7 +786,7 @@ public class TableBlock extends Chunk<TableHeader>
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(": packages = ");
-        builder.append(mPackageArray.getChildesCount());
+        builder.append(mPackageArray.size());
         builder.append(", size = ");
         builder.append(getHeaderBlock().getChunkSize());
         builder.append(" bytes");

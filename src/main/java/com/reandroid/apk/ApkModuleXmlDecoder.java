@@ -158,7 +158,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         for(PackageBlock packageBlock:tableBlock.listPackages()){
             decodePublicXml(mainDirectory, packageBlock);
         }
-        if(tableBlock.countPackages() == 0){
+        if(tableBlock.size() == 0){
             decodeEmptyTable(mainDirectory, tableBlock);
         }
     }

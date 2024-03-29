@@ -739,7 +739,7 @@ public class ResXmlElement extends ResXmlNode implements
     public Iterator<ResXmlAttribute> getAttributes(){
         ResXmlAttributeArray attributeArray = getAttributeArray();
         if(attributeArray != null){
-            if(attributeArray.getChildesCount() == 0){
+            if(attributeArray.size() == 0){
                 return EmptyIterator.of();
             }
             return attributeArray.iterator();
@@ -749,7 +749,7 @@ public class ResXmlElement extends ResXmlNode implements
     public Iterator<ResXmlAttribute> getAttributes(Predicate<? super ResXmlAttribute> filter){
         ResXmlAttributeArray attributeArray = getAttributeArray();
         if(attributeArray != null){
-            if(attributeArray.getChildesCount() == 0){
+            if(attributeArray.size() == 0){
                 return EmptyIterator.of();
             }
             return attributeArray.iterator(filter);
@@ -766,7 +766,7 @@ public class ResXmlElement extends ResXmlNode implements
     public int getAttributeCount() {
         ResXmlStartElement startElement=getStartElement();
         if(startElement!=null){
-            return startElement.getResXmlAttributeArray().getChildesCount();
+            return startElement.getResXmlAttributeArray().size();
         }
         return 0;
     }

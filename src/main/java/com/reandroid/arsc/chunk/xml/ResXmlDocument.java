@@ -191,7 +191,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
                 setDocumentElement(null);
             }
             getResXmlIDMap().destroy();
-            getStringPool().destroy();
+            getStringPool().clear();
             refresh();
         }
     }

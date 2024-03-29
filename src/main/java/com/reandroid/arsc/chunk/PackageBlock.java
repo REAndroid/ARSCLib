@@ -87,7 +87,6 @@ public class PackageBlock extends Chunk<PackageHeader>
         addChild(mSpecStringPool);
         addChild(mBody);
     }
-
     public void changePackageId(int packageIdOld, int packageIdNew){
         Iterator<ValueItem> iterator = allValues();
         while (iterator.hasNext()){
@@ -180,7 +179,16 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return null;
     }
+
+
+    /**
+     * Use iterator();
+     * **/
+    @Deprecated
     public Iterator<ResourceEntry> getResources(){
+        return iterator();
+    }
+    public Iterator<ResourceEntry> iterator(){
         return new IterableIterator<SpecTypePair, ResourceEntry>(getSpecTypePairs()) {
             @Override
             public Iterator<ResourceEntry> iterator(SpecTypePair element) {
@@ -192,7 +200,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         int count = 0;
         TableBlock tableBlock = getTableBlock();
         if(tableBlock != null){
-            count = tableBlock.countPackages();
+            count = tableBlock.size();
         }
         return DIRECTORY_NAME_PREFIX + StringsUtil.formatNumber(getIndex() + 1, count);
     }
@@ -264,8 +272,8 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     public void destroy(){
         getPackageBody().destroy();
-        getTypeStringPool().destroy();
-        getSpecStringPool().destroy();
+        getTypeStringPool().clear();
+        getSpecStringPool().clear();
         setId(0);
         setName("");
     }
@@ -581,14 +589,14 @@ public class PackageBlock extends Chunk<PackageHeader>
         getHeaderBlock().getTypeStringPoolOffset().set(pos);
     }
     private void refreshTypeStringPoolCount(){
-        getHeaderBlock().getTypeStringPoolCount().set(mTypeStringPool.countStrings());
+        getHeaderBlock().getTypeStringPoolCount().set(mTypeStringPool.size());
     }
     private void refreshSpecStringPoolOffset(){
         int pos=countUpTo(mSpecStringPool);
         getHeaderBlock().getSpecStringPoolOffset().set(pos);
     }
     private void refreshSpecStringCount(){
-        getHeaderBlock().getSpecStringPoolCount().set(mSpecStringPool.countStrings());
+        getHeaderBlock().getSpecStringPoolCount().set(mSpecStringPool.size());
     }
     @Override
     public void onChunkLoaded() {
@@ -667,7 +675,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         jsonObject.put(NAME_package_name, getName());
         jsonObject.put(NAME_specs, getSpecTypePairArray().toJson(!addTypes));
         LibraryInfoArray libraryInfoArray = getLibraryBlock().getLibraryInfoArray();
-        if(libraryInfoArray.getChildesCount()>0){
+        if(libraryInfoArray.size()>0){
             jsonObject.put(NAME_libraries,libraryInfoArray.toJson());
         }
         StagedAlias stagedAlias =

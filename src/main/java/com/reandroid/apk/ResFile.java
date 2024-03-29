@@ -174,7 +174,7 @@ public class ResFile {
             if(!mBinXml && getFilePath().endsWith(".xml")){
                 try {
                     ResXmlDocument resXmlDocument = readAsXmlDocument();
-                    mBinXml = resXmlDocument.getStringPool().countStrings() > 0;
+                    mBinXml = !resXmlDocument.getStringPool().isEmpty();
                 } catch (IOException ignored) {
                 }
             }

@@ -94,7 +94,7 @@ public class SpecBlock extends Chunk<SpecHeader> implements JSONConvert<JSONObje
         TypeBlockArray typeBlockArray=getTypeBlockArray();
         if(typeBlockArray!=null){
             builder.append(", typesCount=");
-            builder.append(typeBlockArray.getChildesCount());
+            builder.append(typeBlockArray.size());
         }
         return builder.toString();
     }

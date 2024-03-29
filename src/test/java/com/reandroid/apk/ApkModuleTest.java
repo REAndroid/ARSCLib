@@ -191,7 +191,7 @@ public class ApkModuleTest {
         Entry appName = packageBlock.getOrCreate("", "string", "app_name");
         appName.setValueAsString(app_name);
 
-        Assert.assertEquals("packages count", 1, tableBlock.countPackages());
+        Assert.assertEquals("packages count", 1, tableBlock.size());
         Assert.assertEquals("package id", packageId, packageBlock.getId());
         Assert.assertEquals("package name", packageName, packageBlock.getName());
 

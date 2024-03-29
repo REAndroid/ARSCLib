@@ -47,7 +47,7 @@
          }
 
          ResValueMapArray array = getMapArray();
-         for (int i = regenStart; i < array.getChildesCount(); i++) {
+         for (int i = regenStart; i < array.size(); i++) {
              setIndex(array.get(i), i);
          }
      }
@@ -63,7 +63,7 @@
 
      @Override
      public int size() {
-         return getMapArray().getChildesCount();
+         return getMapArray().size();
      }
 
      @Override
@@ -109,7 +109,7 @@
 
      @Override
      public void clear() {
-         getMapArray().clearChildes();
+         getMapArray().clear();
          updateStructure(-1);
      }
 

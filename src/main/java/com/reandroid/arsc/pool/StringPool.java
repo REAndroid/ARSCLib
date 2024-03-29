@@ -20,6 +20,7 @@ import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.array.StyleArray;
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.BlockArrayCreator;
 import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.header.StringPoolHeader;
@@ -36,7 +37,9 @@ import com.reandroid.utils.collection.FilterIterator;
 import java.io.IOException;
 import java.util.*;
 
-public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolHeader> implements BlockLoad, JSONConvert<JSONArray> {
+public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolHeader>
+        implements BlockLoad, Iterable<T>, JSONConvert<JSONArray> {
+
     private final Object mLock = new Object();
     private final StringArray<T> mArrayStrings;
     private final StyleArray mArrayStyles;
@@ -80,6 +83,33 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         this(is_utf8, true);
     }
 
+    @Override
+    public Iterator<T> iterator(){
+        return mArrayStrings.iterator();
+    }
+    public final T get(int index){
+        return mArrayStrings.get(index);
+    }
+    public int size(){
+        return mArrayStrings.getCount();
+    }
+    public boolean isEmpty(){
+        return size() == 0;
+    }
+    public void clear(){
+        getStyleArray().clear();
+        getStringsArray().clear();
+    }
+    /**
+     * Use clear()
+     * **/
+    @Deprecated
+    public void destroy(){
+        clear();
+    }
+    public boolean containsString(String str){
+        return mUniqueMap.containsKey(str);
+    }
     void sort(Comparator<T> comparator){
         ensureStringLinkUnlockedInternal();
         getStringsArray().sort(comparator);
@@ -104,21 +134,12 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     }
     private void linkStyles(){
         StyleArray styleArray = getStyleArray();
-        if(styleArray == null){
-            return;
-        }
-        StyleItem[] styles = styleArray.getChildes();
-        for(StyleItem styleItem : styles){
+        for(StyleItem styleItem : styleArray){
             styleItem.linkStringsInternal();
         }
     }
-
     public void removeString(T item){
         getStringsArray().remove(item);
-    }
-    public void destroy(){
-        getStyleArray().clearChildes();
-        getStringsArray().clearChildes();
     }
     public List<String> toStringList(){
         return getStringsArray().toStringList();
@@ -144,12 +165,12 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     }
     private void insertStringList(List<String> stringList){
         StringArray<T> stringsArray = getStringsArray();
-        int initialSize=stringsArray.getChildesCount();
+        int initialSize = stringsArray.size();
         stringsArray.ensureSize(initialSize + stringList.size());
-        int size=stringsArray.getChildesCount();
-        int j=0;
-        for (int i=initialSize;i<size;i++){
-            T item=stringsArray.get(i);
+        int size = stringsArray.size();
+        int j = 0;
+        for (int i = initialSize; i < size; i++){
+            T item = stringsArray.get(i);
             item.set(stringList.get(j));
             j++;
         }
@@ -158,13 +179,13 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     public Map<String, T> insertStrings(List<String> stringList){
         Map<String, T> results=new HashMap<>();
         StringArray<T> stringsArray = getStringsArray();
-        int initialSize=stringsArray.getChildesCount();
+        int initialSize = stringsArray.size();
         stringsArray.ensureSize(initialSize + stringList.size());
-        int size=stringsArray.getChildesCount();
-        int j=0;
-        for (int i=initialSize;i<size;i++){
-            T item=stringsArray.get(i);
-            String str=stringList.get(j);
+        int size=stringsArray.size();
+        int j = 0;
+        for (int i = initialSize; i < size; i++){
+            T item = stringsArray.get(i);
+            String str = stringList.get(j);
             item.set(str);
             results.put(str, item);
             j++;
@@ -176,26 +197,20 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     public void refreshUniqueIdMap(){
         Map<String, StringGroup<T>> map = mUniqueMap;
         map.clear();
-        StringArray<T> stringArray = this.mArrayStrings;
-        T[] stringItems = stringArray.getChildes();
-        int length = stringItems.length;
-        if(length == 0){
-            return;
-        }
-        for(int i = 0; i < length; i++){
-            T item = stringItems[i];
-            if(item == null){
+        BlockArrayCreator<T> creator = getStringsArray();
+        for (T item : this) {
+            if (item == null) {
                 continue;
             }
             String str = item.getXml();
-            if(str == null){
+            if (str == null) {
                 continue;
             }
             StringGroup<T> group = map.get(str);
-            if(group == null){
-                group = new StringGroup<>(stringArray, str, item);
+            if (group == null) {
+                group = new StringGroup<>(creator, str, item);
                 map.put(str, group);
-            }else {
+            } else {
                 group.add(item);
             }
         }
@@ -225,7 +240,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         return results;
     }
     public Iterator<StringGroup<T>> listDuplicates(){
-        if(mUniqueMap.size() == countStrings() || countStrings() == 0){
+        if(mUniqueMap.size() == size() || size() == 0){
             return EmptyIterator.of();
         }
         return new FilterIterator<>(mUniqueMap.values().iterator(), StringGroup::isDuplicate);
@@ -258,9 +273,6 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     }
     public boolean contains(String str){
         return mUniqueMap.containsKey(str);
-    }
-    public final T get(int index){
-        return mArrayStrings.get(index);
     }
     public final T getLast(){
         return mArrayStrings.getLast();
@@ -332,17 +344,13 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     public final StyleItem getStyle(int index){
         return mArrayStyles.get(index);
     }
+
+    @Deprecated
     public final int countStrings(){
-        return mArrayStrings.getChildesCount();
+        return mArrayStrings.size();
     }
     public final int countStyles(){
-        return mArrayStyles.getChildesCount();
-    }
-    public final T[] getStrings(){
-        return mArrayStrings.getChildes();
-    }
-    public final StyleItem[] getStyles(){
-        return mArrayStyles.getChildes();
+        return mArrayStyles.size();
     }
     public boolean isUtf8(){
         return getHeaderBlock().isUtf8();
@@ -379,12 +387,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     @Override
     public void onChunkLoaded() {
         refreshUniqueIdMap();
-        StyleItem[] styles = getStyles();
-        if(styles!=null){
-            for(StyleItem styleItem:styles){
-                styleItem.linkStringsInternal();
-            }
-        }
+        linkStyles();
     }
 
     @Override

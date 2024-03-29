@@ -149,12 +149,6 @@ public abstract class BlockContainer<T extends Block> extends Block implements B
             }
         }
     }
-
-    //use getChildesCount()
-    @Deprecated
-    public int childesCount(){
-        return getChildesCount();
-    }
     public abstract int getChildesCount();
     public abstract T[] getChildes();
 }

@@ -66,7 +66,7 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
             }
             @Override
             public int size() {
-                return getChildesCount();
+                return StringArray.this.size();
             }
         };
     }
@@ -151,7 +151,7 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         return toJson(true);
     }
     public JSONArray toJson(boolean styledOnly) {
-        if(getChildesCount()==0){
+        if(size()==0){
             return null;
         }
         JSONArray jsonArray=new JSONArray();
@@ -183,12 +183,12 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         }else {
             length = 0;
         }
-        setChildesCount(length);
+        setSize(length);
         StyleArray styleArray = getStyleArray();
         if(styleArray == null){
             throw new NullPointerException("Null StyleArray");
         }
-        styleArray.setChildesCount(length);
+        styleArray.setSize(length);
         if(length == 0){
             return;
         }

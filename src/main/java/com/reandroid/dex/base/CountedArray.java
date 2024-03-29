@@ -30,7 +30,7 @@ public class CountedArray<T extends Block> extends CreatorArray<T> {
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        setChildesCount(itemCount.get());
+        setSize(itemCount.get());
         super.onReadBytes(reader);
     }
     @Override

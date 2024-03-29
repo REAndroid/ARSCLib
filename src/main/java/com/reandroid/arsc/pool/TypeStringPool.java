@@ -64,12 +64,12 @@ public class TypeStringPool extends StringPool<TypeString> {
     }
     public TypeString getOrCreate(int typeId, String typeName){
         StringArray<TypeString> stringsArray = getStringsArray();
-        int old = stringsArray.getChildesCount();
+        int old = stringsArray.size();
         int size = toIndex(typeId) + 1;
         stringsArray.ensureSize(size);
         TypeString typeString = getById(typeId);
         typeString.set(typeName);
-        if(old != stringsArray.getChildesCount()){
+        if(old != stringsArray.size()){
             updateUniqueIdMap(typeString);
         }
         return typeString;

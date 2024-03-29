@@ -110,7 +110,7 @@ public abstract class MapBag<K, V extends BagItem> extends AbstractMap<K, V> imp
 
         @Override
         public int size() {
-            return getMapArray().getChildesCount();
+            return getMapArray().size();
         }
     }
 
@@ -131,7 +131,7 @@ public abstract class MapBag<K, V extends BagItem> extends AbstractMap<K, V> imp
 
     @Override
     public void clear() {
-        getMapArray().clearChildes();
+        getMapArray().clear();
         updateSize();
     }
 

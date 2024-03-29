@@ -672,7 +672,7 @@ public class ApkModule implements ApkFile, Closeable {
         TableBlock tableBlock=getTableBlock();
         PackageArray pkgArray = tableBlock.getPackageArray();
         for(PackageBlock pkg:pkgArray.listItems()){
-            if(pkgArray.getChildesCount()==1){
+            if(pkgArray.size()==1){
                 pkg.setName(name);
                 continue;
             }
@@ -706,7 +706,7 @@ public class ApkModule implements ApkFile, Closeable {
         TableBlock tableBlock = this.mTableBlock;
         if(tableBlock!=null){
             mExternalFrameworks.clear();
-            tableBlock.destroy();
+            tableBlock.clear();
             this.mTableBlock = null;
         }
         try {

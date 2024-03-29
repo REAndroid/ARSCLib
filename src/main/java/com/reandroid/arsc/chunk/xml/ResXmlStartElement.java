@@ -325,7 +325,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
         mAttributeStart.set(start);
     }
     private void refreshAttributeCount(){
-        int count = mAttributeArray.getChildesCount();
+        int count = mAttributeArray.size();
         mAttributeCount.set(count);
     }
     @Override

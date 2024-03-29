@@ -21,7 +21,6 @@ import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
 import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.*;
 
-import java.util.Iterator;
 import java.util.Objects;
 
 public class ResXmlStringPool extends StringPool<ResXmlString> {
@@ -71,7 +70,7 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
             return super.getOrCreate(str);
         }
         ResXmlIDArray idArray = resXmlIDMap.getResXmlIDArray();
-        int count = idArray.getChildesCount();
+        int count = idArray.size();
         if(resourceId == 0){
             return getOrCreateAfter(count, str);
         }
@@ -83,9 +82,9 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
                 return xmlString;
             }
         }
-        count = idArray.getChildesCount() + 1;
+        count = idArray.size() + 1;
         stringsArray.ensureSize(count);
-        idArray.setChildesCount(count);
+        idArray.setSize(count);
         int index = count - 1;
         xmlID = idArray.get(index);
         assert xmlID != null;
@@ -119,7 +118,7 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
             }
         }
         StringArray<ResXmlString> stringsArray = getStringsArray();
-        int count = stringsArray.getChildesCount();
+        int count = stringsArray.size();
         if(count < position){
             count = position;
         }
@@ -141,8 +140,8 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
     public void onChunkLoaded() {
         super.onChunkLoaded();
         StyleArray styleArray = getStyleArray();
-        if(styleArray.getChildesCount()>0){
-            notifyResXmlStringPoolHasStyles(styleArray.getChildesCount());
+        if(styleArray.size()>0){
+            notifyResXmlStringPoolHasStyles(styleArray.size());
         }
     }
     private static void notifyResXmlStringPoolHasStyles(int styleArrayCount){

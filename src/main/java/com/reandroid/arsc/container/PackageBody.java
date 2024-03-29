@@ -61,8 +61,8 @@ public class PackageBody extends FixedBlockContainer {
     }
 
     public void destroy(){
-        getSpecTypePairArray().clearChildes();
-        getLibraryBlock().getLibraryInfoArray().clearChildes();
+        getSpecTypePairArray().clear();
+        getLibraryBlock().getLibraryInfoArray().clear();
         getStagedAliasList().clearChildes();
         getOverlayableList().clearChildes();
         getOverlayablePolicyList().clearChildes();

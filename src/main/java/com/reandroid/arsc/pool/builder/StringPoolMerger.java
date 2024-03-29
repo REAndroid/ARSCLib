@@ -66,7 +66,7 @@ public class StringPoolMerger implements Comparator<String> {
                 destination.insertStrings(listStyleTags(styledStrings));
 
         StyleArray styleArray = destination.getStyleArray();
-        styleArray.setChildesCount(styledStrings.size());
+        styleArray.setSize(styledStrings.size());
 
         for(TableString tableString:styledStrings){
             TableString createdString = mapTableStrings.get(tableString.get());
@@ -102,12 +102,7 @@ public class StringPoolMerger implements Comparator<String> {
     private List<String> getNonStyledStrings(){
         Set<String> uniqueSet = new HashSet<>();
         for(TableStringPool pool:mPools){
-            TableString[] tableStrings = pool.getStrings();
-            if(tableStrings==null){
-                continue;
-            }
-            for(int i=0;i<tableStrings.length;i++){
-                TableString tableString=tableStrings[i];
+            for(TableString tableString : pool){
                 if(tableString==null || tableString.hasStyle()){
                     continue;
                 }
