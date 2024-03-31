@@ -151,6 +151,12 @@ public abstract class BlockItem extends Block {
         super.notifyBlockLoad();
         return bytes.length;
     }
+    public void setBytes(BlockItem blockItem){
+        if(blockItem != this) {
+            byte[] coming = blockItem.getBytesInternal();
+            setBytesInternal(coming.clone());
+        }
+    }
 
     private static final byte[] EMPTY = new byte[0];
 }
