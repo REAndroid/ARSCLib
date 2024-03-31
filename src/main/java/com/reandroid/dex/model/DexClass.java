@@ -46,6 +46,26 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         this.classId = classId;
     }
 
+    public boolean usesNative() {
+        if(isNative()){
+            return true;
+        }
+        Iterator<DexMethod> methods = getDeclaredMethods();
+        while (methods.hasNext()){
+            DexMethod dexMethod = methods.next();
+            if(dexMethod.isNative()){
+                return true;
+            }
+        }
+        Iterator<DexField> fields = getDeclaredFields();
+        while (fields.hasNext()){
+            DexField dexField = fields.next();
+            if(dexField.isNative()){
+                return true;
+            }
+        }
+        return false;
+    }
     public void replaceKeys(Key search, Key replace){
         getId().replaceKeys(search, replace);
     }
@@ -191,22 +211,13 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         return dexMethod.getKey();
     }
     public boolean containsDeclaredMethod(MethodKey methodKey) {
-        Iterator<DexMethod> iterator = getDeclaredMethods();
-        while (iterator.hasNext()){
-            DexMethod dexMethod = iterator.next();
-            MethodKey key = dexMethod.getKey();
-            if(methodKey.equals(key, false, false)){
-                return true;
-            }
-        }
-        return false;
+        return getDeclaredMethod(methodKey) != null;
     }
     public DexMethod getDeclaredMethod(MethodKey methodKey) {
         Iterator<DexMethod> iterator = getDeclaredMethods();
         while (iterator.hasNext()){
             DexMethod dexMethod = iterator.next();
-            MethodKey key = dexMethod.getKey();
-            if(methodKey.equals(key, false, false)){
+            if(methodKey.equalsNameAndParameters(dexMethod.getKey())){
                 return dexMethod;
             }
         }
@@ -214,7 +225,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     }
     public Iterator<DexMethod> getDeclaredMethods(MethodKey methodKey) {
         return FilterIterator.of(getDeclaredMethods(),
-                dexMethod -> methodKey.equals(dexMethod.getKey(), false, false));
+                dexMethod -> methodKey.equalsNameAndParameters(dexMethod.getKey()));
     }
     public Iterator<DexClass> getOverridingAndSuperTypes(){
         return CombiningIterator.two(getOverriding(), getSuperTypes());
@@ -277,7 +288,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         return FilterIterator.of(iterator, filter);
     }
     public Iterator<DexMethod> getDeclaredMethods() {
-        return new CombiningIterator<>(getDirectMethods(), getVirtualMethods());
+        return CombiningIterator.two(getDirectMethods(), getVirtualMethods());
     }
     public Iterator<DexMethod> getDirectMethods() {
         ClassData classData = getClassData();

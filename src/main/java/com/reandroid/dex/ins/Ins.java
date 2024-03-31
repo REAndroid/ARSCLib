@@ -165,7 +165,9 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
         this.extraLineList.trimToSize();
     }
     public void addExtraLine(ExtraLine extraLine){
-        this.extraLineList = ExtraLineList.add(this.extraLineList, extraLine);
+        if(extraLine != this){
+            this.extraLineList = ExtraLineList.add(this.extraLineList, extraLine);
+        }
     }
     public void addExtraLine(Iterator<ExtraLine> iterator){
         this.extraLineList = ExtraLineList.add(this.extraLineList, iterator);

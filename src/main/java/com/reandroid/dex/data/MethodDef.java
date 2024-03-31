@@ -24,6 +24,7 @@ import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.debug.DebugParameter;
 import com.reandroid.dex.id.*;
 import com.reandroid.dex.ins.Ins;
+import com.reandroid.dex.ins.TryBlock;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
@@ -174,6 +175,13 @@ public class MethodDef extends Def<MethodId>{
         }
         return null;
     }
+    public Ins getInstructionAt(int address) {
+        InstructionList instructionList = getInstructionList();
+        if(instructionList != null) {
+            return instructionList.getAtAddress(address);
+        }
+        return null;
+    }
     public int getInstructionsCount() {
         InstructionList instructionList = getInstructionList();
         if(instructionList != null) {
@@ -191,6 +199,16 @@ public class MethodDef extends Def<MethodId>{
             return codeItem.getInstructionList();
         }
         return null;
+    }
+    public TryBlock getTryBlock(){
+        CodeItem codeItem = getCodeItem();
+        if(codeItem != null){
+            return codeItem.getTryBlock();
+        }
+        return null;
+    }
+    public TryBlock getOrCreateTryBlock(){
+        return getOrCreateCodeItem().getOrCreateTryBlock();
     }
     public CodeItem getOrCreateCodeItem(){
         CodeItem current = codeOffset.getItem();

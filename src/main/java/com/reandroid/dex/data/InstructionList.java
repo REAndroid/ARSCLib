@@ -524,7 +524,10 @@ public class InstructionList extends FixedBlockContainer implements
         buildExtraLines();
     }
     public Ins getAtAddress(int address){
-        for (Ins ins : this) {
+        int estimatedStart = address / 2;
+        int size = getCount();
+        for (int i = estimatedStart; i < size; i++) {
+            Ins ins = get(i);
             if(ins.getAddress() == address){
                 return ins;
             }

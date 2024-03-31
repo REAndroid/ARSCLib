@@ -15,68 +15,37 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.DexBlockItem;
+import com.reandroid.dex.base.CountedList;
+import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
-import java.util.Objects;
 
-public class HandlerOffsetArray extends DexBlockItem {
+public class HandlerOffsetArray extends CountedList<HandlerOffset> {
 
-    private final IntegerReference itemCount;
     private int itemsStart;
 
     public HandlerOffsetArray(IntegerReference itemCount) {
-        super(0);
-        this.itemCount = itemCount;
+        super(itemCount, CREATOR);
     }
 
-    @Override
-    protected byte[] getBytesInternal() {
-        return super.getBytesInternal();
-    }
     public HandlerOffset getOrCreate(int index) {
         ensureSize(index + 1);
         return get(index);
     }
-    public HandlerOffset get(int index) {
-        if(index < 0 || index >= size()){
-            return null;
+    int getOffset(int i) {
+        HandlerOffset offset = get(i);
+        if(offset != null){
+            return offset.getOffset();
         }
-        return new HandlerOffset(this, index);
+        return -1;
     }
-    public int getOffset(int i) {
-        if(i >= size()){
+    int indexOf(int value){
+        if(value < 0){
             return -1;
         }
-        return getShortUnsigned(getBytesInternal(), i * 8 + 6);
-    }
-    public void setOffset(int index, int value) {
-        ensureSize(index + 1);
-        putShort(getBytesInternal(), index * 8 + 6, value);
-    }
-    public int[] getOffsets() {
-        int size = size();
-        int[] results = new int[size];
-        for(int i = 0; i < size; i++){
-            results[i] = getOffset(i);
-        }
-        return results;
-    }
-    public int size() {
-        return countBytes() / 8;
-    }
-    public void setSize(int size) {
-        setBytesLength(size * 8, false);
-        itemCount.set(size);
-    }
-    public void put(int i, int value) {
-        setOffset(i, value);
-    }
-
-    public int indexOf(int value){
         int size = size();
         for(int i = 0; i < size; i++){
             if(value == getOffset(i)){
@@ -84,15 +53,6 @@ public class HandlerOffsetArray extends DexBlockItem {
             }
         }
         return -1;
-    }
-
-    public void clear() {
-        setSize(0);
-    }
-    private void ensureSize(int size){
-        if(size > size()){
-            setSize(size);
-        }
     }
 
     int getItemsStart() {
@@ -111,36 +71,21 @@ public class HandlerOffsetArray extends DexBlockItem {
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        setBytesLength(itemCount.get() * 8, false);
         super.onReadBytes(reader);
         itemsStart = reader.getPosition();
     }
 
-    public void merge(HandlerOffsetArray array){
-        byte[] coming = array.getBytesInternal();
-        int length = coming.length;
-        setBytesLength(length, false);
-        byte[] bytes = getBytesInternal();
-        for(int i = 0; i < length; i++){
-            bytes[i] = coming[i];
+    public void merge(HandlerOffsetArray offsetArray){
+        if(offsetArray == this){
+            return;
         }
-        itemCount.set(array.itemCount.get());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+        int size = offsetArray.size();
+        setSize(size);
+        for(int i = 0; i < size; i++){
+            HandlerOffset coming = offsetArray.get(i);
+            HandlerOffset offset = this.get(i);
+            offset.merge(coming);
         }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        HandlerOffsetArray offsetArray = (HandlerOffsetArray) obj;
-        return Block.areEqual(getBytesInternal(), offsetArray.getBytesInternal());
-    }
-    @Override
-    public int hashCode() {
-        return Block.hashCodeOf(getBytesInternal());
     }
 
     @Override
@@ -150,14 +95,19 @@ public class HandlerOffsetArray extends DexBlockItem {
         builder.append("size = ");
         builder.append(size);
         builder.append('[');
-        for(int i = 0; i < size; i++){
-            if(i != 0){
-                builder.append(", ");
-            }
-            builder.append(get(i));
-        }
+        builder.append(StringsUtil.join(iterator(), ", "));
         builder.append(']');
         return builder.toString();
     }
 
+    private static final Creator<HandlerOffset> CREATOR = new Creator<HandlerOffset>() {
+        @Override
+        public HandlerOffset[] newArrayInstance(int length) {
+            return new HandlerOffset[length];
+        }
+        @Override
+        public HandlerOffset newInstance() {
+            return new HandlerOffset();
+        }
+    };
 }

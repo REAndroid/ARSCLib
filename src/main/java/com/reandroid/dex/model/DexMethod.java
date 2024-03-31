@@ -22,6 +22,7 @@ import com.reandroid.dex.data.*;
 import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.Opcode;
+import com.reandroid.dex.ins.TryBlock;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
@@ -154,10 +155,24 @@ public class DexMethod extends DexDeclaration {
         return ComputeIterator.of(iterator, this::create);
     }
     public Iterator<DexInstruction> getInstructions() {
-        return ComputeIterator.of(getDefinition().getInstructions(), this::create);
+        return DexInstruction.create(this, getDefinition().getInstructions());
+    }
+    public Iterator<DexTry> getDexTry() {
+        TryBlock tryBlock = getDefinition().getTryBlock();
+        if(tryBlock == null){
+            return EmptyIterator.of();
+        }
+        return DexTry.create(this, tryBlock.iterator());
+    }
+    public DexTry createDexTry() {
+        TryBlock tryBlock = getDefinition().getOrCreateTryBlock();
+        return DexTry.create(this, tryBlock.createNext());
     }
     public DexInstruction getInstruction(int i){
         return create(getDefinition().getInstruction(i));
+    }
+    public DexInstruction getInstructionAt(int address){
+        return create(getDefinition().getInstructionAt(address));
     }
     public DexInstruction addInstruction(Opcode<?> opcode){
         return create(getDefinition().getOrCreateInstructionList().createNext(opcode));
@@ -238,10 +253,7 @@ public class DexMethod extends DexDeclaration {
         }
     }
     private DexInstruction create(Ins ins){
-        if(ins != null){
-            return new DexInstruction(this, ins);
-        }
-        return null;
+        return DexInstruction.create(this, ins);
     }
 
     @Override

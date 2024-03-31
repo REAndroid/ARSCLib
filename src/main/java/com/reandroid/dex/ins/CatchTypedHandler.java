@@ -51,8 +51,13 @@ public class CatchTypedHandler extends ExceptionHandler {
     public TypeId getTypeId(){
         return getTypeUle128().getItem();
     }
-    public TypeKey getTypeKey(){
+    @Override
+    public TypeKey getKey(){
         return (TypeKey) getTypeUle128().getKey();
+    }
+    @Override
+    public void setKey(TypeKey typeKey){
+        getTypeUle128().setItem(typeKey);
     }
     Ule128IdItemReference<TypeId> getTypeUle128(){
         return typeId;
@@ -84,11 +89,11 @@ public class CatchTypedHandler extends ExceptionHandler {
 
     @Override
     boolean isTypeEqual(ExceptionHandler handler){
-        return Objects.equals(getTypeKey(), ((CatchTypedHandler) handler).getTypeKey());
+        return Objects.equals(getKey(), ((CatchTypedHandler) handler).getKey());
     }
     @Override
     int getTypeHashCode(){
-        TypeKey typeKey = getTypeKey();
+        TypeKey typeKey = getKey();
         if(typeKey != null){
             return typeKey.hashCode();
         }

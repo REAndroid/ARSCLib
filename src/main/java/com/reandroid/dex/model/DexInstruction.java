@@ -28,11 +28,14 @@ import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
-public class DexInstruction extends Dex {
+public class DexInstruction extends DexCode {
 
     private final DexMethod dexMethod;
     private final Ins mIns;
@@ -42,6 +45,12 @@ public class DexInstruction extends Dex {
         this.mIns = ins;
     }
 
+    public int getAddress(){
+        return getIns().getAddress();
+    }
+    public int getCodeUnits(){
+        return getIns().getCodeUnits();
+    }
     public List<Register> getLocalFreeRegisters(){
         return getDexMethod().getLocalFreeRegisters(getIndex());
     }
@@ -67,7 +76,7 @@ public class DexInstruction extends Dex {
         InsConstStringJumbo jumbo = sizeXIns.replace(Opcode.CONST_STRING_JUMBO);
         jumbo.setRegister(register);
         jumbo.setSectionId(stringId);
-        return new DexInstruction(getDexMethod(), jumbo);
+        return DexInstruction.create(getDexMethod(), jumbo);
     }
     public FieldKey getFieldKey(){
         IdItem idItem = getIdSectionEntry();
@@ -162,6 +171,19 @@ public class DexInstruction extends Dex {
     public boolean isNumberLong(){
         return getIns() instanceof ConstNumberLong;
     }
+    public int getTargetAddress(){
+        Ins ins = getIns();
+        if(ins instanceof Label){
+            return ((Label) ins).getTargetAddress();
+        }
+        return -1;
+    }
+    public void setTargetAddress(int address){
+        Ins ins = getIns();
+        if(ins instanceof Label){
+            ((Label) ins).setTargetAddress(address);
+        }
+    }
     public Integer getAsInteger(){
         Ins ins = getIns();
         if(ins instanceof ConstNumber){
@@ -189,10 +211,10 @@ public class DexInstruction extends Dex {
         }
     }
     public DexInstruction replace(Opcode<?> opcode){
-        return new DexInstruction(getDexMethod(), getIns().replace(opcode));
+        return DexInstruction.create(getDexMethod(), getIns().replace(opcode));
     }
     public DexInstruction createNext(Opcode<?> opcode){
-        return new DexInstruction(getDexMethod(), getIns().createNext(opcode));
+        return DexInstruction.create(getDexMethod(), getIns().createNext(opcode));
     }
     public boolean removeSelf(){
         Ins ins = getIns();
@@ -208,11 +230,9 @@ public class DexInstruction extends Dex {
     public Ins getIns() {
         return mIns;
     }
+    @Override
     public DexMethod getDexMethod() {
         return dexMethod;
-    }
-    public DexClass getDexClass(){
-        return getDexMethod().getDexClass();
     }
 
     public DexDeclaration findDeclaration(){
@@ -261,5 +281,17 @@ public class DexInstruction extends Dex {
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getIns().append(writer);
+    }
+    public static Iterator<DexInstruction> create(DexMethod dexMethod, Iterator<Ins> iterator){
+        if(dexMethod == null){
+            return EmptyIterator.of();
+        }
+        return ComputeIterator.of(iterator, ins -> create(dexMethod, ins));
+    }
+    public static DexInstruction create(DexMethod dexMethod, Ins ins){
+        if(dexMethod == null || ins == null){
+            return null;
+        }
+        return new DexInstruction(dexMethod, ins);
     }
 }

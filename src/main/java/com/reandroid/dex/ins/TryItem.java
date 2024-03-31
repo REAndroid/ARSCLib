@@ -22,6 +22,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Sle128Item;
 import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.model.SmaliCodeCatch;
 import com.reandroid.dex.smali.model.SmaliCodeCatchAll;
 import com.reandroid.dex.smali.model.SmaliCodeTryItem;
@@ -40,6 +41,8 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
     final Sle128Item handlersCount;
     private final BlockList<CatchTypedHandler> catchTypedHandlerList;
     private CatchAllHandler catchAllHandler;
+
+    private HandlerOffset mHandlerOffset;
 
     public TryItem(HandlerOffsetArray handlerOffsetArray) {
         super(3);
@@ -73,10 +76,13 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
         return new Copy(this);
     }
     HandlerOffset getHandlerOffset() {
-        return getHandlerOffsetArray().get(getIndex());
-    }
-    HandlerOffset getOrCreateHandlerOffset() {
-        return getHandlerOffsetArray().getOrCreate(getIndex());
+        HandlerOffset handlerOffset = this.mHandlerOffset;
+        if(handlerOffset == null){
+            handlerOffset = getHandlerOffsetArray().getOrCreate(getIndex());
+            this.mHandlerOffset = handlerOffset;
+            handlerOffset.setTryItem(this);
+        }
+        return handlerOffset;
     }
     HandlerOffsetArray getHandlerOffsetArray(){
         return handlerOffsetArray;
@@ -106,6 +112,9 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
     public Iterator<Label> iterator(){
         return new ExpandIterator<>(getExceptionHandlers());
     }
+    public int getCatchTypedHandlersCount(){
+        return getCatchTypedHandlerBlockList().size();
+    }
     public Iterator<ExceptionHandler> getExceptionHandlers(){
         Iterator<ExceptionHandler> iterator1 = EmptyIterator.of();
         ExceptionHandler handler = getCatchAllHandler();
@@ -113,6 +122,16 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
             iterator1 = SingleIterator.of(handler);
         }
         return new CombiningIterator<>(getCatchTypedHandlers(), iterator1);
+    }
+    public ExceptionHandler getExceptionHandler(TypeKey typeKey){
+        Iterator<CatchTypedHandler> iterator = getCatchTypedHandlers();
+        while (iterator.hasNext()){
+            CatchTypedHandler handler = iterator.next();
+            if(typeKey.equals(handler.getKey())){
+                return handler;
+            }
+        }
+        return null;
     }
     public int getStartAddress(){
         return getHandlerOffset().getStartAddress();
@@ -123,12 +142,23 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
     public int getCatchCodeUnit(){
         return getHandlerOffset().getCatchCodeUnit();
     }
+    public void setCatchCodeUnit(int codeUnit){
+        getHandlerOffset().setCatchCodeUnit(codeUnit);
+    }
 
     public boolean hasCatchAllHandler(){
         return getCatchAllHandler() != null;
     }
     public CatchAllHandler getCatchAllHandler(){
         return catchAllHandler;
+    }
+    public CatchAllHandler getOrCreateCatchAll(){
+        CatchAllHandler handler = getCatchAllHandler();
+        if(handler == null){
+            initCatchAllHandler();
+            handler = getCatchAllHandler();
+        }
+        return handler;
     }
     private CatchAllHandler initCatchAllHandler(){
         CatchAllHandler catchAllHandler = this.getCatchAllHandler();
@@ -150,9 +180,8 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
     public void onReadBytes(BlockReader reader) throws IOException {
         int maxPosition = reader.getPosition();
 
-        HandlerOffsetArray handlerOffsetArray = this.getHandlerOffsetArray();
-        int position = handlerOffsetArray.getItemsStart()
-                + handlerOffsetArray.getOffset(this.getIndex());
+        int position = getHandlerOffsetArray().getItemsStart()
+                + getHandlerOffset().getOffset();
         reader.seek(position);
         this.handlersCount.readBytes(reader);
         int count = this.handlersCount.get();
@@ -175,7 +204,6 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
             // Should never reach here
             reader.seek(maxPosition);
         }
-
     }
     @Override
     public void onCountUpTo(BlockCounter counter) {
@@ -192,7 +220,28 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
         }
         super.onCountUpTo(counter);
     }
+    public void removeSelf(){
+        TryBlock tryBlock = getTryBlock();
+        if(tryBlock != null){
+            tryBlock.remove(this);
+        }
+    }
+    public void remove(ExceptionHandler handler){
+        if(handler == null){
+            return;
+        }
+        if(handler == this.catchAllHandler){
+            handler.onRemove();
+            this.catchAllHandler = null;
+        }else if(handler instanceof CatchTypedHandler && this.catchTypedHandlerList != null){
+            if(catchTypedHandlerList.contains(handler)){
+                catchTypedHandlerList.remove((CatchTypedHandler) handler);
+                handler.onRemove();
+            }
+        }
+    }
     public void onRemove(){
+        HandlerOffset handlerOffset = this.mHandlerOffset;
         BlockList<CatchTypedHandler> list = this.catchTypedHandlerList;
         if(list != null){
             int size = list.size();
@@ -203,11 +252,12 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
             }
             list.destroy();
         }
-        CatchAllHandler handler = this.catchAllHandler;
-        if(handler != null){
-            handler.onRemove();
-            this.catchAllHandler = null;
+        remove(this.catchAllHandler);
+        if(handlerOffset != null){
+            this.mHandlerOffset = null;
+            handlerOffset.removeSelf();
         }
+        setParent(null);
     }
     public void merge(TryItem tryItem){
         mergeOffset(tryItem);
@@ -232,7 +282,7 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
     void mergeOffset(TryItem tryItem){
 
         HandlerOffset coming = tryItem.getHandlerOffset();
-        HandlerOffset handlerOffset = getOrCreateHandlerOffset();
+        HandlerOffset handlerOffset = getHandlerOffset();
 
         handlerOffset.setCatchCodeUnit(coming.getCatchCodeUnit());
         handlerOffset.setStartAddress(coming.getStartAddress());
@@ -334,6 +384,10 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
             });
         }
         @Override
+        BlockList<CatchTypedHandler> getCatchTypedHandlerBlockList() {
+            return tryItem.getCatchTypedHandlerBlockList();
+        }
+        @Override
         TryItem getTryItem(){
             return tryItem.getTryItem();
         }
@@ -346,6 +400,11 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
                 return copy;
             }
             return null;
+        }
+
+        @Override
+        public CatchAllHandler getOrCreateCatchAll() {
+            return tryItem.getOrCreateCatchAll();
         }
 
         @Override

@@ -19,6 +19,7 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -32,6 +33,8 @@ import java.util.Iterator;
 
 public abstract class ExceptionHandler extends FixedDexContainerWithTool
         implements SmaliRegion, Iterable<Label>, LabelsSet {
+
+    private HandlerOffset mHandlerOffset;
 
     private final Ule128Item catchAddress;
 
@@ -66,6 +69,11 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
     }
 
 
+    public TypeKey getKey(){
+        return null;
+    }
+    public void setKey(TypeKey typeKey){
+    }
     public Iterator<Ins> getTryInstructions(){
         InstructionList instructionList = getInstructionList();
         if(instructionList == null){
@@ -155,6 +163,12 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
     public void onRemove(){
         mLabels = null;
         setParent(null);
+    }
+    public void removeSelf(){
+        TryItem tryItem = getTryItem();
+        if(tryItem != null){
+            tryItem.remove(this);
+        }
     }
     public void merge(ExceptionHandler handler){
         catchAddress.set(handler.catchAddress.get());
@@ -427,7 +441,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         }
         @Override
         public String getLabelName() {
-            return HexUtil.toHex(":" + getHandler().getSmaliDirective() + "_", getTargetAddress(), 1);
+            return HexUtil.toHex(":" + getHandler().getSmaliDirective().getName() + "_", getTargetAddress(), 1);
         }
         @Override
         public int getSortOrder() {

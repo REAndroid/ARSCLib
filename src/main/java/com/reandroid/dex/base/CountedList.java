@@ -36,8 +36,16 @@ public class CountedList<T extends Block> extends BlockList<T> {
         setSize(itemCount.get());
         super.readChildes(reader);
     }
+
+    @Override
+    public void setSize(int size) {
+        super.setSize(size);
+        if(size != itemCount.get()){
+            itemCount.set(size);
+        }
+    }
     @Override
     protected void onRefreshed() {
-        itemCount.set(getCount());
+        itemCount.set(size());
     }
 }

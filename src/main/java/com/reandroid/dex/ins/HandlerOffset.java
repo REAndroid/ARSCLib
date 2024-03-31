@@ -16,45 +16,72 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.item.BlockItem;
+import com.reandroid.utils.CompareUtil;
 
-public class HandlerOffset {
+public class HandlerOffset extends BlockItem implements Comparable<HandlerOffset>{
 
-    private final HandlerOffsetArray offsetArray;
-    private final int byteIndex;
+    private TryItem mTryItem;
 
-    HandlerOffset(HandlerOffsetArray offsetArray, int index) {
-        this.offsetArray = offsetArray;
-        this.byteIndex = index * 8;
+    HandlerOffset() {
+        super(8);
     }
 
     public int getStartAddress() {
-        return Block.getInteger(offsetArray.getBytesInternal(), this.byteIndex);
+        return Block.getInteger(getBytesInternal(), 0);
     }
-
     public void setStartAddress(int value) {
-        Block.putInteger(offsetArray.getBytesInternal(), this.byteIndex, value);
+        Block.putInteger(getBytesInternal(), 0, value);
     }
-
     public int getCatchCodeUnit() {
-        return Block.getShortUnsigned(offsetArray.getBytesInternal(), byteIndex + 4);
+        return Block.getShortUnsigned(getBytesInternal(), 4);
     }
-
     public void setCatchCodeUnit(int value) {
-        Block.putShort(offsetArray.getBytesInternal(), byteIndex + 4, value);
+        Block.putShort(getBytesInternal(), 4, value);
     }
-
     public int getOffset() {
-        return Block.getShortUnsigned(offsetArray.getBytesInternal(), byteIndex + 6);
+        return Block.getShortUnsigned(getBytesInternal(), 6);
+    }
+    public void setOffset(int value) {
+        Block.putShort(getBytesInternal(), 6, value);
     }
 
-    public void setOffset(int value) {
-        Block.putShort(offsetArray.getBytesInternal(), byteIndex + 6, value);
+    TryItem getTryItem() {
+        return mTryItem;
+    }
+    void setTryItem(TryItem tryItem) {
+        this.mTryItem = tryItem;
+    }
+
+    void removeSelf(){
+        this.mTryItem = null;
+        HandlerOffsetArray offsetArray = getParentInstance(HandlerOffsetArray.class);
+        if(offsetArray != null){
+            offsetArray.remove(this);
+        }
+    }
+    @Override
+    public int compareTo(HandlerOffset handlerOffset) {
+        if(handlerOffset == null){
+            return 0;
+        }
+        TryItem tryItem = getTryItem();
+        if(tryItem == null){
+            throw new NullPointerException("Unlinked handler offset: " + this.toString());
+        }
+        TryItem other = handlerOffset.getTryItem();
+        if(other == null){
+            throw new NullPointerException("Unlinked handler offset: " + handlerOffset.toString());
+        }
+        return CompareUtil.compare(tryItem.getIndex(), other.getIndex());
+    }
+    public void merge(HandlerOffset handlerOffset){
+        setBytes(handlerOffset);
     }
 
     @Override
     public String toString() {
-        int i = byteIndex / 8;
-        return "(" + i + ":start=" + getStartAddress()
+        return "(" + getIndex() + " : start=" + getStartAddress()
                 + ", catch=" + getCatchCodeUnit()
                 + ", offset=" + getOffset() + ")";
     }

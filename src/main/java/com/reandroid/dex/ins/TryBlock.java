@@ -24,8 +24,6 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.data.CodeItem;
 import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
-import com.reandroid.dex.smali.SmaliDirective;
-import com.reandroid.dex.smali.model.SmaliCodeExceptionHandler;
 import com.reandroid.dex.smali.model.SmaliCodeTryItem;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.ExpandIterator;
@@ -81,9 +79,16 @@ public class TryBlock extends FixedDexContainerWithTool implements
         return new ExpandIterator<>(iterator());
     }
 
-    public void add(TryItem tryItem){
+    public TryItem createNext(){
+        initialize();
+        TryItem tryItem = newInstance();
+        add(tryItem);
+        return tryItem;
+    }
+    private void add(TryItem tryItem){
         if(tryItemArray != null){
             tryItemArray.add(tryItem);
+            handlerOffsetArray.ensureSize(tryItemArray.size());
         }
     }
     public TryItem get(int i){
@@ -99,7 +104,6 @@ public class TryBlock extends FixedDexContainerWithTool implements
         }
         return tryItemArray.iterator();
     }
-
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
@@ -133,7 +137,6 @@ public class TryBlock extends FixedDexContainerWithTool implements
             offset.setOffset(count);
         }
     }
-
     private HandlerOffsetArray initHandlersOffset() {
         if(handlerOffsetArray == null){
             handlerOffsetArray = new HandlerOffsetArray(getCodeItem().getTryCountReference());
@@ -202,6 +205,14 @@ public class TryBlock extends FixedDexContainerWithTool implements
         return tryItemArray == null;
     }
 
+    public void remove(TryItem tryItem){
+        BlockList<TryItem> tryItemArray = this.tryItemArray;
+        if(tryItemArray != null){
+            if(tryItemArray.remove(tryItem)){
+                tryItem.onRemove();
+            }
+        }
+    }
     public void onRemove(){
         BlockList<TryItem> tryItemArray = this.tryItemArray;
         if(tryItemArray != null){
@@ -272,27 +283,6 @@ public class TryBlock extends FixedDexContainerWithTool implements
     public DexPositionAlign getPositionAlign(){
         return positionAlign;
     }
-    public TryItem[] newArrayInstanceOld(int length) {
-        HandlerOffsetArray offsetArray = initHandlersOffset();
-        int count = offsetArray.size();
-        TryItem[] results = new TryItem[length];
-        if(length < 2 || length != count || tryItemArray.getCount() != 0){
-            return results;
-        }
-        for(int i = 0; i < count; i++){
-            int offset = offsetArray.getOffset(i);
-            int index = offsetArray.indexOf(offset);
-            TryItem tryItem;
-            if(index >= 0 && index < i){
-                tryItem = results[index].newCopy();
-            }else {
-                tryItem = new TryItem(offsetArray);
-            }
-            tryItem.setIndex(i);
-            results[i] = tryItem;
-        }
-        return results;
-    }
 
     @Override
     public TryItem newInstance() {
@@ -308,8 +298,7 @@ public class TryBlock extends FixedDexContainerWithTool implements
         if(tryItemArray.size() < 2){
             return new TryItem(offsetArray);
         }
-        int offset = offsetArray.getOffset(index);
-        int i = offsetArray.indexOf(offset);
+        int i = offsetArray.indexOf(offsetArray.getOffset(index));
         TryItem tryItem = null;
         if(i >= 0 && i < index){
             tryItem = tryItemArray.get(i);
