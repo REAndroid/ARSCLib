@@ -96,8 +96,8 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
     }
     private void parseRegisters(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
-        int count = getFormat().getCount();
-        for(int i = 0; i < count; i++){
+        int size = getFormat().size();
+        for(int i = 0; i < size; i++){
             if(i != 0){
                 SmaliParseException.expect(reader, ',');
                 reader.skipWhitespacesOrComment();

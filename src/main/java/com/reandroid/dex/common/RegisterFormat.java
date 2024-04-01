@@ -39,8 +39,26 @@ public class RegisterFormat {
         WRITE_READ = new RegisterFormat("WRITE_READ", new RegisterType[]{RegisterType.WRITE, RegisterType.READ});
         WRITE_READ_READ = new RegisterFormat("WRITE_READ_READ", new RegisterType[]{RegisterType.WRITE, RegisterType.READ, RegisterType.READ});
 
-        OUT = new OutRegisterFormat("OUT", new RegisterType[0]);
-        OUT_RANGE = new OutRegisterFormat("OUT_RANGE", new RegisterType[]{RegisterType.READ, RegisterType.READ});
+        OUT = new RegisterFormat("OUT", new RegisterType[0]){
+            @Override
+            public RegisterType get(int i) {
+                return RegisterType.READ;
+            }
+            @Override
+            public boolean isOut() {
+                return true;
+            }
+        };
+        OUT_RANGE = new RegisterFormat("OUT_RANGE", new RegisterType[]{RegisterType.READ, RegisterType.READ}){
+            @Override
+            public boolean isOut() {
+                return true;
+            }
+            @Override
+            public boolean isRange() {
+                return true;
+            }
+        };
     }
 
     private final String name;
@@ -64,7 +82,7 @@ public class RegisterFormat {
         }
         return types[i];
     }
-    public int getCount(){
+    public int size(){
         RegisterType[] types = this.types;
         if(types != null){
             return types.length;
@@ -89,19 +107,5 @@ public class RegisterFormat {
     @Override
     public String toString() {
         return name;
-    }
-
-    static class OutRegisterFormat extends RegisterFormat {
-        private OutRegisterFormat(String name, RegisterType[] types) {
-            super(name, types);
-        }
-        @Override
-        public boolean isOut() {
-            return true;
-        }
-        @Override
-        public boolean isRange() {
-            return this == OUT_RANGE;
-        }
     }
 }

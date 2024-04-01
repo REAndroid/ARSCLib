@@ -43,17 +43,17 @@ public class SmaliInstruction extends SmaliCode{
 
     public Key getKey(){
         SmaliInstructionOperand operand = getOperand();
-        if(operand instanceof SmaliInstructionOperand.KeyOperand){
-            return ((SmaliInstructionOperand.KeyOperand) operand).getKey();
+        if(operand instanceof SmaliInstructionOperand.SmaliKeyOperand){
+            return ((SmaliInstructionOperand.SmaliKeyOperand) operand).getKey();
         }
         return null;
     }
     public Number getData() throws IOException {
         SmaliInstructionOperand operand = getOperand();
-        if(operand instanceof SmaliInstructionOperand.HexOperand){
-            return ((SmaliInstructionOperand.HexOperand) operand).getNumber();
+        if(operand instanceof SmaliInstructionOperand.SmaliHexOperand){
+            return ((SmaliInstructionOperand.SmaliHexOperand) operand).getNumber();
         }
-        if(operand instanceof SmaliInstructionOperand.LabelOperand){
+        if(operand instanceof SmaliInstructionOperand.SmaliLabelOperand){
             return operand.getIntegerData() - getAddress();
         }
         return null;
@@ -100,11 +100,11 @@ public class SmaliInstruction extends SmaliCode{
     }
     public boolean hasLabel(SmaliLabel label){
         SmaliInstructionOperand operand = getOperand();
-        if(!(operand instanceof SmaliInstructionOperand.LabelOperand)){
+        if(!(operand instanceof SmaliInstructionOperand.SmaliLabelOperand)){
             return false;
         }
-        SmaliInstructionOperand.LabelOperand labelOperand = (SmaliInstructionOperand.LabelOperand) operand;
-        return label.equals(labelOperand.getLabel());
+        SmaliInstructionOperand.SmaliLabelOperand smaliLabelOperand = (SmaliInstructionOperand.SmaliLabelOperand) operand;
+        return label.equals(smaliLabelOperand.getLabel());
     }
 
     public Opcode<?> getOpcode() {
@@ -131,13 +131,13 @@ public class SmaliInstruction extends SmaliCode{
         if(operandType == OperandType.NONE){
             operand = SmaliInstructionOperand.NO_OPERAND;
         }else if(operandType == OperandType.HEX){
-            operand = new SmaliInstructionOperand.HexOperand();
+            operand = new SmaliInstructionOperand.SmaliHexOperand();
         }else if(operandType == OperandType.KEY){
-            operand = new SmaliInstructionOperand.KeyOperand();
+            operand = new SmaliInstructionOperand.SmaliKeyOperand();
         }else if(operandType == OperandType.LABEL){
-            operand = new SmaliInstructionOperand.LabelOperand();
+            operand = new SmaliInstructionOperand.SmaliLabelOperand();
         }else if(operandType == OperandType.DECIMAL){
-            operand = new SmaliInstructionOperand.DecimalOperand();
+            operand = new SmaliInstructionOperand.SmaliDecimalOperand();
         }else {
             throw new RuntimeException("Unknown operand type: " + operandType
                     + ", opcode = " + opcode);

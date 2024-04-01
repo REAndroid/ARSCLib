@@ -46,11 +46,11 @@ public abstract class SmaliInstructionOperand extends Smali{
     }
     public abstract void parse(Opcode<?> opcode, SmaliReader reader) throws IOException;
 
-    public static class LabelOperand extends SmaliInstructionOperand {
+    public static class SmaliLabelOperand extends SmaliInstructionOperand {
 
         private final SmaliLabel label;
 
-        public LabelOperand(){
+        public SmaliLabelOperand(){
             super();
             this.label = new SmaliLabel();
             this.label.setParent(this);
@@ -79,11 +79,11 @@ public abstract class SmaliInstructionOperand extends Smali{
             getLabel().parse(reader);
         }
     }
-    public static class HexOperand extends SmaliInstructionOperand {
+    public static class SmaliHexOperand extends SmaliInstructionOperand {
 
         private SmaliValueNumber<?> valueNumber;
 
-        public HexOperand(){
+        public SmaliHexOperand(){
             super();
             valueNumber = new SmaliValueInteger();
         }
@@ -131,10 +131,10 @@ public abstract class SmaliInstructionOperand extends Smali{
             value.parse(reader);
         }
     }
-    public static class DecimalOperand extends SmaliInstructionOperand {
+    public static class SmaliDecimalOperand extends SmaliInstructionOperand {
         private int number;
 
-        public DecimalOperand(){
+        public SmaliDecimalOperand(){
             super();
         }
 
@@ -165,10 +165,10 @@ public abstract class SmaliInstructionOperand extends Smali{
             setNumber(reader.readInteger());
         }
     }
-    public static class KeyOperand extends SmaliInstructionOperand {
+    public static class SmaliKeyOperand extends SmaliInstructionOperand {
         private Key key;
 
-        public KeyOperand(){
+        public SmaliKeyOperand(){
             super();
         }
         public Key getKey() {

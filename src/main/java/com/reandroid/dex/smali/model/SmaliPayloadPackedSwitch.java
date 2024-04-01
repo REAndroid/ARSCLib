@@ -22,7 +22,7 @@ import com.reandroid.dex.smali.*;
 public class SmaliPayloadPackedSwitch extends SmaliInstructionPayload<SmaliLabel> implements SmaliRegion {
 
     public SmaliPayloadPackedSwitch(){
-        super(new SmaliInstructionOperand.HexOperand());
+        super(new SmaliInstructionOperand.SmaliHexOperand());
     }
 
     public int getFirstKey() {
@@ -44,8 +44,8 @@ public class SmaliPayloadPackedSwitch extends SmaliInstructionPayload<SmaliLabel
     }
 
     @Override
-    public SmaliInstructionOperand.HexOperand getOperand() {
-        return (SmaliInstructionOperand.HexOperand) super.getOperand();
+    public SmaliInstructionOperand.SmaliHexOperand getOperand() {
+        return (SmaliInstructionOperand.SmaliHexOperand) super.getOperand();
     }
 
     @Override

@@ -24,7 +24,7 @@ import java.io.IOException;
 public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<?>> {
 
     public SmaliPayloadArray(){
-        super(new SmaliInstructionOperand.DecimalOperand());
+        super(new SmaliInstructionOperand.SmaliDecimalOperand());
     }
 
     public int[] unsignedInt(){
@@ -46,8 +46,8 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<
         return result;
     }
     @Override
-    public SmaliInstructionOperand.DecimalOperand getOperand() {
-        return (SmaliInstructionOperand.DecimalOperand) super.getOperand();
+    public SmaliInstructionOperand.SmaliDecimalOperand getOperand() {
+        return (SmaliInstructionOperand.SmaliDecimalOperand) super.getOperand();
     }
 
     public int getWidth() {
@@ -97,7 +97,7 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<
     void parseOperand(Opcode<?> opcode, SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
         int position = reader.position();
-        SmaliInstructionOperand.DecimalOperand operand = getOperand();
+        SmaliInstructionOperand.SmaliDecimalOperand operand = getOperand();
         operand.parse(opcode, reader);
         int number = operand.getNumber();
         if(number < 1 || number > 8){
