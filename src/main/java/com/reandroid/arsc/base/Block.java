@@ -17,6 +17,7 @@ package com.reandroid.arsc.base;
 
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -158,6 +159,27 @@ public abstract class Block {
     public static void putShort(byte[] bytes, int offset, int value){
         bytes[offset + 1]= (byte) (value >>> 8 & 0xff);
         bytes[offset]= (byte) (value & 0xff);
+    }
+
+    public static int getNibbleUnsigned(byte[] bytes, int index){
+        int i = bytes[(index / 2)] & 0xff;
+        int shift = (index % 2) * 4;
+        return (i >> shift) & 0x0f;
+    }
+    public static void putNibbleUnsigned(byte[] bytes, int index, int value){
+        if((value & 0x0f) != value){
+            throw new IllegalArgumentException("Nibble value out of range "
+                    + HexUtil.toHex(value, 1) + " > 0xf");
+        }
+        int i = index / 2;
+        int half = bytes[i] & 0xff;
+        int shift = (index % 2) * 4;
+        int mask = 0x0f;
+        if(shift == 0){
+            mask = 0xf0;
+        }
+        int result = (value << shift) | (half & mask);
+        bytes[i] = (byte) result;
     }
     public static boolean getBit(byte[] bytes, int byteOffset, int bitIndex){
         return (((bytes[byteOffset] & 0xff) >>bitIndex) & 0x1) == 1;
