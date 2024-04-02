@@ -208,6 +208,9 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
     public void setParameterRegistersCount(int count) {
     }
     @Override
+    public void ensureLocalRegistersCount(int count) {
+    }
+    @Override
     public int getLocalRegistersCount() {
         Integer locals = getLocals();
         if(locals != null){
@@ -215,6 +218,7 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
         }
         return 0;
     }
+
     @Override
     public String toDebugString() {
         StringBuilder builder = new StringBuilder();

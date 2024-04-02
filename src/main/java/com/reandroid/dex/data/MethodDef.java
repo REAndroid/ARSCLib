@@ -82,6 +82,17 @@ public class MethodDef extends Def<MethodId>{
         }
         return 0;
     }
+    public int getParameterRegistersCount(){
+        MethodId methodId = getId();
+        if(methodId != null){
+            int count = methodId.getParameterRegistersCount();
+            if(!isStatic()){
+                count = count + 1;
+            }
+            return count;
+        }
+        return 0;
+    }
     public Parameter getParameter(int index){
         if(index < 0 || index >= getParametersCount()){
             return null;
@@ -215,13 +226,9 @@ public class MethodDef extends Def<MethodId>{
         CodeItem codeItem = codeOffset.getOrCreateUniqueItem(this);
         if(current == null){
             codeItem.setMethodDef(this);
-            int parametersCount = getParametersCount();
-            int registers = parametersCount;
-            if(!isStatic()){
-                registers = registers + 1;
-            }
+            int registers = getParameterRegistersCount();
             codeItem.setRegistersCount(registers);
-            codeItem.setParameterRegistersCount(parametersCount);
+            codeItem.setParameterRegistersCount(registers);
         }
         return codeItem;
     }

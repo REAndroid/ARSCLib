@@ -86,6 +86,13 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
         }
         return 0;
     }
+    public int getParameterRegistersCount() {
+        ProtoId protoId = getProto();
+        if(protoId != null){
+            return protoId.getParameterRegistersCount();
+        }
+        return 0;
+    }
     public TypeId getParameter(int index) {
         ProtoId protoId = getProto();
         if(protoId != null){

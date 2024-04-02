@@ -26,7 +26,10 @@ import com.reandroid.dex.ins.TryBlock;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.smali.SmaliParser;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
@@ -177,6 +180,21 @@ public class DexMethod extends DexDeclaration {
     public DexInstruction addInstruction(Opcode<?> opcode){
         return create(getDefinition().getOrCreateInstructionList().createNext(opcode));
     }
+    public DexInstruction parseInstruction(String smaliString) throws IOException {
+        return parseInstruction(SmaliReader.of(smaliString));
+    }
+    public DexInstruction parseInstruction(SmaliReader reader) throws IOException {
+        int index = getInstructionsCount();
+        return parseInstruction(index, reader);
+    }
+    public DexInstruction parseInstruction(int index, SmaliReader reader) throws IOException {
+        SmaliInstruction smaliInstruction = new SmaliInstruction();
+        smaliInstruction.parse(reader);
+        InstructionList instructionList = getDefinition().getOrCreateInstructionList();
+        Ins ins = instructionList.createAt(index, smaliInstruction.getOpcode());
+        ins.fromSmali(smaliInstruction);
+        return create(ins);
+    }
     public DexInstruction createInstruction(int index, Opcode<?> opcode){
         return create(getDefinition().getOrCreateInstructionList().createAt(index, opcode));
     }
@@ -207,14 +225,7 @@ public class DexMethod extends DexDeclaration {
             }
         }
         registersTable = getOrCreateRegistersTable();
-        int params = refreshParameterRegistersCount();
-        int current = registersTable.getLocalRegistersCount();
-        int diff = locals - current;
-        InstructionList instructionList = getInstructionList();
-        if(diff > 0){
-            instructionList.addLocalRegisters(diff);
-        }
-        registersTable.setRegistersCount(locals + params);
+        registersTable.ensureLocalRegistersCount(locals);
     }
     public int refreshParameterRegistersCount(){
         RegistersTable registersTable = getRegistersTable();

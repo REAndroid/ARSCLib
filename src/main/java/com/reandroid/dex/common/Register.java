@@ -51,7 +51,11 @@ public class Register implements SmaliFormat, Comparable<Register> {
         if(registersTable == null){
             throw new NullPointerException("Missing register table for: " + toString());
         }
-        return registersTable.getRegisterValue(this);
+        int value = registersTable.getRegisterValue(this);
+        if(!isParameter()){
+            registersTable.ensureLocalRegistersCount(value + 1);
+        }
+        return value;
     }
 
     public char getSymbol(){

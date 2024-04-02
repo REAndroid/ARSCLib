@@ -329,6 +329,9 @@ public class SizeXIns extends Ins {
         if(!(this instanceof RegistersSet)){
             return;
         }
+        if(smaliInstruction.getRegistersTable() == null){
+            smaliInstruction.setRegistersTable(getRegistersTable());
+        }
         int count = smaliInstruction.getRegistersCount();
         RegistersSet registersSet = (RegistersSet) this;
         registersSet.setRegistersCount(count);

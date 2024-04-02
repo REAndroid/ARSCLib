@@ -27,7 +27,9 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
@@ -209,6 +211,26 @@ public class DexInstruction extends DexCode {
         if(ins instanceof ConstNumberLong){
             ((ConstNumberLong) ins).set(value);
         }
+    }
+    public DexInstruction replace(String smaliString) throws IOException {
+        return replace(SmaliReader.of(smaliString));
+    }
+    public DexInstruction replace(SmaliReader reader) throws IOException {
+        SmaliInstruction smaliInstruction = new SmaliInstruction();
+        smaliInstruction.parse(reader);
+        Ins ins = getIns().replace(smaliInstruction.getOpcode());
+        ins.fromSmali(smaliInstruction);
+        return DexInstruction.create(getDexMethod(), ins);
+    }
+    public DexInstruction createNext(String smaliString) throws IOException {
+        return createNext(SmaliReader.of(smaliString));
+    }
+    public DexInstruction createNext(SmaliReader reader) throws IOException {
+        SmaliInstruction smaliInstruction = new SmaliInstruction();
+        smaliInstruction.parse(reader);
+        Ins ins = getIns().createNext(smaliInstruction.getOpcode());
+        ins.fromSmali(smaliInstruction);
+        return DexInstruction.create(getDexMethod(), ins);
     }
     public DexInstruction replace(Opcode<?> opcode){
         return DexInstruction.create(getDexMethod(), getIns().replace(opcode));

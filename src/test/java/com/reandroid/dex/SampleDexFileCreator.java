@@ -10,9 +10,11 @@ import com.reandroid.dex.model.DexFile;
 import com.reandroid.dex.model.DexInstruction;
 import com.reandroid.dex.model.DexMethod;
 
+import java.io.IOException;
+
 public class SampleDexFileCreator {
 
-    public static DexFile createApplicationClass(String appSourceName, String activitySourceName, int contentViewResourceId) {
+    public static DexFile createApplicationClass(String appSourceName, String activitySourceName, int contentViewResourceId) throws IOException {
         DexFile dexFile = DexFile.createDefault();
         createApplicationClass(dexFile, appSourceName);
         createActivityClass(dexFile, activitySourceName, contentViewResourceId);
@@ -21,19 +23,18 @@ public class SampleDexFileCreator {
         dexFile.refreshFull();
         return dexFile;
     }
-    private static void createApplicationClass(DexFile dexFile, String classSourceName){
+    private static void createApplicationClass(DexFile dexFile, String classSourceName) throws IOException {
         if(classSourceName == null){
             return;
         }
-        String binClassName = DexUtils.toBinaryName(classSourceName);
-
-        DexClass dexClass = dexFile.getOrCreateClass(binClassName);
+        TypeKey typeKey = TypeKey.parse(classSourceName);
+        DexClass dexClass = dexFile.getOrCreateClass(typeKey);
         dexClass.addAccessFlag(AccessFlag.PUBLIC);
         dexClass.setSuperClass(TypeKey.create("Landroid/app/Application;"));
 
         createConstructor(dexClass);
     }
-    private static void createActivityClass(DexFile dexFile, String activitySourceName, int contentViewResourceId){
+    private static void createActivityClass(DexFile dexFile, String activitySourceName, int contentViewResourceId) throws IOException {
         String binClassName = DexUtils.toBinaryName(activitySourceName);
 
         DexClass dexClass = dexFile.getOrCreateClass(binClassName);
@@ -44,27 +45,16 @@ public class SampleDexFileCreator {
         create_onCreate(dexClass, contentViewResourceId);
     }
 
-    private static void createConstructor(DexClass dexClass){
+    private static void createConstructor(DexClass dexClass) throws IOException {
         MethodKey methodKey = MethodKey.CONSTRUCTOR.changeDeclaring(dexClass.getKey());
         DexMethod constructor = dexClass.getOrCreateDirectMethod(methodKey);
 
         constructor.addAccessFlag(AccessFlag.PUBLIC);
         constructor.addAccessFlag(AccessFlag.CONSTRUCTOR);
 
-        constructor.setParameterRegistersCount(1);
-        constructor.setLocalRegistersCount(0);
-
-        DexInstruction invokeSuper = constructor.addInstruction(Opcode.INVOKE_DIRECT);
-
-        TypeKey declaring = dexClass.getSuperClassKey();
-
-        MethodKey superMethodKey = methodKey.changeDeclaring(declaring);
-        invokeSuper.setKey(superMethodKey);
-
-        invokeSuper.setRegistersCount(1);
-        invokeSuper.setRegister(0); // p0 (this)
-
-        constructor.addInstruction(Opcode.RETURN_VOID);
+        constructor
+                .parseInstruction("invoke-direct {p0}, Landroid/app/Activity;-><init>()V")
+                .createNext("return-void");
     }
 
     private static void create_onCreate(DexClass dexClass, int contentViewResourceId){

@@ -18,6 +18,7 @@ package com.reandroid.dex.smali.model;
 import com.reandroid.dex.common.OperandType;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegisterFormat;
+import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliParseException;
@@ -76,6 +77,19 @@ public class SmaliInstruction extends SmaliCode{
     }
     public int getRegistersCount(){
         return getRegisterSet().size();
+    }
+    public RegistersTable getRegistersTable(){
+        SmaliRegisterSet registerSet = getRegisterSet();
+        if(registerSet != null){
+            return registerSet.getRegistersTable();
+        }
+        return null;
+    }
+    public void setRegistersTable(RegistersTable registersTable) {
+        SmaliRegisterSet registerSet = getRegisterSet();
+        if(registerSet != null){
+            registerSet.setRegistersTable(registersTable);
+        }
     }
     public SmaliRegisterSet getRegisterSet() {
         return registerSet;

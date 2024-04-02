@@ -96,6 +96,23 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
     public void setParameterRegistersCount(int count){
         header.parameterRegisters.set(count);
     }
+    @Override
+    public void ensureLocalRegistersCount(int locals){
+        if(locals == 0){
+            return;
+        }
+        if(locals <= getLocalRegistersCount()){
+            return;
+        }
+        int params = getParameterRegistersCount();
+        int current = getLocalRegistersCount();
+        int diff = locals - current;
+        InstructionList instructionList = getInstructionList();
+        if(diff > 0){
+            instructionList.addLocalRegisters(diff);
+        }
+        setRegistersCount(locals + params);
+    }
 
     public DebugInfo getDebugInfo(){
         return header.debugInfoOffset.getItem();
