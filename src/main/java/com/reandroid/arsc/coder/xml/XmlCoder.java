@@ -254,7 +254,7 @@ public class XmlCoder {
         public void encodeScalar(XMLElement element, Entry entry) throws IOException{
             entry.ensureComplex(false);
             if(isTypeId(element)){
-                encodeScalarId(entry);
+                encodeScalarId(element, entry);
             }else {
                 encodeScalarAny(element, entry);
             }
@@ -285,9 +285,15 @@ public class XmlCoder {
                     || element.hasAttribute(ATTR_formats)
                     || TypeString.isTypeArray(tag);
         }
-        private void encodeScalarId(Entry entry){
-            entry.setValueAsBoolean(false);
-            entry.getHeader().setWeak(true);
+        private void encodeScalarId(XMLElement element, Entry entry) throws IOException {
+            if(!element.hasTextNode()){
+                entry.setValueAsBoolean(false);
+            }else {
+                encodeScalarAny(element, entry);
+            }
+            ValueHeader header = entry.getHeader();
+            header.setPublic(true);
+            header.setWeak(true);
         }
         private void encodeScalarAny(XMLElement element, Entry entry) throws IOException{
             ResValue resValue = entry.getResValue();

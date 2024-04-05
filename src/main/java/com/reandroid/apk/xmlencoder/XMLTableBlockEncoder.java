@@ -94,7 +94,6 @@ public class XMLTableBlockEncoder {
         }
         loadPublicXmlFiles(pubXmlFileList);
 
-        excludeIds(pubXmlFileList);
         initializeFrameworkFromManifest(pubXmlFileList);
 
         encodeAttrs(pubXmlFileList);
@@ -205,11 +204,6 @@ public class XMLTableBlockEncoder {
     private void excludeIds(List<File> pubXmlFileList){
         for(File pubXmlFile : pubXmlFileList){
             addParsedFiles(pubXmlFile);
-            File valuesDir = pubXmlFile.getParentFile();
-            File file = new File(valuesDir, "ids.xml");
-            if(file.isFile()){
-                addParsedFiles(file);
-            }
         }
     }
     private void initializeFrameworkFromManifest(File manifestFile) throws IOException {
