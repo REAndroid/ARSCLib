@@ -121,7 +121,11 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         return header.debugInfoOffset.getOrCreateUniqueItem(this);
     }
     public void removeDebugInfo(){
+        if(getDebugInfo() == null){
+            return;
+        }
         setDebugInfo(null);
+        getInstructionList().reBuildExtraLines();
     }
     public void setDebugInfo(DebugInfo debugInfo){
         header.debugInfoOffset.setItem(debugInfo);
