@@ -26,7 +26,6 @@ import com.reandroid.dex.ins.TryBlock;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.smali.SmaliParser;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
@@ -159,6 +158,12 @@ public class DexMethod extends DexDeclaration {
     }
     public Iterator<DexInstruction> getInstructions() {
         return DexInstruction.create(this, getDefinition().getInstructions());
+    }
+    public void clearCode(){
+        getDefinition().clearCode();
+    }
+    public void clearDebug(){
+        getDefinition().clearDebug();
     }
     public Iterator<DexTry> getDexTry() {
         TryBlock tryBlock = getDefinition().getTryBlock();

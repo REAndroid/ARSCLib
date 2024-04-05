@@ -239,6 +239,15 @@ public class MethodDef extends Def<MethodId>{
         }
         return codeItem;
     }
+    public void clearCode(){
+        codeOffset.setItem((CodeItem) null);
+    }
+    public void clearDebug(){
+        CodeItem codeItem = getCodeItem();
+        if(codeItem != null){
+            codeItem.removeDebugInfo();
+        }
+    }
     private void linkCodeItem(){
         CodeItem codeItem = codeOffset.getItem();
         if(codeItem != null){
