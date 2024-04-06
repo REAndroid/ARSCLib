@@ -221,6 +221,11 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
             return mSourceMap.get(name);
         }
     }
+    public boolean contains(String name){
+        synchronized (mLock){
+            return mSourceMap.containsKey(name);
+        }
+    }
     public void refresh(){
         InputSource[] inputSourceList = toArray(true);
         set(inputSourceList);
