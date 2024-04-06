@@ -61,10 +61,11 @@ public class RClass extends DexClass {
         builder.append(getResourceType());
         String indent = "\n        ";
         builder.append(" {");
-        Iterator<RField> iterator = getStaticFields();
+        Iterator<DexField> iterator = getStaticFields();
         while (iterator.hasNext()){
             builder.append(indent);
-            builder.append(iterator.next().toJavaDeclare(makeFieldsFinal));
+            RField rField = (RField) iterator.next();
+            builder.append(rField.toJavaDeclare(makeFieldsFinal));
         }
         builder.append('\n');
         builder.append("    }");
@@ -79,7 +80,7 @@ public class RClass extends DexClass {
         return new RField(this, getOrCreateStatic(fieldKey));
     }
     @Override
-    public Iterator<RField> getStaticFields() {
+    public Iterator<DexField> getStaticFields() {
         ClassData classData = getClassData();
         if(classData != null){
             return ComputeIterator.of(classData

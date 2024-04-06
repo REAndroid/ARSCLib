@@ -266,7 +266,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     public FieldDef getOrCreateStatic(FieldKey fieldKey){
         return getOrCreateClassData().getOrCreateStatic(fieldKey);
     }
-    public Iterator<? extends DexField> getStaticFields() {
+    public Iterator<DexField> getStaticFields() {
         ClassData classData = getClassData();
         if(classData == null){
             return EmptyIterator.of();
@@ -311,9 +311,8 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         return createMethod(getOrCreateClassData().getOrCreateVirtual(methodKey));
     }
     public DexMethod getOrCreateStaticMethod(MethodKey methodKey){
-        DexMethod dexMethod = createMethod(getOrCreateClassData().getOrCreateDirect(methodKey));
-        MethodDef methodDef = dexMethod.getDefinition();
-        methodDef.addAccessFlag(AccessFlag.STATIC);
+        DexMethod dexMethod = getOrCreateDirectMethod(methodKey);
+        dexMethod.addAccessFlag(AccessFlag.STATIC);
         return dexMethod;
     }
 

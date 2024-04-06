@@ -15,8 +15,6 @@
  */
 package com.reandroid.dex.model;
 
-import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.common.FullRefresh;
@@ -29,7 +27,6 @@ import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.SourceFile;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.id.TypeId;
-import com.reandroid.dex.ins.*;
 import com.reandroid.dex.data.*;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.pool.DexSectionPool;
@@ -38,7 +35,6 @@ import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliClass;
-import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.FileIterator;
 import com.reandroid.utils.io.FileUtil;
@@ -187,26 +183,6 @@ public class DexFile implements DexClassRepository, Closeable,
     public void setSimpleName(String simpleName){
         getDexLayout().setSimpleName(simpleName);
     }
-
-    public List<RField> listRFields() {
-        List<RField> fieldList = CollectionUtil.toUniqueList(getRFields());
-        fieldList.sort(CompareUtil.getComparableComparator());
-        return fieldList;
-    }
-    public Iterator<RField> getRFields() {
-        return new MergingIterator<>(ComputeIterator.of(getRClasses(),
-                RClass::getStaticFields));
-    }
-    public Iterator<RClass> getRClasses() {
-        return ComputeIterator.of(getClassIds(), this::createRClass);
-    }
-    private RClass createRClass(ClassId classId) {
-        if(RClass.isRClassName(classId)){
-            return new RClass(this, classId);
-        }
-        return null;
-    }
-
     @Override
     public Iterator<DexClass> iterator() {
         return getDexClasses();
@@ -293,40 +269,6 @@ public class DexFile implements DexClassRepository, Closeable,
     public DexClass search(TypeKey typeKey){
         return getClassRepository().getDexClass(typeKey);
     }
-    public void loadRClass(TableBlock tableBlock){
-        for(PackageBlock packageBlock : tableBlock.listPackages()){
-            loadRClass(packageBlock);
-        }
-    }
-    public RClassParent loadRClass(PackageBlock packageBlock){
-        String name = packageBlock.getName();
-        if("android".equals(name)){
-            name = "android_res";
-        }
-        name = DexUtils.toBinaryName(name + ".R");
-        RClassParent rClassParent = getOrCreateRParent(name);
-        rClassParent.initialize();
-        rClassParent.load(packageBlock);
-        return rClassParent;
-    }
-    public RClassParent getOrCreateRParent(String type){
-        ClassId classId = getOrCreateClassId(new TypeKey(type));
-        RClassParent rClassParent = new RClassParent(this, classId);
-        rClassParent.initialize();
-        return rClassParent;
-    }
-    public RClass getOrCreateRClass(TypeKey typeKey){
-        ClassId classId = getOrCreateClassId(typeKey);
-        return createRClass(classId);
-    }
-    public RClass getRClass(TypeKey key){
-        Section<ClassId> section = getDexLayout().get(SectionType.CLASS_ID);
-        ClassId classId = section.getPool().get(key);
-        if(classId == null) {
-            return null;
-        }
-        return createRClass(classId);
-    }
     public boolean containsClass(TypeKey key){
         return contains(SectionType.CLASS_ID, key);
     }
@@ -341,18 +283,6 @@ public class DexFile implements DexClassRepository, Closeable,
         return getDexLayout().getSectionList().contains(key);
     }
 
-    public DexDeclaration getDef(Key key){
-        if(key instanceof TypeKey){
-            return getDexClass((TypeKey) key);
-        }
-        if(key instanceof MethodKey){
-            return getDeclaredMethod((MethodKey) key);
-        }
-        if(key instanceof FieldKey){
-            return getDeclaredField((FieldKey) key);
-        }
-        return null;
-    }
     public ClassId getOrCreateClassId(TypeKey key){
         Section<ClassId> section = getDexLayout().get(SectionType.CLASS_ID);
         DexSectionPool<ClassId> pool = section.getPool();
@@ -674,24 +604,6 @@ public class DexFile implements DexClassRepository, Closeable,
             }
         }
         return builder.toString();
-    }
-
-    public static boolean replaceRFields(RField rField, SizeXIns insConst){
-        if(insConst == null || rField == null){
-            return false;
-        }
-        MethodDef methodDef = insConst.getMethodDef();
-        if(methodDef == null){
-            return false;
-        }
-        if(rField.getDefining().equals(methodDef.getKey().getDeclaring())){
-            return false;
-        }
-        Ins21c ins = Opcode.SGET.newInstance();
-        ins.setRegister(0, ((RegistersSet)insConst).getRegister(0));
-        insConst.replace(ins);
-        ins.setSectionIdKey(rField.getKey());
-        return true;
     }
 
     public static DexFile read(byte[] dexBytes) throws IOException {

@@ -16,7 +16,6 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.archive.ZipEntryMap;
-import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.id.*;
@@ -24,10 +23,7 @@ import com.reandroid.dex.sections.*;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.dex.key.*;
-import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.*;
-import com.reandroid.utils.io.IOUtil;
-import org.xmlpull.v1.XmlSerializer;
 
 import java.io.Closeable;
 import java.io.File;
@@ -275,15 +271,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
     public void save(File dir) throws IOException {
         dexSourceSet.saveAll(dir);
     }
-    public List<RField> listRFields() {
-        List<RField> fieldList = CollectionUtil.toUniqueList(getRFields());
-        fieldList.sort(CompareUtil.getComparableComparator());
-        return fieldList;
-    }
-    public Iterator<RField> getRFields() {
-        return new MergingIterator<>(ComputeIterator.of(getRClasses(),
-                RClass::getStaticFields));
-    }
     public Iterator<ClassId> getClassIds() {
         return getItems(SectionType.CLASS_ID);
     }
@@ -303,10 +290,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
                 return element.getItems(sectionType, key);
             }
         };
-    }
-    public Iterator<RClass> getRClasses() {
-        return new MergingIterator<>(ComputeIterator.of(iterator(),
-                DexFile::getRClasses));
     }
     public boolean removeDexClass(TypeKey typeKey){
         for(DexFile dexFile : this){
@@ -831,24 +814,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return false;
     }
-    public DexDeclaration getDef(Key key){
-        for(DexFile dexFile : this){
-            DexDeclaration result = dexFile.getDef(key);
-            if(result != null){
-                return result;
-            }
-        }
-        return null;
-    }
-    public DexField getField(FieldKey fieldKey){
-        for(DexFile dexFile : this){
-            DexField result = dexFile.getDeclaredField(fieldKey);
-            if(result != null){
-                return result;
-            }
-        }
-        return null;
-    }
 
     public int distributeClasses(int maxClassesPerDex) {
         if(maxClassesPerDex <= 0){
@@ -939,24 +904,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
     public void close() throws IOException {
         this.dexSourceSet.close();
     }
-
-    public void serializePublicXml(XmlSerializer serializer) throws IOException {
-        serializer.startDocument("utf-8", null);
-        serializer.text("\n");
-        serializer.startTag(null, PackageBlock.TAG_resources);
-
-        List<RField> fieldList = listRFields();
-        for(RField rField : fieldList) {
-            rField.serializePublicXml(serializer);
-        }
-
-        serializer.text("\n");
-        serializer.endTag(null, PackageBlock.TAG_resources);
-        serializer.endDocument();
-        serializer.flush();
-        IOUtil.close(serializer);
-    }
-
 
     public void writeSmali(SmaliWriter writer, File root) throws IOException {
         for(DexFile dexFile : this){

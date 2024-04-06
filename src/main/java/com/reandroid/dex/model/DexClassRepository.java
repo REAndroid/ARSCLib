@@ -21,6 +21,7 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.collection.IterableIterator;
 
 import java.util.Iterator;
 import java.util.function.Predicate;
@@ -74,5 +75,20 @@ public interface DexClassRepository {
         }
         return null;
     }
-
+    default Iterator<DexMethod> getDeclaredMethods(){
+        return new IterableIterator<DexClass, DexMethod>(getDexClasses()) {
+            @Override
+            public Iterator<DexMethod> iterator(DexClass dexClass) {
+                return dexClass.getDeclaredMethods();
+            }
+        };
+    }
+    default Iterator<DexField> getDeclaredFields(){
+        return new IterableIterator<DexClass, DexField>(getDexClasses()) {
+            @Override
+            public Iterator<DexField> iterator(DexClass dexClass) {
+                return dexClass.getDeclaredFields();
+            }
+        };
+    }
 }
