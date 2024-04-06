@@ -34,11 +34,13 @@ processResources {
 
 javadoc {
     exclude('com/reandroid/test/**')
+    exclude('zorg/**')
     //exclude('com/reandroid/dex/**')
 }
 
 jar {
     exclude('com/reandroid/test/**')
+    exclude('zorg/**')
     //exclude('com/reandroid/dex/**')
 }
 
