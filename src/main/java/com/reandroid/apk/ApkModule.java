@@ -23,6 +23,7 @@ import com.reandroid.archive.writer.ApkFileWriter;
 import com.reandroid.archive.writer.ApkStreamWriter;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.array.PackageArray;
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
@@ -972,8 +973,7 @@ public class ApkModule implements ApkFile, Closeable {
         }else if(inputSource instanceof SingleJsonTableInputSource){
             tableBlock=((SingleJsonTableInputSource)inputSource).getTableBlock();
         }else if(inputSource instanceof BlockInputSource){
-            Chunk<?> block = ((BlockInputSource<?>) inputSource).getBlock();
-            tableBlock = (TableBlock) block;
+            tableBlock = (TableBlock) ((BlockInputSource<?>) inputSource).getBlock();
         }else {
             setTableOriginalSource(inputSource);
             InputStream inputStream = inputSource.openStream();

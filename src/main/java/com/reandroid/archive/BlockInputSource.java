@@ -16,22 +16,32 @@
 package com.reandroid.archive;
 
 import com.reandroid.apk.CrcOutputStream;
-import com.reandroid.archive.ByteInputSource;
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.chunk.Chunk;
+import com.reandroid.arsc.base.BlockRefresh;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class BlockInputSource<T extends Chunk<?>> extends ByteInputSource{
+public class BlockInputSource<T extends Block> extends ByteInputSource {
+
     private final T mBlock;
+
     public BlockInputSource(String name, T block) {
         super(new byte[0], name);
         this.mBlock=block;
     }
+    public BlockInputSource(InputSource inputSource, T block) {
+        this(inputSource.getAlias(), block);
+        setMethod(inputSource.getMethod());
+        setSort(inputSource.getSort());
+    }
+
     public T getBlock() {
-        mBlock.refresh();
-        return mBlock;
+        T block = this.mBlock;
+        if(block instanceof BlockRefresh){
+            ((BlockRefresh) block).refresh();
+        }
+        return block;
     }
     @Override
     public long getLength() throws IOException{

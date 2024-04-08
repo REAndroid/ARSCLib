@@ -18,6 +18,7 @@ package com.reandroid.apk;
 import com.reandroid.apk.xmlencoder.XMLEncodeSource;
 import com.reandroid.archive.BlockInputSource;
 import com.reandroid.archive.InputSource;
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
@@ -55,9 +56,9 @@ public class ResFile {
         InputSource inputSource = getInputSource();
         if(inputSource instanceof BlockInputSource){
             BlockInputSource<?> bis = (BlockInputSource<?>) inputSource;
-            Chunk<?> chunk = bis.getBlock();
-            if(chunk instanceof ResXmlDocument){
-                return (ResXmlDocument) chunk;
+            Block block = bis.getBlock();
+            if(block instanceof ResXmlDocument){
+                return (ResXmlDocument) block;
             }
         }
         ResXmlDocument xmlDocument = new ResXmlDocument();
@@ -159,8 +160,8 @@ public class ResFile {
             mBinXml = true;
         }else if (inputSource instanceof BlockInputSource){
             BlockInputSource<?> bis = (BlockInputSource<?>) inputSource;
-            Chunk<?> chunk = bis.getBlock();
-            if(chunk instanceof ResXmlDocument){
+            Block block = bis.getBlock();
+            if(block instanceof ResXmlDocument){
                 mBinXml = true;
             }
         }
