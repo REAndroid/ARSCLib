@@ -24,12 +24,23 @@ import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import java.io.File;
 
 public class ApkModuleRawEncoder extends ApkModuleEncoder {
+
     private final ApkModule apkModule;
+    private boolean mKeepOriginal;
+
     public ApkModuleRawEncoder(){
         ZipEntryMap zipEntryMap = new ZipEntryMap();
         String name = "encoded_raw" + String.valueOf(zipEntryMap.hashCode()).substring(1);
         this.apkModule = new ApkModule(name, zipEntryMap);
     }
+
+    public void setKeepOriginal(boolean keepOriginal) {
+        this.mKeepOriginal = keepOriginal;
+    }
+    public boolean isKeepOriginal() {
+        return mKeepOriginal;
+    }
+
     @Override
     public void buildResources(File mainDirectory) {
         addTableBlock(mainDirectory);
@@ -44,13 +55,17 @@ public class ApkModuleRawEncoder extends ApkModuleEncoder {
         if(!file.isFile()){
             file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME);
             if(!file.isFile() || !AndroidManifestBlock.isResXmlBlock(file)){
-                logMessage("Warn: File not found: " + AndroidManifestBlock.FILE_NAME_BIN);
+                logMessage("WARN: Missing file " + AndroidManifestBlock.FILE_NAME_BIN);
                 return;
             }
         }
         logMessage("Loaded binary manifest: " + file.getName());
         FileInputSource inputSource = new FileInputSource(file, AndroidManifestBlock.FILE_NAME);
-        getApkModule().add(inputSource);
+        ApkModule apkModule = getApkModule();
+        apkModule.add(inputSource);
+        if(isKeepOriginal()){
+            apkModule.discardManifestChanges();
+        }
     }
     private void addTableBlock(File mainDirectory){
         File file = new File(mainDirectory, TableBlock.FILE_NAME);
@@ -58,13 +73,26 @@ public class ApkModuleRawEncoder extends ApkModuleEncoder {
             logMessage("Warn: File not found: " + TableBlock.FILE_NAME);
             return;
         }
+        getApkModule().setLoadDefaultFramework(false);
         InputSource inputSource = new FileInputSource(file, TableBlock.FILE_NAME);
-        getApkModule().add(inputSource);
+        ApkModule apkModule = getApkModule();
+        apkModule.add(inputSource);
+        if(isKeepOriginal()){
+            apkModule.discardManifestChanges();
+        }
     }
     @Override
     void refreshTable(){
-        if(getApkModule().getLoadedTableBlock() != null){
+        if(!isKeepOriginal() && getApkModule().getLoadedTableBlock() != null){
             super.refreshTable();
+        }
+    }
+    @Override
+    void onScanDirectoryComplete() {
+        if(isKeepOriginal()){
+            ApkModule apkModule = getApkModule();
+            apkModule.discardTableBlockChanges();
+            apkModule.discardManifestChanges();
         }
     }
 }

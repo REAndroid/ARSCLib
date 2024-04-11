@@ -23,8 +23,6 @@ import com.reandroid.archive.writer.ApkFileWriter;
 import com.reandroid.archive.writer.ApkStreamWriter;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.array.PackageArray;
-import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
@@ -351,7 +349,7 @@ public class ApkModule implements ApkFile, Closeable {
         }
     }
 
-    public void setPreferredFramework(Integer version) throws IOException {
+    public void setPreferredFramework(Integer version) {
         if(version != null && version.equals(preferredFramework)){
             return;
         }
@@ -719,6 +717,7 @@ public class ApkModule implements ApkFile, Closeable {
         ZipEntryMap archive = getZipEntryMap();
         if(manifestBlock==null){
             mManifestBlock = null;
+            mManifestOriginalSource = null;
             archive.remove(AndroidManifestBlock.FILE_NAME);
             return;
         }
@@ -734,6 +733,7 @@ public class ApkModule implements ApkFile, Closeable {
         ZipEntryMap archive = getZipEntryMap();
         if(tableBlock == null){
             mTableBlock = null;
+            mTableOriginalSource = null;
             archive.remove(TableBlock.FILE_NAME);
             return;
         }
@@ -964,15 +964,11 @@ public class ApkModule implements ApkFile, Closeable {
     }
     TableBlock loadTableBlock() throws IOException {
         InputSource inputSource = getInputSource(TableBlock.FILE_NAME);
-        if(inputSource==null){
+        if(inputSource == null){
             throw new IOException("Entry not found: "+TableBlock.FILE_NAME);
         }
         TableBlock tableBlock;
-        if(inputSource instanceof SplitJsonTableInputSource){
-            tableBlock=((SplitJsonTableInputSource)inputSource).getTableBlock();
-        }else if(inputSource instanceof SingleJsonTableInputSource){
-            tableBlock=((SingleJsonTableInputSource)inputSource).getTableBlock();
-        }else if(inputSource instanceof BlockInputSource){
+        if(inputSource instanceof BlockInputSource){
             tableBlock = (TableBlock) ((BlockInputSource<?>) inputSource).getBlock();
         }else {
             setTableOriginalSource(inputSource);
@@ -983,7 +979,7 @@ public class ApkModule implements ApkFile, Closeable {
         BlockInputSource<TableBlock> blockInputSource=new BlockInputSource<>(inputSource.getName(), tableBlock);
         blockInputSource.setMethod(inputSource.getMethod());
         blockInputSource.setSort(inputSource.getSort());
-        zipEntryMap.add(blockInputSource);
+        getZipEntryMap().add(blockInputSource);
         tableBlock.setApkFile(this);
         return tableBlock;
     }

@@ -49,7 +49,8 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
         sortFiles();
         refreshTable();
         dropEmptyManifest();
-        droNullTableBlock();
+        dropNullTableBlock();
+        onScanDirectoryComplete();
     }
     public void encodeBinaryManifest(File mainDirectory){
         File file = new File(mainDirectory, AndroidManifestBlock.FILE_NAME_BIN);
@@ -65,6 +66,8 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
     public abstract ApkModule getApkModule();
 
 
+    void onScanDirectoryComplete(){
+    }
     void refreshTable(){
         logMessage("Refreshing resource table ...");
         getApkModule().refreshTable();
@@ -83,15 +86,21 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
             logMessage("Removed empty: " + AndroidManifest.FILE_NAME);
         }
     }
-    private void droNullTableBlock(){
+    private void dropNullTableBlock(){
         ApkModule apkModule = getApkModule();
         if(!apkModule.hasTableBlock()){
             return;
         }
-        TableBlock tableBlock = apkModule.getTableBlock();
+        TableBlock loadedTableBlock = apkModule.getLoadedTableBlock();
+        TableBlock tableBlock = loadedTableBlock;
+        if(tableBlock == null){
+            tableBlock = apkModule.getTableBlock(false);
+        }
         if(tableBlock.isEmpty() && tableBlock.isNull()){
             apkModule.setTableBlock(null);
-            logMessage("Removed null: " + TableBlock.FILE_NAME);
+            logMessage("Removed empty: " + TableBlock.FILE_NAME);
+        }else if(loadedTableBlock == null){
+            apkModule.discardTableBlockChanges();
         }
     }
     private void sortFiles(){
