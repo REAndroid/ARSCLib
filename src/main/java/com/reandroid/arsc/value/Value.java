@@ -18,6 +18,8 @@ package com.reandroid.arsc.value;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.ParentChunk;
 import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.graphics.AndroidColor;
 
 public interface Value {
     void setValue(EncodeResult encodeResult);
@@ -29,4 +31,14 @@ public interface Value {
     void setValueAsString(String value);
     PackageBlock getPackageBlock();
     ParentChunk getParentChunk();
+    default AndroidColor getValueAsColor() {
+        ValueType valueType = getValueType();
+        if(valueType == null || !valueType.isColor()){
+            return null;
+        }
+        return AndroidColor.decode(ValueCoder.decode(valueType, getData()));
+    }
+    default void setValue(AndroidColor color) {
+        setValue(ValueCoder.encode(color.toHexString()));
+    }
 }

@@ -198,6 +198,36 @@ public class HexUtil {
         }
         return result;
     }
+    public static int decodeHex(String hex, int def){
+        String hexString = hex;
+        boolean negative = false;
+        if(hexString.charAt(0) == '-'){
+            hexString = hexString.substring(1);
+            negative = true;
+        }
+        if(hexString.charAt(0) == '+'){
+            hexString = hexString.substring(1);
+        }
+        int i = hexString.length() - 1;
+        if(hexString.charAt(i) == 'L'){
+            hexString = hexString.substring(0, i);
+        }
+        hexString = trim0x(hexString);
+        int result = 0;
+        int length = hexString.length();
+        for(i = 0; i < length; i++){
+            result = result << 4;
+            int v = decodeHexChar(hexString.charAt(i));
+            if(v == -1){
+                return def;
+            }
+            result = result | v;
+        }
+        if(negative){
+            result = -result;
+        }
+        return result;
+    }
     public static int decodeHexChar(byte b){
         return decodeHexChar((char) (0xff & b));
     }

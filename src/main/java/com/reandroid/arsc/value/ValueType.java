@@ -15,6 +15,7 @@
   */
 package com.reandroid.arsc.value;
 
+import com.reandroid.graphics.AndroidColor;
 import com.reandroid.utils.StringsUtil;
 
 import java.util.HashMap;
@@ -83,6 +84,36 @@ public enum ValueType {
     }
     public static ValueType fromName(String name){
         return getValueTypeMap().get(StringsUtil.toUpperCase(name));
+    }
+    public static AndroidColor.Type colorType(ValueType valueType){
+        if(valueType == ValueType.COLOR_RGB4){
+            return AndroidColor.Type.RGB4;
+        }
+        if(valueType == ValueType.COLOR_ARGB4){
+            return AndroidColor.Type.ARGB4;
+        }
+        if(valueType == ValueType.COLOR_RGB8){
+            return AndroidColor.Type.RGB8;
+        }
+        if(valueType == ValueType.COLOR_ARGB8){
+            return AndroidColor.Type.ARGB8;
+        }
+        return null;
+    }
+    public static ValueType colorType(AndroidColor.Type type){
+        if(type == AndroidColor.Type.RGB4){
+            return COLOR_RGB4;
+        }
+        if(type == AndroidColor.Type.ARGB4){
+            return COLOR_ARGB4;
+        }
+        if(type == AndroidColor.Type.RGB8){
+            return COLOR_RGB8;
+        }
+        if(type == AndroidColor.Type.ARGB8){
+            return COLOR_ARGB8;
+        }
+        return null;
     }
     private static ValueType[] getSortedValues(){
         if(sortedValues != null){
