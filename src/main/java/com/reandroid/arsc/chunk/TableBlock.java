@@ -626,16 +626,20 @@ public class TableBlock extends Chunk<TableHeader>
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
+        if(reader.available() == 0){
+            setNull(true);
+            return;
+        }
         TableHeader tableHeader = getHeaderBlock();
         tableHeader.readBytes(reader);
-        if(tableHeader.getChunkType()!=ChunkType.TABLE){
-            throw new IOException("Not resource table: "+tableHeader);
+        if(tableHeader.getChunkType() != ChunkType.TABLE){
+            throw new IOException("Not resource table: " + tableHeader);
         }
-        boolean stringPoolLoaded=false;
-        InfoHeader infoHeader = reader.readHeaderBlock();
-        PackageArray packageArray=mPackageArray;
+        boolean stringPoolLoaded = false;
+        InfoHeader infoHeader = InfoHeader.read(reader);
+        PackageArray packageArray = mPackageArray;
         packageArray.clear();
-        while(infoHeader!=null && reader.isAvailable()){
+        while(infoHeader != null && reader.isAvailable()){
             ChunkType chunkType=infoHeader.getChunkType();
             if(chunkType==ChunkType.STRING){
                 if(!stringPoolLoaded){
