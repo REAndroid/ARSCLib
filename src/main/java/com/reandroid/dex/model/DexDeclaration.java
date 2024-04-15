@@ -26,6 +26,12 @@ import java.util.Iterator;
 
 public abstract class DexDeclaration extends Dex implements AnnotatedDex {
 
+    public boolean uses(Key key) {
+        if(getKey().equals(key)){
+            return false;
+        }
+        return getId().uses(key);
+    }
     public boolean isAccessibleTo(TypeKey typeKey) {
         if(this.getDefining().equals(typeKey)){
             return true;

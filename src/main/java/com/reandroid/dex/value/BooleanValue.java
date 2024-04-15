@@ -16,6 +16,7 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
@@ -43,6 +44,10 @@ public class BooleanValue extends DexValueBlock<Block> {
         return Boolean.toString(get());
     }
 
+    @Override
+    public TypeKey getDataTypeKey() {
+        return TypeKey.TYPE_Z;
+    }
     @Override
     public int hashCode() {
         int hash = 1;

@@ -34,4 +34,8 @@ public class TypeValue extends SectionIdValue<TypeId> {
     public DexValueType<?> getValueType() {
         return DexValueType.TYPE;
     }
+    @Override
+    public TypeKey getDataTypeKey() {
+        return TypeKey.CLASS;
+    }
 }

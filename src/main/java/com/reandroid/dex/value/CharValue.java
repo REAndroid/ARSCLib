@@ -16,6 +16,7 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueChar;
@@ -79,6 +80,10 @@ public class CharValue extends PrimitiveValue {
     @Override
     public String getAsString() {
         return DexUtils.quoteChar(get());
+    }
+    @Override
+    public TypeKey getDataTypeKey() {
+        return TypeKey.TYPE_C;
     }
 
     @Override

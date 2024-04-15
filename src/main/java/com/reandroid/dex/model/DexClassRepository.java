@@ -22,6 +22,7 @@ import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.UniqueIterator;
 
 import java.util.Iterator;
 import java.util.function.Predicate;
@@ -37,6 +38,11 @@ public interface DexClassRepository {
     <T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType, Key key);
     <T1 extends SectionItem> T1 getItem(SectionType<T1> sectionType, Key key);
 
+
+    default Iterator<DexClass> findUserClasses(Key key){
+        return new UniqueIterator<>(getDexClasses(),
+                dexClass -> dexClass.uses(key));
+    }
     default Iterator<DexClass> getDexClasses(){
         return getDexClasses(null);
     }

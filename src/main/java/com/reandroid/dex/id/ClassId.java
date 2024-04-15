@@ -158,11 +158,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         return CombiningIterator.singleOne(getSuperClassKey(), getInterfaceKeys());
     }
     public Iterator<TypeKey> getInterfaceKeys(){
-        TypeList interfaceList = getInterfaceTypeList();
-        if(interfaceList != null){
-            return interfaceList.getTypeKeys();
-        }
-        return EmptyIterator.of();
+        return getInterfacesReference().getTypeKeys();
     }
     public TypeList getInterfaceTypeList(){
         return interfaces.getItem();
@@ -456,7 +452,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         collection.add(classTypeId.getItem());
         collection.add(superClassId.getItem());
         collection.add(sourceFile.getItem());
-
+        collection.addAll(interfaces.iterator());
         AnnotationsDirectory directory = getAnnotationsDirectory();
         if(directory != null){
             collection.addAll(directory.usedIds());

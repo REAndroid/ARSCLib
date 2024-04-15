@@ -17,6 +17,7 @@ package com.reandroid.dex.model;
 
 import com.reandroid.dex.data.AnnotationElement;
 import com.reandroid.dex.data.AnnotationItem;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.value.ArrayValue;
 import com.reandroid.dex.value.DexValueType;
 
@@ -47,6 +48,16 @@ public class DalvikSignature extends DalvikAnnotation {
     private AnnotationElement getElement(){
         return annotationItem.getElement("value");
     }
+
+    @Override
+    public boolean uses(Key key) {
+        AnnotationElement element = getElement();
+        if(element != null){
+            return element.uses(key);
+        }
+        return false;
+    }
+
     @Override
     public DexFile getClassRepository() {
         return (DexFile) super.getClassRepository();

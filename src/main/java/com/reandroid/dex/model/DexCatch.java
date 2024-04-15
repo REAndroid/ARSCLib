@@ -17,6 +17,7 @@ package com.reandroid.dex.model;
 
 import com.reandroid.dex.ins.CatchAllHandler;
 import com.reandroid.dex.ins.ExceptionHandler;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 
@@ -65,6 +66,16 @@ public class DexCatch extends DexCode {
     public ExceptionHandler getExceptionHandler() {
         return exceptionHandler;
     }
+
+    @Override
+    public boolean uses(Key key) {
+        TypeKey typeKey = getKey();
+        if(typeKey != null){
+            return typeKey.uses(key);
+        }
+        return false;
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getExceptionHandler().getHandlerLabel().appendExtra(writer);

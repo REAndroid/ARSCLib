@@ -20,6 +20,7 @@ import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
@@ -101,6 +102,10 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
     public boolean is(DexValueType<?> dexValueType){
         return dexValueType == getValueType();
     }
+    public TypeKey getDataTypeKey(){
+        return TypeKey.OBJECT;
+    }
+
     @Override
     public int hashCode() {
         int hash = 1;

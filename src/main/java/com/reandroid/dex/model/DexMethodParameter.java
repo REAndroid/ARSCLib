@@ -16,8 +16,10 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.data.MethodDef;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.FilterIterator;
@@ -89,6 +91,22 @@ public class DexMethodParameter extends Dex implements AnnotatedDex{
     public MethodDef.Parameter getParameter() {
         return parameter;
     }
+
+    @Override
+    public boolean uses(Key key) {
+        if(ObjectsUtil.equals(getType(), key)) {
+            return true;
+        }
+        Iterator<DexAnnotation> iterator = getAnnotations();
+        while (iterator.hasNext()){
+            DexAnnotation dexAnnotation = iterator.next();
+            if(dexAnnotation.uses(key)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public DexClassRepository getClassRepository() {
         return getDexMethod().getClassRepository();

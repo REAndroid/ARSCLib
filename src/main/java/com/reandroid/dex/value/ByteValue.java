@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.value;
 
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueByte;
 import com.reandroid.utils.HexUtil;
@@ -47,6 +48,10 @@ public class ByteValue extends PrimitiveValue {
     @Override
     public String getHex() {
         return HexUtil.toHex(getNumberValue(), 1) + "t";
+    }
+    @Override
+    public TypeKey getDataTypeKey() {
+        return TypeKey.TYPE_B;
     }
 
     @Override

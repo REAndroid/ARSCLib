@@ -62,4 +62,8 @@ public class StringValue extends SectionIdValue<StringId> {
     public DexValueType<?> getValueType() {
         return DexValueType.STRING;
     }
+    @Override
+    public TypeKey getDataTypeKey() {
+        return TypeKey.STRING;
+    }
 }

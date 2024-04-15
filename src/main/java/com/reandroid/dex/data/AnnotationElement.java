@@ -7,6 +7,8 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.StringUle128Reference;
 import com.reandroid.dex.smali.model.SmaliAnnotationElement;
 import com.reandroid.dex.smali.model.SmaliValue;
@@ -129,6 +131,36 @@ public class AnnotationElement extends DataItem implements Comparable<Annotation
             return 0;
         }
         return SectionTool.compareIdx(getNameId(), other.getNameId());
+    }
+    public TypeKey getDataTypeKey(){
+        DexValueBlock<?> valueBlock = getValue();
+        if(valueBlock != null){
+            return valueBlock.getDataTypeKey();
+        }
+        return null;
+    }
+    public TypeKey getParentType(){
+        AnnotationItem parent = getParentInstance(AnnotationItem.class);
+        if(parent != null){
+            return parent.getTypeKey();
+        }
+        return null;
+    }
+    public MethodKey getMethodKey(){
+        TypeKey parentType = getParentType();
+        if(parentType == null){
+            return null;
+        }
+        TypeKey dataType = getDataTypeKey();
+        if(dataType == null){
+            return null;
+        }
+        return new MethodKey(parentType, getName(), null, dataType);
+    }
+
+    @Override
+    public Iterator<Key> usedKeys() {
+        return CombiningIterator.singleOne(getMethodKey(), super.usedKeys());
     }
     @Override
     public int hashCode() {

@@ -20,12 +20,16 @@ import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.CollectionUtil;
 
 import java.io.IOException;
 import java.util.Iterator;
 
 public interface Key extends Comparable<Object>, SmaliFormat {
 
+    default boolean uses(Key key){
+        return this.equals(key) || CollectionUtil.contains(mentionedKeys(), key);
+    }
     default TypeKey getDeclaring(){
         return TypeKey.NULL;
     }

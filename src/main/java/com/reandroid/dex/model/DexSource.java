@@ -176,7 +176,16 @@ public interface DexSource<T> extends Comparable<DexSource<?>>, Closeable{
             if(isClosed()){
                 return null;
             }
-            String name = DexFile.getDexName(getDexFileNumber() + 1);
+            int index = getDexFileNumber() + 1;
+            File file = getFile(index);
+            while (file.isFile()){
+                index ++;
+                file = getFile(index);
+            }
+            return new FileDexSource<>(file);
+        }
+        private File getFile(int dexIndex){
+            String name = DexFile.getDexName(dexIndex);
             File dir = getFile().getParentFile();
             File file;
             if(dir == null){
@@ -184,7 +193,7 @@ public interface DexSource<T> extends Comparable<DexSource<?>>, Closeable{
             }else {
                 file = new File(dir, name);
             }
-            return new FileDexSource<>(file);
+            return file;
         }
     }
     class ZipDexSource<T> extends DexSourceImpl<T> {
@@ -235,9 +244,18 @@ public interface DexSource<T> extends Comparable<DexSource<?>>, Closeable{
             if(isClosed()){
                 return null;
             }
-            String name = FileUtil.combineUnixPath(FileUtil.getParent(getName()),
-                    DexFile.getDexName(getDexFileNumber() + 1));
+            int index = getDexFileNumber() + 1;
+            String name = getPath(index);
+            ZipEntryMap zipEntryMap = this.zipEntryMap;
+            while (zipEntryMap.contains(name)){
+                index ++;
+                name = getPath(index);
+            }
             return new ZipDexSource<>(zipEntryMap, name);
+        }
+        private String getPath(int index){
+            return FileUtil.combineUnixPath(FileUtil.getParent(getName()),
+                    DexFile.getDexName(index));
         }
         @Override
         public String toString() {

@@ -16,6 +16,7 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
@@ -46,6 +47,8 @@ public abstract class PrimitiveValue extends DexValueBlock<NumberValue> {
     public String getAsString() {
         return getHex();
     }
+    @Override
+    public abstract TypeKey getDataTypeKey();
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         getValueTypeItem().onReadBytes(reader);

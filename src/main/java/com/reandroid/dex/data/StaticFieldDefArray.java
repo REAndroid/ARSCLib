@@ -23,6 +23,8 @@ import com.reandroid.dex.value.*;
 
 public class StaticFieldDefArray extends FieldDefArray {
 
+    private boolean mValuesLinked;
+
     public StaticFieldDefArray(IntegerReference itemCount) {
         super(itemCount);
     }
@@ -94,16 +96,12 @@ public class StaticFieldDefArray extends FieldDefArray {
     }
 
     @Override
-    protected void onRefreshed() {
-        super.onRefreshed();
-        validateValues();
-    }
-
-    @Override
     public void setClassId(ClassId classId) {
-        boolean firstTime = getClassId() == null;
+        if(getClassId() != classId){
+            mValuesLinked = false;
+        }
         super.setClassId(classId);
-        if(firstTime && getCount() != 0){
+        if(!mValuesLinked){
             holdStaticValues(getStaticValues());
         }
     }
@@ -122,19 +120,8 @@ public class StaticFieldDefArray extends FieldDefArray {
             assert def != null;
             def.holdStaticInitialValue(valueBlock);
         }
-    }
-
-    private void validateValues(){
-        for(FieldDef fieldDef : this){
-            DexValueBlock<?> valueBlock = fieldDef.getStaticInitialValue();
-            if(valueBlock == null){
-                continue;
-            }
-            if(TypeKey.TYPE_I.equals(fieldDef.getKey().getType()) &&
-                    !valueBlock.is(DexValueType.INT)){
-                // throw new IllegalArgumentException("Mismatch value: " + fieldDef.getKey() + " = " + valueBlock);
-            }
-            // TODO: verify others
+        if(count != 0){
+            mValuesLinked = true;
         }
     }
 

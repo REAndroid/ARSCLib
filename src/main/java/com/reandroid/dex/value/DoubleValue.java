@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.value;
 
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueDouble;
@@ -52,6 +53,10 @@ public class DoubleValue extends PrimitiveValue {
     public String getHex() {
         int shift = (7 - getValueSize()) * 8;
         return HexUtil.toHex(getNumberValue() << shift, 8) + "L";
+    }
+    @Override
+    public TypeKey getDataTypeKey() {
+        return TypeKey.TYPE_D;
     }
 
     @Override

@@ -21,13 +21,31 @@ import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.collection.EmptyIterator;
 
-public class TypeListReference extends DataItemIndirectReference<TypeList>{
+import java.util.Iterator;
+
+public class TypeListReference extends DataItemIndirectReference<TypeList> implements Iterable<TypeId>{
 
     public TypeListReference(SectionItem sectionItem, int offset, int usageType) {
         super(SectionType.TYPE_LIST, sectionItem, offset, usageType);
     }
 
+    @Override
+    public Iterator<TypeId> iterator() {
+        TypeList typeList = getItem();
+        if(typeList != null){
+            return typeList.iterator();
+        }
+        return EmptyIterator.of();
+    }
+    public Iterator<TypeKey> getTypeKeys() {
+        TypeList typeList = getItem();
+        if(typeList != null){
+            return typeList.getTypeKeys();
+        }
+        return EmptyIterator.of();
+    }
     @Override
     public TypeListKey getKey() {
         return (TypeListKey) super.getKey();

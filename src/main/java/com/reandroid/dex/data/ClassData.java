@@ -50,8 +50,6 @@ public class ClassData extends DataItem implements SmaliFormat {
     private MethodDefArray directMethods;
     private MethodDefArray virtualMethods;
 
-    private ClassId mClassId;
-
     public ClassData() {
         super(8);
         this.staticFieldsCount = new Ule128Item();
@@ -63,11 +61,6 @@ public class ClassData extends DataItem implements SmaliFormat {
         addChild(1, instanceFieldsCount);
         addChild(2, directMethodsCount);
         addChild(3, virtualMethodCount);
-
-        //addChild(4, staticFields);
-        //addChild(5, instanceFields);
-        //addChild(6, directMethods);
-        //addChild(7, virtualMethods);
     }
 
     @Override
@@ -290,10 +283,6 @@ public class ClassData extends DataItem implements SmaliFormat {
 
 
     public void setClassId(ClassId classId) {
-        if(mClassId == classId){
-            return;
-        }
-        this.mClassId = classId;
         Iterator<DefArray<?>> iterator = getDefArrays();
         while (iterator.hasNext()){
             iterator.next().setClassId(classId);

@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 
@@ -22,6 +23,7 @@ import java.io.IOException;
 
 public abstract class Dex implements SmaliFormat {
 
+    public abstract boolean uses(Key key);
     public abstract DexClassRepository getClassRepository();
     @Override
     public abstract void append(SmaliWriter writer) throws IOException;

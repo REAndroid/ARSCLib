@@ -20,7 +20,6 @@ import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
@@ -42,7 +41,14 @@ public class TypeKey implements Key{
     }
 
     public String getSourceName(){
-        return DexUtils.toSourceName(getDeclaringName());
+        StringBuilder builder = new StringBuilder();
+        String declaring = DexUtils.toSourceName(getDeclaringName());
+        builder.append(declaring);
+        int array = getArrayDimension();
+        for(int i = 0; i < array; i++){
+            builder.append("[]");
+        }
+        return builder.toString();
     }
     @Override
     public TypeKey getDeclaring(){
@@ -456,9 +462,15 @@ public class TypeKey implements Key{
     };
     static class PrimitiveTypeKey extends TypeKey {
         private final String sourceName;
+
         public PrimitiveTypeKey(String type, String sourceName) {
             super(type);
             this.sourceName = sourceName;
+        }
+
+        @Override
+        public boolean uses(Key key) {
+            return equals(key);
         }
         @Override
         public String getSourceName() {
@@ -514,6 +526,7 @@ public class TypeKey implements Key{
     public static final TypeKey TYPE_V = new PrimitiveTypeKey("V", "void");
     public static final TypeKey TYPE_Z = new PrimitiveTypeKey("Z", "boolean");
 
+    public static final TypeKey CLASS = new TypeKey("Ljava/lang/Class;");
     public static final TypeKey OBJECT = new TypeKey("Ljava/lang/Object;");
     public static final TypeKey STRING = new TypeKey("Ljava/lang/String;");
 

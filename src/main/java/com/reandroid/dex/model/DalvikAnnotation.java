@@ -19,7 +19,7 @@ import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
-public class DalvikAnnotation extends Dex {
+public abstract class DalvikAnnotation extends Dex {
 
     private final DexClassRepository classRepository;
 

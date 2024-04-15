@@ -16,6 +16,7 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.data.AnnotationElement;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.value.DexValueType;
 
@@ -58,6 +59,12 @@ public class DexAnnotationElement extends Dex {
     public DexAnnotation getDexAnnotation() {
         return dexAnnotation;
     }
+
+    @Override
+    public boolean uses(Key key) {
+        return getAnnotationElement().uses(key);
+    }
+
     @Override
     public DexClassRepository getClassRepository() {
         return getDexAnnotation().getClassRepository();

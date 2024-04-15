@@ -21,6 +21,7 @@ import com.reandroid.dex.ins.ExceptionHandler;
 import com.reandroid.dex.ins.ExceptionLabel;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.TryItem;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CollectionUtil;
@@ -128,6 +129,19 @@ public class DexTry extends DexCode {
     public TryItem getTryItem() {
         return tryItem;
     }
+
+    @Override
+    public boolean uses(Key key) {
+        Iterator<DexCatch> iterator = getCatches();
+        while (iterator.hasNext()){
+            DexCatch dexCatch = iterator.next();
+            if(dexCatch.uses(key)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public DexMethod getDexMethod() {
         return dexMethod;

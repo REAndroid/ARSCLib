@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.value;
 
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueLong;
@@ -49,6 +50,10 @@ public class LongValue extends PrimitiveValue {
     @Override
     public String getHex() {
         return HexUtil.toHex(getNumberValue(), getValueSize()) + "L";
+    }
+    @Override
+    public TypeKey getDataTypeKey() {
+        return TypeKey.TYPE_J;
     }
 
     @Override

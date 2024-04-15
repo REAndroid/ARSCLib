@@ -203,6 +203,15 @@ public class DexValue extends Dex {
     public Dex getDeclaring() {
         return declaring;
     }
+
+    @Override
+    public boolean uses(Key key) {
+        Key valueKey = getKey();
+        if(valueKey != null){
+            return valueKey.uses(key);
+        }
+        return false;
+    }
     @Override
     public DexClassRepository getClassRepository() {
         return getDeclaring().getClassRepository();

@@ -405,6 +405,9 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     public Iterator<TypeKey> getInterfaces(){
         return getId().getInterfaceKeys();
     }
+    public void addInterface(TypeKey typeKey) {
+        addInterface(typeKey.getTypeName());
+    }
     public void addInterface(String typeName) {
         TypeListReference reference = getId().getInterfacesReference();
         reference.add(typeName);
@@ -412,6 +415,12 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     public void clearInterfaces() {
         TypeListReference reference = getId().getInterfacesReference();
         reference.setItem((TypeList) null);
+    }
+    public void clearDebug(){
+        Iterator<DexMethod> iterator = getDeclaredMethods();
+        while (iterator.hasNext()){
+            iterator.next().clearDebug();
+        }
     }
     public void removeAnnotations(Predicate<AnnotationItem> filter) {
         ClassId classId = getId();
@@ -455,20 +464,13 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     }
     public List<Key> fixAccessibility(){
         DexClassRepository repository = getClassRepository();
-        if(repository == null){
-            return ArrayCollection.empty();
-        }
         List<Key> results = new ArrayCollection<>();
-        ClassId classId = getId();
-        Set<Key> checked = new HashSet<>();
-        checked.add(classId.getKey());
-        Iterator<IdItem> iterator = classId.usedIds();
+        UniqueIterator<Key> iterator = new UniqueIterator<>(getId().usedKeys());
+        iterator.exclude(getKey());
         while (iterator.hasNext()){
-            Key key = iterator.next().getKey();
-            if(checked.add(key)){
-                if(fixAccessibility(repository.getDexDeclaration(key))){
-                    results.add(key);
-                }
+            Key key = iterator.next();
+            if(fixAccessibility(repository.getDexDeclaration(key))){
+                results.add(key);
             }
         }
         return results;

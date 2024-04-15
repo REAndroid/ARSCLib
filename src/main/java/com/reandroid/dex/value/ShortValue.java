@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.value;
 
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueShort;
 import com.reandroid.utils.HexUtil;
@@ -46,6 +47,10 @@ public class ShortValue extends PrimitiveValue {
     @Override
     public String getHex() {
         return HexUtil.toHex(getNumberValue(), getValueSize()) + "S";
+    }
+    @Override
+    public TypeKey getDataTypeKey() {
+        return TypeKey.TYPE_S;
     }
 
     @Override

@@ -30,6 +30,7 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
@@ -251,6 +252,15 @@ public class DexInstruction extends DexCode {
     }
     public Ins getIns() {
         return mIns;
+    }
+
+    @Override
+    public boolean uses(Key key) {
+        Key insKey = getKey();
+        if(insKey != null){
+            return insKey.uses(key);
+        }
+        return false;
     }
     @Override
     public DexMethod getDexMethod() {
