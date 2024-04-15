@@ -16,6 +16,11 @@
 package com.reandroid.graphics;
 
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class AndroidColor {
 
@@ -25,6 +30,8 @@ public class AndroidColor {
     private int blue;
 
     private Type type;
+
+    private boolean upperCase;
 
     public AndroidColor(int alpha, int red, int green, int blue){
         this.alpha = alpha;
@@ -37,9 +44,21 @@ public class AndroidColor {
         this(0, 0, 0, 0);
     }
 
+    public void setUpperCase(boolean upperCase) {
+        this.upperCase = upperCase;
+    }
     public AndroidColor copy(){
         AndroidColor color = new AndroidColor(this.alpha, this.red, this.green, this.blue);
         color.setType(getType());
+        color.setUpperCase(upperCase);
+        return color;
+    }
+    public AndroidColor inverse(){
+        AndroidColor color = copy();
+        int mask = getType().mask();
+        color.red(~color.red() & mask);
+        color.green(~color.green() & mask);
+        color.blue(~color.blue() & mask);
         return color;
     }
     public AndroidColor argb(){
@@ -51,6 +70,7 @@ public class AndroidColor {
             type = Type.ARGB4;
         }
         color.setType(type);
+        color.setUpperCase(upperCase);
         color.alpha(this.alpha());
         return color;
     }
@@ -63,6 +83,7 @@ public class AndroidColor {
             type = Type.RGB4;
         }
         color.setType(type);
+        color.setUpperCase(upperCase);
         return color;
     }
     public AndroidColor toEightBit(){
@@ -208,7 +229,11 @@ public class AndroidColor {
         builder.append(HexUtil.toHex(null, red, width));
         builder.append(HexUtil.toHex(null, green, width));
         builder.append(HexUtil.toHex(null, blue, width));
-        return builder.toString();
+        String hex = builder.toString();
+        if(upperCase) {
+            hex = StringsUtil.toUpperCase(hex);
+        }
+        return hex;
     }
 
     public int intValue() {
@@ -264,6 +289,25 @@ public class AndroidColor {
                 color.green == other.green &&
                 color.blue == other.blue;
     }
+
+    public boolean equals(AndroidColor color, float percent) {
+        if (color == null) {
+            return false;
+        }
+        if (color == this){
+            return true;
+        }
+        return distance(color) <= toDistance(percent);
+    }
+    public boolean equals(AndroidColor color, double distanceTolerance) {
+        if (color == null) {
+            return false;
+        }
+        if (color == this){
+            return true;
+        }
+        return distance(color) <= distanceTolerance;
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -295,8 +339,70 @@ public class AndroidColor {
     public String toString() {
         return toHexString();
     }
-    public static AndroidColor decode(String hexColor) {
-        return parseHex(hexColor, false);
+    public static Iterator<AndroidColor> decodeAll(String text) {
+        return new Iterator<AndroidColor>() {
+            private AndroidColor current;
+            private int index;
+            @Override
+            public boolean hasNext() {
+                return getNext() != null;
+            }
+
+            @Override
+            public AndroidColor next() {
+                AndroidColor color = getNext();
+                if(color == null){
+                    throw new NoSuchElementException();
+                }
+                current = null;
+                return color;
+            }
+            private int nextIndex(){
+                if(text == null){
+                    return -1;
+                }
+                int length = text.length();
+                while (index < length){
+                    if(text.charAt(index) == '#'){
+                        return index;
+                    }
+                    index ++;
+                }
+                return -1;
+            }
+            private AndroidColor getNext(){
+                while (current == null && nextIndex() != -1){
+                    current = decode(text.substring(index));
+                    index ++;
+                }
+                return current;
+            }
+        };
+    }
+    public static AndroidColor decode(String text) {
+        if(text == null){
+            return null;
+        }
+        int length = text.length();
+        if(length < 4){
+            return null;
+        }
+        if(text.charAt(0) != '#'){
+            return null;
+        }
+        StringBuilder builder = new StringBuilder(9);
+        builder.append('#');
+        for(int i = 1; i < length; i++){
+            char ch = text.charAt(i);
+            if(!HexUtil.isHexChar(ch)){
+                break;
+            }
+            if(i > 8){
+                return null;
+            }
+            builder.append(ch);
+        }
+        return parseHex(builder.toString(), false);
     }
     public static AndroidColor parseHex(String hexColor) {
         return parseHex(hexColor, true);
@@ -321,6 +427,7 @@ public class AndroidColor {
         AndroidColor color = new AndroidColor();
         color.type = type;
         current = current.substring(1);
+        color.setUpperCase(StringsUtil.containsUpperAZ(current));
         int width = 1;
         if(type.isEightBit()){
             width = 2;
@@ -483,4 +590,13 @@ public class AndroidColor {
         }
     }
 
+    public static float toPercent(double distance){
+        return (float) ((distance * 100.0) / LENGTH);
+    }
+    public static double toDistance(float percent){
+        return (percent * LENGTH) / 100.0;
+    }
+
+    // the distance between "#000000" and "#ffffff";
+    public static final double LENGTH = ObjectsUtil.of(441.67);
 }

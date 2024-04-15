@@ -243,6 +243,15 @@ public class HexUtil {
         }
         return -1;
     }
+    public static boolean isHexChar(char ch){
+        if(ch <= '9' && ch >= '0'){
+            return true;
+        }
+        if(ch <= 'f' && ch >= 'a'){
+            return true;
+        }
+        return ch <= 'F' && ch >= 'A';
+    }
     public static char toHexChar(int i){
         if(i >= 0){
             if(i < 10){

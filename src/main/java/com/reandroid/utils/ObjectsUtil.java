@@ -35,6 +35,12 @@ public class ObjectsUtil {
     public static long of(long l) {
         return l;
     }
+    public static float of(float f) {
+        return f;
+    }
+    public static double of(double d) {
+        return d;
+    }
 
     public static boolean equals(Object obj1, Object obj2){
         if(obj1 == obj2){

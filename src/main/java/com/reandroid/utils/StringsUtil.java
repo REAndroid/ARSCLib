@@ -105,6 +105,18 @@ public class StringsUtil {
         }
         return true;
     }
+    public static boolean containsUpperAZ(String text){
+        if(isEmpty(text)){
+            return false;
+        }
+        int length = text.length();
+        for(int i = 0; i < length; i++){
+            if(isUpperAZ(text.charAt(i))){
+                return true;
+            }
+        }
+        return false;
+    }
     public static boolean isDigit(char ch){
         return ch >= '0' && ch <= '9';
     }
