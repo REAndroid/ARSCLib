@@ -339,45 +339,8 @@ public class AndroidColor {
     public String toString() {
         return toHexString();
     }
-    public static Iterator<AndroidColor> decodeAll(String text) {
-        return new Iterator<AndroidColor>() {
-            private AndroidColor current;
-            private int index;
-            @Override
-            public boolean hasNext() {
-                return getNext() != null;
-            }
-
-            @Override
-            public AndroidColor next() {
-                AndroidColor color = getNext();
-                if(color == null){
-                    throw new NoSuchElementException();
-                }
-                current = null;
-                return color;
-            }
-            private int nextIndex(){
-                if(text == null){
-                    return -1;
-                }
-                int length = text.length();
-                while (index < length){
-                    if(text.charAt(index) == '#'){
-                        return index;
-                    }
-                    index ++;
-                }
-                return -1;
-            }
-            private AndroidColor getNext(){
-                while (current == null && nextIndex() != -1){
-                    current = decode(text.substring(index));
-                    index ++;
-                }
-                return current;
-            }
-        };
+    public static ColorIterator decodeAll(String text) {
+        return new ColorIterator(text);
     }
     public static AndroidColor decode(String text) {
         if(text == null){
@@ -477,6 +440,12 @@ public class AndroidColor {
     private static int deltaSquare(int i1, int i2) {
         int i = i1 - i2;
         return i * i;
+    }
+    public static float toPercent(double distance){
+        return (float) ((distance * 100.0) / LENGTH);
+    }
+    public static double toDistance(float percent){
+        return (percent * LENGTH) / 100.0;
     }
 
     public static class Type {
@@ -590,11 +559,86 @@ public class AndroidColor {
         }
     }
 
-    public static float toPercent(double distance){
-        return (float) ((distance * 100.0) / LENGTH);
-    }
-    public static double toDistance(float percent){
-        return (percent * LENGTH) / 100.0;
+    public static class ColorIterator implements Iterator<AndroidColor> {
+
+        private String text;
+        private AndroidColor current;
+        private String lastColor;
+        private int index;
+        private int lastIndex;
+
+        public ColorIterator(String text){
+            this.text = text;
+            this.lastIndex = -1;
+        }
+
+        public String getText() {
+            return text;
+        }
+        public String replace(AndroidColor color) {
+            String text = getText();
+            if(color == null || lastColor == null){
+                return text;
+            }
+            String left = text.substring(0, lastIndex);
+            String right = text.substring(lastIndex + lastColor.length());
+            lastColor = color.toHexString();
+            text = left + lastColor + right;
+            this.text = text;
+            return text;
+        }
+
+        @Override
+        public void remove() {
+            String lastColor = this.lastColor;
+            if(lastColor == null){
+                return;
+            }
+            String text = getText();
+            this.lastColor = null;
+            String left = text.substring(0, lastIndex);
+            String right = text.substring(lastIndex + lastColor.length());
+            this.text = left + right;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return getNext() != null;
+        }
+
+        @Override
+        public AndroidColor next() {
+            AndroidColor color = getNext();
+            if(color == null){
+                throw new NoSuchElementException();
+            }
+            lastColor = color.toHexString();
+            current = null;
+            return color;
+        }
+        private int nextIndex(){
+            if(text == null){
+                return -1;
+            }
+            int length = text.length();
+            while (index < length){
+                if(text.charAt(index) == '#'){
+                    return index;
+                }
+                index ++;
+            }
+            return -1;
+        }
+        private AndroidColor getNext(){
+            while (current == null && nextIndex() != -1){
+                current = decode(text.substring(index));
+                if(current != null){
+                    lastIndex = index;
+                }
+                index ++;
+            }
+            return current;
+        }
     }
 
     // the distance between "#000000" and "#ffffff";
