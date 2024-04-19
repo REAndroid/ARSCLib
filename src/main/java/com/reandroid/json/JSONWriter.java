@@ -7,6 +7,7 @@ package com.reandroid.json;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 public class JSONWriter {
@@ -172,7 +173,32 @@ public class JSONWriter {
         return this.append(Long.toString(l));
     }
     public JSONWriter value(Object object) throws JSONException {
+        if(object instanceof JSONArray){
+            return value((JSONArray) object);
+        }
+        if(object instanceof JSONObject){
+            return value((JSONObject) object);
+        }
         return this.append(valueToString(object));
+    }
+    public JSONWriter value(JSONArray jsonArray) throws JSONException {
+        JSONWriter writer = array();
+        int length = jsonArray.length();
+        for(int i = 0; i < length; i++){
+            writer.value(jsonArray.get(i));
+        }
+        writer.endArray();
+        return this;
+    }
+    public JSONWriter value(JSONObject jsonObject) throws JSONException {
+        JSONWriter writer = object();
+        Iterator<String> iterator = jsonObject.keys();
+        while (iterator.hasNext()){
+            String key = iterator.next();
+            writer.key(key).value(jsonObject.get(key));
+        }
+        writer.endObject();
+        return this;
     }
     private void writeIndent() throws JSONException {
         if(this.indentFactor < 0 || this.mode == 'i'){
