@@ -15,13 +15,16 @@
  */
 package com.reandroid.archive.block.pad;
 
+import com.reandroid.archive.block.CertificateBlock;
 import com.reandroid.archive.block.SignatureId;
 import com.reandroid.archive.block.SignatureInfo;
 import com.reandroid.archive.block.SignatureScheme;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class SchemePadding extends SignatureScheme {
     private final ByteArray byteArray;
@@ -41,6 +44,12 @@ public class SchemePadding extends SignatureScheme {
     }
     public void setPadding(byte[] bytes){
         byteArray.set(bytes);
+    }
+
+
+    @Override
+    public Iterator<CertificateBlock> getCertificates() {
+        return EmptyIterator.of();
     }
 
     @Override

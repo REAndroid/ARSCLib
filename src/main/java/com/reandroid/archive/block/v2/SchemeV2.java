@@ -15,15 +15,29 @@
  */
 package com.reandroid.archive.block.v2;
 
+import com.reandroid.archive.block.CertificateBlock;
+import com.reandroid.archive.block.CertificateBlockV2;
 import com.reandroid.archive.block.SignatureId;
 import com.reandroid.archive.block.SignatureScheme;
 
+import java.util.Iterator;
+
 public class SchemeV2 extends SignatureScheme {
+
     private final V2SignedDataList signedDataList;
+
     public SchemeV2(){
         super(1, SignatureId.V2);
         this.signedDataList = new V2SignedDataList();
         addChild(this.signedDataList);
     }
 
+    @Override
+    public Iterator<CertificateBlock> getCertificates() {
+        return getSignedDataList().getCertificates();
+    }
+
+    public V2SignedDataList getSignedDataList() {
+        return signedDataList;
+    }
 }

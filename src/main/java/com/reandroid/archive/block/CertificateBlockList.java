@@ -16,13 +16,13 @@
 package com.reandroid.archive.block;
 
 
-public class CertificateBlockList extends LengthPrefixedList<CertificateBlock>{
+public class CertificateBlockList extends LengthPrefixedList<CertificateBlockV2>{
     public CertificateBlockList() {
         super(false);
     }
     @Override
-    public CertificateBlock newInstance() {
-        return new CertificateBlock();
+    public CertificateBlockV2 newInstance() {
+        return new CertificateBlockV2();
     }
 
 }

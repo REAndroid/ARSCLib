@@ -15,11 +15,10 @@
  */
 package com.reandroid.archive.block.v2;
 
-import com.reandroid.archive.block.BottomBlock;
-import com.reandroid.archive.block.CertificateBlock;
-import com.reandroid.archive.block.CertificateBlockList;
-import com.reandroid.archive.block.LengthPrefixedBlock;
+import com.reandroid.archive.block.*;
+import com.reandroid.utils.collection.InstanceIterator;
 
+import java.util.Iterator;
 import java.util.List;
 
 public class V2Signer extends LengthPrefixedBlock {
@@ -35,14 +34,14 @@ public class V2Signer extends LengthPrefixedBlock {
         addChild(this.certificateBlockList);
         addChild(this.unknown);
     }
-    public List<CertificateBlock> getCertificateBlockList(){
-        return certificateBlockList.getElements();
+    public Iterator<CertificateBlock> getCertificates(){
+        return InstanceIterator.of(certificateBlockList.iterator(), CertificateBlock.class);
     }
-    public void addCertificateBlock(CertificateBlock certificateBlock){
-        certificateBlockList.add(certificateBlock);
+    public void addCertificateBlock(CertificateBlockV2 certificateBlockV2){
+        certificateBlockList.add(certificateBlockV2);
     }
-    public void removeCertificateBlock(CertificateBlock certificateBlock){
-        certificateBlockList.remove(certificateBlock);
+    public void removeCertificateBlock(CertificateBlockV2 certificateBlockV2){
+        certificateBlockList.remove(certificateBlockV2);
     }
     @Override
     public String toString(){

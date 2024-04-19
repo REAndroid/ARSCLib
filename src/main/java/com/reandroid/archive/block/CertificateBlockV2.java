@@ -15,29 +15,17 @@
  */
 package com.reandroid.archive.block;
 
-import com.reandroid.arsc.container.ExpandableBlockContainer;
+public class CertificateBlockV2 extends LengthPrefixedBytes implements CertificateBlock{
 
-import java.util.Iterator;
-
-public abstract class SignatureScheme extends ExpandableBlockContainer {
-
-    private final SignatureId signatureId;
-
-    public SignatureScheme(int childesCount, SignatureId signatureId){
-        super(childesCount);
-        this.signatureId = signatureId;
-    }
-
-    public abstract Iterator<CertificateBlock> getCertificates();
-    public SignatureId getSignatureId() {
-        return signatureId;
-    }
-
-    public SignatureInfo getSignatureInfo(){
-        return getParent(SignatureInfo.class);
+    public CertificateBlockV2() {
+        super(false);
     }
     @Override
-    public String toString(){
-        return "id=" + getSignatureId();
+    public byte[] getCertificateBytes() {
+        return getByteArray().toArray().clone();
+    }
+    @Override
+    public void setCertificate(byte[] bytes){
+        getByteArray().set(bytes);
     }
 }

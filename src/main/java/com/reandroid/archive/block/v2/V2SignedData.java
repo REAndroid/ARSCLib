@@ -16,14 +16,16 @@
 package com.reandroid.archive.block.v2;
 
 import com.reandroid.archive.block.BottomBlock;
+import com.reandroid.archive.block.CertificateBlock;
 import com.reandroid.archive.block.LengthPrefixedBlock;
-import com.reandroid.arsc.io.BlockReader;
 
-import java.io.IOException;
+import java.util.Iterator;
 
 public class V2SignedData extends LengthPrefixedBlock {
+
     private final V2Signer signer;
     private final BottomBlock unknown;
+
     public V2SignedData() {
         super(2, false);
         this.signer = new V2Signer();
@@ -31,8 +33,11 @@ public class V2SignedData extends LengthPrefixedBlock {
         addChild(this.signer);
         addChild(this.unknown);
     }
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
-    }
 
+    public Iterator<CertificateBlock> getCertificates(){
+        return getSigner().getCertificates();
+    }
+    public V2Signer getSigner() {
+        return signer;
+    }
 }

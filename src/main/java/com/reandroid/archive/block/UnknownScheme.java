@@ -17,8 +17,10 @@ package com.reandroid.archive.block;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 // General purpose block to consume the specified bytes of BlockReader
 // TODO: No class should override this, implement all like SchemeV2
@@ -35,5 +37,10 @@ public class UnknownScheme extends SignatureScheme{
         int size = (int) signatureInfo.getDataSize() - 4;
         byteArray.setSize(size);
         super.onReadBytes(reader);
+    }
+    @Override
+    public Iterator<CertificateBlock> getCertificates() {
+        //TODO: implement to all schemes
+        return EmptyIterator.of();
     }
 }

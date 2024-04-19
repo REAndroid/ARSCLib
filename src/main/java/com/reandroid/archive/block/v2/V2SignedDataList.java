@@ -15,13 +15,26 @@
  */
 package com.reandroid.archive.block.v2;
 
+import com.reandroid.archive.block.CertificateBlock;
 import com.reandroid.archive.block.LengthPrefixedList;
+import com.reandroid.utils.collection.IterableIterator;
+
+import java.util.Iterator;
 
 public class V2SignedDataList extends LengthPrefixedList<V2SignedData> {
+
     public V2SignedDataList() {
         super(false);
     }
 
+    public Iterator<CertificateBlock> getCertificates() {
+        return new IterableIterator<V2SignedData, CertificateBlock>(iterator()) {
+            @Override
+            public Iterator<CertificateBlock> iterator(V2SignedData element) {
+                return element.getCertificates();
+            }
+        };
+    }
     @Override
     public V2SignedData newInstance() {
         return new V2SignedData();

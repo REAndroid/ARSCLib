@@ -26,14 +26,18 @@ import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Iterator;
 
 public class SignatureInfo extends LengthPrefixedBlock implements BlockLoad {
+
     private final IntegerItem idItem;
     private final SingleBlockContainer<SignatureScheme> schemeContainer;
+
     public SignatureInfo() {
         super(2, true);
         this.idItem = new IntegerItem();
@@ -42,6 +46,15 @@ public class SignatureInfo extends LengthPrefixedBlock implements BlockLoad {
         addChild(this.schemeContainer);
         this.idItem.setBlockLoad(this);
     }
+
+    public Iterator<CertificateBlock> getCertificates() {
+        SignatureScheme scheme = getSignatureScheme();
+        if(scheme != null){
+            return scheme.getCertificates();
+        }
+        return EmptyIterator.of();
+    }
+
     public int getIdValue(){
         return idItem.get();
     }

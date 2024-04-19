@@ -15,24 +15,35 @@
  */
 package com.reandroid.archive.block;
 
-
 import com.reandroid.archive.block.pad.SchemePadding;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.IterableIterator;
 import com.reandroid.utils.io.FileUtil;
 
 import java.io.*;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 public class ApkSignatureBlock extends LengthPrefixedList<SignatureInfo>
         implements Comparator<SignatureInfo> {
+
     public ApkSignatureBlock(SignatureFooter signatureFooter){
         super(true);
         setBottomBlock(signatureFooter);
     }
     public ApkSignatureBlock(){
         this(new SignatureFooter());
+    }
+
+    public Iterator<CertificateBlock> getCertificates() {
+        return new IterableIterator<SignatureInfo, CertificateBlock>(this.iterator()) {
+            @Override
+            public Iterator<CertificateBlock> iterator(SignatureInfo element) {
+                return element.getCertificates();
+            }
+        };
     }
     public void sortSignatures(){
         sort(this);
