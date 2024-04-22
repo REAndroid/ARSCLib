@@ -598,7 +598,7 @@ public class DexUtils {
         String[] split = StringsUtil.split(className, '$', true);
         split = StringsUtil.removeEmpty(split);
         i = split.length;
-        if(i == 0){
+        if(i < 2){
             return className;
         }
         return split[i - 1];
@@ -612,8 +612,9 @@ public class DexUtils {
         if (i < 0){
             i = 0;
         }
+        i++;
         int j = className.lastIndexOf('$');
-        if(j < i){
+        if(j <= i){
             return className;
         }
         className = className.substring(0, j);
