@@ -23,6 +23,7 @@ import com.reandroid.archive.writer.ApkFileWriter;
 import com.reandroid.archive.writer.ApkStreamWriter;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.array.PackageArray;
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
@@ -900,23 +901,58 @@ public class ApkModule implements ApkFile, Closeable {
         logMessage("Looks like framework apk, skip loading framework");
         mDisableLoadFramework = true;
     }
+
+    @Override
+    public ResXmlDocument getResXmlDocument(String path) {
+        InputSource inputSource = getInputSource(path);
+        if(inputSource != null){
+            try {
+                return loadResXmlDocument(inputSource);
+            } catch (IOException ignored) {
+            }
+        }
+        return null;
+    }
     @Override
     public ResXmlDocument loadResXmlDocument(String path) throws IOException{
         InputSource inputSource = getInputSource(path);
-        if(inputSource==null){
+        if(inputSource == null){
             throw new FileNotFoundException("No such file in apk: " + path);
         }
         return loadResXmlDocument(inputSource);
     }
     public ResXmlDocument loadResXmlDocument(InputSource inputSource) throws IOException{
-        ResXmlDocument resXmlDocument = new ResXmlDocument();
+        ResXmlDocument resXmlDocument = null;
+        if(inputSource instanceof BlockInputSource){
+            Block block = ((BlockInputSource<?>) inputSource).getBlock();
+            if(block instanceof ResXmlDocument){
+                resXmlDocument = (ResXmlDocument) block;
+            }
+        }
+        if(resXmlDocument == null){
+            resXmlDocument = new ResXmlDocument();
+            resXmlDocument.readBytes(inputSource.openStream());
+        }
         resXmlDocument.setApkFile(this);
-        resXmlDocument.readBytes(inputSource.openStream());
-        TableBlock tableBlock = getTableBlock();
-        if(tableBlock != null){
-            resXmlDocument.setPackageBlock(tableBlock.pickOne());
+        if(resXmlDocument.getPackageBlock() == null){
+            resXmlDocument.setPackageBlock(findPackageForPath(inputSource.getAlias()));
         }
         return resXmlDocument;
+    }
+    private PackageBlock findPackageForPath(String path) {
+        TableBlock tableBlock = getTableBlock();
+        if(tableBlock == null){
+            return null;
+        }
+        if(tableBlock.size() == 1){
+            return tableBlock.get(0);
+        }
+        PackageBlock packageBlock = CollectionUtil.getFirst(
+                tableBlock.getStringPool().getUsers(PackageBlock.class, path));
+        if(packageBlock == null){
+            packageBlock = tableBlock.pickOne();
+        }
+        return packageBlock;
     }
     public ApkType getApkType(){
         if(mApkType!=null){
@@ -983,14 +1019,7 @@ public class ApkModule implements ApkFile, Closeable {
         tableBlock.setApkFile(this);
         return tableBlock;
     }
-    public void addAll(Collection<? extends InputSource> inputSources){
-        if(inputSources == null){
-            return;
-        }
-        for(InputSource inputSource : inputSources){
-            add(inputSource);
-        }
-    }
+    @Override
     public void add(InputSource inputSource){
         if(inputSource == null){
             return;
@@ -1011,6 +1040,13 @@ public class ApkModule implements ApkFile, Closeable {
         }
         addInputSource(inputSource);
     }
+
+    @Override
+    public boolean containsFile(String path) {
+        return getZipEntryMap().contains(path);
+    }
+
+    @Override
     public InputSource getInputSource(String path){
         return getZipEntryMap().getInputSource(path);
     }
