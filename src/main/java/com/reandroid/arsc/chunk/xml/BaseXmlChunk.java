@@ -23,9 +23,6 @@ import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 
-import java.util.HashSet;
-import java.util.Set;
-
 class BaseXmlChunk extends Chunk<XmlNodeHeader> {
     private final IntegerItem mNamespaceReference;
     private final IntegerItem mStringReference;

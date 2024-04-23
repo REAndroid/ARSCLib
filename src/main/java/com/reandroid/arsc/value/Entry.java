@@ -25,8 +25,10 @@ import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
@@ -554,22 +556,33 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         entry.fromJson(json);
     }
 
-    public void merge(Entry entry){
-        if(!shouldMerge(entry)){
-            return;
-        }
-        TableEntry<?, ?> tableEntry = entry.getTableEntry();
-        TableEntry<?, ?> existEntry = ensureTableEntry(tableEntry instanceof ResTableMapEntry);
-        existEntry.merge(tableEntry);
+    public ResourceEntry resolve(int resourceId) {
+        PackageBlock packageBlock = getPackageBlock();
+        return packageBlock.getTableBlock()
+                .getResource(packageBlock, resourceId);
     }
-    private boolean shouldMerge(Entry coming){
+    public void merge(Entry entry){
+        if(canMerge(entry)){
+            TableEntry<?, ?> tableEntry = entry.getTableEntry();
+            TableEntry<?, ?> existEntry = ensureTableEntry(tableEntry instanceof ResTableMapEntry);
+            existEntry.merge(tableEntry);
+        }
+    }
+    public void mergeWithName(ResourceMergeOption mergeOption, Entry entry) {
+        if(canMerge(entry)) {
+            TableEntry<?, ?> tableEntry = entry.getTableEntry();
+            TableEntry<?, ?> existEntry = ensureTableEntry(tableEntry instanceof ResTableMapEntry);
+            existEntry.mergeWithName(mergeOption, tableEntry);
+        }
+    }
+    private boolean canMerge(Entry coming){
         if(coming == null || coming == this || coming.isNull()){
             return false;
         }
         if(this.isNull()){
             return true;
         }
-        return getTableEntry().shouldMerge(coming.getTableEntry());
+        return getTableEntry().canMerge(coming.getTableEntry());
     }
     @Override
     public String toString(){

@@ -33,6 +33,7 @@ import com.reandroid.json.JSONConvert;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.*;
@@ -276,6 +277,18 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
     }
     public final T getLast(){
         return mArrayStrings.getLast();
+    }
+    public<E extends Block> Iterator<E> getUsers(Class<E> parentClass, String value) {
+        StringGroup<T> group = get(value);
+        if(group != null) {
+            return new IterableIterator<T, E>(group.iterator()) {
+                @Override
+                public Iterator<E> iterator(T element) {
+                    return element.getUsers(parentClass);
+                }
+            };
+        }
+        return EmptyIterator.of();
     }
     public final StringGroup<T> get(String str){
         return mUniqueMap.get(str);

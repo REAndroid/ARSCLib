@@ -16,6 +16,7 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.coder.XmlSanitizer;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLText;
 import org.xmlpull.v1.XmlPullParser;
@@ -171,6 +172,9 @@ public class ResXmlTextNode extends ResXmlNode {
         append(text);
     }
 
+    public void mergeWithName(ResourceMergeOption mergeOption, ResXmlTextNode textNode){
+        setText(textNode.getText());
+    }
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject=new JSONObject();

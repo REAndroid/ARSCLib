@@ -15,6 +15,9 @@
  */
 package com.reandroid.arsc.value;
 
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONObject;
 
@@ -22,6 +25,13 @@ public class EntryHeaderMap extends ValueHeader {
     public EntryHeaderMap(){
         super(HEADER_SIZE_COMPLEX);
         setComplex(true);
+    }
+    public ResourceEntry resolveParentId() {
+        Entry parentEntry = getParentInstance(Entry.class);
+        if(parentEntry != null){
+            return parentEntry.resolve(getParentId());
+        }
+        return null;
     }
     public int getParentId(){
         return getInteger(getBytesInternal(), OFFSET_PARENT_ID);
@@ -46,6 +56,35 @@ public class EntryHeaderMap extends ValueHeader {
         setParentId(entryHeaderMap.getParentId());
         setValuesCount(entryHeaderMap.getValuesCount());
     }
+
+    @Override
+    public void mergeWithName(ResourceMergeOption mergeOption, ValueHeader valueHeader) {
+        if(valueHeader == this || !(valueHeader instanceof EntryHeaderMap)){
+            return;
+        }
+        super.merge(valueHeader);
+        EntryHeaderMap entryHeaderMap = (EntryHeaderMap) valueHeader;
+        setValuesCount(entryHeaderMap.getValuesCount());
+
+        ResourceEntry parentId = entryHeaderMap.resolveParentId();
+        if(parentId == null){
+            setParentId(entryHeaderMap.getParentId());
+        }else {
+            int id = 0;
+            if(parentId.isContext(entryHeaderMap)){
+                PackageBlock packageBlock = getParentInstance(PackageBlock.class);
+                assert packageBlock != null;
+                parentId = packageBlock.mergeWithName(mergeOption, parentId);
+                if(parentId != null){
+                    id = parentId.getResourceId();
+                }
+            }else {
+                id = parentId.getResourceId();
+            }
+            setParentId(id);
+        }
+    }
+
     @Override
     public void toJson(JSONObject jsonObject) {
         super.toJson(jsonObject);

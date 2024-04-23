@@ -15,6 +15,7 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
+import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.chunk.*;
 import com.reandroid.arsc.container.SingleBlockContainer;
@@ -23,6 +24,7 @@ import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.pool.StringPool;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.common.BytesOutputStream;
 import com.reandroid.json.JSONArray;
@@ -436,6 +438,11 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         outputStream.close();
         return length;
     }
+    public void mergeWithName(ResourceMergeOption mergeOption, ResXmlDocument document) {
+        ResXmlElement documentElement = document.getDocumentElement();
+        ResXmlElement element = getOrCreateElement(documentElement.getName());
+        element.mergeWithName(mergeOption, documentElement);
+    }
     public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
         if(mDestroyed){
             throw new IOException("Destroyed document");
@@ -613,9 +620,19 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
             return false;
         }
     }
-    public static boolean isResXmlBlock(InputStream inputStream){
+    public static boolean isResXmlBlock(InputSource inputSource) {
+        boolean result = false;
         try {
-            HeaderBlock headerBlock=BlockReader.readHeaderBlock(inputStream);
+            InputStream inputStream = inputSource.openStream();
+            result = isResXmlBlock(inputStream);
+            inputStream.close();
+        } catch (IOException ignored) {
+        }
+        return result;
+    }
+    public static boolean isResXmlBlock(InputStream inputStream) {
+        try {
+            HeaderBlock headerBlock = BlockReader.readHeaderBlock(inputStream);
             return isResXmlBlock(headerBlock);
         } catch (IOException ignored) {
             return false;

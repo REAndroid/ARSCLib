@@ -19,6 +19,7 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.ParentChunk;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.graphics.AndroidColor;
 
 public interface Value {
@@ -40,5 +41,17 @@ public interface Value {
     }
     default void setValue(AndroidColor color) {
         setValue(ValueCoder.encode(color.toHexString()));
+    }
+    default ResourceEntry getValueAsReference() {
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null){
+            return null;
+        }
+        int data = getData();
+        ResourceEntry resourceEntry = packageBlock.getResource(data);
+        if(resourceEntry == null) {
+            resourceEntry = packageBlock.getTableBlock().getResource(data);
+        }
+        return resourceEntry;
     }
 }

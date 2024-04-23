@@ -16,6 +16,7 @@
 package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.pool.TableStringPool;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.collection.SingleIterator;
 import java.util.Iterator;
@@ -39,7 +40,7 @@ public class ResTableEntry extends TableEntry<EntryHeader, ResValue> {
         getValue().onRemoved();
     }
     @Override
-    boolean shouldMerge(TableEntry<?, ?> tableEntry){
+    boolean canMerge(TableEntry<?, ?> tableEntry){
         if(tableEntry == this || !(tableEntry instanceof ResTableEntry)){
             return false;
         }
@@ -59,6 +60,15 @@ public class ResTableEntry extends TableEntry<EntryHeader, ResValue> {
         getHeader().merge(tableEntry.getHeader());
         getValue().merge((ValueItem) tableEntry.getValue());
     }
+    @Override
+    public void mergeWithName(ResourceMergeOption mergeOption, TableEntry<?, ?> tableEntry) {
+        if(tableEntry == this || !(tableEntry instanceof ResTableEntry)){
+            return;
+        }
+        getHeader().mergeWithName(mergeOption, tableEntry.getHeader());
+        getValue().mergeWithName(mergeOption, (ValueItem) tableEntry.getValue());
+    }
+
     @Override
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();

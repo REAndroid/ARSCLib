@@ -36,6 +36,7 @@ import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.arsc.value.*;
 import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONArray;
@@ -193,6 +194,17 @@ public class PackageBlock extends Chunk<PackageHeader>
             @Override
             public Iterator<ResourceEntry> iterator(SpecTypePair element) {
                 return element.getResources();
+            }
+        };
+    }
+    public Iterator<ResourceEntry> iterator(String type){
+        return new IterableIterator<SpecTypePair, ResourceEntry>(getSpecTypePairs()) {
+            @Override
+            public Iterator<ResourceEntry> iterator(SpecTypePair element) {
+                if(type.equals(element.getTypeName())){
+                    return element.getResources();
+                }
+                return EmptyIterator.of();
             }
         };
     }
@@ -727,6 +739,27 @@ public class PackageBlock extends Chunk<PackageHeader>
         getSpecTypePairArray().merge(packageBlock.getSpecTypePairArray());
         getOverlayableList().merge(packageBlock.getOverlayableList());
         getStagedAliasList().merge(packageBlock.getStagedAliasList());
+    }
+
+    public ResourceEntry mergeWithName(ResourceMergeOption mergeOption, ResourceEntry resourceEntry) {
+        int id = 0;
+        Iterator<Entry> iterator = resourceEntry.iterator(true);
+        while (iterator.hasNext()) {
+            Entry entry = mergeWithName(mergeOption, iterator.next());
+            if(id == 0){
+                id = entry.getResourceId();
+            }
+        }
+        ResourceEntry result = getResource(id);
+        if(result == null){
+            result = getTableBlock().getResource(id);
+        }
+        return result;
+    }
+    private Entry mergeWithName(ResourceMergeOption mergeOption, Entry entry) {
+        Entry result = getOrCreate(entry.getResConfig(), entry.getTypeName(), entry.getName());
+        result.mergeWithName(mergeOption, entry);
+        return result;
     }
     private void mergeSpecStringPool(PackageBlock coming){
         this.getSpecStringPool().addStrings(

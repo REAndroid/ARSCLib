@@ -22,6 +22,8 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.pool.StringPool;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
+import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.common.Namespace;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.AttributeValue;
@@ -496,26 +498,34 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         }
         return null;
     }
+
+    @Override
+    public void mergeWithName(ResourceMergeOption mergeOption, ValueItem valueItem) {
+        super.mergeWithName(mergeOption, valueItem);
+        ResXmlAttribute attribute = (ResXmlAttribute) valueItem;
+        setNamespace(attribute.getNamespace());
+    }
+
     @Override
     public int compareTo(ResXmlAttribute other) {
-        int id1= getNameId();
-        int id2=other.getNameId();
-        if(id1==0 && id2!=0){
+        int id1 = getNameId();
+        int id2 = other.getNameId();
+        if(id1 == 0 && id2 != 0){
             return 1;
         }
-        if(id2==0 && id1!=0){
+        if(id2 == 0 && id1 != 0){
             return -1;
         }
-        if(id1!=0){
+        if(id1 != 0){
             return Integer.compare(id1, id2);
         }
-        String name1=getName();
-        if(name1==null){
-            name1="";
+        String name1 = getName();
+        if(name1 == null){
+            name1 = "";
         }
-        String name2=other.getName();
-        if(name2==null){
-            name2="";
+        String name2 = other.getName();
+        if(name2 == null){
+            name2 = "";
         }
         return name1.compareTo(name2);
     }

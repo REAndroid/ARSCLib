@@ -15,17 +15,36 @@
   */
 package com.reandroid.arsc;
 
+import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 
 import java.io.IOException;
+import java.util.Collection;
 
 public interface ApkFile {
     AndroidManifestBlock getAndroidManifest();
     TableBlock getTableBlock();
     TableBlock getLoadedTableBlock();
+
+    void add(InputSource inputSource);
+    boolean containsFile(String path);
+    InputSource getInputSource(String path);
+    ResXmlDocument getResXmlDocument(String path);
     ResXmlDocument loadResXmlDocument(String path) throws IOException;
+    default void mergeWithName(ResourceMergeOption mergeOption, ApkFile apkFile, String path){
+        mergeOption.mergeFileWithName(apkFile, this, path);
+    }
+    default void addAll(Collection<? extends InputSource> inputSources){
+        if(inputSources == null){
+            return;
+        }
+        for(InputSource inputSource : inputSources){
+            add(inputSource);
+        }
+    }
 
     enum ApkType {
         BASE,

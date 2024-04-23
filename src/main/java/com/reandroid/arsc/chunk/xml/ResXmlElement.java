@@ -25,6 +25,7 @@ import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.pool.ResXmlStringPool;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
@@ -1274,6 +1275,30 @@ public class ResXmlElement extends ResXmlNode implements
             }
             throw new IOException(builder.toString());
         }
+    }
+
+    public void mergeWithName(ResourceMergeOption mergeOption, ResXmlElement element) {
+
+        setName(element.getName(false));
+        setNamespace(element.getNamespace());
+        Iterator<ResXmlAttribute> attributes = element.getAttributes();
+
+        while (attributes.hasNext()){
+            ResXmlAttribute attribute = attributes.next();
+            ResXmlAttribute resXmlAttribute = newAttribute();
+            resXmlAttribute.mergeWithName(mergeOption, attribute);
+        }
+        for (ResXmlNode node : element) {
+            if (node instanceof ResXmlElement) {
+                createChildElement().mergeWithName(mergeOption, (ResXmlElement) node);
+            } else if (node instanceof ResXmlTextNode) {
+                createResXmlTextNode().mergeWithName(mergeOption, (ResXmlTextNode) node);
+            }
+        }
+        this.getStartElement().setComment(element.getStartComment());
+        this.getEndElement().setComment(element.getEndComment());
+        this.getStartElement().setLineNumber(element.getStartElement().getLineNumber());
+        this.getEndElement().setLineNumber(element.getEndElement().getLineNumber());
     }
     @Override
     public void serialize(XmlSerializer serializer) throws IOException {

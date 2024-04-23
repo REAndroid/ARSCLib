@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.TableStringPool;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
@@ -100,10 +101,11 @@ public abstract class TableEntry<HEADER extends ValueHeader, VALUE extends Block
     void onHeaderLoaded(VALUE value, HEADER header){
     }
     abstract void onRemoved();
-    abstract boolean shouldMerge(TableEntry<?, ?> tableEntry);
+    abstract boolean canMerge(TableEntry<?, ?> tableEntry);
     abstract void linkTableStringsInternal(TableStringPool tableStringPool);
 
     public abstract void merge(TableEntry<?, ?> tableEntry);
+    public abstract void mergeWithName(ResourceMergeOption mergeOption, TableEntry<?, ?> tableEntry);
     @Override
     public abstract JSONObject toJson();
     @Override

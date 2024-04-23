@@ -21,6 +21,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.StringPool;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
@@ -251,6 +252,9 @@ public class ValueHeader extends BlockItem implements JSONConvert<JSONObject> {
         setWeak(valueHeader.isWeak());
         setPublic(valueHeader.isPublic());
         setName(valueHeader.getName());
+    }
+    public void mergeWithName(ResourceMergeOption mergeOption, ValueHeader valueHeader){
+        this.merge(valueHeader);
     }
     public void toJson(JSONObject jsonObject) {
         jsonObject.put(NAME_entry_name, getName());

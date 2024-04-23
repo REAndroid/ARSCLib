@@ -15,8 +15,10 @@
  */
 package com.reandroid.arsc.model;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
@@ -45,6 +47,39 @@ public class ResourceEntry implements Iterable<Entry>{
         this.packageBlock = packageBlock;
     }
 
+    public ResourceEntry previous(){
+        int id = getResourceId();
+        int entryId = id & 0xffff;
+        if(entryId == 0){
+            return null;
+        }
+        entryId = entryId - 1;
+        id = id & 0xffff0000;
+        id = id | entryId;
+        return new ResourceEntry(getPackageBlock(), id);
+    }
+    public ResourceEntry next(){
+        int id = getResourceId();
+        int entryId = id & 0xffff;
+        if(entryId == 0xffff){
+            return null;
+        }
+        PackageBlock packageBlock = getPackageBlock();
+        SpecTypePair specTypePair = packageBlock.getSpecTypePair((id >> 16) & 0xff);
+        if(specTypePair == null){
+            return null;
+        }
+        entryId = entryId + 1;
+        return specTypePair.getResource(entryId);
+    }
+    public ResourceEntry getLast(){
+        PackageBlock packageBlock = getPackageBlock();
+        SpecTypePair specTypePair = packageBlock.getSpecTypePair((getResourceId() >> 16) & 0xff);
+        if(specTypePair != null){
+            return specTypePair.getResource(specTypePair.getHighestEntryId());
+        }
+        return null;
+    }
     public ResourceEntry resolveReference(){
         Set<Integer> processedIds = new HashSet<>();
         processedIds.add(0);
@@ -161,6 +196,23 @@ public class ResourceEntry implements Iterable<Entry>{
     }
     public PackageBlock getPackageBlock(){
         return packageBlock;
+    }
+    public boolean isContext(Block block) {
+        if(block == null){
+            return false;
+        }
+        return isContext(block.getParentInstance(PackageBlock.class));
+    }
+    public boolean isContext(PackageBlock packageBlock) {
+        if(packageBlock == null){
+            return false;
+        }
+        PackageBlock context = getPackageBlock();
+        if(context == null){
+            return false;
+        }
+        return context == packageBlock ||
+                context.getTableBlock() == packageBlock.getTableBlock();
     }
     public int getResourceId() {
         return resourceId;

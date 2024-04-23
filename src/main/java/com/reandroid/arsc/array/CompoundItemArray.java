@@ -16,6 +16,7 @@
 package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.base.BlockArray;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.arsc.value.*;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
@@ -140,7 +141,22 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         for(int i=0;i<count;i++){
             ResValueMap coming = mapArray.get(i);
             ResValueMap exist = get(i);
+            assert exist != null;
             exist.merge(coming);
+        }
+    }
+    public void mergeWithName(ResourceMergeOption mergeOption, CompoundItemArray<?> mapArray){
+        if(mapArray == null || mapArray == this){
+            return;
+        }
+        clear();
+        int count = mapArray.size();
+        ensureSize(count);
+        for(int i=0;i<count;i++){
+            ResValueMap coming = mapArray.get(i);
+            ResValueMap exist = get(i);
+            assert exist != null;
+            exist.mergeWithName(mergeOption, coming);
         }
     }
     @Override

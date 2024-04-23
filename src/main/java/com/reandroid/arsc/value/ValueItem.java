@@ -15,6 +15,7 @@
  */
 package com.reandroid.arsc.value;
 
+import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.MainChunk;
 import com.reandroid.arsc.chunk.PackageBlock;
@@ -29,6 +30,7 @@ import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.arsc.pool.TableStringPool;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
@@ -283,6 +285,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         setData(stringItem.getIndex());
         setValueType(ValueType.STRING);
     }
+    @Override
     public void setValueAsString(String str){
         if(getValueType() == ValueType.STRING
                 && Objects.equals(str, getValueAsString())){
@@ -375,6 +378,51 @@ public abstract class ValueItem extends BlockItem implements Value,
         ValueType coming = valueItem.getValueType();
         if(coming == ValueType.STRING){
             setValueAsString(valueItem.getValueAsString());
+        }else {
+            setTypeAndData(coming, valueItem.getData());
+        }
+    }
+    public void mergeWithName(ResourceMergeOption mergeOption, ValueItem valueItem){
+        if(valueItem == null || valueItem == this){
+            return;
+        }
+        int size = valueItem.getSize();
+        if(size != 0){
+            setSize(valueItem.getSize());
+        }
+        ValueType coming = valueItem.getValueType();
+        if(coming == ValueType.STRING){
+            StyleDocument styleDocument = valueItem.getValueAsStyleDocument();
+            if(styleDocument != null){
+                setValueAsString(styleDocument);
+            }else {
+                ApkFile apk1 = getPackageBlock().getTableBlock().getApkFile();
+                ApkFile apk2 = valueItem.getPackageBlock().getTableBlock().getApkFile();
+                String value = valueItem.getValueAsString();
+                setValueAsString(value);
+                if(apk1 != null && apk2 != null) {
+                    apk1.mergeWithName(mergeOption, apk2, value);
+                }
+            }
+        }else if(coming.isReference()){
+            int id = 0;
+            ResourceEntry comingResourceEntry = valueItem.getValueAsReference();
+            if(comingResourceEntry == null){
+                id = valueItem.getData();
+            }else if(comingResourceEntry.isContext(valueItem.getPackageBlock())){
+                ResourceEntry mergedReference;
+                if(comingResourceEntry.isDeclared()) {
+                    mergedReference = getPackageBlock().mergeWithName(mergeOption, comingResourceEntry);
+                }else {
+                    mergedReference = mergeOption.resolveUndeclared(getPackageBlock(), comingResourceEntry);
+                }
+                if(mergedReference != null){
+                    id = mergedReference.getResourceId();
+                }
+            }else {
+                id = valueItem.getData();
+            }
+            setTypeAndData(coming, id);
         }else {
             setTypeAndData(coming, valueItem.getData());
         }

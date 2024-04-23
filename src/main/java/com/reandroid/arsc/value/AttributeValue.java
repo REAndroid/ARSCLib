@@ -19,6 +19,7 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.xml.XMLUtil;
 
 public abstract class AttributeValue extends ValueItem{
@@ -129,5 +130,36 @@ public abstract class AttributeValue extends ValueItem{
     String decodeDataAsAttrFormats(){
         return null;
     }
+    @Override
+    public void mergeWithName(ResourceMergeOption mergeOption, ValueItem valueItem){
+        if(valueItem == null || valueItem == this || getClass() != valueItem.getClass()){
+            return;
+        }
+        AttributeValue attributeValue = (AttributeValue) valueItem;
+        super.mergeWithName(mergeOption, attributeValue);
 
+        String name = attributeValue.decodeName(false);
+        ResourceEntry nameId = attributeValue.resolveName();
+        if(nameId == null){
+            setName(name, attributeValue.getNameId());
+        }else {
+            int id = attributeValue.getNameId();
+            if(nameId.isContext(attributeValue.getPackageBlock())){
+                ResourceEntry mergedName;
+                PackageBlock packageBlock = getPackageBlock();
+                if(nameId.isDeclared()){
+                    mergedName = packageBlock.mergeWithName(mergeOption, nameId);
+                }else {
+                    mergedName = mergeOption.resolveUndeclared(packageBlock, nameId);
+                }
+                if(mergedName != null){
+                    id = mergedName.getResourceId();
+                    name = mergedName.getName();
+                }
+            }else {
+                id = nameId.getResourceId();
+            }
+            setName(name, id);
+        }
+    }
 }

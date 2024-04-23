@@ -17,6 +17,7 @@ package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.item.TypeString;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -116,7 +117,7 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
         return allValueType;
     }
     @Override
-    boolean shouldMerge(TableEntry<?, ?> tableEntry){
+    boolean canMerge(TableEntry<?, ?> tableEntry){
         if(tableEntry == this || !(tableEntry instanceof ResTableMapEntry)){
             return false;
         }
@@ -135,6 +136,16 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
         ResTableMapEntry coming = (ResTableMapEntry) tableEntry;
         getHeader().merge(coming.getHeader());
         getValue().merge(coming.getValue());
+        refresh();
+    }
+    @Override
+    public void mergeWithName(ResourceMergeOption mergeOption, TableEntry<?, ?> tableEntry){
+        if(tableEntry==null || tableEntry==this){
+            return;
+        }
+        ResTableMapEntry coming = (ResTableMapEntry) tableEntry;
+        getHeader().mergeWithName(mergeOption, coming.getHeader());
+        getValue().mergeWithName(mergeOption, coming.getValue());
         refresh();
     }
 }
