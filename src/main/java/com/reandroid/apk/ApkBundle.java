@@ -22,12 +22,13 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.builder.StringPoolMerger;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
-public class ApkBundle {
+public class ApkBundle implements Closeable {
     private final Map<String, ApkModule> mModulesMap;
     private APKLogger apkLogger;
     public ApkBundle(){
@@ -195,6 +196,13 @@ public class ApkBundle {
             }
         }
         return false;
+    }
+    @Override
+    public void close() throws IOException {
+        for(ApkModule module : mModulesMap.values()) {
+            module.close();
+        }
+        mModulesMap.clear();
     }
     public void setAPKLogger(APKLogger logger) {
         this.apkLogger = logger;
