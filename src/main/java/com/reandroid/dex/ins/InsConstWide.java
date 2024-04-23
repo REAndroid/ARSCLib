@@ -16,7 +16,6 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
@@ -26,14 +25,6 @@ public class InsConstWide extends Ins51l implements ConstNumberLong{
         super(Opcode.CONST_WIDE);
     }
 
-    @Override
-    public int get() {
-        return (int) getLong();
-    }
-    @Override
-    public void set(int value) {
-        set((long) value);
-    }
     @Override
     public void set(long value) {
         setLong(value);

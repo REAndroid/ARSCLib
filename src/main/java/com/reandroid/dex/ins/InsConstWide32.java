@@ -22,14 +22,6 @@ public class InsConstWide32 extends Ins31i implements ConstNumberLong{
     }
 
     @Override
-    public int get() {
-        return getData();
-    }
-    @Override
-    public void set(int value) {
-        setData(value);
-    }
-    @Override
     public void set(long value) {
         setLong(value);
     }

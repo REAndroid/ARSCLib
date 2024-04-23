@@ -101,6 +101,9 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
         numberArray.putLong(values);
         refreshAlignment();
     }
+    public Iterator<IntegerReference> getReferences(){
+        return getNumberArray().getReferences();
+    }
     public IntegerReference getReference(int i){
         return getNumberArray().getReference(i);
     }

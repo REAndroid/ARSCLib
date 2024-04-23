@@ -24,14 +24,6 @@ public class InsConstWide16 extends Ins21s implements ConstNumberLong{
     }
 
     @Override
-    public int get() {
-        return getData();
-    }
-    @Override
-    public void set(int value) {
-        setData(value);
-    }
-    @Override
     public void set(long value) {
         InsConstWide insConstWide = mReplaced;
         if(insConstWide != null){

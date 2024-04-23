@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
@@ -96,5 +97,8 @@ public interface DexClassRepository {
                 return dexClass.getDeclaredFields();
             }
         };
+    }
+    default Iterator<IntegerReference> visitIntegers(){
+        return new DexIntegerVisitor(this);
     }
 }

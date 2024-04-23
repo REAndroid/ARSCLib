@@ -22,6 +22,7 @@ import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 import java.util.AbstractList;
+import java.util.Iterator;
 import java.util.List;
 
 public class NumberArray extends DexBlockItem {
@@ -36,7 +37,26 @@ public class NumberArray extends DexBlockItem {
         this.widthReference = widthReference;
         this.itemCount = itemCount;
     }
+
+    public Iterator<IntegerReference> getReferences(){
+        return new Iterator<IntegerReference>() {
+            private int mIndex;
+            @Override
+            public boolean hasNext() {
+                return mIndex < NumberArray.this.size();
+            }
+            @Override
+            public IntegerReference next() {
+                IntegerReference reference = NumberArray.this.getReference(mIndex);
+                mIndex ++;
+                return reference;
+            }
+        };
+    }
     public IntegerReference getReference(int index) {
+        if(index >= size()){
+            return null;
+        }
         return new Data(this, index);
     }
     public short[] getShortArray(){

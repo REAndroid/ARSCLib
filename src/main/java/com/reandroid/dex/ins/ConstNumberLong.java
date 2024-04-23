@@ -18,4 +18,17 @@ package com.reandroid.dex.ins;
 public interface ConstNumberLong extends ConstNumber{
     long getLong();
     void set(long value);
+    @Override
+    default int get() {
+        long l = getLong();
+        int i = (int) l;
+        if((i & 0xffffffffL) != l){
+            return 0;
+        }
+        return i;
+    }
+    @Override
+    default void set(int value) {
+        set((long) value);
+    }
 }
