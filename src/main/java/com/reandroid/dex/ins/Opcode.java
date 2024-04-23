@@ -977,6 +977,9 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
     }
     public boolean isMoveResultValue(){
         String name = getName();
+        if(name.length() < 6){
+            return false;
+        }
         return name.charAt(0) == 'm' &&
                 name.charAt(5) == 'r';
     }
