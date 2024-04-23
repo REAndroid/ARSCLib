@@ -94,7 +94,13 @@ public class StyleSpanEventSet {
         while (iterator.hasNext()){
             Span span = (Span) iterator.next();
             int start = span.getFirstChar();
+            if(start >= spanEventSets.length){
+                continue;
+            }
             int end = span.getLastChar();
+            if(end >= spanEventSets.length){
+                continue;
+            }
             StyleSpanEventSet eventSet = spanEventSets[start];
             if(start >= end){
                 eventSet.addStartEnd(span);
