@@ -54,7 +54,7 @@ public class BytesInputStream extends InputStream {
         }
         int size = length - position;
         byte[] bytes = new byte[size];
-        System.arraycopy(array, position, bytes, 0, size);
+        System.arraycopy(array, offset + position, bytes, 0, size);
         return bytes;
     }
     public byte[] getArray() {
