@@ -770,6 +770,16 @@ public class PackageBlock extends Chunk<PackageHeader>
     public int compareTo(PackageBlock pkg) {
         return Integer.compare(getId(), pkg.getId());
     }
+    public boolean isSimilarTo(PackageBlock packageBlock) {
+        if(packageBlock == this) {
+            return true;
+        }
+        if(packageBlock == null || getId() != packageBlock.getId() || !getName().equals(packageBlock.getName())) {
+            return false;
+        }
+        return getTypeStringPool().size() == packageBlock.getTypeStringPool().size() &&
+                getSpecStringPool().size() == packageBlock.getSpecStringPool().size();
+    }
     @Override
     public String toString(){
         StringBuilder builder=new StringBuilder();

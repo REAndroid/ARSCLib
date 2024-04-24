@@ -54,7 +54,7 @@ public class TableBlock extends Chunk<TableHeader>
         TableHeader header = getHeaderBlock();
         this.mTableStringPool = new TableStringPool(true);
         this.mPackageArray = new PackageArray(header.getPackageCount());
-        this.mFrameWorks = new ArrayList<>();
+        this.mFrameWorks = new ArrayCollection<>();
         addChild(mTableStringPool);
         addChild(mPackageArray);
     }
@@ -377,7 +377,7 @@ public class TableBlock extends Chunk<TableHeader>
     }
     public Iterator<PackageBlock> getAllPackages(PackageBlock context){
         return new CombiningIterator<>(getPackages(context),
-                new IterableIterator<TableBlock, PackageBlock>(frameworkIterator()) {
+                new IterableIterator<TableBlock, PackageBlock>(frameworks()) {
                     @Override
                     public Iterator<PackageBlock> iterator(TableBlock element) {
                         return element.getPackages();
@@ -705,7 +705,7 @@ public class TableBlock extends Chunk<TableHeader>
     public List<TableBlock> getFrameWorks(){
         return mFrameWorks;
     }
-    public Iterator<TableBlock> frameworkIterator(){
+    public Iterator<TableBlock> frameworks(){
         List<TableBlock> frameworkList = getFrameWorks();
         if(frameworkList.size() == 0){
             return EmptyIterator.of();
@@ -723,16 +723,30 @@ public class TableBlock extends Chunk<TableHeader>
     public boolean hasFramework(){
         return getFrameWorks().size() != 0;
     }
-    public void addFramework(TableBlock tableBlock){
-        if(tableBlock==null||tableBlock==this){
-            return;
+    public void addFrameworks(Iterator<TableBlock> iterator) {
+        List<TableBlock> frameworkList = CollectionUtil.toList(iterator);
+        for(TableBlock framework : frameworkList) {
+            addFramework(framework);
         }
-        for(TableBlock frm:tableBlock.getFrameWorks()){
-            if(frm==this || frm==tableBlock || tableBlock.equals(frm)){
-                return;
+    }
+    public void addFramework(TableBlock frameworkTable){
+        if(frameworkTable != null && !containsFramework(frameworkTable)){
+            mFrameWorks.add(frameworkTable);
+        }
+    }
+    public boolean containsFramework(TableBlock tableBlock) {
+        if(tableBlock == null){
+            return false;
+        }
+        if(this.isSimilarTo(tableBlock)) {
+            return true;
+        }
+        for(TableBlock framework : mFrameWorks) {
+            if(framework.containsFramework(tableBlock)) {
+                return true;
             }
         }
-        mFrameWorks.add(tableBlock);
+        return false;
     }
     public void removeFramework(TableBlock tableBlock){
         mFrameWorks.remove(tableBlock);
@@ -784,6 +798,24 @@ public class TableBlock extends Chunk<TableHeader>
         } catch (IOException ignored) {
         }
         return outputStream.toByteArray();
+    }
+    public boolean isSimilarTo(TableBlock tableBlock) {
+        if(tableBlock == this) {
+            return true;
+        }
+        if(tableBlock == null) {
+            return false;
+        }
+        int size = this.size();
+        if(size != tableBlock.size()) {
+            return false;
+        }
+        for(int i = 0; i < size; i++) {
+            if(!get(i).isSimilarTo(tableBlock.get(i))){
+                return false;
+            }
+        }
+        return true;
     }
     @Override
     public String toString(){

@@ -195,9 +195,13 @@ public class ResourceBuilder {
         TableBlock sourceTable = this.getSourceTable();
         sourceTable.refresh();
         TableBlock resultTable = this.getResultTable();
+
+        resultTable.addFrameworks(resultTable.frameworks());
+
         for(PackageBlock sourcePackage : sourceTable) {
             resultTable.newPackage(sourcePackage.getId(), sourcePackage.getName());
         }
+
         resultTable.getStringPool().merge(sourceTable.getStringPool());
         initializePackages();
     }
