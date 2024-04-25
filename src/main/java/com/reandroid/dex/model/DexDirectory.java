@@ -299,6 +299,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return false;
     }
+    @Override
     public <T1 extends SectionItem> int removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
         Iterator<DexFile> iterator = clonedIterator();
         int result = 0;

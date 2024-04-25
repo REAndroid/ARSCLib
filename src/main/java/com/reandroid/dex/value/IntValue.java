@@ -24,18 +24,18 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class IntValue extends PrimitiveValue implements IntegerReference {
+public class IntValue extends PrimitiveValueBlock implements IntegerReference {
 
     public IntValue() {
         super(DexValueType.INT);
     }
 
     @Override
-    public Integer getNumber() {
+    public Integer getData() {
         return get();
     }
     @Override
-    public void setNumber(Number number) {
+    public void setData(Number number) {
         this.set((Integer) number);
     }
     @Override

@@ -24,14 +24,14 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class CharValue extends PrimitiveValue {
+public class CharValue extends PrimitiveValueBlock {
 
     public CharValue(){
         super(DexValueType.CHAR);
     }
 
     @Override
-    public Number getNumber() {
+    public Number getData() {
         int i = (int) getNumberValue();
         if((i & 0xff) == i){
             return (byte) i;
@@ -42,7 +42,7 @@ public class CharValue extends PrimitiveValue {
         return i;
     }
     @Override
-    public void setNumber(Number number) {
+    public void setData(Number number) {
         if(number == null){
             throw new NullPointerException();
         }

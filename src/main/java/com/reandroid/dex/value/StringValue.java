@@ -66,4 +66,12 @@ public class StringValue extends SectionIdValue<StringId> {
     public TypeKey getDataTypeKey() {
         return TypeKey.STRING;
     }
+    @Override
+    public String getData() {
+        return getString();
+    }
+    @Override
+    public void setData(Object data) {
+        setString((String) data);
+    }
 }

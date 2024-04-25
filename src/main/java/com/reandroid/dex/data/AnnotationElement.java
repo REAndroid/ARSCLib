@@ -67,6 +67,10 @@ public class AnnotationElement extends DataItem implements Comparable<Annotation
     public boolean is(DexValueType<?> valueType){
         return getValueType() == valueType;
     }
+    public boolean is(MethodKey methodKey) {
+        return methodKey != null &&
+                methodKey.equalsIgnoreReturnType(getMethodKey());
+    }
     public DexValueType<?> getValueType(){
         DexValueBlock<?> value = getValue();
         if(value != null){

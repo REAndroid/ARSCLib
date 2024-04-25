@@ -202,6 +202,7 @@ public class DexFile implements DexClassRepository, Closeable,
         Predicate<ClassId> classIdFilter = classId -> filter.test(DexFile.this.create(classId));
         return getDexLayout().removeEntries(SectionType.CLASS_ID, classIdFilter);
     }
+    @Override
     public <T1 extends SectionItem> int removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
         return getDexLayout().removeEntries(sectionType, filter);
     }

@@ -84,8 +84,8 @@ public class AnnotationItem extends DataItem
     public SectionType<AnnotationItem> getSectionType() {
         return SectionType.ANNOTATION_ITEM;
     }
-    public void remove(Predicate<AnnotationElement> filter){
-        annotationElements.remove(filter);
+    public int remove(Predicate<AnnotationElement> filter){
+        return annotationElements.remove(filter);
     }
     public void remove(AnnotationElement element){
         annotationElements.remove(element);
@@ -157,6 +157,9 @@ public class AnnotationItem extends DataItem
     }
     public int getElementsCount(){
         return annotationElements.size();
+    }
+    public boolean isEmpty() {
+        return annotationElements.size() == 0;
     }
     public AnnotationElement getElement(int index){
         return annotationElements.get(index);

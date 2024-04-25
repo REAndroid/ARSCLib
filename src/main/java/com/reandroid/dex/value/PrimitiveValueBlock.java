@@ -21,14 +21,19 @@ import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
-public abstract class PrimitiveValue extends DexValueBlock<NumberValue> {
+public abstract class PrimitiveValueBlock extends DexValueBlock<NumberValue> {
 
-    public PrimitiveValue(DexValueType<?> type) {
+    public PrimitiveValueBlock(DexValueType<?> type) {
         super(new NumberValue(), type);
     }
 
-    public abstract Number getNumber();
-    public abstract void setNumber(Number number);
+    @Override
+    public abstract Number getData();
+    @Override
+    public void setData(Object number) {
+        setData((Number) number);
+    }
+    public abstract void setData(Number number);
 
     public long getNumberValue(){
         return getValueContainer().getNumberValue();
@@ -60,7 +65,7 @@ public abstract class PrimitiveValue extends DexValueBlock<NumberValue> {
     @Override
     public void merge(DexValueBlock<?> valueBlock){
         super.merge(valueBlock);
-        PrimitiveValue coming = (PrimitiveValue) valueBlock;
+        PrimitiveValueBlock coming = (PrimitiveValueBlock) valueBlock;
         getValueContainer().merge(coming.getValueContainer());
     }
     @Override

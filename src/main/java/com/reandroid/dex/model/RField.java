@@ -19,12 +19,11 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
-import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.data.FieldDef;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.IntValue;
-import com.reandroid.dex.value.PrimitiveValue;
+import com.reandroid.dex.value.PrimitiveValueBlock;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import org.xmlpull.v1.XmlSerializer;
@@ -119,8 +118,8 @@ public class RField extends DexField implements Comparable<RField> {
     }
 
     static boolean isResourceIdValue(DexValueBlock<?> dexValueBlock) {
-        if(dexValueBlock instanceof PrimitiveValue){
-            long value = ((PrimitiveValue)dexValueBlock).getNumberValue();
+        if(dexValueBlock instanceof PrimitiveValueBlock){
+            long value = ((PrimitiveValueBlock)dexValueBlock).getNumberValue();
             if((value & 0xffffffff00000000L) != 0){
                 return false;
             }

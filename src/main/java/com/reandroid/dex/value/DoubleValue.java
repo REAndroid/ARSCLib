@@ -23,18 +23,18 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class DoubleValue extends PrimitiveValue {
+public class DoubleValue extends PrimitiveValueBlock {
 
     public DoubleValue() {
         super(DexValueType.DOUBLE);
     }
 
     @Override
-    public Double getNumber() {
+    public Double getData() {
         return get();
     }
     @Override
-    public void setNumber(Number number) {
+    public void setData(Number number) {
         this.set((Double) number);
     }
     public double get(){

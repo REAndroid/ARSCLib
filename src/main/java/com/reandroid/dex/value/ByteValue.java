@@ -20,18 +20,18 @@ import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueByte;
 import com.reandroid.utils.HexUtil;
 
-public class ByteValue extends PrimitiveValue {
+public class ByteValue extends PrimitiveValueBlock {
 
     public ByteValue() {
         super(DexValueType.BYTE);
     }
 
     @Override
-    public Byte getNumber() {
+    public Byte getData() {
         return get();
     }
     @Override
-    public void setNumber(Number number) {
+    public void setData(Number number) {
         this.set((Byte) number);
     }
 

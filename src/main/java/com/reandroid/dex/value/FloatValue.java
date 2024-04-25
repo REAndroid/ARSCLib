@@ -23,18 +23,18 @@ import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
-public class FloatValue extends PrimitiveValue {
+public class FloatValue extends PrimitiveValueBlock {
 
     public FloatValue() {
         super(DexValueType.FLOAT);
     }
 
     @Override
-    public Float getNumber() {
+    public Float getData() {
         return get();
     }
     @Override
-    public void setNumber(Number number) {
+    public void setData(Number number) {
         this.set((Float) number);
     }
     public float get(){

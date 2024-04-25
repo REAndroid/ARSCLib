@@ -121,6 +121,15 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
         }
         return TypeKey.OBJECT.setArrayDimension(1);
     }
+    @Override
+    public Object[] getData() {
+        int size = size();
+        Object[] result = new Object[size];
+        for(int i = 0; i < size; i++) {
+            result[i] = get(i).getData();
+        }
+        return result;
+    }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {

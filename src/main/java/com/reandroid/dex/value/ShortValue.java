@@ -20,18 +20,18 @@ import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.model.SmaliValueShort;
 import com.reandroid.utils.HexUtil;
 
-public class ShortValue extends PrimitiveValue {
+public class ShortValue extends PrimitiveValueBlock {
 
     public ShortValue() {
         super(DexValueType.SHORT);
     }
 
     @Override
-    public Short getNumber() {
+    public Short getData() {
         return get();
     }
     @Override
-    public void setNumber(Number number) {
+    public void setData(Number number) {
         this.set((Short) number);
     }
     public short get(){

@@ -105,6 +105,12 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
     public TypeKey getDataTypeKey(){
         return TypeKey.OBJECT;
     }
+    public Object getData() {
+        return null;
+    }
+    public void setData(Object data) {
+        throw new RuntimeException("Method not implemented");
+    }
 
     @Override
     public int hashCode() {

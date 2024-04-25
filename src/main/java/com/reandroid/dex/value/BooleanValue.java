@@ -49,6 +49,18 @@ public class BooleanValue extends DexValueBlock<Block> {
         return TypeKey.TYPE_Z;
     }
     @Override
+    public Boolean getData() {
+        if(get()) {
+            return Boolean.TRUE;
+        }
+        return Boolean.FALSE;
+    }
+    @Override
+    public void setData(Object data) {
+        set((Boolean) data);
+    }
+
+    @Override
     public int hashCode() {
         int hash = 1;
         hash = hash * 31 + getValueType().getType();

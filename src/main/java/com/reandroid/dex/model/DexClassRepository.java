@@ -17,11 +17,14 @@ package com.reandroid.dex.model;
 
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.common.SectionItem;
+import com.reandroid.dex.data.AnnotationElement;
+import com.reandroid.dex.data.AnnotationItem;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.collection.FilterIterator;
 import com.reandroid.utils.collection.IterableIterator;
 import com.reandroid.utils.collection.UniqueIterator;
 
@@ -38,7 +41,11 @@ public interface DexClassRepository {
     <T extends SectionItem> Iterator<T> getClonedItems(SectionType<T> sectionType);
     <T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType, Key key);
     <T1 extends SectionItem> T1 getItem(SectionType<T1> sectionType, Key key);
+    <T1 extends SectionItem> int removeEntries(SectionType<T1> sectionType, Predicate<T1> filter);
 
+    default <T extends SectionItem> Iterator<T> getClonedItems(SectionType<T> sectionType, Predicate<? super T> filter) {
+        return FilterIterator.of(getClonedItems(sectionType), filter);
+    }
 
     default Iterator<DexClass> findUserClasses(Key key){
         return new UniqueIterator<>(getDexClasses(),
@@ -100,5 +107,31 @@ public interface DexClassRepository {
     }
     default Iterator<IntegerReference> visitIntegers(){
         return new DexIntegerVisitor(this);
+    }
+
+    default int removeAnnotations(TypeKey typeKey) {
+        return removeEntries(SectionType.ANNOTATION_ITEM,
+                annotationItem -> typeKey.equals(annotationItem.getTypeKey()));
+    }
+    default int removeAnnotationElements(MethodKey methodKey) {
+        int removeCount = 0;
+
+        TypeKey typeKey = methodKey.getDeclaring();
+        Predicate<AnnotationElement> elementFilter = element -> element.is(methodKey);
+
+        Iterator<AnnotationItem> iterator = getClonedItems(SectionType.ANNOTATION_ITEM);
+        while (iterator.hasNext()) {
+            AnnotationItem annotationItem = iterator.next();
+            if(typeKey.equals(methodKey.getDeclaring())) {
+                int count = annotationItem.remove(elementFilter);
+                if(count != 0){
+                    if(annotationItem.isEmpty()) {
+                        annotationItem.removeSelf();
+                    }
+                    removeCount += count;
+                }
+            }
+        }
+        return removeCount;
     }
 }

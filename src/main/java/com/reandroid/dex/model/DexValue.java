@@ -159,16 +159,22 @@ public class DexValue extends Dex {
     }
     public Number getNumber() {
         DexValueBlock<?> value = getDexValueBlock();
-        if(value instanceof PrimitiveValue){
-            return ((PrimitiveValue)value).getNumber();
+        if(value instanceof PrimitiveValueBlock){
+            return ((PrimitiveValueBlock)value).getData();
         }
         return null;
     }
     public void setNumber(Number number) {
         DexValueBlock<?> value = getDexValueBlock();
-        if(value instanceof PrimitiveValue){
-            ((PrimitiveValue)value).setNumber(number);
+        if(value instanceof PrimitiveValueBlock){
+            ((PrimitiveValueBlock)value).setData(number);
         }
+    }
+    public Object getData() {
+        return getDexValueBlock().getData();
+    }
+    public void setData(Object data) {
+        getDexValueBlock().setData(data);
     }
     public DexAnnotation getAnnotation(){
         DexValueBlock<?> value = getDexValueBlock();
@@ -188,8 +194,8 @@ public class DexValue extends Dex {
     }
     public int getAsInteger(int def) {
         DexValueBlock<?> value = getDexValueBlock();
-        if(value instanceof PrimitiveValue){
-            return (int) ((PrimitiveValue)value).getNumberValue();
+        if(value instanceof PrimitiveValueBlock){
+            return (int) ((PrimitiveValueBlock)value).getNumberValue();
         }
         return def;
     }
