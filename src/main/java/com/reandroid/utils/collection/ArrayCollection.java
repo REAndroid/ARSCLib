@@ -623,13 +623,17 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
     public boolean remove(Object obj) {
         return removeItem(obj) != null;
     }
-    public void remove(Predicate<? super T> filter){
+    @Override
+    public boolean removeIf(Predicate<? super T> filter){
+        boolean removed = false;
         for(int i = 0; i < this.size(); i++){
             if(filter.test(get(i))){
                 remove(i);
                 i--;
+                removed = true;
             }
         }
+        return removed;
     }
     @Override
     public boolean add(T item){
@@ -675,6 +679,8 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
         if(from == to){
             return;
         }
+        boolean locked = mLocked;
+        this.mLocked = true;
         Object[] elements = this.mElements;
         Object item = elements[from];
         if(from > to){
@@ -687,6 +693,8 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
             }
         }
         elements[to] = item;
+        this.mElements = elements;
+        this.mLocked = locked;
         onChanged();
     }
     @SuppressWarnings("unchecked")
