@@ -25,6 +25,7 @@ import com.reandroid.arsc.coder.ReferenceString;
 import com.reandroid.arsc.coder.xml.XmlCoder;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.io.FileUtil;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.StyleDocument;
@@ -193,7 +194,7 @@ public class XMLTableBlockEncoder {
                 continue;
             }
             for(File file : attrFiles){
-                logVerbose("Encoding: " + IOUtil.shortPath(file, 4));
+                logVerbose("Encoding: " + FileUtil.shortPath(file, 4));
                 XmlCoder xmlCoder = XmlCoder.getInstance();
                 xmlCoder.VALUES_XML.encode(file, packageBlock);
                 addParsedFiles(file);
@@ -302,7 +303,7 @@ public class XMLTableBlockEncoder {
                 continue;
             }
             addParsedFiles(file);
-            logVerbose("Encoding: " + IOUtil.shortPath(file, 4));
+            logVerbose("Encoding: " + FileUtil.shortPath(file, 4));
             XmlCoder xmlCoder = XmlCoder.getInstance();
             xmlCoder.VALUES_XML.encode(file, getTableBlock().getCurrentPackage());
         }

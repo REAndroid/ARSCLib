@@ -179,7 +179,6 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
     private void extractCompressed(File file, ArchiveEntry archiveEntry) throws IOException {
         FileOutputStream outputStream = new FileOutputStream(file);
         IOUtil.writeAll(openInputStream(archiveEntry), outputStream);
-        outputStream.close();
     }
     private File toFile(File dir, ArchiveEntry archiveEntry){
         String name = archiveEntry.getName().replace('/', File.separatorChar);

@@ -16,46 +16,71 @@
 package com.reandroid.utils.io;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
+@SuppressWarnings({"ResultOfMethodCallIgnored"})
 public class IOUtil {
 
-    public static void writeAll(InputStream inputStream, OutputStream outputStream) throws IOException{
-        int bufferLength = 1024 * 1000;
+    public static String readUtf8(File file) throws IOException {
+        return new String(readFully(file), StandardCharsets.UTF_8);
+    }
+    public static String readUtf8(InputStream inputStream) throws IOException {
+        return new String(readFully(inputStream), StandardCharsets.UTF_8);
+    }
+    public static void writeUtf8(String content, File file) throws IOException {
+        writeUtf8(content, FileUtil.outputStream(file));
+    }
+    public static void writeUtf8(String content, OutputStream outputStream) throws IOException {
+        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
+        outputStream.write(bytes, 0, bytes.length);
+        outputStream.close();
+    }
+    public static void writeAll(InputStream inputStream, File file) throws IOException {
+        FileUtil.ensureParentDirectory(file);
+        File tmp = file;
+        if(tmp.isFile()) {
+            tmp = FileUtil.toTmpName(tmp);
+        }
+        writeAll(inputStream, FileUtil.outputStream(tmp), true);
+        if(!tmp.equals(file)) {
+            file.delete();
+            tmp.renameTo(tmp);
+        }
+    }
+    public static void writeAll(InputStream inputStream, OutputStream outputStream) throws IOException {
+        writeAll(inputStream, outputStream, true);
+    }
+    public static void writeAll(InputStream inputStream, OutputStream outputStream, boolean close) throws IOException {
+        int bufferStep = 1024 * 1000;
+        int bufferLength = bufferStep;
+        int maxBuffer = bufferLength * 10;
+
         byte[] buffer = new byte[bufferLength];
         int read;
-        while ((read = inputStream.read(buffer, 0, bufferLength))>0){
+        while ((read = inputStream.read(buffer, 0, buffer.length)) >= 0){
             outputStream.write(buffer, 0, read);
+            bufferLength = buffer.length;
+            if(read == bufferLength && bufferLength < maxBuffer){
+                bufferLength = bufferLength + bufferStep;
+                buffer = new byte[bufferLength];
+            }
+        }
+        if(close) {
+            inputStream.close();
+            outputStream.close();
         }
     }
     public static byte[] readFully(File file) throws IOException{
         return readFully(FileUtil.inputStream(file));
     }
     public static byte[] readFully(InputStream inputStream) throws IOException{
-        byte[] buffer = new byte[1024 * 1000];
-        int length;
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        while ((length = inputStream.read(buffer, 0, buffer.length)) > 0){
-            outputStream.write(buffer, 0, length);
-        }
-        outputStream.close();
-        inputStream.close();
+        writeAll(inputStream, outputStream, true);
         return outputStream.toByteArray();
     }
+    @Deprecated
     public static String shortPath(File file, int depth){
-        File tmp = file;
-        while (depth > 0){
-            File dir = tmp.getParentFile();
-            if(dir == null){
-                break;
-            }
-            tmp = dir;
-            depth --;
-        }
-        if(file == tmp){
-            return file.getName();
-        }
-        int i = tmp.getAbsolutePath().length() + 1;
-        return file.getAbsolutePath().substring(i);
+        return FileUtil.shortPath(file, depth);
     }
     public static void close(Object obj) throws IOException {
         if(obj instanceof Closeable){

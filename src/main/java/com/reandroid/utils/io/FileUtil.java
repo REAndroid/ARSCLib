@@ -16,22 +16,27 @@
 package com.reandroid.utils.io;
 
 import com.reandroid.arsc.ARSCLib;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
+@SuppressWarnings({"ResultOfMethodCallIgnored", "unused"})
 public class FileUtil {
 
+    public static File toTmpName(File file) {
+        File dir = file.getParentFile();
+        String name = file.getName() + ".tmp";
+        if(dir == null){
+            return new File(name);
+        }
+        return new File(dir, name);
+    }
+    @Deprecated
     public static void writeUtf8(File file, String content) throws IOException {
-        ensureParentDirectory(file);
-        OutputStream outputStream = outputStream(file);
-        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
-        outputStream.write(bytes, 0, bytes.length);
-        outputStream.close();
+        IOUtil.writeUtf8(content, file);
     }
     public static String combineFilePath(String parent, String name){
         return combinePath(File.separatorChar, parent, name);
@@ -53,6 +58,22 @@ public class FileUtil {
         }
         builder.append(name);
         return builder.toString();
+    }
+    public static String shortPath(File file, int depth){
+        File tmp = file;
+        while (depth > 0){
+            File dir = tmp.getParentFile();
+            if(dir == null){
+                break;
+            }
+            tmp = dir;
+            depth --;
+        }
+        if(file == tmp){
+            return file.getName();
+        }
+        int i = tmp.getAbsolutePath().length() + 1;
+        return file.getAbsolutePath().substring(i);
     }
     public static String getParent(String path){
         if(StringsUtil.isEmpty(path)){
@@ -232,10 +253,13 @@ public class FileUtil {
             dir = getWritableTempDir(path, rootName);
         }
         if(dir == null){
-            File file = new File("current");
+            File file = new File("tmp");
             file = new File(file.getAbsolutePath());
-            file = file.getParentFile();
-            path = file.getAbsolutePath();
+            dir = file.getParentFile();
+            if(dir == null){
+                dir = file;
+            }
+            path = dir.getAbsolutePath();
             dir = getWritableTempDir(path, rootName);
         }
         return dir;
@@ -274,7 +298,7 @@ public class FileUtil {
 
     public static void setDefaultTempPrefix(String prefix) {
         synchronized (FileUtil.class){
-            if(Objects.equals(prefix, def_prefix)){
+            if(ObjectsUtil.equals(prefix, def_prefix)){
                 return;
             }
             if(def_prefix != null){

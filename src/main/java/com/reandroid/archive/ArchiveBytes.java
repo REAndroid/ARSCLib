@@ -41,12 +41,8 @@ public class ArchiveBytes extends Archive<ZipByteInput>{
     }
     @Override
     void extractStored(File file, ArchiveEntry archiveEntry) throws IOException {
-        FileUtil.ensureParentDirectory(file);
         InputStream inputStream = getZipInput().getInputStream(archiveEntry.getFileOffset(),
                 archiveEntry.getDataSize());
-        FileOutputStream outputStream = new FileOutputStream(file);
-        IOUtil.writeAll(inputStream, outputStream);
-        outputStream.close();
-        inputStream.close();
+        IOUtil.writeAll(inputStream, file);
     }
 }

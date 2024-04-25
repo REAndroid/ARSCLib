@@ -27,7 +27,7 @@ import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.NullValue;
 import com.reandroid.dex.value.StringValue;
 import com.reandroid.utils.collection.*;
-import com.reandroid.utils.io.FileUtil;
+import com.reandroid.utils.io.IOUtil;
 
 import java.io.*;
 import java.lang.annotation.ElementType;
@@ -572,7 +572,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     }
     public void writeSmali(SmaliWriter writer, File dir) throws IOException {
         File file = toSmaliFile(dir);
-        FileUtil.writeUtf8(file, toSmali(writer));
+        IOUtil.writeUtf8(toSmali(writer), file);
     }
     public File toSmaliFile(File dir){
         return new File(dir, buildSmaliPath());
