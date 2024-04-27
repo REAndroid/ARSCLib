@@ -742,6 +742,10 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
 
     public ResourceEntry mergeWithName(ResourceMergeOption mergeOption, ResourceEntry resourceEntry) {
+        ResourceEntry exist = getResource(resourceEntry.getType(), resourceEntry.getName());
+        if(exist != null && !exist.isEmpty()) {
+            return exist;
+        }
         int id = 0;
         Iterator<Entry> iterator = resourceEntry.iterator(true);
         while (iterator.hasNext()) {
