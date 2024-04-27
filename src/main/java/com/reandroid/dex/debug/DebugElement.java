@@ -85,14 +85,20 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
     }
     @Override
     public void setTargetAddress(int address) {
+        DebugElement element = this;
+        while (element.updateTargetAddress(address)) {
+            element = element.getNext();
+            if(element == null) {
+                return;
+            }
+            address = address + element.getAddressDiff();
+        }
+    }
+    private boolean updateTargetAddress(int address) {
         if(address == getTargetAddress()){
-            return;
+            return false;
         }
-        DebugSequence sequence = getDebugSequence();
-        if(sequence == null){
-            return;
-        }
-        DebugElement previous = sequence.get(getIndex() - 1);
+        DebugElement previous = getPrevious();
         int diff;
         if(previous == null){
             diff = address;
@@ -104,10 +110,29 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
         }
         setAddressDiff(diff);
         this.address = address;
-        DebugElement next = sequence.get(getIndex() + 1);
-        if(next != null){
-            next.setTargetAddress(address + next.getAddressDiff());
+        return true;
+    }
+    private DebugElement getPrevious() {
+        int index = getIndex();
+        if(index <= 0) {
+            return null;
         }
+        DebugSequence sequence = getDebugSequence();
+        if(sequence != null){
+            return sequence.get(index - 1);
+        }
+        return null;
+    }
+    private DebugElement getNext() {
+        int index = getIndex();
+        if(index < 0) {
+            return null;
+        }
+        DebugSequence sequence = getDebugSequence();
+        if(sequence != null){
+            return sequence.get(index + 1);
+        }
+        return null;
     }
     private DebugAdvancePc getOrCreateDebugAdvancePc(){
         DebugAdvancePc advancePc = getDebugAdvancePc();
