@@ -94,24 +94,30 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         return EmptyIterator.of();
     }
 
-    public int autoSetAttributeNamespaces(){
+    public int autoSetAttributeNamespaces() {
+        return autoSetAttributeNamespaces(true);
+    }
+    public int autoSetAttributeNamespaces(boolean removeNoIdPrefix) {
         ResXmlElement root = getDocumentElement();
         if(root == null){
             return 0;
         }
-        int changedCount = root.autoSetAttributeNamespaces();
+        int changedCount = root.autoSetAttributeNamespaces(removeNoIdPrefix);
         if(changedCount > 0){
             removeUnusedNamespaces();
             getStringPool().removeUnusedStrings();
         }
         return changedCount;
     }
-    public int autoSetAttributeNames(){
+    public int autoSetAttributeNames() {
+        return autoSetAttributeNames(true);
+    }
+    public int autoSetAttributeNames(boolean removeNoIdPrefix) {
         ResXmlElement root = getDocumentElement();
         if(root == null){
             return 0;
         }
-        int changedCount = root.autoSetAttributeNames();
+        int changedCount = root.autoSetAttributeNames(removeNoIdPrefix);
         if(changedCount > 0){
             removeUnusedNamespaces();
             getStringPool().removeUnusedStrings();

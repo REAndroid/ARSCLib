@@ -42,10 +42,4 @@ public interface ResourceLibrary extends Namespace {
         return packageName.equals(lib.getName())
                 || packageName.equals(lib.getPrefix());
     }
-
-    String URI_ANDROID = "http://schemas.android.com/apk/res/android";
-    String URI_RES_AUTO = "http://schemas.android.com/apk/res-auto";
-    String PREFIX_ANDROID = "android";
-    String PREFIX_APP = "app";
-
 }

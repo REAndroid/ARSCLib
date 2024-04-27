@@ -504,6 +504,9 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return true;
     }
+    public boolean isMultiPackage() {
+        return size() > 1;
+    }
     /**
      * Use clear();
      * **/

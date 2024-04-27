@@ -481,6 +481,13 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return null;
     }
+    public boolean isMultiPackage(){
+        TableBlock tableBlock = getTableBlock();
+        if(tableBlock != null) {
+            return tableBlock.isMultiPackage();
+        }
+        return false;
+    }
     public String typeNameOf(int typeId){
         TypeString typeString = getTypeStringPool().getById(typeId);
         if(typeString != null){

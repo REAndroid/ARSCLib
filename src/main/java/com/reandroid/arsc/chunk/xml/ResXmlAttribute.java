@@ -56,21 +56,33 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         this(20);
     }
 
-    public boolean autoSetNamespace(){
+    public boolean autoSetNamespace() {
+        return autoSetNamespace(true);
+    }
+    public boolean autoSetNamespace(boolean removeNoIdPrefix) {
         if(getNameId() == 0){
-            return setNamespace(null, null);
-        }
-        ResourceEntry nameEntry = resolveName();
-        if(nameEntry == null){
+            if(removeNoIdPrefix) {
+                String uri = getUri();
+                if(!Namespace.isExternalUri(uri) ||
+                        !Namespace.isValidUri(uri) ||
+                        !Namespace.isValidPrefix(getNamePrefix())) {
+                    return setNamespace(null, null);
+                }
+            }
             return false;
         }
-        PackageBlock packageBlock = nameEntry.getPackageBlock();
-        return setNamespace(packageBlock.getUri(), packageBlock.getPrefix());
+        return autoSetNamespace(resolveName());
     }
-    public boolean autoSetName(){
+    public boolean autoSetName() {
+        return autoSetName(true);
+    }
+    public boolean autoSetName(boolean removeNoIdPrefix) {
         int resourceId = getNameId();
         if(getNameId() == 0){
-            return setNamespace(null, null);
+            if(removeNoIdPrefix) {
+                return setNamespace(null, null);
+            }
+            return false;
         }
         ResourceEntry nameEntry = resolveName();
         if(nameEntry == null || nameEntry.isEmpty()){
@@ -80,11 +92,27 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         if(name == null){
             return false;
         }
-        PackageBlock packageBlock = nameEntry.getPackageBlock();
-        boolean nsChanged = setNamespace(packageBlock.getUri(), packageBlock.getPrefix());
+        boolean nsChanged = autoSetNamespace(nameEntry);
         String nameOld = getName();
         setName(name, resourceId);
-        return nsChanged | Objects.equals(nameOld, name);
+        return nsChanged || Objects.equals(nameOld, name);
+    }
+    private boolean autoSetNamespace(ResourceEntry nameEntry) {
+        if(nameEntry == null){
+            return false;
+        }
+        PackageBlock packageBlock = nameEntry.getPackageBlock();
+        String prefix = getNamePrefix();
+        String uri = getUri();
+        String packageName = packageBlock.getName();
+        if(!packageBlock.isMultiPackage() &&
+                Namespace.isValidPrefix(prefix, packageName) &&
+                Namespace.isValidUri(uri, packageName)) {
+            return false;
+        }
+        prefix = packageBlock.getPrefix();
+        uri = packageBlock.getUri();
+        return setNamespace(uri, prefix);
     }
     @Override
     public boolean isUndefined(){

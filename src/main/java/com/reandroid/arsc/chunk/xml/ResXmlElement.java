@@ -219,20 +219,23 @@ public class ResXmlElement extends ResXmlNode implements
         }
         return getOrCreateNamespace(uri, prefix);
     }
-    public int autoSetAttributeNamespaces(){
+    public int autoSetAttributeNamespaces() {
+        return autoSetAttributeNamespaces(true);
+    }
+    public int autoSetAttributeNamespaces(boolean removeNoIdPrefix) {
         int changedCount = 0;
         for(ResXmlAttribute attribute : listAttributes()){
-            boolean changed = attribute.autoSetNamespace();
+            boolean changed = attribute.autoSetNamespace(removeNoIdPrefix);
             if(changed){
                 changedCount ++;
             }
         }
         for(ResXmlNode child : getXmlNodeList()){
             if(child instanceof ResXmlElement){
-                changedCount += ((ResXmlElement)child).autoSetAttributeNamespaces();
+                changedCount += ((ResXmlElement)child).autoSetAttributeNamespaces(removeNoIdPrefix);
             }
         }
-        if(fixEmptyNamespaces()){
+        if(removeNoIdPrefix && fixEmptyNamespaces()){
             changedCount ++;
         }
         return changedCount;
@@ -246,17 +249,20 @@ public class ResXmlElement extends ResXmlNode implements
         }
         return changed;
     }
-    public int autoSetAttributeNames(){
+    public int autoSetAttributeNames() {
+        return autoSetAttributeNames(true);
+    }
+    public int autoSetAttributeNames(boolean removeNoIdPrefix) {
         int changedCount = 0;
         for(ResXmlAttribute attribute : listAttributes()){
-            boolean changed = attribute.autoSetName();
+            boolean changed = attribute.autoSetName(removeNoIdPrefix);
             if(changed){
                 changedCount ++;
             }
         }
         for(ResXmlNode child : getXmlNodeList()){
             if(child instanceof ResXmlElement){
-                changedCount += ((ResXmlElement)child).autoSetAttributeNames();
+                changedCount += ((ResXmlElement)child).autoSetAttributeNames(removeNoIdPrefix);
             }
         }
         return changedCount;
