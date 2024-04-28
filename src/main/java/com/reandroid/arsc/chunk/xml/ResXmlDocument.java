@@ -32,7 +32,6 @@ import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.xml.XMLDocument;
-import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLFactory;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -518,10 +517,19 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         refresh();
     }
     public XMLDocument decodeToXml() {
+        return toXml(true);
+    }
+    public XMLDocument toXml() {
+        return toXml(false);
+    }
+    public XMLDocument toXml(boolean decode) {
         XMLDocument xmlDocument = new XMLDocument();
-        XMLElement xmlElement = getDocumentElement()
-                .decodeToXml();
-        xmlDocument.setDocumentElement(xmlElement);
+        xmlDocument.setEncoding("utf-8");
+        ResXmlElement documentElement = getDocumentElement();
+        if(documentElement == null) {
+            return xmlDocument;
+        }
+        xmlDocument.setDocumentElement(documentElement.toXml(decode));
         return xmlDocument;
     }
     private void onFromJson(JSONObject json){

@@ -16,11 +16,28 @@
 package com.reandroid.common;
 
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
 
 public interface Namespace {
     String getPrefix();
     String getUri();
 
+    static boolean isValidUri(String uri, int resourceId) {
+        int packageId = (resourceId >> 24 ) & 0xff;
+        if(packageId == 0) {
+            if(StringsUtil.isEmpty(uri)) {
+                return true;
+            }
+            return isExternalUri(uri);
+        }
+        if(packageId == 0x1) {
+            return URI_ANDROID.equals(uri);
+        }
+        if(URI_ANDROID.equals(uri) || !isValidUri(uri)) {
+            return false;
+        }
+        return !isExternalUri(uri);
+    }
     static boolean isValidUri(String uri, String packageName) {
         if(PREFIX_ANDROID.equals(packageName)) {
             return URI_ANDROID.equals(uri);
@@ -73,6 +90,32 @@ public interface Namespace {
     static boolean isValidPrefixSymbol(char ch){
         return (ch <= '9' && ch >= '0')
                 || ch == '_';
+    }
+    static String prefixForResourceId(int resourceId) {
+        if(resourceId == 0) {
+            return null;
+        }
+        int packageId = (resourceId >> 24) & 0xff;
+        if(packageId == 0x1) {
+            return PREFIX_ANDROID;
+        }else if(packageId != 0){
+            return PREFIX_APP;
+        }else {
+            return null;
+        }
+    }
+    static String uriForResourceId(int resourceId) {
+        if(resourceId == 0) {
+            return null;
+        }
+        int packageId = (resourceId >> 24) & 0xff;
+        if(packageId == 0x1) {
+            return URI_ANDROID;
+        }else if(packageId != 0){
+            return URI_RES_AUTO;
+        }else {
+            return null;
+        }
     }
 
     String URI_ANDROID = ObjectsUtil.of("http://schemas.android.com/apk/res/android");

@@ -105,8 +105,8 @@ public class ResXmlStartNamespace extends ResXmlNamespaceChunk {
         return false;
     }
     public XMLNamespace decodeToXml(){
-        String uri=getUri();
-        String prefix=getPrefix();
+        String uri = getUri();
+        String prefix = getPrefix();
         if(isEmpty(uri) || isEmpty(prefix)){
             return null;
         }

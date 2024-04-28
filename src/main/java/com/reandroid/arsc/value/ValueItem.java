@@ -427,40 +427,35 @@ public abstract class ValueItem extends BlockItem implements Value,
             setTypeAndData(coming, valueItem.getData());
         }
     }
-    public String decodeValue(){
+    public String decodeValue() {
+        return decodeValue(true);
+    }
+    public String decodeValue(boolean validatePackage) {
         ValueType valueType = getValueType();
         if(valueType == null){
             return null;
         }
         if(valueType.isReference()){
-            return decodeAsReferenceString(valueType);
+            return decodeAsReferenceString(valueType, validatePackage);
         }
         if(valueType == ValueType.STRING){
             return getValueAsString();
         }
         return ValueCoder.decode(valueType, getData());
     }
-    private String decodeAsReferenceString(ValueType valueType){
+    private String decodeAsReferenceString(ValueType valueType, boolean validatePackage){
         int data = getData();
         if(data == 0){
-            if(valueType == ValueType.ATTRIBUTE){
-                return "?null";
-            }
-            return "@null";
+            return ValueCoder.decodeReference(null, valueType, data);
         }
-        PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null){
+        ResourceEntry resourceEntry = getValueAsReference();
+        if(validatePackage && resourceEntry == null && getPackageBlock() == null) {
             throw new NullPointerException("Parent package block is null");
         }
-        TableBlock tableBlock = packageBlock.getTableBlock();
-        if(tableBlock == null){
-            throw new NullPointerException("Parent table block is null");
-        }
-        ResourceEntry resourceEntry = tableBlock.getResource(packageBlock, data);
         if(resourceEntry == null || !resourceEntry.isDeclared()){
             return ValueCoder.decodeUnknownResourceId(valueType == ValueType.REFERENCE, data);
         }
-        return resourceEntry.buildReference(packageBlock, valueType);
+        return resourceEntry.buildReference(getPackageBlock(), valueType);
     }
     @Override
     public JSONObject toJson() {

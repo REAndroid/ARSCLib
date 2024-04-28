@@ -518,7 +518,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         }
         ResXmlAttribute attribute = getResXmlAttributeAt(index);
         if(attribute != null){
-            return attribute.getNamePrefix();
+            return attribute.getPrefix();
         }
         return null;
     }

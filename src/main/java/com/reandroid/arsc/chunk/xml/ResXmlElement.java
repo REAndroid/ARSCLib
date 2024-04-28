@@ -540,11 +540,9 @@ public class ResXmlElement extends ResXmlNode implements
     }
     public ResXmlAttribute getOrCreateAttribute(String uri, String prefix, String name, int resourceId){
         ResXmlAttribute attribute = searchAttribute(name, resourceId);
-        if(attribute == null){
+        if(attribute == null) {
             attribute = createAttribute(name, resourceId);
-            if(uri != null && resourceId != 0){
-                attribute.setNamespace(uri, prefix);
-            }
+            attribute.setNamespace(uri, prefix);
         }
         return attribute;
     }
@@ -1311,8 +1309,7 @@ public class ResXmlElement extends ResXmlNode implements
         int count = getNamespaceCount();
         for(int i = 0; i < count; i++){
             ResXmlNamespace namespace = getNamespaceAt(i);
-            serializer.setPrefix(namespace.getPrefix(),
-                    namespace.getUri());
+            serializer.setPrefix(namespace.getPrefix(), namespace.getUri());
         }
         String comment = getStartComment();
         if(comment != null){
@@ -1537,38 +1534,51 @@ public class ResXmlElement extends ResXmlNode implements
         return childObject.has(NAME_text);
     }
 
-    public XMLElement decodeToXml() {
-        return decodeToXml(null);
+    public XMLElement toXml() {
+        return toXml(null, false);
     }
-    private XMLElement decodeToXml(XMLElement parent) {
-        XMLElement xmlElement = new XMLElement(getName(false));
-        if(parent != null){
-            parent.add(xmlElement);
+    public XMLElement toXml(boolean decode) {
+        return toXml(null, decode);
+    }
+    public XMLElement decodeToXml() {
+        return toXml(null, true);
+    }
+    private XMLElement toXml(XMLElement parent, boolean decode) {
+        XMLElement xmlElement;
+        if(parent == null){
+            xmlElement = new XMLElement();
+        }else {
+            xmlElement = parent.newElement();
         }
+        xmlElement.setName(getName(false));
         xmlElement.setLineNumber(getStartElement().getLineNumber());
-        for(ResXmlStartNamespace startNamespace:getStartNamespaceList()){
+        for(ResXmlStartNamespace startNamespace : getStartNamespaceList()){
             xmlElement.addNamespace(startNamespace.decodeToXml());
         }
         xmlElement.setNamespace(getNamespace());
         for(ResXmlAttribute resXmlAttribute:listAttributes()){
-            XMLAttribute xmlAttribute =
-                    resXmlAttribute.decodeToXml();
+            XMLAttribute xmlAttribute = resXmlAttribute.toXml(decode);
             xmlElement.addAttribute(xmlAttribute);
+            if(decode) {
+                xmlAttribute.setNamespace(resXmlAttribute.decodeUri(), resXmlAttribute.decodePrefix());
+            }else {
+                xmlAttribute.setNamespace(resXmlAttribute.getUri(), resXmlAttribute.decodePrefix());
+            }
         }
-        String comment=getStartComment();
-        if(comment!=null){
+        String comment = getStartComment();
+        if(comment != null){
             xmlElement.add(new XMLComment(comment));
         }
-        comment=getEndComment();
-        if(comment!=null){
+        comment = getEndComment();
+        if(comment != null){
             xmlElement.add(new XMLComment(comment));
         }
         for(ResXmlNode xmlNode: getXmlNodeList()){
             if(xmlNode instanceof ResXmlElement){
-                ResXmlElement childResXmlElement=(ResXmlElement)xmlNode;
-                        childResXmlElement.decodeToXml(xmlElement);
+                ResXmlElement childResXmlElement = (ResXmlElement)xmlNode;
+                childResXmlElement.toXml(xmlElement, decode);
             }else if(xmlNode instanceof ResXmlTextNode){
-                ResXmlTextNode childResXmlTextNode=(ResXmlTextNode)xmlNode;
+                ResXmlTextNode childResXmlTextNode = (ResXmlTextNode)xmlNode;
                 XMLText xmlText = childResXmlTextNode.decodeToXml();
                 xmlElement.add(xmlText);
             }

@@ -17,6 +17,7 @@ package com.reandroid.arsc.value;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.ParentChunk;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.model.ResourceEntry;
@@ -43,14 +44,21 @@ public interface Value {
         setValue(ValueCoder.encode(color.toHexString()));
     }
     default ResourceEntry getValueAsReference() {
+        ValueType valueType = getValueType();
+        if(valueType == null || !valueType.isReference()){
+            return null;
+        }
         PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null){
+        if(packageBlock == null) {
             return null;
         }
         int data = getData();
         ResourceEntry resourceEntry = packageBlock.getResource(data);
         if(resourceEntry == null) {
-            resourceEntry = packageBlock.getTableBlock().getResource(data);
+            TableBlock tableBlock = packageBlock.getTableBlock();
+            if(tableBlock != null){
+                resourceEntry = tableBlock.getResource(packageBlock, data);
+            }
         }
         return resourceEntry;
     }

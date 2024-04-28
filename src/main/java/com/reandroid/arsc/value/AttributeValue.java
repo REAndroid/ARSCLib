@@ -108,7 +108,7 @@ public abstract class AttributeValue extends ValueItem{
         setNameId(nameId);
     }
     @Override
-    public String decodeValue(){
+    public String decodeValue(boolean validatePackage){
         if(AttributeDataFormat.INTEGER.contains(getValueType())){
             String value = decodeDataAsAttrFormats();
             if(value == null){
@@ -118,7 +118,7 @@ public abstract class AttributeValue extends ValueItem{
                 return value;
             }
         }
-        return super.decodeValue();
+        return super.decodeValue(validatePackage);
     }
     private String decodeDataAsAttr(){
         ResourceEntry attr = resolveName();
