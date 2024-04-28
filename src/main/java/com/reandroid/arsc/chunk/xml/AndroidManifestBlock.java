@@ -591,14 +591,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         return manifestElement.getElement(TAG_application);
     }
     public ResXmlElement getManifestElement(){
-        ResXmlElement manifestElement= getDocumentElement();
-        if(manifestElement==null){
-            return null;
-        }
-        if(!manifestElement.equalsName(TAG_manifest)){
-            return null;
-        }
-        return manifestElement;
+        return getElement(AndroidManifest.TAG_manifest);
     }
     public void ensureFullClassNames(){
         ResXmlElement application = getApplicationElement();
@@ -627,15 +620,8 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         }
         return packageName + name;
     }
-    private ResXmlElement getOrCreateManifestElement(){
-        ResXmlElement manifestElement= getDocumentElement();
-        if(manifestElement==null){
-            manifestElement=createRootElement(TAG_manifest);
-        }
-        if(!TAG_manifest.equals(manifestElement.getName())){
-            manifestElement.setName(TAG_manifest);
-        }
-        return manifestElement;
+    private ResXmlElement getOrCreateManifestElement() {
+        return getOrCreateElement(AndroidManifest.TAG_manifest);
     }
     @Override
     public String toString(){
@@ -671,14 +657,10 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
     }
 
     public static boolean isAndroidManifestBlock(ResXmlDocument xmlBlock){
-        if(xmlBlock==null){
+        if(xmlBlock == null){
             return false;
         }
-        ResXmlElement root = xmlBlock.getDocumentElement();
-        if(root==null){
-            return false;
-        }
-        return TAG_manifest.equals(root.getName());
+        return xmlBlock.getElement(AndroidManifest.TAG_manifest) != null;
     }
     public static AndroidManifestBlock load(File file) throws IOException {
         AndroidManifestBlock manifestBlock = new AndroidManifestBlock();
@@ -693,8 +675,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
 
     public static AndroidManifestBlock empty(){
         AndroidManifestBlock manifestBlock = new AndroidManifestBlock();
-        ResXmlElement element = manifestBlock.getDocumentElement();
-        element.setName(EMPTY_MANIFEST_TAG);
+        manifestBlock.getOrCreateElement(EMPTY_MANIFEST_TAG);
         return manifestBlock;
     }
 }

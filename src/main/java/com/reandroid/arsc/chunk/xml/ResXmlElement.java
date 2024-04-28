@@ -1192,23 +1192,7 @@ public class ResXmlElement extends ResXmlNode implements
             }
         }
         linkStartEnd();
-        onFinishedRead(reader);
         return false;
-    }
-    private void onFinishedRead(BlockReader reader) throws IOException{
-        if(reader.available() > 3 && getParentElement() == null){
-            onFinishedUnexpected(reader);
-        }
-    }
-    private void onFinishedUnexpected(BlockReader reader) throws IOException{
-        StringBuilder builder=new StringBuilder();
-        builder.append("Unexpected finish reading: reader=").append(reader.toString());
-        HeaderBlock header = reader.readHeaderBlock();
-        if(header!=null){
-            builder.append(", next header=");
-            builder.append(header.toString());
-        }
-        throw new IOException(builder.toString());
     }
     private void onStartElement(BlockReader reader) throws IOException{
         if(hasStartElement()){
