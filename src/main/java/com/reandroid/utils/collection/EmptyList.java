@@ -60,11 +60,17 @@ public class EmptyList<T> implements List<T>, EmptyItem {
 
     @Override
     public boolean addAll(Collection<? extends T> collection) {
+        if(collection == null || collection.isEmpty()) {
+            return false;
+        }
         throw new IllegalArgumentException("Empty list");
     }
 
     @Override
     public boolean addAll(int i, Collection<? extends T> collection) {
+        if(collection == null || collection.isEmpty()) {
+            return false;
+        }
         throw new IllegalArgumentException("Empty list");
     }
     @Override
