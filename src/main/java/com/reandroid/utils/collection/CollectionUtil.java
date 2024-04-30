@@ -190,6 +190,39 @@ public class CollectionUtil {
         List<T> results = toList(iterator);
         return results.iterator();
     }
+
+    public static void shuffle(List<?> list) {
+        if(list.isEmpty()){
+            return;
+        }
+        int random = Long.toString(System.currentTimeMillis()).hashCode();
+        shuffle(random, list);
+    }
+    @SuppressWarnings("unchecked")
+    public static void shuffle(int random, List<?> list) {
+        if(list.isEmpty()){
+            return;
+        }
+        if(list instanceof ArrayCollection) {
+            shuffle(random, (ArrayCollection<?>) list);
+        }else {
+            ArrayCollection collection = new ArrayCollection<>(list);
+            list.clear();
+            shuffle(random, collection);
+            list.addAll(collection);
+        }
+    }
+    private static void shuffle(int random, ArrayCollection<?> list) {
+        int size = list.size();
+        for(int i = 0; i < size; i++) {
+            int i2 = random % size;
+            if(i2 < 0) {
+                i2 = -i2;
+            }
+            list.swap(i, i2);
+            random = random * 31 + size + 1;
+        }
+    }
     @SuppressWarnings("unchecked")
     public static<T> Predicate<T> getAcceptAll(){
         return (Predicate<T>) ACCEPT_ALL;
