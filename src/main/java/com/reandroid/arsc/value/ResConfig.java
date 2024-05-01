@@ -1230,34 +1230,36 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
 
             appendLanguageAndRegion();
 
-            appendFlag(resConfig.getOrientation());
-            appendFlag(resConfig.getTouchscreen());
-            appendFlag(resConfig.getDensity());
-            appendFlag(resConfig.getKeyboard());
-            appendFlag(resConfig.getNavigation());
-            appendFlag(resConfig.getInputFlagsKeysHidden());
-            appendFlag(resConfig.getInputFlagsNavHidden());
             appendFlag(resConfig.getGender());
 
-            appendScreenWidthHeight();
-
-            appendPrefixedNumber("v", resConfig.getSdkVersion());
-            // append resConfig.getMinorVersion()
-            appendFlag(resConfig.getScreenLayoutSize());
-            appendFlag(resConfig.getScreenLayoutLong());
             appendFlag(resConfig.getScreenLayoutDir());
-
-            appendFlag(resConfig.getUiModeType());
-            appendFlag(resConfig.getUiModeNight());
-
             appendDp("sw", resConfig.getSmallestScreenWidthDp());
             appendDp("w", resConfig.getScreenWidthDp());
             appendDp("h", resConfig.getScreenHeightDp());
 
+            appendFlag(resConfig.getScreenLayoutSize());
+            appendFlag(resConfig.getScreenLayoutLong());
             appendFlag(resConfig.getScreenLayoutRound());
 
             appendFlag(resConfig.getColorModeWide());
             appendFlag(resConfig.getColorModeHdr());
+
+            appendFlag(resConfig.getOrientation());
+            appendFlag(resConfig.getUiModeType());
+            appendFlag(resConfig.getUiModeNight());
+
+            appendFlag(resConfig.getDensity());
+
+            appendFlag(resConfig.getTouchscreen());
+            appendFlag(resConfig.getInputFlagsKeysHidden());
+            appendFlag(resConfig.getKeyboard());
+            appendFlag(resConfig.getInputFlagsNavHidden());
+            appendFlag(resConfig.getNavigation());
+
+            appendScreenWidthHeight();
+
+            // append resConfig.getMinorVersion()
+            appendPrefixedNumber("v", resConfig.getSdkVersion());
 
             //appendLocaleNumberingSystem();
             appendUnknownBytes();
