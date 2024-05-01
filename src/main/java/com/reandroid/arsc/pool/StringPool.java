@@ -290,6 +290,13 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         }
         return EmptyIterator.of();
     }
+    public final Iterator<T> getItems(String str) {
+        StringGroup<T> group = this.get(str);
+        if(group != null){
+            return group.iterator();
+        }
+        return EmptyIterator.of();
+    }
     public final StringGroup<T> get(String str){
         return mUniqueMap.get(str);
     }

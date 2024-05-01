@@ -30,12 +30,9 @@ import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.EmptyList;
+import com.reandroid.utils.collection.*;
 import com.reandroid.arsc.model.FrameworkTable;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
@@ -72,7 +69,7 @@ public class ApkModule implements ApkFile, Closeable {
         this.zipEntryMap = zipEntryMap;
         this.mUncompressedFiles=new UncompressedFiles();
         this.mUncompressedFiles.addPath(zipEntryMap);
-        this.mExternalFrameworks = new ArrayList<>();
+        this.mExternalFrameworks = new ArrayCollection<>();
         this.zipEntryMap.setModuleName(moduleName);
         this.mTagMaps = new HashMap<>();
     }
@@ -209,7 +206,7 @@ public class ApkModule implements ApkFile, Closeable {
         return getAndroidManifest().getSplit();
     }
     public List<TableBlock> getLoadedFrameworks(){
-        List<TableBlock> results = new ArrayList<>();
+        List<TableBlock> results = new ArrayCollection<>();
         if(!hasTableBlock()){
             return results;
         }
@@ -412,14 +409,14 @@ public class ApkModule implements ApkFile, Closeable {
         return removeResFiles(resourceId, null);
     }
     public List<Entry> removeResFiles(int resourceId, ResConfig resConfig) {
-        List<Entry> results = new ArrayList<>();
-        if(resourceId == 0 && resConfig==null){
+        ArrayCollection<Entry> results = new ArrayCollection<>();
+        if(resourceId == 0 && resConfig == null){
             return results;
         }
         List<ResFile> resFileList = listResFiles(resourceId, resConfig);
         ZipEntryMap zipEntryMap = getZipEntryMap();
         for(ResFile resFile:resFileList){
-            results.addAll(resFile.getEntryList());
+            results.addAll(resFile.iterator());
             zipEntryMap.remove(resFile.getInputSource());
         }
         return results;
@@ -437,7 +434,7 @@ public class ApkModule implements ApkFile, Closeable {
         return resXmlDocument.decodeToXml();
     }
     public List<DexFileInputSource> listDexFiles(){
-        List<DexFileInputSource> results = new ArrayList<>();
+        List<DexFileInputSource> results = new ArrayCollection<>();
         for(InputSource source: getInputSources()){
             if(DexFileInputSource.isDexName(source.getAlias())){
                 DexFileInputSource inputSource;
@@ -543,9 +540,9 @@ public class ApkModule implements ApkFile, Closeable {
             existPaths.add(inputSource.getAlias());
         }
         for(ResFile resFile:resFileList){
-            String path=resFile.getFilePath();
-            String pathNew=resFile.validateTypeDirectoryName();
-            if(pathNew==null || pathNew.equals(path)){
+            String path = resFile.getFilePath();
+            String pathNew = resFile.validateTypeDirectoryName();
+            if(pathNew == null || pathNew.equals(path)){
                 continue;
             }
             if(existPaths.contains(pathNew)){
@@ -592,57 +589,78 @@ public class ApkModule implements ApkFile, Closeable {
         return listResFiles(0, null);
     }
     public List<ResFile> listResFiles(int resourceId, ResConfig resConfig) {
-        List<ResFile> results=new ArrayCollection<>();
-        TableBlock tableBlock=getTableBlock();
-        if (tableBlock==null){
+        List<ResFile> results = new ArrayCollection<>();
+        TableBlock tableBlock = getTableBlock();
+        if (tableBlock == null){
             return results;
         }
         TableStringPool stringPool= tableBlock.getStringPool();
         for(InputSource inputSource : getInputSources()){
-            String name=inputSource.getAlias();
-            StringGroup<TableString> groupTableString = stringPool.get(name);
-            if(groupTableString==null){
-                continue;
-            }
-            for(TableString tableString:groupTableString.listItems()){
-                List<Entry> entryList = filterResFileEntries(
-                        tableString, resourceId, resConfig);
-                if(entryList.size()==0){
-                    continue;
+            String name = inputSource.getAlias();
+            Iterator<TableString> iterator = stringPool.getItems(name);
+            while (iterator.hasNext()){
+                TableString tableString = iterator.next();
+                List<Entry> entryList = filterResFileEntries(tableString, resourceId, resConfig);
+                if(!entryList.isEmpty()) {
+                    ResFile resFile = new ResFile(inputSource, entryList);
+                    results.add(resFile);
                 }
-                ResFile resFile = new ResFile(inputSource, entryList);
-                results.add(resFile);
             }
         }
         return results;
     }
+    public boolean removeResFile(String path) {
+        return removeResFile(path, true);
+    }
+    public boolean removeResFile(String path, boolean keepResourceId) {
+        InputSource inputSource = getInputSource(path);
+        if(inputSource == null) {
+            return false;
+        }
+        ResFile resFile = getResFile(path);
+        if(resFile == null) {
+            return false;
+        }
+        resFile.delete(keepResourceId);
+        removeInputSource(path);
+        return true;
+    }
+    public ResFile getResFile(String path) {
+        InputSource inputSource = getInputSource(path);
+        if(inputSource == null) {
+            return null;
+        }
+        List<Entry> entryList = listReferencedEntries(path);
+        if(entryList.isEmpty()) {
+            return null;
+        }
+        return new ResFile(inputSource, entryList);
+    }
 
     public List<Entry> listReferencedEntries(String path) {
+        ArrayCollection<Entry> results = new ArrayCollection<>();
         TableBlock tableBlock = getTableBlock();
-        if (tableBlock == null){
-            return new ArrayList<>();
+        if (tableBlock != null) {
+            TableStringPool stringPool = tableBlock.getStringPool();
+            Iterator<TableString> iterator = stringPool.getItems(path);
+            Predicate<Entry> filter = entry -> entry.isScalar() &&
+                    TypeBlock.canHaveResourceFile(entry.getTypeName());
+            while (iterator.hasNext()) {
+                results.addAll(iterator.next().getEntries(filter));
+            }
         }
-        TableStringPool stringPool = tableBlock.getStringPool();
-        StringGroup<TableString> stringGroup = stringPool.get(path);
-        if(stringGroup == null){
-            return EmptyList.of();
-        }
-        TableString tableString = stringPool.get(0);
-        return tableString.listReferencedResValueEntries();
+        return results;
     }
     private List<Entry> filterResFileEntries(TableString tableString, int resourceId, ResConfig resConfig){
-        Iterator<Entry> itr = tableString.getEntries(new Predicate<Entry>() {
-            @Override
-            public boolean test(Entry item) {
-                if(!item.isScalar() ||
-                        !TypeBlock.canHaveResourceFile(item.getTypeName())){
-                    return false;
-                }
-                if(resourceId != 0 && resourceId != item.getResourceId()){
-                    return false;
-                }
-                return resConfig == null || resConfig.equals(item.getResConfig());
+        Iterator<Entry> itr = tableString.getEntries(item -> {
+            if(!item.isScalar() ||
+                    !TypeBlock.canHaveResourceFile(item.getTypeName())){
+                return false;
             }
+            if(resourceId != 0 && resourceId != item.getResourceId()){
+                return false;
+            }
+            return resConfig == null || resConfig.equals(item.getResConfig());
         });
         return CollectionUtil.toList(itr);
     }
@@ -1049,6 +1067,9 @@ public class ApkModule implements ApkFile, Closeable {
     @Override
     public InputSource getInputSource(String path){
         return getZipEntryMap().getInputSource(path);
+    }
+    public InputSource removeInputSource(String path){
+        return getZipEntryMap().remove(path);
     }
     private void addInputSource(InputSource inputSource){
         getZipEntryMap().add(inputSource);
