@@ -30,9 +30,9 @@ import com.reandroid.common.BytesOutputStream;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
-import com.reandroid.utils.StringsUtil;
-import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.SingleIterator;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLFactory;
 import org.xmlpull.v1.XmlPullParser;
@@ -41,13 +41,13 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.*;
 import java.util.*;
-import java.util.function.Predicate;
 
 public class ResXmlDocument extends Chunk<HeaderBlock>
-        implements MainChunk, ParentChunk, JSONConvert<JSONObject> {
+        implements ResXmlNodeTree, MainChunk, ParentChunk, JSONConvert<JSONObject> {
+
     private final ResXmlStringPool mResXmlStringPool;
     private final ResXmlIDMap mResXmlIDMap;
-    private final BlockList<ResXmlElement> mDocumentElementList;
+    private final BlockList<ResXmlNode> mNodeList;
     private ApkFile mApkFile;
     private PackageBlock mPackageBlock;
     private boolean mDestroyed;
@@ -57,12 +57,17 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
 
         this.mResXmlStringPool = new ResXmlStringPool(true);
         this.mResXmlIDMap = new ResXmlIDMap();
-        this.mDocumentElementList = new BlockList<>();
+        this.mNodeList = new BlockList<>();
 
         addChild(mResXmlStringPool);
         addChild(mResXmlIDMap);
-        addChild(mDocumentElementList);
-        this.mDocumentElementList.add(new ResXmlElement());
+        addChild(mNodeList);
+        this.mNodeList.add(new ResXmlElement());
+    }
+
+    @Override
+    public BlockList<ResXmlNode> getNodeListBlockInternal() {
+        return mNodeList;
     }
 
     /**
@@ -80,10 +85,13 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
      * Iterates every xml node and child node recursively
      * */
     public Iterator<ResXmlNode> recursiveXmlNodes() throws ConcurrentModificationException{
-        return new IterableIterator<ResXmlElement, ResXmlNode>(getElements()) {
+        return new IterableIterator<ResXmlNode, ResXmlNode>(iterator()) {
             @Override
-            public Iterator<ResXmlNode> iterator(ResXmlElement element) {
-                return element.recursiveXmlNodes();
+            public Iterator<ResXmlNode> iterator(ResXmlNode resXmlNode) {
+                if(resXmlNode instanceof ResXmlElement) {
+                    return ((ResXmlElement) resXmlNode).recursiveXmlNodes();
+                }
+                return SingleIterator.of(resXmlNode);
             }
         };
     }
@@ -200,7 +208,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
                 return;
             }
             mDestroyed = true;
-            mDocumentElementList.clearChildes();
+            mNodeList.clearChildes();
             getResXmlIDMap().destroy();
             getStringPool().clear();
             refresh();
@@ -271,7 +279,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         // android/aapt2 accepts 0x0000 (NULL) chunk type as XML, it could
         // be android's bug and might be fixed in the future until then lets fix it ourselves
         headerBlock.setType(ChunkType.XML);
-        clearElements();
+        clear();
         while (chunkReader.isAvailable()){
             boolean readOk = readNext(chunkReader);
             if(!readOk){
@@ -393,63 +401,33 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         return mResXmlIDMap;
     }
     public ResXmlElement getDocumentElement(){
-        return getElement(0);
-    }
-    public Iterator<ResXmlElement> getElements() {
-        return mDocumentElementList.clonedIterator();
-    }
-    public ResXmlElement getElement(int i){
-        return mDocumentElementList.get(i);
-    }
-    public ResXmlElement getElement(String name){
-        Iterator<ResXmlElement> iterator = getElements();
-        while (iterator.hasNext()) {
-            ResXmlElement element = iterator.next();
-            if(element.equalsName(name)) {
-                return element;
-            }
-        }
-        return null;
+        return CollectionUtil.getFirst(getElements());
     }
     public ResXmlElement newElement() {
         ResXmlElement element = new ResXmlElement();
-        addElement(element);
+        add(element);
         return element;
-    }
-    public void addElement(ResXmlElement element) {
-        clearEmptyElements();
-        mDocumentElementList.add(element);
     }
     public void addElement(int index, ResXmlElement element) {
         clearEmptyElements();
-        mDocumentElementList.add(index, element);
-    }
-    public void removeElement(ResXmlElement element) {
-        mDocumentElementList.remove(element);
-    }
-    public void removeElement(int index) {
-        mDocumentElementList.remove(index);
-    }
-    public int getElementCount() {
-        return mDocumentElementList.size();
-    }
-    public void clearElements() {
-        mDocumentElementList.clearChildes();
+        this.add(index, element);
     }
     public void clearEmptyElements() {
-        mDocumentElementList.remove(element -> element.size() == 0 &&
-                element.getAttributeCount() == 0 &&
-                element.getNamespaceCount() == 0 &&
-                StringsUtil.isEmpty(element.getName()));
+        this.removeIf(xmlNode -> {
+            if(xmlNode instanceof ResXmlElement) {
+                return ((ResXmlElement) xmlNode).isUndefined();
+            }
+            return false;
+        });
     }
     @Deprecated
     public void setDocumentElement(ResXmlElement resXmlElement){
-        mDocumentElementList.removeAll();
-        mDocumentElementList.add(resXmlElement);
+        clear();
+        this.add(resXmlElement);
     }
     @Override
     protected void onPreRefresh(){
-        mDocumentElementList.refresh();
+        getNodeListBlockInternal().refresh();
         super.onPreRefresh();
     }
     @Override
@@ -499,7 +477,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         setPackageBlock(packageBlock);
         int event = parser.getEventType();
         if(event == XmlPullParser.START_DOCUMENT){
-            clearElements();
+            clear();
             parser.next();
         }
         while (parseNext(parser)){
@@ -546,7 +524,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     }
     @Override
     public JSONObject toJson() {
-        JSONObject jsonObject=new JSONObject();
+        JSONObject jsonObject = new JSONObject();
         jsonObject.put(ResXmlDocument.NAME_element, getDocumentElement().toJson());
         JSONArray pool = getStringPool().toJson();
         if(pool!=null){
@@ -557,7 +535,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     @Override
     public void fromJson(JSONObject json) {
         onFromJson(json);
-        ResXmlElement xmlElement= getDocumentElement();
+        ResXmlElement xmlElement = getDocumentElement();
         xmlElement.fromJson(json.optJSONObject(ResXmlDocument.NAME_element));
         refresh();
     }
@@ -570,10 +548,8 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     public XMLDocument toXml(boolean decode) {
         XMLDocument xmlDocument = new XMLDocument();
         xmlDocument.setEncoding("utf-8");
-        Iterator<ResXmlElement> iterator = getElements();
-        while (iterator.hasNext()) {
-            ResXmlElement element = iterator.next();
-            xmlDocument.add(element.toXml(decode));
+        for (ResXmlNode node : this) {
+            xmlDocument.add(node.toXml(decode));
         }
         return xmlDocument;
     }
@@ -725,6 +701,6 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         ChunkType chunkType=headerBlock.getChunkType();
         return chunkType==ChunkType.XML;
     }
-    private static final String NAME_element ="element";
-    private static final String NAME_styled_strings="styled_strings";
+    private static final String NAME_element = "element";
+    private static final String NAME_styled_strings = "styled_strings";
 }

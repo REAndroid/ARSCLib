@@ -133,13 +133,13 @@ import java.util.zip.ZipEntry;
         ResXmlElement manifest = manifestBlock.getDocumentElement();
         List<ResXmlNode> removeList = getManifestElementToRemove(manifest);
         for(ResXmlNode node:removeList){
-            manifest.removeNode(node);
+            manifest.remove(node);
         }
         ResXmlElement application = manifestBlock.getApplicationElement();
         if(application!=null){
             removeList = application.listXmlNodes();
             for(ResXmlNode node:removeList){
-                application.removeNode(node);
+                application.remove(node);
             }
         }
         ResXmlStringPool stringPool = manifestBlock.getStringPool();

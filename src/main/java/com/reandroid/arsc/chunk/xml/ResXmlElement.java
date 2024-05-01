@@ -30,6 +30,8 @@ import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.SingleIterator;
 import com.reandroid.utils.collection.*;
 import com.reandroid.xml.*;
@@ -39,11 +41,10 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class ResXmlElement extends ResXmlNode implements
-        Iterable<ResXmlNode>, JSONConvert<JSONObject>, Comparator<ResXmlNode> {
+        ResXmlNodeTree, JSONConvert<JSONObject>, Comparator<ResXmlNode> {
 
     private final BlockList<ResXmlStartNamespace> mStartNamespaceList;
     private final SingleBlockContainer<ResXmlStartElement> mStartElementContainer;
@@ -68,23 +69,15 @@ public class ResXmlElement extends ResXmlNode implements
     }
 
     @Override
-    public Iterator<ResXmlNode> iterator(){
-        return mBody.iterator();
+    public BlockList<ResXmlNode> getNodeListBlockInternal() {
+        return mBody;
     }
-    public Iterator<ResXmlNode> iterator(Predicate<? super ResXmlNode> predicate){
-        return mBody.iterator(predicate);
-    }
-    public<T1 extends ResXmlNode> Iterator<T1> iterator(Class<T1> instance){
-        return mBody.iterator(instance);
-    }
-    public ResXmlNode get(int position){
-        return mBody.get(position);
-    }
-    public int size(){
-        return mBody.size();
-    }
-    public int remove(Predicate<? super ResXmlNode> predicate){
-        return mBody.remove(predicate);
+
+    public boolean isUndefined() {
+        return size() == 0 &&
+                this.getAttributeCount() == 0 &&
+                this.getNamespaceCount() == 0 &&
+                StringsUtil.isEmpty(getName());
     }
     public ResXmlElement getParentElement(){
         return getParentInstance(ResXmlElement.class);
@@ -129,7 +122,7 @@ public class ResXmlElement extends ResXmlNode implements
         }
     }
     public int clearIndents(){
-        return remove(resXmlNode -> {
+        return removeIf(resXmlNode -> {
             if(resXmlNode instanceof ResXmlTextNode){
                 return  ((ResXmlTextNode) resXmlNode).isIndent();
             }
@@ -152,7 +145,7 @@ public class ResXmlElement extends ResXmlNode implements
     /**
      * Iterates every attribute on this element and on child elements recursively
      * */
-    public Iterator<ResXmlAttribute> recursiveAttributes() throws ConcurrentModificationException{
+    public Iterator<ResXmlAttribute> recursiveAttributes() throws ConcurrentModificationException {
         return RecursiveIterator.compute(this, ResXmlElement::getElements, ResXmlElement::getAttributes);
     }
     /**
@@ -230,10 +223,9 @@ public class ResXmlElement extends ResXmlNode implements
                 changedCount ++;
             }
         }
-        for(ResXmlNode child : getXmlNodeList()){
-            if(child instanceof ResXmlElement){
-                changedCount += ((ResXmlElement)child).autoSetAttributeNamespaces(removeNoIdPrefix);
-            }
+        Iterator<ResXmlElement> iterator = getElements();
+        while (iterator.hasNext()) {
+            changedCount += iterator.next().autoSetAttributeNamespaces(removeNoIdPrefix);
         }
         if(removeNoIdPrefix && fixEmptyNamespaces()){
             changedCount ++;
@@ -260,10 +252,9 @@ public class ResXmlElement extends ResXmlNode implements
                 changedCount ++;
             }
         }
-        for(ResXmlNode child : getXmlNodeList()){
-            if(child instanceof ResXmlElement){
-                changedCount += ((ResXmlElement)child).autoSetAttributeNames(removeNoIdPrefix);
-            }
+        Iterator<ResXmlElement> iterator = getElements();
+        while (iterator.hasNext()) {
+            changedCount += iterator.next().autoSetAttributeNames(removeNoIdPrefix);
         }
         return changedCount;
     }
@@ -276,7 +267,7 @@ public class ResXmlElement extends ResXmlNode implements
             start +=(attrCount - 1);
         }
         boolean haveElement = false;
-        for(ResXmlNode xmlNode : getXmlNodeList()){
+        for(ResXmlNode xmlNode : this){
             start = xmlNode.autoSetLineNumber(start);
             if(!haveElement && xmlNode instanceof ResXmlElement){
                 haveElement = true;
@@ -293,7 +284,7 @@ public class ResXmlElement extends ResXmlNode implements
     private void clearNullNodes(boolean recursive){
         for(ResXmlNode node:listXmlNodes()){
             if(node.isNull()){
-                removeNode(node);
+                remove(node);
             }
             if(!recursive || !(node instanceof ResXmlElement)){
                 continue;
@@ -310,11 +301,9 @@ public class ResXmlElement extends ResXmlNode implements
                 count ++;
             }
         }
-        for(ResXmlNode node : getXmlNodeList()){
-            if(node instanceof ResXmlElement){
-                ResXmlElement child = (ResXmlElement) node;
-                count += child.removeUnusedNamespaces();
-            }
+        Iterator<ResXmlElement> iterator = getElements();
+        while (iterator.hasNext()) {
+            count += iterator.next().removeUnusedNamespaces();
         }
         return count;
     }
@@ -324,27 +313,19 @@ public class ResXmlElement extends ResXmlNode implements
         if(start != null){
             count += start.removeUndefinedAttributes();
         }
-        for(ResXmlNode xmlNode : getXmlNodeList()){
-            if(xmlNode instanceof ResXmlElement){
-                count += ((ResXmlElement)xmlNode).removeUndefinedAttributes();
-            }
+        Iterator<ResXmlElement> iterator = getElements();
+        while (iterator.hasNext()) {
+            count += iterator.next().removeUndefinedAttributes();
         }
         return count;
     }
+
+    @Deprecated
+    public int remove(Predicate<? super ResXmlNode> predicate) {
+        return removeIf(predicate);
+    }
     public void changeIndex(ResXmlElement element, int index){
-        int i = 0;
-        for(ResXmlNode xmlNode:mBody.getChildes()){
-            if(i == index){
-                element.setIndex(i);
-                i++;
-            }
-            if(xmlNode==element){
-                continue;
-            }
-            xmlNode.setIndex(i);
-            i++;
-        }
-        mBody.sort(this);
+        getNodeListBlockInternal().moveTo(element, index);
     }
     public int indexOf(String tagName){
         ResXmlElement element = getElement(tagName);
@@ -477,8 +458,9 @@ public class ResXmlElement extends ResXmlNode implements
         if(start != null){
             start.linkStringReferences();
         }
-        for(ResXmlNode xmlNode : getXmlNodeList()){
-            xmlNode.linkStringReferences();
+        Iterator<ResXmlElement> iterator = getElements();
+        while (iterator.hasNext()) {
+            iterator.next().linkStringReferences();
         }
     }
     public ResXmlElement createChildElement(){
@@ -826,11 +808,11 @@ public class ResXmlElement extends ResXmlNode implements
                     new ParserEvent(ParserEvent.COMMENT, this, comment, false));
         }
         parserEventList.add(new ParserEvent(ParserEvent.START_TAG, this));
-        for(ResXmlNode xmlNode: getXmlNodeList()){
+        for(ResXmlNode xmlNode: this){
             xmlNode.addEvents(parserEventList);
         }
         comment = getEndComment();
-        if(comment!=null){
+        if(comment != null){
             parserEventList.add(
                     new ParserEvent(ParserEvent.COMMENT, this, comment, true));
         }
@@ -848,31 +830,22 @@ public class ResXmlElement extends ResXmlNode implements
     public boolean removeSelf(){
         ResXmlElement parent = getParentElement();
         if(parent != null){
-            return parent.removeElement(this);
+            return parent.remove(this);
         }
         return false;
     }
+    @Deprecated
     public boolean removeElement(ResXmlElement element){
-        if(element !=null && element.getParent()!=null){
-            element.onRemoved();
-        }
-        return mBody.remove(element);
+        return remove(element);
     }
+    @Deprecated
     public boolean removeNode(ResXmlNode node){
-        if(node instanceof ResXmlElement){
-            return removeElement((ResXmlElement) node);
-        }
-        return mBody.remove(node);
+        return remove(node);
     }
     public int countElements(){
-        int result = 0;
-        for(ResXmlNode xmlNode: getXmlNodeList()){
-            if(xmlNode instanceof ResXmlElement){
-                result++;
-            }
-        }
-        return result;
+        return CollectionUtil.count(getElements());
     }
+    @Deprecated
     public void clearChildes(){
         ResXmlNode[] copyOfNodeList=mBody.getChildes().toArray(new ResXmlNode[0]);
         for(ResXmlNode xmlNode:copyOfNodeList){
@@ -890,10 +863,7 @@ public class ResXmlElement extends ResXmlNode implements
         return iterator(ResXmlElement.class).hasNext();
     }
     public List<ResXmlNode> listXmlNodes(){
-        return new ArrayList<>(getXmlNodeList());
-    }
-    private List<ResXmlNode> getXmlNodeList(){
-        return mBody.getChildes();
+        return CollectionUtil.toList(iterator());
     }
     public Iterator<ResXmlTextNode> getTextNodes(){
         return iterator(ResXmlTextNode.class);
@@ -906,30 +876,12 @@ public class ResXmlElement extends ResXmlNode implements
         Iterator<ResXmlElement> iterator = removeList.iterator();
         int count = 0;
         while (iterator.hasNext()){
-            boolean removed = removeElement(iterator.next());
+            boolean removed = remove(iterator.next());
             if(removed){
                 count ++;
             }
         }
         return count;
-    }
-    public Iterator<ResXmlElement> getElements(){
-        return iterator(ResXmlElement.class);
-    }
-    public Iterator<ResXmlElement> getElements(Predicate<? super ResXmlElement> filter){
-        return FilterIterator.of(getElements(), filter);
-    }
-    public Iterator<ResXmlElement> getElements(String name){
-        return getElements(element -> element.equalsName(name));
-    }
-    public ResXmlElement getElement(String name){
-        return CollectionUtil.getFirst(getElements(name));
-    }
-    public List<ResXmlElement> listElements(){
-        return CollectionUtil.toList(getElements());
-    }
-    public List<ResXmlElement> listElements(String name){
-        return CollectionUtil.toList(getElements(name));
     }
     ResXmlStartNamespace getStartNamespaceByUriRef(int uriRef){
         if(uriRef<0){
@@ -1168,7 +1120,7 @@ public class ResXmlElement extends ResXmlNode implements
         }
         ChunkType chunkType=headerBlock.getChunkType();
         if(chunkType==null){
-            unknownChunk(reader, headerBlock);
+            unknownChunk(headerBlock);
             return false;
         }
         if(chunkType==ChunkType.XML_START_ELEMENT){
@@ -1182,11 +1134,11 @@ public class ResXmlElement extends ResXmlNode implements
         }else if(chunkType==ChunkType.XML_CDATA){
             onXmlText(reader);
         }else{
-            unexpectedChunk(reader, headerBlock);
+            unexpectedChunk(headerBlock);
         }
         if(!isBalanced()){
             if(!reader.isAvailable()){
-                unBalancedFinish(reader);
+                unBalancedFinish();
             }else if(pos!=reader.getPosition()){
                 return true;
             }
@@ -1229,16 +1181,16 @@ public class ResXmlElement extends ResXmlNode implements
         textNode.getResXmlText().readBytes(reader);
     }
 
-    private void unknownChunk(BlockReader reader, HeaderBlock headerBlock) throws IOException{
+    private void unknownChunk(HeaderBlock headerBlock) throws IOException{
         throw new IOException("Unknown chunk: "+headerBlock.toString());
     }
     private void multipleEndElement(BlockReader reader) throws IOException{
         throw new IOException("Multiple end element: "+reader.toString());
     }
-    private void unexpectedChunk(BlockReader reader, HeaderBlock headerBlock) throws IOException{
+    private void unexpectedChunk(HeaderBlock headerBlock) throws IOException{
         throw new IOException("Unexpected chunk: "+headerBlock.toString());
     }
-    private void unBalancedFinish(BlockReader reader) throws IOException{
+    private void unBalancedFinish() throws IOException{
         if(!isNamespaceBalanced()){
             throw new IOException("Unbalanced namespace: start="
                     +mStartNamespaceList.size()+", end="+mEndNamespaceList.size());
@@ -1308,7 +1260,7 @@ public class ResXmlElement extends ResXmlNode implements
             ResXmlAttribute attribute = getAttributeAt(i);
             attribute.serialize(serializer);
         }
-        for(ResXmlNode xmlNode : getXmlNodeList()){
+        for(ResXmlNode xmlNode : this){
             if(indentChanged && xmlNode instanceof ResXmlTextNode){
                 indentChanged = false;
                 setIndent(serializer, false);
@@ -1452,7 +1404,7 @@ public class ResXmlElement extends ResXmlNode implements
             }
         }
         JSONArray childes = new JSONArray();
-        for(ResXmlNode xmlNode : getXmlNodeList()){
+        for(ResXmlNode xmlNode : this){
             childes.put(xmlNode.toJson());
         }
         if(!childes.isEmpty()){
@@ -1557,14 +1509,12 @@ public class ResXmlElement extends ResXmlNode implements
         if(comment != null){
             xmlElement.add(new XMLComment(comment));
         }
-        for(ResXmlNode xmlNode: getXmlNodeList()){
+        for(ResXmlNode xmlNode: this){
             if(xmlNode instanceof ResXmlElement){
                 ResXmlElement childResXmlElement = (ResXmlElement)xmlNode;
                 childResXmlElement.toXml(xmlElement, decode);
-            }else if(xmlNode instanceof ResXmlTextNode){
-                ResXmlTextNode childResXmlTextNode = (ResXmlTextNode)xmlNode;
-                XMLText xmlText = childResXmlTextNode.decodeToXml();
-                xmlElement.add(xmlText);
+            }else {
+                xmlElement.add(xmlNode.toXml(decode));
             }
         }
         return xmlElement;
@@ -1640,7 +1590,7 @@ public class ResXmlElement extends ResXmlNode implements
      * */
     @Deprecated
     public int removeNodes(Predicate<? super ResXmlNode> predicate){
-        return remove(predicate);
+        return removeIf(predicate);
     }
     /**
      * Use iterator(Predicate)
@@ -1705,20 +1655,17 @@ public class ResXmlElement extends ResXmlNode implements
         }catch (Throwable ignored){
         }
     }
-    private static final Function<ResXmlElement, Iterator<ResXmlElement>> RECURSIVE_ELEMENTS = ResXmlElement::recursiveElements;
-    private static final Function<ResXmlElement, Iterator<ResXmlAttribute>> RECURSIVE_ATTRIBUTES = ResXmlElement::getAttributes;
-
-    static final String NAME_element = "element";
-    static final String NAME_name = "name";
-    static final String NAME_comment = "comment";
-    static final String NAME_text = "text";
-    static final String NAME_namespaces = "namespaces";
-    static final String NAME_namespace_uri = "namespace_uri";
-    static final String NAME_namespace_prefix = "namespace_prefix";
-    private static final String NAME_line = "line";
-    private static final String NAME_line_end = "line_end";
-    static final String NAME_attributes = "attributes";
-    static final String NAME_childes = "childes";
+    public static final String NAME_element = ObjectsUtil.of("element");
+    public static final String NAME_name = ObjectsUtil.of("name");
+    public static final String NAME_comment = ObjectsUtil.of("comment");
+    public static final String NAME_text = ObjectsUtil.of("text");
+    public static final String NAME_namespaces = ObjectsUtil.of("namespaces");
+    public static final String NAME_namespace_uri = ObjectsUtil.of("namespace_uri");
+    public static final String NAME_namespace_prefix = ObjectsUtil.of("namespace_prefix");
+    public static final String NAME_line = ObjectsUtil.of("line");
+    public static final String NAME_line_end = ObjectsUtil.of("line_end");
+    public static final String NAME_attributes = ObjectsUtil.of("attributes");
+    public static final String NAME_childes = ObjectsUtil.of("childes");
 
     private static final String FEATURE_INDENT_OUTPUT = "http://xmlpull.org/v1/doc/features.html#indent-output";
 

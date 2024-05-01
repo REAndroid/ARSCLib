@@ -460,6 +460,9 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
     public boolean contains(Object obj){
         return mItems.contains(obj);
     }
+    public boolean containsExact(Object obj){
+        return mItems.containsFast(obj);
+    }
     public Object[] toArray(){
         return mItems.toArray();
     }

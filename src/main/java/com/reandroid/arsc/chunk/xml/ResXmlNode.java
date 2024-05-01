@@ -18,6 +18,7 @@ package com.reandroid.arsc.chunk.xml;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.xml.XMLNode;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -38,6 +39,7 @@ public abstract class ResXmlNode extends FixedBlockContainer  implements JSONCon
     abstract int autoSetLineNumber(int start);
     public abstract void serialize(XmlSerializer serializer) throws IOException;
     public abstract void parse(XmlPullParser parser) throws IOException, XmlPullParserException;
+    public abstract XMLNode toXml(boolean decode);
 
     public static final String NAME_node_type = "node_type";
 }

@@ -18,6 +18,7 @@ package com.reandroid.arsc.chunk.xml;
 import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.json.JSONObject;
+import com.reandroid.xml.XMLNode;
 import com.reandroid.xml.XMLText;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -170,6 +171,11 @@ public class ResXmlTextNode extends ResXmlNode {
                     + event + ", " + parser.getPositionDescription());
         }
         append(text);
+    }
+
+    @Override
+    public XMLNode toXml(boolean decode) {
+        return new XMLText(getText());
     }
 
     public void mergeWithName(ResourceMergeOption mergeOption, ResXmlTextNode textNode){
