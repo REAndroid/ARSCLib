@@ -51,7 +51,7 @@ public abstract class InputSource {
         this.sort = sort;
     }
     public boolean isUncompressed(){
-        return getMethod() == Archive.STORED;
+        return getMethod() != Archive.DEFLATED;
     }
     public void setUncompressed(boolean uncompressed){
         if(uncompressed){

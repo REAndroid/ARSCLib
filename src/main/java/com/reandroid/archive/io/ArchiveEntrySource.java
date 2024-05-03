@@ -15,9 +15,9 @@
  */
 package com.reandroid.archive.io;
 
+import com.reandroid.archive.Archive;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.ArchiveEntry;
-import com.reandroid.archive.block.LocalFileHeader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,13 +44,47 @@ public class ArchiveEntrySource<T extends ZipInput> extends InputSource {
     }
     @Override
     public InputStream openStream() throws IOException {
+        boolean compressed = isCompressed();
+        if(compressed){
+            return openInflaterInputStream();
+        }
         ArchiveEntry archiveEntry = getArchiveEntry();
-        LocalFileHeader lfh = archiveEntry.getLocalFileHeader();
+        return getZipSource().getInputStream(
+                archiveEntry.getFileOffset(),
+                archiveEntry.getDataSize());
+    }
+    private boolean isCompressed() {
+        ArchiveEntry archiveEntry = getArchiveEntry();
+        int method = archiveEntry.getMethod();
+        if(method == Archive.STORED) {
+            return false;
+        }
+        if(method == Archive.DEFLATED) {
+            return true;
+        }
+        try{
+            byte[] buffer = new byte[1024];
+            openInflaterInputStream().read(buffer, 0, buffer.length);
+            archiveEntry.setMethod(Archive.DEFLATED);
+            this.setMethod(Archive.DEFLATED);
+            return true;
+        }catch (Throwable ignored){
+            archiveEntry.setMethod(Archive.STORED);
+            this.setMethod(Archive.STORED);
+            long s1 = archiveEntry.getSize();
+            long s2 = archiveEntry.getCompressedSize();
+            if(s1 > s2) {
+                archiveEntry.setCompressedSize(s1);
+            }else if(s2 > s1) {
+                archiveEntry.setSize(s2);
+            }
+            return false;
+        }
+    }
+    private InputStream openInflaterInputStream() throws IOException {
+        ArchiveEntry archiveEntry = getArchiveEntry();
         InputStream inputStream = getZipSource().getInputStream(
                 archiveEntry.getFileOffset(), archiveEntry.getDataSize());
-        if(lfh.getSize() == lfh.getCompressedSize()){
-            return inputStream;
-        }
         return new InflaterInputStream(inputStream,
                 new Inflater(true), 512);
     }

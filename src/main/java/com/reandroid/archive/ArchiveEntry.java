@@ -25,14 +25,14 @@ public class ArchiveEntry {
         this.localFileHeader = lfh;
     }
     public long getDataSize(){
-        if(getMethod() == Archive.STORED){
+        if(getMethod() != Archive.DEFLATED){
             return getSize();
         }
         return getCompressedSize();
     }
 
     public boolean isCompressed(){
-        return getMethod() != Archive.STORED;
+        return getMethod() == Archive.DEFLATED;
     }
     public int getMethod(){
         return localFileHeader.getMethod();
