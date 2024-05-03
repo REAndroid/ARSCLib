@@ -620,7 +620,12 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     public void serialize(XmlSerializer serializer, boolean decode) throws IOException {
         String value;
         if(getValueType() == ValueType.STRING){
-            value = XmlSanitizer.escapeSpecialCharacter(getValueAsString());
+            value = getValueAsString();
+            if(value == null) {
+                // Bad string reference, ignore
+                return;
+            }
+            value = XmlSanitizer.escapeSpecialCharacter(value);
             if(getNameId() == 0 || resolveName() == null){
                 value = XmlSanitizer.escapeDecodedValue(value);
             }
