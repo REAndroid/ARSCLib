@@ -20,14 +20,12 @@ import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.KeyPair;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.model.DexClass;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.ObjectsUtil;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class RenameTypes extends Rename<TypeKey, TypeKey>{
 
@@ -35,6 +33,8 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
     private boolean renameSignatures;
     private boolean renameSource;
     private boolean noRenameSourceForNoPackageClass;
+    private boolean fixAccessibility;
+    private Set<String> renamedStrings;
 
     public RenameTypes(){
         super();
@@ -42,33 +42,49 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
         this.renameSignatures = true;
         this.renameSource = true;
         this.noRenameSourceForNoPackageClass = true;
+        this.fixAccessibility = true;
+        this.renamedStrings = new HashSet<>();
     }
 
     @Override
     public int apply(DexClassRepository classRepository) {
         Map<String, String> map = buildRenameMap();
+        this.renamedStrings = new HashSet<>(map.size());
         Iterator<StringId> iterator = classRepository.getClonedItems(SectionType.STRING_ID);
-        int count = 0;
         while (iterator.hasNext()){
             StringId stringId = iterator.next();
             stringId.addUsageType(UsageMarker.USAGE_DEFINITION);
             String text = map.get(stringId.getString());
             if(text != null){
-                stringId.setString(text);
-                count ++;
-            }else if(renameSignatures(map, stringId)){
-                count ++;
+                setString(stringId, text);
+            }else {
+                renameSignatures(map, stringId);
             }
         }
-        return count;
+        fixAccessibility(classRepository);
+        int size = renamedStrings.size();
+        renamedStrings.clear();
+        renamedStrings = null;
+        return size;
     }
-    private boolean renameSignatures(Map<String, String> map, StringId stringId){
+    private void fixAccessibility(DexClassRepository classRepository) {
+        Set<String> renamedSet = this.renamedStrings;
+        if(!this.fixAccessibility || renamedSet == null || renamedSet.isEmpty()) {
+            return;
+        }
+        Iterator<DexClass> iterator = classRepository.getDexClasses(
+                typeKey -> renamedSet.contains(typeKey.getTypeName()));
+        while (iterator.hasNext()) {
+            iterator.next().fixAccessibility();
+        }
+    }
+    private void renameSignatures(Map<String, String> map, StringId stringId){
         if(!stringId.containsUsage(UsageMarker.USAGE_SIGNATURE_TYPE)){
-            return false;
+            return;
         }
         String text = stringId.getString();
         if(text.indexOf('L') < 0){
-            return false;
+            return;
         }
         String[] signatures = DexUtils.splitSignatures(text);
         int length = signatures.length;
@@ -81,15 +97,17 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
                 found = true;
             }
         }
-        if(!found){
-            return false;
+        if(found){
+            StringBuilder builder = new StringBuilder();
+            for(int i = 0; i < length; i++){
+                builder.append(signatures[i]);
+            }
+            setString(stringId, builder.toString());
         }
-        StringBuilder builder = new StringBuilder();
-        for(int i = 0; i < length; i++){
-            builder.append(signatures[i]);
-        }
-        stringId.setString(builder.toString());
-        return true;
+    }
+    private void setString(StringId stringId, String value) {
+        stringId.setString(value);
+        renamedStrings.add(value);
     }
 
     public void setArrayDepth(int arrayDepth) {
@@ -106,6 +124,9 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
     }
     public void setNoRenameSourceForNoPackageClass(boolean noRenameSourceForNoPackageClass) {
         this.noRenameSourceForNoPackageClass = noRenameSourceForNoPackageClass;
+    }
+    public void setFixAccessibility(boolean fixAccessibility) {
+        this.fixAccessibility = fixAccessibility;
     }
 
     private Map<String, String> buildRenameMap() {
