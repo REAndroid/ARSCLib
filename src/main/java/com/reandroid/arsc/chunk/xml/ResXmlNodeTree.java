@@ -56,7 +56,15 @@ public interface ResXmlNodeTree extends Iterable<ResXmlNode>, JSONConvert<JSONOb
         }
     }
     default int removeIf(Predicate<? super ResXmlNode> predicate) {
-        return getNodeListBlockInternal().remove(predicate);
+        int count = 0;
+        Iterator<ResXmlNode> iterator = getNodeListBlockInternal().clonedIterator();
+        while (iterator.hasNext()) {
+            ResXmlNode node = iterator.next();
+            if(predicate.test(node) && remove(node)) {
+                count ++;
+            }
+        }
+        return count;
     }
     default boolean remove(ResXmlNode xmlNode) {
         if(xmlNode != null && xmlNode.getParent() != null){

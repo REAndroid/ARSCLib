@@ -404,6 +404,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         return CollectionUtil.getFirst(getElements());
     }
     public ResXmlElement newElement() {
+        clearEmptyElements();
         ResXmlElement element = new ResXmlElement();
         add(element);
         return element;
@@ -427,6 +428,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     }
     @Override
     protected void onPreRefresh(){
+        clearEmptyElements();
         getNodeListBlockInternal().refresh();
         super.onPreRefresh();
     }
