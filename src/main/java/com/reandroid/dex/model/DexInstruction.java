@@ -16,6 +16,8 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.common.Register;
+import com.reandroid.dex.common.RegisterFormat;
+import com.reandroid.dex.common.RegisterType;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.IdItem;
@@ -30,7 +32,6 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
-import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
@@ -48,6 +49,25 @@ public class DexInstruction extends DexCode {
         this.mIns = ins;
     }
 
+    public boolean usesRegister(int register) {
+        int count = getRegistersCount();
+        for(int i = 0; i < count; i++) {
+            if(register == getRegister(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean usesRegister(int register, RegisterType type) {
+        RegisterFormat format = getOpcode().getRegisterFormat();
+        int count = getRegistersCount();
+        for(int i = 0; i < count; i++) {
+            if(register == getRegister(i) && type.is(format.get(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
     public int getAddress(){
         return getIns().getAddress();
     }
