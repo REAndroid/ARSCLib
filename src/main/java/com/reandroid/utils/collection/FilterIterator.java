@@ -20,9 +20,12 @@ import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 
 public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
+
     private final Iterator<? extends T> iterator;
     private T mNext;
     private final Predicate<? super T> mFilter;
+    private boolean mFinished;
+
     public FilterIterator(Iterator<? extends T> iterator, Predicate<? super T> filter){
         this.iterator = iterator;
         this.mFilter = filter;
@@ -38,7 +41,15 @@ public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
 
     @Override
     public boolean hasNext() {
-        return getNext() != null;
+        if(mFinished) {
+            return false;
+        }
+        if(getNext() != null){
+            return true;
+        }
+        mFinished = true;
+        onFinished();
+        return false;
     }
     @Override
     public T next() {
@@ -48,6 +59,8 @@ public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
         }
         mNext = null;
         return item;
+    }
+    public void onFinished() {
     }
     private T getNext(){
         if(mNext == null) {

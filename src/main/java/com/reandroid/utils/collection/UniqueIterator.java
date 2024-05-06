@@ -31,7 +31,11 @@ public class UniqueIterator<T> extends FilterIterator<T> {
         super(iterator);
     }
 
-    public T exclude(T item) {
+    public UniqueIterator<T> exclude(T item) {
+        addExclude(item);
+        return this;
+    }
+    private T addExclude(T item) {
         if(item == null){
             return null;
         }
@@ -46,7 +50,7 @@ public class UniqueIterator<T> extends FilterIterator<T> {
 
     @Override
     public T next() {
-        return exclude(super.next());
+        return addExclude(super.next());
     }
 
     @Override
@@ -56,5 +60,14 @@ public class UniqueIterator<T> extends FilterIterator<T> {
         }
         Set<T> excludeSet = this.excludeSet;
         return excludeSet == null || !excludeSet.contains(item);
+    }
+
+    @Override
+    public void onFinished() {
+        Set<T> excludeSet = this.excludeSet;
+        if(excludeSet != null) {
+            excludeSet.clear();
+            this.excludeSet = null;
+        }
     }
 }
