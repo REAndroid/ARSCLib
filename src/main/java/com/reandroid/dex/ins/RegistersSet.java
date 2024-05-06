@@ -25,8 +25,9 @@ public interface RegistersSet {
     int getRegister(int index);
     void setRegister(int index, int value);
 
+    @Deprecated
     default boolean isRegistersRange(){
-        return false;
+        return getRegisterFormat().isRange();
     }
     int getRegistersLimit();
     default int getRegister() {
@@ -37,5 +38,33 @@ public interface RegistersSet {
     }
     default RegisterFormat getRegisterFormat(){
         return null;
+    }
+    default boolean removeRegister(int index){
+        if(index < 0) {
+            return false;
+        }
+        int count = getRegistersCount();
+        if(index >= count) {
+            return false;
+        }
+        int last = count - 1;
+        if(getRegisterFormat().isRange()) {
+            if(index == 0) {
+                setRegister(getRegister() + 1);
+                return true;
+            }
+            if(index == last) {
+                setRegistersCount(last);
+                return true;
+            }
+            // Can not remove from middle of registers range
+            return false;
+        }
+        for(int i = 0; i < last; i ++) {
+            setRegister(i, getRegister(i + 1));
+        }
+        setRegister(last, 0);
+        setRegistersCount(last);
+        return true;
     }
 }

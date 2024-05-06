@@ -58,10 +58,6 @@ public class Ins3rc extends Size6Ins implements RegistersSet {
         }
     }
     @Override
-    public boolean isRegistersRange(){
-        return true;
-    }
-    @Override
     public String toString() {
         return getOpcode() + " {" + getRegistersIterator() + "}, " + getSectionId();
     }

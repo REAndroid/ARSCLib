@@ -75,10 +75,6 @@ public class Ins4rcc extends Size8Ins implements RegistersSet {
         }
     }
     @Override
-    public boolean isRegistersRange(){
-        return true;
-    }
-    @Override
     public int getRegistersLimit(){
         return 0xffff;
     }

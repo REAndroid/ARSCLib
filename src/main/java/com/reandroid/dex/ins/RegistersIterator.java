@@ -46,7 +46,7 @@ public class RegistersIterator implements SizedSupplier<RegisterReference>, Iter
         getRegistersSet().setRegistersCount(size);
     }
     public boolean isRange(){
-        return getRegistersSet().isRegistersRange();
+        return getRegistersSet().getRegisterFormat().isRange();
     }
     @Override
     public Iterator<RegisterReference> iterator() {
@@ -65,7 +65,7 @@ public class RegistersIterator implements SizedSupplier<RegisterReference>, Iter
         if(size == 0){
             return;
         }
-        if(getRegistersSet().isRegistersRange()){
+        if(isRange()){
             get(0).append(writer);
             writer.append(" .. ");
             get(size - 1).append(writer);

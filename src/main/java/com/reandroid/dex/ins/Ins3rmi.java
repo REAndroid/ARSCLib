@@ -39,10 +39,6 @@ public class Ins3rmi extends Size6Ins implements RegistersSet {
         }
     }
     @Override
-    public boolean isRegistersRange(){
-        return true;
-    }
-    @Override
     public int getRegistersLimit(){
         return 0xffff;
     }
