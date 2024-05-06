@@ -101,9 +101,7 @@ public class DexMethod extends DexDeclaration {
         if(!getName().equals(bridgedKey.getName())){
             return null;
         }
-        DexClass dexClass = getDexClass();
-        dexClass.addAccessFlag(AccessFlag.SYNTHETIC);
-        return dexClass.getDeclaredMethod(bridgedKey);
+        return getDexClass().getDeclaredMethod(bridgedKey);
     }
     public Iterator<DexMethod> getExtending() {
         return new MergingIterator<>(ComputeIterator.of(getDexClass().getExtending(),

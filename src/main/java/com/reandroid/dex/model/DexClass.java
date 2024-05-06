@@ -33,7 +33,6 @@ import java.io.*;
 import java.lang.annotation.ElementType;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -171,11 +170,17 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         return null;
     }
     public Iterator<DexMethod> getMethods(MethodKey methodKey) {
+        return getMethods(methodKey, false);
+    }
+    public Iterator<DexMethod> getMethods(MethodKey methodKey, boolean ignoreAccessibility) {
+        TypeKey declaring = getKey();
         return CombiningIterator.two(getDeclaredMethods(methodKey),
                 ComputeIterator.of(getSuperTypes(), dexClass -> {
                     DexMethod method = dexClass.getDeclaredMethod(methodKey);
-                    if (method != null && method.isAccessibleTo(methodKey.getDeclaring())) {
-                        return method;
+                    if(method != null && !method.isPrivate()) {
+                        if (ignoreAccessibility || method.isAccessibleTo(declaring)) {
+                            return method;
+                        }
                     }
                     return null;
                 }));
@@ -230,19 +235,20 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     public Iterator<DexClass> getOverridingAndSuperTypes(){
         return CombiningIterator.two(getOverriding(), getSuperTypes());
     }
-    public Iterator<DexClass> getSuperTypes(){
-        final TypeKey overflow = getDefining();
-        Iterator<DexClass> iterator = CombiningIterator.two(SingleIterator.of(getSuperClass()),
+    public Iterator<DexClass> getSuperTypes() {
+
+        Iterator<DexClass> iterator = CombiningIterator.two(
+                SingleIterator.of(getSuperClass()),
                 getInterfaceClasses());
-        return new IterableIterator<DexClass, DexClass>(iterator) {
+
+        iterator = new IterableIterator<DexClass, DexClass>(iterator) {
             @Override
             public Iterator<DexClass> iterator(DexClass element) {
-                if(overflow.equals(element.getDefining())){
-                    throw new IllegalArgumentException("Recursive class super: " + overflow);
-                }
                 return CombiningIterator.two(SingleIterator.of(element), element.getSuperTypes());
             }
         };
+
+        return new UniqueIterator<>(iterator).exclude(this);
     }
     public Iterator<DexClass> getOverriding(){
         return CombiningIterator.two(getExtending(), getImplementations());
@@ -462,21 +468,49 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         StringValue value = (StringValue) valueBlock;
         value.setString(typeKey.getSimpleInnerName());
     }
-    public List<Key> fixAccessibility(){
+    public Set<Key> fixAccessibility(){
         DexClassRepository repository = getClassRepository();
-        List<Key> results = new ArrayCollection<>();
-        UniqueIterator<Key> iterator = new UniqueIterator<>(getId().usedKeys());
-        iterator.exclude(getKey());
+        Set<Key> results = new HashSet<>();
+        Iterator<Key> iterator = getId().usedKeys();
         while (iterator.hasNext()){
             Key key = iterator.next();
-            if(fixAccessibility(repository.getDexDeclaration(key))){
+            if(!results.contains(key) && fixAccessibility(repository.getDexDeclaration(key))){
                 results.add(key);
             }
         }
+        fixMethodAccessibility(results);
         return results;
     }
+    private void fixMethodAccessibility(Set<Key> results){
+        Iterator<DexMethod> iterator = getDeclaredMethods();
+        while (iterator.hasNext()){
+            DexMethod dexMethod = iterator.next();
+            if(dexMethod.isPrivate()) {
+                continue;
+            }
+            Iterator<DexMethod> superMethods = getMethods(dexMethod.getKey(), true);
+            while (superMethods.hasNext()) {
+                DexMethod method = superMethods.next();
+                if(fixAccessibility(method)){
+                    results.add(method.getKey());
+                }
+            }
+            Iterator<DexMethod> extendingMethods = getExtending(dexMethod.getKey());
+            while (superMethods.hasNext()) {
+                DexMethod method = extendingMethods.next();
+                MethodKey key = method.getKey();
+                if(!results.contains(key) && fixAccessibility(method)){
+                    results.add(key);
+                }
+            }
+        }
+    }
     private boolean fixAccessibility(DexDeclaration declaration){
-        if(declaration != null && !declaration.isAccessibleTo(this)){
+        if(declaration == null || declaration.isPrivate() ||
+                (declaration.hasAccessFlag(AccessFlag.CONSTRUCTOR, AccessFlag.STATIC))) {
+            return false;
+        }
+        if(!declaration.isAccessibleTo(this)) {
             declaration.addAccessFlag(AccessFlag.PUBLIC);
             return true;
         }
