@@ -60,7 +60,7 @@ public interface RegistersSet {
             // Can not remove from middle of registers range
             return false;
         }
-        for(int i = 0; i < last; i ++) {
+        for(int i = index; i < last; i ++) {
             setRegister(i, getRegister(i + 1));
         }
         setRegister(last, 0);
