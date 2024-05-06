@@ -426,7 +426,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         return dexSourceSet.getClonedDexFiles();
     }
 
-    // if types changed, this before method rename
+    // if types changed, call this before method rename
     public void clearMethodPools(){
         for(DexFile dexFile : this){
             dexFile.clearPool(SectionType.PROTO_ID);
