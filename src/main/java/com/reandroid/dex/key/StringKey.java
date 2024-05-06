@@ -120,6 +120,25 @@ public class StringKey implements Key{
         text = DexUtils.decodeString(text);
         return new StringKey(text);
     }
+    public static StringKey parseQuotedString(String quotedString) {
+        if(quotedString == null || quotedString.length() < 2) {
+            return null;
+        }
+        SmaliReader reader = SmaliReader.of(quotedString);
+        if(reader.get() != '\"') {
+            return null;
+        }
+        String str;
+        try {
+            str = reader.readEscapedString('"');
+            if(reader.available() != 1 || reader.get() != '\"') {
+                return null;
+            }
+        } catch (IOException ignored) {
+            return null;
+        }
+        return create(str);
+    }
     public static StringKey read(SmaliReader reader) throws IOException{
         reader.skipSpaces();
         SmaliParseException.expect(reader, '\"');

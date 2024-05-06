@@ -20,6 +20,7 @@ import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 
 import java.io.IOException;
@@ -46,6 +47,24 @@ public interface Key extends Comparable<Object>, SmaliFormat {
         writer.append(toString());
     }
 
+    static Key parseBasic(String text){
+        if(StringsUtil.isEmpty(text)) {
+            return null;
+        }
+        int i = text.indexOf('"');
+        if(i == 0) {
+            return StringKey.parseQuotedString(text);
+        }
+        i = text.indexOf('(');
+        if(i > 0) {
+            return MethodKey.parse(text);
+        }
+        i = text.indexOf(':');
+        if(i > 0) {
+            return FieldKey.parse(text);
+        }
+        return TypeKey.parse(text);
+    }
     String DALVIK_accessFlags = ObjectsUtil.of("accessFlags");
     String DALVIK_name = ObjectsUtil.of("name");
     String DALVIK_value = ObjectsUtil.of("value");
