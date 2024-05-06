@@ -169,6 +169,13 @@ public class DexInstruction extends DexCode {
             ((RegistersSet) ins).setRegister(i, register);
         }
     }
+    public boolean removeRegisterAt(int index) {
+        Ins ins = getIns();
+        if(ins instanceof RegistersSet) {
+            return ((RegistersSet) ins).removeRegisterAt(index);
+        }
+        return false;
+    }
     private void ensureRegistersCount(int count){
         if(count > getRegistersCount()){
             if(getOpcode().getRegisterFormat().isOut()){
