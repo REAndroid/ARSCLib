@@ -781,20 +781,26 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         };
     }
     public Iterator<DexClass> searchExtending(TypeKey typeKey){
-        return new IterableIterator<DexFile, DexClass>(iterator()) {
-            @Override
-            public Iterator<DexClass> iterator(DexFile element) {
-                return element.getExtendingClasses(typeKey);
-            }
-        };
+        UniqueIterator<DexClass> iterator = new UniqueIterator<>(
+                new IterableIterator<DexFile, DexClass>(iterator()) {
+                    @Override
+                    public Iterator<DexClass> iterator(DexFile element) {
+                        return element.getExtendingClasses(typeKey);
+                    }
+                });
+        iterator.exclude(getDexClass(typeKey));
+        return iterator;
     }
     public Iterator<DexClass> searchImplementations(TypeKey typeKey){
-        return new IterableIterator<DexFile, DexClass>(iterator()) {
-            @Override
-            public Iterator<DexClass> iterator(DexFile element) {
-                return element.getImplementClasses(typeKey);
-            }
-        };
+        UniqueIterator<DexClass> iterator = new UniqueIterator<>(
+                new IterableIterator<DexFile, DexClass>(iterator()) {
+                    @Override
+                    public Iterator<DexClass> iterator(DexFile element) {
+                        return element.getImplementClasses(typeKey);
+                    }
+                });
+        iterator.exclude(getDexClass(typeKey));
+        return iterator;
     }
     public boolean containsClass(TypeKey key){
         return contains(SectionType.CLASS_ID, key);
