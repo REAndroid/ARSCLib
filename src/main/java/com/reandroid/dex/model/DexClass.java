@@ -205,7 +205,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
                         dexClass -> dexClass.getOverridingKeys(key)));
     }
     private MethodKey getBridgedMethod(MethodKey methodKey){
-        DexMethod dexMethod = getDeclaredMethod(methodKey);
+        DexMethod dexMethod = getDeclaredMethod(methodKey, false);
         if(dexMethod == null){
             return null;
         }
@@ -216,15 +216,31 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         return dexMethod.getKey();
     }
     public boolean containsDeclaredMethod(MethodKey methodKey) {
-        return getDeclaredMethod(methodKey) != null;
+        if(methodKey == null) {
+            return false;
+        }
+        ClassData classData = getClassData();
+        if(classData == null) {
+            return false;
+        }
+        return classData.getMethod(methodKey) != null;
     }
     public DexMethod getDeclaredMethod(MethodKey methodKey) {
+        return getDeclaredMethod(methodKey, true);
+    }
+    public DexMethod getDeclaredMethod(MethodKey methodKey, boolean ignoreReturnType) {
         Iterator<DexMethod> iterator = getDeclaredMethods();
         while (iterator.hasNext()){
             DexMethod dexMethod = iterator.next();
-            if(methodKey.equalsNameAndParameters(dexMethod.getKey())){
-                return dexMethod;
+            MethodKey key = dexMethod.getKey();
+            if(!methodKey.equalsNameAndParameters(key)){
+                continue;
             }
+            if(!ignoreReturnType &&
+                    !methodKey.getReturnType().equals(key.getReturnType())) {
+                return null;
+            }
+            return dexMethod;
         }
         return null;
     }

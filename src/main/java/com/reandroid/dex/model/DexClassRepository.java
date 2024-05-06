@@ -66,7 +66,18 @@ public interface DexClassRepository {
     default DexMethod getDeclaredMethod(MethodKey methodKey){
         DexClass dexClass = getDexClass(methodKey.getDeclaring());
         if(dexClass != null){
-            return dexClass.getDeclaredMethod(methodKey);
+            DexMethod dexMethod = dexClass.getDeclaredMethod(methodKey, false);
+            if(dexMethod == null) {
+                dexMethod = dexClass.getDeclaredMethod(methodKey, true);
+            }
+            return dexMethod;
+        }
+        return null;
+    }
+    default DexMethod getDeclaredMethod(MethodKey methodKey, boolean ignoreReturnType){
+        DexClass dexClass = getDexClass(methodKey.getDeclaring());
+        if(dexClass != null){
+            return dexClass.getDeclaredMethod(methodKey, ignoreReturnType);
         }
         return null;
     }
