@@ -39,7 +39,7 @@ public interface RegistersSet {
     default RegisterFormat getRegisterFormat(){
         return null;
     }
-    default boolean removeRegister(int index){
+    default boolean removeRegisterAt(int index){
         if(index < 0) {
             return false;
         }
