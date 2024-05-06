@@ -213,6 +213,9 @@ public class SmaliReader {
                 return -1;
             }
         }
+        if(index == bytesLength) {
+            return bytesLength;
+        }
         return -1;
     }
     public int indexOf(char ch){
@@ -290,6 +293,9 @@ public class SmaliReader {
     }
     private boolean equalsAt(int index, byte[] bytes){
         int length = bytes.length;
+        if(length > available() - index) {
+            return false;
+        }
         for(int i = 0; i < length; i++){
             if(bytes[i] != get(i + index)){
                 return false;
@@ -298,6 +304,9 @@ public class SmaliReader {
         return true;
     }
     public boolean skipWhitespacesOrComment(){
+        if(finished()) {
+            return false;
+        }
         boolean result = false;
         if(get() == '#'){
             nextLine();
@@ -312,6 +321,9 @@ public class SmaliReader {
         return result;
     }
     public boolean skipWhitespaces(){
+        if(finished()) {
+            return false;
+        }
         int pos = position();
         int nextPosition = pos;
         int end = pos + available();

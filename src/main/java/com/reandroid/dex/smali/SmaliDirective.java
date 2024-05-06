@@ -189,7 +189,7 @@ public class SmaliDirective implements SmaliFormat {
         return parse(reader, true);
     }
     public static SmaliDirective parse(SmaliReader reader, boolean skip){
-        if(reader == null){
+        if(reader == null || reader.finished()){
             return null;
         }
         int position = reader.position();
@@ -218,9 +218,11 @@ public class SmaliDirective implements SmaliFormat {
         return directive;
     }
     private static SmaliDirective directiveOf(SmaliReader reader){
-        for(SmaliDirective smaliDirective : VALUES){
-            if(smaliDirective.readMatches(reader)){
-                return smaliDirective;
+        if(!reader.finished()) {
+            for(SmaliDirective smaliDirective : VALUES){
+                if(smaliDirective.readMatches(reader)){
+                    return smaliDirective;
+                }
             }
         }
         return null;

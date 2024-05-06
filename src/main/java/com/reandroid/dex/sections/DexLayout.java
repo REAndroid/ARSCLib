@@ -241,8 +241,8 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
         }
         return getSectionList().merge(options, dexFile.getSectionList());
     }
-    public void fromSmali(SmaliClass smaliClass) throws IOException {
-        getSectionList().fromSmali(smaliClass);
+    public ClassId fromSmali(SmaliClass smaliClass) throws IOException {
+        return getSectionList().fromSmali(smaliClass);
     }
     @Override
     public byte[] getBytes(){

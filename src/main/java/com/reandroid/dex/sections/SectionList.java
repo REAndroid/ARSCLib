@@ -569,9 +569,10 @@ public class SectionList extends FixedBlockContainer
         }
         return mergedAll;
     }
-    public void fromSmali(SmaliClass smaliClass) throws IOException {
+    public ClassId fromSmali(SmaliClass smaliClass) throws IOException {
         ClassId classId = getOrCreateSectionItem(SectionType.CLASS_ID, smaliClass.getKey());
         classId.fromSmali(smaliClass);
+        return classId;
     }
     private static<T1 extends Section<?>> Comparator<T1> getOffsetComparator() {
         return (section1, section2) -> {

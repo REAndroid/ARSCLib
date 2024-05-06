@@ -497,7 +497,7 @@ public class DexFile implements DexClassRepository, Closeable,
         requireNotClosed();
         fromSmali(SmaliReader.of(file));
     }
-    public void fromSmali(SmaliReader reader) throws IOException {
+    public void fromSmaliMultipleClasses(SmaliReader reader) throws IOException {
         requireNotClosed();
         while (SmaliDirective.parse(reader, false) == SmaliDirective.CLASS){
             SmaliClass smaliClass = new SmaliClass();
@@ -506,9 +506,18 @@ public class DexFile implements DexClassRepository, Closeable,
             reader.skipWhitespacesOrComment();
         }
     }
-    public void fromSmali(SmaliClass smaliClass) throws IOException {
+    public DexClass fromSmali(SmaliReader reader) throws IOException {
         requireNotClosed();
-        getDexLayout().fromSmali(smaliClass);
+        SmaliClass smaliClass = new SmaliClass();
+        smaliClass.parse(reader);
+        DexClass dexClass = fromSmali(smaliClass);
+        reader.skipWhitespacesOrComment();
+        return dexClass;
+    }
+    public DexClass fromSmali(SmaliClass smaliClass) throws IOException {
+        requireNotClosed();
+        ClassId classId = getDexLayout().fromSmali(smaliClass);
+        return create(classId);
     }
 
     public byte[] getBytes() {

@@ -28,6 +28,9 @@ public abstract class SmaliDefSet<T extends SmaliDef> extends SmaliSet<T>
         }
     }
     private boolean parseNext(SmaliReader reader) throws IOException {
+        if(reader.finished()){
+            return false;
+        }
         reader.skipWhitespacesOrComment();
         SmaliDirective directive = SmaliDirective.parse(reader, false);
         if(directive != getSmaliDirective()){
