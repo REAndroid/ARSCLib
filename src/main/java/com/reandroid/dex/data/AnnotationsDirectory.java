@@ -25,7 +25,7 @@ import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.KeyItemCreate;
+import com.reandroid.dex.key.ModifiableKeyItem;
 import com.reandroid.dex.reference.DataItemIndirectReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.CombiningIterator;
@@ -37,7 +37,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class AnnotationsDirectory extends DataItem implements KeyItemCreate {
+public class AnnotationsDirectory extends DataItem implements ModifiableKeyItem {
 
     private final Header header;
 

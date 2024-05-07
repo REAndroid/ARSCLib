@@ -42,6 +42,7 @@ public interface DexClassRepository {
     <T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType, Key key);
     <T1 extends SectionItem> T1 getItem(SectionType<T1> sectionType, Key key);
     <T1 extends SectionItem> int removeEntries(SectionType<T1> sectionType, Predicate<T1> filter);
+    void clearPoolMap();
 
     default <T extends SectionItem> Iterator<T> getClonedItems(SectionType<T> sectionType, Predicate<? super T> filter) {
         return FilterIterator.of(getClonedItems(sectionType), filter);

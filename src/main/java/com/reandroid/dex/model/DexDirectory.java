@@ -429,18 +429,19 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
     // if types changed, call this before method rename
     public void clearMethodPools(){
         for(DexFile dexFile : this){
-            dexFile.clearPool(SectionType.PROTO_ID);
-            dexFile.clearPool(SectionType.METHOD_ID);
+            dexFile.clearPoolMap(SectionType.PROTO_ID);
+            dexFile.clearPoolMap(SectionType.METHOD_ID);
         }
     }
-    public void clearPool(SectionType<?> sectionType){
+    public void clearPoolMap(SectionType<?> sectionType){
         for(DexFile dexFile : this){
-            dexFile.clearPool(sectionType);
+            dexFile.clearPoolMap(sectionType);
         }
     }
-    public void clearPools(){
+    @Override
+    public void clearPoolMap(){
         for(DexFile dexFile : this){
-            dexFile.clearPools();
+            dexFile.clearPoolMap();
         }
     }
     public void sortStrings(){

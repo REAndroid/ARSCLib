@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.sections;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
@@ -25,7 +24,6 @@ import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
@@ -55,13 +53,9 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         this(sectionType, new SectionArray<>(countAndOffset, sectionType.getCreator()));
     }
 
-    public Iterator<T> getWithUsage(int usage){
-        return iterator(item -> ((UsageMarker) item).containsUsage(usage));
-    }
-
     @Override
     public void refreshFull() {
-        clearPool();
+        clearPoolMap();
         SectionArray<T> array = getItemArray();
         array.refreshFull();
         sort();
@@ -106,10 +100,10 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         setIndex(-1);
     }
     public void clear(){
-        clearPool();
+        clearPoolMap();
         getItemArray().clear();
     }
-    public void clearPool(){
+    public void clearPoolMap(){
         DexSectionPool<T> dexSectionPool = this.getLoadedPool();
         if(dexSectionPool != null){
             dexSectionPool.clear();
@@ -131,14 +125,8 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     public T getSectionItem(Key key) {
         return getPool().get(key);
     }
-    public T getLoaded(Key key) {
-        DexSectionPool<T> pool = getLoadedPool();
-        if(pool != null){
-            return pool.get(key);
-        }
-        return null;
-    }
-    boolean keyChanged(Block block, Key key, boolean immediateIdSort){
+
+    boolean keyChanged(SectionItem block, Key key, boolean immediateIdSort){
         DexSectionPool<T> dexSectionPool = this.getLoadedPool();
         if(dexSectionPool != null){
             return dexSectionPool.update(key);
@@ -283,7 +271,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         position += sectionAlign.size();
         getOffsetReference().set(position);
         onRefreshed(position);
-        clearPool();
+        clearPoolMap();
     }
     void alignSection(DexPositionAlign positionAlign, int position){
         if(isPositionAlignedItem()){
@@ -305,9 +293,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
             dexSectionPool.remove(item);
         }
     }
-    int getDiffCount(Section<T> section){
-        return getCount();
-    }
+
     @Override
     public String toString() {
         return getSectionType() +", offset = " + getOffset()

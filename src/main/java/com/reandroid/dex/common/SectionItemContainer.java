@@ -53,10 +53,6 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
         return getOffset();
     }
     @Override
-    public void setIdx(int idx){
-        setPosition(idx);
-    }
-    @Override
     public IntegerReference getOffsetReference() {
         return mReference;
     }

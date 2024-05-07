@@ -15,15 +15,17 @@
  */
 package com.reandroid.dex.sections;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.dex.base.IntegerPair;
+import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public class IdSection<T extends IdItem> extends Section<T> {
@@ -35,9 +37,13 @@ public class IdSection<T extends IdItem> extends Section<T> {
         super(sectionType, itemArray);
     }
 
+    public int getFreeSpace() {
+        return 0xffff - getCount();
+    }
+
     @SuppressWarnings("unchecked")
     @Override
-    boolean keyChanged(Block block, Key key, boolean immediateSort) {
+    boolean keyChanged(SectionItem block, Key key, boolean immediateSort) {
         boolean changed = super.keyChanged(block, key, immediateSort);
         if(!immediateSort){
             return changed;
@@ -105,40 +111,36 @@ public class IdSection<T extends IdItem> extends Section<T> {
         position += getItemArray().countBytes();
         updateNextSection(position);
     }
-    @Override
-    int getDiffCount(Section<T> section){
-        int count = getCount();
-        if(section == this || section == null){
-            return count;
+
+    boolean canAddAll(Collection<IdItem> collection, int reserveSpace) {
+        if(reserveSpace < 0) {
+            reserveSpace = 200;
         }
-        for(T item : section){
-            if(!contains(item.getKey())){
-                count ++;
-            }
+        int freeSpace = getFreeSpace();
+        if(freeSpace <= reserveSpace) {
+            return false;
         }
-        return count;
-    }
-    public boolean canAdd(Collection<IdItem> collection){
-        int count = getCount() + 200;
-        int check = count + collection.size();
-        if((check & 0xffff0000) == 0){
+        if(collection.size() < freeSpace) {
             return true;
         }
+        Set<Key> checkedKeys = new HashSet<>();
         SectionType<T> sectionType = getSectionType();
-        Iterator<IdItem> iterator = collection.iterator();
-        while (iterator.hasNext()){
-            IdItem item = iterator.next();
-            if(item.getSectionType() != sectionType){
+        for (IdItem item : collection) {
+            if (item.getSectionType() != sectionType) {
                 continue;
             }
             Key key = item.getKey();
-            if(!contains(key)){
-                count++;
+            if(checkedKeys.contains(key)) {
+                continue;
             }
-            if((count & 0xffff0000) != 0){
-                return false;
+            checkedKeys.add(key);
+            if (!contains(key)) {
+                freeSpace --;
+                if (freeSpace <= reserveSpace) {
+                    return false;
+                }
             }
         }
-        return (count & 0xffff0000) == 0;
+        return true;
     }
 }

@@ -61,8 +61,11 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
                 renameSignatures(map, stringId);
             }
         }
-        fixAccessibility(classRepository);
         int size = renamedStrings.size();
+        if(size != 0) {
+            classRepository.clearPoolMap();
+        }
+        fixAccessibility(classRepository);
         renamedStrings.clear();
         renamedStrings = null;
         return size;

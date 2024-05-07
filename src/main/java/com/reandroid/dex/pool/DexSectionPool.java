@@ -19,7 +19,7 @@ import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
-import com.reandroid.dex.key.KeyItemCreate;
+import com.reandroid.dex.key.ModifiableKeyItem;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.utils.collection.ArrayCollection;
 
@@ -100,7 +100,7 @@ public class DexSectionPool<T extends SectionItem> extends KeyPool<T>{
     }
     T createNext(Key key){
         T item = getSection().createItem();
-        ((KeyItemCreate) item).setKey(key);
+        ((ModifiableKeyItem) item).setKey(key);
         return item;
     }
     Section<T> getSection(){
@@ -175,7 +175,7 @@ public class DexSectionPool<T extends SectionItem> extends KeyPool<T>{
         T sample = getSectionType().getCreator().newInstance();
         keyItemsChecked = true;
         keyItems = sample instanceof KeyItem;
-        keyItemsCreate = sample instanceof KeyItemCreate;
+        keyItemsCreate = sample instanceof ModifiableKeyItem;
         return keyItems;
     }
 }

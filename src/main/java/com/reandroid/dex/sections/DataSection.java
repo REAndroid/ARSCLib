@@ -122,8 +122,4 @@ public class DataSection<T extends DataItem> extends Section<T> {
         position = array.updatePositionedItemOffsets(position);
         updateNextSection(position);
     }
-    @Override
-    int getDiffCount(Section<T> section){
-        return getCount();
-    }
 }

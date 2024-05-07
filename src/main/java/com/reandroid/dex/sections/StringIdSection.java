@@ -17,6 +17,7 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.base.IntegerPair;
+import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.id.TypeId;
@@ -46,7 +47,7 @@ public class StringIdSection extends IdSection<StringId> {
         super.onPreRefresh();
     }
     @Override
-    boolean keyChanged(Block block, Key key, boolean immediateSort) {
+    boolean keyChanged(SectionItem block, Key key, boolean immediateSort) {
         boolean changed = super.keyChanged(block, key, immediateSort);
         if(key instanceof StringKey){
             String text = ((StringKey)key).getString();

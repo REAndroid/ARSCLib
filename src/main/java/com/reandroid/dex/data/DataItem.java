@@ -27,7 +27,7 @@ import com.reandroid.dex.common.SectionItemContainer;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
-import com.reandroid.dex.key.KeyItemCreate;
+import com.reandroid.dex.key.ModifiableKeyItem;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
@@ -60,9 +60,9 @@ public class DataItem extends SectionItemContainer
         if(item == null){
             return;
         }
-        if(this instanceof KeyItemCreate){
-            KeyItemCreate self = (KeyItemCreate) this;
-            self.setKey(((KeyItemCreate)item).getKey());
+        if(this instanceof ModifiableKeyItem){
+            ModifiableKeyItem self = (ModifiableKeyItem) this;
+            self.setKey(((ModifiableKeyItem)item).getKey());
             return;
         }
         BlockReader reader = new BlockReader(item.getBytes());

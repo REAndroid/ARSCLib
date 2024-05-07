@@ -268,15 +268,15 @@ public class SectionList extends FixedBlockContainer
         dataSectionList.clearChildes();
         typeMap.clear();
     }
-    public void clearPool(SectionType<?> sectionType){
+    public void clearPoolMap(SectionType<?> sectionType){
         Section<?> section = getSection(sectionType);
         if(section != null){
-            section.clearPool();
+            section.clearPoolMap();
         }
     }
-    public void clearPools(){
+    public void clearPoolMap(){
         for(Section<?> section : this){
-            section.clearPool();
+            section.clearPoolMap();
         }
     }
     public void sortSection(SectionType<?>[] order){
@@ -432,7 +432,7 @@ public class SectionList extends FixedBlockContainer
         this.immediateIdSort = immediateIdSort;
     }
 
-    public void keyChanged(Block item, SectionType<?> sectionType, Key oldKey){
+    public void keyChangedInternal(SectionItem item, SectionType<?> sectionType, Key oldKey){
         Section<?> section = getSection(sectionType);
         if(section == null){
             return;
@@ -469,11 +469,12 @@ public class SectionList extends FixedBlockContainer
         return baseOffset;
     }
 
-    private boolean canAdd(Collection<IdItem> usedIds) {
+    private boolean canAddAll(Collection<IdItem> idItemCollection) {
+        int reserveSpace = 200;
         Iterator<IdSection<?>> idSections = getIdSections();
         while (idSections.hasNext()){
             IdSection<?> section = idSections.next();
-            if(!section.canAdd(usedIds)){
+            if(!section.canAddAll(idItemCollection, reserveSpace)){
                 return false;
             }
         }
@@ -500,7 +501,7 @@ public class SectionList extends FixedBlockContainer
             return false;
         }
         ArrayCollection<IdItem> collection = classId.listUsedIds();
-        if(!canAdd(collection)){
+        if(!canAddAll(collection)){
             options.onDexFull(getParentInstance(DexLayout.class), classId);
             return false;
         }
@@ -543,7 +544,7 @@ public class SectionList extends FixedBlockContainer
                 continue;
             }
             ArrayCollection<IdItem> collection = coming.listUsedIds();
-            if(!canAdd(collection)){
+            if(!canAddAll(collection)){
                 mergedAll = false;
                 options.onDexFull(this.getParentInstance(DexLayout.class), coming);
                 break;

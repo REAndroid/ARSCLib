@@ -93,7 +93,7 @@ public class DexFile implements DexClassRepository, Closeable,
         if(section == null){
             return;
         }
-        section.clearPool();
+        section.clearPoolMap();
         section.refresh();
     }
     public void fixDebugLineNumbers(){
@@ -346,11 +346,12 @@ public class DexFile implements DexClassRepository, Closeable,
         getDexLayout().sortSection(order);
         refresh();
     }
-    public void clearPool(SectionType<?> sectionType){
-        getDexLayout().clearPool(sectionType);
+    public void clearPoolMap(SectionType<?> sectionType){
+        getDexLayout().clearPoolMap(sectionType);
     }
-    public void clearPools(){
-        getDexLayout().clearPools();
+    @Override
+    public void clearPoolMap(){
+        getDexLayout().clearPoolMap();
     }
     public void sortStrings(){
         getDexLayout().sortStrings();

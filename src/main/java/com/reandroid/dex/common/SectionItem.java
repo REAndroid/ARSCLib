@@ -7,8 +7,6 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 
-import java.lang.reflect.Field;
-
 public class SectionItem extends BlockItem implements EditableItem, SectionTool, UsageMarker {
 
     private int mUsageType;
@@ -24,12 +22,6 @@ public class SectionItem extends BlockItem implements EditableItem, SectionTool,
     }
     public int getIdx(){
         throw new RuntimeException("Not applicable for: " + getClass());
-    }
-    public void setIdx(int idx){
-        throw new RuntimeException("Not applicable for: " + getClass());
-    }
-    public boolean isValidIdx(){
-        return getIdx() != -1;
     }
 
     public SectionType<? extends SectionItem> getSectionType(){
@@ -87,7 +79,7 @@ public class SectionItem extends BlockItem implements EditableItem, SectionTool,
         }
         SectionList sectionList = getSectionList();
         if(sectionList != null){
-            sectionList.keyChanged(this, getSectionType(), oldKey);
+            sectionList.keyChangedInternal(this, getSectionType(), oldKey);
         }
     }
     public boolean isSameContext(SectionItem sectionItem){
@@ -149,24 +141,5 @@ public class SectionItem extends BlockItem implements EditableItem, SectionTool,
             return false;
         }
         return myKey.equals(key);
-    }
-
-    public String getFieldNameForDebug(Object item){
-        Class<? extends SectionItem> clazz = getClass();
-        Field[] fields = clazz.getDeclaredFields();
-        for(Field field : fields){
-            if(item == invokeSafe(field)){
-                return field.getName();
-            }
-        }
-        return null;
-    }
-    private Object invokeSafe(Field field){
-        try{
-            field.setAccessible(true);
-            return field.get(this);
-        }catch (Throwable ignored){
-            return null;
-        }
     }
 }

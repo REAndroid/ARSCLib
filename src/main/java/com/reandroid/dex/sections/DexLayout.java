@@ -166,11 +166,13 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
         getSectionList().sortSection(order);
         refresh();
     }
-    public void clearPool(SectionType<?> sectionType){
-        getSectionList().clearPool(sectionType);
+    public void clearPoolMap(SectionType<?> sectionType){
+        getSectionList().clearPoolMap(sectionType);
     }
-    public void clearPools(){
-        getSectionList().clearPools();
+    public void clearPoolMap(){
+        extendingClassMap.clear();
+        interfaceMap.clear();
+        getSectionList().clearPoolMap();
     }
     public void sortStrings(){
         getSectionList().sortStrings();
