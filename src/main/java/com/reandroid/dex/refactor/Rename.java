@@ -17,6 +17,7 @@ package com.reandroid.dex.refactor;
 
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyPair;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
@@ -32,6 +33,9 @@ public abstract class Rename<T extends Key, R extends Key> {
         this.keyPairSet = new HashSet<>();
     }
 
+    public void add(T search, R replace) {
+        add(new KeyPair<>(search, replace));
+    }
     public void add(KeyPair<T, R> keyPair){
         addToSet(keyPair);
     }
