@@ -1107,13 +1107,12 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
         T1[] newArray(int length);
     }
     public interface Monitor<T> {
-
         void onAdd(int i, T item);
         void onRemoved(int i, T item);
-        void onSet(int i, T item);
-        void onSet(Object[] elements, int size);
-        void onGrow(int size);
-        void onShrink(int size);
-        void onSwap(int i, int j);
+        default void onSet(int i, T item) {}
+        default void onSet(Object[] elements, int size){}
+        default void onGrow(int size){}
+        default void onShrink(int size){}
+        default void onSwap(int i, int j){}
     }
 }
