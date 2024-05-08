@@ -58,20 +58,20 @@ public class SmaliInterfaceSet extends SmaliSet<SmaliInterface> implements Smali
         writer.appendAll(iterator());
     }
     @Override
-    public void parse(SmaliReader reader) throws IOException {
-        while (parseNext(reader)){
-            reader.skipWhitespaces();
-        }
-    }
-    private boolean parseNext(SmaliReader reader) throws IOException {
+    SmaliInterface createNext(SmaliReader reader) {
         reader.skipWhitespacesOrComment();
         SmaliDirective directive = SmaliDirective.parse(reader, false);
         if(directive != getSmaliDirective()){
-            return false;
+            return null;
         }
-        SmaliInterface item = new SmaliInterface();
-        add(item);
-        item.parse(reader);
-        return true;
+        return new SmaliInterface();
+    }
+    public static SmaliInterfaceSet read(SmaliReader reader) throws IOException {
+        SmaliInterfaceSet smali = new SmaliInterfaceSet();
+        smali.parse(reader);
+        if(!smali.isEmpty()) {
+            return smali;
+        }
+        return null;
     }
 }

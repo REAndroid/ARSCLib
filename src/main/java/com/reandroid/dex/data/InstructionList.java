@@ -34,8 +34,8 @@ import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliCodeSet;
 import com.reandroid.dex.smali.model.SmaliInstruction;
-import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.*;
 
@@ -319,6 +319,9 @@ public class InstructionList extends FixedBlockContainer implements
         return constNumber;
     }
     public<T1 extends Ins> T1 createAt(int index, Opcode<T1> opcode) {
+        if(index == getCount()) {
+            return createNext(opcode);
+        }
         T1 item = opcode.newInstance();
         add(index, item);
         return item;
@@ -645,12 +648,26 @@ public class InstructionList extends FixedBlockContainer implements
         getInsArray().trimToSize();
         updateAddresses();
     }
-    public void fromSmali(SmaliMethod smaliMethod) throws IOException {
-        Iterator<SmaliInstruction> iterator = smaliMethod.getInstructions();
+    public void fromSmali(SmaliCodeSet smaliCodeSet) throws IOException {
+        int index = 0;
+        int offset = smaliCodeSet.getAddressOffset();
+        if(offset != 0) {
+            Ins ins = getAtAddress(smaliCodeSet.getAddressOffset());
+            if(ins != null) {
+                index = ins.getIndex();
+            }else if(offset >= getCodeUnits()) {
+                index = getCount();
+            }
+        }
+        fromSmali(index, smaliCodeSet);
+    }
+    public void fromSmali(int index, SmaliCodeSet smaliCodeSet) throws IOException {
+        Iterator<SmaliInstruction> iterator = smaliCodeSet.getInstructions();
         while (iterator.hasNext()){
             SmaliInstruction smaliInstruction = iterator.next();
-            Ins ins = createNext(smaliInstruction.getOpcode());
+            Ins ins = createAt(index, smaliInstruction.getOpcode());
             ins.fromSmali(smaliInstruction);
+            index ++;
         }
         getInsArray().trimToSize();
         updateAddresses();

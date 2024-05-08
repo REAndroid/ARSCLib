@@ -41,6 +41,20 @@ public class SmaliInstruction extends SmaliCode{
         this.registerSet = SmaliRegisterSet.NO_REGISTER_SET;
         this.operand = SmaliInstructionOperand.NO_OPERAND;
     }
+    public SmaliInstruction(Opcode<?> opcode){
+        super();
+        if(opcode == null) {
+            throw new NullPointerException();
+        }
+        this.opcode = opcode;
+        initRegisterSet(opcode);
+        try {
+            initOperand(opcode);
+        } catch (IOException exception) {
+            // Will not happen
+            throw new RuntimeException(exception);
+        }
+    }
 
     public Key getKey(){
         SmaliInstructionOperand operand = getOperand();
@@ -124,7 +138,7 @@ public class SmaliInstruction extends SmaliCode{
     public Opcode<?> getOpcode() {
         return opcode;
     }
-    public void initializeOpcode(Opcode<?> opcode) {
+    public void initializeOpcode(Opcode<?> opcode) throws IOException {
         this.opcode = opcode;
         initRegisterSet(opcode);
         initOperand(opcode);
@@ -139,7 +153,7 @@ public class SmaliInstruction extends SmaliCode{
         }
         setRegisterSet(registerSet);
     }
-    private void initOperand(Opcode<?> opcode) {
+    private void initOperand(Opcode<?> opcode) throws IOException {
         OperandType operandType = opcode.getOperandType();
         SmaliInstructionOperand operand;
         if(operandType == OperandType.NONE){
@@ -153,7 +167,7 @@ public class SmaliInstruction extends SmaliCode{
         }else if(operandType == OperandType.DECIMAL){
             operand = new SmaliInstructionOperand.SmaliDecimalOperand();
         }else {
-            throw new RuntimeException("Unknown operand type: " + operandType
+            throw new IOException("Unknown operand type: " + operandType
                     + ", opcode = " + opcode);
         }
         setOperand(operand);
@@ -191,7 +205,7 @@ public class SmaliInstruction extends SmaliCode{
         }
         getOperand().parse(opcode, reader);
     }
-    private Opcode<?> parseOpcode(SmaliReader reader){
+    private Opcode<?> parseOpcode(SmaliReader reader) throws IOException {
         reader.skipWhitespaces();
         Opcode<?> opcode = Opcode.parseSmali(reader, true);
         initializeOpcode(opcode);

@@ -16,6 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.FilterIterator;
 
@@ -62,11 +63,20 @@ public class SmaliFieldSet extends SmaliDefSet<SmaliField>{
     }
 
     @Override
-    public SmaliField createNew() {
+    SmaliField createNew() {
         return new SmaliField();
     }
     @Override
     public SmaliDirective getSmaliDirective() {
         return SmaliDirective.FIELD;
+    }
+
+    public static SmaliFieldSet read(SmaliReader reader) throws IOException {
+        SmaliFieldSet smali = new SmaliFieldSet();
+        smali.parse(reader);
+        if(!smali.isEmpty()) {
+            return smali;
+        }
+        return null;
     }
 }

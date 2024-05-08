@@ -18,14 +18,20 @@ package com.reandroid.dex.smali.model;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliRegion;
+
+import java.io.IOException;
 
 public abstract class SmaliDef extends Smali implements SmaliRegion {
 
     private String name;
     private AccessFlag[] accessFlags;
     private SmaliAnnotationSet annotation;
+
+    private TypeKey defining;
 
     public SmaliDef(){
         super();
@@ -46,6 +52,19 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
     }
     public void setName(String name) {
         this.name = name;
+    }
+    public TypeKey getDefining() {
+        TypeKey typeKey = this.defining;
+        if(typeKey == null) {
+            SmaliDefSet<?> defSet = getDefSet();
+            if(defSet != null) {
+                typeKey = defSet.getDefining();
+            }
+        }
+        return typeKey;
+    }
+    public void setDefining(TypeKey defining) {
+        this.defining = defining;
     }
 
     public SmaliAnnotationSet getAnnotation() {
@@ -81,7 +100,17 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
         return Modifier.contains(getAccessFlags(), AccessFlag.PRIVATE);
     }
 
+    private SmaliDefSet<?> getDefSet(){
+        return getParentInstance(SmaliMethodSet.class);
+    }
     public SmaliClass getSmaliClass(){
+        if(getClass().isInstance(SmaliClass.class)) {
+            return (SmaliClass) this;
+        }
         return getParentInstance(SmaliClass.class);
+    }
+
+    public SmaliAnnotationItem parseAnnotation(SmaliReader reader) throws IOException {
+        return getOrCreateAnnotation().parseNext(reader);
     }
 }

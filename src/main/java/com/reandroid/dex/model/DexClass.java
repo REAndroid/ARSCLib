@@ -21,7 +21,10 @@ import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.reference.TypeListReference;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliField;
+import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.NullValue;
@@ -301,6 +304,12 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
             return EmptyIterator.of();
         }
         return ComputeIterator.of(classData.getInstanceFields(), this::createField);
+    }
+    public DexField getOrCreateInstanceField(FieldKey fieldKey){
+        return createField(getOrCreateInstance(fieldKey));
+    }
+    public FieldDef getOrCreateInstance(FieldKey fieldKey){
+        return getOrCreateClassData().getOrCreateInstance(fieldKey);
     }
     public Iterator<DexMethod> getDeclaredMethods(Predicate<DexMethod> filter) {
         Iterator<DexMethod> iterator = getDeclaredMethods();
@@ -619,6 +628,49 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     public void append(SmaliWriter writer) throws IOException {
         getClassData();
         getId().append(writer);
+    }
+
+    public DexMethod parseMethod(SmaliReader reader) throws IOException {
+        SmaliMethod smaliMethod = new SmaliMethod();
+        smaliMethod.setDefining(getKey());
+        smaliMethod.parse(reader);
+        MethodKey methodKey = smaliMethod.getKey();
+        DexMethod dexMethod;
+        if(smaliMethod.isDirect()) {
+            dexMethod = getOrCreateDirectMethod(methodKey);
+        } else {
+            dexMethod = getOrCreateVirtualMethod(methodKey);
+        }
+        dexMethod.getDefinition().fromSmali(smaliMethod);
+        return dexMethod;
+    }
+    public DexField parseField(SmaliReader reader) throws IOException {
+        SmaliField smaliField = new SmaliField();
+        smaliField.setDefining(getKey());
+        smaliField.parse(reader);
+        FieldKey fieldKey = smaliField.getKey();
+        DexField dexField;
+        if(smaliField.isInstance()) {
+            dexField = getOrCreateInstanceField(fieldKey);
+        } else {
+            dexField = getOrCreateStaticField(fieldKey);
+        }
+        dexField.getDefinition().fromSmali(smaliField);
+        return dexField;
+    }
+    public DexField parseInterfaces(SmaliReader reader) throws IOException {
+        SmaliField smaliField = new SmaliField();
+        smaliField.setDefining(getKey());
+        smaliField.parse(reader);
+        FieldKey fieldKey = smaliField.getKey();
+        DexField dexField;
+        if(smaliField.isInstance()) {
+            dexField = getOrCreateInstanceField(fieldKey);
+        } else {
+            dexField = getOrCreateStaticField(fieldKey);
+        }
+        dexField.getDefinition().fromSmali(smaliField);
+        return dexField;
     }
     public void writeSmali(SmaliWriter writer, File dir) throws IOException {
         File file = toSmaliFile(dir);

@@ -48,9 +48,9 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
 
     @Override
     public MethodKey getKey(){
-        SmaliClass smaliClass = getSmaliClass();
-        if(smaliClass != null){
-            return getKey(smaliClass.getKey());
+        TypeKey typeKey = getDefining();
+        if(typeKey != null) {
+            return getKey(typeKey);
         }
         return null;
     }
@@ -101,7 +101,7 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
         return codeSet;
     }
     public Iterator<SmaliCodeTryItem> getTryItems(){
-        return getCodeSet().iterator(SmaliCodeTryItem.class);
+        return getCodeSet().getTryItems();
     }
 
     @Override
@@ -145,6 +145,7 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
 
     @Override
     public void parse(SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, getSmaliDirective());
         setAccessFlags(AccessFlag.parse(reader));
         parseName(reader);
@@ -222,9 +223,9 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
     @Override
     public String toDebugString() {
         StringBuilder builder = new StringBuilder();
-        SmaliClass smaliClass = getSmaliClass();
-        if(smaliClass != null){
-            builder.append(smaliClass.toDebugString());
+        TypeKey typeKey = getDefining();
+        if(typeKey != null){
+            builder.append(typeKey);
             builder.append(", ");
         }
         builder.append("method = ");

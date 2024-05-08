@@ -1,5 +1,6 @@
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliRegion;
@@ -10,11 +11,31 @@ import java.io.IOException;
 public abstract class SmaliDefSet<T extends SmaliDef> extends SmaliSet<T>
         implements SmaliRegion {
 
+    private TypeKey defining;
+
     public SmaliDefSet(){
         super();
     }
 
-    public abstract T createNew();
+    public TypeKey getDefining() {
+        TypeKey typeKey = this.defining;
+        if(typeKey == null) {
+            SmaliClass smaliClass = getSmaliClass();
+            if(smaliClass != null){
+                typeKey = smaliClass.getKey();
+            }
+        }
+        return typeKey;
+    }
+    public void setDefining(TypeKey defining) {
+        this.defining = defining;
+    }
+
+    abstract T createNew();
+
+    public SmaliClass getSmaliClass(){
+        return getParentInstance(SmaliClass.class);
+    }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
@@ -22,23 +43,12 @@ public abstract class SmaliDefSet<T extends SmaliDef> extends SmaliSet<T>
     }
 
     @Override
-    public void parse(SmaliReader reader) throws IOException {
-        while (parseNext(reader)){
-            reader.skipWhitespaces();
-        }
-    }
-    private boolean parseNext(SmaliReader reader) throws IOException {
-        if(reader.finished()){
-            return false;
-        }
+    T createNext(SmaliReader reader) {
         reader.skipWhitespacesOrComment();
         SmaliDirective directive = SmaliDirective.parse(reader, false);
         if(directive != getSmaliDirective()){
-            return false;
+            return null;
         }
-        T item = createNew();
-        add(item);
-        item.parse(reader);
-        return true;
+        return createNew();
     }
 }

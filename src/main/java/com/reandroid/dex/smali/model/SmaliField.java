@@ -35,12 +35,11 @@ public class SmaliField extends SmaliDef{
         super();
     }
 
-
     @Override
     public FieldKey getKey(){
-        SmaliClass smaliClass = getSmaliClass();
-        if(smaliClass != null){
-            return getKey(smaliClass.getKey());
+        TypeKey defining = getDefining();
+        if(defining != null){
+            return getKey(defining);
         }
         return null;
     }
@@ -121,6 +120,9 @@ public class SmaliField extends SmaliDef{
     }
     private void parseValue(SmaliReader reader) throws IOException {
         reader.skipWhitespaces();
+        if(reader.finished()) {
+            return;
+        }
         if(reader.get() != '='){
             return;
         }
@@ -151,9 +153,9 @@ public class SmaliField extends SmaliDef{
     @Override
     public String toDebugString() {
         StringBuilder builder = new StringBuilder();
-        SmaliClass smaliClass = getSmaliClass();
-        if(smaliClass != null){
-            builder.append(smaliClass.toDebugString());
+        TypeKey typeKey = getDefining();
+        if(typeKey != null){
+            builder.append(typeKey);
             builder.append(", ");
         }
         builder.append("field = ");

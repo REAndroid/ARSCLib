@@ -94,6 +94,16 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
             parseRegisters(reader);
         }
     }
+
+    @Override
+    public SmaliRegister parseNext(SmaliReader reader) throws IOException {
+        SmaliRegister register = new SmaliRegister();
+        add(register);
+        register.parse(reader);
+        reader.skipWhitespacesOrComment();
+        return register;
+    }
+
     private void parseRegisters(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
         int size = getFormat().size();
@@ -102,10 +112,7 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
                 SmaliParseException.expect(reader, ',');
                 reader.skipWhitespacesOrComment();
             }
-            SmaliRegister register = new SmaliRegister();
-            add(register);
-            register.parse(reader);
-            reader.skipWhitespacesOrComment();
+            parseNext(reader);
         }
     }
     private void parseOutRegisters(SmaliReader reader) throws IOException {
@@ -118,10 +125,7 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
                 SmaliParseException.expect(reader, ',');
                 reader.skipWhitespacesOrComment();
             }
-            SmaliRegister register = new SmaliRegister();
-            add(register);
-            register.parse(reader);
-            reader.skipWhitespacesOrComment();
+            parseNext(reader);
             parsedOnce = true;
         }
         SmaliParseException.expect(reader, '}');
@@ -131,19 +135,15 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
         SmaliParseException.expect(reader, '{');
         reader.skipWhitespacesOrComment();
 
-        SmaliRegister register1 = new SmaliRegister();
-        add(register1);
-        register1.parse(reader);
+        // first register
+        parseNext(reader);
 
-        reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, '.');
         SmaliParseException.expect(reader, '.');
         reader.skipWhitespacesOrComment();
 
-        SmaliRegister register2 = new SmaliRegister();
-        add(register2);
-        register2.parse(reader);
-        reader.skipWhitespacesOrComment();
+        // second register
+        parseNext(reader);
 
         SmaliParseException.expect(reader, '}');
     }
@@ -166,6 +166,10 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
         }
         @Override
         public void parse(SmaliReader reader) {
+        }
+        @Override
+        public SmaliRegister parseNext(SmaliReader reader) {
+            return null;
         }
         @Override
         public String toString() {

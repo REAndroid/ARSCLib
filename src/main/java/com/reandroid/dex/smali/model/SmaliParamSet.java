@@ -18,8 +18,6 @@ package com.reandroid.dex.smali.model;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 
-import java.io.IOException;
-
 public class SmaliParamSet extends SmaliSet<SmaliMethodParameter>{
 
     public SmaliParamSet(){
@@ -27,15 +25,7 @@ public class SmaliParamSet extends SmaliSet<SmaliMethodParameter>{
     }
 
     @Override
-    public void parse(SmaliReader reader) throws IOException {
-        SmaliMethodParameter param;
-        while ((param = createNext(reader)) != null){
-            add(param);
-            param.parse(reader);
-            reader.skipWhitespacesOrComment();
-        }
-    }
-    private SmaliMethodParameter createNext(SmaliReader reader){
+    SmaliMethodParameter createNext(SmaliReader reader) {
         SmaliDirective directive = SmaliDirective.parse(reader, false);
         if(directive == SmaliDirective.PARAM){
             return new SmaliMethodParameter();

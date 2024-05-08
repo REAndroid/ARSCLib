@@ -21,7 +21,7 @@ import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
+import java.util.function.Predicate;
 
 public class SmaliSet<T extends Smali> extends Smali{
 
@@ -29,7 +29,8 @@ public class SmaliSet<T extends Smali> extends Smali{
 
     public SmaliSet(){
         super();
-        body = new ArrayCollection<>();
+        this.body = new ArrayCollection<>();
+        this.body.setMonitor(new SmaliSetMonitor<>(this));
     }
 
     public Iterator<T> iterator() {
@@ -55,34 +56,38 @@ public class SmaliSet<T extends Smali> extends Smali{
         return body.get(i);
     }
     public boolean add(T smali){
-        boolean added = body.add(smali);
-        if(smali != null){
-            smali.setParent(this);
-        }
-        return added;
+        return body.add(smali);
     }
     public boolean contains(T smali){
         return body.contains(smali);
     }
     public boolean remove(T smali){
-        boolean removed = body.remove(smali);
-        if(removed && smali != null){
-            smali.setParent(null);
-        }
-        return removed;
+        return body.remove(smali);
     }
-    public T remove(int i){
-        T smali = body.remove(i);
-        if(smali != null){
-            smali.setParent(null);
-        }
-        return smali;
+    public T remove(int i) {
+        return body.remove(i);
+    }
+    public boolean removeIf(Predicate<? super T> filter){
+        return body.removeIf(filter);
+    }
+    public boolean removeInstances(Class<?> instance){
+        return body.removeIf(instance::isInstance);
     }
     public void clear(){
         for (T smali : body) {
             smali.setParent(null);
         }
         body.clear();
+    }
+    void onRemoved(T item) {
+        if(item != null) {
+            item.setParent(null);
+        }
+    }
+    void onAdded(T item) {
+        if(item != null) {
+            item.setParent(this);
+        }
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
@@ -91,6 +96,39 @@ public class SmaliSet<T extends Smali> extends Smali{
 
     @Override
     public void parse(SmaliReader reader) throws IOException {
+        while (parseNext(reader) != null) {
+            reader.skipWhitespacesOrComment();
+        }
+    }
+    public T parseNext(SmaliReader reader) throws IOException {
+        if(reader.finished()) {
+            return null;
+        }
+        T item = createNext(reader);
+        if(item != null) {
+            add(item);
+            item.parse(reader);
+        }
+        return item;
+    }
+    T createNext(SmaliReader reader) {
+        throw new RuntimeException("Method not implemented");
+    }
 
+    static class SmaliSetMonitor<T extends Smali> implements ArrayCollection.Monitor<T> {
+
+        private final SmaliSet<T> smaliSet;
+
+        SmaliSetMonitor(SmaliSet<T> smaliSet){
+            this.smaliSet = smaliSet;
+        }
+        @Override
+        public void onAdd(int i, T item) {
+            smaliSet.onAdded(item);
+        }
+        @Override
+        public void onRemoved(int i, T item) {
+            smaliSet.onRemoved(item);
+        }
     }
 }

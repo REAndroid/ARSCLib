@@ -19,19 +19,27 @@ import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.collection.InstanceIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class SmaliCodeSet extends SmaliSet<SmaliCode>{
+public class SmaliCodeSet extends SmaliSet<SmaliCode> {
+
+    private int addressOffset;
 
     public SmaliCodeSet(){
         super();
     }
 
-    public void updateAddresses(){
-        int address = 0;
+    public int getAddressOffset() {
+        return addressOffset;
+    }
+    public void setAddressOffset(int addressOffset) {
+        this.addressOffset = addressOffset;
+    }
+
+    public void updateAddresses() {
+        int address = getAddressOffset();
         Iterator<SmaliInstruction> iterator = getInstructions();
         while (iterator.hasNext()) {
             SmaliInstruction ins = iterator.next();
@@ -40,10 +48,19 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode>{
         }
     }
     public Iterator<SmaliInstruction> getInstructions() {
-        return InstanceIterator.of(iterator(), SmaliInstruction.class);
+        return iterator(SmaliInstruction.class);
+    }
+    public Iterator<SmaliCodeTryItem> getTryItems() {
+        return iterator(SmaliCodeTryItem.class);
     }
     public Iterator<SmaliDebug> getDebugs() {
-        return InstanceIterator.of(iterator(), SmaliDebug.class);
+        return iterator(SmaliDebug.class);
+    }
+    public void clearInstructions() {
+        removeInstances(SmaliDebug.class);
+    }
+    public void clearDebugs() {
+        removeInstances(SmaliDebug.class);
     }
 
     @Override
@@ -57,15 +74,11 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode>{
 
     @Override
     public void parse(SmaliReader reader) throws IOException {
-        SmaliCode code;
-        while ((code = createNext(reader)) != null){
-            add(code);
-            code.parse(reader);
-            reader.skipWhitespacesOrComment();
-        }
+        super.parse(reader);
         updateAddresses();
     }
-    private SmaliCode createNext(SmaliReader reader){
+    @Override
+    SmaliCode createNext(SmaliReader reader) {
         SmaliDirective directive = SmaliDirective.parse(reader, false);
         if(directive != null){
             return createFor(directive);
@@ -80,7 +93,7 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode>{
         }
         return null;
     }
-    public static SmaliCode createFor(SmaliDirective directive){
+    private static SmaliCode createFor(SmaliDirective directive){
         if(directive == SmaliDirective.LINE){
             return new SmaliLineNumber();
         }

@@ -29,6 +29,7 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement> implem
 
     public SmaliAnnotationItem(){
         super();
+        this.smaliDirective = SmaliDirective.ANNOTATION;
     }
 
     public AnnotationVisibility getVisibility() {
@@ -50,8 +51,16 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement> implem
         return smaliDirective;
     }
 
-    public void setSmaliDirective(SmaliDirective smaliDirective) {
-        this.smaliDirective = smaliDirective;
+    public void setSmaliDirective(SmaliDirective annotationDirective) {
+        if(annotationDirective == null) {
+            throw new NullPointerException("Null annotation directive");
+        }
+        if(annotationDirective != SmaliDirective.ANNOTATION &&
+                annotationDirective != SmaliDirective.SUB_ANNOTATION) {
+            throw new IllegalArgumentException("Invalid annotation directive: "
+                    + annotationDirective);
+        }
+        this.smaliDirective = annotationDirective;
     }
 
     @Override
@@ -77,19 +86,33 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement> implem
         setSmaliDirective(directive);
         setVisibility(AnnotationVisibility.parse(reader));
         setType(TypeKey.read(reader));
-        while (parseElements(reader)){
+        while (parseNext(reader) != null){
             reader.skipWhitespacesOrComment();
         }
         SmaliParseException.expect(reader, getSmaliDirective(), true);
     }
-    private boolean parseElements(SmaliReader reader) throws IOException {
+    @Override
+    SmaliAnnotationElement createNext(SmaliReader reader) {
         reader.skipWhitespacesOrComment();
-        if(getSmaliDirective().isEnd(reader)){
-            return false;
+        if(reader.finished()) {
+            return null;
         }
-        SmaliAnnotationElement element = new SmaliAnnotationElement();
-        add(element);
-        element.parse(reader);
-        return true;
+        if(getSmaliDirective().isEnd(reader)){
+            return null;
+        }
+        return new SmaliAnnotationElement();
+    }
+
+    public static SmaliAnnotationItem read(SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        if(reader.finished()) {
+            return null;
+        }
+        SmaliAnnotationItem smali = new SmaliAnnotationItem();
+        smali.parse(reader);
+        if(!smali.isEmpty()) {
+            return smali;
+        }
+        return null;
     }
 }

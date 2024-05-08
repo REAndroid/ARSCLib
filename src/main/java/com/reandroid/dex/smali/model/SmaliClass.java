@@ -189,6 +189,13 @@ public class SmaliClass extends SmaliDef{
         setSourceFile(StringKey.read(reader));
     }
 
+    public SmaliField parseField(SmaliReader reader) throws IOException {
+        return fields.parseNext(reader);
+    }
+    public SmaliMethod parseMethod(SmaliReader reader) throws IOException {
+        return methods.parseNext(reader);
+    }
+
     @Override
     public String toDebugString() {
         return "class = " + getKey();

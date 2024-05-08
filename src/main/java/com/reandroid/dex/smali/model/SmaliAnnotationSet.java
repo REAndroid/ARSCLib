@@ -33,14 +33,7 @@ public class SmaliAnnotationSet extends SmaliSet<SmaliAnnotationItem>{
     }
 
     @Override
-    public void parse(SmaliReader reader) throws IOException{
-        SmaliAnnotationItem item;
-        while ((item = createNext(reader)) != null){
-            add(item);
-            item.parse(reader);
-        }
-    }
-    private SmaliAnnotationItem createNext(SmaliReader reader){
+    SmaliAnnotationItem createNext(SmaliReader reader) {
         reader.skipWhitespacesOrComment();
         SmaliDirective directive = SmaliDirective.parse(reader, false);
         if(directive != SmaliDirective.ANNOTATION && directive != SmaliDirective.SUB_ANNOTATION){
@@ -51,5 +44,13 @@ public class SmaliAnnotationSet extends SmaliSet<SmaliAnnotationItem>{
             return null;
         }
         return new SmaliAnnotationItem();
+    }
+    public static SmaliAnnotationSet read(SmaliReader reader) throws IOException {
+        SmaliAnnotationSet smali = new SmaliAnnotationSet();
+        smali.parse(reader);
+        if(!smali.isEmpty()) {
+            return smali;
+        }
+        return null;
     }
 }

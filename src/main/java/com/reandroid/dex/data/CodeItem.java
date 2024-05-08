@@ -239,7 +239,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
     public void fromSmali(SmaliMethod smaliMethod) throws IOException {
         setRegistersCount(smaliMethod.getRegistersCount());
         setParameterRegistersCount(smaliMethod.getParameterRegistersCount());
-        getInstructionList().fromSmali(smaliMethod);
+        getInstructionList().fromSmali(smaliMethod.getCodeSet());
         Iterator<SmaliCodeTryItem> iterator = smaliMethod.getTryItems();
         TryBlock tryBlock = null;
         if(iterator.hasNext()){
@@ -250,7 +250,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         }
         if(smaliMethod.hasDebugs()){
             DebugInfo debugInfo = getOrCreateDebugInfo();
-            debugInfo.getDebugSequence().fromSmali(smaliMethod);
+            debugInfo.getDebugSequence().fromSmali(smaliMethod.getCodeSet());
         }
     }
     @Override

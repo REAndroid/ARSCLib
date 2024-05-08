@@ -16,6 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.FilterIterator;
 
@@ -36,7 +37,7 @@ public class SmaliMethodSet extends SmaliDefSet<SmaliMethod>{
     }
 
     @Override
-    public SmaliMethod createNew() {
+    SmaliMethod createNew() {
         return new SmaliMethod();
     }
     @Override
@@ -68,5 +69,14 @@ public class SmaliMethodSet extends SmaliDefSet<SmaliMethod>{
             iterator.next().append(writer);
             appendOnce = true;
         }
+    }
+
+    public static SmaliMethodSet read(SmaliReader reader) throws IOException {
+        SmaliMethodSet smali = new SmaliMethodSet();
+        smali.parse(reader);
+        if(!smali.isEmpty()) {
+            return smali;
+        }
+        return null;
     }
 }

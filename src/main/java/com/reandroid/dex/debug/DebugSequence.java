@@ -21,6 +21,7 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.FixedDexContainer;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.smali.model.SmaliCodeSet;
 import com.reandroid.dex.smali.model.SmaliDebug;
 import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.collection.*;
@@ -293,8 +294,8 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         cacheValues();
         getElementList().trimToSize();
     }
-    public void fromSmali(SmaliMethod smaliMethod) throws IOException {
-        Iterator<SmaliDebug> iterator = smaliMethod.getDebugs();
+    public void fromSmali(SmaliCodeSet smaliCodeSet) throws IOException {
+        Iterator<SmaliDebug> iterator = smaliCodeSet.getDebugs();
         while (iterator.hasNext()){
             SmaliDebug smaliDebug = iterator.next();
             DebugElementType<?> type = smaliDebug.getDebugElementType();
