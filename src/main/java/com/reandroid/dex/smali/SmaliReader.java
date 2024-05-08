@@ -20,6 +20,7 @@ import com.reandroid.utils.io.IOUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public class SmaliReader {
@@ -538,5 +539,8 @@ public class SmaliReader {
         SmaliReader reader = new SmaliReader(IOUtil.readFully(file));
         reader.setPath(file.getPath());
         return reader;
+    }
+    public static SmaliReader of(InputStream inputStream) throws IOException {
+        return new SmaliReader(IOUtil.readFully(inputStream));
     }
 }
