@@ -17,9 +17,13 @@ package com.reandroid.utils;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.function.Function;
 
 public class CompareUtil {
 
+    public static<T, E extends Comparable<E>> Comparator<T> computeComparator(Function<? super T, E> function) {
+        return (t1, t2) -> compare(function.apply(t1), function.apply(t2));
+    }
     public static<T extends Comparable<T>> void sort(T[] items) {
         if(items == null || items.length < 2){
             return;
