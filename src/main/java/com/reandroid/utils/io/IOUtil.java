@@ -44,7 +44,7 @@ public class IOUtil {
         writeAll(inputStream, FileUtil.outputStream(tmp), true);
         if(!tmp.equals(file)) {
             file.delete();
-            tmp.renameTo(tmp);
+            tmp.renameTo(file);
         }
     }
     public static void writeAll(InputStream inputStream, OutputStream outputStream) throws IOException {
