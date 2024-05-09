@@ -15,6 +15,8 @@
  */
 package com.reandroid.utils.io;
 
+import com.reandroid.common.FileChannelInputStream;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
@@ -70,8 +72,8 @@ public class IOUtil {
             outputStream.close();
         }
     }
-    public static byte[] readFully(File file) throws IOException{
-        return readFully(FileUtil.inputStream(file));
+    public static byte[] readFully(File file) throws IOException {
+        return FileChannelInputStream.read(file, (int) file.length());
     }
     public static byte[] readFully(InputStream inputStream) throws IOException{
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
