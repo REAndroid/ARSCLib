@@ -13,20 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.smali.model;
+package com.reandroid.dex.smali.formatters;
 
-import com.reandroid.dex.debug.DebugElementType;
-import com.reandroid.dex.debug.DebugPrologue;
-import com.reandroid.dex.smali.*;
-
-public class SmaliDebugPrologue extends SmaliDebugElement implements SmaliRegion {
-
-    public SmaliDebugPrologue(){
-        super();
-    }
-
-    @Override
-    public DebugElementType<DebugPrologue> getDebugElementType() {
-        return DebugElementType.PROLOGUE;
-    }
+public interface SmaliComment {
 }

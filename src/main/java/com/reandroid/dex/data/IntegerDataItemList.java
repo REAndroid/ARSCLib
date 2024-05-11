@@ -68,9 +68,9 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
     }
 
     public void remove(T item) {
-        remove(t -> t == item);
+        removeIf(t -> t == item);
     }
-    public void remove(Predicate<? super T> filter) {
+    public void removeIf(Predicate<? super T> filter) {
         T[] items = this.items;
         if(items == null){
             return;
@@ -150,6 +150,9 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
             updateUsage(item);
         }
         this.items = items;
+    }
+    public boolean isEmpty() {
+        return isEmpty(this.items);
     }
     public boolean sort(Comparator<? super T> comparator){
         T[] items = this.items;

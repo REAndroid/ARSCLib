@@ -235,10 +235,16 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
         return EmptyIterator.of();
     }
     public void merge(Ins ins){
-
+        throw new RuntimeException("merge method not implemented, opcode = " + getOpcode());
     }
     public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
-
+        throw new RuntimeException("fromSmali method not implemented, opcode = " + getOpcode());
+    }
+    void validateOpcode(SmaliInstruction smaliInstruction) throws IOException {
+        if(getOpcode() != smaliInstruction.getOpcode()) {
+            throw new IOException("Mismatch opcode " + getOpcode()
+                    + " vs " + smaliInstruction.getOpcode());
+        }
     }
     @Override
     public final void append(SmaliWriter writer) throws IOException {

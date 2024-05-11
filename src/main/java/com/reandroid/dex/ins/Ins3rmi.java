@@ -33,7 +33,7 @@ public class Ins3rmi extends Size6Ins implements RegistersSet {
     @Override
     public void setRegister(int index, int value) {
         if(index != 0) {
-            setShort(2, value + 1);
+            setShort(2, value + 1 - getRegister());
         }else {
             setShort(4, value);
         }

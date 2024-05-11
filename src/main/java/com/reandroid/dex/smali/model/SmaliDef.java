@@ -101,7 +101,7 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
     }
 
     private SmaliDefSet<?> getDefSet(){
-        return getParentInstance(SmaliMethodSet.class);
+        return getParentInstance(SmaliDefSet.class);
     }
     public SmaliClass getSmaliClass(){
         if(getClass().isInstance(SmaliClass.class)) {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.smali;
+package com.reandroid.dex.smali.formatters;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
@@ -21,13 +21,13 @@ import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResValue;
 import com.reandroid.arsc.value.ValueType;
+import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
+public interface ResourceIdComment extends SmaliComment {
 
-public interface ResourceIdComment {
-
-    void writeResourceIdComment(SmaliWriter writer, int id) throws IOException;
+    void writeComment(SmaliWriter writer, int id) throws IOException;
 
     class ResourceTableComment implements ResourceIdComment{
 
@@ -40,7 +40,7 @@ public interface ResourceIdComment {
         }
 
         @Override
-        public void writeResourceIdComment(SmaliWriter writer, int resourceId) throws IOException {
+        public void writeComment(SmaliWriter writer, int resourceId) {
             if(!PackageBlock.isResourceId(resourceId)){
                 return;
             }

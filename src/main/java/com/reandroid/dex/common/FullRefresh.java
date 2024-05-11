@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// originally copied from JesusFreke/smali
 package com.reandroid.dex.common;
 
 public interface FullRefresh {

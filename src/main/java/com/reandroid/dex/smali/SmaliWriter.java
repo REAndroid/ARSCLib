@@ -19,6 +19,7 @@ import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.utils.HexUtil;
 
 import java.io.Closeable;
@@ -50,6 +51,12 @@ public class SmaliWriter implements Appendable, Closeable {
     }
 
 
+    public void onWriteClass(TypeKey typeKey) throws IOException {
+        SmaliWriterSetting setting = getWriterSetting();
+        if(setting != null){
+            setting.writeClassComment(this, typeKey);
+        }
+    }
     public void onWriteMethod(MethodKey methodKey) throws IOException {
         SmaliWriterSetting setting = getWriterSetting();
         if(setting != null){
@@ -186,6 +193,12 @@ public class SmaliWriter implements Appendable, Closeable {
             setting.writeResourceIdComment(this, l);
         }
     }
+    public void appendResourceIdComment(int i) throws IOException {
+        SmaliWriterSetting setting = getWriterSetting();
+        if(setting != null){
+            setting.writeResourceIdComment(this, i);
+        }
+    }
     public void newLineDouble() throws IOException {
         newLine(2);
     }
@@ -213,7 +226,7 @@ public class SmaliWriter implements Appendable, Closeable {
         }
     }
     public void appendComment(String text) {
-        if(text == null){
+        if(text == null || text.length() == 0){
             return;
         }
         StringBuilder comment = this.comment;
@@ -226,6 +239,9 @@ public class SmaliWriter implements Appendable, Closeable {
             comment.append('#');
             comment.append(' ');
             columnNumber += 2;
+        }else {
+            comment.append(' ');
+            columnNumber += 1;
         }
         comment.append(text);
         columnNumber += text.length();

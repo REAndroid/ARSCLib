@@ -24,6 +24,7 @@ import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliDebug;
+import com.reandroid.dex.smali.model.SmaliDebugElement;
 import com.reandroid.dex.smali.model.SmaliDebugLocal;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
@@ -123,9 +124,9 @@ public class DebugStartLocal extends DebugRegisterNumber {
     }
 
     @Override
-    public void fromSmali(SmaliDebug smaliDebug) throws IOException {
-        super.fromSmali(smaliDebug);
-        SmaliDebugLocal smaliDebugLocal = (SmaliDebugLocal) smaliDebug;
+    public void fromSmali(SmaliDebugElement smaliDebugElement) throws IOException {
+        super.fromSmali(smaliDebugElement);
+        SmaliDebugLocal smaliDebugLocal = (SmaliDebugLocal) smaliDebugElement;
         setName(smaliDebugLocal.getName());
         setType(smaliDebugLocal.getType());
     }

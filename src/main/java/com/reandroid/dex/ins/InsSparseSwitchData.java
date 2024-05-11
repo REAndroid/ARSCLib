@@ -15,66 +15,96 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.io.BlockLoad;
-import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.*;
 import com.reandroid.common.ArraySupplier;
+import com.reandroid.dex.base.CountedList;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliPayloadSparseSwitch;
 import com.reandroid.dex.smali.model.SmaliSet;
 import com.reandroid.dex.smali.model.SmaliSparseSwitchEntry;
+import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArraySupplierIterator;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class InsSparseSwitchData extends PayloadData implements BlockLoad,
-        ArraySupplier<InsSparseSwitchData.Data>, LabelsSet, SmaliFormat {
+public class InsSparseSwitchData extends PayloadData implements
+        ArraySupplier<InsSparseSwitchData.SSData>, LabelsSet, SmaliFormat {
 
     private final ShortItem elementCount;
-    final IntegerArrayBlock elements;
-    final IntegerArrayBlock keys;
+    final CountedList<IntegerItem> elements;
+    final CountedList<IntegerItem> keys;
     private InsSparseSwitch insSparseSwitch;
+
+    boolean mSortRequired;
 
     public InsSparseSwitchData() {
         super(3, Opcode.SPARSE_SWITCH_PAYLOAD);
         this.elementCount = new ShortItem();
 
-        this.elements = new IntegerArrayBlock();
-        this.keys = new IntegerArrayBlock();
+        Creator<IntegerItem> creator = new Creator<IntegerItem>() {
+            @Override
+            public IntegerItem[] newArrayInstance(int length) {
+                return new IntegerItem[length];
+            }
+            @Override
+            public IntegerItem newInstance() {
+                return new IntegerItem();
+            }
+        };
+
+        this.elements = new CountedList<>(elementCount, creator);
+        this.keys = new CountedList<>(elementCount, creator);
 
         addChild(1, elementCount);
         addChild(2, elements);
         addChild(3, keys);
-
-        this.elementCount.setBlockLoad(this);
     }
 
+    public SSData newEntry() {
+        int index = getCount();
+        setCount(index + 1);
+        return get(index);
+    }
+    @Override
+    public SSData get(int i){
+        if(i < 0 || i >= getCount()){
+            return null;
+        }
+        return new SSData(this, elements.get(i), keys.get(i));
+    }
     @Override
     public int getCount(){
-        return keys.size();
+        return elements.size();
     }
     public void setCount(int count){
         elements.setSize(count);
         keys.setSize(count);
         elementCount.set(count);
     }
-    @Override
-    public Data get(int i){
-        if(i < 0 || i >= getCount()){
-            return null;
+    public void sort() {
+        this.mSortRequired = false;
+        Comparator<IntegerItem> comparator = (item1, item2) -> CompareUtil.compare(item1.get(), item2.get());
+        if(!elements.needsSort(comparator)) {
+            return;
         }
-        return new Data(this, i);
+        this.elements.sort(comparator, keys);
     }
     @Override
-    public Iterator<InsSparseSwitchData.Data> getLabels() {
+    public Iterator<IntegerReference> getReferences() {
+        return ObjectsUtil.cast(getLabels());
+    }
+    @Override
+    public Iterator<SSData> getLabels() {
         return new ArraySupplierIterator<>(this);
     }
 
@@ -122,37 +152,30 @@ public class InsSparseSwitchData extends PayloadData implements BlockLoad,
     }
 
     @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender == elementCount){
-            this.keys.setSize(elementCount.get());
-            this.elements.setSize(elementCount.get());
-        }
+    protected void onPreRefresh() {
+        sort();
+        super.onPreRefresh();
     }
     @Override
     public void merge(Ins ins){
         InsSparseSwitchData switchData = (InsSparseSwitchData) ins;
-        int size = switchData.elements.size();
-        this.elements.setSize(size);
+        int size = switchData.getCount();
+        this.setCount(size);
         for(int i = 0; i < size; i++){
-            this.elements.put(i, switchData.elements.get(i));
+            get(i).merge(switchData.get(i));
         }
-        size = switchData.keys.size();
-        this.keys.setSize(size);
-        for(int i = 0; i < size; i++){
-            this.keys.put(i, switchData.keys.get(i));
-        }
-        this.elementCount.set(switchData.elementCount.get());
     }
 
     @Override
     public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
+        validateOpcode(smaliInstruction);
         SmaliPayloadSparseSwitch smaliPayloadSparseSwitch = (SmaliPayloadSparseSwitch) smaliInstruction;
         SmaliSet<SmaliSparseSwitchEntry> entries = smaliPayloadSparseSwitch.getEntries();
         int count = entries.size();
         this.setCount(count);
         for(int i = 0; i < count; i++){
             SmaliSparseSwitchEntry smaliEntry = entries.get(i);
-            Data data = get(i);
+            SSData data = get(i);
             data.fromSmali(smaliEntry);
         }
     }
@@ -176,29 +199,35 @@ public class InsSparseSwitchData extends PayloadData implements BlockLoad,
         return SmaliDirective.SPARSE_SWITCH;
     }
 
-    public static class Data implements IntegerReference, Label, SmaliFormat {
+    public static class SSData implements IntegerReference, Label, SmaliFormat {
 
         private final InsSparseSwitchData switchData;
-        private final int index;
+        private final IntegerReference element;
+        private final IntegerReference key;
 
-        Data(InsSparseSwitchData switchData, int index){
+        public SSData(InsSparseSwitchData switchData, IntegerReference element, IntegerReference key){
             this.switchData = switchData;
-            this.index = index;
+            this.element = element;
+            this.key = key;
         }
 
-        public int getKey(){
-            return switchData.keys.get(index);
-        }
-        public void setKey(int value){
-            switchData.keys.put(index, value);
-        }
         @Override
         public int get(){
-            return switchData.elements.get(index);
+            return element.get();
         }
         @Override
         public void set(int value){
-            switchData.elements.put(index, value);
+            if(value != element.get()) {
+                element.set(value);
+                this.switchData.mSortRequired = true;
+            }
+        }
+
+        public int getKey(){
+            return key.get();
+        }
+        public void setKey(int value){
+            key.set(value);
         }
 
         @Override
@@ -224,9 +253,15 @@ public class InsSparseSwitchData extends PayloadData implements BlockLoad,
         @Override
         public void append(SmaliWriter writer) throws IOException {
             writer.newLine();
-            writer.appendHex(get());
+            int value = get();
+            writer.appendHex(value);
             writer.append(" -> ");
             writer.append(getLabelName());
+            writer.appendResourceIdComment(value);
+        }
+        public void merge(SSData data) {
+            set(data.get());
+            setKey(data.getKey());
         }
         public void fromSmali(SmaliSparseSwitchEntry smaliEntry) throws IOException{
             set(smaliEntry.getIntegerValue());
@@ -234,7 +269,7 @@ public class InsSparseSwitchData extends PayloadData implements BlockLoad,
         }
         @Override
         public int hashCode() {
-            return Objects.hash(switchData, index);
+            return Objects.hash(switchData, element);
         }
         @Override
         public boolean equals(Object obj) {
@@ -244,13 +279,12 @@ public class InsSparseSwitchData extends PayloadData implements BlockLoad,
             if (obj == null || getClass() != obj.getClass()) {
                 return false;
             }
-            Data data = (Data) obj;
-            return index == data.index && switchData == data.switchData;
+            SSData data = (SSData) obj;
+            return element == data.element && switchData == data.switchData;
         }
         @Override
         public String toString() {
-            return HexUtil.toHex8(get());
+            return HexUtil.toHex8(get()) + " -> " + getKey();
         }
-
     }
 }

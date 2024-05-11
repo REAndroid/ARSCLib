@@ -16,6 +16,7 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.ShortItem;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.smali.SmaliDirective;
@@ -23,6 +24,7 @@ import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.*;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -33,11 +35,13 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet, Smali
     private final PackedSwitchDataList elements;
     private InsPackedSwitch insPackedSwitch;
 
+    private InsSparseSwitchData mReplacement;
+
     public InsPackedSwitchData() {
         super(3, Opcode.PACKED_SWITCH_PAYLOAD);
         this.elementCount = new ShortItem();
         this.firstKey = new IntegerItem();
-        this.elements = new PackedSwitchDataList(this, elementCount, firstKey);
+        this.elements = new PackedSwitchDataList(this, elementCount);
 
         addChild(1, elementCount);
         addChild(2, firstKey);
@@ -49,6 +53,39 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet, Smali
     }
     public void setFirstKey(int firstKey){
         this.firstKey.set(firstKey);
+    }
+
+    @Override
+    public Iterator<IntegerReference> getReferences() {
+        return ObjectsUtil.cast(getLabels());
+    }
+
+
+    void onDataChange(int index, int value) {
+        InsSparseSwitchData sparseSwitchData = this.mReplacement;
+        if(sparseSwitchData == null) {
+            sparseSwitchData = replaceBySparse();
+        }
+        sparseSwitchData.get(index).set(value);
+    }
+    private InsSparseSwitchData replaceBySparse() {
+        int[][] copy = elements.makeCopy();
+        InsPackedSwitch packedSwitch = getParentPackedSwitch();
+        InsSparseSwitch sparseSwitch = packedSwitch.getReplacement();
+        InsSparseSwitchData sparseSwitchData = this.replace(Opcode.SPARSE_SWITCH_PAYLOAD);
+        this.mReplacement = sparseSwitchData;
+        this.clearExtraLines();
+        sparseSwitch.clearExtraLines();
+        sparseSwitchData.clearExtraLines();
+        int size = copy.length;
+        sparseSwitchData.setCount(size);
+        for(int i = 0; i < size; i++) {
+            InsSparseSwitchData.SSData data = sparseSwitchData.get(i);
+            int[] c = copy[i];
+            data.set(c[0]);
+            data.setTargetAddress(c[1]);
+        }
+        return sparseSwitchData;
     }
 
     public InsPackedSwitch getParentPackedSwitch() {
@@ -93,18 +130,20 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet, Smali
     }
 
     @Override
-    public Iterator<PackedSwitchDataList.Data> getLabels() {
+    public Iterator<PackedSwitchDataList.PSData> getLabels() {
         return elements.getLabels();
     }
 
     @Override
     public void merge(Ins ins){
         InsPackedSwitchData switchData = (InsPackedSwitchData) ins;
+        setFirstKey(switchData.getFirstKey());
         elements.merge(switchData.elements);
     }
 
     @Override
-    public void fromSmali(SmaliInstruction smaliInstruction) {
+    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
+        validateOpcode(smaliInstruction);
         SmaliPayloadPackedSwitch smaliPayloadPackedSwitch = (SmaliPayloadPackedSwitch) smaliInstruction;
         setFirstKey(smaliPayloadPackedSwitch.getFirstKey());
         SmaliSet<SmaliLabel> entries = smaliPayloadPackedSwitch.getEntries();
@@ -113,7 +152,7 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet, Smali
         dataList.setSize(size);
         for(int i = 0; i < size; i++){
             SmaliLabel smaliLabel = entries.get(i);
-            PackedSwitchDataList.Data data = dataList.getData(i);
+            PackedSwitchDataList.PSData data = dataList.get(i);
             data.setTargetAddress(smaliLabel.getAddress());
         }
     }

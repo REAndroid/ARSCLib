@@ -24,12 +24,11 @@ public class DexFileRawDecoder implements DexDecoder{
     }
 
     @Override
-    public boolean decodeDex(DexFileInputSource dexFileInputSource, File mainDirectory) throws IOException {
+    public void decodeDex(DexFileInputSource dexFileInputSource, File mainDirectory) throws IOException {
         logVerbose(dexFileInputSource.getAlias());
         File file = new File(mainDirectory, DEX_DIRECTORY_NAME);
         file = dexFileInputSource.toFile(file);
         dexFileInputSource.write(file);
-        return true;
     }
 
     public void setApkLogger(APKLogger apkLogger) {

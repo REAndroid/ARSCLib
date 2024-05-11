@@ -32,9 +32,17 @@ public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable
 
     private final ArrayCollection<DexSource<DexFile>> sourceList;
     private boolean mReadStringsMode;
+    private ZipEntryMap zipEntryMap;
 
     public DexFileSourceSet(){
         this.sourceList = new ArrayCollection<>();
+    }
+
+    public ZipEntryMap getZipEntryMap() {
+        return zipEntryMap;
+    }
+    public void setZipEntryMap(ZipEntryMap zipEntryMap) {
+        this.zipEntryMap = zipEntryMap;
     }
 
     public void merge(DexFileSourceSet sourceSet){
@@ -148,6 +156,15 @@ public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable
     }
     public void add(ZipEntryMap zipEntryMap, String name) throws IOException {
         add(DexSource.create(zipEntryMap, name));
+        if(getZipEntryMap() == null){
+            setZipEntryMap(zipEntryMap);
+        }
+    }
+    public void add(ZipEntryMap zipEntryMap, String name, DexFile dexFile) throws IOException {
+        add(DexSource.create(zipEntryMap, name, dexFile));
+        if(getZipEntryMap() == null){
+            setZipEntryMap(zipEntryMap);
+        }
     }
     public void addAll(File dir) throws IOException {
         if(!dir.isDirectory()){
@@ -213,6 +230,16 @@ public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable
     }
     public DexSource<DexFile> createNext(){
         DexSource<DexFile> last = getLast();
+        if(last == null) {
+            ZipEntryMap zipEntryMap = getZipEntryMap();
+            if(zipEntryMap == null) {
+                throw new NullPointerException("Null ZipEntryMap");
+            }
+            DexSource<DexFile> source = DexSource.create(
+                    zipEntryMap, "classes.dex", DexFile.createDefault());
+            sourceList.add(source);
+            return source;
+        }
         DexSource<DexFile> source = last.createNext();
         sourceList.add(source);
         sourceList.sort(CompareUtil.getComparableComparator());

@@ -27,10 +27,7 @@ import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliRegion;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.CombiningIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.SingleIterator;
+import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -113,12 +110,19 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     void addAnnotationSet(AnnotationsDirectory directory, AnnotationSet annotationSet){
         directory.addAnnotation(this, annotationSet);
     }
-    public Iterator<AnnotationSet> getAnnotations(){
+    public Iterator<AnnotationSet> getAnnotations() {
+        return getAnnotations(false);
+    }
+    public Iterator<AnnotationSet> getAnnotations(boolean skipEmpty){
         AnnotationsDirectory directory = getAnnotationsDirectory();
-        if(directory != null){
-            return directory.getAnnotations(this);
+        if(directory == null) {
+            return EmptyIterator.of();
         }
-        return EmptyIterator.of();
+        Iterator<AnnotationSet> iterator = directory.getAnnotations(this);
+        if(!skipEmpty || !iterator.hasNext()) {
+            return iterator;
+        }
+        return FilterIterator.of(iterator, annotationSet -> !annotationSet.isEmpty());
     }
     public AnnotationsDirectory getAnnotationsDirectory(){
         ClassId classId = getClassId();

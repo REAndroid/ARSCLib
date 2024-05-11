@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.debug.DebugElementType;
 import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.smali.*;
@@ -94,10 +93,6 @@ public class SmaliMethodParameter extends SmaliDebug implements SmaliRegion {
     @Override
     public SmaliDirective getSmaliDirective() {
         return SmaliDirective.PARAM;
-    }
-    @Override
-    public DebugElementType<?> getDebugElementType() {
-        return null;
     }
 
     @Override

@@ -55,6 +55,9 @@ public abstract class DexDeclaration extends Dex implements AnnotatedDex {
     public boolean isInternal() {
         return (getAccessFlagsValue() & 0x7) == 0;
     }
+    public boolean isFinal() {
+        return AccessFlag.FINAL.isSet(getAccessFlagsValue());
+    }
     public boolean isPublic() {
         return AccessFlag.PUBLIC.isSet(getAccessFlagsValue());
     }

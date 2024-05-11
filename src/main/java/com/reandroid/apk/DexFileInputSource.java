@@ -18,6 +18,7 @@ package com.reandroid.apk;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.RenamedInputSource;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -76,5 +77,5 @@ public class DexFileInputSource extends RenamedInputSource<InputSource> implemen
         return "classes" + i + ".dex";
     }
 
-    public static final String DEX_DIRECTORY_NAME = "dex";
+    public static final String DEX_DIRECTORY_NAME = ObjectsUtil.of("dex");
 }

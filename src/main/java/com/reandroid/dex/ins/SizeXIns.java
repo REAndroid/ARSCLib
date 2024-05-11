@@ -321,6 +321,7 @@ public class SizeXIns extends Ins {
 
     @Override
     public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
+        validateOpcode(smaliInstruction);
         fromSmaliRegisters(smaliInstruction);
         fromSmaliKey(smaliInstruction);
         fromSmaliData(smaliInstruction);

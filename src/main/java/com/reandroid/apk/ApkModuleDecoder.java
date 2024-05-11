@@ -52,9 +52,6 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
         decodeArchiveInfo(mainDirectory);
         decodeUncompressedFiles(mainDirectory);
 
-        // For next release
-        // decodeDexInfo(mainDirectory);
-
         decodeAndroidManifest(mainDirectory);
         decodeResourceTable(mainDirectory);
         decodeDexFiles(mainDirectory);
@@ -109,20 +106,12 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
         uncompressedFiles.toJson().write(file);
     }
     public void decodeDexFiles(File mainDir) throws IOException {
-        List<DexFileInputSource> dexList = getApkModule().listDexFiles();
-        decodeDexFiles(dexList, mainDir);
-    }
-    public void decodeDexFiles(List<DexFileInputSource> dexList, File mainDir) throws IOException {
-        for(DexFileInputSource dexFileInputSource : dexList){
-            decodeDexFile(dexFileInputSource, mainDir);
-        }
-    }
-    public void decodeDexFile(DexFileInputSource dexFileInputSource, File mainDir) throws IOException {
-        String path = dexFileInputSource.getAlias();
+        ApkModule apkModule = getApkModule();
+        List<DexFileInputSource> dexList = apkModule.listDexFiles();
         DexDecoder dexDecoder = getDexDecoder();
-        boolean decoded = dexDecoder.decodeDex(dexFileInputSource, mainDir);
-        if(decoded){
-            addDecodedPath(path);
+        dexDecoder.decodeDex(apkModule, mainDir);
+        for(DexFileInputSource inputSource : dexList) {
+            addDecodedPath(inputSource.getAlias());
         }
     }
     @Override

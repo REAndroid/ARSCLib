@@ -194,6 +194,7 @@ public class SmaliInstruction extends SmaliCode{
 
     @Override
     public void parse(SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
         Opcode<?> opcode = parseOpcode(reader);
         getRegisterSet().parse(reader);
 

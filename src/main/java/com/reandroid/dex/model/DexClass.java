@@ -459,7 +459,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         if(annotationSet == null) {
             return;
         }
-        annotationSet.remove(filter);
+        annotationSet.removeIf(filter);
         annotationSet.refresh();
         if(annotationSet.size() == 0){
             annotationSet.removeSelf();

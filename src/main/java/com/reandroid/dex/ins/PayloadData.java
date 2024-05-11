@@ -16,11 +16,13 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.ShortItem;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public abstract class PayloadData extends Ins implements SmaliRegion {
 
@@ -30,6 +32,8 @@ public abstract class PayloadData extends Ins implements SmaliRegion {
         opcodeItem.set(opcode.getValue());
         addChild(0, opcodeItem);
     }
+
+    public abstract Iterator<IntegerReference> getReferences();
 
     @Override
     public abstract void fromSmali(SmaliInstruction smaliInstruction) throws IOException;

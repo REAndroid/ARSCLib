@@ -189,11 +189,14 @@ public class SmaliDirective implements SmaliFormat {
         return parse(reader, true);
     }
     public static SmaliDirective parse(SmaliReader reader, boolean skip){
-        if(reader == null || reader.finished()){
+        if(reader == null){
             return null;
         }
         int position = reader.position();
         reader.skipWhitespaces();
+        if(reader.finished()){
+            return null;
+        }
         if(reader.get() != '.'){
             reader.position(position);
             return null;

@@ -16,8 +16,25 @@
 package com.reandroid.dex.ins;
 
 public class InsPackedSwitch extends Ins31t{
+
+    private InsSparseSwitch mReplacement;
+
     public InsPackedSwitch() {
         super(Opcode.PACKED_SWITCH);
+    }
+
+    InsSparseSwitch getReplacement() {
+        InsSparseSwitch sparseSwitch = this.mReplacement;
+        if(sparseSwitch == null) {
+            int reg = getRegister();
+            int target = getTargetAddress();
+            sparseSwitch = replace(Opcode.SPARSE_SWITCH);
+            this.mReplacement = sparseSwitch;
+            sparseSwitch.setRegister(reg);
+            sparseSwitch.clearExtraLines();
+            sparseSwitch.setTargetAddress(target);
+        }
+        return sparseSwitch;
     }
 
     @Override

@@ -117,7 +117,6 @@ public class StringKey implements Key{
         if(text.length() == 0){
             return EMPTY;
         }
-        text = DexUtils.decodeString(text);
         return new StringKey(text);
     }
     public static StringKey parseQuotedString(String quotedString) {

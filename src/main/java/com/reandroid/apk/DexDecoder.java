@@ -15,11 +15,20 @@
  */
 package com.reandroid.apk;
 
+import com.reandroid.utils.ObjectsUtil;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public interface DexDecoder {
-    boolean decodeDex(DexFileInputSource dexFileInputSource, File mainDirectory) throws IOException;
-
+    void decodeDex(DexFileInputSource dexFileInputSource, File mainDirectory) throws IOException;
+    default void decodeDex(ApkModule apkModule, File mainDirectory) throws IOException {
+        List<DexFileInputSource> dexList = apkModule.listDexFiles();
+        for(DexFileInputSource inputSource : dexList) {
+            decodeDex(inputSource, mainDirectory);
+        }
+    }
     String DEX_DIRECTORY_NAME = DexFileInputSource.DEX_DIRECTORY_NAME;
+    String SMALI_DIRECTORY_NAME = ObjectsUtil.of("smali");
 }

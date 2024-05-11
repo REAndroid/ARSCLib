@@ -15,10 +15,10 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.common.ArraySupplier;
-import com.reandroid.utils.collection.ArraySupplierIterator;
-import com.reandroid.dex.data.IntegerList;
+import com.reandroid.dex.base.CountedList;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
@@ -27,20 +27,18 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class PackedSwitchDataList extends IntegerList
+public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.PSData>
         implements SmaliFormat, LabelsSet {
 
-    private final IntegerReference firstKey;
     private final InsPackedSwitchData switchData;
 
-    public PackedSwitchDataList(InsPackedSwitchData switchData, IntegerReference itemCount, IntegerReference firstKey){
-        super(itemCount);
-        this.firstKey = firstKey;
+    public PackedSwitchDataList(InsPackedSwitchData switchData, IntegerReference itemCount){
+        super(itemCount, CREATOR);
         this.switchData = switchData;
     }
 
     public int getFirstKey(){
-        return firstKey.get();
+        return switchData.getFirstKey();
     }
     public int getBaseAddress(){
         InsPackedSwitch packedSwitch = switchData.getParentPackedSwitch();
@@ -49,19 +47,24 @@ public class PackedSwitchDataList extends IntegerList
         }
         return packedSwitch.getAddress();
     }
-    public int size(){
-        return super.size();
+    int[][] makeCopy() {
+        int size = size();
+        int[][] results = new int[size][];
+        for(int i = 0; i < size; i++) {
+            PSData data = get(i);
+            results[i] = new int[]{data.get(), data.getTargetAddress()};
+        }
+        return results;
     }
-    public Data getData(int index){
-        return new Data(this, index);
+    void onDataChange(int index, int value) {
+        this.switchData.onDataChange(index, value);
     }
 
     public void merge(PackedSwitchDataList dataList){
-        firstKey.set(dataList.firstKey.get());
         int size = dataList.size();
         setSize(size);
         for(int i = 0; i < size; i++){
-            put(i, dataList.get(i));
+            get(i).merge(dataList.get(i));
         }
     }
 
@@ -69,44 +72,40 @@ public class PackedSwitchDataList extends IntegerList
     public void append(SmaliWriter writer) throws IOException {
         int size = size();
         for(int i = 0; i < size; i++){
-            getData(i).append(writer);
+            get(i).append(writer);
         }
     }
 
     @Override
-    public Iterator<Data> getLabels() {
-        return new ArraySupplierIterator<>(new ArraySupplier<Data>() {
-            @Override
-            public Data get(int i) {
-                return PackedSwitchDataList.this.getData(i);
-            }
-            @Override
-            public int getCount() {
-                return PackedSwitchDataList.this.size();
-            }
-        });
+    public Iterator<PSData> getLabels() {
+        return iterator();
     }
 
-    public static class Data implements IntegerReference, SmaliFormat, Label {
-        private final PackedSwitchDataList dataList;
-        private final int index;
-        Data(PackedSwitchDataList dataList, int index){
-            this.dataList = dataList;
-            this.index = index;
-        }
-        @Override
-        public void set(int value) {
-            dataList.put(index, value);
+    public static class PSData extends IntegerItem implements IntegerReference, SmaliFormat, Label {
+
+        public PSData(){
+            super();
         }
 
         @Override
         public int get() {
-            return dataList.get(index);
+            return getParentDataList().getFirstKey() + getIndex();
         }
+
+        @Override
+        public void set(int value) {
+            if(value != this.get()) {
+                getParentDataList().onDataChange(getIndex(), value);
+            }
+        }
+
         @Override
         public void append(SmaliWriter writer) throws IOException {
             writer.newLine();
             writer.append(getLabelName());
+            int value = this.get();
+            writer.appendComment(HexUtil.toHex(value, 1));
+            writer.appendResourceIdComment(value);
         }
         @Override
         public void appendExtra(SmaliWriter writer) throws IOException {
@@ -115,27 +114,36 @@ public class PackedSwitchDataList extends IntegerList
 
         @Override
         public int getAddress() {
-            return get();
+            return super.get();
+        }
+        public void setAddress(int address) {
+            super.set(address);
         }
         @Override
         public int getTargetAddress() {
-            return dataList.getBaseAddress() + get();
+            return getParentDataList().getBaseAddress() + getAddress();
         }
         @Override
         public void setTargetAddress(int targetAddress){
-            set(targetAddress - dataList.getBaseAddress());
+            setAddress(targetAddress - getParentDataList().getBaseAddress());
         }
         @Override
         public String getLabelName() {
             return HexUtil.toHex(":pswitch_", getTargetAddress(), 1);
         }
-        @Override
-        public int hashCode() {
-            return Objects.hash(dataList, index);
+        private PackedSwitchDataList getParentDataList() {
+            return (PackedSwitchDataList) getParent();
         }
         @Override
         public int getSortOrder() {
             return ExtraLine.ORDER_INSTRUCTION_LABEL;
+        }
+        public void merge(PSData data) {
+            setAddress(data.getAddress());
+        }
+        @Override
+        public int hashCode() {
+            return Objects.hash(getIndex());
         }
         @Override
         public boolean equals(Object obj) {
@@ -145,8 +153,8 @@ public class PackedSwitchDataList extends IntegerList
             if (obj == null || getClass() != obj.getClass()) {
                 return false;
             }
-            Data data = (Data) obj;
-            return index == data.index && dataList == data.dataList;
+            PSData data = (PSData) obj;
+            return getIndex() == data.getIndex() && getParent() == data.getParent();
         }
 
         @Override
@@ -154,4 +162,15 @@ public class PackedSwitchDataList extends IntegerList
             return getLabelName();
         }
     }
+
+    private static final Creator<PSData> CREATOR = new Creator<PSData>() {
+        @Override
+        public PSData[] newArrayInstance(int length) {
+            return new PSData[length];
+        }
+        @Override
+        public PSData newInstance() {
+            return new PSData();
+        }
+    };
 }

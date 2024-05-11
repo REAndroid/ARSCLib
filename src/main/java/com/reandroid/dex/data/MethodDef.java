@@ -36,10 +36,7 @@ import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.dex.smali.model.SmaliMethodParameter;
 import com.reandroid.utils.StringsUtil;
-import com.reandroid.utils.collection.ArraySupplierIterator;
-import com.reandroid.utils.collection.CombiningIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.ExpandIterator;
+import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -100,19 +97,27 @@ public class MethodDef extends Def<MethodId>{
         return new Parameter(this, index);
     }
     public Iterator<Parameter> getParameters(){
+        return getParameters(false);
+    }
+    public Iterator<Parameter> getParameters(boolean skipEmpty){
         if(getParametersCount() == 0){
             return EmptyIterator.of();
         }
-        return ArraySupplierIterator.of(new ArraySupplier<Parameter>() {
+        Iterator<Parameter> iterator = ArraySupplierIterator.of(new ArraySupplier<Parameter>() {
             @Override
             public Parameter get(int i) {
                 return MethodDef.this.getParameter(i);
             }
+
             @Override
             public int getCount() {
                 return MethodDef.this.getParametersCount();
             }
         });
+        if(!skipEmpty) {
+            return iterator;
+        }
+        return FilterIterator.of(iterator, parameter -> !parameter.isEmpty());
     }
     @Override
     public MethodKey getKey(){
@@ -291,9 +296,9 @@ public class MethodDef extends Def<MethodId>{
 
         getId().append(writer, false);
         writer.indentPlus();
-        if(!writer.appendOptional(getCodeItem())){
-            writer.appendAllWithDoubleNewLine(getParameters());
-            writer.appendAllWithDoubleNewLine(getAnnotations());
+        if(!writer.appendOptional(getCodeItem())) {
+            writer.appendAllWithDoubleNewLine(this.getParameters(true));
+            writer.appendAllWithDoubleNewLine(this.getAnnotations(true));
         }
         writer.indentMinus();
         getSmaliDirective().appendEnd(writer);
@@ -529,6 +534,13 @@ public class MethodDef extends Def<MethodId>{
                 getOrCreateAnnotationSet().fromSmali(smaliMethodParameter.getAnnotationSet());
             }
             setDebugName(smaliMethodParameter.getName());
+        }
+        public boolean isEmpty() {
+            DebugParameter debugParameter = getDebugParameter();
+            if(debugParameter != null && debugParameter.getNameId() != null) {
+                return false;
+            }
+            return !getAnnotationItems().hasNext();
         }
         @Override
         public void append(SmaliWriter writer) throws IOException {

@@ -67,7 +67,7 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<
                 + 4  // count integer reference
                 + width * count;
 
-        int align = (4 - (size % 4)) % 4;
+        int align = (2 - (size % 2)) % 2;
 
         size += align;
         return size / 2;

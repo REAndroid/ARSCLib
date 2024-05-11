@@ -16,6 +16,7 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliInstruction;
 
 import java.io.IOException;
 
@@ -35,6 +36,11 @@ public class Ins10x extends Size2Ins {
         writer.newLine();
         writer.append(getOpcode().getName());
     }
+    @Override
+    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
+        validateOpcode(smaliInstruction);
+    }
+
     @Override
     public String toString() {
         return getOpcode().getName();

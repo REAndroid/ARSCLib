@@ -488,8 +488,18 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
             source.get().setDexDirectory(this);
         }
     }
+    public ZipEntryMap getZipEntryMap() {
+        return getDexSourceSet().getZipEntryMap();
+    }
+    public void setZipEntryMap(ZipEntryMap zipEntryMap) {
+        getDexSourceSet().setZipEntryMap(zipEntryMap);
+    }
     public DexFile createDefault(){
-        DexSource<DexFile> source = getDexSourceSet().createNext();
+        DexFileSourceSet sourceSet = getDexSourceSet();
+        if(size() == 0 && sourceSet.getZipEntryMap() == null) {
+            sourceSet.setZipEntryMap(new ZipEntryMap());
+        }
+        DexSource<DexFile> source = sourceSet.createNext();
         DexFile dexFile = DexFile.createDefault();
         source.set(dexFile);
         dexFile.setDexDirectory(this);
@@ -905,9 +915,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return null;
     }
-    public DexSource<DexFile> getLastSource(){
-        return dexSourceSet.getLast();
-    }
     @Override
     public void close() throws IOException {
         this.dexSourceSet.close();
@@ -936,7 +943,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         dexDirectory.updateDexFileList();
         return dexDirectory;
     }
-    public static DexDirectory fromDirectory(File dir) throws IOException {
+    public static DexDirectory fromDexFilesDirectory(File dir) throws IOException {
         DexDirectory dexDirectory = new DexDirectory();
         dexDirectory.getDexSourceSet().addAll(dir);
         dexDirectory.updateDexFileList();

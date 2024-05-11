@@ -56,6 +56,12 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode> {
     public Iterator<SmaliDebug> getDebugs() {
         return iterator(SmaliDebug.class);
     }
+    public Iterator<SmaliDebugElement> getDebugElements() {
+        return iterator(SmaliDebugElement.class);
+    }
+    public Iterator<SmaliMethodParameter> getMethodParameters() {
+        return iterator(SmaliMethodParameter.class);
+    }
     public void clearInstructions() {
         removeInstances(SmaliDebug.class);
     }

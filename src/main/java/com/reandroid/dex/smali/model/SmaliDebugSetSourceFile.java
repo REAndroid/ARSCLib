@@ -15,40 +15,46 @@
  */
 package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.common.Register;
 import com.reandroid.dex.debug.DebugElementType;
-import com.reandroid.dex.smali.*;
+import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
-public abstract class SmaliDebugRegister extends SmaliDebugElement  implements SmaliRegion {
+public class SmaliDebugSetSourceFile extends SmaliDebugElement {
 
-    private final SmaliRegisterSet registerSet;
+    private StringKey name;
 
-    public SmaliDebugRegister(){
+    public SmaliDebugSetSourceFile() {
         super();
-        this.registerSet = new SmaliRegisterSet();
-        registerSet.setParent(this);
     }
 
-    public SmaliRegisterSet getRegisterSet() {
-        return registerSet;
+    public StringKey getName() {
+        return name;
     }
-    public Register getRegister(){
-        return getRegisterSet().getRegister(0);
+    public void setName(StringKey name) {
+        this.name = name;
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
         super.append(writer);
-        getRegisterSet().append(writer);
+        writer.append(", ");
+        writer.appendOptional(getName());
     }
-
     @Override
     public void parse(SmaliReader reader) throws IOException {
         super.parse(reader);
-        getRegisterSet().parse(reader);
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, ',');
+        reader.skipWhitespacesOrComment();
+        setName(StringKey.read(reader));
     }
 
-    public abstract DebugElementType<?> getDebugElementType();
+    @Override
+    public DebugElementType<?> getDebugElementType() {
+        return DebugElementType.SET_SOURCE_FILE;
+    }
 }

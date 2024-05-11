@@ -38,6 +38,7 @@ import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -248,7 +249,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         while (iterator.hasNext()){
             tryBlock.fromSmali(iterator.next());
         }
-        if(smaliMethod.hasDebugs()){
+        if(smaliMethod.hasDebugElements()){
             DebugInfo debugInfo = getOrCreateDebugInfo();
             debugInfo.getDebugSequence().fromSmali(smaliMethod.getCodeSet());
         }
@@ -260,8 +261,8 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         writer.newLine();
         SmaliDirective.LOCALS.append(writer);
         writer.appendInteger(getLocalRegistersCount());
-        writer.appendAllWithDoubleNewLine(methodDef.getParameters());
-        writer.appendAllWithDoubleNewLine(methodDef.getAnnotations());
+        writer.appendAllWithDoubleNewLine(methodDef.getParameters(true));
+        writer.appendAllWithDoubleNewLine(methodDef.getAnnotations(true));
         getInstructionList().append(writer);
         writer.setCurrentRegistersTable(null);
     }

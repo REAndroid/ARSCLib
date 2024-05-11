@@ -21,7 +21,7 @@ import com.reandroid.dex.smali.*;
 
 import java.io.IOException;
 
-public class SmaliLineNumber extends SmaliDebug implements SmaliRegion {
+public class SmaliLineNumber extends SmaliDebugElement implements SmaliRegion {
 
     private int number;
 

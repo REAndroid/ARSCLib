@@ -20,8 +20,12 @@ import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliDebugElement;
+import com.reandroid.dex.smali.model.SmaliDebugSetSourceFile;
 import com.reandroid.utils.collection.SingleIterator;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 public class DebugSetSourceFile extends DebugElement {
@@ -60,7 +64,6 @@ public class DebugSetSourceFile extends DebugElement {
         return DebugElementType.SET_SOURCE_FILE;
     }
 
-
     @Override
     public Iterator<IdItem> usedIds(){
         return SingleIterator.of(mName.getItem());
@@ -70,6 +73,18 @@ public class DebugSetSourceFile extends DebugElement {
         super.merge(element);
         DebugSetSourceFile coming = (DebugSetSourceFile) element;
         this.mName.setItem(coming.mName.getKey());
+    }
+
+    @Override
+    public void appendExtra(SmaliWriter writer) throws IOException {
+        super.appendExtra(writer);
+        this.mName.append(writer);
+    }
+
+    @Override
+    public void fromSmali(SmaliDebugElement smaliDebugElement) throws IOException {
+        super.fromSmali(smaliDebugElement);
+        setName(((SmaliDebugSetSourceFile) smaliDebugElement).getName());
     }
 
     @Override

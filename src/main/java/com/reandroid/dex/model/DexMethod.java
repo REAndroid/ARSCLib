@@ -295,6 +295,9 @@ public class DexMethod extends DexDeclaration {
     public boolean isDirect(){
         return isConstructor() || isPrivate() || isStatic();
     }
+    public boolean isVirtual(){
+        return !isDirect();
+    }
 
     public Iterator<DexMethodParameter> getParameters(){
         return ComputeIterator.of(getDefinition().getParameters(),

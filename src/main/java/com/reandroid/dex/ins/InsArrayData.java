@@ -101,6 +101,7 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
         numberArray.putLong(values);
         refreshAlignment();
     }
+    @Override
     public Iterator<IntegerReference> getReferences(){
         return getNumberArray().getReferences();
     }
@@ -172,6 +173,7 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
 
     @Override
     public void fromSmali(SmaliInstruction smaliInstruction) throws IOException{
+        validateOpcode(smaliInstruction);
         SmaliPayloadArray smaliPayloadArray = (SmaliPayloadArray) smaliInstruction;
         int width = smaliPayloadArray.getWidth();
         if(width < 1 || width > 8){

@@ -17,10 +17,7 @@ package com.reandroid.dex.model;
 
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.data.*;
-import com.reandroid.dex.ins.ConstNumber;
-import com.reandroid.dex.ins.Ins;
-import com.reandroid.dex.ins.InsArrayData;
-import com.reandroid.dex.ins.InsSparseSwitchData;
+import com.reandroid.dex.ins.*;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.AnnotationValue;
 import com.reandroid.dex.value.ArrayValue;
@@ -69,12 +66,11 @@ public class DexIntegerVisitor extends CombiningIterator<IntegerReference, Integ
     static Iterator<IntegerReference> iterator(Ins ins) {
         if (ins instanceof ConstNumber) {
             return SingleIterator.of((ConstNumber) ins);
-        } else if (ins instanceof InsArrayData) {
-            return ((InsArrayData) ins).getReferences();
-        } else if (ins instanceof InsSparseSwitchData) {
-            return InstanceIterator.of(((InsSparseSwitchData) ins).getLabels(), IntegerReference.class);
+        } else if (ins instanceof PayloadData) {
+            return ((PayloadData) ins).getReferences();
+        } else {
+            return EmptyIterator.of();
         }
-        return EmptyIterator.of();
     }
     static Iterator<IntegerReference> iterator(EncodedArray encodedArray) {
         return new IterableIterator<DexValueBlock<?>, IntegerReference>(encodedArray.iterator()) {

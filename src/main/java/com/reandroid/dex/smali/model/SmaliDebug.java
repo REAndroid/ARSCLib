@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.debug.DebugElementType;
 import com.reandroid.dex.smali.*;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.InstanceIterator;
@@ -56,8 +55,5 @@ public abstract class SmaliDebug extends SmaliCode implements SmaliRegion {
         SmaliParseException.expect(reader, getSmaliDirective());
     }
 
-    public SmaliDirective getSmaliDirective() {
-        return getDebugElementType().getSmaliDirective();
-    }
-    public abstract DebugElementType<?> getDebugElementType();
+    public abstract SmaliDirective getSmaliDirective();
 }

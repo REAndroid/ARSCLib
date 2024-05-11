@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.smali.model.SmaliDebug;
+import com.reandroid.dex.smali.model.SmaliDebugElement;
 import com.reandroid.dex.smali.model.SmaliDebugEpilogue;
 
 import java.io.IOException;
@@ -27,10 +27,10 @@ public class DebugEpilogue extends DebugElement {
     }
 
     @Override
-    public void fromSmali(SmaliDebug smaliDebug) throws IOException {
-        super.fromSmali(smaliDebug);
-        if(!(smaliDebug instanceof SmaliDebugEpilogue)){
-            throw new IOException("Mismatch class: " + smaliDebug.getClass() +
+    public void fromSmali(SmaliDebugElement smaliDebugElement) throws IOException {
+        super.fromSmali(smaliDebugElement);
+        if(!(smaliDebugElement instanceof SmaliDebugEpilogue)){
+            throw new IOException("Mismatch class: " + smaliDebugElement.getClass() +
                     ", expecting: " + SmaliDebugEpilogue.class);
         }
     }

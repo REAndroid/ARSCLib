@@ -17,14 +17,21 @@ package com.reandroid.dex.smali;
 
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.model.DexClassRepository;
+import com.reandroid.dex.smali.formatters.ClassComment;
+import com.reandroid.dex.smali.formatters.MethodComment;
+import com.reandroid.dex.smali.formatters.ResourceIdComment;
+import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.IOException;
+import java.util.List;
 
 public class SmaliWriterSetting {
 
     private ResourceIdComment resourceIdComment;
-    private MethodComment methodComment;
+    private List<MethodComment> methodCommentList;
+    private List<ClassComment> classCommentList;
 
     public SmaliWriterSetting(){
     }
@@ -32,13 +39,13 @@ public class SmaliWriterSetting {
     public void writeResourceIdComment(SmaliWriter writer, long l) throws IOException {
         ResourceIdComment resourceIdComment = getResourceIdComment();
         if(resourceIdComment != null){
-            resourceIdComment.writeResourceIdComment(writer, (int)l);
+            resourceIdComment.writeComment(writer, (int)l);
         }
     }
     public void writeResourceIdComment(SmaliWriter writer, int i) throws IOException {
         ResourceIdComment resourceIdComment = getResourceIdComment();
         if(resourceIdComment != null){
-            resourceIdComment.writeResourceIdComment(writer, i);
+            resourceIdComment.writeComment(writer, i);
         }
     }
     public ResourceIdComment getResourceIdComment() {
@@ -52,18 +59,72 @@ public class SmaliWriterSetting {
     }
 
     public void writeMethodComment(SmaliWriter writer, MethodKey methodKey) throws IOException {
-        MethodComment methodComment = getMethodComment();
-        if(methodComment != null){
-            methodComment.writeMethodComment(writer, methodKey);
+        List<MethodComment> methodCommentList = getMethodCommentList();
+        if(methodCommentList != null) {
+            for(MethodComment methodComment : methodCommentList) {
+                methodComment.writeComment(writer, methodKey);
+            }
         }
     }
-    public MethodComment getMethodComment() {
-        return methodComment;
+    public List<MethodComment> getMethodCommentList() {
+        return methodCommentList;
     }
-    public void setMethodComment(MethodComment methodComment) {
-        this.methodComment = methodComment;
+    public void clearMethodComments() {
+        List<MethodComment> commentList = this.methodCommentList;
+        if(commentList != null) {
+            commentList.clear();
+        }
     }
-    public void setMethodComment(DexClassRepository classRepository) {
-        setMethodComment(new MethodComment.MethodHierarchyComment(classRepository));
+    public void addMethodComment(MethodComment methodComment) {
+        if(methodComment == null) {
+            return;
+        }
+        List<MethodComment> commentList = this.methodCommentList;
+        if(commentList == null) {
+            commentList = new ArrayCollection<>();
+            this.methodCommentList = commentList;
+        }
+        if(!commentList.contains(methodComment)) {
+            commentList.add(methodComment);
+        }
+    }
+    public void addMethodComments(DexClassRepository classRepository) {
+        addMethodComment(new MethodComment.MethodOverrideComment(classRepository));
+        addMethodComment(new MethodComment.MethodImplementComment(classRepository));
+    }
+    public void writeClassComment(SmaliWriter writer, TypeKey typeKey) throws IOException {
+        List<ClassComment> commentList = getClassCommentList();
+        if(commentList != null) {
+            for(ClassComment comment : commentList) {
+                comment.writeComment(writer, typeKey);
+            }
+        }
+    }
+
+    public List<ClassComment> getClassCommentList() {
+        return classCommentList;
+    }
+    public void clearClassComments() {
+        List<ClassComment> commentList = this.classCommentList;
+        if(commentList != null) {
+            commentList.clear();
+        }
+    }
+    public void addClassComment(ClassComment classComment) {
+        if(classComment == null) {
+            return;
+        }
+        List<ClassComment> commentList = this.classCommentList;
+        if(commentList == null) {
+            commentList = new ArrayCollection<>();
+            this.classCommentList = commentList;
+        }
+        if(!commentList.contains(classComment)) {
+            commentList.add(classComment);
+        }
+    }
+    public void addClassComments(DexClassRepository classRepository) {
+        addClassComment(new ClassComment.ClassExtendComment(classRepository));
+        addClassComment(new ClassComment.ClassImplementComment(classRepository));
     }
 }

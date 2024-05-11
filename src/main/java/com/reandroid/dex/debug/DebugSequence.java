@@ -22,8 +22,7 @@ import com.reandroid.dex.base.FixedDexContainer;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.smali.model.SmaliCodeSet;
-import com.reandroid.dex.smali.model.SmaliDebug;
-import com.reandroid.dex.smali.model.SmaliMethod;
+import com.reandroid.dex.smali.model.SmaliDebugElement;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
@@ -295,14 +294,10 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         getElementList().trimToSize();
     }
     public void fromSmali(SmaliCodeSet smaliCodeSet) throws IOException {
-        Iterator<SmaliDebug> iterator = smaliCodeSet.getDebugs();
+        Iterator<SmaliDebugElement> iterator = smaliCodeSet.getDebugElements();
         while (iterator.hasNext()){
-            SmaliDebug smaliDebug = iterator.next();
-            DebugElementType<?> type = smaliDebug.getDebugElementType();
-            if(type == null){
-                continue;
-            }
-            createNext(type).fromSmali(smaliDebug);
+            SmaliDebugElement smaliDebug = iterator.next();
+            createNext(smaliDebug.getDebugElementType()).fromSmali(smaliDebug);
         }
     }
 

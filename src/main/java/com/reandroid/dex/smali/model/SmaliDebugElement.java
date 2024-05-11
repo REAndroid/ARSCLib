@@ -16,17 +16,12 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.debug.DebugElementType;
-import com.reandroid.dex.debug.DebugPrologue;
-import com.reandroid.dex.smali.*;
+import com.reandroid.dex.smali.SmaliDirective;
 
-public class SmaliDebugPrologue extends SmaliDebugElement implements SmaliRegion {
+public abstract class SmaliDebugElement extends SmaliDebug {
 
-    public SmaliDebugPrologue(){
-        super();
+    public SmaliDirective getSmaliDirective() {
+        return getDebugElementType().getSmaliDirective();
     }
-
-    @Override
-    public DebugElementType<DebugPrologue> getDebugElementType() {
-        return DebugElementType.PROLOGUE;
-    }
+    public abstract DebugElementType<?> getDebugElementType();
 }

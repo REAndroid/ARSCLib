@@ -49,7 +49,10 @@ public interface DexSource<T> extends Comparable<DexSource<?>>, Closeable{
         return name;
     }
     default DexSource<T> createNext(){
-        throw new RuntimeException("Not implemented");
+        throw new RuntimeException("Method not implemented");
+    }
+    default DexSource<T> initializeNew(){
+        throw new RuntimeException("Method not implemented");
     }
     @Override
     default int compareTo(DexSource<?> dexSource){
@@ -58,6 +61,9 @@ public interface DexSource<T> extends Comparable<DexSource<?>>, Closeable{
 
     static<T> DexSource<T> create(ZipEntryMap zipEntryMap, String name){
         return new ZipDexSource<>(zipEntryMap, name);
+    }
+    static<T> DexSource<T> create(ZipEntryMap zipEntryMap, String name, T item){
+        return new ZipDexSource<>(zipEntryMap, name, item);
     }
     static<T> DexSource<T> create(File file){
         return new FileDexSource<>(file);
@@ -172,6 +178,11 @@ public interface DexSource<T> extends Comparable<DexSource<?>>, Closeable{
         }
 
         @Override
+        public DexSource<T> initializeNew() {
+            return null;
+        }
+
+        @Override
         public FileDexSource<T> createNext(){
             if(isClosed()){
                 return null;
@@ -205,6 +216,10 @@ public interface DexSource<T> extends Comparable<DexSource<?>>, Closeable{
             super();
             this.zipEntryMap = zipEntryMap;
             this.name = name;
+        }
+        public ZipDexSource(ZipEntryMap zipEntryMap, String name, T item) {
+            this(zipEntryMap, name);
+            set(item);
         }
 
         @Override
