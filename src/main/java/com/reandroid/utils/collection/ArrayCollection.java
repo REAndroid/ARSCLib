@@ -20,7 +20,7 @@ import com.reandroid.common.ArraySupplier;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
+public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Swappable {
 
     private Object[] mElements;
     private Initializer<T> mInitializer;
@@ -170,6 +170,41 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
             public void onSwap(int i, int j) {
                 super.onSwap(i, j);
                 ArrayCollection.this.notifySwap(i, j);
+            }
+        };
+        if(sort.sort()){
+            onChanged();
+            return true;
+        }
+        return false;
+    }
+
+    public boolean sort(Comparator<? super T> comparator, Swappable swappable){
+        if(swappable == null) {
+            throw new NullPointerException("swappable == null");
+        }
+        if(swappable == this) {
+            throw new IllegalArgumentException("swappable == this");
+        }
+        return sort(comparator, SwapListener.redirectTo(swappable));
+    }
+    public boolean sort(Comparator<? super T> comparator, SwapListener swapListener){
+        if(mLocked){
+            return false;
+        }
+        int size = size();
+        if(size < 2){
+            return false;
+        }
+        if(swapListener == null) {
+            throw new NullPointerException("swapListener == null");
+        }
+        ArraySort.ObjectSort sort = new ArraySort.ObjectSort(mElements, 0, size, comparator){
+            @Override
+            public void onSwap(int i, int j) {
+                super.onSwap(i, j);
+                ArrayCollection.this.notifySwap(i, j);
+                swapListener.onSwap(i, j);
             }
         };
         if(sort.sort()){
@@ -664,6 +699,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T> {
         this.mLocked = locked;
         onChanged();
     }
+    @Override
     public boolean swap(int i1, int i2){
         if(i1 == i2){
             return false;

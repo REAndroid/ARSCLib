@@ -20,8 +20,9 @@ import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.utils.collection.SwapListener;
 import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.utils.collection.InstanceIterator;
+import com.reandroid.utils.collection.Swappable;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -30,7 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class BlockList<T extends Block> extends Block implements BlockRefresh {
+public class BlockList<T extends Block> extends Block implements BlockRefresh, Swappable {
     private ArrayCollection<T> mItems;
     private Creator<? extends T> mCreator;
 
@@ -168,6 +169,24 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
             return false;
         }
         if(mItems.sortItems(comparator)){
+            return updateIndex();
+        }
+        return false;
+    }
+    public boolean sort(Comparator<? super T> comparator, Swappable swappable){
+        if(size() < 2){
+            return false;
+        }
+        if(mItems.sort(comparator, swappable)){
+            return updateIndex();
+        }
+        return false;
+    }
+    public boolean sort(Comparator<? super T> comparator, SwapListener swapListener){
+        if(size() < 2){
+            return false;
+        }
+        if(mItems.sort(comparator, swapListener)){
             return updateIndex();
         }
         return false;
@@ -331,15 +350,22 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh {
         }
         add(start, element);
     }
-    public void swap(T item1, T item2){
-        if(item1 == item2){
-            return;
+    public boolean swap(int i, int j) {
+        if(i == j) {
+            return false;
+        }
+        return swap(get(i), get(j));
+    }
+    public boolean swap(T item1, T item2){
+        if(item1 == item2 || item1 == null || item2 == null){
+            return false;
         }
         int i1 = item1.getIndex();
         int i2 = item2.getIndex();
         mItems.swap(i1, i2);
         item1.setIndex(i2);
         item2.setIndex(i1);
+        return true;
     }
     public void moveTo(T item, int index){
         if(index < 0){
