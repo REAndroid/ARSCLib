@@ -20,6 +20,7 @@ import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.KeyPair;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.TypeKeyReference;
 import com.reandroid.dex.model.DexClass;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.dex.sections.SectionType;
@@ -50,6 +51,18 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
     public int apply(DexClassRepository classRepository) {
         Map<String, String> map = buildRenameMap();
         this.renamedStrings = new HashSet<>(map.size());
+        renameStringIds(classRepository, map);
+        renameExternalTypeKeyReferences(classRepository, map);
+        int size = renamedStrings.size();
+        if(size != 0) {
+            classRepository.clearPoolMap();
+        }
+        fixAccessibility(classRepository);
+        renamedStrings.clear();
+        renamedStrings = null;
+        return size;
+    }
+    private void renameStringIds(DexClassRepository classRepository, Map<String, String> map) {
         Iterator<StringId> iterator = classRepository.getClonedItems(SectionType.STRING_ID);
         while (iterator.hasNext()){
             StringId stringId = iterator.next();
@@ -61,14 +74,27 @@ public class RenameTypes extends Rename<TypeKey, TypeKey>{
                 renameSignatures(map, stringId);
             }
         }
-        int size = renamedStrings.size();
-        if(size != 0) {
-            classRepository.clearPoolMap();
+    }
+    private void renameExternalTypeKeyReferences(DexClassRepository classRepository, Map<String, String> map) {
+        List<TypeKeyReference> referenceList = classRepository.getExternalTypeKeyReferenceList();
+        for(TypeKeyReference reference : referenceList) {
+            renameExternalTypeKeyReference(reference, map);
         }
-        fixAccessibility(classRepository);
-        renamedStrings.clear();
-        renamedStrings = null;
-        return size;
+    }
+    private void renameExternalTypeKeyReference(TypeKeyReference reference, Map<String, String> map) {
+        TypeKey typeKey = reference.getTypeKey();
+        if(typeKey == null) {
+            return;
+        }
+        String replace = map.get(typeKey.getTypeName());
+        if(replace == null) {
+            replace = map.get(typeKey.getSourceName());
+        }
+        TypeKey replaceKey = TypeKey.parse(replace);
+        if(replaceKey != null) {
+            reference.setTypeKey(replaceKey);
+            renamedStrings.add(replace);
+        }
     }
     private void fixAccessibility(DexClassRepository classRepository) {
         Set<String> renamedSet = this.renamedStrings;

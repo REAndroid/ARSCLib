@@ -36,9 +36,11 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
 
     private final DexFileSourceSet dexSourceSet;
     private Object mTag;
+    private ArrayCollection<TypeKeyReference> externalTypeKeyReferenceList;
 
     public DexDirectory() {
         this.dexSourceSet = new DexFileSourceSet();
+        this.externalTypeKeyReferenceList = new ArrayCollection<>();
     }
 
     public Object getTag() {
@@ -915,9 +917,24 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return null;
     }
+
+    @Override
+    public List<TypeKeyReference> getExternalTypeKeyReferenceList() {
+        return externalTypeKeyReferenceList;
+    }
+    public void addExternalTypeKeyReference(TypeKeyReference reference) {
+        if(reference != null && !externalTypeKeyReferenceList.contains(reference)) {
+            externalTypeKeyReferenceList.add(reference);
+        }
+    }
+    public void clearExternalTypeKeyReferences() {
+        externalTypeKeyReferenceList.clear();
+    }
+
     @Override
     public void close() throws IOException {
         this.dexSourceSet.close();
+        this.clearExternalTypeKeyReferences();
     }
 
     public void writeSmali(SmaliWriter writer, File root) throws IOException {

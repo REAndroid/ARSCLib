@@ -19,16 +19,15 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.data.AnnotationElement;
 import com.reandroid.dex.data.AnnotationItem;
-import com.reandroid.dex.key.FieldKey;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.MethodKey;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.FilterIterator;
 import com.reandroid.utils.collection.IterableIterator;
 import com.reandroid.utils.collection.UniqueIterator;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Predicate;
 
 public interface DexClassRepository {
@@ -145,5 +144,9 @@ public interface DexClassRepository {
             }
         }
         return removeCount;
+    }
+
+    default List<TypeKeyReference> getExternalTypeKeyReferenceList() {
+        return ArrayCollection.empty();
     }
 }
