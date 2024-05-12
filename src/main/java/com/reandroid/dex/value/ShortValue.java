@@ -38,7 +38,7 @@ public class ShortValue extends PrimitiveValueBlock {
         return (short) getNumberValue();
     }
     public void set(short value){
-        setNumberValue(value & 0xffff);
+        setNumberValue(value);
     }
     @Override
     public DexValueType<?> getValueType() {
@@ -46,7 +46,7 @@ public class ShortValue extends PrimitiveValueBlock {
     }
     @Override
     public String getHex() {
-        return HexUtil.toHex(getNumberValue(), getValueSize()) + "S";
+        return HexUtil.toSignedHex(get()) + "S";
     }
     @Override
     public TypeKey getDataTypeKey() {

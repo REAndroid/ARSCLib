@@ -49,7 +49,7 @@ public class LongValue extends PrimitiveValueBlock {
     }
     @Override
     public String getHex() {
-        return HexUtil.toHex(getNumberValue(), getValueSize()) + "L";
+        return HexUtil.toSignedHex(get()) + "L";
     }
     @Override
     public TypeKey getDataTypeKey() {

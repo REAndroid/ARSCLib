@@ -38,10 +38,23 @@ public abstract class PrimitiveValueBlock extends DexValueBlock<NumberValue> {
     public long getNumberValue(){
         return getValueContainer().getNumberValue();
     }
-    public void setNumberValue(int value){
-        setNumberValue(0x00000000ffffffffL & value);
+
+    void setNumberValue(byte value){
+        NumberValue container = getValueContainer();
+        container.setNumberValue(value);
+        setValueSize(container.getSize() - 1);
     }
-    public void setNumberValue(long value){
+    void setNumberValue(short value){
+        NumberValue container = getValueContainer();
+        container.setNumberValue(value);
+        setValueSize(container.getSize() - 1);
+    }
+    void setNumberValue(int value){
+        NumberValue container = getValueContainer();
+        container.setNumberValue(value);
+        setValueSize(container.getSize() - 1);
+    }
+    void setNumberValue(long value){
         NumberValue container = getValueContainer();
         container.setNumberValue(value);
         setValueSize(container.getSize() - 1);

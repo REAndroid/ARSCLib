@@ -74,7 +74,7 @@ public class CharValue extends PrimitiveValueBlock {
     }
     @Override
     public String getHex() {
-        return HexUtil.toHex(getNumberValue(), getValueSize()) + "C";
+        return HexUtil.toSignedHex(get()) + "C";
     }
 
     @Override

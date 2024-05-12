@@ -54,27 +54,15 @@ public class NumberValue extends DexBlockItem {
         getBytesInternal()[0] = value;
     }
     public void setNumberValue(short value){
-        if(value < 0){
-            byte b = (byte) (value & 0xff);
-            if(value == b){
-                setNumberValue(b);
-                return;
-            }
-        }
-        setNumberValue(value & 0xffffL);
+        setNumberValue(value & 0xffffL, 2);
     }
     public void setNumberValue(int value){
-        if(value < 0){
-            short s = (short) (value & 0xffff);
-            if(value == s){
-                setNumberValue(s);
-                return;
-            }
-        }
-        setNumberValue(value & 0xffffffffL);
+        setNumberValue(value & 0xffffffffL, 4);
     }
     public void setNumberValue(long value){
-        int size = calculateSize(value);
+        setNumberValue(value, 8);
+    }
+    public void setNumberValue(long value, int size){
         setSize(size);
         putNumber(getBytesInternal(), 0, size, value);
     }
@@ -113,16 +101,5 @@ public class NumberValue extends DexBlockItem {
     @Override
     public String toString() {
         return getSize() + ":" + toHex() + ":" + getSignedValue();
-    }
-    private static int calculateSize(long value){
-        if(value == 0){
-            return 1;
-        }
-        int i = 0;
-        while (value != 0){
-            value = value >>> 8;
-            i++;
-        }
-        return i;
     }
 }

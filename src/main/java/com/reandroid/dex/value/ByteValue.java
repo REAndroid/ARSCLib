@@ -39,7 +39,7 @@ public class ByteValue extends PrimitiveValueBlock {
         return (byte) (getNumberValue() & 0xff);
     }
     public void set(byte b){
-        getValueContainer().setNumberValue(b);
+        setNumberValue(b);
     }
     @Override
     public DexValueType<?> getValueType() {
@@ -47,7 +47,7 @@ public class ByteValue extends PrimitiveValueBlock {
     }
     @Override
     public String getHex() {
-        return HexUtil.toHex(getNumberValue(), 1) + "t";
+        return HexUtil.toSignedHex(get()) + "t";
     }
     @Override
     public TypeKey getDataTypeKey() {
