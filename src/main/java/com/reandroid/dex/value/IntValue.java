@@ -40,7 +40,7 @@ public class IntValue extends PrimitiveValueBlock implements IntegerReference {
     }
     @Override
     public int get() {
-        return getValueContainer().getIntegerValue();
+        return (int) getNumberValue();
     }
     @Override
     public void set(int value) {

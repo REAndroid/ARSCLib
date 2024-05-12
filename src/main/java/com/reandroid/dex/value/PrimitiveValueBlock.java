@@ -36,7 +36,18 @@ public abstract class PrimitiveValueBlock extends DexValueBlock<NumberValue> {
     public abstract void setData(Number number);
 
     public long getNumberValue(){
-        return getValueContainer().getNumberValue();
+        int size = getValueSize();
+        long l = getValueContainer().getNumberValue();
+        if(size == 0) {
+            return (byte) l;
+        }
+        if(size < 3) {
+            return (short) l;
+        }
+        if(size < 4) {
+            return (int) l;
+        }
+        return l;
     }
 
     void setNumberValue(byte value){
@@ -45,16 +56,34 @@ public abstract class PrimitiveValueBlock extends DexValueBlock<NumberValue> {
         setValueSize(container.getSize() - 1);
     }
     void setNumberValue(short value){
+        if(value < 0) {
+            byte b = (byte) value;
+            if(b == value) {
+                setNumberValue(b);
+            }
+        }
         NumberValue container = getValueContainer();
         container.setNumberValue(value);
         setValueSize(container.getSize() - 1);
     }
     void setNumberValue(int value){
+        if(value < 0) {
+            short s = (short) value;
+            if(s == value) {
+                setNumberValue(s);
+            }
+        }
         NumberValue container = getValueContainer();
         container.setNumberValue(value);
         setValueSize(container.getSize() - 1);
     }
     void setNumberValue(long value){
+        if(value < 0) {
+            int i = (int)value;
+            if(i == value) {
+                setNumberValue(i);
+            }
+        }
         NumberValue container = getValueContainer();
         container.setNumberValue(value);
         setValueSize(container.getSize() - 1);
