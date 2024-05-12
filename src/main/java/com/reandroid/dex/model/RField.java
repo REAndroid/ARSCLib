@@ -118,12 +118,8 @@ public class RField extends DexField implements Comparable<RField> {
     }
 
     static boolean isResourceIdValue(DexValueBlock<?> dexValueBlock) {
-        if(dexValueBlock instanceof PrimitiveValueBlock){
-            long value = ((PrimitiveValueBlock)dexValueBlock).getNumberValue();
-            if((value & 0xffffffff00000000L) != 0){
-                return false;
-            }
-            return PackageBlock.isResourceId((int) value);
+        if(dexValueBlock instanceof IntValue){
+            return PackageBlock.isResourceId(((IntValue)dexValueBlock).get());
         }
         return false;
     }
