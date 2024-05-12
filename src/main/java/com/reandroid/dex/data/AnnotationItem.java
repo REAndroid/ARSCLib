@@ -31,12 +31,13 @@ import com.reandroid.dex.smali.model.SmaliAnnotationItem;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.function.Predicate;
 
 public class AnnotationItem extends DataItem
@@ -189,7 +190,7 @@ public class AnnotationItem extends DataItem
     }
     public int getVisibilityValue(){
         if(this.visibility == null){
-            return 0;
+            return -1;
         }
         return this.visibility.unsignedInt();
     }
@@ -240,6 +241,7 @@ public class AnnotationItem extends DataItem
     }
     public void fromSmali(SmaliAnnotationItem smaliAnnotationItem){
         setType(smaliAnnotationItem.getType());
+        setVisibility(smaliAnnotationItem.getVisibility());
         Iterator<SmaliAnnotationElement> iterator = smaliAnnotationItem.iterator();
         while (iterator.hasNext()){
             SmaliAnnotationElement smaliAnnotationElement = iterator.next();
@@ -250,10 +252,7 @@ public class AnnotationItem extends DataItem
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
-        AnnotationVisibility visibility = getVisibility();
-        if(visibility != null){
-            visibility.append(writer);
-        }
+        writer.appendOptional(getVisibility());
         getTypeId().append(writer);
         writer.indentPlus();
         writer.appendAllWithDoubleNewLine(iterator());
@@ -276,7 +275,11 @@ public class AnnotationItem extends DataItem
         if(other == this){
             return 0;
         }
-        return SectionTool.compareIdx(getTypeId(), other.getTypeId());
+        int i = SectionTool.compareIdx(getTypeId(), other.getTypeId());
+        if(i != 0) {
+            return i;
+        }
+        return CompareUtil.compare(getVisibilityValue(), other.getVisibilityValue());
     }
     @Override
     public boolean equals(Object obj) {
@@ -287,7 +290,10 @@ public class AnnotationItem extends DataItem
             return false;
         }
         AnnotationItem item = (AnnotationItem) obj;
-        if(!Objects.equals(this.getTypeName(), item.getTypeName())){
+        if(!ObjectsUtil.equals(this.getTypeName(), item.getTypeName())){
+            return false;
+        }
+        if(this.getVisibilityValue() != item.getVisibilityValue()){
             return false;
         }
         return this.annotationElements.equals(item.annotationElements);
@@ -295,18 +301,10 @@ public class AnnotationItem extends DataItem
 
     @Override
     public int hashCode() {
-        int hash = 1;
-        Object obj = getTypeName();
-        hash = hash * 31;
-        if(obj != null){
-            hash = hash + obj.hashCode();
-        }
-        obj = this.annotationElements;
-        hash = hash * 31;
-        if(obj != null){
-            hash = hash + obj.hashCode();
-        }
-        return hash;
+        return ObjectsUtil.hash(
+                getVisibility(),
+                getTypeName(),
+                annotationElements);
     }
 
     @Override

@@ -56,7 +56,7 @@ public class SmaliValueAnnotation extends SmaliValue implements SmaliRegion {
     }
     @Override
     public void parse(SmaliReader reader) throws IOException {
-        SmaliAnnotationItem annotationItem = new SmaliAnnotationItem();
+        SmaliAnnotationItem annotationItem = new SmaliAnnotationItem(true);
         setValue(annotationItem);
         annotationItem.parse(reader);
     }

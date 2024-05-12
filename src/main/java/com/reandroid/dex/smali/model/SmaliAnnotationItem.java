@@ -23,19 +23,33 @@ import java.io.IOException;
 
 public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement> implements SmaliRegion {
 
-    private SmaliDirective smaliDirective;
+    private final SmaliDirective smaliDirective;
     private AnnotationVisibility visibility;
     private TypeKey type;
 
-    public SmaliAnnotationItem(){
+    public SmaliAnnotationItem(boolean subAnnotation){
         super();
-        this.smaliDirective = SmaliDirective.ANNOTATION;
+        this.smaliDirective = subAnnotation ? SmaliDirective.SUB_ANNOTATION :
+                SmaliDirective.ANNOTATION;
+        if(!subAnnotation) {
+            visibility = AnnotationVisibility.BUILD;
+        }
+    }
+    public SmaliAnnotationItem(){
+        this(false);
     }
 
     public AnnotationVisibility getVisibility() {
         return visibility;
     }
     public void setVisibility(AnnotationVisibility visibility) {
+        SmaliDirective smaliDirective = getSmaliDirective();
+        if(smaliDirective == SmaliDirective.ANNOTATION && visibility == null) {
+            throw new NullPointerException("Null annotation visibility");
+        }
+        if(smaliDirective == SmaliDirective.SUB_ANNOTATION && visibility != null) {
+            throw new IllegalArgumentException("Can not set annotation visibility for: " + smaliDirective);
+        }
         this.visibility = visibility;
     }
 
@@ -51,18 +65,6 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement> implem
         return smaliDirective;
     }
 
-    public void setSmaliDirective(SmaliDirective annotationDirective) {
-        if(annotationDirective == null) {
-            throw new NullPointerException("Null annotation directive");
-        }
-        if(annotationDirective != SmaliDirective.ANNOTATION &&
-                annotationDirective != SmaliDirective.SUB_ANNOTATION) {
-            throw new IllegalArgumentException("Invalid annotation directive: "
-                    + annotationDirective);
-        }
-        this.smaliDirective = annotationDirective;
-    }
-
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
@@ -75,16 +77,15 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement> implem
     @Override
     public void parse(SmaliReader reader) throws IOException{
         reader.skipWhitespacesOrComment();
-        int position = reader.position();
-        SmaliDirective directive = SmaliDirective.parse(reader);
-        if(directive != SmaliDirective.ANNOTATION &&
-                directive != SmaliDirective.SUB_ANNOTATION){
-            reader.position(position);
-            throw new SmaliParseException("Expecting " + SmaliDirective.ANNOTATION
-                    + " || " + SmaliDirective.SUB_ANNOTATION, reader);
+        SmaliDirective directive = getSmaliDirective();
+        SmaliParseException.expect(reader, directive);
+        if(directive == SmaliDirective.ANNOTATION) {
+            AnnotationVisibility visibility = AnnotationVisibility.parse(reader);
+            if(visibility == null) {
+                throw new SmaliParseException("Unrecognized annotation visibility", reader);
+            }
+            setVisibility(visibility);
         }
-        setSmaliDirective(directive);
-        setVisibility(AnnotationVisibility.parse(reader));
         setType(TypeKey.read(reader));
         while (parseNext(reader) != null){
             reader.skipWhitespacesOrComment();
@@ -101,18 +102,5 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement> implem
             return null;
         }
         return new SmaliAnnotationElement();
-    }
-
-    public static SmaliAnnotationItem read(SmaliReader reader) throws IOException {
-        reader.skipWhitespacesOrComment();
-        if(reader.finished()) {
-            return null;
-        }
-        SmaliAnnotationItem smali = new SmaliAnnotationItem();
-        smali.parse(reader);
-        if(!smali.isEmpty()) {
-            return smali;
-        }
-        return null;
     }
 }
