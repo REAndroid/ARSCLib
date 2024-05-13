@@ -29,46 +29,38 @@ public class NumberValue extends DexBlockItem {
         setBytesLength(size, false);
     }
 
-    public long getSignedValue(){
-        int size = getSize();
-        long value = getNumberValue();
-        if(size == 1){
-            return (byte)value;
-        }
-        if(size == 2){
-            return (short)value;
-        }
-        if(size < 5){
-            return (int)value;
-        }
-        return value;
+    public long getSignedNumber(){
+        return getSignedNumber(getBytesInternal(), 0, getSize());
     }
-    public int getIntegerValue(){
-        return (int) getNumberValue();
-    }
-    public long getNumberValue(){
-        return getNumber(getBytesInternal(), 0, getSize());
+    public long getUnsignedNumber(){
+        return getUnsignedNumber(getBytesInternal(), 0, getSize());
     }
     public void setNumberValue(byte value){
         setSize(1);
         getBytesInternal()[0] = value;
     }
     public void setNumberValue(short value){
-        setNumberValue(value & 0xffffL, 2);
+        setSignedNumberValue(value & 0xffffL, value < 0);
     }
     public void setNumberValue(int value){
-        setNumberValue(value & 0xffffffffL, 4);
+        setSignedNumberValue(value & 0xffffffffL, value < 0);
     }
     public void setNumberValue(long value){
-        setNumberValue(value, 8);
+        setSignedNumberValue(value, value < 0);
     }
-    public void setNumberValue(long value, int size){
+    public void setUnsignedNumber(long value){
+        int size = calculateUnsignedSize(value);
+        setSize(size);
+        putNumber(getBytesInternal(), 0, size, value);
+    }
+    private void setSignedNumberValue(long value, boolean negative){
+        int size = calculateSignedSize(value, negative);
         setSize(size);
         putNumber(getBytesInternal(), 0, size, value);
     }
 
     public String toHex(){
-        return HexUtil.toHex(getNumberValue(), getSize());
+        return HexUtil.toHex(getUnsignedNumber(), getSize());
     }
 
     public void merge(NumberValue value){
@@ -84,7 +76,7 @@ public class NumberValue extends DexBlockItem {
 
     @Override
     public int hashCode() {
-        return Long.hashCode(getNumberValue());
+        return Long.hashCode(getUnsignedNumber());
     }
 
     @Override
@@ -95,11 +87,54 @@ public class NumberValue extends DexBlockItem {
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        return getNumberValue() == ((NumberValue) obj).getNumberValue();
+        return getUnsignedNumber() == ((NumberValue) obj).getUnsignedNumber();
     }
 
     @Override
     public String toString() {
-        return getSize() + ":" + toHex() + ":" + getSignedValue();
+        return getSize() + ":" + toHex();
+    }
+
+    private static int calculateSignedSize(long l, boolean negative) {
+        if(l == 0) {
+            return 1;
+        }
+        int size = 0;
+        int sign = 0;
+        long value = l;
+        while (value != 0) {
+            sign = (int)value;
+            value = value >>> 8;
+            size ++;
+        }
+        if(!negative && sign >= 0x80) {
+            size++;
+        }else if (negative){
+            byte[] bytes = new byte[size];
+            putNumber(bytes, 0, size, l);
+            int j = size - 1;
+            while (j > 0) {
+                int high = bytes[j] & 0xff;
+                int next = bytes[j - 1] & 0xff;
+                if(high == 0xff && next > 0x80) {
+                    size --;
+                }else {
+                    break;
+                }
+                j--;
+            }
+        }
+        return size;
+    }
+    private static int calculateUnsignedSize(long value) {
+        if(value == 0) {
+            return 1;
+        }
+        int i = 0;
+        while (value != 0) {
+            value = value >>> 8;
+            i++;
+        }
+        return i;
     }
 }

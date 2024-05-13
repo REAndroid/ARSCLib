@@ -38,12 +38,20 @@ public class DoubleValue extends PrimitiveValueBlock {
         this.set((Double) number);
     }
     public double get(){
-        int shift = (7 - getValueSize()) * 8;
-        long value = getNumberValue();
-        return Double.longBitsToDouble(value << shift);
+        return Double.longBitsToDouble(getLongBits());
     }
     public void set(double value){
-        setNumberValue(Double.doubleToLongBits(value));
+        setLongBits(Double.doubleToLongBits(value));
+    }
+    private long getLongBits() {
+        int shift = (7 - getValueSize()) * 8;
+        return getUnsigned() << shift;
+    }
+    private void setLongBits(long bits) {
+        for(int i = 0; i < 8 && (bits & 0xff) == 0; i++) {
+            bits = bits >>> 8;
+        }
+        setUnsignedValue(bits);
     }
     @Override
     public DexValueType<?> getValueType() {
@@ -52,8 +60,9 @@ public class DoubleValue extends PrimitiveValueBlock {
     @Override
     public String getHex() {
         int shift = (7 - getValueSize()) * 8;
-        return HexUtil.toHex(getNumberValue() << shift, 8) + "L";
+        return HexUtil.toHex(getUnsigned() << shift, 8) + "L";
     }
+
     @Override
     public TypeKey getDataTypeKey() {
         return TypeKey.TYPE_D;
@@ -64,6 +73,7 @@ public class DoubleValue extends PrimitiveValueBlock {
         SmaliValueDouble smaliValueDouble = (SmaliValueDouble) smaliValue;
         set(smaliValueDouble.getValue());
     }
+
 
     @Override
     public void append(SmaliWriter writer) throws IOException {

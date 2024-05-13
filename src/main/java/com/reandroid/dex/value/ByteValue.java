@@ -36,7 +36,7 @@ public class ByteValue extends PrimitiveValueBlock {
     }
 
     public byte get(){
-        return (byte) (getNumberValue() & 0xff);
+        return (byte) getSignedValue();
     }
     public void set(byte b){
         setNumberValue(b);
@@ -49,6 +49,7 @@ public class ByteValue extends PrimitiveValueBlock {
     public String getHex() {
         return HexUtil.toSignedHex(get()) + "t";
     }
+
     @Override
     public TypeKey getDataTypeKey() {
         return TypeKey.TYPE_B;

@@ -38,7 +38,7 @@ public class LongValue extends PrimitiveValueBlock {
         this.set((Long) number);
     }
     public long get() {
-        return getNumberValue();
+        return getSignedValue();
     }
     public void set(long value){
         setNumberValue(value);
@@ -51,6 +51,7 @@ public class LongValue extends PrimitiveValueBlock {
     public String getHex() {
         return HexUtil.toSignedHex(get()) + "L";
     }
+
     @Override
     public TypeKey getDataTypeKey() {
         return TypeKey.TYPE_J;

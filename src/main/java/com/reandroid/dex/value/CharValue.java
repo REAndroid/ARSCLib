@@ -32,7 +32,7 @@ public class CharValue extends PrimitiveValueBlock {
 
     @Override
     public Number getData() {
-        int i = (int) getNumberValue();
+        int i = (int) getSignedValue();
         if((i & 0xff) == i){
             return (byte) i;
         }
@@ -63,7 +63,7 @@ public class CharValue extends PrimitiveValueBlock {
                 + "' value for char " + number);
     }
     public char get(){
-        return (char) getNumberValue();
+        return (char) getSignedValue();
     }
     public void set(char ch){
         setNumberValue(0x0000ffff & ch);

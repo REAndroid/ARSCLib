@@ -70,12 +70,12 @@ public abstract class SectionValue<T extends SectionItem> extends DexValueBlock<
     }
     @Override
     public int get(){
-        return getValueContainer().getIntegerValue();
+        return (int) getValueContainer().getUnsignedNumber();
     }
     @Override
     public void set(int value){
         NumberValue numberValue = getValueContainer();
-        numberValue.setNumberValue(value);
+        numberValue.setUnsignedNumber(value & 0xffffffffL);
         int size = numberValue.getSize();
         setValueSize(size - 1);
     }

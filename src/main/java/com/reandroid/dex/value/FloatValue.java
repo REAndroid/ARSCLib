@@ -38,12 +38,20 @@ public class FloatValue extends PrimitiveValueBlock {
         this.set((Float) number);
     }
     public float get(){
-        int shift = (3 - getValueSize()) * 8;
-        int value = (int) getNumberValue();
-        return Float.intBitsToFloat(value << shift);
+        return Float.intBitsToFloat(getFloatBits());
     }
     public void set(float value){
-        setNumberValue(Float.floatToIntBits(value));
+        setFloatBits(Float.floatToIntBits(value));
+    }
+    private int getFloatBits() {
+        int shift = (3 - getValueSize()) * 8;
+        return  (int) (getUnsigned() << shift);
+    }
+    private void setFloatBits(int bits) {
+        for(int i = 0; i < 4 && (bits & 0xff) == 0; i++) {
+            bits = bits >>> 8;
+        }
+        setUnsignedValue(bits & 0xffffffffL);
     }
     @Override
     public DexValueType<?> getValueType() {
@@ -51,8 +59,9 @@ public class FloatValue extends PrimitiveValueBlock {
     }
     @Override
     public String getHex() {
-        return HexUtil.toHex(getNumberValue(), getValueSize()) + "L";
+        return HexUtil.toHex(getUnsigned(), getValueSize()) + "L";
     }
+
     @Override
     public TypeKey getDataTypeKey() {
         return TypeKey.TYPE_F;

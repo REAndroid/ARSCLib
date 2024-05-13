@@ -104,8 +104,27 @@ public abstract class DexBlockItem extends BlockItem implements SectionTool {
         }
         return index;
     }
-    protected static long getNumber(byte[] bytes, int offset, int size){
-        if((offset + size)>bytes.length){
+    protected static long getSignedNumber(byte[] bytes, int offset, int size){
+        if((offset + size)> bytes.length){
+            return 0;
+        }
+        long result = 0;
+        int index = offset + size - 1;
+        int high = bytes[index] & 0xff;
+        while (index >= offset){
+            result = result << 8;
+            result |= (bytes[index] & 0xff);
+            index --;
+        }
+        if(high > 0x7f) {
+            long max = 0xffffffffffffffffL >>> (64 - (size * 8));
+            result = result - max;
+            result = result - 1;
+        }
+        return result;
+    }
+    protected static long getUnsignedNumber(byte[] bytes, int offset, int size){
+        if((offset + size)> bytes.length){
             return 0;
         }
         long result = 0;

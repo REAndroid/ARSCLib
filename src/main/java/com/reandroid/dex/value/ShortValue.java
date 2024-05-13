@@ -35,7 +35,7 @@ public class ShortValue extends PrimitiveValueBlock {
         this.set((Short) number);
     }
     public short get(){
-        return (short) getNumberValue();
+        return (short) getSignedValue();
     }
     public void set(short value){
         setNumberValue(value);
@@ -48,6 +48,7 @@ public class ShortValue extends PrimitiveValueBlock {
     public String getHex() {
         return HexUtil.toSignedHex(get()) + "S";
     }
+
     @Override
     public TypeKey getDataTypeKey() {
         return TypeKey.TYPE_S;

@@ -40,7 +40,7 @@ public class IntValue extends PrimitiveValueBlock implements IntegerReference {
     }
     @Override
     public int get() {
-        return (int) getNumberValue();
+        return (int) getSignedValue();
     }
     @Override
     public void set(int value) {
@@ -52,7 +52,7 @@ public class IntValue extends PrimitiveValueBlock implements IntegerReference {
     }
     @Override
     public String getHex() {
-        return HexUtil.toHex(getNumberValue(), getValueSize());
+        return HexUtil.toHex(getSignedValue(), getValueSize());
     }
     @Override
     public TypeKey getDataTypeKey() {

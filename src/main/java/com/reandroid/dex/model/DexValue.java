@@ -195,7 +195,7 @@ public class DexValue extends Dex {
     public int getAsInteger(int def) {
         DexValueBlock<?> value = getDexValueBlock();
         if(value instanceof PrimitiveValueBlock){
-            return (int) ((PrimitiveValueBlock)value).getNumberValue();
+            return (int) ((PrimitiveValueBlock)value).getSignedValue();
         }
         return def;
     }
