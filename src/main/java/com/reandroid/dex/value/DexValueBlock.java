@@ -43,7 +43,7 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
         valueContainer = value;
         addChild(0, valueTypeItem);
         addChild(1, valueContainer);
-        valueTypeItem.set((byte) type.getFlag());
+        valueTypeItem.set((byte) type.getFlag(0));
     }
     DexValueBlock(DexValueType<?> type){
         this(null, type);
@@ -86,7 +86,7 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
         valueTypeItem.set(valueBlock.valueTypeItem.get());
     }
     public void fromSmali(SmaliValue smaliValue){
-
+        throw new RuntimeException("Method not implemented: " + getClass().getSimpleName());
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {

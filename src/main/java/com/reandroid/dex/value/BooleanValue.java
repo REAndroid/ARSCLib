@@ -18,6 +18,8 @@ package com.reandroid.dex.value;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliValue;
+import com.reandroid.dex.smali.model.SmaliValueBoolean;
 
 import java.io.IOException;
 
@@ -58,6 +60,12 @@ public class BooleanValue extends DexValueBlock<Block> {
     @Override
     public void setData(Object data) {
         set((Boolean) data);
+    }
+
+    @Override
+    public void fromSmali(SmaliValue smaliValue) {
+        SmaliValueBoolean smaliValueBoolean = (SmaliValueBoolean) smaliValue;
+        set(smaliValueBoolean.getValue());
     }
 
     @Override

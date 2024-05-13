@@ -17,6 +17,8 @@ package com.reandroid.dex.value;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliValue;
+import com.reandroid.dex.smali.model.SmaliValueNull;
 
 import java.io.IOException;
 
@@ -35,6 +37,12 @@ public class NullValue extends DexValueBlock<Block> {
     public void merge(DexValueBlock<?> valueBlock){
         super.merge(valueBlock);
     }
+
+    @Override
+    public void fromSmali(SmaliValue smaliValue) {
+        SmaliValueNull smaliValueNull = (SmaliValueNull) smaliValue;
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append("null");
