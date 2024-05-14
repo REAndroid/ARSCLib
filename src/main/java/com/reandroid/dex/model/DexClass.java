@@ -443,6 +443,15 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         TypeListReference reference = getId().getInterfacesReference();
         reference.add(typeName);
     }
+    public void removeInterface(TypeKey typeKey) {
+        if(typeKey != null) {
+            removeInterface(typeKey.getTypeName());
+        }
+    }
+    public void removeInterface(String typeName) {
+        TypeListReference reference = getId().getInterfacesReference();
+        reference.remove(reference.indexOf(typeName));
+    }
     public void clearInterfaces() {
         TypeListReference reference = getId().getInterfacesReference();
         reference.setItem((TypeList) null);
