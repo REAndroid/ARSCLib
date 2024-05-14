@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.CountedList;
+import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
@@ -47,12 +48,11 @@ public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.PSDat
         }
         return packedSwitch.getAddress();
     }
-    int[][] makeCopy() {
+    ImmutablePSData[] makeCopy() {
         int size = size();
-        int[][] results = new int[size][];
+        ImmutablePSData[] results = new ImmutablePSData[size];
         for(int i = 0; i < size; i++) {
-            PSData data = get(i);
-            results[i] = new int[]{data.get(), data.getTargetAddress()};
+            results[i] = get(i).toImmutablePSData();
         }
         return results;
     }
@@ -87,6 +87,12 @@ public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.PSDat
             super();
         }
 
+        public ImmutablePSData toImmutablePSData() {
+            InstructionList instructionList = getParentDataList().switchData
+                    .getInstructionList();
+            Ins ins = instructionList.getAtAddress(getTargetAddress());
+            return new ImmutablePSData(get(), ins);
+        }
         @Override
         public int get() {
             return getParentDataList().getFirstKey() + getIndex();
@@ -160,6 +166,14 @@ public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.PSDat
         @Override
         public String toString() {
             return getLabelName();
+        }
+    }
+    public static class ImmutablePSData {
+        public int data;
+        public Ins targetIns;
+        public ImmutablePSData(int data, Ins targetIns) {
+            this.data = data;
+            this.targetIns = targetIns;
         }
     }
 

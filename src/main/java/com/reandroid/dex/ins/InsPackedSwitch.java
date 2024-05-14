@@ -23,7 +23,7 @@ public class InsPackedSwitch extends Ins31t{
         super(Opcode.PACKED_SWITCH);
     }
 
-    InsSparseSwitch getReplacement() {
+    InsSparseSwitch getSparseSwitchReplacement() {
         InsSparseSwitch sparseSwitch = this.mReplacement;
         if(sparseSwitch == null) {
             int reg = getRegister();

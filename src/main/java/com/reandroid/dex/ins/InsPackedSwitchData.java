@@ -69,21 +69,21 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet, Smali
         sparseSwitchData.get(index).set(value);
     }
     private InsSparseSwitchData replaceBySparse() {
-        int[][] copy = elements.makeCopy();
+        PackedSwitchDataList.ImmutablePSData[] copy = elements.makeCopy();
         InsPackedSwitch packedSwitch = getParentPackedSwitch();
-        InsSparseSwitch sparseSwitch = packedSwitch.getReplacement();
+        InsSparseSwitch sparseSwitch = packedSwitch.getSparseSwitchReplacement();
         InsSparseSwitchData sparseSwitchData = this.replace(Opcode.SPARSE_SWITCH_PAYLOAD);
+        sparseSwitchData.setParentSparseSwitch(sparseSwitch);
         this.mReplacement = sparseSwitchData;
         this.clearExtraLines();
-        sparseSwitch.clearExtraLines();
-        sparseSwitchData.clearExtraLines();
         int size = copy.length;
         sparseSwitchData.setCount(size);
         for(int i = 0; i < size; i++) {
-            InsSparseSwitchData.SSData data = sparseSwitchData.get(i);
-            int[] c = copy[i];
-            data.set(c[0]);
-            data.setTargetAddress(c[1]);
+            InsSparseSwitchData.SSData ssData = sparseSwitchData.get(i);
+            PackedSwitchDataList.ImmutablePSData psData = copy[i];
+            ssData.set(psData.data);
+            ssData.setTargetAddress(psData.targetIns.getAddress());
+            psData.targetIns.addExtraLine(ssData);
         }
         return sparseSwitchData;
     }

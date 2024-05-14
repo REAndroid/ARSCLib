@@ -126,6 +126,11 @@ public class InsSparseSwitchData extends PayloadData implements
         }
         return insSparseSwitch;
     }
+    public void setParentSparseSwitch(InsSparseSwitch sparseSwitch) {
+        this.insSparseSwitch = sparseSwitch;
+        addExtraLine(sparseSwitch);
+        sparseSwitch.setTargetAddress(getAddress());
+    }
     private InsSparseSwitch findOnExtraLines() {
         Iterator<ExtraLine> iterator = getExtraLines();
         while (iterator.hasNext()){
