@@ -77,7 +77,7 @@ public class Ins31t extends Size6Ins implements RegistersSet, Label{
         writer.append(' ');
         getRegistersIterator().append(writer);
         writer.append(", ");
-        writer.append(getLabelName());
+        writer.appendLabelName(getLabelName());
     }
     @Override
     public int getSortOrder() {

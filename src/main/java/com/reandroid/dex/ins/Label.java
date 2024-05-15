@@ -24,7 +24,7 @@ public interface Label extends ExtraLine{
     String getLabelName();
     @Override
     default void appendExtra(SmaliWriter writer) throws IOException {
-        writer.append(getLabelName());
+        writer.appendLabelName(getLabelName());
     }
     @Override
     default boolean isEqualExtraLine(Object obj) {

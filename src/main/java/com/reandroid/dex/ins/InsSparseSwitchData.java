@@ -261,7 +261,7 @@ public class InsSparseSwitchData extends PayloadData implements
             int value = get();
             writer.appendHex(value);
             writer.append(" -> ");
-            writer.append(getLabelName());
+            writer.appendLabelName(getLabelName());
             writer.appendResourceIdComment(value);
         }
         public void merge(SSData data) {

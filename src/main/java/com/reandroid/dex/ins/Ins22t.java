@@ -67,7 +67,7 @@ public class Ins22t extends Ins22 implements Label {
         writer.append(' ');
         getRegistersIterator().append(writer);
         writer.append(", ");
-        writer.append(getLabelName());
+        writer.appendLabelName(getLabelName());
     }
     @Override
     public int getSortOrder() {

@@ -64,7 +64,7 @@ public class InsGoto extends SizeXIns implements Label {
         writer.newLine();
         writer.append(getOpcode().getName());
         writer.append(' ');
-        writer.append(getLabelName());
+        writer.appendLabelName(getLabelName());
     }
     @Override
     public int getSortOrder() {

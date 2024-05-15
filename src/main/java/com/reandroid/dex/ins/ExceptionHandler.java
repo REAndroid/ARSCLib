@@ -34,8 +34,6 @@ import java.util.Iterator;
 public abstract class ExceptionHandler extends FixedDexContainerWithTool
         implements SmaliRegion, Iterable<Label>, LabelsSet {
 
-    private HandlerOffset mHandlerOffset;
-
     private final Ule128Item catchAddress;
 
     private final ExceptionLabel startLabel;
@@ -292,11 +290,11 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
                 writer.append(' ');
             }
             writer.append("{");
-            writer.append(handler.getStartLabel().getLabelName());
+            writer.appendLabelName(handler.getStartLabel().getLabelName());
             writer.append(" .. ");
-            writer.append(handler.getEndLabel().getLabelName());
+            writer.appendLabelName(handler.getEndLabel().getLabelName());
             writer.append("} ");
-            writer.append(handler.getCatchLabel().getLabelName());
+            writer.appendLabelName(handler.getCatchLabel().getLabelName());
         }
         @Override
         public String toString() {

@@ -463,6 +463,7 @@ public class InstructionList extends FixedBlockContainer implements
     @Override
     public void append(SmaliWriter writer) throws IOException {
         buildExtraLines();
+        writer.buildLabels(getLabels());
         for (Ins ins : this) {
             writer.newLine();
             ins.append(writer);
@@ -519,7 +520,6 @@ public class InstructionList extends FixedBlockContainer implements
         }
         mLockExtraLines = true;
         buildLabels();
-        buildTryBlock();
         buildDebugInfo();
     }
     public void reBuildExtraLines(){
@@ -536,6 +536,33 @@ public class InstructionList extends FixedBlockContainer implements
         }
         return null;
     }
+    public Iterator<Label> getLabels() {
+        return CombiningIterator.two(
+                getInsLabels(),
+                getTryBlockLabels());
+    }
+    @SuppressWarnings("unchecked")
+    private Iterator<Label> getInsLabels(){
+        return new IterableIterator<Ins, Label>(iterator()) {
+            @Override
+            public Iterator<Label> iterator(Ins element) {
+                if(element instanceof LabelsSet) {
+                    return (Iterator<Label>) ((LabelsSet) element).getLabels();
+                }
+                if(element instanceof Label) {
+                    return SingleIterator.of((Label) element);
+                }
+                return EmptyIterator.of();
+            }
+        };
+    }
+    private Iterator<Label> getTryBlockLabels(){
+        TryBlock tryBlock = this.codeItem.getTryBlock();
+        if(tryBlock == null || tryBlock.isNull()){
+            return EmptyIterator.of();
+        }
+        return tryBlock.getLabels();
+    }
     private void addLabel(Label label){
         Ins target = getAtAddress(label.getTargetAddress());
         if(target != null){
@@ -551,18 +578,16 @@ public class InstructionList extends FixedBlockContainer implements
         for(Ins ins : this){
             if(ins instanceof Label){
                 addLabel((Label) ins);
-            }else if(ins instanceof LabelsSet){
+            }
+            if(ins instanceof LabelsSet){
                 addLabels(((LabelsSet) ins).getLabels());
             }
             ins.trimExtraLines();
         }
-    }
-    private void buildTryBlock(){
         TryBlock tryBlock = this.codeItem.getTryBlock();
-        if(tryBlock == null || tryBlock.isNull()){
-            return;
+        if(tryBlock != null && !tryBlock.isNull()){
+            addLabels(tryBlock.getLabels());
         }
-        addLabels(tryBlock.getLabels());
     }
     private void buildDebugInfo(){
         mLockExtraLines = true;

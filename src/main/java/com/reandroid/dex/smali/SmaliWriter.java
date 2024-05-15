@@ -18,8 +18,10 @@ package com.reandroid.dex.smali;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegistersTable;
+import com.reandroid.dex.ins.Label;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.smali.formatters.SequentialLabelFactory;
 import com.reandroid.utils.HexUtil;
 
 import java.io.Closeable;
@@ -41,6 +43,7 @@ public class SmaliWriter implements Appendable, Closeable {
     private RegistersTable currentRegistersTable;
 
     private SmaliWriterSetting writerSetting;
+    private SequentialLabelFactory sequentialLabelFactory;
 
     public SmaliWriter(Writer writer){
         this();
@@ -200,6 +203,13 @@ public class SmaliWriter implements Appendable, Closeable {
             setting.writeResourceIdComment(this, i);
         }
     }
+    public void appendLabelName(String name) throws IOException {
+        SequentialLabelFactory labelFactory = getSequentialLabelFactory();
+        if(labelFactory != null) {
+            name = labelFactory.get(name);
+        }
+        append(name);
+    }
     public void newLineDouble() throws IOException {
         newLine(2);
     }
@@ -301,6 +311,29 @@ public class SmaliWriter implements Appendable, Closeable {
     public void setWriterSetting(SmaliWriterSetting writerSetting) {
         this.writerSetting = writerSetting;
     }
+
+    public SequentialLabelFactory getSequentialLabelFactory() {
+        return sequentialLabelFactory;
+    }
+    private SequentialLabelFactory getOrCreateSequentialLabelFactory() {
+        SequentialLabelFactory labelFactory = this.sequentialLabelFactory;
+        SmaliWriterSetting setting = getWriterSetting();
+        if(setting != null) {
+            if(setting.isSequentialLabel()) {
+                if(labelFactory == null) {
+                    labelFactory = new SequentialLabelFactory();
+                    this.sequentialLabelFactory = labelFactory;
+                }
+            }else {
+                labelFactory = null;
+            }
+        }
+        return labelFactory;
+    }
+    public void setSequentialLabelFactory(SequentialLabelFactory sequentialLabelFactory) {
+        this.sequentialLabelFactory = sequentialLabelFactory;
+    }
+
     @Override
     public void close() throws IOException {
         Writer writer = this.writer;
@@ -323,6 +356,21 @@ public class SmaliWriter implements Appendable, Closeable {
     }
     public void setCurrentRegistersTable(RegistersTable currentRegistersTable) {
         this.currentRegistersTable = currentRegistersTable;
+        if(currentRegistersTable == null) {
+            clearSequentialLabels();
+        }
+    }
+    public void buildLabels(Iterator<? extends Label> iterator) {
+        SequentialLabelFactory labelFactory = getOrCreateSequentialLabelFactory();
+        if(labelFactory != null) {
+            labelFactory.build(iterator);
+        }
+    }
+    public void clearSequentialLabels() {
+        SequentialLabelFactory labelFactory = getSequentialLabelFactory();
+        if(labelFactory != null) {
+            labelFactory.reset();
+        }
     }
 
     @Override

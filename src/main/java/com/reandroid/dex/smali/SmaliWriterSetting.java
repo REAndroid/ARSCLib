@@ -32,8 +32,17 @@ public class SmaliWriterSetting {
     private ResourceIdComment resourceIdComment;
     private List<MethodComment> methodCommentList;
     private List<ClassComment> classCommentList;
+    private boolean sequentialLabel;
 
-    public SmaliWriterSetting(){
+    public SmaliWriterSetting() {
+        this.sequentialLabel = true;
+    }
+
+    public boolean isSequentialLabel() {
+        return sequentialLabel;
+    }
+    public void setSequentialLabel(boolean sequentialLabel) {
+        this.sequentialLabel = sequentialLabel;
     }
 
     public void writeResourceIdComment(SmaliWriter writer, long l) throws IOException {

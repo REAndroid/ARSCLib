@@ -78,6 +78,6 @@ public class Ins21t extends Size4Ins implements RegistersSet, Label {
         writer.append(' ');
         getRegistersIterator().append(writer);
         writer.append(", ");
-        writer.append(getLabelName());
+        writer.appendLabelName(getLabelName());
     }
 }

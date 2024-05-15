@@ -75,7 +75,7 @@ public class TryBlock extends FixedDexContainerWithTool implements
         return count;
     }
     @Override
-    public Iterator<? extends Label> getLabels() {
+    public Iterator<Label> getLabels() {
         return new ExpandIterator<>(iterator());
     }
 

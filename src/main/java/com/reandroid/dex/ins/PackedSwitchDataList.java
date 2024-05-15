@@ -108,14 +108,14 @@ public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.PSDat
         @Override
         public void append(SmaliWriter writer) throws IOException {
             writer.newLine();
-            writer.append(getLabelName());
+            writer.appendLabelName(getLabelName());
             int value = this.get();
             writer.appendComment(HexUtil.toHex(value, 1));
             writer.appendResourceIdComment(value);
         }
         @Override
         public void appendExtra(SmaliWriter writer) throws IOException {
-            writer.append(getLabelName());
+            writer.appendLabelName(getLabelName());
         }
 
         @Override
