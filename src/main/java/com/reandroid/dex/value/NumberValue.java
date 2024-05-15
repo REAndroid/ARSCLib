@@ -53,6 +53,10 @@ public class NumberValue extends DexBlockItem {
         setSize(size);
         putNumber(getBytesInternal(), 0, size, value);
     }
+    public void setNumber(long value, int size){
+        setSize(size);
+        putNumber(getBytesInternal(), 0, size, value);
+    }
     private void setSignedNumberValue(long value, boolean negative){
         int size = calculateSignedSize(value, negative);
         setSize(size);

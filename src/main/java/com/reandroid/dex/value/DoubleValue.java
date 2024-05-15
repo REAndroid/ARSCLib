@@ -48,10 +48,12 @@ public class DoubleValue extends PrimitiveValueBlock {
         return getUnsigned() << shift;
     }
     private void setLongBits(long bits) {
-        for(int i = 0; i < 8 && (bits & 0xff) == 0; i++) {
+        int i = 0;
+        while (i < 8 && (bits & 0xff) == 0) {
             bits = bits >>> 8;
+            i ++;
         }
-        setUnsignedValue(bits);
+        setValue(bits, 8 - i);
     }
     @Override
     public DexValueType<?> getValueType() {

@@ -48,10 +48,12 @@ public class FloatValue extends PrimitiveValueBlock {
         return  (int) (getUnsigned() << shift);
     }
     private void setFloatBits(int bits) {
-        for(int i = 0; i < 4 && (bits & 0xff) == 0; i++) {
+        int i = 0;
+        while (i < 4 && (bits & 0xff) == 0) {
             bits = bits >>> 8;
+            i ++;
         }
-        setUnsignedValue(bits & 0xffffffffL);
+        setValue(bits & 0xffffffffL, 4 - i);
     }
     @Override
     public DexValueType<?> getValueType() {

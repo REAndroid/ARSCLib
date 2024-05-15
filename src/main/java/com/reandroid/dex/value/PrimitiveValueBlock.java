@@ -88,6 +88,11 @@ public abstract class PrimitiveValueBlock extends DexValueBlock<NumberValue> {
         container.setUnsignedNumber(value);
         setValueSize(container.getSize() - 1);
     }
+    void setValue(long value, int size){
+        NumberValue container = getValueContainer();
+        container.setNumber(value, size);
+        setValueSize(container.getSize() - 1);
+    }
 
     public abstract String getHex();
     @Override
