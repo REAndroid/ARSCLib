@@ -65,6 +65,24 @@ public class SmaliValueChar extends SmaliValue{
                     reader.skip(-4);
                     throw new SmaliParseException("Invalid four-char hex encoded char", reader);
                 }
+            }else {
+                switch (ch) {
+                    case 'b':
+                        ch = '\b';
+                        break;
+                    case 'f':
+                        ch = '\f';
+                        break;
+                    case 'n':
+                        ch = '\n';
+                        break;
+                    case 'r':
+                        ch = '\r';
+                        break;
+                    case 't':
+                        ch = '\t';
+                        break;
+                }
             }
         }
         setValue(ch);
@@ -73,4 +91,5 @@ public class SmaliValueChar extends SmaliValue{
             throw new SmaliParseException("Missing end \"'\"", reader);
         }
     }
+
 }
