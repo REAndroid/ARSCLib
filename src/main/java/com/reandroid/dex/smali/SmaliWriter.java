@@ -35,6 +35,7 @@ public class SmaliWriter implements Appendable, Closeable {
     private int lineNumber;
     private int columnNumber;
     private boolean state_new_line;
+    private boolean indentRequested;
     private StringBuilder comment;
 
     private RegistersTable currentRegistersTable;
@@ -216,9 +217,15 @@ public class SmaliWriter implements Appendable, Closeable {
         columnNumber = 0;
         lineNumber += amount;
         state_new_line = true;
-        writeIndent();
+        indentRequested = true;
+    }
+    private void flushIndent() throws IOException {
+        if(indentRequested) {
+            writeIndent();
+        }
     }
     private void writeIndent() throws IOException {
+        indentRequested = false;
         Writer writer = this.writer;
         int length = this.indent;
         for(int i = 0; i < length; i++){
@@ -282,6 +289,7 @@ public class SmaliWriter implements Appendable, Closeable {
         }
     }
     private void write(char ch) throws IOException {
+        flushIndent();
         this.writer.append(ch);
         this.columnNumber ++;
         this.state_new_line = false;
@@ -307,6 +315,7 @@ public class SmaliWriter implements Appendable, Closeable {
         this.lineNumber = 1;
         this.columnNumber = 0;
         this.comment = null;
+        this.indentRequested = false;
     }
 
     public RegistersTable getCurrentRegistersTable() {
