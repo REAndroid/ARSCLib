@@ -63,10 +63,10 @@ public class CharValue extends PrimitiveValueBlock {
                 + "' value for char " + number);
     }
     public char get(){
-        return (char) getSignedValue();
+        return (char) (getUnsigned() & 0xffff);
     }
     public void set(char ch){
-        setNumberValue(0x0000ffff & ch);
+        setUnsignedValue((0xffff & ch));
     }
     @Override
     public DexValueType<?> getValueType() {
