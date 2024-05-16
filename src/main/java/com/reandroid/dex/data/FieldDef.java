@@ -82,7 +82,7 @@ public class FieldDef extends Def<FieldId> {
             writer.append(" = ");
             value.append(writer);
         }
-        Iterator<AnnotationSet> annotations = getAnnotations();
+        Iterator<AnnotationSet> annotations = getAnnotations(true);
         if(!annotations.hasNext()){
             return;
         }

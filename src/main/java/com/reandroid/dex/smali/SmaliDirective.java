@@ -164,6 +164,18 @@ public class SmaliDirective implements SmaliFormat {
         }
         return parse(reader, false) == this;
     }
+    public boolean skipEnd(SmaliReader reader){
+        reader.skipWhitespaces();
+        if(!reader.startsWith(END_BYTES)){
+            return false;
+        }
+        int position = reader.position();
+        if(parse(reader, true) == this){
+            return true;
+        }
+        reader.position(position);
+        return false;
+    }
 
     @Override
     public boolean equals(Object obj) {

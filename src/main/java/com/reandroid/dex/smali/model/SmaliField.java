@@ -136,6 +136,7 @@ public class SmaliField extends SmaliDef{
         reader.skipWhitespacesOrComment();
         SmaliDirective directive = SmaliDirective.parse(reader, false);
         if(directive != SmaliDirective.ANNOTATION){
+            getSmaliDirective().skipEnd(reader);
             return;
         }
         int position = reader.position();
