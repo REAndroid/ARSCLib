@@ -25,11 +25,18 @@ public class Ins22x extends Ins22 {
 
     @Override
     public int getRegister(int index) {
-        return getByteUnsigned(1 + index);
+        if(index == 0) {
+            return getByteUnsigned(1);
+        }
+        return getShortUnsigned(2);
     }
     @Override
     public void setRegister(int index, int value) {
-        setByte(1 + index, value);
+        if(index == 0){
+            setByte(1, value);
+        }else {
+            setShort(2, value);
+        }
     }
     @Override
     public int getRegisterLimit(int index){
