@@ -39,7 +39,7 @@ public class Ins21ih extends Size4Ins implements RegistersSet {
     }
 
     @Override
-    public int getRegistersLimit(){
+    public int getRegisterLimit(int index){
         return 0xff;
     }
 

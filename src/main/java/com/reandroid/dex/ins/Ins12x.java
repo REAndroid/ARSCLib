@@ -45,7 +45,7 @@ public class Ins12x extends Size2Ins implements RegistersSet {
         setNibble(2 + index, value);
     }
     @Override
-    public int getRegistersLimit(){
+    public int getRegisterLimit(int index){
         return 0x0f;
     }
     @Override

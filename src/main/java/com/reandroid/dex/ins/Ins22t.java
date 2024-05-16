@@ -35,7 +35,7 @@ public class Ins22t extends Ins22 implements Label {
         setNibble(2 + index, value);
     }
     @Override
-    public int getRegistersLimit(){
+    public int getRegisterLimit(int index){
         return 0x0f;
     }
 

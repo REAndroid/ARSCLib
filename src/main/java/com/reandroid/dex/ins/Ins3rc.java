@@ -37,7 +37,7 @@ public class Ins3rc extends Size6Ins implements RegistersSet {
         setByte(1, count);
     }
     @Override
-    public int getRegistersLimit(){
+    public int getRegisterLimit(int index){
         return 0xff;
     }
 

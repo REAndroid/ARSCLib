@@ -68,7 +68,7 @@ public class Ins45cc extends Size8Ins implements RegistersSet {
         }
     }
     @Override
-    public int getRegistersLimit(){
+    public int getRegisterLimit(int index){
         return 0x0f;
     }
 

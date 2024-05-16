@@ -41,7 +41,7 @@ public class Ins21t extends Size4Ins implements RegistersSet, Label {
         setByte(1, value);
     }
     @Override
-    public int getRegistersLimit(){
+    public int getRegisterLimit(int index){
         return 0xff;
     }
 

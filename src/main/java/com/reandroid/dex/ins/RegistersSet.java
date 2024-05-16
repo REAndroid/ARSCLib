@@ -29,7 +29,7 @@ public interface RegistersSet {
     default boolean isRegistersRange(){
         return getRegisterFormat().isRange();
     }
-    int getRegistersLimit();
+    int getRegisterLimit(int index);
     default int getRegister() {
         return getRegister(0);
     }

@@ -66,6 +66,9 @@ public class RegisterReference extends Register {
     public RegisterType getRegisterType(){
         return getRegistersSet().getRegisterFormat().get(getIndex());
     }
+    public int getLimit() {
+        return getRegistersSet().getRegisterLimit(getIndex());
+    }
 
     @Override
     public boolean equals(Object obj) {

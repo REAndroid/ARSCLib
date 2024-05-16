@@ -38,7 +38,7 @@ public class Ins51l extends Size10Ins implements RegistersSet {
         setByte(1, value);
     }
     @Override
-    public int getRegistersLimit(){
+    public int getRegisterLimit(int index){
         return 0xff;
     }
 

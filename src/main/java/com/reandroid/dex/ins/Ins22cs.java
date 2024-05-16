@@ -30,7 +30,7 @@ public class Ins22cs extends Ins22 {
         setNibble(2 + index, value);
     }
     @Override
-    public int getRegistersLimit(){
+    public int getRegisterLimit(int index){
         return 0x0f;
     }
 

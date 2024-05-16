@@ -39,7 +39,7 @@ public class Ins23x extends Size4Ins implements RegistersSet {
         setByte(1 + index, value);
     }
     @Override
-    public int getRegistersLimit(){
+    public int getRegisterLimit(int index){
         return 0xff;
     }
 

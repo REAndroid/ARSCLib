@@ -41,7 +41,7 @@ public class Ins3rms extends Size6Ins implements RegistersSet {
         }
     }
     @Override
-    public int getRegistersLimit(){
+    public int getRegisterLimit(int index){
         return 0xffff;
     }
 
