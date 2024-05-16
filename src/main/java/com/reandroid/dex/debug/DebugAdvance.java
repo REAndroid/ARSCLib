@@ -34,7 +34,7 @@ public abstract class DebugAdvance extends DebugElement{
     }
     @Override
     public boolean isValid() {
-        return getAdvance() != 0;
+        return !isRemoved() && getAdvance() != 0;
     }
 
     @Override

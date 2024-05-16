@@ -31,6 +31,7 @@ import com.reandroid.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -81,9 +82,9 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
         DexDirectory dexDirectory = DexDirectory.readStrings(zipEntryMap);
         JSONObject jsonObject = new JSONObject();
         JSONArray jsonArray = new JSONArray();
-        List<Marker> markersList = dexDirectory.getMarkers();
-        for(Marker marker : markersList){
-            jsonArray.put(marker.getJsonObject());
+        Iterator<Marker> markers = dexDirectory.getMarkers();
+        while (markers.hasNext()){
+            jsonArray.put(markers.next().getJsonObject());
         }
         jsonObject.put("markers", jsonArray);
         jsonObject.write(file);

@@ -160,12 +160,14 @@ public class DebugLineNumber extends DebugElement {
 
     @Override
     public void appendExtra(SmaliWriter writer) throws IOException {
-        int lineNum = getLineNumber();
-        if(lineNum == -1){
-            return;
+        if(isValid()) {
+            int lineNum = getLineNumber();
+            if(lineNum == -1){
+                return;
+            }
+            getSmaliDirective().append(writer);
+            writer.appendInteger(lineNum);
         }
-        getSmaliDirective().append(writer);
-        writer.appendInteger(lineNum);
     }
     @Override
     public DebugElementType<DebugLineNumber> getElementType() {

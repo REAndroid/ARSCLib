@@ -16,30 +16,105 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.data.AnnotationElement;
 import com.reandroid.dex.data.AnnotationItem;
+import com.reandroid.dex.data.DebugInfo;
+import com.reandroid.dex.id.ClassId;
+import com.reandroid.dex.id.MethodId;
+import com.reandroid.dex.id.SourceFile;
 import com.reandroid.dex.key.*;
+import com.reandroid.dex.sections.Marker;
+import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.utils.collection.FilterIterator;
-import com.reandroid.utils.collection.IterableIterator;
-import com.reandroid.utils.collection.UniqueIterator;
+import com.reandroid.utils.collection.*;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public interface DexClassRepository {
+public interface DexClassRepository extends FullRefresh {
 
     int getDexClassesCount();
     DexClass getDexClass(TypeKey typeKey);
+    default DexClass getDexClass(String name) {
+        return getDexClass(TypeKey.create(name));
+    }
     Iterator<DexClass> getDexClasses(Predicate<? super TypeKey> filter);
     Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter);
-    <T extends SectionItem> Iterator<T> getItems(SectionType<T> sectionType);
-    <T extends SectionItem> Iterator<T> getClonedItems(SectionType<T> sectionType);
-    <T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType, Key key);
-    <T1 extends SectionItem> T1 getItem(SectionType<T1> sectionType, Key key);
+    default Iterator<DexClass> searchExtending(TypeKey typeKey){
+        return EmptyIterator.of();
+    }
+    default Iterator<DexClass> searchImplementations(TypeKey typeKey){
+        return EmptyIterator.of();
+    }
+    <T extends SectionItem> Iterator<Section<T>> getSections(SectionType<T> sectionType);
+    default <T extends SectionItem> Iterator<T> getItems(SectionType<T> sectionType) {
+        return new IterableIterator<Section<T>, T>(getSections(sectionType)) {
+            @Override
+            public Iterator<T> iterator(Section<T> element) {
+                return element.iterator();
+            }
+        };
+    }
+    default <T extends SectionItem> Iterator<T> getClonedItems(SectionType<T> sectionType){
+        return new IterableIterator<Section<T>, T>(getSections(sectionType)) {
+            @Override
+            public Iterator<T> iterator(Section<T> element) {
+                return element.clonedIterator();
+            }
+        };
+    }
+    default <T extends SectionItem> Iterator<T> getItems(SectionType<T> sectionType, Key key) {
+        return new IterableIterator<Section<T>, T>(getSections(sectionType)) {
+            @Override
+            public Iterator<T> iterator(Section<T> element) {
+                return element.getAll(key);
+            }
+        };
+    }
+    default <T extends SectionItem> T getItem(SectionType<T> sectionType, Key key){
+        Iterator<Section<T>> iterator = getSections(sectionType);
+        while (iterator.hasNext()){
+            Section<T> section = iterator.next();
+            T item = section.get(key);
+            if(item != null){
+                return item;
+            }
+        }
+        return null;
+    }
+    default boolean contains(SectionType<?> sectionType, Key key){
+        return getItems(sectionType, key).hasNext();
+    }
+    default boolean contains(Key key){
+        if(key == null){
+            return false;
+        }
+        if(key instanceof StringKey){
+            return contains(SectionType.STRING_ID, key);
+        }
+        if(key instanceof TypeKey){
+            return contains(SectionType.TYPE_ID, key);
+        }
+        if(key instanceof FieldKey){
+            return contains(SectionType.FIELD_ID, key);
+        }
+        if(key instanceof ProtoKey){
+            return contains(SectionType.PROTO_ID, key);
+        }
+        if(key instanceof MethodKey){
+            return contains(SectionType.METHOD_ID, key);
+        }
+        if(key instanceof TypeListKey){
+            return contains(SectionType.TYPE_LIST, key);
+        }
+        throw new IllegalArgumentException("Unknown key type: " + key.getClass() + ", '" + key + "'");
+    }
+    default boolean containsClass(TypeKey key){
+        return contains(SectionType.CLASS_ID, key);
+    }
     <T1 extends SectionItem> int removeEntries(SectionType<T1> sectionType, Predicate<T1> filter);
     void clearPoolMap();
 
@@ -145,8 +220,60 @@ public interface DexClassRepository {
         }
         return removeCount;
     }
+    default void clearDebug() {
+        Iterator<Section<DebugInfo>> iterator = getSections(SectionType.DEBUG_INFO);
+        while (iterator.hasNext()) {
+            iterator.next().removeSelf();
+        }
+    }
 
     default List<TypeKeyReference> getExternalTypeKeyReferenceList() {
         return ArrayCollection.empty();
+    }
+
+    default Iterator<MethodKey> findEquivalentMethods(MethodKey methodKey){
+        DexClass defining = getDexClass(methodKey.getDeclaring());
+        if(defining == null){
+            return EmptyIterator.of();
+        }
+        Iterator<DexMethod> iterator = defining.getMethods(methodKey);
+        return new IterableIterator<DexMethod, MethodKey>(iterator) {
+            @Override
+            public Iterator<MethodKey> iterator(DexMethod element) {
+                element = element.getDeclared();
+                MethodKey definingKey = element.getKey();
+                return CombiningIterator.two(SingleIterator.of(definingKey),
+                        element.getOverridingKeys());
+            }
+        };
+    }
+    default Iterator<DexMethod> getMethods(MethodKey methodKey) {
+        return ComputeIterator.of(findEquivalentMethods(methodKey), this::getDeclaredMethod);
+    }
+    default Iterator<MethodId> getMethodIds(MethodKey methodKey){
+        return new IterableIterator<MethodKey, MethodId>(findEquivalentMethods(methodKey)) {
+            @Override
+            public Iterator<MethodId> iterator(MethodKey element) {
+                return getItems(SectionType.METHOD_ID, element);
+            }
+        };
+    }
+
+    Iterator<Marker> getMarkers();
+    default void clearMarkers(){
+        Iterator<Marker> iterator = getMarkers();
+        while (iterator.hasNext()) {
+            iterator.next().removeSelf();
+        }
+    }
+    default void setClassSourceFileAll(){
+        setClassSourceFileAll(SourceFile.SourceFile);
+    }
+    default void setClassSourceFileAll(String sourceFile){
+        Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);
+        while (iterator.hasNext()){
+            ClassId classId = iterator.next();
+            classId.setSourceFile(sourceFile);
+        }
     }
 }

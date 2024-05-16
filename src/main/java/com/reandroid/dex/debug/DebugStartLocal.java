@@ -56,7 +56,7 @@ public class DebugStartLocal extends DebugRegisterNumber {
 
     @Override
     public boolean isValid(){
-        return mName.getItem() != null && mType.getItem() != null;
+        return !isRemoved() && mName.getItem() != null && mType.getItem() != null;
     }
     public String getName(){
         StringId stringId = mName.getItem();
@@ -96,12 +96,14 @@ public class DebugStartLocal extends DebugRegisterNumber {
 
     @Override
     public void appendExtra(SmaliWriter writer) throws IOException {
-        getSmaliDirective().append(writer);
-        writer.appendRegister(getRegisterNumber());
-        writer.append(", ");
-        this.mName.append(writer);
-        writer.append(':');
-        this.mType.append(writer);
+        if(isValid()) {
+            getSmaliDirective().append(writer);
+            writer.appendRegister(getRegisterNumber());
+            writer.append(", ");
+            this.mName.append(writer);
+            writer.append(':');
+            this.mType.append(writer);
+        }
     }
 
     @Override

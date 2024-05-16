@@ -19,6 +19,7 @@ import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.FixedDexContainer;
+import com.reandroid.dex.data.DebugInfo;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.smali.model.SmaliCodeSet;
@@ -250,6 +251,13 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
     public void clear() {
         getElementList().clearChildes();
     }
+    public boolean isRemoved() {
+        DebugInfo debugInfo = getParentInstance(DebugInfo.class);
+        if(debugInfo != null) {
+            return debugInfo.isRemoved();
+        }
+        return true;
+    }
 
 
     public Iterator<IdItem> usedIds(){
@@ -272,7 +280,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
     }
     private BlockList<DebugElement> getElementList() {
         BlockList<DebugElement> elementList = this.elementList;
-        if(elementList == null){
+        if(elementList == null || isRemoved()){
             elementList = BlockList.empty();
         }
         return elementList;

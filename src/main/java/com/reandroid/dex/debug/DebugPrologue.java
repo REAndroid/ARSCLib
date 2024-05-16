@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.debug;
 
-import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliDebugElement;
 import com.reandroid.dex.smali.model.SmaliDebugPrologue;
 
@@ -34,10 +33,6 @@ public class DebugPrologue extends DebugElement{
             throw new IOException("Mismatch class: " + smaliDebugElement.getClass() +
                     ", expecting: " + SmaliDebugPrologue.class);
         }
-    }
-    @Override
-    public void appendExtra(SmaliWriter writer) throws IOException {
-        super.appendExtra(writer);
     }
     @Override
     public DebugElementType<DebugPrologue> getElementType() {

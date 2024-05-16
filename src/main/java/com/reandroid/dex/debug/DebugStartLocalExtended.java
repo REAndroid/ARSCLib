@@ -6,7 +6,6 @@ import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.smali.model.SmaliDebug;
 import com.reandroid.dex.smali.model.SmaliDebugElement;
 import com.reandroid.dex.smali.model.SmaliDebugLocal;
 import com.reandroid.utils.collection.CombiningIterator;
@@ -29,7 +28,7 @@ public class DebugStartLocalExtended extends DebugStartLocal {
 
     @Override
     public boolean isValid(){
-        return mSignature.getItem() != null;
+        return !isRemoved() && mSignature.getItem() != null;
     }
     public String getSignature(){
         StringId stringId = mSignature.getItem();
@@ -50,9 +49,11 @@ public class DebugStartLocalExtended extends DebugStartLocal {
 
     @Override
     public void appendExtra(SmaliWriter writer) throws IOException {
-        super.appendExtra(writer);
-        writer.append(", ");
-        mSignature.append(writer);
+        if(isValid()) {
+            super.appendExtra(writer);
+            writer.append(", ");
+            mSignature.append(writer);
+        }
     }
     @Override
     public DebugElementType<DebugStartLocalExtended> getElementType() {

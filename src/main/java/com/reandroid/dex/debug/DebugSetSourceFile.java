@@ -40,7 +40,7 @@ public class DebugSetSourceFile extends DebugElement {
 
     @Override
     public boolean isValid(){
-        return mName.getItem() != null;
+        return !isRemoved() && mName.getItem() != null;
     }
     public String getName(){
         StringId stringId = mName.getItem();

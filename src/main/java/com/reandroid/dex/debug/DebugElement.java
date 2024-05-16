@@ -23,7 +23,6 @@ import com.reandroid.dex.ins.ExtraLine;
 import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.smali.model.SmaliDebug;
 import com.reandroid.dex.smali.model.SmaliDebugElement;
 import com.reandroid.utils.collection.EmptyIterator;
 
@@ -57,7 +56,7 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
         }
     }
     public boolean isValid(){
-        return getParent() != null;
+        return !isRemoved();
     }
 
     int getAddressDiff(){
@@ -68,7 +67,9 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
             return;
         }
         DebugAdvancePc advancePc = getOrCreateDebugAdvancePc();
-        advancePc.setAddressDiff(diff);
+        if(advancePc != null) {
+            advancePc.setAddressDiff(diff);
+        }
     }
     int getLineDiff(){
         return 0;
@@ -76,8 +77,15 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
     void setLineDiff(int diff){
     }
 
+    public boolean isRemoved() {
+        return getDebugSequence() == null;
+    }
     DebugSequence getDebugSequence(){
-        return getParent(DebugSequence.class);
+        DebugSequence debugSequence = getParent(DebugSequence.class);
+        if(debugSequence != null && debugSequence.isRemoved()) {
+            return null;
+        }
+        return debugSequence;
     }
 
     @Override
@@ -282,7 +290,9 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
 
     @Override
     public void appendExtra(SmaliWriter writer) throws IOException {
-        getSmaliDirective().append(writer);
+        if(isValid()) {
+            getSmaliDirective().append(writer);
+        }
     }
     @Override
     public boolean isEqualExtraLine(Object obj) {

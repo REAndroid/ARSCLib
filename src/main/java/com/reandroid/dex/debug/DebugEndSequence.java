@@ -22,11 +22,6 @@ public class DebugEndSequence extends DebugElement{
     }
 
     @Override
-    public boolean isValid() {
-        return true;
-    }
-
-    @Override
     public DebugElementType<DebugEndSequence> getElementType() {
         return DebugElementType.END_SEQUENCE;
     }

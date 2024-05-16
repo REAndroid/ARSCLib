@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.debug;
 
+import com.reandroid.dex.data.DebugInfo;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.StringKey;
@@ -48,7 +49,17 @@ public class DebugParameter extends Base1Ule128IdItemReference<StringId> impleme
         }
     }
     public StringId getNameId(){
+        if(isRemoved()) {
+            return null;
+        }
         return getItem();
+    }
+    public boolean isRemoved() {
+        DebugInfo debugInfo = getParentInstance(DebugInfo.class);
+        if(debugInfo != null) {
+            return debugInfo.isRemoved();
+        }
+        return true;
     }
 
     @Override

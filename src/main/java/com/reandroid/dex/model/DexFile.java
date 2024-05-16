@@ -19,19 +19,16 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
-import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.sections.MergeOptions;
 import com.reandroid.dex.id.ClassId;
-import com.reandroid.dex.id.SourceFile;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.data.*;
 import com.reandroid.dex.key.*;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.*;
-import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliClass;
@@ -62,16 +59,6 @@ public class DexFile implements DexClassRepository, Closeable,
     public void setVersion(int version){
         getDexLayout().setVersion(version);
     }
-    public void setClassSourceFileAll(){
-        setClassSourceFileAll(SourceFile.SourceFile);
-    }
-    public void setClassSourceFileAll(String sourceFile){
-        Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);
-        while (iterator.hasNext()){
-            ClassId classId = iterator.next();
-            classId.setSourceFile(sourceFile);
-        }
-    }
     public int shrink(){
         return getDexLayout().getSectionList().shrink();
     }
@@ -83,18 +70,6 @@ public class DexFile implements DexClassRepository, Closeable,
     }
     public int clearEmptySections(){
         return getDexLayout().getSectionList().clearEmptySections();
-    }
-    public void clearDebug(){
-        Section<DebugInfo> debugInfoSection = getSection(SectionType.DEBUG_INFO);
-        if(debugInfoSection != null){
-            debugInfoSection.removeSelf();
-        }
-        Section<CodeItem> section = getSection(SectionType.CODE);
-        if(section == null){
-            return;
-        }
-        section.clearPoolMap();
-        section.refresh();
     }
     public void fixDebugLineNumbers(){
         Section<CodeItem> section = getSection(SectionType.CODE);
@@ -210,19 +185,12 @@ public class DexFile implements DexClassRepository, Closeable,
         return getDexLayout().removeWithKeys(sectionType, filter);
     }
     @Override
-    public<T1 extends SectionItem> Iterator<T1> getClonedItems(SectionType<T1> sectionType) {
-        return getDexLayout().getClonedItems(sectionType);
-    }
-    @Override
     public int getDexClassesCount() {
         Section<ClassId> section = getSection(SectionType.CLASS_ID);
         if(section != null){
             return section.getCount();
         }
         return 0;
-    }
-    public DexClass getDexClass(String typeName){
-        return getDexClass(TypeKey.create(typeName));
     }
     @Override
     public DexClass getDexClass(TypeKey key){
@@ -241,18 +209,10 @@ public class DexFile implements DexClassRepository, Closeable,
         return ComputeIterator.of(getClassIdsCloned(filter), this::create);
     }
     @Override
-    public<T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType) {
-        return getDexLayout().getItems(sectionType);
+    public<T1 extends SectionItem> Iterator<Section<T1>> getSections(SectionType<T1> sectionType) {
+        return SingleIterator.of(getSection(sectionType));
     }
     @Override
-    public <T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType, Key key){
-        return getDexLayout().getAll(sectionType, key);
-    }
-    @Override
-    public <T1 extends SectionItem> T1 getItem(SectionType<T1> sectionType, Key key){
-        return getDexLayout().get(sectionType, key);
-    }
-
     public Iterator<DexClass> searchExtending(TypeKey typeKey){
         DexDirectory directory = getDexDirectory();
         if(directory != null){
@@ -260,6 +220,7 @@ public class DexFile implements DexClassRepository, Closeable,
         }
         return getExtendingClasses(typeKey);
     }
+    @Override
     public Iterator<DexClass> searchImplementations(TypeKey typeKey){
         DexDirectory directory = getDexDirectory();
         if(directory != null){
@@ -270,20 +231,6 @@ public class DexFile implements DexClassRepository, Closeable,
     public DexClass search(TypeKey typeKey){
         return getClassRepository().getDexClass(typeKey);
     }
-    public boolean containsClass(TypeKey key){
-        return contains(SectionType.CLASS_ID, key);
-    }
-    public boolean contains(SectionType<?> sectionType, Key key){
-        Section<?> section = getSection(sectionType);
-        if(section != null){
-            return section.contains(key);
-        }
-        return false;
-    }
-    public boolean contains(Key key){
-        return getDexLayout().getSectionList().contains(key);
-    }
-
     public ClassId getOrCreateClassId(TypeKey key){
         Section<ClassId> section = getDexLayout().get(SectionType.CLASS_ID);
         DexSectionPool<ClassId> pool = section.getPool();
@@ -298,14 +245,11 @@ public class DexFile implements DexClassRepository, Closeable,
         classId.addAccessFlag(AccessFlag.PUBLIC);
         return classId;
     }
-    public ClassId getClassId(Key key){
-        return getItem(SectionType.CLASS_ID, key);
-    }
     private DexClass create(ClassId classId) {
         return new DexClass(this, classId);
     }
     public Marker getOrCreateMarker() {
-        Marker marker = CollectionUtil.getFirst(getMarkers().iterator());
+        Marker marker = CollectionUtil.getFirst(getMarkers());
         if(marker != null){
             return marker;
         }
@@ -328,14 +272,9 @@ public class DexFile implements DexClassRepository, Closeable,
         }
         marker.save();
     }
-    public List<Marker> getMarkers() {
-        return CollectionUtil.toList(getDexLayout().getMarkers());
-    }
-    public void clearMarkers(){
-        List<Marker> markerList = getMarkers();
-        for(Marker marker : markerList){
-            marker.removeSelf();
-        }
+    @Override
+    public Iterator<Marker> getMarkers() {
+        return getDexLayout().getMarkers();
     }
     @Override
     public void refreshFull() throws DexException {
@@ -356,24 +295,6 @@ public class DexFile implements DexClassRepository, Closeable,
     public void sortStrings(){
         getDexLayout().sortStrings();
     }
-    public Iterator<StringId> unusedStrings(){
-        return unused(SectionType.STRING_ID);
-    }
-    public<T1 extends SectionItem> Iterator<T1> unused(SectionType<T1> sectionType){
-        return getWithUsage(sectionType, UsageMarker.USAGE_NONE);
-    }
-    public<T1 extends SectionItem> Iterator<T1> getWithUsage(SectionType<T1> sectionType, int usage){
-        return FilterIterator.of(getSection(sectionType).iterator(),
-                item -> ((UsageMarker)item).containsUsage(usage));
-    }
-    public Iterator<StringId> getStringsWithUsage(int usage){
-        return FilterIterator.of(getStringIds(),
-                stringId -> stringId.containsUsage(usage));
-    }
-    public Iterator<String> getClassNames(){
-        return ComputeIterator.of(getClassIds(), ClassId::getName);
-    }
-
     public Iterator<DexInstruction> getDexInstructions(){
         return new IterableIterator<DexClass, DexInstruction>(getDexClasses()){
             @Override
@@ -390,44 +311,6 @@ public class DexFile implements DexClassRepository, Closeable,
             }
         };
     }
-    public Iterator<MethodDef> getMethods(){
-        return new IterableIterator<ClassData, MethodDef>(getClassData()){
-            @Override
-            public Iterator<MethodDef> iterator(ClassData element) {
-                return element.getMethods();
-            }
-        };
-    }
-    public Iterator<FieldDef> getFields(){
-        return new IterableIterator<ClassData, FieldDef>(getClassData()){
-            @Override
-            public Iterator<FieldDef> iterator(ClassData element) {
-                return element.getFields();
-            }
-        };
-    }
-    public Iterator<FieldDef> getStaticFields(){
-        return new IterableIterator<ClassData, FieldDef>(getClassData()){
-            @Override
-            public Iterator<FieldDef> iterator(ClassData element) {
-                return element.getStaticFields();
-            }
-        };
-    }
-    public Iterator<FieldDef> getInstanceFields(){
-        return new IterableIterator<ClassData, FieldDef>(getClassData()){
-            @Override
-            public Iterator<FieldDef> iterator(ClassData element) {
-                return element.getInstanceFields();
-            }
-        };
-    }
-    public Iterator<ClassData> getClassData(){
-        return ComputeIterator.of(getClassIds(), ClassId::getClassData);
-    }
-    public Iterator<ClassId> getClassIds(){
-        return getItems(SectionType.CLASS_ID);
-    }
     public Iterator<ClassId> getClassIds(Predicate<? super TypeKey> filter){
         return FilterIterator.of(getItems(SectionType.CLASS_ID),
                 classId -> filter == null || filter.test(classId.getKey()));
@@ -435,12 +318,6 @@ public class DexFile implements DexClassRepository, Closeable,
     public Iterator<ClassId> getClassIdsCloned(Predicate<? super TypeKey> filter){
         return FilterIterator.of(getClonedItems(SectionType.CLASS_ID),
                 classId -> filter == null || filter.test(classId.getKey()));
-    }
-    public Iterator<StringId> getStringIds(){
-        return getItems(SectionType.STRING_ID);
-    }
-    public Iterator<StringData> getStringData(){
-        return getItems(SectionType.STRING_DATA);
     }
     public Iterator<TypeId> getTypes(){
         return getItems(SectionType.TYPE_ID);
@@ -604,7 +481,7 @@ public class DexFile implements DexClassRepository, Closeable,
         builder.append(getVersion());
         builder.append(", classes = ");
         builder.append(getDexClassesCount());
-        List<Marker> markers = getMarkers();
+        List<Marker> markers = CollectionUtil.toList(getMarkers());
         int size = markers.size();
         if(size != 0){
             builder.append(", markers = ");

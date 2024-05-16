@@ -36,7 +36,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
 
     private final DexFileSourceSet dexSourceSet;
     private Object mTag;
-    private ArrayCollection<TypeKeyReference> externalTypeKeyReferenceList;
+    private final ArrayCollection<TypeKeyReference> externalTypeKeyReferenceList;
 
     public DexDirectory() {
         this.dexSourceSet = new DexFileSourceSet();
@@ -62,27 +62,14 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
             dexFile.setVersion(version);
         }
     }
-    public void clearMarkers(){
-        for(DexFile dexFile : this){
-            dexFile.clearMarkers();
-        }
-    }
-    public List<Marker> getMarkers() {
-        ArrayCollection<Marker> results = new ArrayCollection<>();
-        for(DexFile dexFile : this){
-            results.addAll(dexFile.getMarkers());
-        }
-        return results;
-    }
-    public void setClassSourceFileAll(){
-        setClassSourceFileAll(SourceFile.SourceFile);
-    }
-    public void setClassSourceFileAll(String sourceFile){
-        Iterator<DexFile> iterator = iterator();
-        while (iterator.hasNext()){
-            DexFile dexFile = iterator.next();
-            dexFile.setClassSourceFileAll(sourceFile);
-        }
+    @Override
+    public Iterator<Marker> getMarkers() {
+        return new IterableIterator<DexFile, Marker>(iterator()) {
+            @Override
+            public Iterator<Marker> iterator(DexFile element) {
+                return element.getMarkers();
+            }
+        };
     }
     public int mergeAll(MergeOptions options, Iterable<DexClass> iterable){
         return mergeAll(options, iterable.iterator());
@@ -199,11 +186,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return result;
     }
-    public void clearDebug(){
-        for(DexFile dexFile : this){
-            dexFile.clearDebug();
-        }
-    }
 
     public void cleanDuplicateDebugLines(){
         for(DexFile dexFile : this){
@@ -234,22 +216,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
                 }
         );
         return CombiningIterator.two(SingleIterator.of(definingKey), subKeys);
-    }
-    public Iterator<MethodKey> findEquivalentMethods(MethodKey methodKey){
-        DexClass defining = getDexClass(methodKey.getDeclaring());
-        if(defining == null){
-            return EmptyIterator.of();
-        }
-        Iterator<DexMethod> iterator = defining.getMethods(methodKey);
-
-        return new IterableIterator<DexMethod, MethodKey>(iterator) {
-            @Override
-            public Iterator<MethodKey> iterator(DexMethod element) {
-                element = element.getDeclared();
-                MethodKey definingKey = element.getKey();
-                return CombiningIterator.two(SingleIterator.of(definingKey), element.getOverridingKeys());
-            }
-        };
     }
     public Iterator<DexClass> getSubTypes(TypeKey typeKey){
         return new IterableIterator<DexFile, DexClass>(iterator()) {
@@ -345,9 +311,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return result;
     }
-    public DexClass getDexClass(String name) {
-        return getDexClass(TypeKey.create(name));
-    }
     @Override
     public DexClass getDexClass(TypeKey key){
         for(DexFile dexFile : this){
@@ -377,32 +340,13 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         };
     }
     @Override
-    public<T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType) {
-        return new IterableIterator<DexFile, T1>(iterator()) {
+    public<T1 extends SectionItem> Iterator<Section<T1>> getSections(SectionType<T1> sectionType) {
+        return new IterableIterator<DexFile, Section<T1>>(iterator()) {
             @Override
-            public Iterator<T1> iterator(DexFile element) {
-                return element.getItems(sectionType);
+            public Iterator<Section<T1>> iterator(DexFile element) {
+                return element.getSections(sectionType);
             }
         };
-    }
-    @Override
-    public <T1 extends SectionItem> Iterator<T1> getItems(SectionType<T1> sectionType, Key key){
-        return new IterableIterator<DexFile, T1>(iterator()) {
-            @Override
-            public Iterator<T1> iterator(DexFile dexFile) {
-                return dexFile.getItems(sectionType, key);
-            }
-        };
-    }
-    @Override
-    public <T1 extends SectionItem> T1 getItem(SectionType<T1> sectionType, Key key){
-        for(DexFile dexFile : this){
-            T1 item = dexFile.getItem(sectionType, key);
-            if(item != null){
-                return item;
-            }
-        }
-        return null;
     }
     public Iterator<DexInstruction> getDexInstructions() {
         return new IterableIterator<DexFile, DexInstruction>(iterator()) {
@@ -689,7 +633,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
             return EmptyList.of();
         }
         ArrayCollection<MethodId> methodIdList = new ArrayCollection<>();
-        methodIdList.addAll(getMethods(methodKey));
+        methodIdList.addAll(getMethodIds(methodKey));
         if(methodIdList.size() == 0){
             return EmptyList.of();
         }
@@ -785,14 +729,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
             }
         };
     }
-    public Iterator<MethodId> getMethods(MethodKey methodKey){
-        return new IterableIterator<MethodKey, MethodId>(findEquivalentMethods(methodKey)) {
-            @Override
-            public Iterator<MethodId> iterator(MethodKey element) {
-                return getAll(SectionType.METHOD_ID, element);
-            }
-        };
-    }
+    @Override
     public Iterator<DexClass> searchExtending(TypeKey typeKey){
         UniqueIterator<DexClass> iterator = new UniqueIterator<>(
                 new IterableIterator<DexFile, DexClass>(iterator()) {
@@ -804,6 +741,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         iterator.exclude(getDexClass(typeKey));
         return iterator;
     }
+    @Override
     public Iterator<DexClass> searchImplementations(TypeKey typeKey){
         UniqueIterator<DexClass> iterator = new UniqueIterator<>(
                 new IterableIterator<DexFile, DexClass>(iterator()) {
@@ -814,25 +752,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
                 });
         iterator.exclude(getDexClass(typeKey));
         return iterator;
-    }
-    public boolean containsClass(TypeKey key){
-        return contains(SectionType.CLASS_ID, key);
-    }
-    public boolean contains(SectionType<?> sectionType, Key key){
-        for(DexFile dexFile : this){
-            if(dexFile.contains(sectionType, key)){
-                return true;
-            }
-        }
-        return false;
-    }
-    public boolean contains(Key key){
-        for(DexFile dexFile : this){
-            if(dexFile.contains(key)){
-                return true;
-            }
-        }
-        return false;
     }
 
     public int distributeClasses(int maxClassesPerDex) {
