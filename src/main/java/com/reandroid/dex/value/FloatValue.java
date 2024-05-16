@@ -49,7 +49,7 @@ public class FloatValue extends PrimitiveValueBlock {
     }
     private void setFloatBits(int bits) {
         int i = 0;
-        while (i < 4 && (bits & 0xff) == 0) {
+        while (i < 3 && (bits & 0xff) == 0) {
             bits = bits >>> 8;
             i ++;
         }

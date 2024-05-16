@@ -49,7 +49,7 @@ public class DoubleValue extends PrimitiveValueBlock {
     }
     private void setLongBits(long bits) {
         int i = 0;
-        while (i < 8 && (bits & 0xff) == 0) {
+        while (i < 7 && (bits & 0xff) == 0) {
             bits = bits >>> 8;
             i ++;
         }
