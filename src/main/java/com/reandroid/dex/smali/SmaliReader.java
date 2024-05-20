@@ -84,6 +84,8 @@ public class SmaliReader {
         return new String(readBytes(length), StandardCharsets.UTF_8);
     }
     public String readEscapedString(char stopChar) throws IOException{
+        int position = position();
+        boolean utf8Detected = false;
         StringBuilder builder = new StringBuilder();
         boolean skipped = false;
         while (true){
@@ -92,6 +94,9 @@ public class SmaliReader {
                 throw new SmaliParseException("Missing character '" + stopChar + "'", this);
             }
             char ch = readASCII();
+            if(ch > 0x7f) {
+                utf8Detected = true;
+            }
             if(skipped){
                 builder.append(decodeSkipped(this, ch));
                 skipped = false;
@@ -106,6 +111,11 @@ public class SmaliReader {
                 break;
             }
             builder.append(ch);
+        }
+        if(utf8Detected) {
+            int len = position() - position;
+            position(position);
+            return decodeEscapedString(readString(len));
         }
         return builder.toString();
     }
@@ -505,6 +515,12 @@ public class SmaliReader {
         }
     }
     private static char decodeSkipped(SmaliReader reader, char ch){
+        if(ch == 'u') {
+            return decodeFourHex(reader);
+        }
+        return decodeSkippedChar(ch);
+    }
+    private static char decodeSkippedChar(char ch){
         switch (ch){
             case 'b':
                 return '\b';
@@ -516,8 +532,6 @@ public class SmaliReader {
                 return  '\r';
             case 't':
                 return '\t';
-            case 'u':
-                return decodeFourHex(reader);
             default:
                 return ch;
         }
@@ -530,6 +544,44 @@ public class SmaliReader {
         i |= HexUtil.decodeHexChar(reader.read());
         i = i << 4;
         i |= HexUtil.decodeHexChar(reader.read());
+        return (char) i;
+    }
+    public static String decodeEscapedString(String text){
+        StringBuilder builder = new StringBuilder();
+        boolean skipped = false;
+        int length = text.length();
+        for (int i = 0; i < length; i++){
+            char ch = text.charAt(i);
+            if(skipped){
+                if(ch == 'u') {
+                    builder.append(decodeHex(
+                            text.charAt(i + 1),
+                            text.charAt(i + 2),
+                            text.charAt(i + 3),
+                            text.charAt(i + 4)));
+                    i = i + 4;
+                }else {
+                    builder.append(decodeSkippedChar(ch));
+                }
+                skipped = false;
+                continue;
+            }
+            if(ch == '\\'){
+                skipped = true;
+                continue;
+            }
+            builder.append(ch);
+        }
+        return builder.toString();
+    }
+    private static char decodeHex(char c1, char c2, char c3, char c4){
+        int i = HexUtil.decodeHexChar(c1);
+        i = i << 4;
+        i |= HexUtil.decodeHexChar(c2);
+        i = i << 4;
+        i |= HexUtil.decodeHexChar(c3);
+        i = i << 4;
+        i |= HexUtil.decodeHexChar(c4);
         return (char) i;
     }
     public static SmaliReader of(String text){
