@@ -25,7 +25,7 @@ import com.reandroid.utils.CompareUtil;
 
 import java.util.*;
 
-public class KeyItemGroup<T extends Block> extends ArrayCollection<T> implements ArraySupplier<T>, Comparator<T> {
+public class KeyItemGroup<T extends Block> extends ArrayCollection<T> implements ArraySupplier<T> {
 
     private boolean sorted;
 
@@ -75,26 +75,23 @@ public class KeyItemGroup<T extends Block> extends ArrayCollection<T> implements
         if(size < 2){
             return;
         }
-        super.sort(this);
+        super.sort((item1, item2) -> {
+            if(item1 == item2){
+                return 0;
+            }
+            if(item1 == null){
+                return -1;
+            }
+            if(item2 == null){
+                return 1;
+            }
+            int i = CompareUtil.compare(((KeyItem)item1).getKey(), ((KeyItem)item2).getKey());
+            if(i != 0){
+                return i;
+            }
+            return Integer.compare(item1.getIndex(), item2.getIndex());
+        });
         sorted = true;
-    }
-
-    @Override
-    public int compare(T item1, T item2) {
-        if(item1 == item2){
-            return 0;
-        }
-        if(item1 == null){
-            return -1;
-        }
-        if(item2 == null){
-            return 1;
-        }
-        int i = CompareUtil.compare(((KeyItem)item1).getKey(), ((KeyItem)item2).getKey());
-        if(i != 0){
-            return i;
-        }
-        return Integer.compare(item1.getIndex(), item2.getIndex());
     }
 
     @Override
