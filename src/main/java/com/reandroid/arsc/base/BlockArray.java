@@ -216,12 +216,29 @@ public abstract class BlockArray<T extends Block> extends BlockContainer<T>
         return false;
     }
     public boolean sort(Comparator<? super T> comparator){
+        if(isFlexible()) {
+            trimAllocatedFreeSpace();
+        }
         T[] elementData = this.elementData;
         if(comparator == null || elementData.length < 2){
             return false;
         }
-        ArraySort.sort(elementData, comparator);
-        boolean changed = false;
+        ArraySort.ObjectSort objectSort = new ArraySort.ObjectSort(elementData, comparator) {
+            @Override
+            public void onSwap(int i, int j) {
+                T item1 = elementData[i];
+                T item2 = elementData[j];
+                super.onSwap(i, j);
+                if(item1 != null) {
+                    item1.setIndex(j);
+                }
+                if(item2 != null) {
+                    item2.setIndex(i);
+                }
+            }
+        };
+        boolean changed = objectSort.sort();
+        //ArraySort.sort(elementData, comparator);
         for(int i=0 ; i < elementData.length; i++){
             T item = elementData[i];
             if(item != null && item.getIndex() != i){
