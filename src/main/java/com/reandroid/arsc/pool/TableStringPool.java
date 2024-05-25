@@ -21,14 +21,11 @@ import com.reandroid.arsc.array.TableStringArray;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.UnknownChunk;
-import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.TableHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
-import com.reandroid.arsc.item.StyleItem;
 import com.reandroid.arsc.item.TableString;
-import com.reandroid.utils.CompareUtil;
 import com.reandroid.xml.StyleDocument;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -42,40 +39,10 @@ public class TableStringPool extends StringPool<TableString> {
     }
 
     public TableString getOrCreateStyled(String xmlString) throws IOException, XmlPullParserException {
-        StyleDocument document = StyleDocument.parseStyledString(xmlString);
-        return getOrCreate(document);
+        return getOrCreate(StyleDocument.parseStyledString(xmlString));
     }
     public TableString getOrCreate(XmlPullParser parser) throws IOException, XmlPullParserException {
-        StyleDocument document = StyleDocument.parseNext(parser);
-        return getOrCreate(document);
-    }
-    public TableString getOrCreate(StyleDocument document){
-        String text = document.getXml();
-        if(!document.hasElements()){
-            return super.getOrCreate(text);
-        }
-        StringGroup<TableString> group = super.get(text);
-        if(group != null && group.size() > 0){
-            return group.get(0);
-        }
-        TableString tableString = createStyled();
-        tableString.set(document.getStyledString());
-        StyleItem styleItem = tableString.getStyle();
-        styleItem.parse(document);
-        updateUniqueIdMap(tableString);
-        styleItem.linkStringsInternal();
-        return tableString;
-    }
-    private TableString createStyled(){
-        int index = countStyles();
-        TableString tableString = new TableString(isUtf8());
-        StringArray<TableString> stringsArray = getStringsArray();
-        stringsArray.addInternal(index, tableString);
-        getStyleArray().ensureSize(index + 1);
-        return tableString;
-    }
-    public void sort(){
-        super.sort(CompareUtil.getComparableComparator());
+        return getOrCreate(StyleDocument.parseNext(parser));
     }
     @Override
     void linkStrings(){
@@ -88,27 +55,6 @@ public class TableStringPool extends StringPool<TableString> {
     @Override
     StringArray<TableString> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         return new TableStringArray(offsets, itemCount, itemStart, is_utf8);
-    }
-    public void merge(TableStringPool stringPool){
-        if(stringPool==null||stringPool==this){
-            return;
-        }
-        StringArray<TableString> existArray = getStringsArray();
-        if(existArray.size()!=0){
-            return;
-        }
-        StringArray<TableString> comingArray = stringPool.getStringsArray();
-        int count=comingArray.size();
-        existArray.ensureSize(count);
-        for(int i=0;i<count;i++){
-            TableString exist = existArray.get(i);
-            TableString coming = comingArray.get(i);
-            assert coming != null;
-            assert exist != null;
-            exist.set(coming.get());
-        }
-        getStyleArray().merge(stringPool.getStyleArray());
-        refreshUniqueIdMap();
     }
 
     /**

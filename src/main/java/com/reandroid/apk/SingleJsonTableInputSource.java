@@ -69,10 +69,7 @@ public class SingleJsonTableInputSource extends BlockInputSource<TableBlock> {
         TableBlock tableBlock = new TableBlock();
         InputStream inputStream = inputSource.openStream();
         try{
-            JsonStringPoolBuilder poolBuilder = new JsonStringPoolBuilder();
             JSONObject jsonObject = new JSONObject(inputStream);
-            poolBuilder.build(jsonObject);
-            poolBuilder.apply(tableBlock);
             tableBlock.fromJson(jsonObject);
         }catch (JSONException ex){
             throw new IOException(inputSource.getAlias(), ex);

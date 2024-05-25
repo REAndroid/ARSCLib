@@ -25,6 +25,7 @@ import com.reandroid.json.JSONObject;
 import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.Iterator;
+import java.util.List;
 
 public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends CompoundItemArray<ITEM>>
         extends TableEntry<EntryHeaderMap, ARRAY> implements Iterable<ITEM>{
@@ -58,7 +59,7 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
     public void refresh(){
         getHeader().setValuesCount(getValue().size());
     }
-    public ITEM[] listResValueMap(){
+    public List<ITEM> listResValueMap(){
         return getValue().getChildes();
     }
 
@@ -142,15 +143,15 @@ public abstract class CompoundEntry<ITEM extends ResValueMap, ARRAY extends Comp
     public String toString(){
         StringBuilder builder = new StringBuilder();
         builder.append(getHeader());
-        ITEM[] valueMaps = listResValueMap();
-        int len = valueMaps.length;
+        List<ITEM> valueMaps = listResValueMap();
+        int len = valueMaps.size();
         int max = len;
         if(max>4){
             max = 4;
         }
         for(int i=0;i<max;i++){
             builder.append("\n    ");
-            builder.append(valueMaps[i]);
+            builder.append(valueMaps.get(i));
         }
         if(len>0){
             if(max!=len){

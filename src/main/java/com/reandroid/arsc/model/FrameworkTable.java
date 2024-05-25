@@ -30,8 +30,12 @@ import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.common.FileChannelInputStream;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class FrameworkTable extends TableBlock {
 
@@ -151,9 +155,9 @@ public class FrameworkTable extends TableBlock {
         SpecTypePairArray specTypePairArray = pkg.getSpecTypePairArray();
         specTypePairArray.sort();
 
-        SpecTypePair[] specTypePairs = specTypePairArray.getChildes().clone();
-        for(SpecTypePair specTypePair : specTypePairs){
-            removeEmptyBlocks(specTypePair);
+        Iterator<SpecTypePair> iterator = specTypePairArray.clonedIterator();
+        while (iterator.hasNext()){
+            removeEmptyBlocks(iterator.next());
         }
     }
     private void removeEmptyBlocks(SpecTypePair specTypePair){

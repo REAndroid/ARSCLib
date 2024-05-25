@@ -17,14 +17,19 @@ package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
-import com.reandroid.arsc.value.*;
-import com.reandroid.json.JSONConvert;
+import com.reandroid.arsc.value.AttributeDataFormat;
+import com.reandroid.arsc.value.AttributeType;
+import com.reandroid.arsc.value.ResTableMapEntry;
+import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONConvert;
 
 import java.util.Comparator;
+import java.util.Iterator;
 
 public abstract class CompoundItemArray<T extends ResValueMap>
         extends BlockArray<T> implements JSONConvert<JSONArray>, Comparator<ResValueMap> {
+
     public CompoundItemArray(){
         super();
     }
@@ -39,14 +44,8 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         updateCountToHeader();
         return resValueMap;
     }
-    private void updateCountToHeader(){
-        EntryHeaderMap headerMap = getEntryHeaderMap();
-        headerMap.setValuesCount(size());
-    }
-    private EntryHeaderMap getEntryHeaderMap(){
-        ResTableMapEntry mapEntry = getParent(ResTableMapEntry.class);
-        assert mapEntry != null;
-        return mapEntry.getHeader();
+    private void updateCountToHeader() {
+        getParent(ResTableMapEntry.class).getHeader().setValuesCount(size());
     }
     public AttributeDataFormat[] getFormats(){
         ResValueMap formatsMap = getByType(AttributeType.FORMATS);
@@ -57,7 +56,9 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         return null;
     }
     public boolean containsType(AttributeType attributeType){
-        for(T valueMap : getChildes()){
+        Iterator<T> iterator = iterator();
+        while (iterator.hasNext()){
+            T valueMap = iterator.next();
             if(attributeType == valueMap.getAttributeType()){
                 return true;
             }
@@ -79,7 +80,9 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         if(attributeType == null){
             return null;
         }
-        for(T valueMap : getChildes()){
+        Iterator<T> iterator = iterator();
+        while (iterator.hasNext()){
+            T valueMap = iterator.next();
             if(attributeType == valueMap.getAttributeType()){
                 return valueMap;
             }
@@ -87,19 +90,26 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         return null;
     }
     public T getByName(int name){
-        for(T resValueMap : getChildes()){
-            if(resValueMap != null && name == resValueMap.getNameId()){
-                return resValueMap;
+        Iterator<T> iterator = iterator();
+        while (iterator.hasNext()){
+            T valueMap = iterator.next();
+            if(valueMap != null && name == valueMap.getNameId()){
+                return valueMap;
             }
         }
         return null;
     }
     @Override
+    protected void onPreRefresh() {
+        updateCountToHeader();
+    }
+    @Override
     protected void onRefreshed() {
     }
     public void onRemoved(){
-        for(T resValueMap : getChildes()){
-            resValueMap.onRemoved();
+        Iterator<T> iterator = iterator();
+        while (iterator.hasNext()){
+            iterator.next().onRemoved();
         }
     }
     @Override
@@ -109,27 +119,31 @@ public abstract class CompoundItemArray<T extends ResValueMap>
     }
     @Override
     public JSONArray toJson() {
-        JSONArray jsonArray=new JSONArray();
+        JSONArray jsonArray = new JSONArray();
         if(isNull()){
             return jsonArray;
         }
-        T[] childes = getChildes();
-        for(int i = 0; i < childes.length; i++){
-            jsonArray.put(i, childes[i].toJson());
+        Iterator<T> iterator = iterator();
+        int i = 0;
+        while (iterator.hasNext()){
+            T item = iterator.next();
+            jsonArray.put(i, item.toJson());
+            i ++;
         }
         return jsonArray;
     }
     @Override
     public void fromJson(JSONArray json){
         clear();
-        if(json==null){
+        if(json == null){
             return;
         }
-        int count=json.length();
+        int count = json.length();
         ensureSize(count);
-        for(int i=0;i<count;i++){
+        for(int i = 0; i < count; i++){
             get(i).fromJson(json.getJSONObject(i));
         }
+        updateCountToHeader();
     }
     public void merge(CompoundItemArray<?> mapArray){
         if(mapArray == null || mapArray == this){
@@ -138,12 +152,10 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         clear();
         int count = mapArray.size();
         ensureSize(count);
-        for(int i=0;i<count;i++){
-            ResValueMap coming = mapArray.get(i);
-            ResValueMap exist = get(i);
-            assert exist != null;
-            exist.merge(coming);
+        for(int i = 0; i < count; i++){
+            get(i).merge(mapArray.get(i));
         }
+        updateCountToHeader();
     }
     public void mergeWithName(ResourceMergeOption mergeOption, CompoundItemArray<?> mapArray){
         if(mapArray == null || mapArray == this){
@@ -152,12 +164,10 @@ public abstract class CompoundItemArray<T extends ResValueMap>
         clear();
         int count = mapArray.size();
         ensureSize(count);
-        for(int i=0;i<count;i++){
-            ResValueMap coming = mapArray.get(i);
-            ResValueMap exist = get(i);
-            assert exist != null;
-            exist.mergeWithName(mergeOption, coming);
+        for(int i = 0; i < count; i++){
+            get(i).mergeWithName(mergeOption, mapArray.get(i));
         }
+        updateCountToHeader();
     }
     @Override
     public int compare(ResValueMap valueMap1, ResValueMap valueMap2){

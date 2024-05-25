@@ -26,12 +26,12 @@ import com.reandroid.arsc.coder.xml.XmlEncodeException;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.PackageBody;
 import com.reandroid.arsc.container.SpecTypePair;
-import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.header.PackageHeader;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.list.OverlayableList;
 import com.reandroid.arsc.list.StagedAliasList;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
@@ -42,8 +42,13 @@ import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
-import com.reandroid.utils.*;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.MergingIterator;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLFactory;
@@ -55,7 +60,10 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 
@@ -180,15 +188,6 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return null;
     }
-
-
-    /**
-     * Use iterator();
-     * **/
-    @Deprecated
-    public Iterator<ResourceEntry> getResources(){
-        return iterator();
-    }
     public Iterator<ResourceEntry> iterator(){
         return new IterableIterator<SpecTypePair, ResourceEntry>(getSpecTypePairs()) {
             @Override
@@ -229,8 +228,8 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return true;
     }
-    public int removeUnusedSpecs(){
-        return getSpecStringPool().removeUnusedStrings().size();
+    public boolean removeUnusedSpecs(){
+        return getSpecStringPool().removeUnusedStrings();
     }
     public String refreshFull(){
         return refreshFull(true);
@@ -239,10 +238,8 @@ public class PackageBlock extends Chunk<PackageHeader>
         int sizeOld = getHeaderBlock().getChunkSize();
         StringBuilder message = new StringBuilder();
         boolean appendOnce = false;
-        int count = removeUnusedSpecs();
-        if(count != 0){
-            message.append("Removed unused spec strings = ");
-            message.append(count);
+        if(removeUnusedSpecs()){
+            message.append("Removed unused spec strings");
             appendOnce = true;
         }
         getSpecStringPool().sort();
@@ -525,8 +522,8 @@ public class PackageBlock extends Chunk<PackageHeader>
     public void trimConfigSizes(int resConfigSize){
         getSpecTypePairArray().trimConfigSizes(resConfigSize);
     }
-    public Collection<LibraryInfo> listLibraryInfo(){
-        return getLibraryBlock().listLibraryInfo();
+    public Iterator<LibraryInfo> getLibraryInfo(){
+        return getLibraryBlock().iterator();
     }
 
     public void addLibrary(LibraryBlock libraryBlock){
@@ -578,12 +575,8 @@ public class PackageBlock extends Chunk<PackageHeader>
         });
     }
     private Iterator<SpecTypePair> getIdSpecs(){
-        return getSpecTypePairArray().iterator(new Predicate<SpecTypePair>() {
-            @Override
-            public boolean test(SpecTypePair specTypePair) {
-                return specTypePair != null && specTypePair.isTypeId();
-            }
-        });
+        return getSpecTypePairArray().iterator(
+                specTypePair -> specTypePair != null && specTypePair.isTypeId());
     }
     public SpecTypePair getSpecTypePair(String typeName){
         return getSpecTypePair(typeIdOf(typeName));
@@ -592,7 +585,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         return getSpecTypePairArray().getSpecTypePair((byte) typeId);
     }
 
-    public Collection<SpecTypePair> listSpecTypePairs(){
+    public Iterable<SpecTypePair> listSpecTypePairs(){
         return getSpecTypePairArray().listItems();
     }
     public Iterator<ResConfig> getResConfigs(){
@@ -742,7 +735,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         setName(packageBlock.getName());
         getLibraryBlock().merge(packageBlock.getLibraryBlock());
-        mergeSpecStringPool(packageBlock);
+        getSpecStringPool().merge(packageBlock.getSpecStringPool());
         getSpecTypePairArray().merge(packageBlock.getSpecTypePairArray());
         getOverlayableList().merge(packageBlock.getOverlayableList());
         getStagedAliasList().merge(packageBlock.getStagedAliasList());
@@ -772,10 +765,6 @@ public class PackageBlock extends Chunk<PackageHeader>
         result.mergeWithName(mergeOption, entry);
         return result;
     }
-    private void mergeSpecStringPool(PackageBlock coming){
-        this.getSpecStringPool().addStrings(
-                coming.getSpecStringPool().toStringList());
-    }
 
     @Override
     public int compareTo(PackageBlock pkg) {
@@ -793,14 +782,14 @@ public class PackageBlock extends Chunk<PackageHeader>
     }
     @Override
     public String toString(){
-        StringBuilder builder=new StringBuilder();
+        StringBuilder builder = new StringBuilder();
         builder.append(super.toString());
         builder.append(", id=");
         builder.append(HexUtil.toHex2((byte) getId()));
         builder.append(", name=");
         builder.append(getName());
-        int libCount=getLibraryBlock().getLibraryCount();
-        if(libCount>0){
+        int libCount = getLibraryBlock().size();
+        if(libCount > 0){
             builder.append(", libraries=");
             builder.append(libCount);
         }

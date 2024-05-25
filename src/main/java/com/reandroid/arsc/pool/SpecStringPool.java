@@ -20,12 +20,10 @@ import com.reandroid.arsc.array.SpecStringArray;
 import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.SpecString;
-import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.arsc.value.Entry;
+import com.reandroid.utils.collection.EmptyIterator;
 
 import java.util.Iterator;
 
@@ -34,9 +32,6 @@ public class SpecStringPool extends StringPool<SpecString>{
         super(is_utf8);
     }
 
-    public void sort(){
-        super.sort(CompareUtil.getComparableComparator());
-    }
     public int resolveResourceId(int typeId, String name){
         Iterator<Entry> itr = getEntries(typeId, name);
         if(itr.hasNext()){
@@ -59,25 +54,25 @@ public class SpecStringPool extends StringPool<SpecString>{
         return 0;
     }
     public Iterator<Entry> getEntries(int typeId, String name){
-        StringGroup<SpecString> group = get(name);
-        if(group == null){
+        SpecString specString = getString(name);
+        if(specString == null){
             return EmptyIterator.of();
         }
-        return group.get(0).getEntries(typeId);
+        return specString.getEntries(typeId);
     }
     public Iterator<Entry> getEntries(String type, String name){
-        StringGroup<SpecString> group = get(name);
-        if(group == null){
+        SpecString specString = getString(name);
+        if(specString == null){
             return EmptyIterator.of();
         }
-        return group.get(0).getEntries(type);
+        return specString.getEntries(type);
     }
     public Iterator<Entry> getEntries(Block parentContext, String name){
-        StringGroup<SpecString> group = get(name);
-        if(group == null){
+        SpecString specString = getString(name);
+        if(specString == null){
             return EmptyIterator.of();
         }
-        return group.get(0).getEntries(parentContext);
+        return specString.getEntries(parentContext);
     }
     @Override
     StringArray<SpecString> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
@@ -89,6 +84,7 @@ public class SpecStringPool extends StringPool<SpecString>{
 
     @Override
     void linkStrings(){
+        super.linkStrings();
         PackageBlock packageBlock = getPackageBlock();
         if(packageBlock != null){
             packageBlock.linkSpecStringsInternal(this);

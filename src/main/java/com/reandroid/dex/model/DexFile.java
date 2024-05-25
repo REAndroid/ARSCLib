@@ -17,16 +17,17 @@ package com.reandroid.dex.model;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexException;
-import com.reandroid.dex.common.FullRefresh;
-import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.DexUtils;
-import com.reandroid.dex.sections.MergeOptions;
+import com.reandroid.dex.common.FullRefresh;
+import com.reandroid.dex.common.SectionItem;
+import com.reandroid.dex.data.CodeItem;
+import com.reandroid.dex.data.DebugInfo;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.id.TypeId;
-import com.reandroid.dex.data.*;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.*;
 import com.reandroid.dex.smali.SmaliReader;
@@ -173,12 +174,12 @@ public class DexFile implements DexClassRepository, Closeable,
     public Iterator<Key> removeClassesWithKeys(Predicate<Key> filter){
         return getDexLayout().removeWithKeys(SectionType.CLASS_ID, filter);
     }
-    public int removeClasses(Predicate<DexClass> filter){
+    public boolean removeClasses(Predicate<DexClass> filter){
         Predicate<ClassId> classIdFilter = classId -> filter.test(DexFile.this.create(classId));
         return getDexLayout().removeEntries(SectionType.CLASS_ID, classIdFilter);
     }
     @Override
-    public <T1 extends SectionItem> int removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
+    public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
         return getDexLayout().removeEntries(sectionType, filter);
     }
     public <T1 extends SectionItem> Iterator<Key> removeWithKeys(SectionType<T1> sectionType, Predicate<Key> filter){

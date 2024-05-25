@@ -62,7 +62,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         refresh();
     }
 
-    int clearUnused(){
+    boolean clearUnused(){
         return removeEntries(item -> item.getUsageType() == UsageMarker.USAGE_NONE);
     }
     public boolean remove(Key key){
@@ -71,8 +71,8 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     public Iterator<Key> removeWithKeys(Predicate<Key> filter){
         return EmptyIterator.of();
     }
-    public int removeEntries(Predicate<? super T> filter){
-        return getItemArray().remove(filter);
+    public boolean removeEntries(Predicate<? super T> filter){
+        return getItemArray().removeIf(filter);
     }
     void clearUsageTypes(){
         UsageMarker.clearUsageTypes(iterator());

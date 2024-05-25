@@ -204,8 +204,9 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
             logMessage("All resource names are valid");
             return;
         }
-        int removed = tableBlock.removeUnusedSpecs();
-        msg = msg + ", removed specs = " + removed;
+        if(tableBlock.removeUnusedSpecs()) {
+            msg = msg + ", removed specs";
+        }
         logMessage(msg);
     }
     public void validateResourceNames(PackageBlock packageBlock){
@@ -217,9 +218,10 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
             logMessage("[" + packageBlock.getName() + "] All resource names are valid");
             return;
         }
-        int removed = packageBlock.removeUnusedSpecs();
-        msg = "[" + packageBlock.getName() + "]" + msg + ", removed specs = " + removed;
-        logMessage(msg);
+        if(packageBlock.removeUnusedSpecs()) {
+            msg = "[" + packageBlock.getName() + "]" + msg + ", removed specs";
+            logMessage(msg);
+        }
     }
     void initialize(){
         mDecodedPaths.clear();

@@ -18,17 +18,20 @@ package com.reandroid.dex.model;
 import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
-import com.reandroid.dex.id.*;
+import com.reandroid.dex.id.ClassId;
+import com.reandroid.dex.id.FieldId;
+import com.reandroid.dex.id.MethodId;
+import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.sections.*;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.dex.key.*;
 import com.reandroid.utils.collection.*;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
 import java.util.function.Predicate;
 
 public class DexDirectory implements Iterable<DexFile>, Closeable,
@@ -268,21 +271,25 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         return false;
     }
     @Override
-    public <T1 extends SectionItem> int removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
+    public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
         Iterator<DexFile> iterator = clonedIterator();
-        int result = 0;
+        boolean result = false;
         while (iterator.hasNext()){
             DexFile dexFile = iterator.next();
-            result += dexFile.removeEntries(sectionType, filter);
+            if(dexFile.removeEntries(sectionType, filter)) {
+                result = true;
+            }
         }
         return result;
     }
-    public int removeClasses(Predicate<DexClass> filter){
+    public boolean removeClasses(Predicate<DexClass> filter){
         Iterator<DexFile> iterator = clonedIterator();
-        int result = 0;
+        boolean result = false;
         while (iterator.hasNext()){
             DexFile dexFile = iterator.next();
-            result += dexFile.removeClasses(filter);
+            if(dexFile.removeClasses(filter)){
+                result = true;
+            }
         }
         return result;
     }

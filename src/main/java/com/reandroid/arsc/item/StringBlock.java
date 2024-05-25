@@ -26,23 +26,31 @@ public abstract class StringBlock extends BlockItem{
 
     public StringBlock() {
         super(0);
-        mCache = "";
+        mCache = StringsUtil.EMPTY;
     }
     public String get(){
         return mCache;
     }
     public void set(String text){
+        set(text, true);
+    }
+    public void set(String text, boolean notify){
         if(text == null || text.length() == 0){
             text = StringsUtil.EMPTY;
         }
         String old = this.mCache;
-        if(text.equals(old) && countBytes() != 0){
+        boolean firstTime = countBytes() == 0;
+        if(firstTime) {
+            old = null;
+        }else if(text.equals(old)) {
             return;
         }
         this.mCache = text;
         byte[] bytes = encodeString(text);
         setBytesInternal(bytes, false);
-        onStringChanged(old, text);
+        if(notify){
+            onStringChanged(old, text);
+        }
     }
     protected void onBytesChanged(){
         mCache = decodeString(getBytesInternal());

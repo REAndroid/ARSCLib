@@ -24,6 +24,7 @@ import com.reandroid.utils.collection.ArraySort;
 
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 
 public class MapList extends SpecialItem
         implements Iterable<MapItem>, PositionAlignedItem {
@@ -150,7 +151,8 @@ public class MapList extends SpecialItem
     }
 
     public MapItem[] getReadSorted(){
-        MapItem[] mapItemList = itemArray.getChildes().clone();
+        List<MapItem> list = itemArray.getChildes();
+        MapItem[] mapItemList = list.toArray(new MapItem[list.size()]);
         Comparator<MapItem> comparator = SectionType.comparator(
                 SectionType.getReadOrderList(), MapItem::getSectionType);
         ArraySort.sort(mapItemList, comparator);
@@ -167,9 +169,11 @@ public class MapList extends SpecialItem
 
     @Override
     public String toString() {
-        MapItem[] mapItems = itemArray.getChildes();
-        StringBuilder builder = new StringBuilder(mapItems.length * 47);
-        for(int i = 0; i < mapItems.length; i++){
+        Iterator<MapItem> it = itemArray.iterator();
+        StringBuilder builder = new StringBuilder();
+        int i = 0;
+        while (it.hasNext()){
+            MapItem item = it.next();
             if(i != 0){
                 builder.append('\n');
             }
@@ -178,7 +182,8 @@ public class MapList extends SpecialItem
             }
             builder.append((i + 1));
             builder.append(") ");
-            builder.append(mapItems[i]);
+            builder.append(item);
+            i ++;
         }
         return builder.toString();
     }

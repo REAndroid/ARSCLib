@@ -78,10 +78,10 @@ public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
         return false;
     }
     public void remove(DEFINITION definition) {
-        super.remove(entry -> entry.equalsDefIndex(definition));
+        super.removeIf(entry -> entry.equalsDefIndex(definition));
     }
     public void remove(DEFINITION definition, Predicate<VALUE> filter) {
-        super.remove(entry -> entry.equalsDefIndex(definition) && filter.test(entry.getValue()));
+        super.removeIf(entry -> entry.equalsDefIndex(definition) && filter.test(entry.getValue()));
     }
     public void link(DEFINITION definition){
         for(DirectoryEntry<DEFINITION, VALUE> entry : this){

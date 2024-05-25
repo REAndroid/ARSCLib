@@ -15,768 +15,130 @@
  */
 package com.reandroid.arsc.base;
 
+import com.reandroid.arsc.container.BlockList;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.common.ArraySupplier;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.NumbersUtil;
+import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.FilterIterator;
 
-import java.util.*;
+import java.io.IOException;
+import java.util.Iterator;
 import java.util.function.Predicate;
 
-public abstract class BlockArray<T extends Block> extends BlockContainer<T>
-        implements BlockArrayCreator<T>, ArraySupplier<T> {
-    private T[] elementData;
-    private int mFreeSpace;
-    private int mAllocateStep;
+public abstract class BlockArray<T extends Block> extends BlockList<T>
+        implements Creator<T>, ArraySupplier<T> {
+
     public BlockArray(){
-        elementData = newArrayInstance(0);
+        super();
+        setCreator(this);
     }
-    public BlockArray(T[] elementData){
-        this.elementData = elementData;
+    public BlockArray(Creator<? extends T> creator){
+        super(creator);
+    }
+
+    @Override
+    protected final ArrayCollection.Monitor<T> getMonitor() {
+        return new ArrayCollection.Monitor<T>() {
+            @Override
+            public void onAdd(int i, T item) {
+            }
+            @Override
+            public void onRemoved(int i, T item) {
+                onPreRemove(item);
+            }
+        };
+    }
+
+    @Override
+    protected void onReadBytes(BlockReader reader) throws IOException {
+        super.readChildes(reader);
+    }
+
+    @Override
+    public void setSize(int size) {
+        int max = size();
+        for(int i = size; i < max; i ++) {
+            onPreRemove(get(i));
+        }
+        super.setSize(size);
     }
 
     public void removeAllNull(int start){
-        removeAll(start, true);
-    }
-    public void removeAll(int start){
-        removeAll(start, false);
-    }
-    private void removeAll(int start, boolean check_null){
-        T[] removeList = subArray(start);
-        if(removeList.length == 0 || (check_null && !isAllNull(removeList))){
+        int lastCount = size() - start;
+        if(lastCount <= 0) {
             return;
         }
-        T[] elementData = this.elementData;
-        for(T item:removeList){
-            if(item == null){
-                continue;
-            }
-            if(!item.isNull()){
-                item.setNull(true);
-            }
-            int index = item.getIndex();
-            if(index>=0 && elementData[index]==item){
-                item.setIndex(-1);
-                item.setParent(null);
-                elementData[index] = null;
-            }
-        }
-        setSize(start);
+        int count = NumbersUtil.min(lastCount, countFromLast(nullPredicate()));
+        setSize(size() - count);
     }
-    private T[] subArray(int start){
-        return subArray(start, -1);
-    }
-    private T[] subArray(int start, int count){
-        T[] items = this.elementData;
-        int length = items.length;
-        if(start < 0){
-            start = 0;
-        }
-        if(start >= length){
-            return newArrayInstance(0);
-        }
-        int end = count;
-        if(end < 0){
-            end = items.length;
-        }else {
-            end = start + count;
-            if(end > length){
-                end=length;
-            }
-        }
-        T[] results = newArrayInstance(end - start);
-        int index = 0;
-        for(int i = start; i < end; i++){
-            results[index] = items[i];
-            index ++;
-        }
-        return results;
-    }
-    public Collection<T> listItems(){
+    public Iterable<T> listItems(){
         return listItems(false);
     }
-    public Collection<T> listItems(boolean skipNullBlocks){
-        trimAllocatedFreeSpace();
-        return new AbstractCollection<T>() {
-            @Override
-            public Iterator<T> iterator(){
-                return BlockArray.this.iterator(skipNullBlocks);
-            }
-            @Override
-            public boolean contains(Object o){
-                return BlockArray.this.contains(o);
-            }
-            @Override
-            public int size() {
-                return BlockArray.this.size();
-            }
-        };
-    }
-    @Override
-    public T[] getChildes(){
-        return elementData;
-    }
-    public void ensureSize(int size){
-        if(size <= size()){
-            return;
-        }
-        setSize(size);
-    }
-    /**
-     * Use setSize(int)
-     * **/
-    @Deprecated
-    public void setChildesCount(int size){
-        setSize(size);
-    }
-    public void setSize(int count){
-        if(count < 0){
-            count = 0;
-        }
-        if(count == 0){
-            clear();
-            return;
-        }
-        int diff = count - size();
-        if(diff == 0){
-            return;
-        }
-        changeSize(diff);
-    }
-    /**
-     * Use clear()
-     * **/
-    @Deprecated
-    public void clearChildes(){
-        clear();
-    }
-    public void clear(){
-        T[] elementData = this.elementData;
-        int length = elementData.length;
-        if(length == 0){
-            return;
-        }
-        for(int i = 0; i < length; i++){
-            T block = elementData[i];
-            if(block == null){
-                continue;
-            }
-            block.setIndex(-1);
-            block.setParent(null);
-            elementData[i]=null;
-        }
-        this.elementData = newArrayInstance(0);
-    }
-    public void addAll(T[] blocks){
-        if(blocks == null || blocks.length == 0){
-            return;
-        }
-        T[] old = elementData;
-        int oldLength = 0;
-        if(old != null){
-            oldLength = old.length;
-        }
-        int len = blocks.length;
-        T[] update = newArrayInstance(oldLength + len);
-        if(oldLength > 0){
-            System.arraycopy(old, 0, update, 0, oldLength);
-        }
-        boolean foundNull=false;
-        for(int i=0; i < len; i++){
-            T item = blocks[i];
-            if(item == null){
-                foundNull=true;
-                continue;
-            }
-            int index = oldLength + i;
-            update[index]=item;
-            item.setParent(this);
-            item.setIndex(index);
-        }
-        elementData = update;
-        if(foundNull){
-            trimNullBlocks();
-        }
-    }
-    public boolean needsSort(Comparator<? super T> comparator) {
-        T[] elementData = this.elementData;
-        if(comparator == null){
-            return false;
-        }
-        int length = elementData.length;
-        if(length < 2){
-            return false;
-        }
-        T previous = elementData[0];
-        for(int i = 1; i < length; i++){
-            T item = elementData[i];
-            if(comparator.compare(previous, item) > 0){
-                return true;
-            }
-            previous = item;
-        }
-        return false;
-    }
-    public boolean sort(Comparator<? super T> comparator){
-        if(isFlexible()) {
-            trimAllocatedFreeSpace();
-        }
-        T[] elementData = this.elementData;
-        if(comparator == null || elementData.length < 2){
-            return false;
-        }
-        ArraySort.ObjectSort objectSort = new ArraySort.ObjectSort(elementData, comparator) {
-            @Override
-            public void onSwap(int i, int j) {
-                T item1 = elementData[i];
-                T item2 = elementData[j];
-                super.onSwap(i, j);
-                if(item1 != null) {
-                    item1.setIndex(j);
-                }
-                if(item2 != null) {
-                    item2.setIndex(i);
-                }
-            }
-        };
-        boolean changed = objectSort.sort();
-        //ArraySort.sort(elementData, comparator);
-        for(int i=0 ; i < elementData.length; i++){
-            T item = elementData[i];
-            if(item != null && item.getIndex() != i){
-                item.setIndex(i);
-                changed = true;
-            }
-        }
-        return changed;
-    }
-    public void insertItem(int index, T item){
-        int count = size();
-        if(count < index){
-            count = index;
-        }
-        ensureSize(count + 1);
-        T[] childes = getChildes();
-        int lastIndex = childes.length - 2;
-        for(int i = lastIndex; i >= index; i--){
-            T exist = childes[i];
-            childes[i] = null;
-            int newIndex = i + 1;
-            childes[newIndex] = exist;
-            exist.setIndex(newIndex);
-        }
-        childes[index] = item;
-        item.setParent(this);
-        item.setIndex(index);
-    }
-    public void insertItem(int index, T[] itemsArray){
-        int count = size();
-        if(count < index){
-            count = index;
-        }
-        int itemsLength = itemsArray.length;
-        ensureSize(count + itemsLength);
-        T[] childes = getChildes();
-        int lastIndex = childes.length - itemsLength - 1;
-        for(int i = lastIndex; i >= index; i--){
-            T exist = childes[i];
-            childes[i] = null;
-            int newIndex = i + itemsLength;
-            childes[newIndex] = exist;
-            if(exist != null){
-                exist.setIndex(newIndex);
-            }
-        }
-        for(int i = 0; i < itemsLength; i++){
-            T item = itemsArray[i];
-            int newIndex = index + i;
-            childes[newIndex] = item;
-            item.setParent(this);
-            item.setIndex(newIndex);
-        }
-    }
-    public void setItem(int index, T item){
-        ensureSize(index + 1);
-        elementData[index] = item;
-        if(item != null){
-            item.setIndex(index);
-            item.setParent(this);
-        }
-    }
-    public void addInternal(int index, T block){
-        if(isFlexible()){
-            allocateIfFull();
-        }else {
-            ensureSize(index + 1);
-        }
-        addAt(index, block);
-    }
-    private void addAt(int index, T block){
-        onPreShifting();
-        T[] elementData = this.elementData;
-        int start = elementData.length - 1;
-        for(int i = start; i > index; i--){
-            int left = i - 1;
-            T exist = elementData[left];
-            elementData[left] = null;
-            elementData[i] = exist;
-            if(exist != null){
-                exist.setIndex(i);
-            }
-        }
-        elementData[index] = block;
-        if(block != null){
-            block.setIndex(index);
-            block.setParent(this);
-        }
-        onPostShift(index);
-        if(isFlexible()){
-            mFreeSpace--;
-        }
-    }
-    protected void onPreShifting(){
-    }
-    protected void onPostShift(int index){
-    }
-    public boolean add(T block){
-        if(block == null){
-            return false;
-        }
-        if(isFlexible()){
-            addAtNull(block);
-            return true;
-        }
-        T[] oldElementData = elementData;
-        int index = oldElementData.length;
-        elementData = newArrayInstance(index+1);
-        if(index>0){
-            System.arraycopy(oldElementData, 0, elementData, 0, index);
-        }
-        elementData[index] = block;
-        block.setIndex(index);
-        block.setParent(this);
-        return true;
-    }
-    private void addAtNull(T block){
-        allocateIfFull();
-        T[] elementData = this.elementData;
-        int index = elementData.length - mFreeSpace;
-        elementData[index]=block;
-        block.setIndex(index);
-        block.setParent(this);
-        mFreeSpace --;
-    }
-    private int calculateAllocate(){
-        mAllocateStep++;
-        int amount = size() / 4;
-        if(amount < 10){
-            amount = 10;
-        }else if(amount > 100){
-            amount = 100;
-        }
-        amount = amount * mAllocateStep;
-        if(amount > 8000){
-            amount = 8000;
-        }
-        return amount;
-    }
-    protected boolean isFlexible(){
-        return false;
-    }
-    protected void trimAllocatedFreeSpace(){
-        if(mFreeSpace <= 0){
-            return;
-        }
-        int length = elementData.length - mFreeSpace;
-        T[] update = newArrayInstance(length);
-        if (length > 0) {
-            System.arraycopy(elementData, 0, update, 0, length);
-        }
-        elementData = update;
-        mFreeSpace = 0;
+    public Iterable<T> listItems(boolean skipNullBlocks){
+        return () -> BlockArray.this.iterator(skipNullBlocks);
     }
     public final int countNonNull(){
-        return countNonNull(true);
-    }
-
-    @Override
-    public int getChildesCount() {
-        return size();
-    }
-    public final int size(){
-        return elementData.length;
-    }
-    public T createNext(){
-        T block=newInstance();
-        add(block);
-        return block;
-    }
-    @Override
-    public final T get(int i){
-        if(i >= size() || i<0){
-            return null;
-        }
-        return elementData[i];
-    }
-    @Override
-    public int getCount(){
-        return size();
-    }
-    public final T getLast(){
-        return get(size() - mFreeSpace - 1);
+        return countIf(nonNullPredicate());
     }
     public int indexOf(Object block){
-        T[] items=elementData;
-        if(items==null){
-            return -1;
-        }
-        int len=items.length;
-        for(int i=0;i<len;i++){
-            if(block==items[i]){
+        int i = 0;
+        Iterator<T> iterator = iterator();
+        while(iterator.hasNext()){
+            T item = iterator.next();
+            if(block == item){
                 return i;
             }
+            i ++;
         }
         return -1;
     }
     public int lastIndexOf(Object block){
-        T[] items=elementData;
-        if(items==null){
-            return -1;
-        }
-        int len=items.length;
-        int result=-1;
-        for(int i=0;i<len;i++){
-            if(block==items[i]){
+        int result = -1;
+        int i = 0;
+        Iterator<T> iterator = iterator();
+        while(iterator.hasNext()){
+            T item = iterator.next();
+            if(block==item){
                 result=i;
             }
+            i++;
         }
         return result;
-    }
-
-    public Iterator<T> arrayIterator() {
-        if(size() == 0){
-            return EmptyIterator.of();
-        }
-        return new ArrayIterator<>(getChildes());
-    }
-    public Iterator<T> clonedIterator() {
-        if(size() == 0){
-            return EmptyIterator.of();
-        }
-        return new ArrayIterator<>(getChildes().clone());
-    }
-    public Iterator<T> iterator() {
-        return iterator(false);
     }
     public Iterator<T> iterator(boolean skipNullBlock) {
-        return iterator(skipNullBlock, 0, size());
-    }
-    public Iterator<T> iterator(int start, int size) {
-        return iterator(false, start, size);
+        if(skipNullBlock) {
+            return iterator(nonNullPredicate());
+        }
+        return super.iterator();
     }
     public Iterator<T> iterator(boolean skipNullBlock, int start, int size) {
-        trimAllocatedFreeSpace();
-        if(start < 0){
-            start = 0;
+        Iterator<T> iterator = super.iterator(start, size);
+        if(skipNullBlock) {
+            iterator = FilterIterator.of(iterator, nonNullPredicate());
         }
-        int count = size() - start;
-        if(size > count){
-            size = count;
-        }
-        if(size == 0){
-            return EmptyIterator.of();
-        }
-        if(size == 1){
-            T item = get(start);
-            if(skipNullBlock && (item == null || item.isNull())){
-                return EmptyIterator.of();
-            }
-            return SingleIterator.of(item);
-        }
-        return new BlockIterator(skipNullBlock, start, size);
+        return iterator;
     }
-    public Iterator<T> iterator(Predicate<? super T> tester) {
-        trimAllocatedFreeSpace();
-        int count = size();
-        if(count == 0){
-            return EmptyIterator.of();
-        }
-        return new PredicateIterator(tester);
-    }
-    public boolean contains(Object block){
-        T[] items = elementData;
-        if(block == null || items==null){
-            return false;
-        }
-        int length = items.length;
-        for(int i = 0; i < length; i++){
-            if(items[i] == block){
-                return true;
-            }
-        }
-        return false;
-    }
-    public int remove(Predicate<? super T> predicate){
-        return remove(CollectionUtil.toList(iterator(predicate)), null);
-    }
-    public int remove(Collection<T> blockList){
-        return remove(blockList, null);
-    }
-    protected int remove(Collection<T> blockList, Collection<T> removedList){
-        int count = 0;
-        T[] items = elementData;
-        if(items == null || blockList == null){
-            return count;
-        }
-        int length = items.length;
-        if(length == 0){
-            return count;
-        }
-        Iterator<T> iterator = blockList.iterator();
-        while (iterator.hasNext()){
-            T block = iterator.next();
-            if(block == null){
-                continue;
-            }
-            int index = block.getIndex();
-            if(index < 0 || index >= length){
-                continue;
-            }
-            T item = items[index];
-            if(item != block){
-                continue;
-            }
-            items[index] = null;
-            onPreRemove(item);
-            if(removedList != null){
-                removedList.add(item);
-            }
-            count ++;
-        }
-        trimNullBlocks();
-        return count;
+    public void clear() {
+        super.clearChildes();
     }
     public void onPreRemove(T block){
-
+        block.setParent(null);
+        block.setIndex(-1);
     }
-    public boolean remove(T block){
-        return remove(block, true);
-    }
-    protected boolean remove(T block, boolean trim){
-        T[] items = elementData;
-        if(block == null){
-            return false;
-        }
-        boolean found=false;
-        int length = items.length;
-        for(int i = 0; i < length; i++){
-            T item = items[i];
-            if(block == item){
-                items[i] = null;
-                found = true;
-                onPreRemove(item);
-            }
-        }
-        if(found && trim){
-            trimNullBlocks();
-        }
-        return found;
-    }
-    protected void trimNullBlocks(){
-        mFreeSpace = 0;
-        T[] items=elementData;
-        if(items==null){
-            return;
-        }
-        int count=countNonNull(false);
-        int len=items.length;
-        if(count==len){
-            return;
-        }
-        T[] update= newArrayInstance(count);
-        int index=0;
-        for(int i=0;i<len;i++){
-            T block=items[i];
-            if(block!=null){
-                update[index]=block;
-                block.setIndex(index);
-                index++;
-            }
-        }
-        elementData=update;
-    }
-    private int countNonNull(boolean is_null_check){
-        T[] items=elementData;
-        if(items==null){
-            return 0;
-        }
-        int result=0;
-        for(T block:items){
-            if(block!=null){
-                if(is_null_check && block.isNull()){
-                    continue;
-                }
-                result++;
-            }
-        }
-        return result;
-    }
-    private void changeSize(int amount){
-        mFreeSpace = 0;
-        mAllocateStep = 0;
-        T[] old=elementData;
-        int index = 0;
-        if(old != null){
-            index = old.length;
-        }
-        int size = index + amount;
-        T[] update = newArrayInstance(size);
-        int end;
-        if(index>size){
-            end=size;
-        }else {
-            end = index;
-        }
-        if(end > 0){
-            System.arraycopy(old, 0, update, 0, end);
-        }
-        for(int i = end; i < size; i++){
-            T item = update[i];
-            if(item == null){
-                item = newInstance();
-                update[i] = item;
-            }
-            item.setIndex(i);
-            item.setParent(this);
-        }
-        elementData = update;
-    }
-    private void allocateIfFull(){
-        if(mFreeSpace > 0){
-            return;
-        }
-        allocate(calculateAllocate());
-    }
-    private void allocate(int amount){
-        if(amount <= 0 || mFreeSpace > 0){
-            return;
-        }
-        mFreeSpace = amount;
-        T[] old = elementData;
-        int index = old.length;
-        int size = index + amount;
-        T[] update = newArrayInstance(size);
-        if(index == 0){
-            elementData = update;
-            return;
-        }
-        System.arraycopy(old, 0, update, 0, index);
-        elementData = update;
-    }
-
-    @Override
-    public String toString(){
-        return "count="+ size();
-    }
-
-    private static boolean isAllNull(Block[] itemsList){
-
-        for(Block item : itemsList){
-            if(item!=null && !item.isNull()){
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private class BlockIterator implements Iterator<T> {
-
-        private int mCursor;
-        private final int mMaxPosition;
-        private final boolean mSkipNullBlock;
-
-        BlockIterator(boolean skipNullBlock, int start, int size){
-            mSkipNullBlock = skipNullBlock;
-            this.mCursor = start;
-            this.mMaxPosition = start + size;
-        }
-
-        @Override
-        public boolean hasNext() {
-            checkCursor();
-            return !isFinished();
-        }
-        @Override
-        public T next() {
-            if(!isFinished()){
-                T item = BlockArray.this.get(mCursor);
-                mCursor++;
-                checkCursor();
-                return item;
-            }
-            return null;
-        }
-        private boolean isFinished(){
-            return mCursor>= mMaxPosition;
-        }
-        private void checkCursor(){
-            if(!mSkipNullBlock || isFinished()){
-                return;
-            }
-            T item = BlockArray.this.get(mCursor);
-            while (item == null || item.isNull()){
-                mCursor++;
-                item = BlockArray.this.get(mCursor);
-                if(mCursor >= mMaxPosition){
-                    break;
-                }
-            }
+    public void trimLastIf(Predicate<? super T> predicate) {
+        int size = size() - countFromLast(predicate);
+        if(size != size()) {
+            setSize(size);
         }
     }
-
-
-    private class PredicateIterator implements Iterator<T> {
-        private int mCursor;
-        private final int mMaxSize;
-        private final Predicate<? super T> mTester;
-        PredicateIterator(Predicate<? super T> tester){
-            this.mTester = tester;
-            mCursor = 0;
-            mMaxSize = BlockArray.this.size();
-        }
-        @Override
-        public boolean hasNext() {
-            checkCursor();
-            return hasItems();
-        }
-        @Override
-        public T next() {
-            if(hasItems()){
-                T item=BlockArray.this.get(mCursor);
-                mCursor++;
-                checkCursor();
-                return item;
-            }
-            return null;
-        }
-        private boolean hasItems(){
-            return mCursor < mMaxSize;
-        }
-        private void checkCursor(){
-            if(mTester == null){
-                return;
-            }
-            while (hasItems() && !test(BlockArray.this.get(getCursor()))){
-                mCursor++;
-            }
-        }
-        private int getCursor(){
-            return mCursor;
-        }
-        private boolean test(T item){
-            Predicate<? super T> tester = mTester;
-            if(tester != null){
-                return tester.test(item);
-            }
-            return true;
-        }
+    public void removeNullBlocks() {
+        removeIf(nullPredicate());
+    }
+    private Predicate<? super T> nullPredicate() {
+        return Block::isNull;
+    }
+    private Predicate<? super T> nonNullPredicate() {
+        return block -> !block.isNull();
     }
 }

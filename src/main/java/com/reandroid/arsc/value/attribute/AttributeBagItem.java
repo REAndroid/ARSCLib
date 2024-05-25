@@ -17,10 +17,12 @@ package com.reandroid.arsc.value.attribute;
 
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.model.ResourceEntry;
-import com.reandroid.utils.HexUtil;
-import com.reandroid.arsc.value.AttributeType;
 import com.reandroid.arsc.value.AttributeDataFormat;
+import com.reandroid.arsc.value.AttributeType;
 import com.reandroid.arsc.value.ResValueMap;
+import com.reandroid.utils.HexUtil;
+
+import java.util.List;
 
 
 public class AttributeBagItem {
@@ -137,23 +139,23 @@ public class AttributeBagItem {
         }
         return null;
     }
-    public static AttributeBagItem[] create(ResValueMap[] resValueMaps){
+    public static AttributeBagItem[] create(List<ResValueMap> resValueMaps){
         if(resValueMaps ==null){
             return null;
         }
         AttributeBagItem format=null;
-        int len= resValueMaps.length;
-        AttributeBagItem[] bagItems=new AttributeBagItem[len];
-        for(int i=0;i<len;i++){
-            AttributeBagItem item=new AttributeBagItem(resValueMaps[i]);
-            bagItems[i]=item;
-            if(format==null){
+        int size = resValueMaps.size();
+        AttributeBagItem[] bagItems = new AttributeBagItem[size];
+        for(int i = 0; i < size; i++){
+            AttributeBagItem item = new AttributeBagItem(resValueMaps.get(i));
+            bagItems[i] = item;
+            if(format == null){
                 if(AttributeType.FORMATS == item.getType()){
                     format = item;
                 }
             }
         }
-        if(format!=null){
+        if(format != null){
             return bagItems;
         }
         return null;

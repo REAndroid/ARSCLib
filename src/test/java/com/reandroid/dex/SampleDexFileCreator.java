@@ -52,9 +52,11 @@ public class SampleDexFileCreator {
         constructor.addAccessFlag(AccessFlag.PUBLIC);
         constructor.addAccessFlag(AccessFlag.CONSTRUCTOR);
 
-        constructor
-                .parseInstruction("invoke-direct {p0}, Landroid/app/Activity;-><init>()V")
-                .createNext("return-void");
+        DexInstruction instruction = constructor.parseInstruction("invoke-direct {p0}, Landroid/app/Activity;-><init>()V");
+        MethodKey key = instruction.getMethodKey();
+        key = key.changeDeclaring(dexClass.getSuperClassKey());
+        instruction.setKey(key);
+        instruction.createNext("return-void");
     }
 
     private static void create_onCreate(DexClass dexClass, int contentViewResourceId){

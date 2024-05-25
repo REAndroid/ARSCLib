@@ -18,39 +18,32 @@ package com.reandroid.arsc.array;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.ResXmlID;
 import com.reandroid.arsc.item.ResXmlString;
+import com.reandroid.utils.ObjectsUtil;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Comparator;
 
 public class ResXmlStringArray extends StringArray<ResXmlString> {
+
     public ResXmlStringArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         super(offsets, itemCount, itemStart, is_utf8);
     }
+
     @Override
-    List<ResXmlString> listUnusedStringsToRemove(){
-        List<ResXmlString> results=new ArrayList<>();
-        ResXmlIDMap idMap = getResXmlIDMap();
-        int lastIndex = -1;
-        if(idMap!=null){
-            lastIndex = idMap.countId();
+    public void add(int index, ResXmlString item) {
+        ResXmlIDArray xmlIDMap = getResXmlIDMap().getResXmlIDArray();
+        if(index < xmlIDMap.size() - 1) {
+            xmlIDMap.add(index, new ResXmlID());
         }
-        for(ResXmlString item:listItems()){
-            if(item == null
-                    || item.hasReference()
-                    || item.getIndex()<lastIndex){
-                continue;
-            }
-            results.add(item);
-        }
-        return results;
+        super.add(index, item);
     }
     private ResXmlIDMap getResXmlIDMap(){
         ResXmlDocument xmlDocument = getParentInstance(ResXmlDocument.class);
         if(xmlDocument != null){
             return xmlDocument.getResXmlIDMap();
         }
-        return null;
+        return ObjectsUtil.cast(null);
     }
     @Override
     public ResXmlString newInstance() {
@@ -58,11 +51,18 @@ public class ResXmlStringArray extends StringArray<ResXmlString> {
     }
     @Override
     public ResXmlString[] newArrayInstance(int length) {
-        if(length == 0){
-            return EMPTY;
-        }
         return new ResXmlString[length];
     }
 
-    private static final ResXmlString[] EMPTY = new ResXmlString[0];
+    @Override
+    public boolean sort(Comparator<? super ResXmlString> comparator) {
+        boolean sorted = super.sort(comparator);
+        getResXmlIDMap().getResXmlIDArray().sort();
+        return sorted;
+    }
+    @Override
+    protected void onPreRefresh() {
+        sort();
+        super.onPreRefresh();
+    }
 }

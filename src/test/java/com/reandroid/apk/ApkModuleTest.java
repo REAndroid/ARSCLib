@@ -3,8 +3,8 @@ package com.reandroid.apk;
 import com.reandroid.TestUtils;
 import com.reandroid.app.AndroidApiLevel;
 import com.reandroid.app.AndroidManifest;
-import com.reandroid.archive.ByteInputSource;
 import com.reandroid.archive.ArchiveBytes;
+import com.reandroid.archive.ByteInputSource;
 import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
@@ -19,12 +19,15 @@ import com.reandroid.arsc.item.TableString;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.*;
+import com.reandroid.common.ReferenceResolver;
 import com.reandroid.dex.SampleDexFileCreator;
 import com.reandroid.dex.model.DexFile;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.xml.*;
+import com.reandroid.xml.StyleDocument;
+import com.reandroid.xml.StyleElement;
+import com.reandroid.xml.StyleText;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -33,6 +36,7 @@ import org.junit.runners.MethodSorters;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.zip.ZipEntry;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -92,6 +96,10 @@ public class ApkModuleTest {
         byte[] bytes = dexFile.getBytes();
         apkModule.add(new ByteInputSource(bytes, "classes.dex"));
 
+        File generated_apk = new File(TestUtils.getTesApkDirectory(), "generated.apk");
+        generated_apk.delete();
+        apkModule.writeApk(generated_apk);
+        apkModule = ApkModule.loadApkFile(generated_apk);
         last_apkModule = apkModule;
 
         return apkModule;
@@ -154,6 +162,8 @@ public class ApkModuleTest {
         Assert.assertEquals(text, helloEntry.getResValue().getValueAsString());
         attribute.setTypeAndData(ValueType.REFERENCE, helloEntry.getResourceId());
 
+        createStyledStringInXmlDocument(root);
+
         document.refreshFull();
 
         String path = "res/layout/activity_main.xml";
@@ -166,6 +176,34 @@ public class ApkModuleTest {
 
 
         return layoutEntry.getResourceId();
+    }
+    private void createStyledStringInXmlDocument(ResXmlElement root) {
+
+        ResXmlElement textView2 = root.createChildElement("TextView");
+        ResXmlAttribute attribute = textView2.getOrCreateAndroidAttribute("layout_width", 0x010100f4);
+        attribute.setTypeAndData(ValueType.DEC, -1); // wrap_content
+
+        attribute = textView2.getOrCreateAndroidAttribute("layout_height", 0x010100f5);
+        attribute.setTypeAndData(ValueType.DEC, -2); // wrap_content
+
+        attribute = textView2.getOrCreateAndroidAttribute("text", 0x0101014f);
+
+        createStyledStringInXmlAttribute(attribute);
+    }
+    private void createStyledStringInXmlAttribute(ResXmlAttribute attribute) {
+
+        String text = "This is <a href=\"https://www.github.com/REAndroid/ARSCLib\"><font size=\"30\" color=\"red\">STYLED!</font></a><b>string in xml document</b>";
+
+        text="To em. <a href=\"intent:#Intent;action=android.settings.SYSTEM_UPDATE_SETTINGS;end\"/> Upd";
+        StyleDocument styleDocument = null;
+        try {
+            styleDocument = StyleDocument.parseStyledString(text);
+        } catch (Exception ignored) {
+            throw new RuntimeException(ignored);
+        }
+        Assert.assertNotNull(styleDocument);
+
+        attribute.setValueAsString(styleDocument);
     }
     private TableBlock createTableBlock(AndroidManifestBlock manifestBlock){
         TableBlock tableBlock = new TableBlock();
@@ -190,6 +228,14 @@ public class ApkModuleTest {
         String app_name = "ARSCLib Test";
         Entry appName = packageBlock.getOrCreate("", "string", "app_name");
         appName.setValueAsString(app_name);
+        packageBlock.getOrCreate("-en-rUS-watch", "string", "app_name").setValueAsString(app_name + "-en-rUS-watch");
+        packageBlock.getOrCreate("-en", "string", "app_name").setValueAsString(app_name + "-en");
+        packageBlock.getOrCreate("-en-rUS", "string", "app_name").setValueAsString(app_name + "-en-rUS");
+        packageBlock.getOrCreate("-en-rCA", "string", "app_name").setValueAsString(app_name + "-en-rCA");
+
+        ReferenceResolver referenceResolver = new ReferenceResolver(packageBlock.getTableBlock());
+        List<Entry> entryList = referenceResolver.resolveWithConfig(appName.getResourceId(), ResConfig.parse("-en"));
+        Assert.assertEquals("packages count", 4, entryList.size());
 
         Assert.assertEquals("packages count", 1, tableBlock.size());
         Assert.assertEquals("package id", packageId, packageBlock.getId());
@@ -237,7 +283,7 @@ public class ApkModuleTest {
         Assert.assertNotEquals(appName_de.getResValue().getValueAsString(),
                 appName_ru.getResValue().getValueAsString());
 
-        Assert.assertEquals("Configs count", 3, resourceEntry.getConfigsCount());
+        Assert.assertEquals("Configs count", 7, resourceEntry.getConfigsCount());
 
         Assert.assertNull("Table search by error id",
                 tableBlock.getResource(appName.getResourceId() + 1));

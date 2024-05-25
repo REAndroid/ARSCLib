@@ -113,47 +113,6 @@ public class StyleSpanEvent implements Comparable<StyleSpanEvent>{
         }
         return i;
     }
-    public int compareTo1(StyleSpanEvent event) {
-        if(event == this){
-            return 0;
-        }
-        int type1 = getType();
-        int type2 = event.getType();
-        if(type1 == TYPE_CHAR){
-            if(type2 == TYPE_START_TAG || type2 == TYPE_START_END){
-                return 1;
-            }
-            return -1;
-        }
-        if(type2 == TYPE_CHAR){
-            if(type1 == TYPE_START_TAG || type1 == TYPE_START_END){
-                return -1;
-            }
-            return 1;
-        }
-        int i = CompareUtil.compare(getSpan().getSpanOrder(), event.getSpan().getSpanOrder());
-        int j = CompareUtil.compare(type1, type2);
-        if(type1 == TYPE_START_END){
-            if(type2 == TYPE_END_TAG){
-                return 1;
-            }
-            return i;
-        }
-        if(type2 == TYPE_START_END){
-            if(type1 == TYPE_END_TAG){
-                return 1;
-            }
-            return i;
-        }
-        if(i == 0){
-            return j;
-        }
-        if(j == 0 && type1 == TYPE_END_TAG){
-            i = -i;
-        }
-        return i;
-    }
-
 
     @Override
     public String toString() {

@@ -134,6 +134,7 @@ public class ResXmlDocumentTest {
         XmlSerializer serializer = XMLFactory.newSerializer(writer);
         document.serialize(serializer);
         writer.close();
+        document.refreshFull();
 
         String org = XML_STRING;
         String decoded = writer.toString();

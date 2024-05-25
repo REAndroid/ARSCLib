@@ -18,8 +18,8 @@ package com.reandroid.arsc.value;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.HexUtil;
 
 public class EntryHeaderMap extends ValueHeader {
     public EntryHeaderMap(){
@@ -73,7 +73,6 @@ public class EntryHeaderMap extends ValueHeader {
             int id = 0;
             if(parentId.isContext(entryHeaderMap)){
                 PackageBlock packageBlock = getParentInstance(PackageBlock.class);
-                assert packageBlock != null;
                 parentId = packageBlock.mergeWithName(mergeOption, parentId);
                 if(parentId != null){
                     id = parentId.getResourceId();

@@ -18,6 +18,7 @@ package com.reandroid.arsc.base;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -105,18 +106,18 @@ public abstract class Block {
             }
             parent = parent.getParent();
         }
-        return null;
+        return ObjectsUtil.cast(null);
     }
     @SuppressWarnings("unchecked")
     public final <T> T getParentInstance(Class<T> parentClass){
         Block parent = getParent();
-        while (parent!=null){
+        while (parent != null){
             if(parentClass.isInstance(parent)){
                 return (T) parent;
             }
             parent = parent.getParent();
         }
-        return null;
+        return ObjectsUtil.cast(null);
     }
 
 

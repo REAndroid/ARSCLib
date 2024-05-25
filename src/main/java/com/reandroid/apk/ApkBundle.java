@@ -15,12 +15,9 @@
   */
 package com.reandroid.apk;
 
-import com.reandroid.archive.BlockInputSource;
 import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.archive.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.TableBlock;
-import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.arsc.pool.builder.StringPoolMerger;
 
 import java.io.Closeable;
 import java.io.File;
@@ -44,11 +41,9 @@ public class ApkBundle implements Closeable {
         result.setAPKLogger(apkLogger);
         result.setLoadDefaultFramework(false);
 
-        mergeStringPools(result);
-
         ApkModule base=getBaseModule();
-        if(base==null){
-            base=getLargestTableModule();
+        if(base == null){
+            base = getLargestTableModule();
         }
         result.merge(base);
         ApkSignatureBlock signatureBlock = null;
@@ -75,32 +70,6 @@ public class ApkBundle implements Closeable {
         }
         result.getZipEntryMap().autoSortApkFiles();
         return result;
-    }
-    private void mergeStringPools(ApkModule mergedModule) throws IOException {
-        if(!hasOneTableBlock() || mergedModule.hasTableBlock()){
-            return;
-        }
-        logMessage("Merging string pools ... ");
-        TableBlock createdTable = new TableBlock();
-        BlockInputSource<TableBlock> inputSource=
-                new BlockInputSource<>(TableBlock.FILE_NAME, createdTable);
-        mergedModule.getZipEntryMap().add(inputSource);
-
-        StringPoolMerger poolMerger = new StringPoolMerger();
-
-        for(ApkModule apkModule:getModules()){
-            if(!apkModule.hasTableBlock()){
-                continue;
-            }
-            TableStringPool stringPool = apkModule.getVolatileTableStringPool();
-            poolMerger.add(stringPool);
-        }
-
-        poolMerger.mergeTo(createdTable.getTableStringPool());
-
-        logMessage("Merged string pools="+poolMerger.getMergedPools()
-                +", style="+poolMerger.getMergedStyleStrings()
-                +", strings="+poolMerger.getMergedStrings());
     }
     private String generateMergedModuleName(){
         Set<String> moduleNames=mModulesMap.keySet();

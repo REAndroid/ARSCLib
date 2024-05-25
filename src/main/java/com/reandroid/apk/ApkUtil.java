@@ -19,7 +19,8 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.utils.CompareUtil;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ApkUtil {
     public static String replaceRootDir(String path, String dirName){
@@ -208,8 +209,7 @@ public class ApkUtil {
         return name;
     }
 
-    public static final String JSON_FILE_EXTENSION=".json";
-    public static final String RES_JSON_NAME = "res-json";
+    public static final String JSON_FILE_EXTENSION = ".json";
     public static final String ROOT_NAME = "root";
     public static final String DEF_MODULE_NAME = "base";
     public static final String NAME_value_type = "value_type";

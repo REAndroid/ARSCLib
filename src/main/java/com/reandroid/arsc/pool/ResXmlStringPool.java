@@ -15,130 +15,93 @@
  */
 package com.reandroid.arsc.pool;
 
-import com.reandroid.arsc.array.*;
+import com.reandroid.arsc.array.OffsetArray;
+import com.reandroid.arsc.array.ResXmlStringArray;
+import com.reandroid.arsc.array.StringArray;
+import com.reandroid.arsc.array.StyleArray;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.chunk.xml.ResXmlIDMap;
-import com.reandroid.arsc.group.StringGroup;
-import com.reandroid.arsc.item.*;
+import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.ResXmlID;
+import com.reandroid.arsc.item.ResXmlString;
+import com.reandroid.utils.NumbersUtil;
+import com.reandroid.xml.StyleDocument;
 
-import java.util.Objects;
 
 public class ResXmlStringPool extends StringPool<ResXmlString> {
+
     public ResXmlStringPool(boolean is_utf8) {
         super(is_utf8, false);
     }
-    @Override
-    public ResXmlString removeReference(ReferenceItem referenceItem){
-        if(referenceItem==null){
-            return null;
-        }
-        ResXmlString stringItem = super.removeReference(referenceItem);
-        removeNotUsedItem(stringItem);
-        return stringItem;
-    }
-    private void removeNotUsedItem(ResXmlString xmlString){
-        if(xmlString == null || xmlString.hasReference()){
-            return;
-        }
-        ResXmlIDMap idMap = getResXmlIDMap();
-        int lastIdIndex = -1;
-        if(idMap!=null){
-            lastIdIndex = idMap.countId() - 1;
-        }
-        if(idMap!=null && xmlString.getIndex()>lastIdIndex){
-            removeString(xmlString);
-        }else {
-            xmlString.set("");
-        }
-    }
+
     @Override
     StringArray<ResXmlString> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         return new ResXmlStringArray(offsets, itemCount, itemStart, is_utf8);
     }
+
+    @Override
     public ResXmlString getOrCreate(String str){
-        return getOrCreateAttribute(0, str);
+        return getOrCreate(0, str);
     }
-    public ResXmlString createNew(String str){
-        StringArray<ResXmlString> stringsArray = getStringsArray();
-        ResXmlString xmlString = stringsArray.createNext();
-        xmlString.set(str);
+    @Override
+    public ResXmlString getOrCreate(StyleDocument styleDocument) {
+        String xml = styleDocument.getXml();
+        if(!styleDocument.hasElements()) {
+            return getOrCreate(0, xml);
+        }
+        ResXmlString xmlString = get(xml, resXmlString -> {
+            if(!xml.equals(resXmlString.getXml()) ||
+                    resXmlString.hasResourceId()) {
+                return false;
+            }
+            return resXmlString.hasStyle();
+        });
+        if(xmlString == null) {
+            xmlString = createNewString();
+            xmlString.set(styleDocument);
+        }
         return xmlString;
     }
-    public ResXmlString getOrCreateAttribute(int resourceId, String str){
-        ResXmlIDMap resXmlIDMap = getResXmlIDMap();
-        if(resXmlIDMap == null){
-            return super.getOrCreate(str);
-        }
-        ResXmlIDArray idArray = resXmlIDMap.getResXmlIDArray();
-        int count = idArray.size();
-        if(resourceId == 0){
-            return getOrCreateAfter(count, str);
-        }
-        StringArray<ResXmlString> stringsArray = getStringsArray();
-        ResXmlID xmlID = idArray.getByResId(resourceId);
-        if(xmlID != null){
-            ResXmlString xmlString = stringsArray.get(xmlID.getIndex());
-            if(xmlString!=null && Objects.equals(str, xmlString.get())){
-                return xmlString;
-            }
-        }
-        count = idArray.size() + 1;
-        stringsArray.ensureSize(count);
-        idArray.setSize(count);
-        int index = count - 1;
-        xmlID = idArray.get(index);
-        assert xmlID != null;
-        xmlID.set(resourceId);
-        idArray.refreshIdMap();
 
-        ResXmlString xmlString = stringsArray.newInstance();
-        xmlString.set(str);
-        stringsArray.insertItem(index, xmlString);
-
-        updateUniqueIdMap(xmlString);
-        return xmlString;
-    }
-    private ResXmlString getOrCreateAfter(int position, String str){
-        if(position<0){
-            position=0;
-        }
-        StringGroup<ResXmlString> group = get(str);
-        if(group!=null){
-            for (int i = 0; i < group.size(); i++){
-                ResXmlString xmlString = group.get(i);
-                if(xmlString.getParent() == null){
-                    group.remove(xmlString);
-                    i--;
-                    continue;
-                }
-                int index = xmlString.getIndex();
-                if(index > position || (position==0 && position == index)){
-                    return xmlString;
-                }
+    public ResXmlString getOrCreate(int resourceId, String str){
+        ResXmlString xmlString = get(str, resXmlString -> {
+            if(!str.equals(resXmlString.getXml()) || resXmlString.hasStyle()) {
+                return false;
             }
+            return (resourceId == 0) == (resXmlString.getResourceId() == 0);
+        });
+        if(xmlString == null) {
+            xmlString = createNewString(str);
+            xmlString.setResourceId(resourceId);
         }
-        StringArray<ResXmlString> stringsArray = getStringsArray();
-        int count = stringsArray.size();
-        if(count < position){
-            count = position;
-        }
-        stringsArray.ensureSize(count+1);
-        ResXmlString xmlString = stringsArray.get(count);
-        assert xmlString != null;
-        xmlString.set(str);
-        super.updateUniqueIdMap(xmlString);
         return xmlString;
     }
     private ResXmlIDMap getResXmlIDMap(){
         ResXmlDocument resXmlDocument = getParentInstance(ResXmlDocument.class);
-        if(resXmlDocument!=null){
+        if(resXmlDocument != null){
             return resXmlDocument.getResXmlIDMap();
         }
         return null;
     }
+
+    public void linkResXmlIDMapInternal() {
+        ResXmlIDMap resXmlIDMap = getResXmlIDMap();
+        if(resXmlIDMap == null) {
+            return;
+        }
+        StringArray<ResXmlString> stringsArray = getStringsArray();
+        int size = NumbersUtil.min(resXmlIDMap.size(), stringsArray.size());
+        for(int i = 0; i < size; i++) {
+            ResXmlString resXmlString = stringsArray.get(i);
+            ResXmlID xmlID = resXmlIDMap.get(i);
+            resXmlString.linkResourceIdInternal(xmlID);
+        }
+    }
+
     @Override
     public void onChunkLoaded() {
         super.onChunkLoaded();
+        linkResXmlIDMapInternal();
         StyleArray styleArray = getStyleArray();
         if(styleArray.size()>0){
             notifyResXmlStringPoolHasStyles(styleArray.size());

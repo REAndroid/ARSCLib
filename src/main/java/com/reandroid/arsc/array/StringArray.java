@@ -17,114 +17,33 @@ package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.StringItem;
-import com.reandroid.arsc.item.StyleItem;
 import com.reandroid.arsc.pool.StringPool;
-import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.Iterator;
 
 public abstract class StringArray<T extends StringItem> extends OffsetBlockArray<T> implements JSONConvert<JSONArray> {
+
     private boolean mUtf8;
 
     public StringArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         super(offsets, itemCount, itemStart);
-        this.mUtf8=is_utf8;
-    }
-    @Override
-    protected void onPreShifting(){
-        StringPool<?> stringPool = getParentInstance(StringPool.class);
-        if(stringPool != null){
-            stringPool.ensureStringLinkUnlockedInternal();
-        }
-    }
-    @Override
-    protected void onPostShift(int index){
-        StringPool<?> stringPool = getParentInstance(StringPool.class);
-        if(stringPool != null){
-            stringPool.getStyleArray().onStringShifted(index);
-        }
-    }
-    @Override
-    protected void onPreRefresh(){
-        if(isFlexible()){
-            trimNullBlocks();
-        }
-        super.onPreRefresh();
+        this.mUtf8 = is_utf8;
     }
 
-    public List<String> toStringList(){
-        return new AbstractList<String>() {
-            @Override
-            public String get(int i) {
-                T item=StringArray.this.get(i);
-                if(item==null){
-                    return null;
-                }
-                return item.getHtml();
-            }
-            @Override
-            public int size() {
-                return StringArray.this.size();
-            }
-        };
-    }
-    public List<T> removeUnusedStrings(){
-        List<T> unusedList = listUnusedStringsToRemove();
-        remove(unusedList);
-        return unusedList;
-    }
-    @Override
-    protected int remove(Collection<T> blockList, Collection<T> removedList){
-        List<T> copyList = new ArrayList<>();
-        int count = super.remove(blockList, copyList);
-        for(T item : copyList){
-            item.onRemoved();
-        }
-        if(removedList != null){
-            removedList.addAll(copyList);
-        }
-        return count;
-    }
-    @Override
-    public void onPreRemove(T block){
-        block.onPreRemoveInternal();
-    }
-    @Override
-    protected boolean remove(T block, boolean trim){
-        if(block == null){
-            return false;
-        }
-        boolean removed = super.remove(block, trim);
-        if(removed){
-            block.onRemoved();
-        }
-        return removed;
-    }
-    List<T> listUnusedStringsToRemove(){
-        return listUnusedStrings();
-    }
-    public List<T> listUnusedStrings(){
-        List<T> results=new ArrayList<>();
-        T[] childes = getChildes();
-        for(int i = 0; i < childes.length; i++){
-            T item = childes[i];
-            if(item != null && !item.hasReference()){
-                results.add(item);
-            }
-        }
-        return results;
-    }
     public void setUtf8(boolean is_utf8){
         if(mUtf8 == is_utf8){
             return;
         }
         mUtf8 = is_utf8;
-        T[] childes = getChildes();
-        int length = childes.length;
-        for(int i = 0; i < length; i++){
-            T item = childes[i];
+        Iterator<T> iterator = iterator();
+        while (iterator.hasNext()){
+            T item = iterator.next();
             if(item != null){
                 item.setUtf8(is_utf8);
             }
@@ -134,17 +53,37 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         return mUtf8;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected void refreshChildes(){
-        // Not required
+    public void onPreRemove(T block) {
+        StringPool<T> stringPool = getParentInstance(StringPool.class);
+        stringPool.onStringRemoved(block);
+        block.onRemoved();
+        super.onPreRemove(block);
     }
+
     private StyleArray getStyleArray(){
         StringPool<?> stringPool = getParentInstance(StringPool.class);
         if(stringPool != null){
             return stringPool.getStyleArray();
         }
-        return null;
+        return ObjectsUtil.cast(null);
     }
+    public void sort() {
+        sort(CompareUtil.getComparableComparator());
+    }
+    @Override
+    public boolean sort(Comparator<? super T> comparator) {
+        boolean sorted = super.sort(comparator);
+        getStyleArray().sort();
+        return sorted;
+    }
+    @Override
+    protected void onPreRefresh() {
+        sort();
+        super.onPreRefresh();
+    }
+
     // Only styled strings
     @Override
     public JSONArray toJson() {
@@ -183,20 +122,14 @@ public abstract class StringArray<T extends StringItem> extends OffsetBlockArray
         }else {
             length = 0;
         }
-        setSize(length);
-        StyleArray styleArray = getStyleArray();
-        if(styleArray == null){
-            throw new NullPointerException("Null StyleArray");
-        }
-        styleArray.setSize(length);
+        ensureSize(length);
         if(length == 0){
             return;
         }
         for(int i = 0; i < length; i++){
             JSONObject jsonObject = json.getJSONObject(i);
             StringItem stringItem = get(i);
-            StyleItem styleItem = styleArray.get(i);
-            stringItem.fromJson(jsonObject, styleItem);
+            stringItem.fromJson(jsonObject);
         }
     }
 }

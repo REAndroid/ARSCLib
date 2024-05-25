@@ -46,13 +46,18 @@ public class FixedLengthString  extends StringItem {
         return decodeUtf16Bytes(bytes);
     }
     @Override
-    public StyleItem getStyle(){
+    public StyleItem getOrCreateStyle(){
         return null;
     }
     @Override
     int calculateReadLength(BlockReader reader){
         return bytesLength;
     }
+
+    @Override
+    protected void onStringChanged(String old, String text) {
+    }
+
     @Override
     public int compareTo(StringItem stringItem){
         if(stringItem == null){

@@ -98,6 +98,9 @@ public class ArraySort {
             this.start = start;
             this.length = length;
         }
+        public ObjectSort(Object[] elementData, Comparator<?> comparator){
+            this(elementData, 0, elementData.length, comparator);
+        }
 
         public boolean sort(){
             return sort(start, length);

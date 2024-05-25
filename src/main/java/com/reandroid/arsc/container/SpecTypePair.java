@@ -15,35 +15,37 @@
   */
 package com.reandroid.arsc.container;
 
-import com.reandroid.arsc.chunk.*;
 import com.reandroid.arsc.array.TypeBlockArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockContainer;
-import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.chunk.ChunkType;
+import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.chunk.SpecBlock;
+import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.TypeHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.arsc.value.ValueItem;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
+import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.MergingIterator;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class SpecTypePair extends BlockContainer<Block>
-        implements JSONConvert<JSONObject>, Comparable<SpecTypePair>{
+        implements Iterable<TypeBlock>, JSONConvert<JSONObject>, Comparable<SpecTypePair>{
     private final Block[] mChildes;
     private final SpecBlock mSpecBlock;
     private final TypeBlockArray mTypeBlockArray;
@@ -141,26 +143,16 @@ public class SpecTypePair extends BlockContainer<Block>
             }
         };
     }
-    private Iterator<Entry> listDefaultEntries(){
-        Iterator<TypeBlock> iterator = getTypeBlockArray().iterator(false);
-        if(!iterator.hasNext()){
-            return EmptyIterator.of();
-        }
-        return iterator.next().getEntries();
-    }
     public Iterator<Entry> getEntries(int entryId){
         return getEntries(entryId, false);
     }
     public Iterator<Entry> getEntries(int entryId, boolean skipNull){
-        return new ComputeIterator<TypeBlock, Entry>(getTypeBlocks(), new Function<TypeBlock, Entry>() {
-            @Override
-            public Entry apply(TypeBlock typeBlock) {
-                Entry entry = typeBlock.getEntry(entryId);
-                if(entry == null || (skipNull && entry.isNull())){
-                    return null;
-                }
-                return entry;
+        return new ComputeIterator<>(getTypeBlocks(), typeBlock -> {
+            Entry entry = typeBlock.getEntry(entryId);
+            if(entry == null || (skipNull && entry.isNull())){
+                return null;
             }
+            return entry;
         });
     }
     public Iterator<TypeBlock> getTypeBlocks(){
@@ -176,12 +168,12 @@ public class SpecTypePair extends BlockContainer<Block>
         return getTypeBlockArray().hasComplexEntry();
     }
     public void linkTableStringsInternal(TableStringPool tableStringPool){
-        for(TypeBlock typeBlock:listTypeBlocks()){
+        for(TypeBlock typeBlock : this){
             typeBlock.linkTableStringsInternal(tableStringPool);
         }
     }
     public void linkSpecStringsInternal(SpecStringPool specStringPool){
-        for(TypeBlock typeBlock:listTypeBlocks()){
+        for(TypeBlock typeBlock : this){
             typeBlock.linkSpecStringsInternal(specStringPool);
         }
     }
@@ -191,12 +183,9 @@ public class SpecTypePair extends BlockContainer<Block>
     }
     public Entry getAnyEntry(short entryId){
         Entry result = null;
-        TypeBlock[] types = getTypeBlockArray().getChildes();
-        for(int i = 0; i < types.length; i++){
-            TypeBlock typeBlock = types[i];
-            if(typeBlock == null){
-                continue;
-            }
+        Iterator<TypeBlock> iterator = getTypeBlockArray().iterator();
+        while (iterator.hasNext()){
+            TypeBlock typeBlock = iterator.next();
             Entry entry = typeBlock.getEntry(entryId);
             if(entry == null){
                 continue;
@@ -211,9 +200,9 @@ public class SpecTypePair extends BlockContainer<Block>
         return result;
     }
     public Entry getAnyEntry(String name){
-        TypeBlock[] types = getTypeBlockArray().getChildes();
-        for(int i = 0; i < types.length; i++){
-            TypeBlock typeBlock = types[i];
+        Iterator<TypeBlock> iterator = getTypeBlockArray().iterator();
+        while (iterator.hasNext()){
+            TypeBlock typeBlock = iterator.next();
             if(typeBlock == null){
                 continue;
             }
@@ -302,16 +291,7 @@ public class SpecTypePair extends BlockContainer<Block>
     public boolean isEqualTypeName(String typeName){
         return TypeBlock.isEqualTypeName(getTypeName(), typeName);
     }
-    /**
-     * TOBEREMOVED
-     *
-     * It is allowed to have duplicate entry name therefore it is not recommend to use this.
-     * Lets depreciate to warn developer
-     */
-    @Deprecated
-    public Entry searchByEntryName(String entryName){
-        return getTypeBlockArray().searchByEntryName(entryName);
-    }
+
     public SpecBlock getSpecBlock(){
         return mSpecBlock;
     }
@@ -346,10 +326,11 @@ public class SpecTypePair extends BlockContainer<Block>
         }
         return results;
     }
-    public Collection<TypeBlock> listTypeBlocks(){
-        return getTypeBlockArray().listItems();
-    }
 
+    @Override
+    public Iterator<TypeBlock> iterator() {
+        return getTypeBlockArray().iterator();
+    }
     @Override
     protected void onRefreshed() {
 

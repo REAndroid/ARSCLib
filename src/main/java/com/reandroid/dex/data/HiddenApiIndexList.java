@@ -75,7 +75,7 @@ public class HiddenApiIndexList extends BlockList<HiddenApiIndex> {
     }
 
     private void clearNullIndex() {
-        remove(HiddenApiIndex::isNull);
+        removeIf(HiddenApiIndex::isNull);
     }
     private void sortItems() {
         sort(CompareUtil.getComparableComparator());

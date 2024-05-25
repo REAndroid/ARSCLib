@@ -33,6 +33,10 @@ public interface Value {
     void setValueAsString(String value);
     PackageBlock getPackageBlock();
     ParentChunk getParentChunk();
+    default void setTypeAndData(ValueType valueType, int data) {
+        setData(data);
+        setValueType(valueType);
+    }
     default AndroidColor getValueAsColor() {
         ValueType valueType = getValueType();
         if(valueType == null || !valueType.isColor()){
@@ -61,5 +65,41 @@ public interface Value {
             }
         }
         return resourceEntry;
+    }
+    default Float getValueAsFloat() {
+        ValueType valueType = getValueType();
+        if(valueType != ValueType.FLOAT){
+            return null;
+        }
+        return Float.intBitsToFloat(getData());
+    }
+    default void setValueAsFloat(float f) {
+        setTypeAndData(ValueType.FLOAT, Float.floatToIntBits(f));
+    }
+    default Integer getValueAsInteger() {
+        ValueType valueType = getValueType();
+        if(valueType == ValueType.DEC || valueType == ValueType.HEX){
+            return getData();
+        }
+        return null;
+    }
+    default void setValueAsDecimal(int i) {
+        setTypeAndData(ValueType.DEC, i);
+    }
+    default void setValueAsHex(int i) {
+        setTypeAndData(ValueType.HEX, i);
+    }
+    default int getValueAsResourceId() {
+        ValueType valueType = getValueType();
+        if(valueType != null && valueType.isReference()){
+            return getData();
+        }
+        return 0;
+    }
+    default void setValueAsResourceId(int id) {
+        setTypeAndData(ValueType.REFERENCE, id);
+    }
+    default void setValueAsResourceAttributeId(int id) {
+        setTypeAndData(ValueType.ATTRIBUTE, id);
     }
 }

@@ -25,9 +25,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
-import com.reandroid.arsc.value.ValueType;
 import com.reandroid.common.BytesOutputStream;
-import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.collection.CollectionUtil;
@@ -40,7 +38,8 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.*;
-import java.util.*;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
 
 public class ResXmlDocument extends Chunk<HeaderBlock>
         implements ResXmlNodeTree, MainChunk, ParentChunk, JSONConvert<JSONObject> {
@@ -157,6 +156,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         StringBuilder message = new StringBuilder();
         boolean appendOnce = false;
         int count;
+        getStringPool().compressDuplicates();
         Iterator<ResXmlElement> iterator = getElements();
         while (iterator.hasNext()){
             ResXmlElement element = iterator.next();
@@ -176,13 +176,11 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
             message.append(count);
             appendOnce = true;
         }
-        count = getStringPool().removeUnusedStrings().size();
-        if(count != 0){
+        if(getStringPool().removeUnusedStrings()){
             if(appendOnce){
                 message.append("\n");
             }
-            message.append("Removed xml strings = ");
-            message.append(count);
+            message.append("Removed unused xml strings");
             appendOnce = true;
         }
         refresh();
@@ -421,11 +419,6 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
             return false;
         });
     }
-    @Deprecated
-    public void setDocumentElement(ResXmlElement resXmlElement){
-        clear();
-        this.add(resXmlElement);
-    }
     @Override
     protected void onPreRefresh(){
         clearEmptyElements();
@@ -528,15 +521,10 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
     public JSONObject toJson() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(ResXmlDocument.NAME_element, getDocumentElement().toJson());
-        JSONArray pool = getStringPool().toJson();
-        if(pool!=null){
-            jsonObject.put(ResXmlDocument.NAME_styled_strings, pool);
-        }
         return jsonObject;
     }
     @Override
     public void fromJson(JSONObject json) {
-        onFromJson(json);
         ResXmlElement xmlElement = getDocumentElement();
         xmlElement.fromJson(json.optJSONObject(ResXmlDocument.NAME_element));
         refresh();
@@ -554,88 +542,6 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
             xmlDocument.add(node.toXml(decode));
         }
         return xmlDocument;
-    }
-    private void onFromJson(JSONObject json){
-        List<JSONObject> attributeList = new ArrayList<>();
-        recursiveAttributes(json.optJSONObject(ResXmlDocument.NAME_element), attributeList);
-        buildResourceIds(attributeList);
-        Set<String> strings = new HashSet<>();
-        recursiveStrings(json.optJSONObject(ResXmlDocument.NAME_element), strings);
-        ResXmlStringPool stringPool = getStringPool();
-        stringPool.addStrings(strings);
-        stringPool.refresh();
-    }
-    private void buildResourceIds(List<JSONObject> attributeList){
-        ResIdBuilder builder=new ResIdBuilder();
-        for(JSONObject attribute:attributeList){
-            int id=attribute.getInt(ResXmlAttribute.NAME_id);
-            if(id==0){
-                continue;
-            }
-            String name=attribute.getString(ResXmlAttribute.NAME_name);
-            builder.add(id, name);
-        }
-        builder.buildTo(getResXmlIDMap());
-    }
-    private void recursiveAttributes(JSONObject elementJson, List<JSONObject> results){
-        if(elementJson == null){
-            return;
-        }
-        JSONArray attributes = elementJson.optJSONArray(ResXmlElement.NAME_attributes);
-        if(attributes != null){
-            int length = attributes.length();
-            for(int i=0; i<length; i++){
-                JSONObject attr=attributes.optJSONObject(i);
-                if(attr!=null){
-                    results.add(attr);
-                }
-            }
-        }
-        JSONArray childElements = elementJson.optJSONArray(ResXmlElement.NAME_childes);
-        if(childElements != null){
-            int length=childElements.length();
-            for(int i = 0; i < length; i++){
-                recursiveAttributes(childElements.getJSONObject(i), results);
-            }
-        }
-    }
-    private void recursiveStrings(JSONObject elementJson, Set<String> results){
-        if(elementJson == null){
-            return;
-        }
-        results.add(elementJson.optString(ResXmlElement.NAME_namespace_uri));
-        results.add(elementJson.optString(ResXmlElement.NAME_name));
-        JSONArray namespaces=elementJson.optJSONArray(ResXmlElement.NAME_namespaces);
-        if(namespaces != null){
-            int length = namespaces.length();
-            for(int i=0; i<length; i++){
-                JSONObject nsObject=namespaces.getJSONObject(i);
-                results.add(nsObject.getString(ResXmlElement.NAME_namespace_uri));
-                results.add(nsObject.getString(ResXmlElement.NAME_namespace_prefix));
-            }
-        }
-        JSONArray attributes = elementJson.optJSONArray(ResXmlElement.NAME_attributes);
-        if(attributes != null){
-            int length = attributes.length();
-            for(int i = 0; i < length; i++){
-                JSONObject attr = attributes.optJSONObject(i);
-                if(attr != null){
-                    results.add(attr.getString(ResXmlAttribute.NAME_name));
-
-                    if(ValueType.fromName(attr.getString(ResXmlAttribute.NAME_value_type))
-                            == ValueType.STRING){
-                        results.add(attr.optString(ResXmlAttribute.NAME_data));
-                    }
-                }
-            }
-        }
-        JSONArray childElements = elementJson.optJSONArray(ResXmlElement.NAME_childes);
-        if(childElements != null){
-            int length = childElements.length();
-            for(int i = 0; i < length; i++){
-                recursiveStrings(childElements.getJSONObject(i), results);
-            }
-        }
     }
     void addEvents(ParserEventList parserEventList){
         ResXmlElement xmlElement = getDocumentElement();
@@ -704,5 +610,4 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         return chunkType==ChunkType.XML;
     }
     private static final String NAME_element = "element";
-    private static final String NAME_styled_strings = "styled_strings";
 }

@@ -24,14 +24,18 @@ import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.*;
+import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.SpecFlag;
+import com.reandroid.arsc.item.SpecString;
+import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
-import com.reandroid.utils.HexUtil;
+import com.reandroid.graphics.AndroidColor;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.xml.StyleDocument;
 
@@ -335,15 +339,57 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         }
         return null;
     }
+    public ValueType getValueType() {
+        ResValue resValue = getResValue();
+        if(resValue != null) {
+            return resValue.getValueType();
+        }
+        return null;
+    }
+    public Boolean getValueAsBoolean() {
+        ResValue resValue = getResValue();
+        if(resValue != null) {
+            return resValue.getValueAsBoolean();
+        }
+        return null;
+    }
+    public AndroidColor getValueAsColor() {
+        ResValue resValue = getResValue();
+        if(resValue != null) {
+            return resValue.getValueAsColor();
+        }
+        return null;
+    }
+    public Float getValueAsFloat() {
+        ResValue resValue = getResValue();
+        if(resValue != null) {
+            return resValue.getValueAsFloat();
+        }
+        return null;
+    }
+    public Integer getValueAsInteger() {
+        ResValue resValue = getResValue();
+        if(resValue != null) {
+            return resValue.getValueAsInteger();
+        }
+        return null;
+    }
+    public ResourceEntry getValueAsReference() {
+        ResValue resValue = getResValue();
+        if(resValue != null) {
+            return resValue.getValueAsReference();
+        }
+        return null;
+    }
     public ResValue setValueAsRaw(ValueType valueType, int data){
-        TableEntry<?, ?> tableEntry = ensureTableEntry(false);
-        ResValue resValue = (ResValue) tableEntry.getValue();
+        ResValue resValue = ensureScalar();
         resValue.setTypeAndData(valueType, data);
         return resValue;
     }
-    public ResValue setValueAsBoolean(boolean val){
-        int data = val?0xffffffff:0;
-        return setValueAsRaw(ValueType.BOOLEAN, data);
+    public ResValue setValueAsBoolean(boolean value){
+        ResValue resValue = ensureScalar();
+        resValue.setValueAsBoolean(value);
+        return resValue;
     }
     public ResValue setValueAsReference(int resourceId){
         return setValueAsRaw(ValueType.REFERENCE, resourceId);
@@ -355,11 +401,16 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         return resValue;
     }
     public ResValue setValueAsString(String str){
-        TableEntry<?, ?> tableEntry = ensureTableEntry(false);
-        ResValue resValue = (ResValue) tableEntry.getValue();
+        ResValue resValue = ensureScalar();
         resValue.setValueAsString(str);
         return resValue;
     }
+    public ResValue setValueAsColor(AndroidColor color){
+        ResValue resValue = ensureScalar();
+        resValue.setValue(color);
+        return resValue;
+    }
+
     public SpecString getSpecString(){
         int ref = getSpecReference();
         if(ref < 0){
@@ -405,6 +456,9 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
     }
     public PackageBlock getPackageBlock(){
         return getParent(PackageBlock.class);
+    }
+    private ResValue ensureScalar() {
+        return (ResValue) ensureTableEntry(false).getValue();
     }
     private TableEntry<?, ?> ensureTableEntry(boolean is_complex){
         TableEntry<?, ?> tableEntry = getTableEntry();

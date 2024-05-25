@@ -15,7 +15,9 @@
  */
 package com.reandroid.dex.base;
 
-import com.reandroid.arsc.base.*;
+import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.header.DexHeader;
@@ -71,14 +73,11 @@ public class DexItemArray<T extends Block> extends CreatorArray<T>
         }
         return false;
     }
-    protected void readChildes(BlockReader reader) throws IOException {
-        T[] childes = getChildes();
-        if(childes == null){
-            return;
-        }
-        int length = childes.length;
+    @Override
+    public void readChildes(BlockReader reader) throws IOException {
+        int length = size();
         for(int i = 0; i < length; i++){
-            Block block = childes[i];
+            Block block = get(i);
             if(block == null){
                 continue;
             }

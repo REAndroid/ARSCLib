@@ -25,10 +25,8 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.model.ResourceEntry;
-import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
@@ -222,25 +220,21 @@ public class ResourceBuilder {
     }
     private void initializeTypeString(PackageBlock sourcePackage, PackageBlock resultPackage) {
         TypeStringPool sourcePool = sourcePackage.getTypeStringPool();
-        Set<String> typeList = new HashSet<>(sourcePool.size());
+        Set<String> typeSet = new HashSet<>(sourcePool.size());
         for(TypeString typeString : sourcePool) {
             String typeName = typeString.get();
             Iterator<ResourceEntry> iterator = FilterIterator.of(sourcePackage.iterator(typeName),
                     ResourceEntry::isDeclared);
             if(iterator.hasNext()){
-                typeList.add(typeName);
+                typeSet.add(typeName);
             }
         }
-        resultPackage.getTypeStringPool().addStrings(typeList);
+        List<String> typeList = new ArrayCollection<>(typeSet);
+        typeList.sort(CompareUtil.getComparableComparator());
+        resultPackage.getTypeStringPool().addStrings(typeSet);
     }
     private void initializeSpecString(PackageBlock sourcePackage, PackageBlock resultPackage) {
-        SpecStringPool sourcePool = sourcePackage.getSpecStringPool();
-        Set<String> specList = new HashSet<>(sourcePool.size());
-        for(SpecString specString : sourcePool) {
-            String name = specString.get();
-            specList.add(name);
-        }
-        resultPackage.getSpecStringPool().addStrings(specList);
+        resultPackage.getSpecStringPool().merge(sourcePackage.getSpecStringPool());
     }
     private void initializeEntries(PackageBlock sourcePackage, PackageBlock resultPackage) {
         TypeStringPool resultPool = resultPackage.getTypeStringPool();
@@ -265,7 +259,6 @@ public class ResourceBuilder {
         for(int i = 0; i < size; i++){
             ResourceEntry resourceEntry = sourceEntryList.get(i);
             Entry entry = entryArray.get(i);
-            assert entry != null;
             entry.setName(resourceEntry.getName(), true);
         }
     }

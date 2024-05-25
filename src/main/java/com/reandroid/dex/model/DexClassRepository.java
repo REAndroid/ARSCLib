@@ -115,7 +115,7 @@ public interface DexClassRepository extends FullRefresh {
     default boolean containsClass(TypeKey key){
         return contains(SectionType.CLASS_ID, key);
     }
-    <T1 extends SectionItem> int removeEntries(SectionType<T1> sectionType, Predicate<T1> filter);
+    <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter);
     void clearPoolMap();
 
     default <T extends SectionItem> Iterator<T> getClonedItems(SectionType<T> sectionType, Predicate<? super T> filter) {
@@ -195,7 +195,7 @@ public interface DexClassRepository extends FullRefresh {
         return new DexIntegerVisitor(this);
     }
 
-    default int removeAnnotations(TypeKey typeKey) {
+    default boolean removeAnnotations(TypeKey typeKey) {
         return removeEntries(SectionType.ANNOTATION_ITEM,
                 annotationItem -> typeKey.equals(annotationItem.getTypeKey()));
     }
@@ -209,12 +209,11 @@ public interface DexClassRepository extends FullRefresh {
         while (iterator.hasNext()) {
             AnnotationItem annotationItem = iterator.next();
             if(typeKey.equals(methodKey.getDeclaring())) {
-                int count = annotationItem.remove(elementFilter);
-                if(count != 0){
+                if(annotationItem.removeIf(elementFilter)){
                     if(annotationItem.isEmpty()) {
                         annotationItem.removeSelf();
                     }
-                    removeCount += count;
+                    removeCount ++;
                 }
             }
         }

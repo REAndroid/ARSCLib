@@ -17,7 +17,10 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.NumberIntegerReference;
-import com.reandroid.dex.base.*;
+import com.reandroid.dex.base.DexPositionAlign;
+import com.reandroid.dex.base.IntegerPair;
+import com.reandroid.dex.base.ParallelIntegerPair;
+import com.reandroid.dex.base.ParallelReference;
 
 public class SpecialSection<T extends SpecialItem> extends Section<T> {
 
@@ -34,8 +37,8 @@ public class SpecialSection<T extends SpecialItem> extends Section<T> {
     }
 
     @Override
-    int clearUnused() {
-        return 0;
+    boolean clearUnused() {
+        return false;
     }
     @Override
     void clearUsageTypes() {

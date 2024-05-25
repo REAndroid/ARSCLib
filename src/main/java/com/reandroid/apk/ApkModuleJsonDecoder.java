@@ -102,7 +102,7 @@ public class ApkModuleJsonDecoder extends ApkModuleDecoder{
         addDecodedPath(AndroidManifestBlock.FILE_NAME);
     }
     private File toResJson(File mainDirectory, String path){
-        File file = new File(mainDirectory, ApkUtil.RES_JSON_NAME);
+        File file = new File(mainDirectory, TableBlock.RES_JSON_DIRECTORY_NAME);
         path = path + ApkUtil.JSON_FILE_EXTENSION;
         path = path.replace('/', File.separatorChar);
         return new File(file, path);

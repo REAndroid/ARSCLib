@@ -15,8 +15,8 @@
   */
 package com.reandroid.arsc.array;
 
-import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.base.BlockArray;
+import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.chunk.SpecBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
 import com.reandroid.arsc.container.SpecTypePair;
@@ -26,13 +26,16 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
-import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public class TypeBlockArray extends BlockArray<TypeBlock>
@@ -76,17 +79,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return result;
     }
     public void removeEmptyBlocks(){
-        TypeBlock[] typeBlocks = getChildes().clone();
-        boolean foundEmpty = false;
-        for(TypeBlock typeBlock:typeBlocks){
-            if(typeBlock.isEmpty()){
-                super.remove(typeBlock, false);
-                foundEmpty=true;
-            }
-        }
-        if(foundEmpty){
-            trimNullBlocks();
-        }
+        removeIf(TypeBlock::isEmpty);
     }
     public Entry getOrCreateEntry(short entryId, String qualifiers){
         TypeBlock typeBlock=getOrCreate(qualifiers);
@@ -149,30 +142,22 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return typeBlock;
     }
     public TypeBlock getTypeBlock(String qualifiers){
-        TypeBlock[] items=getChildes();
-        if(items==null){
-            return null;
-        }
-        int max=items.length;
-        for(int i=0;i<max;i++){
-            TypeBlock block=items[i];
-            if(block.getResConfig().isEqualQualifiers(qualifiers)){
-                return block;
+        Iterator<TypeBlock> iterator = iterator();
+        while (iterator.hasNext()){
+            TypeBlock typeBlock = iterator.next();
+            if(typeBlock.getResConfig().isEqualQualifiers(qualifiers)){
+                return typeBlock;
             }
         }
         return null;
     }
     public TypeBlock getTypeBlock(ResConfig config){
-        if(config==null){
+        if(config == null){
             return null;
         }
-        TypeBlock[] items = getChildes();
-        if(items == null){
-            return null;
-        }
-        int length = items.length;
-        for(int i = 0; i < length; i++){
-            TypeBlock typeBlock = items[i];
+        Iterator<TypeBlock> iterator = iterator();
+        while (iterator.hasNext()){
+            TypeBlock typeBlock = iterator.next();
             if(typeBlock == null){
                 continue;
             }
@@ -183,16 +168,12 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return null;
     }
     public TypeBlock getTypeBlock(ResConfig config, boolean sparse){
-        if(config==null){
+        if(config == null){
             return null;
         }
-        TypeBlock[] items = getChildes();
-        if(items == null){
-            return null;
-        }
-        int length = items.length;
-        for(int i = 0; i < length; i++){
-            TypeBlock typeBlock = items[i];
+        Iterator<TypeBlock> iterator = iterator();
+        while (iterator.hasNext()){
+            TypeBlock typeBlock = iterator.next();
             if(typeBlock == null || sparse != typeBlock.isSparse()){
                 continue;
             }
@@ -203,14 +184,10 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return null;
     }
     public void setTypeId(byte id){
-        this.mTypeId=id;
-        TypeBlock[] allChildes=getChildes();
-        if(allChildes==null){
-            return;
-        }
-        int max=allChildes.length;
-        for(int i=0;i<max;i++){
-            TypeBlock typeBlock = allChildes[i];
+        this.mTypeId = id;
+        Iterator<TypeBlock> iterator = iterator();
+        while (iterator.hasNext()){
+            TypeBlock typeBlock = iterator.next();
             typeBlock.setTypeId(id);
         }
     }
@@ -225,13 +202,9 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         if(mTypeId != 0){
             return mTypeId;
         }
-        TypeBlock[] childes = getChildes();
-        if(childes == null){
-            return 0;
-        }
-        int length = childes.length;
-        for(int i=0; i < length; i++){
-            TypeBlock typeBlock = childes[i];
+        Iterator<TypeBlock> iterator = iterator();
+        while (iterator.hasNext()){
+            TypeBlock typeBlock = iterator.next();
             if(typeBlock == null){
                 continue;
             }
@@ -249,7 +222,9 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     public Set<ResConfig> listResConfig(){
         Set<ResConfig> unique = new HashSet<>();
-        for(TypeBlock typeBlock : getChildes()){
+        Iterator<TypeBlock> iterator = iterator();
+        while (iterator.hasNext()){
+            TypeBlock typeBlock = iterator.next();
             unique.add(typeBlock.getResConfig());
         }
         return unique;
@@ -293,14 +268,6 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
             return parent.getSpecBlock();
         }
         return null;
-    }
-    @Override
-    protected boolean remove(TypeBlock block, boolean trim){
-        if(block==null){
-            return false;
-        }
-        block.cleanEntries();
-        return super.remove(block, trim);
     }
     @Override
     public TypeBlock newInstance() {
@@ -352,7 +319,9 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     public int getHighestEntryId(){
         int result = -1;
-        for(TypeBlock typeBlock:getChildes()){
+        Iterator<TypeBlock> iterator = iterator();
+        while (iterator.hasNext()){
+            TypeBlock typeBlock = iterator.next();
             int high = typeBlock.getEntryArray().getHighestEntryId();
             if(high > result){
                 result = high;
@@ -362,7 +331,9 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
     }
     public int getHighestEntryCount(){
         int result = 0;
-        for(TypeBlock typeBlock:getChildes()){
+        Iterator<TypeBlock> iterator = iterator();
+        while (iterator.hasNext()){
+            TypeBlock typeBlock = iterator.next();
             int count = typeBlock.getEntryArray().size();
             if(count > result){
                 result = count;
@@ -371,16 +342,20 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         return result;
     }
     public void setEntryCount(int count){
-        for(TypeBlock typeBlock:getChildes()){
+        Iterator<TypeBlock> iterator = iterator();
+        while (iterator.hasNext()){
+            TypeBlock typeBlock = iterator.next();
             if(!typeBlock.isSparse()){
                 typeBlock.setEntryCount(count);
             }
         }
     }
     public TypeString getTypeString(){
-        for(TypeBlock typeBlock:getChildes()){
-            TypeString typeString=typeBlock.getTypeString();
-            if(typeString!=null){
+        Iterator<TypeBlock> iterator = iterator();
+        while (iterator.hasNext()){
+            TypeBlock typeBlock = iterator.next();
+            TypeString typeString = typeBlock.getTypeString();
+            if(typeString != null){
                 return typeString;
             }
         }
@@ -423,23 +398,6 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
                     typeBlock.getResConfig(), typeBlock.isSparse());
             exist.merge(typeBlock);
         }
-    }
-    /**
-     * TOBEREMOVED
-     *
-     * It's mistake to have this method
-     *
-     */
-    @Deprecated
-    public Entry searchByEntryName(String entryName){
-        if(entryName==null){
-            return null;
-        }
-        TypeBlock[] childes = getChildes();
-        if(childes==null || childes.length==0){
-            return null;
-        }
-        return childes[0].getEntry(entryName);
     }
     @Override
     public int compare(TypeBlock typeBlock1, TypeBlock typeBlock2) {

@@ -31,12 +31,13 @@ import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.item.TableString;
-import com.reandroid.arsc.pool.TableStringPool;
-import com.reandroid.utils.collection.*;
 import com.reandroid.arsc.model.FrameworkTable;
+import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.identifiers.PackageIdentifier;
+import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.xml.XMLDocument;
 import com.reandroid.xml.XMLElement;
 
@@ -556,8 +557,6 @@ public class ApkModule implements ApkFile, Closeable {
             }
             logVerbose("Dir validated: '"+path+"' -> '"+pathNew+"'");
         }
-        TableStringPool stringPool= getTableBlock().getStringPool();
-        stringPool.refreshUniqueIdMap();
         getTableBlock().refresh();
     }
     public void setResourcesRootDir(String dirName) {
@@ -581,8 +580,6 @@ public class ApkModule implements ApkFile, Closeable {
             }
             logVerbose("Root changed: '"+path+"' -> '"+pathNew+"'");
         }
-        TableStringPool stringPool= getTableBlock().getStringPool();
-        stringPool.refreshUniqueIdMap();
         getTableBlock().refresh();
     }
     public List<ResFile> listResFiles() {
@@ -597,7 +594,7 @@ public class ApkModule implements ApkFile, Closeable {
         TableStringPool stringPool= tableBlock.getStringPool();
         for(InputSource inputSource : getInputSources()){
             String name = inputSource.getAlias();
-            Iterator<TableString> iterator = stringPool.getItems(name);
+            Iterator<TableString> iterator = stringPool.getAll(name);
             while (iterator.hasNext()){
                 TableString tableString = iterator.next();
                 List<Entry> entryList = filterResFileEntries(tableString, resourceId, resConfig);
@@ -642,7 +639,7 @@ public class ApkModule implements ApkFile, Closeable {
         TableBlock tableBlock = getTableBlock();
         if (tableBlock != null) {
             TableStringPool stringPool = tableBlock.getStringPool();
-            Iterator<TableString> iterator = stringPool.getItems(path);
+            Iterator<TableString> iterator = stringPool.getAll(path);
             Predicate<Entry> filter = entry -> entry.isScalar() &&
                     TypeBlock.canHaveResourceFile(entry.getTypeName());
             while (iterator.hasNext()) {

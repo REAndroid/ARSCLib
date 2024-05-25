@@ -20,11 +20,8 @@ import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.base.Creator;
 
 public class CreatorArray<T extends Block> extends BlockArray<T> {
-    private final Creator<T> creator;
-
     public CreatorArray(Creator<T> creator){
-        super(creator.newArrayInstance(0));
-        this.creator = creator;
+        super(creator);
     }
 
     @Override
@@ -32,10 +29,10 @@ public class CreatorArray<T extends Block> extends BlockArray<T> {
     }
     @Override
     public T[] newArrayInstance(int length) {
-        return creator.newArrayInstance(length);
+        return getCreator().newArrayInstance(length);
     }
     @Override
     public T newInstance() {
-        return creator.newInstance();
+        return getCreator().newInstance();
     }
 }

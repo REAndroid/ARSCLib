@@ -24,14 +24,14 @@ import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResValue;
 import com.reandroid.arsc.value.ValueType;
-import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
 import java.util.Iterator;
 
-
 public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<JSONArray> {
+
     public EntryArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart){
         super(offsets, itemCount, itemStart);
     }
@@ -73,8 +73,8 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         return super.getOffsetArray() instanceof SparseOffsetsArray;
     }
     public void destroy(){
-        for(Entry entry:listItems()){
-            if(entry!=null){
+        for(Entry entry : listItems()){
+            if(entry != null){
                 entry.setNull(true);
             }
         }
@@ -173,17 +173,16 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
 
     @Override
     public JSONArray toJson() {
-        JSONArray jsonArray=new JSONArray();
-        int index=0;
+        JSONArray jsonArray = new JSONArray();
         String name_id = Entry.NAME_id;
-        for(Entry entry : listItems(true)){
+        Iterator<Entry> iterator = iterator(true);
+        while (iterator.hasNext()) {
+            Entry entry = iterator.next();
             JSONObject childObject = entry.toJson();
-            if(childObject==null){
-                continue;
+            if(childObject != null) {
+                childObject.put(name_id, entry.getId());
+                jsonArray.put(childObject);
             }
-            childObject.put(name_id, entry.getId());
-            jsonArray.put(index, childObject);
-            index++;
         }
         return jsonArray;
     }
@@ -201,9 +200,9 @@ public class EntryArray extends OffsetBlockArray<Entry> implements JSONConvert<J
         int length=json.length();
         ensureSize(length);
         String name_id = Entry.NAME_id;
-        for(int i=0;i<length;i++){
+        for(int i = 0; i < length; i++){
             JSONObject jsonObject = json.optJSONObject(i);
-            if(jsonObject==null){
+            if(jsonObject == null){
                 continue;
             }
             int id = jsonObject.getInt(name_id);

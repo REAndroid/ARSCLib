@@ -39,7 +39,7 @@ public class TypeString extends StringItem {
         return getIndex()+1;
     }
     @Override
-    public StyleItem getStyle(){
+    public StyleItem getOrCreateStyle(){
         // Type don't have style unless to obfuscate/confuse other decompilers
         return null;
     }

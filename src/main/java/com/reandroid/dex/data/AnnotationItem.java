@@ -16,21 +16,26 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.arsc.item.ByteItem;
-import com.reandroid.dex.base.*;
+import com.reandroid.dex.base.CountedList;
+import com.reandroid.dex.base.Ule128Item;
+import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.TypeId;
-import com.reandroid.dex.key.*;
+import com.reandroid.dex.key.DataKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.ModifiableKeyItem;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliAnnotationElement;
 import com.reandroid.dex.smali.model.SmaliAnnotationItem;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
-import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
@@ -85,8 +90,8 @@ public class AnnotationItem extends DataItem
     public SectionType<AnnotationItem> getSectionType() {
         return SectionType.ANNOTATION_ITEM;
     }
-    public int remove(Predicate<AnnotationElement> filter){
-        return annotationElements.remove(filter);
+    public boolean removeIf(Predicate<AnnotationElement> filter){
+        return annotationElements.removeIf(filter);
     }
     public void remove(AnnotationElement element){
         annotationElements.remove(element);

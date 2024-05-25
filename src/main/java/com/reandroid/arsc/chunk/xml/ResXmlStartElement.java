@@ -15,11 +15,11 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
-import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.array.ResXmlAttributeArray;
+import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.item.ShortItem;
+import com.reandroid.utils.StringsUtil;
 
-import java.util.Collection;
 import java.util.Iterator;
 
 public class ResXmlStartElement extends BaseXmlChunk {
@@ -258,9 +258,6 @@ public class ResXmlStartElement extends BaseXmlChunk {
             endElement.setString(name);
         }
     }
-    public Collection<ResXmlAttribute> listResXmlAttributes(){
-        return getResXmlAttributeArray().listItems();
-    }
     public Iterator<ResXmlAttribute> iterator(){
         return getResXmlAttributeArray().iterator();
     }
@@ -339,23 +336,11 @@ public class ResXmlStartElement extends BaseXmlChunk {
 
     @Override
     public String toString(){
-        String txt=getTagName();
-        if(txt==null){
+        String tag = getTagName();
+        if(tag == null){
             return super.toString();
         }
-        StringBuilder builder=new StringBuilder();
-        builder.append(txt);
-        ResXmlAttribute[] allAttr=mAttributeArray.getChildes();
-        if(allAttr!=null){
-            for(int i=0;i<allAttr.length;i++){
-                if(i>10){
-                    break;
-                }
-                builder.append(" ");
-                builder.append(allAttr[i].toString());
-            }
-        }
-        return builder.toString();
+        return tag + " " + StringsUtil.join(iterator(), ' ');
     }
 
     private static final short ATTRIBUTES_UNIT_SIZE=20;

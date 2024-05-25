@@ -19,14 +19,16 @@ import android.content.res.XmlResourceParser;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.value.ValueType;
+import com.reandroid.utils.ObjectsUtil;
 import org.xmlpull.v1.XmlPullParserException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 public class ResXmlPullParser implements XmlResourceParser {
     private PackageBlock mCurrentPackage;
@@ -559,9 +561,11 @@ public class ResXmlPullParser implements XmlResourceParser {
         if(element == null){
             return null;
         }
-        for(ResXmlAttribute attribute:element.listAttributes()){
-            if(Objects.equals(namespace, attribute.getUri())
-                    && Objects.equals(name, attribute.getName())){
+        Iterator<ResXmlAttribute> iterator = element.getAttributes();
+        while (iterator.hasNext()){
+            ResXmlAttribute attribute = iterator.next();
+            if(ObjectsUtil.equals(namespace, attribute.getUri())
+                    && ObjectsUtil.equals(name, attribute.getName())){
                 return attribute;
             }
         }
@@ -569,7 +573,7 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     public ResXmlElement getCurrentElement() {
         int type = mEventList.getType();
-        if(type==START_TAG||type==END_TAG){
+        if(type == START_TAG || type == END_TAG){
             return mEventList.getElement();
         }
         return null;

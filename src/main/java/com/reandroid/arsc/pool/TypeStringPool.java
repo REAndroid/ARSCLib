@@ -19,18 +19,21 @@ import com.reandroid.arsc.array.OffsetArray;
 import com.reandroid.arsc.array.StringArray;
 import com.reandroid.arsc.array.TypeStringArray;
 import com.reandroid.arsc.chunk.TypeBlock;
-import com.reandroid.arsc.group.StringGroup;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.TypeString;
+import com.reandroid.utils.collection.CollectionUtil;
+
 
 public class TypeStringPool extends StringPool<TypeString> {
+
     private final IntegerItem mTypeIdOffset;
+
     public TypeStringPool(boolean is_utf8, IntegerItem typeIdOffset) {
         super(is_utf8, false);
         this.mTypeIdOffset = typeIdOffset;
     }
     public int getLastId(){
-        int count = countStrings();
+        int count = size();
         return toTypeId(count - 1);
     }
     public int idOf(String typeName){
@@ -52,7 +55,7 @@ public class TypeStringPool extends StringPool<TypeString> {
      * This might not working if duplicate type names are present
      **/
     public TypeString getByName(String name){
-        for(TypeString typeString:listStrings()){
+        for(TypeString typeString : this){
             if(name.equals(typeString.get())){
                 return typeString;
             }
@@ -64,14 +67,10 @@ public class TypeStringPool extends StringPool<TypeString> {
     }
     public TypeString getOrCreate(int typeId, String typeName){
         StringArray<TypeString> stringsArray = getStringsArray();
-        int old = stringsArray.size();
         int size = toIndex(typeId) + 1;
         stringsArray.ensureSize(size);
         TypeString typeString = getById(typeId);
         typeString.set(typeName);
-        if(old != stringsArray.size()){
-            updateUniqueIdMap(typeString);
-        }
         return typeString;
     }
     private int toIndex(int typeId){
@@ -86,12 +85,12 @@ public class TypeStringPool extends StringPool<TypeString> {
     @Deprecated
     @Override
     public final TypeString getOrCreate(String str){
-        StringGroup<TypeString> group = get(str);
-        if(group==null||group.size()==0){
+        TypeString typeString = CollectionUtil.getSingle(getAll(str));
+        if(typeString == null){
             throw new IllegalArgumentException("Can not create TypeString (" + str
                     +") without type id. use getOrCreate(typeId, typeName)");
         }
-        return group.get(0);
+        return typeString;
     }
     @Override
     StringArray<TypeString> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {

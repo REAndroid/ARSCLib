@@ -21,6 +21,7 @@ import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ResValue;
 import com.reandroid.arsc.value.ValueType;
+import com.reandroid.utils.collection.ArrayCollection;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -32,7 +33,7 @@ public class ReferenceResolver{
     private int limit;
     public ReferenceResolver(TableBlock entryStore){
         this.entryStore = entryStore;
-        this.results = new ArrayList<>();
+        this.results = new ArrayCollection<>();
         this.resolvedIds = new HashSet<>();
         this.limit = -1;
     }
@@ -41,7 +42,7 @@ public class ReferenceResolver{
     }
     public synchronized Entry resolve(int referenceId, Predicate<Entry> filter){
         resolveReference(referenceId, filter);
-        List<Entry> results = new ArrayList<>(this.results);
+        List<Entry> results = new ArrayCollection<>(this.results);
         reset();
         if(results.size() > 0){
             return results.get(0);
@@ -131,13 +132,20 @@ public class ReferenceResolver{
         }
         @Override
         public int compare(Entry entry1, Entry entry2) {
+            ResConfig config = this.config;
             ResConfig config1 = entry1.getResConfig();
             ResConfig config2 = entry2.getResConfig();
-            if (config.equals(config1)){
+            if(config.equals(config1)){
+                if(config.equals(config2)) {
+                    return 0;
+                }
                 return -1;
             }
-            if(config.equals(config2)){
+            if(config.equals(config2) || config1.isEqualOrMoreSpecificThan(config2)){
                 return 1;
+            }
+            if(config2.isEqualOrMoreSpecificThan(config1)) {
+                return -1;
             }
             return 0;
         }

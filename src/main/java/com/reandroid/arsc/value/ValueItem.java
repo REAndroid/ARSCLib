@@ -25,15 +25,17 @@ import com.reandroid.arsc.coder.CoderUnknownStringRef;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.coder.XmlSanitizer;
-import com.reandroid.arsc.item.*;
-import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.BlockItem;
+import com.reandroid.arsc.item.ReferenceItem;
+import com.reandroid.arsc.item.StringItem;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.xml.StyleDocument;
 import org.xmlpull.v1.XmlSerializer;
@@ -42,14 +44,17 @@ import java.io.IOException;
 import java.util.Objects;
 
 public abstract class ValueItem extends BlockItem implements Value,
-        JSONConvert<JSONObject>{
+        JSONConvert<JSONObject> {
+
     private ReferenceItem mStringReference;
     private final int sizeOffset;
+
     public ValueItem(int bytesLength, int sizeOffset) {
         super(bytesLength);
         this.sizeOffset = sizeOffset;
         writeSize();
     }
+
     public boolean isUndefined(){
         return getValueType() == ValueType.NULL && getData() == 0;
     }
@@ -86,6 +91,7 @@ public abstract class ValueItem extends BlockItem implements Value,
         updateSize();
     }
 
+    @SuppressWarnings("unused")
     byte getRes0(){
         return getBytesInternal()[this.sizeOffset + OFFSET_RES0];
     }
@@ -162,9 +168,8 @@ public abstract class ValueItem extends BlockItem implements Value,
         putInteger(getBytesInternal(), this.sizeOffset + OFFSET_DATA, data);
     }
 
-
     public StringItem getDataAsPoolString(){
-        if(getValueType()!=ValueType.STRING){
+        if(getValueType() != ValueType.STRING){
             return null;
         }
         StringPool<?> stringPool = getStringPool();
@@ -265,10 +270,10 @@ public abstract class ValueItem extends BlockItem implements Value,
     }
     public StyleDocument getValueAsStyleDocument(){
         StringItem stringItem = getDataAsPoolString();
-        if(!(stringItem instanceof TableString)){
-            return null;
+        if(stringItem != null) {
+            return stringItem.getStyleDocument();
         }
-        return ((TableString)stringItem).getStyleDocument();
+        return null;
     }
     public void setValueAsString(StyleDocument styledString){
         if(styledString == null){
@@ -276,12 +281,11 @@ public abstract class ValueItem extends BlockItem implements Value,
             return;
         }
         StringPool<?> stringPool = getStringPool();
-        if(!styledString.hasElements() || !(stringPool instanceof TableStringPool)){
+        if(!styledString.hasElements()){
             setValueAsString(XmlSanitizer.unEscapeUnQuote(styledString.getXml(false)));
             return;
         }
-        TableStringPool tableStringPool = (TableStringPool) stringPool;
-        StringItem stringItem = tableStringPool.getOrCreate(styledString);
+        StringItem stringItem = stringPool.getOrCreate(styledString);
         setData(stringItem.getIndex());
         setValueType(ValueType.STRING);
     }
@@ -318,9 +322,6 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         serializer.text(value);
     }
-    public void serializeAttribute(XmlSerializer serializer, String name) throws IOException {
-        serializeAttribute(serializer, null, name, false);
-    }
     public void serializeAttribute(XmlSerializer serializer, String name, boolean ignore_empty) throws IOException {
         serializeAttribute(serializer, null, name, ignore_empty);
     }
@@ -345,12 +346,11 @@ public abstract class ValueItem extends BlockItem implements Value,
         serializer.attribute(namespace, name, value);
     }
     public boolean getValueAsBoolean(){
-        return getData()!=0;
+        return getData() != 0;
     }
-    public void setValueAsBoolean(boolean val){
+    public void setValueAsBoolean(boolean value){
         setValueType(ValueType.BOOLEAN);
-        int data=val?0xffffffff:0;
-        setData(data);
+        setData(value ? 0xffffffff : 0);
     }
     @Override
     public void setValue(EncodeResult encodeResult){
@@ -363,12 +363,8 @@ public abstract class ValueItem extends BlockItem implements Value,
         }
         setTypeAndData(encodeResult.valueType, encodeResult.value);
     }
-    public void setTypeAndData(ValueType valueType, int data){
-        setData(data);
-        setValueType(valueType);
-    }
-    public void merge(ValueItem valueItem){
-        if(valueItem == null || valueItem==this){
+    public void merge(ValueItem valueItem) {
+        if(valueItem == null || valueItem == this) {
             return;
         }
         int size = valueItem.getSize();
@@ -376,8 +372,16 @@ public abstract class ValueItem extends BlockItem implements Value,
             setSize(valueItem.getSize());
         }
         ValueType coming = valueItem.getValueType();
-        if(coming == ValueType.STRING){
-            setValueAsString(valueItem.getValueAsString());
+        if(coming == ValueType.STRING) {
+            StringItem stringItem = valueItem.getDataAsPoolString();
+            if(stringItem != null) {
+                StyleDocument document = stringItem.getStyleDocument();
+                if(document != null) {
+                    setValueAsString(document);
+                }else {
+                    setValueAsString(stringItem.get());
+                }
+            }
         }else {
             setTypeAndData(coming, valueItem.getData());
         }
@@ -465,9 +469,14 @@ public abstract class ValueItem extends BlockItem implements Value,
         JSONObject jsonObject = new JSONObject();
         ValueType valueType = getValueType();
         jsonObject.put(NAME_value_type, valueType.name());
-        if(valueType==ValueType.STRING){
-            jsonObject.put(NAME_data, getValueAsString());
-        }else if(valueType==ValueType.BOOLEAN){
+        if(valueType == ValueType.STRING) {
+            StringItem stringItem = getDataAsPoolString();
+            if(stringItem.hasStyle()) {
+                jsonObject.put(NAME_data, getDataAsPoolString().toJson());
+            }else {
+                jsonObject.put(NAME_data, stringItem.get());
+            }
+        }else if(valueType == ValueType.BOOLEAN) {
             jsonObject.put(NAME_data, getValueAsBoolean());
         }else {
             jsonObject.put(NAME_data, getData());
@@ -476,14 +485,24 @@ public abstract class ValueItem extends BlockItem implements Value,
     }
     @Override
     public void fromJson(JSONObject json) {
-        ValueType valueType = ValueType.fromName(json.getString(NAME_value_type));
-        if(valueType==ValueType.STRING){
-            setValueAsString(json.optString(NAME_data, ""));
-        }else if(valueType==ValueType.BOOLEAN){
-            setValueAsBoolean(json.getBoolean(NAME_data));
-        }else {
-            setValueType(valueType);
-            setData(json.getInt(NAME_data));
+        if(json != null) {
+            ValueType valueType = ValueType.fromName(json.getString(NAME_value_type));
+            if(valueType == ValueType.STRING) {
+                JSONObject jsonObject = json.optJSONObject(NAME_data);
+                StringPool<?> stringPool = getStringPool();
+                StringItem stringItem;
+                if(jsonObject != null) {
+                    stringItem = stringPool.getOrCreate(jsonObject);
+                }else {
+                    stringItem = stringPool.getOrCreate(json.getString(NAME_data));
+                }
+                setTypeAndData(valueType, stringItem.getIndex());
+            }else if(valueType == ValueType.BOOLEAN){
+                setValueAsBoolean(json.getBoolean(NAME_data));
+            }else {
+                setValueType(valueType);
+                setData(json.getInt(NAME_data));
+            }
         }
     }
 

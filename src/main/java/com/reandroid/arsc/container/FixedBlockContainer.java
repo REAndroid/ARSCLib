@@ -19,7 +19,9 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockContainer;
 
 public class FixedBlockContainer extends BlockContainer<Block> {
+
     private final Block[] mChildes;
+    
     public FixedBlockContainer(int childesCount){
         super();
         Block[] childes;

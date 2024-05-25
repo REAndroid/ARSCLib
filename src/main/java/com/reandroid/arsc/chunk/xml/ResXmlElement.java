@@ -16,25 +16,27 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.array.ResXmlAttributeArray;
-import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.model.ResourceLibrary;
+import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ResXmlString;
+import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.common.Namespace;
-import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
-import com.reandroid.utils.collection.SingleIterator;
 import com.reandroid.utils.collection.*;
-import com.reandroid.xml.*;
+import com.reandroid.xml.XMLAttribute;
+import com.reandroid.xml.XMLComment;
+import com.reandroid.xml.XMLElement;
+import com.reandroid.xml.XMLUtil;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -217,7 +219,9 @@ public class ResXmlElement extends ResXmlNode implements
     }
     public int autoSetAttributeNamespaces(boolean removeNoIdPrefix) {
         int changedCount = 0;
-        for(ResXmlAttribute attribute : listAttributes()){
+        Iterator<ResXmlAttribute> attributes = getAttributes();
+        while (attributes.hasNext()){
+            ResXmlAttribute attribute = attributes.next();
             boolean changed = attribute.autoSetNamespace(removeNoIdPrefix);
             if(changed){
                 changedCount ++;
@@ -246,7 +250,9 @@ public class ResXmlElement extends ResXmlNode implements
     }
     public int autoSetAttributeNames(boolean removeNoIdPrefix) {
         int changedCount = 0;
-        for(ResXmlAttribute attribute : listAttributes()){
+        Iterator<ResXmlAttribute> attributes = getAttributes();
+        while (attributes.hasNext()){
+            ResXmlAttribute attribute = attributes.next();
             boolean changed = attribute.autoSetName(removeNoIdPrefix);
             if(changed){
                 changedCount ++;
@@ -319,11 +325,6 @@ public class ResXmlElement extends ResXmlNode implements
         }
         return count;
     }
-
-    @Deprecated
-    public int remove(Predicate<? super ResXmlNode> predicate) {
-        return removeIf(predicate);
-    }
     public void changeIndex(ResXmlElement element, int index){
         getNodeListBlockInternal().moveTo(element, index);
     }
@@ -349,11 +350,11 @@ public class ResXmlElement extends ResXmlNode implements
     }
     public int indexOf(ResXmlNode resXmlNode, int def){
         int index = 0;
-        for(ResXmlNode xmlNode : mBody.getChildes()){
-            if(xmlNode == resXmlNode){
+        for (ResXmlNode xmlNode : this) {
+            if (xmlNode == resXmlNode) {
                 return index;
             }
-            index++;
+            index ++;
         }
         return def;
     }
@@ -634,68 +635,12 @@ public class ResXmlElement extends ResXmlNode implements
         }
         return null;
     }
-    /**
-     * Use setName(String)
-     * */
-    @Deprecated
-    public void setTag(String tag){
-        setName(tag);
-    }
-    /**
-     * Use getName(true)
-     * */
-    @Deprecated
-    public String getTagName(){
-        return getName(true);
-    }
-    /**
-     * Use getName()
-     * */
-    @Deprecated
-    public String getTag(){
-        return getName();
-    }
-    /**
-     * Use getUri()
-     * */
-    @Deprecated
-    public String getTagUri(){
-        return getUri();
-    }
-    /**
-     * Use getPrefix()
-     * */
-    @Deprecated
-    public String getTagPrefix(){
-        return getPrefix();
-    }
-    /**
-     * Use getNamespace()
-     * */
-    @Deprecated
-    public ResXmlNamespace getTagNamespace(){
-        return getNamespace();
-    }
-    /**
-     * Use setNamespace(Namespace)
-     * */
-    @Deprecated
-    public void setTagNamespace(Namespace namespace){
-        setNamespace(namespace);
-    }
     public void setNamespace(Namespace namespace){
         if(namespace != null){
             setNamespace(namespace.getUri(), namespace.getPrefix());
         }else {
             setNamespace(null, null);
         }
-    }
-    /**
-     * Use setNamespace(uri, prefix)
-     * */
-    @Deprecated
-    public void setTagNamespace(String uri, String prefix){
-        setNamespace(uri, prefix);
     }
     public void setNamespace(String uri, String prefix){
         ResXmlStartElement startElement = getStartElement();
@@ -752,35 +697,25 @@ public class ResXmlElement extends ResXmlNode implements
     }
     public int getAttributeCount() {
         ResXmlStartElement startElement=getStartElement();
-        if(startElement!=null){
+        if(startElement != null){
             return startElement.getResXmlAttributeArray().size();
         }
         return 0;
     }
     public ResXmlAttribute getAttributeAt(int index){
-        ResXmlStartElement startElement=getStartElement();
-        if(startElement!=null){
+        ResXmlStartElement startElement = getStartElement();
+        if(startElement != null){
             return startElement.getResXmlAttributeArray().get(index);
         }
         return null;
     }
-    public Collection<ResXmlAttribute> listAttributes(){
-        ResXmlStartElement startElement=getStartElement();
-        if(startElement!=null){
-            return startElement.listResXmlAttributes();
-        }
-        return new ArrayList<>();
-    }
     public ResXmlStringPool getStringPool(){
-        Block parent=getParent();
-        while (parent!=null){
+        Block parent = getParent();
+        while (parent != null){
             if(parent instanceof ResXmlDocument){
                 return ((ResXmlDocument)parent).getStringPool();
             }
-            if(parent instanceof ResXmlElement){
-                return ((ResXmlElement)parent).getStringPool();
-            }
-            parent=parent.getParent();
+            parent = parent.getParent();
         }
         return null;
     }
@@ -834,27 +769,8 @@ public class ResXmlElement extends ResXmlNode implements
         }
         return false;
     }
-    @Deprecated
-    public boolean removeElement(ResXmlElement element){
-        return remove(element);
-    }
-    @Deprecated
-    public boolean removeNode(ResXmlNode node){
-        return remove(node);
-    }
     public int countElements(){
         return CollectionUtil.count(getElements());
-    }
-    @Deprecated
-    public void clearChildes(){
-        ResXmlNode[] copyOfNodeList=mBody.getChildes().toArray(new ResXmlNode[0]);
-        for(ResXmlNode xmlNode:copyOfNodeList){
-            if(xmlNode==null){
-                continue;
-            }
-            xmlNode.onRemoved();
-            mBody.remove(xmlNode);
-        }
     }
     public boolean hasText(){
         return iterator(ResXmlTextNode.class).hasNext();
@@ -871,24 +787,22 @@ public class ResXmlElement extends ResXmlNode implements
     public List<ResXmlTextNode> listXmlTextNodes(){
         return CollectionUtil.toList(getTextNodes());
     }
-    public int removeElements(Predicate<? super ResXmlElement> predicate){
-        List<ResXmlElement> removeList = CollectionUtil.toList(getElements(predicate));
-        Iterator<ResXmlElement> iterator = removeList.iterator();
-        int count = 0;
-        while (iterator.hasNext()){
-            boolean removed = remove(iterator.next());
-            if(removed){
-                count ++;
+    public void removeElements(Predicate<? super ResXmlElement> predicate){
+        removeIf(node -> {
+            if(node instanceof ResXmlElement) {
+                return predicate.test((ResXmlElement) node);
             }
-        }
-        return count;
+            return false;
+        });
     }
     ResXmlStartNamespace getStartNamespaceByUriRef(int uriRef){
         if(uriRef<0){
             return null;
         }
-        for(ResXmlStartNamespace ns:mStartNamespaceList.getChildes()){
-            if(uriRef==ns.getUriReference()){
+        Iterator<ResXmlStartNamespace> iterator = mStartNamespaceList.iterator();
+        while (iterator.hasNext()){
+            ResXmlStartNamespace ns = iterator.next();
+            if(uriRef == ns.getUriReference()){
                 return ns;
             }
         }
@@ -928,7 +842,7 @@ public class ResXmlElement extends ResXmlNode implements
         addStartNamespace(startNamespace);
         addEndNamespace(endNamespace, true);
         ResXmlStringPool stringPool = getStringPool();
-        ResXmlString xmlString = stringPool.createNew(uri);
+        ResXmlString xmlString = stringPool.getOrCreate(uri);
         startNamespace.setUriReference(xmlString.getIndex());
         startNamespace.setPrefix(prefix);
 
@@ -1492,7 +1406,9 @@ public class ResXmlElement extends ResXmlNode implements
             xmlElement.addNamespace(startNamespace.decodeToXml());
         }
         xmlElement.setNamespace(getNamespace());
-        for(ResXmlAttribute resXmlAttribute:listAttributes()){
+        Iterator<ResXmlAttribute> attributes = getAttributes();
+        while (attributes.hasNext()){
+            ResXmlAttribute resXmlAttribute = attributes.next();
             XMLAttribute xmlAttribute = resXmlAttribute.toXml(decode);
             xmlElement.addAttribute(xmlAttribute);
             if(decode) {
@@ -1549,76 +1465,6 @@ public class ResXmlElement extends ResXmlNode implements
             return builder.toString();
         }
         return "NULL";
-    }
-
-
-    /**
-     * Use getElement(name)
-     * */
-    @Deprecated
-    public ResXmlElement getElementByTagName(String name){
-        return getElement(name);
-    }
-    /**
-     * Use getRootElement()
-     * */
-    @Deprecated
-    public ResXmlElement getRootResXmlElement(){
-        ResXmlElement parent = getParentElement();
-        if(parent != null){
-            return parent.getRootElement();
-        }
-        return getRootElement();
-    }
-
-    /**
-     * Use getParentElement()
-     * */
-    @Deprecated
-    public ResXmlElement getParentResXmlElement(){
-        return getParentElement();
-    }
-    /**
-     * Use getTextNodes()
-     * */
-    @Deprecated
-    public Iterator<ResXmlTextNode> getResXmlTextNodes(){
-        return getTextNodes();
-    }
-    /**
-     * Use remove(Predicate)
-     * */
-    @Deprecated
-    public int removeNodes(Predicate<? super ResXmlNode> predicate){
-        return removeIf(predicate);
-    }
-    /**
-     * Use iterator(Predicate)
-     * */
-    @Deprecated
-    public Iterator<ResXmlNode> getResXmlNodes(Predicate<? super ResXmlNode> predicate){
-        return iterator(predicate);
-    }
-    /**
-     * Use iterator()
-     * */
-    @Deprecated
-    public Iterator<ResXmlNode> getResXmlNodes(){
-        return iterator();
-    }
-    /**
-     * Use get(int)
-     * */
-    @Deprecated
-    public ResXmlNode getResXmlNode(int position){
-        return get(position);
-    }
-    /**
-     * Use size()
-     * */
-    @Deprecated
-    public int countResXmlNodes(){
-        return size();
     }
 
 

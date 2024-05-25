@@ -15,26 +15,26 @@
   */
 package com.reandroid.arsc.item;
 
-import com.reandroid.arsc.array.StyleArray;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.xml.StyleSpanEventSet;
-import com.reandroid.arsc.pool.StringPool;
-import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.xml.SpanSet;
 import com.reandroid.xml.StyleDocument;
 import com.reandroid.xml.StyleElement;
+import com.reandroid.xml.StyleSpanEventSet;
 
 import java.io.IOException;
-import java.util.*;
+import java.io.OutputStream;
+import java.util.Iterator;
 
 public class StyleItem extends FixedBlockContainer implements
-        Iterable<StyleSpan>, SpanSet<StyleSpan>, JSONConvert<JSONObject> {
+        Comparable<StyleItem>, Iterable<StyleSpan>, SpanSet<StyleSpan>, JSONConvert<JSONObject> {
 
     private final BlockList<StyleSpan> spanList;
     private final IntegerItem endBlock;
@@ -67,6 +67,9 @@ public class StyleItem extends FixedBlockContainer implements
     public int size(){
         return spanList.size();
     }
+    public boolean hasSpans() {
+        return spanList.size() != 0;
+    }
     @Override
     public Iterator<StyleSpan> iterator() {
         return spanList.clonedIterator();
@@ -91,7 +94,7 @@ public class StyleItem extends FixedBlockContainer implements
         return StyleSpanEventSet.serialize(text, this);
     }
     public void parse(StyleDocument document){
-        clearStyle();
+        clearSpans();
         Iterator<StyleElement> iterator = document.getElements();
         while (iterator.hasNext()){
             parse(iterator.next());
@@ -105,6 +108,13 @@ public class StyleItem extends FixedBlockContainer implements
         }
     }
     protected void clearStyle(){
+        StringItem stringItem = getStringItemInternal();
+        if(stringItem != null) {
+            stringItem.unlinkStyleItemInternal(this);
+        }
+        clearSpans();
+    }
+    protected void clearSpans(){
         if(getParent() == null){
             return;
         }
@@ -114,32 +124,43 @@ public class StyleItem extends FixedBlockContainer implements
         spanList.clearChildes();
     }
     public void onRemoved(){
-        StyleArray parentArray = getParentInstance(StyleArray.class);
-        setParent(null);
-        setIndex(-1);
-        if(parentArray != null){
-            parentArray.remove(this);
-        }
+        clearStyle();
     }
     public void linkStringsInternal(){
-        linkIndexReference();
         for(StyleSpan styleSpan : this){
             styleSpan.link();
         }
     }
-    private void linkIndexReference(){
-        StringItem stringItem = getStringItem(getIndex());
-        unLinkIndexReference(mStringItem);
-        if(stringItem == null){
+    public void setStringItemInternal(StringItem stringItem) {
+        if(stringItem == null) {
+            StringItem exist = this.mStringItem;
+            this.mStringItem = null;
+            unLinkIndexReference(exist);
             return;
         }
+        if(this.mStringItem != null) {
+            if(stringItem == this.mStringItem) {
+                return;
+            }
+            throw new IllegalStateException("Different string item");
+        }
+        this.mStringItem = stringItem;
         StyleIndexReference reference = new StyleIndexReference(this);
         stringItem.addReference(reference);
         this.indexReference = reference;
-        this.mStringItem = stringItem;
     }
+    public StringItem getStringItemInternal() {
+        return mStringItem;
+    }
+    public boolean isEmpty() {
+        StringItem stringItem = getStringItemInternal();
+        if(stringItem == null) {
+            return true;
+        }
+        return !hasSpans();
+    }
+
     private void unLinkIndexReference(StringItem stringItem){
-        this.mStringItem = null;
         StyleIndexReference reference = this.indexReference;
         if(reference == null){
             return;
@@ -149,16 +170,6 @@ public class StyleItem extends FixedBlockContainer implements
             return;
         }
         stringItem.removeReference(reference);
-    }
-    private StringItem getStringItem(int ref){
-        StringPool<?> stringPool = getStringPool();
-        if(stringPool != null){
-            return stringPool.get(ref);
-        }
-        return null;
-    }
-    private StringPool<?> getStringPool(){
-        return getParentInstance(StringPool.class);
     }
 
     public String applyStyle(String text, boolean xml, boolean escapeXmlText){
@@ -202,13 +213,14 @@ public class StyleItem extends FixedBlockContainer implements
     }
     @Override
     public void fromJson(JSONObject json) {
-        setNull(true);
+        clearSpans();
         if(json == null){
+            clearStyle();
             return;
         }
         JSONArray jsonArray = json.getJSONArray(NAME_spans);
         int length = jsonArray.length();
-        for(int i = 0; i < length;i++){
+        for(int i = 0; i < length; i++){
             JSONObject jsonObject = jsonArray.getJSONObject(i);
             StyleSpan styleSpan = createNext();
             styleSpan.fromJson(jsonObject);
@@ -222,6 +234,38 @@ public class StyleItem extends FixedBlockContainer implements
             add(styleSpan.getString(), styleSpan.getFirstChar(), styleSpan.getLastChar());
         }
     }
+
+    @Override
+    public int compareTo(StyleItem styleItem) {
+        if(styleItem == this) {
+            return 0;
+        }
+        if(styleItem == null) {
+            return -1;
+        }
+        int i = -1 * CompareUtil.compare(this.hasSpans(), styleItem.hasSpans());
+        if(i != 0) {
+            return i;
+        }
+        StringItem stringItem1 = this.getStringItemInternal();
+        StringItem stringItem2 = styleItem.getStringItemInternal();
+        i = CompareUtil.compare(stringItem1 == null, stringItem2 == null);
+        if(i != 0 || stringItem1 == null) {
+            return i;
+        }
+        return CompareUtil.compareUnsigned(stringItem1.getIndex(), stringItem2.getIndex());
+    }
+
+    @Override
+    public int onWriteBytes(OutputStream stream) throws IOException {
+        StringItem stringItem = getStringItemInternal();
+        if(stringItem.getIndex() != getIndex()) {
+            String junk = "";
+            throw new IOException("Unmatching index: " + getIndex() + ", isNull = " + (stringItem.getParent() == null) + ", " + stringItem);
+        }
+        return super.onWriteBytes(stream);
+    }
+
     @Override
     public String toString(){
         return "Spans count = " + size();
@@ -229,26 +273,18 @@ public class StyleItem extends FixedBlockContainer implements
 
     static final class StyleIndexReference implements WeakStringReference{
         private final StyleItem styleItem;
+        private int index;
         StyleIndexReference(StyleItem styleItem){
             this.styleItem = styleItem;
+            this.index = styleItem.getIndex();
         }
         @Override
         public void set(int value) {
-            StyleItem styleItem = this.styleItem;
-            int oldIndex = styleItem.getIndex();
-            StyleArray styleArray = styleItem.getParentInstance(StyleArray.class);
-            if(styleArray != null){
-                StyleItem previous = styleArray.get(oldIndex);
-                if(previous == styleItem){
-                    styleArray.setItem(oldIndex, null);
-                }
-                styleArray.setItem(value, styleItem);
-            }
+            this.index = value;
         }
-
         @Override
         public int get() {
-            return styleItem.getIndex();
+            return index;
         }
         @SuppressWarnings("unchecked")
         @Override

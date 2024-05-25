@@ -20,6 +20,7 @@ import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArray> {
@@ -29,11 +30,9 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
 
     public boolean isAttr(){
         boolean hasFormats = false;
-        ResValueMap[] childes = getValue().getChildes();
-        for(ResValueMap valueMap : childes){
-            if(valueMap == null){
-                continue;
-            }
+        Iterator<ResValueMap> iterator = getValue().iterator();
+        while (iterator.hasNext()){
+            ResValueMap valueMap = iterator.next();
             AttributeType attributeType = valueMap.getAttributeType();
             if(attributeType != null && attributeType.isPlural()){
                 return false;
@@ -48,12 +47,10 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
         return hasFormats;
     }
     public boolean isPlural(){
-        ResValueMap[] childes = getValue().getChildes();
         Set<AttributeType> uniqueSet = new HashSet<>();
-        for(ResValueMap valueMap : childes){
-            if(valueMap == null){
-                continue;
-            }
+        Iterator<ResValueMap> iterator = getValue().iterator();
+        while (iterator.hasNext()){
+            ResValueMap valueMap = iterator.next();
             AttributeType attributeType = valueMap.getAttributeType();
             if(attributeType == null || !attributeType.isPlural()){
                 return false;
@@ -66,12 +63,10 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
         return uniqueSet.size() > 0;
     }
     public boolean isArray(){
-        ResValueMap[] childes = getValue().getChildes();
-        int size = childes.length;
-        for(ResValueMap valueMap : childes){
-            if(valueMap == null){
-                continue;
-            }
+        int size = getValue().size();
+        Iterator<ResValueMap> iterator = getValue().iterator();
+        while (iterator.hasNext()){
+            ResValueMap valueMap = iterator.next();
             int id = valueMap.getArrayIndex();
             if(id >= 0 && id <= size){
                 continue;
@@ -99,8 +94,9 @@ public class ResTableMapEntry extends CompoundEntry<ResValueMap, ResValueMapArra
     }
     public ValueType isAllSameValueType(){
         ValueType allValueType = null;
-        ResValueMap[] childes = getValue().getChildes();
-        for(ResValueMap valueMap : childes){
+        Iterator<ResValueMap> iterator = getValue().iterator();
+        while (iterator.hasNext()){
+            ResValueMap valueMap = iterator.next();
             ValueType valueType = valueMap.getValueType();
             if(valueType == null){
                 return null;

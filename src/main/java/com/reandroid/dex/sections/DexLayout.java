@@ -19,9 +19,9 @@ import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.common.BytesOutputStream;
 import com.reandroid.dex.base.DexException;
+import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
-import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.header.Checksum;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.id.ClassId;
@@ -30,10 +30,16 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.pool.KeyPool;
 import com.reandroid.dex.smali.model.SmaliClass;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.IterableIterator;
+import com.reandroid.utils.collection.SingleIterator;
 import com.reandroid.utils.io.FileUtil;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
@@ -185,12 +191,12 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
         }
         return EmptyIterator.of();
     }
-    public <T1 extends SectionItem> int removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
+    public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
         Section<T1> section = get(sectionType);
         if(section != null){
             return section.removeEntries(filter);
         }
-        return 0;
+        return false;
     }
     public <T1 extends SectionItem> Iterator<Key> removeWithKeys(SectionType<T1> sectionType, Predicate<Key> filter){
         Section<T1> section = get(sectionType);

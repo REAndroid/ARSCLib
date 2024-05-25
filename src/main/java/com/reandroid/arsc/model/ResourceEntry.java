@@ -20,15 +20,13 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.container.SpecTypePair;
 import com.reandroid.arsc.item.SpecString;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.FilterIterator;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.arsc.value.ResValue;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.arsc.value.attribute.AttributeBag;
+import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.collection.*;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
@@ -45,6 +43,35 @@ public class ResourceEntry implements Iterable<Entry>{
     public ResourceEntry(PackageBlock packageBlock, int resourceId){
         this.resourceId = resourceId;
         this.packageBlock = packageBlock;
+    }
+
+    public Iterator<String> getStringValues() {
+        return this.getStringValues(this.iterator());
+    }
+    Iterator<String> getStringValues(Iterator<Entry> iterator) {
+        return new IterableIterator<Entry, String>(iterator) {
+            public Iterator<String> iterator(Entry element) {
+                return getStringValues(element);
+            }
+        };
+    }
+    Iterator<String> getStringValues(Entry entry) {
+        ResValue resValue = entry.getResValue();
+        if (resValue == null) {
+            return EmptyIterator.of();
+        }
+        ValueType valueType = resValue.getValueType();
+        if (valueType == ValueType.STRING) {
+            return SingleIterator.of(resValue.getValueAsString());
+        }
+        if(!valueType.isReference()) {
+            return EmptyIterator.of();
+        }
+        TableBlock tableBlock = getPackageBlock().getTableBlock();
+        if(tableBlock == null) {
+            return EmptyIterator.of();
+        }
+        return this.getStringValues(tableBlock.resolveReference(resValue.getData()).iterator());
     }
 
     public ResourceEntry previous(){

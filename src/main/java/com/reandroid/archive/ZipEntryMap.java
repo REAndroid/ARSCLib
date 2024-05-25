@@ -127,19 +127,13 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
         }
         return null;
     }
-    public void removeAll(Predicate<? super InputSource> filter){
+    public void removeIf(Predicate<? super InputSource> filter){
         Iterator<InputSource> iterator = iterator(filter);
         while (iterator.hasNext()){
             remove(iterator.next());
         }
     }
-    public void clear(){
-        synchronized (mLock){
-            mSourceMap.clear();
-            onChanged(true);
-        }
-    }
-    public void removeAll(Pattern pattern){
+    public void removeIf(Pattern pattern){
         synchronized (mLock){
             boolean removed = false;
             LinkedHashMap<String, InputSource> map = this.mSourceMap;
@@ -152,6 +146,12 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
                 }
             }
             onChanged(removed);
+        }
+    }
+    public void clear(){
+        synchronized (mLock){
+            mSourceMap.clear();
+            onChanged(true);
         }
     }
     public InputSource remove(InputSource inputSource){

@@ -21,7 +21,6 @@ import com.reandroid.json.JSONObject;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.xml.Span;
 
-
 public class StyleSpan extends BlockItem implements Span, JSONConvert<JSONObject> {
 
     private final SpanStringReference stringReference;
@@ -109,7 +108,7 @@ public class StyleSpan extends BlockItem implements Span, JSONConvert<JSONObject
         public void setString(String value) {
             unlink();
             StringPool<?> stringPool = getStringPool();
-            StringItem stringItem = stringPool.getOrCreateForSpan(value);
+            StringItem stringItem = stringPool.getOrCreate(value);
             set(stringItem.getIndex());
             stringItem.addReference(this);
         }

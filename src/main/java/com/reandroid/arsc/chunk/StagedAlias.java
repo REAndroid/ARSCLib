@@ -47,7 +47,7 @@ public class StagedAlias extends Chunk<StagedAliasHeader> {
     public StagedAliasEntryArray getStagedAliasEntryArray() {
         return stagedAliasEntryArray;
     }
-    public Collection<StagedAliasEntry> listStagedAliasEntry(){
+    public Iterable<StagedAliasEntry> listStagedAliasEntry(){
         return getStagedAliasEntryArray().listItems();
     }
     public int getStagedAliasEntryCount(){

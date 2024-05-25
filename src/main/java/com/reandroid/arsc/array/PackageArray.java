@@ -21,13 +21,14 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
-import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 public class PackageArray extends BlockArray<PackageBlock>
@@ -51,12 +52,12 @@ public class PackageArray extends BlockArray<PackageBlock>
     public PackageBlock pickOne(int packageId){
         return pickOne(getChildes(), packageId);
     }
-    private PackageBlock pickOne(PackageBlock[] items, int packageId){
-        if(items==null||items.length==0){
+    private PackageBlock pickOne(List<PackageBlock> items, int packageId){
+        if(items==null || items.size()==0){
             return null;
         }
-        if(items.length==1 && packageId==0){
-            return items[0];
+        if(items.size() == 1 && packageId==0){
+            return items.get(0);
         }
         PackageBlock largest=null;
         for(PackageBlock packageBlock:items){
@@ -93,9 +94,6 @@ public class PackageArray extends BlockArray<PackageBlock>
         packageBlock.setId(pkgId);
         packageBlock.setName("PACKAGE NAME");
         return packageBlock;
-    }
-    public PackageBlock getPackageBlockById(byte pkgId){
-        return getPackageBlockById(0xff & pkgId);
     }
     public PackageBlock getPackageBlockById(int pkgId){
         Iterator<PackageBlock> itr=iterator(true);

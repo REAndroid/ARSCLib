@@ -21,20 +21,21 @@ import com.reandroid.arsc.header.TypeHeader;
 
 import java.io.*;
 
-
 public class BlockReader extends InputStream {
-    private final Object mLock=new Object();
+    private final Object mLock = new Object();
+
     private byte[] BUFFER;
     private final int mStart;
     private final int mLength;
     private int mPosition;
     private boolean mIsClosed;
     private int mMark;
+
     public BlockReader(byte[] buffer, int start, int length) {
-        this.BUFFER=buffer;
-        this.mStart=start;
-        this.mLength=length;
-        this.mPosition =0;
+        this.BUFFER = buffer;
+        this.mStart = start;
+        this.mLength = length;
+        this.mPosition = 0;
     }
     public BlockReader(byte[] buffer) {
         this(buffer, 0, buffer.length);
@@ -56,14 +57,14 @@ public class BlockReader extends InputStream {
         byte[] bts = new byte[2];
         readFully(bts);
         seek(pos);
-        return toShort(bts, 0);
+        return toShort(bts);
     }
     public int readInteger() throws IOException {
         int pos = getPosition();
         byte[] bytes = new byte[4];
         readFully(bytes);
         seek(pos);
-        return toInt(bytes, 0);
+        return toInt(bytes);
     }
     /**
      * Use SpecHeader#read(BlockReader)
@@ -82,32 +83,15 @@ public class BlockReader extends InputStream {
     public InfoHeader readHeaderBlock() throws IOException {
         return InfoHeader.read(this);
     }
-    public int searchNextIntPosition(int bytesOffset, int value){
-        if(mIsClosed || mPosition>=mLength){
-            return -1;
-        }
-        synchronized (mLock){
-            int actPos=mStart+mPosition+bytesOffset;
-            int max=available()/4;
-            for(int i=0;i<max;i++){
-                int pos=actPos+(i*4);
-                int valCur=toInt(BUFFER, pos);
-                if(valCur==value){
-                    return pos-mStart;
-                }
-            }
-            return -1;
-        }
+    private int toInt(byte[] bytes){
+        return bytes[0] & 0xff |
+                (bytes[1] & 0xff) << 8 |
+                (bytes[2] & 0xff) << 16 |
+                (bytes[3] & 0xff) << 24;
     }
-    private int toInt(byte[] bts, int offset){
-        return bts[offset] & 0xff |
-                (bts[offset+1] & 0xff) << 8 |
-                (bts[offset+2] & 0xff) << 16 |
-                (bts[offset+3] & 0xff) << 24;
-    }
-    private short toShort(byte[] bts, int offset){
-        return (short) (bts[offset] & 0xff |
-                (bts[offset+1] & 0xff) << 8);
+    private short toShort(byte[] bytes){
+        return (short) (bytes[0] & 0xff |
+                (bytes[1] & 0xff) << 8);
     }
     public byte[] getBuffer(){
         return BUFFER;
@@ -219,22 +203,19 @@ public class BlockReader extends InputStream {
     public int getActualPosition(){
         return mStart + mPosition;
     }
-    public int getStartPosition(){
-        return mStart;
-    }
     @Override
     public int read() throws IOException {
         if(mIsClosed){
             throw new IOException("Stream is closed");
         }
-        int i=mPosition;
-        if(i>=mLength){
+        int i = mPosition;
+        if(i >= mLength){
             throw new EOFException("Finished reading: "+i);
         }
         synchronized (mLock){
-            int actPos=mStart+i;
-            int val=BUFFER[actPos] & 0xff;
-            mPosition++;
+            int actPos = mStart + i;
+            int val = BUFFER[actPos] & 0xff;
+            mPosition ++;
             return val;
         }
     }

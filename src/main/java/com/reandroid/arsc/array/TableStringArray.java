@@ -19,23 +19,17 @@ import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.TableString;
 
 public class TableStringArray extends StringArray<TableString> {
+
     public TableStringArray(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
         super(offsets, itemCount, itemStart, is_utf8);
     }
-    @Override
-    protected boolean isFlexible(){
-        return true;
-    }
+
     @Override
     public TableString newInstance() {
         return new TableString(isUtf8());
     }
     @Override
     public TableString[] newArrayInstance(int len) {
-        if(len == 0){
-            return EMPTY;
-        }
         return new TableString[len];
     }
-    private static final TableString[] EMPTY = new TableString[0];
 }

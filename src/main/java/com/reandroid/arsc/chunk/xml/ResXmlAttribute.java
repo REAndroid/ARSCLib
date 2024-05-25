@@ -16,20 +16,22 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.PackageBlock;
-import com.reandroid.arsc.coder.*;
-import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.coder.EncodeResult;
+import com.reandroid.arsc.coder.ValueCoder;
+import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.*;
+import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
-import com.reandroid.arsc.value.ValueItem;
-import com.reandroid.common.Namespace;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.arsc.value.AttributeValue;
+import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.arsc.value.attribute.AttributeBag;
+import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.xml.XMLAttribute;
@@ -235,13 +237,6 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         }
         return null;
     }
-    /**
-     * Use getPrefix()
-     * **/
-    @Deprecated
-    public String getNamePrefix(){
-        return getPrefix();
-    }
     public ResXmlNamespace getNamespace(){
         return getStartNamespace();
     }
@@ -324,7 +319,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         if(stringPool==null){
             return null;
         }
-        return stringPool.getOrCreateAttribute(resourceId, name);
+        return stringPool.getOrCreate(resourceId, name);
     }
     public boolean removeSelf(){
         ResXmlElement parent = getParentElement();
@@ -337,13 +332,6 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         return getParent(ResXmlElement.class);
     }
 
-    /**
-     * Use getName(true)
-     * */
-    @Deprecated
-    public ResXmlElement getParentResXmlElement(){
-        return getParent(ResXmlElement.class);
-    }
     public int getAttributesUnitSize(){
         return OFFSET_SIZE + super.getSize();
     }
@@ -373,11 +361,11 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         return stringPool.get(ref);
     }
     private ResXmlID getResXmlID(){
-        ResXmlIDMap xmlIDMap = getResXmlIDMap();
-        if(xmlIDMap == null){
-            return null;
+        ResXmlString xmlString = (ResXmlString) getStringItem(getNameReference());
+        if(xmlString != null) {
+            return xmlString.getResXmlID();
         }
-        return xmlIDMap.getResXmlIDArray().get(getNameReference());
+        return null;
     }
     private ResXmlIDMap getResXmlIDMap(){
         ResXmlElement xmlElement= getParentElement();
@@ -505,6 +493,9 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     private void linkNameId(){
         ResXmlID xmlID = getResXmlID();
         if(xmlID == null){
+            return;
+        }
+        if(mNameIdReference != null && xmlID.hasReference(this)) {
             return;
         }
         unLinkNameId(xmlID);
@@ -730,19 +721,10 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
 
     @Override
     public JSONObject toJson() {
-        JSONObject jsonObject= new JSONObject();
+        JSONObject jsonObject = super.toJson();
         jsonObject.put(NAME_name, getName());
         jsonObject.put(NAME_id, getNameId());
         jsonObject.put(NAME_namespace_uri, getUri());
-        ValueType valueType=getValueType();
-        jsonObject.put(NAME_value_type, valueType.name());
-        if(valueType==ValueType.STRING){
-            jsonObject.put(NAME_data, getValueAsString());
-        }else if(valueType==ValueType.BOOLEAN){
-            jsonObject.put(NAME_data, getValueAsBoolean());
-        }else {
-            jsonObject.put(NAME_data, getData());
-        }
         return jsonObject;
     }
     @Override
@@ -759,15 +741,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
             }
             setNamespaceReference(ns.getUriReference());
         }
-        ValueType valueType = ValueType.fromName(json.getString(NAME_value_type));
-        if(valueType == ValueType.STRING){
-            setValueAsString(json.optString(NAME_data, ""));
-        }else if(valueType == ValueType.BOOLEAN){
-            setValueAsBoolean(json.getBoolean(NAME_data));
-        }else {
-            setValueType(valueType);
-            setData(json.getInt(NAME_data));
-        }
+        super.fromJson(json);
     }
     public XMLAttribute decodeToXml() {
         return toXml(true);

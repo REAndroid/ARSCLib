@@ -4,11 +4,8 @@ import com.reandroid.TestUtils;
 import com.reandroid.arsc.base.BlockDiff;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
-import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
-import com.reandroid.arsc.value.ResValue;
 import com.reandroid.utils.io.FileUtil;
-import com.reandroid.xml.StyleDocument;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -46,6 +43,7 @@ public class ApkModuleCoderTest {
         apkModule.getAndroidManifest().getStringPool().removeUnusedStrings();
         apkModule.getAndroidManifest().refreshFull();
 
+        apkModule_encoded.getTableBlock().refreshFull();
         // Preserve generated apk for signing and install on device
         File apk = new File(TestUtils.getTesApkDirectory(), "encoded_xml.apk");
 

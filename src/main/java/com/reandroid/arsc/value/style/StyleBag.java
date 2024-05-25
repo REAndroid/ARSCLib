@@ -21,6 +21,8 @@ import com.reandroid.arsc.value.ResValueMap;
 import com.reandroid.arsc.value.bag.MapBag;
 import com.reandroid.xml.XMLUtil;
 
+import java.util.List;
+
 public class StyleBag extends MapBag<Integer, StyleBagItem> {
     private StyleBag(com.reandroid.arsc.value.Entry entry) {
         super(entry);
@@ -118,16 +120,16 @@ public class StyleBag extends MapBag<Integer, StyleBagItem> {
             return false;
         }
 
-        com.reandroid.arsc.chunk.TableBlock tableBlock = entry.getPackageBlock().getTableBlock();
+        TableBlock tableBlock = entry.getPackageBlock().getTableBlock();
         if (tableBlock == null) {
             return false;
         }
-        ResValueMap[] items = style.getMapArray().getChildes();
-        if (items.length == 0) {
+        List<ResValueMap> list = style.getMapArray().getChildes();
+        if (list.size() == 0) {
             return false;
         }
 
-        for (ResValueMap item : items) {
+        for (ResValueMap item : list) {
             if (item == null || tableBlock.getResource(item.getNameId()) == null) {
                 return false;
             }

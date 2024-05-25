@@ -17,17 +17,18 @@ package com.reandroid.arsc.array;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockArray;
+import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
 import com.reandroid.arsc.item.ShortItem;
-import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
@@ -48,14 +49,16 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
 
     public int removeUndefinedAttributes(){
         List<ResXmlAttribute> undefinedAttributes = listUndefined();
-        super.remove(undefinedAttributes);
+        for(ResXmlAttribute attribute : undefinedAttributes) {
+            attribute.removeSelf();
+        }
         return undefinedAttributes.size();
     }
     public List<ResXmlAttribute> listUndefined(){
-        List<ResXmlAttribute> results = new ArrayList<>();
-        ResXmlAttribute[] attributes = getChildes();
-        for(int i = 0; i < attributes.length; i++){
-            ResXmlAttribute attribute = attributes[i];
+        List<ResXmlAttribute> results = new ArrayCollection<>(size());
+        Iterator<ResXmlAttribute> iterator = iterator();
+        while (iterator.hasNext()){
+            ResXmlAttribute attribute = iterator.next();
             if(attribute != null && attribute.isUndefined()){
                 results.add(attribute);
             }
@@ -63,9 +66,9 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         return results;
     }
     public void setAttributesUnitSize(int size){
-        ResXmlAttribute[] attributes=getChildes();
-        for(int i=0;i<attributes.length;i++){
-            attributes[i].setAttributesUnitSize(size);
+        Iterator<ResXmlAttribute> iterator = iterator();
+        while (iterator.hasNext()){
+            iterator.next().setAttributesUnitSize(size);
         }
         mAttributesUnitSize.set(size);
     }
@@ -106,10 +109,10 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
         reader.seek(start);
         setSize(mAttributeCount.get());
         int attributeSize = mAttributesUnitSize.unsignedInt();
-        ResXmlAttribute[] childes = getChildes();
-        for(int i=0;i<childes.length;i++){
+        Iterator<ResXmlAttribute> iterator = iterator();
+        while (iterator.hasNext()){
+            ResXmlAttribute attribute = iterator.next();
             int position = reader.getPosition();
-            ResXmlAttribute attribute = childes[i];
             attribute.readBytes(reader);
             int remaining = attributeSize - (reader.getPosition() - position);
             reader.offset(remaining);
@@ -117,18 +120,9 @@ public class ResXmlAttributeArray extends BlockArray<ResXmlAttribute>
     }
     @Override
     public void clear(){
-        ResXmlAttribute[] childes = getChildes();
-        if(childes==null || childes.length==0){
-            super.clear();
-            return;
-        }
-        int length = childes.length;
-        for(int i=0;i<length;i++){
-            ResXmlAttribute child = childes[i];
-            if(child==null){
-                continue;
-            }
-            child.onRemoved();
+        Iterator<ResXmlAttribute> iterator = iterator();
+        while (iterator.hasNext()){
+            iterator.next().onRemoved();
         }
         super.clear();
     }

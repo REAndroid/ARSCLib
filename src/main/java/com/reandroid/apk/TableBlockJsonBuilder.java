@@ -28,9 +28,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class TableBlockJsonBuilder {
-    private final JsonStringPoolBuilder poolBuilder;
     public TableBlockJsonBuilder(){
-        poolBuilder = new JsonStringPoolBuilder();
     }
     public TableBlock scanDirectory(File resourcesDir) throws IOException {
         if(!resourcesDir.isDirectory()){
@@ -41,8 +39,6 @@ public class TableBlockJsonBuilder {
             throw new IOException("No package sub directory found in : "+resourcesDir);
         }
         TableBlock tableBlock = new TableBlock();
-        poolBuilder.scanDirectory(resourcesDir);
-        poolBuilder.apply(tableBlock);
         for(File packageDir : packageDirectories){
             scanPackageDirectory(tableBlock, packageDir);
         }

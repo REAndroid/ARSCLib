@@ -24,6 +24,7 @@ import com.reandroid.arsc.value.bag.MapBag;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 public class PluralsBag extends MapBag<AttributeType, PluralsBagItem> {
@@ -112,12 +113,13 @@ public class PluralsBag extends MapBag<AttributeType, PluralsBagItem> {
         if (plurals == null) {
             return false;
         }
-        ResValueMap[] items = plurals.getMapArray().getChildes();
-        if (items.length == 0) {
+        ResValueMapArray array = plurals.getMapArray();
+        if (array.size() == 0) {
             return false;
         }
-
-        for (ResValueMap item : items) {
+        Iterator<ResValueMap> iterator = array.iterator();
+        while (iterator.hasNext()) {
+            ResValueMap item = iterator.next();
             if (item == null || !validTypes.contains(item.getValueType())) {
                 return false;
             }

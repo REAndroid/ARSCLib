@@ -15,68 +15,120 @@
  */
 package com.reandroid.arsc.item;
 
-import com.reandroid.arsc.chunk.xml.ResXmlDocument;
-import com.reandroid.arsc.pool.ResXmlStringPool;
+import com.reandroid.arsc.base.Block;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class ResXmlID extends IntegerItem {
-    private final List<ReferenceItem> mReferencedList;
+public class ResXmlID extends IntegerItem implements Comparable<ResXmlID>{
+
+    private List<ReferenceItem> mReferencedList;
+    private ResXmlString mResXmlString;
+
     public ResXmlID(int resId){
         super(resId);
-        this.mReferencedList=new ArrayList<>();
     }
     public ResXmlID(){
         this(0);
     }
-    public boolean removeReference(ReferenceItem ref){
-        return mReferencedList.remove(ref);
-    }
-    public List<ReferenceItem> getReferencedList(){
-        return mReferencedList;
+
+    public boolean removeReference(ReferenceItem ref) {
+        boolean removed = false;
+        List<ReferenceItem> referencedList = this.mReferencedList;
+        if(referencedList != null) {
+            removed = referencedList.remove(ref);
+            if(referencedList.size() == 0) {
+                this.mReferencedList = null;
+            }
+        }
+        return removed;
     }
     public void addReference(ReferenceItem ref){
-        if(ref!=null){
-            mReferencedList.add(ref);
+        if(ref != null) {
+            List<ReferenceItem> referencedList = this.mReferencedList;
+            if(referencedList == null) {
+                referencedList = new ArrayCollection<>();
+                this.mReferencedList = referencedList;
+            }
+            referencedList.add(ref);
         }
     }
-    public boolean hasReference(){
-        return mReferencedList.size()>0;
-    }
-    public int getReferenceCount(){
-        return mReferencedList.size();
-    }
-    private void reUpdateReferences(int newIndex){
-        for(ReferenceItem ref:mReferencedList){
-            ref.set(newIndex);
+    public boolean hasReference() {
+        List<ReferenceItem> referencedList = this.mReferencedList;
+        if(referencedList != null) {
+            return referencedList.size() != 0;
         }
+        return false;
+    }
+    public boolean hasReference(Block block) {
+        if(block == null) {
+            return false;
+        }
+        List<ReferenceItem> referencedList = this.mReferencedList;
+        if(referencedList != null) {
+            for(ReferenceItem item : referencedList) {
+                if(item.getReferredParent(block.getClass()) == block) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    public int getReferenceCount() {
+        List<ReferenceItem> referencedList = this.mReferencedList;
+        if(referencedList != null) {
+            return referencedList.size();
+        }
+        return 0;
     }
     @Override
-    public void onIndexChanged(int oldIndex, int newIndex){
-        //TODO: We have to ignore this to avoid conflict with ResXmlIDMap.removeSafely
+    public void onIndexChanged(int oldIndex, int newIndex) {
     }
     public String getName(){
         ResXmlString xmlString = getResXmlString();
-        if(xmlString==null){
+        if(xmlString == null){
             return null;
         }
         return xmlString.getHtml();
     }
-    public ResXmlString getResXmlString(){
-        ResXmlStringPool stringPool=getXmlStringPool();
-        if(stringPool==null){
+    public ResXmlString getResXmlString() {
+        ResXmlString resXmlString = this.mResXmlString;
+        if(resXmlString == null || resXmlString.isNull()) {
             return null;
         }
-        return stringPool.get(getIndex());
+        return resXmlString;
     }
-    private ResXmlStringPool getXmlStringPool(){
-        ResXmlDocument resXmlDocument = getParentInstance(ResXmlDocument.class);
-        if(resXmlDocument!=null){
-            return resXmlDocument.getStringPool();
+    void setResXmlStringInternal(ResXmlString xmlString) {
+        this.mResXmlString = xmlString;
+    }
+
+    public boolean isEmpty() {
+        StringItem stringItem = getResXmlString();
+        if(stringItem == null) {
+            return true;
         }
-        return null;
+        return get() == 0;
+    }
+    @Override
+    public int compareTo(ResXmlID resXmlID) {
+        if(resXmlID == null) {
+            return -1;
+        }
+        if(resXmlID == this) {
+            return 0;
+        }
+        ResXmlString xmlString1 = this.getResXmlString();
+        ResXmlString xmlString2 = resXmlID.getResXmlString();
+        int i = CompareUtil.compare(xmlString1 == null, xmlString2 == null);
+        if(i != 0) {
+            return i;
+        }
+        if(xmlString1 == null || xmlString2 == null) {
+            return 0;
+        }
+        return CompareUtil.compare(xmlString1.getIndex(), xmlString2.getIndex());
     }
     @Override
     public String toString(){
@@ -85,7 +137,7 @@ public class ResXmlID extends IntegerItem {
         builder.append(getReferenceCount());
         builder.append('{');
         String name = getName();
-        if(name!=null){
+        if(name != null){
             builder.append(name);
         }else {
             builder.append(getIndex());

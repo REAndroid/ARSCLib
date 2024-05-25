@@ -15,15 +15,15 @@
  */
 package com.reandroid.dex.sections;
 
-import com.reandroid.common.ArraySupplier;
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.arsc.item.NumberIntegerReference;
-import com.reandroid.arsc.base.OffsetSupplier;
+import com.reandroid.common.ArraySupplier;
+import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.common.SectionTool;
@@ -139,7 +139,9 @@ public class SectionList extends FixedBlockContainer
         int result = 0;
         Iterator<Section<?>> iterator = getSections();
         while (iterator.hasNext()) {
-            result += iterator.next().clearUnused();
+            if(iterator.next().clearUnused()){
+                result ++;
+            }
         }
         return result;
     }

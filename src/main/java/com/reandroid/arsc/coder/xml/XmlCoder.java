@@ -34,7 +34,6 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -54,18 +53,6 @@ public class XmlCoder {
     public XmlCoderLogger getLogger() {
         return mLogger;
     }
-    private void logMessage(String tag, String message){
-        XmlCoderLogger logger = getLogger();
-        if(logger != null){
-            logger.logMessage(tag, message);
-        }
-    }
-    private void logVerbose(String tag, String message){
-        XmlCoderLogger logger = getLogger();
-        if(logger != null){
-            logger.logMessage(tag, message);
-        }
-    }
 
     public static class ValuesXml{
         private final BagRootAttribute BAG_ROOT_ATTRIBUTE = new BagRootAttribute();
@@ -77,11 +64,11 @@ public class XmlCoder {
         public void decodeTable(File resourcesDir,
                                 TableBlock tableBlock,
                                 Predicate<Entry> decodedEntries) throws IOException {
-            logMessage("Decoding", "Resource table ...");
+            logMessage("Resource table ...");
             ValuesDirectorySerializer directorySerializer =
                     new ValuesDirectorySerializer(resourcesDir);
             decodeTable(directorySerializer, tableBlock, decodedEntries);
-            logMessage("Decoding", "Finished resource table");
+            logMessage("Finished resource table");
         }
         public void decodeTable(ValuesSerializerFactory serializerFactory,
                                   TableBlock tableBlock,
@@ -96,7 +83,7 @@ public class XmlCoder {
 
             packageBlock.sortTypes();
 
-            Collection<SpecTypePair> specs = packageBlock.listSpecTypePairs();
+            Iterable<SpecTypePair> specs = packageBlock.listSpecTypePairs();
 
             for (SpecTypePair specTypePair : specs){
                 Set<ResConfig> configs = specTypePair.listResConfig();
@@ -105,7 +92,7 @@ public class XmlCoder {
                 for(ResConfig resConfig : configs){
                     i ++;
                     TypeBlock typeBlock = specTypePair.getTypeBlock(resConfig);
-                    logVerbose("Decoding", i + "/" + size + " " + packageBlock.getName()
+                    logVerbose(i + "/" + size + " " + packageBlock.getName()
                             + ":" + typeBlock.getTypeName() + resConfig.getQualifiers());
                     XmlSerializer serializer = serializerFactory.createSerializer(typeBlock);
                     int entriesCount = decode(serializer, specTypePair, resConfig, decodedEntries);
@@ -353,16 +340,16 @@ public class XmlCoder {
         public XmlCoderLogger getLogger() {
             return mLogger;
         }
-        private void logMessage(String tag, String message){
+        private void logMessage(String message){
             XmlCoderLogger logger = getLogger();
             if(logger != null){
-                logger.logMessage(tag, message);
+                logger.logMessage("Decoding", message);
             }
         }
-        private void logVerbose(String tag, String message){
+        private void logVerbose(String message){
             XmlCoderLogger logger = getLogger();
             if(logger != null){
-                logger.logMessage(tag, message);
+                logger.logMessage("Decoding", message);
             }
         }
     }
@@ -406,20 +393,19 @@ public class XmlCoder {
 
             ResValueMap formatsMap = mapEntry.getByType(AttributeType.FORMATS);
             AttributeDataFormat bagType = AttributeDataFormat.typeOfBag(formatsMap.getData());
-            ResValueMap[] bagItems = mapEntry.listResValueMap();
 
             int childCount = 0;
-            for(ResValueMap valueMap : bagItems){
+            for (ResValueMap valueMap : mapEntry) {
                 AttributeType attributeType = valueMap.getAttributeType();
-                if(attributeType != null){
+                if (attributeType != null) {
                     continue;
                 }
                 assert bagType != null;
                 startTag(serializer, bagType.getName());
-                serializer.attribute(null,ATTR_name, valueMap.decodeName());
+                serializer.attribute(null, ATTR_name, valueMap.decodeName());
                 serializer.text(valueMap.decodeValue());
                 endTag(serializer, bagType.getName());
-                childCount ++;
+                childCount++;
             }
             return childCount;
         }
@@ -427,10 +413,9 @@ public class XmlCoder {
             ResTableMapEntry mapEntry = entry.getResTableMapEntry();
             ResValueMapArray mapArray = mapEntry.getValue();
             int childCount = 0;
-            for(ResValueMap valueMap : mapArray.getChildes()){
-                if(valueMap == null){
-                    continue;
-                }
+            Iterator<ResValueMap> iterator = mapArray.iterator();
+            while (iterator.hasNext()){
+                ResValueMap valueMap = iterator.next();
                 AttributeType attributeType = valueMap.getAttributeType();
                 if(attributeType == null){
                     continue;
@@ -447,10 +432,9 @@ public class XmlCoder {
             ResTableMapEntry mapEntry = entry.getResTableMapEntry();
             ResValueMapArray mapArray = mapEntry.getValue();
             int childCount = 0;
-            for(ResValueMap valueMap : mapArray.getChildes()){
-                if(valueMap == null){
-                    continue;
-                }
+            Iterator<ResValueMap> iterator = mapArray.iterator();
+            while (iterator.hasNext()){
+                ResValueMap valueMap = iterator.next();
                 startTag(serializer, TAG_item);
                 String name = valueMap.decodeName(true);
                 boolean escapeValue = false;
@@ -470,10 +454,9 @@ public class XmlCoder {
             ResTableMapEntry mapEntry = entry.getResTableMapEntry();
             ResValueMapArray mapArray = mapEntry.getValue();
             int childCount = 0;
-            for(ResValueMap valueMap : mapArray.getChildes()){
-                if(valueMap == null){
-                    continue;
-                }
+            Iterator<ResValueMap> iterator = mapArray.iterator();
+            while (iterator.hasNext()){
+                ResValueMap valueMap = iterator.next();
                 startTag(serializer, TAG_item);
                 valueMap.serializeText(serializer, escapeValues);
                 endTag(serializer, TAG_item);
@@ -598,10 +581,9 @@ public class XmlCoder {
             }
             ResTableMapEntry mapEntry = entry.getResTableMapEntry();
             ResValueMapArray mapArray = mapEntry.getValue();
-            for(ResValueMap valueMap : mapArray.getChildes()){
-                if(valueMap == null){
-                    continue;
-                }
+            Iterator<ResValueMap> iterator = mapArray.iterator();
+            while (iterator.hasNext()){
+                ResValueMap valueMap = iterator.next();
                 AttributeType attributeType = valueMap.getAttributeType();
                 if(attributeType == null){
                     continue;

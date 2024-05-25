@@ -18,11 +18,16 @@ package com.reandroid.arsc.array;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.AlignItem;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.arsc.item.StringItem;
 import com.reandroid.arsc.item.StyleItem;
-import com.reandroid.json.JSONConvert;
+import com.reandroid.arsc.pool.StringPool;
 import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONConvert;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
+import java.util.Comparator;
+import java.util.Iterator;
 
 public class StyleArray extends OffsetBlockArray<StyleItem> implements
         Iterable<StyleItem>, JSONConvert<JSONArray> {
@@ -31,20 +36,12 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements
         super(offsets, itemCount, itemStart);
     }
 
-    protected void onStringShifted(int index){
-        StyleItem styleItem = get(index);
-        if(styleItem == null || styleItem.getIndex() == index){
-            return;
-        }
-        styleItem = newInstance();
-        setItem(index, styleItem);
-        styleItem.setNull(true);
-        styleItem.linkStringsInternal();
-    }
     @Override
-    public void clear(){
-        for(StyleItem styleItem:listItems(true)){
-            styleItem.onRemoved();
+    public void clear() {
+        for (StyleItem styleItem : this) {
+            if (!styleItem.isNull()) {
+                styleItem.onRemoved();
+            }
         }
         super.clear();
     }
@@ -76,29 +73,45 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements
         alignItem.ensureSize(8);
     }
     @Override
-    protected void refreshChildes(){
-        // Not required
-    }
-    @Override
-    protected boolean remove(StyleItem block, boolean trim){
-        if(block == null){
-            return false;
-        }
-        boolean removed = super.remove(block, trim);
-        if(!removed && trim){
-            trimNullBlocks();
-        }
-        return removed;
-    }
-    @Override
     public StyleItem newInstance() {
         return new StyleItem();
     }
     @Override
-    public StyleItem[] newArrayInstance(int len) {
-        return new StyleItem[len];
+    public StyleItem[] newArrayInstance(int length) {
+        return new StyleItem[length];
+    }
+    public boolean sort() {
+        return sort(CompareUtil.getComparableComparator());
     }
 
+    @Override
+    public boolean sort(Comparator<? super StyleItem> comparator) {
+        boolean sorted = super.sort(comparator);
+        adjustIndexes();
+        trimLastItems();
+        return sorted;
+    }
+    private void adjustIndexes() {
+        Iterator<StyleItem> iterator = clonedIterator();
+        boolean adjusted = false;
+        while (iterator.hasNext()) {
+            StyleItem styleItem = iterator.next();
+            StringItem stringItem = styleItem.getStringItemInternal();
+            if(stringItem != null) {
+                int index = stringItem.getIndex();
+                if(index != styleItem.getIndex()) {
+                    moveTo(styleItem, index);
+                    adjusted = true;
+                }
+            }
+        }
+        if(adjusted) {
+            getParentInstance(StringPool.class).linkStylesInternal();
+        }
+    }
+    private void trimLastItems() {
+        trimLastIf(StyleItem::isEmpty);
+    }
     @Override
     public JSONArray toJson() {
         return null;
@@ -106,20 +119,6 @@ public class StyleArray extends OffsetBlockArray<StyleItem> implements
     @Override
     public void fromJson(JSONArray json) {
     }
-    public void merge(StyleArray styleArray){
-        if(styleArray == null || styleArray == this){
-            return;
-        }
-        if(!isEmpty()){
-            return;
-        }
-        int count = styleArray.size();
-        ensureSize(count);
-        for(int i = 0; i < count; i++){
-            StyleItem exist = get(i);
-            StyleItem coming = styleArray.get(i);
-            exist.merge(coming);
-        }
-    }
+
     private static final byte END_BYTE = (byte) 0xFF;
 }

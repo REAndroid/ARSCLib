@@ -15,13 +15,14 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
+import com.reandroid.app.AndroidManifest;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.ValueType;
-import com.reandroid.app.AndroidManifest;
+import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.File;
 import java.io.IOException;
@@ -622,6 +623,10 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
     }
     private ResXmlElement getOrCreateManifestElement() {
         return getOrCreateElement(AndroidManifest.TAG_manifest);
+    }
+    public Iterator<ResXmlElement> getAndroidNameElements(String tag, String name) {
+        return FilterIterator.of(this.recursiveElements(), (element) ->
+                element.equalsName(tag) && name.equals(getAndroidNameValue(element)));
     }
     @Override
     public String toString(){

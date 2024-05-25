@@ -46,7 +46,7 @@ public class ApkModuleJsonEncoder extends ApkModuleEncoder {
         return apkModule;
     }
     private void scanResJsonDirs(File mainDirectory){
-        File resJsonDir = new File(mainDirectory, ApkUtil.RES_JSON_NAME);
+        File resJsonDir = new File(mainDirectory, TableBlock.RES_JSON_DIRECTORY_NAME);
         List<File> jsonFileList = ApkUtil.recursiveFiles(resJsonDir);
         for(File file:jsonFileList){
             scanResJsonFile(resJsonDir, file);
