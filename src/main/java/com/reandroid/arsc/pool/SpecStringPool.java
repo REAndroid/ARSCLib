@@ -23,7 +23,7 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.value.Entry;
-import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.IterableIterator;
 
 import java.util.Iterator;
 
@@ -54,25 +54,28 @@ public class SpecStringPool extends StringPool<SpecString>{
         return 0;
     }
     public Iterator<Entry> getEntries(int typeId, String name){
-        SpecString specString = getString(name);
-        if(specString == null){
-            return EmptyIterator.of();
-        }
-        return specString.getEntries(typeId);
+        return new IterableIterator<SpecString, Entry>(getAll(name)) {
+            @Override
+            public Iterator<Entry> iterator(SpecString element) {
+                return element.getEntries(typeId);
+            }
+        };
     }
     public Iterator<Entry> getEntries(String type, String name){
-        SpecString specString = getString(name);
-        if(specString == null){
-            return EmptyIterator.of();
-        }
-        return specString.getEntries(type);
+        return new IterableIterator<SpecString, Entry>(getAll(name)) {
+            @Override
+            public Iterator<Entry> iterator(SpecString element) {
+                return element.getEntries(type);
+            }
+        };
     }
     public Iterator<Entry> getEntries(Block parentContext, String name){
-        SpecString specString = getString(name);
-        if(specString == null){
-            return EmptyIterator.of();
-        }
-        return specString.getEntries(parentContext);
+        return new IterableIterator<SpecString, Entry>(getAll(name)) {
+            @Override
+            public Iterator<Entry> iterator(SpecString element) {
+                return element.getEntries(parentContext);
+            }
+        };
     }
     @Override
     StringArray<SpecString> newInstance(OffsetArray offsets, IntegerItem itemCount, IntegerItem itemStart, boolean is_utf8) {
