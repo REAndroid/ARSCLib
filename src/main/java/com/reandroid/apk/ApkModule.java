@@ -751,6 +751,7 @@ public class ApkModule implements ApkFile, Closeable {
             mTableBlock = null;
             mTableOriginalSource = null;
             archive.remove(TableBlock.FILE_NAME);
+            unlinkLoadedManifest();
             return;
         }
         tableBlock.setApkFile(this);
@@ -762,6 +763,7 @@ public class ApkModule implements ApkFile, Closeable {
         getUncompressedFiles().addPath(source);
         mTableBlock = tableBlock;
         updateExternalFramework();
+        ensureLoadedManifestLinked();
     }
     /**
      * Use getAndroidManifest()
@@ -780,26 +782,17 @@ public class ApkModule implements ApkFile, Closeable {
             return null;
         }
         setManifestOriginalSource(inputSource);
-        InputStream inputStream = null;
+        InputStream inputStream;
         try {
             inputStream = inputSource.openStream();
-            AndroidManifestBlock manifestBlock=AndroidManifestBlock.load(inputStream);
+            AndroidManifestBlock manifestBlock = AndroidManifestBlock.load(inputStream);
             inputStream.close();
-            BlockInputSource<AndroidManifestBlock> blockInputSource=new BlockInputSource<>(inputSource.getName(),manifestBlock);
-            blockInputSource.setSort(inputSource.getSort());
-            blockInputSource.setMethod(inputSource.getMethod());
+            this.mManifestBlock = manifestBlock;
+            BlockInputSource<AndroidManifestBlock> blockInputSource = new BlockInputSource<>(
+                    inputSource.getName(),manifestBlock);
+            blockInputSource.copyAttributes(inputSource);
             addInputSource(blockInputSource);
-            manifestBlock.setApkFile(this);
-            TableBlock tableBlock = this.mTableBlock;
-            if(tableBlock != null){
-                int packageId = manifestBlock.guessCurrentPackageId();
-                if(packageId != 0){
-                    manifestBlock.setPackageBlock(tableBlock.pickOne(packageId));
-                }else {
-                    manifestBlock.setPackageBlock(tableBlock.pickOne());
-                }
-            }
-            mManifestBlock = manifestBlock;
+            ensureLoadedManifestLinked();
             onManifestBlockLoaded(manifestBlock);
         } catch (IOException exception) {
             throw new IllegalArgumentException(exception);
@@ -810,22 +803,58 @@ public class ApkModule implements ApkFile, Closeable {
         initializeApkType(manifestBlock);
     }
     public TableBlock getTableBlock(boolean initFramework) {
-        if(mTableBlock==null){
+        TableBlock tableBlock = this.mTableBlock;
+        if(tableBlock == null){
             if(!hasTableBlock()){
                 return null;
             }
             try {
-                mTableBlock = loadTableBlock();
+                tableBlock = loadTableBlock();
+                this.mTableBlock = tableBlock;
                 if(initFramework && loadDefaultFramework){
                     Integer version = getAndroidFrameworkVersion();
-                    initializeAndroidFramework(mTableBlock, version);
+                    initializeAndroidFramework(tableBlock, version);
                 }
                 updateExternalFramework();
             } catch (IOException exception) {
                 throw new IllegalArgumentException(exception);
             }
+            ensureLoadedManifestLinked();
         }
-        return mTableBlock;
+        return tableBlock;
+    }
+    private void ensureLoadedManifestLinked() {
+        TableBlock tableBlock = this.mTableBlock;
+        if(tableBlock == null) {
+            return;
+        }
+        AndroidManifestBlock manifestBlock = this.mManifestBlock;
+        if(manifestBlock == null) {
+            return;
+        }
+        PackageBlock packageBlock = manifestBlock.getPackageBlock();
+        if(packageBlock != null) {
+            TableBlock linkedTable = packageBlock.getTableBlock();
+            if(linkedTable == tableBlock) {
+                return;
+            }
+        }
+        packageBlock = tableBlock.pickOne(manifestBlock.guessCurrentPackageId());
+        if(packageBlock == null) {
+            packageBlock = tableBlock.pickOne();
+        }
+        if(packageBlock != null) {
+            manifestBlock.setPackageBlock(packageBlock);
+            manifestBlock.setApkFile(this);
+        }
+    }
+    private void unlinkLoadedManifest() {
+        AndroidManifestBlock manifestBlock = this.mManifestBlock;
+        if(manifestBlock == null) {
+            return;
+        }
+        manifestBlock.setPackageBlock(null);
+        manifestBlock.setApkFile(null);
     }
     private void updateExternalFramework(){
         TableBlock tableBlock = mTableBlock;
@@ -1027,9 +1056,9 @@ public class ApkModule implements ApkFile, Closeable {
             tableBlock = TableBlock.load(inputStream);
             inputStream.close();
         }
-        BlockInputSource<TableBlock> blockInputSource=new BlockInputSource<>(inputSource.getName(), tableBlock);
-        blockInputSource.setMethod(inputSource.getMethod());
-        blockInputSource.setSort(inputSource.getSort());
+        BlockInputSource<TableBlock> blockInputSource = new BlockInputSource<>(
+                inputSource.getName(), tableBlock);
+        blockInputSource.copyAttributes(inputSource);
         getZipEntryMap().add(blockInputSource);
         tableBlock.setApkFile(this);
         return tableBlock;
