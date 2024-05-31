@@ -182,6 +182,13 @@ public class CollectionUtil {
         }
         return results;
     }
+    public static<T> Iterator<T> newIterator(Collection<? extends T> collection) {
+        int size = collection.size();
+        if(size == 0) {
+            return EmptyIterator.of();
+        }
+        return ArrayIterator.of(collection.toArray());
+    }
     public static<T> Iterator<T> copyOf(Iterator<? extends T> iterator){
         boolean hasNext = iterator.hasNext();
         if(!hasNext){
