@@ -456,6 +456,12 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return null;
     }
+    private void linkStringsInternal() {
+        linkTableStringsInternal(getTableStringPool());
+        for(PackageBlock packageBlock : this) {
+            packageBlock.linkSpecStringsInternal(packageBlock.getSpecStringPool());
+        }
+    }
     public void linkTableStringsInternal(TableStringPool tableStringPool){
         for(PackageBlock packageBlock : this){
             packageBlock.linkTableStringsInternal(tableStringPool);
@@ -646,6 +652,7 @@ public class TableBlock extends Chunk<TableHeader>
             infoHeader=reader.readHeaderBlock();
         }
         reader.close();
+        linkStringsInternal();
     }
 
     public void readBytes(File file) throws IOException{

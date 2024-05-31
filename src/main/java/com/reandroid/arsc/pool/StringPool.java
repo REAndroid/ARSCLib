@@ -393,6 +393,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
         if(stringPool == null || stringPool == this || stringPool.size() == 0){
             return;
         }
+        ensureStringLinkUnlockedInternal();
         for (T stringItem : stringPool) {
             if(!containsInternal(stringItem)) {
                 createNewString().merge(stringItem);
