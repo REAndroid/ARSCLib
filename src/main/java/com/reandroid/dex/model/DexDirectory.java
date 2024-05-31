@@ -168,8 +168,9 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return null;
     }
-    public int shrink(){
+    public int shrink() {
         int result = 0;
+        result += DalvikUtil.cleanMissingMembers(this);
         for(DexFile dexFile : this){
             result += dexFile.shrink();
         }
