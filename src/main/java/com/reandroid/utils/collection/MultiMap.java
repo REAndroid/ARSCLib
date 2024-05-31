@@ -81,7 +81,7 @@ public class MultiMap<K, V> {
                 if(result.size() > 1) {
                     consumer.accept(result);
                 }
-                result.removeAll();
+                result.clearTemporarily();
             }
             result.add(value);
             previous = value;

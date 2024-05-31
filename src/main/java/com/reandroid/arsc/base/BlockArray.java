@@ -45,7 +45,7 @@ public abstract class BlockArray<T extends Block> extends BlockList<T>
             }
             @Override
             public void onRemoved(int i, T item) {
-                onPreRemove(item);
+                notifyPreRemove(item);
             }
         };
     }

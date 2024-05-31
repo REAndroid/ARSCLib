@@ -155,13 +155,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         if(size < 2){
             return;
         }
-        ArraySort.ObjectSort sort = new ArraySort.ObjectSort(mElements, 0, size, comparator){
-            @Override
-            public void onSwap(int i, int j) {
-                super.onSwap(i, j);
-                ArrayCollection.this.notifySwap(i, j);
-            }
-        };
+        ArraySort.ObjectSort sort = new ArraySort.ObjectSort(mElements, 0, size, comparator);
         if(sort.sort()){
             onChanged();
         }
@@ -174,13 +168,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         if(size < 2){
             return false;
         }
-        ArraySort.ObjectSort sort = new ArraySort.ObjectSort(mElements, 0, size, comparator){
-            @Override
-            public void onSwap(int i, int j) {
-                super.onSwap(i, j);
-                ArrayCollection.this.notifySwap(i, j);
-            }
-        };
+        ArraySort.ObjectSort sort = new ArraySort.ObjectSort(mElements, 0, size, comparator);
         if(sort.sort()){
             onChanged();
             return true;
@@ -212,7 +200,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
             @Override
             public void onSwap(int i, int j) {
                 super.onSwap(i, j);
-                ArrayCollection.this.notifySwap(i, j);
                 swapListener.onSwap(i, j);
             }
         };
@@ -304,7 +291,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         if(size < start){
             this.size = size;
             onChanged();
-            notifyShrink(size);
             return;
         }
         boolean locked = this.mLocked;
@@ -376,7 +362,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         this.mElements = elements;
         this.size = size;
         onChanged();
-        notifySet(elements, size);
     }
 
     @Override
@@ -428,6 +413,14 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
             result[i] = elements[i];
         }
         return new ArrayCollection<>(result);
+    }
+    public ArrayCollection<T> reversedCopy() {
+        Object[] elements = toArray();
+        if(elements == this.mElements && elements.length != 0) {
+            elements = elements.clone();
+        }
+        ArrayUtil.reverse(elements);
+        return new ArrayCollection<>(elements);
     }
 
     @Override
@@ -760,13 +753,13 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     }
     @Override
     public boolean retainAll(Collection<?> collection) {
-        return false;
+        throw new RuntimeException("Method not implemented");
     }
 
     /**
      * Keeps the current array for latter use
      * */
-    public void removeAll(){
+    public void clearTemporarily() {
         int size = this.size;
         this.size = 0;
         Object[] elements = this.mElements;
@@ -775,7 +768,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
             elements[i] = null;
         }
         onChanged();
-        notifyShrink(0);
     }
     @Override
     public void clear() {
@@ -789,7 +781,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
             elements[i] = null;
         }
         onChanged();
-        notifyShrink(0);
     }
 
     @Override
@@ -876,7 +867,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         this.mElements[i] = item;
         if(item != existing){
             onChanged();
-            notifySet(i, item);
         }
         return existing;
     }
@@ -1014,12 +1004,10 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         Object[] elements = this.mElements;
         if(elements.length == 0 || size == 0){
             this.mElements = update;
-            notifyGrow(length);
             return;
         }
         arrayCopy(elements, update, size);
         this.mElements = update;
-        notifyGrow(length);
     }
     public int availableCapacity(){
         return this.mElements.length - size;
@@ -1066,36 +1054,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         Monitor<T> monitor = getMonitor();
         if(monitor != null){
             monitor.onRemoved(i, item);
-        }
-    }
-    private void notifySet(int i, T item){
-        Monitor<T> monitor = getMonitor();
-        if(monitor != null){
-            monitor.onSet(i, item);
-        }
-    }
-    private void notifySet(Object[] elements, int size){
-        Monitor<T> monitor = getMonitor();
-        if(monitor != null){
-            monitor.onSet(elements, size);
-        }
-    }
-    private void notifyGrow(int size){
-        Monitor<T> monitor = getMonitor();
-        if(monitor != null){
-            monitor.onGrow(size);
-        }
-    }
-    private void notifyShrink(int size){
-        Monitor<T> monitor = getMonitor();
-        if(monitor != null){
-            monitor.onShrink(size);
-        }
-    }
-    void notifySwap(int i, int j){
-        Monitor<T> monitor = getMonitor();
-        if(monitor != null){
-            monitor.onSwap(i, j);
         }
     }
     @Override
@@ -1197,7 +1155,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
             return false;
         }
         @Override
-        public void removeAll(){
+        public void clearTemporarily(){
         }
         @Override
         public void clear() {
@@ -1275,10 +1233,5 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     public interface Monitor<T> {
         void onAdd(int i, T item);
         void onRemoved(int i, T item);
-        default void onSet(int i, T item) {}
-        default void onSet(Object[] elements, int size){}
-        default void onGrow(int size){}
-        default void onShrink(int size){}
-        default void onSwap(int i, int j){}
     }
 }

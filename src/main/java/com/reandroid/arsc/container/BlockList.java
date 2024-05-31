@@ -67,8 +67,8 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
             mItems.setSize(size);
         }
     }
-    public void removeAll(){
-        mItems.removeAll();
+    public void clearTemporarily() {
+        mItems.clearTemporarily();
     }
     public void setElements(T[] elements){
         if(elements == null || elements.length == 0){
@@ -273,7 +273,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         if(item == null){
             return null;
         }
-        onPreRemove(item);
+        notifyPreRemove(item);
         item.setParent(null);
         item.setIndex(-1);
         if(updateIndex){
@@ -283,7 +283,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         return item;
     }
     public boolean remove(T item){
-        onPreRemove(item);
+        notifyPreRemove(item);
         int index = -1;
         if(item != null){
             index = mItems.indexOfFast(item, item.getIndex());
@@ -302,6 +302,11 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         }
         onChanged();
         return removed;
+    }
+    protected void notifyPreRemove(T item) {
+        if(item != null && item.getParent() == this) {
+            onPreRemove(item);
+        }
     }
     public void onPreRemove(T item){
 
