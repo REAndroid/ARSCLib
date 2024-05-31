@@ -108,7 +108,7 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         }
         return addNewItem(typeKey);
     }
-    public AnnotationItem getOrCreate(String type, String name){
+    public AnnotationItem getOrCreate(TypeKey type, String name){
         AnnotationItem item = get(type, name);
         if(item != null){
             return item;
@@ -120,15 +120,15 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         item.setType(typeKey);
         return item;
     }
-    public AnnotationItem addNew(String type, String name){
+    public AnnotationItem addNew(TypeKey type, String name){
         AnnotationItem item = addNew();
         item.setType(type);
         item.getOrCreateElement(name);
         return item;
     }
-    public AnnotationItem get(String type, String name){
+    public AnnotationItem get(TypeKey type, String name){
         for (AnnotationItem item : this) {
-            if (type.equals(item.getTypeName())
+            if (type.equals(item.getTypeKey())
                     && item.containsName(name)) {
                 return item;
             }

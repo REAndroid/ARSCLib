@@ -68,16 +68,8 @@ public class IdSection<T extends IdItem> extends Section<T> {
         return false;
     }
     @Override
-    public Iterator<Key> removeWithKeys(Predicate<Key> filter){
-        Iterator<T> iterator = getItemArray().clonedIterator();
-        return ComputeIterator.of(iterator, item -> {
-            Key key = item.getKey();
-            if(filter.test(key)){
-                item.removeSelf();
-                return key;
-            }
-            return null;
-        });
+    public boolean removeWithKeys(Predicate<? super Key> filter){
+        return getItemArray().removeIf(item -> filter.test(item.getKey()));
     }
     @Override
     public T getSectionItem(int i){

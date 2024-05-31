@@ -20,7 +20,7 @@ import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.PositionAlignedItem;
 import com.reandroid.dex.data.DataItem;
-import com.reandroid.dex.pool.DataSectionPool;
+import com.reandroid.dex.pool.DexSectionPool;
 
 
 public class DataSection<T extends DataItem> extends Section<T> {
@@ -33,8 +33,8 @@ public class DataSection<T extends DataItem> extends Section<T> {
     }
 
     @Override
-    boolean clearUnused() {
-        return false;
+    int clearUnused() {
+        return super.clearUnused();
     }
     @Override
     public T getSectionItem(int offset){
@@ -52,12 +52,12 @@ public class DataSection<T extends DataItem> extends Section<T> {
     }
 
     @Override
-    public DataSectionPool<T> getPool() {
-        return (DataSectionPool<T>) super.getPool();
+    public DexSectionPool<T> getPool() {
+        return super.getPool();
     }
     @Override
-    DataSectionPool<T> createPool(){
-        return new DataSectionPool<>(this);
+    DexSectionPool<T> createPool(){
+        return new DexSectionPool<>(this);
     }
     @Override
     public DataSectionArray<T> getItemArray() {

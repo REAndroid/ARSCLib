@@ -27,15 +27,20 @@ import com.reandroid.utils.collection.EmptyIterator;
 
 import java.util.Iterator;
 
-public class StringDataPool extends DataSectionPool<StringData> {
+public class StringDataPool extends DexSectionPool<StringData> {
 
     public StringDataPool(StringDataSection section) {
-        super(section, 0);
+        super(section);
     }
 
     // Ignore loading, StringId pool is already created.
     @Override
     public void load() {
+    }
+
+    @Override
+    public int clearDuplicates() {
+        return 0;
     }
 
     @Override
@@ -62,10 +67,10 @@ public class StringDataPool extends DataSectionPool<StringData> {
     }
 
     @Override
-    public boolean update(Key key) {
+    public boolean updateKey(Key old, Key key, StringData value) {
         DexSectionPool<StringId> pool = getLoadedIdPool();
-        if(pool != null){
-            return pool.update(key);
+        if(pool != null) {
+            return pool.updateKey(old, key, pool.get(old));
         }
         return false;
     }
@@ -79,10 +84,6 @@ public class StringDataPool extends DataSectionPool<StringData> {
         return false;
     }
 
-    @Override
-    Object getItem(Key key){
-        return getStringData(key);
-    }
     @Override
     StringDataSection getSection() {
         return (StringDataSection) super.getSection();

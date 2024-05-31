@@ -51,6 +51,9 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
     public boolean remove(DexValueBlock<?> value){
         return getValueContainer().remove(value);
     }
+    public boolean removeIf(Predicate<? super DexValueBlock<?>> filter){
+        return getValueContainer().removeIf(filter);
+    }
     public<T1 extends DexValueBlock<?>> T1 createNext(DexValueType<T1> valueType){
         T1 item = valueType.newInstance();
         add(item);

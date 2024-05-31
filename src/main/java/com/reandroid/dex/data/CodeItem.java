@@ -38,7 +38,6 @@ import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
 import java.util.Iterator;

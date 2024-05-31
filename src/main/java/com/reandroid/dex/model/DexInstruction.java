@@ -341,6 +341,11 @@ public class DexInstruction extends DexCode {
     public void append(SmaliWriter writer) throws IOException {
         getIns().append(writer);
     }
+    @Override
+    public String toString() {
+        return getIns().toString();
+    }
+
     public static Iterator<DexInstruction> create(DexMethod dexMethod, Iterator<Ins> iterator){
         if(dexMethod == null){
             return EmptyIterator.of();

@@ -28,12 +28,8 @@ import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.pool.KeyPool;
 import com.reandroid.dex.smali.model.SmaliClass;
-import com.reandroid.utils.collection.CombiningIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.IterableIterator;
-import com.reandroid.utils.collection.SingleIterator;
+import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.FileUtil;
 
 import java.io.File;
@@ -49,8 +45,8 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
 
     private String mSimpleName;
 
-    private final KeyPool<ClassId> extendingClassMap;
-    private final KeyPool<ClassId> interfaceMap;
+    private final MultiMap<TypeKey, ClassId> extendingClassMap;
+    private final MultiMap<TypeKey, ClassId> interfaceMap;
 
     private Object mTag;
 
@@ -59,8 +55,8 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
         this.sectionList = new SectionList();
         addChild(0, sectionList);
 
-        this.extendingClassMap = new KeyPool<>(SectionType.CLASS_ID, 2000);
-        this.interfaceMap = new KeyPool<>(SectionType.CLASS_ID, 2000);
+        this.extendingClassMap = new MultiMap<>();
+        this.interfaceMap = new MultiMap<>();
     }
 
     public int getVersion(){
@@ -102,36 +98,36 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
         getSectionList().clear();
     }
     private void loadExtendingClassMap(){
-        KeyPool<ClassId> superClassMap = this.extendingClassMap;
+        MultiMap<TypeKey, ClassId> superClassMap = this.extendingClassMap;
         superClassMap.clear();
-        Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);
-        while (iterator.hasNext()){
-            ClassId classId = iterator.next();
-            String superName = classId.getSuperClassKey().getTypeName();
-            if(DexUtils.isJavaFramework(superName)){
-                continue;
-            }
-            TypeKey typeKey = TypeKey.create(superName);
-            superClassMap.put(typeKey, classId);
+        Section<ClassId> section = getSectionList().getSection(SectionType.CLASS_ID);
+        if(section == null) {
+            return;
         }
-        superClassMap.trimToSize();
+        superClassMap.setInitialSize(section.getCount());
+        for (ClassId classId : section) {
+            TypeKey typeKey = classId.getSuperClassKey();
+            if(!DexUtils.isJavaFramework(typeKey.getTypeName())){
+                superClassMap.put(typeKey, classId);
+            }
+        }
     }
     private void loadInterfacesMap(){
-        KeyPool<ClassId> interfaceMap = this.interfaceMap;
+        MultiMap<TypeKey, ClassId> interfaceMap = this.interfaceMap;
         interfaceMap.clear();
-        Iterator<ClassId> iterator = getItems(SectionType.CLASS_ID);
-        while (iterator.hasNext()){
-            ClassId classId = iterator.next();
+        Section<ClassId> section = getSectionList().getSection(SectionType.CLASS_ID);
+        if(section == null) {
+            return;
+        }
+        for (ClassId classId : section) {
             Iterator<TypeKey> interfaceKeys = classId.getInterfaceKeys();
             while (interfaceKeys.hasNext()){
                 TypeKey typeKey = interfaceKeys.next();
-                if(DexUtils.isJavaFramework(typeKey.getTypeName())){
-                    continue;
+                if(!DexUtils.isJavaFramework(typeKey.getTypeName())) {
+                    interfaceMap.put(typeKey, classId);
                 }
-                interfaceMap.put(typeKey, classId);
             }
         }
-        interfaceMap.trimToSize();
     }
     public Iterator<StringId> getStrings(){
         return getItems(SectionType.STRING_ID);
@@ -198,12 +194,19 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
         }
         return false;
     }
-    public <T1 extends SectionItem> Iterator<Key> removeWithKeys(SectionType<T1> sectionType, Predicate<Key> filter){
+    public <T1 extends SectionItem> boolean removeWithKeys(SectionType<T1> sectionType, Predicate<? super Key> filter){
         Section<T1> section = get(sectionType);
         if(section != null){
             return section.removeWithKeys(filter);
         }
-        return EmptyIterator.of();
+        return false;
+    }
+    public <T1 extends SectionItem> boolean removeWithKey(SectionType<T1> sectionType, Key key){
+        Section<T1> section = get(sectionType);
+        if(section != null){
+            return section.remove(key);
+        }
+        return false;
     }
     public <T1 extends SectionItem> T1 get(SectionType<T1> sectionType, Key key){
         Section<T1> section = get(sectionType);

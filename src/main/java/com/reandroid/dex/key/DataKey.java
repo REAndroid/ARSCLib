@@ -16,6 +16,7 @@
 package com.reandroid.dex.key;
 
 import com.reandroid.dex.data.DataItem;
+import com.reandroid.utils.CompareUtil;
 
 public class DataKey<T extends DataItem> implements Key{
     private final T item;
@@ -37,8 +38,13 @@ public class DataKey<T extends DataItem> implements Key{
             return 1;
         }
         DataKey<?> key = (DataKey<?>) obj;
-        if(getItem().getClass() == key.getItem().getClass()){
+        if(getItem().equals(key.getItem())){
             return 0;
+        }
+        int i = CompareUtil.compareUnsigned(getItem().getIndex(),
+                key.getItem().getIndex());
+        if(i != 0) {
+            return i;
         }
         return 1;
     }

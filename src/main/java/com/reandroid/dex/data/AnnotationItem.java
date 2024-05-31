@@ -39,6 +39,7 @@ import com.reandroid.dex.value.DexValueType;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
@@ -225,6 +226,10 @@ public class AnnotationItem extends DataItem
         }
     }
     public Iterator<IdItem> usedIds(){
+        TypeKey typeKey = getTypeKey();
+        if(typeKey.getTypeName().startsWith("Ldalvik/annotation/")){
+            return EmptyIterator.of();
+        }
         return CombiningIterator.singleOne(getTypeId(),
                 new IterableIterator<AnnotationElement, IdItem>(iterator()) {
                     @Override

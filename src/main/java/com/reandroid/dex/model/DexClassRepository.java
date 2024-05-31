@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
@@ -28,13 +29,14 @@ import com.reandroid.dex.key.*;
 import com.reandroid.dex.sections.Marker;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.*;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public interface DexClassRepository extends FullRefresh {
+public interface DexClassRepository extends FullRefresh, BlockRefresh {
 
     int getDexClassesCount();
     DexClass getDexClass(TypeKey typeKey);
@@ -116,6 +118,8 @@ public interface DexClassRepository extends FullRefresh {
         return contains(SectionType.CLASS_ID, key);
     }
     <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter);
+    <T1 extends SectionItem> boolean removeEntriesWithKey(SectionType<T1> sectionType, Predicate<? super Key> filter);
+    <T1 extends SectionItem> boolean removeEntry(SectionType<T1> sectionType, Key key);
     void clearPoolMap();
 
     default <T extends SectionItem> Iterator<T> getClonedItems(SectionType<T> sectionType, Predicate<? super T> filter) {
@@ -195,6 +199,13 @@ public interface DexClassRepository extends FullRefresh {
         return new DexIntegerVisitor(this);
     }
 
+    default boolean removeClass(TypeKey typeKey) {
+        return removeEntry(SectionType.CLASS_ID, typeKey);
+    }
+    boolean removeClasses(Predicate<? super DexClass> filter);
+    default boolean removeClassesWithKeys(Predicate<? super TypeKey> filter) {
+        return removeEntriesWithKey(SectionType.CLASS_ID, ObjectsUtil.cast(filter));
+    }
     default boolean removeAnnotations(TypeKey typeKey) {
         return removeEntries(SectionType.ANNOTATION_ITEM,
                 annotationItem -> typeKey.equals(annotationItem.getTypeKey()));

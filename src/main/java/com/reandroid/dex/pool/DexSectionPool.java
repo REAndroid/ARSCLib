@@ -15,17 +15,19 @@
  */
 package com.reandroid.dex.pool;
 
-import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
 import com.reandroid.dex.key.ModifiableKeyItem;
 import com.reandroid.dex.sections.Section;
+import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.MultiMap;
 
-import java.util.Iterator;
+import java.util.Comparator;
 
-public class DexSectionPool<T extends SectionItem> extends KeyPool<T>{
+public class DexSectionPool<T extends SectionItem> extends MultiMap<Key, T> {
 
     private final Section<T> section;
 
@@ -33,70 +35,38 @@ public class DexSectionPool<T extends SectionItem> extends KeyPool<T>{
     private boolean keyItemsCreate;
     private boolean keyItemsChecked;
 
-    DexSectionPool(Section<T> section, int initialCapacity){
-        super(section.getSectionType(), initialCapacity);
+    public DexSectionPool(Section<T> section) {
         this.section = section;
     }
-    public DexSectionPool(Section<T> section){
-        this(section, section.getCount());
-    }
 
-    @Override
-    public void remove(T item){
-        if(isKeyItems()){
-            super.remove(item);
-        }
-    }
-    @SuppressWarnings("unchecked")
-    public boolean update(Key key){
-        Object obj = getItem(key);
-        if(obj == null){
-            return false;
-        }
-        remove(key);
-        if(!(obj instanceof KeyItemGroup)){
-            T item = (T)obj;
-            key = ((KeyItem) item).getKey();
-            put(key, item);
-            return true;
-        }
-        KeyItemGroup<T> group = (KeyItemGroup<T>) obj;
-        if(group.size() == 0){
-            return false;
-        }
-        key = group.getKey();
-        put(key, group);
-        return true;
-    }
-    @SuppressWarnings("unchecked")
     public T getOrCreate(Key key){
         if(key == null || !isKeyItemsCreate()){
             return null;
         }
-        Object obj = getItem(key);
-        if(obj != null){
-            if(obj instanceof KeyItemGroup){
-                return  ((KeyItemGroup<T>)obj).matching(key);
-            }else {
-                return (T) obj;
-            }
+        T item = get(key);
+        if(item == null) {
+            item = createNext(key);
+            put(key, item);
         }
-        T item = createNext(key);
-        add(item);
         return item;
+    }
+    public SectionType<T> getSectionType(){
+        return getSection().getSectionType();
+    }
+    public void remove(T item){
+        if(item != null) {
+            super.remove(item.getKey(), item);
+        }
+    }
+    public boolean contains(Key key){
+        return super.containsKey(key);
     }
     public void load(){
         if(!isKeyItems()){
             return;
         }
         Section<T> section = this.getSection();
-        BlockListArray<T> itemArray = section.getItemArray();
-        int length = itemArray.size();
-        reInitialize(length);
-        for(int i = 0; i < length; i++){
-            add(itemArray.get(i));
-        }
-        trimToSize();
+        putAll(T::getKey, section.iterator());
     }
     T createNext(Key key){
         T item = getSection().createItem();
@@ -106,57 +76,31 @@ public class DexSectionPool<T extends SectionItem> extends KeyPool<T>{
     Section<T> getSection(){
         return this.section;
     }
-    public int clearDuplicates(){
-        ArrayCollection<T> result = new ArrayCollection<>(size() / 10);
-        Iterator<KeyItemGroup<T>> iterator = groupIterator();
-        while (iterator.hasNext()){
-            replaceDuplicates(result, iterator.next());
+    public int clearDuplicates() {
+        if (size() == 0 || size() == getSection().getCount()) {
+            return 0;
         }
+        ArrayCollection<T> result = new ArrayCollection<>();
+        Comparator<T> comparator = (item1, item2) -> {
+            int i = CompareUtil.compare(item1.isRemoved(), item2.isRemoved());
+            if(i != 0 || item1.isRemoved()) {
+                return i;
+            }
+            i = CompareUtil.compare(item1.getKey(), item2.getKey());
+            return i;
+        };
+        findDuplicates(comparator,
+                list -> {
+                    T first = list.get(0);
+                    for(int i = 1; i < list.size(); i++) {
+                        T item = list.get(i);
+                        item.setReplace(first);
+                        result.add(item);
+                    }
+                });
         Section<T> section = getSection();
-        int size = result.size();
-        section.removeEntries(item -> {
-            int i = result.indexOfFast(item);
-            if(i < 0){
-                return false;
-            }
-            result.remove(i);
-            return true;
-        });
-
-        result.clear();
-        return size;
-    }
-    private void replaceDuplicates(ArrayCollection<T> result, KeyItemGroup<T> group){
-        int size = group.size();
-        if(size < 2){
-            return;
-        }
-        T first = group.getFirst();
-        if(first.isRemoved() || first.getReplace() != first){
-            return;
-        }
-        Iterator<T> iterator = group.iterator(1);
-        int start = result.size();
-        while (iterator.hasNext()){
-            T item = iterator.next();
-            if(start < result.size() && result.indexOf(item, start) < 0 ||
-                    (start == result.size() && !first.equalsKey(item))){
-                undoSetReplace(result, start);
-                return;
-            }
-            if(item != first){
-                item.setReplace(first);
-                result.add(item);
-            }
-        }
-    }
-    private void undoSetReplace(ArrayCollection<T> result, int start){
-        Iterator<T> iterator = result.iterator(start);
-        while (iterator.hasNext()){
-            T item = iterator.next();
-            item.setReplace(null);
-        }
-        result.setSize(start);
+        section.getItemArray().removeAll(result);
+        return result.size();
     }
     boolean isKeyItemsCreate(){
         isKeyItems();
@@ -177,5 +121,9 @@ public class DexSectionPool<T extends SectionItem> extends KeyPool<T>{
         keyItems = sample instanceof KeyItem;
         keyItemsCreate = sample instanceof ModifiableKeyItem;
         return keyItems;
+    }
+    @Override
+    public String toString() {
+        return getSectionType().getName() + "-Pool = " + size();
     }
 }

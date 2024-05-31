@@ -119,7 +119,7 @@ public class RClassParent extends DexClass {
     private AnnotationItem getOrCreateMemberAnnotation(){
         AnnotationSet annotationSet = getOrCreateClassAnnotations();
         String name = "value";
-        AnnotationItem item = annotationSet.getOrCreate(DexUtils.DALVIK_MEMBER, name);
+        AnnotationItem item = annotationSet.getOrCreate(TypeKey.DALVIK_MemberClass, name);
         AnnotationElement element = item.getElement(name);
         if(element.getValueType() == DexValueType.ARRAY){
             return item;

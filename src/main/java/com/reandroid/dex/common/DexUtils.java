@@ -532,9 +532,19 @@ public class DexUtils {
     public static String toBinaryName(String sourceName){
         return 'L' + sourceName.replace('.', '/') + ';';
     }
+    public static String toBinaryPackageName(String sourceName) {
+        if(sourceName.indexOf('/') > 0) {
+            return sourceName;
+        }
+        String binName = 'L' + sourceName.replace('.', '/');
+        if(binName.charAt(sourceName.length() - 1) != '/') {
+            binName = binName + '/';
+        }
+        return binName;
+    }
     public static String getPackageName(String className) {
         if(className.length() < 3){
-            return "";
+            return StringsUtil.EMPTY;
         }
         int start = 0;
         while (className.charAt(start) == '['){
@@ -676,8 +686,6 @@ public class DexUtils {
                 return false;
         }
     }
-
-    public static final String DALVIK_MEMBER = "Ldalvik/annotation/MemberClasses;";
 
     public static final String[] PLATFORM_PACKAGES = new String[]{
             "Ljava/",

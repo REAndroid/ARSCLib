@@ -163,18 +163,8 @@ public class DexFile implements DexClassRepository, Closeable,
     public Iterator<DexClass> iterator() {
         return getDexClasses();
     }
-
-    public boolean removeDexClass(TypeKey typeKey){
-        Section<ClassId> section = getSection(SectionType.CLASS_ID);
-        if(section != null){
-            return section.remove(typeKey);
-        }
-        return false;
-    }
-    public Iterator<Key> removeClassesWithKeys(Predicate<Key> filter){
-        return getDexLayout().removeWithKeys(SectionType.CLASS_ID, filter);
-    }
-    public boolean removeClasses(Predicate<DexClass> filter){
+    @Override
+    public boolean removeClasses(Predicate<? super DexClass> filter){
         Predicate<ClassId> classIdFilter = classId -> filter.test(DexFile.this.create(classId));
         return getDexLayout().removeEntries(SectionType.CLASS_ID, classIdFilter);
     }
@@ -182,8 +172,13 @@ public class DexFile implements DexClassRepository, Closeable,
     public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
         return getDexLayout().removeEntries(sectionType, filter);
     }
-    public <T1 extends SectionItem> Iterator<Key> removeWithKeys(SectionType<T1> sectionType, Predicate<Key> filter){
+    @Override
+    public <T1 extends SectionItem> boolean removeEntriesWithKey(SectionType<T1> sectionType, Predicate<? super Key> filter) {
         return getDexLayout().removeWithKeys(sectionType, filter);
+    }
+    @Override
+    public <T1 extends SectionItem> boolean removeEntry(SectionType<T1> sectionType, Key key){
+        return getDexLayout().removeWithKey(sectionType, key);
     }
     @Override
     public int getDexClassesCount() {
@@ -326,6 +321,7 @@ public class DexFile implements DexClassRepository, Closeable,
     public <T1 extends SectionItem> Section<T1> getSection(SectionType<T1> sectionType){
         return getDexLayout().get(sectionType);
     }
+    @Override
     public void refresh() {
         getDexLayout().refresh();
     }

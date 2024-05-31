@@ -255,22 +255,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return null;
     }
-    public <T1 extends SectionItem> Iterator<T1> getAll(SectionType<T1> sectionType, Key key){
-        return new IterableIterator<DexFile, T1>(iterator()) {
-            @Override
-            public Iterator<T1> iterator(DexFile element) {
-                return element.getItems(sectionType, key);
-            }
-        };
-    }
-    public boolean removeDexClass(TypeKey typeKey){
-        for(DexFile dexFile : this){
-            if(dexFile.removeDexClass(typeKey)){
-                return true;
-            }
-        }
-        return false;
-    }
     @Override
     public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
         Iterator<DexFile> iterator = clonedIterator();
@@ -283,24 +267,37 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return result;
     }
-    public boolean removeClasses(Predicate<DexClass> filter){
+    @Override
+    public <T1 extends SectionItem> boolean removeEntry(SectionType<T1> sectionType, Key key) {
+        boolean removed = false;
+        for(DexFile dexFile : this) {
+            if(dexFile.removeEntry(sectionType, key)) {
+                removed = true;
+            }
+        }
+        return removed;
+    }
+    @Override
+    public <T1 extends SectionItem> boolean removeEntriesWithKey(SectionType<T1> sectionType, Predicate<? super Key> filter) {
+        boolean removed = false;
+        for(DexFile dexFile : this) {
+            if(dexFile.removeEntriesWithKey(sectionType, filter)) {
+                removed = true;
+            }
+        }
+        return removed;
+    }
+    @Override
+    public boolean removeClasses(Predicate<? super DexClass> filter) {
         Iterator<DexFile> iterator = clonedIterator();
-        boolean result = false;
+        boolean removed = false;
         while (iterator.hasNext()){
             DexFile dexFile = iterator.next();
             if(dexFile.removeClasses(filter)){
-                result = true;
+                removed = true;
             }
         }
-        return result;
-    }
-    public Iterator<Key> removeClassesWithKeys(Predicate<Key> filter){
-        return new IterableIterator<DexFile, Key>(clonedIterator()) {
-            @Override
-            public Iterator<Key> iterator(DexFile element) {
-                return element.removeClassesWithKeys(filter);
-            }
-        };
+        return removed;
     }
     @Override
     public<T1 extends SectionItem> Iterator<T1> getClonedItems(SectionType<T1> sectionType) {
@@ -404,12 +401,13 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
     }
     @Override
-    public void refreshFull(){
+    public void refreshFull() {
         for(DexFile dexFile : this){
             dexFile.setDexDirectory(this);
             dexFile.refreshFull();
         }
     }
+    @Override
     public void refresh(){
         for(DexFile dexFile : this){
             dexFile.setDexDirectory(this);
@@ -677,7 +675,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
     }
     public List<FieldKey> rename(FieldKey fieldKey, String name){
         ArrayCollection<FieldKey> existingFields = ArrayCollection.of(findEquivalentFields(fieldKey.changeName(name)));
-        ArrayCollection<FieldId> fieldIdList = ArrayCollection.of(getFields(fieldKey));
+        ArrayCollection<FieldId> fieldIdList = ArrayCollection.of(getItems(SectionType.FIELD_ID, fieldKey));
         if(fieldIdList.isEmpty()){
             return EmptyList.of();
         }
@@ -728,14 +726,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
             }
         }
         return false;
-    }
-    public Iterator<FieldId> getFields(FieldKey fieldKey){
-        return new IterableIterator<FieldKey, FieldId>(findEquivalentFields(fieldKey)) {
-            @Override
-            public Iterator<FieldId> iterator(FieldKey element) {
-                return getAll(SectionType.FIELD_ID, element);
-            }
-        };
     }
     @Override
     public Iterator<DexClass> searchExtending(TypeKey typeKey){

@@ -26,6 +26,7 @@ import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 public class DexValueArray extends DexValue implements Iterable<DexValue> {
 
@@ -44,8 +45,7 @@ public class DexValueArray extends DexValue implements Iterable<DexValue> {
     }
 
     public DexValue get(int index){
-        return DexValue.create(getDeclaring(),
-                getDexValueBlock().get(index));
+        return createValue(getDexValueBlock().get(index));
     }
     public int size(){
         return getDexValueBlock().size();
@@ -58,6 +58,10 @@ public class DexValueArray extends DexValue implements Iterable<DexValue> {
             return false;
         }
         return getDexValueBlock().remove(dexValue.getDexValueBlock());
+    }
+    public boolean removeIf(Predicate<? super DexValue> filter){
+        return getDexValueBlock().removeIf(
+                dexValueBlock -> filter.test(DexValueArray.this.createValue(dexValueBlock)));
     }
     public void clear(){
         getDexValueBlock().clear();
@@ -153,5 +157,8 @@ public class DexValueArray extends DexValue implements Iterable<DexValue> {
     @Override
     public ArrayValue getDexValueBlock() {
         return (ArrayValue) super.getDexValueBlock();
+    }
+    DexValue createValue(DexValueBlock<?> valueBlock) {
+        return DexValue.create(getDeclaring(), valueBlock);
     }
 }

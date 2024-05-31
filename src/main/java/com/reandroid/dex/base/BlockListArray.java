@@ -16,16 +16,16 @@
 package com.reandroid.dex.base;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.BlockArray;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.base.OffsetSupplier;
-import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.header.DexHeader;
 
 import java.io.IOException;
 
-public class BlockListArray<T extends Block> extends BlockList<T>
+public class BlockListArray<T extends Block> extends BlockArray<T>
         implements OffsetSupplier, DexArraySupplier<T>, Creator<T> {
 
     private final IntegerPair countAndOffset;

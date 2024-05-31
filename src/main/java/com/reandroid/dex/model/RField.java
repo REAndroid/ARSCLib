@@ -198,7 +198,7 @@ public class RField extends DexField implements Comparable<RField> {
             return EmptyIterator.of();
         }
         @Override
-        public Iterator<Entry> iterator(Predicate<Entry> filter) {
+        public Iterator<Entry> iterator(Predicate<? super Entry> filter) {
             return EmptyIterator.of();
         }
         public RField getRField() {

@@ -133,14 +133,15 @@ public class SectionList extends FixedBlockContainer
         }
         return result;
     }
-    public int clearUnused(){
+    public int clearUnused() {
         clearUsageTypes();
         refresh();
         int result = 0;
-        Iterator<Section<?>> iterator = getSections();
-        while (iterator.hasNext()) {
-            if(iterator.next().clearUnused()){
-                result ++;
+        SectionType<?>[] remove = SectionType.getRemoveOrderList();
+        for (SectionType<?> sectionType : remove) {
+            Section<?> section = getSection(sectionType);
+            if(section != null){
+                result += section.clearUnused();
             }
         }
         return result;

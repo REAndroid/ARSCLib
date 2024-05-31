@@ -24,7 +24,6 @@ import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -62,14 +61,16 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         refresh();
     }
 
-    boolean clearUnused(){
-        return removeEntries(item -> item.getUsageType() == UsageMarker.USAGE_NONE);
+    int clearUnused(){
+        int size = getCount();
+        removeEntries(item -> item.getUsageType() == UsageMarker.USAGE_NONE);
+        return size - getCount();
     }
     public boolean remove(Key key){
         return false;
     }
-    public Iterator<Key> removeWithKeys(Predicate<Key> filter){
-        return EmptyIterator.of();
+    public boolean removeWithKeys(Predicate<? super Key> filter){
+        return false;
     }
     public boolean removeEntries(Predicate<? super T> filter){
         return getItemArray().removeIf(filter);
@@ -126,10 +127,11 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         return getPool().get(key);
     }
 
+    @SuppressWarnings("unchecked")
     boolean keyChanged(SectionItem block, Key key, boolean immediateIdSort){
         DexSectionPool<T> dexSectionPool = this.getLoadedPool();
         if(dexSectionPool != null){
-            return dexSectionPool.update(key);
+            return dexSectionPool.updateKey(key, block.getKey(), (T)block);
         }
         return false;
     }

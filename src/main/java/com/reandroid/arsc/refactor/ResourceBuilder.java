@@ -35,6 +35,7 @@ import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.FilterIterator;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 public class ResourceBuilder {
 
@@ -70,6 +71,7 @@ public class ResourceBuilder {
         resultModule.setTableBlock(resultTable);
         initializeTable();
         mergePackages();
+        resultTable.refreshFull();
     }
 
     public int applyIdChanges(Iterator<IntegerReference> iterator) {
@@ -145,7 +147,7 @@ public class ResourceBuilder {
             zipEntryMap.remove(path);
         }
     }
-    private void rebuildManifest(ApkModule apkModule) {
+    public void rebuildManifest(ApkModule apkModule) {
         AndroidManifestBlock moduleManifest = apkModule.getAndroidManifest();
         if(moduleManifest == null){
             return;
@@ -165,6 +167,7 @@ public class ResourceBuilder {
         resultManifest.mergeWithName(getMergeOption(), moduleManifest);
 
         apkModule.setManifest(resultManifest);
+        apkModule.keepManifestChanges();
     }
 
     private void mergePackages(){
@@ -179,12 +182,14 @@ public class ResourceBuilder {
     }
     private void mergePackage(PackageBlock sourcePackage, PackageBlock resultPackage) {
         ResourceMergeOption mergeOption = this.getMergeOption();
-        Iterator<ResourceEntry> iterator = sourcePackage.iterator();
+        Predicate<? super ResourceEntry> keepEntries = mergeOption.getKeepEntries();
+        Iterator<ResourceEntry> iterator = FilterIterator.of(sourcePackage.iterator(), keepEntries);
         while (iterator.hasNext()){
             ResourceEntry sourceEntry = iterator.next();
             if(sourceEntry.isEmpty()) {
                 continue;
             }
+
             ResourceEntry resultEntry = resultPackage.mergeWithName(mergeOption, sourceEntry);
             addIdMap(sourceEntry.getResourceId(), resultEntry.getResourceId());
         }
@@ -194,7 +199,7 @@ public class ResourceBuilder {
         sourceTable.refresh();
         TableBlock resultTable = this.getResultTable();
 
-        resultTable.addFrameworks(resultTable.frameworks());
+        resultTable.addFrameworks(sourceTable.frameworks());
 
         for(PackageBlock sourcePackage : sourceTable) {
             resultTable.newPackage(sourcePackage.getId(), sourcePackage.getName());
@@ -219,19 +224,20 @@ public class ResourceBuilder {
         initializeEntries(sourcePackage, resultPackage);
     }
     private void initializeTypeString(PackageBlock sourcePackage, PackageBlock resultPackage) {
+        Predicate<? super ResourceEntry> keepEntries = getMergeOption().getKeepEntries();
         TypeStringPool sourcePool = sourcePackage.getTypeStringPool();
         Set<String> typeSet = new HashSet<>(sourcePool.size());
         for(TypeString typeString : sourcePool) {
             String typeName = typeString.get();
             Iterator<ResourceEntry> iterator = FilterIterator.of(sourcePackage.iterator(typeName),
-                    ResourceEntry::isDeclared);
+                    keepEntries);
             if(iterator.hasNext()){
                 typeSet.add(typeName);
             }
         }
         List<String> typeList = new ArrayCollection<>(typeSet);
         typeList.sort(CompareUtil.getComparableComparator());
-        resultPackage.getTypeStringPool().addStrings(typeSet);
+        resultPackage.getTypeStringPool().addStrings(typeList);
     }
     private void initializeSpecString(PackageBlock sourcePackage, PackageBlock resultPackage) {
         resultPackage.getSpecStringPool().merge(sourcePackage.getSpecStringPool());
@@ -244,9 +250,12 @@ public class ResourceBuilder {
         }
     }
     private void initializeEntries(String typeName, PackageBlock sourcePackage, PackageBlock resultPackage) {
+        Predicate<? super ResourceEntry> keepEntries = getMergeOption().getKeepEntries();
         ArrayCollection<ResourceEntry> sourceEntryList = new ArrayCollection<>();
-        Iterator<ResourceEntry> iterator = FilterIterator.of(sourcePackage.iterator(typeName),
-                ResourceEntry::isDeclared);
+        Iterator<ResourceEntry> iterator = FilterIterator.of(
+                sourcePackage.iterator(typeName),
+                resourceEntry -> resourceEntry.isDeclared() &&
+                        keepEntries.test(resourceEntry));
         sourceEntryList.addAll(iterator);
 
         sourceEntryList.sort(this::compareEntryNames);
