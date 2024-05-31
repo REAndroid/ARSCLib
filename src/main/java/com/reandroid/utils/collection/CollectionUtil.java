@@ -31,6 +31,7 @@ public class CollectionUtil {
     public static<T> List<T> toUniqueList(Iterator<? extends T> iterator) {
         return new ArrayCollection<>(toHashSet(iterator));
     }
+    @SafeVarargs
     public static<T> HashSet<T> newHashSet(T ... elements) {
         if(elements == null || elements.length == 0) {
             return new HashSet<>();
@@ -164,6 +165,7 @@ public class CollectionUtil {
         }
         return results;
     }
+    @SafeVarargs
     public static<T> List<T> asList(T ... elements) {
         return new ArrayCollection<>(elements);
     }
@@ -205,7 +207,7 @@ public class CollectionUtil {
         int random = Long.toString(System.currentTimeMillis()).hashCode();
         shuffle(random, list);
     }
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("all")
     public static void shuffle(int random, List<?> list) {
         if(list.isEmpty()){
             return;
