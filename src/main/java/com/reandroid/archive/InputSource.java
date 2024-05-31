@@ -17,7 +17,9 @@ package com.reandroid.archive;
 
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.io.FileUtil;
 
 import java.io.*;
 import java.util.Comparator;
@@ -50,6 +52,13 @@ public abstract class InputSource {
     public void setSort(int sort) {
         this.sort = sort;
     }
+    public void copyAttributes(InputSource other) {
+        if(other != null && other != this) {
+            this.setSort(other.getSort());
+            this.setMethod(other.getMethod());
+            this.setAlias(other.getAlias());
+        }
+    }
     public boolean isUncompressed(){
         return getMethod() != Archive.DEFLATED;
     }
@@ -76,6 +85,18 @@ public abstract class InputSource {
     public void setAlias(String alias) {
         this.alias = alias;
         this.splitAlias = null;
+    }
+    public String getSimpleName() {
+        return FileUtil.getFileName(getAlias());
+    }
+    public String getSimpleNameWoExtension() {
+        return FileUtil.getNameWoExtension(getAlias());
+    }
+    public String getParentPath() {
+        return FileUtil.getParent(getAlias());
+    }
+    public String getExtension() {
+        return FileUtil.getExtension(getAlias());
     }
     private String[] getSplitAlias(){
         if(this.splitAlias == null){
@@ -243,7 +264,7 @@ public abstract class InputSource {
         int order1 = getSortOrder(alias1);
         int order2 = getSortOrder(alias2);
         if(order1 != order2){
-            return Integer.compare(order1, order2);
+            return CompareUtil.compare(order1, order2);
         }
         if(order1 == ORDER_classes){
             return compareDex(alias1[0], alias2[0]);

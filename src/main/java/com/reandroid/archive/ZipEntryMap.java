@@ -50,6 +50,23 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
     public Iterator<InputSource> iterator(Predicate<? super InputSource> filter){
         return ArrayIterator.of(toArray(), filter);
     }
+    public Iterator<InputSource> iteratorWithPath(Predicate<? super String> filter){
+        return iterator(inputSource -> filter.test(inputSource.getAlias()));
+    }
+    public Iterator<InputSource> withinDirectory(String directory) {
+        return withinDirectory(directory, true);
+    }
+    public Iterator<InputSource> withinDirectory(String directory, boolean includeSubDirectory) {
+        if(directory.length() != 0 && !directory.endsWith("/")) {
+            directory = directory + '/';
+        }
+        String prefix = directory;
+        if (includeSubDirectory) {
+            return iterator(inputSource -> inputSource.getParentPath().startsWith(prefix));
+        } else {
+            return iterator(inputSource -> inputSource.getParentPath().equals(prefix));
+        }
+    }
     @Override
     public Iterator<InputSource> iterator(){
         return ArrayIterator.of(toArray());
@@ -119,13 +136,6 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
             }
             onChanged(changed);
         }
-    }
-    public InputSource remove(Predicate<? super InputSource> filter){
-        Iterator<InputSource> iterator = iterator(filter);
-        if(iterator.hasNext()){
-            return remove(iterator.next());
-        }
-        return null;
     }
     public void removeIf(Predicate<? super InputSource> filter){
         Iterator<InputSource> iterator = iterator(filter);
@@ -198,6 +208,14 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
                 added = true;
             }
             onChanged(added);
+        }
+    }
+    public void addAll(Iterable<? extends InputSource> iterable) {
+        addAll(iterable.iterator());
+    }
+    public void addAll(Iterator<? extends InputSource> iterator) {
+        while (iterator.hasNext()) {
+            add(iterator.next());
         }
     }
     public void add(InputSource inputSource){
