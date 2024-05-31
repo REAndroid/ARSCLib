@@ -16,30 +16,26 @@
 package com.reandroid.dex.header;
 
 import com.reandroid.arsc.base.Block;
-import com.reandroid.dex.model.DexFile;
+import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.SHA1;
 
-import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+public class Signature extends HeaderPiece {
 
-public class Signature extends HeaderPiece{
     public Signature(){
         super(20);
     }
+
     public void update(Block parent, byte[] bytes) {
+        SHA1 sha1 = new SHA1();
         int start = parent.countUpTo(this) + countBytes();
-        MessageDigest messageDigest;
-        try {
-            messageDigest = MessageDigest.getInstance("SHA-1");
-        } catch (NoSuchAlgorithmException ex) {
-            throw new IllegalArgumentException(ex);
-        }
-        messageDigest.update(bytes, start, bytes.length - start);
-        byte[] digest = messageDigest.digest();
-        putByteArray(0, digest);
+        sha1.update(bytes, start, bytes.length - start);
+        sha1.digest(getBytesInternal());
+    }
+    public String getHex() {
+        return HexUtil.toHexString(getBytesInternal());
     }
     @Override
     public String toString() {
-        return printHex(getBytesInternal());
+        return getHex();
     }
 }
