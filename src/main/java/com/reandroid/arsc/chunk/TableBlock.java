@@ -23,6 +23,7 @@ import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.header.TableHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.model.ResourceName;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
@@ -146,6 +147,13 @@ public class TableBlock extends Chunk<TableHeader>
             if(resourceEntry != null){
                 return resourceEntry;
             }
+        }
+        return null;
+    }
+    public ResourceEntry getResource(ResourceName resourceName) {
+        if(resourceName != null) {
+            return getResource(resourceName.getPackageName(),
+                    resourceName.getType(), resourceName.getName());
         }
         return null;
     }

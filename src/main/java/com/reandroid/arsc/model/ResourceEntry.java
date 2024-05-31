@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class ResourceEntry implements Iterable<Entry>{
@@ -228,6 +227,13 @@ public class ResourceEntry implements Iterable<Entry>{
         if(block == null){
             return false;
         }
+        if(block instanceof TableBlock) {
+            PackageBlock packageBlock = getPackageBlock();
+            return packageBlock != null && block == packageBlock.getTableBlock();
+        }
+        if(block instanceof PackageBlock) {
+            return isContext((PackageBlock) block);
+        }
         return isContext(block.getParentInstance(PackageBlock.class));
     }
     public boolean isContext(PackageBlock packageBlock) {
@@ -290,19 +296,21 @@ public class ResourceEntry implements Iterable<Entry>{
     public Iterator<Entry> iterator(boolean skipNull){
         return getPackageBlock().getEntries(getResourceId(), skipNull);
     }
-    public Iterator<Entry> iterator(Predicate<Entry> filter){
+    public Iterator<Entry> iterator(Predicate<? super Entry> filter) {
         return new FilterIterator<>(getPackageBlock().getEntries(getResourceId()), filter);
     }
     public Iterator<ResConfig> getConfigs(){
-        return new ComputeIterator<>(iterator(false), new Function<Entry, ResConfig>() {
-            @Override
-            public ResConfig apply(Entry entry) {
-                return entry.getResConfig();
-            }
-        });
+        return new ComputeIterator<>(iterator(false), Entry::getResConfig);
     }
     public String getHexId(){
         return HexUtil.toHex8(getResourceId());
+    }
+    public ResourceName toResourceName() {
+        String name = getName();
+        if(name == null) {
+            return null;
+        }
+        return new ResourceName(getPackageName(), getType(), name);
     }
     public String buildReference(){
         return buildReference(getPackageBlock(), null);

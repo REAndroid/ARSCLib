@@ -33,6 +33,7 @@ import com.reandroid.arsc.list.OverlayableList;
 import com.reandroid.arsc.list.StagedAliasList;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.model.ResourceLibrary;
+import com.reandroid.arsc.model.ResourceName;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
@@ -45,10 +46,7 @@ import com.reandroid.json.JSONObject;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.IterableIterator;
-import com.reandroid.utils.collection.MergingIterator;
+import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.xml.XMLElement;
 import com.reandroid.xml.XMLFactory;
@@ -157,6 +155,12 @@ public class PackageBlock extends Chunk<PackageHeader>
             return null;
         }
         return new ResourceEntry(this, entry.getResourceId());
+    }
+    public ResourceEntry getResource(ResourceName resourceName) {
+        if(resourceName == null || !resourceName.matchesPackageName(getName())) {
+            return null;
+        }
+        return getResource(resourceName.getType(), resourceName.getName());
     }
     public ResourceEntry getResource(String type, String name){
         SpecTypePair specTypePair =
@@ -747,7 +751,7 @@ public class PackageBlock extends Chunk<PackageHeader>
             return exist;
         }
         int id = 0;
-        Iterator<Entry> iterator = resourceEntry.iterator(true);
+        Iterator<Entry> iterator = resourceEntry.iterator(mergeOption.getKeepEntryConfigs());
         while (iterator.hasNext()) {
             Entry entry = mergeWithName(mergeOption, iterator.next());
             if(id == 0){

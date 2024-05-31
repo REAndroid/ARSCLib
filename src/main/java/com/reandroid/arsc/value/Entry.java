@@ -29,6 +29,7 @@ import com.reandroid.arsc.item.SpecFlag;
 import com.reandroid.arsc.item.SpecString;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.model.ResourceName;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
@@ -456,6 +457,20 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
     }
     public PackageBlock getPackageBlock(){
         return getParent(PackageBlock.class);
+    }
+    public ResourceEntry getResourceEntry() {
+        return new ResourceEntry(getPackageBlock(), getResourceId());
+    }
+    public ResourceName getResourceName() {
+        PackageBlock packageBlock = getPackageBlock();
+        if(packageBlock == null) {
+            return null;
+        }
+        String name = getName();
+        if(name == null) {
+            return null;
+        }
+        return new ResourceName(packageBlock.getName(), getTypeName(), name);
     }
     private ResValue ensureScalar() {
         return (ResValue) ensureTableEntry(false).getValue();
