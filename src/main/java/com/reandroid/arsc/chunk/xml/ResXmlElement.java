@@ -30,6 +30,7 @@ import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.*;
@@ -1153,6 +1154,8 @@ public class ResXmlElement extends ResXmlNode implements
         this.getEndElement().setComment(element.getEndComment());
         this.getStartElement().setLineNumber(element.getStartElement().getLineNumber());
         this.getEndElement().setLineNumber(element.getEndElement().getLineNumber());
+        clearNullNodes(false);
+        calculateAttributesOrder();
     }
     @Override
     public void serialize(XmlSerializer serializer) throws IOException {
@@ -1437,7 +1440,7 @@ public class ResXmlElement extends ResXmlNode implements
     }
     @Override
     public int compare(ResXmlNode node1, ResXmlNode node2) {
-        return Integer.compare(node1.getIndex(), node2.getIndex());
+        return CompareUtil.compare(node1.getIndex(), node2.getIndex());
     }
     @Override
     public String toString(){
