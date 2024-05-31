@@ -108,6 +108,10 @@ public class FileUtil {
         return getNameWoExtensionForSimpleName(getFileName(name));
     }
     private static String getNameWoExtensionForSimpleName(String simpleName){
+        String ninePng = ".9.png";
+        if(simpleName.endsWith(ninePng)) {
+            return simpleName.substring(0, simpleName.length() - ninePng.length());
+        }
         int i = simpleName.lastIndexOf('.');
         if(i < 0){
             return simpleName;
@@ -122,6 +126,10 @@ public class FileUtil {
         return getExtensionForSimpleName(getFileName(name));
     }
     private static String getExtensionForSimpleName(String simpleName){
+        String ninePng = ".9.png";
+        if(simpleName.endsWith(ninePng)) {
+            return ninePng;
+        }
         int i = simpleName.lastIndexOf('.');
         if(i < 0){
             return StringsUtil.EMPTY;
