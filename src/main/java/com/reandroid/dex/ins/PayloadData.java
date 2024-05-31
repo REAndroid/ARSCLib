@@ -18,6 +18,7 @@ package com.reandroid.dex.ins;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.ShortItem;
+import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 
@@ -31,6 +32,39 @@ public abstract class PayloadData extends Ins implements SmaliRegion {
         ShortItem opcodeItem = new ShortItem();
         opcodeItem.set(opcode.getValue());
         addChild(0, opcodeItem);
+    }
+
+    void updateNopAlignment() {
+        InstructionList instructionList = getInstructionList();
+        if(instructionList == null) {
+            return;
+        }
+        int position = instructionList.countUpTo(this);
+        if(position % 4 == 0) {
+            return;
+        }
+        InsNop insNop = getNopAlignment();
+        if(insNop != null) {
+            instructionList.remove(insNop);
+        } else {
+            instructionList.createAt(getIndex(), Opcode.NOP);
+        }
+    }
+    private InsNop getNopAlignment() {
+        InstructionList instructionList = getInstructionList();
+        if(instructionList != null) {
+            Ins ins = instructionList.get(getIndex() - 1);
+            if(ins instanceof InsNop) {
+                return (InsNop) ins;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    protected void onPreRefresh() {
+        updateNopAlignment();
+        super.onPreRefresh();
     }
 
     public abstract Iterator<IntegerReference> getReferences();

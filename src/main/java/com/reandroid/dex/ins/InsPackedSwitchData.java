@@ -85,6 +85,7 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet, Smali
             ssData.setTargetAddress(psData.targetIns.getAddress());
             psData.targetIns.addExtraLine(ssData);
         }
+        sparseSwitchData.updateNopAlignment();
         return sparseSwitchData;
     }
 
@@ -158,8 +159,7 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet, Smali
     }
 
     @Override
-    void appendCode(SmaliWriter writer) throws IOException {
-        writer.newLine();
+    public void appendCode(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
         writer.append(HexUtil.toHex(firstKey.get(), 1));
         writer.indentPlus();
