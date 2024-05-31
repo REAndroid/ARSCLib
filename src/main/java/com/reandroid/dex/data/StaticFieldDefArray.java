@@ -59,7 +59,6 @@ public class StaticFieldDefArray extends FieldDefArray {
         int count = getCount();
         for(int i = 0; i < count; i++){
             FieldDef def = get(i);
-            assert def != null;
             DexValueBlock<?> valueBlock = def.getStaticInitialValue();
             if(valueBlock != null){
                 ensureArraySize(encodedArray, i + 1);
@@ -75,7 +74,6 @@ public class StaticFieldDefArray extends FieldDefArray {
         }
         for(int i = arraySize; i < size; i++){
             FieldDef def = get(i);
-            assert def != null;
             TypeKey typeKey = def.getKey().getType();
             encodedArray.add(createFor(typeKey));
         }
@@ -83,7 +81,12 @@ public class StaticFieldDefArray extends FieldDefArray {
     private EncodedArray getUniqueStaticValues(){
         ClassId classId = getClassId();
         if(classId != null){
-            return classId.getUniqueStaticValues();
+            EncodedArray previous = classId.getStaticValues();
+            EncodedArray current = classId.getUniqueStaticValues();
+            if(previous != null && previous != current) {
+                updateStaticValues(current);
+            }
+            return current;
         }
         return null;
     }
@@ -117,8 +120,23 @@ public class StaticFieldDefArray extends FieldDefArray {
         for(int i = 0; i < count; i++){
             FieldDef def = get(i);
             DexValueBlock<?> valueBlock = encodedArray.get(i);
-            assert def != null;
             def.holdStaticInitialValue(valueBlock);
+        }
+        if(count != 0){
+            mValuesLinked = true;
+        }
+    }
+    private void updateStaticValues(EncodedArray encodedArray){
+        if(encodedArray == null){
+            return;
+        }
+        int count = getCount();
+        for(int i = 0; i < count; i++){
+            FieldDef def = get(i);
+            DexValueBlock<?> value = def.getStaticInitialValue();
+            if(value != null) {
+                def.holdStaticInitialValue(encodedArray.get(value.getIndex()));
+            }
         }
         if(count != 0){
             mValuesLinked = true;

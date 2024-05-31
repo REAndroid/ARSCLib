@@ -20,24 +20,28 @@ import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.DataKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.ModifiableKeyItem;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.NullValue;
 import com.reandroid.dex.value.SectionValue;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.InstanceIterator;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.function.Predicate;
 
-public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>> {
+public class EncodedArray extends DataItem implements ModifiableKeyItem, Iterable<DexValueBlock<?>> {
 
     private final Ule128Item valuesCountReference;
     private final BlockList<DexValueBlock<?>> valueList;
+    private final DataKey<EncodedArray> itemKey;
 
     public EncodedArray() {
         super(2);
@@ -46,6 +50,19 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
         this.valueList.setCreator(CREATOR);
         addChild(0, valuesCountReference);
         addChild(1, valueList);
+        this.itemKey = new DataKey<>(this);
+    }
+
+    @Override
+    public DataKey<EncodedArray> getKey() {
+        return itemKey;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void setKey(Key key) {
+        DataKey<EncodedArray> other = (DataKey<EncodedArray>) key;
+        merge(other.getItem());
     }
 
     @Override
@@ -82,6 +99,9 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
     public boolean remove(DexValueBlock<?> value){
         return getValueList().remove(value);
     }
+    public boolean removeIf(Predicate<? super DexValueBlock<?>> filter){
+        return getValueList().removeIf(filter);
+    }
     public void set(int i, DexValueBlock<?> value){
         ensureSize(i + 1);
         getValueList().set(i, value);
@@ -90,7 +110,7 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
         getValueList().clearChildes();
     }
     public void removeAll(){
-        getValueList().removeAll();
+        getValueList().clearTemporarily();
     }
     public boolean sort(Comparator<? super DexValueBlock<?>> comparator){
         return getValueList().sort(comparator);
@@ -122,7 +142,7 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
         valuesCountReference.set(size);
         BlockList<DexValueBlock<?>> valueList = this.getValueList();
         if(size == 0){
-            valueList.removeAll();
+            valueList.clearTemporarily();
             return;
         }
         int current = valueList.size();
@@ -223,7 +243,7 @@ public class EncodedArray extends DataItem implements Iterable<DexValueBlock<?>>
             return false;
         }
         for(int i = 0; i < size; i++){
-            if(!Objects.equals(get(i), array.get(i))){
+            if(!ObjectsUtil.equals(get(i), array.get(i))){
                 return false;
             }
         }
