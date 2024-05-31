@@ -85,6 +85,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         Iterator<TypeKey> iterator = usedTypes();
         while (iterator.hasNext()){
             TypeKey typeKey = iterator.next();
+            typeKey = typeKey.getDeclaring();
             if(exclude != null && !exclude.test(typeKey)){
                 continue;
             }

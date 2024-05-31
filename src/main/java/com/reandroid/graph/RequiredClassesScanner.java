@@ -172,7 +172,7 @@ public class RequiredClassesScanner extends BaseApkModuleProcessor {
         if(typeKey == null) {
             return false;
         }
-        return addUsed(getClassRepository().getDexClass(typeKey));
+        return addUsed(getClassRepository().getDexClass(typeKey.getDeclaring()));
     }
     private boolean addUsed(DexClass dexClass) {
         if(dexClass == null) {
