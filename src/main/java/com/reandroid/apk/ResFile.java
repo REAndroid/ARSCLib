@@ -94,6 +94,16 @@ public class ResFile implements Iterable<Entry> {
         }
         return null;
     }
+    public ResXmlDocument getResXmlDocument() {
+        if(!isBinaryXml()) {
+            return null;
+        }
+        try {
+            return readAsXmlDocument();
+        } catch (IOException ignored) {
+            return null;
+        }
+    }
     public ResXmlDocument readAsXmlDocument() throws IOException {
         InputSource inputSource = getInputSource();
         if(inputSource instanceof BlockInputSource){
