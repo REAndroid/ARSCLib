@@ -62,7 +62,6 @@ public class Ins22t extends Ins22 implements Label {
     @Override
     public void appendCode(SmaliWriter writer) throws IOException {
         Opcode<?> opcode = getOpcode();
-        writer.newLine();
         writer.append(opcode.getName());
         writer.append(' ');
         getRegistersIterator().append(writer);

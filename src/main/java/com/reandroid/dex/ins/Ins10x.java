@@ -32,17 +32,11 @@ public class Ins10x extends Size2Ins {
     public void setData(int data){
     }
     @Override
-    void appendCode(SmaliWriter writer) throws IOException {
-        writer.newLine();
+    public void appendCode(SmaliWriter writer) throws IOException {
         writer.append(getOpcode().getName());
     }
     @Override
     public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
         validateOpcode(smaliInstruction);
-    }
-
-    @Override
-    public String toString() {
-        return getOpcode().getName();
     }
 }

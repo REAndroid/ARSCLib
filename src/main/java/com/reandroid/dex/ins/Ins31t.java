@@ -72,7 +72,6 @@ public class Ins31t extends Size6Ins implements RegistersSet, Label{
     @Override
     public void appendCode(SmaliWriter writer) throws IOException {
         Opcode<?> opcode = getOpcode();
-        writer.newLine();
         writer.append(opcode.getName());
         writer.append(' ');
         getRegistersIterator().append(writer);

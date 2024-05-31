@@ -201,9 +201,8 @@ public class SizeXIns extends Ins {
         return null;
     }
     @Override
-    void appendCode(SmaliWriter writer) throws IOException {
+    public void appendCode(SmaliWriter writer) throws IOException {
         Opcode<?> opcode = getOpcode();
-        writer.newLine();
         writer.append(opcode.getName());
         writer.append(' ');
         appendRegisters(writer);

@@ -60,8 +60,7 @@ public class InsGoto extends SizeXIns implements Label {
         return HexUtil.toHex(":goto_", getTargetAddress(), 1);
     }
     @Override
-    void appendCode(SmaliWriter writer) throws IOException {
-        writer.newLine();
+    public void appendCode(SmaliWriter writer) throws IOException {
         writer.append(getOpcode().getName());
         writer.append(' ');
         writer.appendLabelName(getLabelName());

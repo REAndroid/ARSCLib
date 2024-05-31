@@ -51,8 +51,7 @@ public class Ins11x extends Size2Ins implements RegistersSet {
     }
 
     @Override
-    void appendCode(SmaliWriter writer) throws IOException {
-        writer.newLine();
+    public void appendCode(SmaliWriter writer) throws IOException {
         writer.append(getOpcode().getName());
         writer.append(' ');
         getRegistersIterator().append(writer);

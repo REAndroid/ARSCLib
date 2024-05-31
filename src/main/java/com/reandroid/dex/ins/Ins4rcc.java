@@ -109,7 +109,7 @@ public class Ins4rcc extends Size8Ins implements RegistersSet {
         mProtoId = getSectionItem(SectionType.PROTO_ID, getProtoIndex());
     }
     @Override
-    void appendCode(SmaliWriter writer) throws IOException {
+    public void appendCode(SmaliWriter writer) throws IOException {
         super.appendCode(writer);
         writer.append(", ");
         getProtoId().append(writer);

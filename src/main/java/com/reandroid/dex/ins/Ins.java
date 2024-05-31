@@ -249,10 +249,10 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
     @Override
     public final void append(SmaliWriter writer) throws IOException {
         appendExtraLines(writer);
+        writer.newLine();
         appendCode(writer);
     }
-    void appendCode(SmaliWriter writer) throws IOException {
-        writer.newLine();
+    public void appendCode(SmaliWriter writer) throws IOException {
         writer.append(getOpcode().getName());
         writer.append(' ');
     }

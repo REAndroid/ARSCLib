@@ -128,8 +128,7 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
         this.blockAlign.align(this);
     }
     @Override
-    void appendCode(SmaliWriter writer) throws IOException {
-        writer.newLine();
+    public void appendCode(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
         writer.appendInteger(getWidth());
         writer.indentPlus();

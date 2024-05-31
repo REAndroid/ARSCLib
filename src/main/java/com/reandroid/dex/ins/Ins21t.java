@@ -71,9 +71,8 @@ public class Ins21t extends Size4Ins implements RegistersSet, Label {
         return ExtraLine.ORDER_INSTRUCTION_LABEL;
     }
     @Override
-    void appendCode(SmaliWriter writer) throws IOException {
+    public void appendCode(SmaliWriter writer) throws IOException {
         Opcode<?> opcode = getOpcode();
-        writer.newLine();
         writer.append(opcode.getName());
         writer.append(' ');
         getRegistersIterator().append(writer);

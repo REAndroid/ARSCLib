@@ -54,9 +54,4 @@ public class Ins3rc extends Size6Ins implements RegistersSet {
             setShort(4, value);
         }
     }
-    @Override
-    public String toString() {
-        return getOpcode() + " {" + getRegistersIterator() + "}, " + getSectionId();
-    }
-
 }
