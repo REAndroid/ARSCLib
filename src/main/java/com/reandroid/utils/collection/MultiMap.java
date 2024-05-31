@@ -250,15 +250,16 @@ public class MultiMap<K, V> {
         }
     }
 
-    public void updateKey(K old, K key, V value) {
+    public boolean updateKey(K old, K key, V value) {
         synchronized (mLock) {
             if(old == null && key == null) {
-                return;
+                return false;
             }
             Map<K, Object> map = getInitializedMap();
             Object obj = combine(map.remove(old), map.remove(key));
             obj = combine(obj, value);
             map.put(key, obj);
+            return true;
         }
     }
     private Object combine(Object obj1, Object obj2) {
