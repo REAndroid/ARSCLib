@@ -241,7 +241,7 @@ public class CollectionUtil {
         return (Predicate<T>) REJECT_ALL;
     }
 
-    public static<T> Predicate<T> orFilter(Predicate<T> filter1, Predicate<T> filter2){
+    public static<T> Predicate<? super T> orFilter(Predicate<? super T> filter1, Predicate<? super T> filter2){
         if(filter1 == null || filter1 == getRejectAll()){
             return filter2;
         }
