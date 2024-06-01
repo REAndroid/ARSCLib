@@ -340,13 +340,13 @@ public class SmaliReader {
         int end = pos + available();
         for(int i = pos; i < end; i++){
             if(!isWhiteSpace(get(i))){
-                nextPosition = i;
                 break;
             }
+            nextPosition = i + 1;
         }
         if(nextPosition != pos){
             position(nextPosition);
-            return true;
+            return nextPosition != end;
         }
         return false;
     }
@@ -423,7 +423,10 @@ public class SmaliReader {
         if(pos - lineStart > limit){
             lineStart = pos - limit;
         }
-        int end = indexOf(lineStart, (byte) '\n');
+        int end = -1;
+        if(available() > 1) {
+            end = indexOf(lineStart, (byte) '\n');
+        }
         if(end < 0){
             if(pos == 0){
                 end = lineStart;
