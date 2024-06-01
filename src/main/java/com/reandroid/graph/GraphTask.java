@@ -18,35 +18,52 @@ package com.reandroid.graph;
 import com.reandroid.common.DiagnosticMessage;
 import com.reandroid.common.DiagnosticsReporter;
 
-public abstract class BaseReporter implements DiagnosticsReporter {
+public abstract class GraphTask implements DiagnosticsReporter {
 
     private DiagnosticsReporter reporter;
+    private String reporterTag;
 
-    public BaseReporter() {
+    public GraphTask() {
+        this.reporterTag = getClass().getSimpleName();
     }
+
+    public abstract void apply();
 
     public DiagnosticsReporter getReporter() {
         return reporter;
     }
-    public void setReporter(DiagnosticsReporter reporter) {
+    public GraphTask setReporter(DiagnosticsReporter reporter) {
         if(reporter == this) {
             throw new IllegalArgumentException("Can not set reporter to itself");
         }
         this.reporter = reporter;
+        return this;
+    }
+
+    public String getReporterTag() {
+        return reporterTag;
+    }
+    public GraphTask setReporterTag(String reporterTag) {
+        this.reporterTag = reporterTag;
+        return this;
     }
 
     public void info(String message) {
         DiagnosticsReporter reporter = getReporter();
-        if(reporter != null) {
+        if(reporter != null && reporter.isReportEnabled()) {
             reporter.report(new DiagnosticMessage.StringMessage(
-                    DiagnosticMessage.Type.INFO, message));
+                    DiagnosticMessage.Type.INFO,
+                    getReporterTag(),
+                    message));
         }
     }
     public void warn(String message) {
         DiagnosticsReporter reporter = getReporter();
-        if(reporter != null) {
+        if(reporter != null && reporter.isReportEnabled()) {
             reporter.report(new DiagnosticMessage.StringMessage(
-                    DiagnosticMessage.Type.WARN, message));
+                    DiagnosticMessage.Type.WARN,
+                    getReporterTag(),
+                    message));
         }
     }
     public void verbose(String message) {
@@ -54,7 +71,9 @@ public abstract class BaseReporter implements DiagnosticsReporter {
             DiagnosticsReporter reporter = getReporter();
             if(reporter != null) {
                 reporter.report(new DiagnosticMessage.StringMessage(
-                        DiagnosticMessage.Type.VERBOSE, message));
+                        DiagnosticMessage.Type.VERBOSE,
+                        getReporterTag(),
+                        message));
             }
         }
     }
@@ -63,22 +82,33 @@ public abstract class BaseReporter implements DiagnosticsReporter {
             DiagnosticsReporter reporter = getReporter();
             if(reporter != null) {
                 reporter.report(new DiagnosticMessage.StringMessage(
-                        DiagnosticMessage.Type.DEBUG, message));
+                        DiagnosticMessage.Type.DEBUG,
+                        getReporterTag(),
+                        message));
             }
         }
     }
     @Override
     public void report(DiagnosticMessage message) {
         DiagnosticsReporter reporter = getReporter();
-        if(reporter != null) {
+        if(reporter != null && reporter.isReportEnabled()) {
             reporter.report(message);
         }
+    }
+
+    @Override
+    public boolean isReportEnabled() {
+        DiagnosticsReporter reporter = getReporter();
+        if(reporter != null) {
+            return reporter.isReportEnabled();
+        }
+        return false;
     }
     @Override
     public boolean isVerboseEnabled() {
         DiagnosticsReporter reporter = getReporter();
         if(reporter != null) {
-            return reporter.isVerboseEnabled();
+            return isReportEnabled() && reporter.isVerboseEnabled();
         }
         return false;
     }
@@ -86,11 +116,8 @@ public abstract class BaseReporter implements DiagnosticsReporter {
     public boolean isDebugEnabled() {
         DiagnosticsReporter reporter = getReporter();
         if(reporter != null) {
-            return reporter.isDebugEnabled();
+            return isReportEnabled() && reporter.isDebugEnabled();
         }
         return false;
-    }
-    private boolean hasReporter() {
-        return getReporter() != null;
     }
 }

@@ -17,6 +17,9 @@ package com.reandroid.common;
 
 public interface DiagnosticsReporter {
     void report(DiagnosticMessage message);
+    default boolean isReportEnabled() {
+        return true;
+    }
     default boolean isVerboseEnabled() {
         return false;
     }

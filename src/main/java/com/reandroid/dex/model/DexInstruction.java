@@ -266,13 +266,13 @@ public class DexInstruction extends DexCode {
     public DexInstruction createNext(Opcode<?> opcode){
         return DexInstruction.create(getDexMethod(), getIns().createNext(opcode));
     }
-    public boolean removeSelf(){
+    @Override
+    public void removeSelf(){
         Ins ins = getIns();
         InstructionList instructionList = ins.getInstructionList();
         if(instructionList != null){
-            return instructionList.remove(ins);
+            instructionList.remove(ins);
         }
-        return false;
     }
     public Opcode<?> getOpcode(){
         return getIns().getOpcode();

@@ -87,6 +87,7 @@ public class DexAnnotation extends Dex implements Iterable<DexAnnotationElement>
         return DexAnnotationElement.create(this,
                 getAnnotationItem().getOrCreateElement(name));
     }
+    @Override
     public void removeSelf(){
         getAnnotationItem().removeSelf();
     }

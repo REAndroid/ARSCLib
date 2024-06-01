@@ -17,6 +17,13 @@ package com.reandroid.graph;
 
 import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.utils.collection.CollectionUtil;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public class ApkBuildOption {
@@ -29,7 +36,8 @@ public class ApkBuildOption {
     private boolean processClassNamesOnStrings = true;
 
     private ResourceMergeOption mMergeOption;
-    private Predicate<? super TypeKey> keepClasses;
+    private Predicate<? super TypeKey> keepClassesFilter;
+    private final Set<TypeKey> keepClassesList = new HashSet<>();
 
     public ApkBuildOption() {
 
@@ -82,9 +90,38 @@ public class ApkBuildOption {
     }
 
     public Predicate<? super TypeKey> getKeepClasses() {
-        return keepClasses;
+        return CollectionUtil.orFilter(getKeepClassesFilter(),
+                getKeepClassesListFilter());
     }
-    public void setKeepClasses(Predicate<? super TypeKey> filter) {
-        this.keepClasses = filter;
+    public Predicate<? super TypeKey> getKeepClassesFilter() {
+        return keepClassesFilter;
+    }
+    public void setKeepClassesFilter(Predicate<? super TypeKey> filter) {
+        this.keepClassesFilter = filter;
+    }
+
+    public Predicate<? super TypeKey> getKeepClassesListFilter() {
+        Set<TypeKey> keepClassesList = this.keepClassesList;
+        if(!keepClassesList.isEmpty()) {
+            return (Predicate<TypeKey>) keepClassesList::contains;
+        }
+        return null;
+    }
+    public void clearKeepClasses() {
+        this.keepClassesList.clear();
+    }
+    public void addKeepClasses(TypeKey typeKey) {
+        this.keepClassesList.add(typeKey.getDeclaring());
+    }
+    public void readKeepClassesList(File keepClassesListFile) throws IOException {
+        SmaliReader reader = SmaliReader.of(keepClassesListFile);
+        Set<TypeKey> keepClassesList = this.keepClassesList;
+        while (!reader.finished()) {
+            keepClassesList.add(TypeKey.read(reader).getDeclaring());
+            reader.skipWhitespacesOrComment();
+        }
+    }
+    public void readKeepResourceNameList(File keepResourceNameListFile) throws IOException {
+        getResourceMergeOption().readKeepResourceNameList(keepResourceNameListFile);
     }
 }

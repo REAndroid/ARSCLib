@@ -52,6 +52,7 @@ public class DexCatch extends DexCode {
     public DexInstruction getCaughtInstruction(){
         return getDexMethod().getInstructionAt(getCatchAddress());
     }
+    @Override
     public void removeSelf(){
         getExceptionHandler().removeSelf();
     }

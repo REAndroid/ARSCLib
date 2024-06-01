@@ -49,7 +49,8 @@ public class RequiredClassesScanner extends BaseApkModuleProcessor {
     public void setLookInStrings(boolean lookInStrings) {
         this.lookInStrings = lookInStrings;
     }
-    public void scan() {
+    @Override
+    public void apply() {
         verbose("Scanning required classes ...");
         scanOnXml(getApkModule().getAndroidManifest());
         scanOnServicesMeta();

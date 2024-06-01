@@ -137,7 +137,6 @@ public abstract class DexDeclaration extends Dex implements AnnotatedDex {
     public String getPackageName() {
         return getDefining().getPackageName();
     }
-    public abstract void removeSelf();
     public boolean isInSameFile(DexDeclaration dexDeclaration){
         if(dexDeclaration == null){
             return false;

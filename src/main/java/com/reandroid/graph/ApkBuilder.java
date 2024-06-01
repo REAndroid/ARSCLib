@@ -21,12 +21,12 @@ import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.arsc.model.ResourceName;
 import com.reandroid.arsc.refactor.ResourceBuilder;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
-import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.model.DexClass;
 import com.reandroid.dex.model.DexClassRepository;
+import com.reandroid.graph.cleaners.UnusedClassesCleaner;
+import com.reandroid.graph.cleaners.UnusedFieldsCleaner;
+import com.reandroid.graph.cleaners.UnusedMethodsCleaner;
 import com.reandroid.utils.collection.CollectionUtil;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -38,22 +38,29 @@ public class ApkBuilder extends BaseApkModuleProcessor {
         super(sourceModule, classRepository);
     }
 
-    public void build() {
+    @Override
+    public void apply() {
+
+        int filesCount = getApkModule().getZipEntryMap().size();
+
         resolveInlineIntegerFieldCalls();
-        cleanUnusedFieldsAndMethods();
-        cleanUnusedClasses();
+
+        cleanDex();
+
         ResourceMergeOption resourceMergeOption = getBuildOption().getResourceMergeOption();
         ResourceBuilder resourceBuilder = new ResourceBuilder(resourceMergeOption,
                 getApkModule().getTableBlock());
 
         cleanUnusedResFiles();
-        initializeRequiredIds(resourceMergeOption);
+        initializeRequiredIds();
+
         resourceBuilder.rebuild();
 
         ApkModule sourceModule = getApkModule();
         resourceBuilder.rebuildManifest(sourceModule);
         resourceBuilder.applyIdChanges(getClassRepository().visitIntegers());
         ApkModule resultModule = resourceBuilder.getResultModule();
+
         removeResFiles();
 
         sourceModule.setTableBlock(resultModule.getTableBlock());
@@ -61,18 +68,20 @@ public class ApkBuilder extends BaseApkModuleProcessor {
 
         resultModule.setTableBlock(null);
         sourceModule.getZipEntryMap().addAll(resultModule.getZipEntryMap());
+
+        filesCount = filesCount - sourceModule.getZipEntryMap().size();
+        verbose("Removed files: " + filesCount);
     }
-    private void cleanUnusedFieldsAndMethods() {
-        if(getBuildOption().isMinifyFields()) {
-            UnusedFieldsCleaner cleaner = new UnusedFieldsCleaner(getClassRepository());
-            cleaner.setReporter(getReporter());
-            cleaner.apply();
-        }
-        if(getBuildOption().isMinifyMethods()) {
-            UnusedMethodsCleaner cleaner = new UnusedMethodsCleaner(getClassRepository());
-            cleaner.setReporter(getReporter());
-            cleaner.apply();
-        }
+    private void cleanDex() {
+        new UnusedFieldsCleaner(getBuildOption(), getApkModule(), getClassRepository())
+                .setReporter(getReporter())
+                .apply();
+        new UnusedMethodsCleaner(getBuildOption(), getApkModule(), getClassRepository())
+                .setReporter(getReporter())
+                .apply();
+        new UnusedClassesCleaner(getBuildOption(), getApkModule(), getClassRepository())
+                .setReporter(getReporter())
+                .apply();
     }
     private void resolveInlineIntegerFieldCalls() {
         if(getBuildOption().isMinifyResources()) {
@@ -83,48 +92,16 @@ public class ApkBuilder extends BaseApkModuleProcessor {
             resolver.apply();
         }
     }
-    private void cleanUnusedClasses() {
-        ApkBuildOption buildOption = getBuildOption();
-        if(!buildOption.isMinifyClasses()) {
-            return;
-        }
-        verbose("Removing unused classes ...");
-        DexClassRepository repository = getClassRepository();
-        RequiredClassesScanner scanner = new RequiredClassesScanner(getApkModule(), repository);
-        scanner.setReporter(getReporter());
-        scanner.setLookInStrings(buildOption.isProcessClassNamesOnStrings());
-
-        // FIXME: this is mainly to keep Landroidx/work/impl/WorkDatabase_Impl;
-        // TODO: find universal rule
-        scanner.keepClasses(typeKey -> typeKey.getTypeName().endsWith("_Impl;"));
-        scanner.keepClasses(buildOption.getKeepClasses());
-        scanner.scan();
-        Set<TypeKey> requiredClasses = scanner.getResults();
-        int size = repository.getDexClassesCount();
-        reportRemovedClasses(requiredClasses);
-        repository.removeClassesWithKeys(typeKey -> !requiredClasses.contains(typeKey));
-        repository.refresh();
-        size = size - repository.getDexClassesCount();
-        verbose("Removed unused classes: " + size);
-    }
-    private void reportRemovedClasses(Set<TypeKey> requiredClasses) {
-        if(!isVerboseEnabled()) {
-            return;
-        }
-        verbose("Removing ...");
-        Iterator<DexClass> iterator = getClassRepository().getDexClasses(typeKey ->
-                !requiredClasses.contains(typeKey));
-        while (iterator.hasNext()) {
-            debug(iterator.next().getKey().toString());
-        }
-    }
     private void cleanUnusedResFiles() {
         if(!getBuildOption().isMinifyResources()) {
             return;
         }
         ApkModule apkModule = getApkModule();
-        RequiredEntriesScanner scanner = new RequiredEntriesScanner(apkModule, getClassRepository());
-        scanner.scan();
+
+        RequiredEntriesScanner scanner = new RequiredEntriesScanner(getBuildOption(),
+                apkModule, getClassRepository());
+        scanner.apply();
+
         Set<String> requiredFiles = scanner.getRequiredFiles();
         List<ResFile> resFileList = apkModule.listResFiles();
         ZipEntryMap zipEntryMap = apkModule.getZipEntryMap();
@@ -146,14 +123,16 @@ public class ApkBuilder extends BaseApkModuleProcessor {
             zipEntryMap.remove(resFile.getInputSource());
         }
     }
-    private void initializeRequiredIds(ResourceMergeOption resourceMergeOption) {
+    private void initializeRequiredIds() {
+        ResourceMergeOption resourceMergeOption = getBuildOption().getResourceMergeOption();
         if(!getBuildOption().isMinifyResources()) {
             resourceMergeOption.setKeepEntries(CollectionUtil.getAcceptAll());
             return;
         }
-        RequiredEntriesScanner scanner = new RequiredEntriesScanner(getApkModule(), getClassRepository());
+        RequiredEntriesScanner scanner = new RequiredEntriesScanner(getBuildOption(),
+                getApkModule(), getClassRepository());
         scanner.setReporter(getReporter());
-        scanner.scan();
+        scanner.apply();
         Set<ResourceName> requiredResources = scanner.getRequiredResources();
         resourceMergeOption.setKeepEntries(resourceEntry ->
                 requiredResources.contains(resourceEntry.toResourceName()));

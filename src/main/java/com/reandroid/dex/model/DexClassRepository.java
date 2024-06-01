@@ -45,6 +45,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
     }
     Iterator<DexClass> getDexClasses(Predicate<? super TypeKey> filter);
     Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter);
+    int shrink();
     default Iterator<DexClass> searchExtending(TypeKey typeKey){
         return EmptyIterator.of();
     }

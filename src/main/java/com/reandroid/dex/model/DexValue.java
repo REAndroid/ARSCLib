@@ -222,6 +222,12 @@ public class DexValue extends Dex {
     public DexClassRepository getClassRepository() {
         return getDeclaring().getClassRepository();
     }
+
+    @Override
+    public void removeSelf() {
+        throw new RuntimeException("Method not implemented");
+    }
+
     public int getIndex(){
         return getDexValueBlock().getIndex();
     }

@@ -15,9 +15,14 @@
  */
 package com.reandroid.graph;
 
+import com.reandroid.dex.model.DexClass;
 import com.reandroid.dex.model.DexClassRepository;
+import com.reandroid.utils.collection.FilterIterator;
 
-public abstract class BaseDexClassProcessor extends BaseReporter {
+import java.util.Iterator;
+import java.util.function.Predicate;
+
+public abstract class BaseDexClassProcessor extends GraphTask {
 
     private final DexClassRepository classRepository;
 
@@ -25,6 +30,9 @@ public abstract class BaseDexClassProcessor extends BaseReporter {
         this.classRepository = classRepository;
     }
 
+    public Iterator<DexClass> getDexClasses(Predicate<? super DexClass> filter) {
+        return FilterIterator.of(getClassRepository().getDexClasses(), filter);
+    }
     public DexClassRepository getClassRepository() {
         return classRepository;
     }

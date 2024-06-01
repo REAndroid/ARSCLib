@@ -49,6 +49,7 @@ public class DexAnnotationElement extends Dex {
                 getAnnotationElement().getOrCreateValue(valueType));
     }
 
+    @Override
     public void removeSelf(){
         getAnnotationElement().removeSelf();
     }

@@ -13,39 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.graph;
+package com.reandroid.graph.cleaners;
 
+import com.reandroid.apk.ApkModule;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.model.DexClass;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.dex.model.DexInstruction;
 import com.reandroid.dex.model.DexMethod;
+import com.reandroid.graph.ApkBuildOption;
 import com.reandroid.utils.collection.ArrayCollection;
 
 import java.util.Iterator;
+import java.util.List;
 
-public class UnusedMethodsCleaner extends BaseDexClassProcessor{
-    private int mCount;
+public class UnusedMethodsCleaner extends UnusedClassComponentCleaner<DexMethod> {
 
-    public UnusedMethodsCleaner(DexClassRepository classRepository) {
-        super(classRepository);
+    public UnusedMethodsCleaner(ApkBuildOption buildOption, ApkModule apkModule, DexClassRepository classRepository) {
+        super(buildOption, apkModule, classRepository);
     }
 
-    public void apply() {
-        verbose("Searching for unused methods ...");
-        Iterator<DexClass> iterator = getClassRepository().getDexClasses();
-        while (iterator.hasNext()) {
-            DexClass dexClass = iterator.next();
-            if(dexClass.usesNative()) {
-                continue;
-            }
-            cleanUnusedMethods(dexClass);
-        }
-        if(mCount != 0) {
-            verbose("Unused methods: " + mCount);
-        }
+    @Override
+    protected boolean isEnabled() {
+        return getBuildOption().isMinifyMethods();
     }
-    private void cleanUnusedMethods(DexClass dexClass) {
+    @Override
+    protected List<DexMethod> listUnusedInClass(DexClass dexClass) {
         Iterator<DexMethod> iterator = dexClass.getDeclaredMethods();
         ArrayCollection<DexMethod> list = null;
         while (iterator.hasNext()) {
@@ -57,18 +50,8 @@ public class UnusedMethodsCleaner extends BaseDexClassProcessor{
                 list.add(dexMethod);
             }
         }
-        if(list != null) {
-            boolean debugEnabled = isDebugEnabled();
-            for(DexMethod dexMethod : list) {
-                if(debugEnabled) {
-                    debug(dexMethod.getKey().toString());
-                }
-                dexMethod.removeSelf();
-                mCount ++;
-            }
-        }
+        return list;
     }
-
     private boolean isUnusedMethod(DexMethod dexMethod) {
         if(dexMethod.isConstructor() && dexMethod.isStatic()) {
             return false;

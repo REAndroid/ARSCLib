@@ -123,6 +123,7 @@ public class DexTry extends DexCode {
         }
         return null;
     }
+    @Override
     public void removeSelf(){
         getTryItem().removeSelf();
     }

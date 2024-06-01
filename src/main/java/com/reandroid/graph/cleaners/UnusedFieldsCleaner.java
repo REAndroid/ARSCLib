@@ -13,36 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.graph;
+package com.reandroid.graph.cleaners;
 
+import com.reandroid.apk.ApkModule;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.model.*;
+import com.reandroid.graph.ApkBuildOption;
 import com.reandroid.utils.collection.ArrayCollection;
 
 import java.util.Iterator;
+import java.util.List;
 
-public class UnusedFieldsCleaner extends BaseDexClassProcessor {
+public class UnusedFieldsCleaner extends UnusedClassComponentCleaner<DexField> {
 
-    private int mCount;
-
-    public UnusedFieldsCleaner(DexClassRepository repository) {
-        super(repository);
+    public UnusedFieldsCleaner(ApkBuildOption buildOption, ApkModule apkModule,
+                               DexClassRepository classRepository) {
+        super(buildOption, apkModule, classRepository);
     }
-    public void apply() {
-        verbose("Searching for unused methods and fields ...");
-        Iterator<DexClass> iterator = getClassRepository().getDexClasses();
-        while (iterator.hasNext()) {
-            DexClass dexClass = iterator.next();
-            if(dexClass.usesNative()) {
-                continue;
-            }
-            cleanUnusedFields(dexClass);
-        }
-        if(mCount != 0) {
-            verbose("Unused fields: " + mCount);
-        }
+
+    @Override
+    protected boolean isEnabled() {
+        return getBuildOption().isMinifyFields();
     }
-    private void cleanUnusedFields(DexClass dexClass) {
+    @Override
+    protected List<DexField> listUnusedInClass(DexClass dexClass) {
         Iterator<DexField> iterator = dexClass.getDeclaredFields();
         ArrayCollection<DexField> list = null;
         while (iterator.hasNext()) {
@@ -54,16 +48,7 @@ public class UnusedFieldsCleaner extends BaseDexClassProcessor {
                 list.add(dexField);
             }
         }
-        if(list != null) {
-            boolean debugEnabled = isDebugEnabled();
-            for(DexField dexField : list) {
-                if(debugEnabled) {
-                    debug(dexField.getKey().toString());
-                }
-                dexField.removeSelf();
-                mCount++;
-            }
-        }
+        return list;
     }
 
     private boolean isUnusedField(DexField dexField) {

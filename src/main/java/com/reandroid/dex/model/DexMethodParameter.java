@@ -111,6 +111,12 @@ public class DexMethodParameter extends Dex implements AnnotatedDex{
     public DexClassRepository getClassRepository() {
         return getDexMethod().getClassRepository();
     }
+
+    @Override
+    public void removeSelf() {
+        getParameter().remove();
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getParameter().append(writer);

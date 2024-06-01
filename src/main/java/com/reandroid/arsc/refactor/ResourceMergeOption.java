@@ -28,17 +28,25 @@ import com.reandroid.arsc.value.ResValue;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.common.BytesOutputStream;
 import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.io.FileUtil;
+import com.reandroid.utils.io.StringLineStream;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public class ResourceMergeOption {
 
     private Predicate<? super ResourceEntry> keepEntries;
-    private Predicate<? super ResourceName> keepResourceNames;
+    private Predicate<? super ResourceName> keepResourceNameFilter;
     private Predicate<? super ResConfig> keepConfigs;
 
-    public ResourceMergeOption(){
+    private final Set<ResourceName> keepResourceNameList;
+
+    public ResourceMergeOption() {
+        this.keepResourceNameList = new HashSet<>();
     }
 
     public Predicate<? super Entry> getKeepEntryConfigs() {
@@ -57,7 +65,7 @@ public class ResourceMergeOption {
     }
     public Predicate<? super ResourceEntry> getKeepEntries() {
         Predicate<? super ResourceEntry> keepEntries = this.getKeepEntriesInternal();
-        Predicate<? super ResourceName> keepResourceNames = this.getKeepResourceNames();
+        Predicate<? super ResourceName> keepResourceNames = this.getKeepResourceName();
         Predicate<? super ResourceEntry> result = keepEntries;
         if(keepResourceNames != null) {
             result = (Predicate<ResourceEntry>) resourceEntry -> {
@@ -85,11 +93,41 @@ public class ResourceMergeOption {
         this.keepEntries = keepEntries;
     }
 
-    public Predicate<? super ResourceName> getKeepResourceNames() {
-        return keepResourceNames;
+    public Predicate<? super ResourceName> getKeepResourceName() {
+        return CollectionUtil.orFilter(getKeepResourceNameFilter(),
+                getKeepResourceNameListFilter());
     }
-    public void setKeepResourceNames(Predicate<? super ResourceName> keepResourceNames) {
-        this.keepResourceNames = keepResourceNames;
+    public void setKeepResourceNameFilter(Predicate<? super ResourceName> keepResourceNameFilter) {
+        this.keepResourceNameFilter = keepResourceNameFilter;
+    }
+    private Predicate<? super ResourceName> getKeepResourceNameFilter() {
+        return keepResourceNameFilter;
+    }
+    private Predicate<? super ResourceName> getKeepResourceNameListFilter() {
+        Set<ResourceName> keepResourceNameList = this.keepResourceNameList;
+        if(!keepResourceNameList.isEmpty()) {
+            return (Predicate<ResourceName>) keepResourceNameList::contains;
+        }
+        return null;
+    }
+    public void clearKeepResourceNameList() {
+        this.keepResourceNameList.clear();
+    }
+    public void addKeepResourceName(ResourceName resourceName) {
+        this.keepResourceNameList.add(resourceName);
+    }
+    public void readKeepResourceNameList(File keepResourceNameListFile) throws IOException {
+        StringLineStream stringLineStream = new StringLineStream(FileUtil.inputStream(keepResourceNameListFile));
+        while (stringLineStream.hasNext()) {
+            String line = stringLineStream.next();
+            line = line.trim();
+            addKeepResourceName(ResourceName.parse(line));
+        }
+        IOException exception = stringLineStream.getError();
+        if(exception != null) {
+            throw exception;
+        }
+        stringLineStream.close();
     }
 
     public ResourceEntry resolveUndeclared(PackageBlock currentContext, ResourceEntry undeclared) {

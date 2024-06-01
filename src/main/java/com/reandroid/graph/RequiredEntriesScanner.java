@@ -26,28 +26,34 @@ import com.reandroid.arsc.model.ResourceName;
 import com.reandroid.arsc.value.*;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.FilterIterator;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public class RequiredEntriesScanner extends BaseApkModuleProcessor{
 
+    private final ApkBuildOption buildOption;
     private final Set<ResourceName> requiredResources;
     private final Set<String> requiredFiles;
     private final Set<String> processedFiles;
     private final Set<Integer> processedNumbers;
 
-    public RequiredEntriesScanner(ApkModule apkModule, DexClassRepository classRepository) {
+    public RequiredEntriesScanner(ApkBuildOption buildOption, ApkModule apkModule, DexClassRepository classRepository) {
         super(apkModule, classRepository);
 
+        this.buildOption = buildOption;
         this.requiredResources = new HashSet<>();
         this.requiredFiles = new HashSet<>();
         this.processedFiles = new HashSet<>();
         this.processedNumbers = new HashSet<>();
     }
 
-    public void scan() {
+    @Override
+    public void apply() {
+        scanUserConfigs();
         scanIdOnXml(getApkModule().getAndroidManifest());
         scanIdOnDexClasses();
         reset();
@@ -58,6 +64,22 @@ public class RequiredEntriesScanner extends BaseApkModuleProcessor{
     }
     public Set<String> getRequiredFiles() {
         return requiredFiles;
+    }
+
+    private void scanUserConfigs() {
+        Predicate<? super ResourceName> filter = buildOption.getResourceMergeOption()
+                .getKeepResourceName();
+        if(filter == null) {
+            return;
+        }
+        Iterator<ResourceEntry> iterator = FilterIterator.of(getTableBlock().getResources(),
+                resourceEntry -> {
+                    ResourceName resourceName = resourceEntry.toResourceName();
+                    return resourceName != null && filter.test(resourceName);
+                });
+        while (iterator.hasNext()) {
+            add(iterator.next());
+        }
     }
     private void scanIdOnResXml(String path) {
         if(path == null || !processedFiles.add(path)) {

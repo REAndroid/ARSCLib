@@ -42,6 +42,7 @@ public class InlineFieldIntResolver extends BaseDexClassProcessor {
         this(classRepository, createDefaultChecker());
     }
 
+    @Override
     public void apply() {
         verbose("Resolving inline resource ids ..");
         reset();
