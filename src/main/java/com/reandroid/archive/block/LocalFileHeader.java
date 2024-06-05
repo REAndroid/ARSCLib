@@ -21,8 +21,13 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class LocalFileHeader extends CommonHeader {
+
     private DataDescriptor dataDescriptor;
     private CentralEntryHeader centralEntryHeader;
+    private long tmpCrc;
+    private long tmpCompressedSize;
+    private long tmpSize;
+
     public LocalFileHeader(){
         super(OFFSET_fileName, ZipSignature.LOCAL_FILE, OFFSET_general_purpose);
     }
@@ -81,6 +86,13 @@ public class LocalFileHeader extends CommonHeader {
 
     @Override
     public long getCompressedSize(){
+        long size = getInternalCompressedSize();
+        if(size == 0) {
+            size = this.tmpCompressedSize;
+        }
+        return size;
+    }
+    private long getInternalCompressedSize(){
         if(isZip64()){
             return getZip64CompressedSize();
         }
@@ -96,9 +108,19 @@ public class LocalFileHeader extends CommonHeader {
             putInteger(getOffsetCompressedSize(), value);
         }
     }
+    public void setTmpCompressedSize(long value) {
+        this.tmpCompressedSize = value;
+    }
 
     @Override
     public long getSize(){
+        long size = getInternalSize();
+        if(size == 0) {
+            size = this.tmpSize;
+        }
+        return size;
+    }
+    private long getInternalSize(){
         if(isZip64()){
             return getZip64Size();
         }
@@ -113,6 +135,21 @@ public class LocalFileHeader extends CommonHeader {
         }else {
             putInteger(getOffsetSize(), value);
         }
+    }
+    public void setTmpSize(long value) {
+        this.tmpSize = value;
+    }
+
+    public void setTmpCrc(long value) {
+        this.tmpCrc = value;
+    }
+    @Override
+    public long getCrc() {
+        long crc = super.getCrc();
+        if(crc == 0) {
+            crc = this.tmpCrc;
+        }
+        return crc;
     }
 
     public DataDescriptor getDataDescriptor() {
