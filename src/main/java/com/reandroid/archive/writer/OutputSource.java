@@ -50,7 +50,7 @@ class OutputSource {
 
         if(inputSource.getMethod() != Archive.STORED){
             DeflaterOutputStream deflaterInputStream =
-                    new DeflaterOutputStream(rawCounter, new Deflater(Deflater.BEST_SPEED, true), true);
+                    new DeflaterOutputStream(rawCounter, new Deflater(Deflater.DEFAULT_COMPRESSION, true), true);
             deflateCounter = new CountingOutputStream<>(deflaterInputStream, false);
         }
         if(deflateCounter != null){
@@ -173,5 +173,5 @@ class OutputSource {
             apkLogger.logVerbose(msg);
         }
     }
-    private static final long LOG_LARGE_FILE_SIZE = 2L * 1000 * 1000 * 1024;
+    private static final long LOG_LARGE_FILE_SIZE = 2L * 1000 * 1024;
 }
