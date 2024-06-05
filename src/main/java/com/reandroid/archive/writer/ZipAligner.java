@@ -29,6 +29,7 @@ public class ZipAligner {
     private final Map<Pattern, Integer> alignmentMap;
     private int defaultAlignment;
     private boolean enableDataDescriptor;
+    private boolean clearLfhSizeForDataDescriptor = true;
 
     public ZipAligner(){
         alignmentMap = new HashMap<>();
@@ -48,9 +49,13 @@ public class ZipAligner {
     }
     public void setDefaultAlignment(int defaultAlignment) {
         if(defaultAlignment <= 0){
-            defaultAlignment = 1;
+            defaultAlignment = NO_ALIGNMENT;
         }
         this.defaultAlignment = defaultAlignment;
+    }
+
+    public void setClearLfhSizeForDataDescriptor(boolean clearLfhSizeForDataDescriptor) {
+        this.clearLfhSizeForDataDescriptor = clearLfhSizeForDataDescriptor;
     }
     public void setEnableDataDescriptor(boolean enableDataDescriptor) {
         this.enableDataDescriptor = enableDataDescriptor;
@@ -62,13 +67,17 @@ public class ZipAligner {
         }
         lfh.setZipAlign(0);
         int padding;
-        if(lfh.getMethod() != Archive.STORED){
+        if(lfh.getMethod() == Archive.DEFLATED){
             padding = 0;
             createDataDescriptor(lfh);
         }else {
             int alignment = getAlignment(lfh.getFileName());
-            long dataOffset = offset + lfh.countBytes();
-            padding = (int) ((alignment - (dataOffset % alignment)) % alignment);
+            if (alignment == NO_ALIGNMENT) {
+                padding = 0;
+            } else {
+                long dataOffset = offset + lfh.countBytes();
+                padding = (int) ((alignment - (dataOffset % alignment)) % alignment);
+            }
         }
         lfh.setZipAlign(padding);
     }
@@ -76,16 +85,26 @@ public class ZipAligner {
         DataDescriptor dataDescriptor;
         if(enableDataDescriptor){
             dataDescriptor = DataDescriptor.fromLocalFile(lfh);
+            if(clearLfhSizeForDataDescriptor) {
+                lfh.setTmpCrc(lfh.getCrc());
+                lfh.setCrc(0);
+                lfh.setTmpCompressedSize(lfh.getCompressedSize());
+                lfh.setCompressedSize(0);
+                lfh.setTmpSize(lfh.getSize());
+                lfh.setSize(0);
+            }
         }else {
             dataDescriptor = null;
         }
         lfh.setDataDescriptor(dataDescriptor);
     }
     private int getAlignment(String name){
-        for(Map.Entry<Pattern, Integer> entry:alignmentMap.entrySet()){
-            Matcher matcher = entry.getKey().matcher(name);
-            if(matcher.matches()){
-                return entry.getValue();
+        if(!alignmentMap.isEmpty()) {
+            for(Map.Entry<Pattern, Integer> entry:alignmentMap.entrySet()){
+                Matcher matcher = entry.getKey().matcher(name);
+                if(matcher.matches()){
+                    return entry.getValue();
+                }
             }
         }
         return defaultAlignment;
@@ -99,7 +118,14 @@ public class ZipAligner {
         zipAligner.setEnableDataDescriptor(true);
         return zipAligner;
     }
+    public static ZipAligner noAlignment(){
+        ZipAligner zipAligner = new ZipAligner();
+        zipAligner.setDefaultAlignment(NO_ALIGNMENT);
+        zipAligner.setEnableDataDescriptor(true);
+        return zipAligner;
+    }
 
+    private static final int NO_ALIGNMENT = 1;
     private static final int ALIGNMENT_4 = 4;
     private static final int ALIGNMENT_PAGE = 4096;
 }
