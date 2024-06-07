@@ -20,7 +20,7 @@ import com.reandroid.utils.StringsUtil;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 
-public abstract class StringBlock extends BlockItem{
+public abstract class StringBlock extends BlockItem implements StringReference {
 
     private String mCache;
 
