@@ -86,7 +86,7 @@ public class FileUtil {
         if(i <= 0){
             return StringsUtil.EMPTY;
         }
-        return path.substring(0, i);
+        return path.substring(0, i + 1);
     }
     public static String getFileName(String path){
         if(path == null){
