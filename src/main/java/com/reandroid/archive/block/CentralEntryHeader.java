@@ -17,6 +17,7 @@ package com.reandroid.archive.block;
 
 import com.reandroid.archive.ZipSignature;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.io.FilePermissions;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,13 +25,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 public class CentralEntryHeader extends CommonHeader {
+
     private String mComment;
+
     public CentralEntryHeader(){
         super(OFFSET_fileName, ZipSignature.CENTRAL_FILE, OFFSET_general_purpose);
-    }
-    public CentralEntryHeader(String name){
-        this();
-        setFileName(name);
+        setFilePermissionsValue(0x81a4); // 0100644
     }
 
     @Override
@@ -124,10 +124,34 @@ public class CentralEntryHeader extends CommonHeader {
         putShort(OFFSET_internalFileAttributes, value);
     }
     public int getExternalFileAttributes(){
-        return getShortUnsigned(OFFSET_externalFileAttributes);
+        return getInteger(OFFSET_externalFileAttributes);
     }
     public void setExternalFileAttributes(int value){
+        putInteger(OFFSET_externalFileAttributes, value);
+    }
+    public int getFileAttributesId() {
+        return getShortUnsigned(OFFSET_externalFileAttributes);
+    }
+    public void setFileAttributesId(int value) {
         putShort(OFFSET_externalFileAttributes, value);
+    }
+    public int getFilePermissionsValue() {
+        return getShortUnsigned(OFFSET_externalFileAttributes + 2);
+    }
+    public void setFilePermissionsValue(int value) {
+        putShort(OFFSET_externalFileAttributes + 2, value);
+    }
+    public FilePermissions getFilePermissions() {
+        return new FilePermissions() {
+            @Override
+            public int get() {
+                return getFilePermissionsValue();
+            }
+            @Override
+            public void set(int value) {
+                setFilePermissionsValue(value);
+            }
+        };
     }
     @Override
     void onUtf8Changed(boolean oldValue){
@@ -182,8 +206,10 @@ public class CentralEntryHeader extends CommonHeader {
         builder.append(", extraLength=").append(getExtraLength());
         builder.append(", commentLength=").append(getCommentLength());
         builder.append(", offset=").append(getLocalRelativeOffset());
-        builder.append(", internalFileAttributes=").append(getInternalFileAttributes());
-        builder.append(", externalFileAttributes=").append(getExternalFileAttributes());
+        builder.append(", internalAttr=").append(getInternalFileAttributes());
+        builder.append(", externalAttr=").append(HexUtil.toHex8(getExternalFileAttributes()));
+        builder.append(", attrId=").append(getFileAttributesId());
+        builder.append(", permissions=").append(getFilePermissions());
         return builder.toString();
     }
 
@@ -191,10 +217,10 @@ public class CentralEntryHeader extends CommonHeader {
     public static CentralEntryHeader fromLocalFileHeader(LocalFileHeader lfh){
         CentralEntryHeader ceh = new CentralEntryHeader();
         ceh.setSignature(ZipSignature.CENTRAL_FILE);
-        ceh.setVersionMadeBy(0x0300);
+        ceh.setVersionMadeBy(lfh.getVersionMadeBy());
         long offset = lfh.getFileOffset() - lfh.countBytes();
         ceh.setLocalRelativeOffset(offset);
-        ceh.getGeneralPurposeFlag().setValue(lfh.getGeneralPurposeFlag().getValue());
+        ceh.getGeneralPurposeFlag().setUtf8(lfh.getGeneralPurposeFlag().getUtf8());
         ceh.setMethod(lfh.getMethod());
         ceh.setDosTime(lfh.getDosTime());
         ceh.setCrc(lfh.getCrc());
