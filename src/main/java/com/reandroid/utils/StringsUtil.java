@@ -587,6 +587,47 @@ public class StringsUtil {
         }
         return -1;
     }
+    public static String trimStart(String str, char ch) {
+        if(str == null) {
+            return null;
+        }
+        int start = 0;
+        while (str.charAt(start) == ch) {
+            start ++;
+        }
+        if(start == 0) {
+            return str;
+        }
+        return str.substring(start);
+    }
+    public static int indexOfFrom(String str, int start, char ch) {
+        if(str == null || start < 0) {
+            return -1;
+        }
+        int length = str.length();
+        for(int i = start; i < length; i++) {
+            if(str.charAt(i) == ch) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    public static boolean endsWith(String str, char ch) {
+        if(str == null) {
+            return false;
+        }
+        int length = str.length();
+        if(length == 0) {
+            return false;
+        }
+        return str.charAt(length - 1) == ch;
+    }
+    public static boolean startsWith(String str, char ch) {
+        if(isEmpty(str)) {
+            return false;
+        }
+        return str.charAt(0) == ch;
+    }
 
     private static final int MAX_STRING_APPEND = 5;
 }
