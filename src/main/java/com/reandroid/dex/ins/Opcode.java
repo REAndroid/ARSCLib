@@ -983,6 +983,17 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         return name.charAt(0) == 'm' &&
                 name.charAt(5) == 'r';
     }
+    public boolean isMover(){
+        Opcode<?> opcode = this;
+        return opcode == MOVE ||
+                opcode == MOVE_16 ||
+                opcode == MOVE_FROM16 ||
+                opcode == MOVE_OBJECT ||
+                opcode == MOVE_OBJECT_16 ||
+                opcode == MOVE_WIDE ||
+                opcode == MOVE_WIDE_16 ||
+                opcode == MOVE_WIDE_FROM16;
+    }
     public SectionType<? extends IdItem> getSectionType(){
         return sectionType;
     }
