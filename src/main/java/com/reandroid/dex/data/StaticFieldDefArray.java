@@ -30,16 +30,19 @@ public class StaticFieldDefArray extends FieldDefArray {
     }
 
     @Override
-    public boolean remove(FieldDef fieldDef){
+    public void onPreRemove(FieldDef fieldDef) {
         EncodedArray encodedArray = getUniqueStaticValues();
         DexValueBlock<?> value = fieldDef.getStaticInitialValue();
-        fieldDef.holdStaticInitialValue(value);
-        boolean removed = super.remove(fieldDef);
+        if(value == null || value.getParentInstance(EncodedArray.class) != encodedArray) {
+            holdStaticValues(encodedArray);
+            value = fieldDef.getStaticInitialValue();
+        }
         if(value != null && encodedArray != null){
             encodedArray.remove(value);
         }
-        return removed;
+        super.onPreRemove(fieldDef);
     }
+
     @Override
     void onPreSort(){
         super.onPreSort();

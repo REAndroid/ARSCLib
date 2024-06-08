@@ -47,21 +47,15 @@ public abstract class DefArray<T extends Def<?>> extends BlockList<T> implements
     }
 
     @Override
-    public boolean remove(T def){
+    public void onPreRemove(T item) {
         AnnotationsDirectory directory = getUniqueAnnotationsDirectory();
-        if(directory != null){
-            directory.remove(def);
+        if(directory != null) {
+            directory.remove(item);
         }
-        boolean removed = super.remove(def);
-        if(removed){
-            resetIndex();
-            if(directory != null){
-                sortAnnotations();
-            }
-        }
-        updateCount();
-        return removed;
+        resetIndex();
+        super.onPreRemove(item);
     }
+
     @Override
     public final boolean sort(Comparator<? super T> comparator) {
         if(!needsSort(comparator)){

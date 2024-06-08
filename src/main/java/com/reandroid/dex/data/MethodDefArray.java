@@ -28,11 +28,6 @@ public class MethodDefArray extends DefArray<MethodDef> {
     }
 
     @Override
-    public boolean remove(MethodDef methodDef){
-        return super.remove(methodDef);
-    }
-
-    @Override
     void sortAnnotations(){
         AnnotationsDirectory directory = getAnnotationsDirectory();
         if(directory != null){
