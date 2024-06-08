@@ -62,7 +62,7 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
         }
         String prefix = directory;
         if (includeSubDirectory) {
-            return iterator(inputSource -> inputSource.getParentPath().startsWith(prefix));
+            return iterator(inputSource -> inputSource.getAlias().startsWith(prefix));
         } else {
             return iterator(inputSource -> inputSource.getParentPath().equals(prefix));
         }
