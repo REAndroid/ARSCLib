@@ -32,12 +32,14 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class DexInstruction extends DexCode {
 
@@ -309,6 +311,64 @@ public class DexInstruction extends DexCode {
     }
     public DexInstruction getPrevious(){
         return getDexMethod().getInstruction(getIndex() - 1);
+    }
+    public DexInstruction getPreviousReader(int register) {
+        return getPreviousReader(register, CollectionUtil.getAcceptAll());
+    }
+    public DexInstruction getPreviousReader(int register, Opcode<?> opcode) {
+        return getPreviousReader(register, instruction -> instruction.is(opcode));
+    }
+    public DexInstruction getPreviousReader(int register, Predicate<DexInstruction> predicate) {
+        DexInstruction previous = getPrevious();
+        while (previous != null) {
+            Opcode<?> opcode = previous.getOpcode();
+            if(opcode.isMover() && previous.getRegister(0) == register) {
+                register = previous.getRegister(1);
+            } else {
+                RegisterFormat format = opcode.getRegisterFormat();
+                int size = previous.getRegistersCount();
+                for(int i = 0; i < size; i++) {
+                    if(register == previous.getRegister(i) &&
+                            RegisterType.READ.is(format.get(i))) {
+                        if(predicate.test(previous)) {
+                            return previous;
+                        }
+                        return null;
+                    }
+                }
+            }
+            previous = previous.getPrevious();
+        }
+        return null;
+    }
+    public DexInstruction getPreviousSetter(int register) {
+        return getPreviousSetter(register, CollectionUtil.getAcceptAll());
+    }
+    public DexInstruction getPreviousSetter(int register, Opcode<?> opcode) {
+        return getPreviousSetter(register, instruction -> instruction.is(opcode));
+    }
+    public DexInstruction getPreviousSetter(int register, Predicate<DexInstruction> predicate) {
+        DexInstruction previous = getPrevious();
+        while (previous != null) {
+            Opcode<?> opcode = previous.getOpcode();
+            if(opcode.isMover() && previous.getRegister(1) == register) {
+                register = previous.getRegister(0);
+            } else {
+                RegisterFormat format = opcode.getRegisterFormat();
+                int size = previous.getRegistersCount();
+                for(int i = 0; i < size; i++) {
+                    if(register == previous.getRegister(i) &&
+                            RegisterType.WRITE.is(format.get(i))) {
+                        if(predicate.test(previous)) {
+                            return previous;
+                        }
+                        return null;
+                    }
+                }
+            }
+            previous = previous.getPrevious();
+        }
+        return null;
     }
     public int getIndex(){
         return getIns().getIndex();
