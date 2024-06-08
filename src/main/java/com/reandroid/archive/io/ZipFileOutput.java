@@ -79,7 +79,7 @@ public class ZipFileOutput extends ZipOutput{
     public void write(InputStream inputStream) throws IOException {
         FileChannel fileChannel = getFileChannel();
         long pos = fileChannel.position();
-        int bufferLength = 1024 * 1000 * 100;
+        int bufferLength = 1024 * 1000 * 10;
         byte[] buffer = new byte[bufferLength];
         long result = 0;
         int read;
