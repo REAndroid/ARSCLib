@@ -273,7 +273,6 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         if(item == null){
             return null;
         }
-        notifyPreRemove(item);
         item.setParent(null);
         item.setIndex(-1);
         if(updateIndex){
@@ -283,7 +282,6 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         return item;
     }
     public boolean remove(T item){
-        notifyPreRemove(item);
         int index = -1;
         if(item != null){
             index = mItems.indexOfFast(item, item.getIndex());
@@ -538,7 +536,15 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         mItems.setMonitor(getMonitor());
     }
     protected ArrayCollection.Monitor<T> getMonitor() {
-        return null;
+        return new ArrayCollection.Monitor<T>() {
+            @Override
+            public void onAdd(int i, T item) {
+            }
+            @Override
+            public void onRemoved(int i, T item) {
+                notifyPreRemove(item);
+            }
+        };
     }
     private void updateCreator(){
         Creator<? extends T> creator = getCreator();

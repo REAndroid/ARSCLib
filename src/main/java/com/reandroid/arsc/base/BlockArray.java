@@ -19,7 +19,6 @@ import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.common.ArraySupplier;
 import com.reandroid.utils.NumbersUtil;
-import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
@@ -35,19 +34,6 @@ public abstract class BlockArray<T extends Block> extends BlockList<T>
     }
     public BlockArray(Creator<? extends T> creator){
         super(creator);
-    }
-
-    @Override
-    protected final ArrayCollection.Monitor<T> getMonitor() {
-        return new ArrayCollection.Monitor<T>() {
-            @Override
-            public void onAdd(int i, T item) {
-            }
-            @Override
-            public void onRemoved(int i, T item) {
-                notifyPreRemove(item);
-            }
-        };
     }
 
     @Override
