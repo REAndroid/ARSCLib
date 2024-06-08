@@ -41,10 +41,19 @@ public class TypeKey implements Key{
     }
 
     public String getSourceName(){
-        StringBuilder builder = new StringBuilder();
-        String declaring = DexUtils.toSourceName(getDeclaringName());
-        builder.append(declaring);
         int array = getArrayDimension();
+        if(array == 0) {
+            String type = getTypeName();
+            if(type.length() == 1) {
+                TypeKey typeKey = PrimitiveTypeKey.primitiveType(type.charAt(0));
+                if(typeKey != null) {
+                    return typeKey.getSourceName();
+                }
+            }
+            return DexUtils.toSourceName(type);
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append(getDeclaring().getSourceName());
         for(int i = 0; i < array; i++){
             builder.append("[]");
         }
@@ -250,6 +259,25 @@ public class TypeKey implements Key{
         name1 = this.getTypeName();
         name2 = other.getTypeName();
         return CompareUtil.compare(name1, name2);
+    }
+    public boolean equalsPackage(TypeKey typeKey) {
+        if(typeKey == null) {
+            return false;
+        }
+        String name1 = StringsUtil.trimStart(getTypeName(), '[');
+        String name2 = StringsUtil.trimStart(typeKey.getTypeName(), '[');
+        if(name1.charAt(0) != 'L' || name2.charAt(0) != 'L') {
+            return false;
+        }
+        if(typeKey == this || name1.equals(name2)) {
+            return true;
+        }
+        int start = StringsUtil.diffStart(name1, name2);
+        if(start < 0) {
+            return false;
+        }
+        return StringsUtil.indexOfFrom(name1, start, '/') < 0 &&
+                StringsUtil.indexOfFrom(name2, start, '/') < 0;
     }
     @Override
     public int compareTo(Object obj) {
