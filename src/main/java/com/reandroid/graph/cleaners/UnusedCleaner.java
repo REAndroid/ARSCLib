@@ -37,7 +37,7 @@ public abstract class UnusedCleaner<T extends Dex> extends BaseApkModuleProcesso
         return buildOption;
     }
 
-    protected int getCount() {
+    public int getCount() {
         return mCount;
     }
     public void addCount() {

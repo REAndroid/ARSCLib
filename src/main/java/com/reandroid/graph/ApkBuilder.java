@@ -33,6 +33,7 @@ import java.util.Set;
 public class ApkBuilder extends BaseApkModuleProcessor {
 
     private ApkBuildOption buildOption;
+    private VitalClassesSet vitalClassesSet;
 
     public ApkBuilder(ApkModule sourceModule, DexClassRepository classRepository) {
         super(sourceModule, classRepository);
@@ -73,15 +74,37 @@ public class ApkBuilder extends BaseApkModuleProcessor {
         verbose("Removed files: " + filesCount);
     }
     private void cleanDex() {
-        new UnusedFieldsCleaner(getBuildOption(), getApkModule(), getClassRepository())
-                .setReporter(getReporter())
-                .apply();
-        new UnusedMethodsCleaner(getBuildOption(), getApkModule(), getClassRepository())
-                .setReporter(getReporter())
-                .apply();
-        new UnusedClassesCleaner(getBuildOption(), getApkModule(), getClassRepository())
-                .setReporter(getReporter())
-                .apply();
+        int countTotal = 0;
+        int count = 1;
+        int cycle = 0;
+        while (cycle < MAX_CYCLE && count > 0) {
+            cycle ++;
+            verbose("Stage " + cycle);
+            count = cyclicCleanDex();
+            countTotal += count;
+        }
+        verbose("Cleaned dex: " + countTotal);
+    }
+    private int cyclicCleanDex() {
+        int count = 0;
+        UnusedFieldsCleaner fieldsCleaner = new UnusedFieldsCleaner(getBuildOption(),
+                getApkModule(), getClassRepository());
+        fieldsCleaner.setReporter(getReporter());
+        fieldsCleaner.apply();
+        count += fieldsCleaner.getCount();
+        UnusedMethodsCleaner methodsCleaner = new UnusedMethodsCleaner(getBuildOption(),
+                getApkModule(), getClassRepository());
+        methodsCleaner.setReporter(getReporter());
+        methodsCleaner.apply();
+        count += methodsCleaner.getCount();
+        UnusedClassesCleaner classesCleaner = new UnusedClassesCleaner(getBuildOption(),
+                getApkModule(), getClassRepository());
+        classesCleaner.setReporter(getReporter());
+        classesCleaner.setVitalClassesSet(this.vitalClassesSet);
+        classesCleaner.apply();
+        this.vitalClassesSet = classesCleaner.getVitalClassesSet();
+        count += classesCleaner.getCount();
+        return count;
     }
     private void resolveInlineIntegerFieldCalls() {
         if(getBuildOption().isMinifyResources()) {
@@ -148,4 +171,5 @@ public class ApkBuilder extends BaseApkModuleProcessor {
     public void setBuildOption(ApkBuildOption buildOption) {
         this.buildOption = buildOption;
     }
+    private static final int MAX_CYCLE = 25;
 }

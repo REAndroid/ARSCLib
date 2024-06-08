@@ -21,11 +21,14 @@ import com.reandroid.dex.model.DexClass;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.graph.ApkBuildOption;
 import com.reandroid.graph.RequiredClassesScanner;
+import com.reandroid.graph.VitalClassesSet;
 
 import java.util.Iterator;
 import java.util.Set;
 
 public class UnusedClassesCleaner extends UnusedCleaner<DexClass> {
+
+    private VitalClassesSet vitalClassesSet;
 
     public UnusedClassesCleaner(ApkBuildOption buildOption, ApkModule apkModule,
                                 DexClassRepository classRepository) {
@@ -38,13 +41,38 @@ public class UnusedClassesCleaner extends UnusedCleaner<DexClass> {
             debug("Skip");
             return;
         }
-        Set<TypeKey> requiredClasses = scanRequiredClasses();
-        verbose("Required classes: " + requiredClasses.size());
-        debugReportClassesToRemove(requiredClasses);
-        cleanUnusedClasses(requiredClasses);
+        getVitalClassesSet().setReporter(getReporter()).apply();
+        cleanCyclic();
     }
-    private void cleanUnusedClasses(Set<TypeKey> requiredClasses) {
-        verbose("Cleaning ...");
+
+    public VitalClassesSet getVitalClassesSet() {
+        VitalClassesSet vitalClassesSet = this.vitalClassesSet;
+        if(vitalClassesSet == null) {
+            vitalClassesSet = new VitalClassesSet(getBuildOption(),
+                    getApkModule(), getClassRepository());
+            this.vitalClassesSet = vitalClassesSet;
+        }
+        return vitalClassesSet;
+    }
+    public void setVitalClassesSet(VitalClassesSet vitalClassesSet) {
+        this.vitalClassesSet = vitalClassesSet;
+    }
+
+    private void cleanCyclic() {
+        int cycle = 0;
+        int totalRemoved = 0;
+        int removedCount = 1;
+        while(cycle < MAXIMUM_CYCLE && removedCount > 0) {
+            cycle ++;
+            Set<TypeKey> requiredClasses = scanRequiredClasses();
+            debugReportClassesToRemove(requiredClasses);
+            removedCount = cleanUnusedClasses(requiredClasses);
+            totalRemoved += removedCount;
+            verbose("Cycle: " + cycle + ", removed: " + removedCount + ", total: " + totalRemoved);
+        }
+        setCount(totalRemoved);
+    }
+    private int cleanUnusedClasses(Set<TypeKey> requiredClasses) {
         DexClassRepository repository = getClassRepository();
         int previousCount = repository.getDexClassesCount();
         repository.removeClassesWithKeys(typeKey -> !requiredClasses.contains(typeKey));
@@ -53,7 +81,7 @@ public class UnusedClassesCleaner extends UnusedCleaner<DexClass> {
         if(removed != 0) {
             repository.shrink();
         }
-        verbose("Cleaned: " + removed);
+        return removed;
     }
     private void debugReportClassesToRemove(Set<TypeKey> requiredClasses) {
         if(!isDebugEnabled()) {
@@ -67,27 +95,18 @@ public class UnusedClassesCleaner extends UnusedCleaner<DexClass> {
     }
     private Set<TypeKey> scanRequiredClasses() {
         RequiredClassesScanner scanner = new RequiredClassesScanner(
+                this.vitalClassesSet,
                 getApkModule(),
                 getClassRepository());
         scanner.setReporter(getReporter());
         scanner.setLookInStrings(getBuildOption().isProcessClassNamesOnStrings());
-
-        processUserKeep(scanner);
-        processOtherKeep(scanner);
-
         scanner.apply();
         return scanner.getResults();
-    }
-    private void processUserKeep(RequiredClassesScanner scanner) {
-        scanner.keepClasses(getBuildOption().getKeepClasses());
-    }
-    private void processOtherKeep(RequiredClassesScanner scanner) {
-        // FIXME: this is mainly to keep Landroidx/work/impl/WorkDatabase_Impl;
-        // TODO: find universal rule
-        scanner.keepClasses(typeKey -> typeKey.getTypeName().endsWith("_Impl;"));
     }
     @Override
     protected boolean isEnabled() {
         return getBuildOption().isMinifyClasses();
     }
+
+    private static final int MAXIMUM_CYCLE = 25;
 }

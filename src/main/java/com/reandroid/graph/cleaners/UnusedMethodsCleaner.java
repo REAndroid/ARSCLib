@@ -24,10 +24,14 @@ import com.reandroid.dex.model.DexMethod;
 import com.reandroid.graph.ApkBuildOption;
 import com.reandroid.utils.collection.ArrayCollection;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 public class UnusedMethodsCleaner extends UnusedClassComponentCleaner<DexMethod> {
+
+    private Set<MethodKey> unusedInternalMethods;
 
     public UnusedMethodsCleaner(ApkBuildOption buildOption, ApkModule apkModule, DexClassRepository classRepository) {
         super(buildOption, apkModule, classRepository);
@@ -74,6 +78,72 @@ public class UnusedMethodsCleaner extends UnusedClassComponentCleaner<DexMethod>
     }
     private boolean isUnusedVirtualMethod(DexMethod dexMethod) {
         // TODO:
-        return false;
+        return getUnusedInternalMethods().contains(dexMethod.getKey());
+    }
+
+    public Set<MethodKey> getUnusedInternalMethods() {
+        Set<MethodKey> unusedInternalMethods = this.unusedInternalMethods;
+        if(unusedInternalMethods == null) {
+            loadUnusedInternalMethods();
+            unusedInternalMethods = this.unusedInternalMethods;
+        }
+        return unusedInternalMethods;
+    }
+    private void loadUnusedInternalMethods() {
+        Set<MethodKey> unusedInternalMethods = new HashSet<>();
+        Iterator<DexClass> iterator = getClassRepository().getDexClasses();
+        while (iterator.hasNext()) {
+            DexClass dexClass = iterator.next();
+            if(dexClass.usesNative()) {
+                continue;
+            }
+            Iterator<DexMethod> methods = dexClass.getDeclaredMethods();
+            while (methods.hasNext()) {
+                DexMethod dexMethod = methods.next();
+                if(isInternal(dexMethod)) {
+                    unusedInternalMethods.add(dexMethod.getKey());
+                }
+            }
+        }
+        subtractUnused(unusedInternalMethods);
+        this.unusedInternalMethods = unusedInternalMethods;
+        for(MethodKey key : unusedInternalMethods) {
+            debug(key.toString());
+        }
+        debug("Internal methods: " + unusedInternalMethods.size());
+    }
+    private void subtractUnused(Set<MethodKey> unusedInternalMethods) {
+        if(unusedInternalMethods.isEmpty()) {
+            return;
+        }
+        DexClassRepository repository = getClassRepository();
+        Iterator<DexClass> iterator = repository.getDexClasses();
+        while (iterator.hasNext()) {
+            DexClass dexClass = iterator.next();
+            Iterator<DexInstruction> instructionIterator = dexClass.getDexInstructions();
+            while (instructionIterator.hasNext()) {
+                DexInstruction instruction = instructionIterator.next();
+                MethodKey key = instruction.getMethodKey();
+                if(key != null) {
+                   unusedInternalMethods.remove(key);
+                    Iterator<MethodKey> equivalents = repository.findEquivalentMethods(key);
+                    while (equivalents.hasNext()) {
+                        unusedInternalMethods.remove(equivalents.next());
+                    }
+                }
+            }
+        }
+    }
+    private boolean isInternal(DexMethod dexMethod) {
+        if(dexMethod.isConstructor()) {
+            return false;
+        }
+        if(!dexMethod.isInternal() && !dexMethod.isStatic()) {
+            return false;
+        }
+        if(dexMethod.getSuperMethods().hasNext() || dexMethod.getExtending().hasNext()) {
+            return false;
+        }
+        return true;
     }
 }

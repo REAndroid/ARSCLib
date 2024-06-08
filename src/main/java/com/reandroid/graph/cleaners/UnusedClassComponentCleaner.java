@@ -72,7 +72,7 @@ public abstract class UnusedClassComponentCleaner<T extends Dex> extends UnusedC
         return getDexClasses(this::isCleanableClass);
     }
     protected boolean isCleanableClass(DexClass dexClass) {
-        if(dexClass.usesNative()) {
+        if(dexClass.usesNative() || dexClass.isEnum()) {
             return false;
         }
         Predicate<? super TypeKey> filter = getBuildOption().getKeepClasses();
