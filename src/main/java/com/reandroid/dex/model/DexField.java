@@ -15,8 +15,10 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.data.FieldDef;
+import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.Section;
@@ -24,6 +26,7 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.value.IntValue;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.ExpandIterator;
@@ -57,6 +60,45 @@ public class DexField extends DexDeclaration {
 
     public DexValue getInitialValue() {
         return DexValue.create(this, getDefinition().getStaticInitialValue());
+    }
+    public IntegerReference getStaticIntegerValue() {
+        if(isStatic()) {
+            IntegerReference reference = resolveValueFromStaticConstructor();
+            if(reference == null) {
+                DexValue dexValue = getInitialValue();
+                if(dexValue != null) {
+                    if(dexValue.is(DexValueType.INT)) {
+                        reference = (IntValue) dexValue.getDexValueBlock();
+                    }
+                }
+            }
+            return reference;
+        }
+        return null;
+    }
+    private IntegerReference resolveValueFromStaticConstructor() {
+        DexClass dexClass = getDexClass();
+        DexMethod dexMethod = dexClass.getStaticConstructor();
+        if(dexMethod == null) {
+            return null;
+        }
+        Iterator<DexInstruction> iterator = dexMethod.getInstructions();
+        FieldKey fieldKey = getKey();
+        while (iterator.hasNext()) {
+            DexInstruction instruction = iterator.next();
+            if(!fieldKey.equals(instruction.getFieldKey())) {
+                continue;
+            }
+            if(!instruction.is(Opcode.SPUT)) {
+                return null;
+            }
+            DexInstruction constInstruction = instruction.getPreviousSetter(instruction.getRegister());
+            if(constInstruction == null) {
+                return null;
+            }
+            return constInstruction.getAsIntegerReference();
+        }
+        return null;
     }
     public<T1 extends DexValueBlock<?>> T1 getOrCreateInitialValue(DexValueType<T1> dexValueType) {
         return getDefinition().getOrCreateStaticValue(dexValueType);

@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegisterFormat;
 import com.reandroid.dex.common.RegisterType;
@@ -215,6 +216,13 @@ public class DexInstruction extends DexCode {
         if(ins instanceof Label){
             ((Label) ins).setTargetAddress(address);
         }
+    }
+    public IntegerReference getAsIntegerReference(){
+        Ins ins = getIns();
+        if(ins instanceof ConstNumber){
+            return ((ConstNumber) ins);
+        }
+        return null;
     }
     public Integer getAsInteger(){
         Ins ins = getIns();
