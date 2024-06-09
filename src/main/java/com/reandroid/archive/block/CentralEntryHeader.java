@@ -220,7 +220,7 @@ public class CentralEntryHeader extends CommonHeader {
         ceh.setVersionMadeBy(lfh.getVersionMadeBy());
         long offset = lfh.getFileOffset() - lfh.countBytes();
         ceh.setLocalRelativeOffset(offset);
-        ceh.getGeneralPurposeFlag().setUtf8(lfh.getGeneralPurposeFlag().getUtf8());
+        ceh.getGeneralPurposeFlag().setValue(lfh.getGeneralPurposeFlag().getValue());
         ceh.setMethod(lfh.getMethod());
         ceh.setDosTime(lfh.getDosTime());
         ceh.setCrc(lfh.getCrc());
