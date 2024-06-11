@@ -229,6 +229,14 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return null;
     }
+    public Iterator<ResourceEntry> getLocalResources(String type){
+        return new IterableIterator<PackageBlock, ResourceEntry>(getPackages((String) null)) {
+            @Override
+            public Iterator<ResourceEntry> iterator(PackageBlock element) {
+                return element.getResources(type);
+            }
+        };
+    }
     public ResourceEntry getAttrResource(String prefix, String name){
         Iterator<PackageBlock> iterator = getAllPackages(prefix);
         while (iterator.hasNext()){

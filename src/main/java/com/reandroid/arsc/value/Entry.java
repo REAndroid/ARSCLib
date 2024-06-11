@@ -347,6 +347,20 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
         }
         return null;
     }
+    public String getValueAsString() {
+        ResValue resValue = getResValue();
+        if(resValue != null) {
+            return resValue.getValueAsString();
+        }
+        return null;
+    }
+    public StyleDocument getValueAsStyleDocument() {
+        ResValue resValue = getResValue();
+        if(resValue != null) {
+            return resValue.getValueAsStyleDocument();
+        }
+        return null;
+    }
     public Boolean getValueAsBoolean() {
         ResValue resValue = getResValue();
         if(resValue != null) {

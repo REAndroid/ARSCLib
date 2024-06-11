@@ -170,6 +170,14 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return null;
     }
+    public Iterator<ResourceEntry> getResources(String type){
+        SpecTypePair specTypePair =
+                getSpecTypePair(type);
+        if(specTypePair != null){
+            return specTypePair.getResources();
+        }
+        return EmptyIterator.of();
+    }
     public ResourceEntry getAttrResource(String name){
         Iterator<SpecTypePair> itr = getAttrSpecs();
         while (itr.hasNext()){
