@@ -361,6 +361,9 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     public boolean isEnum() {
         return AccessFlag.ENUM.isSet(getAccessFlagsValue());
     }
+    public boolean isAnnotation() {
+        return AccessFlag.ANNOTATION.isSet(getAccessFlagsValue());
+    }
     public Iterator<DexInstruction> getDexInstructions(){
         return getDexInstructions(null);
     }
