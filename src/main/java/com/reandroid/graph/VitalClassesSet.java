@@ -18,7 +18,11 @@ package com.reandroid.graph;
 import com.reandroid.apk.ApkModule;
 import com.reandroid.apk.ResFile;
 import com.reandroid.archive.InputSource;
+import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
+import com.reandroid.arsc.model.ResourceEntry;
+import com.reandroid.arsc.value.Entry;
+import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.key.StringKey;
@@ -53,6 +57,9 @@ public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate
 
     public Iterator<TypeKey> getMainClasses() {
         return mainClasses.iterator();
+    }
+    public Iterator<TypeKey> getDexSourceStringClasses() {
+        return sourceStringClasses.iterator();
     }
     @Override
     public boolean test(TypeKey typeKey) {
@@ -90,8 +97,26 @@ public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate
         scanUsedByMetaInfServices();
         scanRequiredByUser();
         scanOthers();
+        scanOnResourceStrings();
         scanOnDexStrings();
         verbose("Classes: " + mainClasses.size());
+    }
+
+    private void scanOnResourceStrings() {
+        debug("Searching on resource strings ...");
+        TableBlock tableBlock = getApkModule().getTableBlock();
+        Iterator<ResourceEntry> iterator = tableBlock.getLocalResources("string");
+        ResConfig def = ResConfig.getDefault();
+        while (iterator.hasNext()) {
+            ResourceEntry resourceEntry = iterator.next();
+            Entry entry = resourceEntry.get(def);
+            if(entry != null) {
+                String value = entry.getValueAsString();
+                if(maybeValidSourceType(value)) {
+                    addType(TypeKey.parse(value));
+                }
+            }
+        }
     }
     private void scanOnDexStrings() {
         if(!getBuildOption().isProcessClassNamesOnStrings()) {
@@ -157,6 +182,7 @@ public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate
         }
     }
     private void scanUsedByMetaInfServices(InputSource inputSource) {
+        addType(TypeKey.parse(inputSource.getSimpleName()));
         String content;
         try {
             content = IOUtil.readUtf8(inputSource.openStream());
