@@ -56,7 +56,7 @@ public class SequentialLabelFactory {
         list.sort((s, t1) -> CompareUtil.compare(getLabelSuffix(s), getLabelSuffix(t1)));
         int size = list.size();
         for(int i = 0; i < size; i++) {
-            labelMap.put(list.get(i), key + i);
+            labelMap.put(list.get(i), HexUtil.toHex(key, i, 1));
         }
     }
     private String dropSuffix(String name) {
