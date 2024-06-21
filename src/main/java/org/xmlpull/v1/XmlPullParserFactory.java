@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings({"deprecation", "unchecked"})
 public class XmlPullParserFactory {
     public static final String PROPERTY_NAME = "org.xmlpull.v1.XmlPullParserFactory";
     protected ArrayList parserClasses;
