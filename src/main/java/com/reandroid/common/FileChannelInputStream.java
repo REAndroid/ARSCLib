@@ -34,6 +34,15 @@ public class FileChannelInputStream extends InputStream {
     private boolean mAutoClosable;
     private boolean mIsClosed;
 
+    public FileChannelInputStream(FileChannel fileChannel, byte[] buffer, long length) throws IOException {
+        this.fileChannel = fileChannel;
+        this.totalLength = length;
+        int bufferSize = buffer.length;
+        this.buffer = buffer;
+        this.bufferLength = bufferSize;
+        this.bufferPosition = bufferSize;
+        this.startOffset = fileChannel.position();
+    }
     public FileChannelInputStream(FileChannel fileChannel, long length, int bufferSize) throws IOException {
         this.fileChannel = fileChannel;
         this.totalLength = length;
@@ -53,6 +62,10 @@ public class FileChannelInputStream extends InputStream {
     }
     public FileChannelInputStream(File file, long length, int bufferSize) throws IOException {
         this(FileChannel.open(file.toPath(), StandardOpenOption.READ), length, bufferSize);
+        this.mAutoClosable = true;
+    }
+    public FileChannelInputStream(File file, byte[] buffer, int bufferSize) throws IOException {
+        this(FileChannel.open(file.toPath(), StandardOpenOption.READ), buffer, bufferSize);
         this.mAutoClosable = true;
     }
     public FileChannelInputStream(File file) throws IOException {
@@ -233,6 +246,11 @@ public class FileChannelInputStream extends InputStream {
         inputStream.loadBuffer();
         inputStream.closeAuto();
         return inputStream.buffer;
+    }
+    public static void read(File file, byte[] buffer, int length) throws IOException{
+        FileChannelInputStream inputStream = new FileChannelInputStream(file, buffer, length);
+        inputStream.loadBuffer();
+        inputStream.closeAuto();
     }
 
     private static final int DEFAULT_BUFFER_SIZE = 1024 * 100;
