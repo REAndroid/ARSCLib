@@ -99,7 +99,7 @@ public class AndroidApiLevel implements Comparable<AndroidApiLevel>{
 
         ANDROID_PLATFORM = new AndroidApiLevel("ANDROID_PLATFORM", 10000, "10000", "ANDROID_PLATFORM");
 
-        LATEST = U;
+        LATEST = V;
 
         VALUES = new AndroidApiLevel[]{
                 B,
