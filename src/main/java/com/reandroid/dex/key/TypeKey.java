@@ -21,6 +21,7 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
@@ -69,7 +70,11 @@ public class TypeKey implements Key{
     }
     @Override
     public Iterator<TypeKey> mentionedKeys() {
-        return SingleIterator.of(this);
+        Iterator<TypeKey> iterator = SingleIterator.of(this);
+        if(isTypeArray()) {
+            iterator = CombiningIterator.singleOne(getDeclaring(), iterator);
+        }
+        return iterator;
     }
 
     @Override
@@ -102,7 +107,8 @@ public class TypeKey implements Key{
         return DexUtils.isTypeSignature(getTypeName());
     }
     public boolean isTypeArray(){
-        return DexUtils.isTypeArray(getTypeName());
+        String name = getTypeName();
+        return name.length() > 1 && name.charAt(0) == '[';
     }
     public boolean isTypeObject(){
         return DexUtils.isTypeObject(getTypeName());

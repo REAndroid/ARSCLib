@@ -477,21 +477,10 @@ public class DexUtils {
         return false;
     }
     public static boolean isPrimitive(String type){
-        if(type == null){
+        if(type == null || type.length() != 1){
             return false;
         }
-        int length = type.length();
-        if(length == 0){
-            return false;
-        }
-        int i = 0;
-        while (i < length && type.charAt(i) == '['){
-            i++;
-        }
-        if(i >= length){
-            return false;
-        }
-        return isPrimitive(type.charAt(i));
+        return isPrimitive(type.charAt(0));
     }
     public static boolean isPrimitive(char ch){
         switch (ch){
