@@ -30,7 +30,6 @@ import com.reandroid.xml.StyleElement;
 import com.reandroid.xml.StyleSpanEventSet;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Iterator;
 
 public class StyleItem extends FixedBlockContainer implements
@@ -250,20 +249,10 @@ public class StyleItem extends FixedBlockContainer implements
         StringItem stringItem1 = this.getStringItemInternal();
         StringItem stringItem2 = styleItem.getStringItemInternal();
         i = CompareUtil.compare(stringItem1 == null, stringItem2 == null);
-        if(i != 0 || stringItem1 == null) {
+        if(i != 0 || stringItem1 == null || stringItem2 == null) {
             return i;
         }
         return CompareUtil.compareUnsigned(stringItem1.getIndex(), stringItem2.getIndex());
-    }
-
-    @Override
-    public int onWriteBytes(OutputStream stream) throws IOException {
-        StringItem stringItem = getStringItemInternal();
-        if(stringItem.getIndex() != getIndex()) {
-            String junk = "";
-            throw new IOException("Unmatching index: " + getIndex() + ", isNull = " + (stringItem.getParent() == null) + ", " + stringItem);
-        }
-        return super.onWriteBytes(stream);
     }
 
     @Override
