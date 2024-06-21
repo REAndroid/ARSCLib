@@ -17,32 +17,32 @@ package com.reandroid.common;
 
 import com.reandroid.utils.StringsUtil;
 
-public class DiagnosticSource {
+public class Origin {
 
-    private DiagnosticSource parent;
-    private final String name;
-    private String separator = ":";
+    private Origin parent;
+    private final Object name;
+    private Object separator = ":";
 
-    public DiagnosticSource(DiagnosticSource parent, String name) {
+    public Origin(Origin parent, Object name) {
         this.parent = parent;
         this.name = name;
     }
 
-    public String getName() {
+    public Object getName() {
         return name;
     }
-    public DiagnosticSource getParent() {
+    public Origin getParent() {
         return parent;
     }
-    public void setParent(DiagnosticSource parent) {
+    public void setParent(Origin parent) {
         this.parent = parent;
     }
 
-    public void setSeparator(String separator) {
+    public void setSeparator(Object separator) {
         this.separator = separator;
     }
-    public String getSeparator() {
-        String separator = this.separator;
+    public Object getSeparator() {
+        Object separator = this.separator;
         if(separator == null) {
             separator = StringsUtil.EMPTY;
         }
@@ -52,14 +52,14 @@ public class DiagnosticSource {
     public boolean isRoot() {
         return getParent() == null;
     }
-    public DiagnosticSource[] toArray() {
+    public Origin[] toArray() {
         int count = 0;
-        DiagnosticSource source = this;
+        Origin source = this;
         while (!source.isRoot()) {
             count ++;
             source = source.getParent();
         }
-        DiagnosticSource[] result = new DiagnosticSource[count];
+        Origin[] result = new Origin[count];
         count = count - 1;
         source = this;
         while (count >= 0) {
@@ -70,17 +70,17 @@ public class DiagnosticSource {
         return result;
     }
 
-    public DiagnosticSource createChild(String name) {
-        return new DiagnosticSource(this, name);
+    public Origin createChild(Object name) {
+        return new Origin(this, name);
     }
 
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        DiagnosticSource[] sources = toArray();
+        Origin[] sources = toArray();
         int length = sources.length;
         for(int i = 0; i < length; i++) {
-            DiagnosticSource source = sources[i];
+            Origin source = sources[i];
             if(i != 0) {
                 builder.append(source.getSeparator());
             }
@@ -89,7 +89,10 @@ public class DiagnosticSource {
         return builder.toString();
     }
 
-    public static DiagnosticSource newRoot() {
-        return new DiagnosticSource(null, StringsUtil.EMPTY);
+    public static Origin newRoot() {
+        return new Origin(null, StringsUtil.EMPTY);
+    }
+    public static Origin createNew(Object name) {
+        return newRoot().createChild(name);
     }
 }

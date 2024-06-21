@@ -20,18 +20,18 @@ public interface DiagnosticMessage {
     default String getTag() {
         return null;
     }
-    default DiagnosticSource getSource() {
+    default Origin getSource() {
         return null;
     }
 
     class StringMessage implements DiagnosticMessage {
 
         private final Type type;
-        private final DiagnosticSource source;
+        private final Origin source;
         private final String tag;
         private final String message;
 
-        public StringMessage(Type type, DiagnosticSource source, String tag, String message) {
+        public StringMessage(Type type, Origin source, String tag, String message) {
             this.type = type;
             this.source = source;
             this.tag = tag;
@@ -48,7 +48,7 @@ public interface DiagnosticMessage {
             return type;
         }
         @Override
-        public DiagnosticSource getSource() {
+        public Origin getSource() {
             return source;
         }
         @Override
@@ -70,7 +70,7 @@ public interface DiagnosticMessage {
                 builder.append(tag);
                 builder.append(" : ");
             }
-            DiagnosticSource source = getSource();
+            Origin source = getSource();
             if(source != null) {
                 builder.append(source);
                 builder.append(", ");
