@@ -15,7 +15,11 @@
  */
 package com.reandroid.dex.smali;
 
+import com.reandroid.common.ByteSource;
+import com.reandroid.common.Origin;
+import com.reandroid.common.TextPosition;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.NumbersUtil;
 import com.reandroid.utils.io.IOUtil;
 
 import java.io.File;
@@ -24,25 +28,22 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public class SmaliReader {
-    private final byte[] array;
-    private final int start;
-    private final int length;
+
+    private final ByteSource byteSource;
     private int position;
 
-    private int lineNumber;
-    private int columnNumber;
+    private Origin origin;
 
-    private String path;
-
-    public SmaliReader(byte[] array, int start, int length) {
-        this.array = array;
-        this.start = start;
-        this.length = length;
+    public SmaliReader(ByteSource byteSource) {
+        this.byteSource = byteSource;
     }
-    public SmaliReader(byte[] array) {
-        this(array, 0, array.length);
+    public SmaliReader(byte[] bytes) {
+        this(ByteSource.of(bytes));
     }
 
+    public void reset() {
+        this.position(0);
+    }
     public int position() {
         return position;
     }
@@ -50,7 +51,7 @@ public class SmaliReader {
         this.position = position;
     }
     public int available() {
-        return this.length - this.position;
+        return this.byteSource.length() - this.position;
     }
     public boolean finished() {
         return available() == 0;
@@ -65,17 +66,17 @@ public class SmaliReader {
         int c = get(i) & 0xff;
         return (char) c;
     }
-    public byte get(int i){
-        return array[this.start + i];
+    public byte get(int i) {
+        return byteSource.read(i);
     }
-    public char readASCII(){
+    public char readASCII() {
         int i = read() & 0xff;
         return (char) i;
     }
     public byte read() {
-        int i = start + position;
+        int i = position;
         position ++;
-        return this.array[i];
+        return this.byteSource.read(i);
     }
     public String getString(int length){
         return new String(getBytes(length), StandardCharsets.UTF_8);
@@ -266,13 +267,7 @@ public class SmaliReader {
         return indexOf(position(), b);
     }
     public int indexOf(int start, byte b){
-        int end = start + available();
-        for(int i = start; i < end; i++){
-            if(b == get(i)){
-                return i;
-            }
-        }
-        return -1;
+        return byteSource.indexOf(start, b);
     }
     public int indexOfBeforeLineEnd(char ch){
         int pos = position();
@@ -381,81 +376,29 @@ public class SmaliReader {
         position(amount + position());
     }
 
-    public String getPath() {
-        return path;
+    public Origin getCurrentOrigin() {
+        return getOrigin(position());
     }
-    public void setPath(String path) {
-        this.path = path;
+    public Origin getOrigin(int position) {
+        Origin origin =  this.getOrigin();
+        origin = origin.createChild(new SmaliTextPosition(byteSource, position));
+        return origin;
+    }
+    public Origin getOrigin() {
+        Origin origin =  this.origin;
+        if(origin == null) {
+            origin = Origin.newRoot();
+            this.origin = origin;
+        }
+        return origin;
+    }
+    public void setOrigin(Origin origin) {
+        this.origin = origin;
     }
 
-    private void updatePositions(){
-        int pos = position();
-        int line = 1;
-        int column = 1;
-        for(int i = 0; i < pos; i++){
-            if(get(i) == '\n'){
-                column = 1;
-                line ++;
-            }else {
-                column ++;
-            }
-        }
-        this.lineNumber = line;
-        this.columnNumber = column;
-    }
-    public String getPositionPointer() {
-        if(finished()){
-            return "EOF";
-        }
-        StringBuilder builder = new StringBuilder();
-        int pos = position();
-        int lineStart = pos;
-        while (get(lineStart) != '\n'){
-            if(lineStart == 0){
-                break;
-            }
-            lineStart --;
-        }
-        if(get(lineStart) == '\n'){
-            lineStart ++;
-        }
-        int limit = 38;
-        if(pos - lineStart > limit){
-            lineStart = pos - limit;
-        }
-        int end = -1;
-        if(available() > 1) {
-            end = indexOf(lineStart, (byte) '\n');
-        }
-        if(end < 0){
-            if(pos == 0){
-                end = lineStart;
-            }else {
-                end = pos;
-            }
-            end = end + available();
-        }
-        if(end - pos > limit){
-            end = pos + limit;
-        }
-        for(int i = lineStart; i < end; i++){
-            builder.append(getASCII(i));
-        }
-        builder.append('\n');
-        for(int i = lineStart; i < pos; i++){
-            builder.append(' ');
-        }
-        builder.append('^');
-
-        return builder.toString();
-    }
-    public String getPositionLabel() {
-        updatePositions();
-        return "[" + lineNumber + ", " + columnNumber + "]";
-    }
     @Override
     public String toString() {
-        return getPositionPointer();
+        return getCurrentOrigin().toString();
     }
 
     public static boolean isWhiteSpaceOrComment(byte b){
@@ -588,14 +531,112 @@ public class SmaliReader {
         return (char) i;
     }
     public static SmaliReader of(String text){
-        return new SmaliReader(text.getBytes(StandardCharsets.UTF_8));
+        SmaliReader reader = new SmaliReader(text.getBytes(StandardCharsets.UTF_8));
+        reader.setOrigin(Origin.createNew("<text-source>"));
+        return reader;
     }
     public static SmaliReader of(File file) throws IOException {
         SmaliReader reader = new SmaliReader(IOUtil.readFully(file));
-        reader.setPath(file.getPath());
+        reader.setOrigin(Origin.createNew(file));
         return reader;
     }
     public static SmaliReader of(InputStream inputStream) throws IOException {
-        return new SmaliReader(IOUtil.readFully(inputStream));
+        SmaliReader reader = new SmaliReader(IOUtil.readFully(inputStream));
+        reader.setOrigin(Origin.createNew("<" + inputStream.getClass().getName() + ">"));
+        return reader;
+    }
+
+    static class SmaliTextPosition extends TextPosition {
+
+        private ByteSource byteSource;
+        private final int position;
+
+        public SmaliTextPosition(ByteSource byteSource, int position) {
+            this.byteSource = byteSource;
+            this.position = position;
+        }
+
+        @Override
+        public int getLineNumber() {
+            computeValues();
+            return super.getLineNumber();
+        }
+        @Override
+        public int getColumnNumber() {
+            computeValues();
+            return super.getColumnNumber();
+        }
+        private void computeValues() {
+            if(this.byteSource == null) {
+                return;
+            }
+            ByteSource byteSource = this.byteSource;
+            this.byteSource = null;
+            int line = 1;
+            int column = 1;
+            try {
+                int end = NumbersUtil.min(position, byteSource.length());
+                for(int i = 0; i < end; i++) {
+                    if (byteSource.read(i) == '\n') {
+                        line ++;
+                        column = 1;
+                    } else {
+                        column ++;
+                    }
+                }
+                setDescription(computePositionDescription(byteSource));
+            } catch (Throwable throwable) {
+                setDescription(throwable.getMessage());
+            }
+            setLineNumber(line);
+            setColumnNumber(column);
+            this.byteSource = null;
+        }
+        private String computePositionDescription(ByteSource byteSource) {
+            int pos = this.position;
+            if(pos >= byteSource.length()){
+                return "EOF";
+            }
+            StringBuilder builder = new StringBuilder();
+            builder.append('\n');
+            int lineStart = pos;
+            while (byteSource.read(lineStart) != '\n'){
+                if(lineStart == 0){
+                    break;
+                }
+                lineStart --;
+            }
+            if(byteSource.read(lineStart) == '\n'){
+                lineStart ++;
+            }
+            int limit = 38;
+            if(pos - lineStart > limit){
+                lineStart = pos - limit;
+            }
+            int end = -1;
+            if(byteSource.length() - pos > 1) {
+                end = byteSource.indexOf(lineStart, (byte) '\n');
+            }
+            if(end < 0){
+                if(pos == 0){
+                    end = lineStart;
+                }else {
+                    end = pos;
+                }
+                end = end + (byteSource.length() - pos);
+            }
+            if(end - pos > limit){
+                end = pos + limit;
+            }
+            for(int i = lineStart; i < end; i++){
+                builder.append((char) (byteSource.read(i) & 0xff));
+            }
+            builder.append('\n');
+            for(int i = lineStart; i < pos; i++){
+                builder.append(' ');
+            }
+            builder.append('^');
+            return builder.toString();
+        }
     }
 }

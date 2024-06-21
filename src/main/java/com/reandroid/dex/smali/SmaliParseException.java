@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.smali;
 
+import com.reandroid.common.Origin;
+
 import java.io.IOException;
 
 public class SmaliParseException extends IOException {
@@ -35,19 +37,10 @@ public class SmaliParseException extends IOException {
         }
         StringBuilder builder = new StringBuilder();
         builder.append(message);
-        String path = reader.getPath();
-        String label = reader.getPositionLabel();
-        if(path != null){
-            builder.append("\n");
-            builder.append(path);
-            builder.append(" ");
-            builder.append(label);
-        }else {
-            builder.append(", at ");
-            builder.append(label);
-        }
-        builder.append("\n");
-        builder.append(reader.getPositionPointer());
+        Origin origin = reader.getCurrentOrigin();
+        if(origin != null) {
+            builder.append(origin);
+        };
         return builder.toString();
     }
 

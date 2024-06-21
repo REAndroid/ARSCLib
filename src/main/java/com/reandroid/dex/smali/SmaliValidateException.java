@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali;
 
+import com.reandroid.common.Origin;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDef;
 
@@ -35,6 +36,10 @@ public class SmaliValidateException extends IOException {
         Smali smali = this.smali;
         if(smali == null){
             return message;
+        }
+        Origin origin = smali.getOrigin();
+        if(origin != null) {
+            return message + "\n" + origin;
         }
         Smali debug;
         if(smali instanceof SmaliDef){
