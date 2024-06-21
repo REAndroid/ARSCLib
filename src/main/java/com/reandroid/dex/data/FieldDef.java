@@ -45,7 +45,25 @@ public class FieldDef extends Def<FieldId> {
         return (FieldKey) super.getKey();
     }
 
-    public DexValueBlock<?> getStaticInitialValue(){
+    public DexValueBlock<?> getStaticInitialValue() {
+        return getStaticInitialValue(false);
+    }
+    public DexValueBlock<?> getStaticInitialValue(boolean forEditing) {
+        DexValueBlock<?> valueBlock = getLinkedStaticInitialValue();
+        if(valueBlock != null) {
+            StaticFieldDefArray array = getParentInstance(StaticFieldDefArray.class);
+            if(array != null) {
+                if(forEditing) {
+                    array.linkUniqueStaticValues();
+                } else {
+                    array.linkStaticValues();
+                }
+                valueBlock = getLinkedStaticInitialValue();
+            }
+        }
+        return valueBlock;
+    }
+    DexValueBlock<?> getLinkedStaticInitialValue() {
         return staticInitialValue;
     }
 

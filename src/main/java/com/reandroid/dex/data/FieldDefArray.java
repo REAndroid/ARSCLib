@@ -35,8 +35,10 @@ public class FieldDefArray extends DefArray<FieldDef> {
         }
     }
     public void fromSmali(Iterator<SmaliField> iterator){
-        while (iterator.hasNext()){
-            fromSmali(iterator.next());
+        while (iterator.hasNext()) {
+            SmaliField smaliField = iterator.next();
+            FieldDef fieldDef = createNext();
+            fieldDef.fromSmali(smaliField);
         }
     }
     public void fromSmali(SmaliField smaliField){

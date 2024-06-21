@@ -16,14 +16,21 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.id.ClassId;
+import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.smali.model.SmaliField;
 import com.reandroid.dex.value.*;
+import com.reandroid.utils.NumbersUtil;
+
+import java.util.Iterator;
 
 
 public class StaticFieldDefArray extends FieldDefArray {
 
     private boolean mValuesLinked;
+    private EncodedArray mLinkedArray;
 
     public StaticFieldDefArray(IntegerReference itemCount) {
         super(itemCount);
@@ -31,13 +38,10 @@ public class StaticFieldDefArray extends FieldDefArray {
 
     @Override
     public void onPreRemove(FieldDef fieldDef) {
-        EncodedArray encodedArray = getUniqueStaticValues();
-        DexValueBlock<?> value = fieldDef.getStaticInitialValue();
-        if(value == null || value.getParentInstance(EncodedArray.class) != encodedArray) {
-            holdStaticValues(encodedArray);
-            value = fieldDef.getStaticInitialValue();
-        }
-        if(value != null && encodedArray != null){
+        linkUniqueStaticValues();
+        DexValueBlock<?> value = fieldDef.getLinkedStaticInitialValue();
+        EncodedArray encodedArray = getStaticValues();
+        if(value != null && encodedArray != null) {
             encodedArray.remove(value);
         }
         super.onPreRemove(fieldDef);
@@ -46,15 +50,16 @@ public class StaticFieldDefArray extends FieldDefArray {
     @Override
     void onPreSort(){
         super.onPreSort();
-        holdStaticValues(getUniqueStaticValues());
+        linkUniqueStaticValues();
     }
     @Override
     void onPostSort(){
         super.onPostSort();
         sortStaticValues();
     }
-    private void sortStaticValues(){
-        EncodedArray encodedArray = getUniqueStaticValues();
+    private void sortStaticValues() {
+        linkUniqueStaticValues();
+        EncodedArray encodedArray = getStaticValues();
         if(encodedArray == null){
             return;
         }
@@ -62,7 +67,7 @@ public class StaticFieldDefArray extends FieldDefArray {
         int count = getCount();
         for(int i = 0; i < count; i++){
             FieldDef def = get(i);
-            DexValueBlock<?> valueBlock = def.getStaticInitialValue();
+            DexValueBlock<?> valueBlock = def.getLinkedStaticInitialValue();
             if(valueBlock != null){
                 ensureArraySize(encodedArray, i + 1);
                 encodedArray.set(i, valueBlock);
@@ -81,17 +86,78 @@ public class StaticFieldDefArray extends FieldDefArray {
             encodedArray.add(createFor(typeKey));
         }
     }
-    private EncodedArray getUniqueStaticValues(){
+    void linkUniqueStaticValues() {
         ClassId classId = getClassId();
         if(classId != null){
-            EncodedArray previous = classId.getStaticValues();
-            EncodedArray current = classId.getUniqueStaticValues();
-            if(previous != null && previous != current) {
-                updateStaticValues(current);
-            }
-            return current;
+            classId.getUniqueStaticValues();
         }
-        return null;
+        linkStaticValues();
+    }
+    void linkStaticValues() {
+        initStaticValues();
+        EncodedArray updatedArray = getStaticValues();
+        EncodedArray linkedArray = this.mLinkedArray;
+        if(updatedArray == linkedArray) {
+            return;
+        }
+        this.mLinkedArray = linkedArray;
+        replacePlaceHolder(linkedArray);
+        if(updatedArray != null && linkedArray != null) {
+            int count = getCount();
+            for(int i = 0; i < count; i++){
+                FieldDef def = get(i);
+                DexValueBlock<?> linkedValue = def.getLinkedStaticInitialValue();
+                DexValueBlock<?> updatedValue = null;
+                if(linkedValue != null) {
+                    updatedValue = updatedArray.get(linkedValue.getIndex());
+                }
+                def.holdStaticInitialValue(updatedValue);
+            }
+        } else if(updatedArray != null) {
+            int count = getCount();
+            for(int i = 0; i < count; i++){
+                FieldDef def = get(i);
+                DexValueBlock<?> updatedValue = updatedArray.get(i);
+                def.holdStaticInitialValue(updatedValue);
+            }
+        } else {
+            int count = getCount();
+            for(int i = 0; i < count; i++){
+                FieldDef def = get(i);
+                def.holdStaticInitialValue(null);
+            }
+        }
+    }
+    private void replacePlaceHolder(EncodedArray encodedArray) {
+        if(encodedArray == null) {
+            return;
+        }
+        int size = NumbersUtil.min(encodedArray.size(), size());
+        for(int i = 0; i < size; i++) {
+            DexValueBlock<?> value = encodedArray.get(i);
+            if(value == NullValue.PLACE_HOLDER) {
+                FieldDef def = get(i);
+                DexValueBlock<?> replace = createFor(def.getKey().getType());
+                encodedArray.set(i, replace);
+            }
+        }
+    }
+    private void initStaticValues(){
+        if(mValuesLinked) {
+            return;
+        }
+        EncodedArray encodedArray = getStaticValues();
+        replacePlaceHolder(encodedArray);
+        this.mLinkedArray = encodedArray;
+        if(encodedArray != null) {
+            int count = getCount();
+            for(int i = 0; i < count; i++){
+                FieldDef def = get(i);
+                DexValueBlock<?> valueBlock = encodedArray.get(i);
+                def.holdStaticInitialValue(valueBlock);
+            }
+            mValuesLinked = encodedArray.size() != 0;
+        }
     }
     private EncodedArray getStaticValues(){
         ClassId classId = getClassId();
@@ -100,61 +166,65 @@ public class StaticFieldDefArray extends FieldDefArray {
         }
         return null;
     }
-
     @Override
     public void setClassId(ClassId classId) {
         if(getClassId() != classId){
             mValuesLinked = false;
         }
         super.setClassId(classId);
-        if(!mValuesLinked){
-            holdStaticValues(getStaticValues());
-        }
+        linkStaticValues();
     }
-
-    private void holdStaticValues(){
-        holdStaticValues(getUniqueStaticValues());
-    }
-    private void holdStaticValues(EncodedArray encodedArray){
-        if(encodedArray == null){
+    private void validateValues() {
+        EncodedArray encodedArray = getStaticValues();
+        if(encodedArray == null) {
             return;
         }
-        int count = getCount();
-        for(int i = 0; i < count; i++){
-            FieldDef def = get(i);
-            DexValueBlock<?> valueBlock = encodedArray.get(i);
-            def.holdStaticInitialValue(valueBlock);
-        }
-        if(count != 0){
-            mValuesLinked = true;
-        }
-    }
-    private void updateStaticValues(EncodedArray encodedArray){
-        if(encodedArray == null){
-            return;
-        }
-        int count = getCount();
-        for(int i = 0; i < count; i++){
-            FieldDef def = get(i);
-            DexValueBlock<?> value = def.getStaticInitialValue();
-            if(value != null) {
-                def.holdStaticInitialValue(encodedArray.get(value.getIndex()));
+        encodedArray.refresh();
+        Iterator<FieldDef> iterator = this.iterator();
+        Iterator<DexValueBlock<?>> valuesIterator = encodedArray.iterator();
+        while (iterator.hasNext() && valuesIterator.hasNext()) {
+            FieldDef fieldDef = iterator.next();
+            DexValueBlock<?> value = valuesIterator.next();
+            TypeKey typeKey = fieldDef.getKey().getType();
+            if(value != fieldDef.getLinkedStaticInitialValue()) {
+                throw new DexException("Different value: " + fieldDef);
+            }
+            TypeKey expected = value.getDataTypeKey();
+            boolean primitive = typeKey.isPrimitive();
+            if(primitive != expected.isPrimitive() || primitive && !typeKey.equals(expected)) {
+                throw new DexException("Mismatch on initial value type: " + typeKey + " vs " + expected
+                        + ",\n " + fieldDef.getKey() + ",\n " + fieldDef);
             }
         }
-        if(count != 0){
-            mValuesLinked = true;
+        if(valuesIterator.hasNext()) {
+            FieldKey fieldKey = iterator().next().getKey();
+            throw new DexException("Too many values than fields: " + size() + ", values = " + encodedArray.size()
+                    + ", at " + fieldKey);
         }
     }
 
     @Override
     public void merge(DefArray<?> defArray) {
         super.merge(defArray);
-        holdStaticValues();
+        linkStaticValues();
+    }
+
+    @Override
+    public void fromSmali(Iterator<SmaliField> iterator) {
+        super.fromSmali(iterator);
+        linkStaticValues();
+        validateValues();
+    }
+    @Override
+    public void fromSmali(SmaliField smaliField) {
+        super.fromSmali(smaliField);
+        linkStaticValues();
+        validateValues();
     }
 
     private static DexValueBlock<?> createFor(TypeKey typeKey){
         DexValueBlock<?> valueBlock;
-        if(typeKey.isTypeArray() || !typeKey.isPrimitive()){
+        if(!typeKey.isPrimitive()){
             valueBlock = NullValue.PLACE_HOLDER;
         }else if(TypeKey.TYPE_I.equals(typeKey)){
             valueBlock = new IntValue();
