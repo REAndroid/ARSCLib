@@ -25,6 +25,7 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class SmaliField extends SmaliDef{
 
@@ -70,6 +71,33 @@ public class SmaliField extends SmaliDef{
         if(value != null){
             value.setParent(this);
         }
+    }
+    void fixUninitializedFinalValue() {
+        if(this.getValue() != null || !isStatic() || !isFinal()) {
+            return;
+        }
+        SmaliClass smaliClass = getSmaliClass();
+        FieldKey fieldKey = getKey();
+        if(smaliClass == null || fieldKey == null) {
+            return;
+        }
+        if(!isInitializedInStaticConstructor(smaliClass, fieldKey)) {
+            setValue(SmaliValue.createDefaultFor(fieldKey.getType()));
+        }
+    }
+    private boolean isInitializedInStaticConstructor(SmaliClass smaliClass, FieldKey fieldKey) {
+        SmaliMethod method = smaliClass.getStaticConstructor();
+        if(method == null) {
+            return false;
+        }
+        Iterator<SmaliInstruction> iterator = method.getInstructions();
+        while (iterator.hasNext()) {
+            SmaliInstruction instruction = iterator.next();
+            if(fieldKey.equals(instruction.getKey())) {
+                return instruction.getOpcode().isFieldStaticPut();
+            }
+        }
+        return false;
     }
 
     @Override

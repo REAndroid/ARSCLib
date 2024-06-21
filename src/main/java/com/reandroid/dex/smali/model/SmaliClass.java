@@ -17,6 +17,7 @@ package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
+import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.key.TypeListKey;
@@ -104,6 +105,24 @@ public class SmaliClass extends SmaliDef{
         return methods.getVirtualMethods();
     }
 
+    public SmaliMethod getStaticConstructor() {
+        Iterator<SmaliMethod> iterator = getDirectMethods();
+        while (iterator.hasNext()) {
+            SmaliMethod method = iterator.next();
+            if(method.isConstructor() && method.isStatic() &&
+                    MethodKey.CONSTRUCTOR_STATIC.equalsIgnoreDeclaring(method.getKey())) {
+                return method;
+            }
+        }
+        return null;
+    }
+    void fixUninitializedFinalFields() {
+        Iterator<SmaliField> iterator = getStaticFields();
+        while (iterator.hasNext()) {
+            iterator.next().fixUninitializedFinalValue();
+        }
+    }
+
     @Override
     public SmaliDirective getSmaliDirective() {
         return SmaliDirective.CLASS;
@@ -143,6 +162,7 @@ public class SmaliClass extends SmaliDef{
             reader.skipWhitespacesOrComment();
         }
         reader.skipWhitespacesOrComment();
+        fixUninitializedFinalFields();
     }
     private boolean parseNext(SmaliReader reader) throws IOException {
         if(reader.finished()) {
