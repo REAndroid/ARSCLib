@@ -282,95 +282,44 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         return item;
     }
     public boolean remove(T item){
-        int index = -1;
-        if(item != null){
-            index = mItems.indexOfFast(item, item.getIndex());
-            if(index < 0){
-                index = mItems.indexOfFast(item);
-            }
-            item.setParent(null);
-            item.setIndex(-1);
+        if(item == null) {
+            return false;
         }
+        int index = mItems.indexOfFast(item, item.getIndex());
         if(index < 0){
             index = mItems.indexOfFast(item);
         }
+        if(index < 0) {
+            return false;
+        }
         boolean removed = mItems.remove(index) != null;
-        if(removed){
+        if(removed) {
             updateIndex(index);
+            item.setIndex(-1);
+            item.setParent(null);
         }
         onChanged();
         return removed;
     }
+    public int indexOf(T item){
+        if(item == null) {
+            return -1;
+        }
+        int index = mItems.indexOfFast(item, item.getIndex());
+        if(index < 0){
+            index = mItems.indexOfFast(item);
+        }
+        return index;
+    }
     protected void notifyPreRemove(T item) {
         if(item != null && item.getParent() == this) {
             onPreRemove(item);
+            item.setIndex(-1);
+            item.setParent(null);
         }
     }
     public void onPreRemove(T item){
 
-    }
-
-    public void sortSingle(T element, Comparator<? super T> comparator){
-        int count = getCount();
-        if(count < 2){
-            return;
-        }
-        int attempts = 0;
-        mItems.remove(element);
-        int speedLimit = count / 20;
-        int prev = 0;
-        int speed = 0;
-        int acceleration = 1;
-        boolean skipAcceleration = false;
-        for(int i = 0; i < count; i++){
-            attempts ++;
-            T item = get(i);
-            if(element == item){
-                continue;
-            }
-            int compare = comparator.compare(item, element);
-            if(compare == 0){
-                add(i, element);
-                return;
-            }
-            if(compare > 0){
-                if(i == 0 || attempts < 0){
-                    add(i, element);
-                    return;
-                }
-                if(prev > 0){
-                    i = prev - 1;
-                    prev = -1;
-                    continue;
-                }
-                add(i, element);
-                return;
-            }
-            if(prev < 0){
-                continue;
-            }
-            prev = i;
-            if(attempts % 8 == 0){
-                speed = speed + acceleration;
-            }
-            if(attempts % (16 + acceleration) == 0){
-                if(!skipAcceleration){
-                    acceleration = acceleration + 1;
-                    skipAcceleration = true;
-                }else {
-                    skipAcceleration = false;
-                }
-            }
-            if(speed > speedLimit){
-                speed = speedLimit;
-            }
-            i += speed;
-            if(i >= count){
-                i = prev - 1;
-                prev = -1;
-            }
-        }
-        add(element);
     }
     public boolean swap(int i, int j) {
         if(i == j) {
