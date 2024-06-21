@@ -39,6 +39,14 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
 
     @Override
     public T getItem() {
+        T item = this.item;
+        if(item != null) {
+            T replace = item.getReplace();
+            if(replace != item) {
+                setItem(replace);
+                item = this.item;
+            }
+        }
         return item;
     }
     @Override
@@ -94,12 +102,9 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
     }
     @Override
     public void refresh() {
-        T item = getItem();
         int value = 0;
-        if(item != null){
-            item = item.getReplace();
-        }
-        if(item != null){
+        T item = getItem();
+        if(item != null) {
             value = item.getIdx();
             if(value == 0){
                 throw new RuntimeException("Invalid reference");
