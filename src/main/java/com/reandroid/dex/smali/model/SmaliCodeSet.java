@@ -19,6 +19,8 @@ import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -26,6 +28,7 @@ import java.util.Iterator;
 public class SmaliCodeSet extends SmaliSet<SmaliCode> {
 
     private int addressOffset;
+    private SmaliNullInstruction nullInstruction;
 
     public SmaliCodeSet(){
         super();
@@ -46,6 +49,17 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode> {
             ins.setAddress(address);
             address += ins.getCodeUnits();
         }
+        SmaliInstruction instruction = getNullInstruction();
+        if(instruction != null) {
+            instruction.setAddress(address);
+        }
+    }
+    public Iterator<SmaliInstruction> getInstructions(SmaliLabel label) {
+        if(label != null) {
+            return FilterIterator.of(getInstructions(),
+                    smaliInstruction -> smaliInstruction.hasLabelOperand(label));
+        }
+        return EmptyIterator.of();
     }
     public Iterator<SmaliInstruction> getInstructions() {
         return iterator(SmaliInstruction.class);
@@ -67,6 +81,30 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode> {
     }
     public void clearDebugs() {
         removeInstances(SmaliDebug.class);
+    }
+
+    public SmaliInstruction getNullInstruction() {
+        SmaliNullInstruction nullInstruction = this.nullInstruction;
+        if(needsNullInstruction()) {
+            if(nullInstruction == null) {
+                nullInstruction = new SmaliNullInstruction();
+                nullInstruction.setParent(this);
+                this.nullInstruction = nullInstruction;
+            }
+        } else {
+            if(nullInstruction != null) {
+                nullInstruction.setParent(null);
+                nullInstruction = null;
+                this.nullInstruction = null;
+            }
+        }
+        return nullInstruction;
+    }
+    private boolean needsNullInstruction() {
+        if(isEmpty()) {
+            return false;
+        }
+        return !(get(size() - 1) instanceof SmaliInstruction);
     }
 
     @Override

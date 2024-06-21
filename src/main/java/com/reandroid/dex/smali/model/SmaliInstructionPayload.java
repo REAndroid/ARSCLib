@@ -61,6 +61,7 @@ public abstract class SmaliInstructionPayload<T extends Smali> extends SmaliInst
     @Override
     public void parse(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
+        setOrigin(reader.getCurrentOrigin());
         SmaliDirective directive = getSmaliDirective();
         SmaliParseException.expect(reader, directive);
         reader.skipSpaces();

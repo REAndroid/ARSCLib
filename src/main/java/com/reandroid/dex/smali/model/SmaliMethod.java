@@ -209,7 +209,9 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
     public void setParameterRegistersCount(int count) {
     }
     @Override
-    public void ensureLocalRegistersCount(int count) {
+    public boolean ensureLocalRegistersCount(int count) {
+        // FIXME
+        return true;
     }
     @Override
     public int getLocalRegistersCount() {

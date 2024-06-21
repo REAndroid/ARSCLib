@@ -15,21 +15,40 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
-public class SmaliCode extends Smali {
+public class SmaliNullInstruction extends SmaliInstruction {
 
-    public SmaliCode(){
+    public SmaliNullInstruction() {
         super();
     }
 
-    public SmaliCodeSet getCodeSet(){
-        return getParentInstance(SmaliCodeSet.class);
+    @Override
+    public int getCodeUnits() {
+        return 0;
+    }
+
+    @Override
+    public Opcode<?> getOpcode() {
+        return Opcode.NOP;
     }
     @Override
-    public void parse(SmaliReader reader) throws IOException {
+    public SmaliRegisterSet getRegisterSet() {
+        return SmaliRegisterSet.NO_REGISTER_SET;
+    }
+    @Override
+    public SmaliInstructionOperand getOperand() {
+        return SmaliInstructionOperand.NO_OPERAND;
+    }
 
+    @Override
+    public void parse(SmaliReader reader) throws IOException {
+    }
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
     }
 }

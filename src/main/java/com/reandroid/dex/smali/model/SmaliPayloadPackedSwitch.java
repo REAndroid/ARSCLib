@@ -15,11 +15,13 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.ins.InsPackedSwitch;
 import com.reandroid.dex.ins.InsPackedSwitchData;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.smali.*;
 
-public class SmaliPayloadPackedSwitch extends SmaliInstructionPayload<SmaliLabel> implements SmaliRegion {
+public class SmaliPayloadPackedSwitch extends SmaliSwitchPayload<SmaliPackedSwitchEntry>
+        implements SmaliRegion {
 
     public SmaliPayloadPackedSwitch(){
         super(new SmaliInstructionOperand.SmaliHexOperand());
@@ -33,6 +35,10 @@ public class SmaliPayloadPackedSwitch extends SmaliInstructionPayload<SmaliLabel
     }
 
 
+    @Override
+    public Opcode<InsPackedSwitch> getSwitchOpcode() {
+        return Opcode.PACKED_SWITCH;
+    }
     @Override
     public int getCodeUnits() {
         int count = getEntries().size();
@@ -53,8 +59,8 @@ public class SmaliPayloadPackedSwitch extends SmaliInstructionPayload<SmaliLabel
         return Opcode.PACKED_SWITCH_PAYLOAD;
     }
     @Override
-    public SmaliLabel newEntry(SmaliReader reader) {
-        return new SmaliLabel();
+    public SmaliPackedSwitchEntry newEntry(SmaliReader reader) {
+        return new SmaliPackedSwitchEntry();
     }
 
     @Override

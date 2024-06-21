@@ -21,20 +21,17 @@ import com.reandroid.dex.smali.SmaliValidateException;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.InstanceIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class SmaliLabel extends SmaliCode{
+public class SmaliLabel extends SmaliCode {
 
     private String labelName;
-    private int temporaryAddress;
 
     public SmaliLabel(){
         super();
-        this.temporaryAddress = -1;
     }
 
     public String getLabelName() {
@@ -51,14 +48,10 @@ public class SmaliLabel extends SmaliCode{
         }
         return address;
     }
-    public int getAddress(){
-        int address = searchAddress();
-        if(address < 0){
-            address = this.temporaryAddress;
-        }
-        return address;
+    public int getAddress() {
+        return searchAddress();
     }
-    private int searchAddress(){
+    private int searchAddress() {
         SmaliCodeSet codeSet = getCodeSet();
         if(codeSet == null){
             return -1;
@@ -71,17 +64,32 @@ public class SmaliLabel extends SmaliCode{
             SmaliLabel label = (SmaliLabel) codeSet.get(i);
             return label.getAddress();
         }
-        Iterator<SmaliCode> iterator = codeSet.iterator(codeSet.indexOf(this) + 1);
-        SmaliInstruction next = CollectionUtil.getFirst(
-                InstanceIterator.of(iterator, SmaliInstruction.class));
-        if(next != null){
-            return next.getAddress();
+        Iterator<SmaliInstruction> iterator = codeSet.iterator(codeSet.indexOf(this) + 1,
+                SmaliInstruction.class);
+        if(iterator.hasNext()) {
+            return iterator.next().getAddress();
+        }
+        SmaliInstruction nullInstruction = codeSet.getNullInstruction();
+        if(nullInstruction != null) {
+            return nullInstruction.getAddress();
         }
         return -1;
     }
-
-    public void setTemporaryAddress(int address) {
-        this.temporaryAddress = address;
+    public SmaliInstruction getTargetInstruction() {
+        SmaliCodeSet codeSet = getCodeSet();
+        if(codeSet == null) {
+            return null;
+        }
+        int i = codeSet.indexOf(this);
+        if(i < 0) {
+            return null;
+        }
+        SmaliInstruction instruction = CollectionUtil.getFirst(codeSet.iterator(i + 1,
+                SmaliInstruction.class));
+        if(instruction == null) {
+            instruction = codeSet.getNullInstruction();
+        }
+        return instruction;
     }
 
     @Override
@@ -93,6 +101,7 @@ public class SmaliLabel extends SmaliCode{
     @Override
     public void parse(SmaliReader reader) throws IOException{
         reader.skipWhitespaces();
+        setOrigin(reader.getCurrentOrigin());
         SmaliParseException.expect(reader, ':');
         int i1 = reader.indexOfWhiteSpaceOrComment();
         int i2 = reader.indexOfBeforeLineEnd('}');

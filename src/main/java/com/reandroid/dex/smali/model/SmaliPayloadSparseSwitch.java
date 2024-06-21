@@ -15,14 +15,20 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.ins.InsSparseSwitch;
 import com.reandroid.dex.ins.InsSparseSwitchData;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.smali.*;
 
-public class SmaliPayloadSparseSwitch extends SmaliInstructionPayload<SmaliSparseSwitchEntry> {
+public class SmaliPayloadSparseSwitch extends SmaliSwitchPayload<SmaliSparseSwitchEntry> {
 
     public SmaliPayloadSparseSwitch(){
         super(SmaliInstructionOperand.NO_OPERAND);
+    }
+
+    @Override
+    public Opcode<InsSparseSwitch> getSwitchOpcode() {
+        return Opcode.SPARSE_SWITCH;
     }
 
     @Override

@@ -126,7 +126,7 @@ public class SmaliInstruction extends SmaliCode{
             operand.setParent(this);
         }
     }
-    public boolean hasLabel(SmaliLabel label){
+    public boolean hasLabelOperand(SmaliLabel label) {
         SmaliInstructionOperand operand = getOperand();
         if(!(operand instanceof SmaliInstructionOperand.SmaliLabelOperand)){
             return false;
@@ -195,6 +195,7 @@ public class SmaliInstruction extends SmaliCode{
     @Override
     public void parse(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
+        setOrigin(reader.getCurrentOrigin());
         Opcode<?> opcode = parseOpcode(reader);
         getRegisterSet().parse(reader);
 

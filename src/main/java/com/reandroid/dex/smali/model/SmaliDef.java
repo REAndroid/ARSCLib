@@ -96,6 +96,9 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
     public boolean isStatic(){
         return Modifier.contains(getAccessFlags(), AccessFlag.STATIC);
     }
+    public boolean isFinal(){
+        return Modifier.contains(getAccessFlags(), AccessFlag.FINAL);
+    }
     public boolean isPrivate(){
         return Modifier.contains(getAccessFlags(), AccessFlag.PRIVATE);
     }

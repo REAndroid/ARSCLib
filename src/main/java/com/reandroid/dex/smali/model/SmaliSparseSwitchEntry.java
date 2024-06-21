@@ -21,44 +21,30 @@ import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
-public class SmaliSparseSwitchEntry extends Smali{
+public class SmaliSparseSwitchEntry extends SmaliSwitchEntry {
 
-    private SmaliValueNumber<?> value;
-    private final SmaliLabel label;
+    private final SmaliValueInteger smaliValue;
 
-    public SmaliSparseSwitchEntry(){
+    public SmaliSparseSwitchEntry() {
         super();
-        this.label = new SmaliLabel();
-        this.label.setParent(this);
+        this.smaliValue = new SmaliValueInteger();
+        this.smaliValue.setParent(this);
     }
 
-    public int getIntegerValue(){
-        return getValueNumber().unsignedInt();
+    public int getValue() {
+        return this.smaliValue.getValue();
     }
-    public Number getValue() {
-        return getValueNumber().getNumber();
-    }
-    public void setValue(Number value) {
-        setNumberValue(SmaliValueNumber.createFor(value));
+    public void setValue(int value) {
+        this.smaliValue.setValue(value);
     }
 
-    public SmaliValueNumber<?> getValueNumber() {
-        return value;
-    }
-    public void setNumberValue(SmaliValueNumber<?> valueNumber) {
-        this.value = valueNumber;
-        if(valueNumber != null){
-            valueNumber.setParent(this);
-        }
-    }
-
-    public SmaliLabel getLabel() {
-        return label;
+    public SmaliValueInteger getSmaliValue() {
+        return smaliValue;
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.appendOptional(getValueNumber());
+        writer.appendOptional(getSmaliValue());
         writer.append(" -> ");
         getLabel().append(writer);
     }
@@ -66,10 +52,7 @@ public class SmaliSparseSwitchEntry extends Smali{
     @Override
     public void parse(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
-
-        SmaliValueNumber<?> value = SmaliValueNumber.createNumber(reader);
-        setNumberValue(value);
-        value.parse(reader);
+        getSmaliValue().parse(reader);
         reader.skipSpaces();
         SmaliParseException.expect(reader, '-');
         SmaliParseException.expect(reader, '>');

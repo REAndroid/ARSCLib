@@ -18,6 +18,7 @@ package com.reandroid.dex.smali.model;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.InstanceIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -41,6 +42,21 @@ public class SmaliSet<T extends Smali> extends Smali{
     }
     public<T2> Iterator<T2> iterator(Class<T2> instance) {
         return body.iterator(instance);
+    }
+    public<T2> Iterator<T2> iterator(int start, Class<T2> instance) {
+        return InstanceIterator.of(body.iterator(start), instance);
+    }
+    public Iterator<T> reversedIterator() {
+        return body.reversedIterator();
+    }
+    public Iterator<T> reversedIterator(int start) {
+        return body.reversedIterator(start);
+    }
+    public<T2> Iterator<T2> reversedIterator(Class<T2> instance) {
+        return InstanceIterator.of(body.reversedIterator(), instance);
+    }
+    public<T2> Iterator<T2> reversedIterator(int start, Class<T2> instance) {
+        return InstanceIterator.of(body.reversedIterator(start), instance);
     }
     public int size(){
         return body.size();

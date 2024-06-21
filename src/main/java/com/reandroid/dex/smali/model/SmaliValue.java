@@ -15,10 +15,11 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
-import com.reandroid.dex.value.DexValueType;
+import com.reandroid.dex.value.*;
 
 import java.io.IOException;
 
@@ -102,5 +103,31 @@ public class SmaliValue extends Smali{
             return new SmaliValueDouble();
         }
         return new SmaliValueKey();
+    }
+
+    public static SmaliValue createDefaultFor(TypeKey typeKey){
+        SmaliValue smaliValue;
+        if(typeKey.isTypeArray() || !typeKey.isPrimitive()) {
+            smaliValue = new SmaliValueNull();
+        }else if(TypeKey.TYPE_I.equals(typeKey)) {
+            smaliValue = new SmaliValueInteger();
+        } else if(TypeKey.TYPE_J.equals(typeKey)) {
+            smaliValue = new SmaliValueLong();
+        } else if(TypeKey.TYPE_D.equals(typeKey)) {
+            smaliValue = new SmaliValueDouble();
+        } else if(TypeKey.TYPE_F.equals(typeKey)) {
+            smaliValue = new SmaliValueFloat();
+        } else if(TypeKey.TYPE_S.equals(typeKey)) {
+            smaliValue = new SmaliValueShort();
+        } else if(TypeKey.TYPE_B.equals(typeKey)) {
+            smaliValue = new SmaliValueByte();
+        } else if(TypeKey.TYPE_C.equals(typeKey)) {
+            smaliValue = new SmaliValueChar();
+        } else if(TypeKey.TYPE_Z.equals(typeKey)) {
+            smaliValue = new SmaliValueBoolean();
+        }else {
+            throw new IllegalArgumentException("Undefined: " + typeKey);
+        }
+        return smaliValue;
     }
 }

@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.common.Origin;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliParser;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -22,9 +23,18 @@ import com.reandroid.dex.smali.SmaliWriter;
 import java.io.IOException;
 
 public abstract class Smali implements SmaliFormat, SmaliParser {
+
     private Smali parent;
+    private Origin origin;
 
     public Smali(){
+    }
+
+    public Origin getOrigin() {
+        return origin;
+    }
+    public void setOrigin(Origin origin) {
+        this.origin = origin;
     }
 
     public Smali getParent() {
@@ -66,6 +76,10 @@ public abstract class Smali implements SmaliFormat, SmaliParser {
     }
 
     public String toDebugString(){
+        Origin origin = getOrigin();
+        if(origin != null) {
+            return origin.toString();
+        }
         try{
             return toString();
         }catch (Throwable e){

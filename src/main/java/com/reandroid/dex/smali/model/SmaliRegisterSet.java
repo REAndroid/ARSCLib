@@ -162,6 +162,9 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
             return 0;
         }
         @Override
+        public void setRegistersTable(RegistersTable registersTable) {
+        }
+        @Override
         public void append(SmaliWriter writer) {
         }
         @Override
