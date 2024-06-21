@@ -161,7 +161,7 @@ public class AccessFlag extends Modifier{
     private static AccessFlag parseNext(SmaliReader reader){
         reader.skipWhitespaces();
         int i = reader.indexOf(' ');
-        if(i < 0 || i > reader.indexOf('\n')){
+        if(i < 0){
             return null;
         }
         int position = reader.position();
