@@ -32,7 +32,7 @@ public class ExtraLineList implements ArraySupplier<ExtraLine>, Iterable<ExtraLi
         return false;
     }
     public boolean isEmpty(){
-        return getCount() != 0;
+        return getCount() == 0;
     }
 
     public<T1> Iterator<T1> iterator(Class<T1> instance){

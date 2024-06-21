@@ -202,6 +202,7 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
 
         public EmptyAnnotationSet(){
             super();
+            addUsageType(UsageMarker.USAGE_ANNOTATION);
         }
         @Override
         protected void onRefreshed() {
@@ -209,6 +210,14 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
             Section<AnnotationSet> section = getSection(getSectionType());
             if(section.getCount() == 1){
                 addUsageType(UsageMarker.USAGE_ANNOTATION);
+            }
+        }
+
+        @Override
+        public void clearUsageType() {
+            Section<AnnotationSet> section = getSection(getSectionType());
+            if(section.getCount() != 1){
+                super.clearUsageType();
             }
         }
     }

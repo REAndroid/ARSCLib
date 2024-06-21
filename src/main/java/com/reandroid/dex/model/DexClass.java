@@ -30,6 +30,7 @@ import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.value.NullValue;
 import com.reandroid.dex.value.StringValue;
 import com.reandroid.utils.collection.*;
+import com.reandroid.utils.io.FileUtil;
 import com.reandroid.utils.io.IOUtil;
 
 import java.io.*;
@@ -687,7 +688,11 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     }
     public void writeSmali(SmaliWriter writer, File dir) throws IOException {
         File file = toSmaliFile(dir);
-        IOUtil.writeUtf8(toSmali(writer), file);
+        FileUtil.ensureParentDirectory(file);
+        FileWriter fileWriter = new FileWriter(file);
+        writer.setWriter(fileWriter);
+        append(writer);
+        writer.close();
     }
     public File toSmaliFile(File dir){
         return new File(dir, buildSmaliPath());

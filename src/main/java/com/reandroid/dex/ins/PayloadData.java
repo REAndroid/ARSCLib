@@ -47,7 +47,7 @@ public abstract class PayloadData extends Ins implements SmaliRegion {
         if(insNop != null) {
             instructionList.remove(insNop);
         } else {
-            instructionList.createAt(getIndex(), Opcode.NOP);
+            instructionList.add(false, getIndex(), Opcode.NOP.newInstance());
         }
     }
     private InsNop getNopAlignment() {

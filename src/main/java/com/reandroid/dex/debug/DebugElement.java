@@ -21,6 +21,7 @@ import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.ins.ExtraLine;
 import com.reandroid.dex.data.FixedDexContainerWithTool;
+import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliDebugElement;
@@ -33,6 +34,7 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
     private final ByteItem elementType;
     private int address;
     private int lineNumber;
+    private Ins targetIns;
 
     DebugElement(int childesCount, int flag) {
         super(childesCount + 1);
@@ -47,6 +49,20 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
     }
     DebugElement(DebugElementType<?> elementType) {
         this(0, elementType.getFlag());
+    }
+
+    @Override
+    public Ins getTargetIns() {
+        return targetIns;
+    }
+    @Override
+    public void setTargetIns(Ins targetIns) {
+        if(targetIns != this.targetIns) {
+            this.targetIns = targetIns;
+            if(targetIns != null) {
+                targetIns.addExtraLine(this);
+            }
+        }
     }
 
     public void removeSelf(){

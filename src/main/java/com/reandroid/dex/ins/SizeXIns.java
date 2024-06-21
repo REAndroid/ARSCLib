@@ -17,6 +17,7 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.id.IdItem;
@@ -24,6 +25,7 @@ import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.reference.InsIdSectionReference;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.dex.smali.SmaliValidateException;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.utils.HexUtil;
@@ -60,6 +62,9 @@ public class SizeXIns extends Ins {
     }
 
 
+    final ByteArray getValueBytes() {
+        return valueBytes;
+    }
     long getLong(){
         return getLong(valueBytes.getBytes(), 2);
     }
@@ -81,7 +86,7 @@ public class SizeXIns extends Ins {
         return valueBytes.getShort(2);
     }
     void setShort(int offset, int value){
-        if(value != (value & 0xffff) && (value & 0xffff0000) != 0xffff0000){
+        if((value & 0xffff0000) != 0 && value != (short) value) {
            throw new InstructionException("Short value out of range "
                     + HexUtil.toHex(value, 4) + " > 0xffff", this);
         }
@@ -92,9 +97,9 @@ public class SizeXIns extends Ins {
         return valueBytes.get(1);
     }
     void setByte(int offset, int value){
-        if(value != (value & 0xff) && (value & 0xffffff00) != 0xffffff00){
+        if((value & 0xffffff00) != 0 && value != (byte) value) {
             throw new InstructionException("Byte value out of range "
-                    + HexUtil.toHex(value, 2) + "> 0xff", this);
+                    + HexUtil.toHex(value & 0xffff, 2) + "> 0xff", this);
         }
         valueBytes.put(offset, (byte) value);
     }
@@ -320,10 +325,14 @@ public class SizeXIns extends Ins {
 
     @Override
     public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
-        validateOpcode(smaliInstruction);
-        fromSmaliRegisters(smaliInstruction);
-        fromSmaliKey(smaliInstruction);
-        fromSmaliData(smaliInstruction);
+        try {
+            validateOpcode(smaliInstruction);
+            fromSmaliRegisters(smaliInstruction);
+            fromSmaliKey(smaliInstruction);
+            fromSmaliData(smaliInstruction);
+        } catch (DexException exception) {
+            throw new SmaliValidateException(exception.getMessage(), smaliInstruction);
+        }
     }
     private void fromSmaliRegisters(SmaliInstruction smaliInstruction){
         if(!(this instanceof RegistersSet)){

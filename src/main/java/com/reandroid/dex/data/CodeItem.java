@@ -22,7 +22,10 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.SectionItem;
+import com.reandroid.dex.debug.DebugElement;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.ins.ExtraLine;
+import com.reandroid.dex.ins.Label;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.ModifiableKeyItem;
@@ -97,23 +100,35 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         header.parameterRegisters.set(count);
     }
     @Override
-    public void ensureLocalRegistersCount(int locals){
+    public boolean ensureLocalRegistersCount(int locals){
         if(locals == 0){
-            return;
+            return true;
         }
         if(locals <= getLocalRegistersCount()){
-            return;
+            return true;
         }
         int params = getParameterRegistersCount();
         int current = getLocalRegistersCount();
         int diff = locals - current;
         InstructionList instructionList = getInstructionList();
-        if(diff > 0){
+        if(!instructionList.canAddLocalRegisters(diff)) {
+            return false;
+        }
+        if(diff > 0) {
             instructionList.addLocalRegisters(diff);
         }
         setRegistersCount(locals + params);
+        return true;
     }
 
+
+    public Iterator<DebugElement> getDebugLabels() {
+        DebugInfo debugInfo = getDebugInfo();
+        if(debugInfo != null) {
+            return debugInfo.getExtraLines();
+        }
+        return EmptyIterator.of();
+    }
     public DebugInfo getDebugInfo(){
         return header.debugInfoOffset.getItem();
     }
@@ -125,7 +140,6 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
             return;
         }
         setDebugInfo(null);
-        getInstructionList().reBuildExtraLines();
     }
     public void setDebugInfo(DebugInfo debugInfo){
         header.debugInfoOffset.setItem(debugInfo);
@@ -135,6 +149,19 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
     }
     public IntegerReference getTryCountReference(){
         return header.tryBlockCount;
+    }
+
+    public Iterable<ExtraLine> getExtraLines() {
+        return () -> CombiningIterator.two(
+                CodeItem.this.getTryBlockLabels(),
+                CodeItem.this.getDebugLabels());
+    }
+    public Iterator<Label> getTryBlockLabels(){
+        TryBlock tryBlock = this.getTryBlock();
+        if(tryBlock == null || tryBlock.isNull()){
+            return EmptyIterator.of();
+        }
+        return tryBlock.getLabels();
     }
     public TryBlock getTryBlock(){
         return tryBlock;
@@ -189,17 +216,6 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         }
     }
 
-    IntegerReference getCodeUnits(){
-        return header.instructionCodeUnits;
-    }
-
-    public boolean cleanInvalidDebugLineNumbers(){
-        InstructionList instructionList = getInstructionList();
-        if(instructionList == null){
-            return false;
-        }
-        return instructionList.cleanInvalidDebugLineNumbers();
-    }
     public void replaceKeys(Key search, Key replace){
         getInstructionList().replaceKeys(search, replace);
     }

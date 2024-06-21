@@ -15,12 +15,21 @@
  */
 package com.reandroid.dex.ins;
 
-public class InsPackedSwitch extends Ins31t{
+public class InsPackedSwitch extends InsSwitch {
 
     private InsSparseSwitch mReplacement;
 
     public InsPackedSwitch() {
         super(Opcode.PACKED_SWITCH);
+    }
+
+    @Override
+    public InsPackedSwitchData getPayload() {
+        return (InsPackedSwitchData) super.getPayload();
+    }
+    @Override
+    public Opcode<InsPackedSwitchData> getPayloadOpcode() {
+        return Opcode.PACKED_SWITCH_PAYLOAD;
     }
 
     InsSparseSwitch getSparseSwitchReplacement() {

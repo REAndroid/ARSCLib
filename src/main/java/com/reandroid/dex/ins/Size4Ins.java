@@ -27,4 +27,9 @@ public class Size4Ins extends SizeXIns {
     public void setData(int data){
         setShort(2, data);
     }
+
+    @Override
+    public int getCodeUnits() {
+        return 2;
+    }
 }

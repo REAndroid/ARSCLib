@@ -19,7 +19,6 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.*;
 import com.reandroid.common.ArraySupplier;
 import com.reandroid.dex.base.CountedList;
-import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliPayloadSparseSwitch;
@@ -28,22 +27,19 @@ import com.reandroid.dex.smali.model.SmaliSparseSwitchEntry;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArraySupplierIterator;
-import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Objects;
 
-public class InsSparseSwitchData extends PayloadData implements
-        ArraySupplier<InsSparseSwitchData.SSData>, LabelsSet, SmaliFormat {
+public class InsSparseSwitchData extends InsSwitchPayload implements
+        ArraySupplier<InsSparseSwitchData.SparseSwitchEntry> {
 
     private final ShortItem elementCount;
     final CountedList<IntegerItem> elements;
-    final CountedList<IntegerItem> keys;
-    private InsSparseSwitch insSparseSwitch;
+    final CountedList<EntryKey> keys;
 
     boolean mSortRequired;
 
@@ -61,37 +57,66 @@ public class InsSparseSwitchData extends PayloadData implements
                 return new IntegerItem();
             }
         };
+        Creator<EntryKey> entryKeyCreator = new Creator<EntryKey>() {
+            @Override
+            public EntryKey[] newArrayInstance(int length) {
+                return new EntryKey[length];
+            }
+            @Override
+            public EntryKey newInstance() {
+                return new EntryKey();
+            }
+        };
 
         this.elements = new CountedList<>(elementCount, creator);
-        this.keys = new CountedList<>(elementCount, creator);
+        this.keys = new CountedList<>(elementCount, entryKeyCreator);
 
         addChild(1, elementCount);
         addChild(2, elements);
         addChild(3, keys);
     }
 
-    public SSData newEntry() {
+    @Override
+    public Iterator<SwitchEntry> iterator() {
+        return ObjectsUtil.cast(getLabels());
+    }
+    public SparseSwitchEntry newEntry() {
         int index = getCount();
         setCount(index + 1);
         return get(index);
     }
     @Override
-    public SSData get(int i){
+    public SparseSwitchEntry get(int i){
         if(i < 0 || i >= getCount()){
             return null;
         }
-        return new SSData(this, elements.get(i), keys.get(i));
+        return new SparseSwitchEntry(this, elements.get(i), keys.get(i));
     }
     @Override
     public int getCount(){
         return elements.size();
     }
     public void setCount(int count){
+        int previous = getCount();
+        boolean linked = false;
+        InsBlockList insBlockList = getInsBlockList();
+        if(count != previous) {
+            if(insBlockList != null) {
+                linked = insBlockList.isLinked();
+                insBlockList.link();
+            }
+        }
         elements.setSize(count);
         keys.setSize(count);
         elementCount.set(count);
+        if(insBlockList != null && !linked) {
+            insBlockList.unlink();
+        }
     }
     public void sort() {
+        if(!mSortRequired) {
+            return;
+        }
         this.mSortRequired = false;
         Comparator<IntegerItem> comparator = (item1, item2) -> CompareUtil.compare(item1.get(), item2.get());
         if(!elements.needsSort(comparator)) {
@@ -100,66 +125,37 @@ public class InsSparseSwitchData extends PayloadData implements
         this.elements.sort(comparator, keys);
     }
     @Override
-    public Iterator<IntegerReference> getReferences() {
-        return ObjectsUtil.cast(getLabels());
-    }
-    @Override
-    public Iterator<SSData> getLabels() {
+    public Iterator<SparseSwitchEntry> getLabels() {
         return new ArraySupplierIterator<>(this);
     }
 
     public int getBaseAddress(){
-        InsSparseSwitch sparseSwitch = getParentSparseSwitch();
+        InsSparseSwitch sparseSwitch = getSwitch();
         if(sparseSwitch == null){
             return 0;
         }
         return sparseSwitch.getAddress();
     }
-    public InsSparseSwitch getParentSparseSwitch() {
-        InsSparseSwitch sparseSwitch = this.insSparseSwitch;
-        if(sparseSwitch == null){
-            sparseSwitch = findOnExtraLines();
-            if(sparseSwitch == null){
-                sparseSwitch = findByAddress();
-            }
-            this.insSparseSwitch = sparseSwitch;
-        }
-        return insSparseSwitch;
-    }
-    public void setParentSparseSwitch(InsSparseSwitch sparseSwitch) {
-        this.insSparseSwitch = sparseSwitch;
-        addExtraLine(sparseSwitch);
-        sparseSwitch.setTargetAddress(getAddress());
-    }
-    private InsSparseSwitch findOnExtraLines() {
-        Iterator<ExtraLine> iterator = getExtraLines();
-        while (iterator.hasNext()){
-            ExtraLine extraLine = iterator.next();
-            if(extraLine instanceof InsSparseSwitch){
-                return (InsSparseSwitch) extraLine;
-            }
-        }
-        return null;
-    }
-    private InsSparseSwitch findByAddress() {
-        InstructionList instructionList = getInstructionList();
-        if(instructionList != null){
-            Iterator<InsSparseSwitch> iterator = instructionList.iterator(Opcode.SPARSE_SWITCH);
-            int address = getAddress();
-            while (iterator.hasNext()){
-                InsSparseSwitch sparseSwitch = iterator.next();
-                if(sparseSwitch.getTargetAddress() == address){
-                    return sparseSwitch;
-                }
-            }
-        }
-        return null;
-    }
 
+    @Override
+    public Opcode<InsSparseSwitch> getSwitchOpcode() {
+        return Opcode.SPARSE_SWITCH;
+    }
+    @Override
+    public InsSparseSwitch getSwitch() {
+        return (InsSparseSwitch) super.getSwitch();
+    }
     @Override
     protected void onPreRefresh() {
         sort();
         super.onPreRefresh();
+    }
+    void fromPackedSwitchData(PackedSwitchDataList packedSwitchDataList) {
+        int length = packedSwitchDataList.size();
+        setCount(length);
+        for(int i = 0; i < length; i++) {
+            get(i).fromPackedSwitch(packedSwitchDataList.get(i));
+        }
     }
     @Override
     public void merge(Ins ins){
@@ -178,11 +174,12 @@ public class InsSparseSwitchData extends PayloadData implements
         SmaliSet<SmaliSparseSwitchEntry> entries = smaliPayloadSparseSwitch.getEntries();
         int count = entries.size();
         this.setCount(count);
-        for(int i = 0; i < count; i++){
+        for(int i = 0; i < count; i++) {
             SmaliSparseSwitchEntry smaliEntry = entries.get(i);
-            SSData data = get(i);
+            SparseSwitchEntry data = get(i);
             data.fromSmali(smaliEntry);
         }
+        mSortRequired = true;
     }
 
     @Override
@@ -203,18 +200,36 @@ public class InsSparseSwitchData extends PayloadData implements
         return SmaliDirective.SPARSE_SWITCH;
     }
 
-    public static class SSData implements IntegerReference, Label, SmaliFormat {
+    static class EntryKey extends IntegerItem {
+        private Ins targetIns;
 
-        private final InsSparseSwitchData switchData;
+        EntryKey() {
+            super();
+        }
+
+        public Ins getTargetIns() {
+            return targetIns;
+        }
+        public void setTargetIns(Ins targetIns) {
+            this.targetIns = targetIns;
+        }
+    }
+    public static class SparseSwitchEntry implements InsSwitchPayload.SwitchEntry {
+
+        private final InsSparseSwitchData payload;
         private final IntegerReference element;
-        private final IntegerReference key;
+        private final EntryKey key;
 
-        public SSData(InsSparseSwitchData switchData, IntegerReference element, IntegerReference key){
-            this.switchData = switchData;
+        public SparseSwitchEntry(InsSparseSwitchData payload, IntegerReference element, EntryKey key){
+            this.payload = payload;
             this.element = element;
             this.key = key;
         }
 
+        @Override
+        public InsSparseSwitchData getPayload() {
+            return payload;
+        }
         @Override
         public int get(){
             return element.get();
@@ -223,7 +238,26 @@ public class InsSparseSwitchData extends PayloadData implements
         public void set(int value){
             if(value != element.get()) {
                 element.set(value);
-                this.switchData.mSortRequired = true;
+                this.payload.mSortRequired = true;
+            }
+        }
+        @Override
+        public Ins getTargetIns() {
+            Ins targetIns = this.key.getTargetIns();
+            if(targetIns == null) {
+                setTargetIns(findTargetIns());
+                targetIns = this.key.getTargetIns();
+            }
+            return targetIns;
+        }
+        @Override
+        public void setTargetIns(Ins targetIns) {
+            Ins ins = key.getTargetIns();
+            if(targetIns != ins) {
+                key.setTargetIns(targetIns);
+                if(targetIns != null) {
+                    targetIns.addExtraLine(this);
+                }
             }
         }
 
@@ -240,15 +274,15 @@ public class InsSparseSwitchData extends PayloadData implements
         }
         @Override
         public int getAddress() {
-            return switchData.getAddress();
+            return payload.getAddress();
         }
         @Override
         public int getTargetAddress() {
-            return getKey() + switchData.getBaseAddress();
+            return getKey() + payload.getBaseAddress();
         }
         @Override
         public void setTargetAddress(int targetAddress){
-            setKey(targetAddress - switchData.getBaseAddress());
+            setKey(targetAddress - payload.getBaseAddress());
         }
         @Override
         public String getLabelName() {
@@ -263,17 +297,31 @@ public class InsSparseSwitchData extends PayloadData implements
             writer.appendLabelName(getLabelName());
             writer.appendResourceIdComment(value);
         }
-        public void merge(SSData data) {
+
+        @Override
+        public void appendExtra(SmaliWriter writer) throws IOException {
+            writer.appendLabelName(getLabelName());
+            writer.appendComment(HexUtil.toSignedHex(get()));
+        }
+
+        public void fromPackedSwitch(PackedSwitchDataList.PackedSwitchEntry packedSwitchEntry) {
+            this.set(packedSwitchEntry.get());
+            Ins ins = packedSwitchEntry.getTargetIns();
+            this.setTargetAddress(ins.getAddress());
+            this.setTargetIns(ins);
+            ins.addExtraLine(this);
+        }
+        public void merge(SparseSwitchEntry data) {
             set(data.get());
             setKey(data.getKey());
         }
         public void fromSmali(SmaliSparseSwitchEntry smaliEntry) throws IOException{
-            set(smaliEntry.getIntegerValue());
-            setTargetAddress(smaliEntry.getLabel().getIntegerData());
+            set(smaliEntry.getValue());
+            setKey(smaliEntry.getRelativeOffset());
         }
         @Override
         public int hashCode() {
-            return Objects.hash(switchData, element);
+            return ObjectsUtil.hash(payload, element);
         }
         @Override
         public boolean equals(Object obj) {
@@ -283,8 +331,8 @@ public class InsSparseSwitchData extends PayloadData implements
             if (obj == null || getClass() != obj.getClass()) {
                 return false;
             }
-            SSData data = (SSData) obj;
-            return element == data.element && switchData == data.switchData;
+            SparseSwitchEntry data = (SparseSwitchEntry) obj;
+            return element == data.element && payload == data.payload;
         }
         @Override
         public String toString() {

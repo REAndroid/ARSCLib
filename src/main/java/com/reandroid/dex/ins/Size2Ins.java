@@ -23,4 +23,9 @@ public class Size2Ins extends SizeXIns {
     public int getData(){
         return getNibble(2);
     }
+
+    @Override
+    public int getCodeUnits() {
+        return 1;
+    }
 }

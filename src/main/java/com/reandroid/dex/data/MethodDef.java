@@ -178,11 +178,16 @@ public class MethodDef extends Def<MethodId>{
         return null;
     }
     public Iterator<Ins> getInstructions() {
-        InstructionList instructionList = getInstructionList();
-        if(instructionList != null) {
-            return instructionList.clonedIterator();
-        }
-        return EmptyIterator.of();
+        return new ArraySupplierIterator<>(new ArraySupplier<Ins>() {
+            @Override
+            public Ins get(int i) {
+                return getInstruction(i);
+            }
+            @Override
+            public int getCount() {
+                return getInstructionsCount();
+            }
+        });
     }
     public Ins getInstruction(int i) {
         InstructionList instructionList = getInstructionList();
@@ -314,10 +319,15 @@ public class MethodDef extends Def<MethodId>{
 
     @Override
     public void edit(){
-        CodeItem codeItem = codeOffset.getUniqueItem(this);
-        if(codeItem != null){
-            codeItem.setMethodDef(this);
-            codeItem.edit();
+        CodeItem shared = codeOffset.getItem();
+        CodeItem unique = codeOffset.getUniqueItem(this);
+        if(unique != null) {
+            unique.setMethodDef(this);
+            if(shared != unique) {
+                unique.edit();
+                shared.getInstructionList()
+                        .onEditing(unique.getInstructionList());
+            }
         }
     }
     @Override

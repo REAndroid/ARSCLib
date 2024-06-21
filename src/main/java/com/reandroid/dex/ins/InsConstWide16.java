@@ -79,4 +79,9 @@ public class InsConstWide16 extends Ins21s implements ConstNumberLong{
         insConstWide.setData(data);
         this.mReplaced = insConstWide;
     }
+
+    @Override
+    public boolean isWideRegisterAt(int index) {
+        return true;
+    }
 }

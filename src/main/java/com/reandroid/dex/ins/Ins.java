@@ -25,6 +25,7 @@ import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.data.MethodDef;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
@@ -40,7 +41,7 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
 
     private final Opcode<?> opcode;
     private ExtraLineList extraLineList;
-    private int address;
+    private Ins targetIns;
 
     Ins(int childesCount, Opcode<?> opcode) {
         super(childesCount);
@@ -58,6 +59,23 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
         }
         return null;
     }
+    public MethodKey getMethodKey() {
+        MethodDef methodDef = getMethodDef();
+        if(methodDef != null) {
+            return methodDef.getKey();
+        }
+        return null;
+    }
+    public Ins edit() {
+        MethodDef methodDef = getMethodDef();
+        InstructionList current = methodDef.getInstructionList();
+        methodDef.edit();
+        InstructionList update = methodDef.getInstructionList();
+        if(current != update) {
+            return update.get(getIndex());
+        }
+        return this;
+    }
     public DebugSequence getOrCreateDebugSequence(){
         InstructionList instructionList = getInstructionList();
         if(instructionList != null){
@@ -72,23 +90,35 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
         }
         return null;
     }
+    InsBlockList getInsBlockList() {
+        return getParentInstance(InsBlockList.class);
+    }
     public InstructionList getInstructionList() {
         return getParentInstance(InstructionList.class);
     }
 
-    public void updateLabelAddress() {
-        int address = getAddress();
-        Iterator<ExtraLine> iterator = getExtraLines();
-        while (iterator.hasNext()) {
-            ExtraLine extraLine = iterator.next();
-            if(address != extraLine.getTargetAddress()){
-                extraLine.setTargetAddress(address);
+    public void updateTargetAddress() {
+        if(this instanceof Label) {
+            Ins target = getTargetIns();
+            if(target == null) {
+                throw new NullPointerException("Null target: " + this + ", " + getMethodKey());
             }
+            ((Label) this).setTargetAddress(target.getAddress());
         }
     }
-    public void transferExtraLines(Ins target) {
-        target.extraLineList = this.extraLineList;
-        this.extraLineList = ExtraLineList.EMPTY;
+    public void transferExtraLinesTo(Ins destination) {
+        destination.extraLineList = ExtraLineList.add(this.extraLineList, destination.getExtraLines());
+        Iterator<ExtraLine> iterator = destination.getExtraLines();
+        while (iterator.hasNext()) {
+            ExtraLine extraLine = iterator.next();
+            extraLine.setTargetIns(null);
+            extraLine.setTargetIns(destination);
+        }
+        Ins target = this.targetIns;
+        if(target != null && destination instanceof Label) {
+            destination.setTargetIns(target);
+        }
+        this.clearExtraLines();
     }
     public void replace(Ins ins){
         if(ins == null || ins == this){
@@ -114,13 +144,6 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
             throw new DexException("Parent " + getClass().getSimpleName() + " == null");
         }
         return instructionList.createAt(getIndex() + 1, opcode);
-    }
-    public Ins[] createNext(Opcode<?>[] opcodeArray) {
-        InstructionList instructionList = getInstructionList();
-        if(instructionList == null){
-            throw new DexException("Parent " + getClass().getSimpleName() + " == null");
-        }
-        return instructionList.createAt(getIndex() + 1, opcodeArray);
     }
     public void moveTo(int index){
         InstructionList instructionList = getInstructionList();
@@ -148,29 +171,76 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
         return 0;
     }
     public int getAddress() {
-        return address;
+        InsBlockList insBlockList = getInsBlockList();
+        if(insBlockList != null) {
+            return insBlockList.addressOf(this);
+        }
+        return -1;
     }
-    public void setAddress(int address) {
-        this.address = address;
+    void linkTargetIns() {
+        Ins targetIns = this.targetIns;
+        if(targetIns == null) {
+            setTargetIns(findTargetIns());
+        }
+        if((this instanceof Label) && this.targetIns == null) {
+            throw new NullPointerException("Missing target: " + this + ", " + getMethodKey());
+        }
+    }
+    void unLinkTargetIns() {
+        Ins targetIns = this.targetIns;
+        if(targetIns != null) {
+            setTargetIns(null);
+        }
+        clearExtraLines();
+    }
+    public Ins getTargetIns() {
+        Ins targetIns = ensureTargetNotRemoved();
+        if(targetIns == null) {
+            targetIns = findTargetIns();
+            setTargetIns(targetIns);
+            targetIns = this.targetIns;
+        }
+        return targetIns;
+    }
+    public void setTargetIns(Ins targetIns) {
+        if(targetIns == this) {
+            // TODO: throw ?
+            return;
+        }
+        if(targetIns != this.targetIns) {
+            this.targetIns = targetIns;
+            if(targetIns != null) {
+                ((Label) this).setTargetAddress(targetIns.getAddress());
+                targetIns.addExtraLine((Label) this);
+            }
+        }
     }
 
-    public boolean isLonelyInTryCatch(){
-        InstructionList instructionList = getInstructionList();
-        if(instructionList != null){
-            return instructionList.isLonelyInTryCatch(this);
+    private Ins ensureTargetNotRemoved() {
+        Ins target = this.targetIns;
+        if(target != null && target.isRemoved()) {
+            target = null;
+            this.targetIns = null;
         }
-        return false;
+        return target;
     }
-    public void trimExtraLines(){
-        this.extraLineList.trimToSize();
+    private Ins findTargetIns() {
+        if(this instanceof Label) {
+            InsBlockList insBlockList = getInsBlockList();
+            if(insBlockList != null) {
+                int targetAddress = ((Label) this).getTargetAddress();
+                Ins target = insBlockList.getAtAddress(targetAddress);
+                if(targetAddress != 0 || target != this) {
+                    return target;
+                }
+            }
+        }
+        return null;
     }
     public void addExtraLine(ExtraLine extraLine){
-        if(extraLine != this){
+        if(extraLine != this) {
             this.extraLineList = ExtraLineList.add(this.extraLineList, extraLine);
         }
-    }
-    public void addExtraLine(Iterator<ExtraLine> iterator){
-        this.extraLineList = ExtraLineList.add(this.extraLineList, iterator);
     }
     public DebugLineNumber getDebugLineNumber(){
         return CollectionUtil.getFirst(getDebugLineNumbers());
@@ -222,17 +292,14 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
         }
     }
 
-    @Override
-    protected void onRefreshed() {
-        super.onRefreshed();
-        clearExtraLines();
-    }
-
     public void replaceKeys(Key search, Key replace){
 
     }
     public Iterator<IdItem> usedIds(){
         return EmptyIterator.of();
+    }
+    public boolean isRemoved() {
+        return getParent() == null;
     }
     public void merge(Ins ins){
         throw new RuntimeException("merge method not implemented, opcode = " + getOpcode());

@@ -16,11 +16,8 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.item.IntegerItem;
-import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.ShortItem;
-import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.smali.SmaliDirective;
-import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.*;
 import com.reandroid.utils.HexUtil;
@@ -29,11 +26,11 @@ import com.reandroid.utils.ObjectsUtil;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class InsPackedSwitchData extends PayloadData implements LabelsSet, SmaliRegion {
+public class InsPackedSwitchData extends InsSwitchPayload {
+
     private final ShortItem elementCount;
     private final IntegerItem firstKey;
     private final PackedSwitchDataList elements;
-    private InsPackedSwitch insPackedSwitch;
 
     private InsSparseSwitchData mReplacement;
 
@@ -56,73 +53,46 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet, Smali
     }
 
     @Override
-    public Iterator<IntegerReference> getReferences() {
-        return ObjectsUtil.cast(getLabels());
+    public Iterator<SwitchEntry> iterator() {
+        return ObjectsUtil.cast(elements.getLabels());
     }
 
 
     void onDataChange(int index, int value) {
-        InsSparseSwitchData sparseSwitchData = this.mReplacement;
-        if(sparseSwitchData == null) {
-            sparseSwitchData = replaceBySparse();
-        }
-        sparseSwitchData.get(index).set(value);
+        replaceBySparse().get(index).set(value);
     }
-    private InsSparseSwitchData replaceBySparse() {
-        PackedSwitchDataList.ImmutablePSData[] copy = elements.makeCopy();
-        InsPackedSwitch packedSwitch = getParentPackedSwitch();
-        InsSparseSwitch sparseSwitch = packedSwitch.getSparseSwitchReplacement();
-        InsSparseSwitchData sparseSwitchData = this.replace(Opcode.SPARSE_SWITCH_PAYLOAD);
-        sparseSwitchData.setParentSparseSwitch(sparseSwitch);
-        this.mReplacement = sparseSwitchData;
-        this.clearExtraLines();
-        int size = copy.length;
-        sparseSwitchData.setCount(size);
-        for(int i = 0; i < size; i++) {
-            InsSparseSwitchData.SSData ssData = sparseSwitchData.get(i);
-            PackedSwitchDataList.ImmutablePSData psData = copy[i];
-            ssData.set(psData.data);
-            ssData.setTargetAddress(psData.targetIns.getAddress());
-            psData.targetIns.addExtraLine(ssData);
+    public InsSparseSwitchData replaceBySparse() {
+        InsSparseSwitchData sparseData = this.mReplacement;
+        if(sparseData != null) {
+            return sparseData;
         }
-        sparseSwitchData.updateNopAlignment();
-        return sparseSwitchData;
+        InsBlockList insBlockList = getInsBlockList();
+        Object lock = insBlockList.linkLocked();
+
+        InsPackedSwitch packed = getSwitch();
+        InsSparseSwitch sparse = packed.getSparseSwitchReplacement();
+
+        sparseData = Opcode.SPARSE_SWITCH_PAYLOAD.newInstance();
+        this.mReplacement = sparseData;
+
+        sparseData.setSwitch(sparse);
+        sparseData.fromPackedSwitchData(this.elements);
+
+        this.replace(sparseData);
+
+        insBlockList.unlinkLocked(lock);
+
+        return sparseData;
     }
 
-    public InsPackedSwitch getParentPackedSwitch() {
-        InsPackedSwitch packedSwitch = this.insPackedSwitch;
-        if(packedSwitch == null){
-            packedSwitch = findOnExtraLines();
-            if(packedSwitch == null){
-                packedSwitch = findByAddress();
-            }
-            this.insPackedSwitch = packedSwitch;
-        }
-        return insPackedSwitch;
+    @Override
+    public Opcode<InsPackedSwitch> getSwitchOpcode() {
+        return Opcode.PACKED_SWITCH;
     }
-    private InsPackedSwitch findOnExtraLines() {
-        Iterator<ExtraLine> iterator = getExtraLines();
-        while (iterator.hasNext()){
-            ExtraLine extraLine = iterator.next();
-            if(extraLine instanceof InsPackedSwitch){
-                return (InsPackedSwitch) extraLine;
-            }
-        }
-        return null;
-    }
-    private InsPackedSwitch findByAddress() {
-        InstructionList instructionList = getInstructionList();
-        if(instructionList != null){
-            Iterator<InsPackedSwitch> iterator = instructionList.iterator(Opcode.PACKED_SWITCH);
-            int address = getAddress();
-            while (iterator.hasNext()){
-                InsPackedSwitch packedSwitch = iterator.next();
-                if(packedSwitch.getTargetAddress() == address){
-                    return packedSwitch;
-                }
-            }
-        }
-        return null;
+
+    @Override
+    public InsPackedSwitch getSwitch() {
+        return (InsPackedSwitch) super.getSwitch();
     }
 
     @Override
@@ -131,7 +101,7 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet, Smali
     }
 
     @Override
-    public Iterator<PackedSwitchDataList.PSData> getLabels() {
+    public Iterator<PackedSwitchDataList.PackedSwitchEntry> getLabels() {
         return elements.getLabels();
     }
 
@@ -147,14 +117,14 @@ public class InsPackedSwitchData extends PayloadData implements LabelsSet, Smali
         validateOpcode(smaliInstruction);
         SmaliPayloadPackedSwitch smaliPayloadPackedSwitch = (SmaliPayloadPackedSwitch) smaliInstruction;
         setFirstKey(smaliPayloadPackedSwitch.getFirstKey());
-        SmaliSet<SmaliLabel> entries = smaliPayloadPackedSwitch.getEntries();
+        SmaliSet<SmaliPackedSwitchEntry> entries = smaliPayloadPackedSwitch.getEntries();
         int size = entries.size();
         PackedSwitchDataList dataList = this.elements;
         dataList.setSize(size);
-        for(int i = 0; i < size; i++){
-            SmaliLabel smaliLabel = entries.get(i);
-            PackedSwitchDataList.PSData data = dataList.get(i);
-            data.setTargetAddress(smaliLabel.getAddress());
+        for(int i = 0; i < size; i++) {
+            SmaliPackedSwitchEntry smaliSwitchEntry = entries.get(i);
+            PackedSwitchDataList.PackedSwitchEntry data = dataList.get(i);
+            data.setAddress(smaliSwitchEntry.getRelativeOffset());
         }
     }
 

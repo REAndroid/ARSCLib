@@ -45,7 +45,8 @@ import java.util.function.Predicate;
 public class DexInstruction extends DexCode {
 
     private final DexMethod dexMethod;
-    private final Ins mIns;
+    private Ins mIns;
+    private boolean mEdit;
 
     public DexInstruction(DexMethod dexMethod, Ins ins) {
         this.dexMethod = dexMethod;
@@ -91,7 +92,7 @@ public class DexInstruction extends DexCode {
         setKey(StringKey.create(text));
     }
     public DexInstruction setStringWithJumbo(String text){
-        SizeXIns sizeXIns = (SizeXIns) getIns();
+        SizeXIns sizeXIns = (SizeXIns) edit();
         StringId stringId = sizeXIns.getOrCreateSectionItem(
                 SectionType.STRING_ID, StringKey.create(text));
         if((stringId.getIdx() & 0xffff0000) == 0 || !sizeXIns.is(Opcode.CONST_STRING)){
@@ -128,7 +129,7 @@ public class DexInstruction extends DexCode {
     public void setKey(Key key){
         Ins ins = getIns();
         if(ins instanceof SizeXIns){
-            ((SizeXIns) ins).setSectionIdKey(key);
+            ((SizeXIns) edit()).setSectionIdKey(key);
         }
     }
     public IdItem getIdSectionEntry(){
@@ -173,7 +174,7 @@ public class DexInstruction extends DexCode {
         }
     }
     public boolean removeRegisterAt(int index) {
-        Ins ins = getIns();
+        Ins ins = edit();
         if(ins instanceof RegistersSet) {
             return ((RegistersSet) ins).removeRegisterAt(index);
         }
@@ -187,9 +188,8 @@ public class DexInstruction extends DexCode {
         }
     }
     public void setRegistersCount(int count){
-        Ins ins = getIns();
-        if(ins instanceof RegistersSet){
-            ((RegistersSet) ins).setRegistersCount(count);
+        if(getIns() instanceof RegistersSet){
+            ((RegistersSet) edit()).setRegistersCount(count);
         }
     }
     public boolean is(Opcode<?> opcode){
@@ -211,10 +211,9 @@ public class DexInstruction extends DexCode {
         }
         return -1;
     }
-    public void setTargetAddress(int address){
-        Ins ins = getIns();
-        if(ins instanceof Label){
-            ((Label) ins).setTargetAddress(address);
+    public void setTargetAddress(int address) {
+        if(getIns() instanceof Label){
+            ((Label) edit()).setTargetAddress(address);
         }
     }
     public IntegerReference getAsIntegerReference(){
@@ -239,13 +238,13 @@ public class DexInstruction extends DexCode {
         return null;
     }
     public void setAsInteger(int value){
-        Ins ins = getIns();
+        Ins ins = edit();
         if(ins instanceof ConstNumber){
             ((ConstNumber) ins).set(value);
         }
     }
     public void setAsLong(long value){
-        Ins ins = getIns();
+        Ins ins = edit();
         if(ins instanceof ConstNumberLong){
             ((ConstNumberLong) ins).set(value);
         }
@@ -256,7 +255,7 @@ public class DexInstruction extends DexCode {
     public DexInstruction replace(SmaliReader reader) throws IOException {
         SmaliInstruction smaliInstruction = new SmaliInstruction();
         smaliInstruction.parse(reader);
-        Ins ins = getIns().replace(smaliInstruction.getOpcode());
+        Ins ins = edit().replace(smaliInstruction.getOpcode());
         ins.fromSmali(smaliInstruction);
         return DexInstruction.create(getDexMethod(), ins);
     }
@@ -266,19 +265,19 @@ public class DexInstruction extends DexCode {
     public DexInstruction createNext(SmaliReader reader) throws IOException {
         SmaliInstruction smaliInstruction = new SmaliInstruction();
         smaliInstruction.parse(reader);
-        Ins ins = getIns().createNext(smaliInstruction.getOpcode());
+        Ins ins = edit().createNext(smaliInstruction.getOpcode());
         ins.fromSmali(smaliInstruction);
         return DexInstruction.create(getDexMethod(), ins);
     }
     public DexInstruction replace(Opcode<?> opcode){
-        return DexInstruction.create(getDexMethod(), getIns().replace(opcode));
+        return DexInstruction.create(getDexMethod(), edit().replace(opcode));
     }
     public DexInstruction createNext(Opcode<?> opcode){
-        return DexInstruction.create(getDexMethod(), getIns().createNext(opcode));
+        return DexInstruction.create(getDexMethod(), edit().createNext(opcode));
     }
     @Override
     public void removeSelf(){
-        Ins ins = getIns();
+        Ins ins = edit();
         InstructionList instructionList = ins.getInstructionList();
         if(instructionList != null){
             instructionList.remove(ins);
@@ -288,7 +287,33 @@ public class DexInstruction extends DexCode {
         return getIns().getOpcode();
     }
     public Ins getIns() {
-        return mIns;
+        Ins ins = this.mIns;
+        if(mEdit) {
+            return ins;
+        }
+        DexMethod dexMethod = getDexMethod();
+        int editIndex = dexMethod.getEditIndex();
+        int index = ins.getIndex();
+        if(editIndex < index) {
+            ins = dexMethod.getDefinition()
+                    .getInstruction(index);
+            this.mIns = ins;
+            mEdit = true;
+        }
+        return ins;
+    }
+    public Ins edit() {
+        Ins ins = getIns();
+        if(mEdit) {
+            return ins;
+        }
+        ins = mIns.edit();
+        if(ins != mIns) {
+            getDexMethod().setEditIndex(ins.getIndex());
+            this.mIns = ins;
+            this.mEdit = true;
+        }
+        return ins;
     }
 
     @Override
@@ -384,17 +409,17 @@ public class DexInstruction extends DexCode {
     public void moveBackward(){
         int index = getIndex();
         if(index != 0){
-            getIns().moveTo(index - 1);
+            edit().moveTo(index - 1);
         }
     }
     public void moveForward(){
         int index = getIndex() + 1;
         if(index < getDexMethod().getInstructionsCount()){
-            getIns().moveTo(index);
+            edit().moveTo(index);
         }
     }
     public void moveTo(int index){
-        getIns().moveTo(index);
+        edit().moveTo(index);
     }
     public void merge(DexInstruction other){
         getIns().merge(other.getIns());

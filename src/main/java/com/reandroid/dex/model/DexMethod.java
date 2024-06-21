@@ -38,8 +38,10 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class DexMethod extends DexDeclaration {
+
     private final DexClass dexClass;
     private final MethodDef methodDef;
+    private int mEditIndex;
 
     public DexMethod(DexClass dexClass, MethodDef methodDef){
         this.dexClass = dexClass;
@@ -157,6 +159,14 @@ public class DexMethod extends DexDeclaration {
     public Iterator<DexInstruction> getInstructions() {
         return DexInstruction.create(this, getDefinition().getInstructions());
     }
+
+    int getEditIndex() {
+        return mEditIndex;
+    }
+    void setEditIndex(int index) {
+        this.mEditIndex = index;
+    }
+
     public void clearCode(){
         getDefinition().clearCode();
     }

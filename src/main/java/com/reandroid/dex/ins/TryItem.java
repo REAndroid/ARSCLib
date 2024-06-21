@@ -33,9 +33,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.function.Function;
 
-public class TryItem extends FixedDexContainerWithTool implements Iterable<Label>{
+public class TryItem extends FixedDexContainerWithTool implements Iterable<Label> {
+
     private final HandlerOffsetArray handlerOffsetArray;
 
     final Sle128Item handlersCount;
@@ -340,16 +340,21 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
     public String toString() {
         StringBuilder builder = new StringBuilder();
         Iterator<ExceptionHandler> handlers = getExceptionHandlers();
-        while (handlers.hasNext()){
-            if(builder.length() > 0){
-                builder.append("\n");
+        while (handlers.hasNext()) {
+            if(builder.length() != 0){
+                builder.append('\n');
             }
             builder.append(handlers.next());
         }
         return builder.toString();
     }
-    static class Copy extends TryItem{
+    static class Copy extends TryItem {
+
         private final TryItem tryItem;
+        private ArrayCollection<CatchTypedHandler> mTypeHandlerList;
+        private CatchAllHandler mOriginalCatchAllHandler;
+        private CatchAllHandler mCatchAllHandler;
+
         public Copy(TryItem tryItem) {
             super();
             this.tryItem = tryItem;
@@ -374,14 +379,20 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
         }
         @Override
         Iterator<CatchTypedHandler> getCatchTypedHandlers(){
-            return ComputeIterator.of(tryItem.getCatchTypedHandlers(), new Function<CatchTypedHandler, CatchTypedHandler>() {
-                @Override
-                public CatchTypedHandler apply(CatchTypedHandler catchTypedHandler) {
-                    CatchTypedHandler copy = catchTypedHandler.newCopy();
-                    copy.setParent(Copy.this);
-                    return copy;
+            return getTypeHandlerList().iterator();
+        }
+        private ArrayCollection<CatchTypedHandler> getTypeHandlerList() {
+            ArrayCollection<CatchTypedHandler> typedHandlerList = this.mTypeHandlerList;
+            BlockList<CatchTypedHandler> blockList = getCatchTypedHandlerBlockList();
+            if(typedHandlerList == null || typedHandlerList.size() != blockList.size()) {
+                typedHandlerList = new ArrayCollection<>();
+                mTypeHandlerList = typedHandlerList;
+                Iterator<CatchTypedHandler> iterator = blockList.iterator();
+                while (iterator.hasNext()) {
+                    typedHandlerList.add(iterator.next().newCopy(this));
                 }
-            });
+            }
+            return typedHandlerList;
         }
         @Override
         BlockList<CatchTypedHandler> getCatchTypedHandlerBlockList() {
@@ -392,19 +403,27 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
             return tryItem.getTryItem();
         }
         @Override
-        public CatchAllHandler getCatchAllHandler(){
+        public CatchAllHandler getCatchAllHandler() {
             CatchAllHandler catchAllHandler = tryItem.getCatchAllHandler();
-            if(catchAllHandler != null){
-                CatchAllHandler copy = catchAllHandler.newCopy();
-                copy.setParent(this);
-                return copy;
+            if(catchAllHandler != mOriginalCatchAllHandler) {
+                mOriginalCatchAllHandler = catchAllHandler;
+                mCatchAllHandler = null;
             }
-            return null;
+            if(catchAllHandler == null) {
+                this.mCatchAllHandler = null;
+            } else if(mCatchAllHandler == null) {
+                catchAllHandler = catchAllHandler.newCopy(this);
+                this.mCatchAllHandler = catchAllHandler;
+            } else {
+                catchAllHandler = this.mCatchAllHandler;
+            }
+            return catchAllHandler;
         }
 
         @Override
         public CatchAllHandler getOrCreateCatchAll() {
-            return tryItem.getOrCreateCatchAll();
+            tryItem.getOrCreateCatchAll();
+            return getCatchAllHandler();
         }
 
         @Override
@@ -424,16 +443,23 @@ public class TryItem extends FixedDexContainerWithTool implements Iterable<Label
         }
         @Override
         protected void onRefreshed() {
+            clearCache();
         }
-
         @Override
         public void onReadBytes(BlockReader reader) throws IOException {
+            clearCache();
         }
         @Override
         void updateCount(){
         }
         @Override
         void mergeHandlers(TryItem tryItem){
+            clearCache();
+        }
+
+        private void clearCache() {
+            this.mTypeHandlerList = null;
+            this.mCatchAllHandler = null;
         }
     }
 }

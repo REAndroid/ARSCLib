@@ -25,7 +25,7 @@ public interface RegistersTable {
     int getParameterRegistersCount();
     void setRegistersCount(int count);
     void setParameterRegistersCount(int count);
-    void ensureLocalRegistersCount(int count);
+    boolean ensureLocalRegistersCount(int count);
 
     default int getLocalRegistersCount(){
         return getRegistersCount() - getParameterRegistersCount();

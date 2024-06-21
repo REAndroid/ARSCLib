@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.TypeId;
@@ -24,8 +25,8 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.model.SmaliCodeCatch;
 import com.reandroid.dex.smali.model.SmaliCodeExceptionHandler;
+import com.reandroid.utils.ObjectsUtil;
 
-import java.util.Objects;
 
 public class CatchTypedHandler extends ExceptionHandler {
 
@@ -41,9 +42,10 @@ public class CatchTypedHandler extends ExceptionHandler {
         this.typeId = null;
     }
 
-    CatchTypedHandler newCopy(){
+    CatchTypedHandler newCopy(TryItem parent){
         CatchTypedHandler catchTypedHandler = new Copy(this);
         catchTypedHandler.setIndex(getIndex());
+        catchTypedHandler.setParent(parent);
         return catchTypedHandler;
     }
 
@@ -89,7 +91,7 @@ public class CatchTypedHandler extends ExceptionHandler {
 
     @Override
     boolean isTypeEqual(ExceptionHandler handler){
-        return Objects.equals(getKey(), ((CatchTypedHandler) handler).getKey());
+        return ObjectsUtil.equals(getKey(), handler.getKey());
     }
     @Override
     int getTypeHashCode(){
@@ -100,11 +102,17 @@ public class CatchTypedHandler extends ExceptionHandler {
         return 0;
     }
     static class Copy extends CatchTypedHandler {
+
         private final CatchTypedHandler catchTypedHandler;
 
         Copy(CatchTypedHandler catchTypedHandler){
             super(true);
             this.catchTypedHandler = catchTypedHandler;
+        }
+
+        @Override
+        public boolean isRemoved() {
+            return super.isRemoved() || catchTypedHandler.isRemoved();
         }
 
         @Override

@@ -17,14 +17,11 @@ package com.reandroid.dex.data;
 
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.common.ArraySupplier;
 import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegisterType;
 import com.reandroid.dex.common.RegistersTable;
-import com.reandroid.dex.debug.DebugElement;
-import com.reandroid.dex.debug.DebugLineNumber;
 import com.reandroid.dex.debug.DebugSequence;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.StringId;
@@ -49,19 +46,23 @@ public class InstructionList extends FixedBlockContainer implements
         Iterable<Ins>, SmaliFormat {
 
     private final CodeItem codeItem;
-    private final BlockList<Ins> insArray;
+    private final InsBlockList insBlockList;
     private final DexPositionAlign blockAlign;
-
-    private boolean mLockExtraLines;
 
     public InstructionList(CodeItem codeItem){
         super(2);
         this.codeItem = codeItem;
 
-        this.insArray = new BlockList<>();
-        this.blockAlign = new DexPositionAlign();
+        DexPositionAlign blockAlign = new DexPositionAlign();
+        this.insBlockList = new InsBlockList(blockAlign,
+                codeItem.getInstructionCodeUnitsReference(),
+                codeItem.getInstructionOutsReference(),
+                codeItem.getExtraLines()
+                );
 
-        addChild(0, insArray);
+        this.blockAlign = blockAlign;
+
+        addChild(0, insBlockList);
         addChild(1, blockAlign);
     }
 
@@ -117,6 +118,29 @@ public class InstructionList extends FixedBlockContainer implements
         }
         registersTable.setRegistersCount(registersTable.getRegistersCount() + amount);
     }
+    public boolean canAddLocalRegisters(int amount){
+        RegistersTable registersTable = getRegistersTable();
+        if(registersTable.getRegistersCount() + amount < 0xf) {
+            return true;
+        }
+        Iterator<RegistersIterator> iterator = getRegistersIterators();
+        while (iterator.hasNext()){
+            RegistersIterator registersIterator = iterator.next();
+            int count;
+            if(registersIterator.isRange()){
+                count = 1;
+            }else {
+                count = registersIterator.size();
+            }
+            for(int i = 0; i < count; i++){
+                RegisterReference reference = registersIterator.get(i);
+                if(reference.isParameter() && reference.getValue() + amount > reference.getLimit()){
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     public List<Register> getLocalFreeRegisters(int startIndex){
         RegistersTable registersTable = getRegistersTable();
         int count = registersTable.getLocalRegistersCount();
@@ -143,15 +167,12 @@ public class InstructionList extends FixedBlockContainer implements
         while (iterator.hasNext()){
             RegistersIterator registersIterator = iterator.next();
             for(RegisterReference reference : registersIterator){
-                if(reference.getValue() == registerValue){
+                if(reference.getValue() == registerValue) {
                     return reference.getRegisterType() == RegisterType.WRITE;
                 }
             }
         }
         return registerValue != getRegistersTable().getLocalRegistersCount();
-    }
-    private Iterator<RegisterReference> getRegisters(int startIndex){
-        return ExpandIterator.of(getRegistersIterators(startIndex));
     }
     private Iterator<RegistersIterator> getRegistersIterators(){
         return getRegistersIterators(0);
@@ -183,19 +204,19 @@ public class InstructionList extends FixedBlockContainer implements
     }
     @Override
     public Iterator<Ins> iterator() {
-        return getInsArray().iterator();
+        return getInsBlockList().iterator();
     }
     public Iterator<Ins> clonedIterator() {
-        return getInsArray().clonedIterator();
+        return getInsBlockList().clonedIterator();
     }
     public Iterator<Ins> arrayIterator() {
-        return getInsArray().arrayIterator();
+        return getInsBlockList().arrayIterator();
     }
     public Iterator<Ins> iterator(int start, int size) {
-        return getInsArray().iterator(start, size);
+        return getInsBlockList().iterator(start, size);
     }
     public Iterator<Ins> iterator(int start) {
-        BlockList<Ins> array = getInsArray();
+        BlockList<Ins> array = getInsBlockList();
         return array.iterator(start, getCount() - start);
     }
     public Iterator<Ins> iteratorByAddress(int startAddress, int codeUnits) {
@@ -208,45 +229,49 @@ public class InstructionList extends FixedBlockContainer implements
         return this.iterator(insStart.getIndex(), count);
     }
 
-    private BlockList<Ins> getInsArray() {
-        return insArray;
+    private InsBlockList getInsBlockList() {
+        return insBlockList;
     }
 
+    void onEditing(InstructionList instructionList) {
+        getInsBlockList().onEditingInternal(instructionList.getInsBlockList());
+    }
     public Ins get(int i){
-        return getInsArray().get(i);
+        return getInsBlockList().get(i);
     }
     public int getCount(){
-        return getInsArray().getCount();
+        return getInsBlockList().size();
+    }
+    public boolean isEmpty() {
+        return getInsBlockList().size() == 0;
     }
     public void add(Ins ins){
-        BlockList<Ins> array = getInsArray();
-        array.add(ins);
-        Ins previous = array.get(ins.getIndex() - 1);
-        int address;
-        if(previous != null){
-            address = previous.getAddress() + previous.getCodeUnits();
-        }else {
-            address = 0;
-        }
-        ins.setAddress(address);
+        add(getInsBlockList().size(), ins);
     }
     public void add(int index, Ins item) {
-        reBuildExtraLines();
-        getInsArray().add(index, item);
-        updateAddresses();
-        updateLabelAddress();
-        reBuildExtraLines();
+        add(true, index, item);
     }
-    public void add(int index, Ins[] insArray) {
-        reBuildExtraLines();
-        getInsArray().addAll(index, insArray);
-        updateAddresses();
-        updateLabelAddress();
-        reBuildExtraLines();
+    public void add(boolean shiftLabels, int index, Ins item) {
+        InsBlockList insBlockList = getInsBlockList();
+        insBlockList.unlink();
+        Ins exist = insBlockList.get(index);
+        Object lock = null;
+        if(exist != null) {
+            lock = insBlockList.linkLocked();
+        }
+        insBlockList.add(index, item);
+        if(shiftLabels && exist != null) {
+            exist.transferExtraLinesTo(item);
+        }
+        insBlockList.unlinkLocked(lock);
     }
     public void moveTo(Ins ins, int index){
-        if(index == ins.getIndex()){
+        int current = ins.getIndex();
+        if(index == current){
             return;
+        }
+        if(current < 0) {
+            throw new IndexOutOfBoundsException("Removed ins, negative index: " + index);
         }
         if(index < 0){
             throw new IndexOutOfBoundsException("Negative index: " + index);
@@ -254,11 +279,12 @@ public class InstructionList extends FixedBlockContainer implements
         if(index >= getCount()){
             throw new IndexOutOfBoundsException("Size = " + getCount() + ", " + index);
         }
-        reBuildExtraLines();
-        getInsArray().moveTo(ins, index);
-        updateAddresses();
-        updateLabelAddress();
-        reBuildExtraLines();
+        InsBlockList insBlockList = getInsBlockList();
+        Object locked = insBlockList.linkLocked();
+        insBlockList.moveTo(ins, index);
+        Ins insAtPosition = get(current);
+        ins.transferExtraLinesTo(insAtPosition);
+        insBlockList.unlinkLocked(locked);
     }
     public ConstNumber createConstIntegerAt(int index, int value) {
         return createConstIntegerAt(index, 0, value);
@@ -326,59 +352,56 @@ public class InstructionList extends FixedBlockContainer implements
         add(index, item);
         return item;
     }
-    public Ins[] createAt(int index, Opcode<?>[] opcodeArray) {
-        int length = opcodeArray.length;
-        Ins[] results = new Ins[length];
-        for(int i = 0; i < length; i++){
-            results[i] = opcodeArray[i].newInstance();
-        }
-        add(index, results);
-        return results;
-    }
     public<T1 extends Ins> T1 createNext(Opcode<T1> opcode) {
         T1 item = opcode.newInstance();
         add(item);
         return item;
     }
     public boolean isLonelyInTryCatch(Ins ins){
-        buildExtraLines();
-        int codeUnits = ins.getCodeUnits();
         Iterator<ExceptionHandler.TryStartLabel> iterator = ins.getExtraLines(
                 ExceptionHandler.TryStartLabel.class);
+        if(!iterator.hasNext()) {
+            return false;
+        }
+        InsBlockList insBlockList = getInsBlockList();
+        insBlockList.link(iterator);
+        int codeUnits = ins.getCodeUnits();
+        boolean result = false;
         while (iterator.hasNext()){
             ExceptionHandler.TryStartLabel startLabel = iterator.next();
             int handlerCodeUnits = startLabel.getHandler().getCodeUnit();
             if(handlerCodeUnits <= codeUnits){
-                return true;
+                result = true;
+                break;
             }
         }
-        return false;
+        insBlockList.unlink(iterator);
+        return result;
     }
     public boolean contains(Ins item){
-        return getInsArray().contains(item);
+        return getInsBlockList().containsExact(item);
     }
     public boolean remove(Ins item){
         return remove(item, false);
     }
     public boolean remove(Ins item, boolean force) {
-        if(!contains(item)){
+        InsBlockList insBlockList = getInsBlockList();
+        if(!insBlockList.containsExact(item)){
             return false;
         }
-        if(!force && isLonelyInTryCatch(item)){
+        Object lock = insBlockList.linkLocked();
+        if(!force && isLonelyInTryCatch(item)) {
             return replaceWithNop(item) != null;
         }
-        reBuildExtraLines();
-        if(item.hasExtraLines()){
-            Ins next = get(item.getIndex() + 1);
-            if(next != null) {
-                item.transferExtraLines(next);
-            }
+        int index = item.getIndex();
+        Ins next = get(index + 1);
+        if(next != null) {
+            item.transferExtraLinesTo(next);
         }
-        getInsArray().remove(item);
+        insBlockList.remove(item);
         item.setParent(null);
         item.setIndex(-1);
-        updateAddresses();
-        updateLabelAddress();
+        insBlockList.unlinkLocked(lock);
         return true;
     }
     public InsNop replaceWithNop(Ins ins){
@@ -396,267 +419,42 @@ public class InstructionList extends FixedBlockContainer implements
         if(old == item){
             return;
         }
-        reBuildExtraLines();
+        InsBlockList insBlockList = getInsBlockList();
+        if(!insBlockList.containsExact(old)) {
+            throw new IllegalArgumentException("Not a member of this instruction list");
+        }
+        Object obj = insBlockList.linkLocked();
         int index = old.getIndex();
-        old.transferExtraLines(item);
-        item.setAddress(old.getAddress());
-        getInsArray().set(index, item);
+        insBlockList.set(index, item);
+        old.transferExtraLinesTo(item);
         old.setParent(null);
         old.setIndex(-1);
-        updateAddresses();
-        updateLabelAddress();
-    }
-    private void updateLabelAddress() {
-        for(Ins ins : this) {
-            ins.updateLabelAddress();
-        }
-    }
-    private void updateAddresses() {
-        int outSize = 0;
-        int address = 0;
-        for(Ins ins : this) {
-            ins.setAddress(address);
-            address += ins.getCodeUnits();
-            int out = ins.getOutSize();
-            if(out > outSize){
-                outSize = out;
-            }
-        }
-        this.codeItem.getInstructionCodeUnitsReference().set(address);
-        this.codeItem.getInstructionOutsReference().set(outSize);
+        insBlockList.unlinkLocked(obj);
     }
 
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
-        this.blockAlign.align(this);
-        this.codeItem.getCodeUnits().set(getCodeUnits());
-        clearAndUpdateAddresses();
-    }
-    private void clearAndUpdateAddresses() {
-        int outSize = 0;
-        int address = 0;
-        for(Ins ins : this) {
-            ins.clearExtraLines();
-            ins.setAddress(address);
-            address += ins.getCodeUnits();
-            int out = ins.getOutSize();
-            if(out > outSize){
-                outSize = out;
-            }
-        }
-        this.codeItem.getInstructionCodeUnitsReference().set(address);
-        this.codeItem.getInstructionOutsReference().set(outSize);
-        this.mLockExtraLines = false;
+        getInsBlockList().unlink();
     }
     public int getCodeUnits() {
-        int result = 0;
-        for (Ins ins : this) {
-            result += ins.getCodeUnits();
-        }
-        return result;
+        return getInsBlockList().getCodeUnits();
     }
     public DexPositionAlign getBlockAlign() {
         return blockAlign;
     }
-
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
-        buildExtraLines();
-        writer.buildLabels(getLabels());
-        for (Ins ins : this) {
-            writer.newLine();
-            ins.append(writer);
-        }
-    }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-
-        int insCodeUnits = codeItem.getInstructionCodeUnitsReference().get();
-        int position = reader.getPosition() + insCodeUnits * 2;
-        int zeroPosition = reader.getPosition();
-
-        int count = (insCodeUnits + 1) / 2;
-        BlockList<Ins> insBlockList = getInsArray();
-        insBlockList.ensureCapacity(count);
-
-        while (reader.getPosition() < position){
-            Opcode<?> opcode = Opcode.read(reader);
-            Ins ins = opcode.newInstance();
-            ins.setAddress((reader.getPosition() - zeroPosition) / 2);
-            insBlockList.add(ins);
-            ins.readBytes(reader);
-        }
-        insBlockList.trimToSize();
-        if(position != reader.getPosition()){
-            // should not reach here
-            reader.seek(position);
-        }
-        int totalRead = reader.getPosition() - zeroPosition;
-        blockAlign.align(totalRead);
-        reader.offset(blockAlign.size());
-    }
-
-    private void clearExtraLines() {
-        for (Ins ins : this) {
-            ins.clearExtraLines();
-        }
-        mLockExtraLines = false;
-    }
-    private boolean haveExtraLines() {
-        if(mLockExtraLines){
-            return true;
-        }
-        for (Ins ins : this) {
-            if(ins.hasExtraLines()){
-                return true;
-            }
-        }
-        return false;
-    }
-    public void buildExtraLines(){
-        if(haveExtraLines()){
-            return;
-        }
-        mLockExtraLines = true;
-        buildLabels();
-        buildDebugInfo();
-    }
-    public void reBuildExtraLines(){
-        clearExtraLines();
-        buildExtraLines();
-    }
     public Ins getAtAddress(int address){
-        int size = getCount();
-        for (int i = 0; i < size; i++) {
-            Ins ins = get(i);
-            if(ins.getAddress() == address){
-                return ins;
-            }
-        }
-        return null;
+        return getInsBlockList().getAtAddress(address);
     }
-    public Iterator<Label> getLabels() {
-        return CombiningIterator.two(
-                getInsLabels(),
-                getTryBlockLabels());
-    }
-    @SuppressWarnings("unchecked")
-    private Iterator<Label> getInsLabels(){
-        return new IterableIterator<Ins, Label>(iterator()) {
-            @Override
-            public Iterator<Label> iterator(Ins element) {
-                if(element instanceof LabelsSet) {
-                    return (Iterator<Label>) ((LabelsSet) element).getLabels();
-                }
-                if(element instanceof Label) {
-                    return SingleIterator.of((Label) element);
-                }
-                return EmptyIterator.of();
-            }
-        };
-    }
-    private Iterator<Label> getTryBlockLabels(){
-        TryBlock tryBlock = this.codeItem.getTryBlock();
-        if(tryBlock == null || tryBlock.isNull()){
-            return EmptyIterator.of();
-        }
-        return tryBlock.getLabels();
-    }
-    private void addLabel(Label label){
-        Ins target = getAtAddress(label.getTargetAddress());
-        if(target != null){
-            target.addExtraLine(label);
-        }
-    }
-    private void addLabels(Iterator<? extends Label> iterator){
-        while (iterator.hasNext()){
-            addLabel(iterator.next());
-        }
-    }
-    private void buildLabels(){
-        for(Ins ins : this){
-            if(ins instanceof Label){
-                addLabel((Label) ins);
-            }
-            if(ins instanceof LabelsSet){
-                addLabels(((LabelsSet) ins).getLabels());
-            }
-            ins.trimExtraLines();
-        }
-        TryBlock tryBlock = this.codeItem.getTryBlock();
-        if(tryBlock != null && !tryBlock.isNull()){
-            addLabels(tryBlock.getLabels());
-        }
-    }
-    private void buildDebugInfo(){
-        mLockExtraLines = true;
-        DebugInfo debugInfo = codeItem.getDebugInfo();
-        if(debugInfo == null){
-            mLockExtraLines = false;
-            return;
-        }
-        Iterator<DebugElement> iterator = debugInfo.getExtraLines();
-        while (iterator.hasNext()){
-            DebugElement element = iterator.next();
-            Ins target = getAtAddress(element.getTargetAddress());
-            if(target != null){
-                target.addExtraLine(element);
-            }
-        }
-        mLockExtraLines = false;
-    }
-    public void onRemove(){
-        clearExtraLines();
-        getInsArray().clearChildes();
-        getInsArray().destroy();
-    }
-    public boolean cleanInvalidDebugLineNumbers(){
-        DebugInfo debugInfo = getDebugInfo();
-        if(debugInfo == null){
-            return false;
-        }
-        clearExtraLines();
-        boolean result = false;
-        buildDebugInfo();
-        for(Ins ins : this){
-            if(cleanInvalidDebugLineNumbers(ins)){
-                result = true;
-            }
-        }
-        clearExtraLines();
-        return result;
-    }
-    private boolean cleanInvalidDebugLineNumbers(Ins ins){
-        boolean result = false;
-        DebugLineNumber first = null;
-        int address = ins.getAddress();
-        Iterator<DebugLineNumber> iterator = ins.getExtraLines(DebugLineNumber.class);
-        while (iterator.hasNext()){
-            DebugLineNumber lineNumber = iterator.next();
-            if(lineNumber.getParent() == null){
-                continue;
-            }
-            if(lineNumber.getTargetAddress() != address){
-                lineNumber.removeSelf();
-                result = true;
-                continue;
-            }
-            if(first == null){
-                first = lineNumber;
-                continue;
-            }
-            lineNumber.removeSelf();
-            result = true;
-        }
-        return result;
+    public Iterator<Label> getCodeLabels() {
+        return CombiningIterator.two(getInsBlockList().getLabels(), getCodeItem().getTryBlockLabels());
     }
     public void replaceKeys(Key search, Key replace){
-        for(Ins ins : this){
+        for(Ins ins : this) {
             ins.replaceKeys(search, replace);
         }
     }
-    public Iterator<IdItem> usedIds(){
+    public Iterator<IdItem> usedIds() {
         return new IterableIterator<Ins, IdItem>(iterator()) {
             @Override
             public Iterator<IdItem> iterator(Ins element) {
@@ -664,14 +462,25 @@ public class InstructionList extends FixedBlockContainer implements
             }
         };
     }
-    public void merge(InstructionList instructionList){
-        getInsArray().ensureCapacity(instructionList.getCount());
-        for(Ins coming : instructionList){
-            Ins ins = createNext(coming.getOpcode());
-            ins.merge(coming);
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        InsBlockList insBlockList = getInsBlockList();
+        Object lock = insBlockList.linkLocked();
+        writer.buildLabels(getCodeLabels());
+        for (Ins ins : this) {
+            writer.newLine();
+            ins.append(writer);
         }
-        getInsArray().trimToSize();
-        updateAddresses();
+        NullInstruction nullInstruction = getInsBlockList().getNullInstruction();
+        if(nullInstruction != null) {
+            writer.newLine();
+            nullInstruction.append(writer);
+        }
+        insBlockList.unlink(lock, false);
+    }
+    public void merge(InstructionList instructionList){
+        getInsBlockList().merge(instructionList.getInsBlockList());
+        getInsBlockList().updateCodeUnits();
     }
     public void fromSmali(SmaliCodeSet smaliCodeSet) throws IOException {
         int index = 0;
@@ -687,15 +496,16 @@ public class InstructionList extends FixedBlockContainer implements
         fromSmali(index, smaliCodeSet);
     }
     public void fromSmali(int index, SmaliCodeSet smaliCodeSet) throws IOException {
+        InsBlockList insBlockList = getInsBlockList();
+        Object obj = insBlockList.linkLocked();
         Iterator<SmaliInstruction> iterator = smaliCodeSet.getInstructions();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             SmaliInstruction smaliInstruction = iterator.next();
             Ins ins = createAt(index, smaliInstruction.getOpcode());
             ins.fromSmali(smaliInstruction);
             index ++;
         }
-        getInsArray().trimToSize();
-        updateAddresses();
+        insBlockList.unlinkLocked(obj);
     }
 
     @Override
@@ -707,12 +517,12 @@ public class InstructionList extends FixedBlockContainer implements
             return false;
         }
         InstructionList list = (InstructionList) obj;
-        return insArray.equals(list.insArray);
+        return insBlockList.equals(list.insBlockList);
     }
 
     @Override
     public int hashCode() {
-        return insArray.hashCode();
+        return insBlockList.hashCode();
     }
 
     @Override

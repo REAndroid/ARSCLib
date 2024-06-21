@@ -15,32 +15,35 @@
  */
 package com.reandroid.dex.ins;
 
-public class InsConstWide32 extends Ins31i implements ConstNumberLong{
+import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.smali.SmaliWriter;
 
-    public InsConstWide32(){
-        super(Opcode.CONST_WIDE_32);
-    }
+import java.io.IOException;
+import java.io.OutputStream;
 
-    @Override
-    public void set(long value) {
-        setLong(value);
-    }
-    @Override
-    public long getLong() {
-        return super.getLong();
+public class NullInstruction extends InsNop {
+
+    public NullInstruction() {
+        super();
     }
 
     @Override
-    public int getRegister() {
-        return getRegister(0);
-    }
-    @Override
-    public void setRegister(int register) {
-        setRegister(0, register);
-    }
-
-    @Override
-    public boolean isWideRegisterAt(int index) {
+    public boolean isNull() {
         return true;
+    }
+    @Override
+    public int countBytes() {
+        return 0;
+    }
+    @Override
+    public int getCodeUnits() {
+        return 0;
+    }
+    @Override
+    public int onWriteBytes(OutputStream stream) throws IOException {
+        return super.onWriteBytes(stream);
+    }
+    @Override
+    public void appendCode(SmaliWriter writer) throws IOException {
     }
 }

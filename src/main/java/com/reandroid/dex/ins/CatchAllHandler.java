@@ -20,6 +20,7 @@ import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.smali.SmaliDirective;
 
 public class CatchAllHandler extends ExceptionHandler {
+
     public CatchAllHandler() {
         super(0);
     }
@@ -27,9 +28,10 @@ public class CatchAllHandler extends ExceptionHandler {
         super();
     }
 
-    CatchAllHandler newCopy(){
+    CatchAllHandler newCopy(TryItem parent){
         CatchAllHandler handler = new Copy(this);
         handler.setIndex(getIndex());
+        handler.setParent(parent);
         return handler;
     }
 
@@ -45,10 +47,16 @@ public class CatchAllHandler extends ExceptionHandler {
     static class Copy extends CatchAllHandler {
 
         private final CatchAllHandler catchAllHandler;
+
         Copy(CatchAllHandler catchAllHandler){
             super(true);
             this.catchAllHandler = catchAllHandler;
         }
+        @Override
+        public boolean isRemoved() {
+            return super.isRemoved() || catchAllHandler.isRemoved();
+        }
+
         @Override
         Ule128Item getCatchAddressUle128(){
             return catchAllHandler.getCatchAddressUle128();

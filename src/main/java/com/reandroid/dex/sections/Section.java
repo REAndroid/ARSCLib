@@ -128,16 +128,12 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     }
 
     @SuppressWarnings("unchecked")
-    boolean keyChanged(SectionItem block, Key key, boolean immediateIdSort){
+    boolean keyChanged(SectionItem block, Key key){
         DexSectionPool<T> dexSectionPool = this.getLoadedPool();
         if(dexSectionPool != null){
             return dexSectionPool.updateKey(key, block.getKey(), (T)block);
         }
         return false;
-    }
-    void sortImmediate(T item){
-        SectionArray<T> array = getItemArray();
-        array.sortSingle(item, CompareUtil.getComparatorUnchecked());
     }
     public DexSectionPool<T> getPool(){
         DexSectionPool<T> dexSectionPool = this.dexSectionPool;

@@ -20,12 +20,15 @@ import com.reandroid.dex.smali.SmaliWriter;
 import java.io.IOException;
 import java.util.Comparator;
 
-public interface ExtraLine{
+public interface ExtraLine {
     int getTargetAddress();
     void setTargetAddress(int targetAddress);
+    Ins getTargetIns();
+    void setTargetIns(Ins ins);
     void appendExtra(SmaliWriter writer) throws IOException;
     boolean isEqualExtraLine(Object obj);
     int getSortOrder();
+    boolean isRemoved();
     default int getSortOrderFine(){
         return 0;
     }

@@ -55,8 +55,6 @@ public class SectionList extends FixedBlockContainer
     private final Map<SectionType<?>, Section<?>> typeMap;
     private final MapList mapList;
 
-    private boolean immediateIdSort;
-
     private boolean mReading;
 
     public SectionList() {
@@ -428,19 +426,12 @@ public class SectionList extends FixedBlockContainer
         return false;
     }
 
-    public boolean isImmediateIdSort() {
-        return immediateIdSort;
-    }
-    public void setImmediateIdSort(boolean immediateIdSort) {
-        this.immediateIdSort = immediateIdSort;
-    }
-
     public void keyChangedInternal(SectionItem item, SectionType<?> sectionType, Key oldKey){
         Section<?> section = getSection(sectionType);
         if(section == null){
             return;
         }
-        section.keyChanged(item, oldKey, isImmediateIdSort());
+        section.keyChanged(item, oldKey);
         if(sectionType == SectionType.TYPE_ID){
             ClassId classId = getLoaded(SectionType.CLASS_ID, oldKey);
             if(classId != null){

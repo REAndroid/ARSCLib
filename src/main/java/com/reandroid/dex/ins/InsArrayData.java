@@ -51,12 +51,12 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
         addChild(4, this.blockAlign);
     }
 
-    public Iterator<InsFillArrayData> getInsFillArrayData(){
-        InstructionList instructionList = getInstructionList();
-        if(instructionList == null){
+    public Iterator<InsFillArrayData> getInsFillArrayData() {
+        InsBlockList insBlockList = getInsBlockList();
+        if(insBlockList == null) {
             return EmptyIterator.of();
         }
-        instructionList.buildExtraLines();
+        insBlockList.link();
         return InstanceIterator.of(getExtraLines(), InsFillArrayData.class);
     }
     public int size(){

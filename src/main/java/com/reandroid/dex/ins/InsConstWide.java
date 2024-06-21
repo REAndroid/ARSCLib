@@ -44,6 +44,11 @@ public class InsConstWide extends Ins51l implements ConstNumberLong{
     }
 
     @Override
+    public boolean isWideRegisterAt(int index) {
+        return true;
+    }
+
+    @Override
     void appendHexData(SmaliWriter writer) throws IOException {
         writer.appendHex(getLong());
     }

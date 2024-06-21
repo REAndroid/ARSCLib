@@ -19,7 +19,6 @@ import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.CountedList;
-import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
@@ -28,7 +27,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.PSData>
+public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.PackedSwitchEntry>
         implements SmaliFormat, LabelsSet {
 
     private final InsPackedSwitchData switchData;
@@ -42,19 +41,14 @@ public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.PSDat
         return switchData.getFirstKey();
     }
     public int getBaseAddress(){
-        InsPackedSwitch packedSwitch = switchData.getParentPackedSwitch();
+        InsPackedSwitch packedSwitch = switchData.getSwitch();
         if(packedSwitch == null){
             return 0;
         }
         return packedSwitch.getAddress();
     }
-    ImmutablePSData[] makeCopy() {
-        int size = size();
-        ImmutablePSData[] results = new ImmutablePSData[size];
-        for(int i = 0; i < size; i++) {
-            results[i] = get(i).toImmutablePSData();
-        }
-        return results;
+    public InsPackedSwitchData getSwitchData() {
+        return switchData;
     }
     void onDataChange(int index, int value) {
         this.switchData.onDataChange(index, value);
@@ -77,21 +71,39 @@ public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.PSDat
     }
 
     @Override
-    public Iterator<PSData> getLabels() {
+    public Iterator<PackedSwitchEntry> getLabels() {
         return iterator();
     }
 
-    public static class PSData extends IntegerItem implements IntegerReference, SmaliFormat, Label {
+    public static class PackedSwitchEntry extends IntegerItem implements InsSwitchPayload.SwitchEntry{
 
-        public PSData(){
+        private Ins targetIns;
+
+        public PackedSwitchEntry(){
             super();
         }
 
-        public ImmutablePSData toImmutablePSData() {
-            InstructionList instructionList = getParentDataList().switchData
-                    .getInstructionList();
-            Ins ins = instructionList.getAtAddress(getTargetAddress());
-            return new ImmutablePSData(get(), ins);
+        @Override
+        public Ins getTargetIns() {
+            Ins targetIns = this.targetIns;
+            if(targetIns == null) {
+                setTargetIns(findTargetIns());
+                targetIns = this.targetIns;
+            }
+            return targetIns;
+        }
+        @Override
+        public void setTargetIns(Ins targetIns) {
+            if(targetIns != this.targetIns) {
+                this.targetIns = targetIns;
+                if(targetIns != null) {
+                    targetIns.addExtraLine(this);
+                }
+            }
+        }
+        @Override
+        public InsPackedSwitchData getPayload() {
+            return getParentDataList().getSwitchData();
         }
         @Override
         public int get() {
@@ -116,6 +128,7 @@ public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.PSDat
         @Override
         public void appendExtra(SmaliWriter writer) throws IOException {
             writer.appendLabelName(getLabelName());
+            writer.appendComment(HexUtil.toHex(get(), 1));
         }
 
         @Override
@@ -144,7 +157,7 @@ public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.PSDat
         public int getSortOrder() {
             return ExtraLine.ORDER_INSTRUCTION_LABEL;
         }
-        public void merge(PSData data) {
+        public void merge(PackedSwitchEntry data) {
             setAddress(data.getAddress());
         }
         @Override
@@ -159,7 +172,7 @@ public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.PSDat
             if (obj == null || getClass() != obj.getClass()) {
                 return false;
             }
-            PSData data = (PSData) obj;
+            PackedSwitchEntry data = (PackedSwitchEntry) obj;
             return getIndex() == data.getIndex() && getParent() == data.getParent();
         }
 
@@ -168,23 +181,15 @@ public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.PSDat
             return getLabelName();
         }
     }
-    public static class ImmutablePSData {
-        public int data;
-        public Ins targetIns;
-        public ImmutablePSData(int data, Ins targetIns) {
-            this.data = data;
-            this.targetIns = targetIns;
-        }
-    }
 
-    private static final Creator<PSData> CREATOR = new Creator<PSData>() {
+    private static final Creator<PackedSwitchEntry> CREATOR = new Creator<PackedSwitchEntry>() {
         @Override
-        public PSData[] newArrayInstance(int length) {
-            return new PSData[length];
+        public PackedSwitchEntry[] newArrayInstance(int length) {
+            return new PackedSwitchEntry[length];
         }
         @Override
-        public PSData newInstance() {
-            return new PSData();
+        public PackedSwitchEntry newInstance() {
+            return new PackedSwitchEntry();
         }
     };
 }

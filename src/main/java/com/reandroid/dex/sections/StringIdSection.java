@@ -15,20 +15,14 @@
  */
 package com.reandroid.dex.sections;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.common.SectionItem;
-import com.reandroid.dex.data.StringData;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.ComputeIterator;
-
-import java.util.Iterator;
-import java.util.function.Function;
 
 public class StringIdSection extends IdSection<StringId> {
 
@@ -47,8 +41,8 @@ public class StringIdSection extends IdSection<StringId> {
         super.onPreRefresh();
     }
     @Override
-    boolean keyChanged(SectionItem block, Key key, boolean immediateSort) {
-        boolean changed = super.keyChanged(block, key, immediateSort);
+    boolean keyChanged(SectionItem block, Key key) {
+        boolean changed = super.keyChanged(block, key);
         if(key instanceof StringKey){
             String text = ((StringKey)key).getString();
             if(text.length() > 0){
@@ -70,25 +64,5 @@ public class StringIdSection extends IdSection<StringId> {
             // getKey() call triggers keyChanged event
             typeId.getKey();
         }
-    }
-
-    @Override
-    void sortImmediate(StringId item) {
-        StringData stringData = item.getStringData();
-        stringData.getSection(SectionType.STRING_DATA).sortImmediate(stringData);
-        super.sortImmediate(item);
-    }
-
-    private Iterator<StringKey> getAllStringKeys(Key key){
-        Iterator<? extends Key> iterator = key.mentionedKeys();
-        return ComputeIterator.of(iterator, (Function<Key, StringKey>) key1 -> {
-            if(key1 instanceof StringKey){
-                return (StringKey) key1;
-            }
-            if(key1 instanceof TypeKey){
-                return new StringKey(((TypeKey) key1).getTypeName());
-            }
-            return null;
-        });
     }
 }

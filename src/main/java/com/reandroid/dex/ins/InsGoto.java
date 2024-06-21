@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.HexUtil;
 
@@ -22,8 +23,11 @@ import java.io.IOException;
 
 public class InsGoto extends SizeXIns implements Label {
 
+    private Opcode<?> opcode;
+
     public InsGoto(Opcode<?> opcode) {
         super(opcode);
+        this.opcode = opcode;
     }
     @Override
     public int getData() {
@@ -39,21 +43,34 @@ public class InsGoto extends SizeXIns implements Label {
     @Override
     public void setData(int data) {
         int size = getOpcode().size();
-        if(size == 2){
+        if (size == 2) {
             setByte(1, data);
-        }
-        if(size == 4){
+        } else if(size == 4) {
             setShort(2, data);
+        } else {
+            setInteger(data);
         }
-        setInteger(data);
     }
     @Override
     public int getTargetAddress() {
         return getAddress() + getData();
     }
     @Override
-    public void setTargetAddress(int targetAddress){
-        setData(targetAddress - getAddress());
+    public void setTargetAddress(int targetAddress) {
+        int data = targetAddress - getAddress();
+        if(!canFitOpcode(data)) {
+            Ins targetIns = null;
+            InsBlockList insBlockList = getInsBlockList();
+            if(insBlockList != null) {
+                targetIns = insBlockList.getAtAddress(targetAddress);
+            }
+            ensureFittingOpcode(data);
+            if(targetIns != null) {
+                targetAddress = targetIns.getAddress();
+            }
+            data = targetAddress - getAddress();
+        }
+        setData(data);
     }
     @Override
     public String getLabelName() {
@@ -68,5 +85,59 @@ public class InsGoto extends SizeXIns implements Label {
     @Override
     public int getSortOrder() {
         return ExtraLine.ORDER_INSTRUCTION_LABEL;
+    }
+
+    @Override
+    public int getCodeUnits() {
+        return getOpcode().size() / 2;
+    }
+
+    @Override
+    public Opcode<?> getOpcode() {
+        return this.opcode;
+    }
+    private boolean canFitOpcode(int data) {
+        int size = getOpcode().size();
+        if (size == 2) {
+            return data == (byte) data;
+        } else if(size == 4) {
+            return data == (short) data;
+        }
+        return true;
+    }
+    private void ensureFittingOpcode(int data) {
+        Opcode<InsGoto> opcode = null;
+        int size = getOpcode().size();
+        if (size == 2 && data != (byte) data) {
+            if(data == (short) data) {
+                opcode = Opcode.GOTO_16;
+            } else {
+                opcode = Opcode.GOTO_32;
+            }
+        } else if(size == 4 && data != (short) data) {
+            opcode = Opcode.GOTO_32;
+        }
+        if(opcode != null) {
+            setOpcode(opcode);
+        }
+    }
+    public void setOpcode(Opcode<InsGoto> opcode) {
+        if(opcode == this.opcode) {
+            return;
+        }
+        int data = getData();
+        InsBlockList insBlockList = getInsBlockList();
+        if(insBlockList != null) {
+            insBlockList.link();
+        }
+        this.opcode = opcode;
+        ByteArray byteArray = getValueBytes();
+        byteArray.setSize(0);
+        byteArray.setSize(opcode.size());
+        byteArray.putShort(0, opcode.getValue());
+        setData(data);
+        if(insBlockList != null) {
+            insBlockList.unlink();
+        }
     }
 }

@@ -17,14 +17,11 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.dex.base.IntegerPair;
-import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
-import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -39,18 +36,6 @@ public class IdSection<T extends IdItem> extends Section<T> {
 
     public int getFreeSpace() {
         return 0xffff - getCount();
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    boolean keyChanged(SectionItem block, Key key, boolean immediateSort) {
-        boolean changed = super.keyChanged(block, key, immediateSort);
-        if(!immediateSort){
-            return changed;
-        }
-        T item = (T) block;
-        sortImmediate(item);
-        return changed;
     }
 
     @Override

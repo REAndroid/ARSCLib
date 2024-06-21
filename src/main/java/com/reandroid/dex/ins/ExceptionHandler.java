@@ -168,6 +168,9 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
             tryItem.remove(this);
         }
     }
+    public boolean isRemoved() {
+        return getParent() == null;
+    }
     public void merge(ExceptionHandler handler){
         catchAddress.set(handler.catchAddress.get());
     }
@@ -218,17 +221,40 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         return getHandlerLabel().toString();
     }
 
-    public static class HandlerLabel implements ExceptionLabel{
+    static abstract class AbstractExceptionLabel implements ExceptionLabel {
 
+        private Ins targetIns;
         private final ExceptionHandler handler;
 
-        HandlerLabel(ExceptionHandler handler){
+        AbstractExceptionLabel(ExceptionHandler handler) {
             this.handler = handler;
         }
 
         @Override
         public ExceptionHandler getHandler() {
             return handler;
+        }
+        @Override
+        public Ins getTargetIns() {
+            return targetIns;
+        }
+        @Override
+        public void setTargetIns(Ins targetIns) {
+            if(targetIns != this.targetIns) {
+                this.targetIns = targetIns;
+                if(targetIns != null) {
+                    if(targetIns.getAddress() != getTargetAddress()) {
+                        setTargetAddress(targetIns.getAddress());
+                    }
+                    targetIns.addExtraLine(this);
+                }
+            }
+        }
+    }
+    public static class HandlerLabel extends AbstractExceptionLabel {
+
+        HandlerLabel(ExceptionHandler handler){
+            super(handler);
         }
 
         @Override
@@ -246,7 +272,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
 
         @Override
         public String getLabelName() {
-            ExceptionHandler handler = this.handler;
+            ExceptionHandler handler = this.getHandler();
             StringBuilder builder = new StringBuilder();
             builder.append('.');
             builder.append(handler.getSmaliDirective().getName());
@@ -278,11 +304,11 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
                 return false;
             }
             HandlerLabel label = (HandlerLabel) obj;
-            return this.handler == label.handler;
+            return this.getHandler() == label.getHandler();
         }
         @Override
         public void appendExtra(SmaliWriter writer) throws IOException {
-            ExceptionHandler handler = this.handler;
+            ExceptionHandler handler = this.getHandler();
             handler.getSmaliDirective().append(writer);
             TypeId typeId = handler.getTypeId();
             if(typeId != null){
@@ -302,17 +328,10 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         }
     }
 
-    public static class TryStartLabel implements ExceptionLabel{
-
-        private final ExceptionHandler handler;
+    public static class TryStartLabel extends AbstractExceptionLabel {
 
         TryStartLabel(ExceptionHandler handler){
-            this.handler = handler;
-        }
-
-        @Override
-        public ExceptionHandler getHandler() {
-            return handler;
+            super(handler);
         }
 
         @Override
@@ -346,7 +365,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
                 return false;
             }
             TryStartLabel label = (TryStartLabel) obj;
-            if(handler == label.handler){
+            if(this.getHandler() == label.getHandler()){
                 return true;
             }
             return getTargetAddress() == label.getTargetAddress();
@@ -357,17 +376,10 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         }
     }
 
-    public static class TryEndLabel implements ExceptionLabel{
-
-        private final ExceptionHandler handler;
+    public static class TryEndLabel extends AbstractExceptionLabel {
 
         TryEndLabel(ExceptionHandler handler){
-            this.handler = handler;
-        }
-
-        @Override
-        public ExceptionHandler getHandler() {
-            return handler;
+            super(handler);
         }
 
         @Override
@@ -384,7 +396,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         }
         @Override
         public String getLabelName() {
-            int startAddress = handler.getStartLabel().getTargetAddress();
+            int startAddress = getHandler().getStartLabel().getTargetAddress();
             return HexUtil.toHex(":try_end_", startAddress, 1);
         }
 
@@ -401,7 +413,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
                 return false;
             }
             TryEndLabel label = (TryEndLabel) obj;
-            if(handler == label.handler){
+            if(this.getHandler() == label.getHandler()){
                 return true;
             }
             return getTargetAddress() == label.getTargetAddress();
@@ -412,17 +424,10 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         }
     }
 
-    public static class CatchLabel implements ExceptionLabel{
+    public static class CatchLabel extends AbstractExceptionLabel {
 
-        private final ExceptionHandler handler;
-
-        CatchLabel(ExceptionHandler handler){
-            this.handler = handler;
-        }
-
-        @Override
-        public ExceptionHandler getHandler() {
-            return handler;
+        CatchLabel(ExceptionHandler handler) {
+            super(handler);
         }
 
         @Override
@@ -454,7 +459,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
                 return false;
             }
             CatchLabel label = (CatchLabel) obj;
-            if(handler == label.handler){
+            if(this.getHandler() == label.getHandler()){
                 return true;
             }
             return getTargetAddress() == label.getTargetAddress() &&

@@ -19,4 +19,9 @@ public class Size8Ins extends SizeXIns {
     public Size8Ins(Opcode<?> opcode) {
         super(opcode);
     }
+
+    @Override
+    public int getCodeUnits() {
+        return 4;
+    }
 }

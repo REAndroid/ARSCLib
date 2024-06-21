@@ -25,10 +25,6 @@ public interface RegistersSet {
     int getRegister(int index);
     void setRegister(int index, int value);
 
-    @Deprecated
-    default boolean isRegistersRange(){
-        return getRegisterFormat().isRange();
-    }
     int getRegisterLimit(int index);
     default int getRegister() {
         return getRegister(0);
@@ -66,5 +62,8 @@ public interface RegistersSet {
         setRegister(last, 0);
         setRegistersCount(last);
         return true;
+    }
+    default boolean isWideRegisterAt(int index){
+        return false;
     }
 }

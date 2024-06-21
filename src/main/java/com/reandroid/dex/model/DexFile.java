@@ -16,6 +16,7 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.common.Origin;
 import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.DexUtils;
@@ -34,6 +35,7 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliClass;
 import com.reandroid.utils.collection.*;
+import com.reandroid.utils.io.FileByteSource;
 import com.reandroid.utils.io.FileIterator;
 import com.reandroid.utils.io.FileUtil;
 
@@ -85,20 +87,6 @@ public class DexFile implements DexClassRepository, Closeable,
             debugInfo.getDebugSequence().fixDebugLineNumbers();
         }
     }
-    public boolean cleanInvalidDebugLineNumbers(){
-        Section<CodeItem> section = getSection(SectionType.CODE);
-        if(section == null){
-            return false;
-        }
-        boolean result = false;
-        for(CodeItem codeItem : section){
-            if(codeItem.cleanInvalidDebugLineNumbers()){
-                result = true;
-            }
-        }
-        return result;
-    }
-
 
     public DexClassRepository getClassRepository(){
         DexDirectory directory = getDexDirectory();
@@ -363,8 +351,17 @@ public class DexFile implements DexClassRepository, Closeable,
             throw new FileNotFoundException("No such directory: " + dir);
         }
         FileIterator iterator = new FileIterator(dir, FileIterator.getExtensionFilter(".smali"));
-        while (iterator.hasNext()){
-            parseSmaliFile(iterator.next());
+        FileByteSource byteSource = new FileByteSource();
+        SmaliReader reader = new SmaliReader(byteSource);
+        DexLayout layout = getDexLayout();
+        while (iterator.hasNext()) {
+            reader.reset();
+            File file = iterator.next();
+            byteSource.setFile(file);
+            reader.setOrigin(Origin.createNew(file));
+            SmaliClass smaliClass = new SmaliClass();
+            smaliClass.parse(reader);
+            layout.fromSmali(smaliClass);
         }
         shrink();
     }

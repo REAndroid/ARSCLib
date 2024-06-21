@@ -21,8 +21,6 @@ import com.reandroid.dex.data.FieldDef;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.sections.Section;
-import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -46,11 +44,6 @@ public class DexField extends DexDeclaration {
         this.fieldDef = fieldDef;
     }
 
-    public FieldId getOrCreate(DexFile dexFile){
-        Section<FieldId> section = dexFile.getSection(SectionType.FIELD_ID);
-        return section.getOrCreate(getKey());
-    }
-
     public String getName(){
         return getId().getName();
     }
@@ -59,7 +52,7 @@ public class DexField extends DexDeclaration {
     }
 
     public DexValue getInitialValue() {
-        return DexValue.create(this, getDefinition().getStaticInitialValue());
+        return DexValue.create(this, getDefinition().getStaticInitialValue(true));
     }
     public IntegerReference getStaticIntegerValue() {
         if(isStatic()) {
