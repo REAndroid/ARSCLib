@@ -37,7 +37,7 @@ public class UnusedClassesCleaner extends UnusedCleaner<DexClass> {
 
     @Override
     public void apply() {
-        if(!getBuildOption().isMinifyClasses()) {
+        if(!isEnabled()) {
             debug("Skip");
             return;
         }

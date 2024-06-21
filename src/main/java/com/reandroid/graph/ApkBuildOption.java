@@ -33,6 +33,8 @@ public class ApkBuildOption {
     private boolean minifyFields = true;
     private boolean minifyMethods = false;
 
+    private boolean cleanAnnotations = true;
+
     private boolean processClassNamesOnStrings = true;
 
     private ResourceMergeOption mMergeOption;
@@ -67,6 +69,13 @@ public class ApkBuildOption {
     }
     public void setMinifyMethods(boolean minifyMethods) {
         this.minifyMethods = minifyMethods;
+    }
+
+    public boolean isCleanAnnotations() {
+        return cleanAnnotations;
+    }
+    public void setCleanAnnotations(boolean cleanAnnotations) {
+        this.cleanAnnotations = cleanAnnotations;
     }
 
     public boolean isProcessClassNamesOnStrings() {

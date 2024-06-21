@@ -29,8 +29,6 @@ import java.util.function.Predicate;
 
 public abstract class UnusedClassComponentCleaner<T extends Dex> extends UnusedCleaner<T> {
 
-    private int mCount;
-
     public UnusedClassComponentCleaner(ApkBuildOption buildOption, ApkModule apkModule,
                                        DexClassRepository classRepository) {
         super(buildOption, apkModule, classRepository);

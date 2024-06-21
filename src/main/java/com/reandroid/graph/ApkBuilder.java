@@ -22,6 +22,7 @@ import com.reandroid.arsc.model.ResourceName;
 import com.reandroid.arsc.refactor.ResourceBuilder;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.dex.model.DexClassRepository;
+import com.reandroid.graph.cleaners.UnusedAnnotationCleaner;
 import com.reandroid.graph.cleaners.UnusedClassesCleaner;
 import com.reandroid.graph.cleaners.UnusedFieldsCleaner;
 import com.reandroid.graph.cleaners.UnusedMethodsCleaner;
@@ -92,11 +93,19 @@ public class ApkBuilder extends BaseApkModuleProcessor {
         fieldsCleaner.setReporter(getReporter());
         fieldsCleaner.apply();
         count += fieldsCleaner.getCount();
+
         UnusedMethodsCleaner methodsCleaner = new UnusedMethodsCleaner(getBuildOption(),
                 getApkModule(), getClassRepository());
         methodsCleaner.setReporter(getReporter());
         methodsCleaner.apply();
         count += methodsCleaner.getCount();
+
+        UnusedAnnotationCleaner unusedAnnotationCleaner = new UnusedAnnotationCleaner(getBuildOption(),
+                getApkModule(), getClassRepository());
+        unusedAnnotationCleaner.setReporter(getReporter());
+        unusedAnnotationCleaner.apply();
+        count += unusedAnnotationCleaner.getCount();
+
         UnusedClassesCleaner classesCleaner = new UnusedClassesCleaner(getBuildOption(),
                 getApkModule(), getClassRepository());
         classesCleaner.setReporter(getReporter());
