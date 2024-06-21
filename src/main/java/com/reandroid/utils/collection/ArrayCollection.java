@@ -348,6 +348,26 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return ArrayIterator.of(this.mElements.clone(), start, length);
     }
 
+    public Iterator<T> reversedIterator() {
+        return ReversedIterator.of(this);
+    }
+    public Iterator<T> reversedIterator(int start) {
+        return ReversedIterator.of(this, start);
+    }
+    public Iterator<T> reversedIterator(int start, int length) {
+        return ReversedIterator.of(this, start, length);
+    }
+
+    public Iterator<T> reversedClonedIterator() {
+        return ReversedIterator.of(this.mElements.clone());
+    }
+    public Iterator<T> reversedClonedIterator(int start) {
+        return ReversedIterator.of(this.mElements.clone(), start);
+    }
+    public Iterator<T> reversedClonedIterator(int start, int length) {
+        return ReversedIterator.of(this.mElements.clone(), start, length);
+    }
+
     @Override
     public Object[] toArray() {
         return trimToSize(getElements(), size());
