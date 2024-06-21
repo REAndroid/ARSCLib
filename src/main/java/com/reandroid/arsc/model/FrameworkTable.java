@@ -169,8 +169,8 @@ public class FrameworkTable extends TableBlock {
     }
     private void optimizeTableString(){
         removeUnusedTableString();
-        shrinkTableString();
         getStringPool().getStyleArray().clear();
+        shrinkTableString();
         removeUnusedTableString();
     }
     private void removeUnusedTableString(){
