@@ -20,6 +20,7 @@ import com.reandroid.apk.ResFile;
 import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
+import com.reandroid.arsc.chunk.xml.ResXmlElement;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
@@ -46,6 +47,8 @@ public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate
     private final ApkBuildOption buildOption;
     private final Set<TypeKey> mainClasses;
     private final Set<TypeKey> sourceStringClasses;
+    private final Set<String> elementNameSuffix;
+
     private boolean scanned;
 
     public VitalClassesSet(ApkBuildOption buildOption, ApkModule apkModule, DexClassRepository classRepository) {
@@ -53,6 +56,7 @@ public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate
         this.buildOption = buildOption;
         this.mainClasses = new HashSet<>();
         this.sourceStringClasses = new HashSet<>();
+        this.elementNameSuffix = new HashSet<>();
     }
 
     public Iterator<TypeKey> getMainClasses() {
@@ -144,6 +148,16 @@ public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate
         debug("Scanning xml ...");
         scanOnXml(getApkModule().getAndroidManifest());
         scanOnResourceXmlFiles();
+        scanElementSuffix();
+    }
+    private void scanElementSuffix() {
+        Set<String> elementNameSuffix = this.elementNameSuffix;
+        Iterator<DexClass> iterator = getClassRepository().getDexClasses(
+                typeKey -> elementNameSuffix.contains(typeKey.getSimpleName()));
+        while (iterator.hasNext()) {
+            addType(iterator.next().getKey());
+        }
+        elementNameSuffix.clear();
     }
     private void scanOnResourceXmlFiles() {
         List<ResFile> resFileList = getApkModule().listResFiles();
@@ -159,6 +173,17 @@ public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate
         Iterator<String> iterator = resXmlDocument.getStringPool().getStrings();
         while (iterator.hasNext()) {
             addType(TypeKey.parse(iterator.next()));
+        }
+        loadElementNames(resXmlDocument);
+    }
+    private void loadElementNames(ResXmlDocument resXmlDocument) {
+        if(resXmlDocument != null) {
+            Set<String> elementNameSuffix = this.elementNameSuffix;
+            Iterator<ResXmlElement> iterator = resXmlDocument.recursiveElements();
+            while (iterator.hasNext()) {
+                ResXmlElement element = iterator.next();
+                elementNameSuffix.add(element.getName(false));
+            }
         }
     }
     private void scanUsedByNative() {
@@ -198,6 +223,9 @@ public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate
         }
     }
     private void scanOthers() {
+        scanImplSuffix();
+    }
+    private void scanImplSuffix() {
         // FIXME: this is mainly to keep Landroidx/work/impl/WorkDatabase_Impl;
         // TODO: find universal rule
         this.keepClasses(typeKey -> typeKey.getTypeName().endsWith("_Impl;"));
@@ -275,6 +303,7 @@ public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate
             case '"':
             case ';':
             case ':':
+            case '?':
                 return false;
             default:
                 return true;
