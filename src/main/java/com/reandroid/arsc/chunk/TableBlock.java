@@ -94,7 +94,7 @@ public class TableBlock extends Chunk<TableHeader>
         return new IterableIterator<PackageBlock, ResourceEntry>(getPackages()) {
             @Override
             public Iterator<ResourceEntry> iterator(PackageBlock element) {
-                return element.iterator();
+                return element.getResources();
             }
         };
     }

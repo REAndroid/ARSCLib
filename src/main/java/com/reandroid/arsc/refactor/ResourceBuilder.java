@@ -183,7 +183,7 @@ public class ResourceBuilder {
     private void mergePackage(PackageBlock sourcePackage, PackageBlock resultPackage) {
         ResourceMergeOption mergeOption = this.getMergeOption();
         Predicate<? super ResourceEntry> keepEntries = mergeOption.getKeepEntries();
-        Iterator<ResourceEntry> iterator = FilterIterator.of(sourcePackage.iterator(), keepEntries);
+        Iterator<ResourceEntry> iterator = FilterIterator.of(sourcePackage.getResources(), keepEntries);
         while (iterator.hasNext()){
             ResourceEntry sourceEntry = iterator.next();
             if(sourceEntry.isEmpty()) {
@@ -229,7 +229,7 @@ public class ResourceBuilder {
         Set<String> typeSet = new HashSet<>(sourcePool.size());
         for(TypeString typeString : sourcePool) {
             String typeName = typeString.get();
-            Iterator<ResourceEntry> iterator = FilterIterator.of(sourcePackage.iterator(typeName),
+            Iterator<ResourceEntry> iterator = FilterIterator.of(sourcePackage.getResources(typeName),
                     keepEntries);
             if(iterator.hasNext()){
                 typeSet.add(typeName);
@@ -253,7 +253,7 @@ public class ResourceBuilder {
         Predicate<? super ResourceEntry> keepEntries = getMergeOption().getKeepEntries();
         ArrayCollection<ResourceEntry> sourceEntryList = new ArrayCollection<>();
         Iterator<ResourceEntry> iterator = FilterIterator.of(
-                sourcePackage.iterator(typeName),
+                sourcePackage.getResources(typeName),
                 resourceEntry -> resourceEntry.isDeclared() &&
                         keepEntries.test(resourceEntry));
         sourceEntryList.addAll(iterator);

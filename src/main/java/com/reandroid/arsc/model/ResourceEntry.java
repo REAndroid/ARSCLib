@@ -217,6 +217,9 @@ public class ResourceEntry implements Iterable<Entry>{
     public boolean isEmpty() {
         return CollectionUtil.isEmpty(iterator(true));
     }
+    public boolean isDefined() {
+        return iterator(true).hasNext();
+    }
     public boolean isDeclared() {
         return getName() != null;
     }

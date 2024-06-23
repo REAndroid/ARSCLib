@@ -34,6 +34,7 @@ import com.reandroid.arsc.list.StagedAliasList;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.model.ResourceName;
+import com.reandroid.arsc.model.ResourceType;
 import com.reandroid.arsc.pool.SpecStringPool;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.pool.TypeStringPool;
@@ -115,6 +116,10 @@ public class PackageBlock extends Chunk<PackageHeader>
     public void setTag(Object tag){
         this.mTag = tag;
     }
+
+    public Iterator<ResourceType> getTypes() {
+        return ComputeIterator.of(getSpecTypePairs(), ResourceType::new);
+    }
     public ResourceEntry getResource(int resourceId){
         int packageId = (resourceId >> 24 ) & 0xff;
         if(packageId == 0){
@@ -170,14 +175,6 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return null;
     }
-    public Iterator<ResourceEntry> getResources(String type){
-        SpecTypePair specTypePair =
-                getSpecTypePair(type);
-        if(specTypePair != null){
-            return specTypePair.getResources();
-        }
-        return EmptyIterator.of();
-    }
     public ResourceEntry getAttrResource(String name){
         Iterator<SpecTypePair> itr = getAttrSpecs();
         while (itr.hasNext()){
@@ -200,7 +197,7 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         return null;
     }
-    public Iterator<ResourceEntry> iterator(){
+    public Iterator<ResourceEntry> getResources() {
         return new IterableIterator<SpecTypePair, ResourceEntry>(getSpecTypePairs()) {
             @Override
             public Iterator<ResourceEntry> iterator(SpecTypePair element) {
@@ -208,7 +205,7 @@ public class PackageBlock extends Chunk<PackageHeader>
             }
         };
     }
-    public Iterator<ResourceEntry> iterator(String type){
+    public Iterator<ResourceEntry> getResources(String type){
         return new IterableIterator<SpecTypePair, ResourceEntry>(getSpecTypePairs()) {
             @Override
             public Iterator<ResourceEntry> iterator(SpecTypePair element) {
