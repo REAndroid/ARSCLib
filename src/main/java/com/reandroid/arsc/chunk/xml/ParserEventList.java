@@ -54,16 +54,17 @@ public class ParserEventList implements Iterator<ParserEvent> {
         return null;
     }
     public int getLineNumber(){
-        if(type!=ParserEvent.COMMENT
-                && type!=ParserEvent.START_TAG
-                && type!=ParserEvent.END_TAG){
-            return 0;
+        if(type != ParserEvent.COMMENT
+                && type != ParserEvent.TEXT
+                && type != ParserEvent.START_TAG
+                && type != ParserEvent.END_TAG){
+            return -1;
         }
         ResXmlNode xmlNode = getXmlNode();
-        if(mCurrent.isEndComment() || type==ParserEvent.END_TAG){
+        if(mCurrent.isEndComment() || type == ParserEvent.END_TAG){
             return ((ResXmlElement)xmlNode).getEndLineNumber();
         }
-        if(type==ParserEvent.TEXT){
+        if(type == ParserEvent.TEXT){
             return ((ResXmlTextNode)xmlNode).getLineNumber();
         }
         return ((ResXmlElement)xmlNode).getStartLineNumber();

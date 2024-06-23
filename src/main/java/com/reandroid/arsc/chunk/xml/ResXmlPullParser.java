@@ -20,17 +20,22 @@ import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
+
+/**
+ * Direct implementation of:
+ * https://android.googlesource.com/platform/frameworks/base/+/main/core/java/android/content/res/XmlBlock.java
+ * */
 
 public class ResXmlPullParser implements XmlResourceParser {
+
     private PackageBlock mCurrentPackage;
     private final ParserEventList mEventList = new ParserEventList();
     private ResXmlDocument mDocument;
@@ -53,19 +58,9 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     public void setCurrentPackage(PackageBlock packageBlock){
         this.mCurrentPackage = packageBlock;
-        if(mDocument != null){
+        if(mDocument != null) {
             mDocument.setPackageBlock(packageBlock);
         }
-    }
-    public synchronized ResXmlPullParser getParser(){
-        if(isBusy()){
-            return new ResXmlPullParser(getCurrentPackage());
-        }
-        closeDocument();
-        return this;
-    }
-    public synchronized boolean isBusy() {
-        return !mEventList.hasNext();
     }
     public synchronized void setResXmlDocument(ResXmlDocument xmlDocument){
         closeDocument();
@@ -139,7 +134,21 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public String getPositionDescription() {
-        return null;
+        StringBuilder builder = new StringBuilder();
+        builder.append(" Binary XML file line #");
+        builder.append(mEventList.getLineNumber());
+        ResXmlElement element = getCurrentElement();
+        if(element != null) {
+            if (mEventList.getType() == START_TAG) {
+                builder.append(" START_TAG ");
+            } else {
+                builder.append(" END_TAG ");
+            }
+            builder.append('<');
+            builder.append(element.getName(true));
+            builder.append('>');
+        }
+        return builder.toString();
     }
     @Override
     public int getAttributeNameResource(int index) {
@@ -150,75 +159,38 @@ public class ResXmlPullParser implements XmlResourceParser {
         return 0;
     }
     @Override
-    public int getAttributeListValue(String namespace, String attribute, String[] options, int defaultValue) {
-        ResXmlAttribute xmlAttribute = getAttribute(namespace, attribute);
-        if(xmlAttribute == null){
-            return 0;
-        }
-        List<String> list = Arrays.asList(options);
-        int index = list.indexOf(decodeAttributeValue(xmlAttribute));
-        if(index==-1){
-            return defaultValue;
-        }
-        return index;
-    }
-    @Override
     public boolean getAttributeBooleanValue(String namespace, String attribute, boolean defaultValue) {
         ResXmlAttribute xmlAttribute = getAttribute(namespace, attribute);
-        if(xmlAttribute == null || xmlAttribute.getValueType() != ValueType.BOOLEAN){
-            return defaultValue;
+        if(xmlAttribute != null) {
+            int v = getAttributeIntValue(xmlAttribute, 0);
+            return v != 0;
         }
-        return xmlAttribute.getValueAsBoolean();
+        return defaultValue;
     }
     @Override
     public int getAttributeResourceValue(String namespace, String attribute, int defaultValue) {
         ResXmlAttribute xmlAttribute = getAttribute(namespace, attribute);
-        if(xmlAttribute == null){
-            return 0;
-        }
-        ValueType valueType=xmlAttribute.getValueType();
-        if(valueType==ValueType.ATTRIBUTE
-                ||valueType==ValueType.REFERENCE
-                ||valueType==ValueType.DYNAMIC_ATTRIBUTE
-                ||valueType==ValueType.DYNAMIC_REFERENCE){
+        if(xmlAttribute != null && xmlAttribute.getValueType() == ValueType.REFERENCE){
             return xmlAttribute.getData();
         }
         return defaultValue;
     }
     @Override
     public int getAttributeIntValue(String namespace, String attribute, int defaultValue) {
-        ResXmlAttribute xmlAttribute = getAttribute(namespace, attribute);
-        if(xmlAttribute == null){
-            return 0;
-        }
-        ValueType valueType=xmlAttribute.getValueType();
-        if(valueType==ValueType.DEC
-                ||valueType==ValueType.HEX){
-            return xmlAttribute.getData();
-        }
-        return defaultValue;
+        return getAttributeIntValue(getAttribute(namespace, attribute), defaultValue);
     }
     @Override
     public int getAttributeUnsignedIntValue(String namespace, String attribute, int defaultValue) {
-        ResXmlAttribute xmlAttribute = getAttribute(namespace, attribute);
-        if(xmlAttribute == null){
-            return 0;
-        }
-        ValueType valueType=xmlAttribute.getValueType();
-        if(valueType==ValueType.DEC){
-            return xmlAttribute.getData();
-        }
-        return defaultValue;
+        return getAttributeIntValue(getAttribute(namespace, attribute), defaultValue);
     }
     @Override
     public float getAttributeFloatValue(String namespace, String attribute, float defaultValue) {
         ResXmlAttribute xmlAttribute = getAttribute(namespace, attribute);
-        if(xmlAttribute == null){
-            return 0;
-        }
-        ValueType valueType=xmlAttribute.getValueType();
-        if(valueType==ValueType.FLOAT){
-            return Float.intBitsToFloat(xmlAttribute.getData());
+        if(xmlAttribute != null){
+            ValueType valueType = xmlAttribute.getValueType();
+            if(valueType == ValueType.FLOAT) {
+                return Float.intBitsToFloat(xmlAttribute.getData());
+            }
         }
         return defaultValue;
     }
@@ -226,64 +198,55 @@ public class ResXmlPullParser implements XmlResourceParser {
     @Override
     public int getAttributeListValue(int index, String[] options, int defaultValue) {
         ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
-        if(xmlAttribute == null){
-            return 0;
-        }
-        List<String> list = Arrays.asList(options);
-        int i = list.indexOf(decodeAttributeValue(xmlAttribute));
-        if(i==-1){
+        if(xmlAttribute == null ||
+                xmlAttribute.getValueType() != ValueType.STRING
+                || options == null || options.length == 0){
             return defaultValue;
         }
-        return index;
+        return convertValueToList(xmlAttribute.getValueAsString(), options, defaultValue);
+    }
+    @Override
+    public int getAttributeListValue(String namespace, String attribute, String[] options, int defaultValue) {
+        ResXmlAttribute xmlAttribute = getAttribute(namespace, attribute);
+        if(xmlAttribute == null ||
+                xmlAttribute.getValueType() != ValueType.STRING
+                || options == null || options.length == 0){
+            return defaultValue;
+        }
+        return convertValueToList(xmlAttribute.getValueAsString(), options, defaultValue);
     }
     @Override
     public boolean getAttributeBooleanValue(int index, boolean defaultValue) {
         ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
-        if(xmlAttribute == null || xmlAttribute.getValueType() != ValueType.BOOLEAN){
-            return defaultValue;
+        if(xmlAttribute != null) {
+            int v = getAttributeIntValue(xmlAttribute, 0);
+            return v != 0;
         }
-        return xmlAttribute.getValueAsBoolean();
+        return defaultValue;
     }
     @Override
     public int getAttributeResourceValue(int index, int defaultValue) {
         ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
-        if(xmlAttribute == null){
-            return 0;
-        }
-        ValueType valueType=xmlAttribute.getValueType();
-        if(valueType==ValueType.ATTRIBUTE
-                ||valueType==ValueType.REFERENCE
-                ||valueType==ValueType.DYNAMIC_ATTRIBUTE
-                ||valueType==ValueType.DYNAMIC_REFERENCE){
+        if(xmlAttribute != null && xmlAttribute.getValueType() == ValueType.REFERENCE){
             return xmlAttribute.getData();
         }
         return defaultValue;
     }
     @Override
     public int getAttributeIntValue(int index, int defaultValue) {
-        ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
-        if(xmlAttribute == null){
-            return defaultValue;
-        }
-        return xmlAttribute.getData();
+        return getAttributeIntValue(getResXmlAttributeAt(index), defaultValue);
     }
     @Override
     public int getAttributeUnsignedIntValue(int index, int defaultValue) {
-        ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
-        if(xmlAttribute == null){
-            return 0;
-        }
-        return xmlAttribute.getData();
+        return getAttributeIntValue(getResXmlAttributeAt(index), defaultValue);
     }
     @Override
     public float getAttributeFloatValue(int index, float defaultValue) {
         ResXmlAttribute xmlAttribute = getResXmlAttributeAt(index);
-        if(xmlAttribute == null){
-            return 0;
-        }
-        ValueType valueType=xmlAttribute.getValueType();
-        if(valueType==ValueType.FLOAT){
-            return Float.intBitsToFloat(xmlAttribute.getData());
+        if(xmlAttribute != null) {
+            if(xmlAttribute.getValueType() == ValueType.FLOAT){
+                return Float.intBitsToFloat(xmlAttribute.getData());
+            }
         }
         return defaultValue;
     }
@@ -319,7 +282,7 @@ public class ResXmlPullParser implements XmlResourceParser {
                 return attribute.getNameId();
             }
         }
-        return 0;
+        return defaultValue;
     }
     @Override
     public int getStyleAttribute() {
@@ -577,6 +540,27 @@ public class ResXmlPullParser implements XmlResourceParser {
             return mEventList.getElement();
         }
         return null;
+    }
+    private int convertValueToList(String value, String[] options, int defaultValue) {
+        if (!StringsUtil.isEmpty(value)) {
+            for (int i = 0; i < options.length; i++) {
+                if (value.equals(options[i])) {
+                    return i;
+                }
+            }
+        }
+        return defaultValue;
+    }
+
+    private int getAttributeIntValue(ResXmlAttribute xmlAttribute, int defaultValue) {
+        if(xmlAttribute != null) {
+            int type = xmlAttribute.getType() & 0xff;
+            if(type > 0x10 && type <= 0x1f) {
+                return xmlAttribute.getData();
+            }
+            // TODO: resolve if type is REFERENCE
+        }
+        return defaultValue;
     }
     private int getRealAttributeIndex(int index){
         if(isCountNamespacesAsAttribute()){
