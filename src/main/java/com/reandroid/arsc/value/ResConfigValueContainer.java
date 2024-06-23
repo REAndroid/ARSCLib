@@ -41,6 +41,9 @@ class ResConfigValueContainer extends ByteArray {
     int getIntValue(int offset){
         return getValue(offset, 4);
     }
+    long getLongValue(int offset){
+        return getLong(getBytesInternal(), offset);
+    }
     void setIntValue(int offset, int value){
         setValue(offset, 4, value);
     }

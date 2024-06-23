@@ -18,6 +18,7 @@ package com.reandroid.arsc.value;
 import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
 
 import java.util.Arrays;
@@ -518,15 +519,95 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
     }
     @Override
     public String toString(){
-        String q= getQualifiers();
-        if(q.length() == 0){
-            q="DEFAULT";
+        String q = getQualifiers();
+        if(q.length() == 0) {
+            return "[DEFAULT]";
         }
-        return "["+q+"]";
+        return "[" + q + "]";
     }
     @Override
-    public int compareTo(ResConfig resConfig) {
-        return getQualifiers().compareTo(resConfig.getQualifiers());
+    public int compareTo(ResConfig config) {
+        int i = CompareUtil.compare(getMnc(), config.getMnc());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getMcc(), config.getMcc());
+        if(i != 0) {
+            return i;
+        }
+        i = compareLocale(config);
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getGenderValue(), config.getGenderValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getDensityValue(), config.getDensityValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getTouchscreenValue(), config.getTouchscreenValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getOrientationValue(), config.getOrientationValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getNavigationValue(), config.getNavigationValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getKeyboardValue(), config.getKeyboardValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getInputFlagsValue(), config.getInputFlagsValue());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getScreenWidth(), config.getScreenWidth());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getScreenHeight(), config.getScreenHeight());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getSdkVersion(), config.getSdkVersion());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getScreenLayout(), config.getScreenLayout());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getScreenLayout2(), config.getScreenLayout2());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getColorMode(), config.getColorMode());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getUiMode(), config.getUiMode());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getSmallestScreenWidthDp(), config.getSmallestScreenWidthDp());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getScreenHeightDp(), config.getScreenHeightDp());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getScreenWidthDp(), config.getScreenWidthDp());
+        if(i != 0) {
+            return i;
+        }
+        return 0;
     }
 
     public static ResConfig parse(String qualifiers){
@@ -1131,7 +1212,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         }
     }
 
-    public static class Flag{
+    public static class Flag implements Comparable<Flag> {
         private final String name;
         private final int flag;
         Flag(String name, int flag){
@@ -1140,6 +1221,13 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         }
         public int getFlag() {
             return flag;
+        }
+        @Override
+        public int compareTo(Flag flag) {
+            if(flag == null) {
+                return 1;
+            }
+            return CompareUtil.compare(getFlag(), flag.getFlag());
         }
         @Override
         public boolean equals(Object obj) {

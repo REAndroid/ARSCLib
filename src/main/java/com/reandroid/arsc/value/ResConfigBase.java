@@ -21,6 +21,7 @@ import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
@@ -279,7 +280,31 @@ class ResConfigBase extends FixedBlockContainer
             mValuesContainer.setSize(configSize.get() - 4);
         }
     }
-
+    int compareLocale(ResConfigBase config) {
+        int offset = OFFSET_region;
+        int i = CompareUtil.compare(
+                mValuesContainer.getShortValue(offset),
+                config.mValuesContainer.getShortValue(offset));
+        if(i == 0) {
+            offset = OFFSET_language;
+            i = CompareUtil.compare(
+                    mValuesContainer.getShortValue(offset),
+                    config.mValuesContainer.getShortValue(offset));
+        }
+        if(i == 0) {
+            offset = OFFSET_localeScript;
+            i = CompareUtil.compare(
+                    mValuesContainer.getIntValue(offset),
+                    config.mValuesContainer.getIntValue(offset));
+        }
+        if(i == 0) {
+            offset = OFFSET_localeVariant;
+            i = CompareUtil.compare(
+                    mValuesContainer.getLongValue(offset),
+                    config.mValuesContainer.getLongValue(offset));
+        }
+        return i;
+    }
     public static int nearestSize(int size){
         if(size <= SIZE_16){
             return SIZE_16;
