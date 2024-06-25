@@ -20,10 +20,12 @@ import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliField;
 import com.reandroid.dex.value.*;
 import com.reandroid.utils.NumbersUtil;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 
@@ -207,6 +209,13 @@ public class StaticFieldDefArray extends FieldDefArray {
     public void merge(DefArray<?> defArray) {
         super.merge(defArray);
         linkStaticValues();
+    }
+
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.setStateWritingFields(true);
+        super.append(writer);
+        writer.setStateWritingFields(false);
     }
 
     @Override

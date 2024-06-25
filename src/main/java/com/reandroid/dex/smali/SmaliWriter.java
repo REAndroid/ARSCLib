@@ -41,6 +41,8 @@ public class SmaliWriter implements Appendable, Closeable {
     private StringBuilder comment;
 
     private RegistersTable currentRegistersTable;
+    private boolean stateWritingFields;
+    private boolean stateWritingInstructions;
 
     private SmaliWriterSetting writerSetting;
     private SequentialLabelFactory sequentialLabelFactory;
@@ -263,6 +265,20 @@ public class SmaliWriter implements Appendable, Closeable {
         comment.append(text);
         columnNumber += text.length();
     }
+    public Appendable getCommentAppender() {
+        StringBuilder comment = this.comment;
+        if(comment == null){
+            comment = new StringBuilder();
+            this.comment = comment;
+            if(this.indent != 0 || this.columnNumber != 0){
+                comment.append("    ");
+            }
+            comment.append('#');
+            comment.append(' ');
+            columnNumber += 2;
+        }
+        return comment;
+    }
     private void flushComment() throws IOException {
         StringBuilder comment = this.comment;
         if(comment == null){
@@ -333,6 +349,13 @@ public class SmaliWriter implements Appendable, Closeable {
     public void setSequentialLabelFactory(SequentialLabelFactory sequentialLabelFactory) {
         this.sequentialLabelFactory = sequentialLabelFactory;
     }
+    public boolean isCommentUnicodeStrings() {
+        SmaliWriterSetting setting = getWriterSetting();
+        if(setting != null && setting.isCommentUnicodeStrings()) {
+            return stateWritingFields || stateWritingInstructions;
+        }
+        return false;
+    }
 
     @Override
     public void close() throws IOException {
@@ -340,6 +363,7 @@ public class SmaliWriter implements Appendable, Closeable {
         if(writer == null){
             return;
         }
+        flushComment();
         this.writer = null;
         writer.close();
     }
@@ -360,6 +384,13 @@ public class SmaliWriter implements Appendable, Closeable {
             clearSequentialLabels();
         }
     }
+    public void setStateWritingFields(boolean stateWritingFields) {
+        this.stateWritingFields = stateWritingFields;
+    }
+    public void setStateWritingInstructions(boolean stateWritingInstructions) {
+        this.stateWritingInstructions = stateWritingInstructions;
+    }
+
     public void buildLabels(Iterator<? extends Label> iterator) {
         SequentialLabelFactory labelFactory = getOrCreateSequentialLabelFactory();
         if(labelFactory != null) {

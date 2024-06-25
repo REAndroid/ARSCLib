@@ -17,6 +17,7 @@
 package com.reandroid.dex.common;
 
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.utils.NumbersUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 
@@ -166,8 +167,10 @@ public class DexUtils {
         encodeString(appendable, text);
         appendable.append('"');
     }
-    public static void encodeString(Appendable appendable, String text) throws IOException {
-        for (int i = 0; i < text.length(); i++) {
+    public static boolean encodeString(Appendable appendable, String text) throws IOException {
+        boolean unicodeDetected = false;
+        int length = text.length();
+        for (int i = 0; i < length; i++) {
             char c = text.charAt(i);
 
             if ((c >= ' ') && (c < 0x7f)) {
@@ -189,12 +192,42 @@ public class DexUtils {
                         continue;
                 }
             }
-            appendable.append("\\u");
-            appendable.append(Character.forDigit(c >> 12, 16));
-            appendable.append(Character.forDigit((c >> 8) & 0x0f, 16));
-            appendable.append(Character.forDigit((c >> 4) & 0x0f, 16));
-            appendable.append(Character.forDigit(c & 0x0f, 16));
+            escapeChar(appendable, c);
+            if(!unicodeDetected && c != '…' && c > 0xff) {
+                unicodeDetected = true;
+            }
         }
+        return unicodeDetected;
+    }
+    public static void appendCommentString(int maxLength, Appendable appendable, String text) throws IOException {
+        int length = NumbersUtil.min(maxLength, text.length());
+        appendable.append('\'');
+        for (int i = 0; i < length; i++) {
+            char c = text.charAt(i);
+
+            if ((c >= ' ') && (c < 0x7f)) {
+                appendable.append(c);
+                continue;
+            } else if (c <= 0x7f) {
+                switch (c) {
+                    case '\n':
+                        appendable.append("\\n");
+                        continue;
+                    case '\r':
+                        appendable.append("\\r");
+                        continue;
+                    case '\t':
+                        appendable.append("\\t");
+                        continue;
+                }
+            }
+            if(Character.isDefined(c) && !Character.isWhitespace(c)) {
+                appendable.append(c);
+            } else {
+                escapeChar(appendable, c);
+            }
+        }
+        appendable.append('\'');
     }
     public static String quoteChar(char ch){
         StringBuilder builder = new StringBuilder();
@@ -234,12 +267,15 @@ public class DexUtils {
         }
 
         appendable.append('\'');
-        appendable.append("\\u");
-        appendable.append(Character.forDigit(ch >> 12, 16));
-        appendable.append(Character.forDigit((ch >> 8) & 0x0f, 16));
-        appendable.append(Character.forDigit((ch >> 4) & 0x0f, 16));
-        appendable.append(Character.forDigit(ch & 0x0f, 16));
+        escapeChar(appendable, ch);
         appendable.append('\'');
+    }
+    private static void escapeChar(Appendable appendable, char c) throws IOException {
+        appendable.append("\\u");
+        appendable.append(Character.forDigit(c >> 12, 16));
+        appendable.append(Character.forDigit((c >> 8) & 0x0f, 16));
+        appendable.append(Character.forDigit((c >> 4) & 0x0f, 16));
+        appendable.append(Character.forDigit(c & 0x0f, 16));
     }
     public static String decodeString(String text) {
         if(text.indexOf('\\') < 0){

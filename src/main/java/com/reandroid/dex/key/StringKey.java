@@ -20,6 +20,7 @@ import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
@@ -79,8 +80,14 @@ public class StringKey implements Key{
         }
         return this;
     }
-    public void append(SmaliWriter writer) throws IOException{
-        writer.append(DexUtils.quoteString(getString()));
+    @Override
+    public void append(SmaliWriter writer) throws IOException {
+        writer.append('"');
+        boolean unicodeDetected = DexUtils.encodeString(writer, getString());
+        writer.append('"');
+        if(unicodeDetected && writer.isCommentUnicodeStrings()) {
+            DexUtils.appendCommentString(250, writer.getCommentAppender(), getString());
+        }
     }
     @Override
     public int compareTo(Object obj) {
@@ -99,7 +106,7 @@ public class StringKey implements Key{
             return false;
         }
         StringKey stringKey = (StringKey) obj;
-        return Objects.equals(getString(), stringKey.getString());
+        return ObjectsUtil.equals(getString(), stringKey.getString());
     }
     @Override
     public int hashCode() {
@@ -129,6 +136,7 @@ public class StringKey implements Key{
         }
         String str;
         try {
+            reader.skip(1);
             str = reader.readEscapedString('"');
             if(reader.available() != 1 || reader.get() != '\"') {
                 return null;

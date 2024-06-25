@@ -467,10 +467,12 @@ public class InstructionList extends FixedBlockContainer implements
         InsBlockList insBlockList = getInsBlockList();
         Object lock = insBlockList.linkLocked();
         writer.buildLabels(getCodeLabels());
+        writer.setStateWritingInstructions(true);
         for (Ins ins : this) {
             writer.newLine();
             ins.append(writer);
         }
+        writer.setStateWritingInstructions(false);
         NullInstruction nullInstruction = getInsBlockList().getNullInstruction();
         if(nullInstruction != null) {
             writer.newLine();

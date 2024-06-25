@@ -170,7 +170,12 @@ public class StringData extends DataItem
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        DexUtils.appendQuotedString(writer, getString());
+        writer.append('"');
+        boolean unicodeDetected = DexUtils.encodeString(writer, getString());
+        writer.append('"');
+        if(unicodeDetected && writer.isCommentUnicodeStrings()) {
+            DexUtils.appendCommentString(250, writer.getCommentAppender(), getString());
+        }
     }
     @Override
     public int compareTo(StringData stringData) {
