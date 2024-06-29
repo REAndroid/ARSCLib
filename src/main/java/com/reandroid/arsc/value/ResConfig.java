@@ -1374,7 +1374,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             }
             StringBuilder builder = this.mBuilder;
             char separator;
-            if(script != null || variant != null){
+            if(script != null || variant != null || (region != null && region.length() == 3)){
                 builder.append('-');
                 builder.append('b');
                 separator = '+';
@@ -1555,7 +1555,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
                 return null;
             }
             String[] qualifiers = this.mQualifiers;
-            if(qualifiers == null || qualifiers.length == 0){
+            if(isEmpty(qualifiers)){
                 return null;
             }
             int length = qualifiers.length;
@@ -1734,22 +1734,15 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
                 return false;
             }
             Matcher matcher = PATTERN_LOCALE_SCRIPT_VARIANT.matcher(qualifier);
-            if(!matcher.find()){
-                return false;
+            if(matcher.find()) {
+                ResConfig resConfig = this.mConfig;
+                resConfig.setLanguage(trimPlus(matcher.group(1)));
+                resConfig.setRegion(trimPlus(matcher.group(2)));
+                resConfig.setLocaleScript(trimPlus(matcher.group(3)));
+                resConfig.setLocaleVariant(trimPlus(matcher.group(4)));
+                return true;
             }
-            String language = trimPlus(matcher.group(1));
-            String region = trimPlus(matcher.group(2));
-            String script = trimPlus(matcher.group(3));
-            String variant = trimPlus(matcher.group(4));
-            if(script == null && variant == null){
-                return false;
-            }
-            ResConfig resConfig = this.mConfig;
-            resConfig.setLanguage(language);
-            resConfig.setRegion(region);
-            resConfig.setLocaleScript(script);
-            resConfig.setLocaleVariant(variant);
-            return true;
+            return false;
         }
 
         private void parseLanguage(){
@@ -1943,7 +1936,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
         private static final Pattern PATTERN_DP = Pattern.compile("^([swh]+)([0-9]+)dp$");
         private static final Pattern PATTERN_WIDTH_HEIGHT = Pattern.compile("^([0-9]+)[xX]([0-9]+)$");
         private static final Pattern PATTERN_LOCALE_NUMBERING_SYSTEM = Pattern.compile("^u\\+nu\\+(.{1,8})$");
-        private static final Pattern PATTERN_LOCALE_SCRIPT_VARIANT = Pattern.compile("^b(\\+[a-z]{2})?(\\+r[A-Z]{2})?(\\+[A-Z][a-z]{3})?(\\+[A-Z]{2,8})?$");
+        private static final Pattern PATTERN_LOCALE_SCRIPT_VARIANT = Pattern.compile("^b(\\+[a-z]{2})?(\\+r?[A-Z0-9]{2,3})?(\\+[A-Z][a-z]{3})?(\\+[A-Z]{2,8})?$");
     }
 
     private static final ResConfig DEFAULT_INSTANCE = new ResConfig(SIZE_16);
