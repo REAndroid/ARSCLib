@@ -84,14 +84,14 @@ public class Overlayable extends Chunk<OverlayableHeader> implements JSONConvert
         headerBlock = getHeaderBlock();
         headerBlock.readBytes(chunkReader);
 
-        readOverlayablePlolicies(chunkReader);
+        readOverlayablePolicies(chunkReader);
         readExtraBytes(chunkReader);
 
         reader.offset(size);
         chunkReader.close();
         onChunkLoaded();
     }
-    private void readOverlayablePlolicies(BlockReader reader) throws IOException {
+    private void readOverlayablePolicies(BlockReader reader) throws IOException {
         HeaderBlock headerBlock = reader.readHeaderBlock();
         BlockList<OverlayablePolicy> policyList = this.policyList;
         while (headerBlock!=null && headerBlock.getChunkType()==ChunkType.OVERLAYABLE_POLICY){
