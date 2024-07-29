@@ -31,7 +31,6 @@ import com.reandroid.dex.value.NullValue;
 import com.reandroid.dex.value.StringValue;
 import com.reandroid.utils.collection.*;
 import com.reandroid.utils.io.FileUtil;
-import com.reandroid.utils.io.IOUtil;
 
 import java.io.*;
 import java.lang.annotation.ElementType;
@@ -231,21 +230,18 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         return classData.getMethod(methodKey) != null;
     }
     public DexMethod getDeclaredMethod(MethodKey methodKey) {
-        return getDeclaredMethod(methodKey, true);
+        return getDeclaredMethod(methodKey, false);
     }
     public DexMethod getDeclaredMethod(MethodKey methodKey, boolean ignoreReturnType) {
         Iterator<DexMethod> iterator = getDeclaredMethods();
         while (iterator.hasNext()){
             DexMethod dexMethod = iterator.next();
             MethodKey key = dexMethod.getKey();
-            if(!methodKey.equalsNameAndParameters(key)){
-                continue;
+            if(methodKey.equalsNameAndParameters(key)){
+                if(ignoreReturnType || methodKey.equalsReturnType(key)) {
+                    return dexMethod;
+                }
             }
-            if(!ignoreReturnType &&
-                    !methodKey.getReturnType().equals(key.getReturnType())) {
-                return null;
-            }
-            return dexMethod;
         }
         return null;
     }
@@ -288,7 +284,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     }
 
     public DexField getOrCreateStaticField(FieldKey fieldKey){
-        return createField(getOrCreateStatic(fieldKey));
+        return initializeField(getOrCreateStatic(fieldKey));
     }
     public FieldDef getOrCreateStatic(FieldKey fieldKey){
         return getOrCreateClassData().getOrCreateStatic(fieldKey);
@@ -298,17 +294,17 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         if(classData == null){
             return EmptyIterator.of();
         }
-        return ComputeIterator.of(classData.getStaticFields(), this::createField);
+        return ComputeIterator.of(classData.getStaticFields(), this::initializeField);
     }
     public Iterator<DexField> getInstanceFields() {
         ClassData classData = getClassData();
         if(classData == null){
             return EmptyIterator.of();
         }
-        return ComputeIterator.of(classData.getInstanceFields(), this::createField);
+        return ComputeIterator.of(classData.getInstanceFields(), this::initializeField);
     }
     public DexField getOrCreateInstanceField(FieldKey fieldKey){
-        return createField(getOrCreateInstance(fieldKey));
+        return initializeField(getOrCreateInstance(fieldKey));
     }
     public FieldDef getOrCreateInstance(FieldKey fieldKey){
         return getOrCreateClassData().getOrCreateInstance(fieldKey);
@@ -328,20 +324,20 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         if(classData == null){
             return EmptyIterator.of();
         }
-        return ComputeIterator.of(classData.getDirectMethods(), this::createMethod);
+        return ComputeIterator.of(classData.getDirectMethods(), this::initializeMethod);
     }
     public Iterator<DexMethod> getVirtualMethods() {
         ClassData classData = getClassData();
         if(classData == null){
             return EmptyIterator.of();
         }
-        return ComputeIterator.of(classData.getVirtualMethods(), this::createMethod);
+        return ComputeIterator.of(classData.getVirtualMethods(), this::initializeMethod);
     }
     public DexMethod getOrCreateDirectMethod(MethodKey methodKey){
-        return createMethod(getOrCreateClassData().getOrCreateDirect(methodKey));
+        return initializeMethod(getOrCreateClassData().getOrCreateDirect(methodKey));
     }
     public DexMethod getOrCreateVirtualMethod(MethodKey methodKey){
-        return createMethod(getOrCreateClassData().getOrCreateVirtual(methodKey));
+        return initializeMethod(getOrCreateClassData().getOrCreateVirtual(methodKey));
     }
     public DexMethod getOrCreateStaticMethod(MethodKey methodKey){
         DexMethod dexMethod = getOrCreateDirectMethod(methodKey);
@@ -349,10 +345,10 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         return dexMethod;
     }
 
-    DexField createField(FieldDef fieldDef){
+    DexField initializeField(FieldDef fieldDef){
         return new DexField(this, fieldDef);
     }
-    DexMethod createMethod(MethodDef methodDef){
+    DexMethod initializeMethod(MethodDef methodDef){
         return new DexMethod(this, methodDef);
     }
 
