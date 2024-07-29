@@ -29,6 +29,12 @@ public interface ExtraLine {
     boolean isEqualExtraLine(Object obj);
     int getSortOrder();
     boolean isRemoved();
+    default void updateTarget() {
+        Ins ins = getTargetIns();
+        if(ins != null && !ins.isRemoved()) {
+            setTargetAddress(ins.getAddress());
+        }
+    }
     default int getSortOrderFine(){
         return 0;
     }

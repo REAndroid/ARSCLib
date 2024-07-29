@@ -285,16 +285,7 @@ public class InsBlockList extends BlockList<Ins> {
     }
     private void updateExtraLines() {
         for (ExtraLine extraLine : extraLines) {
-            Ins ins = extraLine.getTargetIns();
-            if (extraLine instanceof DebugElement) {
-                if (ins == null) {
-                    continue;
-                }
-            }
-            if(ins == null) {
-                throw new DexException("Unlinked label \"" + extraLine + "\" , " + getCurrentMethodForDebug());
-            }
-            extraLine.setTargetAddress(ins.getAddress());
+            extraLine.updateTarget();
         }
     }
     private String getCurrentMethodForDebug() {

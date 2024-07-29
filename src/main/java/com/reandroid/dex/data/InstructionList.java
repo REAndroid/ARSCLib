@@ -462,6 +462,10 @@ public class InstructionList extends FixedBlockContainer implements
             }
         };
     }
+    public void linkExtraLines() {
+        InsBlockList insBlockList = getInsBlockList();
+        insBlockList.link();
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         InsBlockList insBlockList = getInsBlockList();

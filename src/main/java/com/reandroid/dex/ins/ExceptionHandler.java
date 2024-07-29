@@ -115,6 +115,25 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         return catchLabel;
     }
 
+    public void refreshAddresses() {
+        Ins handlerIns = getHandlerLabel().getTargetIns();
+        Ins startIns = getStartLabel().getTargetIns();
+        Ins endIns = getEndLabel().getTargetIns();
+        Ins catchIns = getCatchLabel().getTargetIns();
+
+        if(handlerIns != null && startIns != null && endIns != null && catchIns != null) {
+
+            int handlerAddress = handlerIns.getAddress();
+            int startAddress = startIns.getAddress();
+            int endAddress = endIns.getAddress();
+            int catchAddress = catchIns.getAddress();
+
+            setStartAddress(startIns.getAddress());
+            setCatchAddress(catchAddress);
+            setCodeUnit(handlerAddress - startAddress);
+        }
+    }
+
     public int getCatchAddress(){
         return getCatchAddressUle128().get();
     }
@@ -236,19 +255,25 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         }
         @Override
         public Ins getTargetIns() {
-            return targetIns;
+            Ins ins = this.targetIns;
+            if(ins != null && ins.isRemoved()) {
+                ins = null;
+                this.targetIns = null;
+            }
+            return ins;
         }
         @Override
         public void setTargetIns(Ins targetIns) {
             if(targetIns != this.targetIns) {
                 this.targetIns = targetIns;
                 if(targetIns != null) {
-                    if(targetIns.getAddress() != getTargetAddress()) {
-                        setTargetAddress(targetIns.getAddress());
-                    }
                     targetIns.addExtraLine(this);
                 }
             }
+        }
+        @Override
+        public void updateTarget() {
+            // update on handler is enough
         }
     }
     public static class HandlerLabel extends AbstractExceptionLabel {
@@ -268,6 +293,10 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         @Override
         public void setTargetAddress(int targetAddress){
             getHandler().setAddress(targetAddress);
+        }
+        @Override
+        public void updateTarget() {
+            getHandler().refreshAddresses();
         }
 
         @Override
