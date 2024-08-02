@@ -88,9 +88,11 @@ public interface AndroidManifest {
     int ID_maxSdkVersion = ObjectsUtil.of(0x01010271);
     int ID_minSdkVersion = ObjectsUtil.of(0x0101020c);
     int ID_name = ObjectsUtil.of(0x01010003);
+    int ID_requiredSplitTypes = ObjectsUtil.of(0x0101064e);
     int ID_resource = ObjectsUtil.of(0x01010025);
     int ID_roundIcon = ObjectsUtil.of(0x0101052c);
     int ID_screenOrientation = ObjectsUtil.of(0x0101001e);
+    int ID_splitTypes = ObjectsUtil.of(0x0101064f);
     int ID_targetActivity = ObjectsUtil.of(0x01010202);
     int ID_targetSdkVersion = ObjectsUtil.of(0x01010270);
     int ID_theme = ObjectsUtil.of(0x01010000);
