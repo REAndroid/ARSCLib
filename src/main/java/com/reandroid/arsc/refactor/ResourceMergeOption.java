@@ -20,6 +20,7 @@ import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.ApkFile;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
+import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.model.ResourceName;
 import com.reandroid.arsc.value.Entry;
@@ -87,7 +88,12 @@ public class ResourceMergeOption {
             keepEntries = resourceEntry -> !resourceEntry.isEmpty();
             this.keepEntries = keepEntries;
         }
-        return keepEntries;
+        return CollectionUtil.orFilter(keepEntries, getKeepStyleEntries());
+    }
+    private Predicate<? super ResourceEntry> getKeepStyleEntries() {
+        return (Predicate<ResourceEntry>) resourceEntry ->
+                TypeString.isTypeStyle(resourceEntry.getType()) &&
+                resourceEntry.getName().indexOf('.') > 0;
     }
     public void setKeepEntries(Predicate<? super ResourceEntry> keepEntries) {
         this.keepEntries = keepEntries;
