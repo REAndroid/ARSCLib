@@ -153,9 +153,22 @@ public class ResourceIdentifier extends Identifier{
     }
     public boolean renameBadSpec(){
         if(hasGoodName()){
-            return false;
+            return renameDollarPrefix();
         }
         setName(generateUniqueName());
+        return renameSpec();
+    }
+    public boolean renameDollarPrefix(){
+        if(!Identifier.isAapt()) {
+            return false;
+        }
+        String name = getName();
+        if(name.charAt(0) != '$'){
+            return false;
+        }
+        name = name.substring(1);
+
+        setName(name);
         return renameSpec();
     }
     public boolean renameSpec(){

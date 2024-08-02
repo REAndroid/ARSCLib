@@ -15,6 +15,7 @@
  */
 package com.reandroid.identifiers;
 
+import com.reandroid.arsc.coder.xml.XmlCoder;
 import com.reandroid.utils.HexUtil;
 
 import java.io.File;
@@ -89,6 +90,10 @@ public class Identifier implements Comparable<Identifier>{
         return getName() + "(" + getHexId() + ")";
     }
 
+    public static boolean isAapt() {
+        // TODO: make separate setting
+        return XmlCoder.getInstance().getSetting().isAapt();
+    }
     static final String XML_TAG_RESOURCES = "resources";
     static final String XML_TAG_PUBLIC = "public";
 
