@@ -19,6 +19,7 @@ import com.reandroid.arsc.array.ResValueMapArray;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.TypeBlock;
+import com.reandroid.arsc.coder.CoderSetting;
 import com.reandroid.arsc.coder.EncodeResult;
 import com.reandroid.arsc.coder.ValueCoder;
 import com.reandroid.arsc.coder.XmlSanitizer;
@@ -39,26 +40,64 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public class XmlCoder {
+
     private static XmlCoder sInstance;
 
-    public final ValuesXml VALUES_XML = new ValuesXml();
-    private XmlCoderLogger mLogger;
-    public XmlCoder(){
+    public final ValuesXml VALUES_XML;
+
+    private CoderSetting setting;
+
+    public XmlCoder() {
+        VALUES_XML = new ValuesXml(this);
     }
 
+    public CoderSetting getSetting() {
+        CoderSetting setting = this.setting;
+        if(setting == null) {
+            setting = new CoderSetting();
+            this.setting = setting;
+        }
+        return setting;
+    }
+    public void setSetting(CoderSetting setting) {
+        this.setting = setting;
+    }
+
+    public XmlStringDecoder getStringDecoder() {
+        return getSetting().getStringDecoder();
+    }
+
+    /**
+     * Use getSetting().setLogger(logger);
+     * */
+    @Deprecated
     public void setLogger(XmlCoderLogger logger) {
-        this.mLogger = logger;
-        VALUES_XML.setLogger(logger);
+        getSetting().setLogger(logger);
     }
+    /**
+     * Use getSetting().getLogger();
+     * */
+    @Deprecated
     public XmlCoderLogger getLogger() {
-        return mLogger;
+        return getSetting().getLogger();
     }
 
-    public static class ValuesXml{
+    public static class ValuesXml {
+
         private final BagRootAttribute BAG_ROOT_ATTRIBUTE = new BagRootAttribute();
-        private final BagChild BAG_CHILD = new BagChild();
-        private XmlCoderLogger mLogger;
-        public ValuesXml(){
+        private final BagChild BAG_CHILD;
+        private final XmlCoder xmlCoder;
+
+        public ValuesXml(XmlCoder xmlCoder){
+            this.xmlCoder = xmlCoder;
+            this.BAG_CHILD = new BagChild(this);
+        }
+
+        public XmlStringDecoder getStringDecoder() {
+            return xmlCoder.getStringDecoder();
+        }
+        public boolean isAapt() {
+            return xmlCoder.getSetting().isAapt();
         }
 
         public void decodeTable(File resourcesDir,
@@ -154,13 +193,11 @@ public class XmlCoder {
                 return;
             }
             ResValue resValue = entry.getResValue();
-            boolean escapeValues;
             if(resValue.getValueType() == ValueType.STRING){
-                escapeValues = ! TypeString.isTypeString(entry.getTypeName());
+                getStringDecoder().serializeText(resValue.getDataAsPoolString(), serializer);
             }else {
-                escapeValues = false;
+                resValue.serializeText(serializer, false);
             }
-            resValue.serializeText(serializer, escapeValues);
             endEntry(serializer, tag);
         }
         private String startEntry(XmlSerializer serializer, Entry entry) throws IOException {
@@ -182,6 +219,9 @@ public class XmlCoder {
         private boolean ignoreIdValue(Entry entry){
             if(!TypeString.isTypeId(entry.getTypeName())){
                 return false;
+            }
+            if(isAapt()) {
+                return true;
             }
             ResValue resValue = entry.getResValue();
             ValueType valueType = resValue.getValueType();
@@ -333,12 +373,8 @@ public class XmlCoder {
             }
         }
 
-
-        public void setLogger(XmlCoderLogger logger) {
-            this.mLogger = logger;
-        }
         public XmlCoderLogger getLogger() {
-            return mLogger;
+            return xmlCoder.getSetting().getLogger();
         }
         private void logMessage(String message){
             XmlCoderLogger logger = getLogger();
@@ -354,6 +390,15 @@ public class XmlCoder {
         }
     }
     public static class BagChild {
+
+        private final ValuesXml valuesXml;
+
+        public BagChild(ValuesXml valuesXml) {
+            this.valuesXml = valuesXml;
+        }
+        public XmlStringDecoder getStringDecoder() {
+            return valuesXml.getStringDecoder();
+        }
         public void encode(XMLElement child, Entry entry) throws IOException{
             ChildType childType = ChildType.getType(child);
             if(childType == null){
@@ -403,7 +448,7 @@ public class XmlCoder {
                 assert bagType != null;
                 startTag(serializer, bagType.getName());
                 serializer.attribute(null, ATTR_name, valueMap.decodeName());
-                serializer.text(valueMap.decodeValue());
+                serializer.attribute(null, ATTR_value, valueMap.decodeValue());
                 endTag(serializer, bagType.getName());
                 childCount++;
             }
@@ -422,7 +467,11 @@ public class XmlCoder {
                 }
                 startTag(serializer, TAG_item);
                 serializer.attribute(null, ATTR_quantity, attributeType.getName());
-                valueMap.serializeText(serializer);
+                if(valueMap.getValueType() == ValueType.STRING) {
+                    getStringDecoder().serializeText(valueMap.getDataAsPoolString(), serializer);
+                } else {
+                    valueMap.serializeText(serializer);
+                }
                 endTag(serializer, TAG_item);
                 childCount++;
             }
@@ -443,7 +492,13 @@ public class XmlCoder {
                     escapeValue = true;
                 }
                 serializer.attribute(null, ATTR_name, name);
-                valueMap.serializeText(serializer, escapeValue);
+
+                if(valueMap.getValueType() == ValueType.STRING) {
+                    getStringDecoder().serializeText(valueMap.getDataAsPoolString(), serializer);
+                } else {
+                    valueMap.serializeText(serializer, escapeValue);
+                }
+
                 endTag(serializer, TAG_item);
                 childCount ++;
             }
@@ -458,7 +513,11 @@ public class XmlCoder {
             while (iterator.hasNext()){
                 ResValueMap valueMap = iterator.next();
                 startTag(serializer, TAG_item);
-                valueMap.serializeText(serializer, escapeValues);
+                if(valueMap.getValueType() == ValueType.STRING) {
+                    getStringDecoder().serializeText(valueMap.getDataAsPoolString(), serializer);
+                } else {
+                    valueMap.serializeText(serializer, escapeValues);
+                }
                 endTag(serializer, TAG_item);
                 childCount ++;
             }
@@ -480,7 +539,7 @@ public class XmlCoder {
                         + " name: " + child.getDebugText());
             }
 
-            EncodeResult encodeResult = ValueCoder.encode(child.getTextContent().trim());
+            EncodeResult encodeResult = ValueCoder.encode(getValue(child));
             if(encodeResult == null){
                 // TODO: unbelievable! we always expect INT/HEX on enum/flags lets throw exception to see
                 throw new XmlEncodeException("Unexpected value: " + child.getDebugText());
@@ -569,6 +628,16 @@ public class XmlCoder {
                 throw new XmlEncodeException(encodeResult.getError() + ": " + child.getDebugText());
             }
         }
+        private String getValue(XMLElement element) {
+            String value = element.getAttributeValue(ATTR_value);
+            if(value == null) {
+                value = element.getTextContent();
+                if(value != null) {
+                    value = value.trim();
+                }
+            }
+            return value;
+        }
     }
     public static class BagRootAttribute {
         public void decode(XmlSerializer serializer, Entry entry) throws IOException {
@@ -600,8 +669,10 @@ public class XmlCoder {
                 serializer.attribute(null, ATTR_parent, parent);
                 return;
             }
-            if(mapEntry.isStyle()){
-                if(mapEntry.childesCount() == 0){
+            if(mapEntry.isStyle()) {
+                if(mapEntry.childesCount() == 0 ||
+                        entry.getName().indexOf('.') > 0 ||
+                        entry.getResourceEntry().getConfigsCount() > 1) {
                     serializer.attribute(null, ATTR_parent, "");
                 }
             }
@@ -752,6 +823,7 @@ public class XmlCoder {
     static final String ATTR_parent = "parent";
     static final String ATTR_quantity = "quantity";
     static final String ATTR_type = "type";
+    static final String ATTR_value = "value";
 
     static final String TAG_item = "item";
 }
