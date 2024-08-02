@@ -28,7 +28,7 @@ public class RawXmlStringDecoder implements XmlStringDecoder {
 
     @Override
     public void serializeText(StringItem stringItem, XmlSerializer serializer) throws IOException {
-        stringItem.serializeText(serializer, false);
+        stringItem.serializeText(serializer, true);
     }
     @Override
     public String decodeAttributeValue(StringItem stringItem) {
