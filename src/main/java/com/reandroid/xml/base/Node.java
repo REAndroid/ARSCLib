@@ -15,7 +15,9 @@
  */
 package com.reandroid.xml.base;
 
-public interface Node extends XmlSerializable, XmlReader{
+import java.io.IOException;
+
+public interface Node extends XmlSerializable, XmlReader {
 
     Node getParentNode();
 
@@ -23,4 +25,15 @@ public interface Node extends XmlSerializable, XmlReader{
     void setLineNumber(int lineNumber);
     int getColumnNumber();
     void setColumnNumber(int columnNumber);
+
+    default String toXmlString() {
+        return toXmlString(true);
+    }
+    default String toXmlString(boolean indent){
+        try {
+            return XmlSerializable.toXmlString(this, indent);
+        } catch (IOException ignored) {
+            return null;
+        }
+    }
 }

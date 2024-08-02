@@ -98,7 +98,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
     public String getPrefix(){
         XMLNamespace namespace = getNamespace();
         if(namespace != null){
-            return namespace.getUri();
+            return namespace.getPrefix();
         }
         return null;
     }
@@ -389,7 +389,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
         return null;
     }
     public int getDepth(){
-        int result = 0;
+        int result = 1;
         XMLElement parent = getParentElement();
         while (parent != null){
             result ++;
@@ -564,6 +564,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
         }
     }
     public void parseAttributes(XmlPullParser parser){
+        boolean processNamespaces = parser.getFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES);
         int count = parser.getAttributeCount();
         for(int i = 0; i < count; i++){
             String name = parser.getAttributeName(i);
@@ -571,6 +572,9 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
             if(!XMLNamespace.looksNamespace(name, value)){
                 String uri = parser.getAttributeNamespace(i);
                 String prefix = parser.getAttributePrefix(i);
+                if(processNamespaces) {
+                    name = XMLUtil.splitName(name);
+                }
                 addAttribute(uri, prefix, name, value);
             }
         }
@@ -658,19 +662,6 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
         XMLElement element = new XMLElement();
         element.parse(parser);
         return element;
-    }
-    public static Iterator<XMLElement> iterateElements(XmlPullParser parser) throws IOException, XmlPullParserException {
-        return new Iterator<XMLElement>() {
-            @Override
-            public boolean hasNext() {
-                return false;
-            }
-
-            @Override
-            public XMLElement next() {
-                return null;
-            }
-        };
     }
 
     private static final ArrayCollection<XMLAttribute> EMPTY_ATTRIBUTES = ArrayCollection.empty();

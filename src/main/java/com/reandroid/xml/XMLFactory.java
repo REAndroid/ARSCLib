@@ -16,6 +16,7 @@
 package com.reandroid.xml;
 
 import com.reandroid.common.FileChannelInputStream;
+import com.reandroid.utils.io.FileUtil;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -51,7 +52,12 @@ public class XMLFactory {
         return parser;
     }
     public static XmlPullParser newPullParser(){
-        return new CloseableParser();
+        XmlPullParser parser = new CloseableParser();
+        try {
+            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
+        } catch (Throwable ignored) {
+        }
+        return parser;
     }
 
     public static XmlSerializer newSerializer(Writer writer) throws IOException{
@@ -59,12 +65,8 @@ public class XMLFactory {
         serializer.setOutput(writer);
         return serializer;
     }
-    public static XmlSerializer newSerializer(File file) throws IOException{
-        File dir = file.getParentFile();
-        if(dir != null && !dir.exists()){
-            dir.mkdirs();
-        }
-        return newSerializer(new FileOutputStream(file));
+    public static XmlSerializer newSerializer(File file) throws IOException {
+        return newSerializer(FileUtil.outputStream(file));
     }
     public static XmlSerializer newSerializer(OutputStream outputStream) throws IOException{
         XmlSerializer serializer = newSerializer();

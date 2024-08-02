@@ -45,11 +45,14 @@ public class CloseableSerializer extends KXmlSerializer implements Closeable {
     }
     @Override
     public void close() throws IOException {
-        if(writer != null){
+        if(writer != null) {
+            flush();
             writer.close();
+            writer = null;
         }
-        if(outputStream != null){
+        if(outputStream != null) {
             outputStream.close();
+            outputStream = null;
         }
     }
 }

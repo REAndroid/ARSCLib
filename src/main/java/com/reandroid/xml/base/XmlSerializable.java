@@ -15,10 +15,27 @@
  */
 package com.reandroid.xml.base;
 
+import com.reandroid.xml.XMLFactory;
+import com.reandroid.xml.XMLUtil;
+import com.reandroid.xml.XmlIndentingSerializer;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
+import java.io.StringWriter;
 
 public interface XmlSerializable {
+
     void serialize(XmlSerializer serializer) throws IOException;
+
+    static String toXmlString(XmlSerializable serializable, boolean indent) throws IOException {
+        StringWriter stringWriter = new StringWriter();
+        XmlSerializer serializer = XMLFactory.newSerializer(stringWriter);
+        if(indent) {
+            serializer = XmlIndentingSerializer.create(serializer);
+        }
+        serializable.serialize(serializer);
+        XMLUtil.close(serializer);
+        stringWriter.close();
+        return stringWriter.toString();
+    }
 }
