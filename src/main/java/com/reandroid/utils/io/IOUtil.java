@@ -30,7 +30,15 @@ public class IOUtil {
         return new String(readFully(inputStream), StandardCharsets.UTF_8);
     }
     public static void writeUtf8(String content, File file) throws IOException {
-        writeUtf8(content, FileUtil.outputStream(file));
+        File tmp = file;
+        if(file.isFile()) {
+            tmp = FileUtil.toTmpName(file);
+        }
+        writeUtf8(content, FileUtil.outputStream(tmp));
+        if(!tmp.equals(file)) {
+            file.delete();
+            tmp.renameTo(file);
+        }
     }
     public static void writeUtf8(String content, OutputStream outputStream) throws IOException {
         byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
