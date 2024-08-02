@@ -15,6 +15,8 @@
  */
 package com.reandroid.utils.io;
 
+import java.io.File;
+
 public class FilePermissions {
 
     private int value;
@@ -22,6 +24,28 @@ public class FilePermissions {
     public FilePermissions() {
     }
 
+    public boolean apply(File file) {
+
+        Permission owner = owner();
+        Permission group = group();
+        Permission others = others();
+        boolean result;
+
+        boolean applied = file.setExecutable(owner.execute(),
+                owner.execute() && !group.execute() && !others.execute());
+        result = applied;
+
+        applied = file.setWritable(owner.write(),
+                owner.write() && !group.write() && !others.write());
+
+        result |= applied;
+        applied = file.setReadable(owner.read(),
+                owner.read() && !group.read() && !others.read());
+
+        result |= applied;
+
+        return result;
+    }
     public int get() {
         return value;
     }

@@ -178,6 +178,14 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
         }else {
             extractStored(file, archiveEntry);
         }
+        applyAttributes(archiveEntry, file);
+    }
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private void applyAttributes(ArchiveEntry archiveEntry, File file) {
+        CentralEntryHeader ceh = archiveEntry.getCentralEntryHeader();
+        ceh.getFilePermissions().apply(file);
+        long time = Archive.dosToJavaDate(ceh.getDosTime()).getTime();
+        file.setLastModified(time);
     }
     abstract void extractStored(File file, ArchiveEntry archiveEntry) throws IOException;
     private void extractCompressed(File file, ArchiveEntry archiveEntry) throws IOException {
