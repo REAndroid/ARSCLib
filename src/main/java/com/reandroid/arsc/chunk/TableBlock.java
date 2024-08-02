@@ -843,6 +843,12 @@ public class TableBlock extends Chunk<TableHeader>
         tableBlock.readBytes(inputStream);
         return tableBlock;
     }
+    public static TableBlock createEmpty() {
+        TableBlock tableBlock = new TableBlock();
+        tableBlock.pickOrEmptyPackage();
+        tableBlock.setNull(true);
+        return tableBlock;
+    }
 
     public static boolean isResTableBlock(InputStream inputStream){
         try {

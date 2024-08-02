@@ -229,14 +229,9 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
     }
     private void ensureTableBlock(){
         ApkModule apkModule = getApkModule();
-        if(apkModule.hasTableBlock()){
-            return;
+        if(apkModule.ensureTableBlock()){
+            logMessage("Missing " + TableBlock.FILE_NAME + ", created empty");
         }
-        TableBlock tableBlock = new TableBlock();
-        tableBlock.pickOrEmptyPackage();
-        apkModule.setTableBlock(tableBlock);
-        tableBlock.setNull(true);
-        logMessage("Missing " + TableBlock.FILE_NAME + ", created empty");
     }
 
     public boolean isLogErrors() {

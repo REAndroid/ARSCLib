@@ -765,6 +765,13 @@ public class ApkModule implements ApkFile, Closeable {
         updateExternalFramework();
         ensureLoadedManifestLinked();
     }
+    public boolean ensureTableBlock() {
+        if(!hasTableBlock()) {
+            setTableBlock(TableBlock.createEmpty());
+            return true;
+        }
+        return false;
+    }
     /**
      * Use getAndroidManifest()
      * */
@@ -845,8 +852,9 @@ public class ApkModule implements ApkFile, Closeable {
         }
         if(packageBlock != null) {
             manifestBlock.setPackageBlock(packageBlock);
-            manifestBlock.setApkFile(this);
         }
+        manifestBlock.setApkFile(this);
+        ensureFrameworkLinked();
     }
     private void unlinkLoadedManifest() {
         AndroidManifestBlock manifestBlock = this.mManifestBlock;
@@ -855,6 +863,24 @@ public class ApkModule implements ApkFile, Closeable {
         }
         manifestBlock.setPackageBlock(null);
         manifestBlock.setApkFile(null);
+    }
+    private void ensureFrameworkLinked() {
+        if(mDisableLoadFramework) {
+            return;
+        }
+        TableBlock tableBlock = this.mTableBlock;
+        if(tableBlock == null ||
+                tableBlock instanceof FrameworkTable ||
+                isAndroid(tableBlock)) {
+            return;
+        }
+        Integer preferred = this.preferredFramework;
+        if(preferred != null || (mManifestBlock != null && !tableBlock.hasFramework())) {
+            try {
+                initializeAndroidFramework(tableBlock, preferred);
+            } catch (IOException ignored) {
+            }
+        }
     }
     private void updateExternalFramework(){
         TableBlock tableBlock = mTableBlock;
