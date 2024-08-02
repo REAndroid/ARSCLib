@@ -661,6 +661,16 @@ public class ApkModule implements ApkFile, Closeable {
         });
         return CollectionUtil.toList(itr);
     }
+    public int getVersionCode() {
+        AndroidManifestBlock manifestBlock = getAndroidManifest();
+        if(manifestBlock != null) {
+            Integer versionCode = manifestBlock.getVersionCode();
+            if(versionCode != null) {
+                return versionCode;
+            }
+        }
+        return 0;
+    }
     public String getPackageName(){
         if(hasAndroidManifest()){
             return getAndroidManifest().getPackageName();
@@ -1141,20 +1151,62 @@ public class ApkModule implements ApkFile, Closeable {
     }
 
     public void merge(ApkModule module) throws IOException {
-        if(module==null||module==this){
+        merge(module, false);
+    }
+    public void merge(ApkModule module, boolean force) throws IOException {
+        if(module == null || module == this){
             return;
         }
-        logMessage("Merging: "+module.getModuleName());
+        logMessage("Merging: " + module.getModuleName());
+        validateMerge(module, force);
         mergeDexFiles(module);
         mergeTable(module);
         mergeFiles(module);
         getUncompressedFiles().merge(module.getUncompressedFiles());
     }
+    private void validateMerge(ApkModule apkModule, boolean force) throws IOException{
+        if(!hasTableBlock()) {
+            return;
+        }
+        String packageName = getPackageName();
+        int code = getVersionCode();
+        if(packageName == null || code == 0) {
+            return;
+        }
+        String packageName2 = apkModule.getPackageName();
+        int code2 = apkModule.getVersionCode();
+        if(packageName2 == null || code2 == 0) {
+            return;
+        }
+        if(!packageName.equals(packageName2)) {
+            return;
+        }
+        if(code == code2) {
+            return;
+        }
+        StringBuilder builder = new StringBuilder();
+        if(!force) {
+            builder.append("WARN: ");
+        }
+        builder.append("Incompatible to merge: {");
+        builder.append(packageName);
+        builder.append(", ");
+        builder.append(code);
+        builder.append("}, with {");
+        builder.append(packageName2);
+        builder.append(", ");
+        builder.append(code2);
+        builder.append("}");
+        String msg = builder.toString();
+        if(force) {
+            throw new IOException(msg);
+        }
+        logMessage(msg);
+    }
     private void mergeTable(ApkModule module) {
         if(!module.hasTableBlock()){
             return;
         }
-        logMessage("Merging resource table: "+module.getModuleName());
         TableBlock exist;
         if(!hasTableBlock()){
             exist=new TableBlock();

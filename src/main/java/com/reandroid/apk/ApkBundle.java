@@ -33,6 +33,9 @@ public class ApkBundle implements Closeable {
     }
 
     public ApkModule mergeModules() throws IOException {
+        return mergeModules(false);
+    }
+    public ApkModule mergeModules(boolean force) throws IOException {
         List<ApkModule> moduleList=getApkModuleList();
         if(moduleList.size()==0){
             throw new FileNotFoundException("Nothing to merge, empty modules");
@@ -45,7 +48,7 @@ public class ApkBundle implements Closeable {
         if(base == null){
             base = getLargestTableModule();
         }
-        result.merge(base);
+        result.merge(base, force);
         ApkSignatureBlock signatureBlock = null;
         for(ApkModule module:moduleList){
             ApkSignatureBlock asb = module.getApkSignatureBlock();
@@ -58,7 +61,7 @@ public class ApkBundle implements Closeable {
             if(signatureBlock == null){
                 signatureBlock = asb;
             }
-            result.merge(module);
+            result.merge(module, force);
         }
 
         result.setApkSignatureBlock(signatureBlock);
