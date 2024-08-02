@@ -224,6 +224,11 @@ public class BlockReader extends InputStream {
         mMark=pos;
     }
     @Override
+    public boolean markSupported() {
+        return true;
+    }
+
+    @Override
     public int available(){
         return mLength-mPosition;
     }
