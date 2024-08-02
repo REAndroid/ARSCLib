@@ -16,13 +16,14 @@
 package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.DirectStreamReader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-public class IntegerItem extends BlockItem implements ReferenceItem{
+public class IntegerItem extends BlockItem implements ReferenceItem, DirectStreamReader {
     private int mCache;
     public IntegerItem(){
         super(4);

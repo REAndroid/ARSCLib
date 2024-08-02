@@ -149,7 +149,7 @@ public abstract class BlockItem extends Block {
         }
         onBytesChanged();
         super.notifyBlockLoad();
-        return bytes.length;
+        return offset;
     }
     public void setBytes(BlockItem blockItem){
         if(blockItem != this) {
