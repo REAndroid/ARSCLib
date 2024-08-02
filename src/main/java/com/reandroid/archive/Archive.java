@@ -160,7 +160,11 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
     public void extract(File file, ArchiveEntry archiveEntry) throws IOException{
         extract(file, archiveEntry, null);
     }
-    public void extract(File file, ArchiveEntry archiveEntry, APKLogger logger) throws IOException{
+    public void extract(File file, ArchiveEntry archiveEntry, APKLogger logger) throws IOException {
+        if(archiveEntry.isDirectory()) {
+            // TODO: make directories considering file collision
+            return;
+        }
         FileUtil.ensureParentDirectory(file);
         if(logger != null){
             long size = archiveEntry.getDataSize();
