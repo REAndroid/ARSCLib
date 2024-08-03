@@ -15,17 +15,19 @@
   */
 package com.reandroid.apk;
 
+import com.reandroid.utils.CRCDigest;
+
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.zip.CRC32;
 
+@Deprecated
 public class CrcOutputStream extends OutputStream {
-    private final CRC32 crc;
+    private final CRCDigest crc;
     private long length;
     private long mCheckSum;
     public CrcOutputStream() {
         super();
-        this.crc = new CRC32();
+        this.crc = new CRCDigest();
     }
     public long getLength(){
         return length;

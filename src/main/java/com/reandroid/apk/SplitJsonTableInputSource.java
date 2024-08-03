@@ -17,6 +17,7 @@ package com.reandroid.apk;
 
 import com.reandroid.archive.BlockInputSource;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.utils.CRCDigest;
 
 import java.io.*;
 
@@ -54,9 +55,9 @@ public class SplitJsonTableInputSource extends BlockInputSource<TableBlock> {
     }
     @Override
     public long getCrc() throws IOException {
-        CrcOutputStream outputStream=new CrcOutputStream();
+        CRCDigest outputStream = new CRCDigest();
         this.write(outputStream);
-        return outputStream.getCrcValue();
+        return outputStream.getValue();
     }
     public TableBlock getTableBlock() throws IOException {
         if(mCache!=null){

@@ -17,13 +17,13 @@ package com.reandroid.archive;
 
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.utils.CRCDigest;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.io.FileUtil;
 
 import java.io.*;
 import java.util.Comparator;
-import java.util.zip.CRC32;
 
 public abstract class InputSource {
     private final String name;
@@ -174,7 +174,7 @@ public abstract class InputSource {
     private void calculateCrc() throws IOException {
         InputStream inputStream=openStream();
         long length=0;
-        CRC32 crc = new CRC32();
+        CRCDigest crc = new CRCDigest();
         int bytesRead;
         byte[] buffer = new byte[1024*64];
         while((bytesRead = inputStream.read(buffer)) != -1) {

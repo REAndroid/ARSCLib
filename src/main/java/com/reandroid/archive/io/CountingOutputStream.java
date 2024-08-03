@@ -15,23 +15,24 @@
  */
 package com.reandroid.archive.io;
 
+import com.reandroid.utils.CRCDigest;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.zip.CRC32;
 
 public class CountingOutputStream<T extends OutputStream> extends OutputStream {
     private final T outputStream;
-    private CRC32 crc;
+    private CRCDigest crc;
     private long size;
     private boolean mClosed;
     public CountingOutputStream(T outputStream, boolean disableCrc){
         this.outputStream = outputStream;
-        CRC32 crc32;
+        CRCDigest crc32;
         if(disableCrc){
             crc32 = null;
         }else {
-            crc32 = new CRC32();
+            crc32 = new CRCDigest();
         }
         this.crc = crc32;
     }
@@ -42,7 +43,7 @@ public class CountingOutputStream<T extends OutputStream> extends OutputStream {
     public void disableCrc(boolean disableCrc) {
         if(!disableCrc){
             if(crc == null){
-                this.crc = new CRC32();
+                this.crc = new CRCDigest();
             }
         }else{
             this.crc = null;
@@ -50,7 +51,7 @@ public class CountingOutputStream<T extends OutputStream> extends OutputStream {
     }
 
     public void reset(){
-        this.crc = new CRC32();
+        this.crc = new CRCDigest();
         this.size = 0L;
     }
     public T getOutputStream() {

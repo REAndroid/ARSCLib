@@ -15,25 +15,25 @@
  */
 package com.reandroid.archive.io;
 
+import com.reandroid.utils.CRCDigest;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.zip.CRC32;
 
 public class CountingInputStream<T extends InputStream> extends InputStream {
     private final T inputStream;
-    private final CRC32 crc;
+    private final CRCDigest crc;
     private long size;
     private long mCheckSum;
     private boolean mFinished;
     public CountingInputStream(T inputStream, boolean disableCrc){
         this.inputStream = inputStream;
-        CRC32 crc32;
+        CRCDigest crc32;
         if(disableCrc){
             crc32 = null;
         }else {
-            crc32 = new CRC32();
+            crc32 = new CRCDigest();
         }
         this.crc = crc32;
     }
