@@ -530,6 +530,14 @@ public class TableBlock extends Chunk<TableHeader>
         }
         return true;
     }
+    public boolean initializeAsEmpty() {
+        if(isEmpty()) {
+            setNull(true);
+            setCurrentPackage(pickOrEmptyPackage());
+            return true;
+        }
+        return false;
+    }
     public boolean isMultiPackage() {
         return size() > 1;
     }
@@ -845,8 +853,7 @@ public class TableBlock extends Chunk<TableHeader>
     }
     public static TableBlock createEmpty() {
         TableBlock tableBlock = new TableBlock();
-        tableBlock.pickOrEmptyPackage();
-        tableBlock.setNull(true);
+        tableBlock.initializeAsEmpty();
         return tableBlock;
     }
 

@@ -82,8 +82,15 @@ public class XMLTableBlockEncoder {
     public void scanResourcesDirectory(File resourcesDirectory) throws IOException {
         try {
             scanResourceFiles(resourcesDirectory);
+            ensureEmptyTable();
         } catch (XmlPullParserException ex) {
             throw new IOException(ex);
+        }
+    }
+    private void ensureEmptyTable() {
+        TableBlock tableBlock = this.getTableBlock();
+        if(tableBlock.initializeAsEmpty()) {
+            logMessage("Using <NULL> resource table");
         }
     }
     private void scanResourceFiles(File resourcesDirectory) throws IOException, XmlPullParserException {
