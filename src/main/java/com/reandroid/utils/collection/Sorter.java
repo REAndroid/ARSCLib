@@ -30,7 +30,15 @@ public abstract class Sorter {
         }
         int i = begin;
         int j = end;
-        setMid(begin + (end - begin) / 2);
+        int mid = begin + (end - begin) / 2;
+        setMid(mid);
+        if(i == mid) {
+            if(compareToMid(j) < 0) {
+                onSwap(i, j);
+                sorted = true;
+            }
+            return;
+        }
         while (i <= j) {
             while (compareToMid(i) < 0) {
                 i++;
