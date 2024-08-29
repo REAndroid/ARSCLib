@@ -29,11 +29,11 @@ import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ResConfig;
 import com.reandroid.common.FileChannelInputStream;
+import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -192,7 +192,7 @@ public class FrameworkTable extends TableBlock {
         tableStringPool.refresh();
     }
     private void shrinkTableString(TableString zero, TableString tableString){
-        List<ReferenceItem> allRef = new ArrayList<>(tableString.getReferencedList());
+        List<ReferenceItem> allRef = new ArrayCollection<>(tableString.getReferencedList());
         tableString.removeAllReference();
         for(ReferenceItem item:allRef){
             item.set(zero.getIndex());

@@ -301,7 +301,7 @@ public class ResXmlElement extends ResXmlNode implements
     }
     int removeUnusedNamespaces(){
         int count = 0;
-        List<ResXmlStartNamespace> nsList = new ArrayList<>(getStartNamespaceList());
+        List<ResXmlStartNamespace> nsList = new ArrayCollection<>(getStartNamespaceList());
         for(ResXmlStartNamespace ns : nsList){
             boolean removed = ns.removeIfNoReference();
             if(removed){

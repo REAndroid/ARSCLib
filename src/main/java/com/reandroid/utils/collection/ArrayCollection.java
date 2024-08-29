@@ -57,7 +57,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
             elements = EMPTY_OBJECTS;
         }else {
             elements = collection.toArray();
-            if(collection instanceof ArrayCollection){
+            if(collection.getClass() != ArrayCollection.class){
                 elements = elements.clone();
             }
         }
@@ -370,7 +370,11 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
 
     @Override
     public Object[] toArray() {
-        return trimToSize(getElements(), size());
+        Object[] results = trimToSize(getElements(), size());
+        if (results == this.mElements) {
+            results = results.clone();
+        }
+        return results;
     }
     public Object[] getElements() {
         return this.mElements;

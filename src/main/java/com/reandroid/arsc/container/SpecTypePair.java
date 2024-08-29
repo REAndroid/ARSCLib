@@ -35,6 +35,7 @@ import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.MergingIterator;
@@ -302,7 +303,7 @@ public class SpecTypePair extends BlockContainer<Block>
         return getParent(PackageBlock.class);
     }
     public List<Entry> listEntries(int entryId){
-        List<Entry> results=new ArrayList<>();
+        List<Entry> results=new ArrayCollection<>();
         Iterator<TypeBlock> itr = mTypeBlockArray.iterator(true);
         while (itr.hasNext()){
             TypeBlock typeBlock=itr.next();
@@ -315,7 +316,7 @@ public class SpecTypePair extends BlockContainer<Block>
         return results;
     }
     public List<Entry> listEntries(String entryName){
-        List<Entry> results = new ArrayList<>();
+        List<Entry> results = new ArrayCollection<>();
         Iterator<TypeBlock> itr = mTypeBlockArray.iterator(true);
         while (itr.hasNext()){
             TypeBlock typeBlock = itr.next();

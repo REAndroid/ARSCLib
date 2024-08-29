@@ -61,7 +61,7 @@ public class ReferenceResolver{
     }
     public synchronized List<Entry> resolveAll(int referenceId, Predicate<Entry> filter){
         resolveReference(referenceId, filter);
-        List<Entry> results = new ArrayList<>(this.results);
+        List<Entry> results = new ArrayCollection<>(this.results);
         reset();
         return results;
     }
@@ -105,7 +105,7 @@ public class ReferenceResolver{
         }
     }
     private List<Entry> listNonNullEntries(int resourceId){
-        List<Entry> results = new ArrayList<>();
+        List<Entry> results = new ArrayCollection<>();
         ResourceEntry resourceEntry = this.entryStore.getResource(resourceId);
         if(resourceEntry == null){
             return results;

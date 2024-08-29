@@ -17,8 +17,8 @@ package com.reandroid.arsc.chunk.xml;
 
 
 import com.reandroid.arsc.coder.XmlSanitizer;
+import com.reandroid.utils.collection.ArrayCollection;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -28,7 +28,7 @@ public class ParserEventList implements Iterator<ParserEvent> {
     private ParserEvent mCurrent;
     private int type = -1;
     public ParserEventList(){
-        this.eventList = new ArrayList<>();
+        this.eventList = new ArrayCollection<>();
     }
     public void clear(){
         this.eventList.clear();

@@ -32,11 +32,11 @@ import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -288,14 +288,8 @@ public class TypeBlock extends Chunk<TypeHeader>
         entryArray.ensureSize(count);
         entryArray.refreshCount();
     }
-    public List<Entry> listEntries(boolean skipNullBlock){
-        List<Entry> results=new ArrayList<>();
-        Iterator<Entry> itr = getEntryArray().iterator(skipNullBlock);
-        while (itr.hasNext()){
-            Entry block=itr.next();
-            results.add(block);
-        }
-        return results;
+    public List<Entry> listEntries(boolean skipNullBlock) {
+        return CollectionUtil.toList(getEntryArray().iterator(skipNullBlock));
     }
     public Entry getEntry(int entryId){
         return getEntryArray().getEntry(entryId);

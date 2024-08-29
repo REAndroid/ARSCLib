@@ -18,6 +18,7 @@ package com.reandroid.apk;
 import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.archive.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.TableBlock;
+import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.Closeable;
 import java.io.File;
@@ -110,7 +111,7 @@ public class ApkBundle implements Closeable {
         return null;
     }
     public List<ApkModule> getApkModuleList(){
-        return new ArrayList<>(mModulesMap.values());
+        return new ArrayCollection<>(mModulesMap.values());
     }
     public void loadApkDirectory(File dir) throws IOException{
         loadApkDirectory(dir, false);

@@ -22,12 +22,12 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.ValueType;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -283,7 +283,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
     public List<ResXmlElement> listActivities(boolean includeActivityAlias){
         ResXmlElement application=getApplicationElement();
         if(application==null){
-            return new ArrayList<>();
+            return new ArrayCollection<>();
         }
         List<ResXmlElement> results = application.listElements(TAG_activity);
         if(includeActivityAlias && !results.isEmpty()){
@@ -294,12 +294,12 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
     public List<ResXmlElement> listApplicationElementsByTag(String tag){
         ResXmlElement application=getApplicationElement();
         if(application==null){
-            return new ArrayList<>();
+            return new ArrayCollection<>();
         }
         return application.listElements(tag);
     }
     public List<String> getUsesPermissions(){
-        List<String> results=new ArrayList<>();
+        List<String> results = new ArrayCollection<>();
         ResXmlElement manifestElement=getManifestElement();
         if(manifestElement==null){
             return results;

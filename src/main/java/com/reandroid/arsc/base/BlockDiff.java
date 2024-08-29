@@ -15,7 +15,8 @@
  */
 package com.reandroid.arsc.base;
 
-import java.util.ArrayList;
+import com.reandroid.utils.collection.ArrayCollection;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -32,7 +33,7 @@ public class BlockDiff {
     public DiffResult[] find(int limit){
         byte[] bytes_a = block_a.getBytes();
         byte[] bytes_b = block_b.getBytes();
-        List<DiffResult> results = new ArrayList<>();
+        List<DiffResult> results = new ArrayCollection<>();
         int start = 0;
         int position = findByteDifferencePosition(start, bytes_a, bytes_b);
         while (limit < 0 || results.size() < limit){

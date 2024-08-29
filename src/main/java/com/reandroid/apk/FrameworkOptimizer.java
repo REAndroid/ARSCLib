@@ -27,6 +27,7 @@ import com.reandroid.arsc.model.FrameworkTable;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.value.*;
+import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.IOException;
 import java.util.*;
@@ -150,7 +151,7 @@ import java.util.zip.ZipEntry;
         logMessage("Manifest size reduced by: "+percent+" %");
     }
     private List<ResXmlNode> getManifestElementToRemove(ResXmlElement manifest){
-        List<ResXmlNode> results = new ArrayList<>();
+        List<ResXmlNode> results = new ArrayCollection<>();
         for(ResXmlNode node:manifest.listXmlNodes()){
             if(!(node instanceof ResXmlElement)){
                 continue;
