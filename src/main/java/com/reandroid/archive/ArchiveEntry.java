@@ -18,6 +18,7 @@ package com.reandroid.archive;
 import com.reandroid.archive.block.CentralEntryHeader;
 import com.reandroid.archive.block.LocalFileHeader;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.io.FilePermissions;
 
 public class ArchiveEntry {
     private final LocalFileHeader localFileHeader;
@@ -90,6 +91,9 @@ public class ArchiveEntry {
     }
     public boolean isDirectory() {
         return this.getName().endsWith("/");
+    }
+    public FilePermissions getFilePermissions() {
+        return getCentralEntryHeader().getFilePermissions();
     }
     public CentralEntryHeader getCentralEntryHeader(){
         CentralEntryHeader ceh = localFileHeader.getCentralEntryHeader();

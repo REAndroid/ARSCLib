@@ -24,6 +24,7 @@ import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayIterator;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.io.FilePermissions;
 import com.reandroid.utils.io.FileUtil;
 import com.reandroid.utils.io.IOUtil;
 
@@ -182,9 +183,11 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
     }
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private void applyAttributes(ArchiveEntry archiveEntry, File file) {
-        CentralEntryHeader ceh = archiveEntry.getCentralEntryHeader();
-        ceh.getFilePermissions().apply(file);
-        long time = Archive.dosToJavaDate(ceh.getDosTime()).getTime();
+        FilePermissions permissions = archiveEntry.getFilePermissions();
+        if(permissions.get() != 0) {
+            permissions.apply(file);
+        }
+        long time = Archive.dosToJavaDate(archiveEntry.getDosTime()).getTime();
         file.setLastModified(time);
     }
     abstract void extractStored(File file, ArchiveEntry archiveEntry) throws IOException;
