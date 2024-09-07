@@ -308,8 +308,11 @@ public abstract class CommonHeader extends ZipHeader {
     public boolean isUtf8(){
         return getGeneralPurposeFlag().getUtf8();
     }
-    public boolean hasDataDescriptor(){
+    public boolean hasDataDescriptor() {
         return getGeneralPurposeFlag().hasDataDescriptor();
+    }
+    public void setHasDataDescriptor(boolean hasDataDescriptor) {
+        getGeneralPurposeFlag().setHasDataDescriptor(hasDataDescriptor);
     }
     private String decodeFileName(){
         int length = getFileNameLength();

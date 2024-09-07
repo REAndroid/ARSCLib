@@ -17,7 +17,6 @@ package com.reandroid.archive.writer;
 
 import com.reandroid.archive.ArchiveInfo;
 import com.reandroid.archive.block.CentralEntryHeader;
-import com.reandroid.archive.block.CommonHeader;
 import com.reandroid.archive.block.DataDescriptor;
 import com.reandroid.archive.block.LocalFileHeader;
 
@@ -25,8 +24,21 @@ public class HeaderInterceptorChain implements HeaderInterceptor{
 
     private ArchiveInfo archiveInfo;
     private HeaderInterceptor headerInterceptor;
+    private DataDescriptorFactory dataDescriptorFactory;
 
     private HeaderInterceptorChain(){
+    }
+
+    public DataDescriptorFactory getDataDescriptorFactory() {
+        DataDescriptorFactory factory = this.dataDescriptorFactory;
+        if(factory == null) {
+            factory = DataDescriptorFactory.NO_ACTION;
+            this.dataDescriptorFactory = factory;
+        }
+        return factory;
+    }
+    public void setDataDescriptorFactory(DataDescriptorFactory dataDescriptorFactory) {
+        this.dataDescriptorFactory = dataDescriptorFactory;
     }
 
     public ArchiveInfo getArchiveInfo() {
@@ -38,7 +50,8 @@ public class HeaderInterceptorChain implements HeaderInterceptor{
 
     public boolean isDisabled() {
         return getArchiveInfo() == null &&
-                getHeaderInterceptor() == null;
+                getHeaderInterceptor() == null &&
+                getDataDescriptorFactory() == DataDescriptorFactory.NO_ACTION;
     }
 
     public void setHeaderInterceptor(HeaderInterceptor headerInterceptor) {
@@ -49,6 +62,7 @@ public class HeaderInterceptorChain implements HeaderInterceptor{
     }
     @Override
     public void onWriteLfh(LocalFileHeader header) {
+        getDataDescriptorFactory().createDataDescriptor(header);
         HeaderInterceptor interceptor = getArchiveInfo();
         if(interceptor != null){
             interceptor.onWriteLfh(header);
@@ -85,6 +99,7 @@ public class HeaderInterceptorChain implements HeaderInterceptor{
     public static HeaderInterceptorChain createDefault(){
         HeaderInterceptorChain interceptorChain = new HeaderInterceptorChain();
         interceptorChain.setArchiveInfo(ArchiveInfo.apk());
+        interceptorChain.setDataDescriptorFactory(DataDescriptorFactory.NO_ACTION);
         return interceptorChain;
     }
 }

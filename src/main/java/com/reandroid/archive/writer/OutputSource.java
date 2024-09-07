@@ -124,9 +124,11 @@ class OutputSource {
     }
     LocalFileHeader getLocalFileHeader(){
         if(lfh == null){
-            lfh = createLocalFileHeader();
+            LocalFileHeader lfh = createLocalFileHeader();
             lfh.setFileName(getInputSource().getAlias());
-            clearAlignment(lfh);
+            lfh.setZipAlign(0);
+            lfh.updateDataDescriptor();
+            this.lfh = lfh;
         }
         return lfh;
     }
@@ -138,11 +140,6 @@ class OutputSource {
         lfh.setFileName(inputSource.getAlias());
         lfh.setMethod(inputSource.getMethod());
         return lfh;
-    }
-    private void clearAlignment(LocalFileHeader lfh){
-        lfh.getGeneralPurposeFlag().setHasDataDescriptor(false);
-        lfh.setDataDescriptor(null);
-        lfh.setZipAlign(0);
     }
     void logLargeFileWrite(){
         APKLogger logger =  this.apkLogger;

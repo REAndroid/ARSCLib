@@ -189,6 +189,9 @@ public abstract class ApkWriter<T extends ZipOutput, OUT extends OutputSource> i
     public void setHeaderInterceptor(HeaderInterceptor interceptor) {
         this.getInterceptorChain().setHeaderInterceptor(interceptor);
     }
+    public void setDataDescriptorFactory(DataDescriptorFactory dataDescriptorFactory) {
+        getInterceptorChain().setDataDescriptorFactory(dataDescriptorFactory);
+    }
 
     void onCompressFileProgress(String path, int mode, long writtenBytes) {
         if(writeProgress!=null){

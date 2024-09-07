@@ -26,10 +26,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ZipAligner {
+
     private final Map<Pattern, Integer> alignmentMap;
     private int defaultAlignment;
-    private boolean enableDataDescriptor;
-    private boolean clearLfhSizeForDataDescriptor = true;
 
     public ZipAligner(){
         alignmentMap = new HashMap<>();
@@ -54,22 +53,15 @@ public class ZipAligner {
         this.defaultAlignment = defaultAlignment;
     }
 
-    public void setClearLfhSizeForDataDescriptor(boolean clearLfhSizeForDataDescriptor) {
-        this.clearLfhSizeForDataDescriptor = clearLfhSizeForDataDescriptor;
-    }
-    public void setEnableDataDescriptor(boolean enableDataDescriptor) {
-        this.enableDataDescriptor = enableDataDescriptor;
-    }
-
     public void align(long offset, LocalFileHeader lfh){
         if(ZipHeader.isZip64Length(offset + lfh.getSize())){
             return;
         }
         lfh.setZipAlign(0);
+        lfh.updateDataDescriptor();
         int padding;
         if(lfh.getMethod() == Archive.DEFLATED){
             padding = 0;
-            createDataDescriptor(lfh);
         }else {
             int alignment = getAlignment(lfh.getFileName());
             if (alignment == NO_ALIGNMENT) {
@@ -80,23 +72,6 @@ public class ZipAligner {
             }
         }
         lfh.setZipAlign(padding);
-    }
-    private void createDataDescriptor(LocalFileHeader lfh){
-        DataDescriptor dataDescriptor;
-        if(enableDataDescriptor){
-            dataDescriptor = DataDescriptor.fromLocalFile(lfh);
-            if(clearLfhSizeForDataDescriptor) {
-                lfh.setTmpCrc(lfh.getCrc());
-                lfh.setCrc(0);
-                lfh.setTmpCompressedSize(lfh.getCompressedSize());
-                lfh.setCompressedSize(0);
-                lfh.setTmpSize(lfh.getSize());
-                lfh.setSize(0);
-            }
-        }else {
-            dataDescriptor = null;
-        }
-        lfh.setDataDescriptor(dataDescriptor);
     }
     private int getAlignment(String name){
         if(!alignmentMap.isEmpty()) {
@@ -115,13 +90,11 @@ public class ZipAligner {
         zipAligner.setDefaultAlignment(ALIGNMENT_4);
         Pattern patternNativeLib = Pattern.compile("^lib/.+\\.so$");
         zipAligner.setFileAlignment(patternNativeLib, ALIGNMENT_PAGE);
-        zipAligner.setEnableDataDescriptor(true);
         return zipAligner;
     }
     public static ZipAligner noAlignment(){
         ZipAligner zipAligner = new ZipAligner();
         zipAligner.setDefaultAlignment(NO_ALIGNMENT);
-        zipAligner.setEnableDataDescriptor(true);
         return zipAligner;
     }
 

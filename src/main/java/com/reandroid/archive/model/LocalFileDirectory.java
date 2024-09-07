@@ -62,15 +62,14 @@ public class LocalFileDirectory {
 
             inputStream.skip(lfh.getDataSize());
 
-            DataDescriptor dataDescriptor = null;
-            if(lfh.hasDataDescriptor()){
-                dataDescriptor = new DataDescriptor();
+            lfh.updateDataDescriptor();
+            DataDescriptor dataDescriptor = lfh.getDataDescriptor();
+            if(dataDescriptor != null) {
                 int read = dataDescriptor.readBytes(inputStream);
-                if(read != dataDescriptor.countBytes()){
-                    dataDescriptor = null;
+                if(read != dataDescriptor.countBytes()) {
+                    lfh.setHasDataDescriptor(false);
                 }
             }
-            lfh.setDataDescriptor(dataDescriptor);
             lfh.setIndex(index);
 
             headerList.add(lfh);

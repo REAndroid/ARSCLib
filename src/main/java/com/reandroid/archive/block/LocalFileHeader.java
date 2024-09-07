@@ -24,9 +24,6 @@ public class LocalFileHeader extends CommonHeader {
 
     private DataDescriptor dataDescriptor;
     private CentralEntryHeader centralEntryHeader;
-    private long tmpCrc;
-    private long tmpCompressedSize;
-    private long tmpSize;
 
     public LocalFileHeader(){
         super(OFFSET_fileName, ZipSignature.LOCAL_FILE, OFFSET_general_purpose);
@@ -55,14 +52,11 @@ public class LocalFileHeader extends CommonHeader {
         lfh.setCompressedSize(getCompressedSize());
         lfh.setSize(getSize());
         lfh.setCrc(getCrc());
-        DataDescriptor dd = getDataDescriptor();
-        if(dd != null){
-            lfh.setDataDescriptor(dd.copy());
-        }
         lfh.setDosTime(getDosTime());
         lfh.setPlatform(getPlatform());
         lfh.setVersionMadeBy(getVersionMadeBy());
         lfh.setMethod(getMethod());
+        lfh.updateDataDescriptor();
         return lfh;
     }
 
@@ -85,79 +79,124 @@ public class LocalFileHeader extends CommonHeader {
     }
 
     @Override
-    public long getCompressedSize(){
-        long size = getInternalCompressedSize();
-        if(size == 0) {
-            size = this.tmpCompressedSize;
+    public long getCompressedSize() {
+        DataDescriptor dataDescriptor = getDataDescriptor();
+        if(dataDescriptor != null) {
+            return dataDescriptor.getCompressedSize();
         }
-        return size;
+        return getCompressedSizeInternal();
     }
-    private long getInternalCompressedSize(){
+    private long getCompressedSizeInternal(){
         if(isZip64()){
             return getZip64CompressedSize();
         }
         return getIntegerUnsigned(getOffsetCompressedSize());
     }
     @Override
-    public void setCompressedSize(long value){
-        if(isZip64Value() || isZip64Value(value)){
+    public void setCompressedSize(long value) {
+        DataDescriptor dataDescriptor = getDataDescriptor();
+        if (dataDescriptor != null) {
+            dataDescriptor.setCompressedSize(value);
+            setCompressedSizeInternal(0);
+        } else {
+            setCompressedSizeInternal(value);
+        }
+    }
+    private void setCompressedSizeInternal(long value){
+        if (isZip64Value() || isZip64Value(value)){
             ensureZip64();
             putInteger(getOffsetCompressedSize(), -1);
             setZip64CompressedSize(value);
-        }else {
+        } else {
             putInteger(getOffsetCompressedSize(), value);
         }
     }
-    public void setTmpCompressedSize(long value) {
-        this.tmpCompressedSize = value;
+    @Override
+    public void setCrc(long value) {
+        DataDescriptor dataDescriptor = getDataDescriptor();
+        if (dataDescriptor != null) {
+            dataDescriptor.setCrc(value);
+            setCrcInternal(0);
+        } else {
+            setCrcInternal(value);
+        }
+    }
+    private void setCrcInternal(long value) {
+        super.setCrc(value);
     }
 
     @Override
-    public long getSize(){
-        long size = getInternalSize();
-        if(size == 0) {
-            size = this.tmpSize;
+    public long getSize() {
+        DataDescriptor dataDescriptor = getDataDescriptor();
+        if (dataDescriptor != null) {
+            return dataDescriptor.getSize();
         }
-        return size;
+        return getSizeInternal();
     }
-    private long getInternalSize(){
-        if(isZip64()){
+    private long getSizeInternal() {
+        if (isZip64()){
             return getZip64Size();
         }
         return getIntegerUnsigned(getOffsetSize());
     }
     @Override
-    public void setSize(long value){
-        if(isZip64Value() || isZip64Value(value)){
+    public void setSize(long value) {
+        DataDescriptor dataDescriptor = getDataDescriptor();
+        if (dataDescriptor != null) {
+            dataDescriptor.setSize(value);
+            setSizeInternal(0);
+        } else {
+            setSizeInternal(value);
+        }
+    }
+    private void setSizeInternal(long value){
+        if (isZip64Value() || isZip64Value(value)){
             ensureZip64();
             putInteger(getOffsetSize(), -1);
             setZip64CompressedSize(value);
-        }else {
+        } else {
             putInteger(getOffsetSize(), value);
         }
     }
-    public void setTmpSize(long value) {
-        this.tmpSize = value;
-    }
-
-    public void setTmpCrc(long value) {
-        this.tmpCrc = value;
-    }
     @Override
     public long getCrc() {
-        long crc = super.getCrc();
-        if(crc == 0) {
-            crc = this.tmpCrc;
+        DataDescriptor dataDescriptor = getDataDescriptor();
+        if (dataDescriptor != null) {
+            return dataDescriptor.getCrc();
         }
-        return crc;
+        return super.getCrc();
     }
 
     public DataDescriptor getDataDescriptor() {
         return dataDescriptor;
     }
-    public void setDataDescriptor(DataDescriptor dataDescriptor){
-        this.dataDescriptor = dataDescriptor;
-        getGeneralPurposeFlag().setHasDataDescriptor(dataDescriptor!=null);
+
+    @Override
+    public void setHasDataDescriptor(boolean hasDataDescriptor) {
+        if(hasDataDescriptor != this.hasDataDescriptor() ||
+                hasDataDescriptor == (getDataDescriptor() == null)) {
+            super.setHasDataDescriptor(hasDataDescriptor);
+            updateDataDescriptor();
+        }
+    }
+
+    public void updateDataDescriptor() {
+        DataDescriptor dataDescriptor = this.dataDescriptor;
+        if (hasDataDescriptor()) {
+            if(dataDescriptor == null) {
+                this.dataDescriptor = DataDescriptor.fromLocalFile(this);
+                setCrcInternal(0);
+                setCompressedSizeInternal(0);
+                setSizeInternal(0);
+            }
+        } else {
+            this.dataDescriptor = null;
+            if(dataDescriptor != null) {
+                setCrcInternal(dataDescriptor.getCrc());
+                setSizeInternal(dataDescriptor.getSize());
+                setCompressedSizeInternal(dataDescriptor.getCompressedSize());
+            }
+        }
     }
 
     public static LocalFileHeader fromCentralEntryHeader(CentralEntryHeader ceh){
@@ -171,6 +210,7 @@ public class LocalFileHeader extends CommonHeader {
         lfh.setCompressedSize(ceh.getCompressedSize());
         lfh.setSize(ceh.getSize());
         lfh.setFileName(ceh.getFileName());
+        lfh.updateDataDescriptor();
         return lfh;
     }
 
