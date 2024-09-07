@@ -300,6 +300,6 @@ public class PathSanitizer {
         return pathSanitizer;
     }
 
-    private static final int MAX_NAME_LENGTH = 75;
-    private static final int MAX_PATH_LENGTH = 100;
+    private static final int MAX_NAME_LENGTH = 140;
+    private static final int MAX_PATH_LENGTH = 4096;
 }
