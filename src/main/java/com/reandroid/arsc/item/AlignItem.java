@@ -16,8 +16,10 @@
 package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.HexUtil;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 public class AlignItem extends BlockItem{
@@ -41,6 +43,14 @@ public class AlignItem extends BlockItem{
         }
         int size = (alignment - (count % alignment)) % alignment;
         setSize(size);
+    }
+    public void alignSafe(BlockReader reader) throws IOException {
+        align(reader.getPosition());
+        int size = size();
+        int available = reader.available();
+        if(size != 0 && available >= size) {
+            super.onReadBytes(reader);
+        }
     }
     public void clear(){
         setBytesLength(0, false);

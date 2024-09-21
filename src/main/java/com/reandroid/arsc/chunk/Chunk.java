@@ -1,4 +1,4 @@
- /*
+/*
   *  Copyright (C) 2022 github.com/REAndroid
   *
   *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,19 +20,34 @@ import com.reandroid.arsc.container.ExpandableBlockContainer;
 import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.AlignItem;
 
 import java.io.IOException;
 
 public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContainer {
+
     private final T mHeaderBlock;
     protected final SingleBlockContainer<Block> firstPlaceHolder;
+    private AlignItem alignItem;
+
     protected Chunk(T headerBlock, int initialChildesCount) {
-        super(initialChildesCount+2);
+        super(initialChildesCount + 3);
         this.mHeaderBlock = headerBlock;
         this.firstPlaceHolder = new SingleBlockContainer<>();
         addChild(headerBlock);
         addChild(firstPlaceHolder);
     }
+
+    public AlignItem getAlignItem() {
+        AlignItem alignItem = this.alignItem;
+        if(alignItem == null) {
+            alignItem = new AlignItem();
+            addChild(alignItem);
+            this.alignItem = alignItem;
+        }
+        return alignItem;
+    }
+
     public SingleBlockContainer<Block> getFirstPlaceHolder() {
         return firstPlaceHolder;
     }
@@ -44,8 +59,15 @@ public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContai
     }
     @Override
     protected final void onRefreshed() {
+        updateAlign();
         getHeaderBlock().refreshHeader();
         onChunkRefreshed();
+    }
+
+    private void updateAlign() {
+        AlignItem alignItem = getAlignItem();
+        alignItem.setSize(0);
+        alignItem.align(this);
     }
     protected abstract void onChunkRefreshed();
     public void onChunkLoaded(){
@@ -62,7 +84,10 @@ public abstract class Chunk<T extends HeaderBlock> extends ExpandableBlockContai
         onChunkLoaded();
     }
     protected void onReadChildes(BlockReader reader) throws IOException{
+        AlignItem alignItem = getAlignItem();
+        alignItem.setSize(0);
         super.onReadBytes(reader);
+        alignItem.alignSafe(reader);
     }
     void checkInvalidChunk(HeaderBlock headerBlock) throws IOException {
         ChunkType chunkType = headerBlock.getChunkType();
