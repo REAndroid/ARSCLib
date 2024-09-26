@@ -828,12 +828,16 @@ public class ResXmlElement extends ResXmlNode implements
         }
         return null;
     }
-    private ResXmlStartNamespace getOrCreateXmlStartNamespace(String uri, String prefix){
-        ResXmlStartNamespace exist = getXmlStartNamespace(uri, prefix);
-        if(exist != null){
-            return exist;
+    private ResXmlStartNamespace getOrCreateXmlStartNamespace(String uri, String prefix) {
+        return getOrCreateXmlStartNamespace(uri, prefix, 0);
+    }
+    private ResXmlStartNamespace getOrCreateXmlStartNamespace(String uri, String prefix, int lineNumber){
+        ResXmlStartNamespace namespace = getXmlStartNamespace(uri, prefix);
+        if(namespace == null) {
+            namespace = getRootElement().createXmlStartNamespace(uri, prefix);
+            namespace.setLineNumber(lineNumber);
         }
-        return getRootElement().createXmlStartNamespace(uri, prefix);
+        return namespace;
     }
     private ResXmlStartNamespace createXmlStartNamespace(String uri, String prefix){
         ResXmlStartNamespace startNamespace = new ResXmlStartNamespace();
@@ -1239,14 +1243,14 @@ public class ResXmlElement extends ResXmlNode implements
     }
     private void parseNamespaces(XmlPullParser parser) throws XmlPullParserException {
         int count = parser.getNamespaceCount(parser.getDepth());
-        for(int i = 0; i < count; i++){
-            ResXmlStartNamespace namespace = createXmlStartNamespace(
+        for(int i = 0; i < count; i++) {
+            getOrCreateXmlStartNamespace(
                     parser.getNamespaceUri(i),
-                    parser.getNamespacePrefix(i));
-            namespace.setLineNumber(parser.getLineNumber());
+                    parser.getNamespacePrefix(i),
+                    parser.getLineNumber());
         }
         count = parser.getAttributeCount();
-        for(int i = 0; i < count; i++){
+        for(int i = 0; i < count; i++) {
             String name = parser.getAttributeName(i);
             String prefix = splitPrefix(name);
             name = splitName(name);
