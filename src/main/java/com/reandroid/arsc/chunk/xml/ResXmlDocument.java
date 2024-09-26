@@ -501,19 +501,21 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
         return writer.toString();
     }
     public void serialize(XmlSerializer serializer) throws IOException {
+        serialize(serializer, true);
+    }
+    public void serialize(XmlSerializer serializer, boolean decode) throws IOException {
         if(mDestroyed){
             throw new IOException("Destroyed document");
         }
         PackageBlock packageBlock = getPackageBlock();
-        if(packageBlock == null){
+        if(decode && packageBlock == null) {
             throw new IOException("Can not decode without package");
         }
         ResXmlElement.setIndent(serializer, true);
         serializer.startDocument("utf-8", null);
         autoSetAttributeNamespaces();
-        Iterator<ResXmlElement> iterator = getElements();
-        while (iterator.hasNext()){
-            iterator.next().serialize(serializer);
+        for (ResXmlNode xmlNode : this) {
+            xmlNode.serialize(serializer, decode);
         }
         serializer.endDocument();
     }

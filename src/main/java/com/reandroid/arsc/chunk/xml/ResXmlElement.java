@@ -1162,7 +1162,7 @@ public class ResXmlElement extends ResXmlNode implements
         calculateAttributesOrder();
     }
     @Override
-    public void serialize(XmlSerializer serializer) throws IOException {
+    public void serialize(XmlSerializer serializer, boolean decode) throws IOException {
         int count = getNamespaceCount();
         for(int i = 0; i < count; i++){
             ResXmlNamespace namespace = getNamespaceAt(i);
@@ -1179,14 +1179,14 @@ public class ResXmlElement extends ResXmlNode implements
         count = getAttributeCount();
         for(int i = 0; i < count; i++){
             ResXmlAttribute attribute = getAttributeAt(i);
-            attribute.serialize(serializer);
+            attribute.serialize(serializer, decode);
         }
-        for(ResXmlNode xmlNode : this){
+        for(ResXmlNode xmlNode : this) {
             if(indentChanged && xmlNode instanceof ResXmlTextNode){
                 indentChanged = false;
                 setIndent(serializer, false);
             }
-            xmlNode.serialize(serializer);
+            xmlNode.serialize(serializer, decode);
         }
         serializer.endTag(getUri(), getName());
         if(indent != indentChanged){

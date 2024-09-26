@@ -37,7 +37,10 @@ public abstract class ResXmlNode extends FixedBlockContainer  implements JSONCon
         autoSetLineNumber(1);
     }
     abstract int autoSetLineNumber(int start);
-    public abstract void serialize(XmlSerializer serializer) throws IOException;
+    public void serialize(XmlSerializer serializer) throws IOException {
+        serialize(serializer, true);
+    }
+    public abstract void serialize(XmlSerializer serializer, boolean decode) throws IOException;
     public abstract void parse(XmlPullParser parser) throws IOException, XmlPullParserException;
     public abstract XMLNode toXml(boolean decode);
 
