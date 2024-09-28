@@ -176,7 +176,7 @@ public class AnnotationItem extends DataItem
     }
     public AnnotationVisibility getVisibility(){
         if(!isValueEntry()){
-            return AnnotationVisibility.valueOf(visibility.unsignedInt());
+            return AnnotationVisibility.valueOf(visibility.get());
         }
         return null;
     }
@@ -198,7 +198,7 @@ public class AnnotationItem extends DataItem
         if(this.visibility == null){
             return -1;
         }
-        return this.visibility.unsignedInt();
+        return this.visibility.get();
     }
     public String getTypeName(){
         TypeId typeId = getTypeId();

@@ -191,14 +191,14 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
     }
 
     int getFlag(){
-        int flag = elementType.unsignedInt();
+        int flag = elementType.get();
         if(flag > 0x0A){
             flag = 0x0A;
         }
         return flag;
     }
     int getFlagOffset(){
-        int offset = elementType.unsignedInt();
+        int offset = elementType.get();
         if(offset < 0x0A){
             return 0;
         }
@@ -323,7 +323,7 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
         return EmptyIterator.of();
     }
     public void merge(DebugElement element){
-        this.elementType.set(element.elementType.get());
+        this.elementType.set(element.elementType.getByte());
     }
     public void fromSmali(SmaliDebugElement smaliDebugElement) throws IOException{
         setTargetAddress(smaliDebugElement.getAddress());
@@ -338,11 +338,11 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
             return false;
         }
         DebugElement element = (DebugElement) obj;
-        return elementType.get() == element.elementType.get();
+        return elementType.getByte() == element.elementType.getByte();
     }
     @Override
     public int hashCode() {
-        return elementType.get();
+        return elementType.getByte();
     }
 
     @Override

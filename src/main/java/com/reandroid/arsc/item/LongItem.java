@@ -15,33 +15,88 @@
  */
 package com.reandroid.arsc.item;
 
+import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.base.DirectStreamReader;
 import com.reandroid.utils.HexUtil;
 
-public class LongItem extends BlockItem{
+public class LongItem extends BlockItem implements LongReference, DirectStreamReader {
+
+    private final boolean bigEndian;
     private long mCache;
-    public LongItem() {
+
+    public LongItem(boolean bigEndian) {
         super(8);
+        this.bigEndian = bigEndian;
     }
+    public LongItem() {
+        this(false);
+    }
+
+    @Override
     public void set(long value){
         if(value == mCache){
             return;
         }
         mCache = value;
-        putLong(getBytesInternal(), 0, value);
+        byte[] bytes = getBytesInternal();
+        if (bigEndian) {
+            putBigEndianLong(bytes, 0, value);
+        } else {
+            putLong(bytes, 0, value);
+        }
     }
-    public long get(){
+    @Override
+    public long getLong(){
         return mCache;
     }
-    public String toHex(){
-        return HexUtil.toHex(get(), 16);
+    @Override
+    public int get() {
+        return 0;
+    }
+    @Override
+    public void set(int value) {
+        set(value & 0xffffffffL);
+    }
+    public String toHex() {
+        return HexUtil.toHex(getLong(), 16);
     }
 
     @Override
     protected void onBytesChanged() {
-        mCache = getLong(getBytesInternal(), 0);
+        long l;
+        byte[] bytes = getBytesInternal();
+        if (bigEndian) {
+            l = getBigEndianLong(bytes, 0);
+        } else {
+            l = getLong(bytes, 0);
+        }
+        mCache = l;
     }
+
     @Override
     public String toString(){
-        return String.valueOf(get());
+        return String.valueOf(getLong());
     }
+
+    public static final Creator<LongItem> CREATOR = new Creator<LongItem>() {
+        @Override
+        public LongItem[] newArrayInstance(int length) {
+            return new LongItem[length];
+        }
+        @Override
+        public LongItem newInstance() {
+            return new LongItem(false);
+        }
+    };
+
+    public static final Creator<LongItem> CREATOR_BIG_ENDIAN = new Creator<LongItem>() {
+        @Override
+        public LongItem[] newArrayInstance(int length) {
+            return new LongItem[length];
+        }
+        @Override
+        public LongItem newInstance() {
+            return new LongItem(true);
+        }
+    };
 }

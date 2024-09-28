@@ -309,7 +309,7 @@ public class TypeBlockArray extends BlockArray<TypeBlock>
         }
         TypeHeader typeHeader = TypeHeader.read(reader);
         int id = getTypeId();
-        if(id!=0 && typeHeader.getId().unsignedInt() != id){
+        if(id!=0 && typeHeader.getId().get() != id){
             return false;
         }
         int pos=reader.getPosition();

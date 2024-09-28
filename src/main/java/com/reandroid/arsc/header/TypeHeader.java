@@ -53,10 +53,10 @@ import java.io.IOException;
         this(sparse, false);
     }
     public boolean isSparse(){
-        return (getFlags().get() & FLAG_SPARSE) == FLAG_SPARSE;
+        return (getFlags().getByte() & FLAG_SPARSE) == FLAG_SPARSE;
     }
     public void setSparse(boolean sparse){
-        byte flag = getFlags().get();
+        byte flag = getFlags().getByte();
         if(sparse){
             flag = (byte) (flag | FLAG_SPARSE);
         }else {
@@ -65,10 +65,10 @@ import java.io.IOException;
         getFlags().set(flag);
     }
     public boolean isOffset16(){
-        return getFlags().get()  == FLAG_OFFSET16;
+        return getFlags().getByte()  == FLAG_OFFSET16;
     }
     public void setOffset16(boolean offset16){
-        byte flag = getFlags().get();
+        byte flag = getFlags().getByte();
         if(offset16){
             flag = (byte) (flag | FLAG_OFFSET16);
         }else {

@@ -39,7 +39,7 @@ public class LengthPrefixedBlock extends ExpandableBlockContainer{
     public long getDataSize(){
         Block numberBlock = this.numberBlock;
         if(numberBlock instanceof LongItem){
-            return ((LongItem)numberBlock).get();
+            return ((LongItem)numberBlock).getLong();
         }
         return ((IntegerItem)numberBlock).get();
     }

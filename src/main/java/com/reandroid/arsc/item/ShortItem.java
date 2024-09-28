@@ -15,18 +15,27 @@
  */
 package com.reandroid.arsc.item;
 
+import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.base.DirectStreamReader;
 import com.reandroid.utils.HexUtil;
 
-public class ShortItem extends BlockItem implements IntegerReference{
+public class ShortItem extends BlockItem implements IntegerReference, DirectStreamReader {
+
+    private final boolean bigEndian;
     private int mCache;
 
-    public ShortItem(){
+    public ShortItem(boolean bigEndian) {
         super(2);
+        this.bigEndian = bigEndian;
+    }
+    public ShortItem() {
+        this(false);
     }
     public ShortItem(short value){
-        this();
+        this(false);
         set(value);
     }
+
     @Override
     public void set(int value){
         if(value == mCache){
@@ -34,8 +43,11 @@ public class ShortItem extends BlockItem implements IntegerReference{
         }
         mCache = value;
         byte[] bytes = getBytesInternal();
-        bytes[1]= (byte) (value >>> 8 & 0xff);
-        bytes[0]= (byte) (value & 0xff);
+        if (bigEndian) {
+            putBigEndianShort(bytes, 0, value);
+        } else {
+            putShort(bytes, 0, value);
+        }
     }
     @Override
     public int get(){
@@ -55,15 +67,40 @@ public class ShortItem extends BlockItem implements IntegerReference{
     }
     @Override
     protected void onBytesChanged() {
-        // To save cpu usage, better to calculate once only when bytes changed
-        mCache = readShortBytes();
-    }
-    private int readShortBytes(){
+        int s;
         byte[] bytes = getBytesInternal();
-        return (bytes[0] & 0xff | (bytes[1] & 0xff) << 8);
+        if (bigEndian) {
+            s = getBigEndianShort(bytes, 0);
+        } else {
+            s = getShort(bytes, 0);
+        }
+        mCache = s;
     }
+
     @Override
     public String toString(){
         return String.valueOf(get());
     }
+
+    public static final Creator<ShortItem> CREATOR = new Creator<ShortItem>() {
+        @Override
+        public ShortItem[] newArrayInstance(int length) {
+            return new ShortItem[length];
+        }
+        @Override
+        public ShortItem newInstance() {
+            return new ShortItem(false);
+        }
+    };
+
+    public static final Creator<ShortItem> CREATOR_BIG_ENDIAN = new Creator<ShortItem>() {
+        @Override
+        public ShortItem[] newArrayInstance(int length) {
+            return new ShortItem[length];
+        }
+        @Override
+        public ShortItem newInstance() {
+            return new ShortItem(true);
+        }
+    };
 }
