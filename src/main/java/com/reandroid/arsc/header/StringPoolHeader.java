@@ -70,13 +70,13 @@ public class StringPoolHeader extends HeaderBlock{
     }
 
     public boolean isUtf8(){
-        return (getFlagUtf8().get() & 0x01) !=0;
+        return (getFlagUtf8().getByte() & 0x01) !=0;
     }
     public void setUtf8(boolean utf8){
         getFlagUtf8().set((byte) (utf8 ? 0x01 : 0x00));
     }
     public boolean isSorted(){
-        return (getFlagSorted().get() & 0x01) !=0;
+        return (getFlagSorted().getByte() & 0x01) !=0;
     }
     public void setSorted(boolean sorted){
         getFlagSorted().set((byte) (sorted ? 0x01 : 0x00));

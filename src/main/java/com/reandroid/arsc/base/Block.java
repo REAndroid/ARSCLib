@@ -217,6 +217,59 @@ public abstract class Block {
             index++;
         }
     }
+    public static int getBigEndianShort(byte[] bytes, int offset) {
+        if((offset + 2) > bytes.length) {
+            return 0;
+        }
+        return (bytes[offset] & 0xff) << 8 | bytes[offset + 1] & 0xff;
+    }
+    public static void putBigEndianShort(byte[] bytes, int offset, int value) {
+        bytes[offset]= (byte) (value >>> 8 & 0xff);
+        bytes[offset + 1]= (byte) (value & 0xff);
+    }
+    public static int getBigEndianInteger(byte[] bytes, int offset) {
+        if((offset + 4) > bytes.length) {
+            return 0;
+        }
+        return bytes[offset + 3] & 0xff |
+                (bytes[offset + 2] & 0xff) << 8 |
+                (bytes[offset + 1] & 0xff) << 16 |
+                (bytes[offset] & 0xff) << 24;
+    }
+    public static void putBigEndianInteger(byte[] bytes, int offset, int value) {
+        if((offset + 4) > bytes.length) {
+            return;
+        }
+        bytes[offset]= (byte) (value >>> 24 & 0xff);
+        bytes[offset + 1]= (byte) (value >>> 16 & 0xff);
+        bytes[offset + 2]= (byte) (value >>> 8 & 0xff);
+        bytes[offset + 3]= (byte) (value & 0xff);
+    }
+    public static long getBigEndianLong(byte[] bytes, int offset){
+        if((offset + 8) > bytes.length){
+            return 0;
+        }
+        long result = 0;
+        int index = offset;
+        offset = offset + 8;
+        while (index < offset){
+            result = result << 8;
+            result |= (bytes[index] & 0xff);
+            index ++;
+        }
+        return result;
+    }
+    public static void putBigEndianLong(byte[] bytes, int offset, long value){
+        if((offset + 8) > bytes.length){
+            return;
+        }
+        int index = offset + 7;
+        while (index >= offset) {
+            bytes[index] = (byte) (value & 0xff);
+            value = value >>> 8;
+            index --;
+        }
+    }
     public static byte[] getBytes(byte[] bytes, int offset, int length){
         if(bytes.length == 0){
             return new byte[0];

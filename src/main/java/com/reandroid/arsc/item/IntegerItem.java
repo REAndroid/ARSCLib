@@ -16,6 +16,7 @@
 package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.base.DirectStreamReader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.HexUtil;
@@ -24,25 +25,35 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class IntegerItem extends BlockItem implements ReferenceItem, DirectStreamReader {
+
+    private final boolean bigEndian;
     private int mCache;
-    public IntegerItem(){
+
+    public IntegerItem(boolean bigEndian){
         super(4);
+        this.bigEndian = bigEndian;
     }
-    public IntegerItem(int val){
-        this();
-        set(val);
+    public IntegerItem(){
+        this(false);
     }
+    public IntegerItem(int value){
+        this(false);
+        set(value);
+    }
+
     @Override
-    public void set(int val){
-        if(val==mCache){
+    public void set(int value) {
+        if(value == mCache){
             return;
         }
-        mCache=val;
-        byte[] bts = getBytesInternal();
-        bts[3]= (byte) (val >>> 24 & 0xff);
-        bts[2]= (byte) (val >>> 16 & 0xff);
-        bts[1]= (byte) (val >>> 8 & 0xff);
-        bts[0]= (byte) (val & 0xff);
+
+        mCache = value;
+        byte[] bytes = getBytesInternal();
+        if (bigEndian) {
+            putBigEndianInteger(bytes, 0, value);
+        } else {
+            putInteger(bytes, 0, value);
+        }
     }
     @Override
     public int get(){
@@ -60,15 +71,14 @@ public class IntegerItem extends BlockItem implements ReferenceItem, DirectStrea
     }
     @Override
     protected void onBytesChanged() {
-        // To save cpu usage, better to calculate once only when bytes changed
-        mCache=readIntBytes();
-    }
-    private int readIntBytes(){
-        byte[] bts = getBytesInternal();
-        return bts[0] & 0xff |
-                (bts[1] & 0xff) << 8 |
-                (bts[2] & 0xff) << 16 |
-                (bts[3] & 0xff) << 24;
+        int i;
+        byte[] bytes = getBytesInternal();
+        if (bigEndian) {
+            i = getBigEndianInteger(bytes, 0);
+        } else {
+            i = getInteger(bytes, 0);
+        }
+        mCache = i;
     }
     @Override
     public String toString(){
@@ -85,4 +95,26 @@ public class IntegerItem extends BlockItem implements ReferenceItem, DirectStrea
         integerItem.readBytes(inputStream);
         return integerItem.get();
     }
+
+    public static final Creator<IntegerItem> CREATOR = new Creator<IntegerItem>() {
+        @Override
+        public IntegerItem[] newArrayInstance(int length) {
+            return new IntegerItem[length];
+        }
+        @Override
+        public IntegerItem newInstance() {
+            return new IntegerItem(false);
+        }
+    };
+
+    public static final Creator<IntegerItem> CREATOR_BIG_ENDIAN = new Creator<IntegerItem>() {
+        @Override
+        public IntegerItem[] newArrayInstance(int length) {
+            return new IntegerItem[length];
+        }
+        @Override
+        public IntegerItem newInstance() {
+            return new IntegerItem(true);
+        }
+    };
 }

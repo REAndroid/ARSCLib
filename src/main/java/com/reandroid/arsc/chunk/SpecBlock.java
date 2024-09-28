@@ -47,10 +47,10 @@ public class SpecBlock extends Chunk<SpecHeader> implements JSONConvert<JSONObje
         return specFlagsArray.toList();
     }
     public byte getTypeId(){
-        return getHeaderBlock().getId().get();
+        return getHeaderBlock().getId().getByte();
     }
     public int getId(){
-        return getHeaderBlock().getId().unsignedInt();
+        return getHeaderBlock().getId().get();
     }
     public void setId(int id){
         setTypeId((byte) (0xff & id));

@@ -66,10 +66,10 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
         return getValueTypeReal();
     }
     private DexValueType<?> getValueTypeReal(){
-        return DexValueType.fromFlag(valueTypeItem.unsignedInt());
+        return DexValueType.fromFlag(valueTypeItem.get());
     }
     int getValueSize(){
-        return DexValueType.decodeSize(valueTypeItem.unsignedInt());
+        return DexValueType.decodeSize(valueTypeItem.get());
     }
     void setValueSize(int size){
         int flag = getValueType().getFlag(size);
@@ -83,7 +83,7 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
         return EmptyIterator.of();
     }
     public void merge(DexValueBlock<?> valueBlock){
-        valueTypeItem.set(valueBlock.valueTypeItem.get());
+        valueTypeItem.set(valueBlock.valueTypeItem.getByte());
     }
     public void fromSmali(SmaliValue smaliValue){
         throw new RuntimeException("Method not implemented: " + getClass().getSimpleName());

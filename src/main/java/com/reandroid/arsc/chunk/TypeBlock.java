@@ -150,10 +150,10 @@ public class TypeBlock extends Chunk<TypeHeader>
         return mTypeString;
     }
     public byte getTypeId(){
-        return getHeaderBlock().getId().get();
+        return getHeaderBlock().getId().getByte();
     }
     public int getId(){
-        return getHeaderBlock().getId().unsignedInt();
+        return getHeaderBlock().getId().get();
     }
     public void setId(int id){
         setTypeId((byte) (0xff & id));
