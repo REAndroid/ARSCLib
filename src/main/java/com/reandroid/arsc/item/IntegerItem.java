@@ -18,11 +18,7 @@ package com.reandroid.arsc.item;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.base.DirectStreamReader;
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.utils.HexUtil;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 public class IntegerItem extends BlockItem implements ReferenceItem, DirectStreamReader {
 
@@ -83,17 +79,6 @@ public class IntegerItem extends BlockItem implements ReferenceItem, DirectStrea
     @Override
     public String toString(){
         return String.valueOf(get());
-    }
-
-    public static int readInteger(BlockReader reader) throws IOException {
-        IntegerItem integerItem = new IntegerItem();
-        integerItem.readBytes(reader);
-        return integerItem.get();
-    }
-    public static int readInteger(InputStream inputStream) throws IOException {
-        IntegerItem integerItem = new IntegerItem();
-        integerItem.readBytes(inputStream);
-        return integerItem.get();
     }
 
     public static final Creator<IntegerItem> CREATOR = new Creator<IntegerItem>() {
