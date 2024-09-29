@@ -43,8 +43,18 @@ public class KXmlSerializer implements XmlSerializer {
     private boolean unicode;
     private String encoding;
 
+    private boolean enableIndentAttributes = true;
+
     public KXmlSerializer(){
     }
+
+    public boolean isEnableIndentAttributes() {
+        return enableIndentAttributes;
+    }
+    public void setEnableIndentAttributes(boolean enableIndentAttributes) {
+        this.enableIndentAttributes = enableIndentAttributes;
+    }
+
     private void append(char c) throws IOException {
         if(mPos >= BUFFER_LEN){
             flushBuffer();
@@ -553,7 +563,7 @@ public class KXmlSerializer implements XmlSerializer {
     }
 
     private void attributeIndent() throws IOException {
-        if(!firstAttributeWritten || !indent[depth]){
+        if(!isEnableIndentAttributes() || !firstAttributeWritten || !indent[depth]){
             return;
         }
         int length = this.indentAttributeReference;

@@ -84,6 +84,16 @@ public class XMLUtil {
         }
         return event;
     }
+    public static int ensureTag(XmlPullParser parser)
+            throws IOException, XmlPullParserException {
+        int event = parser.getEventType();
+        while (event != XmlPullParser.START_TAG &&
+                event != XmlPullParser.END_TAG  &&
+                event != XmlPullParser.END_DOCUMENT){
+            event = parser.next();
+        }
+        return event;
+    }
     public static boolean isEmpty(String s){
         if(s==null){
             return true;

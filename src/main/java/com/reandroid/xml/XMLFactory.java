@@ -17,6 +17,8 @@ package com.reandroid.xml;
 
 import com.reandroid.common.FileChannelInputStream;
 import com.reandroid.utils.io.FileUtil;
+import com.reandroid.xml.kxml2.KXmlParser;
+import com.reandroid.xml.kxml2.KXmlSerializer;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -75,5 +77,29 @@ public class XMLFactory {
     }
     public static XmlSerializer newSerializer(){
         return new CloseableSerializer();
+    }
+
+    public static void setOrigin(XmlPullParser parser, Object origin) {
+        if (parser instanceof KXmlParser) {
+            ((KXmlParser) parser).setOrigin(origin);
+        }
+    }
+    public static void setEnableIndentAttributes(XmlSerializer serializer, boolean indentAttributes) {
+        KXmlSerializer kXmlSerializer = getKXmlSerializer(serializer);
+        if (kXmlSerializer != null) {
+            kXmlSerializer.setEnableIndentAttributes(indentAttributes);
+        }
+    }
+    private static KXmlSerializer getKXmlSerializer(XmlSerializer serializer) {
+        if (serializer instanceof KXmlSerializer) {
+            return (KXmlSerializer) serializer;
+        }
+        while (serializer instanceof XmlSerializerWrapper) {
+            serializer = ((XmlSerializerWrapper) serializer).getBaseSerializer();
+            if (serializer instanceof KXmlSerializer) {
+                return (KXmlSerializer) serializer;
+            }
+        }
+        return null;
     }
 }

@@ -175,8 +175,16 @@ public class KXmlParser implements XmlPullParser, Closeable {
 
     private boolean unresolved;
 
+    private Object origin;
 
     public KXmlParser(){
+    }
+
+    public Object getOrigin() {
+        return origin;
+    }
+    public void setOrigin(Object origin) {
+        this.origin = origin;
     }
 
     /**
@@ -1905,13 +1913,18 @@ public class KXmlParser implements XmlPullParser, Closeable {
             buf.append(text);
         }
 
-        buf.append("@" + getLineNumber() + ":" + getColumnNumber());
+        buf.append("@");
+        buf.append(getLineNumber());
+        buf.append(":");
+        buf.append(getColumnNumber());
         if (location != null) {
             buf.append(" in ");
             buf.append(location);
-        } else if (reader != null) {
+        }
+        Object origin = getOrigin();
+        if (origin != null) {
             buf.append(" in ");
-            buf.append(reader.toString());
+            buf.append(origin);
         }
         return buf.toString();
     }
