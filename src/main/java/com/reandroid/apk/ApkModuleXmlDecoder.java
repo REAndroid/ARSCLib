@@ -17,15 +17,18 @@ package com.reandroid.apk;
 
 import com.reandroid.app.AndroidManifest;
 import com.reandroid.archive.InputSource;
+import com.reandroid.arsc.chunk.Overlayable;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
 import com.reandroid.arsc.coder.xml.XmlCoder;
+import com.reandroid.arsc.list.OverlayableList;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.arsc.value.*;
 import com.reandroid.json.JSONObject;
 import com.reandroid.xml.XMLFactory;
+import com.reandroid.xml.XmlIndentingSerializer;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.File;
@@ -59,6 +62,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         decodeTableBlock(mainDirectory, tableBlock);
         decodeResFiles(mainDirectory);
         decodeValues(mainDirectory, tableBlock);
+        decodeOverlayable(mainDirectory, tableBlock);
     }
     private void decodeTableBlock(File mainDirectory, TableBlock tableBlock) throws IOException {
         try{
@@ -280,6 +284,25 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         File resourcesDir = new File(mainDirectory, TableBlock.DIRECTORY_NAME);
         XmlCoder xmlCoder = XmlCoder.getInstance();
         xmlCoder.VALUES_XML.decodeTable(resourcesDir, tableBlock, this);
+    }
+    private void decodeOverlayable(File mainDirectory, TableBlock tableBlock) throws IOException {
+        for (PackageBlock packageBlock : tableBlock) {
+            decodeOverlayable(mainDirectory, packageBlock);
+        }
+    }
+    private void decodeOverlayable(File mainDirectory, PackageBlock packageBlock) throws IOException {
+        OverlayableList overlayableList = packageBlock.getOverlayableList();
+        if(overlayableList.isEmpty()) {
+            return;
+        }
+        logMessage("Decode: overlayable");
+        File packageDirectory = toPackageDirectory(mainDirectory, packageBlock);
+        File file = new File(packageDirectory, PackageBlock.RES_DIRECTORY_NAME);
+        file = new File(file, PackageBlock.VALUES_DIRECTORY_NAME);
+        file = new File(file, Overlayable.FILE_NAME_XML);
+        XmlSerializer serializer = new XmlIndentingSerializer(XMLFactory.newSerializer(file));
+        XMLFactory.setEnableIndentAttributes(serializer, false);
+        overlayableList.serialize(serializer);
     }
     @Override
     public boolean test(Entry entry) {

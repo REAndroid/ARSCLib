@@ -18,11 +18,13 @@ package com.reandroid.apk.xmlencoder;
 import com.reandroid.apk.*;
 import com.reandroid.archive.BlockInputSource;
 import com.reandroid.archive.ZipEntryMap;
+import com.reandroid.arsc.chunk.Overlayable;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
 import com.reandroid.arsc.coder.ReferenceString;
 import com.reandroid.arsc.coder.xml.XmlCoder;
+import com.reandroid.arsc.list.OverlayableList;
 import com.reandroid.arsc.pool.TableStringPool;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.io.FileUtil;
@@ -44,6 +46,7 @@ public class XMLTableBlockEncoder {
     private APKLogger apkLogger;
     private final TableBlock tableBlock;
     private final Set<File> parsedFiles = new HashSet<>();
+    private final Set<File> nonTypeValueFiles = new HashSet<>();
     private final ApkModule apkModule;
     private Integer mMainPackageId;
 
@@ -107,6 +110,8 @@ public class XMLTableBlockEncoder {
         encodeAttrs(pubXmlFileList);
 
         encodeValues(pubXmlFileList);
+
+        encodeNonTypeValues(pubXmlFileList);
 
         tableBlock.refresh();
 
@@ -209,11 +214,6 @@ public class XMLTableBlockEncoder {
             packageBlock.sortTypes();
         }
     }
-    private void excludeIds(List<File> pubXmlFileList){
-        for(File pubXmlFile : pubXmlFileList){
-            addParsedFiles(pubXmlFile);
-        }
-    }
     private void initializeFrameworkFromManifest(File manifestFile) throws IOException {
         if(AndroidManifestBlock.FILE_NAME_BIN.equals(manifestFile.getName())){
             initializeFrameworkFromBinaryManifest();
@@ -309,11 +309,64 @@ public class XMLTableBlockEncoder {
             if(isAlreadyParsed(file)){
                 continue;
             }
+            if(addNonTypeValueFile(file)){
+                continue;
+            }
             addParsedFiles(file);
             logVerbose("Encoding: " + FileUtil.shortPath(file, 4));
             XmlCoder xmlCoder = XmlCoder.getInstance();
             xmlCoder.VALUES_XML.encode(file, getTableBlock().getCurrentPackage());
         }
+    }
+
+    private void encodeNonTypeValues(List<File> pubXmlFileList) throws IOException, XmlPullParserException {
+        Set<File> nonTypeValueFiles = this.nonTypeValueFiles;
+        if (nonTypeValueFiles.isEmpty()) {
+            return;
+        }
+        TableBlock tableBlock = getTableBlock();
+
+        for(File pubXmlFile:pubXmlFileList){
+            addParsedFiles(pubXmlFile);
+            PackageBlock packageBlock = tableBlock.getPackageBlockByTag(pubXmlFile);
+            tableBlock.setCurrentPackage(packageBlock);
+            File valuesDir = pubXmlFile.getParentFile();
+            for (File file : nonTypeValueFiles) {
+                File dir = file.getParentFile().getParentFile();
+                dir = new File(dir, PackageBlock.VALUES_DIRECTORY_NAME);
+                if (valuesDir.equals(dir)) {
+                    encodeNonTypeValue(file);
+                }
+            }
+        }
+    }
+    private void encodeNonTypeValue(File file) throws IOException, XmlPullParserException {
+        if (isAlreadyParsed(file)) {
+            return;
+        }
+        addParsedFiles(file);
+        if (Overlayable.FILE_NAME_XML.equals(file.getName())) {
+            encodeOverlayable(file);
+        }
+    }
+    private void encodeOverlayable(File file) throws IOException, XmlPullParserException {
+        logMessage("Encode: " + FileUtil.shortPath(file, 4));
+        TableBlock tableBlock = getTableBlock();
+        PackageBlock packageBlock = tableBlock.getCurrentPackage();
+        OverlayableList overlayableList = packageBlock.getOverlayableList();
+        XmlPullParser parser = XMLFactory.newPullParser(file);
+        XMLFactory.setOrigin(parser, FileUtil.shortPath(file, 4));
+        overlayableList.parse(parser);
+    }
+    private boolean addNonTypeValueFile(File file) {
+        if (nonTypeValueFiles.contains(file)) {
+            return true;
+        }
+        if (Overlayable.FILE_NAME_XML.equals(file.getName())) {
+            nonTypeValueFiles.add(file);
+            return true;
+        }
+        return false;
     }
     private File toAndroidManifest(File pubXmlFile){
         File resDirectory = toResDirectory(pubXmlFile);

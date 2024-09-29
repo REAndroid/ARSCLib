@@ -19,42 +19,51 @@ import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.OverlayableHeader;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.json.JSONObject;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.xml.XMLUtil;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Iterator;
 
-public class Overlayable extends Chunk<OverlayableHeader> implements JSONConvert<JSONObject> {
+public class Overlayable extends Chunk<OverlayableHeader> implements
+        Iterable<OverlayablePolicy>, JSONConvert<JSONObject> {
+
     private final BlockList<OverlayablePolicy> policyList;
-    private final ByteArray extraBytes;
 
     public Overlayable() {
         super(new OverlayableHeader(), 2);
         this.policyList = new BlockList<>();
-        this.extraBytes = new ByteArray();
         addChild(this.policyList);
-        addChild(this.extraBytes);
     }
 
-    public OverlayablePolicy get(int flags){
-        for(OverlayablePolicy policy:listOverlayablePolicies()){
-            if(flags==policy.getFlags()){
+    @Override
+    public Iterator<OverlayablePolicy> iterator() {
+        return policyList.iterator();
+    }
+
+    public OverlayablePolicy createNext() {
+        OverlayablePolicy overlayablePolicy = new OverlayablePolicy();
+        this.policyList.add(overlayablePolicy);
+        return overlayablePolicy;
+    }
+
+    public OverlayablePolicy getByFlag(int flags) {
+        for (OverlayablePolicy policy : this) {
+            if(flags == policy.getFlags()){
                 return policy;
             }
         }
         return null;
     }
-    public void addOverlayablePolicy(OverlayablePolicy overlayablePolicy){
+    public void addPolicy(OverlayablePolicy overlayablePolicy){
         this.policyList.add(overlayablePolicy);
-    }
-    public List<OverlayablePolicy> listOverlayablePolicies() {
-        return policyList.getChildes();
-    }
-    public ByteArray getExtraBytes() {
-        return extraBytes;
     }
 
     public String getName(){
@@ -85,7 +94,6 @@ public class Overlayable extends Chunk<OverlayableHeader> implements JSONConvert
         headerBlock.readBytes(chunkReader);
 
         readOverlayablePolicies(chunkReader);
-        readExtraBytes(chunkReader);
 
         reader.offset(size);
         chunkReader.close();
@@ -101,10 +109,41 @@ public class Overlayable extends Chunk<OverlayableHeader> implements JSONConvert
             headerBlock = reader.readHeaderBlock();
         }
     }
-    private void readExtraBytes(BlockReader reader) throws IOException {
-        int remaining = reader.available();
-        this.extraBytes.setSize(remaining);
-        this.extraBytes.readBytes(reader);
+
+    public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+        XMLUtil.ensureStartTag(parser);
+        if (!TAG_overlayable.equals(parser.getName())) {
+            throw new XmlPullParserException("Expecting tag '" + TAG_overlayable +
+                    "', but found '" + parser.getName() + "'");
+        }
+        setName(parser.getAttributeValue(null, NAME_name));
+        setActor(parser.getAttributeValue(null, NAME_actor));
+        parser.next();
+        XMLUtil.ensureTag(parser);
+        while (parser.getEventType() != XmlPullParser.END_TAG && parser.getEventType() != XmlPullParser.END_DOCUMENT) {
+            OverlayablePolicy overlayablePolicy = createNext();
+            overlayablePolicy.parse(parser);
+            XMLUtil.ensureTag(parser);
+        }
+        if (parser.getEventType() == XmlPullParser.END_TAG) {
+            parser.next();
+            XMLUtil.ensureTag(parser);
+        }
+    }
+    public void serialize(XmlSerializer serializer) throws IOException {
+        serializer.startTag(null, TAG_overlayable);
+        String name = getName();
+        if (!StringsUtil.isEmpty(name)) {
+            serializer.attribute(null, NAME_name, name);
+        }
+        String actor = getActor();
+        if (!StringsUtil.isEmpty(actor)) {
+            serializer.attribute(null, NAME_actor, actor);
+        }
+        for (OverlayablePolicy overlayablePolicy : this) {
+            overlayablePolicy.serialize(serializer);
+        }
+        serializer.endTag(null, TAG_overlayable);
     }
 
     @Override
@@ -113,7 +152,7 @@ public class Overlayable extends Chunk<OverlayableHeader> implements JSONConvert
         jsonObject.put(NAME_name, getName());
         jsonObject.put(NAME_actor, getActor());
         JSONArray jsonArray = new JSONArray();
-        for(OverlayablePolicy policy:listOverlayablePolicies()){
+        for (OverlayablePolicy policy : this) {
             jsonArray.put(policy.toJson());
         }
         jsonObject.put(NAME_policies, jsonArray);
@@ -121,44 +160,40 @@ public class Overlayable extends Chunk<OverlayableHeader> implements JSONConvert
     }
     @Override
     public void fromJson(JSONObject json) {
-        setName(json.optString(NAME_name));
-        setActor(json.optString(NAME_actor));
+        setName(json.optString(NAME_name, null));
+        setActor(json.optString(NAME_actor, null));
         JSONArray jsonArray = json.getJSONArray(NAME_policies);
         int length = jsonArray.length();
-        BlockList<OverlayablePolicy> policyList = this.policyList;
-        for(int i=0;i<length;i++){
-            OverlayablePolicy policy = new OverlayablePolicy();
-            policyList.add(policy);
-            policy.fromJson(jsonArray.getJSONObject(i));
+        for(int i = 0; i < length; i++) {
+            createNext().fromJson(jsonArray.getJSONObject(i));
         }
     }
     public void merge(Overlayable overlayable){
-        if(overlayable==null||overlayable==this){
+        if(overlayable == null || overlayable == this){
             return;
         }
         setName(overlayable.getName());
         setActor(overlayable.getActor());
-        for(OverlayablePolicy policy:overlayable.listOverlayablePolicies()){
-            OverlayablePolicy exist = get(policy.getFlags());
-            if(exist==null){
-                exist = new OverlayablePolicy();
-                addOverlayablePolicy(exist);
+        for(OverlayablePolicy policy : overlayable) {
+            OverlayablePolicy exist = getByFlag(policy.getFlags());
+            if (exist == null) {
+                exist = createNext();
             }
             exist.merge(policy);
         }
     }
 
     @Override
-    public String toString(){
-        return getClass().getSimpleName()+
-                ": name='" + getName()
+    public String toString() {
+        return "name='" + getName()
                 +"', actor='" + getActor()
-                +"', policies=" + policyList.size()
-                +"', extra=" + getExtraBytes().size();
+                +"', policies=" + policyList.size();
     }
 
-    public static final String NAME_name = "name";
-    public static final String NAME_actor = "actor";
-    public static final String NAME_policies = "policies";
+    public static final String NAME_name = ObjectsUtil.of("name");
+    public static final String NAME_actor = ObjectsUtil.of("actor");
+    public static final String NAME_policies = ObjectsUtil.of("policies");
+    public static final String TAG_overlayable = ObjectsUtil.of("overlayable");
+    public static final String FILE_NAME_XML = ObjectsUtil.of("overlayable.xml");
 
 }

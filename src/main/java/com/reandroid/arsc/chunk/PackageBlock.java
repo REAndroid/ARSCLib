@@ -395,9 +395,6 @@ public class PackageBlock extends Chunk<PackageHeader>
     public OverlayableList getOverlayableList(){
         return mBody.getOverlayableList();
     }
-    public BlockList<OverlayablePolicy> getOverlayablePolicyList(){
-        return mBody.getOverlayablePolicyList();
-    }
     public void sortTypes(){
         getSpecTypePairArray().sort();
     }
@@ -705,9 +702,11 @@ public class PackageBlock extends Chunk<PackageHeader>
             jsonObject.put(NAME_staged_aliases,
                     stagedAlias.getStagedAliasEntryArray().toJson());
         }
-        JSONArray jsonArray = getOverlayableList().toJson();
-        if(jsonArray!=null){
-            jsonObject.put(NAME_overlaybles, jsonArray);
+        if (addTypes) {
+            JSONArray jsonArray = getOverlayableList().toJson();
+            if(jsonArray != null){
+                jsonObject.put(NAME_overlaybles, jsonArray);
+            }
         }
         return jsonObject;
     }

@@ -1,18 +1,18 @@
- /*
-  *  Copyright (C) 2022 github.com/REAndroid
-  *
-  *  Licensed under the Apache License, Version 2.0 (the "License");
-  *  you may not use this file except in compliance with the License.
-  *  You may obtain a copy of the License at
-  *
-  *      http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.arsc.container;
 
 import com.reandroid.arsc.chunk.*;
@@ -34,6 +34,7 @@ public class PackageBody extends FixedBlockContainer {
     private final OverlayableList mOverlayableList;
     private final BlockList<OverlayablePolicy> mOverlayablePolicyList;
     private final BlockList<UnknownChunk> mUnknownChunkList;
+
     public PackageBody(){
         super(6);
         this.mSpecTypePairArray = new SpecTypePairArray();
@@ -56,7 +57,6 @@ public class PackageBody extends FixedBlockContainer {
                 getLibraryBlock().isEmpty() &&
                 getStagedAliasList().size() == 0 &&
                 getOverlayableList().size() == 0 &&
-                getOverlayablePolicyList().size() == 0 &&
                 getUnknownChunkList().size() == 0;
     }
 
@@ -65,14 +65,10 @@ public class PackageBody extends FixedBlockContainer {
         getLibraryBlock().getLibraryInfoArray().clear();
         getStagedAliasList().clearChildes();
         getOverlayableList().clearChildes();
-        getOverlayablePolicyList().clearChildes();
         getUnknownChunkList().clearChildes();
     }
     public OverlayableList getOverlayableList() {
         return mOverlayableList;
-    }
-    public BlockList<OverlayablePolicy> getOverlayablePolicyList() {
-        return mOverlayablePolicyList;
     }
     public StagedAliasList getStagedAliasList() {
         return mStagedAliasList;
@@ -141,14 +137,13 @@ public class PackageBody extends FixedBlockContainer {
         mStagedAliasList.add(stagedAlias);
     }
     private void readOverlayable(BlockReader reader) throws IOException{
-        Overlayable overlayable = new Overlayable();
+        Overlayable overlayable = getOverlayableList().createNext();
         overlayable.readBytes(reader);
-        mOverlayableList.add(overlayable);
     }
     private void readOverlayablePolicy(BlockReader reader) throws IOException{
         OverlayablePolicy overlayablePolicy = new OverlayablePolicy();
-        overlayablePolicy.readBytes(reader);
         mOverlayablePolicyList.add(overlayablePolicy);
+        overlayablePolicy.readBytes(reader);
     }
     private void readUnknownChunk(BlockReader reader) throws IOException{
         UnknownChunk unknownChunk = new UnknownChunk();
