@@ -169,6 +169,9 @@ public class EncodedArray extends DataItem implements ModifiableKeyItem, Iterabl
     public<T1 extends DexValueBlock<?>> Iterator<T1> iterator(Class<T1> instance, Predicate<? super T1> filter){
         return InstanceIterator.of(iterator(), instance, filter);
     }
+    public Iterator<DexValueBlock<?>> iterator(int start, int length) {
+        return getValueList().iterator(start, length);
+    }
     public Iterator<DexValueBlock<?>> clonedIterator(){
         return getValueList().clonedIterator();
     }

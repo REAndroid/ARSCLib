@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.value;
 
+import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
@@ -58,6 +59,10 @@ public class FloatValue extends PrimitiveValueBlock {
     @Override
     public DexValueType<?> getValueType() {
         return DexValueType.FLOAT;
+    }
+    @Override
+    public PrimitiveKey getKey() {
+        return PrimitiveKey.of(get());
     }
     @Override
     public String getHex() {

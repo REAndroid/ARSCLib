@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 
@@ -30,6 +31,7 @@ public abstract class SmaliValueNumber<T extends Number> extends SmaliValue{
     public abstract int getWidth();
     public abstract int unsignedInt();
     public abstract long unsignedLong();
+    public abstract PrimitiveKey getKey();
 
     @SuppressWarnings("unchecked")
     public static<T1 extends Number> SmaliValueNumber<T1> createFor(T1 number){

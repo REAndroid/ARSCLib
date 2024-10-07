@@ -52,7 +52,7 @@ public class SectionType<T extends SectionItem> {
     public static final SectionType<MethodId> METHOD_ID;
     public static final SectionType<ClassId> CLASS_ID;
     public static final SectionType<CallSiteId> CALL_SITE_ID;
-    public static final SectionType<MethodHandle> METHOD_HANDLE;
+    public static final SectionType<MethodHandleId> METHOD_HANDLE;
 
     public static final SectionType<TypeList> TYPE_LIST;
     public static final SectionType<AnnotationItem> ANNOTATION_ITEM;
@@ -243,14 +243,14 @@ public class SectionType<T extends SectionItem> {
         });
         VALUES[index++] = CALL_SITE_ID;
 
-        METHOD_HANDLE = new IdSectionType<>("METHOD_HANDLE", 0x0008, 6, new Creator<MethodHandle>() {
+        METHOD_HANDLE = new IdSectionType<>("METHOD_HANDLE", 0x0008, 6, new Creator<MethodHandleId>() {
             @Override
-            public MethodHandle[] newArrayInstance(int length) {
-                return new MethodHandle[length];
+            public MethodHandleId[] newArrayInstance(int length) {
+                return new MethodHandleId[length];
             }
             @Override
-            public MethodHandle newInstance() {
-                return new MethodHandle();
+            public MethodHandleId newInstance() {
+                return new MethodHandleId();
             }
         });
         VALUES[index++] = METHOD_HANDLE;

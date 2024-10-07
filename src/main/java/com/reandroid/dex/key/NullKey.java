@@ -13,45 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.smali.model;
+package com.reandroid.dex.key;
 
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.NullKey;
-import com.reandroid.dex.smali.SmaliParseException;
-import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.value.DexValueType;
 
 import java.io.IOException;
 
-public class SmaliValueNull extends SmaliValue{
+public class NullKey implements Key {
 
-    public SmaliValueNull(){
-        super();
+    public static NullKey INSTANCE = new NullKey();
+
+    public NullKey() {
     }
 
     @Override
-    public DexValueType<?> getValueType() {
-        return DexValueType.NULL;
+    public int compareTo(Object obj) {
+        if (obj == null) {
+            return -1;
+        }
+        return 0;
     }
-
     @Override
-    public NullKey getKey() {
-        return NullKey.INSTANCE;
+    public int hashCode() {
+        return 0;
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        return getClass() == obj.getClass();
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append("null");
     }
+
     @Override
-    public void parse(SmaliReader reader) throws IOException {
-        reader.skipSpaces();
-        byte[] bytes = new byte[]{'n', 'u', 'l', 'l'};
-        if(reader.startsWith(bytes)){
-            reader.skip(bytes.length);
-        }else {
-            throw new SmaliParseException("Not 'null' value", reader);
-        }
+    public String toString() {
+        return "null";
     }
 }

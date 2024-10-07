@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -59,6 +60,10 @@ public class SmaliValueFloat extends SmaliValueNumber<Float>{
     @Override
     public long unsignedLong() {
         return getNumber().intValue() & 0xffffffffL;
+    }
+    @Override
+    public PrimitiveKey getKey() {
+        return PrimitiveKey.of(getValue());
     }
 
     @Override

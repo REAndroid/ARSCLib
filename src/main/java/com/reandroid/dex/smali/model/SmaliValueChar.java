@@ -16,6 +16,8 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -37,6 +39,11 @@ public class SmaliValueChar extends SmaliValue{
     }
     public void setValue(char value) {
         this.value = value;
+    }
+
+    @Override
+    public Key getKey() {
+        return PrimitiveKey.of(getValue());
     }
 
     @Override

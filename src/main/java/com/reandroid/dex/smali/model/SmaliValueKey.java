@@ -38,6 +38,10 @@ public class SmaliValueKey extends SmaliValue{
     }
 
     @Override
+    public Key getKey() {
+        return getValue();
+    }
+    @Override
     public DexValueType<?> getValueType() {
         Key key = getValue();
         if(key instanceof StringKey){

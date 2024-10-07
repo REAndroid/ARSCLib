@@ -15,41 +15,39 @@
  */
 package com.reandroid.dex.key;
 
-
+import com.reandroid.dex.common.MethodHandleType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
 public class MethodHandleKey implements Key{
 
-    private final MethodKey id;
-    private final MethodKey member;
+    private final MethodHandleType handleType;
+    private final Key member;
 
-    public MethodHandleKey(MethodKey id, MethodKey member){
-        this.id = id;
+    public MethodHandleKey(MethodHandleType handleType, Key member){
+        this.handleType = handleType;
         this.member = member;
     }
 
-    public MethodKey getId() {
-        return id;
+    public MethodHandleType getHandleType() {
+        return handleType;
     }
-    public MethodKey getMember() {
+    public Key getMember() {
         return member;
     }
 
     @Override
     public TypeKey getDeclaring() {
-        return getId().getDeclaring();
+        return getMember().getDeclaring();
     }
 
     @Override
     public Iterator<? extends Key> mentionedKeys() {
-        return CombiningIterator.two(getId().mentionedKeys(),
-                getMember().mentionedKeys());
+        return getMember().mentionedKeys();
     }
 
     @Override
@@ -57,18 +55,22 @@ public class MethodHandleKey implements Key{
         if(search.equals(this)){
             return replace;
         }
-        MethodKey id = (MethodKey) getId().replaceKey(search, replace);
-        MethodKey member = (MethodKey) getMember().replaceKey(search, replace);
-        if(id != getId() || member != getMember()){
-            return new MethodHandleKey(id, member);
+        Key key = getMember().replaceKey(search, replace);
+        if(key != getMember()){
+            return new MethodHandleKey(getHandleType(), key);
         }
         return this;
     }
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        getId().append(writer);
-        writer.append(", ");
+        append(writer, true);
+    }
+    public void append(SmaliWriter writer, boolean appendHandle) throws IOException {
+        if (appendHandle) {
+            getHandleType().append(writer);
+        }
+        writer.append('@');
         getMember().append(writer);
     }
 
@@ -78,7 +80,7 @@ public class MethodHandleKey implements Key{
             return -1;
         }
         MethodHandleKey other = (MethodHandleKey) obj;
-        int i = CompareUtil.compare(getId(), other.getId());
+        int i = CompareUtil.compare(getHandleType(), other.getHandleType());
         if(i != 0){
             return i;
         }
@@ -94,16 +96,16 @@ public class MethodHandleKey implements Key{
             return false;
         }
         MethodHandleKey other = (MethodHandleKey) obj;
-        return Objects.equals(getId(), other.getId()) &&
-                Objects.equals(getMember(), other.getMember());
+        return ObjectsUtil.equals(getHandleType(), other.getHandleType()) &&
+                ObjectsUtil.equals(getMember(), other.getMember());
     }
     @Override
     public int hashCode() {
-        return getId().hashCode() + getMember().hashCode() * 31 ;
+        return ObjectsUtil.hash(getHandleType(), getMember().hashCode());
     }
 
     @Override
     public String toString() {
-        return getId() + ", " + getMember();
+        return getHandleType() + "@" + getMember();
     }
 }

@@ -23,6 +23,7 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.*;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
@@ -33,36 +34,49 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
 
     private final DataItemIndirectReference<EncodedArray> encodedArrayReference;
 
-    private final IdKey<CallSiteId> mKey;
-
     public CallSiteId() {
         super(4);
         this.encodedArrayReference = new DataItemIndirectReference<>(SectionType.ENCODED_ARRAY,
                 this, 0, UsageMarker.USAGE_CALL_SITE);
-        this.mKey = new IdKey<>(this);
     }
 
     @Override
-    public IdKey<CallSiteId> getKey() {
-        return mKey;
+    public CallSiteKey getKey() {
+        return checkKey(new CallSiteKey(getMethodHandle(), getMethodNameKey(),
+                getProto(), getArguments()));
     }
-    @SuppressWarnings("unchecked")
     @Override
     public void setKey(Key key) {
-        IdKey<CallSiteId> idKey = (IdKey<CallSiteId>) key;
-        merge(idKey.getItem());
+        CallSiteKey callSiteKey = (CallSiteKey) key;
+        setMethodHandle(callSiteKey.getMethodHandle());
+        setMethodName(callSiteKey.getName());
+        setProto(callSiteKey.getProto());
+        throw new RuntimeException("Method not implemented");
     }
 
-    public MethodHandle getMethodHandle(){
+    public String callSiteName() {
+        return NAME_PREFIX + getIdx();
+    }
+    public MethodHandleKey getMethodHandle() {
+        return getMethodHandleId().getKey();
+    }
+    public MethodHandleId getMethodHandleId(){
         return getValue(SectionType.METHOD_HANDLE, 0);
     }
     public void setMethodHandle(MethodHandleKey key){
         getOrCreateValue(SectionType.METHOD_HANDLE, 0, key);
     }
-    public String getMethodName(){
+    public String getMethodName() {
         StringId stringId = getMethodNameId();
         if(stringId != null){
             return stringId.getString();
+        }
+        return null;
+    }
+    public StringKey getMethodNameKey(){
+        StringId stringId = getMethodNameId();
+        if (stringId != null) {
+            return stringId.getKey();
         }
         return null;
     }
@@ -75,11 +89,59 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
     public StringId getMethodNameId(){
         return getValue(SectionType.STRING_ID, 1);
     }
-    public MethodId getMethodId(){
-        return getValue(SectionType.METHOD_ID, 2);
+    public ProtoId getProtoId() {
+        return getValue(SectionType.PROTO_ID, 2);
     }
-    public void setMethodId(MethodKey methodKey){
-        getOrCreateValue(SectionType.METHOD_ID, 2, methodKey);
+    public ProtoKey getProto() {
+        ProtoId protoId = getProtoId();
+        if (protoId != null) {
+            return protoId.getKey();
+        }
+        return null;
+    }
+    public void setProto(ProtoKey protoKey){
+        getOrCreateValue(SectionType.METHOD_ID, 2, protoKey);
+    }
+    public ArrayKey getArguments() {
+        int size = getArgumentsSize();
+        Key[] results = new Key[size];
+        for (int i = 0; i < size; i++) {
+            results[i] = getArgument(i);
+        }
+        return new ArrayKey(results);
+    }
+    public Iterator<DexValueBlock<?>> getArgumentValues() {
+        EncodedArray encodedArray = getEncodedArray();
+        if (encodedArray != null) {
+            return encodedArray.iterator(3, encodedArray.size() - 3);
+        }
+        return EmptyIterator.of();
+    }
+    public Key getArgument(int i) {
+        DexValueBlock<?> valueBlock = getArgumentValue(i);
+        if (valueBlock != null) {
+            return valueBlock.getKey();
+        }
+        return null;
+    }
+    public DexValueBlock<?> getArgumentValue(int i) {
+        if (i >= 0) {
+            EncodedArray encodedArray = getEncodedArray();
+            if (encodedArray != null) {
+                return encodedArray.get(i + 3);
+            }
+        }
+        return null;
+    }
+    public int getArgumentsSize() {
+        EncodedArray encodedArray = getEncodedArray();
+        if (encodedArray != null) {
+            int size = encodedArray.size();
+            if (size > 0) {
+                return size - 3;
+            }
+        }
+        return 0;
     }
     private<T1 extends IdItem> T1 getOrCreateValue(SectionType<T1> sectionType, int index, Key key){
         EncodedArray encodedArray = getOrCreateEncodedArray();
@@ -140,7 +202,18 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-
+        writer.append(callSiteName());
+        writer.append('(');
+        getMethodNameId().append(writer);
+        writer.append(", ");
+        getProtoId().append(writer);
+        Iterator<DexValueBlock<?>> iterator = getArgumentValues();
+        while (iterator.hasNext()) {
+            writer.append(", ");
+            iterator.next().append(writer);
+        }
+        writer.append(')');
+        getMethodHandle().append(writer, false);
     }
 
     @Override
@@ -151,7 +224,7 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
         if(callSiteId == null){
             return -1;
         }
-        int i = CompareUtil.compare(getMethodHandle(), callSiteId.getMethodHandle());
+        int i = CompareUtil.compare(getMethodHandleId(), callSiteId.getMethodHandleId());
         if(i != 0){
             return i;
         }
@@ -159,7 +232,7 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
         if(i != 0){
             return i;
         }
-        return CompareUtil.compare(getMethodId(), callSiteId.getMethodId());
+        return CompareUtil.compare(getProtoId(), callSiteId.getProtoId());
     }
     @Override
     public boolean equals(Object o) {
@@ -181,4 +254,10 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
         return 0;
     }
 
+    @Override
+    public String toString() {
+        return SmaliWriter.toStringSafe(this);
+    }
+
+    public static final String NAME_PREFIX = ObjectsUtil.of("call_site_");
 }

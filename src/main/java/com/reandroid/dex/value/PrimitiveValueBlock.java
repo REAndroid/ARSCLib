@@ -16,6 +16,8 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 
@@ -94,6 +96,8 @@ public abstract class PrimitiveValueBlock extends DexValueBlock<NumberValue> {
         setValueSize(container.getSize() - 1);
     }
 
+    @Override
+    public abstract PrimitiveKey getKey();
     public abstract String getHex();
     @Override
     public String getAsString() {

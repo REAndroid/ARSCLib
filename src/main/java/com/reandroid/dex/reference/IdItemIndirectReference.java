@@ -179,6 +179,6 @@ public class IdItemIndirectReference<T extends IdItem> extends IndirectItem<Sect
         if(item != null){
             return get() + ": " + item.toString();
         }
-        return sectionType.getName() + ": " + get();
+        return getSectionType().getName() + ": " + get();
     }
 }

@@ -777,6 +777,7 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         values[0xec] = IPUT_BYTE_QUICK;
         THROW_VERIFICATION_ERROR = new Opcode<>(0xed, 4, "throw-verification-error", new Ins20bcCreator(0xed));
         values[0xed] = THROW_VERIFICATION_ERROR;
+
         EXECUTE_INLINE = new Opcode<>(0xee, 6, "execute-inline", new Ins35miCreator(0xee));
         values[0xee] = EXECUTE_INLINE;
         EXECUTE_INLINE_RANGE = new Opcode<>(0xef, 6, "execute-inline/range", new Ins3rmiCreator(0xef));
@@ -805,10 +806,14 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         values[0xfa] = INVOKE_SUPER_QUICK;
         INVOKE_SUPER_QUICK_RANGE = new Opcode<>(0xfb, 6, "invoke-super-quick/range", SectionType.METHOD_ID, new Ins3rmsCreator(0xfb));
         values[0xfb] = INVOKE_SUPER_QUICK_RANGE;
-        IPUT_OBJECT_VOLATILE = new Opcode<>(0xfc, 4, "iput-object-volatile", SectionType.FIELD_ID, new Ins22cCreator(0xfc));
-        values[0xfc] = IPUT_OBJECT_VOLATILE;
-        SGET_OBJECT_VOLATILE = new Opcode<>(0xfd, 4, "sget-object-volatile", SectionType.FIELD_ID, new Ins21cCreator(0xfd));
-        values[0xfd] = SGET_OBJECT_VOLATILE;
+
+
+
+        INVOKE_CUSTOM = new Opcode<>(0xfc, 6, "invoke-custom", SectionType.CALL_SITE_ID, new Ins35cCreator(0xfc));
+        values[0xfc] = INVOKE_CUSTOM;
+        INVOKE_CUSTOM_RANGE = new Opcode<>(0xfd, 6, "invoke-custom/range", SectionType.CALL_SITE_ID, new Ins3rcCreator(0xfd));
+        values[0xfd] = INVOKE_CUSTOM_RANGE;
+
         SPUT_OBJECT_VOLATILE = new Opcode<>(0xfe, 4, "sput-object-volatile", SectionType.FIELD_ID, new Ins21cPutCreator(0xfe));
         values[0xfe] = SPUT_OBJECT_VOLATILE;
         CONST_METHOD_TYPE = new Opcode<>(0xff, 4, "const-method-type", SectionType.METHOD_ID, new Ins21cCreator(0xff));
@@ -841,10 +846,13 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         VALUES_2[7] = INVOKE_POLYMORPHIC;
         INVOKE_POLYMORPHIC_RANGE = new Opcode<>(0xfb, 8, "invoke-polymorphic/range", SectionType.METHOD_ID, new Ins4rccCreator(0xfb));
         VALUES_2[8] = INVOKE_POLYMORPHIC_RANGE;
-        INVOKE_CUSTOM = new Opcode<>(0xfc, 6, "invoke-custom", SectionType.METHOD_ID, new Ins35cCreator(0xfc));
-        VALUES_2[9] = INVOKE_CUSTOM;
-        INVOKE_CUSTOM_RANGE = new Opcode<>(0xfd, 6, "invoke-custom/range", SectionType.METHOD_ID, new Ins3rcCreator(0xfd));
-        VALUES_2[10] = INVOKE_CUSTOM_RANGE;
+
+
+        IPUT_OBJECT_VOLATILE = new Opcode<>(0xfc, 4, "iput-object-volatile", SectionType.FIELD_ID, new Ins22cCreator(0xfc));
+        VALUES_2[9] = IPUT_OBJECT_VOLATILE;
+        SGET_OBJECT_VOLATILE = new Opcode<>(0xfd, 4, "sget-object-volatile", SectionType.FIELD_ID, new Ins21cCreator(0xfd));
+        VALUES_2[10] = SGET_OBJECT_VOLATILE;
+
         CONST_METHOD_HANDLE = new Opcode<>(0xfe, 4, "const-method-handle", SectionType.METHOD_HANDLE, new Ins21cCreator(0xfe));
         VALUES_2[11] = CONST_METHOD_HANDLE;
 
@@ -900,8 +908,9 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
     public String getName() {
         return name;
     }
-    public boolean hasOutRegisters(){
-        if(getSectionType() == SectionType.METHOD_ID){
+    public boolean hasOutRegisters() {
+        SectionType<?> sectionType = getSectionType();
+        if (sectionType == SectionType.METHOD_ID || sectionType == SectionType.CALL_SITE_ID) {
             return true;
         }
         return this == FILLED_NEW_ARRAY || this == FILLED_NEW_ARRAY_RANGE;

@@ -17,6 +17,7 @@ package com.reandroid.dex.value;
 
 import com.reandroid.dex.data.EncodedArray;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.ArrayKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -36,6 +37,13 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
         super(new EncodedArray(), DexValueType.ARRAY);
     }
 
+    public Key getKey(int i) {
+        DexValueBlock<?> value = get(i);
+        if (value != null) {
+            return value.getKey();
+        }
+        return null;
+    }
     public DexValueBlock<?> get(int i){
         return getValueContainer().get(i);
     }
@@ -97,6 +105,16 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
         for(DexValueBlock<?> valueBlock : this){
             valueBlock.replaceKeys(search, replace);
         }
+    }
+
+    @Override
+    public ArrayKey getKey() {
+        int size = size();
+        Key[] keys = new Key[size];
+        for (int i = 0; i < size; i++) {
+            keys[i] = getKey(i);
+        }
+        return new ArrayKey(keys);
     }
 
     @Override

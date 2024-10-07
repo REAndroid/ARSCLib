@@ -16,6 +16,8 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
@@ -37,6 +39,12 @@ public class BooleanValue extends DexValueBlock<Block> {
     public DexValueType<?> getValueType() {
         return DexValueType.BOOLEAN;
     }
+
+    @Override
+    public PrimitiveKey getKey() {
+        return PrimitiveKey.of(get());
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append(Boolean.toString(get()));

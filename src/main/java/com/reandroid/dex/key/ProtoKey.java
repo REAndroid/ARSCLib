@@ -1,10 +1,12 @@
 package com.reandroid.dex.key;
 
+import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
@@ -245,6 +247,26 @@ public class ProtoKey implements Key{
         return new ProtoKey(parameters, returnType);
     }
 
+    public static ProtoKey parse(String text) {
+        if (text == null) {
+            return null;
+        }
+        text = text.trim();
+        if (text.length() < 3 || text.charAt(0) != '(') {
+            return null;
+        }
+        text = text.substring(1);
+        int i = text.indexOf(')');
+        if (i < 0) {
+            return null;
+        }
+        String[] parameters = DexUtils.splitParameters(text.substring(0, i).trim());
+        String returnType = text.substring(i + 1).trim();
+        if (StringsUtil.isEmpty(text)) {
+            return null;
+        }
+        return new ProtoKey(parameters, returnType);
+    }
     public static ProtoKey read(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, '(');

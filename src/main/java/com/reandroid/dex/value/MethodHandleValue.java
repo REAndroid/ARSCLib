@@ -15,11 +15,11 @@
  */
 package com.reandroid.dex.value;
 
-import com.reandroid.dex.id.MethodHandle;
+import com.reandroid.dex.id.MethodHandleId;
 import com.reandroid.dex.key.MethodHandleKey;
 import com.reandroid.dex.sections.SectionType;
 
-public class MethodHandleValue extends SectionIdValue<MethodHandle> {
+public class MethodHandleValue extends SectionIdValue<MethodHandleId> {
 
     public MethodHandleValue() {
         super(SectionType.METHOD_HANDLE, DexValueType.METHOD_HANDLE);

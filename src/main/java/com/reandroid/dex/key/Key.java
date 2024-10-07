@@ -40,6 +40,9 @@ public interface Key extends Comparable<Object>, SmaliFormat {
     default Key replaceKey(Key search, Key replace){
         return this;
     }
+    default boolean isPrimitiveKey() {
+        return false;
+    }
     default boolean isPlatform(){
         return DexUtils.isPlatform(getDeclaring());
     }

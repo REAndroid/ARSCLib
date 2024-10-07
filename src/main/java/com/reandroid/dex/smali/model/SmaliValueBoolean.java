@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -37,6 +38,10 @@ public class SmaliValueBoolean extends SmaliValue{
         this.value = value;
     }
 
+    @Override
+    public PrimitiveKey getKey() {
+        return PrimitiveKey.of(getValue());
+    }
     @Override
     public DexValueType<?> getValueType() {
         return DexValueType.BOOLEAN;

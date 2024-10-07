@@ -76,7 +76,9 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
         valueTypeItem.set((byte) flag);
     }
 
-
+    public Key getKey() {
+        throw new RuntimeException("Method not implemented");
+    }
     public void replaceKeys(Key search, Key replace){
     }
     public Iterator<IdItem> usedIds(){

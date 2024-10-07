@@ -82,10 +82,13 @@ public class StringKey implements Key{
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
+        append(writer, false);
+    }
+    public void append(SmaliWriter writer, boolean enableComment) throws IOException {
         writer.append('"');
         boolean unicodeDetected = DexUtils.encodeString(writer, getString());
         writer.append('"');
-        if(unicodeDetected && writer.isCommentUnicodeStrings()) {
+        if(enableComment && unicodeDetected && writer.isCommentUnicodeStrings()) {
             DexUtils.appendCommentString(250, writer.getCommentAppender(), getString());
         }
     }

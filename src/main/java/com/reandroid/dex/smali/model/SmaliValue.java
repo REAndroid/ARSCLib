@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
@@ -31,6 +33,9 @@ public class SmaliValue extends Smali{
 
     public DexValueType<?> getValueType(){
         return null;
+    }
+    public Key getKey() {
+        throw new RuntimeException("Method not implemented");
     }
     @Override
     public void parse(SmaliReader reader) throws IOException {
