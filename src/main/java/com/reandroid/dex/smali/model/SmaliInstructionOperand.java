@@ -210,6 +210,8 @@ public abstract class SmaliInstructionOperand extends Smali{
                 key = FieldKey.read(reader);
             }else if(sectionType == SectionType.METHOD_ID){
                 key = MethodKey.read(reader);
+            }else if(sectionType == SectionType.CALL_SITE_ID){
+                key = CallSiteKey.read(reader);
             }else {
                 throw new SmaliParseException("Invalid key", reader);
             }

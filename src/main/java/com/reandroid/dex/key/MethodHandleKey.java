@@ -16,6 +16,8 @@
 package com.reandroid.dex.key;
 
 import com.reandroid.dex.common.MethodHandleType;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
@@ -107,5 +109,24 @@ public class MethodHandleKey implements Key{
     @Override
     public String toString() {
         return getHandleType() + "@" + getMember();
+    }
+
+    public static MethodHandleKey read(SmaliReader reader) throws IOException {
+        MethodHandleType handleType = MethodHandleType.read(reader);
+        if (handleType == null) {
+            return null;
+        }
+        SmaliParseException.expect(reader, '@');
+        return read(handleType, reader);
+    }
+
+    public static MethodHandleKey read(MethodHandleType handleType, SmaliReader reader) throws IOException {
+        Key key;
+        if (handleType.isField()) {
+            key = FieldKey.read(reader);
+        } else {
+            key = MethodKey.read(reader);
+        }
+        return new MethodHandleKey(handleType, key);
     }
 }

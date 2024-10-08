@@ -15,13 +15,17 @@
  */
 package com.reandroid.dex.key;
 
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArrayIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 public class ArrayKey implements Key, Iterable<Key> {
 
@@ -137,5 +141,60 @@ public class ArrayKey implements Key, Iterable<Key> {
             }
         }
         return true;
+    }
+
+    public static ArrayKey read(SmaliReader reader, char end) throws IOException {
+        reader.skipWhitespacesOrComment();
+        if (reader.getASCII(reader.position()) == end) {
+            reader.readASCII();
+            return new ArrayKey(new Key[0]);
+        }
+        List<Key> results = new ArrayCollection<>();
+        while (true) {
+            Key key = readNext(reader);
+            results.add(key);
+            reader.skipWhitespacesOrComment();
+            if (reader.getASCII(reader.position()) == end) {
+                break;
+            }
+            SmaliParseException.expect(reader, ',');
+        }
+        SmaliParseException.expect(reader, end);
+        return new ArrayKey(results.toArray(new Key[results.size()]));
+    }
+    private static Key readNext(SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        char c = reader.getASCII(reader.position());
+        if (c == '"') {
+            return StringKey.read(reader);
+        }
+        Key key = MethodHandleKey.read(reader);
+        if (key != null) {
+            return key;
+        }
+        key = TypeKey.primitiveType(c);
+        if (key != null) {
+            reader.readASCII();
+            return key;
+        }
+        int lineEnd = reader.indexOfBeforeLineEnd(',');
+        if (lineEnd < 0) {
+            lineEnd = reader.indexOfLineEnd();
+        }
+        if (c == 'L' || c == '[') {
+            int i = reader.indexOfBeforeLineEnd('>');
+            if (i < 0 || i > lineEnd) {
+                return TypeKey.read(reader);
+            }
+            c = reader.getASCII(i + 1);
+            if (c == '(') {
+                return MethodKey.read(reader);
+            }
+            if (c != ':') {
+                throw new SmaliParseException("Expecting ':'", reader);
+            }
+            return FieldKey.read(reader);
+        }
+        return StringKey.read(reader);
     }
 }
