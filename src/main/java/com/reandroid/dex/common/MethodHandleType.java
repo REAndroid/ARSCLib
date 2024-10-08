@@ -16,10 +16,13 @@
 package com.reandroid.dex.common;
 
 import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MethodHandleType implements Comparable<MethodHandleType>, SmaliFormat {
 
@@ -34,6 +37,7 @@ public class MethodHandleType implements Comparable<MethodHandleType>, SmaliForm
     public static final MethodHandleType INVOKE_INTERFACE;
 
     private static final MethodHandleType[] VALUES;
+    private static final Map<String, MethodHandleType> nameMap;
 
     static {
 
@@ -47,7 +51,7 @@ public class MethodHandleType implements Comparable<MethodHandleType>, SmaliForm
         INVOKE_DIRECT = new MethodHandleType(7, "invoke-direct", false);
         INVOKE_INTERFACE = new MethodHandleType(8, "invoke-interface", false);
 
-        VALUES = new MethodHandleType[] {
+        MethodHandleType [] values = new MethodHandleType[] {
                 STATIC_PUT,
                 STATIC_GET,
                 INSTANCE_PUT,
@@ -58,6 +62,14 @@ public class MethodHandleType implements Comparable<MethodHandleType>, SmaliForm
                 INVOKE_DIRECT,
                 INVOKE_INTERFACE
         };
+        VALUES = values;
+        int length = values.length;
+        Map<String, MethodHandleType> map = new HashMap<>(length);
+        nameMap = map;
+        for (int i = 0; i < length; i++) {
+            MethodHandleType type = values[i];
+            map.put(type.name, type);
+        }
     }
 
     private final int type;
@@ -68,9 +80,6 @@ public class MethodHandleType implements Comparable<MethodHandleType>, SmaliForm
         this.type = type;
         this.name = name;
         this.field = field;
-    }
-    private MethodHandleType(int type, String name) {
-        this(type, name, false);
     }
 
     public String name() {
@@ -119,5 +128,26 @@ public class MethodHandleType implements Comparable<MethodHandleType>, SmaliForm
             return VALUES[type];
         }
         return null;
+    }
+    public static MethodHandleType valueOf(String name) {
+        return nameMap.get(name);
+    }
+
+    public static MethodHandleType read(SmaliReader reader) {
+        reader.skipWhitespaces();
+        int position = reader.position();
+        char c = reader.getASCII(position);
+        if (c != 's' && c != 'i') {
+            return null;
+        }
+        int i = reader.indexOfBeforeLineEnd('@');
+        if (i < 0) {
+            return null;
+        }
+        MethodHandleType type = valueOf(reader.readString(i - position).trim());
+        if (type == null) {
+            reader.position(position);
+        }
+        return type;
     }
 }

@@ -15,6 +15,9 @@
  */
 package com.reandroid.dex.key;
 
+import com.reandroid.dex.common.MethodHandleType;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
@@ -87,5 +90,33 @@ public class CallSiteKey implements Key {
             builder.append("null");
         }
         return builder.toString();
+    }
+
+    public static CallSiteKey read(SmaliReader reader) throws IOException {
+        reader.skipWhitespaces();
+        String label = readCallSiteLabel(reader);
+        SmaliParseException.expect(reader, '(');
+        StringKey name = StringKey.read(reader);
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, ',');
+        ProtoKey protoKey = ProtoKey.read(reader);
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, ',');
+        ArrayKey arguments = ArrayKey.read(reader, ')');
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, '@');
+        MethodHandleKey methodHandleKey = MethodHandleKey.read(MethodHandleType.INVOKE_STATIC, reader);
+        return new CallSiteKey(methodHandleKey, name, protoKey, arguments);
+    }
+    private static String readCallSiteLabel(SmaliReader reader) throws IOException {
+        int position = reader.position();
+        if (reader.getASCII(position) == '(') {
+            return null;
+        }
+        int i = reader.indexOfBeforeLineEnd('(');
+        if (i < 0) {
+            throw new SmaliParseException("Expecting call site", reader);
+        }
+        return reader.readString(i - position);
     }
 }
