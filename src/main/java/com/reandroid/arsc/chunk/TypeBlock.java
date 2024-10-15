@@ -221,6 +221,9 @@ public class TypeBlock extends Chunk<TypeHeader>
         return entry;
     }
     public Entry getOrCreateEntry(String name){
+        if (name == null) {
+            return null;
+        }
         Entry entry = getEntry(name);
         if(entry != null){
             return entry;

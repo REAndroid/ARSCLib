@@ -74,7 +74,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         }
         return new ComputeIterator<>(referencedList.iterator(), referenceItem -> {
             T result = referenceItem.getReferredParent(parentClass);
-            if (resultFilter != null && !resultFilter.test(result)) {
+            if (result == null || resultFilter != null && !resultFilter.test(result)) {
                 result = null;
             }
             return result;

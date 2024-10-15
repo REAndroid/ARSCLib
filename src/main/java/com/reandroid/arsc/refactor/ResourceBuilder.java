@@ -254,7 +254,7 @@ public class ResourceBuilder {
         ArrayCollection<ResourceEntry> sourceEntryList = new ArrayCollection<>();
         Iterator<ResourceEntry> iterator = FilterIterator.of(
                 sourcePackage.getResources(typeName),
-                resourceEntry -> resourceEntry.isDeclared() &&
+                resourceEntry -> resourceEntry.isDefined() &&
                         keepEntries.test(resourceEntry));
         sourceEntryList.addAll(iterator);
 

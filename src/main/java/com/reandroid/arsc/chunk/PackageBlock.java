@@ -757,7 +757,11 @@ public class PackageBlock extends Chunk<PackageHeader>
         int id = 0;
         Iterator<Entry> iterator = resourceEntry.iterator(mergeOption.getKeepEntryConfigs());
         while (iterator.hasNext()) {
-            Entry entry = mergeWithName(mergeOption, iterator.next());
+            Entry coming = iterator.next();
+            if (coming.isNull()) {
+                continue;
+            }
+            Entry entry = mergeWithName(mergeOption, coming);
             if(id == 0){
                 id = entry.getResourceId();
             }

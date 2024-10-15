@@ -129,9 +129,16 @@ public abstract class XMLNodeTree extends XMLNode implements
             return xmlNode;
         }
     }
-    public boolean remove(Predicate<? extends XMLNode> filter){
+    /**
+     * Use removeIf
+     * */
+    @Deprecated
+    public boolean remove(Predicate<? super XMLNode> filter){
+        return removeIf(filter);
+    }
+    public boolean removeIf(Predicate<? super XMLNode> filter){
         synchronized (this){
-            return mChildes.remove(filter);
+            return mChildes.removeIf(filter);
         }
     }
     public boolean sort(Comparator<? super XMLNode> comparator){

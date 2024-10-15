@@ -653,6 +653,7 @@ public class Entry extends Block implements JSONConvert<JSONObject> {
     }
     public void mergeWithName(ResourceMergeOption mergeOption, Entry entry) {
         if(canMerge(entry)) {
+            unlinkNullSpecString();
             TableEntry<?, ?> tableEntry = entry.getTableEntry();
             TableEntry<?, ?> existEntry = ensureTableEntry(tableEntry instanceof ResTableMapEntry);
             existEntry.mergeWithName(mergeOption, tableEntry);
