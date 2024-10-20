@@ -17,12 +17,14 @@ package com.reandroid.arsc.container;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.base.DirectStreamReader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 
 import java.io.IOException;
+import java.io.InputStream;
 
-public class CountedBlockList<T extends Block> extends BlockList<T> {
+public class CountedBlockList<T extends Block> extends BlockList<T> implements DirectStreamReader {
 
     private final IntegerReference countReference;
 
@@ -45,5 +47,16 @@ public class CountedBlockList<T extends Block> extends BlockList<T> {
     protected void onReadBytes(BlockReader reader) throws IOException {
         setSize(getCountReference().get());
         readChildes(reader);
+    }
+
+    @Override
+    public int readBytes(InputStream inputStream) throws IOException, ClassCastException {
+        int size = getCountReference().get();
+        setSize(size);
+        int result = 0;
+        for (int i = 0; i < size; i++) {
+            result += ((DirectStreamReader)get(i)).readBytes(inputStream);
+        }
+        return result;
     }
 }
