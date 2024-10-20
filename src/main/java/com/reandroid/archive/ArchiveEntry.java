@@ -90,7 +90,7 @@ public class ArchiveEntry {
         return !isDirectory();
     }
     public boolean isDirectory() {
-        return this.getName().endsWith("/");
+        return getDataSize() == 0 && this.getName().endsWith("/");
     }
     public FilePermissions getFilePermissions() {
         return getCentralEntryHeader().getFilePermissions();
