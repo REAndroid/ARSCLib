@@ -17,8 +17,10 @@ package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.ApkFile;
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.chunk.*;
 import com.reandroid.arsc.container.BlockList;
+import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.header.InfoHeader;
 import com.reandroid.arsc.io.BlockReader;
@@ -46,6 +48,7 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
 
     private final ResXmlStringPool mResXmlStringPool;
     private final ResXmlIDMap mResXmlIDMap;
+    private final SingleBlockContainer<Block> mUnexpectedBlockContainer;
     private final BlockList<ResXmlNode> mNodeList;
     private ApkFile mApkFile;
     private PackageBlock mPackageBlock;
@@ -56,12 +59,18 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
 
         this.mResXmlStringPool = new ResXmlStringPool(true);
         this.mResXmlIDMap = new ResXmlIDMap();
+        this.mUnexpectedBlockContainer = new SingleBlockContainer<>();
         this.mNodeList = new BlockList<>();
 
         addChild(mResXmlStringPool);
         addChild(mResXmlIDMap);
+        addChild(mUnexpectedBlockContainer);
         addChild(mNodeList);
         this.mNodeList.add(new ResXmlElement());
+    }
+
+    public SingleBlockContainer<Block> getUnexpectedBlockContainer() {
+        return mUnexpectedBlockContainer;
     }
 
     @Override
@@ -303,17 +312,40 @@ public class ResXmlDocument extends Chunk<HeaderBlock>
             return false;
         }
         ChunkType chunkType=headerBlock.getChunkType();
-        if(chunkType==ChunkType.STRING){
+        if (chunkType == ChunkType.STRING && mResXmlStringPool.size() == 0) {
+            // If the string pool is not empty then it will be assumed that
+            // it is already loaded and consume bytes as unexpected chunk,
+            // same goes for ResXmlIDMap below
             mResXmlStringPool.readBytes(reader);
-        }else if(chunkType==ChunkType.XML_RESOURCE_MAP){
+        } else if(chunkType == ChunkType.XML_RESOURCE_MAP && mResXmlIDMap.size() == 0) {
             mResXmlIDMap.readBytes(reader);
-        }else if(isElementChunk(chunkType)){
+        } else if(isElementChunk(chunkType)){
             newElement().readBytes(reader);
             return reader.isAvailable();
-        }else {
-            throw new IOException("Unexpected chunk "+headerBlock);
+        } else {
+            readUnexpectedChunk(reader);
+            // TODO find a way to warn or log that unexpected chunk is present
         }
         return reader.isAvailable() && position!=reader.getPosition();
+    }
+    @SuppressWarnings("unchecked")
+    private void readUnexpectedChunk(BlockReader reader) throws IOException {
+        UnknownChunk unknownChunk = new UnknownChunk();
+        SingleBlockContainer<Block> container = getUnexpectedBlockContainer();
+        Block prevUnknown = container.getItem();
+        if (prevUnknown == null) {
+            container.setItem(unknownChunk);
+        } else {
+            if (prevUnknown instanceof BlockList) {
+                ((BlockList<Block>) prevUnknown).add(unknownChunk);
+            } else {
+                BlockList<Block> blockList = new BlockList<>();
+                blockList.add(prevUnknown);
+                blockList.add(unknownChunk);
+                container.setItem(blockList);
+            }
+        }
+        unknownChunk.readBytes(reader);
     }
     private boolean isElementChunk(ChunkType chunkType){
         if(chunkType==ChunkType.XML_START_ELEMENT){
