@@ -15,13 +15,16 @@
  */
 package com.reandroid.dex.base;
 
+import com.reandroid.arsc.base.DirectStreamReader;
 import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.arsc.item.IntegerReference;
 
-public class BlockIntegerPair extends BlockItem implements IntegerPair{
+public class BlockIntegerPair extends BlockItem implements IntegerPair, DirectStreamReader {
+
     private final IntegerReference first;
     private final IntegerReference second;
+
     public BlockIntegerPair() {
         super(8);
         this.first = new IndirectInteger(this, 0);

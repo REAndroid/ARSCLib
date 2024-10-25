@@ -266,7 +266,7 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
         throw new RuntimeException("Not block item");
     }
     @Override
-    public final int readBytes(InputStream inputStream) throws IOException {
+    public int readBytes(InputStream inputStream) throws IOException {
         throw new RuntimeException("Not block item");
     }
 

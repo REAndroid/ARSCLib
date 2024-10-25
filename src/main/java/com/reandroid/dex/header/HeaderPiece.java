@@ -15,16 +15,19 @@
  */
 package com.reandroid.dex.header;
 
+import com.reandroid.arsc.base.DirectStreamReader;
 import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.utils.HexUtil;
 
-class HeaderPiece extends ByteArray {
+class HeaderPiece extends ByteArray implements DirectStreamReader {
+
     HeaderPiece(){
         super();
     }
     HeaderPiece(int bytesLength){
         super(bytesLength);
     }
+
     @Override
     public String toString(){
         return printChars(getBytesInternal());

@@ -16,10 +16,9 @@
 package com.reandroid.dex.header;
 
 import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.base.DirectStreamReader;
 import com.reandroid.arsc.base.OffsetSupplier;
-import com.reandroid.arsc.io.BlockLoad;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.NumberIntegerReference;
@@ -29,7 +28,7 @@ import com.reandroid.dex.sections.SpecialItem;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class DexHeader extends SpecialItem implements OffsetSupplier, BlockLoad {
+public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStreamReader {
 
     private final IntegerReference offsetReference;
 
@@ -38,10 +37,10 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, BlockLoad 
     public final Checksum checksum;
     public final Signature signature;
 
-    public final IntegerItem fileSize;
-    public final IntegerItem headerSize;
+    public final IntegerReference fileSize;
+    public final IntegerReference headerSize;
     public final Endian endian;
-    public final IntegerItem map;
+    public final IntegerReference map;
 
     public final CountAndOffset string_id;
     public final CountAndOffset type_id;
@@ -50,11 +49,16 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, BlockLoad 
     public final CountAndOffset method_id;
     public final CountAndOffset class_id;
     public final CountAndOffset data;
+    public final DexContainerInfo containerInfo;
 
-    public final ByteArray unknown;
+    /**
+     * A placeholder for unknown bytes. Normally the size should be zero, but a tampered dex or
+     * future versions may have extra bytes than declared on headerSize.
+     * */
+    public final UnknownHeaderBytes unknown;
 
     public DexHeader(IntegerReference offsetReference) {
-        super(16);
+        super(17);
         this.offsetReference = offsetReference;
 
         this.magic = new Magic();
@@ -76,17 +80,18 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, BlockLoad 
         this.method_id = new CountAndOffset();
         this.class_id = new CountAndOffset();
         this.data = new CountAndOffset();
+        this.containerInfo = new DexContainerInfo();
 
-        this.unknown = new ByteArray();
+        this.unknown = new UnknownHeaderBytes();
 
         addChild(0, magic);
         addChild(1, version);
         addChild(2, checksum);
         addChild(3, signature);
-        addChild(4, fileSize);
-        addChild(5, headerSize);
+        addChild(4, (Block) fileSize);
+        addChild(5, (Block) headerSize);
         addChild(6, endian);
-        addChild(7, map);
+        addChild(7, (Block) map);
 
         addChild(8, string_id);
         addChild(9, type_id);
@@ -95,11 +100,10 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, BlockLoad 
         addChild(12, method_id);
         addChild(13, class_id);
         addChild(14, data);
+        addChild(15, containerInfo);
 
-        addChild(15, unknown);
+        addChild(16, unknown);
 
-
-        headerSize.setBlockLoad(this);
         setOffsetReference(offsetReference);
     }
     public DexHeader(){
@@ -154,15 +158,24 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, BlockLoad 
         return offset >= 0;
     }
 
-    @Override
-    public void onBlockLoaded(BlockReader reader, Block sender) throws IOException {
-        if(sender == headerSize){
-            unknown.setSize(headerSize.get() - countBytes());
-        }
-    }
     public boolean isClassDefinitionOrderEnforced(){
         return version.isClassDefinitionOrderEnforced();
     }
+
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+    }
+    @Override
+    public int readBytes(InputStream inputStream) throws IOException {
+        int result = 0;
+        Block[] childes = getChildes();
+        for (Block block : childes) {
+            result += ((DirectStreamReader) block).readBytes(inputStream);
+        }
+        return result;
+    }
+
 
     @Override
     public String toString() {
@@ -182,27 +195,17 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, BlockLoad 
                 ", method=" + method_id +
                 ", clazz=" + class_id +
                 ", data=" + data +
+                ", container-v41" + containerInfo +
                 ", unknown=" + unknown +
                 '}';
     }
 
     public static DexHeader readHeader(InputStream inputStream) throws IOException {
-        byte[] bytes = new byte[COMMON_HEADER_SIZE];
-        int read = inputStream.read(bytes, 0, bytes.length);
-        if(read < 0){
-            throw new IOException("Finished reading");
-        }
-        if(read < bytes.length){
+        DexHeader dexHeader = new DexHeader();
+        int read = dexHeader.readBytes(inputStream);
+        if(read < dexHeader.countBytes()) {
             throw new IOException("Few bytes to read header: " + read);
         }
-        BlockReader reader = new BlockReader(bytes);
-        DexHeader dexHeader = new DexHeader();
-        //to protect from reading oversize headers
-        dexHeader.headerSize.setBlockLoad(null);
-        dexHeader.readBytes(reader);
-        reader.close();
         return dexHeader;
     }
-
-    private static final int COMMON_HEADER_SIZE = 112;
 }
