@@ -34,7 +34,7 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
 
     public final Magic magic;
     public final Version version;
-    public final Checksum checksum;
+    public final DexChecksum checksum;
     public final Signature signature;
 
     public final IntegerReference fileSize;
@@ -63,7 +63,7 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
 
         this.magic = new Magic();
         this.version = new Version();
-        this.checksum = new Checksum();
+        this.checksum = new DexChecksum();
         this.signature = new Signature();
 
         this.fileSize = new IntegerItem();
@@ -142,13 +142,6 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
         }
         return null;
     }
-    public void updateHeaderInternal(Block parent){
-        byte[] bytes = parent.getBytes();
-        headerSize.set(countBytes());
-        fileSize.set(bytes.length);
-        signature.update(parent, bytes);
-        checksum.update(parent, bytes);
-    }
     @Override
     public IntegerReference getOffsetReference() {
         return offsetReference;
@@ -176,6 +169,16 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
         return result;
     }
 
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        this.headerSize.set(countBytes());
+    }
+
+    public boolean updateChecksums() {
+        this.signature.update();
+        return this.checksum.update();
+    }
 
     @Override
     public String toString() {

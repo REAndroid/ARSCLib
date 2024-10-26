@@ -66,12 +66,12 @@ class OutputSource {
 
         if(deflateCounter != null){
             lfh.setMethod(Archive.DEFLATED);
-            lfh.setCrc(deflateCounter.getCrc());
+            lfh.setCrc(deflateCounter.getCrc32());
             lfh.setSize(deflateCounter.getSize());
         }else {
             lfh.setSize(rawCounter.getSize());
             lfh.setMethod(Archive.STORED);
-            lfh.setCrc(rawCounter.getCrc());
+            lfh.setCrc(rawCounter.getCrc32());
         }
         inputSource.disposeInputSource();
     }

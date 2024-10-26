@@ -17,7 +17,7 @@ package com.reandroid.archive;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockRefresh;
-import com.reandroid.utils.CRCDigest;
+import com.reandroid.utils.Crc32OutputStream;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -51,7 +51,7 @@ public class BlockInputSource<T extends Block> extends ByteInputSource {
     @Override
     public long getCrc() throws IOException{
         Block block = getBlock();
-        CRCDigest outputStream = new CRCDigest();
+        Crc32OutputStream outputStream = new Crc32OutputStream();
         block.writeBytes(outputStream);
         return outputStream.getValue();
     }

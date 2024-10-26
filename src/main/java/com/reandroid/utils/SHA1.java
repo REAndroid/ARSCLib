@@ -15,7 +15,7 @@
  */
 package com.reandroid.utils;
 
-public class SHA1 {
+public class SHA1 extends ByteDigest {
 
     private static final int round1_kt = 0x5A827999;
     private static final int round2_kt = 0x6ED9EBA1;
@@ -25,12 +25,12 @@ public class SHA1 {
     private final byte[] padding;
     private final int[] WORD;
     private final int[] state;
-    private byte[] oneByte;
     private final byte[] buffer;
     private int bufferOffset;
     private long bytesProcessed;
 
     public SHA1() {
+        super();
         this.padding = new byte[136];
         this.buffer = new byte[64];
         this.WORD = new int[80];
@@ -38,13 +38,8 @@ public class SHA1 {
         this.padding[0] = (byte) 0x80;
         this.resetState();
     }
-    public void update(byte b) {
-        if (this.oneByte == null) {
-            this.oneByte = new byte[1];
-        }
-        this.oneByte[0] = b;
-        this.update(this.oneByte, 0, 1);
-    }
+
+    @Override
     public void update(byte[] bytes, int offset, int length) {
         if (this.bytesProcessed < 0L) {
             this.reset();
@@ -75,6 +70,12 @@ public class SHA1 {
         }
 
     }
+
+    @Override
+    public int getDigestLength() {
+        return 20;
+    }
+    @Override
     public void reset() {
         if (this.bytesProcessed != 0L) {
             this.resetState();
@@ -84,15 +85,7 @@ public class SHA1 {
             fillZero(this.buffer);
         }
     }
-
-    public byte[] digest() {
-        byte[] b = new byte[20];
-        this.digest(b);
-        return b;
-    }
-    public void digest(byte[] out) {
-        this.digest(out, 0);
-    }
+    @Override
     public void digest(byte[] out, int offset) {
         if (this.bytesProcessed < 0L) {
             this.reset();
@@ -106,8 +99,8 @@ public class SHA1 {
         int index = (int)this.bytesProcessed & 63;
         int padLen = index < 56 ? 56 - index : 120 - index;
         this.update(padding, 0, padLen);
-        writeBigInt((int)(bitsProcessed >>> 32), this.buffer, 56);
-        writeBigInt((int)bitsProcessed, this.buffer, 60);
+        putBigEndianInteger(this.buffer, 56, (int)(bitsProcessed >>> 32));
+        putBigEndianInteger(this.buffer, 60, (int)bitsProcessed);
         this.compressBytes(this.buffer, 0);
         writeBigInt(this.state, out, offset);
     }
@@ -131,7 +124,7 @@ public class SHA1 {
     private void compressBytes(byte[] buf, int offset) {
         int[] word = this.WORD;
         for(int i = 0; i < 16; i++) {
-            word[i] = getReversedInteger(buf, (offset + i * 4));
+            word[i] = getBigEndianInteger(buf, (offset + i * 4));
         }
         this.compressWord(word);
     }
@@ -196,36 +189,9 @@ public class SHA1 {
         int length = offset + 20;
         int i = 0;
         while (offset < length) {
-            putReversedInteger(out, offset, in[i]);
+            putBigEndianInteger(out, offset, in[i]);
             offset += 4;
             i ++;
-        }
-    }
-    private void writeBigInt(int value, byte[] out, int offset) {
-        putReversedInteger(out, offset, value);
-    }
-    private int getReversedInteger(byte[] bytes, int offset){
-        return bytes[offset + 3] & 0xff |
-                (bytes[offset + 2] & 0xff) << 8 |
-                (bytes[offset + 1] & 0xff) << 16 |
-                (bytes[offset] & 0xff) << 24;
-    }
-    private void putReversedInteger(byte[] bytes, int offset, int val){
-        bytes[offset] = (byte) (val >>> 24 );
-        bytes[offset + 1] = (byte) (val >>> 16);
-        bytes[offset + 2] = (byte) (val >>> 8 );
-        bytes[offset + 3] = (byte) (val & 0xff);
-    }
-    private void fillZero(int[] arr) {
-        int length = arr.length;
-        for(int i = 0; i < length; i++){
-            arr[i] = 0;
-        }
-    }
-    private void fillZero(byte[] arr) {
-        int length = arr.length;
-        for(int i = 0; i < length; i++){
-            arr[i] = (byte) 0;
         }
     }
 }

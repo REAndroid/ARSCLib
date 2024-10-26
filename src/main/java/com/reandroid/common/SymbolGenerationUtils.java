@@ -17,76 +17,23 @@
 // Copied and modified from AOSP
 package com.reandroid.common;
 
-import com.reandroid.utils.collection.CollectionUtil;
-
-import java.util.Set;
-
 public class SymbolGenerationUtils {
 
     public static String generateLowercase(int index) {
         return generate(index, false);
     }
     public static String generateMixedCase(int index) {
-        return generate(index, true);
+        return GENERATOR.generateMixedCase(index);
     }
     public static String generate(int index, boolean mixedCase) {
-        int size = 1;
-        int number = index + 1;
-        int maximumNumberOfCharacters = mixedCase ? TOTAL_CHARACTERS : LOWERCASE_AND_SUFFIX;
-        int firstNumberOfCharacters = maximumNumberOfCharacters - SUFFIX_LENGTH;
-
-        int availableCharacters;
-        for(availableCharacters = firstNumberOfCharacters; number > availableCharacters; ++size) {
-            number = (number - 1) / availableCharacters;
-            availableCharacters = maximumNumberOfCharacters;
-        }
-
-        char[] characters = new char[size];
-        number = index + 1;
-        int i = 0;
-        availableCharacters = firstNumberOfCharacters;
-
-        int firstLetterPadding;
-        for(firstLetterPadding = SUFFIX_LENGTH; number > availableCharacters; firstLetterPadding = 0) {
-            characters[i++] = CHARACTERS[(number - 1) % availableCharacters + firstLetterPadding];
-            number = (number - 1) / availableCharacters;
-            availableCharacters = maximumNumberOfCharacters;
-        }
-
-        characters[i] = CHARACTERS[number - 1 + firstLetterPadding];
-
-        String symbol = new String(characters);
-        if(isReserved(symbol)) {
-            return generate(index + 1, mixedCase);
-        }
-        return symbol;
+        return GENERATOR.generate(index, mixedCase);
     }
-    private static boolean isReserved(String symbol) {
-        return symbol.length() > 1 && RESERVED_NAMES.contains(symbol);
-    }
-
     static {
 
         char[] charArray = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
                 .toCharArray();
-
-        CHARACTERS = charArray;
-        int length = charArray.length;
-        TOTAL_CHARACTERS = length;
-        LOWERCASE_AND_SUFFIX = length - 26;
-        SUFFIX_LENGTH = 10;
-
-        RESERVED_NAMES = CollectionUtil.newHashSet(
-                "boolean", "byte", "char",
-                "double", "float", "int",
-                "long", "short", "void", "it",
-                "by", "class");
+        GENERATOR = new SymbolGenerator(charArray, 26, 10);
     }
 
-    private static final char[] CHARACTERS;
-    private static final int TOTAL_CHARACTERS;
-    private static final int LOWERCASE_AND_SUFFIX;
-    private static final int SUFFIX_LENGTH;
-
-    private static final Set<String> RESERVED_NAMES;
+    private static final SymbolGenerator GENERATOR;
 }

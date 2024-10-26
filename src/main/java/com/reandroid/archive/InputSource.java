@@ -17,7 +17,7 @@ package com.reandroid.archive;
 
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
-import com.reandroid.utils.CRCDigest;
+import com.reandroid.utils.Crc32OutputStream;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.io.FileUtil;
@@ -26,6 +26,7 @@ import java.io.*;
 import java.util.Comparator;
 
 public abstract class InputSource {
+
     private final String name;
     private String alias;
     private long mCrc;
@@ -33,10 +34,12 @@ public abstract class InputSource {
     private int method = Archive.DEFLATED;
     private int sort = -1;
     private String[] splitAlias;
+
     public InputSource(String name){
         this.name = name;
         this.alias = ArchiveUtil.sanitizePath(name);
     }
+
     public byte[] getBytes(int length) throws IOException{
         InputStream inputStream = openStream();
         byte[] bytes = new byte[length];
@@ -172,18 +175,10 @@ public abstract class InputSource {
         return getClass().getSimpleName()+": "+getName();
     }
     private void calculateCrc() throws IOException {
-        InputStream inputStream=openStream();
-        long length=0;
-        CRCDigest crc = new CRCDigest();
-        int bytesRead;
-        byte[] buffer = new byte[1024*64];
-        while((bytesRead = inputStream.read(buffer)) != -1) {
-            crc.update(buffer, 0, bytesRead);
-            length+=bytesRead;
-        }
-        close(inputStream);
-        mCrc=crc.getValue();
-        mLength=length;
+        Crc32OutputStream outputStream = new Crc32OutputStream();
+        write(outputStream);
+        this.mCrc = outputStream.getValue();
+        this.mLength = outputStream.getLength();
     }
 
     public static int getDexNumber(String name){

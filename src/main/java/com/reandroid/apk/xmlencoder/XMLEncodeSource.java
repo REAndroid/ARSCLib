@@ -4,7 +4,7 @@ import com.reandroid.apk.APKLogger;
 import com.reandroid.archive.ByteInputSource;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.xml.ResXmlDocument;
-import com.reandroid.utils.CRCDigest;
+import com.reandroid.utils.Crc32;
 import com.reandroid.utils.io.IOUtil;
 import com.reandroid.xml.source.XMLParserSource;
 import org.xmlpull.v1.XmlPullParser;
@@ -30,9 +30,8 @@ public class XMLEncodeSource extends ByteInputSource {
     }
     @Override
     public long getCrc() throws IOException{
-        CRCDigest crc32 = new CRCDigest();
-        byte[] bytes = getArray();
-        crc32.update(bytes, 0, bytes.length);
+        Crc32 crc32 = new Crc32();
+        crc32.update(getArray());
         return crc32.getValue();
     }
     @Override

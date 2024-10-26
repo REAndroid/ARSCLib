@@ -16,46 +16,53 @@
 package com.reandroid.dex.header;
 
 import com.reandroid.dex.sections.DexLayout;
+import com.reandroid.utils.Alder32OutputStream;
 import com.reandroid.utils.HexUtil;
-import com.reandroid.utils.Sha1OutputStream;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class Signature extends HeaderPiece {
+public class DexChecksum extends HeaderPiece {
 
-    public Signature(){
-        super(20);
+    public DexChecksum(){
+        super(4);
     }
 
-    public void update() {
+    public int getValue(){
+        return getInteger(0);
+    }
+    public void setValue(long checksum){
+        setSize(4);
+        putInteger(0, (int)checksum);
+    }
+    public boolean update() {
         DexLayout dexLayout = getParentInstance(DexLayout.class);
         if (dexLayout == null) {
-            return;
+            return false;
         }
-        Sha1OutputStream outputStream = new Sha1OutputStream();
+        int previous = getValue();
+        Alder32OutputStream outputStream = new Alder32OutputStream();
         try {
             dexLayout.writeBytes(outputStream);
         } catch (IOException exception) {
             // will not reach here
             throw new RuntimeException(exception);
         }
-        outputStream.digest(getBytesInternal(), 0);
+        setValue(outputStream.getValue());
+        return previous != getValue();
     }
 
     @Override
     protected int onWriteBytes(OutputStream stream) throws IOException {
-        if (stream instanceof Sha1OutputStream) {
-            ((Sha1OutputStream) stream).reset();
+        if (stream instanceof Alder32OutputStream) {
+            ((Alder32OutputStream) stream).reset();
             return 0;
         }
         return super.onWriteBytes(stream);
     }
-    public String getHex() {
-        return HexUtil.toHexString(getBytesInternal());
-    }
+
     @Override
-    public String toString() {
-        return getHex();
+    public String toString(){
+        return HexUtil.toHex8(getValue());
     }
 }

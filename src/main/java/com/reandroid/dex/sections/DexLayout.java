@@ -22,7 +22,6 @@ import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
-import com.reandroid.dex.header.Checksum;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.StringId;
@@ -147,21 +146,34 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
         return EmptyIterator.of();
     }
     @Override
-    public void refreshFull() throws DexException{
+    public void refreshFull() throws DexException {
+        this.onPreRefresh();
         getSectionList().refreshFull();
-        Checksum checksum = getHeader().checksum;
-        int previousSum = checksum.getValue();
-        int max_trials = 10;
-        int trials;
-        for(trials = 0; trials < max_trials; trials++){
-            refresh();
-            int sum = checksum.getValue();
-            if(previousSum == sum){
+        this.onRefreshed();
+    }
+    @Override
+    protected void onPreRefresh() {
+        interfaceMap.clear();
+        extendingClassMap.clear();
+    }
+    @Override
+    protected void onRefreshed() {
+        this.updateChecksums();
+    }
+    private void updateChecksums() {
+        DexHeader dexHeader = getHeader();
+        SectionList sectionList = getSectionList();
+        int maximumTrials = 10;
+        int i = 0;
+        while (i < maximumTrials) {
+            if (dexHeader.updateChecksums()) {
+                sectionList.refresh();
+            } else {
                 return;
             }
-            previousSum = sum;
+            i ++;
         }
-        throw new DexException("Failed to refresh trials = " + trials);
+        throw new DexException("Failed to update checksums, trial = " + i);
     }
     public void sortSection(SectionType<?>[] order){
         refresh();
@@ -226,17 +238,6 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
     }
     public MapList getMapList(){
         return getSectionList().getMapList();
-    }
-
-    @Override
-    protected void onPreRefresh() {
-        sectionList.refresh();
-        interfaceMap.clear();
-        extendingClassMap.clear();
-    }
-    @Override
-    protected void onRefreshed() {
-        sectionList.updateHeader();
     }
     public boolean isEmpty(){
         Section<ClassId> section = get(SectionType.CLASS_ID);
@@ -373,7 +374,7 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
         if(dexHeader == null){
             return false;
         }
-        if(dexHeader.magic.isDefault()){
+        if(!dexHeader.magic.isDefault()){
             return false;
         }
         int version = dexHeader.getVersion();

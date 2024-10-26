@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.sections;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
@@ -160,12 +159,10 @@ public class SectionList extends FixedBlockContainer
             iterator.next().clearUsageTypes();
         }
     }
-    public void updateHeader() {
-        Block parent = getParentInstance(DexLayout.class);
-        if(parent == null){
-            parent = this;
-        }
-        dexHeader.updateHeaderInternal(parent);
+
+    @Override
+    protected void onPreRefresh() {
+        super.onPreRefresh();
     }
 
     @Override

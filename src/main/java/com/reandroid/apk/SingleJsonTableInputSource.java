@@ -21,7 +21,7 @@ import com.reandroid.archive.InputSource;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.json.JSONException;
 import com.reandroid.json.JSONObject;
-import com.reandroid.utils.CRCDigest;
+import com.reandroid.utils.Crc32OutputStream;
 
 import java.io.*;
 
@@ -59,7 +59,7 @@ public class SingleJsonTableInputSource extends BlockInputSource<TableBlock> {
     }
     @Override
     public long getCrc() throws IOException {
-        CRCDigest outputStream = new CRCDigest();
+        Crc32OutputStream outputStream = new Crc32OutputStream();
         this.write(outputStream);
         return outputStream.getValue();
     }
