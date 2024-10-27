@@ -113,6 +113,12 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         if(key instanceof TypeListKey){
             return contains(SectionType.TYPE_LIST, key);
         }
+        if(key instanceof MethodHandleKey){
+            return contains(SectionType.METHOD_HANDLE, key);
+        }
+        if(key instanceof CallSiteKey){
+            return contains(SectionType.CALL_SITE_ID, key);
+        }
         throw new IllegalArgumentException("Unknown key type: " + key.getClass() + ", '" + key + "'");
     }
     default boolean containsClass(TypeKey key){
