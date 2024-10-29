@@ -181,14 +181,7 @@ public abstract class InputSource {
         this.mLength = outputStream.getLength();
     }
 
-    public static int getDexNumber(String name){
-        int i = name.lastIndexOf('/');
-        if(i < 0){
-            i = name.lastIndexOf('\\');
-        }
-        if(i >= 0){
-            name = name.substring(i + 1);
-        }
+    public static int getDexNumber(String name) {
         if(name.equals("classes.dex")){
             return 0;
         }
