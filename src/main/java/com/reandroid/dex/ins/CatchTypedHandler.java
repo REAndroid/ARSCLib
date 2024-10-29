@@ -15,7 +15,6 @@
  */
 package com.reandroid.dex.ins;
 
-import com.reandroid.arsc.base.Block;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.TypeId;
@@ -37,18 +36,22 @@ public class CatchTypedHandler extends ExceptionHandler {
         this.typeId = new Ule128IdItemReference<>(SectionType.TYPE_ID, UsageMarker.USAGE_INSTRUCTION);
         addChild(0, typeId);
     }
-    CatchTypedHandler(boolean forCopy) {
+    CatchTypedHandler(Ule128IdItemReference<TypeId> nullForCompact) {
         super();
-        this.typeId = null;
+        this.typeId = nullForCompact;
     }
 
-    CatchTypedHandler newCopy(TryItem parent){
-        CatchTypedHandler catchTypedHandler = new Copy(this);
+    CatchTypedHandler newCompact(TryItem parent){
+        CatchTypedHandler catchTypedHandler = new Compact(this);
         catchTypedHandler.setIndex(getIndex());
         catchTypedHandler.setParent(parent);
         return catchTypedHandler;
     }
 
+    @Override
+    public boolean traps(TypeKey typeKey) {
+        return typeKey != null && typeKey.equals(getKey());
+    }
     @Override
     public TypeId getTypeId(){
         return getTypeUle128().getItem();
@@ -101,12 +104,12 @@ public class CatchTypedHandler extends ExceptionHandler {
         }
         return 0;
     }
-    static class Copy extends CatchTypedHandler {
+    static class Compact extends CatchTypedHandler {
 
         private final CatchTypedHandler catchTypedHandler;
 
-        Copy(CatchTypedHandler catchTypedHandler){
-            super(true);
+        Compact(CatchTypedHandler catchTypedHandler){
+            super(null);
             this.catchTypedHandler = catchTypedHandler;
         }
 

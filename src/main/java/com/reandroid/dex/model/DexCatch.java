@@ -40,7 +40,10 @@ public class DexCatch extends DexCode {
     public void setKey(TypeKey typeKey){
         getExceptionHandler().setKey(typeKey);
     }
-    public boolean isCatchAll(){
+    public boolean traps(TypeKey typeKey) {
+        return getExceptionHandler().traps(typeKey);
+    }
+    public boolean isCatchAll() {
         return getExceptionHandler() instanceof CatchAllHandler;
     }
     public int getCatchAddress(){

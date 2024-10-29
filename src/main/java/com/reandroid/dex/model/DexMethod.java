@@ -174,11 +174,15 @@ public class DexMethod extends DexDeclaration {
         getDefinition().clearDebug();
     }
     public Iterator<DexTry> getDexTry() {
+        return getDexTry(-1);
+    }
+    public Iterator<DexTry> getDexTry(int address) {
         TryBlock tryBlock = getDefinition().getTryBlock();
-        if(tryBlock == null){
+        if(tryBlock == null) {
             return EmptyIterator.of();
         }
-        return DexTry.create(this, tryBlock.iterator());
+        return DexTry.create(this, address,
+                tryBlock.getTriesForAddress(address));
     }
     public DexTry createDexTry() {
         TryBlock tryBlock = getDefinition().getOrCreateTryBlock();

@@ -179,6 +179,34 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         this.header.tryBlockCount.set(0);
         tryBlock.setParent(null);
     }
+    public boolean compactSimilarCatches() {
+        TryBlock tryBlock = this.getTryBlock();
+        if (tryBlock != null) {
+            return tryBlock.compactSimilarCatches();
+        }
+        return false;
+    }
+    public boolean flattenTryItems() {
+        TryBlock tryBlock = this.getTryBlock();
+        if (tryBlock != null) {
+            return tryBlock.flattenCompactCatches();
+        }
+        return false;
+    }
+    public boolean splitTryHandlers() {
+        TryBlock tryBlock = this.getTryBlock();
+        if (tryBlock != null) {
+            return tryBlock.splitTryHandlers();
+        }
+        return false;
+    }
+    public boolean combineTries() {
+        TryBlock tryBlock = this.getTryBlock();
+        if (tryBlock != null) {
+            return tryBlock.combineTries();
+        }
+        return false;
+    }
     public MethodDef getMethodDef() {
         return methodDef;
     }
@@ -230,6 +258,16 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         this.header.editInternal(user);
     }
 
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        TryBlock tryBlock = this.getTryBlock();
+        if (tryBlock != null && tryBlock.isEmpty()) {
+            removeTryBlock();
+        }
+    }
+
+    @Override
     public Iterator<IdItem> usedIds(){
         DebugInfo debugInfo = getDebugInfo();
         Iterator<IdItem> iterator1;
@@ -238,8 +276,16 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         }else {
             iterator1 = debugInfo.usedIds();
         }
-        return CombiningIterator.two(iterator1, getInstructionList().usedIds());
+        Iterator<IdItem> iterator2;
+        TryBlock tryBlock = getTryBlock();
+        if(tryBlock == null) {
+            iterator2 = EmptyIterator.of();
+        }else {
+            iterator2 = tryBlock.usedIds();
+        }
+        return CombiningIterator.three(getInstructionList().usedIds(), iterator1, iterator2);
     }
+
     public void merge(CodeItem codeItem){
         if(codeItem == this){
             return;
@@ -267,6 +313,11 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         if(smaliMethod.hasDebugElements()){
             DebugInfo debugInfo = getOrCreateDebugInfo();
             debugInfo.getDebugSequence().fromSmali(smaliMethod.getCodeSet());
+        }
+        if (tryBlock != null) {
+            tryBlock.combineTries();
+            tryBlock.compactSimilarCatches();
+            tryBlock.refresh();
         }
     }
     @Override
@@ -348,6 +399,9 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         public void refresh() {
             debugInfoOffset.addUniqueUser(this.codeItem);
             debugInfoOffset.refresh();
+            if (this.codeItem.getTryBlock() == null) {
+                this.tryBlockCount.set(0);
+            }
         }
         @Override
         public void onReadBytes(BlockReader reader) throws IOException {

@@ -17,6 +17,7 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.id.TypeId;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
 
 public class CatchAllHandler extends ExceptionHandler {
@@ -24,17 +25,21 @@ public class CatchAllHandler extends ExceptionHandler {
     public CatchAllHandler() {
         super(0);
     }
-    CatchAllHandler(boolean forCopy) {
+    CatchAllHandler(boolean forCompact) {
         super();
     }
 
-    CatchAllHandler newCopy(TryItem parent){
-        CatchAllHandler handler = new Copy(this);
+    CatchAllHandler newCompact(TryItem parent){
+        CatchAllHandler handler = new Compact(this);
         handler.setIndex(getIndex());
         handler.setParent(parent);
         return handler;
     }
 
+    @Override
+    public boolean traps(TypeKey typeKey) {
+        return true;
+    }
     @Override
     TypeId getTypeId(){
         return null;
@@ -44,11 +49,11 @@ public class CatchAllHandler extends ExceptionHandler {
         return SmaliDirective.CATCH_ALL;
     }
 
-    static class Copy extends CatchAllHandler {
+    static class Compact extends CatchAllHandler {
 
         private final CatchAllHandler catchAllHandler;
 
-        Copy(CatchAllHandler catchAllHandler){
+        Compact(CatchAllHandler catchAllHandler){
             super(true);
             this.catchAllHandler = catchAllHandler;
         }

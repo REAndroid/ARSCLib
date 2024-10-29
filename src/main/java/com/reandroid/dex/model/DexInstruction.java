@@ -25,17 +25,12 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.ins.*;
-import com.reandroid.dex.key.FieldKey;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.MethodKey;
-import com.reandroid.dex.key.StringKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.collection.EmptyIterator;
+import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -248,6 +243,27 @@ public class DexInstruction extends DexCode {
         if(ins instanceof ConstNumberLong){
             ((ConstNumberLong) ins).set(value);
         }
+    }
+    public boolean trapsCatchAll() {
+        return traps(null);
+    }
+    public boolean traps(TypeKey typeKey) {
+        return getCatches(typeKey).hasNext();
+    }
+    public Iterator<DexCatch> getCatches(TypeKey typeKey) {
+        return FilterIterator.of(getCatches(), dexCatch -> dexCatch.traps(typeKey));
+    }
+    public Iterator<DexCatch> getCatches() {
+        final int address = getAddress();
+        return new IterableIterator<DexTry, DexCatch>(getTries()) {
+            @Override
+            public Iterator<DexCatch> iterator(DexTry element) {
+                return element.getCatches(address);
+            }
+        };
+    }
+    public Iterator<DexTry> getTries() {
+        return getDexMethod().getDexTry(getAddress());
     }
     public DexInstruction replace(String smaliString) throws IOException {
         return replace(SmaliReader.of(smaliString));

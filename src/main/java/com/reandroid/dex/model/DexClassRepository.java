@@ -21,6 +21,7 @@ import com.reandroid.dex.common.FullRefresh;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.data.AnnotationElement;
 import com.reandroid.dex.data.AnnotationItem;
+import com.reandroid.dex.data.CodeItem;
 import com.reandroid.dex.data.DebugInfo;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.MethodId;
@@ -291,6 +292,14 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         while (iterator.hasNext()){
             ClassId classId = iterator.next();
             classId.setSourceFile(sourceFile);
+        }
+    }
+    default void edit() {
+        CollectionUtil.walk(FilterIterator.of(getItems(SectionType.CODE),
+                CodeItem::flattenTryItems));
+        Iterator<DexClass> iterator = getDexClasses();
+        while (iterator.hasNext()) {
+            iterator.next().edit();
         }
     }
 }

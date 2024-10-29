@@ -25,6 +25,7 @@ import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliCodeExceptionHandler;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayIterator;
 import com.reandroid.utils.collection.EmptyIterator;
 
@@ -72,6 +73,12 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
     }
     public void setKey(TypeKey typeKey){
     }
+    public boolean isAddressBounded(int address) {
+        if (address == -1) {
+            return true;
+        }
+        return address >= getStartAddress() && address <= getAddress();
+    }
     public Iterator<Ins> getTryInstructions(){
         InstructionList instructionList = getInstructionList();
         if(instructionList == null){
@@ -88,6 +95,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         return null;
     }
 
+    public abstract boolean traps(TypeKey typeKey);
     abstract TypeId getTypeId();
     public abstract SmaliDirective getSmaliDirective();
     Ule128Item getCatchAddressUle128(){
@@ -125,7 +133,6 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
 
             int handlerAddress = handlerIns.getAddress();
             int startAddress = startIns.getAddress();
-            int endAddress = endIns.getAddress();
             int catchAddress = catchIns.getAddress();
 
             setStartAddress(startIns.getAddress());
@@ -191,7 +198,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         return getParent() == null;
     }
     public void merge(ExceptionHandler handler){
-        catchAddress.set(handler.catchAddress.get());
+        catchAddress.set(handler.getCatchAddress());
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
@@ -498,5 +505,18 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         public String toString() {
             return getLabelName();
         }
+    }
+
+    static boolean areSimilar(ExceptionHandler handler1, ExceptionHandler handler2) {
+        if (handler1 == null) {
+            return handler2 == null;
+        }
+        if (handler2 == null) {
+            return false;
+        }
+        if (handler1.getCatchAddress() != handler2.getCatchAddress()) {
+            return false;
+        }
+        return ObjectsUtil.equals(handler1.getKey(), handler2.getKey());
     }
 }

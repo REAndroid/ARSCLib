@@ -36,11 +36,16 @@ public class DexTry extends DexCode {
 
     private final DexMethod dexMethod;
     private final TryItem tryItem;
+    private final int address;
 
-    public DexTry(DexMethod dexMethod, TryItem tryItem) {
+    public DexTry(DexMethod dexMethod, TryItem tryItem, int address) {
         super();
         this.dexMethod = dexMethod;
         this.tryItem = tryItem;
+        this.address = address;
+    }
+    public DexTry(DexMethod dexMethod, TryItem tryItem) {
+        this(dexMethod, tryItem, -1);
     }
 
     public DexInstruction getFirst(){
@@ -113,12 +118,27 @@ public class DexTry extends DexCode {
         count += tryItem.getCatchTypedHandlersCount();
         return count;
     }
-    public Iterator<DexCatch> getCatches(){
-        return ComputeIterator.of(getTryItem().getExceptionHandlers(),
+    public Iterator<DexCatch> getCatches() {
+        return getCatches(this.address);
+    }
+    public Iterator<DexCatch> getCatches(int address) {
+        return ComputeIterator.of(getTryItem().getExceptionHandlersForAddress(address),
                 this::create);
     }
-    DexCatch create(ExceptionHandler handler){
-        if(handler != null){
+    public boolean trapsCatchAll() {
+        return traps(null, this.address);
+    }
+    public boolean trapsCatchAll(int address) {
+        return traps(null, address);
+    }
+    public boolean traps(TypeKey typeKey) {
+        return traps(typeKey, this.address);
+    }
+    public boolean traps(TypeKey typeKey, int address) {
+        return getTryItem().traps(typeKey, address);
+    }
+    DexCatch create(ExceptionHandler handler) {
+        if(handler != null) {
             return new DexCatch(this, handler);
         }
         return null;
@@ -189,16 +209,22 @@ public class DexTry extends DexCode {
         }
     }
 
-    public static Iterator<DexTry> create(DexMethod dexMethod, Iterator<TryItem> iterator){
+    public static Iterator<DexTry> create(DexMethod dexMethod, Iterator<TryItem> iterator) {
+        return create(dexMethod, -1, iterator);
+    }
+    public static Iterator<DexTry> create(DexMethod dexMethod, int address, Iterator<TryItem> iterator){
         if(dexMethod == null){
             return EmptyIterator.of();
         }
-        return ComputeIterator.of(iterator, tryItem -> create(dexMethod, tryItem));
+        return ComputeIterator.of(iterator, tryItem -> create(dexMethod, tryItem, address));
     }
     public static DexTry create(DexMethod dexMethod, TryItem tryItem) {
+        return create(dexMethod, tryItem, -1);
+    }
+    public static DexTry create(DexMethod dexMethod, TryItem tryItem, int address) {
         if(dexMethod == null || tryItem == null){
             return null;
         }
-        return new DexTry(dexMethod, tryItem);
+        return new DexTry(dexMethod, tryItem, address);
     }
 }
