@@ -58,6 +58,36 @@ public class ObjectsUtil {
         }
         return obj1.equals(obj2);
     }
+    public static boolean equalsArray(Object[] elements1, Object[] elements2){
+        if(elements1 == elements2) {
+            return true;
+        }
+        if(elements1 == null || elements2 == null){
+            return false;
+        }
+        int length = elements1.length;
+        if (length != elements2.length) {
+            return false;
+        }
+        for (int i = 0; i < length; i ++) {
+            if (!equals(elements1[i], elements2[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+    public static int hashElements(Object[] elements){
+        if (elements == null) {
+            return 0;
+        }
+        int hash = 31;
+        int length = elements.length;
+        hash = hash * 31 + length;
+        for (int i = 0; i < length; i ++) {
+            hash = hash * 31 + hash(elements[i]);
+        }
+        return hash;
+    }
     public static int hash(Object obj){
         if(obj == null){
             return 0;
