@@ -16,14 +16,13 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.TypeString;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.dex.data.FieldDef;
-import com.reandroid.dex.value.DexValueBlock;
-import com.reandroid.dex.value.DexValueType;
-import com.reandroid.dex.value.IntValue;
-import com.reandroid.dex.value.PrimitiveValueBlock;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import org.xmlpull.v1.XmlSerializer;
@@ -64,15 +63,14 @@ public class RField extends DexField implements Comparable<RField> {
         return new DexResourceEntry(this);
     }
     public int getResourceId() {
-        DexValue dexValue = getInitialValue();
-        if(dexValue != null){
-            return dexValue.getAsInteger();
+        IntegerReference reference = getStaticIntegerValue();
+        if (reference != null) {
+            return reference.get();
         }
         return 0;
     }
     public void setResourceId(int resourceId) {
-        IntValue dexValue = getOrCreateInitialValue(DexValueType.INT);
-        dexValue.set(resourceId);
+        setStaticValue(PrimitiveKey.of(resourceId));
     }
     public String getResourceName(){
         String name = getName();
@@ -117,9 +115,12 @@ public class RField extends DexField implements Comparable<RField> {
         return toJavaDeclare();
     }
 
-    static boolean isResourceIdValue(DexValueBlock<?> dexValueBlock) {
-        if(dexValueBlock instanceof IntValue){
-            return PackageBlock.isResourceId(((IntValue)dexValueBlock).get());
+    static boolean isResourceIdValue(Key key) {
+        if(key instanceof PrimitiveKey){
+            PrimitiveKey primitiveKey = (PrimitiveKey) key;
+            if (primitiveKey.isInteger()) {
+                return PackageBlock.isResourceId(((PrimitiveKey.IntegerKey)primitiveKey).value());
+            }
         }
         return false;
     }

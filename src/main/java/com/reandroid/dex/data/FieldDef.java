@@ -15,17 +15,19 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.PrimitiveKey;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.model.SmaliField;
 import com.reandroid.dex.smali.model.SmaliValue;
-import com.reandroid.dex.value.DexValueBlock;
-import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.SingleIterator;
 
@@ -34,7 +36,7 @@ import java.util.Iterator;
 
 public class FieldDef extends Def<FieldId> {
 
-    private DexValueBlock<?> staticInitialValue;
+    private Key staticValue;
 
     public FieldDef() {
         super(0, SectionType.FIELD_ID);
@@ -45,47 +47,20 @@ public class FieldDef extends Def<FieldId> {
         return (FieldKey) super.getKey();
     }
 
-    public DexValueBlock<?> getStaticInitialValue() {
-        return getStaticInitialValue(false);
+    public Key getStaticValue() {
+        return staticValue;
     }
-    public DexValueBlock<?> getStaticInitialValue(boolean forEditing) {
-        DexValueBlock<?> valueBlock = getLinkedStaticInitialValue();
-        if(valueBlock != null) {
-            StaticFieldDefArray array = getParentInstance(StaticFieldDefArray.class);
-            if(array != null) {
-                if(forEditing) {
-                    array.linkUniqueStaticValues();
-                } else {
-                    array.linkStaticValues();
-                }
-                valueBlock = getLinkedStaticInitialValue();
-            }
+    public void setStaticValue(Key staticValue) {
+        this.staticValue = staticValue;
+        if (!isReading()) {
+            validateStaticValue();
         }
-        return valueBlock;
-    }
-    DexValueBlock<?> getLinkedStaticInitialValue() {
-        return staticInitialValue;
-    }
-
-    @SuppressWarnings("unchecked")
-    public<T1 extends DexValueBlock<?>> T1 getOrCreateStaticValue(DexValueType<T1> valueType){
-        DexValueBlock<?> valueBlock = this.staticInitialValue;
-        if(valueBlock == null || !valueBlock.is(valueType)){
-            valueBlock =  getClassId().getOrCreateStaticValue(valueType, getIndex());
-            holdStaticInitialValue(valueBlock);
-        }
-        return (T1) valueBlock;
     }
 
     @Override
     public Iterator<? extends Modifier> getAccessFlags(){
         return AccessFlag.valuesOfField(getAccessFlagsValue());
     }
-
-    void holdStaticInitialValue(DexValueBlock<?> staticInitialValue) {
-        this.staticInitialValue = staticInitialValue;
-    }
-
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
@@ -95,7 +70,7 @@ public class FieldDef extends Def<FieldId> {
         writer.appendModifiers(getModifiers());
         getId().append(writer, false);
 
-        DexValueBlock<?> value = getStaticInitialValue();
+        Key value = getStaticValue();
         if(value != null){
             writer.append(" = ");
             value.append(writer);
@@ -113,6 +88,7 @@ public class FieldDef extends Def<FieldId> {
     public Iterator<IdItem> usedIds(){
         return SingleIterator.of(getId());
     }
+
     public void fromSmali(SmaliField smaliField){
         setKey(smaliField.getKey());
         setAccessFlagsValue(smaliField.getAccessFlagsValue());
@@ -122,22 +98,67 @@ public class FieldDef extends Def<FieldId> {
             addAnnotationSet(annotationSet);
         }
         SmaliValue smaliValue = smaliField.getValue();
-        if(smaliValue != null){
-            getOrCreateStaticValue(smaliValue.getValueType()).fromSmali(smaliValue);
+        if(smaliValue != null) {
+            setStaticValue(smaliValue.getKey());
+            validateStaticValue();
+        }
+    }
+
+    // TODO: Move this function to central dex file validator
+    public void validateStaticValue() {
+        Key staticValue = getStaticValue();
+        if (staticValue == null) {
+            return;
+        }
+        FieldKey fieldKey = getKey();
+        if (!isStatic()) {
+            throw new DexException("Instance field could not have initial value: "
+                    + Modifier.toString(getAccessFlags()) + " " + fieldKey + " = "
+                    + SmaliWriter.toStringSafe(staticValue));
+        }
+        TypeKey typeKey = fieldKey.getType();
+        if (typeKey.isPrimitive() != staticValue.isPrimitiveKey()) {
+            throw new DexException("Mismatch in type object vs primitive for value: "
+                    + SmaliWriter.toStringSafe(staticValue) + ", in field: " + fieldKey + "\n");
+        }
+        if (typeKey.isPrimitive()) {
+            TypeKey valueType = ((PrimitiveKey) staticValue).valueType();
+            if (!typeKey.equals(valueType)) {
+                throw new DexException("Mismatch in type: " + typeKey
+                        + " vs " + valueType
+                        + ", for value: "
+                        + SmaliWriter.toStringSafe(staticValue) + ", in field: " + fieldKey);
+            }
         }
     }
     @Override
     public SmaliDirective getSmaliDirective() {
         return SmaliDirective.FIELD;
     }
+
+    @Override
+    public void merge(Def<?> def) {
+        super.merge(def);
+        FieldDef comingField = (FieldDef) def;
+        setStaticValue(comingField.getStaticValue());
+    }
+
     @Override
     public String toString() {
-        if(isReading()){
-            return getSmaliDirective() + " " + getKey();
-        }
         FieldId fieldId = getId();
-        if(fieldId != null){
-            return SmaliWriter.toStringSafe(this);
+        if (fieldId != null) {
+            StringBuilder builder = new StringBuilder();
+            builder.append(getSmaliDirective());
+            builder.append(" ");
+            builder.append(Modifier.toString(getAccessFlags()));
+            builder.append(" ");
+            builder.append(fieldId);
+            Key staticValue = getStaticValue();
+            if (staticValue != null) {
+                builder.append(" = ");
+                builder.append(staticValue);
+            }
+            return builder.toString();
         }
         return getSmaliDirective() + " " + Modifier.toString(getAccessFlags())
                 + " " + getRelativeIdValue();

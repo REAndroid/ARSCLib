@@ -41,6 +41,10 @@ public class NullValue extends DexValueBlock<Block> {
     }
 
     @Override
+    public void setKey(Key key) {
+    }
+
+    @Override
     public void merge(DexValueBlock<?> valueBlock){
         super.merge(valueBlock);
     }

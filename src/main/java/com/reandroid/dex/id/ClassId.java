@@ -20,10 +20,7 @@ import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.*;
 import com.reandroid.dex.data.*;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.StringKey;
-import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.key.TypeListKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.reference.DataItemIndirectReference;
 import com.reandroid.dex.reference.TypeListReference;
 import com.reandroid.dex.sections.Section;
@@ -277,7 +274,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
             return null;
         }
         AnnotationElement element = item.getElement(Key.DALVIK_value);
-        DexValueBlock<?> value = element.getValue();
+        DexValueBlock<?> value = element.getValueBlock();
         if(value instanceof TypeValue){
             return (TypeValue) value;
         }
@@ -356,24 +353,14 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         this.classData.setItem(classData);
         linkClassData(classData);
     }
-    public EncodedArray getStaticValues(){
+    public EncodedArray getStaticValuesEncodedArray(){
         return staticValues.getItem();
     }
-    public EncodedArray getOrCreateUniqueStaticValues(){
-        return staticValues.getOrCreateUniqueItem(this);
+    public ArrayKey getStaticValues() {
+        return (ArrayKey) staticValues.getKey();
     }
-    public EncodedArray getUniqueStaticValues(){
-        return staticValues.getUniqueItem(this);
-    }
-    public DexValueBlock<?> getStaticValue(int i){
-        EncodedArray encodedArray = getStaticValues();
-        if(encodedArray != null){
-            return encodedArray.get(i);
-        }
-        return null;
-    }
-    public<T1 extends DexValueBlock<?>> T1 getOrCreateStaticValue(DexValueType<T1> valueType, int i){
-        return getOrCreateUniqueStaticValues().getOrCreate(valueType, i);
+    public void setStaticValues(ArrayKey staticValues){
+        this.staticValues.setItem(staticValues);
     }
     public void setStaticValues(EncodedArray staticValues){
         this.staticValues.setItem(staticValues);
@@ -461,7 +448,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         if(classData != null){
             collection.addAll(classData.usedIds());
         }
-        EncodedArray encodedArray = getStaticValues();
+        EncodedArray encodedArray = getStaticValuesEncodedArray();
         if(encodedArray != null){
             collection.addAll(encodedArray.usedIds());
         }
@@ -482,7 +469,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         sourceFile.setItem(classId.sourceFile.getKey());
         interfaces.setItem(classId.interfaces.getKey());
         annotationsDirectory.setItem(classId.annotationsDirectory.getKey());
-        EncodedArray comingArray = classId.getStaticValues();
+        EncodedArray comingArray = classId.getStaticValuesEncodedArray();
         if(comingArray != null){
             EncodedArray encodedArray = staticValues.getOrCreate();
             encodedArray.merge(comingArray);

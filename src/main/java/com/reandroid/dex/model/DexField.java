@@ -20,11 +20,10 @@ import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.data.FieldDef;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.value.DexValueBlock;
-import com.reandroid.dex.value.DexValueType;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.value.IntValue;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.ExpandIterator;
@@ -51,19 +50,38 @@ public class DexField extends DexDeclaration {
         getId().setName(name);
     }
 
-    public DexValue getInitialValue() {
-        return DexValue.create(this, getDefinition().getStaticInitialValue(true));
+    public Key getStaticInitialValue() {
+        return getDefinition().getStaticValue();
+    }
+    public IntegerReference getStaticValueIntegerReference() {
+        if (!(getStaticInitialValue() instanceof PrimitiveKey.IntegerKey)) {
+            return null;
+        }
+        final DexField dexField = this;
+        return new IntegerReference() {
+            @Override
+            public int get() {
+                Key key = dexField.getStaticInitialValue();
+                if (key instanceof PrimitiveKey.IntegerKey) {
+                    return ((PrimitiveKey.IntegerKey) key).value();
+                }
+                return 0;
+            }
+            @Override
+            public void set(int value) {
+                dexField.setStaticValue(PrimitiveKey.of(value));
+            }
+            @Override
+            public String toString() {
+                return Integer.toString(get());
+            }
+        };
     }
     public IntegerReference getStaticIntegerValue() {
         if(isStatic()) {
             IntegerReference reference = resolveValueFromStaticConstructor();
             if(reference == null) {
-                DexValue dexValue = getInitialValue();
-                if(dexValue != null) {
-                    if(dexValue.is(DexValueType.INT)) {
-                        reference = (IntValue) dexValue.getDexValueBlock();
-                    }
-                }
+                reference = getStaticValueIntegerReference();
             }
             return reference;
         }
@@ -93,8 +111,8 @@ public class DexField extends DexDeclaration {
         }
         return null;
     }
-    public<T1 extends DexValueBlock<?>> T1 getOrCreateInitialValue(DexValueType<T1> dexValueType) {
-        return getDefinition().getOrCreateStaticValue(dexValueType);
+    public void setStaticValue(Key value) {
+        getDefinition().setStaticValue(value);
     }
 
     @Override

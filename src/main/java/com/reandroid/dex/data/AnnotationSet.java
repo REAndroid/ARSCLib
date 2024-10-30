@@ -63,7 +63,7 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
     public DexValueBlock<?> getValue(TypeKey typeKey, String name){
         AnnotationElement element = getElement(typeKey, name);
         if(element != null){
-            return element.getValue();
+            return element.getValueBlock();
         }
         return null;
     }

@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliRegion;
@@ -29,6 +30,15 @@ public class SmaliValueAnnotation extends SmaliValue implements SmaliRegion {
 
     public SmaliValueAnnotation(){
         super();
+    }
+
+    @Override
+    public AnnotationItemKey getKey() {
+        SmaliAnnotationItem item = getValue();
+        if (item != null) {
+            return item.getKey();
+        }
+        return null;
     }
 
     public SmaliAnnotationItem getValue() {

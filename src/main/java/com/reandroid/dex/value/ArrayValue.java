@@ -83,9 +83,6 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
     public Iterator<DexValueBlock<?>> clonedIterator() {
         return getValueContainer().clonedIterator();
     }
-    public boolean sort(Comparator<? super DexValueBlock<?>> comparator) {
-        return getValueContainer().sort(comparator);
-    }
     @Override
     public DexValueType<?> getValueType() {
         return DexValueType.ARRAY;
@@ -109,12 +106,12 @@ public class ArrayValue extends DexValueBlock<EncodedArray>
 
     @Override
     public ArrayKey getKey() {
-        int size = size();
-        Key[] keys = new Key[size];
-        for (int i = 0; i < size; i++) {
-            keys[i] = getKey(i);
-        }
-        return new ArrayKey(keys);
+        return getValueContainer().getKey();
+    }
+
+    @Override
+    public void setKey(Key key) {
+        getValueContainer().setKey(key);
     }
 
     @Override

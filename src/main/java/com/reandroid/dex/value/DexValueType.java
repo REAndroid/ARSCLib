@@ -17,7 +17,9 @@ package com.reandroid.dex.value;
 
 import com.reandroid.arsc.base.BlockCreator;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.HexUtil;
 
@@ -201,6 +203,87 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
     }
     public static DexValueType<?>[] values() {
         return VALUES_COPY;
+    }
+    public static DexValueType<?> forKey(Key key) {
+        if(key instanceof TypeKey) {
+            return TYPE;
+        }
+        if(key instanceof FieldKey) {
+            return ENUM;
+        }
+        if(key instanceof MethodKey) {
+            return METHOD;
+        }
+        if(key instanceof StringKey) {
+            return STRING;
+        }
+        if(key instanceof ArrayKey) {
+            return ARRAY;
+        }
+        if(key instanceof NullKey) {
+            return NULL;
+        }
+        if(key instanceof PrimitiveKey) {
+            PrimitiveKey primitiveKey = (PrimitiveKey) key;
+            if(primitiveKey.isBoolean()) {
+                return BOOLEAN;
+            }
+            if(primitiveKey.isByte()) {
+                return BYTE;
+            }
+            if(primitiveKey.isChar()) {
+                return CHAR;
+            }
+            if(primitiveKey.isShort()) {
+                return SHORT;
+            }
+            if(primitiveKey.isInteger()) {
+                return INT;
+            }
+            if(primitiveKey.isFloat()) {
+                return FLOAT;
+            }
+            if(primitiveKey.isDouble()) {
+                return DOUBLE;
+            }
+            if(primitiveKey.isLong()) {
+                return LONG;
+            }
+        }
+        if(key instanceof AnnotationItemKey) {
+            AnnotationItemKey itemKey = (AnnotationItemKey) key;
+            if (!itemKey.hasVisibility()) {
+                return ANNOTATION;
+            }
+        }
+        throw new DexException("Unknown value type: " + key);
+    }
+    public static Key createNull(TypeKey typeKey) {
+        if (!typeKey.isPrimitive()) {
+            return NullKey.INSTANCE;
+        }
+        if (TypeKey.TYPE_B.equals(typeKey)) {
+            return PrimitiveKey.of((byte) 0);
+        }
+        if (TypeKey.TYPE_C.equals(typeKey)) {
+            return PrimitiveKey.of((char) 0);
+        }
+        if (TypeKey.TYPE_D.equals(typeKey)) {
+            return PrimitiveKey.of(0.0);
+        }
+        if (TypeKey.TYPE_F.equals(typeKey)) {
+            return PrimitiveKey.of(0.0f);
+        }
+        if (TypeKey.TYPE_J.equals(typeKey)) {
+            return PrimitiveKey.of(0L);
+        }
+        if (TypeKey.TYPE_S.equals(typeKey)) {
+            return PrimitiveKey.of((short) 0);
+        }
+        if (TypeKey.TYPE_Z.equals(typeKey)) {
+            return PrimitiveKey.of(false);
+        }
+        throw new DexException("Unknown key type: " + typeKey);
     }
 
     @SuppressWarnings("unchecked")

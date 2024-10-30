@@ -15,8 +15,8 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.value.DexValueType;
 
 import java.lang.annotation.ElementType;
 import java.util.Iterator;
@@ -46,15 +46,11 @@ public interface AnnotatedDex {
         DexAnnotation annotation = getOrCreateAnnotation(typeKey);
         return annotation.getOrCreate(name);
     }
-    default DexValue getAnnotationValue(TypeKey typeKey, String name){
+    default Key getAnnotationValue(TypeKey typeKey, String name){
         DexAnnotationElement element = getAnnotationElement(typeKey, name);
         if(element != null){
             return element.getValue();
         }
         return null;
-    }
-    default DexValue getOrCreateAnnotationValue(TypeKey typeKey, String name, DexValueType<?> valueType){
-        DexAnnotationElement element = getOrCreateAnnotationElement(typeKey, name);
-        return element.getOrCreateValue(valueType);
     }
 }

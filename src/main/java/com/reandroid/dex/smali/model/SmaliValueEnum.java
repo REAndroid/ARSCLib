@@ -21,7 +21,7 @@ import com.reandroid.dex.value.DexValueType;
 
 import java.io.IOException;
 
-public class SmaliValueEnum extends SmaliValueKey implements SmaliRegion {
+public class SmaliValueEnum extends SmaliValueSectionData implements SmaliRegion {
 
     public SmaliValueEnum(){
         super();
@@ -30,6 +30,11 @@ public class SmaliValueEnum extends SmaliValueKey implements SmaliRegion {
     @Override
     public FieldKey getValue() {
         return (FieldKey) super.getValue();
+    }
+
+    @Override
+    public FieldKey getKey() {
+        return getValue();
     }
 
     @Override

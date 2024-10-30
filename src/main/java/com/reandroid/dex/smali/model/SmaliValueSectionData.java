@@ -22,11 +22,11 @@ import com.reandroid.dex.value.DexValueType;
 
 import java.io.IOException;
 
-public class SmaliValueKey extends SmaliValue{
+public class SmaliValueSectionData extends SmaliValue{
 
     private Key value;
 
-    public SmaliValueKey(){
+    public SmaliValueSectionData(){
         super();
     }
 

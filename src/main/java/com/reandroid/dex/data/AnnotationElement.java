@@ -5,10 +5,7 @@ import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.key.DataKey;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.MethodKey;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.reference.StringUle128Reference;
 import com.reandroid.dex.smali.model.SmaliAnnotationElement;
 import com.reandroid.dex.smali.model.SmaliValue;
@@ -23,30 +20,45 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class AnnotationElement extends DataItem implements Comparable<AnnotationElement>, SmaliFormat {
+public class AnnotationElement extends DataItem implements ModifiableKeyItem,
+        Comparable<AnnotationElement>, SmaliFormat {
 
     private final StringUle128Reference elementName;
-
-    private final DataKey<AnnotationElement> mKey;
 
     public AnnotationElement() {
         super(2);
         this.elementName = new StringUle128Reference(StringId.USAGE_METHOD_NAME);
         addChild(0, elementName);
-        this.mKey = new DataKey<>(this);
     }
 
     @Override
-    public DataKey<AnnotationElement> getKey(){
-        return mKey;
+    public AnnotationElementKey getKey(){
+        return checkKey(new AnnotationElementKey(getName(), getValue()));
     }
-    public DexValueBlock<?> getValue(){
+    @Override
+    public void setKey(Key key) {
+        AnnotationElementKey elementKey = (AnnotationElementKey) key;
+        setName(elementKey.getName());
+    }
+    public Key getValue() {
+        DexValueBlock<?> valueBlock = getValueBlock();
+        if (valueBlock != null) {
+            return valueBlock.getKey();
+        }
+        return null;
+    }
+    public void setValue(Key value) {
+        DexValueBlock<?> valueBlock = DexValueType.forKey(value).newInstance();
+        setValue(valueBlock);
+        valueBlock.setKey(value);
+    }
+    public DexValueBlock<?> getValueBlock(){
         return (DexValueBlock<?>) getChildes()[1];
     }
 
     @SuppressWarnings("unchecked")
     public<T1 extends DexValueBlock<?>> T1 getValue(DexValueType<T1> valueType){
-        DexValueBlock<?> value = getValue();
+        DexValueBlock<?> value = getValueBlock();
         if(value != null && value.is(valueType)){
             return (T1) value;
         }
@@ -54,7 +66,7 @@ public class AnnotationElement extends DataItem implements Comparable<Annotation
     }
     @SuppressWarnings("unchecked")
     public<T1 extends DexValueBlock<?>> T1 getOrCreateValue(DexValueType<T1> valueType){
-        DexValueBlock<?> value = getValue();
+        DexValueBlock<?> value = getValueBlock();
         if(value == null || value == NullValue.PLACE_HOLDER || value.getValueType() != valueType){
             value = valueType.newInstance();
             setValue(value);
@@ -72,7 +84,7 @@ public class AnnotationElement extends DataItem implements Comparable<Annotation
                 methodKey.equalsIgnoreReturnType(getMethodKey());
     }
     public DexValueType<?> getValueType(){
-        DexValueBlock<?> value = getValue();
+        DexValueBlock<?> value = getValueBlock();
         if(value != null){
             return value.getValueType();
         }
@@ -97,18 +109,18 @@ public class AnnotationElement extends DataItem implements Comparable<Annotation
     }
 
     public void replaceKeys(Key search, Key replace){
-        getValue().replaceKeys(search, replace);
+        getValueBlock().replaceKeys(search, replace);
     }
     @Override
     public Iterator<IdItem> usedIds(){
-        return CombiningIterator.singleOne(getNameId(), getValue().usedIds());
+        return CombiningIterator.singleOne(getNameId(), getValueBlock().usedIds());
     }
     public void merge(AnnotationElement element){
         if(element == this){
             return;
         }
         setName(element.getName());
-        DexValueBlock<?> coming = element.getValue();
+        DexValueBlock<?> coming = element.getValueBlock();
         DexValueBlock<?> value = getOrCreateValue(coming.getValueType());
         value.merge(coming);
     }
@@ -122,7 +134,7 @@ public class AnnotationElement extends DataItem implements Comparable<Annotation
     public void append(SmaliWriter writer) throws IOException {
         writer.append(getName());
         writer.append(" = ");
-        getValue().append(writer);
+        getValueBlock().append(writer);
     }
 
 
@@ -137,7 +149,7 @@ public class AnnotationElement extends DataItem implements Comparable<Annotation
         return SectionTool.compareIdx(getNameId(), other.getNameId());
     }
     public TypeKey getDataTypeKey(){
-        DexValueBlock<?> valueBlock = getValue();
+        DexValueBlock<?> valueBlock = getValueBlock();
         if(valueBlock != null){
             return valueBlock.getDataTypeKey();
         }
@@ -174,7 +186,7 @@ public class AnnotationElement extends DataItem implements Comparable<Annotation
         if(obj != null){
             hash += obj.hashCode();
         }
-        obj = getValue();
+        obj = getValueBlock();
         hash = hash * 31;
         if(obj != null){
             hash = hash + obj.hashCode();
@@ -193,12 +205,12 @@ public class AnnotationElement extends DataItem implements Comparable<Annotation
         if(!Objects.equals(getName(), element.getName())){
             return false;
         }
-        return Objects.equals(getValue(), element.getValue());
+        return Objects.equals(getValueBlock(), element.getValueBlock());
     }
 
     @Override
     public String toString() {
-        return getName() + " = " + getValue();
+        return getName() + " = " + getValueBlock();
     }
 
     public static final Creator<AnnotationElement> CREATOR = new Creator<AnnotationElement>() {

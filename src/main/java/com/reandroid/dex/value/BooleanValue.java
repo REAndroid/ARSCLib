@@ -46,6 +46,11 @@ public class BooleanValue extends DexValueBlock<Block> {
     }
 
     @Override
+    public void setKey(Key key) {
+        set(((PrimitiveKey.BooleanKey) key).value());
+    }
+
+    @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.append(Boolean.toString(get()));
     }

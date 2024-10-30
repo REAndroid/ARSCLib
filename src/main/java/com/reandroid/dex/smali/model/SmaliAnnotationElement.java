@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.AnnotationElementKey;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
@@ -29,11 +31,21 @@ public class SmaliAnnotationElement extends Smali{
         super();
     }
 
+    public AnnotationElementKey getKey() {
+        return new AnnotationElementKey(getName(), getValueKey());
+    }
     public String getName() {
         return name;
     }
     public void setName(String name) {
         this.name = name;
+    }
+    public Key getValueKey() {
+        SmaliValue value = getValue();
+        if (value != null) {
+            return value.getKey();
+        }
+        return null;
     }
     public SmaliValue getValue() {
         return value;

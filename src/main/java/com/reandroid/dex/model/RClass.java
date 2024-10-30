@@ -90,7 +90,7 @@ public class RClass extends DexClass {
     }
     private RField createRField(FieldDef fieldDef){
         if(fieldDef.isStatic()){
-            if(RField.isResourceIdValue(fieldDef.getStaticInitialValue())){
+            if(RField.isResourceIdValue(fieldDef.getStaticValue())){
                 return new RField(this, fieldDef);
             }
         }

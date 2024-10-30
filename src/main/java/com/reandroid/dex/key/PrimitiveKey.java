@@ -16,6 +16,7 @@ public abstract class PrimitiveKey implements Key {
     public boolean isPrimitiveKey() { return true; }
 
     public abstract Object getValue();
+    public abstract TypeKey valueType();
 
     public boolean isNumber() { return false; }
     public boolean isBoolean() { return false; }
@@ -99,6 +100,11 @@ public abstract class PrimitiveKey implements Key {
             return value();
         }
         @Override
+        public TypeKey valueType() {
+            return TypeKey.TYPE_Z;
+        }
+
+        @Override
         public int compareTo(Object obj) {
             if (obj == null || obj.getClass() != getClass()) {
                 return 0;
@@ -146,6 +152,10 @@ public abstract class PrimitiveKey implements Key {
         @Override
         public Byte getValue() {
             return value;
+        }
+        @Override
+        public TypeKey valueType() {
+            return TypeKey.TYPE_B;
         }
         @Override
         public boolean isByte() {
@@ -205,6 +215,10 @@ public abstract class PrimitiveKey implements Key {
             return value;
         }
         @Override
+        public TypeKey valueType() {
+            return TypeKey.TYPE_C;
+        }
+        @Override
         public boolean isChar() {
             return true;
         }
@@ -260,6 +274,10 @@ public abstract class PrimitiveKey implements Key {
         @Override
         public Double getValue() {
             return value;
+        }
+        @Override
+        public TypeKey valueType() {
+            return TypeKey.TYPE_D;
         }
         @Override
         public boolean isDouble() {
@@ -319,6 +337,10 @@ public abstract class PrimitiveKey implements Key {
             return value;
         }
         @Override
+        public TypeKey valueType() {
+            return TypeKey.TYPE_F;
+        }
+        @Override
         public boolean isFloat() {
             return true;
         }
@@ -376,6 +398,10 @@ public abstract class PrimitiveKey implements Key {
             return value();
         }
         @Override
+        public TypeKey valueType() {
+            return TypeKey.TYPE_I;
+        }
+        @Override
         public boolean isInteger() {
             return true;
         }
@@ -423,6 +449,10 @@ public abstract class PrimitiveKey implements Key {
         @Override
         public Long getValue() {
             return value;
+        }
+        @Override
+        public TypeKey valueType() {
+            return TypeKey.TYPE_J;
         }
         @Override
         public boolean isLong() {
@@ -475,6 +505,10 @@ public abstract class PrimitiveKey implements Key {
         @Override
         public Short getValue() {
             return value;
+        }
+        @Override
+        public TypeKey valueType() {
+            return TypeKey.TYPE_S;
         }
         @Override
         public boolean isShort() {

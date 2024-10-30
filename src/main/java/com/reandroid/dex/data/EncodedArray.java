@@ -20,7 +20,7 @@ import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.key.DataKey;
+import com.reandroid.dex.key.ArrayKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.ModifiableKeyItem;
 import com.reandroid.dex.sections.SectionType;
@@ -33,7 +33,6 @@ import com.reandroid.utils.collection.InstanceIterator;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
@@ -41,7 +40,6 @@ public class EncodedArray extends DataItem implements ModifiableKeyItem, Iterabl
 
     private final Ule128Item valuesCountReference;
     private final BlockList<DexValueBlock<?>> valueList;
-    private final DataKey<EncodedArray> itemKey;
 
     public EncodedArray() {
         super(2);
@@ -50,19 +48,24 @@ public class EncodedArray extends DataItem implements ModifiableKeyItem, Iterabl
         this.valueList.setCreator(CREATOR);
         addChild(0, valuesCountReference);
         addChild(1, valueList);
-        this.itemKey = new DataKey<>(this);
     }
 
     @Override
-    public DataKey<EncodedArray> getKey() {
-        return itemKey;
+    public ArrayKey getKey() {
+        int size = size();
+        Key[] keys = new Key[size];
+        for (int i = 0; i < size; i++) {
+            keys[i] = get(i).getKey();
+        }
+        return checkKey(new ArrayKey(keys));
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
     public void setKey(Key key) {
-        DataKey<EncodedArray> other = (DataKey<EncodedArray>) key;
-        merge(other.getItem());
+        ArrayKey arrayKey = (ArrayKey) key;
+        clear();
+        for (Key k : arrayKey) {
+            add(k);
+        }
     }
 
     @Override
@@ -90,6 +93,12 @@ public class EncodedArray extends DataItem implements ModifiableKeyItem, Iterabl
     public int size(){
         return getValueList().getCount();
     }
+
+    public void add(Key key) {
+        DexValueBlock<?> valueBlock = DexValueType.forKey(key).newInstance();
+        add(valueBlock);
+        valueBlock.setKey(key);
+    }
     public void add(DexValueBlock<?> value){
        getValueList().add(value);
     }
@@ -109,26 +118,6 @@ public class EncodedArray extends DataItem implements ModifiableKeyItem, Iterabl
     public void clear(){
         getValueList().clearChildes();
     }
-    public void removeAll(){
-        getValueList().clearTemporarily();
-    }
-    public boolean sort(Comparator<? super DexValueBlock<?>> comparator){
-        return getValueList().sort(comparator);
-    }
-    public void trimNull(){
-        int size = size();
-        int updatedSize = 0;
-        for(int i = 0; i < size; i++){
-            DexValueBlock<?> value = get(i);
-            if(value != null && !value.is(DexValueType.NULL) && !value.isTemporary()) {
-                updatedSize = i + 1;
-            }
-        }
-        if(updatedSize != size){
-            setSize(updatedSize);
-        }
-    }
-
 
     public void ensureSize(int size){
         if(size > size()){
@@ -141,8 +130,8 @@ public class EncodedArray extends DataItem implements ModifiableKeyItem, Iterabl
         }
         valuesCountReference.set(size);
         BlockList<DexValueBlock<?>> valueList = this.getValueList();
-        if(size == 0){
-            valueList.clearTemporarily();
+        if(size == 0) {
+            valueList.setSize(0);
             return;
         }
         int current = valueList.size();

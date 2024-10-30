@@ -16,6 +16,8 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.common.AnnotationVisibility;
+import com.reandroid.dex.key.AnnotationElementKey;
+import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.*;
 
@@ -39,6 +41,14 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement> implem
         this(false);
     }
 
+    public AnnotationItemKey getKey() {
+        int length = this.size();
+        AnnotationElementKey[] elements = new AnnotationElementKey[length];
+        for (int i = 0; i < length; i++) {
+            elements[i] = get(i).getKey();
+        }
+        return new AnnotationItemKey(getVisibility(), getType(), elements);
+    }
     public AnnotationVisibility getVisibility() {
         return visibility;
     }

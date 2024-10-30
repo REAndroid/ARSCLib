@@ -23,10 +23,7 @@ import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.TypeId;
-import com.reandroid.dex.key.DataKey;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.ModifiableKeyItem;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.reference.Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
@@ -56,8 +53,6 @@ public class AnnotationItem extends DataItem
 
     private final boolean mValueEntry;
 
-    private final DataKey<AnnotationItem> mItemKey;
-
     public AnnotationItem(boolean valueEntry) {
         super(valueEntry? 3 : 4);
         this.mValueEntry = valueEntry;
@@ -77,8 +72,6 @@ public class AnnotationItem extends DataItem
             addChild(i++, visibility);
         }
 
-        this.mItemKey = new DataKey<>(this);
-
         addChild(i++, typeId);
         addChild(i++, elementsCount);
         addChild(i, annotationElements);
@@ -96,6 +89,9 @@ public class AnnotationItem extends DataItem
     }
     public void remove(AnnotationElement element){
         annotationElements.remove(element);
+    }
+    public void clear() {
+        annotationElements.clearChildes();
     }
     public AnnotationElement getOrCreateElement(String name){
         AnnotationElement element = getElement(name);
@@ -121,7 +117,7 @@ public class AnnotationItem extends DataItem
     public DexValueBlock<?> getElementValue(String name){
         AnnotationElement element = getElement(name);
         if(element != null){
-            return element.getValue();
+            return element.getValueBlock();
         }
         return null;
     }
@@ -132,6 +128,17 @@ public class AnnotationItem extends DataItem
             }
         }
         return null;
+    }
+    public AnnotationElementKey[] getElements() {
+        int length = getElementsCount();
+        AnnotationElementKey[] results = new AnnotationElementKey[length];
+        for (int i = 0; i < length; i++) {
+            results[i] = getElement(i).getKey();
+        }
+        return results;
+    }
+    public void addElement(AnnotationElementKey element) {
+        createNewElement().setKey(element);
     }
     public String[] getNames(){
         CountedList<AnnotationElement> elements = annotationElements;
@@ -146,14 +153,18 @@ public class AnnotationItem extends DataItem
         return results;
     }
     @Override
-    public DataKey<AnnotationItem> getKey(){
-        return mItemKey;
+    public AnnotationItemKey getKey(){
+        return checkKey(new AnnotationItemKey(getVisibility(), getTypeKey(), getElements()));
     }
-    @SuppressWarnings("unchecked")
     @Override
     public void setKey(Key key){
-        DataKey<AnnotationItem> itemKey = (DataKey<AnnotationItem>) key;
-        merge(itemKey.getItem());
+        AnnotationItemKey itemKey = (AnnotationItemKey) key;
+        setVisibility(itemKey.getVisibility());
+        setType(itemKey.getType());
+        clear();
+        for (AnnotationElementKey elementKey : itemKey) {
+            addElement(elementKey);
+        }
     }
     @Override
     public Iterator<AnnotationElement> iterator(){

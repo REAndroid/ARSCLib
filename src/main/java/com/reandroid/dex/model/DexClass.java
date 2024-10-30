@@ -491,7 +491,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         if(element == null){
             return;
         }
-        DexValueBlock<?> valueBlock = element.getValue();
+        DexValueBlock<?> valueBlock = element.getValueBlock();
         if(!valueBlock.is(DexValueType.STRING)){
             return;
         }
@@ -559,25 +559,21 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         return null;
     }
     public String getDalvikInnerClassName(){
-        DexValue dexValue = getAnnotationValue(TypeKey.DALVIK_InnerClass, "name");
-        if(dexValue != null){
-            return dexValue.getString();
+        Key key = getAnnotationValue(TypeKey.DALVIK_InnerClass, "name");
+        if(key instanceof StringKey){
+            return ((StringKey) key).getString();
         }
         return null;
     }
     public void updateDalvikInnerClassName(String name){
-        DexValue dexValue = getAnnotationValue(
-                TypeKey.DALVIK_InnerClass, "name");
-        if(dexValue != null){
-            dexValue.setString(name);
+        DexAnnotationElement element = getAnnotationElement(TypeKey.DALVIK_InnerClass, "name");
+        if (element != null) {
+            element.setValue(StringKey.create(name));
         }
     }
     public void createDalvikInnerClassName(String name){
-        DexValue dexValue = getOrCreateAnnotationValue(
-                TypeKey.DALVIK_InnerClass,
-                "name",
-                DexValueType.STRING);
-        dexValue.setString(name);
+        DexAnnotationElement element = getOrCreateAnnotationElement(TypeKey.DALVIK_InnerClass, "name");
+        element.setValue(StringKey.create(name));
     }
 
     @Override

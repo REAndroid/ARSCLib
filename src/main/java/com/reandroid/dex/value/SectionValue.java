@@ -26,7 +26,7 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliValue;
-import com.reandroid.dex.smali.model.SmaliValueKey;
+import com.reandroid.dex.smali.model.SmaliValueSectionData;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
@@ -107,8 +107,8 @@ public abstract class SectionValue<T extends SectionItem> extends DexValueBlock<
     }
     @Override
     public void fromSmali(SmaliValue smaliValue) {
-        SmaliValueKey smaliValueKey = (SmaliValueKey) smaliValue;
-        setItem(smaliValueKey.getValue());
+        SmaliValueSectionData smaliValueSectionData = (SmaliValueSectionData) smaliValue;
+        setItem(smaliValueSectionData.getValue());
     }
 
     @Override

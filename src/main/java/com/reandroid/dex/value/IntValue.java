@@ -16,6 +16,7 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -54,6 +55,11 @@ public class IntValue extends PrimitiveValueBlock implements IntegerReference {
     @Override
     public PrimitiveKey getKey() {
         return PrimitiveKey.of(get());
+    }
+
+    @Override
+    public void setKey(Key key) {
+        set(((PrimitiveKey.IntegerKey) key).value());
     }
     @Override
     public String getHex() {

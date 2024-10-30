@@ -108,7 +108,7 @@ public class RClassParent extends DexClass {
     private ArrayValue getOrCreateMembersArray(){
         AnnotationItem item = getOrCreateMemberAnnotation();
         AnnotationElement element = item.getElement("value");
-        DexValueBlock<?> value = element.getValue();
+        DexValueBlock<?> value = element.getValueBlock();
         if(value == null){
             ArrayValue array = DexValueType.ARRAY.newInstance();
             element.setValue(array);

@@ -16,7 +16,6 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
@@ -107,7 +106,7 @@ public class SmaliValue extends Smali{
             }
             return new SmaliValueDouble();
         }
-        return new SmaliValueKey();
+        return new SmaliValueSectionData();
     }
 
     public static SmaliValue createDefaultFor(TypeKey typeKey){

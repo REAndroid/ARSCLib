@@ -18,7 +18,6 @@ package com.reandroid.dex.model;
 import com.reandroid.dex.data.AnnotationElement;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.value.DexValueType;
 
 import java.io.IOException;
 
@@ -40,13 +39,11 @@ public class DexAnnotationElement extends Dex {
         getAnnotationElement().setName(name);
     }
 
-    public DexValue getValue(){
-        return DexValue.create(this,
-                getAnnotationElement().getValue());
+    public Key getValue(){
+        return getAnnotationElement().getValue();
     }
-    public DexValue getOrCreateValue(DexValueType<?> valueType){
-        return DexValue.create(this,
-                getAnnotationElement().getOrCreateValue(valueType));
+    public void setValue(Key value) {
+        getAnnotationElement().setValue(value);
     }
 
     @Override

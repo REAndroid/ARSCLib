@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.dex.key.ArrayKey;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 
 import java.util.Iterator;
@@ -38,16 +40,18 @@ public class DalvikUtil {
             if(element == null) {
                 continue;
             }
-            DexValue value = element.getValue();
-            if(value instanceof DexValueArray) {
-                DexValueArray valueArray = (DexValueArray) value;
-                boolean removed = valueArray.removeIf(dexValue ->
-                        !dexValue.getClassRepository().containsClass(dexValue.getTypeKey()));
-                if(removed) {
+            Key value = element.getValue();
+            if(value instanceof ArrayKey) {
+                ArrayKey valueArray = (ArrayKey) value;
+                DexClassRepository repository = dexClass.getClassRepository();
+                ArrayKey changedKey = valueArray.removeIf(key -> !repository.containsClass((TypeKey) key));
+                if(changedKey != valueArray) {
                     result ++;
-                }
-                if(valueArray.isEmpty()) {
-                    element.removeSelf();
+                    if(changedKey.isEmpty()) {
+                        element.removeSelf();
+                    } else {
+                        element.setValue(changedKey);
+                    }
                 }
             }
             if(annotation.size() == 0) {

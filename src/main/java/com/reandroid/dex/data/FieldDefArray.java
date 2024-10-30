@@ -36,14 +36,13 @@ public class FieldDefArray extends DefArray<FieldDef> {
     }
     public void fromSmali(Iterator<SmaliField> iterator){
         while (iterator.hasNext()) {
-            SmaliField smaliField = iterator.next();
-            FieldDef fieldDef = createNext();
-            fieldDef.fromSmali(smaliField);
+            fromSmali(iterator.next());
         }
     }
-    public void fromSmali(SmaliField smaliField){
+    public FieldDef fromSmali(SmaliField smaliField){
         FieldDef fieldDef = createNext();
         fieldDef.fromSmali(smaliField);
+        return fieldDef;
     }
 
     private static final Creator<FieldDef> CREATOR = new Creator<FieldDef>() {

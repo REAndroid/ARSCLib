@@ -98,6 +98,9 @@ public abstract class PrimitiveValueBlock extends DexValueBlock<NumberValue> {
 
     @Override
     public abstract PrimitiveKey getKey();
+    @Override
+    public abstract void setKey(Key key);
+
     public abstract String getHex();
     @Override
     public String getAsString() {

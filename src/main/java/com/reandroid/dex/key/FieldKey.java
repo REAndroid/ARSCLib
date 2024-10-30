@@ -122,7 +122,7 @@ public class FieldKey implements Key {
         return new StringKey(getName());
     }
     public TypeKey getType() {
-        return new TypeKey(getTypeName());
+        return TypeKey.create(getTypeName());
     }
 
     public String getDeclaringName() {

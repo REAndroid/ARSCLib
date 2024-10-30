@@ -77,7 +77,10 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
     }
 
     public Key getKey() {
-        throw new RuntimeException("Method not implemented");
+        throw new RuntimeException("Method not implemented: " + getClass());
+    }
+    public void setKey(Key key) {
+        throw new RuntimeException("Method not implemented: " + getClass());
     }
     public void replaceKeys(Key search, Key replace){
     }

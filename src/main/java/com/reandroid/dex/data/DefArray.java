@@ -67,14 +67,14 @@ public abstract class DefArray<T extends Def<?>> extends BlockList<T> implements
         onPostSort();
         return changed;
     }
-    void onPreSort(){
+    private void onPreSort() {
         ClassId classId = getClassId();
         if(classId != null){
             classId.getUniqueAnnotationsDirectory();
         }
         linkAnnotation();
     }
-    void onPostSort(){
+    private void onPostSort(){
         resetIndex();
         sortAnnotations();
     }

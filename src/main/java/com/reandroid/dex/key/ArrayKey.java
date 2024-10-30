@@ -26,6 +26,7 @@ import com.reandroid.utils.collection.ArrayIterator;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class ArrayKey implements Key, Iterable<Key> {
 
@@ -53,9 +54,48 @@ public class ArrayKey implements Key, Iterable<Key> {
         return ArrayIterator.of(values);
     }
 
+    public ArrayKey removeIf(Predicate<Key> predicate) {
+        Key[] results = null;
+        Key[] elements = this.values;
+        int length = elements.length;
+        int size = length;
+        for (int i = 0; i < length; i++) {
+            Key key = elements[i];
+            if (key != null && !predicate.test(key)) {
+                continue;
+            }
+            if (results == null) {
+                results = elements.clone();
+            }
+            results[i] = null;
+            size --;
+        }
+        if (length == size) {
+            return this;
+        }
+        Key[] tmp = new Key[size];
+        int j = 0;
+        for (int i = 0; i < length; i++) {
+            Key key = results[i];
+            if (key != null) {
+                tmp[j] = key;
+                j ++;
+            }
+        }
+        return new ArrayKey(tmp);
+    }
     @Override
     public Iterator<? extends Key> mentionedKeys() {
         return iterator();
+    }
+    public ArrayKey add(Key key) {
+        int size = length();
+        Key[] elements = new Key[size + 1];
+        for (int i = 0; i < size; i++) {
+            elements[i] = get(i);
+        }
+        elements[size] = key;
+        return new ArrayKey(elements);
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
@@ -74,7 +114,8 @@ public class ArrayKey implements Key, Iterable<Key> {
     }
     @Override
     public String toString() {
-        return toString(", ");
+        //return toString(", ");
+        return SmaliWriter.toStringSafe(this);
     }
     public String toString(String separator) {
         StringBuilder builder = new StringBuilder();
@@ -111,14 +152,7 @@ public class ArrayKey implements Key, Iterable<Key> {
 
     @Override
     public int hashCode() {
-        int hash = 0;
-        Key[] values = this.values;
-        if (values != null) {
-            for (Key key : values) {
-                hash = hash + hash * ObjectsUtil.hash(key);
-            }
-        }
-        return hash;
+        return ObjectsUtil.hashElements(this.values);
     }
 
     @Override
@@ -130,17 +164,7 @@ public class ArrayKey implements Key, Iterable<Key> {
             return false;
         }
         ArrayKey arrayKey = (ArrayKey) obj;
-        if (this.length() != arrayKey.length()) {
-            return false;
-        }
-        Iterator<Key> iterator1 = this.iterator();
-        Iterator<Key> iterator2 = arrayKey.iterator();
-        while (iterator1.hasNext() && iterator2.hasNext()) {
-            if (!ObjectsUtil.equals(iterator1.next(), iterator2.next())) {
-                return false;
-            }
-        }
-        return true;
+        return ObjectsUtil.equalsArray(this.values, arrayKey.values);
     }
 
     public static ArrayKey read(SmaliReader reader, char end) throws IOException {

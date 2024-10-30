@@ -102,7 +102,7 @@ public class DexIntegerVisitor extends CombiningIterator<IntegerReference, Integ
         return new IterableIterator<AnnotationElement, IntegerReference>(arrayValue.iterator()) {
             @Override
             public Iterator<IntegerReference> iterator(AnnotationElement element) {
-                return DexIntegerVisitor.iterator(element.getValue());
+                return DexIntegerVisitor.iterator(element.getValueBlock());
             }
         };
     }

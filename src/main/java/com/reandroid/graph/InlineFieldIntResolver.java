@@ -20,6 +20,7 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.model.*;
 
@@ -65,13 +66,13 @@ public class InlineFieldIntResolver extends BaseDexClassProcessor {
         Iterator<DexInstruction> iterator = dexMethod.getInstructions();
         while(iterator.hasNext()) {
             DexInstruction instruction = iterator.next();
-            DexValue value = getValueFromStaticField(instruction);
+            Key value = getValueFromStaticField(instruction);
             if(value != null) {
                 resolve(instruction, value);
             }
         }
     }
-    private DexValue getValueFromStaticField(DexInstruction instruction) {
+    private Key getValueFromStaticField(DexInstruction instruction) {
         if(!instruction.is(Opcode.SGET)){
             return null;
         }
@@ -83,11 +84,17 @@ public class InlineFieldIntResolver extends BaseDexClassProcessor {
         if(dexField == null) {
             return null;
         }
-        return dexField.getInitialValue();
+        return dexField.getStaticInitialValue();
     }
-    private void resolve(DexInstruction instruction, DexValue value) {
-        Integer id = value.getInteger();
-        if(id == null || !resourceIdChecker.test(id)) {
+    private void resolve(DexInstruction instruction, Key value) {
+        if (!(value instanceof PrimitiveKey)) {
+            return;
+        }
+        if (!(((PrimitiveKey) value).isInteger())) {
+            return;
+        }
+        int id = ((PrimitiveKey.IntegerKey) value).value();
+        if(!resourceIdChecker.test(id)) {
             return;
         }
         Key key = instruction.getKey();

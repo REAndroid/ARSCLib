@@ -16,6 +16,7 @@
 package com.reandroid.dex.value;
 
 import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -76,6 +77,11 @@ public class CharValue extends PrimitiveValueBlock {
     @Override
     public PrimitiveKey getKey() {
         return PrimitiveKey.of(get());
+    }
+
+    @Override
+    public void setKey(Key key) {
+        set(((PrimitiveKey.CharKey) key).value());
     }
     @Override
     public String getHex() {
