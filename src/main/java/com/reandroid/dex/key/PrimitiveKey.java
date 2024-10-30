@@ -306,7 +306,7 @@ public abstract class PrimitiveKey implements Key {
             if (obj == null || obj.getClass() != getClass()) {
                 return false;
             }
-            return value() == ((DoubleKey) obj).value();
+            return Double.doubleToLongBits(value()) == Double.doubleToLongBits(((DoubleKey) obj).value());
         }
 
         @Override
@@ -367,7 +367,8 @@ public abstract class PrimitiveKey implements Key {
             if (obj == null || obj.getClass() != getClass()) {
                 return false;
             }
-            return value() == ((FloatKey) obj).value();
+            return Float.floatToIntBits(this.value()) ==
+                    Float.floatToIntBits(((FloatKey)obj).value());
         }
 
         @Override
