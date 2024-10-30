@@ -274,6 +274,9 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
         if (TypeKey.TYPE_F.equals(typeKey)) {
             return PrimitiveKey.of(0.0f);
         }
+        if (TypeKey.TYPE_I.equals(typeKey)) {
+            return PrimitiveKey.of(0);
+        }
         if (TypeKey.TYPE_J.equals(typeKey)) {
             return PrimitiveKey.of(0L);
         }

@@ -33,12 +33,13 @@ public class AnnotationElement extends DataItem implements ModifiableKeyItem,
 
     @Override
     public AnnotationElementKey getKey(){
-        return checkKey(new AnnotationElementKey(getName(), getValue()));
+        return new AnnotationElementKey(getName(), getValue());
     }
     @Override
     public void setKey(Key key) {
         AnnotationElementKey elementKey = (AnnotationElementKey) key;
         setName(elementKey.getName());
+        setValue(elementKey.getValue());
     }
     public Key getValue() {
         DexValueBlock<?> valueBlock = getValueBlock();
