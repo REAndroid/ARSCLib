@@ -20,6 +20,7 @@ import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.item.ByteItem;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyReference;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -30,7 +31,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class DexValueBlock<T extends Block> extends FixedBlockContainer implements SmaliFormat {
+public class DexValueBlock<T extends Block> extends FixedBlockContainer
+        implements KeyReference, SmaliFormat {
 
     private final ByteItem valueTypeItem;
     private final T valueContainer;
@@ -76,9 +78,11 @@ public class DexValueBlock<T extends Block> extends FixedBlockContainer implemen
         valueTypeItem.set((byte) flag);
     }
 
+    @Override
     public Key getKey() {
         throw new RuntimeException("Method not implemented: " + getClass());
     }
+    @Override
     public void setKey(Key key) {
         throw new RuntimeException("Method not implemented: " + getClass());
     }
