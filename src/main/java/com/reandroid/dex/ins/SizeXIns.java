@@ -40,7 +40,7 @@ public class SizeXIns extends Ins {
     private final ByteArray valueBytes;
     private final InsIdSectionReference sectionReference;
 
-    public SizeXIns(Opcode<?> opcode) {
+    public SizeXIns(Opcode<?> opcode, boolean hasSectionData) {
         super(opcode);
         this.valueBytes = new ByteArray();
 
@@ -49,12 +49,16 @@ public class SizeXIns extends Ins {
         valueBytes.putShort(0, opcode.getValue());
 
         InsIdSectionReference sectionReference;
-        if(opcode.getSectionType() != null){
+        if (hasSectionData) {
             sectionReference = new InsIdSectionReference(this);
         }else {
             sectionReference = null;
         }
         this.sectionReference = sectionReference;
+    }
+
+    public SizeXIns(Opcode<?> opcode) {
+        this(opcode, opcode.getSectionType() != null);
     }
 
     public SectionType<? extends IdItem> getSectionType(){
@@ -152,15 +156,29 @@ public class SizeXIns extends Ins {
     public void setSectionId(IdItem item){
         sectionReference.setItem(item);
     }
-    public Key getSectionIdKey() {
-        IdItem entry = getSectionId();
-        if(entry != null){
-            return entry.getKey();
+    public Key getKey() {
+        InsIdSectionReference sectionReference = this.sectionReference;
+        if(sectionReference != null) {
+            return sectionReference.getKey();
         }
         return null;
     }
-    public void setSectionIdKey(Key key){
+    public void setKey(Key key) {
         sectionReference.setItem(key);
+    }
+    /**
+     * Use setKey
+     */
+    @Deprecated
+    public void setSectionIdKey(Key key){
+        setKey(key);
+    }
+    /**
+     * Use getKey
+     */
+    @Deprecated
+    public Key getSectionIdKey() {
+        return getKey();
     }
 
     public int getData(){
@@ -242,13 +260,13 @@ public class SizeXIns extends Ins {
 
     @Override
     public void replaceKeys(Key search, Key replace){
-        Key key = getSectionIdKey();
+        Key key = getKey();
         if(key == null){
             return;
         }
         Key key2 = key.replaceKey(search, replace);
         if(key != key2){
-            setSectionIdKey(key2);
+            setKey(key2);
         }
     }
     @Override
@@ -262,7 +280,7 @@ public class SizeXIns extends Ins {
             this.valueBytes.set(coming.valueBytes.getBytes().clone());
             return;
         }
-        setSectionIdKey(coming.getSectionIdKey());
+        setKey(coming.getKey());
         this.sectionReference.validate();
         RegistersSet comingSet = (RegistersSet) coming;
         RegistersSet set = (RegistersSet) this;
@@ -294,7 +312,7 @@ public class SizeXIns extends Ins {
             }
         }
         if(getSectionType() != null){
-            return Objects.equals(getSectionIdKey(), sizeXIns.getSectionIdKey());
+            return Objects.equals(getKey(), sizeXIns.getKey());
         }else {
             return getData() == sizeXIns.getData();
         }
@@ -314,7 +332,7 @@ public class SizeXIns extends Ins {
             }
         }
         hash = hash * 31;
-        Key key = getSectionIdKey();
+        Key key = getKey();
         if(key != null){
             hash = hash + key.hashCode();
         }else {
@@ -353,7 +371,7 @@ public class SizeXIns extends Ins {
         if(getSectionType() == null){
             return;
         }
-        setSectionIdKey(smaliInstruction.getKey());
+        setKey(smaliInstruction.getKey());
     }
     private void fromSmaliData(SmaliInstruction smaliInstruction) throws IOException {
         Number data = smaliInstruction.getData();

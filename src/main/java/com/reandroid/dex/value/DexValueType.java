@@ -250,13 +250,19 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
                 return LONG;
             }
         }
-        if(key instanceof AnnotationItemKey) {
+        if (key instanceof AnnotationItemKey) {
             AnnotationItemKey itemKey = (AnnotationItemKey) key;
             if (!itemKey.hasVisibility()) {
                 return ANNOTATION;
             }
         }
-        throw new DexException("Unknown value type: " + key);
+        if (key instanceof MethodHandleKey) {
+            return METHOD_HANDLE;
+        }
+        if (key instanceof ProtoKey) {
+            return PROTO;
+        }
+        throw new DexException("Unknown value type: " + key.getClass() + ", " + key);
     }
     public static Key createNull(TypeKey typeKey) {
         if (!typeKey.isPrimitive()) {

@@ -124,7 +124,7 @@ public class DexInstruction extends DexCode {
     public void setKey(Key key){
         Ins ins = getIns();
         if(ins instanceof SizeXIns){
-            ((SizeXIns) edit()).setSectionIdKey(key);
+            ((SizeXIns) edit()).setKey(key);
         }
     }
     public IdItem getIdSectionEntry(){

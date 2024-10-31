@@ -19,6 +19,9 @@ public class Size4Ins extends SizeXIns {
     public Size4Ins(Opcode<?> opcode) {
         super(opcode);
     }
+    public Size4Ins(Opcode<?> opcode, boolean hasSectionData) {
+        super(opcode, hasSectionData);
+    }
     @Override
     public int getData(){
         return getShortUnsigned(2);

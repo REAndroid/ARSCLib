@@ -174,5 +174,6 @@ public interface UsageMarker {
     int USAGE_INTERFACE = ObjectsUtil.of(1 << 16);
     int USAGE_CALL_SITE = ObjectsUtil.of(1 << 17);
     int USAGE_STATIC_VALUES = ObjectsUtil.of(1 << 18);
-    int USAGE_MARKER = ObjectsUtil.of(1 << 19);
+    int USAGE_METHOD_HANDLE = ObjectsUtil.of(1 << 19);
+    int USAGE_MARKER = ObjectsUtil.of(1 << 20);
 }

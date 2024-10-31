@@ -153,7 +153,7 @@ public class RClassParent extends DexClass {
         methodDef.addAccessFlag(AccessFlag.CONSTRUCTOR);
         InstructionList insList = methodDef.getOrCreateInstructionList();
         Ins35c ins = insList.createNext(Opcode.INVOKE_DIRECT);
-        ins.setSectionIdKey(MethodKey.parse("Ljava/lang/Object;-><init>()V"));
+        ins.setKey(MethodKey.parse("Ljava/lang/Object;-><init>()V"));
         ins.setRegistersCount(1);
         ins.setRegister(0, 0);
         insList.createNext(Opcode.RETURN_VOID);

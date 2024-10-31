@@ -34,7 +34,7 @@ public class InsConstString extends Ins21c implements ConstString{
     }
     @Override
     public void setString(StringKey key) {
-        super.setSectionIdKey(key);
+        super.setKey(key);
     }
 
     @Override
@@ -52,6 +52,11 @@ public class InsConstString extends Ins21c implements ConstString{
     public StringId getSectionId() {
         return (StringId) super.getSectionId();
     }
+    @Override
+    public StringKey getKey() {
+        return (StringKey) super.getKey();
+    }
+
     public InsConstStringJumbo toConstStringJumbo(){
         StringId stringId = getSectionId();
         if(stringId == null || !needsConvertToConstStringJumbo(stringId)){

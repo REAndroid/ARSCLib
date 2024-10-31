@@ -16,6 +16,7 @@
 package com.reandroid.dex.id;
 
 import com.reandroid.dex.base.IndirectShort;
+import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.MethodHandleType;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodHandleKey;
@@ -41,7 +42,8 @@ public class MethodHandleId extends IdItem implements Comparable<MethodHandleId>
         MethodHandleTypeReference handleType = new MethodHandleTypeReference(this, 0);
         this.handleType = handleType;
         this.unused1 = new IndirectShort(this, 2);
-        this.member = new IdItemIndirectReference<IdItem>(null, this, 4) {
+        this.member = new IdItemIndirectReference<IdItem>(null, this, 4,
+                UsageMarker.USAGE_METHOD_HANDLE) {
             @Override
             public SectionType<IdItem> getSectionType() {
                 return handleType.getSectionType();

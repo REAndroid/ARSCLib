@@ -34,7 +34,7 @@ public class InsConstStringJumbo extends Ins31c implements ConstString{
     }
     @Override
     public void setString(StringKey key) {
-        super.setSectionIdKey(key);
+        super.setKey(key);
     }
     @Override
     public int getRegister() {
@@ -50,6 +50,10 @@ public class InsConstStringJumbo extends Ins31c implements ConstString{
     @Override
     public StringId getSectionId() {
         return (StringId) super.getSectionId();
+    }
+    @Override
+    public StringKey getKey() {
+        return (StringKey) super.getKey();
     }
 
     public InsConstString toConstString(){

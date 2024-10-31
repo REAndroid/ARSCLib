@@ -16,12 +16,13 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.sections.SectionType;
 
 public class Ins20bc extends Size4Ins {
 
     public Ins20bc(Opcode<?> opcode) {
-        super(opcode);
+        super(opcode, true);
     }
 
     public int getVerificationError() {
@@ -42,6 +43,13 @@ public class Ins20bc extends Size4Ins {
     public SectionType<? extends IdItem> getSectionType(){
         return SectionType.getReferenceType(getReferenceTypeValue());
     }
+
+    @Override
+    public void setKey(Key key) {
+        setSectionType(SectionType.getSectionType(key));
+        super.setKey(key);
+    }
+
     public void setSectionType(SectionType<?> sectionType){
         setReferenceTypeValue(sectionType.getReferenceType());
     }

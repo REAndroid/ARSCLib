@@ -28,7 +28,6 @@ import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
 public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
 
@@ -42,16 +41,13 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
 
     @Override
     public CallSiteKey getKey() {
-        return checkKey(new CallSiteKey(getMethodHandle(), getMethodNameKey(),
+        return checkKey(new CallSiteKey(getMethodHandle(), getMethodName(),
                 getProto(), getArguments()));
     }
     @Override
     public void setKey(Key key) {
         CallSiteKey callSiteKey = (CallSiteKey) key;
-        setMethodHandle(callSiteKey.getMethodHandle());
-        setMethodName(callSiteKey.getName());
-        setProto(callSiteKey.getProto());
-        throw new RuntimeException("Method not implemented");
+        this.encodedArrayReference.setItem(callSiteKey.toArrayKey());
     }
 
     public String callSiteName() {
@@ -63,19 +59,14 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
     public MethodHandleId getMethodHandleId(){
         return getValue(SectionType.METHOD_HANDLE, 0);
     }
-    public void setMethodHandle(MethodHandleKey key){
-        getOrCreateValue(SectionType.METHOD_HANDLE, 0, key);
+    public void setMethodHandle(MethodHandleKey key) {
+        if (!key.equals(getMethodHandle())) {
+            setKey(getKey().changeMethodHandle(key));
+        }
     }
-    public String getMethodName() {
+    public StringKey getMethodName() {
         StringId stringId = getMethodNameId();
         if(stringId != null){
-            return stringId.getString();
-        }
-        return null;
-    }
-    public StringKey getMethodNameKey(){
-        StringId stringId = getMethodNameId();
-        if (stringId != null) {
             return stringId.getKey();
         }
         return null;
@@ -83,8 +74,10 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
     public void setMethodName(String methodName){
         setMethodName(StringKey.create(methodName));
     }
-    public void setMethodName(StringKey methodName){
-        getOrCreateValue(SectionType.STRING_ID, 1, methodName);
+    public void setMethodName(StringKey methodName) {
+        if (!methodName.equals(getMethodName())) {
+            setKey(getKey().changeName(methodName));
+        }
     }
     public StringId getMethodNameId(){
         return getValue(SectionType.STRING_ID, 1);
@@ -100,7 +93,9 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
         return null;
     }
     public void setProto(ProtoKey protoKey){
-        getOrCreateValue(SectionType.METHOD_ID, 2, protoKey);
+        if (!protoKey.equals(getProto())) {
+            setKey(getKey().changeProto(protoKey));
+        }
     }
     public ArrayKey getArguments() {
         int size = getArgumentsSize();
@@ -143,11 +138,10 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
         }
         return 0;
     }
-    private<T1 extends IdItem> T1 getOrCreateValue(SectionType<T1> sectionType, int index, Key key){
-        EncodedArray encodedArray = getOrCreateEncodedArray();
-        SectionValue<T1> sectionValue = encodedArray.getOrCreate(sectionType, index);
-        sectionValue.setItem(key);
-        return sectionValue.getItem();
+    public void setArguments(ArrayKey key) {
+        if (!key.equals(getArguments())) {
+            setKey(getKey().changeArguments(key));
+        }
     }
     @SuppressWarnings("unchecked")
     private<T1 extends IdItem> T1 getValue(SectionType<T1> sectionType, int index){
@@ -228,6 +222,10 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
         if(i != 0){
             return i;
         }
+        i = CompareUtil.compare(getArguments(), callSiteId.getArguments());
+        if(i != 0){
+            return i;
+        }
         i = CompareUtil.compare(getMethodNameId(), callSiteId.getMethodNameId());
         if(i != 0){
             return i;
@@ -243,7 +241,7 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
             return false;
         }
         CallSiteId callSiteId = (CallSiteId) o;
-        return Objects.equals(getEncodedArray(), callSiteId.getEncodedArray());
+        return ObjectsUtil.equals(getEncodedArray(), callSiteId.getEncodedArray());
     }
     @Override
     public int hashCode() {

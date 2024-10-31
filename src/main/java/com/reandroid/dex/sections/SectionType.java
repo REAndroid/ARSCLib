@@ -23,6 +23,7 @@ import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.dex.id.*;
 import com.reandroid.dex.data.*;
+import com.reandroid.dex.key.*;
 import com.reandroid.utils.collection.ArrayIterator;
 
 import java.util.Comparator;
@@ -531,6 +532,31 @@ public class SectionType<T extends SectionItem> {
             default:
                 return null;
         }
+    }
+
+    public static SectionType<? extends IdItem> getSectionType(Key key) {
+        if (key instanceof StringKey) {
+            return STRING_ID;
+        }
+        if (key instanceof TypeKey) {
+            return TYPE_ID;
+        }
+        if (key instanceof ProtoKey) {
+            return PROTO_ID;
+        }
+        if (key instanceof FieldKey) {
+            return FIELD_ID;
+        }
+        if (key instanceof MethodKey) {
+            return METHOD_ID;
+        }
+        if (key instanceof MethodHandleKey) {
+            return METHOD_HANDLE;
+        }
+        if (key instanceof CallSiteKey) {
+            return CALL_SITE_ID;
+        }
+        return null;
     }
 
     public static Iterator<SectionType<?>> getIdSectionTypes(){

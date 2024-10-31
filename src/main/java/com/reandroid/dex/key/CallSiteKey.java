@@ -19,6 +19,8 @@ import com.reandroid.dex.common.MethodHandleType;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 
@@ -48,10 +50,41 @@ public class CallSiteKey implements Key {
     public ArrayKey getArguments() {
         return arguments;
     }
-
-    @Override
-    public int compareTo(Object o) {
-        return 0;
+    public ArrayKey toArrayKey() {
+        ArrayKey arguments = getArguments();
+        int argumentsLength = arguments.length();
+        Key[] elements = new Key[3 + arguments.length()];
+        elements[0] = getMethodHandle();
+        elements[1] = getName();
+        elements[2] = getProto();
+        for (int i = 0; i < argumentsLength; i++) {
+            elements[i + 3] = arguments.get(i);
+        }
+        return new ArrayKey(elements);
+    }
+    public CallSiteKey changeMethodHandle(MethodHandleKey methodHandle) {
+        if (methodHandle.equals(getMethodHandle())) {
+            return this;
+        }
+        return new CallSiteKey(methodHandle, getName(), getProto(), getArguments());
+    }
+    public CallSiteKey changeName(StringKey name) {
+        if (name.equals(getName())) {
+            return this;
+        }
+        return new CallSiteKey(getMethodHandle(), name, getProto(), getArguments());
+    }
+    public CallSiteKey changeProto(ProtoKey proto) {
+        if (proto.equals(getProto())) {
+            return this;
+        }
+        return new CallSiteKey(getMethodHandle(), getName(), proto, getArguments());
+    }
+    public CallSiteKey changeArguments(ArrayKey arguments) {
+        if (arguments.equals(getArguments())) {
+            return this;
+        }
+        return new CallSiteKey(getMethodHandle(), getName(), getProto(), arguments);
     }
 
     @Override
@@ -67,6 +100,49 @@ public class CallSiteKey implements Key {
         }
         writer.append(')');
         getMethodHandle().append(writer, false);
+    }
+
+    @Override
+    public int compareTo(Object obj) {
+        if (obj == this) {
+            return 0;
+        }
+        if (!(obj instanceof CallSiteKey)) {
+            return 0;
+        }
+        CallSiteKey key = (CallSiteKey) obj;
+        int i = CompareUtil.compare(this.getMethodHandle(), key.getMethodHandle());
+        if (i == 0) {
+            i = CompareUtil.compare(this.getArguments(), key.getArguments());
+            if (i == 0) {
+                i = CompareUtil.compare(this.getName(), key.getName());
+                if (i == 0) {
+                    i = CompareUtil.compare(this.getProto(), key.getProto());
+                }
+            }
+        }
+        return i;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof CallSiteKey)) {
+            return false;
+        }
+        CallSiteKey other = (CallSiteKey) obj;
+        return ObjectsUtil.equals(getMethodHandle(), other.getMethodHandle()) &&
+                ObjectsUtil.equals(getName(), other.getName()) &&
+                ObjectsUtil.equals(getProto(), other.getProto()) &&
+                ObjectsUtil.equals(getArguments(), other.getArguments());
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsUtil.hash(getMethodHandle(),
+                getName(), getProto(), getArguments());
     }
 
     @Override
