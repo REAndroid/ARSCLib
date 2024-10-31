@@ -328,6 +328,13 @@ public class SmaliWriter implements Appendable, Closeable {
         this.writerSetting = writerSetting;
     }
 
+    public boolean isLocalRegistersCount() {
+        SmaliWriterSetting setting = getWriterSetting();
+        if (setting != null) {
+            return setting.isLocalRegistersCount();
+        }
+        return true;
+    }
     public SequentialLabelFactory getSequentialLabelFactory() {
         return sequentialLabelFactory;
     }

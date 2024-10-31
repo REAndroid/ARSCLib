@@ -35,6 +35,7 @@ public class SmaliDirective implements SmaliFormat {
     public static final SmaliDirective CATCH_ALL;
     public static final SmaliDirective CATCH;
     public static final SmaliDirective LOCALS;
+    public static final SmaliDirective REGISTERS;
 
     public static final SmaliDirective ARRAY_DATA;
     public static final SmaliDirective PACKED_SWITCH;
@@ -67,6 +68,8 @@ public class SmaliDirective implements SmaliFormat {
         ENUM = new SmaliDirective("enum");
 
         LOCALS = new SmaliDirective("locals");
+        REGISTERS = new SmaliDirective("registers");
+
         CATCH = new SmaliDirective("catch", true);
         CATCH_ALL = new SmaliDirective("catchall", true);
         ARRAY_DATA = new SmaliDirective("array-data", true);
@@ -107,7 +110,8 @@ public class SmaliDirective implements SmaliFormat {
                 PROLOGUE,
                 PARAM,
                 END_LOCAL,
-                LOCAL
+                LOCAL,
+                REGISTERS
         };
     }
 

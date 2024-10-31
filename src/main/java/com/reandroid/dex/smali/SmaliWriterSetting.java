@@ -34,10 +34,12 @@ public class SmaliWriterSetting {
     private List<ClassComment> classCommentList;
     private boolean sequentialLabel;
     private boolean commentUnicodeStrings;
+    private boolean localRegistersCount;
 
     public SmaliWriterSetting() {
         this.sequentialLabel = true;
         this.commentUnicodeStrings = false;
+        this.localRegistersCount = true;
     }
 
     public boolean isSequentialLabel() {
@@ -52,6 +54,13 @@ public class SmaliWriterSetting {
     }
     public void setCommentUnicodeStrings(boolean commentUnicodeStrings) {
         this.commentUnicodeStrings = commentUnicodeStrings;
+    }
+
+    public boolean isLocalRegistersCount() {
+        return localRegistersCount;
+    }
+    public void setLocalRegistersCount(boolean localRegistersCount) {
+        this.localRegistersCount = localRegistersCount;
     }
 
     public void writeResourceIdComment(SmaliWriter writer, long l) throws IOException {

@@ -24,7 +24,9 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.SmaliWriterSetting;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -32,17 +34,19 @@ import java.util.Iterator;
 public class SmaliMethod extends SmaliDef implements RegistersTable{
 
     private ProtoKey protoKey;
-    private Integer locals;
 
     private final SmaliParamSet paramSet;
+    private final SmaliRegistersCount smaliRegistersCount;
     private final SmaliCodeSet codeSet;
 
     public SmaliMethod(){
         super();
         this.paramSet = new SmaliParamSet();
+        this.smaliRegistersCount = new SmaliRegistersCount();
         this.codeSet = new SmaliCodeSet();
 
         this.paramSet.setParent(this);
+        this.smaliRegistersCount.setParent(this);
         this.codeSet.setParent(this);
     }
 
@@ -78,11 +82,8 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
     public Iterator<SmaliDebugElement> getDebugElements(){
         return getCodeSet().getDebugElements();
     }
-    public Integer getLocals() {
-        return locals;
-    }
-    public void setLocals(Integer locals) {
-        this.locals = locals;
+    public SmaliRegistersCount getSmaliRegistersCount() {
+        return smaliRegistersCount;
     }
     public ProtoKey getProtoKey() {
         return protoKey;
@@ -127,11 +128,9 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
         writer.append(getName());
         getProtoKey().append(writer);
         writer.indentPlus();
-        Integer locals = getLocals();
-        if(locals != null){
+        if (hasInstructions()) {
             writer.newLine();
-            SmaliDirective.LOCALS.append(writer);
-            writer.appendInteger(locals);
+            getSmaliRegistersCount().append(writer);
         }
         getParamSet().append(writer);
         if(hasAnnotation()){
@@ -159,8 +158,9 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
     }
     private boolean parseNoneCode(SmaliReader reader) throws IOException {
         SmaliDirective directive = SmaliDirective.parse(reader, false);
-        if(directive == SmaliDirective.LOCALS){
-            parseLocals(reader);
+        if(directive == SmaliDirective.LOCALS ||
+                directive == SmaliDirective.REGISTERS) {
+            getSmaliRegistersCount().parse(reader);
             return true;
         }
         if(directive == SmaliDirective.ANNOTATION){
@@ -172,11 +172,6 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
             return true;
         }
         return false;
-    }
-    private void parseLocals(SmaliReader reader) throws IOException {
-        SmaliParseException.expect(reader, SmaliDirective.LOCALS);
-        reader.skipSpaces();
-        setLocals(reader.readInteger());
     }
     private void parseName(SmaliReader reader) {
         reader.skipWhitespaces();
@@ -190,7 +185,7 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
 
     @Override
     public int getRegistersCount() {
-        return getLocalRegistersCount() + getParameterRegistersCount();
+        return getSmaliRegistersCount().getRegisters();
     }
 
     @Override
@@ -215,11 +210,7 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
     }
     @Override
     public int getLocalRegistersCount() {
-        Integer locals = getLocals();
-        if(locals != null){
-            return locals;
-        }
-        return 0;
+        return getSmaliRegistersCount().getLocals();
     }
 
     @Override
@@ -234,5 +225,88 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
         builder.append(getName());
         builder.append(getProtoKey());
         return builder.toString();
+    }
+
+    public static class SmaliRegistersCount extends Smali implements SmaliRegion {
+
+        private SmaliDirective directive;
+        private int value;
+
+        public SmaliRegistersCount() {
+            this.directive = SmaliDirective.LOCALS;
+        }
+
+        public int getLocals() {
+            int value = getValue();
+            if (!isLocalsMode()) {
+                SmaliMethod method = getParent(SmaliMethod.class);
+                value -= method.getParameterRegistersCount();
+            }
+            return value;
+        }
+        public int getRegisters() {
+            int value = getValue();
+            if (isLocalsMode()) {
+                SmaliMethod method = getParent(SmaliMethod.class);
+                value += method.getParameterRegistersCount();
+            }
+            return value;
+        }
+        public int getValue() {
+            return value;
+        }
+        public void setValue(int value) {
+            this.value = value;
+        }
+
+        public boolean isLocalsMode() {
+            return getSmaliDirective() == SmaliDirective.LOCALS;
+        }
+        public void setLocalsMode(boolean localsMode) {
+            if (localsMode == isLocalsMode()) {
+                return;
+            }
+            SmaliDirective directive;
+            int value;
+            if (localsMode) {
+                value = getLocals();
+                directive = SmaliDirective.LOCALS;
+            } else {
+                value = getRegisters();
+                directive = SmaliDirective.REGISTERS;
+            }
+            setDirective(directive);
+            setValue(value);
+        }
+
+        private void setDirective(SmaliDirective directive) {
+            this.directive = directive;
+        }
+
+        @Override
+        public void parse(SmaliReader reader) throws IOException {
+            SmaliDirective directive = SmaliDirective.parse(reader);
+            if (directive != SmaliDirective.LOCALS && directive != SmaliDirective.REGISTERS) {
+                throw new SmaliParseException("expecting '" + SmaliDirective.LOCALS + "', or '"
+                        + SmaliDirective.REGISTERS + "'", reader);
+            }
+            setDirective(directive);
+            reader.skipSpaces();
+            setValue(reader.readInteger());
+        }
+        @Override
+        public SmaliDirective getSmaliDirective() {
+            return directive;
+        }
+
+        @Override
+        public void append(SmaliWriter writer) throws IOException {
+            SmaliWriterSetting setting = writer.getWriterSetting();
+            if (setting != null) {
+                setLocalsMode(setting.isLocalRegistersCount());
+            }
+            getSmaliDirective().append(writer);
+            writer.appendInteger(getValue());
+        }
     }
 }

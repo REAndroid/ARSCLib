@@ -325,8 +325,13 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
         writer.setCurrentRegistersTable(this);
         MethodDef methodDef = getMethodDef();
         writer.newLine();
-        SmaliDirective.LOCALS.append(writer);
-        writer.appendInteger(getLocalRegistersCount());
+        if (writer.isLocalRegistersCount()) {
+            SmaliDirective.LOCALS.append(writer);
+            writer.appendInteger(getLocalRegistersCount());
+        } else {
+            SmaliDirective.REGISTERS.append(writer);
+            writer.appendInteger(getRegistersCount());
+        }
         writer.appendAllWithDoubleNewLine(methodDef.getParameters(true));
         writer.appendAllWithDoubleNewLine(methodDef.getAnnotations(true));
         getInstructionList().append(writer);
