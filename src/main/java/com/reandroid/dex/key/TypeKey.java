@@ -327,44 +327,46 @@ public class TypeKey implements Key{
         }
         if(name.indexOf('/') > 0 ||
                 name.indexOf(';') > 0 ||
-                name.charAt(0) == '['){
-            return create(name);
+                name.charAt(0) == '[') {
+            return new TypeKey(name.replace('.', '/'));
         }
-        if(name.indexOf('.') >= 0){
-            return create(DexUtils.toBinaryName(name));
+        return parseSourceName(name);
+    }
+    private static TypeKey parseSourceName(String name) {
+        int length = name.length();
+        int arrayDimension = 0;
+        int i = name.indexOf('[');
+        while (i > 0 && i < length && name.charAt(i) == '['){
+            arrayDimension ++;
+            i ++;
+            if (i == length || name.charAt(i) != ']') {
+                return null;
+            }
+            i ++;
         }
-        int i = 0;
-        while (name.charAt(i) == '[' && i < name.length() - 1){
-            i++;
+        length = name.length() - (arrayDimension * 2);
+        if (length == 0) {
+            return null;
         }
-        if(primitiveType(name.charAt(i)) != null){
-            return create(name);
+        if (arrayDimension != 0) {
+            name = name.substring(0, length);
         }
-        if(name.equals(TYPE_B.getSourceName())){
-            return TYPE_B;
+        TypeKey typeKey = primitiveType(name);
+        if (typeKey == null) {
+            name = name.replace('.', '/');
+            typeKey = new TypeKey('L' + name + ';');
         }
-        if(name.equals(TYPE_D.getSourceName())){
-            return TYPE_D;
+        return typeKey.setArrayDimension(arrayDimension);
+    }
+    public static TypeKey convert(Class<?> type) {
+        String name = type.getName();
+        if (type.isArray()) {
+            return new TypeKey(name.replace('.', '/'));
         }
-        if(name.equals(TYPE_F.getSourceName())){
-            return TYPE_F;
+        if (type.isPrimitive()) {
+            return primitiveType(name);
         }
-        if(name.equals(TYPE_I.getSourceName())){
-            return TYPE_I;
-        }
-        if(name.equals(TYPE_J.getSourceName())){
-            return TYPE_J;
-        }
-        if(name.equals(TYPE_S.getSourceName())){
-            return TYPE_S;
-        }
-        if(name.equals(TYPE_V.getSourceName())){
-            return TYPE_V;
-        }
-        if(name.equals(TYPE_Z.getSourceName())){
-            return TYPE_Z;
-        }
-        return create(DexUtils.toBinaryName(name));
+        return new TypeKey('L' + name.replace('.', '/') + ';');
     }
 
     public static TypeKey create(String typeName){
@@ -430,6 +432,38 @@ public class TypeKey implements Key{
             default:
                 return null;
         }
+    }
+    private static TypeKey primitiveType(String sourceName) {
+        int length = sourceName.length();
+        // int = 3, boolean = 7
+        if (length < 3 || length > 7) {
+            return null;
+        }
+        if(sourceName.equals(TYPE_B.getSourceName())) {
+            return TYPE_B;
+        }
+        if(sourceName.equals(TYPE_D.getSourceName())) {
+            return TYPE_D;
+        }
+        if(sourceName.equals(TYPE_F.getSourceName())) {
+            return TYPE_F;
+        }
+        if(sourceName.equals(TYPE_I.getSourceName())) {
+            return TYPE_I;
+        }
+        if(sourceName.equals(TYPE_J.getSourceName())) {
+            return TYPE_J;
+        }
+        if(sourceName.equals(TYPE_S.getSourceName())) {
+            return TYPE_S;
+        }
+        if(sourceName.equals(TYPE_V.getSourceName())) {
+            return TYPE_V;
+        }
+        if(sourceName.equals(TYPE_Z.getSourceName())) {
+            return TYPE_Z;
+        }
+        return null;
     }
 
 

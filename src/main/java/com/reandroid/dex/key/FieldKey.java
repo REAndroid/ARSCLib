@@ -25,6 +25,7 @@ import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.function.Function;
 
@@ -305,6 +306,11 @@ public class FieldKey implements Key {
             type = text;
         }
         return new FieldKey(defining, name, type);
+    }
+    public static FieldKey convert(Field field) {
+        TypeKey declaring = TypeKey.convert(field.getDeclaringClass());
+        TypeKey type = TypeKey.convert(field.getType());
+        return new FieldKey(declaring.getTypeName(), field.getName(), type.getTypeName());
     }
     public static FieldKey create(FieldId fieldId){
         TypeKey defining = fieldId.getDefining();

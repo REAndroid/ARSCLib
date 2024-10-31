@@ -28,6 +28,8 @@ import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.Iterator;
 import java.util.function.Function;
 
@@ -491,6 +493,17 @@ public class MethodKey implements Key{
             returnType = text;
         }
         return new MethodKey(defining, name, parameters, returnType);
+    }
+    public static MethodKey convert(Method method) {
+        TypeKey declaring = TypeKey.convert(method.getDeclaringClass());
+        TypeKey ret = TypeKey.convert(method.getReturnType());
+        Parameter[] parameters = method.getParameters();
+        int length = parameters.length;
+        String[] parameterNames = new String[length];
+        for (int i = 0; i < length; i++) {
+            parameterNames[i] = TypeKey.convert(parameters[i].getType()).getTypeName();
+        }
+        return new MethodKey(declaring, method.getName(), parameterNames, ret);
     }
 
     public static MethodKey create(MethodId methodId){
