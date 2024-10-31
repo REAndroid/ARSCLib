@@ -82,7 +82,7 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<
     }
     @Override
     public SmaliValueNumber<?> newEntry(SmaliReader reader) throws IOException {
-        SmaliValue value =  SmaliValue.create(reader);
+        SmaliValue value =  SmaliValueFactory.create(reader);
         if(!(value instanceof SmaliValueNumber)){
             throw new SmaliParseException("Unrecognized array data entry", reader);
         }

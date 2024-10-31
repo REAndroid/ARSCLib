@@ -24,7 +24,7 @@ import com.reandroid.dex.value.DexValueType;
 
 import java.io.IOException;
 
-public class SmaliValueNull extends SmaliValue{
+public class SmaliValueNull extends SmaliValue {
 
     public SmaliValueNull(){
         super();
@@ -38,6 +38,10 @@ public class SmaliValueNull extends SmaliValue{
     @Override
     public NullKey getKey() {
         return NullKey.INSTANCE;
+    }
+    @Override
+    public void setKey(Key key) {
+        NullKey nullKey = (NullKey) key;
     }
 
     @Override

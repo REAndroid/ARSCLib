@@ -82,7 +82,7 @@ public class SmaliField extends SmaliDef{
             return;
         }
         if(!isInitializedInStaticConstructor(smaliClass, fieldKey)) {
-            setValue(SmaliValue.createDefaultFor(fieldKey.getType()));
+            setValue(SmaliValueFactory.createForField(fieldKey.getType()));
         }
     }
     private boolean isInitializedInStaticConstructor(SmaliClass smaliClass, FieldKey fieldKey) {
@@ -156,7 +156,7 @@ public class SmaliField extends SmaliDef{
         }
         reader.skip(1); // =
         reader.skipWhitespaces();
-        SmaliValue value = SmaliValue.create(reader);
+        SmaliValue value = SmaliValueFactory.create(reader);
         setValue(value);
         value.parse(reader);
     }

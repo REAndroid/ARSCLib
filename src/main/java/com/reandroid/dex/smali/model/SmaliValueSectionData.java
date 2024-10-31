@@ -42,6 +42,10 @@ public class SmaliValueSectionData extends SmaliValue{
         return getValue();
     }
     @Override
+    public void setKey(Key key) {
+        setValue(key);
+    }
+    @Override
     public DexValueType<?> getValueType() {
         Key key = getValue();
         if(key instanceof StringKey){

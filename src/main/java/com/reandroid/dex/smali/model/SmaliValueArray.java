@@ -44,6 +44,14 @@ public class SmaliValueArray extends SmaliValue implements Iterable<SmaliValue>{
         }
         return new ArrayKey(elements);
     }
+    @Override
+    public void setKey(Key key) {
+        ArrayKey arrayKey = (ArrayKey) key;
+        clear();
+        for (Key entry : arrayKey) {
+            addValue(entry);
+        }
+    }
 
     public SmaliSet<SmaliValue> getValues() {
         return values;
@@ -61,6 +69,11 @@ public class SmaliValueArray extends SmaliValue implements Iterable<SmaliValue>{
     }
     public void clear() {
         values.clear();
+    }
+    public void addValue(Key value) {
+        SmaliValue smaliValue = SmaliValueFactory.createForValue(value);
+        add(smaliValue);
+        smaliValue.setKey(value);
     }
     public boolean add(SmaliValue value) {
         return values.add(value);
@@ -121,9 +134,7 @@ public class SmaliValueArray extends SmaliValue implements Iterable<SmaliValue>{
             }
         }
         reader.skipWhitespaces();
-        if(reader.readASCII() != '}'){
-            // throw
-        }
+        SmaliParseException.expect(reader, '}');
     }
     private SmaliValue createNext(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
@@ -131,6 +142,6 @@ public class SmaliValueArray extends SmaliValue implements Iterable<SmaliValue>{
         if(b == '}'){
             return null;
         }
-        return SmaliValue.create(reader);
+        return SmaliValueFactory.create(reader);
     }
 }

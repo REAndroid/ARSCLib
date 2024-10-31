@@ -16,14 +16,13 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.common.AnnotationVisibility;
-import com.reandroid.dex.key.AnnotationElementKey;
-import com.reandroid.dex.key.AnnotationItemKey;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.smali.*;
 
 import java.io.IOException;
 
-public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement> implements SmaliRegion {
+public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement>
+        implements KeyReference, SmaliRegion {
 
     private final SmaliDirective smaliDirective;
     private AnnotationVisibility visibility;
@@ -41,6 +40,7 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement> implem
         this(false);
     }
 
+    @Override
     public AnnotationItemKey getKey() {
         int length = this.size();
         AnnotationElementKey[] elements = new AnnotationElementKey[length];
@@ -48,6 +48,16 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement> implem
             elements[i] = get(i).getKey();
         }
         return new AnnotationItemKey(getVisibility(), getType(), elements);
+    }
+    @Override
+    public void setKey(Key key) {
+        clear();
+        AnnotationItemKey itemKey = (AnnotationItemKey) key;
+        setVisibility(itemKey.getVisibility());
+        setType(itemKey.getType());
+        for (AnnotationElementKey elementKey : itemKey) {
+            newElement().setKey(elementKey);
+        }
     }
     public AnnotationVisibility getVisibility() {
         return visibility;
@@ -70,6 +80,11 @@ public class SmaliAnnotationItem extends SmaliSet<SmaliAnnotationElement> implem
         this.type = type;
     }
 
+    public SmaliAnnotationElement newElement() {
+        SmaliAnnotationElement element = new SmaliAnnotationElement();
+        add(element);
+        return element;
+    }
     @Override
     public SmaliDirective getSmaliDirective() {
         return smaliDirective;

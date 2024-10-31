@@ -45,6 +45,10 @@ public class SmaliValueChar extends SmaliValue{
     public Key getKey() {
         return PrimitiveKey.of(getValue());
     }
+    @Override
+    public void setKey(Key key) {
+        setValue(((PrimitiveKey.CharKey) key).value());
+    }
 
     @Override
     public DexValueType<?> getValueType() {

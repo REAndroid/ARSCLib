@@ -17,12 +17,14 @@ package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.key.AnnotationElementKey;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyReference;
+import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
-public class SmaliAnnotationElement extends Smali{
+public class SmaliAnnotationElement extends Smali implements KeyReference {
 
     private String name;
     private SmaliValue value;
@@ -31,8 +33,15 @@ public class SmaliAnnotationElement extends Smali{
         super();
     }
 
+    @Override
     public AnnotationElementKey getKey() {
         return new AnnotationElementKey(getName(), getValueKey());
+    }
+    @Override
+    public void setKey(Key key) {
+        AnnotationElementKey elementKey = (AnnotationElementKey) key;
+        setName(elementKey.getName());
+        setValue(elementKey.getValue());
     }
     public String getName() {
         return name;
@@ -49,6 +58,12 @@ public class SmaliAnnotationElement extends Smali{
     }
     public SmaliValue getValue() {
         return value;
+    }
+
+    public void setValue(Key key) {
+        SmaliValue smaliValue = SmaliValueFactory.createForValue(key);
+        setValue(smaliValue);
+        smaliValue.setKey(key);
     }
     public void setValue(SmaliValue value) {
         this.value = value;
@@ -78,11 +93,9 @@ public class SmaliAnnotationElement extends Smali{
         int length = i - reader.position();
         setName(reader.readString(length));
         reader.skipWhitespaces();
-        if(reader.readASCII() != '='){
-            // throw
-        }
+        SmaliParseException.expect(reader, '=');
         reader.skipWhitespaces();
-        SmaliValue smaliValue = SmaliValue.create(reader);
+        SmaliValue smaliValue = SmaliValueFactory.create(reader);
         setValue(smaliValue);
         smaliValue.parse(reader);
     }
