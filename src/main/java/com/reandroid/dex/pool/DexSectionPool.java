@@ -18,7 +18,7 @@ package com.reandroid.dex.pool;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyItem;
-import com.reandroid.dex.key.ModifiableKeyItem;
+import com.reandroid.dex.key.KeyReference;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.CompareUtil;
@@ -70,7 +70,7 @@ public class DexSectionPool<T extends SectionItem> extends MultiMap<Key, T> {
     }
     T createNext(Key key){
         T item = getSection().createItem();
-        ((ModifiableKeyItem) item).setKey(key);
+        ((KeyReference) item).setKey(key);
         return item;
     }
     Section<T> getSection(){
@@ -119,7 +119,7 @@ public class DexSectionPool<T extends SectionItem> extends MultiMap<Key, T> {
         T sample = getSectionType().getCreator().newInstance();
         keyItemsChecked = true;
         keyItems = sample instanceof KeyItem;
-        keyItemsCreate = sample instanceof ModifiableKeyItem;
+        keyItemsCreate = sample instanceof KeyReference;
         return keyItems;
     }
     @Override

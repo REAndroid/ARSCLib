@@ -31,7 +31,7 @@ import com.reandroid.utils.collection.ComputeIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class TypeList extends ShortList implements ModifiableKeyItem,
+public class TypeList extends ShortList implements KeyReference,
         SmaliFormat, Iterable<TypeId>, Comparable<TypeList> {
 
     private TypeId[] typeIds;

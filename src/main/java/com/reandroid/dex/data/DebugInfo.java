@@ -25,7 +25,7 @@ import com.reandroid.dex.debug.DebugParameter;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.ModifiableKeyItem;
+import com.reandroid.dex.key.KeyReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class DebugInfo extends DataItem implements ModifiableKeyItem {
+public class DebugInfo extends DataItem implements KeyReference {
 
     private final Ule128Item lineStart;
     private final Ule128Item debugParameterCount;

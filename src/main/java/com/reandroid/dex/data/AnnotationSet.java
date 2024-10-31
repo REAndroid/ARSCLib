@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
-        implements ModifiableKeyItem, SmaliFormat, PositionAlignedItem, FullRefresh {
+        implements KeyReference, SmaliFormat, PositionAlignedItem, FullRefresh {
 
     private final DataKey<AnnotationSet> mKey;
 

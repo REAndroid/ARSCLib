@@ -15,6 +15,6 @@
  */
 package com.reandroid.dex.key;
 
-public interface ModifiableKeyItem extends KeyItem {
+public interface KeyReference extends KeyItem {
     void setKey(Key key);
 }

@@ -28,7 +28,7 @@ import com.reandroid.dex.ins.ExtraLine;
 import com.reandroid.dex.ins.Label;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.ModifiableKeyItem;
+import com.reandroid.dex.key.KeyReference;
 import com.reandroid.dex.reference.DataItemIndirectReference;
 import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.ins.TryBlock;
@@ -45,7 +45,7 @@ import com.reandroid.utils.collection.EmptyIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class CodeItem extends DataItem implements RegistersTable, PositionAlignedItem, ModifiableKeyItem,
+public class CodeItem extends DataItem implements RegistersTable, PositionAlignedItem, KeyReference,
         SmaliFormat {
 
     private final Header header;

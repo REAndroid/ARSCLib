@@ -19,13 +19,13 @@ import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.ModifiableKeyItem;
+import com.reandroid.dex.key.KeyReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.util.Iterator;
 
-public class AnnotationGroup extends IntegerDataItemList<AnnotationSet> implements ModifiableKeyItem {
+public class AnnotationGroup extends IntegerDataItemList<AnnotationSet> implements KeyReference {
 
     private final DataKey<AnnotationGroup> mKey;
 

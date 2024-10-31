@@ -22,7 +22,7 @@ import com.reandroid.dex.common.EditableItem;
 import com.reandroid.dex.common.IdUsageIterator;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.ModifiableKeyItem;
+import com.reandroid.dex.key.KeyReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
 
@@ -31,7 +31,7 @@ import java.util.Iterator;
 
 public abstract class IdItem extends SectionItem
         implements SmaliFormat, BlockRefresh, EditableItem,
-        ModifiableKeyItem, FixedSizeBlock, IdUsageIterator {
+        KeyReference, FixedSizeBlock, IdUsageIterator {
 
     IdItem(int bytesLength) {
         super(bytesLength);

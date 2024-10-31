@@ -45,7 +45,7 @@ import java.util.function.Predicate;
 
 public class AnnotationItem extends DataItem
         implements Comparable<AnnotationItem>, Iterable<AnnotationElement>,
-        ModifiableKeyItem, SmaliRegion {
+        KeyReference, SmaliRegion {
 
     private final ByteItem visibility;
     private final Ule128IdItemReference<TypeId> typeId;

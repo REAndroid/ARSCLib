@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class AnnotationElement extends DataItem implements ModifiableKeyItem,
+public class AnnotationElement extends DataItem implements KeyReference,
         Comparable<AnnotationElement>, SmaliFormat {
 
     private final StringUle128Reference elementName;

@@ -22,7 +22,7 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.ArrayKey;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.ModifiableKeyItem;
+import com.reandroid.dex.key.KeyReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.value.DexValueBlock;
 import com.reandroid.dex.value.DexValueType;
@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class EncodedArray extends DataItem implements ModifiableKeyItem, Iterable<DexValueBlock<?>> {
+public class EncodedArray extends DataItem implements KeyReference, Iterable<DexValueBlock<?>> {
 
     private final Ule128Item valuesCountReference;
     private final BlockList<DexValueBlock<?>> valueList;
