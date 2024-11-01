@@ -22,7 +22,6 @@ import com.reandroid.utils.io.FileUtil;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.nio.file.StandardOpenOption;
 
 public class ArchiveFile extends Archive<ZipFileInput>{
 
@@ -39,9 +38,7 @@ public class ArchiveFile extends Archive<ZipFileInput>{
     }
     @Override
     void extractStored(File file, ArchiveEntry archiveEntry) throws IOException {
-        FileUtil.createNewFile(file);
-        StandardOpenOption openOption = StandardOpenOption.WRITE;
-        FileChannel outputChannel = FileChannel.open(file.toPath(), openOption);
+        FileChannel outputChannel = FileUtil.openWriteChannel(file);
         FileChannel fileChannel = getZipInput().getFileChannel();
         fileChannel.position(archiveEntry.getFileOffset());
         outputChannel.transferFrom(fileChannel, 0, archiveEntry.getDataSize());

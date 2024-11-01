@@ -20,6 +20,7 @@ import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 
 import java.io.*;
+import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -163,6 +164,22 @@ public class FileUtil {
             return result + unit;
         }
         return result + "." + dec + unit;
+    }
+    public static FileChannel openReadChannel(File file) throws IOException {
+        if(!file.isFile()){
+            throw new FileNotFoundException("No such file: " + file);
+        }
+        return new FileInputStream(file).getChannel();
+    }
+    public static FileChannel openWriteChannel(File file) throws IOException {
+        if (file.isDirectory()) {
+            throw new IOException("File is directory: " + file);
+        }
+        ensureParentDirectory(file);
+        if (!file.exists() || file.delete()) {
+            file.createNewFile();
+        }
+        return new FileOutputStream(file).getChannel();
     }
     public static InputStream inputStream(File file) throws IOException{
         if(!file.isFile()){

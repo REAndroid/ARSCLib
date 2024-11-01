@@ -15,13 +15,14 @@
  */
 package com.reandroid.common;
 
+import com.reandroid.utils.io.FileUtil;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.StandardOpenOption;
 
 public class FileChannelInputStream extends InputStream {
     private final FileChannel fileChannel;
@@ -61,15 +62,15 @@ public class FileChannelInputStream extends InputStream {
         this(fileChannel, length, DEFAULT_BUFFER_SIZE);
     }
     public FileChannelInputStream(File file, long length, int bufferSize) throws IOException {
-        this(FileChannel.open(file.toPath(), StandardOpenOption.READ), length, bufferSize);
+        this(FileUtil.openReadChannel(file), length, bufferSize);
         this.mAutoClosable = true;
     }
     public FileChannelInputStream(File file, byte[] buffer, int bufferSize) throws IOException {
-        this(FileChannel.open(file.toPath(), StandardOpenOption.READ), buffer, bufferSize);
+        this(FileUtil.openReadChannel(file), buffer, bufferSize);
         this.mAutoClosable = true;
     }
     public FileChannelInputStream(File file) throws IOException {
-        this(FileChannel.open(file.toPath(), StandardOpenOption.READ), file.length());
+        this(FileUtil.openReadChannel(file), file.length());
         this.mAutoClosable = true;
     }
 

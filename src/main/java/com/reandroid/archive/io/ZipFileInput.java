@@ -16,11 +16,11 @@
 package com.reandroid.archive.io;
 
 import com.reandroid.common.FileChannelInputStream;
+import com.reandroid.utils.io.FileUtil;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.StandardOpenOption;
 
 public class ZipFileInput extends ZipInput {
     private final File file;
@@ -78,10 +78,7 @@ public class ZipFileInput extends ZipInput {
             return fileChannel;
         }
         synchronized (this){
-            if(!file.isFile()){
-                throw new FileNotFoundException("No such file: " + file);
-            }
-            fileChannel = FileChannel.open(this.file.toPath(), StandardOpenOption.READ);
+            fileChannel = FileUtil.openReadChannel(file);
             this.fileChannel = fileChannel;
             return fileChannel;
         }
