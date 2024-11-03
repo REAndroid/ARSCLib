@@ -344,6 +344,13 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         setClassData(classData);
         return classData;
     }
+    public Def<?> getDef(Key key) {
+        ClassData classData = getClassData();
+        if (classData != null) {
+            return classData.get(key);
+        }
+        return null;
+    }
     public ClassData getClassData(){
         ClassData data = classData.getItem();
         linkClassData(data);

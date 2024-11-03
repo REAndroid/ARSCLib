@@ -3,15 +3,14 @@ package com.reandroid.dex.data;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.dex.key.FieldKey;
-import com.reandroid.dex.key.Key;
+import com.reandroid.dex.base.DexException;
 import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Iterator;
 
-public class HiddenApiFlagValueList extends BlockList<HiddenApiFlagValue> {
+class HiddenApiFlagValueList extends BlockList<HiddenApiFlagValue>
+        implements Iterable<HiddenApiFlagValue> {
 
     private DefArray<?> defArray;
 
@@ -22,37 +21,73 @@ public class HiddenApiFlagValueList extends BlockList<HiddenApiFlagValue> {
         this(CREATOR);
     }
 
-    HiddenApiFlagValueList newCopy(){
-        return new Copy(this);
+
+    public HiddenApiFlagValue get(Def<?> def) {
+        if (def == null) {
+            return null;
+        }
+        DefArray<?> defArray = this.defArray;
+        if (defArray == null) {
+            defArray = def.getParentInstance(DefArray.class);
+            linkDefArray(defArray);
+        }
+        HiddenApiFlagValue flagValue = get(def.getIndex());
+        if (defArray == null) {
+            return flagValue;
+        }
+        if (flagValue != null && flagValue.getDef() == def) {
+            return flagValue;
+        }
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            flagValue = get(i);
+            if (flagValue.getDef() == def) {
+                return flagValue;
+            }
+        }
+        flagValue = createNext();
+        flagValue.linkDef(def);
+        return flagValue;
     }
 
-    public boolean isEmptyValueList(){
-        return size() != 0;
+    HiddenApiFlagValueList newCompact(){
+        return new Compact(this);
     }
+
     @Override
     protected void onPreRefresh() {
         super.onPreRefresh();
-        ensureDefArraySize();
-        sort();
+        ensureDefLinked();
     }
 
-    private void ensureDefArraySize(){
-        int size;
-        if(defArray == null){
-            size = 0;
-        }else {
-            size = defArray.size();
+    private void ensureDefLinked() {
+        DefArray<?> defArray = this.defArray;
+        if(defArray == null || defArray.size() == 0){
+            setSize(0);
+            return;
         }
-        setSize(size);
-    }
-    public boolean sort() {
-        if(defArray == null){
-            return false;
+        removeIf(HiddenApiFlagValue::isEmpty);
+        boolean needsSort = false;
+        int size = defArray.size();
+        for (int i = 0; i < size; i++) {
+            Def<?> def = defArray.get(i);
+            HiddenApiFlagValue flagValue = get(def);
+            if (!needsSort) {
+                needsSort = (def.getIndex() != flagValue.getIndex());
+            }
         }
-        return super.sort(CompareUtil.getComparableComparator());
+        if (needsSort) {
+            sort(CompareUtil.getComparableComparator());
+        }
     }
 
     void linkDefArray(DefArray<?> defArray) {
+        if (this.defArray != null) {
+            if (this.defArray == defArray) {
+                return;
+            }
+            throw new DexException("Invalid link state");
+        }
         this.defArray = defArray;
         if(defArray == null){
             setSize(0);
@@ -64,29 +99,33 @@ public class HiddenApiFlagValueList extends BlockList<HiddenApiFlagValue> {
             get(i).linkDef(defArray.get(i));
         }
     }
+    boolean isAllNoRestrictions() {
+        for (HiddenApiFlagValue flagValue : this) {
+            if (!flagValue.isNoRestriction()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     @Override
     protected void onReadBytes(BlockReader reader) throws IOException {
         readChildes(reader);
     }
 
-    static class Copy extends HiddenApiFlagValueList{
+    static class Compact extends HiddenApiFlagValueList{
 
         private final HiddenApiFlagValueList source;
 
-        Copy(HiddenApiFlagValueList source){
-            super(new CopyCreator(source));
+        Compact(HiddenApiFlagValueList source){
+            super(new CompactCreator(source));
             this.source = source;
         }
         @Override
-        HiddenApiFlagValueList newCopy() {
-            return new Copy(source);
+        HiddenApiFlagValueList newCompact() {
+            return new Compact(source);
         }
 
-        @Override
-        public boolean isEmptyValueList() {
-            return source.isEmptyValueList();
-        }
         @Override
         protected void onPreRefresh() {
         }
@@ -107,11 +146,11 @@ public class HiddenApiFlagValueList extends BlockList<HiddenApiFlagValue> {
     }
 
 
-    static class CopyCreator implements Creator<HiddenApiFlagValue>{
+    static class CompactCreator implements Creator<HiddenApiFlagValue>{
 
         private final HiddenApiFlagValueList source;
 
-        CopyCreator(HiddenApiFlagValueList source){
+        CompactCreator(HiddenApiFlagValueList source){
             this.source = source;
         }
 
@@ -125,7 +164,7 @@ public class HiddenApiFlagValueList extends BlockList<HiddenApiFlagValue> {
         }
         @Override
         public HiddenApiFlagValue newInstanceAt(int index) {
-            return source.get(index).newCopy();
+            return source.get(index).newCompact();
         }
     }
 

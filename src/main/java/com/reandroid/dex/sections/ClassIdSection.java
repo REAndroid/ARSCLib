@@ -16,6 +16,7 @@
 package com.reandroid.dex.sections;
 
 import com.reandroid.dex.base.IntegerPair;
+import com.reandroid.dex.data.HiddenApiRestrictions;
 import com.reandroid.dex.id.ClassId;
 
 public class ClassIdSection extends IdSection<ClassId>{
@@ -27,5 +28,17 @@ public class ClassIdSection extends IdSection<ClassId>{
     @Override
     public ClassIdSectionArray getItemArray() {
         return (ClassIdSectionArray) super.getItemArray();
+    }
+
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        Section<HiddenApiRestrictions> section = getSectionList().getSection(SectionType.HIDDEN_API);
+        if (section != null) {
+            HiddenApiRestrictions first = section.get(0);
+            if (first != null) {
+                first.removeIfAllNoRestrictions();
+            }
+        }
     }
 }

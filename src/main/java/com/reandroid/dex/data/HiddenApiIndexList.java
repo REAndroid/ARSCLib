@@ -25,39 +25,64 @@ import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.FilterIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
 
-public class HiddenApiIndexList extends BlockList<HiddenApiIndex> {
+class HiddenApiIndexList extends BlockList<HiddenApiIndex> implements
+        Iterable<HiddenApiIndex> {
 
     public HiddenApiIndexList(){
         super();
         setCreator(new HiddenApiIndexCreator(this));
     }
+
     public HiddenApiFlagValue getFlagValue(Key key){
         HiddenApiIndex apiIndex = get(key.getDeclaring());
-        if(apiIndex != null){
+        if(apiIndex != null) {
             return apiIndex.get(key);
         }
         return null;
     }
-    public HiddenApiIndex get(TypeKey typeKey){
-        Section<ClassId> section = getClassIdSection();
-        if(section == null){
+    public HiddenApiIndex get(TypeKey typeKey) {
+        return get(getClassId(typeKey));
+    }
+    public HiddenApiIndex get(ClassId classId) {
+        if (classId == null || classId.isRemoved()) {
             return null;
         }
-        if(section.getCount() != size()){
-            sortItems();
+        HiddenApiIndex apiIndex = get(classId.getIndex());
+        if(apiIndex != null && apiIndex.getClassId() == classId) {
+            return apiIndex;
         }
-        ClassId classId = section.get(typeKey);
-        if(classId == null || classId.isRemoved()){
-            return null;
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            apiIndex = get(i);
+            if (apiIndex.getClassId() == classId) {
+                return apiIndex;
+            }
         }
-        return get(classId.getIdx());
+        HiddenApiRestrictions parent = getParentInstance(HiddenApiRestrictions.class);
+        apiIndex = parent.createNew(classId);
+        return apiIndex;
+    }
+    HiddenApiIndex createNext(ClassId classId, HiddenApiData apiData) {
+        HiddenApiIndex apiIndex = new HiddenApiIndex(classId);
+        add(apiIndex);
+        apiIndex.linkData(apiData);
+        return apiIndex;
     }
 
+    boolean isAllNoRestrictions() {
+        for (HiddenApiIndex apiIndex : this) {
+            if (!apiIndex.isAllNoRestrictions()) {
+                return false;
+            }
+        }
+        return true;
+    }
     public Iterator<HiddenApiIndex> getHiddenApis() {
         return FilterIterator.of(iterator(), HiddenApiIndex::hasValidDataOffset);
     }
@@ -70,60 +95,54 @@ public class HiddenApiIndexList extends BlockList<HiddenApiIndex> {
     @Override
     protected void onPreRefresh() {
         super.onPreRefresh();
-        clearNullIndex();
-        sortItems();
+        ensureClassesLinked();
     }
 
-    private void clearNullIndex() {
+    private void ensureClassesLinked() {
         removeIf(HiddenApiIndex::isNull);
-    }
-    private void sortItems() {
-        sort(CompareUtil.getComparableComparator());
-        if(ensureClassSectionSize()){
+        Section<ClassId> section = getClassIdSection();
+        if (section == null) {
+            return;
+        }
+        boolean needsSort = false;
+        int size = section.getCount();
+        for(int i = 0; i < size; i++) {
+            ClassId classId = section.get(i);
+            HiddenApiIndex apiIndex = get(classId);
+            if (!needsSort) {
+                needsSort = (classId.getIndex() != apiIndex.getIndex());
+            }
+        }
+        if (needsSort) {
             sort(CompareUtil.getComparableComparator());
         }
     }
-    private boolean ensureClassSectionSize() {
-        Section<ClassId> section = getClassIdSection();
-        if(section == null){
-            return false;
-        }
-        boolean changed = false;
-        for(int i = 0; i < size(); i++){
-            HiddenApiIndex apiIndex = get(i);
-            ClassId classId = apiIndex.getClassId();
-            if(classId.getIndex() == i){
-                continue;
-            }
-            ClassId update = section.get(i);
-            HiddenApiIndex hiddenApiIndex = new HiddenApiIndex(update);
-            add(i, hiddenApiIndex);
-            changed = true;
-            i --;
-        }
-        setSize(section.getCount());
-        return changed;
-    }
-
     @Override
     protected void onReadBytes(BlockReader reader) throws IOException {
         setSize(getClassIdSectionCount());
         super.readChildes(reader);
     }
 
-    private int getClassIdSectionCount(){
+    private int getClassIdSectionCount() {
         Section<ClassId> section = getClassIdSection();
-        if(section != null){
+        if (section != null) {
             return section.getCount();
         }
         return 0;
     }
-    private Section<ClassId> getClassIdSection(){
-        SectionList sectionList = getParentSectionList();
-        if(sectionList != null){
-            return sectionList.getSection(SectionType.CLASS_ID);
+    private ClassId getClassId(TypeKey typeKey) {
+        Section<ClassId> section = getClassIdSection();
+        if (section != null) {
+            return section.get(typeKey);
         }
         return null;
+    }
+    Section<ClassId> getClassIdSection(){
+        SectionList sectionList = getParentSectionList();
+        if (sectionList != null) {
+            return sectionList.getSection(SectionType.CLASS_ID);
+        }
+        return ObjectsUtil.getNull();
     }
     private SectionList getParentSectionList(){
         return getParentInstance(SectionList.class);

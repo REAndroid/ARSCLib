@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.HiddenApiFlag;
@@ -27,31 +28,105 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
 
-public class HiddenApiFlagValue extends Ule128Item
-        implements SmaliFormat, Comparable<HiddenApiFlagValue> {
+public class HiddenApiFlagValue extends Ule128Item implements
+        BlockRefresh, Iterable<HiddenApiFlag>, SmaliFormat, Comparable<HiddenApiFlagValue> {
 
     private Def<?> def;
 
-    public HiddenApiFlagValue(){
+    public HiddenApiFlagValue() {
         super();
         set(HiddenApiFlag.NO_RESTRICTION);
     }
 
-    HiddenApiFlagValue newCopy(){
-        return new Copy(this);
-    }
-    public void linkDef(Def<?> def) {
-        this.def = def;
-        def.setHiddenApiFlagValue(this);
+    Def<?> getDef() {
+        return def;
     }
 
-    public Iterator<HiddenApiFlag> getFlags(){
+    HiddenApiFlagValue newCompact() {
+        return new Compact(this);
+    }
+    void linkDef(Def<?> def) {
+        this.def = def;
+        def.linkHiddenApiFlagValueInternal(this);
+    }
+
+    public void removeSelf() {
+        HiddenApiFlagValueList flagValueList = getParentInstance(HiddenApiFlagValueList.class);
+        if (flagValueList != null) {
+            flagValueList.remove(this);
+        }
+    }
+
+    public boolean isEmpty() {
+        Def<?> def = getDef();
+        return def == null || def.isRemoved();
+    }
+    public boolean isRemoved() {
+        return getParentInstance(HiddenApiRestrictions.class) == null;
+    }
+    public boolean isNoRestriction() {
+        return isEmpty() || get() == HiddenApiFlag.NO_RESTRICTION;
+    }
+
+    public HiddenApiFlag getRestriction() {
+        return HiddenApiFlag.restrictionOf(get());
+    }
+    public HiddenApiFlag getDomain() {
+        return HiddenApiFlag.domainOf(get());
+    }
+    public void add(HiddenApiFlag flag) {
+        int restrict = HiddenApiFlag.NO_RESTRICTION;
+        int domain = 0;
+        if (flag.isDomainFlag()) {
+            HiddenApiFlag keep = getRestriction();
+            if (keep != null) {
+                restrict = keep.getValue();
+            }
+            domain = flag.getValue();
+        } else {
+            HiddenApiFlag keep = getDomain();
+            if (keep != null) {
+                domain = keep.getValue();
+            }
+            restrict = flag.getValue();
+        }
+        set(domain | restrict);
+    }
+    public void remove(HiddenApiFlag flag) {
+        int restrict = HiddenApiFlag.NO_RESTRICTION;
+        int domain = 0;
+        if (flag.isDomainFlag()) {
+            HiddenApiFlag keep = getRestriction();
+            if (keep != null) {
+                restrict = keep.getValue();
+            }
+        } else {
+            HiddenApiFlag keep = getDomain();
+            if (keep != null) {
+                domain = keep.getValue();
+            }
+        }
+        set(domain | restrict);
+    }
+    public void clear() {
+        set(HiddenApiFlag.NO_RESTRICTION);
+    }
+
+    @Override
+    public Iterator<HiddenApiFlag> iterator() {
         return HiddenApiFlag.valuesOf(get());
     }
 
     @Override
+    public void refresh() {
+        Def<?> def = this.def;
+        if (def == null) {
+            set(HiddenApiFlag.NO_RESTRICTION);
+        }
+    }
+    @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.appendModifiers(getFlags());
+        writer.appendModifiers(iterator());
     }
 
     @Override
@@ -84,13 +159,13 @@ public class HiddenApiFlagValue extends Ule128Item
 
     @Override
     public String toString() {
-        return Modifier.toString(getFlags());
+        return Modifier.toString(iterator());
     }
 
-    static class Copy extends HiddenApiFlagValue {
+    static class Compact extends HiddenApiFlagValue {
         private final HiddenApiFlagValue source;
 
-        Copy(HiddenApiFlagValue source){
+        Compact(HiddenApiFlagValue source){
             super();
             this.source = source;
         }

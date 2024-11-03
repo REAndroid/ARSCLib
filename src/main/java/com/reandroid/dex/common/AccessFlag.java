@@ -146,10 +146,16 @@ public class AccessFlag extends Modifier{
         return new ArrayIterator<>(VALUES, filter);
     }
     public static AccessFlag[] parse(SmaliReader reader){
-        List<AccessFlag> accessFlags = new ArrayCollection<>();
+        List<AccessFlag> accessFlags = null;
         AccessFlag flag;
         while ((flag = parseNext(reader)) != null){
+            if (accessFlags == null) {
+                accessFlags = new ArrayCollection<>();
+            }
             accessFlags.add(flag);
+        }
+        if (accessFlags == null) {
+            return null;
         }
         int size = accessFlags.size();
         if(size == 0){

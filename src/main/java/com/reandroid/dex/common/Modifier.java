@@ -72,6 +72,13 @@ public abstract class Modifier implements SmaliFormat {
             }
         }
     }
+    public static void append(SmaliWriter writer, Iterator<? extends Modifier> iterator) throws IOException {
+        while (iterator.hasNext()) {
+            Modifier modifier = iterator.next();
+            writer.append(modifier.getName());
+            writer.append(' ');
+        }
+    }
     public static boolean contains(Modifier[] modifiers, Modifier modifier) {
         if(modifiers == null || modifier == null){
             return false;

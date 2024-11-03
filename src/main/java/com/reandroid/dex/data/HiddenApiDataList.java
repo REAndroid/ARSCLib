@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
 
-public class HiddenApiDataList extends SingleBlockContainer<BlockList<HiddenApiData>>
+class HiddenApiDataList extends SingleBlockContainer<BlockList<HiddenApiData>>
         implements Iterable<HiddenApiData>{
 
     private final BlockList<HiddenApiData> dataList;
@@ -34,7 +34,7 @@ public class HiddenApiDataList extends SingleBlockContainer<BlockList<HiddenApiD
         this.dataList = new BlockList<>();
         setItem(dataList);
     }
-    public HiddenApiData get(int offset){
+    public HiddenApiData getAtOffset(int offset){
         BlockList<HiddenApiData> dataList = this.dataList;
         int size = dataList.size();
         for(int i = 0; i < size; i++){
@@ -55,7 +55,11 @@ public class HiddenApiDataList extends SingleBlockContainer<BlockList<HiddenApiD
     private void add(HiddenApiData hiddenApiData){
         this.dataList.add(hiddenApiData);
     }
-
+    HiddenApiData createNext() {
+        HiddenApiData hiddenApiData = new HiddenApiData();
+        add(hiddenApiData);
+        return hiddenApiData;
+    }
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
@@ -86,12 +90,10 @@ public class HiddenApiDataList extends SingleBlockContainer<BlockList<HiddenApiD
     }
     private int getOffsetStart(){
         HiddenApiRestrictions restrictions = getParentInstance(HiddenApiRestrictions.class);
-        assert restrictions != null;
         return restrictions.getHiddenApiDataListOffset();
     }
     private HiddenApiIndexList getHiddenApiList(){
         HiddenApiRestrictions restrictions = getParentInstance(HiddenApiRestrictions.class);
-        assert restrictions != null;
         return restrictions.getHiddenApiIndexList();
     }
 }

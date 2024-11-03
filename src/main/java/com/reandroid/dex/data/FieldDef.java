@@ -92,6 +92,7 @@ public class FieldDef extends Def<FieldId> {
     public void fromSmali(SmaliField smaliField){
         setKey(smaliField.getKey());
         setAccessFlagsValue(smaliField.getAccessFlagsValue());
+        addHiddenApiFlags(smaliField.getHiddenApiFlags());
         if(smaliField.hasAnnotation()){
             AnnotationSet annotationSet = getOrCreateSection(SectionType.ANNOTATION_SET).createItem();
             annotationSet.fromSmali(smaliField.getAnnotation());
@@ -150,7 +151,7 @@ public class FieldDef extends Def<FieldId> {
             StringBuilder builder = new StringBuilder();
             builder.append(getSmaliDirective());
             builder.append(" ");
-            builder.append(Modifier.toString(getAccessFlags()));
+            builder.append(Modifier.toString(getModifiers()));
             builder.append(" ");
             builder.append(fieldId);
             Key staticValue = getStaticValue();
@@ -160,7 +161,7 @@ public class FieldDef extends Def<FieldId> {
             }
             return builder.toString();
         }
-        return getSmaliDirective() + " " + Modifier.toString(getAccessFlags())
+        return getSmaliDirective() + " " + Modifier.toString(getModifiers())
                 + " " + getRelativeIdValue();
     }
 }

@@ -16,11 +16,14 @@
 package com.reandroid.dex.common;
 
 import com.reandroid.dex.smali.SmaliFormat;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ArrayIterator;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -118,38 +121,59 @@ public class HiddenApiFlag extends Modifier implements SmaliFormat {
     public static Iterator<HiddenApiFlag> valuesOf(int value) {
         return getValues(hiddenApiFlag -> hiddenApiFlag.isSet(value));
     }
-    public static HiddenApiFlag[] valuesOf1(int value) {
-        if((value & NO_RESTRICTION) == NO_RESTRICTION){
-            return null;
-        }
-        HiddenApiFlag normalRestriction = RESTRICTION_VALUES[value & NO_RESTRICTION];
-
-        int domainSpecificPart = (value & ~NO_RESTRICTION);
-        if (domainSpecificPart == 0) {
-            return new HiddenApiFlag[]{normalRestriction};
-        }
-        int count = 1;
-        for (HiddenApiFlag flag : DOMAIN_VALUES) {
-            if (flag.isSet(value)) {
-                count ++;
-            }
-        }
-        HiddenApiFlag[] results = new HiddenApiFlag[count];
-        count = 0;
-        results[count] = normalRestriction;
-        count ++;
-        for (HiddenApiFlag domainFlag : DOMAIN_VALUES) {
-            if (domainFlag.isSet(value)) {
-                results[count] = domainFlag;
-                count ++;
-            }
-        }
-        return results;
-    }
     public static Iterator<HiddenApiFlag> getValues(){
         return getValues(null);
     }
     public static Iterator<HiddenApiFlag> getValues(Predicate<HiddenApiFlag> filter){
         return new ArrayIterator<>(VALUES, filter);
+    }
+    public static HiddenApiFlag restrictionOf(int value) {
+        for (HiddenApiFlag flag : RESTRICTION_VALUES) {
+            if (flag.isSet(value)) {
+                return flag;
+            }
+        }
+        return null;
+    }
+    public static HiddenApiFlag domainOf(int value) {
+        for (HiddenApiFlag flag : DOMAIN_VALUES) {
+            if (flag.isSet(value)) {
+                return flag;
+            }
+        }
+        return null;
+    }
+
+    public static HiddenApiFlag[] parse(SmaliReader reader){
+        List<HiddenApiFlag> hiddenApiFlags = null;
+        HiddenApiFlag flag;
+        while ((flag = parseNext(reader)) != null){
+            if (hiddenApiFlags == null) {
+                hiddenApiFlags = new ArrayCollection<>();
+            }
+            hiddenApiFlags.add(flag);
+        }
+        if (hiddenApiFlags == null) {
+            return null;
+        }
+        int size = hiddenApiFlags.size();
+        if(size == 0){
+            return null;
+        }
+        reader.skipWhitespaces();
+        return hiddenApiFlags.toArray(new HiddenApiFlag[size]);
+    }
+    private static HiddenApiFlag parseNext(SmaliReader reader){
+        reader.skipWhitespaces();
+        int i = reader.indexOf(' ');
+        if(i < 0){
+            return null;
+        }
+        int position = reader.position();
+        HiddenApiFlag hiddenApiFlag = valueOf(reader.readString(i - reader.position()));
+        if(hiddenApiFlag == null) {
+            reader.position(position);
+        }
+        return hiddenApiFlag;
     }
 }

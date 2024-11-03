@@ -358,6 +358,7 @@ public class MethodDef extends Def<MethodId>{
     public void fromSmali(SmaliMethod smaliMethod) throws IOException {
         setKey(smaliMethod.getKey());
         setAccessFlagsValue(smaliMethod.getAccessFlagsValue());
+        addHiddenApiFlags(smaliMethod.getHiddenApiFlags());
         if(smaliMethod.hasInstructions()){
             getOrCreateCodeItem().fromSmali(smaliMethod);
         }
@@ -390,15 +391,19 @@ public class MethodDef extends Def<MethodId>{
     @Override
     public String toString() {
         if(isReading()){
-            return getSmaliDirective() + " " + getKey();
+            return getSmaliDirective() + " " +
+                    Modifier.toString(getModifiers()) +
+                    getKey();
         }
         MethodId methodId = getId();
-        if(methodId != null){
-            return getSmaliDirective() + " " + Modifier.toString(getAccessFlags())
-                    + " " + methodId.toString();
+        if (methodId != null) {
+            return getSmaliDirective() + " " +
+                    Modifier.toString(getModifiers()) +
+                    methodId.toString();
         }
-        return getSmaliDirective() + " " + Modifier.toString(getAccessFlags())
-                + " " + getRelativeIdValue();
+        return getSmaliDirective() + " " +
+                Modifier.toString(getAccessFlags()) +
+                " " + getRelativeIdValue();
     }
     public static class Parameter implements DefIndex, SmaliRegion {
 

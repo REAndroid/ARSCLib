@@ -16,6 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.common.AccessFlag;
+import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.key.MethodKey;
@@ -125,6 +126,7 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
     public void append(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
         Modifier.append(writer, getAccessFlags());
+        Modifier.append(writer, hiddenApiFlags());
         writer.append(getName());
         getProtoKey().append(writer);
         writer.indentPlus();
@@ -147,6 +149,7 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
         reader.skipWhitespacesOrComment();
         SmaliParseException.expect(reader, getSmaliDirective());
         setAccessFlags(AccessFlag.parse(reader));
+        setHiddenApiFlags(HiddenApiFlag.parse(reader));
         parseName(reader);
         parseProto(reader);
         reader.skipWhitespacesOrComment();

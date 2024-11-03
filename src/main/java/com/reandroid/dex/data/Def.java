@@ -24,6 +24,7 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.pool.DexSectionPool;
+import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliRegion;
@@ -58,15 +59,52 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     }
     public Iterator<HiddenApiFlag> getHiddenApiFlags(){
         HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
-        if(flagValue != null){
-            return flagValue.getFlags();
+        if(flagValue != null) {
+            return flagValue.iterator();
         }
         return EmptyIterator.of();
+    }
+    public void addHiddenApiFlags(Iterator<HiddenApiFlag> iterator) {
+        while (iterator.hasNext()) {
+            addHiddenApiFlag(iterator.next());
+        }
+    }
+    public void addHiddenApiFlag(HiddenApiFlag flag) {
+        if (flag != null) {
+            HiddenApiFlagValue flagValue = getOrCreateHiddenApiFlagValue();
+            flagValue.add(flag);
+        }
+    }
+    public void removeHiddenApiFlag(HiddenApiFlag flag) {
+        if (flag != null) {
+            HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
+            if (flagValue != null) {
+                flagValue.remove(flag);
+            }
+        }
+    }
+    public void removeHiddenApiFlags() {
+        HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
+        if (flagValue != null) {
+            flagValue.clear();
+        }
+    }
+    public HiddenApiFlagValue getOrCreateHiddenApiFlagValue() {
+        HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
+        if (flagValue == null) {
+            Section<HiddenApiRestrictions> section = getOrCreateSection(SectionType.HIDDEN_API);
+            HiddenApiRestrictions restrictions = section.get(0);
+            if (restrictions == null) {
+                restrictions = section.createItem();
+            }
+            flagValue = restrictions.getFlagValue(getKey());
+        }
+        return flagValue;
     }
     public HiddenApiFlagValue getHiddenApiFlagValue() {
         return hiddenApiFlagValue;
     }
-    public void setHiddenApiFlagValue(HiddenApiFlagValue hiddenApiFlagValue) {
+    public void linkHiddenApiFlagValueInternal(HiddenApiFlagValue hiddenApiFlagValue) {
         this.hiddenApiFlagValue = hiddenApiFlagValue;
     }
 
@@ -76,7 +114,15 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
             array.remove(this);
         }
     }
+    public boolean isRemoved() {
+        return getParent() == null || getId() == null;
+    }
     void onRemove(){
+        HiddenApiFlagValue flagValue = getHiddenApiFlagValue();
+        if (flagValue != null) {
+            this.linkHiddenApiFlagValueInternal(null);
+            flagValue.removeSelf();
+        }
         mCachedIndexUpdated = true;
         mDefId = null;
         relativeId.set(0);
@@ -283,6 +329,7 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     protected void onRefreshed() {
         super.onRefreshed();
         updateIndex();
+        updateHiddenApiFlag();
     }
     private void updateIndex(){
         resetIndex();
@@ -296,6 +343,12 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     }
     void resetIndex(){
         mCachedIndexUpdated = false;
+    }
+    private void updateHiddenApiFlag() {
+        HiddenApiFlagValue hiddenApiFlagValue = this.hiddenApiFlagValue;
+        if (hiddenApiFlagValue != null && hiddenApiFlagValue.isRemoved()) {
+            this.hiddenApiFlagValue = null;
+        }
     }
 
     public void replaceKeys(Key search, Key replace){
@@ -318,6 +371,11 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     public void merge(Def<?> def){
         setItem(def.getKey());
         setAccessFlagsValue(def.getAccessFlagsValue());
+        HiddenApiFlagValue flagValue = def.getHiddenApiFlagValue();
+        if (flagValue != null) {
+            addHiddenApiFlag(flagValue.getRestriction());
+            addHiddenApiFlag(flagValue.getDomain());
+        }
     }
     @Override
     public int compareTo(Def<T> other) {

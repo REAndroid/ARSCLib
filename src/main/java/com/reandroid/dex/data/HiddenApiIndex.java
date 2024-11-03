@@ -16,7 +16,6 @@
 package com.reandroid.dex.data;
 
 import com.reandroid.arsc.base.BlockRefresh;
-import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.BlockItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.IndirectInteger;
@@ -24,13 +23,9 @@ import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.sections.Section;
-import com.reandroid.dex.sections.SectionList;
-import com.reandroid.dex.sections.SectionType;
 
-import java.io.IOException;
 
-public class HiddenApiIndex extends BlockItem implements Comparable<HiddenApiIndex>, BlockRefresh {
+class HiddenApiIndex extends BlockItem implements Comparable<HiddenApiIndex>, BlockRefresh {
 
     private final IntegerReference dataOffset;
 
@@ -43,20 +38,12 @@ public class HiddenApiIndex extends BlockItem implements Comparable<HiddenApiInd
         this.classId = classId;
     }
 
-    public HiddenApiFlagValue get(Key key){
+    public HiddenApiFlagValue get(Key key) {
         HiddenApiData hiddenApiData = getHiddenApiData();
-        if(hiddenApiData == null){
-            return null;
+        if(hiddenApiData != null) {
+            return hiddenApiData.get(getClassId().getDef(key));
         }
-        ClassData classData = getClassId().getClassData();
-        if(classData == null){
-            return null;
-        }
-        Def<?> def = classData.get(key);
-        if(def == null){
-            return null;
-        }
-        return hiddenApiData.get(def);
+        return null;
     }
     public IntegerReference getDataOffset() {
         return dataOffset;
@@ -68,11 +55,14 @@ public class HiddenApiIndex extends BlockItem implements Comparable<HiddenApiInd
     public HiddenApiData getHiddenApiData() {
         return hiddenApiData;
     }
-
     void linkData(HiddenApiData hiddenApiData) {
         this.hiddenApiData = hiddenApiData;
         hiddenApiData.setOffsetReference(getDataOffset());
         hiddenApiData.setClassId(getClassId());
+    }
+    boolean isAllNoRestrictions() {
+        HiddenApiData apiData = getHiddenApiData();
+        return apiData == null || apiData.isAllNoRestrictions();
     }
 
     public TypeKey getClassType(){
@@ -84,22 +74,6 @@ public class HiddenApiIndex extends BlockItem implements Comparable<HiddenApiInd
     }
     public ClassId getClassId() {
         return classId;
-    }
-    private Section<ClassId> getClassIdSection(){
-        SectionList sectionList = getParentSectionList();
-        if(sectionList != null){
-            return sectionList.getSection(SectionType.CLASS_ID);
-        }
-        return null;
-    }
-    private SectionList getParentSectionList(){
-        return getParentInstance(SectionList.class);
-    }
-
-
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
     }
 
     public void removeSelf(){

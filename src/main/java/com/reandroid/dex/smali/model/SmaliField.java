@@ -16,6 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.common.AccessFlag;
+import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.TypeKey;
@@ -113,6 +114,7 @@ public class SmaliField extends SmaliDef{
     public void append(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
         Modifier.append(writer, getAccessFlags());
+        Modifier.append(writer, hiddenApiFlags());
         writer.append(getName());
         writer.append(':');
         getType().append(writer);
@@ -135,6 +137,7 @@ public class SmaliField extends SmaliDef{
     public void parse(SmaliReader reader) throws IOException{
         SmaliParseException.expect(reader, getSmaliDirective());
         setAccessFlags(AccessFlag.parse(reader));
+        setHiddenApiFlags(HiddenApiFlag.parse(reader));
         parseName(reader);
         setType(TypeKey.read(reader));
         parseValue(reader);

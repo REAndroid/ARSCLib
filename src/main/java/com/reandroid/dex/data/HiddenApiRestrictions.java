@@ -17,7 +17,10 @@ package com.reandroid.dex.data;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.dex.base.UsageMarker;
+import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
 
 import java.io.IOException;
@@ -38,7 +41,7 @@ public class HiddenApiRestrictions extends DataItem{
         addChild(2, hiddenApiDataList);
     }
 
-    public HiddenApiFlagValue getFlagValue(Key key){
+    public HiddenApiFlagValue getFlagValue(Key key) {
         return getHiddenApiIndexList().getFlagValue(key);
     }
     public HiddenApiIndexList getHiddenApiIndexList() {
@@ -47,12 +50,49 @@ public class HiddenApiRestrictions extends DataItem{
     public HiddenApiDataList getHiddenApiDataList() {
         return hiddenApiDataList;
     }
+    HiddenApiIndex createNew(ClassId classId) {
+        return getHiddenApiIndexList().createNext(classId,
+                getHiddenApiDataList().createNext());
+    }
+    public boolean isAllNoRestrictions() {
+        return getHiddenApiIndexList().isAllNoRestrictions();
+    }
+    public void removeIfAllNoRestrictions() {
+        Section<HiddenApiRestrictions> section = getSection(SectionType.HIDDEN_API);
+        if(section == null) {
+            return;
+        }
+        if (!isAllNoRestrictions()) {
+            return;
+        }
+        getHiddenApiIndexList().clearChildes();
+        HiddenApiDataList hiddenApiDataList = getHiddenApiDataList();
+        hiddenApiDataList.setItem(null);
+        hiddenApiDataList.setParent(null);
+        this.removeSelf();
+        section.removeSelf();
+    }
 
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
         updateSizeFast();
+        updateUsageType();
     }
+
+    private void updateUsageType() {
+        if (getIndex() != 0) {
+            return;
+        }
+        if (getUsageType() != UsageMarker.USAGE_NONE) {
+            return;
+        }
+        Section<ClassId> section = getSection(SectionType.CLASS_ID);
+        if (section != null && !section.isEmpty()) {
+            addUsageType(UsageMarker.USAGE_DEFINITION);
+        }
+    }
+
     private void updateSizeFast(){
         int size = 0;
         HiddenApiData last = hiddenApiDataList.getLast();
@@ -74,14 +114,23 @@ public class HiddenApiRestrictions extends DataItem{
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         sizeReference.readBytes(reader);
-        BlockReader restrictionsReader = reader.create(sizeReference.get());
+        reader.offset(-sizeReference.countBytes());
+        int size = sizeReference.get();
+        BlockReader restrictionsReader = reader.create(size);
+        restrictionsReader.offset(sizeReference.countBytes());
         hiddenApiIndexList.onReadBytes(restrictionsReader);
         hiddenApiDataList.onReadBytes(restrictionsReader);
         restrictionsReader.close();
-        reader.seek(sizeReference.get());
+        reader.seek(size);
     }
     @Override
     public SectionType<HiddenApiRestrictions> getSectionType() {
         return SectionType.HIDDEN_API;
+    }
+
+    @Override
+    public String toString() {
+        return "index = " + this.hiddenApiIndexList +
+                ", data = " + this.hiddenApiDataList;
     }
 }

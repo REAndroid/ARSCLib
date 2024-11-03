@@ -19,6 +19,7 @@ import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.NumberIntegerReference;
+import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.base.FixedDexContainer;
 import com.reandroid.dex.base.OffsetReceiver;
 import com.reandroid.dex.id.ClassId;
@@ -30,7 +31,7 @@ import com.reandroid.utils.ObjectsUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class HiddenApiData extends FixedDexContainer
+class HiddenApiData extends FixedDexContainer
         implements OffsetSupplier, OffsetReceiver {
 
     private IntegerReference offsetReference;
@@ -45,22 +46,24 @@ public class HiddenApiData extends FixedDexContainer
         super(4);
     }
 
-    public HiddenApiFlagValue get(Def<?> def){
-        HiddenApiFlagValueList flagValueList = getFlagValueList(def);
-        if(flagValueList != null){
-            return flagValueList.get(def.getIndex());
+    public HiddenApiFlagValue get(Def<?> def) {
+        if (def != null) {
+            HiddenApiFlagValueList flagValueList = getFlagValueList(def);
+            if(flagValueList != null) {
+                return flagValueList.get(def);
+            }
         }
         return null;
     }
-    private HiddenApiFlagValueList getFlagValueList(Def<?> def){
+    public HiddenApiFlagValueList getFlagValueList(Def<?> def){
         Key key = def.getKey();
-        if(key instanceof FieldKey){
-            if(def.isStatic()){
+        if (key instanceof FieldKey) {
+            if(def.isStatic()) {
                 return getStaticFields();
             }
             return getInstanceFields();
         }
-        if(key instanceof MethodKey){
+        if (key instanceof MethodKey) {
             if(def.isDirect()){
                 return getDirectMethods();
             }
@@ -70,31 +73,18 @@ public class HiddenApiData extends FixedDexContainer
     }
 
 
-    HiddenApiData newCopy(){
-        return new Copy(this);
-    }
-    public boolean isEmptyValueList(){
-        if(staticFields != null && !staticFields.isEmptyValueList()){
-            return false;
-        }
-        if(instanceFields != null && !instanceFields.isEmptyValueList()){
-            return false;
-        }
-        if(directMethods != null && !directMethods.isEmptyValueList()){
-            return false;
-        }
-        if(virtualMethods != null && !virtualMethods.isEmptyValueList()){
-            return false;
-        }
-        return true;
+    HiddenApiData newCompact(){
+        return new Compact(this);
     }
     public ClassId getClassId() {
         return classId;
     }
     public void setClassId(ClassId classId) {
-
         if(this.classId == classId){
             return;
+        }
+        if (this.classId != null) {
+            throw new DexException("Invalid class link state");
         }
         this.classId = classId;
 
@@ -130,6 +120,21 @@ public class HiddenApiData extends FixedDexContainer
         this.instanceFields.linkDefArray(classData.getInstanceFieldsArray());
         this.directMethods.linkDefArray(classData.getDirectMethodsArray());
         this.virtualMethods.linkDefArray(classData.getVirtualMethodArray());
+    }
+    boolean isAllNoRestrictions() {
+        if (staticFields != null && !staticFields.isAllNoRestrictions()) {
+            return false;
+        }
+        if (instanceFields != null && !instanceFields.isAllNoRestrictions()) {
+            return false;
+        }
+        if (directMethods != null && !directMethods.isAllNoRestrictions()) {
+            return false;
+        }
+        if (virtualMethods != null && !virtualMethods.isAllNoRestrictions()) {
+            return false;
+        }
+        return true;
     }
 
     public HiddenApiFlagValueList getStaticFields() {
@@ -199,27 +204,27 @@ public class HiddenApiData extends FixedDexContainer
     }
 
 
-    static class Copy extends HiddenApiData{
+    static class Compact extends HiddenApiData{
 
         private final HiddenApiData source;
 
-        Copy(HiddenApiData source){
+        Compact(HiddenApiData source){
             super();
             this.source = source;
         }
 
         @Override
-        HiddenApiData newCopy() {
-            return source.newCopy();
+        HiddenApiData newCompact() {
+            return source.newCompact();
         }
 
         @Override
         HiddenApiFlagValueList[] createHiddenApiFlagValueList() {
             return new HiddenApiFlagValueList[]{
-                    source.getStaticFields().newCopy(),
-                    source.getInstanceFields().newCopy(),
-                    source.getDirectMethods().newCopy(),
-                    source.getVirtualMethods().newCopy(),
+                    source.getStaticFields().newCompact(),
+                    source.getInstanceFields().newCompact(),
+                    source.getDirectMethods().newCompact(),
+                    source.getVirtualMethods().newCompact(),
             };
         }
         @Override
@@ -248,7 +253,7 @@ public class HiddenApiData extends FixedDexContainer
             if(obj == this){
                 return true;
             }
-            if(!(obj instanceof Copy)){
+            if(!(obj instanceof Compact)){
                 return false;
             }
             return source.equals(obj);
