@@ -21,20 +21,17 @@ import com.reandroid.dex.key.*;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
-import com.reandroid.dex.smali.SmaliValidateException;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 
-public abstract class SmaliInstructionOperand extends Smali{
+public abstract class SmaliInstructionOperand extends Smali {
 
     public SmaliInstructionOperand(){
         super();
     }
 
-    public long getLongData() throws IOException {
-        return getIntegerData() & 0x00000000ffffffffL;
-    }
     public abstract int getIntegerData() throws IOException;
     public abstract OperandType getOperandType();
     @Override
@@ -113,10 +110,6 @@ public abstract class SmaliInstructionOperand extends Smali{
         public OperandType getOperandType() {
             return OperandType.HEX;
         }
-        @Override
-        public long getLongData() {
-            return valueNumber.unsignedLong();
-        }
 
         @Override
         public void append(SmaliWriter writer) throws IOException {
@@ -129,6 +122,21 @@ public abstract class SmaliInstructionOperand extends Smali{
             SmaliValueNumber<?> value = SmaliValueNumber.createNumber(reader);
             setNumberValue(value);
             value.parse(reader);
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+            SmaliHexOperand other = (SmaliHexOperand) obj;
+            return ObjectsUtil.equals(getValueNumber(), other.getValueNumber());
+        }
+        @Override
+        public int hashCode() {
+            return ObjectsUtil.hash(getValueNumber());
         }
     }
     public static class SmaliDecimalOperand extends SmaliInstructionOperand {
@@ -164,6 +172,21 @@ public abstract class SmaliInstructionOperand extends Smali{
             reader.skipSpaces();
             setNumber(reader.readInteger());
         }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+            SmaliDecimalOperand other = (SmaliDecimalOperand) obj;
+            return getNumber() == other.getNumber();
+        }
+        @Override
+        public int hashCode() {
+            return 31 + getNumber();
+        }
     }
     public static class SmaliKeyOperand extends SmaliInstructionOperand {
         private Key key;
@@ -186,10 +209,6 @@ public abstract class SmaliInstructionOperand extends Smali{
         public OperandType getOperandType() {
             return OperandType.KEY;
         }
-        @Override
-        public long getLongData() {
-            return -1;
-        }
 
         @Override
         public void append(SmaliWriter writer) throws IOException {
@@ -200,7 +219,9 @@ public abstract class SmaliInstructionOperand extends Smali{
         }
         @Override
         public void parse(Opcode<?> opcode, SmaliReader reader) throws IOException {
-            SectionType<?> sectionType = opcode.getSectionType();
+            setKey(parseKey(opcode.getSectionType(), reader));
+        }
+        Key parseKey(SectionType<?> sectionType, SmaliReader reader) throws IOException {
             Key key;
             if(sectionType == SectionType.STRING_ID){
                 key = StringKey.read(reader);
@@ -208,6 +229,8 @@ public abstract class SmaliInstructionOperand extends Smali{
                 key = TypeKey.read(reader);
             }else if(sectionType == SectionType.FIELD_ID){
                 key = FieldKey.read(reader);
+            }else if(sectionType == SectionType.PROTO_ID){
+                key = ProtoKey.read(reader);
             }else if(sectionType == SectionType.METHOD_ID){
                 key = MethodKey.read(reader);
             }else if(sectionType == SectionType.CALL_SITE_ID){
@@ -215,9 +238,84 @@ public abstract class SmaliInstructionOperand extends Smali{
             }else {
                 throw new SmaliParseException("Invalid key", reader);
             }
-            setKey(key);
+            return key;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+            SmaliKeyOperand other = (SmaliKeyOperand) obj;
+            return ObjectsUtil.equals(getKey(), other.getKey());
+        }
+        @Override
+        public int hashCode() {
+            return ObjectsUtil.hash(getKey());
         }
     }
+
+    public static class SmaliDualKeyOperand extends SmaliKeyOperand implements DualKeyReference {
+
+        private Key key2;
+
+        public SmaliDualKeyOperand() {
+            super();
+        }
+
+        @Override
+        public Key getKey2() {
+            return key2;
+        }
+        @Override
+        public void setKey2(Key key) {
+            this.key2 = key;
+        }
+
+        @Override
+        public OperandType getOperandType() {
+            return OperandType.DUAL_KEY;
+        }
+
+        @Override
+        public void append(SmaliWriter writer) throws IOException {
+            super.append(writer);
+            writer.append(", ");
+            Key key = getKey2();
+            if (key != null) {
+                key.append(writer);
+            }
+        }
+        @Override
+        public void parse(Opcode<?> opcode, SmaliReader reader) throws IOException {
+            super.parse(opcode, reader);
+            reader.skipWhitespaces();
+            SmaliParseException.expect(reader, ',');
+            reader.skipWhitespaces();
+            setKey2(parseKey(opcode.getSectionType2(), reader));
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null || getClass() != obj.getClass()) {
+                return false;
+            }
+            SmaliDualKeyOperand other = (SmaliDualKeyOperand) obj;
+            return ObjectsUtil.equals(getKey(), other.getKey()) &&
+                    ObjectsUtil.equals(getKey2(), other.getKey2());
+        }
+        @Override
+        public int hashCode() {
+            return ObjectsUtil.hash(getKey(), getKey2());
+        }
+    }
+
     public static final SmaliInstructionOperand NO_OPERAND = new SmaliInstructionOperand() {
         @Override
         public int getIntegerData() {
@@ -226,10 +324,6 @@ public abstract class SmaliInstructionOperand extends Smali{
         @Override
         public OperandType getOperandType() {
             return OperandType.NONE;
-        }
-        @Override
-        public long getLongData() {
-            return -1;
         }
 
         @Override
@@ -241,6 +335,15 @@ public abstract class SmaliInstructionOperand extends Smali{
         }
         @Override
         void setParent(Smali parent) {
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj == this;
+        }
+        @Override
+        public int hashCode() {
+            return super.hashCode();
         }
     };
 }

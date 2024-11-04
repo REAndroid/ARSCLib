@@ -20,6 +20,8 @@ import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegistersTable;
+import com.reandroid.dex.data.CodeItem;
+import com.reandroid.dex.data.MethodDef;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.key.Key;
@@ -63,6 +65,9 @@ public class SizeXIns extends Ins {
 
     public SectionType<? extends IdItem> getSectionType(){
         return getOpcode().getSectionType();
+    }
+    public SectionType<? extends IdItem> getSectionType2(){
+        return getOpcode().getSectionType2();
     }
 
 
@@ -138,9 +143,9 @@ public class SizeXIns extends Ins {
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         valueBytes.onReadBytes(reader);
-        cacheSectionItem();
+        pullSectionItem();
     }
-    void cacheSectionItem(){
+    void pullSectionItem(){
         InsIdSectionReference sectionReference = this.sectionReference;
         if(sectionReference != null){
             sectionReference.pullItem();
@@ -229,7 +234,7 @@ public class SizeXIns extends Ins {
         writer.append(opcode.getName());
         writer.append(' ');
         appendRegisters(writer);
-        appendCodeData(writer);
+        appendOperand(writer);
     }
     void appendRegisters(SmaliWriter writer) throws IOException {
         RegistersIterator iterator = getRegistersIterator();
@@ -245,7 +250,7 @@ public class SizeXIns extends Ins {
             writer.append('}');
         }
     }
-    void appendCodeData(SmaliWriter writer) throws IOException {
+    void appendOperand(SmaliWriter writer) throws IOException {
         writer.append(", ");
         IdItem sectionItem = getSectionId();
         if(sectionItem != null){
@@ -402,5 +407,58 @@ public class SizeXIns extends Ins {
             }
         }
         return true;
+    }
+
+    public static String buildTrace(SizeXIns sizeXIns, IdItem item, int data) {
+        InstructionList instructionList = sizeXIns.getInstructionList();
+        if(instructionList == null) {
+            return "removed instruction";
+        }
+        CodeItem codeItem = instructionList.getCodeItem();
+        if(codeItem == null){
+            return "removed instruction list";
+        }
+        if(codeItem.getParent() == null){
+            return "removed code item";
+        }
+        MethodDef methodDef = codeItem.getMethodDef();
+        StringBuilder builder = new StringBuilder();
+        if(methodDef != null){
+            builder.append("method = ");
+            builder.append(methodDef.getKey());
+            builder.append(", ");
+        }
+        builder.append(sizeXIns.getOpcode());
+        String key = toDebugString(item);
+        if(key == null){
+            key = HexUtil.toHex(data, 1);
+        }
+        builder.append(", key = '");
+        builder.append(key);
+        builder.append('\'');
+        return builder.toString();
+    }
+    static String toDebugString(IdItem item) {
+        if(item == null){
+            return null;
+        }
+        Key key = item.getKey();
+        if(key == null){
+            return null;
+        }
+        String keyString = key.toString();
+        if(keyString == null){
+            return null;
+        }
+        if(keyString.length() > 100){
+            keyString = keyString.substring(0, 100) + "...";
+        }
+        if(keyString.startsWith("\"")){
+            keyString = keyString.substring(1);
+        }
+        if(keyString.endsWith("\"")){
+            keyString = keyString.substring(0, keyString.length() - 1);
+        }
+        return keyString;
     }
 }

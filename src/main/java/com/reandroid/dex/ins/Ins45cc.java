@@ -15,32 +15,62 @@
  */
 package com.reandroid.dex.ins;
 
+import com.reandroid.dex.base.UsageMarker;
+import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.ProtoId;
-import com.reandroid.dex.key.ProtoKey;
-import com.reandroid.dex.sections.Section;
+import com.reandroid.dex.key.DualKeyReference;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.reference.IdSectionReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliInstruction;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
+import java.util.Iterator;
 
-public class Ins45cc extends Size8Ins implements RegistersSet {
+public class Ins45cc extends Size8Ins implements RegistersSet, DualKeyReference {
 
-    private ProtoId mProtoId;
+    private final IdSectionReference<ProtoId> reference2;
 
     public Ins45cc(Opcode<?> opcode) {
         super(opcode);
+        final Ins45cc ins45cc = this;
+        this.reference2 = new IdSectionReference<ProtoId>(ins45cc, UsageMarker.USAGE_INSTRUCTION) {
+            @Override
+            public int get() {
+                return ins45cc.getData2();
+            }
+            @Override
+            public void set(int value) {
+                ins45cc.setData2(value);
+            }
+            @Override
+            public SectionType<ProtoId> getSectionType() {
+                return ins45cc.getSectionType2();
+            }
+            @Override
+            protected String buildTrace(ProtoId currentItem) {
+                return SizeXIns.buildTrace(ins45cc, currentItem, get());
+            }
+        };
     }
 
-    public ProtoId getProtoId(){
-        return mProtoId;
+    @Override
+    public Key getKey2() {
+        return reference2.getKey();
     }
-    public void setProtoId(ProtoKey protoKey){
-        Section<ProtoId> section = getSection(SectionType.PROTO_ID);
-        setProtoId(section.getOrCreate(protoKey));
+    @Override
+    public void setKey2(Key key) {
+        reference2.setItem(key);
     }
-    public void setProtoId(ProtoId protoId){
-        setShort(6, protoId.getIndex());
-        this.mProtoId = protoId;
+    public ProtoId getSectionId2() {
+        return reference2.getItem();
+    }
+    public void setSectionId2(IdItem idItem) {
+        reference2.setItem((ProtoId) idItem);
     }
 
     @Override
@@ -81,37 +111,56 @@ public class Ins45cc extends Size8Ins implements RegistersSet {
         setShort(2, data);
     }
 
-    public int getProtoIndex(){
+    public int getData2(){
         return getShortUnsigned(6);
     }
-    public void setProtoIndex(int data){
+    public void setData2(int data){
         setShort(6, data);
-        cacheProto();
+    }
+    @Override
+    public SectionType<ProtoId> getSectionType2() {
+        return ObjectsUtil.cast(super.getSectionType2());
     }
 
     @Override
-    void cacheSectionItem() {
-        super.cacheSectionItem();
-        cacheProto();
+    void pullSectionItem() {
+        super.pullSectionItem();
+        reference2.pullItem();
     }
 
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
-        refreshProtoId();
+        reference2.refresh();
     }
-    private void refreshProtoId() {
-        ProtoId protoId = this.mProtoId;
-        protoId = protoId.getReplace();
-        setProtoIndex(protoId.getIndex());
-    }
-    private void cacheProto() {
-        mProtoId = getSectionItem(SectionType.PROTO_ID, getProtoIndex());
+
+    @Override
+    public void replaceKeys(Key search, Key replace) {
+        super.replaceKeys(search, replace);
+        Key key = getKey2();
+        if (key == null) {
+            return;
+        }
+        Key update = key.replaceKey(search, replace);
+        if(key != update){
+            setKey2(update);
+        }
     }
     @Override
-    public void appendCode(SmaliWriter writer) throws IOException {
-        super.appendCode(writer);
+    public Iterator<IdItem> usedIds() {
+        return CombiningIterator.two(super.usedIds(), SingleIterator.of(getSectionId2()));
+    }
+
+    @Override
+    void appendOperand(SmaliWriter writer) throws IOException {
+        super.appendOperand(writer);
         writer.append(", ");
-        getProtoId().append(writer);
+        reference2.append(writer);
+    }
+
+    @Override
+    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
+        super.fromSmali(smaliInstruction);
+        setKey2(smaliInstruction.getKey2());
     }
 }

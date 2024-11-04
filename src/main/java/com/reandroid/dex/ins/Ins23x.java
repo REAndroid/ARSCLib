@@ -44,6 +44,6 @@ public class Ins23x extends Size4Ins implements RegistersSet {
     }
 
     @Override
-    void appendCodeData(SmaliWriter writer) {
+    void appendOperand(SmaliWriter writer) {
     }
 }

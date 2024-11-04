@@ -49,6 +49,6 @@ public class Ins12x extends Size2Ins implements RegistersSet {
         return 0x0f;
     }
     @Override
-    void appendCodeData(SmaliWriter writer) {
+    void appendOperand(SmaliWriter writer) {
     }
 }

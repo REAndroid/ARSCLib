@@ -19,6 +19,7 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 
@@ -36,6 +37,23 @@ public abstract class SmaliValueNumber<T extends Number> extends SmaliValue{
     public abstract PrimitiveKey getKey();
     @Override
     public abstract void setKey(Key key);
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || this.getClass() != obj.getClass()) {
+            return false;
+        }
+        SmaliValueNumber<?> other = (SmaliValueNumber<?>) obj;
+        return ObjectsUtil.equals(this.getKey(), other.getKey());
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsUtil.hash(getKey());
+    }
 
     @SuppressWarnings("unchecked")
     public static<T1 extends Number> SmaliValueNumber<T1> createFor(T1 number){

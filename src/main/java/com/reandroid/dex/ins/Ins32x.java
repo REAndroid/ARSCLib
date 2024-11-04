@@ -52,6 +52,6 @@ public class Ins32x extends Size6Ins implements RegistersSet{
     }
 
     @Override
-    void appendCodeData(SmaliWriter writer) {
+    void appendOperand(SmaliWriter writer) {
     }
 }

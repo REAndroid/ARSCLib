@@ -22,6 +22,7 @@ public class OperandType {
     public static final OperandType DECIMAL;
     public static final OperandType LABEL;
     public static final OperandType KEY;
+    public static final OperandType DUAL_KEY;
 
     static {
         NONE = new OperandType("NONE");
@@ -29,6 +30,7 @@ public class OperandType {
         DECIMAL = new OperandType("DECIMAL");
         LABEL = new OperandType("LABEL");
         KEY = new OperandType("KEY");
+        DUAL_KEY = new OperandType("DUAL_KEY");
     }
 
     private final String name;

@@ -63,6 +63,13 @@ public class SmaliInstruction extends SmaliCode{
         }
         return null;
     }
+    public Key getKey2(){
+        SmaliInstructionOperand operand = getOperand();
+        if(operand instanceof SmaliInstructionOperand.SmaliDualKeyOperand) {
+            return ((SmaliInstructionOperand.SmaliDualKeyOperand) operand).getKey2();
+        }
+        return null;
+    }
     public Number getData() throws IOException {
         SmaliInstructionOperand operand = getOperand();
         if(operand instanceof SmaliInstructionOperand.SmaliHexOperand){
@@ -162,6 +169,8 @@ public class SmaliInstruction extends SmaliCode{
             operand = new SmaliInstructionOperand.SmaliHexOperand();
         }else if(operandType == OperandType.KEY){
             operand = new SmaliInstructionOperand.SmaliKeyOperand();
+        }else if(operandType == OperandType.DUAL_KEY){
+            operand = new SmaliInstructionOperand.SmaliDualKeyOperand();
         }else if(operandType == OperandType.LABEL){
             operand = new SmaliInstructionOperand.SmaliLabelOperand();
         }else if(operandType == OperandType.DECIMAL){

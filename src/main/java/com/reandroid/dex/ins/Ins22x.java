@@ -47,6 +47,6 @@ public class Ins22x extends Ins22 {
     }
 
     @Override
-    void appendCodeData(SmaliWriter writer) {
+    void appendOperand(SmaliWriter writer) {
     }
 }

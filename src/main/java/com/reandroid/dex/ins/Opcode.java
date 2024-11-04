@@ -802,12 +802,11 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         values[0xf8] = INVOKE_VIRTUAL_QUICK;
         INVOKE_VIRTUAL_QUICK_RANGE = new Opcode<>(0xf9, 6, "invoke-virtual-quick/range", SectionType.METHOD_ID, new Ins3rmsCreator(0xf9));
         values[0xf9] = INVOKE_VIRTUAL_QUICK_RANGE;
-        INVOKE_SUPER_QUICK = new Opcode<>(0xfa, 6, "invoke-super-quick", SectionType.METHOD_ID, new Ins35msCreator(0xfa));
-        values[0xfa] = INVOKE_SUPER_QUICK;
-        INVOKE_SUPER_QUICK_RANGE = new Opcode<>(0xfb, 6, "invoke-super-quick/range", SectionType.METHOD_ID, new Ins3rmsCreator(0xfb));
-        values[0xfb] = INVOKE_SUPER_QUICK_RANGE;
 
-
+        INVOKE_POLYMORPHIC = new Opcode<>(0xfa, 8, "invoke-polymorphic", SectionType.METHOD_ID, new Ins45ccCreator(0xfa));
+        values[0xfa] = INVOKE_POLYMORPHIC;
+        INVOKE_POLYMORPHIC_RANGE = new Opcode<>(0xfb, 8, "invoke-polymorphic/range", SectionType.METHOD_ID, new Ins4rccCreator(0xfb));
+        values[0xfb] = INVOKE_POLYMORPHIC_RANGE;
 
         INVOKE_CUSTOM = new Opcode<>(0xfc, 6, "invoke-custom", SectionType.CALL_SITE_ID, new Ins35cCreator(0xfc));
         values[0xfc] = INVOKE_CUSTOM;
@@ -842,11 +841,13 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         VALUES_2[5] = IGET_CHAR_QUICK;
         IGET_SHORT_QUICK = new Opcode<>(0xf2, 4, "iget-short-quick", SectionType.FIELD_ID, new Ins22csCreator(0xf2));
         VALUES_2[6] = IGET_SHORT_QUICK;
-        INVOKE_POLYMORPHIC = new Opcode<>(0xfa, 8, "invoke-polymorphic", SectionType.METHOD_ID, new Ins45ccCreator(0xfa));
-        VALUES_2[7] = INVOKE_POLYMORPHIC;
-        INVOKE_POLYMORPHIC_RANGE = new Opcode<>(0xfb, 8, "invoke-polymorphic/range", SectionType.METHOD_ID, new Ins4rccCreator(0xfb));
-        VALUES_2[8] = INVOKE_POLYMORPHIC_RANGE;
 
+
+
+        INVOKE_SUPER_QUICK = new Opcode<>(0xfa, 6, "invoke-super-quick", SectionType.METHOD_ID, new Ins35msCreator(0xfa));
+        VALUES_2[7] = INVOKE_SUPER_QUICK;
+        INVOKE_SUPER_QUICK_RANGE = new Opcode<>(0xfb, 6, "invoke-super-quick/range", SectionType.METHOD_ID, new Ins3rmsCreator(0xfb));
+        VALUES_2[8] = INVOKE_SUPER_QUICK_RANGE;
 
         IPUT_OBJECT_VOLATILE = new Opcode<>(0xfc, 4, "iput-object-volatile", SectionType.FIELD_ID, new Ins22cCreator(0xfc));
         VALUES_2[9] = IPUT_OBJECT_VOLATILE;
@@ -1006,6 +1007,9 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
     public SectionType<? extends IdItem> getSectionType(){
         return sectionType;
     }
+    public SectionType<? extends IdItem> getSectionType2(){
+        return creator.getSectionType2();
+    }
     public RegisterFormat getRegisterFormat(){
         return creator.getRegisterFormat();
     }
@@ -1125,6 +1129,9 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         }
         public abstract RegisterFormat getRegisterFormat();
         public abstract OperandType getOperandType();
+        public SectionType<? extends IdItem> getSectionType2() {
+            return null;
+        }
     }
 
     static class Ins10xCreator extends InsCreator<Ins10x> {
@@ -1677,11 +1684,15 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         }
         @Override
         public OperandType getOperandType() {
-            return OperandType.KEY;
+            return OperandType.DUAL_KEY;
         }
         @Override
         public Ins45cc newInstance() {
             return new Ins45cc(getOpcode());
+        }
+        @Override
+        public SectionType<? extends IdItem> getSectionType2() {
+            return SectionType.PROTO_ID;
         }
     }
     static class Ins4rccCreator extends InsCreator<Ins4rcc> {
@@ -1695,7 +1706,11 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         }
         @Override
         public OperandType getOperandType() {
-            return OperandType.KEY;
+            return OperandType.DUAL_KEY;
+        }
+        @Override
+        public SectionType<? extends IdItem> getSectionType2() {
+            return SectionType.PROTO_ID;
         }
         @Override
         public Ins4rcc newInstance() {
