@@ -115,6 +115,9 @@ class HiddenApiData extends FixedDexContainer
     }
     void linkDefArray(ClassId classId) {
         ClassData classData = classId.getClassData();
+        if (classData == null) {
+            return;
+        }
 
         this.staticFields.linkDefArray(classData.getStaticFieldsArray());
         this.instanceFields.linkDefArray(classData.getInstanceFieldsArray());
