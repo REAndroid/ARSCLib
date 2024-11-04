@@ -813,9 +813,10 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         INVOKE_CUSTOM_RANGE = new Opcode<>(0xfd, 6, "invoke-custom/range", SectionType.CALL_SITE_ID, new Ins3rcCreator(0xfd));
         values[0xfd] = INVOKE_CUSTOM_RANGE;
 
-        SPUT_OBJECT_VOLATILE = new Opcode<>(0xfe, 4, "sput-object-volatile", SectionType.FIELD_ID, new Ins21cPutCreator(0xfe));
-        values[0xfe] = SPUT_OBJECT_VOLATILE;
-        CONST_METHOD_TYPE = new Opcode<>(0xff, 4, "const-method-type", SectionType.METHOD_ID, new Ins21cCreator(0xff));
+        CONST_METHOD_HANDLE = new Opcode<>(0xfe, 4, "const-method-handle", SectionType.METHOD_HANDLE, new Ins21cCreator(0xfe));
+        values[0xfe] = CONST_METHOD_HANDLE;
+
+        CONST_METHOD_TYPE = new Opcode<>(0xff, 4, "const-method-type", SectionType.PROTO_ID, new Ins21cCreator(0xff));
         values[0xff] = CONST_METHOD_TYPE;
 
 
@@ -854,9 +855,8 @@ public class Opcode<T extends Ins> implements BlockCreator<T>, SmaliFormat {
         SGET_OBJECT_VOLATILE = new Opcode<>(0xfd, 4, "sget-object-volatile", SectionType.FIELD_ID, new Ins21cCreator(0xfd));
         VALUES_2[10] = SGET_OBJECT_VOLATILE;
 
-        CONST_METHOD_HANDLE = new Opcode<>(0xfe, 4, "const-method-handle", SectionType.METHOD_HANDLE, new Ins21cCreator(0xfe));
-        VALUES_2[11] = CONST_METHOD_HANDLE;
-
+        SPUT_OBJECT_VOLATILE = new Opcode<>(0xfe, 4, "sput-object-volatile", SectionType.FIELD_ID, new Ins21cPutCreator(0xfe));
+        VALUES_2[11] = SPUT_OBJECT_VOLATILE;
 
         IGET_BYTE_QUICK = new Opcode<>(0xf0, 4, "iget-byte-quick", SectionType.FIELD_ID, new Ins22csCreator(0xf0));
         VALUES_3[0] = IGET_BYTE_QUICK;
