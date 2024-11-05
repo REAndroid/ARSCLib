@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.header;
 
-import com.reandroid.dex.sections.DexLayout;
+import com.reandroid.dex.sections.DexLayoutBlock;
 import com.reandroid.utils.Alder32OutputStream;
 import com.reandroid.utils.HexUtil;
 
@@ -36,14 +36,14 @@ public class DexChecksum extends HeaderPiece {
         putInteger(0, (int)checksum);
     }
     public boolean update() {
-        DexLayout dexLayout = getParentInstance(DexLayout.class);
-        if (dexLayout == null) {
+        DexLayoutBlock dexLayoutBlock = getParentInstance(DexLayoutBlock.class);
+        if (dexLayoutBlock == null) {
             return false;
         }
         int previous = getValue();
         Alder32OutputStream outputStream = new Alder32OutputStream();
         try {
-            dexLayout.writeBytes(outputStream);
+            dexLayoutBlock.writeBytes(outputStream);
         } catch (IOException exception) {
             // will not reach here
             throw new RuntimeException(exception);

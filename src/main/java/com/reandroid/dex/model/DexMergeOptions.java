@@ -17,7 +17,7 @@ package com.reandroid.dex.model;
 
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.sections.DexLayout;
+import com.reandroid.dex.sections.DexLayoutBlock;
 import com.reandroid.dex.sections.MergeOptions;
 import com.reandroid.dex.sections.SectionList;
 
@@ -50,18 +50,18 @@ public class DexMergeOptions implements MergeOptions {
         mergedSet.add(classId.getKey());
     }
     @Override
-    public void onMergeError(DexLayout dexLayout, ClassId classId, String message) {
+    public void onMergeError(DexLayoutBlock dexLayoutBlock, ClassId classId, String message) {
     }
     @Override
-    public void onMergeError(DexLayout dexLayout, SectionList sectionList, String message) {
+    public void onMergeError(DexLayoutBlock dexLayoutBlock, SectionList sectionList, String message) {
     }
     @Override
-    public void onDexFull(DexLayout dexLayout, ClassId classId) {
+    public void onDexFull(DexLayoutBlock dexLayoutBlock, ClassId classId) {
         DexFile coming = DexFile.findDexFile(classId);
         if(coming == null){
             return;
         }
-        DexFile dexFile = DexFile.findDexFile(dexLayout);
+        DexFile dexFile = DexFile.findDexFile(dexLayoutBlock);
         if(dexFile == null){
             return;
         }
@@ -69,7 +69,7 @@ public class DexMergeOptions implements MergeOptions {
         if(directory == null || directory == coming.getDexDirectory()){
             return;
         }
-        onCreateNext(dexLayout);
+        onCreateNext(dexLayoutBlock);
     }
     @Override
     public void onMergeSuccess(ClassId classId, TypeKey key) {
@@ -91,7 +91,7 @@ public class DexMergeOptions implements MergeOptions {
     }
 
     @Override
-    public DexLayout onCreateNext(DexLayout last) {
+    public DexLayoutBlock onCreateNext(DexLayoutBlock last) {
         DexFile dexFile = DexFile.findDexFile(last);
         if(dexFile == null){
             return null;

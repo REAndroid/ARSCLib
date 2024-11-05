@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.header;
 
-import com.reandroid.dex.sections.DexLayout;
+import com.reandroid.dex.sections.DexLayoutBlock;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.Sha1OutputStream;
 
@@ -29,13 +29,13 @@ public class Signature extends HeaderPiece {
     }
 
     public void update() {
-        DexLayout dexLayout = getParentInstance(DexLayout.class);
-        if (dexLayout == null) {
+        DexLayoutBlock dexLayoutBlock = getParentInstance(DexLayoutBlock.class);
+        if (dexLayoutBlock == null) {
             return;
         }
         Sha1OutputStream outputStream = new Sha1OutputStream();
         try {
-            dexLayout.writeBytes(outputStream);
+            dexLayoutBlock.writeBytes(outputStream);
         } catch (IOException exception) {
             // will not reach here
             throw new RuntimeException(exception);

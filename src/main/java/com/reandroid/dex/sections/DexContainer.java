@@ -26,15 +26,15 @@ import java.util.Iterator;
  * Unfinished work, this is for multi-dex layout as noticed in dex version 41
  * */
 
-public class DexContainer extends BlockList<DexLayout> implements Iterable<DexLayout> {
+public class DexContainer extends BlockList<DexLayoutBlock> implements Iterable<DexLayoutBlock> {
 
-    private DexLayout current;
+    private DexLayoutBlock current;
     public DexContainer(){
         super();
-        this.current = new DexLayout();
+        this.current = new DexLayoutBlock();
         add(current);
     }
-    public DexLayout getDexLayout(){
+    public DexLayoutBlock getDexLayout(){
         return current;
     }
 
@@ -56,6 +56,6 @@ public class DexContainer extends BlockList<DexLayout> implements Iterable<DexLa
         return null;
     }
     public Iterator<SectionList> getSectionLists(){
-        return ComputeIterator.of(iterator(), DexLayout::getSectionList);
+        return ComputeIterator.of(iterator(), DexLayoutBlock::getSectionList);
     }
 }

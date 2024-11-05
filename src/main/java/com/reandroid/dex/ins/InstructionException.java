@@ -20,7 +20,7 @@ import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.data.CodeItem;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.data.MethodDef;
-import com.reandroid.dex.sections.DexLayout;
+import com.reandroid.dex.sections.DexLayoutBlock;
 
 public class InstructionException extends DexException {
 
@@ -71,11 +71,11 @@ public class InstructionException extends DexException {
         return true;
     }
     private void appendDex(StringBuilder builder){
-        DexLayout dexLayout = getIns().getParentInstance(DexLayout.class);
-        if(dexLayout == null){
+        DexLayoutBlock dexLayoutBlock = getIns().getParentInstance(DexLayoutBlock.class);
+        if(dexLayoutBlock == null){
             return;
         }
-        String simpleName = dexLayout.getSimpleName();
+        String simpleName = dexLayoutBlock.getSimpleName();
         if(simpleName == null){
             return;
         }

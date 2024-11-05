@@ -38,7 +38,7 @@ import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.function.Predicate;
 
-public class DexLayout extends FixedBlockContainer implements FullRefresh {
+public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
 
     private final SectionList sectionList;
 
@@ -49,7 +49,7 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
 
     private Object mTag;
 
-    public DexLayout() {
+    public DexLayoutBlock() {
         super(1);
         this.sectionList = new SectionList();
         addChild(0, sectionList);
@@ -246,7 +246,7 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
     public boolean merge(MergeOptions options, ClassId classId){
         return getSectionList().merge(options, classId);
     }
-    public boolean merge(MergeOptions options, DexLayout dexFile){
+    public boolean merge(MergeOptions options, DexLayoutBlock dexFile){
         if(dexFile == this){
             options.onMergeError(this, getSectionList(), "Can not merge dex file to self");
             return false;
@@ -333,9 +333,9 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
         this.mSimpleName = simpleName;
     }
 
-    public static DexLayout createDefault(){
-        DexLayout dexLayout = new DexLayout();
-        SectionList sectionList = dexLayout.getSectionList();
+    public static DexLayoutBlock createDefault(){
+        DexLayoutBlock dexLayoutBlock = new DexLayoutBlock();
+        SectionList sectionList = dexLayoutBlock.getSectionList();
         MapList mapList = sectionList.getMapList();
         mapList.getOrCreate(SectionType.HEADER);
         mapList.getOrCreate(SectionType.MAP_LIST);
@@ -346,7 +346,7 @@ public class DexLayout extends FixedBlockContainer implements FullRefresh {
 
         sectionList.getMapList().linkHeader(sectionList.getHeader());
 
-        return dexLayout;
+        return dexLayoutBlock;
     }
     public static boolean isDexFile(File file){
         if(file == null || !file.isFile()){

@@ -47,13 +47,13 @@ import java.util.function.Predicate;
 public class DexFile implements DexClassRepository, Closeable,
         Iterable<DexClass>, FullRefresh {
 
-    private final DexLayout dexLayout;
+    private final DexLayoutBlock dexLayoutBlock;
     private DexDirectory dexDirectory;
     private boolean closed;
 
-    public DexFile(DexLayout dexLayout){
-        this.dexLayout = dexLayout;
-        dexLayout.setTag(this);
+    public DexFile(DexLayoutBlock dexLayoutBlock){
+        this.dexLayoutBlock = dexLayoutBlock;
+        dexLayoutBlock.setTag(this);
     }
 
     public int getVersion(){
@@ -100,9 +100,9 @@ public class DexFile implements DexClassRepository, Closeable,
     }
     public void setDexDirectory(DexDirectory dexDirectory) {
         this.dexDirectory = dexDirectory;
-        DexLayout dexLayout = getDexLayout();
-        dexLayout.setTag(this);
-        dexLayout.setSimpleName(getSimpleName());
+        DexLayoutBlock dexLayoutBlock = getDexLayout();
+        dexLayoutBlock.setTag(this);
+        dexLayoutBlock.setSimpleName(getSimpleName());
     }
 
     public Iterator<DexClass> getSubTypes(TypeKey typeKey){
@@ -313,8 +313,8 @@ public class DexFile implements DexClassRepository, Closeable,
     public void refresh() {
         getDexLayout().refresh();
     }
-    public DexLayout getDexLayout() {
-        return dexLayout;
+    public DexLayoutBlock getDexLayout() {
+        return dexLayoutBlock;
     }
 
     public boolean isEmpty(){
@@ -353,7 +353,7 @@ public class DexFile implements DexClassRepository, Closeable,
         FileIterator iterator = new FileIterator(dir, FileIterator.getExtensionFilter(".smali"));
         FileByteSource byteSource = new FileByteSource();
         SmaliReader reader = new SmaliReader(byteSource);
-        DexLayout layout = getDexLayout();
+        DexLayoutBlock layout = getDexLayout();
         while (iterator.hasNext()) {
             reader.reset();
             File file = iterator.next();
@@ -501,25 +501,25 @@ public class DexFile implements DexClassRepository, Closeable,
         return read(new BlockReader(file));
     }
     public static DexFile read(BlockReader reader) throws IOException {
-        DexLayout dexLayout = new DexLayout();
-        dexLayout.readBytes(reader);
+        DexLayoutBlock dexLayoutBlock = new DexLayoutBlock();
+        dexLayoutBlock.readBytes(reader);
         reader.close();
-        return new DexFile(dexLayout);
+        return new DexFile(dexLayoutBlock);
     }
     public static DexFile readStrings(BlockReader reader) throws IOException {
-        DexLayout dexLayout = new DexLayout();
-        dexLayout.readStrings(reader);
-        return new DexFile(dexLayout);
+        DexLayoutBlock dexLayoutBlock = new DexLayoutBlock();
+        dexLayoutBlock.readStrings(reader);
+        return new DexFile(dexLayoutBlock);
     }
     public static DexFile readClassIds(BlockReader reader) throws IOException {
-        DexLayout dexLayout = new DexLayout();
-        dexLayout.readClassIds(reader);
-        return new DexFile(dexLayout);
+        DexLayoutBlock dexLayoutBlock = new DexLayoutBlock();
+        dexLayoutBlock.readClassIds(reader);
+        return new DexFile(dexLayoutBlock);
     }
     public static DexFile readSections(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
-        DexLayout dexLayout = new DexLayout();
-        dexLayout.readSections(reader, filter);
-        return new DexFile(dexLayout);
+        DexLayoutBlock dexLayoutBlock = new DexLayoutBlock();
+        dexLayoutBlock.readSections(reader, filter);
+        return new DexFile(dexLayoutBlock);
     }
     public static DexFile readStrings(InputStream inputStream) throws IOException {
         return readStrings(new BlockReader(inputStream));
@@ -529,20 +529,20 @@ public class DexFile implements DexClassRepository, Closeable,
     }
 
     public static DexFile createDefault(){
-        return new DexFile(DexLayout.createDefault());
+        return new DexFile(DexLayoutBlock.createDefault());
     }
 
     public static DexFile findDexFile(ClassId classId){
         if(classId == null){
             return null;
         }
-        return DexFile.findDexFile(classId.getParentInstance(DexLayout.class));
+        return DexFile.findDexFile(classId.getParentInstance(DexLayoutBlock.class));
     }
-    public static DexFile findDexFile(DexLayout dexLayout){
-        if(dexLayout == null){
+    public static DexFile findDexFile(DexLayoutBlock dexLayoutBlock){
+        if(dexLayoutBlock == null){
             return null;
         }
-        Object obj = dexLayout.getTag();
+        Object obj = dexLayoutBlock.getTag();
         if(!(obj instanceof DexFile)){
             return null;
         }

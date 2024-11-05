@@ -473,15 +473,15 @@ public class SectionList extends FixedBlockContainer
     }
     public boolean merge(MergeOptions options, ClassId classId){
         if(classId == null){
-            options.onMergeError(getParentInstance(DexLayout.class), classId, "Null class id");
+            options.onMergeError(getParentInstance(DexLayoutBlock.class), classId, "Null class id");
             return false;
         }
         if(classId.getParent() == null){
-            options.onMergeError(getParentInstance(DexLayout.class), classId, "Destroyed class id");
+            options.onMergeError(getParentInstance(DexLayoutBlock.class), classId, "Destroyed class id");
             return false;
         }
         if(classId.getParent(SectionList.class) == this){
-            options.onMergeError(getParentInstance(DexLayout.class), classId, "Class id is on same section");
+            options.onMergeError(getParentInstance(DexLayoutBlock.class), classId, "Class id is on same section");
             return false;
         }
         if(options.skipMerging(classId, classId.getKey())){
@@ -493,7 +493,7 @@ public class SectionList extends FixedBlockContainer
         }
         ArrayCollection<IdItem> collection = classId.listUsedIds();
         if(!canAddAll(collection)){
-            options.onDexFull(getParentInstance(DexLayout.class), classId);
+            options.onDexFull(getParentInstance(DexLayoutBlock.class), classId);
             return false;
         }
         Section<ClassId> mySection = getOrCreateSection(SectionType.CLASS_ID);
@@ -508,11 +508,11 @@ public class SectionList extends FixedBlockContainer
     }
     public boolean merge(MergeOptions options, SectionList sectionList){
         if(sectionList == this){
-            options.onMergeError(getParentInstance(DexLayout.class), sectionList, "Can not merge with self");
+            options.onMergeError(getParentInstance(DexLayoutBlock.class), sectionList, "Can not merge with self");
             return false;
         }
         if(sectionList.getParent() == null){
-            options.onMergeError(getParentInstance(DexLayout.class), sectionList, "Destroyed section list");
+            options.onMergeError(getParentInstance(DexLayoutBlock.class), sectionList, "Destroyed section list");
             return false;
         }
         Section<ClassId> comingSection = sectionList.getSection(SectionType.CLASS_ID);
@@ -537,7 +537,7 @@ public class SectionList extends FixedBlockContainer
             ArrayCollection<IdItem> collection = coming.listUsedIds();
             if(!canAddAll(collection)){
                 mergedAll = false;
-                options.onDexFull(this.getParentInstance(DexLayout.class), coming);
+                options.onDexFull(this.getParentInstance(DexLayoutBlock.class), coming);
                 break;
             }
             ClassId classId = mySection.getOrCreate(coming.getKey());
@@ -550,9 +550,9 @@ public class SectionList extends FixedBlockContainer
         }
         if(comingSection.getCount() == 0){
             SectionList comingSectionSectionList = comingSection.getSectionList();
-            DexLayout dexLayout = comingSectionSectionList
-                    .getParentInstance(DexLayout.class);
-            dexLayout.clear();
+            DexLayoutBlock dexLayoutBlock = comingSectionSectionList
+                    .getParentInstance(DexLayoutBlock.class);
+            dexLayoutBlock.clear();
         }
         if(mergedOnce){
             refresh();

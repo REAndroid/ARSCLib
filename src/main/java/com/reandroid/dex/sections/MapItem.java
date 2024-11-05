@@ -65,7 +65,7 @@ public class MapItem extends DexBlockItem {
             parent = getParent(MapList.class);
         }
         if(parent == null){
-            parent = getParent(DexLayout.class);
+            parent = getParent(DexLayoutBlock.class);
         }
         if(parent == null){
             parent = getParent();

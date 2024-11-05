@@ -22,9 +22,9 @@ public interface MergeOptions {
 
     boolean skipMerging(ClassId classId, TypeKey typeKey);
     void onDuplicate(ClassId classId);
-    void onMergeError(DexLayout dexLayout, ClassId classId, String message);
-    void onMergeError(DexLayout dexLayout, SectionList sectionList, String message);
-    void onDexFull(DexLayout dexLayout, ClassId classId);
+    void onMergeError(DexLayoutBlock dexLayoutBlock, ClassId classId, String message);
+    void onMergeError(DexLayoutBlock dexLayoutBlock, SectionList sectionList, String message);
+    void onDexFull(DexLayoutBlock dexLayoutBlock, ClassId classId);
     void onMergeSuccess(ClassId classId, TypeKey key);
     boolean relocateClass();
     default int getMergeStartDexFile(){
@@ -32,12 +32,12 @@ public interface MergeOptions {
     }
     default void setMergeStartDexFile(int startDexFile){
     }
-    DexLayout onCreateNext(DexLayout last);
-    default boolean isEmptyDexFile(DexLayout dexLayout){
-        if(dexLayout == null || dexLayout.isEmpty()){
+    DexLayoutBlock onCreateNext(DexLayoutBlock last);
+    default boolean isEmptyDexFile(DexLayoutBlock dexLayoutBlock){
+        if(dexLayoutBlock == null || dexLayoutBlock.isEmpty()){
             return true;
         }
-        Section<ClassId> section = dexLayout.get(SectionType.CLASS_ID);
+        Section<ClassId> section = dexLayoutBlock.get(SectionType.CLASS_ID);
         for(ClassId classId : section){
             if(!skipMerging(classId, classId.getKey())){
                 return false;
@@ -56,13 +56,13 @@ public interface MergeOptions {
             classId.removeSelf();
         }
         @Override
-        public void onMergeError(DexLayout dexLayout, ClassId classId, String message) {
+        public void onMergeError(DexLayoutBlock dexLayoutBlock, ClassId classId, String message) {
         }
         @Override
-        public void onMergeError(DexLayout dexLayout, SectionList sectionList, String message) {
+        public void onMergeError(DexLayoutBlock dexLayoutBlock, SectionList sectionList, String message) {
         }
         @Override
-        public void onDexFull(DexLayout dexLayout, ClassId classId) {
+        public void onDexFull(DexLayoutBlock dexLayoutBlock, ClassId classId) {
         }
         @Override
         public void onMergeSuccess(ClassId classId, TypeKey key) {
@@ -72,7 +72,7 @@ public interface MergeOptions {
             return true;
         }
         @Override
-        public DexLayout onCreateNext(DexLayout last) {
+        public DexLayoutBlock onCreateNext(DexLayoutBlock last) {
             return null;
         }
     };
