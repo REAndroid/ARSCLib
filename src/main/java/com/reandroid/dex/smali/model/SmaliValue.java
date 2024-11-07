@@ -15,11 +15,10 @@
  */
 package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.key.*;
-import com.reandroid.dex.smali.SmaliDirective;
-import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyReference;
 import com.reandroid.dex.smali.SmaliReader;
-import com.reandroid.dex.value.*;
+import com.reandroid.dex.value.DexValueType;
 
 import java.io.IOException;
 
