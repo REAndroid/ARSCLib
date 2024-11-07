@@ -61,7 +61,7 @@ public abstract class DexBlockItem extends BlockItem implements SectionTool {
         }
         if (value > 0x7f) {
             throw new IOException("Invalid uleb128 integer, size = " + size);
-        } else if (count == size && ((value & 0xf) > 0x07)) {
+        } else if (count > size && ((value & 0xf) > 0x07)) {
             throw new IOException("Encountered valid uleb128 that is out of range, size = " + size);
         }
         return result;
