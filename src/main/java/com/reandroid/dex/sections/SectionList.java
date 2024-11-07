@@ -20,7 +20,6 @@ import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.arsc.item.NumberIntegerReference;
 import com.reandroid.common.ArraySupplier;
 import com.reandroid.dex.base.BlockListArray;
 import com.reandroid.dex.common.FullRefresh;
@@ -59,13 +58,14 @@ public class SectionList extends FixedBlockContainer
     public SectionList() {
         super(4);
 
-        this.baseOffset = new NumberIntegerReference();
         this.idSectionList = new BlockList<>();
         this.dataSectionList = new BlockList<>();
 
+        DexHeader dexHeader = new DexHeader();
+        this.baseOffset = dexHeader.getOffsetReference();
+
         Section<DexHeader> dexHeaderSection = SectionType
                 .HEADER.createSpecialSection(baseOffset);
-        DexHeader dexHeader = new DexHeader(baseOffset);
         dexHeaderSection.add(dexHeader);
 
         this.dexHeaderSection = dexHeaderSection;
@@ -161,11 +161,6 @@ public class SectionList extends FixedBlockContainer
     }
 
     @Override
-    protected void onPreRefresh() {
-        super.onPreRefresh();
-    }
-
-    @Override
     protected void onRefreshed() {
         super.onRefreshed();
         mapList.refresh();
@@ -177,8 +172,12 @@ public class SectionList extends FixedBlockContainer
     }
     void readSections(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
         mReading = true;
+        int position = reader.getPosition();
+        DexHeader header = getHeader();
+        header.getOffsetReference().set(position);
         readSpecialSections(reader);
         readBody(reader, filter);
+        reader.seek(position + header.getFileSize());
         mReading = false;
     }
     private void readSpecialSections(BlockReader reader) throws IOException {

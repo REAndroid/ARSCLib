@@ -255,10 +255,17 @@ public class MapList extends SpecialItem
         }
         @Override
         public int get() {
-            return mapList.getOffset() + mapList.countBytes();
+            return mapList.getOffset() + mapList.countBytes() - getHeaderBaseOffset();
         }
         @Override
         public void set(int value) {
+        }
+        private int getHeaderBaseOffset() {
+            SectionList sectionList = mapList.getSectionList();
+            if (sectionList != null) {
+                return sectionList.getHeader().getOffsetReference().get();
+            }
+            return 0;
         }
     }
 }

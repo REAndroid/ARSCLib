@@ -18,116 +18,91 @@ package com.reandroid.dex.key;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.utils.collection.ArrayIterator;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class ArrayKey implements Key, Iterable<Key> {
+public class ArrayKey extends KeyList<Key> {
 
-    private final Key[] values;
+    private static final Key[] EMPTY = new Key[0];
 
-    public ArrayKey(Key[] values) {
-        this.values = values;
+    public ArrayKey(Key[] elements) {
+        super(checkNullOrEmpty(elements));
     }
 
-    public Key get(int i) {
-        return values[i];
-    }
-    public int length() {
-        Key[] values = this.values;
-        if (values != null) {
-            return values.length;
-        }
-        return 0;
-    }
-    public boolean isEmpty() {
-        return length() == 0;
+    @Override
+    public ArrayKey add(Key item) {
+        return (ArrayKey) super.add(item);
     }
     @Override
-    public Iterator<Key> iterator() {
-        return ArrayIterator.of(values);
-    }
-
-    public ArrayKey removeIf(Predicate<Key> predicate) {
-        Key[] results = null;
-        Key[] elements = this.values;
-        int length = elements.length;
-        int size = length;
-        for (int i = 0; i < length; i++) {
-            Key key = elements[i];
-            if (key != null && !predicate.test(key)) {
-                continue;
-            }
-            if (results == null) {
-                results = elements.clone();
-            }
-            results[i] = null;
-            size --;
-        }
-        if (length == size) {
-            return this;
-        }
-        Key[] tmp = new Key[size];
-        int j = 0;
-        for (int i = 0; i < length; i++) {
-            Key key = results[i];
-            if (key != null) {
-                tmp[j] = key;
-                j ++;
-            }
-        }
-        return new ArrayKey(tmp);
+    public ArrayKey remove(Key itemKey) {
+        return (ArrayKey) super.remove(itemKey);
     }
     @Override
-    public Iterator<? extends Key> mentionedKeys() {
-        return iterator();
+    public ArrayKey remove(int index) {
+        return (ArrayKey) super.remove(index);
     }
-    public ArrayKey add(Key key) {
-        int size = length();
-        Key[] elements = new Key[size + 1];
-        for (int i = 0; i < size; i++) {
-            elements[i] = get(i);
-        }
-        elements[size] = key;
+    @Override
+    public ArrayKey removeIf(Predicate<? super Key> predicate) {
+        return (ArrayKey) super.removeIf(predicate);
+    }
+    @Override
+    public ArrayKey set(int i, Key item) {
+        return (ArrayKey) super.set(i, item);
+    }
+
+    @Override
+    ArrayKey newInstance(Key[] elements) {
         return new ArrayKey(elements);
     }
+    @Override
+    Key[] newArray(int length) {
+        if (length == 0) {
+            return EMPTY;
+        }
+        return new Key[length];
+    }
+
     @Override
     public void append(SmaliWriter writer) throws IOException {
         append(writer, ", ");
     }
 
     public void append(SmaliWriter writer, String separator) throws IOException {
-        int length = this.length();
-        for (int i = 0; i < length; i++) {
-            if (i != 0) {
+        boolean appendOnce = false;
+        int size = this.size();
+        for (int i = 0; i < size; i++) {
+            Key key = get(i);
+            if (appendOnce) {
                 writer.append(separator);
             }
-            Key key = get(i);
-            key.append(writer);
+            if (key == null) {
+                writer.append("# null");
+            } else {
+                key.append(writer);
+            }
+            appendOnce = true;
         }
     }
+
     @Override
     public String toString() {
-        //return toString(", ");
-        return SmaliWriter.toStringSafe(this);
+        return toString(", ");
     }
+
     public String toString(String separator) {
-        StringBuilder builder = new StringBuilder();
-        int length = this.length();
-        for (int i = 0; i < length; i++) {
-            if (i != 0) {
-                builder.append(separator);
-            }
-            Key key = get(i);
-            builder.append(key);
+        StringWriter stringWriter = new StringWriter();
+        SmaliWriter writer = new SmaliWriter(stringWriter);
+        try {
+            this.append(writer, separator);
+            writer.close();
+            return stringWriter.toString();
+        } catch (IOException exception) {
+            return "# " + exception.toString();
         }
-        return builder.toString();
     }
 
     @Override
@@ -138,21 +113,12 @@ public class ArrayKey implements Key, Iterable<Key> {
         if (!(obj instanceof ArrayKey)) {
             return 0;
         }
-        ArrayKey arrayKey = (ArrayKey) obj;
-        Iterator<Key> iterator1 = this.iterator();
-        Iterator<Key> iterator2 = arrayKey.iterator();
-        while (iterator1.hasNext() && iterator2.hasNext()) {
-            int i = CompareUtil.compare(iterator1.next(), iterator2.next());
-            if (i != 0) {
-                return i;
-            }
-        }
-        return CompareUtil.compare(length(), arrayKey.length());
+        return compareElements((ArrayKey) obj);
     }
 
     @Override
     public int hashCode() {
-        return ObjectsUtil.hashElements(this.values);
+        return getHashCode();
     }
 
     @Override
@@ -163,8 +129,7 @@ public class ArrayKey implements Key, Iterable<Key> {
         if (!(obj instanceof ArrayKey)) {
             return false;
         }
-        ArrayKey arrayKey = (ArrayKey) obj;
-        return ObjectsUtil.equalsArray(this.values, arrayKey.values);
+        return equalsElements((ArrayKey) obj);
     }
 
     public static ArrayKey read(SmaliReader reader, char end) throws IOException {
@@ -220,5 +185,12 @@ public class ArrayKey implements Key, Iterable<Key> {
             return FieldKey.read(reader);
         }
         return StringKey.read(reader);
+    }
+
+    private static Key[] checkNullOrEmpty(Key[] elements) {
+        if (elements == null || elements.length == 0) {
+            return EMPTY;
+        }
+        return elements;
     }
 }

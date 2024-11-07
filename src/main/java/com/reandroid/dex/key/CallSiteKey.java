@@ -52,8 +52,8 @@ public class CallSiteKey implements Key {
     }
     public ArrayKey toArrayKey() {
         ArrayKey arguments = getArguments();
-        int argumentsLength = arguments.length();
-        Key[] elements = new Key[3 + arguments.length()];
+        int argumentsLength = arguments.size();
+        Key[] elements = new Key[3 + arguments.size()];
         elements[0] = getMethodHandle();
         elements[1] = getName();
         elements[2] = getProto();

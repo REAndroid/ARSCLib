@@ -25,9 +25,7 @@ import com.reandroid.dex.debug.DebugParameter;
 import com.reandroid.dex.id.*;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.TryBlock;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.MethodKey;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.reference.DataItemUle128Reference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
@@ -363,9 +361,7 @@ public class MethodDef extends Def<MethodId>{
             getOrCreateCodeItem().fromSmali(smaliMethod);
         }
         if(smaliMethod.hasAnnotation()){
-            AnnotationSet annotationSet = getOrCreateSection(SectionType.ANNOTATION_SET).createItem();
-            annotationSet.fromSmali(smaliMethod.getAnnotation());
-            addAnnotationSet(annotationSet);
+            addAnnotationSet(smaliMethod.getAnnotationSetKey());
         }
         Iterator<SmaliMethodParameter> iterator = smaliMethod.getParameters();
         while (iterator.hasNext()){
@@ -437,7 +433,7 @@ public class MethodDef extends Def<MethodId>{
                 AnnotationGroup update = group.getSection(SectionType.ANNOTATION_GROUP)
                         .createItem();
                 entry.setValue(update);
-                update.put(index, 0);
+                update.setItemKeyAt(index, null);
                 update.refresh();
             }
         }
@@ -464,9 +460,9 @@ public class MethodDef extends Def<MethodId>{
             AnnotationsDirectory directory = this.methodDef.getOrCreateUniqueAnnotationsDirectory();
             return directory.getOrCreateParameterAnnotation(methodDef, getDefinitionIndex());
         }
-        public AnnotationSet addNewAnnotationSet(){
+        public AnnotationSet setAnnotationSet(AnnotationSetKey key) {
             AnnotationsDirectory directory = this.methodDef.getOrCreateUniqueAnnotationsDirectory();
-            return directory.createNewParameterAnnotation(methodDef, getDefinitionIndex());
+            return directory.setParameterAnnotation(methodDef, getDefinitionIndex(), key);
         }
         public TypeKey getType() {
             TypeId typeId = getTypeId();
@@ -546,7 +542,8 @@ public class MethodDef extends Def<MethodId>{
         }
         public void fromSmali(SmaliMethodParameter smaliMethodParameter){
             if(smaliMethodParameter.hasAnnotations()){
-                getOrCreateAnnotationSet().fromSmali(smaliMethodParameter.getAnnotationSet());
+                setAnnotationSet(smaliMethodParameter.getAnnotationSet().getKey());
+                //getOrCreateAnnotationSet().fromSmali(smaliMethodParameter.getAnnotationSet());
             }
             setDebugName(smaliMethodParameter.getName());
         }

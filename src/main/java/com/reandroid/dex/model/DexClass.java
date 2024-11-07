@@ -40,11 +40,11 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 public class DexClass extends DexDeclaration implements Comparable<DexClass> {
-    private final DexFile dexFile;
+    private final DexLayout dexLayout;
     private final ClassId classId;
 
-    public DexClass(DexFile dexFile, ClassId classId){
-        this.dexFile = dexFile;
+    public DexClass(DexLayout dexLayout, ClassId classId){
+        this.dexLayout = dexLayout;
         this.classId = classId;
     }
 
@@ -271,10 +271,10 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         return CombiningIterator.two(getExtending(), getImplementations());
     }
     public Iterator<DexClass> getExtending(){
-        return getDexFile().searchExtending(getKey());
+        return getDexLayout().searchExtending(getKey());
     }
     public Iterator<DexClass> getImplementations(){
-        return getDexFile().searchImplementations(getKey());
+        return getDexLayout().searchImplementations(getKey());
     }
     public DexClass getSuperClass() {
         return search(getSuperClassKey());
@@ -392,8 +392,8 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     }
 
     @Override
-    public DexFile getDexFile() {
-        return dexFile;
+    public DexLayout getDexLayout() {
+        return dexLayout;
     }
     @Override
     public ClassId getId() {
@@ -473,7 +473,7 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         annotationSet.refresh();
         if(annotationSet.size() == 0){
             annotationSet.removeSelf();
-            classId.setClassAnnotations(null);
+            classId.setClassAnnotations((AnnotationSet) null);
             AnnotationsDirectory directory = getId().getAnnotationsDirectory();
             if(directory != null && directory.isEmpty()){
                 directory.removeSelf();

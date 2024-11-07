@@ -53,27 +53,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         this.mTag = tag;
     }
 
-    public int getVersion(){
-        DexFile first = getFirst();
-        if(first != null){
-            return first.getVersion();
-        }
-        return 0;
-    }
-    public void setVersion(int version){
-        for(DexFile dexFile : this){
-            dexFile.setVersion(version);
-        }
-    }
-    @Override
-    public Iterator<Marker> getMarkers() {
-        return new IterableIterator<DexFile, Marker>(iterator()) {
-            @Override
-            public Iterator<Marker> iterator(DexFile element) {
-                return element.getMarkers();
-            }
-        };
-    }
     public int mergeAll(MergeOptions options, Iterable<DexClass> iterable){
         return mergeAll(options, iterable.iterator());
     }
@@ -162,19 +141,11 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         int size = size() - 1;
         for(int i = size; i >= limit; i--){
             DexFile dexFile = get(i);
-            if(!options.isEmptyDexFile(dexFile.getDexLayout())){
+            if(!options.isEmptyDexFile(dexFile.getContainerBlock())){
                 return dexFile;
             }
         }
         return null;
-    }
-    public int shrink() {
-        int result = 0;
-        result += DalvikUtil.cleanMissingMembers(this);
-        for(DexFile dexFile : this){
-            result += dexFile.shrink();
-        }
-        return result;
     }
     public int clearDuplicateData(){
         int result = 0;
@@ -191,11 +162,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         return result;
     }
 
-    public void cleanDuplicateDebugLines(){
-        for(DexFile dexFile : this){
-            dexFile.fixDebugLineNumbers();
-        }
-    }
     public Iterator<FieldKey> findEquivalentFields(FieldKey fieldKey){
         DexClass defining = getDexClass(fieldKey.getDeclaring());
         if(defining == null){
@@ -229,14 +195,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
             }
         };
     }
-    public Iterator<DexClass> getImplementClasses(TypeKey typeKey){
-        return new IterableIterator<DexFile, DexClass>(iterator()) {
-            @Override
-            public Iterator<DexClass> iterator(DexFile element) {
-                return element.getImplementClasses(typeKey);
-            }
-        };
-    }
     public void save() throws IOException {
         dexSourceSet.saveAll();
     }
@@ -256,100 +214,11 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         return null;
     }
     @Override
-    public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
-        Iterator<DexFile> iterator = clonedIterator();
-        boolean result = false;
-        while (iterator.hasNext()){
-            DexFile dexFile = iterator.next();
-            if(dexFile.removeEntries(sectionType, filter)) {
-                result = true;
-            }
-        }
-        return result;
-    }
-    @Override
-    public <T1 extends SectionItem> boolean removeEntry(SectionType<T1> sectionType, Key key) {
-        boolean removed = false;
-        for(DexFile dexFile : this) {
-            if(dexFile.removeEntry(sectionType, key)) {
-                removed = true;
-            }
-        }
-        return removed;
-    }
-    @Override
-    public <T1 extends SectionItem> boolean removeEntriesWithKey(SectionType<T1> sectionType, Predicate<? super Key> filter) {
-        boolean removed = false;
-        for(DexFile dexFile : this) {
-            if(dexFile.removeEntriesWithKey(sectionType, filter)) {
-                removed = true;
-            }
-        }
-        return removed;
-    }
-    @Override
-    public boolean removeClasses(Predicate<? super DexClass> filter) {
-        Iterator<DexFile> iterator = clonedIterator();
-        boolean removed = false;
-        while (iterator.hasNext()){
-            DexFile dexFile = iterator.next();
-            if(dexFile.removeClasses(filter)){
-                removed = true;
-            }
-        }
-        return removed;
-    }
-    @Override
     public<T1 extends SectionItem> Iterator<T1> getClonedItems(SectionType<T1> sectionType) {
         return new IterableIterator<DexFile, T1>(clonedIterator()) {
             @Override
             public Iterator<T1> iterator(DexFile element) {
                 return element.getClonedItems(sectionType);
-            }
-        };
-    }
-    @Override
-    public int getDexClassesCount() {
-        int result = 0;
-        for(DexFile dexFile : this){
-            result += dexFile.getDexClassesCount();
-        }
-        return result;
-    }
-    @Override
-    public DexClass getDexClass(TypeKey key){
-        for(DexFile dexFile : this){
-            DexClass result = dexFile.getDexClass(key);
-            if(result != null){
-                return result;
-            }
-        }
-        return null;
-    }
-    @Override
-    public Iterator<DexClass> getDexClasses(Predicate<? super TypeKey> filter) {
-        return new IterableIterator<DexFile, DexClass>(iterator()) {
-            @Override
-            public Iterator<DexClass> iterator(DexFile dexFile) {
-                return dexFile.getDexClasses(filter);
-            }
-        };
-    }
-    @Override
-    public Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter) {
-        return new IterableIterator<DexFile, DexClass>(clonedIterator()) {
-            @Override
-            public Iterator<DexClass> iterator(DexFile dexFile) {
-                return dexFile.getDexClassesCloned(filter);
-            }
-        };
-    }
-    @Override
-    public<T1 extends SectionItem> Iterator<Section<T1>> getSections(SectionType<T1> sectionType) {
-        return new IterableIterator<DexFile, Section<T1>>(iterator()) {
-            @Override
-            public Iterator<Section<T1>> iterator(DexFile element) {
-                return element.getSections(sectionType);
             }
         };
     }
@@ -377,29 +246,6 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         return dexSourceSet.getClonedDexFiles();
     }
 
-    // if types changed, call this before method rename
-    public void clearMethodPools(){
-        for(DexFile dexFile : this){
-            dexFile.clearPoolMap(SectionType.PROTO_ID);
-            dexFile.clearPoolMap(SectionType.METHOD_ID);
-        }
-    }
-    public void clearPoolMap(SectionType<?> sectionType){
-        for(DexFile dexFile : this){
-            dexFile.clearPoolMap(sectionType);
-        }
-    }
-    @Override
-    public void clearPoolMap(){
-        for(DexFile dexFile : this){
-            dexFile.clearPoolMap();
-        }
-    }
-    public void sortStrings(){
-        for(DexFile dexFile : this){
-            dexFile.sortStrings();
-        }
-    }
     @Override
     public void refreshFull() {
         for(DexFile dexFile : this){
@@ -457,7 +303,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         dexFile.setDexDirectory(this);
         dexFile.setSimpleName(source.toString());
         int version = getVersion();
-        if(version != 0){
+        if(version != 0) {
             dexFile.setVersion(version);
         }
         return dexFile;
@@ -505,7 +351,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
     boolean renameTypes(StringId stringId, KeyPair<TypeKey, TypeKey> pair, boolean renameInner, boolean renameJava){
         boolean renamed = renameTypeString(stringId, pair, renameInner, renameJava);
         if(renamed){
-            DexClass dexClass = getDexClass(stringId.getString());
+            DexClass dexClass = getDexClass(TypeKey.create(stringId.getString()));
             if(dexClass != null){
                 dexClass.fixDalvikInnerClassName();
             }
@@ -727,29 +573,19 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
         }
         return false;
     }
+
     @Override
-    public Iterator<DexClass> searchExtending(TypeKey typeKey){
-        UniqueIterator<DexClass> iterator = new UniqueIterator<>(
-                new IterableIterator<DexFile, DexClass>(iterator()) {
-                    @Override
-                    public Iterator<DexClass> iterator(DexFile element) {
-                        return element.getExtendingClasses(typeKey);
-                    }
-                });
-        iterator.exclude(getDexClass(typeKey));
-        return iterator;
+    public DexClassRepository getRootRepository() {
+        return this;
     }
     @Override
-    public Iterator<DexClass> searchImplementations(TypeKey typeKey){
-        UniqueIterator<DexClass> iterator = new UniqueIterator<>(
-                new IterableIterator<DexFile, DexClass>(iterator()) {
-                    @Override
-                    public Iterator<DexClass> iterator(DexFile element) {
-                        return element.getImplementClasses(typeKey);
-                    }
-                });
-        iterator.exclude(getDexClass(typeKey));
-        return iterator;
+    public Iterator<DexClassModule> modules() {
+        return new IterableIterator<DexFile, DexClassModule>(iterator()) {
+            @Override
+            public Iterator<DexClassModule> iterator(DexFile element) {
+                return element.modules();
+            }
+        };
     }
 
     public int distributeClasses(int maxClassesPerDex) {
@@ -781,14 +617,19 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
     private int distributeClasses(DexFile source, int classesPerDex){
         int result = 0;
         DexDirectory directory = source.getDexDirectory();
-        for(int i = 0; i < directory.size(); i++){
-            result += distributeClasses(source, directory.get(i), classesPerDex);
+        for(int i = 0; i < directory.size(); i++) {
+            DexLayout sourceLayout = source.getFirst();
+            if (sourceLayout == null) {
+                continue;
+            }
+            DexLayout destinationLayout = directory.get(i).getOrCreateFirst();
+            result += distributeClasses(sourceLayout, destinationLayout, classesPerDex);
         }
         return result;
     }
-    private int distributeClasses(DexFile source, DexFile destination, int classesPerDex){
+    private int distributeClasses(DexLayout source, DexLayout destination, int classesPerDex){
         int result = 0;
-        if(source.getDexLayout() == destination.getDexLayout()){
+        if(source.getDexLayoutBlock() == destination.getDexLayoutBlock()){
             return result;
         }
         Section<ClassId> classSection = source.getSection(SectionType.CLASS_ID);
@@ -822,14 +663,14 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
     }
     public DexFile getFirst(){
         DexSource<DexFile> source = dexSourceSet.getFirst();
-        if(source != null){
+        if(source != null) {
             return source.get();
         }
         return null;
     }
     public DexFile getLast(){
         DexSource<DexFile> source = dexSourceSet.getLast();
-        if(source != null){
+        if(source != null) {
             return source.get();
         }
         return null;
@@ -855,7 +696,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
     }
 
     public void writeSmali(SmaliWriter writer, File root) throws IOException {
-        for(DexFile dexFile : this){
+        for(DexFile dexFile : this) {
             dexFile.writeSmali(writer, root);
         }
     }

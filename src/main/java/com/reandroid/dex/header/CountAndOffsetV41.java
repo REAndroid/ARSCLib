@@ -24,6 +24,6 @@ public class CountAndOffsetV41 extends CountAndOffset {
     @Override
     public boolean isNull() {
         DexHeader dexHeader = getParentInstance(DexHeader.class);
-        return dexHeader == null || dexHeader.getVersion() < 41;
+        return dexHeader == null || !dexHeader.isMultiLayoutVersion();
     }
 }

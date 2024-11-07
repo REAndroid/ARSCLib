@@ -45,8 +45,8 @@ public class RClassParent extends DexClass {
     private final Map<String, RClass> mMembers;
     private final Set<PackageBlock> mPackageBlocks;
 
-    public RClassParent(DexFile dexFile, ClassId classId) {
-        super(dexFile, classId);
+    public RClassParent(DexLayout dexLayout, ClassId classId) {
+        super(dexLayout, classId);
         this.mMembers = new HashMap<>();
         this.mPackageBlocks = new HashSet<>();
     }
@@ -83,8 +83,8 @@ public class RClassParent extends DexClass {
             return rClass;
         }
         addMemberAnnotation(simpleName);
-        ClassId classId = getDexFile().getOrCreateClassId(typeKey);
-        rClass = new RClass(getDexFile(), classId);
+        ClassId classId = getDexLayout().getOrCreateClassId(typeKey);
+        rClass = new RClass(getDexLayout(), classId);
         mMembers.put(typeKey.getTypeName(), rClass);
         rClass.initialize();
         return rClass;

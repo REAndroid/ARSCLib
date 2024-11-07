@@ -17,7 +17,7 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.model.DexFile;
+import com.reandroid.dex.model.DexLayout;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.CompareUtil;
@@ -248,8 +248,8 @@ public class Marker {
         return tool.hashCode() + 3 * jsonObject.hashCode();
     }
 
-    public static Iterator<Marker> parse(DexFile dexFile){
-        return parse(dexFile.getSection(SectionType.STRING_ID));
+    public static Iterator<Marker> parse(DexLayout dexLayout){
+        return parse(dexLayout.getSection(SectionType.STRING_ID));
     }
     public static Iterator<Marker> parse(Section<StringId> stringIdSection){
         if(stringIdSection == null){

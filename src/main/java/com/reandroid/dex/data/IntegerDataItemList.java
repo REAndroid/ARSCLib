@@ -15,55 +15,114 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.item.IntegerItem;
+import com.reandroid.dex.base.CountedList;
 import com.reandroid.dex.base.DexPositionAlign;
+import com.reandroid.dex.key.ArrayKey;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyList;
+import com.reandroid.dex.reference.IntegerDataReference;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.utils.collection.ArrayIterator;
-import com.reandroid.utils.collection.ArraySort;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.ComputeIterator;
 
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.function.Predicate;
 
-public class IntegerDataItemList<T extends DataItem> extends IntegerList implements Iterable<T>{
-    private final SectionType<T> sectionType;
-    private final int usageType;
-    private T[] items;
+public class IntegerDataItemList<T extends DataItem> extends DataItem implements Iterable<T> {
+
+    private final CountedList<IntegerDataReference<T>> referenceList;
+    private final DexPositionAlign positionAlign;
 
     public IntegerDataItemList(SectionType<T> sectionType, int usageType, DexPositionAlign positionAlign) {
-        super(positionAlign);
-        this.sectionType = sectionType;
-        this.usageType = usageType;
+        super(3);
+
+        this.positionAlign = positionAlign;
+
+        IntegerItem countReference = new IntegerItem();
+        this.referenceList = new CountedList<>(countReference,
+                new ReferenceCreator<>(sectionType, usageType));
+
+        addChild(0, countReference);
+        addChild(1, referenceList);
+        addChild(2, positionAlign);
     }
 
-    public T addNew(Key key){
-        T item = getOrCreateSection(sectionType).getOrCreate(key);
-        add(item.getIdx());
-        return item;
+    @Override
+    public KeyList<?> getKey() {
+        Key[] elements = new Key[size()];
+        getItemKeys(elements);
+        return new ArrayKey(elements);
     }
-    public T addNew(){
-        T item = getOrCreateSection(sectionType).createItem();
-        add(item.getIdx());
-        return item;
-    }
-    public T getOrCreateAt(int index){
-        T item = getItem(index);
-        if(item == null){
-            ensureSize(index + 1);
-            item = getOrCreateSection(sectionType).createItem();
-            put(index, item.getIdx());
-            onChanged();
+    public void setKey(Key key) {
+        KeyList<?> keyList = (KeyList<?>) key;
+        int size = keyList.size();
+        setSize(size);
+        for (int i = 0; i < size; i++) {
+            getReference(i).setItem(keyList.get(i));
         }
-        return item;
     }
-    public void addNull(){
-        add(0);
+    public int size() {
+        return referenceList.size();
+    }
+    public void setSize(int size) {
+        referenceList.setSize(size);
+    }
+    public void clear() {
+        setSize(0);
+    }
+    private void ensureSize(int size) {
+        referenceList.ensureSize(size);
+    }
+    private IntegerDataReference<T> createNext() {
+        return referenceList.createNext();
+    }
+    private IntegerDataReference<T> getReference(int i) {
+        return referenceList.get(i);
+    }
+    private IntegerDataReference<T> getOrCreateReference(int i) {
+        ensureSize(i + 1);
+        return referenceList.get(i);
+    }
+    public T addNewItem(Key key) {
+        IntegerDataReference<T> item = createNext();
+        item.setItem(key);
+        return item.getItem();
+    }
+    public void addNewItem(T item) {
+        IntegerDataReference<T> reference = createNext();
+        reference.setItem(item);
+    }
+    public T addNewItem() {
+        return createNext().getOrCreate();
+    }
+    public T getOrCreateAt(int index) {
+        return getOrCreateReference(index).getOrCreate();
+    }
+    public Key getItemKey(int i) {
+        IntegerDataReference<T> reference = getReference(i);
+        if (reference != null) {
+            return reference.getKey();
+        }
+        return null;
+    }
+    public T setItemKeyAt(int index, Key key) {
+        IntegerDataReference<T> reference = getOrCreateReference(index);
+        reference.setItem(key);
+        return reference.getItem();
+    }
+    public void getItemKeys(Key[] out) {
+        int length = out.length;
+        for (int i = 0; i < length; i++) {
+            out[i] = getItemKey(i);
+        }
     }
 
     @Override
     public void removeSelf() {
-        setItems(null);
+        clear();
         super.removeSelf();
     }
 
@@ -71,186 +130,44 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
         removeIf(t -> t == item);
     }
     public void removeIf(Predicate<? super T> filter) {
-        T[] items = this.items;
-        if(items == null){
-            return;
-        }
-        int length = items.length;
-        boolean found = false;
-        for(int i = 0; i < length; i++){
-            T item = items[i];
-            if(filter.test(item)){
-                items[i] = null;
-                found = true;
-            }
-        }
-        if(found){
-            removeNulls();
-        }
+        referenceList.removeIf(reference -> filter.test(reference.getItem()));
     }
     void removeNulls() {
-        T[] items = this.items;
-        if(items == null || items.length == 0){
-            setItems(null);
-            return;
-        }
-        int length = items.length;
-        int count = 0;
-        for(int i = 0; i < length; i++){
-            if(items[i] == null){
-                count ++;
-            }
-        }
-        if(count == 0){
-            return;
-        }
-        T[] update = sectionType.getCreator()
-                .newArrayInstance(length - count);
-        int index = 0;
-        for(int i  = 0; i < length; i++){
-            T element = items[i];
-            if(element != null){
-                update[index] = element;
-                index++;
-            }
-        }
-        setItems(update);
+        removeIf(item -> item == null);
     }
     @Override
     public Iterator<T> iterator() {
-        return ArrayIterator.of(items);
+        return ComputeIterator.of(referenceList.iterator(), IntegerDataReference::getItem);
     }
     public T getItem(int i){
-        if(i < 0){
-            return null;
+        IntegerDataReference<T> reference = getReference(i);
+        if (reference != null) {
+            return reference.getItem();
         }
-        T[] items = this.items;
-        if(items == null || i >= items.length){
-            return null;
-        }
-        return items[i];
-    }
-    public T[] getItems() {
-        return items;
-    }
-    public void setItems(T[] items){
-        if(items == this.items){
-            return;
-        }
-        if(isEmpty(items)){
-            this.items = null;
-            setSize(0);
-            return;
-        }
-        int length = items.length;
-        setSize(length, false);
-        for(int i = 0; i < length; i++){
-            T item = items[i];
-            put(i, getData(item));
-            updateUsage(item);
-        }
-        this.items = items;
+        return null;
     }
     public boolean isEmpty() {
-        return isEmpty(this.items);
+        return !iterator().hasNext();
     }
-    public boolean sort(Comparator<? super T> comparator){
-        T[] items = this.items;
-        if(items == null || items.length < 2){
-            return false;
-        }
-        boolean sorted = ArraySort.sort(items, comparator);
-        if(sorted){
-            setItems(items.clone());
-        }
-        return sorted;
-    }
-    private void updateUsage(T[] items){
-        if(items == null){
-            return;
-        }
-        for(T item : items){
-            updateUsage(item);
-        }
-    }
-    private void updateUsage(T item){
-        if(item == null){
-            return;
-        }
-        item.addUsageType(usageType);
-    }
-
-    @Override
-    void onChanged() {
-        super.onChanged();
-        cacheItems();
+    public boolean sort(Comparator<? super T> comparator) {
+        return referenceList.sort((ref1, ref2) -> comparator.compare(ref1.getItem(), ref2.getItem()));
     }
 
     @Override
     protected void onPreRefresh() {
         super.onPreRefresh();
-        refreshItems();
+        removeNulls();
+    }
+    public DexPositionAlign getPositionAlign() {
+        return positionAlign;
     }
 
-    private void refreshItems(){
-        T[] items = this.items;
-        if(isEmpty(items)){
-            this.items = null;
-            setSize(0);
-            return;
-        }
-        int length = items.length;
-        setSize(length, false);
-        boolean found = false;
-        for(int i = 0; i < length; i++){
-            T item = items[i];
-            if(item != null){
-                item = item.getReplace();
-                items[i] = item;
-            }
-            int data = getData(item);
-            put(i, getData(item));
-            if(data == 0) {
-                items[i] = null;
-                found = true;
-            }
-            updateUsage(item);
-        }
-        if(found){
-            removeNulls();
-        }
-    }
-    private int getData(T item){
-        if(item == null){
-            return 0;
-        }
-        return item.getIdx();
-    }
-    private void cacheItems(){
-        items = getSectionItem(sectionType, toArray());
-        updateUsage(items);
-    }
-    private boolean isEmpty(T[] items){
-        if(items == null || items.length == 0){
-            return true;
-        }
-        for(int i = 0; i < items.length; i++){
-            if(items[i] != null){
-                return false;
-            }
-        }
-        return true;
-    }
     @Override
     public int hashCode() {
         int hash = 1;
         int size = size();
         for(int i = 0; i < size; i++){
-            hash = hash * 31;
-            Object item = getItem(i);
-            if(item != null){
-                hash = hash + item.hashCode();
-            }
+            hash = hash * 31 + ObjectsUtil.hash(getItem(i));
         }
         return hash;
     }
@@ -268,13 +185,33 @@ public class IntegerDataItemList<T extends DataItem> extends IntegerList impleme
         if(size != itemList.size()){
             return false;
         }
-        for(int i = 0; i < size; i++){
-            Object item1 = getItem(i);
-            Object item2 = itemList.getItem(i);
-            if(!Objects.equals(item1, item2)){
+        for(int i = 0; i < size; i++) {
+            if(!ObjectsUtil.equals(getItem(i), itemList.getItem(i))){
                 return false;
             }
         }
         return true;
+    }
+
+    static class ReferenceCreator<T extends DataItem> implements Creator<IntegerDataReference<T>> {
+
+        private final SectionType<T> sectionType;
+        private final int usageType;
+
+        ReferenceCreator(SectionType<T> sectionType, int usageType) {
+            this.sectionType = sectionType;
+            this.usageType = usageType;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public IntegerDataReference<T>[] newArrayInstance(int length) {
+            return new IntegerDataReference[length];
+        }
+
+        @Override
+        public IntegerDataReference<T> newInstance() {
+            return new IntegerDataReference<>(sectionType, usageType);
+        }
     }
 }

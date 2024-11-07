@@ -57,16 +57,16 @@ public class DexMergeOptions implements MergeOptions {
     }
     @Override
     public void onDexFull(DexLayoutBlock dexLayoutBlock, ClassId classId) {
-        DexFile coming = DexFile.findDexFile(classId);
+        DexLayout coming = DexLayout.findDexFile(classId);
         if(coming == null){
             return;
         }
-        DexFile dexFile = DexFile.findDexFile(dexLayoutBlock);
-        if(dexFile == null){
+        DexLayout dexLayout = DexLayout.findDexFile(dexLayoutBlock);
+        if(dexLayout == null){
             return;
         }
-        DexDirectory directory = dexFile.getDexDirectory();
-        if(directory == null || directory == coming.getDexDirectory()){
+        DexDirectory directory = dexLayout.getDexFile().getDexDirectory();
+        if(directory == null || directory == coming.getDexFile().getDexDirectory()){
             return;
         }
         onCreateNext(dexLayoutBlock);
@@ -92,16 +92,16 @@ public class DexMergeOptions implements MergeOptions {
 
     @Override
     public DexLayoutBlock onCreateNext(DexLayoutBlock last) {
-        DexFile dexFile = DexFile.findDexFile(last);
-        if(dexFile == null){
+        DexLayout dexLayout = DexLayout.findDexFile(last);
+        if(dexLayout == null){
             return null;
         }
-        DexDirectory directory = dexFile.getDexDirectory();
-        if(directory == null || directory.getLast() != dexFile){
+        DexDirectory directory = dexLayout.getDexFile().getDexDirectory();
+        if(directory == null || directory.getLast() != dexLayout.getDexFile()){
             return null;
         }
-        dexFile = directory.createDefault();
+        DexFile dexFile = directory.createDefault();
         setMergeStartDexFile(dexFile.getIndex());
-        return dexFile.getDexLayout();
+        return dexFile.getFirst().getDexLayoutBlock();
     }
 }

@@ -287,6 +287,16 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         }
         return null;
     }
+    public void setClassAnnotations(AnnotationSetKey setKey) {
+        AnnotationsDirectory directory = getAnnotationsDirectory();
+        if (directory == null) {
+            if (setKey == null) {
+                return;
+            }
+            directory = getOrCreateAnnotationsDirectory();
+        }
+        directory.setClassAnnotations(setKey);
+    }
     public AnnotationSet getOrCreateClassAnnotations(){
         return getOrCreateAnnotationsDirectory().getOrCreateClassAnnotations();
     }
@@ -498,8 +508,8 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         if(smaliClass.hasClassData()){
             getOrCreateClassData().fromSmali(smaliClass);
         }
-        if(smaliClass.hasAnnotation()){
-            getOrCreateClassAnnotations().fromSmali(smaliClass.getAnnotation());
+        if(smaliClass.hasAnnotation()) {
+            setClassAnnotations(smaliClass.getAnnotationSetKey());
         }
     }
 

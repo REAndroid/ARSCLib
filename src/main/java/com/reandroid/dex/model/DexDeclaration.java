@@ -112,14 +112,17 @@ public abstract class DexDeclaration extends Dex implements AnnotatedDex {
     public TypeKey getDefining(){
         return getKey().getDeclaring();
     }
-    public DexFile getDexFile(){
+    public DexLayout getDexLayout() {
         if(getClass() == DexClass.class){
             throw new RuntimeException(
                     "getDexFile() must be override for: " + getClass());
         }
-        return getDexClass().getDexFile();
+        return getDexClass().getDexLayout();
     }
-    public DexDirectory getDexDirectory(){
+    public DexFile getDexFile() {
+        return getDexLayout().getDexFile();
+    }
+    public DexDirectory getDexDirectory() {
         DexFile dexFile = getDexFile();
         if(dexFile != null){
             return dexFile.getDexDirectory();
@@ -128,9 +131,9 @@ public abstract class DexDeclaration extends Dex implements AnnotatedDex {
     }
     @Override
     public DexClassRepository getClassRepository(){
-        DexFile dexFile = getDexFile();
-        if(dexFile != null){
-            return dexFile.getClassRepository();
+        DexLayout dexLayout = getDexLayout();
+        if(dexLayout != null){
+            return dexLayout.getClassRepository();
         }
         return null;
     }
@@ -144,15 +147,15 @@ public abstract class DexDeclaration extends Dex implements AnnotatedDex {
         if(dexDeclaration == this){
             return true;
         }
-        DexFile dexFile = getDexFile();
-        if(dexFile == null){
+        DexLayout dexLayout = getDexLayout();
+        if(dexLayout == null){
             return false;
         }
-        return dexFile == dexDeclaration.getDexFile();
+        return dexLayout == dexDeclaration.getDexLayout();
     }
-    public boolean isInSameFile(DexFile dexFile){
-        return dexFile != null &&
-                dexFile.getDexLayout() == getDexFile().getDexLayout();
+    public boolean isInSameFile(DexLayout dexLayout){
+        return dexLayout != null &&
+                dexLayout.getDexLayoutBlock() == getDexLayout().getDexLayoutBlock();
     }
     public boolean isInSameDirectory(DexDeclaration dexDeclaration){
         if(dexDeclaration == null){

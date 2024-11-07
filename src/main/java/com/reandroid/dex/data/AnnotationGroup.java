@@ -17,7 +17,7 @@ package com.reandroid.dex.data;
 
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.IdItem;
-import com.reandroid.dex.key.DataKey;
+import com.reandroid.dex.key.ArrayKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyReference;
 import com.reandroid.dex.sections.SectionType;
@@ -27,22 +27,17 @@ import java.util.Iterator;
 
 public class AnnotationGroup extends IntegerDataItemList<AnnotationSet> implements KeyReference {
 
-    private final DataKey<AnnotationGroup> mKey;
-
     public AnnotationGroup() {
         super(SectionType.ANNOTATION_SET, UsageMarker.USAGE_ANNOTATION, null);
-        this.mKey = new DataKey<>(this);
     }
 
     @Override
-    public DataKey<AnnotationGroup> getKey() {
-        return mKey;
+    public ArrayKey getKey() {
+        return (ArrayKey) checkKey(super.getKey());
     }
-    @SuppressWarnings("unchecked")
     @Override
     public void setKey(Key key){
-        DataKey<AnnotationGroup> dataKey = (DataKey<AnnotationGroup>) key;
-        merge(dataKey.getItem());
+        super.setKey(key);
     }
     @Override
     public SectionType<AnnotationGroup> getSectionType() {
@@ -65,17 +60,15 @@ public class AnnotationGroup extends IntegerDataItemList<AnnotationSet> implemen
         };
     }
 
-    public void merge(AnnotationGroup annotationGroup){
-        AnnotationSet[] comingSets = annotationGroup.getItems();
-        if(comingSets == null){
-            return;
+    public void merge(AnnotationGroup annotationGroup) {
+        int size = annotationGroup.size();
+        for (int i = 0; i < size; i++) {
+            addNewItem(annotationGroup.getItemKey(i));
         }
-        for(AnnotationSet comingSet : comingSets){
-            if(comingSet == null){
-                addNull();
-                continue;
-            }
-            addNew(comingSet.getKey());
-        }
+    }
+
+    @Override
+    public String toString() {
+        return getKey().toString("\n");
     }
 }

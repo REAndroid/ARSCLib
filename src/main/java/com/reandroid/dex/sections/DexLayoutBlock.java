@@ -33,7 +33,6 @@ import com.reandroid.utils.io.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.function.Predicate;
@@ -41,8 +40,6 @@ import java.util.function.Predicate;
 public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
 
     private final SectionList sectionList;
-
-    private String mSimpleName;
 
     private final MultiMap<TypeKey, ClassId> extendingClassMap;
     private final MultiMap<TypeKey, ClassId> interfaceMap;
@@ -65,16 +62,16 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
         getHeader().setVersion(version);
     }
     public Iterator<Marker> getMarkers(){
-        return Marker.parse(get(SectionType.STRING_ID));
+        return Marker.parse(getSection(SectionType.STRING_ID));
     }
 
-    public Iterator<ClassId> getSubTypes(TypeKey typeKey){
+    public Iterator<ClassId> getExtendingOrImplementing(TypeKey typeKey){
         Iterator<ClassId> iterator = CombiningIterator.two(getExtendingClassIds(typeKey),
                 getImplementationIds(typeKey));
         return new IterableIterator<ClassId, ClassId>(iterator) {
             @Override
             public Iterator<ClassId> iterator(ClassId element) {
-                return CombiningIterator.two(SingleIterator.of(element), getSubTypes(element.getKey()));
+                return CombiningIterator.singleOne(element, getExtendingOrImplementing(element.getKey()));
             }
         };
     }
@@ -153,32 +150,65 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
     }
     @Override
     protected void onPreRefresh() {
+        super.onPreRefresh();
         interfaceMap.clear();
         extendingClassMap.clear();
+        this.updateHeaderOffset();
     }
     @Override
     protected void onRefreshed() {
-        this.updateChecksums();
+        this.updateChecksumAndSignature();
     }
-    private void updateChecksums() {
+
+    // Updating checksum/signature is expensive operation, but
+    // checksum (alder32) is a lot faster than signature (sha1), thus our logic is:
+    //   * Update checksum, if the value changes then repeat with refresh
+    //   * If checksum is not changed at first attempt, then no need of other action
+    //   * If checksum is changed after the first attempt, then update sig & cs
+    //   * Normally it requires not more than 3 trials to update but throws unreachable after
+    //     trying 10 times
+    private void updateChecksumAndSignature() {
         DexHeader dexHeader = getHeader();
         SectionList sectionList = getSectionList();
         int maximumTrials = 10;
         int i = 0;
         while (i < maximumTrials) {
-            if (dexHeader.updateChecksums()) {
+            if (dexHeader.updateChecksum()) {
                 sectionList.refresh();
             } else {
+                if (i != 0) {
+                    dexHeader.updateSignature();
+                    dexHeader.updateChecksum();
+                }
                 return;
             }
             i ++;
         }
-        throw new DexException("Failed to update checksums, trial = " + i);
+        throw new RuntimeException("Failed to update checksums, trial = " + i);
+    }
+    private void updateHeaderOffset() {
+        DexLayoutBlock previousLayoutBlock = getPreviousLayoutBlock();
+        int offset = 0;
+        if (previousLayoutBlock != null) {
+            DexHeader header = previousLayoutBlock.getHeader();
+            offset = header.getOffsetReference().get() + header.fileSize.get();
+        }
+        getHeader().getOffsetReference().set(offset);
+    }
+    private DexLayoutBlock getPreviousLayoutBlock() {
+        DexContainerBlock containerBlock = getParentInstance(DexContainerBlock.class);
+        if (containerBlock != null) {
+            return containerBlock.get(getIndex() - 1);
+        }
+        return null;
     }
     public void sortSection(SectionType<?>[] order){
         refresh();
         getSectionList().sortSection(order);
         refresh();
+    }
+    public int clearEmptySections() {
+        return getSectionList().clearEmptySections();
     }
     public void clearPoolMap(SectionType<?> sectionType){
         getSectionList().clearPoolMap(sectionType);
@@ -193,45 +223,51 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
     }
 
     public <T1 extends SectionItem> Iterator<T1> getAll(SectionType<T1> sectionType, Key key){
-        Section<T1> section = get(sectionType);
+        Section<T1> section = getSection(sectionType);
         if(section != null){
             return section.getAll(key);
         }
         return EmptyIterator.of();
     }
     public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
-        Section<T1> section = get(sectionType);
+        Section<T1> section = getSection(sectionType);
         if(section != null){
             return section.removeEntries(filter);
         }
         return false;
     }
     public <T1 extends SectionItem> boolean removeWithKeys(SectionType<T1> sectionType, Predicate<? super Key> filter){
-        Section<T1> section = get(sectionType);
+        Section<T1> section = getSection(sectionType);
         if(section != null){
             return section.removeWithKeys(filter);
         }
         return false;
     }
     public <T1 extends SectionItem> boolean removeWithKey(SectionType<T1> sectionType, Key key){
-        Section<T1> section = get(sectionType);
+        Section<T1> section = getSection(sectionType);
         if(section != null){
             return section.remove(key);
         }
         return false;
     }
-    public <T1 extends SectionItem> T1 get(SectionType<T1> sectionType, Key key){
-        Section<T1> section = get(sectionType);
+    public <T1 extends SectionItem> T1 getItem(SectionType<T1> sectionType, Key key){
+        Section<T1> section = getSection(sectionType);
         if(section != null){
             return section.getSectionItem(key);
         }
         return null;
     }
-    public<T1 extends SectionItem> Section<T1> get(SectionType<T1> sectionType){
+    public<T1 extends SectionItem> Section<T1> getSection(SectionType<T1> sectionType){
         return getSectionList().getSection(sectionType);
+    }
+    public<T1 extends SectionItem> Section<T1> getOrCreateSection(SectionType<T1> sectionType){
+        return getSectionList().getOrCreateSection(sectionType);
     }
     public DexHeader getHeader() {
         return getSectionList().getHeader();
+    }
+    public int getFileSize() {
+        return getHeader().getFileSize();
     }
     public SectionList getSectionList(){
         return sectionList;
@@ -240,26 +276,34 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
         return getSectionList().getMapList();
     }
     public boolean isEmpty(){
-        Section<ClassId> section = get(SectionType.CLASS_ID);
+        Section<ClassId> section = getSection(SectionType.CLASS_ID);
         return section == null || section.getCount() == 0;
+    }
+    public void removeSelf() {
+        DexContainerBlock containerBlock = getDexContainerBlock();
+        if (containerBlock != null) {
+            containerBlock.remove(this);
+        }
+    }
+    public DexContainerBlock getDexContainerBlock() {
+        return getParentInstance(DexContainerBlock.class);
     }
     public boolean merge(MergeOptions options, ClassId classId){
         return getSectionList().merge(options, classId);
     }
-    public boolean merge(MergeOptions options, DexLayoutBlock dexFile){
-        if(dexFile == this){
+    public boolean merge(MergeOptions options, DexLayoutBlock layoutBlock){
+        if(layoutBlock == this){
             options.onMergeError(this, getSectionList(), "Can not merge dex file to self");
             return false;
         }
-        return getSectionList().merge(options, dexFile.getSectionList());
+        return getSectionList().merge(options, layoutBlock.getSectionList());
     }
     public ClassId fromSmali(SmaliClass smaliClass) throws IOException {
         return getSectionList().fromSmali(smaliClass);
     }
     @Override
     public byte[] getBytes(){
-        BytesOutputStream outputStream = new BytesOutputStream(
-                getHeader().fileSize.get());
+        BytesOutputStream outputStream = new BytesOutputStream(getFileSize());
         try {
             writeBytes(outputStream);
             outputStream.close();
@@ -268,49 +312,8 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
         return outputStream.toByteArray();
     }
 
-    public void read(byte[] dexBytes) throws IOException {
-        BlockReader reader = new BlockReader(dexBytes);
-        readBytes(reader);
-        reader.close();
-    }
-    public void read(InputStream inputStream) throws IOException {
-        BlockReader reader;
-        if(inputStream instanceof BlockReader){
-            reader = (BlockReader) inputStream;
-        }else {
-            reader = new BlockReader(inputStream);
-        }
-        readBytes(reader);
-        reader.close();
-    }
-    public void readStrings(InputStream inputStream) throws IOException {
-        BlockReader reader;
-        if(inputStream instanceof BlockReader){
-            reader = (BlockReader) inputStream;
-        }else {
-            reader = new BlockReader(inputStream);
-        }
-        readStrings(reader);
-    }
-    public void readStrings(BlockReader reader) throws IOException {
-        readSections(reader, sectionType ->
-                sectionType == SectionType.STRING_ID ||
-                        sectionType == SectionType.STRING_DATA);
-    }
-    public void readClassIds(BlockReader reader) throws IOException {
-        readSections(reader, sectionType ->
-                sectionType == SectionType.STRING_ID ||
-                        sectionType == SectionType.STRING_DATA||
-                        sectionType == SectionType.TYPE_ID||
-                        sectionType == SectionType.CLASS_ID);
-    }
     public void readSections(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
         getSectionList().readSections(reader, filter);
-        reader.close();
-    }
-    public void read(File file) throws IOException {
-        BlockReader reader = new BlockReader(file);
-        readBytes(reader);
         reader.close();
     }
     public void write(File file) throws IOException {
@@ -325,12 +328,6 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
     }
     public void setTag(Object tag) {
         this.mTag = tag;
-    }
-    public String getSimpleName() {
-        return mSimpleName;
-    }
-    public void setSimpleName(String simpleName) {
-        this.mSimpleName = simpleName;
     }
 
     public static DexLayoutBlock createDefault(){
@@ -347,37 +344,5 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
         sectionList.getMapList().linkHeader(sectionList.getHeader());
 
         return dexLayoutBlock;
-    }
-    public static boolean isDexFile(File file){
-        if(file == null || !file.isFile()){
-            return false;
-        }
-        DexHeader dexHeader = null;
-        try {
-            InputStream inputStream = FileUtil.inputStream(file);
-            dexHeader = DexHeader.readHeader(inputStream);
-            inputStream.close();
-        } catch (IOException ignored) {
-        }
-        return isDexFile(dexHeader);
-    }
-    public static boolean isDexFile(InputStream inputStream){
-        DexHeader dexHeader = null;
-        try {
-            dexHeader = DexHeader.readHeader(inputStream);
-            inputStream.close();
-        } catch (IOException ignored) {
-        }
-        return isDexFile(dexHeader);
-    }
-    private static boolean isDexFile(DexHeader dexHeader){
-        if(dexHeader == null){
-            return false;
-        }
-        if(!dexHeader.magic.isDefault()){
-            return false;
-        }
-        int version = dexHeader.getVersion();
-        return version > 0 && version < 1000;
     }
 }

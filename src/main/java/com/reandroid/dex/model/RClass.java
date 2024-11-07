@@ -38,8 +38,8 @@ import java.util.List;
 
 public class RClass extends DexClass {
 
-    public RClass(DexFile dexFile, ClassId classId) {
-        super(dexFile, classId);
+    public RClass(DexLayout dexLayout, ClassId classId) {
+        super(dexLayout, classId);
     }
 
     public RField load(ResourceEntry resourceEntry){

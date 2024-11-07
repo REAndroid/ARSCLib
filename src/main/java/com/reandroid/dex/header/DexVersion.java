@@ -17,9 +17,11 @@ package com.reandroid.dex.header;
 
 import com.reandroid.arsc.item.ByteArray;
 
-public class Version extends HeaderPiece {
+public class DexVersion extends HeaderPiece {
+
     private int mCache;
-    public Version(){
+
+    public DexVersion(){
         super();
         super.set(DEFAULT_BYTES.clone());
     }
@@ -62,9 +64,13 @@ public class Version extends HeaderPiece {
     public boolean isDefault(){
         return ByteArray.equals(getBytesInternal(), DEFAULT_BYTES);
     }
-    public boolean isClassDefinitionOrderEnforced(){
+    public boolean isClassDefinitionOrderEnforced() {
         return getVersionAsInteger() >= ClassDefinitionOrderEnforcedVersion;
     }
+    public boolean isMultiLayoutVersion() {
+        return getVersionAsInteger() >= MinimumMultiLayoutVersion;
+    }
+
     @Override
     public String toString(){
         int version = getVersionAsInteger();
@@ -77,4 +83,5 @@ public class Version extends HeaderPiece {
     private static final byte[] DEFAULT_BYTES = new byte[]{(byte)'0', (byte)'3', (byte)'5', (byte)0x00};
 
     public static final int ClassDefinitionOrderEnforcedVersion = 37;
+    public static final int MinimumMultiLayoutVersion = 41;
 }

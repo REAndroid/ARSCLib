@@ -94,9 +94,7 @@ public class FieldDef extends Def<FieldId> {
         setAccessFlagsValue(smaliField.getAccessFlagsValue());
         addHiddenApiFlags(smaliField.getHiddenApiFlags());
         if(smaliField.hasAnnotation()){
-            AnnotationSet annotationSet = getOrCreateSection(SectionType.ANNOTATION_SET).createItem();
-            annotationSet.fromSmali(smaliField.getAnnotation());
-            addAnnotationSet(annotationSet);
+            addAnnotationSet(smaliField.getAnnotationSetKey());
         }
         SmaliValue smaliValue = smaliField.getValue();
         if(smaliValue != null) {

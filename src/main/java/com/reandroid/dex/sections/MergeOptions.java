@@ -37,9 +37,20 @@ public interface MergeOptions {
         if(dexLayoutBlock == null || dexLayoutBlock.isEmpty()){
             return true;
         }
-        Section<ClassId> section = dexLayoutBlock.get(SectionType.CLASS_ID);
+        Section<ClassId> section = dexLayoutBlock.getSection(SectionType.CLASS_ID);
         for(ClassId classId : section){
             if(!skipMerging(classId, classId.getKey())){
+                return false;
+            }
+        }
+        return true;
+    }
+    default boolean isEmptyDexFile(DexContainerBlock dexContainerBlock){
+        if(dexContainerBlock == null || dexContainerBlock.isEmpty()){
+            return true;
+        }
+        for(DexLayoutBlock layoutBlock : dexContainerBlock){
+            if(!isEmptyDexFile(layoutBlock)){
                 return false;
             }
         }

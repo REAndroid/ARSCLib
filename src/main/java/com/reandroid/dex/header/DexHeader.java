@@ -21,19 +21,18 @@ import com.reandroid.arsc.base.OffsetSupplier;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.arsc.item.NumberIntegerReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.sections.SpecialItem;
+import com.reandroid.utils.io.FileUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
 public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStreamReader {
 
-    private final IntegerReference offsetReference;
-
     public final Magic magic;
-    public final Version version;
+    public final DexVersion version;
     public final DexChecksum checksum;
     public final Signature signature;
 
@@ -57,12 +56,11 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
      * */
     public final UnknownHeaderBytes unknown;
 
-    public DexHeader(IntegerReference offsetReference) {
+    public DexHeader() {
         super(17);
-        this.offsetReference = offsetReference;
 
         this.magic = new Magic();
-        this.version = new Version();
+        this.version = new DexVersion();
         this.checksum = new DexChecksum();
         this.signature = new Signature();
 
@@ -104,10 +102,7 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
 
         addChild(16, unknown);
 
-        setOffsetReference(offsetReference);
-    }
-    public DexHeader(){
-        this(new NumberIntegerReference(0));
+        setOffsetReference(containerInfo.getOffsetReference());
     }
 
     @Override
@@ -144,7 +139,10 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
     }
     @Override
     public IntegerReference getOffsetReference() {
-        return offsetReference;
+        return containerInfo.getOffsetReference();
+    }
+    public int getFileSize() {
+        return fileSize.get();
     }
     @Override
     protected boolean isValidOffset(int offset){
@@ -154,11 +152,10 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
     public boolean isClassDefinitionOrderEnforced(){
         return version.isClassDefinitionOrderEnforced();
     }
-
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        super.onReadBytes(reader);
+    public boolean isMultiLayoutVersion() {
+        return version.isMultiLayoutVersion();
     }
+
     @Override
     public int readBytes(InputStream inputStream) throws IOException {
         int result = 0;
@@ -175,9 +172,19 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
         this.headerSize.set(countBytes());
     }
 
-    public boolean updateChecksums() {
-        this.signature.update();
+    /**
+     * Updates header checksum with alder32 algorithm
+     * returns true if the value of checksum is changed, otherwise false
+     * */
+    public boolean updateChecksum() {
         return this.checksum.update();
+    }
+
+    /**
+     * Updates header signature with sha1 algorithm
+     * */
+    public void updateSignature() {
+        this.signature.update();
     }
 
     @Override
@@ -203,12 +210,26 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
                 '}';
     }
 
+    public static DexHeader readHeader(File file) throws IOException {
+        InputStream inputStream = FileUtil.inputStream(file);
+        DexHeader dexHeader = readHeader(inputStream);
+        inputStream.close();
+        return dexHeader;
+    }
     public static DexHeader readHeader(InputStream inputStream) throws IOException {
         DexHeader dexHeader = new DexHeader();
         int read = dexHeader.readBytes(inputStream);
         if(read < dexHeader.countBytes()) {
             throw new IOException("Few bytes to read header: " + read);
         }
+        return dexHeader;
+    }
+    public static DexHeader readHeader(byte[] bytes) throws IOException {
+        DexHeader dexHeader = new DexHeader();
+        if(bytes.length < dexHeader.countBytes()) {
+            throw new IOException("Few bytes to read header: " + bytes.length);
+        }
+        dexHeader.readBytes(new BlockReader(bytes));
         return dexHeader;
     }
 }

@@ -20,29 +20,23 @@ import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.ArrayIterator;
-import com.reandroid.utils.collection.ArraySort;
+import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
-public class AnnotationItemKey implements Key, Iterable<AnnotationElementKey> {
+public class AnnotationItemKey extends KeyList<AnnotationElementKey> implements Key, Iterable<AnnotationElementKey> {
 
     private static final AnnotationElementKey[] EMPTY = new AnnotationElementKey[0];
 
     private final AnnotationVisibility visibility;
     private final TypeKey type;
-    private final AnnotationElementKey[] elements;
-    private final AnnotationElementKey[] sortedElements;
 
     public AnnotationItemKey(AnnotationVisibility visibility, TypeKey type, AnnotationElementKey[] elements) {
-        if (elements == null || elements.length == 0) {
-            elements = EMPTY;
-        }
+        super(removeNulls(elements));
         this.visibility = visibility;
         this.type = type;
-        this.elements = elements;
-        this.sortedElements = sortElements(elements);
     }
 
     public boolean hasVisibility() {
@@ -54,38 +48,76 @@ public class AnnotationItemKey implements Key, Iterable<AnnotationElementKey> {
     public TypeKey getType() {
         return type;
     }
+    public AnnotationItemKey changeType(TypeKey typeKey) {
+        if (typeKey.equals(getType())) {
+            return this;
+        }
+        return new AnnotationItemKey(getVisibility(), getType(), getElements());
+    }
     public AnnotationElementKey get(String name) {
-        AnnotationElementKey[] elements = this.elements;
-        int length = elements.length;
-        for (int i = 0; i < length; i++) {
-            AnnotationElementKey elementKey = elements[i];
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            AnnotationElementKey elementKey = get(i);
             if (elementKey != null && ObjectsUtil.equals(name, elementKey.getName())) {
                 return elementKey;
             }
         }
         return null;
     }
-    public AnnotationElementKey get(int i) {
-        return elements[i];
-    }
-    public boolean isEmpty() {
-        return elements.length == 0;
-    }
-    public int size() {
-        return elements.length;
-    }
 
-    private AnnotationElementKey[] getSortedElements() {
-        AnnotationElementKey[] elementKeys = this.sortedElements;
-        if (elementKeys == null) {
-            elementKeys = this.elements;
-        }
-        return elementKeys;
+    @Override
+    public AnnotationItemKey add(AnnotationElementKey item) {
+        return (AnnotationItemKey) super.add(item);
+    }
+    @Override
+    public AnnotationItemKey remove(AnnotationElementKey itemKey) {
+        return (AnnotationItemKey) super.remove(itemKey);
+    }
+    @Override
+    public AnnotationItemKey remove(int index) {
+        return (AnnotationItemKey) super.remove(index);
+    }
+    @Override
+    public AnnotationItemKey removeIf(Predicate<? super AnnotationElementKey> predicate) {
+        return (AnnotationItemKey) super.removeIf(predicate);
+    }
+    @Override
+    public AnnotationItemKey set(int i, AnnotationElementKey item) {
+        return (AnnotationItemKey) super.set(i, item);
     }
 
     @Override
-    public Iterator<AnnotationElementKey> iterator() {
-        return ArrayIterator.of(this.elements);
+    AnnotationItemKey newInstance(AnnotationElementKey[] elements) {
+        return new AnnotationItemKey(getVisibility(), getType(), elements);
+    }
+    @Override
+    AnnotationElementKey[] newArray(int length) {
+        if (length == 0) {
+            return EMPTY;
+        }
+        return new AnnotationElementKey[length];
+    }
+    @Override
+    AnnotationElementKey[] initializeSortedElements(AnnotationElementKey[] elements) {
+        if (elements == null || elements.length < 2) {
+            return null;
+        }
+        boolean needsSort = false;
+        int length = elements.length;
+        AnnotationElementKey previous  = elements[0];
+        for (int i = 1; i < length; i ++) {
+            AnnotationElementKey next = elements[i];
+            if (CompareUtil.compare(previous, next) > 0) {
+                needsSort = true;
+                break;
+            }
+        }
+        if (!needsSort) {
+            return null;
+        }
+        elements = elements.clone();
+        ArraySort.sort(elements, CompareUtil.getComparableComparator());
+        return elements;
     }
 
     public SmaliDirective getSmaliDirective() {
@@ -93,6 +125,25 @@ public class AnnotationItemKey implements Key, Iterable<AnnotationElementKey> {
             return SmaliDirective.ANNOTATION;
         }
         return SmaliDirective.SUB_ANNOTATION;
+    }
+
+    @Override
+    public AnnotationItemKey replaceKey(Key search, Key replace) {
+        if (this.equals(search)) {
+            return (AnnotationItemKey) replace;
+        }
+        AnnotationItemKey result = this;
+        if(search.equals(getType())) {
+            result = result.changeType((TypeKey) replace);
+        }
+        return (AnnotationItemKey) result.replaceElements(search, replace);
+    }
+
+    @Override
+    public Iterator<? extends Key> mentionedKeys() {
+        return CombiningIterator.singleOne(
+                getType(),
+                super.mentionedKeys());
     }
 
     @Override
@@ -119,6 +170,11 @@ public class AnnotationItemKey implements Key, Iterable<AnnotationElementKey> {
     }
 
     @Override
+    int computeHash() {
+        return ObjectsUtil.hash(getVisibility(), getType()) * 31 + super.computeHash();
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -127,41 +183,44 @@ public class AnnotationItemKey implements Key, Iterable<AnnotationElementKey> {
             return false;
         }
         AnnotationItemKey other = (AnnotationItemKey) obj;
-        return ObjectsUtil.equals(this.getVisibility(), other.getVisibility()) &&
+        return this.hashCode() == other.hashCode() &&
+                ObjectsUtil.equals(this.getVisibility(), other.getVisibility()) &&
                 ObjectsUtil.equals(this.getType(), other.getType()) &&
-                ObjectsUtil.equalsArray(this.getSortedElements(), other.getSortedElements());
+                equalsElements(other);
     }
 
     @Override
     public int hashCode() {
-        return ObjectsUtil.hash(getVisibility(), getType()) * 31 +
-                ObjectsUtil.hashElements(this.getSortedElements());
+        return getHashCode();
     }
 
-    @Override
-    public String toString() {
-        return SmaliWriter.toStringSafe(this);
-    }
-
-    private static AnnotationElementKey[] sortElements(AnnotationElementKey[] elements) {
-        if (elements == null || elements.length < 2) {
-            return null;
+    private static AnnotationElementKey[] removeNulls(AnnotationElementKey[] elements) {
+        if (elements == null || elements.length == 0) {
+            return EMPTY;
         }
-        boolean needsSort = false;
         int length = elements.length;
-        AnnotationElementKey previous  = elements[0];
-        for (int i = 1; i < length; i ++) {
-            AnnotationElementKey next = elements[i];
-            if (CompareUtil.compare(previous, next) > 0) {
-                needsSort = true;
-                break;
+        int size = 0;
+        for (int i = 0; i < length; i ++) {
+            AnnotationElementKey key = elements[i];
+            if (key != null) {
+                size ++;
             }
         }
-        if (!needsSort) {
-            return null;
+        if (size == length) {
+            return elements;
         }
-        elements = elements.clone();
-        ArraySort.sort(elements, CompareUtil.getComparableComparator());
-        return elements;
+        if (size == 0) {
+            return EMPTY;
+        }
+        AnnotationElementKey[] results = new AnnotationElementKey[size];
+        int j = 0;
+        for (int i = 0; i < length; i ++) {
+            AnnotationElementKey key = elements[i];
+            if (key != null) {
+                results[j] = key;
+                j ++;
+            }
+        }
+        return results;
     }
 }

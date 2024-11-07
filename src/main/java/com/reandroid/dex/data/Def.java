@@ -21,6 +21,7 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.*;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.pool.DexSectionPool;
@@ -148,6 +149,10 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
         annotationSet = directory.createSectionItem(SectionType.ANNOTATION_SET);
         directory.addAnnotation(this, annotationSet);
         return annotationSet;
+    }
+    public void addAnnotationSet(AnnotationSetKey key) {
+        AnnotationSet annotationSet = getOrCreateSectionItem(SectionType.ANNOTATION_SET, key);
+        addAnnotationSet(annotationSet);
     }
     public void addAnnotationSet(AnnotationSet annotationSet){
         AnnotationsDirectory directory = getOrCreateUniqueAnnotationsDirectory();

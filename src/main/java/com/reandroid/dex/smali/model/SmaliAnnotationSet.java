@@ -15,6 +15,8 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.AnnotationItemKey;
+import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -27,6 +29,14 @@ public class SmaliAnnotationSet extends SmaliSet<SmaliAnnotationItem>{
         super();
     }
 
+    public AnnotationSetKey getKey() {
+        int size = size();
+        AnnotationItemKey[] elements = new AnnotationItemKey[size];
+        for (int i = 0; i < size; i++) {
+            elements[i] = get(i).getKey();
+        }
+        return new AnnotationSetKey(elements);
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.appendAll(iterator());

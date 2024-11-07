@@ -1,14 +1,10 @@
 package com.reandroid.dex;
 
 import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.model.DexClass;
-import com.reandroid.dex.model.DexFile;
-import com.reandroid.dex.model.DexInstruction;
-import com.reandroid.dex.model.DexMethod;
+import com.reandroid.dex.model.*;
 
 import java.io.IOException;
 
@@ -28,16 +24,15 @@ public class SampleDexFileCreator {
             return;
         }
         TypeKey typeKey = TypeKey.parse(classSourceName);
-        DexClass dexClass = dexFile.getOrCreateClass(typeKey);
+        DexLayout dexLayout = dexFile.getOrCreateFirst();
+        DexClass dexClass = dexLayout.getOrCreateClass(typeKey);
         dexClass.addAccessFlag(AccessFlag.PUBLIC);
         dexClass.setSuperClass(TypeKey.create("Landroid/app/Application;"));
 
         createConstructor(dexClass);
     }
     private static void createActivityClass(DexFile dexFile, String activitySourceName, int contentViewResourceId) throws IOException {
-        String binClassName = DexUtils.toBinaryName(activitySourceName);
-
-        DexClass dexClass = dexFile.getOrCreateClass(binClassName);
+        DexClass dexClass = dexFile.getOrCreateFirst().getOrCreateClass(TypeKey.parse(activitySourceName));
         dexClass.addAccessFlag(AccessFlag.PUBLIC);
         dexClass.setSuperClass(TypeKey.create("Landroid/app/Activity;"));
 

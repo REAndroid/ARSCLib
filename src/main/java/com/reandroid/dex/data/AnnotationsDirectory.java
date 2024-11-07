@@ -23,6 +23,7 @@ import com.reandroid.arsc.item.IndirectInteger;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.DataKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyReference;
@@ -81,6 +82,9 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
         return SectionType.ANNOTATION_DIRECTORY;
     }
 
+    public void setClassAnnotations(AnnotationSetKey setKey) {
+        header.classAnnotation.setItem(setKey);
+    }
     public AnnotationSet getOrCreateClassAnnotations(){
         return header.classAnnotation.getOrCreate();
     }
@@ -219,6 +223,10 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
     public AnnotationSet createNewParameterAnnotation(MethodDef methodDef, int parameterIndex){
         AnnotationGroup annotationGroup = getEmptyParameterAnnotationGroup(methodDef, parameterIndex);
         return annotationGroup.getOrCreateAt(parameterIndex);
+    }
+    public AnnotationSet setParameterAnnotation(MethodDef methodDef, int parameterIndex, AnnotationSetKey key){
+        AnnotationGroup annotationGroup = getEmptyParameterAnnotationGroup(methodDef, parameterIndex);
+        return annotationGroup.setItemKeyAt(parameterIndex, key);
     }
     private AnnotationGroup getEmptyParameterAnnotationGroup(MethodDef methodDef, int parameterIndex){
         Iterator<AnnotationGroup> iterator = parametersAnnotationMap.getValues(methodDef);

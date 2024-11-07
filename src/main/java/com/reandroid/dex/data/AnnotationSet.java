@@ -38,28 +38,28 @@ import java.util.Iterator;
 public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         implements KeyReference, SmaliFormat, PositionAlignedItem, FullRefresh {
 
-    private final DataKey<AnnotationSet> mKey;
-
     public AnnotationSet(){
         super(SectionType.ANNOTATION_ITEM, UsageMarker.USAGE_ANNOTATION, new DexPositionAlign());
-        this.mKey = new DataKey<>(this);
     }
 
     @Override
-    public DataKey<AnnotationSet> getKey() {
-        return mKey;
+    public AnnotationSetKey getKey() {
+        AnnotationItemKey[] elements = new AnnotationItemKey[size()];
+        getItemKeys(elements);
+        return checkKey(new AnnotationSetKey(elements));
     }
-    @SuppressWarnings("unchecked")
     @Override
-    public void setKey(Key key){
-        DataKey<AnnotationSet> dataKey = (DataKey<AnnotationSet>) key;
-        merge(dataKey.getItem());
+    public void setKey(Key key) {
+        super.setKey(key);
     }
     @Override
     public SectionType<AnnotationSet> getSectionType() {
         return SectionType.ANNOTATION_SET;
     }
 
+    public AnnotationItemKey getItemKey(int i) {
+        return (AnnotationItemKey) super.getItemKey(i);
+    }
     public DexValueBlock<?> getValue(TypeKey typeKey, String name){
         AnnotationElement element = getElement(typeKey, name);
         if(element != null){
@@ -116,12 +116,12 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         return addNew(type, name);
     }
     public AnnotationItem addNewItem(TypeKey typeKey){
-        AnnotationItem item = addNew();
+        AnnotationItem item = addNewItem();
         item.setType(typeKey);
         return item;
     }
     public AnnotationItem addNew(TypeKey type, String name){
-        AnnotationItem item = addNew();
+        AnnotationItem item = addNewItem();
         item.setType(type);
         item.getOrCreateElement(name);
         return item;
@@ -130,6 +130,21 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
         for (AnnotationItem item : this) {
             if (type.equals(item.getTypeKey())
                     && item.containsName(name)) {
+                return item;
+            }
+        }
+        return null;
+    }
+    public AnnotationItem getOrCreate(AnnotationItemKey annotationItemKey) {
+        AnnotationItem item = get(annotationItemKey);
+        if (item == null) {
+            item = addNewItem(annotationItemKey);
+        }
+        return item;
+    }
+    public AnnotationItem get(AnnotationItemKey annotationItemKey){
+        for (AnnotationItem item : this) {
+            if (annotationItemKey.equals(item.getKey())) {
                 return item;
             }
         }
@@ -162,15 +177,14 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
             return;
         }
         for(AnnotationItem coming : annotationSet){
-            addNew(coming.getKey());
+            addNewItem(coming.getKey());
         }
     }
     public void fromSmali(SmaliAnnotationSet smaliAnnotationSet){
         Iterator<SmaliAnnotationItem> iterator = smaliAnnotationSet.iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             SmaliAnnotationItem smaliAnnotationItem = iterator.next();
-            AnnotationItem annotationItem = addNewItem(smaliAnnotationItem.getType());
-            annotationItem.fromSmali(smaliAnnotationItem);
+            getOrCreate(smaliAnnotationItem.getKey());
         }
     }
 

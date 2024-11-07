@@ -16,123 +16,83 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.common.Origin;
-import com.reandroid.dex.base.DexException;
-import com.reandroid.dex.common.AccessFlag;
-import com.reandroid.dex.common.DexUtils;
-import com.reandroid.dex.common.FullRefresh;
-import com.reandroid.dex.common.SectionItem;
-import com.reandroid.dex.data.CodeItem;
-import com.reandroid.dex.data.DebugInfo;
 import com.reandroid.dex.id.ClassId;
-import com.reandroid.dex.id.StringId;
-import com.reandroid.dex.id.TypeId;
-import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.*;
-import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.smali.model.SmaliClass;
-import com.reandroid.utils.collection.*;
-import com.reandroid.utils.io.FileByteSource;
-import com.reandroid.utils.io.FileIterator;
+import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.IterableIterator;
 import com.reandroid.utils.io.FileUtil;
 
 import java.io.*;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Predicate;
 
-public class DexFile implements DexClassRepository, Closeable,
-        Iterable<DexClass>, FullRefresh {
+public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayout> {
 
-    private final DexLayoutBlock dexLayoutBlock;
+    private final DexContainerBlock containerBlock;
+    private final DexFileLayoutController layoutController;
     private DexDirectory dexDirectory;
+
     private boolean closed;
 
-    public DexFile(DexLayoutBlock dexLayoutBlock){
-        this.dexLayoutBlock = dexLayoutBlock;
-        dexLayoutBlock.setTag(this);
+    public DexFile(DexContainerBlock containerBlock) {
+        this.containerBlock = containerBlock;
+        this.layoutController = new DexFileLayoutController(this);
+        containerBlock.setLayoutBlockChangedListener(layoutController);
     }
 
-    public int getVersion(){
-        return getDexLayout().getVersion();
-    }
-    public void setVersion(int version){
-        getDexLayout().setVersion(version);
-    }
-    public int shrink(){
-        return getDexLayout().getSectionList().shrink();
-    }
-    public int clearDuplicateData(){
-        return getDexLayout().getSectionList().clearDuplicateData();
-    }
-    public int clearUnused(){
-        return getDexLayout().getSectionList().clearUnused();
-    }
-    public int clearEmptySections(){
-        return getDexLayout().getSectionList().clearEmptySections();
-    }
-    public void fixDebugLineNumbers(){
-        Section<CodeItem> section = getSection(SectionType.CODE);
-        if(section == null){
-            return;
-        }
-        for(CodeItem codeItem : section){
-            DebugInfo debugInfo = codeItem.getDebugInfo();
-            if(debugInfo == null){
-                continue;
-            }
-            debugInfo.getDebugSequence().fixDebugLineNumbers();
-        }
-    }
 
-    public DexClassRepository getClassRepository(){
+    public boolean isMultiLayout() {
+        return getContainerBlock().isMultiLayout();
+    }
+    @Override
+    public Iterator<DexLayout> iterator() {
+        return layoutController.iterator();
+    }
+    public Iterator<DexLayout> clonedIterator() {
+        return layoutController.iterator();
+    }
+    public DexLayout getOrCreateFirst() {
+        return getOrCreateAt(0);
+    }
+    public DexLayout getOrCreateAt(int index) {
+        getContainerBlock().ensureSize(index + 1);
+        return getLayout(index);
+    }
+    public DexLayout getFirst() {
+        return layoutController.get(0);
+    }
+    public DexLayout getLayout(int i) {
+        return this.layoutController.get(i);
+    }
+    public int size() {
+        return getContainerBlock().size();
+    }
+    public boolean isEmpty() {
+        return getContainerBlock().isEmpty();
+    }
+    public int getIndex() {
         DexDirectory directory = getDexDirectory();
-        if(directory != null){
-            return directory;
+        if(directory != null) {
+            return directory.indexOf(this);
         }
-        return this;
-    }
-    public DexDirectory getDexDirectory() {
-        return dexDirectory;
-    }
-    public void setDexDirectory(DexDirectory dexDirectory) {
-        this.dexDirectory = dexDirectory;
-        DexLayoutBlock dexLayoutBlock = getDexLayout();
-        dexLayoutBlock.setTag(this);
-        dexLayoutBlock.setSimpleName(getSimpleName());
+        return -1;
     }
 
-    public Iterator<DexClass> getSubTypes(TypeKey typeKey){
-        return ComputeIterator.of(getSubTypeIds(typeKey), this::create);
+    public int getVersion() {
+        return getContainerBlock().getVersion();
     }
-    public Iterator<DexClass> getExtendingClasses(TypeKey typeKey){
-        return ComputeIterator.of(getExtendingClassIds(typeKey), this::create);
+    public void setVersion(int version) {
+        getContainerBlock().setVersion(version);
     }
-    public Iterator<DexClass> getImplementClasses(TypeKey typeKey){
-        return ComputeIterator.of(getImplementationIds(typeKey), this::create);
+    public String getSimpleName() {
+        return getContainerBlock().getSimpleName();
     }
-    public Iterator<ClassId> getSubTypeIds(TypeKey superClass){
-        return getDexLayout().getSubTypes(superClass);
-    }
-    public Iterator<ClassId> getExtendingClassIds(TypeKey superClass){
-        return getDexLayout().getExtendingClassIds(superClass);
-    }
-    public Iterator<ClassId> getImplementationIds(TypeKey interfaceClass){
-        return getDexLayout().getImplementationIds(interfaceClass);
-    }
-    public DexClass getOrCreateClass(String type){
-        return getOrCreateClass(new TypeKey(type));
-    }
-    public DexClass getOrCreateClass(TypeKey key){
-        DexClass dexClass = search(key);
-        if(dexClass != null){
-            return dexClass;
-        }
-        ClassId classId = getOrCreateClassId(key);
-        return create(classId);
+    public void setSimpleName(String simpleName) {
+        getContainerBlock().setSimpleName(simpleName);
     }
     public DexSource<DexFile> getSource(){
         DexDirectory directory = getDexDirectory();
@@ -141,192 +101,91 @@ public class DexFile implements DexClassRepository, Closeable,
         }
         return null;
     }
-    public String getSimpleName() {
-        return getDexLayout().getSimpleName();
+    public DexDirectory getDexDirectory() {
+        return dexDirectory;
     }
-    public void setSimpleName(String simpleName){
-        getDexLayout().setSimpleName(simpleName);
+    public void setDexDirectory(DexDirectory dexDirectory) {
+        this.dexDirectory = dexDirectory;
+        DexContainerBlock containerBlock = getContainerBlock();
+        containerBlock.setTag(this);
+        containerBlock.setSimpleName(getSimpleName());
     }
-    @Override
-    public Iterator<DexClass> iterator() {
-        return getDexClasses();
+    public DexContainerBlock getContainerBlock() {
+        return containerBlock;
     }
-    @Override
-    public boolean removeClasses(Predicate<? super DexClass> filter){
-        Predicate<ClassId> classIdFilter = classId -> filter.test(DexFile.this.create(classId));
-        return getDexLayout().removeEntries(SectionType.CLASS_ID, classIdFilter);
-    }
-    @Override
-    public <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter){
-        return getDexLayout().removeEntries(sectionType, filter);
-    }
-    @Override
-    public <T1 extends SectionItem> boolean removeEntriesWithKey(SectionType<T1> sectionType, Predicate<? super Key> filter) {
-        return getDexLayout().removeWithKeys(sectionType, filter);
-    }
-    @Override
-    public <T1 extends SectionItem> boolean removeEntry(SectionType<T1> sectionType, Key key){
-        return getDexLayout().removeWithKey(sectionType, key);
-    }
-    @Override
-    public int getDexClassesCount() {
-        Section<ClassId> section = getSection(SectionType.CLASS_ID);
-        if(section != null){
-            return section.getCount();
-        }
-        return 0;
-    }
-    @Override
-    public DexClass getDexClass(TypeKey key){
-        ClassId classId = getItem(SectionType.CLASS_ID, key);
-        if(classId == null) {
-            return null;
-        }
-        return create(classId);
-    }
-    @Override
-    public Iterator<DexClass> getDexClasses(Predicate<? super TypeKey> filter) {
-        return ComputeIterator.of(getClassIds(filter), this::create);
-    }
-    @Override
-    public Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter) {
-        return ComputeIterator.of(getClassIdsCloned(filter), this::create);
-    }
-    @Override
-    public<T1 extends SectionItem> Iterator<Section<T1>> getSections(SectionType<T1> sectionType) {
-        return SingleIterator.of(getSection(sectionType));
-    }
-    @Override
-    public Iterator<DexClass> searchExtending(TypeKey typeKey){
-        DexDirectory directory = getDexDirectory();
-        if(directory != null){
-            return directory.searchExtending(typeKey);
-        }
-        return getExtendingClasses(typeKey);
-    }
-    @Override
-    public Iterator<DexClass> searchImplementations(TypeKey typeKey){
-        DexDirectory directory = getDexDirectory();
-        if(directory != null){
-            return directory.searchImplementations(typeKey);
-        }
-        return getImplementClasses(typeKey);
-    }
-    public DexClass search(TypeKey typeKey){
-        return getClassRepository().getDexClass(typeKey);
-    }
-    public ClassId getOrCreateClassId(TypeKey key){
-        Section<ClassId> section = getDexLayout().get(SectionType.CLASS_ID);
-        DexSectionPool<ClassId> pool = section.getPool();
-        ClassId classId = pool.get(key);
-        if(classId != null) {
-            return classId;
-        }
-        classId = pool.getOrCreate(key);
-        classId.getOrCreateClassData();
-        classId.setSuperClass(TypeKey.OBJECT);
-        classId.setSourceFile(DexUtils.toSourceFileName(key.getTypeName()));
-        classId.addAccessFlag(AccessFlag.PUBLIC);
-        return classId;
-    }
-    private DexClass create(ClassId classId) {
-        return new DexClass(this, classId);
-    }
-    public Marker getOrCreateMarker() {
-        Marker marker = CollectionUtil.getFirst(getMarkers());
-        if(marker != null){
-            return marker;
-        }
-        marker = Marker.createR8();
-        Section<StringId> stringSection = getSection(SectionType.STRING_ID);
 
-        StringId stringId = stringSection.createItem();
-        marker.setStringId(stringId);
 
-        marker.save();
-
-        return marker;
-    }
-    public void addMarker(Marker marker) {
-        StringId stringId = marker.getStringId();
-        if(stringId == null){
-            Section<StringId> stringSection = getSection(SectionType.STRING_ID);
-            stringId = stringSection.createItem();
-            marker.setStringId(stringId);
-        }
-        marker.save();
-    }
-    @Override
-    public Iterator<Marker> getMarkers() {
-        return getDexLayout().getMarkers();
-    }
-    @Override
-    public void refreshFull() throws DexException {
-        getDexLayout().refreshFull();
-    }
-    public void sortSection(SectionType<?>[] order){
-        refresh();
-        getDexLayout().sortSection(order);
-        refresh();
-    }
-    public void clearPoolMap(SectionType<?> sectionType){
-        getDexLayout().clearPoolMap(sectionType);
-    }
-    @Override
-    public void clearPoolMap(){
-        getDexLayout().clearPoolMap();
-    }
-    public void sortStrings(){
-        getDexLayout().sortStrings();
-    }
-    public Iterator<DexInstruction> getDexInstructions(){
-        return new IterableIterator<DexClass, DexInstruction>(getDexClasses()){
-            @Override
-            public Iterator<DexInstruction> iterator(DexClass element) {
-                return element.getDexInstructions();
-            }
-        };
-    }
-    public Iterator<DexInstruction> getDexInstructionsCloned(){
-        return new IterableIterator<DexClass, DexInstruction>(getDexClassesCloned()){
-            @Override
-            public Iterator<DexInstruction> iterator(DexClass element) {
-                return element.getDexInstructions();
-            }
-        };
-    }
-    public Iterator<ClassId> getClassIds(Predicate<? super TypeKey> filter){
-        return FilterIterator.of(getItems(SectionType.CLASS_ID),
-                classId -> filter == null || filter.test(classId.getKey()));
-    }
-    public Iterator<ClassId> getClassIdsCloned(Predicate<? super TypeKey> filter){
-        return FilterIterator.of(getClonedItems(SectionType.CLASS_ID),
-                classId -> filter == null || filter.test(classId.getKey()));
-    }
-    public Iterator<TypeId> getTypes(){
-        return getItems(SectionType.TYPE_ID);
-    }
-    public <T1 extends SectionItem> Section<T1> getSection(SectionType<T1> sectionType){
-        return getDexLayout().get(sectionType);
-    }
     @Override
     public void refresh() {
-        getDexLayout().refresh();
-    }
-    public DexLayoutBlock getDexLayout() {
-        return dexLayoutBlock;
+        getContainerBlock().refresh();
+        layoutController.refreshController();
     }
 
-    public boolean isEmpty(){
-        return getDexLayout().isEmpty();
+    @Override
+    public void refreshFull() {
+        layoutController.refreshController();
+        getContainerBlock().refreshFull();
+        layoutController.refreshController();
     }
-    public int getIndex(){
-        DexDirectory directory = getDexDirectory();
-        if(directory != null){
-            return directory.indexOf(this);
+
+    public void clearEmptySections() {
+        for (DexLayout dexLayout : this) {
+            dexLayout.clearEmptySections();
         }
-        return -1;
     }
+    public Iterator<DexClass> getSubTypes(TypeKey typeKey){
+        return new IterableIterator<DexLayout, DexClass>(iterator()) {
+            @Override
+            public Iterator<DexClass> iterator(DexLayout element) {
+                return element.getExtendingOrImplementing(typeKey);
+            }
+        };
+    }
+    public Iterator<DexInstruction> getDexInstructions() {
+        return new IterableIterator<DexLayout, DexInstruction>(iterator()) {
+            @Override
+            public Iterator<DexInstruction> iterator(DexLayout element) {
+                return element.getDexInstructions();
+            }
+        };
+    }
+    public Iterator<DexInstruction> getDexInstructionsCloned() {
+        return new IterableIterator<DexLayout, DexInstruction>(iterator()) {
+            @Override
+            public Iterator<DexInstruction> iterator(DexLayout element) {
+                return element.getDexInstructionsCloned();
+            }
+        };
+    }
+
+    @Override
+    public DexClassRepository getRootRepository() {
+        DexDirectory dexDirectory = getDexDirectory();
+        if (dexDirectory != null) {
+            return dexDirectory.getRootRepository();
+        }
+        return this;
+    }
+    @Override
+    public Iterator<DexClassModule> modules() {
+        return ObjectsUtil.cast(iterator());
+    }
+
+    public int clearDuplicateData(){
+        int result = 0;
+        for(DexLayout dexLayout : this){
+            result += dexLayout.clearDuplicateData();
+        }
+        return result;
+    }
+    public int clearUnused(){
+        int result = 0;
+        for(DexLayout dexLayout : this){
+            result += dexLayout.clearUnused();
+        }
+        return result;
+    }
+
     public boolean merge(DexClass dexClass){
         return merge(new DexMergeOptions(true), dexClass);
     }
@@ -337,89 +196,152 @@ public class DexFile implements DexClassRepository, Closeable,
         return merge(new DexMergeOptions(true), classId);
     }
     public boolean merge(MergeOptions options, ClassId classId){
-        return getDexLayout().merge(options, classId);
+        return getOrCreateFirst().merge(options, classId);
     }
     public boolean merge(MergeOptions options, DexFile dexFile){
-        if(dexFile == null || dexFile.isEmpty()){
+        if(dexFile == null){
             return false;
         }
-        return getDexLayout().merge(options, dexFile.getDexLayout());
-    }
-    public void parseSmaliDirectory(File dir) throws IOException {
-        requireNotClosed();
-        if(!dir.isDirectory()){
-            throw new FileNotFoundException("No such directory: " + dir);
+        DexLayout dexLayout = dexFile.getFirst();
+        if (dexLayout == null) {
+            return false;
         }
-        FileIterator iterator = new FileIterator(dir, FileIterator.getExtensionFilter(".smali"));
-        FileByteSource byteSource = new FileByteSource();
-        SmaliReader reader = new SmaliReader(byteSource);
-        DexLayoutBlock layout = getDexLayout();
-        while (iterator.hasNext()) {
-            reader.reset();
-            File file = iterator.next();
-            byteSource.setFile(file);
-            reader.setOrigin(Origin.createNew(file));
-            SmaliClass smaliClass = new SmaliClass();
-            smaliClass.parse(reader);
-            layout.fromSmali(smaliClass);
+        return getOrCreateFirst().merge(options, dexLayout);
+    }
+    public boolean merge(MergeOptions options, DexLayout dexLayout){
+        if(dexLayout == null || dexLayout.isEmpty()){
+            return false;
         }
-        shrink();
+        return getOrCreateFirst().merge(options, dexLayout);
     }
-    public void parseSmaliFile(File file) throws IOException {
-        requireNotClosed();
-        fromSmali(SmaliReader.of(file));
+    public void combineFrom(DexLayout dexLayout) {
+        getContainerBlock().combineFrom(dexLayout.getDexLayoutBlock());
     }
-    public void fromSmaliAll(SmaliReader reader) throws IOException {
-        reader.skipWhitespacesOrComment();
-        while (!reader.finished()){
-            fromSmali(reader);
-            reader.skipWhitespacesOrComment();
-        }
+    public void combineFrom(MergeOptions options, DexLayout dexLayout) {
+        getContainerBlock().combineFrom(options, dexLayout.getDexLayoutBlock());
     }
-    public DexClass fromSmali(SmaliReader reader) throws IOException {
-        requireNotClosed();
-        SmaliClass smaliClass = new SmaliClass();
-        smaliClass.parse(reader);
-        DexClass dexClass = fromSmali(smaliClass);
-        reader.skipWhitespacesOrComment();
-        return dexClass;
+    public void combineFrom(DexFile dexFile) {
+        getContainerBlock().combineFrom(dexFile.getContainerBlock());
     }
-    public DexClass fromSmali(SmaliClass smaliClass) throws IOException {
-        requireNotClosed();
-        ClassId classId = getDexLayout().fromSmali(smaliClass);
-        return create(classId);
+    public void combineFrom(MergeOptions options, DexFile dexFile) {
+        getContainerBlock().combineFrom(options, dexFile.getContainerBlock());
     }
-
-    public byte[] getBytes() {
+    private void requireNotClosed() throws IOException {
         if(isClosed()){
-            return null;
+            throw new IOException("Closed");
         }
+    }
+    public boolean isClosed() {
+        return closed;
+    }
+    @Override
+    public void close() throws IOException {
+        if(!closed){
+            closed = true;
+            getContainerBlock().clear();
+        }
+    }
+    public byte[] getBytes() {
         if(isEmpty()){
             return new byte[0];
         }
-        return getDexLayout().getBytes();
+        return getContainerBlock().getBytes();
     }
     public void write(File file) throws IOException {
-        requireNotClosed();
         OutputStream outputStream = FileUtil.outputStream(file);;
         write(outputStream);
         outputStream.close();
     }
     public void write(OutputStream outputStream) throws IOException {
-        requireNotClosed();
-        byte[] bytes = getBytes();
-        outputStream.write(bytes, 0, bytes.length);
+        getContainerBlock().writeBytes(outputStream);
     }
 
-    public String printSectionInfo(){
-        return getDexLayout().getMapList().toString();
+    public void parseSmaliDirectory(File dir) throws IOException {
+        File fileInfo = new File(dir, DexFileInfo.FILE_NAME);
+        if (fileInfo.isFile()) {
+            DexFileInfo.readJson(fileInfo).applyTo(this);
+        }
+        List<File> layoutDir = listSmaliLayouts(dir);
+        if (layoutDir != null) {
+            int size = layoutDir.size();
+            for (int i = 0; i < size; i++) {
+                File file = layoutDir.get(i);
+                DexLayout layout = getOrCreateAt(i);
+                layout.parseSmaliDirectory(file);
+            }
+        } else {
+            getOrCreateFirst().parseSmaliDirectory(dir);
+        }
     }
     public void writeSmali(SmaliWriter writer, File root) throws IOException {
         requireNotClosed();
-        File dir = new File(root, buildSmaliDirectoryName());
-        for(DexClass dexClass : this){
-            dexClass.writeSmali(writer, dir);
+        root = new File(root, buildSmaliDirectoryName());
+        DexFileInfo fileInfo = DexFileInfo.fromDex(this);
+        fileInfo.saveToDirectory(root);
+        if (!isMultiLayout()) {
+            DexLayout first = getFirst();
+            if (first != null) {
+                first.writeSmali(writer, root);
+            }
+        } else {
+            int size = size();
+            for(int i = 0; i < size; i++) {
+                DexLayout dexLayout = getLayout(i);
+                String name = "layout" + i;
+                File dir = new File(root, name);
+                dexLayout.writeSmali(writer, dir);
+            }
         }
+    }
+
+    private List<File> listSmaliLayouts(File dir) {
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return null;
+        }
+        List<File> results = new ArrayCollection<>();
+        for (File file : files) {
+            if (file.isFile()) {
+                if (file.getName().equals(DexFileInfo.FILE_NAME)) {
+                    continue;
+                }
+                return null;
+            }
+            if (isLayoutDirectory(file)) {
+                results.add(file);
+            } else {
+                return null;
+            }
+        }
+        if (results.isEmpty()) {
+            return null;
+        }
+        results.sort(CompareUtil.getToStringComparator());
+        return results;
+    }
+    private boolean isLayoutDirectory(File dir) {
+        if (!dir.isDirectory()) {
+            return false;
+        }
+        String name = dir.getName();
+        String prefix = "layout";
+        if (!name.startsWith(prefix)) {
+            return false;
+        }
+        name = name.substring(prefix.length());
+        try {
+            int i = Integer.parseInt(name);
+            return i >= 0;
+        } catch (NumberFormatException ignored) {
+            return false;
+        }
+    }
+    public String getFileName(){
+        String simpleName = getSimpleName();
+        if(simpleName == null){
+            return buildSmaliDirectoryName() + ".dex";
+        }
+        return FileUtil.getFileName(simpleName);
     }
     public String buildSmaliDirectoryName() {
         DexDirectory dexDirectory = getDexDirectory();
@@ -443,111 +365,34 @@ public class DexFile implements DexClassRepository, Closeable,
         i++;
         return "classes" + i;
     }
-    public String getFileName(){
-        String simpleName = getSimpleName();
-        if(simpleName == null){
-            return buildSmaliDirectoryName() + ".dex";
-        }
-        return FileUtil.getFileName(simpleName);
-    }
 
-    private void requireNotClosed() throws IOException {
-        if(isClosed()){
-            throw new IOException("Closed");
-        }
-    }
-    public boolean isClosed() {
-        return closed;
-    }
-    @Override
-    public void close() throws IOException {
-        if(!closed){
-            closed = true;
-            getDexLayout().clear();
-        }
-    }
 
-    @Override
-    public String toString() {
+    public String printSectionInfo() {
+        if (!isMultiLayout()) {
+            DexLayout layout = getFirst();
+            if (layout != null) {
+                return layout.printSectionInfo();
+            }
+            return "empty";
+        }
         StringBuilder builder = new StringBuilder();
-        builder.append(getSimpleName());
-        builder.append(", version = ");
-        builder.append(getVersion());
-        builder.append(", classes = ");
-        builder.append(getDexClassesCount());
-        List<Marker> markers = CollectionUtil.toList(getMarkers());
-        int size = markers.size();
-        if(size != 0){
-            builder.append(", markers = ");
-            builder.append(size);
-            if(size > 10){
-                size = 10;
-            }
-            for(int i = 0; i < size; i++){
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            if (i != 0) {
                 builder.append('\n');
-                builder.append(markers.get(i));
             }
+            DexLayout layout = getLayout(i);
+            builder.append("layout");
+            builder.append(i);
+            builder.append('\n');
+            builder.append(layout.printSectionInfo());
         }
         return builder.toString();
     }
-
-    public static DexFile read(byte[] dexBytes) throws IOException {
-        return read(new BlockReader(dexBytes));
-    }
-    public static DexFile read(InputStream inputStream) throws IOException {
-        return read(new BlockReader(inputStream));
-    }
-    public static DexFile read(File file) throws IOException {
-        return read(new BlockReader(file));
-    }
-    public static DexFile read(BlockReader reader) throws IOException {
-        DexLayoutBlock dexLayoutBlock = new DexLayoutBlock();
-        dexLayoutBlock.readBytes(reader);
-        reader.close();
-        return new DexFile(dexLayoutBlock);
-    }
-    public static DexFile readStrings(BlockReader reader) throws IOException {
-        DexLayoutBlock dexLayoutBlock = new DexLayoutBlock();
-        dexLayoutBlock.readStrings(reader);
-        return new DexFile(dexLayoutBlock);
-    }
-    public static DexFile readClassIds(BlockReader reader) throws IOException {
-        DexLayoutBlock dexLayoutBlock = new DexLayoutBlock();
-        dexLayoutBlock.readClassIds(reader);
-        return new DexFile(dexLayoutBlock);
-    }
-    public static DexFile readSections(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
-        DexLayoutBlock dexLayoutBlock = new DexLayoutBlock();
-        dexLayoutBlock.readSections(reader, filter);
-        return new DexFile(dexLayoutBlock);
-    }
-    public static DexFile readStrings(InputStream inputStream) throws IOException {
-        return readStrings(new BlockReader(inputStream));
-    }
-    public static DexFile readClassIds(InputStream inputStream) throws IOException {
-        return readClassIds(new BlockReader(inputStream));
+    public static DexFile createDefault() {
+        return new DexFile(DexContainerBlock.createDefault());
     }
 
-    public static DexFile createDefault(){
-        return new DexFile(DexLayoutBlock.createDefault());
-    }
-
-    public static DexFile findDexFile(ClassId classId){
-        if(classId == null){
-            return null;
-        }
-        return DexFile.findDexFile(classId.getParentInstance(DexLayoutBlock.class));
-    }
-    public static DexFile findDexFile(DexLayoutBlock dexLayoutBlock){
-        if(dexLayoutBlock == null){
-            return null;
-        }
-        Object obj = dexLayoutBlock.getTag();
-        if(!(obj instanceof DexFile)){
-            return null;
-        }
-        return  (DexFile) obj;
-    }
     public static int getDexFileNumber(String name){
         int i = name.lastIndexOf('/');
         if(i < 0){
@@ -580,5 +425,22 @@ public class DexFile implements DexClassRepository, Closeable,
             i = 2;
         }
         return "classes" + i + ".dex";
+    }
+
+
+
+    public static DexFile read(byte[] dexBytes) throws IOException {
+        return read(new BlockReader(dexBytes));
+    }
+    public static DexFile read(InputStream inputStream) throws IOException {
+        return read(new BlockReader(inputStream));
+    }
+    public static DexFile read(BlockReader reader) throws IOException {
+        DexContainerBlock containerBlock = new DexContainerBlock();
+        containerBlock.readBytes(reader);
+        return new DexFile(containerBlock);
+    }
+    public static DexFile read(File file) throws IOException {
+        return read(new BlockReader(file));
     }
 }

@@ -16,6 +16,7 @@
 package com.reandroid.dex.header;
 
 import com.reandroid.arsc.base.BlockRefresh;
+import com.reandroid.arsc.item.IntegerReference;
 
 public class DexContainerInfo extends CountAndOffsetV41 implements BlockRefresh {
 
@@ -30,6 +31,9 @@ public class DexContainerInfo extends CountAndOffsetV41 implements BlockRefresh 
         super.setCount(count);
     }
 
+    public IntegerReference getOffsetReference() {
+        return getSecond();
+    }
 
     @Override
     public void refresh() {
@@ -40,10 +44,7 @@ public class DexContainerInfo extends CountAndOffsetV41 implements BlockRefresh 
         if (dexHeader == null) {
             return;
         }
-        // TODO: This method is incorrect, the proper file size value is the sum of
-        //  all dex container. We don't have a sample dex file with multi dex container
-        //  for the moment, thus we just assume as single dex container.
-        setFileSize(dexHeader.fileSize.get());
+        setFileSize(dexHeader.getFileSize());
 
         setOffset(dexHeader.getOffset());
     }

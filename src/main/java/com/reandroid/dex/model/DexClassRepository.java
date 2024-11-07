@@ -39,21 +39,115 @@ import java.util.function.Predicate;
 
 public interface DexClassRepository extends FullRefresh, BlockRefresh {
 
-    int getDexClassesCount();
-    DexClass getDexClass(TypeKey typeKey);
+    Iterator<DexClassModule> modules();
+    DexClassRepository getRootRepository();
+
+    default int getVersion() {
+        int version = 0;
+        Iterator<DexClassModule> iterator = modules();
+        while (iterator.hasNext()) {
+            int v = iterator.next().getVersion();
+            if (v > version) {
+                version = v;
+            }
+        }
+        return version;
+    }
+    default void setVersion(int version) {
+        Iterator<DexClassModule> iterator = modules();
+        while (iterator.hasNext()) {
+            iterator.next().setVersion(version);
+        }
+    }
+
+    default int getDexClassesCount() {
+        int result = 0;
+        Iterator<DexClassModule> iterator = modules();
+        while (iterator.hasNext()) {
+            result += iterator.next().getDexClassesCount();
+        }
+        return result;
+    }
+    default int shrink() {
+        int result = 0;
+        Iterator<DexClassModule> iterator = modules();
+        while (iterator.hasNext()) {
+            result += iterator.next().shrink();
+        }
+        return result;
+    }
+    /**
+     * Use getDexClass(TypeKey)
+     * */
+    @Deprecated
     default DexClass getDexClass(String name) {
         return getDexClass(TypeKey.create(name));
     }
-    Iterator<DexClass> getDexClasses(Predicate<? super TypeKey> filter);
-    Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter);
-    int shrink();
-    default Iterator<DexClass> searchExtending(TypeKey typeKey){
-        return EmptyIterator.of();
+
+    default DexClass getDexClass(TypeKey typeKey) {
+        return searchClass(modules(), typeKey);
+    }
+
+    default DexClass searchClass(TypeKey typeKey) {
+        return searchClass(getRootRepository().modules(), typeKey);
+    }
+    default DexClass searchClass(Iterator<DexClassModule> modules, TypeKey typeKey) {
+        while (modules.hasNext()) {
+            DexClass dexClass = modules.next().getDexClass(typeKey);
+            if (dexClass != null) {
+                return dexClass;
+            }
+        }
+        return null;
+    }
+
+    default Iterator<DexClass> getDexClasses(Predicate<? super TypeKey> filter) {
+        return new IterableIterator<DexClassModule, DexClass>(modules()) {
+            @Override
+            public Iterator<DexClass> iterator(DexClassModule element) {
+                return element.getDexClasses(filter);
+            }
+        };
+    }
+    default Iterator<DexClass> getDexClassesCloned(Predicate<? super TypeKey> filter) {
+        return new IterableIterator<DexClassModule, DexClass>(modules()) {
+            @Override
+            public Iterator<DexClass> iterator(DexClassModule element) {
+                return element.getDexClassesCloned(filter);
+            }
+        };
+    }
+
+    default Iterator<DexClass> searchExtending(TypeKey typeKey) {
+        UniqueIterator<DexClass> iterator = new UniqueIterator<>(
+                new IterableIterator<DexClassModule, DexClass>(getRootRepository().modules()) {
+                    @Override
+                    public Iterator<DexClass> iterator(DexClassModule element) {
+                        return element.getExtendingClasses(typeKey);
+                    }
+                });
+        iterator.exclude(getDexClass(typeKey));
+        return iterator;
     }
     default Iterator<DexClass> searchImplementations(TypeKey typeKey){
-        return EmptyIterator.of();
+        UniqueIterator<DexClass> iterator = new UniqueIterator<>(
+                new IterableIterator<DexClassModule, DexClass>(getRootRepository().modules()) {
+                    @Override
+                    public Iterator<DexClass> iterator(DexClassModule element) {
+                        return element.getImplementClasses(typeKey);
+                    }
+                });
+        iterator.exclude(getDexClass(typeKey));
+        return iterator;
     }
-    <T extends SectionItem> Iterator<Section<T>> getSections(SectionType<T> sectionType);
+    default <T extends SectionItem> Iterator<Section<T>> getSections(SectionType<T> sectionType) {
+        return new IterableIterator<DexClassModule, Section<T>>(modules()) {
+            @Override
+            public Iterator<Section<T>> iterator(DexClassModule element) {
+                return element.getSections(sectionType);
+            }
+        };
+    }
     default <T extends SectionItem> Iterator<T> getItems(SectionType<T> sectionType) {
         return new IterableIterator<Section<T>, T>(getSections(sectionType)) {
             @Override
@@ -78,11 +172,10 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
             }
         };
     }
-    default <T extends SectionItem> T getItem(SectionType<T> sectionType, Key key){
-        Iterator<Section<T>> iterator = getSections(sectionType);
-        while (iterator.hasNext()){
-            Section<T> section = iterator.next();
-            T item = section.get(key);
+    default <T extends SectionItem> T getItem(SectionType<T> sectionType, Key key) {
+        Iterator<DexClassModule> iterator = modules();
+        while (iterator.hasNext()) {
+            T item = iterator.next().getItem(sectionType, key);
             if(item != null){
                 return item;
             }
@@ -125,10 +218,49 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
     default boolean containsClass(TypeKey key){
         return contains(SectionType.CLASS_ID, key);
     }
-    <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter);
-    <T1 extends SectionItem> boolean removeEntriesWithKey(SectionType<T1> sectionType, Predicate<? super Key> filter);
-    <T1 extends SectionItem> boolean removeEntry(SectionType<T1> sectionType, Key key);
-    void clearPoolMap();
+
+    default <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter) {
+        Iterator<DexClassModule> iterator = modules();
+        boolean result = false;
+        while (iterator.hasNext()) {
+            DexClassModule module = iterator.next();
+            if (module.removeEntries(sectionType, filter)) {
+                result = true;
+            }
+        }
+        return result;
+    }
+
+    default <T1 extends SectionItem> boolean removeEntriesWithKey(SectionType<T1> sectionType, Predicate<? super Key> filter) {
+        Iterator<DexClassModule> iterator = modules();
+        boolean result = false;
+        while (iterator.hasNext()) {
+            DexClassModule module = iterator.next();
+            if (module.removeEntriesWithKey(sectionType, filter)) {
+                result = true;
+            }
+        }
+        return result;
+    }
+
+    default <T1 extends SectionItem> boolean removeEntry(SectionType<T1> sectionType, Key key) {
+        Iterator<DexClassModule> iterator = modules();
+        boolean result = false;
+        while (iterator.hasNext()) {
+            DexClassModule module = iterator.next();
+            if (module.removeEntry(sectionType, key)) {
+                result = true;
+            }
+        }
+        return result;
+    }
+
+    default void clearPoolMap() {
+        Iterator<DexClassModule> iterator = modules();
+        while (iterator.hasNext()) {
+            iterator.next().clearPoolMap();
+        }
+    }
 
     default <T extends SectionItem> Iterator<T> getClonedItems(SectionType<T> sectionType, Predicate<? super T> filter) {
         return FilterIterator.of(getClonedItems(sectionType), filter);
@@ -210,7 +342,18 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
     default boolean removeClass(TypeKey typeKey) {
         return removeEntry(SectionType.CLASS_ID, typeKey);
     }
-    boolean removeClasses(Predicate<? super DexClass> filter);
+
+    default boolean removeClasses(Predicate<? super DexClass> filter) {
+        Iterator<DexClassModule> iterator = modules();
+        boolean result = false;
+        while (iterator.hasNext()) {
+            DexClassModule module = iterator.next();
+            if (module.removeClasses(filter)) {
+                result = true;
+            }
+        }
+        return result;
+    }
     default boolean removeClassesWithKeys(Predicate<? super TypeKey> filter) {
         return removeEntriesWithKey(SectionType.CLASS_ID, ObjectsUtil.cast(filter));
     }
@@ -277,7 +420,14 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         };
     }
 
-    Iterator<Marker> getMarkers();
+    default Iterator<Marker> getMarkers() {
+        return new IterableIterator<DexClassModule, Marker>(modules()) {
+            @Override
+            public Iterator<Marker> iterator(DexClassModule element) {
+                return element.getMarkers();
+            }
+        };
+    }
     default void clearMarkers(){
         Iterator<Marker> iterator = getMarkers();
         while (iterator.hasNext()) {

@@ -18,6 +18,7 @@ package com.reandroid.dex.smali.model;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
+import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
@@ -84,6 +85,13 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
 
     public SmaliAnnotationSet getAnnotation() {
         return annotation;
+    }
+    public AnnotationSetKey getAnnotationSetKey() {
+        SmaliAnnotationSet annotationSet = getAnnotation();
+        if (annotationSet != null) {
+            return annotationSet.getKey();
+        }
+        return null;
     }
     public SmaliAnnotationSet getOrCreateAnnotation() {
         SmaliAnnotationSet directory = getAnnotation();

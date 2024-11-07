@@ -75,7 +75,7 @@ public class InstructionException extends DexException {
         if(dexLayoutBlock == null){
             return;
         }
-        String simpleName = dexLayoutBlock.getSimpleName();
+        String simpleName = dexLayoutBlock.getDexContainerBlock().getSimpleName();
         if(simpleName == null){
             return;
         }

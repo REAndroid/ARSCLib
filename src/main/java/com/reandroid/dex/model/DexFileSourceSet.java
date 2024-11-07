@@ -286,7 +286,7 @@ public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable
             return;
         }
         if(mReadStringsMode){
-            dexFile = DexFile.readStrings(dexSource.openStream());
+            throw new IOException("Strings mode not implemented");
         }else {
             dexFile = DexFile.read(dexSource.openStream());
         }
