@@ -34,7 +34,7 @@ public class IndirectStringReference extends IdItemIndirectReference<StringId>{
         return null;
     }
     public void setString(String text) {
-        setItem(StringKey.create(text));
+        setKey(StringKey.create(text));
     }
 
     public static boolean equals(IndirectStringReference reference1, IndirectStringReference reference2) {

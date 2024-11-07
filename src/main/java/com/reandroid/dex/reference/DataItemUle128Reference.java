@@ -62,7 +62,7 @@ public class DataItemUle128Reference<T extends DataItem> extends Ule128Item impl
         updateItemUsage();
     }
     @Override
-    public void setItem(Key key){
+    public void setKey(Key key){
         setItem(getOrCreateSectionItem(getSectionType(), key));
     }
     @Override

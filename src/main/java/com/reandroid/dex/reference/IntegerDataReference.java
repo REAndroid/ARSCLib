@@ -65,7 +65,7 @@ public class IntegerDataReference<T extends DataItem> extends IntegerItem
     }
 
     @Override
-    public void setItem(Key key) {
+    public void setKey(Key key) {
         setItem(getSectionTool().getOrCreateSectionItem(getSectionType(), key));
     }
 
@@ -125,7 +125,7 @@ public class IntegerDataReference<T extends DataItem> extends IntegerItem
         }
         Key key2 = key.replaceKey(search, replace);
         if(key != key2){
-            setItem(key2);
+            setKey(key2);
         }
     }
 

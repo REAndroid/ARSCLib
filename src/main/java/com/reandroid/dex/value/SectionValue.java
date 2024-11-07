@@ -59,7 +59,7 @@ public abstract class SectionValue<T extends SectionItem> extends DexValueBlock<
         updateUsageType(data);
     }
     @Override
-    public void setItem(Key key){
+    public void setKey(Key key){
         Section<T> section = getOrCreateSection();
         T item = section.getOrCreate(key);
         setItem(item);
@@ -103,12 +103,12 @@ public abstract class SectionValue<T extends SectionItem> extends DexValueBlock<
     public void merge(DexValueBlock<?> valueBlock){
         super.merge(valueBlock);
         SectionValue<T> value = (SectionValue<T>) valueBlock;
-        setItem(value.getKey());
+        this.setKey(value.getKey());
     }
     @Override
     public void fromSmali(SmaliValue smaliValue) {
         SmaliValueSectionData smaliValueSectionData = (SmaliValueSectionData) smaliValue;
-        setItem(smaliValueSectionData.getValue());
+        this.setKey(smaliValueSectionData.getValue());
     }
 
     @Override

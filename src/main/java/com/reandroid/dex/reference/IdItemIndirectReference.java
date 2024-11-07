@@ -74,7 +74,7 @@ public class IdItemIndirectReference<T extends IdItem> extends IndirectItem<Sect
         return getBlockItem().getSectionItem(getSectionType(), i);
     }
     @Override
-    public void setItem(Key key){
+    public void setKey(Key key){
         setItem(getBlockItem().getOrCreateSectionItem(getSectionType(), key));
     }
     @Override
@@ -166,7 +166,7 @@ public class IdItemIndirectReference<T extends IdItem> extends IndirectItem<Sect
         }
         Key key2 = key.replaceKey(search, replace);
         if(key != key2){
-            setItem(key2);
+            setKey(key2);
         }
     }
 

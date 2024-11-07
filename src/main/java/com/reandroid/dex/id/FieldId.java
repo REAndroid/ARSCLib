@@ -73,7 +73,7 @@ public class FieldId extends IdItem implements Comparable<FieldId>{
         return (TypeKey) defining.getKey();
     }
     public void setDefining(TypeKey typeKey){
-        defining.setItem(typeKey);
+        defining.setKey(typeKey);
     }
     public TypeId getDefiningId(){
         return defining.getItem();
@@ -86,7 +86,7 @@ public class FieldId extends IdItem implements Comparable<FieldId>{
         return (TypeKey) fieldType.getKey();
     }
     public void setFieldType(TypeKey typeKey) {
-        fieldType.setItem(typeKey);
+        fieldType.setKey(typeKey);
     }
     public TypeId getFieldTypeId(){
         return fieldType.getItem();
@@ -126,9 +126,9 @@ public class FieldId extends IdItem implements Comparable<FieldId>{
         if(Objects.equals(key, old)){
             return;
         }
-        defining.setItem(key.getDeclaring());
+        defining.setKey(key.getDeclaring());
         nameReference.setString(key.getName());
-        fieldType.setItem(key.getType());
+        fieldType.setKey(key.getType());
         keyChanged(old);
     }
     @Override

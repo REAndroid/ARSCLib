@@ -350,7 +350,7 @@ public class MethodDef extends Def<MethodId>{
         MethodDef comingMethod = (MethodDef) def;
         CodeItem comingCode = comingMethod.getCodeItem();
         if(comingCode != null){
-            this.codeOffset.setItem(comingCode.getKey());
+            this.codeOffset.setKey(comingCode.getKey());
         }
     }
     public void fromSmali(SmaliMethod smaliMethod) throws IOException {

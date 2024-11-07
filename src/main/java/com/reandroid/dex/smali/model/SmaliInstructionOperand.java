@@ -188,15 +188,17 @@ public abstract class SmaliInstructionOperand extends Smali {
             return 31 + getNumber();
         }
     }
-    public static class SmaliKeyOperand extends SmaliInstructionOperand {
+    public static class SmaliKeyOperand extends SmaliInstructionOperand implements KeyReference {
         private Key key;
 
         public SmaliKeyOperand(){
             super();
         }
+        @Override
         public Key getKey() {
             return key;
         }
+        @Override
         public void setKey(Key key) {
             this.key = key;
         }

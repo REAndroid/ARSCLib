@@ -73,8 +73,8 @@ public class ProtoId extends IdItem implements Comparable<ProtoId> {
             return;
         }
         shorty.setString(key.getShorty());
-        returnType.setItem(key.getReturnType());
-        parameters.setItem(key.getParameterListKey());
+        returnType.setKey(key.getReturnType());
+        parameters.setKey(key.getParameterListKey());
         keyChanged(old);
     }
     public int getParameterRegistersCount(){
@@ -119,7 +119,7 @@ public class ProtoId extends IdItem implements Comparable<ProtoId> {
         return parameters;
     }
     public void setParameters(TypeListKey key){
-        parameters.setItem(key);
+        parameters.setKey(key);
     }
     public TypeListKey getParameters(){
         return parameters.getKey();
@@ -134,7 +134,7 @@ public class ProtoId extends IdItem implements Comparable<ProtoId> {
         return shorty.getString();
     }
     public void setShorty(StringKey key){
-        shorty.setItem(key);
+        shorty.setKey(key);
     }
     public void setShorty(String shortyString){
         shorty.setString(shortyString);

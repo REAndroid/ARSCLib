@@ -96,7 +96,7 @@ public class RClassParent extends DexClass {
             return;
         }
         TypeValue typeValue = arrayValue.createNext(DexValueType.TYPE);
-        typeValue.setItem(getKey().createInnerClass(simpleName));
+        typeValue.setKey(getKey().createInnerClass(simpleName));
     }
     public Iterator<String> getMemberSimpleNames(){
         return ComputeIterator.of(getMemberNames(), DexUtils::getSimpleInnerName);

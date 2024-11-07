@@ -64,7 +64,7 @@ public class Ins4rcc extends Size8Ins implements RegistersSet, DualKeyReference 
     }
     @Override
     public void setKey2(Key key) {
-        reference2.setItem(key);
+        reference2.setKey(key);
     }
     public ProtoId getSectionId2() {
         return reference2.getItem();

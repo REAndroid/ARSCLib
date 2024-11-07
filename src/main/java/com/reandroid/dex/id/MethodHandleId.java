@@ -79,7 +79,7 @@ public class MethodHandleId extends IdItem implements Comparable<MethodHandleId>
         member.setItem(idItem);
     }
     public void setMember(Key key){
-        member.setItem(key);
+        member.setKey(key);
     }
     public void set(MethodHandleType type, Key key) {
         setMethodHandleType(type);

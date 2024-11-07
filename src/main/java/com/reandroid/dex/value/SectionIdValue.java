@@ -31,9 +31,6 @@ public abstract class SectionIdValue<T extends IdItem> extends SectionValue<T> {
         super(sectionType, type);
     }
 
-    public void setKey(Key key) {
-        setItem(key);
-    }
     @Override
     public Key getKey(){
         T item = getItem();
@@ -79,7 +76,7 @@ public abstract class SectionIdValue<T extends IdItem> extends SectionValue<T> {
         Key key = getKey();
         Key key2 = key.replaceKey(search, replace);
         if(key != key2){
-            setItem(key2);
+            this.setKey(key2);
         }
     }
 

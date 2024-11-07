@@ -41,10 +41,10 @@ public class DebugStartLocalExtended extends DebugStartLocal {
         return (StringKey) mSignature.getKey();
     }
     public void setSignature(String signature){
-        this.mSignature.setItem(StringKey.create(signature));
+        this.mSignature.setKey(StringKey.create(signature));
     }
     public void setSignature(StringKey key){
-        this.mSignature.setItem(key);
+        this.mSignature.setKey(key);
     }
 
     @Override
@@ -69,7 +69,7 @@ public class DebugStartLocalExtended extends DebugStartLocal {
     public void merge(DebugElement element){
         super.merge(element);
         DebugStartLocalExtended coming = (DebugStartLocalExtended) element;
-        this.mSignature.setItem(coming.mSignature.getKey());
+        this.mSignature.setKey(coming.mSignature.getKey());
     }
 
     @Override

@@ -23,7 +23,6 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.smali.model.SmaliDebug;
 import com.reandroid.dex.smali.model.SmaliDebugElement;
 import com.reandroid.dex.smali.model.SmaliDebugLocal;
 import com.reandroid.utils.collection.CombiningIterator;
@@ -72,7 +71,7 @@ public class DebugStartLocal extends DebugRegisterNumber {
         this.setName(StringKey.create(name));
     }
     public void setName(StringKey key){
-        this.mName.setItem(key);
+        this.mName.setKey(key);
     }
     public String getType(){
         TypeId typeId = mType.getItem();
@@ -88,10 +87,10 @@ public class DebugStartLocal extends DebugRegisterNumber {
         return (TypeKey) mType.getKey();
     }
     public void setType(String type){
-        this.mType.setItem(TypeKey.create(type));
+        this.mType.setKey(TypeKey.create(type));
     }
     public void setType(TypeKey typeKey){
-        this.mType.setItem(typeKey);
+        this.mType.setKey(typeKey);
     }
 
     @Override
@@ -121,8 +120,8 @@ public class DebugStartLocal extends DebugRegisterNumber {
     public void merge(DebugElement element){
         super.merge(element);
         DebugStartLocal coming = (DebugStartLocal) element;
-        this.mName.setItem(coming.mName.getKey());
-        this.mType.setItem(coming.mType.getKey());
+        this.mName.setKey(coming.mName.getKey());
+        this.mType.setKey(coming.mType.getKey());
     }
 
     @Override

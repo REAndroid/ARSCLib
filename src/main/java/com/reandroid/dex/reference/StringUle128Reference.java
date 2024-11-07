@@ -36,7 +36,7 @@ public class StringUle128Reference extends Ule128IdItemReference<StringId> imple
         return null;
     }
     public void setString(String text){
-        setItem(StringKey.create(text));
+        setKey(StringKey.create(text));
     }
 
     @Override

@@ -90,7 +90,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         if(Objects.equals(old, key)){
             return;
         }
-        this.classTypeId.setItem(key);
+        this.classTypeId.setKey(key);
         keyChanged(old);
     }
     public String getName(){
@@ -136,10 +136,10 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         return getSuperClassId().getKey();
     }
     public void setSuperClass(TypeKey typeKey){
-        this.superClassId.setItem(typeKey);
+        this.superClassId.setKey(typeKey);
     }
     public void setSuperClass(String superClass){
-        this.superClassId.setItem(new TypeKey(superClass));
+        this.superClassId.setKey(new TypeKey(superClass));
     }
     public SourceFile getSourceFile(){
         return sourceFile;
@@ -164,7 +164,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         return this.interfaces;
     }
     public void setInterfaces(TypeListKey typeListKey){
-        this.interfaces.setItem(typeListKey);
+        this.interfaces.setKey(typeListKey);
     }
 
     public Key getDalvikEnclosing(){
@@ -240,7 +240,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
 
         if(name != null){
             StringValue stringValue = nameElement.getOrCreateValue(DexValueType.STRING);
-            stringValue.setItem(new StringKey(name));
+            stringValue.setKey(new StringKey(name));
         }else {
             nameElement.getOrCreateValue(DexValueType.NULL);
         }
@@ -377,7 +377,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         return (ArrayKey) staticValues.getKey();
     }
     public void setStaticValues(ArrayKey staticValues){
-        this.staticValues.setItem(staticValues);
+        this.staticValues.setKey(staticValues);
     }
     public void setStaticValues(EncodedArray staticValues){
         this.staticValues.setItem(staticValues);
@@ -482,10 +482,10 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
             return;
         }
         accessFlagValue.set(classId.accessFlagValue.get());
-        superClassId.setItem(classId.superClassId.getKey());
-        sourceFile.setItem(classId.sourceFile.getKey());
-        interfaces.setItem(classId.interfaces.getKey());
-        annotationsDirectory.setItem(classId.annotationsDirectory.getKey());
+        superClassId.setKey(classId.superClassId.getKey());
+        sourceFile.setKey(classId.sourceFile.getKey());
+        interfaces.setKey(classId.interfaces.getKey());
+        annotationsDirectory.setKey(classId.annotationsDirectory.getKey());
         EncodedArray comingArray = classId.getStaticValuesEncodedArray();
         if(comingArray != null){
             EncodedArray encodedArray = staticValues.getOrCreate();

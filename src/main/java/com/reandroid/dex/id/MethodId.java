@@ -60,7 +60,7 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
         nameReference.setString(name);
     }
     public void setName(StringKey key){
-        nameReference.setItem(key);
+        nameReference.setKey(key);
     }
 
     IndirectStringReference getNameReference(){
@@ -71,7 +71,7 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
         return (TypeKey) defining.getKey();
     }
     public void setDefining(TypeKey typeKey){
-        defining.setItem(typeKey);
+        defining.setKey(typeKey);
     }
     public TypeId getDefiningId(){
         return defining.getItem();
@@ -153,9 +153,9 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
         if(key.equals(old)){
             return;
         }
-        defining.setItem(key.getDeclaring());
+        defining.setKey(key.getDeclaring());
         nameReference.setString(key.getName());
-        proto.setItem(key.getProtoKey());
+        proto.setKey(key.getProtoKey());
         keyChanged(old);
     }
     @Override

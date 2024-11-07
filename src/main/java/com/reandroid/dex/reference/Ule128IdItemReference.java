@@ -60,9 +60,9 @@ public class Ule128IdItemReference<T extends IdItem> extends Ule128Item implemen
         return null;
     }
     @Override
-    public void setItem(Key item){
+    public void setKey(Key key){
         DexSectionPool<T> pool = getPool(getSectionType());
-        setItem(pool.getOrCreate(item));
+        setItem(pool.getOrCreate(key));
     }
     @Override
     public SectionType<T> getSectionType(){

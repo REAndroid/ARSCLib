@@ -57,7 +57,7 @@ public class TypeListReference extends DataItemIndirectReference<TypeList> imple
         }else {
             key = new TypeListKey(new String[]{name});
         }
-        setItem(key);
+        setKey(key);
     }
     public void remove(int i){
         TypeListKey key = getKey();
@@ -65,7 +65,7 @@ public class TypeListReference extends DataItemIndirectReference<TypeList> imple
             return;
         }
         key = key.remove(i);
-        setItem(key);
+        setKey(key);
     }
     public TypeKey getType(int i){
         TypeId typeId = get(i);

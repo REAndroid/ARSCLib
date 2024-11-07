@@ -228,7 +228,7 @@ public class AnnotationItem extends DataItem
         setType(TypeKey.create(type));
     }
     public void setType(TypeKey typeKey){
-        typeId.setItem(typeKey);
+        typeId.setKey(typeKey);
     }
 
     public void replaceKeys(Key search, Key replace){

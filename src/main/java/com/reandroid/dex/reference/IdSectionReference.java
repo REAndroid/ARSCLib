@@ -72,7 +72,7 @@ public abstract class IdSectionReference<T extends IdItem> implements
     }
 
     @Override
-    public void setItem(Key key) {
+    public void setKey(Key key) {
         T item = getSectionTool().getOrCreateSection(getSectionType())
                 .getOrCreate(key);
         setItem(item);

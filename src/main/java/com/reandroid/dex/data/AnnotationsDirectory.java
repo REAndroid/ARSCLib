@@ -83,7 +83,7 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
     }
 
     public void setClassAnnotations(AnnotationSetKey setKey) {
-        header.classAnnotation.setItem(setKey);
+        header.classAnnotation.setKey(setKey);
     }
     public AnnotationSet getOrCreateClassAnnotations(){
         return header.classAnnotation.getOrCreate();
@@ -386,7 +386,7 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
         }
 
         public void merge(Header header){
-            classAnnotation.setItem(header.classAnnotation.getKey());
+            classAnnotation.setKey(header.classAnnotation.getKey());
         }
 
         @Override

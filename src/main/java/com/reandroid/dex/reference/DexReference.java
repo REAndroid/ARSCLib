@@ -19,15 +19,17 @@ import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.common.EditableItem;
 import com.reandroid.dex.common.SectionItem;
-import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.KeyReference;
 import com.reandroid.dex.sections.SectionType;
 
 public interface DexReference<T extends SectionItem> extends
-        IntegerReference, BlockRefresh, EditableItem {
+        IntegerReference, KeyReference, BlockRefresh, EditableItem {
+
     T getItem();
+
     void setItem(T item);
-    void setItem(Key item);
-    Key getKey();
+
     SectionType<T> getSectionType();
+
     void pullItem();
 }

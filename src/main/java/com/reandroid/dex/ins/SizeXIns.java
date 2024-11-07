@@ -169,7 +169,7 @@ public class SizeXIns extends Ins {
         return null;
     }
     public void setKey(Key key) {
-        sectionReference.setItem(key);
+        sectionReference.setKey(key);
     }
     /**
      * Use setKey

@@ -434,7 +434,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
             tryBlockCount.set(header.tryBlockCount.get());
             DebugInfo comingDebug = header.debugInfoOffset.getItem();
             if(comingDebug != null){
-                debugInfoOffset.setItem(comingDebug.getKey());
+                debugInfoOffset.setKey(comingDebug.getKey());
                 debugInfoOffset.addUniqueUser(codeItem);
             }
             instructionCodeUnits.set(header.instructionCodeUnits.get());

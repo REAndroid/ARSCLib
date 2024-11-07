@@ -47,7 +47,7 @@ public class CallSiteId extends IdItem implements Comparable<CallSiteId> {
     @Override
     public void setKey(Key key) {
         CallSiteKey callSiteKey = (CallSiteKey) key;
-        this.encodedArrayReference.setItem(callSiteKey.toArrayKey());
+        this.encodedArrayReference.setKey(callSiteKey.toArrayKey());
     }
 
     public String callSiteName() {

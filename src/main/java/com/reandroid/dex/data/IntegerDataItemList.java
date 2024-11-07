@@ -61,7 +61,7 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
         int size = keyList.size();
         setSize(size);
         for (int i = 0; i < size; i++) {
-            getReference(i).setItem(keyList.get(i));
+            getReference(i).setKey(keyList.get(i));
         }
     }
     public int size() {
@@ -88,7 +88,7 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
     }
     public T addNewItem(Key key) {
         IntegerDataReference<T> item = createNext();
-        item.setItem(key);
+        item.setKey(key);
         return item.getItem();
     }
     public void addNewItem(T item) {
@@ -110,7 +110,7 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
     }
     public T setItemKeyAt(int index, Key key) {
         IntegerDataReference<T> reference = getOrCreateReference(index);
-        reference.setItem(key);
+        reference.setKey(key);
         return reference.getItem();
     }
     public void getItemKeys(Key[] out) {

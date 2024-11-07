@@ -53,10 +53,10 @@ public class DebugSetSourceFile extends DebugElement {
         return (StringKey) mName.getKey();
     }
     public void setName(String name){
-        mName.setItem(StringKey.create(name));
+        mName.setKey(StringKey.create(name));
     }
     public void setName(StringKey key){
-        mName.setItem(key);
+        mName.setKey(key);
     }
 
     @Override
@@ -72,7 +72,7 @@ public class DebugSetSourceFile extends DebugElement {
     public void merge(DebugElement element){
         super.merge(element);
         DebugSetSourceFile coming = (DebugSetSourceFile) element;
-        this.mName.setItem(coming.mName.getKey());
+        this.mName.setKey(coming.mName.getKey());
     }
 
     @Override

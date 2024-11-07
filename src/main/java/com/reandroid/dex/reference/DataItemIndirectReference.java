@@ -73,7 +73,7 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
         updateItemUsage();
     }
     @Override
-    public void setItem(Key key){
+    public void setKey(Key key){
         setItem(getBlockItem().getOrCreateSectionItem(getSectionType(), key));
     }
     @Override
@@ -188,7 +188,7 @@ public class DataItemIndirectReference<T extends DataItem> extends IndirectItem<
         }
         Key key2 = key.replaceKey(search, replace);
         if(key != key2){
-            setItem(key2);
+            setKey(key2);
         }
     }
 

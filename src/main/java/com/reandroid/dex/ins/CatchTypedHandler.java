@@ -62,7 +62,7 @@ public class CatchTypedHandler extends ExceptionHandler {
     }
     @Override
     public void setKey(TypeKey typeKey){
-        getTypeUle128().setItem(typeKey);
+        getTypeUle128().setKey(typeKey);
     }
     Ule128IdItemReference<TypeId> getTypeUle128(){
         return typeId;
@@ -82,13 +82,13 @@ public class CatchTypedHandler extends ExceptionHandler {
     public void merge(ExceptionHandler handler){
         super.merge(handler);
         CatchTypedHandler typedHandler = (CatchTypedHandler) handler;
-        typeId.setItem(typedHandler.typeId.getKey());
+        typeId.setKey(typedHandler.typeId.getKey());
     }
 
     @Override
     public void fromSmali(SmaliCodeExceptionHandler smaliCodeExceptionHandler) {
         SmaliCodeCatch smaliCodeCatch = (SmaliCodeCatch) smaliCodeExceptionHandler;
-        typeId.setItem(smaliCodeCatch.getType());
+        typeId.setKey(smaliCodeCatch.getType());
         super.fromSmali(smaliCodeExceptionHandler);
     }
 

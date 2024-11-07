@@ -72,7 +72,7 @@ public class Base1Ule128IdItemReference<T extends IdItem> extends Ule128Item imp
         return null;
     }
     @Override
-    public void setItem(Key key) {
+    public void setKey(Key key) {
         T item;
         if(key != null){
             item = getSection(getSectionType()).getOrCreate(key);

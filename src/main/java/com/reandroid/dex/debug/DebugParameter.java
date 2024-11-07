@@ -45,7 +45,7 @@ public class DebugParameter extends Base1Ule128IdItemReference<StringId> impleme
         if(name == null || name.length() == 0){
             setItem((StringId) null);
         }else {
-            setItem(new StringKey(name));
+            setKey(new StringKey(name));
         }
     }
     public StringId getNameId(){
@@ -76,7 +76,7 @@ public class DebugParameter extends Base1Ule128IdItemReference<StringId> impleme
         return SingleIterator.of(getItem());
     }
     public void merge(DebugParameter parameter){
-        setItem(parameter.getKey());
+        setKey(parameter.getKey());
     }
 
     @Override
