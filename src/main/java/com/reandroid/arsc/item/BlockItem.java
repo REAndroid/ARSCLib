@@ -125,6 +125,9 @@ public abstract class BlockItem extends Block {
     }
     @Override
     protected int onWriteBytes(OutputStream stream) throws IOException {
+        if (isNull()) {
+            return 0;
+        }
         byte[] bytes = getBytesInternal();
         int length = bytes.length;
         if(length == 0){
