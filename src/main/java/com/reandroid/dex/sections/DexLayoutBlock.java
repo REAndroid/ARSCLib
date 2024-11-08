@@ -312,9 +312,8 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
         return outputStream.toByteArray();
     }
 
-    public void readSections(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
+    public void readBytes(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
         getSectionList().readSections(reader, filter);
-        reader.close();
     }
     public void write(File file) throws IOException {
         OutputStream outputStream = FileUtil.outputStream(file);

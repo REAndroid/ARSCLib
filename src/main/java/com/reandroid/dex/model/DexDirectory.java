@@ -707,32 +707,30 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
     }
 
     public static DexDirectory fromZip(ZipEntryMap zipEntryMap) throws IOException {
-        DexDirectory dexDirectory = new DexDirectory();
-        dexDirectory.getDexSourceSet().addAll(zipEntryMap);
-        dexDirectory.updateDexFileList();
-        return dexDirectory;
+        return fromZip(zipEntryMap, null);
     }
-    public static DexDirectory fromZip(ZipEntryMap zipEntryMap, String directoryPath) throws IOException {
-        DexDirectory dexDirectory = new DexDirectory();
-        dexDirectory.getDexSourceSet().addAll(zipEntryMap, directoryPath);
-        dexDirectory.updateDexFileList();
-        return dexDirectory;
-    }
-    public static DexDirectory fromDexFilesDirectory(File dir) throws IOException {
-        DexDirectory dexDirectory = new DexDirectory();
-        dexDirectory.getDexSourceSet().addAll(dir);
-        dexDirectory.updateDexFileList();
-        return dexDirectory;
-    }
-    public static DexDirectory readStrings(ZipEntryMap zipEntryMap) throws IOException {
-        return readStrings(zipEntryMap, null);
-    }
-    public static DexDirectory readStrings(ZipEntryMap zipEntryMap, String directoryPath) throws IOException {
+    public static DexDirectory fromZip(ZipEntryMap zipEntryMap, Predicate<SectionType<?>> readFilter) throws IOException {
         DexDirectory dexDirectory = new DexDirectory();
         DexFileSourceSet sourceSet = dexDirectory.getDexSourceSet();
-        sourceSet.setReadStringsMode(true);
-        sourceSet.addAll(zipEntryMap, directoryPath);
+        sourceSet.setReadFilter(readFilter);
+        sourceSet.addAll(zipEntryMap);
         dexDirectory.updateDexFileList();
         return dexDirectory;
+    }
+    public static DexDirectory fromDexFilesDirectory(File dir, Predicate<SectionType<?>> readFilter) throws IOException {
+        DexDirectory dexDirectory = new DexDirectory();
+        DexFileSourceSet sourceSet = dexDirectory.getDexSourceSet();
+        sourceSet.setReadFilter(readFilter);
+        sourceSet.addAll(dir);
+        dexDirectory.updateDexFileList();
+        return dexDirectory;
+    }
+
+    public static DexDirectory readMapList(ZipEntryMap zipEntryMap) throws IOException {
+        return fromZip(zipEntryMap, CollectionUtil.getRejectAll());
+    }
+    public static DexDirectory readStrings(ZipEntryMap zipEntryMap) throws IOException {
+        return fromZip(zipEntryMap, sectionType ->
+                sectionType == SectionType.STRING_ID || sectionType == SectionType.STRING_DATA);
     }
 }

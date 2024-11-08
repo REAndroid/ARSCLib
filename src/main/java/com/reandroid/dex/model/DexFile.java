@@ -29,6 +29,7 @@ import com.reandroid.utils.io.FileUtil;
 import java.io.*;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayout> {
 
@@ -235,17 +236,28 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
         return closed;
     }
     @Override
-    public void close() throws IOException {
-        if(!closed){
-            closed = true;
-            getContainerBlock().clear();
+    public void close() {
+        closed = true;
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            DexLayout layout = getLayout(i);
+            if (layout != null) {
+                layout.close();
+            }
         }
+        getContainerBlock().clear();
     }
     public byte[] getBytes() {
         if(isEmpty()){
             return new byte[0];
         }
         return getContainerBlock().getBytes();
+    }
+    public void readBytes(BlockReader reader) throws IOException {
+        getContainerBlock().readBytes(reader);
+    }
+    public void readBytes(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
+        getContainerBlock().readBytes(reader, filter);
     }
     public void write(File file) throws IOException {
         OutputStream outputStream = FileUtil.outputStream(file);;
@@ -367,30 +379,57 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
     }
 
 
-    public String printSectionInfo() {
-        if (!isMultiLayout()) {
-            DexLayout layout = getFirst();
-            if (layout != null) {
-                return layout.printSectionInfo();
-            }
-            return "empty";
+    public String printSectionInfo(boolean hex) {
+        int size = size();
+        if (size == 0) {
+            return "no layouts";
         }
         StringBuilder builder = new StringBuilder();
-        int size = size();
         for (int i = 0; i < size; i++) {
             if (i != 0) {
                 builder.append('\n');
             }
             DexLayout layout = getLayout(i);
-            builder.append("layout");
-            builder.append(i);
-            builder.append('\n');
-            builder.append(layout.printSectionInfo());
+            builder.append(layout.printSectionInfo(hex));
         }
         return builder.toString();
     }
+
+
+    public int getDexClassesCountForDebug() {
+        int count = 0;
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            count += getLayout(i).getDexClassesCountForDebug();
+        }
+        return count;
+    }
+    @Override
+    public String toString() {
+        int size = size();
+        if (size == 0) {
+            return "EMPTY DEX FILE";
+        }
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < size; i++) {
+            if (i != 0) {
+                builder.append('\n');
+            }
+            builder.append(getLayout(i));
+        }
+        if (isMultiLayout()) {
+            builder.append('\n');
+            builder.append("total classes = ");
+            builder.append(getDexClassesCountForDebug());
+        }
+        return builder.toString();
+    }
+
     public static DexFile createDefault() {
         return new DexFile(DexContainerBlock.createDefault());
+    }
+    public static DexFile createNew() {
+        return new DexFile(new DexContainerBlock());
     }
 
     public static int getDexFileNumber(String name){
@@ -430,17 +469,31 @@ public class DexFile implements Closeable, DexClassRepository, Iterable<DexLayou
 
 
     public static DexFile read(byte[] dexBytes) throws IOException {
-        return read(new BlockReader(dexBytes));
-    }
-    public static DexFile read(InputStream inputStream) throws IOException {
-        return read(new BlockReader(inputStream));
-    }
-    public static DexFile read(BlockReader reader) throws IOException {
-        DexContainerBlock containerBlock = new DexContainerBlock();
-        containerBlock.readBytes(reader);
-        return new DexFile(containerBlock);
+        return read(dexBytes, null);
     }
     public static DexFile read(File file) throws IOException {
-        return read(new BlockReader(file));
+        return read(file, null);
+    }
+    public static DexFile read(InputStream inputStream) throws IOException {
+        return read(inputStream, null);
+    }
+    public static DexFile read(BlockReader reader) throws IOException {
+        return read(reader, null);
+    }
+
+
+    public static DexFile read(byte[] dexBytes, Predicate<SectionType<?>> filter) throws IOException {
+        return read(new BlockReader(dexBytes), filter);
+    }
+    public static DexFile read(File file, Predicate<SectionType<?>> filter) throws IOException {
+        return read(new BlockReader(file), filter);
+    }
+    public static DexFile read(InputStream inputStream, Predicate<SectionType<?>> filter) throws IOException {
+        return read(new BlockReader(inputStream), filter);
+    }
+    public static DexFile read(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
+        DexFile dexFile = new DexFile(new DexContainerBlock());
+        dexFile.readBytes(reader, filter);
+        return dexFile;
     }
 }

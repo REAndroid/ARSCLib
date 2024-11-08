@@ -6,6 +6,7 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.Marker;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
@@ -20,6 +21,7 @@ public interface DexClassModule extends DexClassRepository {
     void setVersion(int version);
 
     boolean isMultiLayoutEntry();
+    int getOffset();
 
     Iterator<DexClass> getExtendingClasses(TypeKey typeKey);
     Iterator<DexClass> getImplementClasses(TypeKey typeKey);
@@ -72,6 +74,18 @@ public interface DexClassModule extends DexClassRepository {
     void addMarker(Marker marker);
     @Override
     Iterator<Marker> getMarkers();
+    Iterator<DexSectionInfo> getSectionInfo();
+
+    default DexSectionInfo getSectionInfo(SectionType<?> sectionType) {
+        Iterator<DexSectionInfo> iterator = getSectionInfo();
+        while (iterator.hasNext()) {
+            DexSectionInfo sectionInfo = iterator.next();
+            if (ObjectsUtil.equals(sectionType, sectionInfo.getSectionType())) {
+                return sectionInfo;
+            }
+        }
+        return null;
+    }
 
     @Override
     <T1 extends SectionItem> boolean removeEntries(SectionType<T1> sectionType, Predicate<T1> filter);

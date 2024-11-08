@@ -35,7 +35,6 @@ import com.reandroid.utils.io.FileIterator;
 
 import java.io.*;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Predicate;
 
 public class DexLayout implements DexClassModule, Closeable,
@@ -59,6 +58,13 @@ public class DexLayout implements DexClassModule, Closeable,
             return containerBlock.isMultiLayout();
         }
         return false;
+    }
+    @Override
+    public int getOffset() {
+        return getDexLayoutBlock().getHeader().getOffset();
+    }
+    public String getName() {
+        return "layout" + getIndex();
     }
 
     @Override
@@ -215,6 +221,12 @@ public class DexLayout implements DexClassModule, Closeable,
         return getDexLayoutBlock().getMarkers();
     }
     @Override
+    public Iterator<DexSectionInfo> getSectionInfo() {
+        MapList mapList = getDexLayoutBlock().getMapList();
+        return ComputeIterator.of(mapList.iterator(),
+                mapItem -> new DexSectionInfo(DexLayout.this, mapItem));
+    }
+    @Override
     public void refreshFull() throws DexException {
         getDexLayoutBlock().refreshFull();
     }
@@ -356,9 +368,32 @@ public class DexLayout implements DexClassModule, Closeable,
         }
         return getDexLayoutBlock().getBytes();
     }
-
-    public String printSectionInfo() {
-        return getDexLayoutBlock().getMapList().toString();
+    public String printSectionInfo(boolean hex) {
+        StringBuilder builder = new StringBuilder();
+        boolean appendOnce = false;
+        if (isMultiLayoutEntry()) {
+            builder.append(getName());
+            builder.append(", offset = ");
+            builder.append(getOffset());
+            appendOnce = true;
+        }
+        Iterator<DexSectionInfo> iterator = getSectionInfo();
+        while (iterator.hasNext()) {
+            DexSectionInfo sectionInfo = iterator.next();
+            if (appendOnce) {
+                builder.append('\n');
+            }
+            builder.append(' ');
+            int index = sectionInfo.getIndex();
+            if (index < 10) {
+                builder.append(' ');
+            }
+            builder.append(index);
+            builder.append(") ");
+            builder.append(sectionInfo.print(hex));
+            appendOnce = true;
+        }
+        return builder.toString();
     }
     private void requireNotClosed() throws IOException {
         if (isClosed()) {
@@ -369,35 +404,48 @@ public class DexLayout implements DexClassModule, Closeable,
         return closed;
     }
     @Override
-    public void close() throws IOException {
+    public void close() {
         if (!closed) {
             closed = true;
             getDexLayoutBlock().clear();
         }
     }
 
+    public int getDexClassesCountForDebug() {
+        Section<?> section = getSection(SectionType.CLASS_ID);
+        if (section != null) {
+            return section.getCount();
+        } else {
+            DexSectionInfo sectionInfo = getSectionInfo(SectionType.CLASS_ID);
+            if (sectionInfo != null) {
+                return sectionInfo.getCount();
+            }
+        }
+        return 0;
+    }
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("offset = ");
-        builder.append(getDexLayoutBlock().getHeader().getOffset());
-        builder.append(", version = ");
+        if (isMultiLayoutEntry()) {
+            builder.append("offset = ");
+            builder.append(getOffset());
+            builder.append(", ");
+        }
+        builder.append("version = ");
         builder.append(getVersion());
         builder.append(", classes = ");
-        builder.append(getDexClassesCount());
-        List<Marker> markers = CollectionUtil.toList(getMarkers());
-        int size = markers.size();
-        if (size != 0) {
-            builder.append(", markers = ");
-            builder.append(size);
-            if (size > 10) {
-                size = 10;
-            }
-            for(int i = 0; i < size; i++) {
-                builder.append('\n');
-                builder.append(markers.get(i));
+        int classesCount;
+        if (getSections(SectionType.CLASS_ID).hasNext()) {
+            classesCount = getDexClassesCount();
+        } else {
+            DexSectionInfo sectionInfo = getSectionInfo(SectionType.CLASS_ID);
+            if (sectionInfo != null) {
+                classesCount = sectionInfo.getCount();
+            } else {
+                classesCount = 0;
             }
         }
+        builder.append(classesCount);
         return builder.toString();
     }
 

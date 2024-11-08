@@ -17,10 +17,10 @@ package com.reandroid.dex.model;
 
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.ZipEntryMap;
+import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.ComputeIterator;
-import com.reandroid.utils.io.FileUtil;
 
 import java.io.Closeable;
 import java.io.File;
@@ -31,8 +31,8 @@ import java.util.function.Predicate;
 public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable {
 
     private final ArrayCollection<DexSource<DexFile>> sourceList;
-    private boolean mReadStringsMode;
     private ZipEntryMap zipEntryMap;
+    private Predicate<SectionType<?>> readFilter;
 
     public DexFileSourceSet(){
         this.sourceList = new ArrayCollection<>();
@@ -43,6 +43,13 @@ public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable
     }
     public void setZipEntryMap(ZipEntryMap zipEntryMap) {
         this.zipEntryMap = zipEntryMap;
+    }
+
+    public Predicate<SectionType<?>> getReadFilter() {
+        return readFilter;
+    }
+    public void setReadFilter(Predicate<SectionType<?>> readFilter) {
+        this.readFilter = readFilter;
     }
 
     public void merge(DexFileSourceSet sourceSet){
@@ -245,15 +252,6 @@ public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable
         sourceList.sort(CompareUtil.getComparableComparator());
         return source;
     }
-    public String buildNextName(){
-        DexSource<DexFile> last = getLast();
-        if(last == null){
-            return DexFile.getDexName(0);
-        }
-        String dir = FileUtil.getParent(last.getName());
-        String name = DexFile.getDexName(last.getDexFileNumber() + 1);
-        return FileUtil.combineUnixPath(dir, name);
-    }
 
     public int size(){
         return sourceList.size();
@@ -274,22 +272,12 @@ public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable
         sourceList.clear();
     }
 
-    public boolean isReadStringsMode() {
-        return mReadStringsMode;
-    }
-    public void setReadStringsMode(boolean readStringsMode) {
-        this.mReadStringsMode = readStringsMode;
-    }
     private void load(DexSource<DexFile> dexSource) throws IOException {
         DexFile dexFile = dexSource.get();
-        if(dexFile != null){
+        if (dexFile != null) {
             return;
         }
-        if(mReadStringsMode){
-            throw new IOException("Strings mode not implemented");
-        }else {
-            dexFile = DexFile.read(dexSource.openStream());
-        }
+        dexFile = DexFile.read(dexSource.openStream(), getReadFilter());
         dexSource.set(dexFile);
         dexFile.setSimpleName(dexSource.toString());
     }

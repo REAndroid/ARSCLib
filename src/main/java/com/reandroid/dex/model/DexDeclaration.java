@@ -133,7 +133,7 @@ public abstract class DexDeclaration extends Dex implements AnnotatedDex {
     public DexClassRepository getClassRepository(){
         DexLayout dexLayout = getDexLayout();
         if(dexLayout != null){
-            return dexLayout.getClassRepository();
+            return dexLayout.getRootRepository();
         }
         return null;
     }

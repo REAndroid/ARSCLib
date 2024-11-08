@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.function.Predicate;
 
 
 public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
@@ -166,16 +167,20 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
 
     @Override
     protected void onReadBytes(BlockReader reader) throws IOException {
-        if (size() == 0) {
-            createNext();
-        }
         readChildes(reader);
     }
     @Override
     public void readChildes(BlockReader reader) throws IOException {
-        super.readChildes(reader);
+        readBytes(reader, null);
+    }
+    public void readBytes(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            DexLayoutBlock layoutBlock = get(i);
+            layoutBlock.readBytes(reader, filter);
+        }
         while (reader.isAvailable()) {
-            createNext().readBytes(reader);
+            createNext().readBytes(reader, filter);
         }
     }
 
