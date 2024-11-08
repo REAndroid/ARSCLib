@@ -141,6 +141,13 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
     public IntegerReference getOffsetReference() {
         return containerInfo.getOffsetReference();
     }
+    @Override
+    public void setOffsetReference(IntegerReference reference) {
+        if (reference != containerInfo.getOffsetReference()) {
+            throw new RuntimeException("Header already has offset reference");
+        }
+    }
+
     public int getFileSize() {
         return fileSize.get();
     }
@@ -164,6 +171,10 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
             result += ((DirectStreamReader) block).readBytes(inputStream);
         }
         return result;
+    }
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.nonCheckRead(reader);
     }
 
     @Override
@@ -218,6 +229,7 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
     }
     public static DexHeader readHeader(InputStream inputStream) throws IOException {
         DexHeader dexHeader = new DexHeader();
+        dexHeader.magic.setDisableVerification(true);
         int read = dexHeader.readBytes(inputStream);
         if(read < dexHeader.countBytes()) {
             throw new IOException("Few bytes to read header: " + read);
@@ -226,6 +238,7 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
     }
     public static DexHeader readHeader(byte[] bytes) throws IOException {
         DexHeader dexHeader = new DexHeader();
+        dexHeader.magic.setDisableVerification(true);
         if(bytes.length < dexHeader.countBytes()) {
             throw new IOException("Few bytes to read header: " + bytes.length);
         }

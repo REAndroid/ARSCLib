@@ -284,7 +284,7 @@ public class DexContainerBlock extends BlockList<DexLayoutBlock> implements
         if(dexHeader == null){
             return false;
         }
-        if(!dexHeader.magic.isDefault()){
+        if(!dexHeader.magic.isValid()){
             return false;
         }
         int version = dexHeader.getVersion();

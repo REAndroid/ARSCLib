@@ -15,18 +15,43 @@
  */
 package com.reandroid.dex.header;
 
+import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
+import com.reandroid.utils.HexUtil;
+
+import java.io.IOException;
 
 public class Magic extends HeaderPiece {
-    public Magic(){
+
+    private boolean disableVerification;
+
+    public Magic() {
         super();
         super.set(DEFAULT_BYTES.clone());
     }
-    public void resetDefault(){
+
+    public void reset(){
         super.set(DEFAULT_BYTES.clone());
     }
-    public boolean isDefault(){
+    public boolean isValid(){
         return ByteArray.equals(getBytesInternal(), DEFAULT_BYTES);
+    }
+
+    public boolean isDisableVerification() {
+        return disableVerification;
+    }
+    public void setDisableVerification(boolean disableVerification) {
+        this.disableVerification = disableVerification;
+    }
+
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+        if (!isDisableVerification() && !isValid()) {
+            throw new IOException("Invalid dex magic: '"
+                    + HexUtil.toHexString(getBytesInternal())
+                    + "', expecting '" + HexUtil.toHexString(DEFAULT_BYTES) + "'");
+        }
     }
 
     public static final byte[] DEFAULT_BYTES = new byte[]{(byte)'d', (byte)'e', (byte)'x', (byte)0x0A};
