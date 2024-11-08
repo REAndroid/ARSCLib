@@ -15,10 +15,29 @@
  */
 package com.reandroid.dex.header;
 
+import com.reandroid.arsc.io.BlockReader;
+
+import java.io.IOException;
+import java.io.InputStream;
+
 public class CountAndOffsetV41 extends CountAndOffset {
 
     public CountAndOffsetV41() {
         super();
+    }
+
+    @Override
+    public void onReadBytes(BlockReader reader) throws IOException {
+        if (!isNull()) {
+            super.onReadBytes(reader);
+        }
+    }
+    @Override
+    public int readBytes(InputStream inputStream) throws IOException {
+        if (isNull()) {
+            return 0;
+        }
+        return super.readBytes(inputStream);
     }
 
     @Override
