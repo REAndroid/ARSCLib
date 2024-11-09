@@ -22,6 +22,7 @@ import com.reandroid.utils.CompareUtil;
 public class ResXmlString extends StringItem {
 
     private ResXmlID mResXmlID;
+    private ResXmlString namespacePrefix;
 
     public ResXmlString(boolean utf8) {
         super(utf8);
@@ -74,10 +75,55 @@ public class ResXmlString extends StringItem {
             return;
         }
         if(this.mResXmlID != null) {
-            throw new IllegalStateException("Style item is already linked");
+            throw new IllegalStateException("Resource id string item is already linked");
         }
         this.mResXmlID = resXmlID;
         resXmlID.setResXmlStringInternal(this);
+    }
+
+    public ResXmlString getNamespacePrefix() {
+        ResXmlString xmlString = this.namespacePrefix;
+        if (xmlString != null && xmlString.getParent() == null) {
+            xmlString = null;
+            this.namespacePrefix = null;
+        }
+        return xmlString;
+    }
+    private String getNamespacePrefixString() {
+        ResXmlString xmlString = getNamespacePrefix();
+        if (xmlString != null) {
+            return xmlString.getXml();
+        }
+        return null;
+    }
+    public boolean hasNamespacePrefix() {
+        return getNamespacePrefix() != null;
+    }
+    public boolean equalsNamespace(String uri, String prefix) {
+        if (uri == null || prefix == null) {
+            return false;
+        }
+        if (!uri.equals(this.getXml())) {
+            return false;
+        }
+        return prefix.equals(getNamespacePrefixString());
+    }
+
+    public void linkNamespacePrefixInternal(ResXmlString namespacePrefix) {
+        if(namespacePrefix == this) {
+            throw new IllegalArgumentException("Cyclic link of namespace prefix");
+        }
+        if(namespacePrefix == null) {
+            throw new NullPointerException("Can not link null namespace prefix");
+        }
+        ResXmlString xmlString = getNamespacePrefix();
+        if (xmlString == namespacePrefix) {
+            return;
+        }
+        if (xmlString != null) {
+            throw new IllegalStateException("Uri string item is already linked");
+        }
+        this.namespacePrefix = namespacePrefix;
     }
 
     @Override
@@ -90,6 +136,15 @@ public class ResXmlString extends StringItem {
             return resXmlID.hasReference();
         }
         return false;
+    }
+    @Override
+    public int getReferencesSize() {
+        int size = super.getReferencesSize();
+        ResXmlID resXmlID = getResXmlID();
+        if(resXmlID != null && resXmlID.hasReference()) {
+            size ++;
+        }
+        return size;
     }
 
     @Override
@@ -125,6 +180,26 @@ public class ResXmlString extends StringItem {
         if(i != 0) {
             return i;
         }
-        return super.compareTo(stringItem);
+        i = CompareUtil.compare(xmlString.hasStyle(), this.hasStyle());
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(this.getXml(), stringItem.getXml());
+        if( i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(xmlString.hasNamespacePrefix(), this.hasNamespacePrefix());
+        if(i != 0) {
+            return i;
+        }
+        i = compareReferences(xmlString);
+        if(i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(this.getNamespacePrefixString(), xmlString.getNamespacePrefixString());
+        if(i != 0) {
+            return i;
+        }
+        return 0;
     }
 }

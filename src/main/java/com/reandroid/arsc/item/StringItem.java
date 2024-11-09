@@ -97,6 +97,9 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
                 referenceItem -> !(referenceItem instanceof StyleItem.StyleIndexReference))
                 .hasNext();
     }
+    public int getReferencesSize() {
+        return mReferencedList.size();
+    }
     public Collection<ReferenceItem> getReferencedList(){
         ensureStringLinkUnlocked();
         return mReferencedList;
@@ -416,17 +419,27 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
     }
     @Override
     public int compareTo(StringItem stringItem) {
-        if(stringItem == null){
+        if (stringItem == null) {
             return -1;
         }
-        if(stringItem == this) {
+        if (stringItem == this) {
             return 0;
         }
+        int i = compareStringValue(stringItem);
+        if(i != 0) {
+            return i;
+        }
+        return compareReferences(stringItem);
+    }
+    public int compareStringValue(StringItem stringItem) {
         int i = -1 * CompareUtil.compare(hasStyle(), stringItem.hasStyle());
         if(i != 0) {
             return i;
         }
         return CompareUtil.compare(getXml(), stringItem.getXml());
+    }
+    public int compareReferences(StringItem stringItem) {
+        return CompareUtil.compare(stringItem.getReferencesSize(), this.getReferencesSize());
     }
     @Override
     public JSONObject toJson() {
@@ -449,7 +462,7 @@ public class StringItem extends StringBlock implements JSONConvert<JSONObject>, 
         }
         StringPool<?> stringPool = getParentInstance(StringPool.class);
         if(stringPool != null && !stringPool.isStringLinkLocked()){
-            return getIndex() + ": USED BY=" + mReferencedList.size() + "{" + xml + "}";
+            return getIndex() + ": USED BY=" + getReferencesSize() + "{" + xml + "}";
         }
         return getIndex() + ":" + xml;
     }

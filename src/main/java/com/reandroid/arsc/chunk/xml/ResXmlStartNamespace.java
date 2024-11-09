@@ -16,9 +16,9 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.ChunkType;
-import com.reandroid.arsc.chunk.PackageBlock;
+import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.model.ResourceLibrary;
-import com.reandroid.common.Namespace;
+import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.xml.XMLNamespace;
 
 import java.util.HashSet;
@@ -34,6 +34,30 @@ public class ResXmlStartNamespace extends ResXmlNamespaceChunk {
         this.mReferencedAttributes = new HashSet<>();
         this.mReferencedElements = new HashSet<>();
     }
+
+    void ensureUniqueUri() {
+        ResXmlString xmlString = getResXmlString(getUriReference());
+        if (xmlString != null) {
+            ResXmlString prefixXmlString = xmlString.getNamespacePrefix();
+            if (prefixXmlString != null && prefixXmlString.getIndex() == getPrefixReference()) {
+                return;
+            }
+        }
+        setNamespace(getUri(), getPrefix());
+    }
+    void setNamespace(String uri, String prefix) {
+        ResXmlStringPool stringPool = getStringPool();
+        if (stringPool == null) {
+            return;
+        }
+        ResXmlString resXmlString = stringPool.getOrCreateNamespaceString(uri, prefix);
+        if (resXmlString == null) {
+            return;
+        }
+        setUriReference(resXmlString.getIndex());
+        setPrefixReference(resXmlString.getNamespacePrefix().getIndex());
+    }
+
     @Override
     void onUriReferenceChanged(int old, int uriReference){
         for(ResXmlAttribute attribute : mReferencedAttributes){
@@ -65,6 +89,7 @@ public class ResXmlStartNamespace extends ResXmlNamespaceChunk {
         }
         mReferencedAttributes.clear();
         mReferencedElements.clear();
+        super.onRemoved();
     }
     public boolean hasReferences(){
         return mReferencedAttributes.size() > 0

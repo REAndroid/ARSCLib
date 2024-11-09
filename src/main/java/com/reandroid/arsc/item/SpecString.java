@@ -17,7 +17,7 @@ package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.value.Entry;
-import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.CompareUtil;
 
 import java.util.Iterator;
 import java.util.function.Predicate;
@@ -70,10 +70,13 @@ public class SpecString extends StringItem {
         return null;
     }
     @Override
-    public int compareTo(StringItem stringItem) {
-        if(stringItem == null){
+    public int compareStringValue(StringItem stringItem) {
+        if (stringItem == null) {
             return -1;
         }
-        return StringsUtil.compareStrings(this.get(), stringItem.get());
+        if (stringItem == this) {
+            return 0;
+        }
+        return CompareUtil.compare(this.get(), stringItem.get());
     }
 }

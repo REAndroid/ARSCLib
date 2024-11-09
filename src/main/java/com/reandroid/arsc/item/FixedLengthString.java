@@ -16,7 +16,7 @@
 package com.reandroid.arsc.item;
 
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.CompareUtil;
 
 import java.nio.charset.StandardCharsets;
 
@@ -63,7 +63,7 @@ public class FixedLengthString  extends StringItem {
         if(stringItem == null){
             return -1;
         }
-        return StringsUtil.compareStrings(get(), stringItem.get());
+        return CompareUtil.compare(this.get(), stringItem.get());
     }
     @Override
     public String toString(){

@@ -76,6 +76,29 @@ public class ResXmlStringPool extends StringPool<ResXmlString> {
         }
         return xmlString;
     }
+    public ResXmlString getNamespaceString(String uri, String prefix) {
+        return get(uri, resXmlString -> resXmlString.equalsNamespace(uri, prefix));
+    }
+    public ResXmlString getOrCreateNamespaceString(String uri, String prefix) {
+        if (uri == null || prefix == null || uri.equals(prefix)) {
+            return null;
+        }
+        ResXmlString xmlString = getNamespaceString(uri, prefix);
+        if (xmlString == null) {
+            xmlString = get(uri, resXmlString -> !resXmlString.hasNamespacePrefix()
+                    && !resXmlString.hasResourceId() && !resXmlString.hasStyle());
+            if (xmlString != null) {
+                ResXmlString prefixXmlString = getOrCreate(prefix);
+                xmlString.linkNamespacePrefixInternal(prefixXmlString);
+            }
+        }
+        if(xmlString == null) {
+            xmlString = createNewString(uri);
+            ResXmlString prefixXmlString = getOrCreate(prefix);
+            xmlString.linkNamespacePrefixInternal(prefixXmlString);
+        }
+        return xmlString;
+    }
     private ResXmlIDMap getResXmlIDMap(){
         ResXmlDocument resXmlDocument = getParentInstance(ResXmlDocument.class);
         if(resXmlDocument != null){

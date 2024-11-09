@@ -22,7 +22,6 @@ import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.SingleBlockContainer;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
@@ -840,30 +839,47 @@ public class ResXmlElement extends ResXmlNode implements
         return namespace;
     }
     private ResXmlStartNamespace createXmlStartNamespace(String uri, String prefix){
+        updateStartNamespaces();
         ResXmlStartNamespace startNamespace = new ResXmlStartNamespace();
         ResXmlEndNamespace endNamespace = new ResXmlEndNamespace();
         startNamespace.setEnd(endNamespace);
 
         addStartNamespace(startNamespace);
         addEndNamespace(endNamespace, true);
-        ResXmlStringPool stringPool = getStringPool();
-        ResXmlString xmlString = stringPool.getOrCreate(uri);
-        startNamespace.setUriReference(xmlString.getIndex());
-        startNamespace.setPrefix(prefix);
-
+        startNamespace.setNamespace(uri, prefix);
         return startNamespace;
     }
+    private void updateStartNamespaces() {
+        ResXmlDocument document = getParentDocument();
+        if (document == null) {
+            return;
+        }
+        Iterator<ResXmlStartNamespace> iterator = new IterableIterator<ResXmlElement, ResXmlStartNamespace>(
+                document.recursiveElements()) {
+            @Override
+            public Iterator<ResXmlStartNamespace> iterator(ResXmlElement element) {
+                return element.getStartNamespaces();
+            }
+        };
+        while (iterator.hasNext()) {
+            ResXmlStartNamespace startNamespace = iterator.next();
+            startNamespace.ensureUniqueUri();
+        }
+    }
+
     ResXmlStartNamespace getStartNamespaceByUri(String uri){
-        if(uri==null){
+        if(uri == null) {
             return null;
         }
-        for(ResXmlStartNamespace ns:mStartNamespaceList.getChildes()){
-            if(uri.equals(ns.getUri())){
-                return ns;
+        Iterator<ResXmlStartNamespace> iterator = getStartNamespaces();
+        while (iterator.hasNext()) {
+            ResXmlStartNamespace startNamespace = iterator.next();
+            if(uri.equals(startNamespace.getUri())){
+                return startNamespace;
             }
         }
-        ResXmlElement xmlElement= getParentElement();
-        if(xmlElement!=null){
+        ResXmlElement xmlElement = getParentElement();
+        if (xmlElement != null) {
             return xmlElement.getStartNamespaceByUri(uri);
         }
         return null;
@@ -890,6 +906,9 @@ public class ResXmlElement extends ResXmlNode implements
     }
     private List<ResXmlStartNamespace> getStartNamespaceList(){
         return mStartNamespaceList.getChildes();
+    }
+    private Iterator<ResXmlStartNamespace> getStartNamespaces(){
+        return mStartNamespaceList.iterator();
     }
     private void addStartNamespace(ResXmlStartNamespace item){
         mStartNamespaceList.add(item);
