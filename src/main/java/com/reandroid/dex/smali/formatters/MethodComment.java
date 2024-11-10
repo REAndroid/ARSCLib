@@ -20,6 +20,8 @@ import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.dex.model.DexMethod;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.CollectionUtil;
 
 import java.io.IOException;
@@ -81,12 +83,19 @@ public interface MethodComment extends SmaliComment{
             if(dexMethod == null || dexMethod.isDirect() || dexMethod.getDexClass().isFinal()){
                 return;
             }
+            ArrayCollection arrayCollection = new ArrayCollection();
             Iterator<DexMethod> iterator = dexMethod.getOverriding();
             while (iterator.hasNext()) {
                 DexMethod method = iterator.next();
+                String typeName = method.getKey().getDeclaring().getTypeName();
+                arrayCollection.add(typeName);
+            }
+            StringsUtil.toStringSort(arrayCollection);
+            Iterator<String> iterator2 = arrayCollection.iterator();
+            while (iterator2.hasNext()) {
                 writer.newLine();
                 writer.appendComment("implemented-by: ");
-                writer.appendComment(method.getKey().getDeclaring().getTypeName());
+                writer.appendComment(iterator2.next());
             }
         }
         @Override
