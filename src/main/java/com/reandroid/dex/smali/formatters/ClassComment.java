@@ -53,9 +53,9 @@ public interface ClassComment extends SmaliComment {
             StringsUtil.toStringSort(arrayCollection);
             Iterator<String> iterator2 = arrayCollection.iterator();
             while (iterator2.hasNext()) {
-                writer.newLine();
                 writer.appendComment("extended-by: ");
                 writer.appendComment(iterator2.next());
+                writer.newLine();
             }
         }
         @Override
@@ -97,9 +97,9 @@ public interface ClassComment extends SmaliComment {
             StringsUtil.toStringSort(arrayCollection);
             Iterator<String> iterator2 = arrayCollection.iterator();
             while (iterator2.hasNext()) {
-                writer.newLine();
                 writer.appendComment("implemented-by: ");
                 writer.appendComment(iterator2.next());
+                writer.newLine();
             }
         }
         @Override
