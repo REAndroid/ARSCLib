@@ -40,14 +40,16 @@ public abstract class Sorter {
             return;
         }
         while (i <= j) {
-            while (compareToMid(i) < 0) {
+            int x;
+            while ((x = compareToMid(i)) < 0) {
                 i++;
             }
-            while (compareToMid(j) > 0) {
+            int y;
+            while ((y = compareToMid(j)) > 0) {
                 j--;
             }
             if (i <= j) {
-                if(i != j){
+                if((i != j) && (x >  0 || y < 0)){
                     onSwap(i, j);
                     sorted = true;
                 }
