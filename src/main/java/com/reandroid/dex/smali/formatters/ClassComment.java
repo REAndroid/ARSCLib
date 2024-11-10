@@ -20,6 +20,8 @@ import com.reandroid.dex.model.DexClass;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -41,14 +43,20 @@ public interface ClassComment extends SmaliComment {
             if(dexClass == null || dexClass.isFinal()) {
                 return;
             }
+            ArrayCollection arrayCollection = new ArrayCollection();
             Iterator<DexClass> iterator = dexClass.getExtending();
             while (iterator.hasNext()) {
                 TypeKey key = iterator.next().getKey();
+                String typeName = key.getTypeName();
+                arrayCollection.add(typeName);
+            }
+            StringsUtil.toStringSort(arrayCollection);
+            Iterator<String> iterator2 = arrayCollection.iterator();
+            while (iterator2.hasNext()) {
                 writer.appendComment("extended-by: ");
-                writer.appendComment(key.getTypeName());
+                writer.appendComment(iterator2.next());
                 writer.newLine();
             }
-
         }
         @Override
         public boolean equals(Object obj) {
@@ -79,11 +87,18 @@ public interface ClassComment extends SmaliComment {
             if(dexClass == null || !dexClass.isInterface()) {
                 return;
             }
+            ArrayCollection arrayCollection = new ArrayCollection();
             Iterator<DexClass> iterator = dexClass.getImplementations();
             while (iterator.hasNext()) {
                 TypeKey key = iterator.next().getKey();
+                String typeName = key.getTypeName();
+                arrayCollection.add(typeName);
+            }
+            StringsUtil.toStringSort(arrayCollection);
+            Iterator<String> iterator2 = arrayCollection.iterator();
+            while (iterator2.hasNext()) {
                 writer.appendComment("implemented-by: ");
-                writer.appendComment(key.getTypeName());
+                writer.appendComment(iterator2.next());
                 writer.newLine();
             }
         }
