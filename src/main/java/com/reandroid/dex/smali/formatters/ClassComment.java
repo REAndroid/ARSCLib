@@ -19,12 +19,13 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.model.DexClass;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.StringsUtil;
-import com.reandroid.utils.collection.ArrayCollection;
+import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.List;
 
 public interface ClassComment extends SmaliComment {
 
@@ -43,18 +44,13 @@ public interface ClassComment extends SmaliComment {
             if(dexClass == null || dexClass.isFinal()) {
                 return;
             }
-            ArrayCollection arrayCollection = new ArrayCollection();
-            Iterator<DexClass> iterator = dexClass.getExtending();
-            while (iterator.hasNext()) {
-                TypeKey key = iterator.next().getKey();
-                String typeName = key.getTypeName();
-                arrayCollection.add(typeName);
-            }
-            StringsUtil.toStringSort(arrayCollection);
-            Iterator<String> iterator2 = arrayCollection.iterator();
-            while (iterator2.hasNext()) {
+            List<TypeKey> extendingList = CollectionUtil.toList(
+                    ComputeIterator.of(dexClass.getExtending(), DexClass::getKey));
+            extendingList.sort(CompareUtil.getComparableComparator());
+
+            for (TypeKey extending : extendingList) {
                 writer.appendComment("extended-by: ");
-                writer.appendComment(iterator2.next());
+                writer.appendComment(extending.getTypeName());
                 writer.newLine();
             }
         }
@@ -87,18 +83,14 @@ public interface ClassComment extends SmaliComment {
             if(dexClass == null || !dexClass.isInterface()) {
                 return;
             }
-            ArrayCollection arrayCollection = new ArrayCollection();
-            Iterator<DexClass> iterator = dexClass.getImplementations();
-            while (iterator.hasNext()) {
-                TypeKey key = iterator.next().getKey();
-                String typeName = key.getTypeName();
-                arrayCollection.add(typeName);
-            }
-            StringsUtil.toStringSort(arrayCollection);
-            Iterator<String> iterator2 = arrayCollection.iterator();
-            while (iterator2.hasNext()) {
+            List<TypeKey> implementList = CollectionUtil.toList(
+                    ComputeIterator.of(dexClass.getExtending(), DexClass::getKey));
+
+            implementList.sort(CompareUtil.getComparableComparator());
+
+            for (TypeKey impl : implementList) {
                 writer.appendComment("implemented-by: ");
-                writer.appendComment(iterator2.next());
+                writer.appendComment(impl.getTypeName());
                 writer.newLine();
             }
         }
