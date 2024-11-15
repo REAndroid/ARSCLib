@@ -33,8 +33,26 @@ public class HandlerOffsetArray extends CountedList<HandlerOffset> {
 
     public HandlerOffset getOrCreate(int index) {
         ensureSize(index + 1);
-        return get(index);
+        return getHandlerOffset(index);
     }
+    public HandlerOffset getHandlerOffset(int index) {
+        HandlerOffset handlerOffset = get(index);
+        if (handlerOffset == null) {
+            return null;
+        }
+        if (handlerOffset.getIdx() == index) {
+            return handlerOffset;
+        }
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            handlerOffset = get(i);
+            if (handlerOffset.getIdx() == index) {
+                return handlerOffset;
+            }
+        }
+        return null;
+    }
+
     int getOffset(int i) {
         HandlerOffset offset = get(i);
         if(offset != null){

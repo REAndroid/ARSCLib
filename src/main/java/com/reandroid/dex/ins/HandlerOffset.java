@@ -27,6 +27,13 @@ public class HandlerOffset extends BlockItem implements Comparable<HandlerOffset
         super(8);
     }
 
+    public int getIdx() {
+        TryItem tryItem = getTryItem();
+        if (tryItem != null) {
+            return tryItem.getIndex();
+        }
+        return getIndex();
+    }
     public int getStartAddress() {
         return Block.getInteger(getBytesInternal(), 0);
     }

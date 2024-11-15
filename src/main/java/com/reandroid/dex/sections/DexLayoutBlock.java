@@ -145,6 +145,7 @@ public class DexLayoutBlock extends FixedBlockContainer implements FullRefresh {
     @Override
     public void refreshFull() throws DexException {
         this.onPreRefresh();
+        sortStrings();
         getSectionList().refreshFull();
         this.onRefreshed();
     }

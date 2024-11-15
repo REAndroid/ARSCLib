@@ -27,6 +27,7 @@ import com.reandroid.dex.smali.model.SmaliCodeExceptionHandler;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 
 import java.io.IOException;
@@ -78,6 +79,9 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
             return true;
         }
         return address >= getStartAddress() && address <= getAddress();
+    }
+    public int getInstructionCount() {
+        return CollectionUtil.count(getTryInstructions());
     }
     public Iterator<Ins> getTryInstructions(){
         InstructionList instructionList = getInstructionList();

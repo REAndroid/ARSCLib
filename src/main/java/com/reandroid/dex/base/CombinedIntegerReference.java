@@ -34,7 +34,7 @@ public class CombinedIntegerReference implements IntegerReference,
         if(reference == this){
             throw new RuntimeException("Cyclic add reference");
         }
-        if(reference == null || references.containsFast(reference)){
+        if(reference == null || references.containsExact(reference)){
             return;
         }
         references.add(reference);
