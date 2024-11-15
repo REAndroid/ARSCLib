@@ -17,13 +17,12 @@ package com.reandroid.xml;
 
 import java.io.IOException;
 
-public class StyleText extends XMLText implements StyleNode{
-    public StyleText(String text){
-        super(text);
-    }
+public class StyleText extends XMLText implements StyleNode {
+
     public StyleText(){
-        this("");
+        super("");
     }
+
     void writeStyledText(Appendable appendable) throws IOException {
         appendable.append(getText(false));
     }
@@ -50,10 +49,7 @@ public class StyleText extends XMLText implements StyleNode{
     public StyleNode getParentStyle() {
         return (StyleNode) getParentNode();
     }
-    @Override
-    public void addStyleNode(StyleNode styleNode){
-        throw new IllegalArgumentException("Text can't add node");
-    }
+
     @Override
     boolean isIndent(){
         return false;

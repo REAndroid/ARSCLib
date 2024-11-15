@@ -36,7 +36,7 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
         addChild(mNamespaceReference);
         addChild(mStringReference);
     }
-    void onRemoved(){
+    void onPreRemove(){
         ResXmlStringPool stringPool = getStringPool();
         if(stringPool==null){
             return;
@@ -91,12 +91,12 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
     int getNamespaceReference(){
         return mNamespaceReference.get();
     }
-    void setStringReference(int val){
-        if(val == getStringReference()){
+    void setStringReference(int value){
+        if(value == getStringReference()){
             return;
         }
         unLinkStringReference(mStringReference);
-        mStringReference.set(val);
+        mStringReference.set(value);
         linkStringReference(mStringReference);
     }
     int getStringReference(){
@@ -179,6 +179,9 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
     }
     public ResXmlElement getParentResXmlElement(){
         return getParent(ResXmlElement.class);
+    }
+    public ResXmlElement getNodeElement() {
+        return getParentInstance(ResXmlElement.class);
     }
     @Override
     protected void onChunkRefreshed() {

@@ -17,22 +17,22 @@ package com.reandroid.xml;
 
 import com.reandroid.utils.collection.IndexIterator;
 import com.reandroid.utils.collection.SizedSupplier;
+import com.reandroid.xml.base.Attribute;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.Collection;
 import java.util.Iterator;
 
-public class StyleElement extends XMLElement implements StyleNode, Span{
-    public StyleElement(String name){
-        super(name);
-    }
+public class StyleElement extends XMLElement implements StyleNode, Span {
+
     public StyleElement(){
-        this("");
+        super();
     }
+
+    @Override
     public StyleElement getParentElement(){
         return (StyleElement) super.getParentElement();
     }
@@ -40,19 +40,16 @@ public class StyleElement extends XMLElement implements StyleNode, Span{
         setName(xmlElement.getName());
         Iterator<? extends XMLAttribute> attributes = xmlElement.getAttributes();
         while (attributes.hasNext()){
-            addAttribute(new StyleAttribute(attributes.next()));
+            newAttribute().setFrom(attributes.next());
         }
         Iterator<XMLNode> iterator = xmlElement.iterator();
         while (iterator.hasNext()){
             XMLNode xmlNode = iterator.next();
-            if(xmlNode instanceof XMLElement){
-                StyleElement styleElement = newElement();
-                add(styleElement);
-                styleElement.copyFrom((XMLElement) xmlNode);
-            }else if(xmlNode instanceof XMLText){
+            if (xmlNode instanceof XMLElement) {
+                newElement().copyFrom((XMLElement) xmlNode);
+            } else if(xmlNode instanceof XMLText){
                 XMLText xmlText = (XMLText)xmlNode;
-                StyleText styleText = new StyleText(xmlText.getText());
-                add(styleText);
+                newText(xmlText.getText());
             }
         }
     }
@@ -60,22 +57,18 @@ public class StyleElement extends XMLElement implements StyleNode, Span{
     public StyleAttribute getAttributeAt(int i){
         return (StyleAttribute) super.getAttributeAt(i);
     }
-    public void addAttribute(StyleAttribute attribute){
+    @Override
+    public void addAttribute(Attribute attribute) {
+        if (!(attribute instanceof StyleAttribute)) {
+            throw new ClassCastException("Incompatible attribute type: "
+                    + attribute.getClass());
+        }
         super.addAttribute(attribute);
     }
-    public void addAttributes(Collection<StyleAttribute> attributes){
-        if(attributes != null){
-            for(StyleAttribute attribute : attributes){
-                addAttribute(attribute);
-            }
-        }
-    }
+
     @Override
     public StyleAttribute getAttribute(String name){
         return (StyleAttribute) super.getAttribute(name);
-    }
-    public void addElement(StyleElement element){
-        add(element);
     }
     @Override
     public Iterator<StyleElement> getElements(){
@@ -98,9 +91,13 @@ public class StyleElement extends XMLElement implements StyleNode, Span{
     public String getTagString(){
         return getTagName() + getSpanAttributes();
     }
+
+    @Override
     public String getTagName(){
         return getName();
     }
+
+    @Override
     public int getFirstChar(){
         XMLNode parent = getRootParentNode();
         int result = 0;
@@ -114,6 +111,8 @@ public class StyleElement extends XMLElement implements StyleNode, Span{
         }
         return result;
     }
+
+    @Override
     public int getLastChar(){
         int result = getFirstChar() + getLength();
         if(result != 0){
@@ -121,6 +120,8 @@ public class StyleElement extends XMLElement implements StyleNode, Span{
         }
         return result;
     }
+
+    @Override
     public int getSpanOrder(){
         XMLNode parent = getRootParentNode();
         int result = 0;
@@ -189,8 +190,7 @@ public class StyleElement extends XMLElement implements StyleNode, Span{
         if(xmlNode instanceof StyleText){
             styleText = (StyleText) xmlNode;
         }else {
-            styleText = new StyleText();
-            add(styleText);
+            styleText = newText();
         }
         styleText.appendChar(ch);
     }
@@ -198,10 +198,7 @@ public class StyleElement extends XMLElement implements StyleNode, Span{
     public StyleNode getParentStyle() {
         return (StyleNode) getParentNode();
     }
-    @Override
-    public void addStyleNode(StyleNode styleNode){
-        add((XMLNode) styleNode);
-    }
+
     @Override
     void startSerialize(XmlSerializer serializer) throws IOException {
         serializer.startTag(null, getName());
@@ -223,20 +220,16 @@ public class StyleElement extends XMLElement implements StyleNode, Span{
         setName(parser.getName());
         int count = parser.getAttributeCount();
         for(int i = 0; i < count; i++){
-            addAttribute(new StyleAttribute(parser.getAttributeName(i),
-                    parser.getAttributeValue(i)));
+            newAttribute().set(parser.getAttributeName(i),
+                    parser.getAttributeValue(i));
         }
         event = parser.next();
         while (event != XmlPullParser.END_TAG && event != XmlPullParser.END_DOCUMENT){
-            if(event == XmlPullParser.START_TAG){
-                StyleElement element = new StyleElement();
-                addElement(element);
-                element.parse(parser);
-            }else if(XMLText.isTextEvent(event)){
-                StyleText styleText = newText();
-                add(styleText);
-                styleText.parse(parser);
-            }else {
+            if (event == XmlPullParser.START_TAG) {
+                newElement().parse(parser);
+            } else if(XMLText.isTextEvent(event)) {
+                newText().parse(parser);
+            } else {
                 parser.next();
             }
             event = parser.getEventType();
@@ -248,19 +241,29 @@ public class StyleElement extends XMLElement implements StyleNode, Span{
 
     @Override
     public StyleElement newElement(){
-        return new StyleElement();
+        StyleElement element = new StyleElement();
+        add(element);
+        return element;
     }
     @Override
-    public StyleText newText(){
-        return new StyleText();
+    public StyleText newText() {
+        StyleText styleText = new StyleText();
+        add(styleText);
+        return styleText;
     }
-    @Override
+    public StyleText newText(String text){
+        StyleText styleText = newText();
+        styleText.setText(text);
+        return styleText;
+    }
     public XMLComment newComment(){
         return null;
     }
     @Override
     public StyleAttribute newAttribute(){
-        return new StyleAttribute();
+        StyleAttribute attribute = new StyleAttribute();
+        addAttribute(attribute);
+        return attribute;
     }
 
     @Override

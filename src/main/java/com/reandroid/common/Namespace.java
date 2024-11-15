@@ -22,6 +22,9 @@ public interface Namespace {
     String getPrefix();
     String getUri();
 
+    static boolean isValidNamespace(String uri, String prefix) {
+        return isValidUri(uri) && isValidPrefix(prefix);
+    }
     static boolean isValidUri(String uri, int resourceId) {
         int packageId = (resourceId >> 24 ) & 0xff;
         if(packageId == 0) {

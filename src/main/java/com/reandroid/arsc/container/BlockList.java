@@ -20,6 +20,8 @@ import com.reandroid.arsc.base.BlockCounter;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.base.Creator;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONConvert;
 import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.Swappable;
 
@@ -155,6 +157,13 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         return mItems.iterator(instance);
     }
 
+    public Iterator<T> reversedIterator() {
+        return mItems.reversedIterator();
+    }
+    public int lastIndexOf(T item) {
+        return mItems.lastIndexOf(item);
+    }
+
     public int countIf(Predicate<? super T> predicate){
         return mItems.count(predicate);
     }
@@ -285,9 +294,9 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         if(item == null) {
             return false;
         }
-        int index = mItems.indexOfFast(item, item.getIndex());
+        int index = mItems.indexOfExact(item, item.getIndex());
         if(index < 0){
-            index = mItems.indexOfFast(item);
+            index = mItems.indexOfExact(item);
         }
         if(index < 0) {
             return false;
@@ -305,9 +314,9 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         if(item == null) {
             return -1;
         }
-        int index = mItems.indexOfFast(item, item.getIndex());
+        int index = mItems.indexOfExact(item, item.getIndex());
         if(index < 0){
-            index = mItems.indexOfFast(item);
+            index = mItems.indexOfExact(item);
         }
         return index;
     }
@@ -342,9 +351,27 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         if(index < 0){
             index = 0;
         }
-        int i = mItems.indexOfFast(item, item.getIndex());
+        int i = mItems.indexOfExact(item, item.getIndex());
         mItems.move(item, index);
         updateIndex(i, index);
+    }
+    public boolean transferTo(T item, BlockList<? super T> destination) {
+        if (item == null || destination == null || destination == this) {
+            return false;
+        }
+        int i = mItems.indexOfExact(item, item.getIndex());
+        if (i < 0) {
+            return false;
+        }
+        mItems.removeSilent(i);
+        return destination.add(item);
+    }
+    public boolean transferTo(int index, BlockList<? super T> destination) {
+        if (index < 0 || destination == null || destination == this) {
+            return false;
+        }
+        T item = mItems.removeSilent(index);
+        return destination.add(item);
     }
     public void set(int index, T item){
         if(item == null){
@@ -458,7 +485,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         return mItems.contains(obj);
     }
     public boolean containsExact(Object obj){
-        return mItems.containsFast(obj);
+        return mItems.containsExact(obj);
     }
     public Object[] toArray(){
         return mItems.toArray();
@@ -633,6 +660,18 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
     @SuppressWarnings("unchecked")
     public static<T1 extends Block> BlockList<T1> empty(){
         return (BlockList<T1>) empty_list;
+    }
+
+    public static JSONArray toJsonArray(BlockList<? extends JSONConvert<?>> blockList) {
+        int size = blockList.size();
+        if (size == 0) {
+            return null;
+        }
+        JSONArray jsonArray = new JSONArray(size);
+        for (int i = 0; i < size; i++) {
+            jsonArray.put(i, blockList.get(i).toJson());
+        }
+        return jsonArray;
     }
 
     private static final BlockList<?> empty_list = new BlockList<Block>(){

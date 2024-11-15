@@ -30,15 +30,14 @@ public abstract class XMLNode implements Node {
     private int mLineNumber;
     private int mColumnNumber;
     public XMLNode(){
-
     }
+
     int getLength(){
         return 0;
     }
     int getTextLength(){
         return 0;
     }
-    abstract XMLNode newCopy(XMLNode parent);
     public XMLNode getParentNode(){
         return mParent;
     }

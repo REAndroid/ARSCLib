@@ -22,8 +22,8 @@ import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.value.ValueType;
-import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.collection.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -216,17 +216,20 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
             application.removeAttribute(attribute);
         }
     }
-    public ResXmlElement getMainActivity(){
-        for(ResXmlElement activity:listActivities()){
-            for(ResXmlElement intentFilter:activity.listElements(TAG_intent_filter)){
-                for(ResXmlElement action:intentFilter.listElements(TAG_action)){
-                    ResXmlAttribute attribute = action.searchAttributeByResourceId(ID_name);
-                    if(attribute==null){
-                        continue;
-                    }
-                    if(VALUE_android_intent_action_MAIN.equals(attribute.getValueAsString())){
-                        return activity;
-                    }
+    public ResXmlElement getMainActivity() {
+        Iterator<ResXmlElement> iterator = getActivities(true);
+        while (iterator.hasNext()) {
+            ResXmlElement activity = iterator.next();
+            Iterator<ResXmlElement> actions = activity
+                    .getElementsWithChild(TAG_intent_filter, TAG_action);
+            while (actions.hasNext()) {
+                ResXmlElement action = actions.next();
+                ResXmlAttribute attribute = action.searchAttributeByResourceId(ID_name);
+                if (attribute == null) {
+                    continue;
+                }
+                if(VALUE_android_intent_action_MAIN.equals(attribute.getValueAsString())){
+                    return activity;
                 }
             }
         }
@@ -236,15 +239,15 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         ResXmlElement activity = getMainActivity();
         if(activity == null){
             ResXmlElement application = getOrCreateApplicationElement();
-            activity = application.createChildElement(0, TAG_activity);
-            ResXmlElement intentFilter = activity.createChildElement(TAG_intent_filter);
-            ResXmlElement action = intentFilter.createChildElement(TAG_action);
+            activity = application.newElementAt(0, TAG_activity);
+            ResXmlElement intentFilter = activity.newElement(TAG_intent_filter);
+            ResXmlElement action = intentFilter.newElement(TAG_action);
             ResXmlAttribute attribute = action.getOrCreateAndroidAttribute(NAME_name, ID_name);
             attribute.setValueAsString(VALUE_android_intent_action_MAIN);
-            ResXmlElement category = intentFilter.createChildElement(TAG_category);
+            ResXmlElement category = intentFilter.newElement(TAG_category);
             attribute = category.getOrCreateAndroidAttribute(NAME_name, ID_name);
             attribute.setValueAsString("android.intent.category.DEFAULT");
-            category = intentFilter.createChildElement(TAG_category);
+            category = intentFilter.newElement(TAG_category);
             attribute = category.getOrCreateAndroidAttribute(NAME_name, ID_name);
             attribute.setValueAsString("android.intent.category.LAUNCHER");
         }
@@ -256,84 +259,69 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         ResXmlElement activity = getActivity(name, activityAlias);
         if(activity == null){
             ResXmlElement application = getOrCreateApplicationElement();
-            activity = application.createChildElement(
+            activity = application.newElement(
                     activityAlias? TAG_activity_alias : TAG_activity);
             ResXmlAttribute attribute = activity
-                    .createAndroidAttribute(NAME_name, ID_name);
+                    .createAndroidAttribute(AndroidManifest.NAME_name, ID_name);
             attribute.setValueAsString(name);
         }
         return activity;
     }
     public ResXmlElement getActivity(String name, boolean activityAlias){
         name = fullClassName(name);
-        for(ResXmlElement element : listActivities(activityAlias)){
-            ResXmlAttribute attribute = element.searchAttributeByResourceId(ID_name);
-            if(attribute == null){
-                continue;
-            }
-            if(name.equals(fullClassName(attribute.getValueAsString()))){
+        Iterator<ResXmlElement> iterator = getActivities(true);
+        while(iterator.hasNext()) {
+            ResXmlElement element = iterator.next();
+            if (ObjectsUtil.equals(name, getAndroidNameValue(element))) {
                 return element;
             }
         }
         return null;
     }
+    @Deprecated
     public List<ResXmlElement> listActivities(){
-        return listActivities(true);
-    }
-    public List<ResXmlElement> listActivities(boolean includeActivityAlias){
-        ResXmlElement application=getApplicationElement();
-        if(application==null){
-            return new ArrayCollection<>();
-        }
-        List<ResXmlElement> results = application.listElements(TAG_activity);
-        if(includeActivityAlias && !results.isEmpty()){
-            results.addAll(application.listElements(TAG_activity_alias));
-        }
+        ArrayCollection<ResXmlElement> results = new ArrayCollection<>();
+        results.addAll(getActivities(true));
         return results;
+    }
+    @Deprecated
+    public List<ResXmlElement> listActivities(boolean includeActivityAlias){
+        ArrayCollection<ResXmlElement> results = new ArrayCollection<>();
+        results.addAll(getActivities(includeActivityAlias));
+        return results;
+    }
+    public Iterator<ResXmlElement> getActivities(boolean includeAlias) {
+        Iterator<ResXmlElement> iterator = getElementsWithChild(
+                TAG_manifest,
+                TAG_application,
+                TAG_activity);
+        if (!includeAlias) {
+            return iterator;
+        }
+        return CombiningIterator.two(iterator, getElementsWithChild(
+                TAG_manifest,
+                TAG_application,
+                TAG_activity_alias));
     }
     public List<ResXmlElement> listApplicationElementsByTag(String tag){
-        ResXmlElement application=getApplicationElement();
-        if(application==null){
-            return new ArrayCollection<>();
-        }
-        return application.listElements(tag);
+        return CollectionUtil.toList(getApplicationElementsByTag(tag));
     }
-    public List<String> getUsesPermissions(){
-        List<String> results = new ArrayCollection<>();
-        ResXmlElement manifestElement=getManifestElement();
-        if(manifestElement==null){
-            return results;
-        }
-        List<ResXmlElement> permissionList = manifestElement.listElements(TAG_uses_permission);
-        for(ResXmlElement permission:permissionList){
-            ResXmlAttribute nameAttr = permission.searchAttributeByResourceId(ID_name);
-            if(nameAttr==null||nameAttr.getValueType()!=ValueType.STRING){
-                continue;
-            }
-            String val=nameAttr.getValueAsString();
-            if(val!=null){
-                results.add(val);
-            }
-        }
-        return results;
+    public Iterator<ResXmlElement> getApplicationElementsByTag(String tag){
+        return getElementsWithChild(TAG_manifest, TAG_application, tag);
+    }
+    public List<String> getUsesPermissions() {
+        Iterator<String> iterator = ComputeIterator.of(
+                getElementsWithChild(TAG_manifest, TAG_uses_permission),
+                AndroidManifestBlock::getAndroidNameValue
+        );
+        return CollectionUtil.toList(iterator);
     }
     public ResXmlElement getUsesPermission(String permissionName){
-        ResXmlElement manifestElement=getManifestElement();
-        if(manifestElement==null){
-            return null;
-        }
-        List<ResXmlElement> permissionList = manifestElement.listElements(TAG_uses_permission);
-        for(ResXmlElement permission:permissionList){
-            ResXmlAttribute nameAttr = permission.searchAttributeByResourceId(ID_name);
-            if(nameAttr==null || nameAttr.getValueType()!=ValueType.STRING){
-                continue;
-            }
-            String val=nameAttr.getValueAsString();
-            if(val==null){
-                continue;
-            }
-            if(val.equals(permissionName)){
-                return permission;
+        Iterator<ResXmlElement> iterator = getElementsWithChild(TAG_manifest, TAG_uses_permission);
+        while (iterator.hasNext()) {
+            ResXmlElement element = iterator.next();
+            if (ObjectsUtil.equals(permissionName, getAndroidNameValue(element))) {
+                return element;
             }
         }
         return null;
@@ -349,10 +337,10 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         }
         int i = manifestElement.lastIndexOf(TAG_uses_permission);
         i++;
-        ResXmlElement result = manifestElement.createChildElement(TAG_uses_permission);
-        ResXmlAttribute attr = result.getOrCreateAndroidAttribute(NAME_name, ID_name);
+        ResXmlElement result = manifestElement.newElement(TAG_uses_permission);
+        ResXmlAttribute attr = result.getOrCreateAndroidAttribute(AndroidManifest.NAME_name, ID_name);
         attr.setValueAsString(permissionName);
-        manifestElement.changeIndex(result, i);
+        manifestElement.moveTo(result, i);
         return result;
     }
     @Override
@@ -389,7 +377,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
     @Override
     public void setApplicationClassName(String className){
         ResXmlAttribute attribute = getOrCreateApplicationElement()
-                .getOrCreateAndroidAttribute(NAME_name, ID_name);
+                .getOrCreateAndroidAttribute(AndroidManifest.NAME_name, ID_name);
         attribute.setValueAsString(className);
     }
     @Override
@@ -494,7 +482,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         ResXmlElement manifest = getOrCreateManifestElement();
         ResXmlElement usesSdk = manifest.getElement(TAG_uses_sdk);
         if(usesSdk == null){
-            usesSdk = manifest.createChildElement(TAG_uses_sdk);
+            usesSdk = manifest.newElement(TAG_uses_sdk);
         }
         ResXmlAttribute attribute = usesSdk.getOrCreateAndroidAttribute(NAME_minSdkVersion, ID_minSdkVersion);
         attribute.setTypeAndData(ValueType.DEC, version);
@@ -520,7 +508,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         ResXmlElement manifest = getOrCreateManifestElement();
         ResXmlElement usesSdk = manifest.getElement(TAG_uses_sdk);
         if(usesSdk == null){
-            usesSdk = manifest.createChildElement(TAG_uses_sdk);
+            usesSdk = manifest.newElement(TAG_uses_sdk);
         }
         ResXmlAttribute attribute = usesSdk.getOrCreateAndroidAttribute(NAME_targetSdkVersion, ID_targetSdkVersion);
         attribute.setTypeAndData(ValueType.DEC, version);
@@ -580,7 +568,7 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         ResXmlElement manifestElement = getOrCreateManifestElement();
         ResXmlElement application = manifestElement.getElement(TAG_application);
         if(application == null){
-            application = manifestElement.createChildElement(TAG_application);
+            application = manifestElement.newElement(TAG_application);
         }
         return application;
     }
@@ -625,11 +613,12 @@ public class AndroidManifestBlock extends ResXmlDocument implements AndroidManif
         return getOrCreateElement(AndroidManifest.TAG_manifest);
     }
     public Iterator<ResXmlElement> getAndroidNameElements(String tag, String name) {
-        return FilterIterator.of(this.recursiveElements(), (element) ->
+        return recursiveElements((element) ->
                 element.equalsName(tag) && name.equals(getAndroidNameValue(element)));
     }
     @Override
     public String toString(){
+        touchChildNodesForDebug();
         StringBuilder builder=new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append("{");

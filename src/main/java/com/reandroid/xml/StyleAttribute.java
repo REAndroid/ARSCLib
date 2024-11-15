@@ -21,15 +21,26 @@ import java.io.IOException;
 
 public class StyleAttribute extends XMLAttribute {
 
-    public StyleAttribute(XMLAttribute xmlAttribute){
-        super(xmlAttribute.getName(true), xmlAttribute.getValueAsString(false));
-    }
-    public StyleAttribute(String name, String value){
-        super(name, value);
-    }
     public StyleAttribute(){
         super();
     }
+
+    @Override
+    public StyleElement getParentNode() {
+        return (StyleElement) super.getParentNode();
+    }
+
+    public void setFrom(XMLAttribute xmlAttribute) {
+        set(xmlAttribute.getName(true),
+                xmlAttribute.getValueAsString(false));
+    }
+
+    @Override
+    public StyleAttribute set(String name, String value) {
+        super.set(name, value);
+        return this;
+    }
+
     @Override
     public void serialize(XmlSerializer serializer) throws IOException {
         serializer.attribute(null, getName(), getValueAsString());

@@ -253,8 +253,8 @@ public class KXmlParser implements XmlPullParser, Closeable {
                 int cut = attrName.indexOf(':');
 
                 if (cut == 0 && !relaxed) {
-                    throw new RuntimeException(
-                            "illegal attribute name: " + attrName + " at " + this);
+                    throw new XmlPullParserException(
+                            "illegal attribute name: " + attrName , this, null);
                 } else if (cut != -1) {
                     String attrPrefix = attrName.substring(0, cut);
 
@@ -263,8 +263,8 @@ public class KXmlParser implements XmlPullParser, Closeable {
                     String attrNs = getNamespace(attrPrefix);
 
                     if (attrNs == null && !relaxed) {
-                        throw new RuntimeException(
-                                "Undefined Prefix: " + attrPrefix + " in " + this);
+                        throw new XmlPullParserException(
+                                "Undefined Prefix: " + attrPrefix, this, null);
                     }
 
                     attributes[i] = attrNs;
@@ -1872,7 +1872,16 @@ public class KXmlParser implements XmlPullParser, Closeable {
     }
 
     public String getPositionDescription() {
-        StringBuilder buf = new StringBuilder(type < TYPES.length ? TYPES[type] : "unknown");
+        StringBuilder buf = new StringBuilder();
+
+        Object origin = getOrigin();
+        if (origin != null) {
+            buf.append(" at ");
+            buf.append(origin);
+            buf.append(' ');
+        }
+
+        buf.append(type < TYPES.length ? TYPES[type] : "unknown");
         buf.append(' ');
 
         if (type == START_TAG || type == END_TAG) {
@@ -1885,7 +1894,8 @@ public class KXmlParser implements XmlPullParser, Closeable {
             }
 
             if (prefix != null) {
-                buf.append("{" + namespace + "}" + prefix + ":");
+                buf.append("{").append(namespace).append("}")
+                        .append(prefix).append(":");
             }
             buf.append(name);
 
@@ -1893,14 +1903,16 @@ public class KXmlParser implements XmlPullParser, Closeable {
             for (int i = 0; i < cnt; i += 4) {
                 buf.append(' ');
                 if (attributes[i + 1] != null) {
-                    buf.append("{" + attributes[i] + "}" + attributes[i + 1] + ":");
+                    buf.append("{").append(attributes[i]).append("}")
+                            .append(attributes[i + 1]).append(":");
                 }
-                buf.append(attributes[i + 2] + "='" + attributes[i + 3] + "'");
+                buf.append(attributes[i + 2]).append("='")
+                        .append(attributes[i + 3]).append("'");
             }
 
             buf.append('>');
         } else if (type == IGNORABLE_WHITESPACE) {
-            ;
+            buf.append("(whitespace)");
         } else if (type != TEXT) {
             buf.append(getText());
         } else if (isWhitespace) {
@@ -1920,11 +1932,6 @@ public class KXmlParser implements XmlPullParser, Closeable {
         if (location != null) {
             buf.append(" in ");
             buf.append(location);
-        }
-        Object origin = getOrigin();
-        if (origin != null) {
-            buf.append(" in ");
-            buf.append(origin);
         }
         return buf.toString();
     }

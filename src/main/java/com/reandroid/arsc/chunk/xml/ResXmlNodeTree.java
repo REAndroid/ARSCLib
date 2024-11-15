@@ -1,110 +1,258 @@
-/*
- *  Copyright (C) 2022 github.com/REAndroid
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.reandroid.arsc.chunk.xml;
 
-import com.reandroid.arsc.container.BlockList;
-import com.reandroid.json.JSONConvert;
+import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.refactor.ResourceMergeOption;
+import com.reandroid.json.JSONArray;
+import com.reandroid.json.JSONException;
 import com.reandroid.json.JSONObject;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.*;
+import com.reandroid.xml.base.NodeTree;
+import org.xmlpull.v1.XmlSerializer;
 
+import java.io.IOException;
+import java.util.AbstractList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public interface ResXmlNodeTree extends Iterable<ResXmlNode>, JSONConvert<JSONObject> {
+public abstract class ResXmlNodeTree extends ResXmlNode implements NodeTree<ResXmlNode> {
 
-    BlockList<ResXmlNode> getNodeListBlockInternal();
-    default Iterator<ResXmlNode> iterator() {
-        return getNodeListBlockInternal().clonedIterator();
+    // For debugging and testing only, remove latter
+    private List<ResXmlNode> CHILD_NODES; private ResXmlNode PARENT_NODE;
+
+    ResXmlNodeTree(Block chunk) {
+        super(chunk);
     }
-    default ResXmlNode get(int i){
-        return getNodeListBlockInternal().get(i);
+
+    @Override
+    public ResXmlNode get(int i) {
+        return getNodeList().get(i);
     }
-    default int size(){
-        return getNodeListBlockInternal().size();
+    @Override
+    public int size() {
+        return getNodeList().size();
     }
-    default void add(ResXmlNode resXmlNode) {
-        if(resXmlNode == null || resXmlNode == this) {
+    public boolean isEmpty() {
+        return size() == 0;
+    }
+
+    @Override
+    public Iterator<ResXmlNode> iterator() {
+        return getNodeList().iterator();
+    }
+
+    public<T extends ResXmlNode> Iterator<T> recursive(Class<T> instance) {
+        return InstanceIterator.of(recursive(), instance);
+    }
+    public<T extends ResXmlNode> Iterator<T> recursive(Class<T> instance, Predicate<? super T> predicate) {
+        return InstanceIterator.of(recursive(), instance, predicate);
+    }
+    public Iterator<ResXmlNode> recursive() {
+        return new IterableIterator<ResXmlNode, ResXmlNode>(iterator()) {
+            @Override
+            public Iterator<ResXmlNode> iterator(ResXmlNode resXmlNode) {
+                if (resXmlNode instanceof ResXmlNodeTree) {
+                    return CombiningIterator.singleOne(resXmlNode,
+                            ((ResXmlNodeTree) resXmlNode).recursive());
+                }
+                return SingleIterator.of(resXmlNode);
+            }
+        };
+    }
+
+    public Iterator<ResXmlNode> reversedIterator() {
+        return getNodeList().reversedIterator();
+    }
+    public Iterator<ResXmlNode> reversedRecursive() {
+        return new IterableIterator<ResXmlNode, ResXmlNode>(reversedIterator()) {
+            @Override
+            public Iterator<ResXmlNode> iterator(ResXmlNode resXmlNode) {
+                if (resXmlNode instanceof ResXmlNodeTree) {
+                    return CombiningIterator.two(
+                            ((ResXmlNodeTree) resXmlNode).reversedRecursive(),
+                            SingleIterator.of(resXmlNode)
+                    );
+                }
+                return SingleIterator.of(resXmlNode);
+            }
+        };
+    }
+
+    public boolean add(ResXmlNode resXmlNode) {
+        return getNodeList().add(resXmlNode);
+    }
+    public void add(int index, ResXmlNode resXmlNode) {
+        getNodeList().add(index, resXmlNode);
+    }
+
+    public int indexOf(ResXmlNode resXmlNode) {
+        return getNodeList().indexOf(resXmlNode);
+    }
+    public void moveTo(ResXmlNode resXmlNode, int index) {
+        getNodeList().moveTo(resXmlNode, index);
+    }
+    @Override
+    public boolean remove(ResXmlNode resXmlNode) {
+        return getNodeList().remove(resXmlNode);
+    }
+    @Override
+    public ResXmlNode remove(int i) {
+        return getNodeList().remove(i);
+    }
+    @Override
+    public boolean removeIf(Predicate<? super ResXmlNode> predicate) {
+        return getNodeList().removeIf(predicate);
+    }
+    public int countIf(Predicate<? super ResXmlNode> predicate) {
+        return getNodeList().countIf(predicate);
+    }
+    @Override
+    public boolean sort(Comparator<? super ResXmlNode> comparator) {
+        return getNodeList().sort(comparator);
+    }
+    @Override
+    public void clear() {
+        getNodeList().clearChildes();
+    }
+
+    @Override
+    public boolean removeSelf() {
+        ResXmlNodeTree parentNode = getParentNode();
+        if (parentNode != null) {
+            return parentNode.remove(this);
+        }
+        return false;
+    }
+    @Override
+    public ResXmlNodeTree getParentNode() {
+        return (ResXmlNodeTree) super.getParentNode();
+    }
+    @Override
+    void onPreRemove() {
+        clear();
+    }
+
+    abstract ResXmlNodeList getNodeList();
+
+    public abstract ResXmlNode newElement();
+    public abstract ResXmlNode newText();
+    public abstract ResXmlNode newDocument();
+
+    ResXmlNode newUnknown() {
+        return null;
+    }
+
+    @Override
+    ResXmlNode newSimilarTo(ResXmlNode otherNode) {
+        if (otherNode.isElement()) {
+            return newElement();
+        }
+        if (otherNode.isText()) {
+            return newText();
+        }
+        if (otherNode.isDocument()) {
+            return newDocument();
+        }
+        if (otherNode.isUnknown()) {
+            return newUnknown();
+        }
+        throw new RuntimeException("Unknown node class: " + otherNode.getClass());
+    }
+
+    ResXmlNode newForNodeTypeName(String name) {
+        if (JSON_node_type_element.equals(name)) {
+            return newElement();
+        }
+        if (JSON_node_type_document.equals(name)) {
+            return newDocument();
+        }
+        if (JSON_node_type_text.equals(name)) {
+            return newText();
+        }
+        throw new JSONException("Unknown node type name: " + name);
+    }
+
+    @Override
+    public void merge(ResXmlNode xmlNode) {
+        if (xmlNode == this) {
             return;
         }
-        BlockList<ResXmlNode> blockList = getNodeListBlockInternal();
-        if(!blockList.containsExact(resXmlNode)) {
-            blockList.add(resXmlNode);
-        }
-    }
-    default void add(int index, ResXmlNode resXmlNode) {
-        if(resXmlNode == null || resXmlNode == this) {
-            return;
-        }
-        BlockList<ResXmlNode> blockList = getNodeListBlockInternal();
-        if(!blockList.containsExact(resXmlNode)) {
-            blockList.add(index, resXmlNode);
-        }
-    }
-    default int removeIf(Predicate<? super ResXmlNode> predicate) {
-        int count = 0;
-        Iterator<ResXmlNode> iterator = getNodeListBlockInternal().clonedIterator();
+        ResXmlNodeTree comingTree = (ResXmlNodeTree) xmlNode;
+        Iterator<ResXmlNode> iterator = comingTree.iterator();
         while (iterator.hasNext()) {
-            ResXmlNode node = iterator.next();
-            if(predicate.test(node) && remove(node)) {
-                count ++;
+            ResXmlNode coming = iterator.next();
+            ResXmlNode child = newSimilarTo(coming);
+            child.merge(coming);
+        }
+    }
+    @Override
+    public void mergeWithName(ResourceMergeOption mergeOption, ResXmlNode xmlNode) {
+        ResXmlNodeTree comingTree = (ResXmlNodeTree) xmlNode;
+        Iterator<ResXmlNode> iterator = comingTree.iterator();
+        while (iterator.hasNext()) {
+            ResXmlNode coming = iterator.next();
+            ResXmlNode destination = newSimilarTo(coming);
+            destination.mergeWithName(mergeOption, coming);
+        }
+    }
+
+    void serializeNodes(XmlSerializer serializer, boolean decode) throws IOException {
+        Iterator<ResXmlNode> iterator = iterator();
+        while (iterator.hasNext()) {
+            iterator.next().serialize(serializer, decode);
+        }
+    }
+
+    JSONArray nodesToJson() {
+        JSONArray jsonArray = null;
+        Iterator<ResXmlNode> iterator = iterator();
+        while (iterator.hasNext()) {
+            JSONObject jsonObject = iterator.next().toJson();
+            if (jsonObject == null) {
+                continue;
             }
-        }
-        return count;
-    }
-    default boolean remove(ResXmlNode xmlNode) {
-        if(xmlNode != null && xmlNode.getParent() != null){
-            xmlNode.onRemoved();
-        }
-        return getNodeListBlockInternal().remove(xmlNode);
-    }
-    default void clear() {
-        for(ResXmlNode xmlNode : this) {
-            if(xmlNode.getParent() != null){
-                xmlNode.onRemoved();
+            if (jsonArray == null) {
+                jsonArray = new JSONArray();
             }
+            jsonArray.put(jsonObject);
         }
-        getNodeListBlockInternal().clearChildes();
+        return jsonArray;
+    }
+    void nodesFromJson(JSONObject json) {
+        JSONArray jsonArray = json.optJSONArray(JSON_nodes);
+        if (jsonArray == null) {
+            return;
+        }
+        int size = jsonArray.length();
+        for (int i = 0; i < size; i++) {
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+            if (!jsonObject.has(JSON_node_type)) {
+                throw new JSONException("Missing: " + JSON_node_type);
+            }
+            newForNodeTypeName(jsonObject.getString(JSON_node_type))
+                    .fromJson(jsonObject);
+        }
+    }
+    void touchChildNodesForDebug() {
+        PARENT_NODE = getParentNode();
+        if (this.CHILD_NODES == null) {
+            CHILD_NODES = new AbstractList<ResXmlNode>() {
+                @Override
+                public ResXmlNode get(int i) {
+                    return ResXmlNodeTree.this.get(i);
+                }
+                @Override
+                public int size() {
+                    return ResXmlNodeTree.this.size();
+                }
+            };
+        }
     }
 
-
-    default Iterator<ResXmlNode> iterator(Predicate<? super ResXmlNode> predicate){
-        return getNodeListBlockInternal().iterator(predicate);
+    @Override
+    public String toString() {
+        touchChildNodesForDebug();
+        return super.toString();
     }
-    default <T1 extends ResXmlNode> Iterator<T1> iterator(Class<T1> instance){
-        return getNodeListBlockInternal().iterator(instance);
-    }
-    default Iterator<ResXmlElement> getElements(){
-        return iterator(ResXmlElement.class);
-    }
-    default Iterator<ResXmlElement> getElements(Predicate<? super ResXmlElement> filter){
-        return FilterIterator.of(getElements(), filter);
-    }
-    default Iterator<ResXmlElement> getElements(String name){
-        return getElements(element -> element.equalsName(name));
-    }
-    default ResXmlElement getElement(String name){
-        return CollectionUtil.getFirst(getElements(name));
-    }
-    default List<ResXmlElement> listElements(){
-        return CollectionUtil.toList(getElements());
-    }
-    default List<ResXmlElement> listElements(String name){
-        return CollectionUtil.toList(getElements(name));
-    }
-
 }

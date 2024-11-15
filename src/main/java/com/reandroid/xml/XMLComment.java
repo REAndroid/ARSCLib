@@ -32,13 +32,6 @@ public class XMLComment extends XMLNode implements Comment {
         super();
     }
 
-    @Override
-    XMLComment newCopy(XMLNode parent) {
-        XMLComment comment = new XMLComment();
-        comment.setText(getText());
-        return comment;
-    }
-
     public void setText(String text){
         this.text = text;
     }

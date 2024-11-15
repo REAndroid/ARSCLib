@@ -30,18 +30,23 @@ import com.reandroid.arsc.value.ValueItem;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.arsc.value.attribute.AttributeBag;
 import com.reandroid.common.Namespace;
+import com.reandroid.json.JSONException;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.xml.XMLAttribute;
 import com.reandroid.xml.XMLUtil;
+import com.reandroid.xml.base.Attribute;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.Objects;
 
-public class ResXmlAttribute extends AttributeValue implements Comparable<ResXmlAttribute> {
+public class ResXmlAttribute extends AttributeValue implements
+        Attribute, Comparable<ResXmlAttribute> {
 
     private ReferenceItem mNSReference;
     private ReferenceItem mNameReference;
@@ -130,7 +135,15 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     public String getUri(){
         return getString(getNamespaceReference());
     }
-    public boolean equalsName(String name){
+
+    public boolean equalsNameId(int resourceId) {
+        return resourceId != 0 && resourceId == getNameId();
+    }
+    public boolean equalsNameWithNoId(String name) {
+        return getNameId() == 0 && equalsName(name);
+    }
+
+    public boolean equalsName(String name) {
         if(name == null){
             return getName() == null;
         }
@@ -151,9 +164,14 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         }
         return prefix + ":" + name;
     }
-    public String getName(){
+    public String getName() {
         return getString(getNameReference());
     }
+    @Override
+    public void setName(String name) {
+        setName(name, 0);
+    }
+
     @Override
     public String decodePrefix(){
         int resourceId = getNameId();
@@ -247,6 +265,20 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
             setNamespace(null, null);
         }
     }
+
+    @Override
+    public ResXmlElement getParentNode() {
+        return getParentInstance(ResXmlElement.class);
+    }
+
+    @Override
+    public int getLineNumber() {
+        return getParentNode().getLineNumber();
+    }
+    @Override
+    public void setLineNumber(int lineNumber) {
+    }
+
     public String getValueString(){
         return getString(getValueStringReference());
     }
@@ -261,7 +293,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     @Override
     public void setNameId(int resourceId) {
         ResXmlIDMap xmlIDMap = getResXmlIDMap();
-        if(xmlIDMap==null){
+        if (xmlIDMap == null) {
             return;
         }
         ResXmlID xmlID = xmlIDMap.getOrCreate(resourceId);
@@ -309,8 +341,8 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
             return namespace;
         }
         ResXmlElement parentElement = getParentElement();
-        if(parentElement != null){
-            return parentElement.getStartNamespaceByUriRef(uriRef);
+        if(parentElement != null) {
+            return (ResXmlStartNamespace) parentElement.getNamespaceForUriReference(uriRef);
         }
         return null;
     }
@@ -368,9 +400,12 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         return null;
     }
     private ResXmlIDMap getResXmlIDMap(){
-        ResXmlElement xmlElement= getParentElement();
-        if(xmlElement!=null){
-            return xmlElement.getResXmlIDMap();
+        ResXmlElement xmlElement = getParentElement();
+        if(xmlElement != null) {
+            ResXmlDocument document = xmlElement.getParentDocument();
+            if (document != null) {
+                return document.getResXmlIDMap();
+            }
         }
         return null;
     }
@@ -392,7 +427,7 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         if(uri != null && prefix != null){
             namespace = parentElement.getOrCreateNamespace(uri, prefix);
         }else if(uri != null){
-            namespace = parentElement.getStartNamespaceByUri(uri);
+            namespace = parentElement.getNamespaceByUri(uri);
         }else{
             namespace = parentElement.getNamespaceByPrefix(prefix);
         }
@@ -576,6 +611,14 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     }
 
     @Override
+    public void merge(ValueItem valueItem) {
+        super.merge(valueItem);
+        ResXmlAttribute coming = (ResXmlAttribute) valueItem;
+        setName(coming.getName(false), coming.getNameId());
+        setNamespace(coming.getNamespace());
+    }
+
+    @Override
     public void mergeWithName(ResourceMergeOption mergeOption, ValueItem valueItem) {
         super.mergeWithName(mergeOption, valueItem);
         ResXmlAttribute attribute = (ResXmlAttribute) valueItem;
@@ -715,34 +758,49 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
     }
     private String buildErrorMessage(String msg, String value){
         ResXmlElement parent = getParentElement();
-        return msg + ", at line = " + parent.getStartLineNumber() +", <"+ parent.getName(true) + " "
+        return msg + ", at line = " + parent.getLineNumber() +", <"+ parent.getName(true) + " "
                 + getName(true) + "=\"" + value + "\"";
     }
 
+    private void setNamespaceFromJson(JSONObject jsonObject) {
+        String uri = jsonObject.optString(ResXmlElement.JSON_uri, null);
+        String prefix = jsonObject.optString(ResXmlElement.JSON_prefix, null);
+        if (uri == null && prefix != null) {
+            throw new JSONException("Provided " + ResXmlElement.JSON_prefix + "="
+                    + prefix + ", but missing: " + ResXmlElement.JSON_uri);
+        }
+        if (prefix == null && uri != null) {
+            throw new JSONException("Provided " + ResXmlElement.JSON_uri + "="
+                    + uri + ", but missing: " + ResXmlElement.JSON_prefix);
+        }
+        setNamespace(uri, prefix);
+    }
     @Override
     public JSONObject toJson() {
-        JSONObject jsonObject = super.toJson();
-        jsonObject.put(NAME_name, getName());
-        jsonObject.put(NAME_id, getNameId());
-        jsonObject.put(NAME_namespace_uri, getUri());
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put(ResXmlElement.JSON_name, getName());
+        jsonObject.put(ResXmlElement.JSON_id, getNameId());
+
+        jsonObject.put(ResXmlElement.JSON_uri, getUri());
+        jsonObject.put(ResXmlElement.JSON_prefix, getPrefix());
+
+        JSONObject values = super.toJson();
+        for (String key : values.keySet()) {
+            jsonObject.put(key, values.get(key));
+        }
+
         return jsonObject;
     }
     @Override
     public void fromJson(JSONObject json) {
-        String name = json.optString(NAME_name, "");
-        int id =  json.optInt(NAME_id, 0);
+        String name = json.optString(ResXmlElement.JSON_name, "");
+        int id =  json.optInt(ResXmlElement.JSON_id, 0);
         setName(name, id);
-        String uri = json.optString(NAME_namespace_uri, null);
-        if(uri != null){
-            ResXmlNamespace ns = getParentElement().getStartNamespaceByUri(uri);
-            if(ns == null){
-                ns = getParentElement().getRootElement()
-                        .getOrCreateNamespace(uri, "");
-            }
-            setNamespaceReference(ns.getUriReference());
-        }
+        setNamespaceFromJson(json);
         super.fromJson(json);
     }
+    @Deprecated
     public XMLAttribute decodeToXml() {
         return toXml(true);
     }
@@ -792,16 +850,19 @@ public class ResXmlAttribute extends AttributeValue implements Comparable<ResXml
         builder.append("}");
         return builder.toString();
     }
+    @Override
+    public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
 
-
-
-    public static final String NAME_id = "id";
-    public static final String NAME_name = "name";
-    public static final String NAME_namespace_uri = "namespace_uri";
+    }
 
     private static final int OFFSET_NS = 0;
     private static final int OFFSET_NAME = 4;
     private static final int OFFSET_STRING = 8;
 
     private static final int OFFSET_SIZE = 12;
+
+    public static final int ATTRIBUTE_RESOURCE_ID_id = ObjectsUtil.of(0x010100d0);
+    public static final String ATTRIBUTE_NAME_CLASS = ObjectsUtil.of("class");
+    public static final String ATTRIBUTE_NAME_STYLE = ObjectsUtil.of("style");
+
 }

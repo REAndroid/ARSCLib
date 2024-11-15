@@ -23,4 +23,5 @@ public interface ResXmlNamespace extends Namespace {
     int getUriReference();
     int getLineNumber();
     void setLineNumber(int lineNumber);
+    boolean isUnused();
 }

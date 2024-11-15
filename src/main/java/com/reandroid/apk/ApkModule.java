@@ -122,12 +122,11 @@ public class ApkModule implements ApkFile, Closeable {
         }
         return null;
     }
-    public String refreshManifest(){
+    public void refreshManifest(){
         AndroidManifestBlock manifestBlock = this.mManifestBlock;
         if(manifestBlock != null){
-            return manifestBlock.refreshFull();
+            manifestBlock.refreshFull();
         }
-        return null;
     }
     public void validateResourceNames(){
         if(!hasTableBlock()){
@@ -430,7 +429,7 @@ public class ApkModule implements ApkFile, Closeable {
                 resXmlDocument.setPackageBlock(packageBlock);
             }
         }
-        return resXmlDocument.decodeToXml();
+        throw new RuntimeException("Method not implemented");
     }
     public List<DexFileInputSource> listDexFiles(){
         List<DexFileInputSource> results = new ArrayCollection<>();
@@ -720,7 +719,7 @@ public class ApkModule implements ApkFile, Closeable {
         getZipEntryMap().clear();
         AndroidManifestBlock manifestBlock = this.mManifestBlock;
         if(manifestBlock!=null){
-            manifestBlock.destroy();
+            manifestBlock.clear();
             this.mManifestBlock = null;
         }
         TableBlock tableBlock = this.mTableBlock;

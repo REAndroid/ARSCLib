@@ -107,6 +107,11 @@ public class ParserEventList implements Iterator<ParserEvent> {
         }
         eventList.add(parserEvent);
     }
+    void addAll(Iterator<ParserEvent> iterator){
+        while (iterator.hasNext()) {
+            add(iterator.next());
+        }
+    }
     private ParserEvent get(int i){
         return eventList.get(i);
     }

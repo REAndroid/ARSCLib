@@ -15,27 +15,25 @@
  */
 package com.reandroid.xml;
 
-import com.reandroid.utils.collection.ArrayCollection;
-import com.reandroid.utils.collection.EmptyList;
-
-import java.util.List;
-
 public interface Span {
+
     String getTagName();
     int getFirstChar();
     int getLastChar();
     int getSpanOrder();
     String getSpanAttributes();
-    default StyleElement toElement(){
-        StyleElement element = new StyleElement(getTagName());
-        element.addAttributes(parseAttributes(getSpanAttributes()));
+
+    default StyleElement toElement() {
+        StyleElement element = new StyleElement();
+        element.setName(getTagName());
+        parseAttributes(element, getSpanAttributes());
         return element;
     }
-    default List<StyleAttribute> parseAttributes(String attributes){
+
+    static void parseAttributes(StyleElement element, String attributes){
         if(attributes == null || attributes.length() == 0){
-            return EmptyList.of();
+            return;
         }
-        List<StyleAttribute> results = new ArrayCollection<>();
         StyleAttribute attribute = null;
         StringBuilder builder = new StringBuilder();
         int length = attributes.length();
@@ -44,8 +42,7 @@ public interface Span {
             char ch = attributes.charAt(i);
             if(ch == '=' && attribute == null){
                 if(builder != null){
-                    attribute = new StyleAttribute(builder.toString(), "");
-                    results.add(attribute);
+                    attribute = element.newAttribute().set(builder.toString(), "");
                 }
                 builder = null;
                 quoted = false;
@@ -88,7 +85,6 @@ public interface Span {
         if(attribute != null && builder !=  null){
             attribute.setValue(builder.toString());
         }
-        return results;
     }
 
     static String splitTagName(String raw){

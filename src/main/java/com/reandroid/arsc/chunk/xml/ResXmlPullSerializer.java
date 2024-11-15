@@ -94,7 +94,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
             ResXmlDocument document =  getCurrentDocument();
             element = document.getDocumentElement();
             if(element == null){
-                element = document.createRootElement(null);
+                element = document.newElement();
             }
             mCurrentElement = element;
         }
@@ -221,8 +221,9 @@ public class ResXmlPullSerializer implements XmlSerializer {
         if(element.getName() == null){
             element.setName(name);
         }else {
-            element = element.createChildElement(name);
+            element = element.newElement();
             mCurrentElement = element;
+            element.setName(name);
         }
         element.setNamespace(namespace, prefix);
         mCurrentElement = element;
@@ -239,7 +240,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
             name = name.substring(i + 1);
         }
         if(prefix == null){
-            ResXmlNamespace resXmlNamespace = element.getStartNamespaceByUri(namespace);
+            ResXmlNamespace resXmlNamespace = element.getNamespaceByUri(namespace);
             if(resXmlNamespace != null){
                 prefix = resXmlNamespace.getPrefix();
             }
@@ -252,7 +253,6 @@ public class ResXmlPullSerializer implements XmlSerializer {
     @Override
     public ResXmlPullSerializer endTag(String namespace, String name) throws IOException, IllegalArgumentException, IllegalStateException {
         flushText();
-        mCurrentElement.calculateAttributesOrder();
         mCurrentElement = mCurrentElement.getParentElement();
         return this;
     }
@@ -314,7 +314,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
             return;
         }
         ResXmlElement element = getCurrentElement();
-        element.addResXmlText(text);
+        element.newText().setText(text);
     }
     private void appendText(String text){
         if(text == null){

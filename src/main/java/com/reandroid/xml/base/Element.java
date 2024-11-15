@@ -25,11 +25,11 @@ public interface Element<T extends Node>
     int getAttributeCount();
     Attribute getAttributeAt(int i);
     Iterator<? extends Attribute> getAttributes();
-    void addAttribute(Attribute attribute);
-    void addAttribute(int i, Attribute attribute);
 
     int getNamespaceCount();
     Namespace getNamespaceAt(int i);
     Iterator<? extends Namespace> getNamespaces();
     Element<T> newElement();
+    Attribute newAttribute();
+    Namespace newNamespace(String uri, String prefix);
 }

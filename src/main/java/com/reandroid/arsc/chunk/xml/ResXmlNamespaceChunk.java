@@ -18,8 +18,6 @@ package com.reandroid.arsc.chunk.xml;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.item.ResXmlString;
 
-import java.util.Objects;
-
 abstract class ResXmlNamespaceChunk extends BaseXmlChunk implements ResXmlNamespace{
     private ResXmlNamespaceChunk mPair;
     ResXmlNamespaceChunk(ChunkType chunkType) {
@@ -107,6 +105,13 @@ abstract class ResXmlNamespaceChunk extends BaseXmlChunk implements ResXmlNamesp
         if(pair != null){
             pair.setLineNumber(lineNumber);
         }
+    }
+    public boolean isRemoved() {
+        return getParent() == null;
+    }
+    @Override
+    public boolean isUnused() {
+        return isRemoved();
     }
     @Override
     public String toString(){

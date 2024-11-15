@@ -81,7 +81,7 @@ public abstract class ApkModuleEncoder extends ApkModuleCoder{
         AndroidManifestBlock manifestBlock = apkModule.getAndroidManifest();
         ResXmlElement element = manifestBlock.getDocumentElement();
         if(element.equalsName(AndroidManifest.EMPTY_MANIFEST_TAG) &&
-                element.countElements() == 0){
+                element.getElementsCount() == 0){
             apkModule.setManifest(null);
             logMessage("Removed empty: " + AndroidManifest.FILE_NAME);
         }

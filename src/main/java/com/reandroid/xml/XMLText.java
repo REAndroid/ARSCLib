@@ -23,7 +23,9 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.IOException;
 
 public class XMLText extends XMLNode implements Text {
+
     private String text;
+
     public XMLText(String text){
         this.text = text;
     }
@@ -34,20 +36,6 @@ public class XMLText extends XMLNode implements Text {
     @Override
     public XMLElement getParentNode() {
         return (XMLElement) super.getParentNode();
-    }
-
-    @Override
-    XMLNode newCopy(XMLNode parent) {
-        XMLText xmlText;
-        if(parent instanceof XMLNodeTree){
-            XMLNodeTree nodeTree =  (XMLNodeTree) parent;
-            xmlText = nodeTree.newText();
-            xmlText.setText(this.text);
-            nodeTree.add(xmlText);
-        }else {
-            xmlText = new XMLText(this.text);
-        }
-        return xmlText;
     }
 
     public String getText(){

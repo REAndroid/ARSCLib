@@ -19,13 +19,17 @@ import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.pool.ResXmlStringPool;
-import com.reandroid.xml.XMLNamespace;
+import com.reandroid.json.JSONConvert;
+import com.reandroid.json.JSONObject;
+import com.reandroid.utils.StringsUtil;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-public class ResXmlStartNamespace extends ResXmlNamespaceChunk {
+public class ResXmlStartNamespace extends ResXmlNamespaceChunk
+        implements JSONConvert<JSONObject> {
+
     private final Set<ResXmlAttribute> mReferencedAttributes;
     private final Set<ResXmlStartElement> mReferencedElements;
 
@@ -77,27 +81,37 @@ public class ResXmlStartNamespace extends ResXmlNamespaceChunk {
     void linkStringReferences(){
         super.linkStringReferences();
         ResXmlEndNamespace end = getEnd();
-        if(end!=null){
+        if (end != null) {
             end.linkStringReferences();
         }
     }
+
     @Override
-    void onRemoved(){
+    public void onChunkLoaded() {
+        super.onChunkLoaded();
+        linkStringReferences();
+    }
+
+    @Override
+    void onPreRemove(){
         ResXmlEndNamespace end = getEnd();
-        if(end!=null){
-            end.onRemoved();
+        if (end != null) {
+            end.removeSelf();
         }
         mReferencedAttributes.clear();
         mReferencedElements.clear();
-        super.onRemoved();
+        super.onPreRemove();
     }
-    public boolean hasReferences(){
-        return mReferencedAttributes.size() > 0
-                || mReferencedElements.size() > 0;
+
+    @Override
+    public boolean isUnused() {
+        if (isRemoved()) {
+            return true;
+        }
+        return mReferencedAttributes.size() == 0
+                && mReferencedElements.size() == 0;
     }
-    public Iterator<ResXmlAttribute> getReferencedAttributes(){
-        return mReferencedAttributes.iterator();
-    }
+
     void addAttributeReference(ResXmlAttribute attribute){
         if(attribute != null){
             mReferencedAttributes.add(attribute);
@@ -118,26 +132,7 @@ public class ResXmlStartNamespace extends ResXmlNamespaceChunk {
             mReferencedElements.remove(element);
         }
     }
-    boolean removeIfNoReference(){
-        if(hasReferences()){
-            return false;
-        }
-        ResXmlElement parent = getParentResXmlElement();
-        if(parent != null){
-            parent.removeNamespace(this);
-            return true;
-        }
-        return false;
-    }
-    public XMLNamespace decodeToXml(){
-        String uri = getUri();
-        String prefix = getPrefix();
-        if(isEmpty(uri) || isEmpty(prefix)){
-            return null;
-        }
-        return new XMLNamespace(uri, prefix);
-    }
-    boolean fixEmpty(){
+    boolean fixEmpty() {
         boolean changed = fixEmptyPrefix();
         if(fixEmptyUri()){
             changed = true;
@@ -145,24 +140,32 @@ public class ResXmlStartNamespace extends ResXmlNamespaceChunk {
         return changed;
     }
     private boolean fixEmptyPrefix(){
-        if(!isEmpty(getPrefix())){
+        if(!StringsUtil.isBlank(getPrefix())){
             return false;
         }
         setPrefix("ns" + getIndex());
         return true;
     }
     private boolean fixEmptyUri(){
-        if(!isEmpty(getUri())){
+        if(!StringsUtil.isBlank(getUri())){
             return false;
         }
         setUri(ResourceLibrary.URI_RES_AUTO);
         return true;
     }
-    private boolean isEmpty(String txt){
-        if(txt==null){
-            return true;
-        }
-        txt=txt.trim();
-        return txt.length()==0;
+
+    @Override
+    public JSONObject toJson() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put(ResXmlNode.JSON_uri, getUri());
+        jsonObject.put(ResXmlNode.JSON_prefix, getPrefix());
+        jsonObject.put(ResXmlNode.JSON_line, getLineNumber());
+        return jsonObject;
+    }
+    @Override
+    public void fromJson(JSONObject json) {
+        setNamespace(json.getString(ResXmlElement.JSON_uri),
+                json.getString(ResXmlElement.JSON_prefix));
+        setLineNumber(json.optInt(ResXmlElement.JSON_line));
     }
 }

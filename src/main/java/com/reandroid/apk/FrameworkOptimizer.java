@@ -15,6 +15,7 @@
   */
 package com.reandroid.apk;
 
+import com.reandroid.app.AndroidManifest;
 import com.reandroid.archive.InputSource;
 import com.reandroid.archive.ZipEntryMap;
 import com.reandroid.arsc.chunk.TableBlock;
@@ -27,10 +28,10 @@ import com.reandroid.arsc.model.FrameworkTable;
 import com.reandroid.arsc.model.ResourceEntry;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.value.*;
-import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 
  public class FrameworkOptimizer {
@@ -132,16 +133,16 @@ import java.util.zip.ZipEntry;
         logMessage("Compressing manifest ...");
         int prev = manifestBlock.countBytes();
         ResXmlElement manifest = manifestBlock.getDocumentElement();
-        List<ResXmlNode> removeList = getManifestElementToRemove(manifest);
-        for(ResXmlNode node:removeList){
-            manifest.remove(node);
-        }
+        manifest.removeIf(new Predicate<ResXmlNode>() {
+            @Override
+            public boolean test(ResXmlNode xmlNode) {
+                return !(xmlNode instanceof ResXmlElement) ||
+                        !((ResXmlElement) xmlNode).equalsName(AndroidManifest.TAG_application);
+            }
+        });
         ResXmlElement application = manifestBlock.getApplicationElement();
         if(application!=null){
-            removeList = application.listXmlNodes();
-            for(ResXmlNode node:removeList){
-                application.remove(node);
-            }
+            application.clear();
         }
         ResXmlStringPool stringPool = manifestBlock.getStringPool();
         stringPool.removeUnusedStrings();
@@ -149,20 +150,6 @@ import java.util.zip.ZipEntry;
         long diff=prev - manifestBlock.countBytes();
         long percent=(diff*100L)/prev;
         logMessage("Manifest size reduced by: "+percent+" %");
-    }
-    private List<ResXmlNode> getManifestElementToRemove(ResXmlElement manifest){
-        List<ResXmlNode> results = new ArrayCollection<>();
-        for(ResXmlNode node:manifest.listXmlNodes()){
-            if(!(node instanceof ResXmlElement)){
-                continue;
-            }
-            ResXmlElement element = (ResXmlElement)node;
-            if(AndroidManifestBlock.TAG_application.equals(element.getName())){
-                continue;
-            }
-            results.add(element);
-        }
-        return results;
     }
     private void backupManifestValue(AndroidManifestBlock manifestBlock, TableBlock tableBlock){
         logMessage("Backup manifest values ...");

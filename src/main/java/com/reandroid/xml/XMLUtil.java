@@ -157,7 +157,22 @@ public class XMLUtil {
         }
     }
 
+    public static Object getLocation(XmlPullParser parser) {
+        try {
+            return parser.getProperty(XMLUtil.PROPERTY_LOCATION);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+    public static void setLocation(XmlPullParser parser, Object location) {
+        try {
+            parser.setProperty(XMLUtil.PROPERTY_LOCATION, location);
+        } catch (Throwable ignored) {
+        }
+    }
+
     public static final String FEATURE_INDENT_OUTPUT = ObjectsUtil.of("http://xmlpull.org/v1/doc/features.html#indent-output");
+    public static final String PROPERTY_LOCATION = ObjectsUtil.of("http://xmlpull.org/v1/doc/properties.html#location");
 
     public static String [] EVENT_TYPES = {
             "START_DOCUMENT",

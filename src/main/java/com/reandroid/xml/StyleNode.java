@@ -18,5 +18,4 @@ package com.reandroid.xml;
 public interface StyleNode {
     void appendChar(char ch);
     StyleNode getParentStyle();
-    void addStyleNode(StyleNode styleNode);
 }

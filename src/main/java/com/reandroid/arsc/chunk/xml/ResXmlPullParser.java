@@ -21,6 +21,7 @@ import com.reandroid.arsc.coder.XmlSanitizer;
 import com.reandroid.arsc.value.ValueType;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.xml.XMLUtil;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -44,6 +45,8 @@ public class ResXmlPullParser implements XmlResourceParser {
     private boolean processNamespaces;
     private boolean reportNamespaceAttrs;
     private boolean mIsTagStared;
+
+    private Object location;
 
     public ResXmlPullParser(PackageBlock packageBlock){
         this.mCurrentPackage = packageBlock;
@@ -70,7 +73,7 @@ public class ResXmlPullParser implements XmlResourceParser {
             xmlDocument.setPackageBlock(getCurrentPackage());
         }
         initDefaultFeatures();
-        xmlDocument.addEvents(mEventList);
+        mEventList.addAll(xmlDocument.getParserEvents());
     }
     public ResXmlDocument getResXmlDocument() {
         return mDocument;
@@ -88,7 +91,7 @@ public class ResXmlPullParser implements XmlResourceParser {
         if(this.mDocument == null){
             return;
         }
-        this.mDocument.destroy();
+        this.mDocument.clear();
         this.mDocument = null;
     }
 
@@ -135,6 +138,11 @@ public class ResXmlPullParser implements XmlResourceParser {
     @Override
     public String getPositionDescription() {
         StringBuilder builder = new StringBuilder();
+        Object location = XMLUtil.getLocation(this);
+        if (location != null) {
+            builder.append(" at ");
+            builder.append(location);
+        }
         builder.append(" Binary XML file line #");
         builder.append(mEventList.getLineNumber());
         ResXmlElement element = getCurrentElement();
@@ -325,9 +333,17 @@ public class ResXmlPullParser implements XmlResourceParser {
     }
     @Override
     public void setProperty(String name, Object value) throws XmlPullParserException {
+        if (XMLUtil.PROPERTY_LOCATION.equals(name)) {
+            location = value;
+        } else {
+            throw new XmlPullParserException("unsupported property: " + name);
+        }
     }
     @Override
     public Object getProperty(String name) {
+        if (XMLUtil.PROPERTY_LOCATION.equals(name)) {
+            return location;
+        }
         return null;
     }
     @Override
@@ -682,8 +698,8 @@ public class ResXmlPullParser implements XmlResourceParser {
         reportNamespaceAttrs = true;
     }
 
-    public static interface DocumentLoadedListener{
-        public ResXmlDocument onDocumentLoaded(ResXmlDocument resXmlDocument);
+    public interface DocumentLoadedListener {
+        ResXmlDocument onDocumentLoaded(ResXmlDocument resXmlDocument);
     }
 
 }

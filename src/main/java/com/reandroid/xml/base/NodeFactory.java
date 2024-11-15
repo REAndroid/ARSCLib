@@ -15,12 +15,7 @@
  */
 package com.reandroid.xml.base;
 
-import com.reandroid.common.Namespace;
-
 public interface NodeFactory {
-    Namespace newNamespace(String uri, String prefix);
-    Attribute newAttribute();
     Element<?> newElement();
     Text newText();
-    Comment newComment();
 }

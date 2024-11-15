@@ -13,8 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.xml.base;
+package com.reandroid.arsc.chunk.xml;
 
-public interface Document<E extends Element<?>> extends Node, NodeFactory{
-    E getDocumentElement();
+import com.reandroid.arsc.container.BlockList;
+
+class ResXmlChunkList<T extends BaseXmlChunk> extends BlockList<T> {
+
+    ResXmlChunkList() {
+        super();
+    }
+
+    @Override
+    public void onPreRemove(T item) {
+        super.onPreRemove(item);
+        item.onPreRemove();
+    }
 }

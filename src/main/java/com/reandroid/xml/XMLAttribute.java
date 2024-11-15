@@ -35,16 +35,6 @@ public class XMLAttribute extends XMLNode implements Attribute {
         mValue = value;
     }
     @Override
-    XMLAttribute newCopy(XMLNode parent){
-        XMLAttribute attribute = new XMLAttribute();
-        attribute.setParentNode(parent);
-        attribute.setName(getUri(), getPrefix(), getName(false));
-        if(parent instanceof XMLElement){
-            ((XMLElement)parent).addAttribute(attribute);
-        }
-        return attribute;
-    }
-    @Override
     public XMLElement getParentNode(){
         return (XMLElement) super.getParentNode();
     }
@@ -78,6 +68,18 @@ public class XMLAttribute extends XMLNode implements Attribute {
     public void setNamespace(Namespace namespace){
         this.mNamespace = (XMLNamespace) namespace;
     }
+    public void setNamespaceFrom(Namespace namespace) {
+        String uri;
+        String prefix;
+        if (namespace != null) {
+            uri = namespace.getUri();
+            prefix = namespace.getPrefix();
+        } else {
+            uri = null;
+            prefix = null;
+        }
+        setNamespace(uri, prefix);
+    }
     public void setNamespace(String uri, String prefix){
         XMLElement element = getParentNode();
         if(element == null){
@@ -110,6 +112,11 @@ public class XMLAttribute extends XMLNode implements Attribute {
             return XMLUtil.escapeXmlChars(value);
         }
         return value;
+    }
+    void setFrom(XMLAttribute xmlAttribute) {
+        set(xmlAttribute.getName(true),
+                xmlAttribute.getValueAsString(false));
+        setNamespaceFrom(xmlAttribute.getNamespace());
     }
     XMLAttribute set(String name, String value){
         this.mName = name;

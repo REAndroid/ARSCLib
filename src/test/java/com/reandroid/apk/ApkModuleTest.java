@@ -118,7 +118,7 @@ public class ApkModuleTest {
         attribute = root.getOrCreateAndroidAttribute("orientation", 0x010100c4);
         attribute.setTypeAndData(ValueType.DEC, 1); // vertical
 
-        ResXmlElement textView = root.createChildElement("TextView");
+        ResXmlElement textView = root.newElement("TextView");
         attribute = textView.getOrCreateAndroidAttribute("layout_width", 0x010100f4);
         attribute.setTypeAndData(ValueType.DEC, -1); // wrap_content
 
@@ -179,7 +179,7 @@ public class ApkModuleTest {
     }
     private void createStyledStringInXmlDocument(ResXmlElement root) {
 
-        ResXmlElement textView2 = root.createChildElement("TextView");
+        ResXmlElement textView2 = root.newElement("TextView");
         ResXmlAttribute attribute = textView2.getOrCreateAndroidAttribute("layout_width", 0x010100f4);
         attribute.setTypeAndData(ValueType.DEC, -1); // wrap_content
 
@@ -213,12 +213,11 @@ public class ApkModuleTest {
                 packageId, packageName);
         packageBlock.getHeaderBlock().setTypeIdOffset(0);
         StyleDocument xmlDocument = new StyleDocument();
-        xmlDocument.add(new StyleText("The quick"));
-        StyleElement element = new StyleElement();
-        xmlDocument.add(element);
+        xmlDocument.newText().setText("The quick");
+        StyleElement element = xmlDocument.newElement();
         element.setName("br");
         element.addText("brown fox");
-        xmlDocument.add(new StyleText("jumps over lazy dog"));
+        xmlDocument.newText().setText("jumps over lazy dog");
         TableStringPool pool = tableBlock.getStringPool();
         TableString tableString = pool.getOrCreate(xmlDocument);
         Entry someStyle = packageBlock.getOrCreate("", "string", "some_style");
@@ -522,7 +521,7 @@ public class ApkModuleTest {
     }
     private void addEmptyAttributeValue(AndroidManifestBlock manifestBlock){
         ResXmlElement application = manifestBlock.getOrCreateApplicationElement();
-        ResXmlElement meta = application.createChildElement(AndroidManifest.TAG_meta_data);
+        ResXmlElement meta = application.newElement(AndroidManifest.TAG_meta_data);
         ResXmlAttribute name = meta.getOrCreateAndroidAttribute(AndroidManifest.NAME_name,
                 AndroidManifest.ID_name);
         name.setValueAsString(EMPTY_META_NAME);

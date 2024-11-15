@@ -47,31 +47,8 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
         this();
         setName(tagName);
     }
-    @Override
-    XMLElement newCopy(XMLNode parent){
-        XMLElement element = newElement();
-        if(parent instanceof XMLNodeTree){
-            ((XMLNodeTree)parent).add(element);
-        }
-        int count = getNamespaceCount();
-        for(int i = 0; i < count; i++){
-            getNamespaceAt(i).newCopy(element);
-        }
-        setName(getUri(), getPrefix(), getName(false));
-        count = getAttributeCount();
-        for(int i = 0; i < count; i++){
-            element.addAttribute(getAttributeAt(i).newCopy(element));
-        }
-        Iterator<XMLNode> iterator = iterator();
-        while(iterator.hasNext()){
-            iterator.next().newCopy(element);
-        }
-        return element;
-    }
     public void addText(String text){
-        XMLText xmlText = newText();
-        xmlText.setText(text);
-        add(xmlText);
+        newText().setText(text);
     }
     public XMLAttribute getAttributeAt(int index){
         return mAttributes.get(index);
@@ -133,26 +110,40 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
 
     @Override
     public XMLNamespace newNamespace(String uri, String prefix) {
-        return new XMLNamespace(uri, prefix);
-    }
-    @Override
-    public XMLAttribute newAttribute() {
-        return new XMLAttribute();
+        XMLNamespace namespace = new XMLNamespace(uri, prefix);
+        addNamespace(namespace);
+        return namespace;
     }
     @Override
     public XMLElement newElement() {
-        return new XMLElement();
+        XMLElement element = new XMLElement();
+        add(element);
+        return element;
     }
     @Override
     public XMLText newText() {
-        return super.newText();
+        XMLText xmlText = new XMLText();
+        add(xmlText);
+        return xmlText;
+    }
+
+    @Override
+    public XMLComment newComment() {
+        XMLComment comment = new XMLComment();
+        add(comment);
+        return comment;
+    }
+    public XMLAttribute newAttribute() {
+        XMLAttribute attribute = new XMLAttribute();
+        addAttribute(attribute);
+        return attribute;
     }
 
     public void addNamespace(String uri, String prefix){
         if(uri == null || prefix == null){
             return;
         }
-        addNamespace(newNamespace(uri, prefix));
+        newNamespace(uri, prefix);
     }
     public void addNamespace(XMLNamespace namespace){
         if(namespace != null && !mNamespaceList.contains(namespace)){
@@ -172,8 +163,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
         if(namespace != null){
             return namespace;
         }
-        namespace = newNamespace(uri, prefix);
-        getRootElement().addNamespace(namespace);
+        namespace = getRootElement().newNamespace(uri, prefix);
         return namespace;
     }
     public XMLNamespace getXMLNamespace(String uri, String prefix){
@@ -231,7 +221,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
         return mAttributes;
     }
     public int getChildElementsCount(){
-        return super.countNodesWithType(XMLElement.class);
+        return super.countNodeWithType(XMLElement.class);
     }
     public List<XMLElement> getChildElementList(){
         return CollectionUtil.toList(iterator(XMLElement.class));
@@ -309,10 +299,9 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
         XMLAttribute xmlAttribute = getAttribute(name);
         if(xmlAttribute == null){
             if(XMLNamespace.looksNamespace(name, value)){
-                XMLNamespace namespace = newNamespace(value, XMLUtil.splitName(name));
-                addNamespace(namespace);
+                newNamespace(value, XMLUtil.splitName(name));
             }else{
-                addAttribute(newAttribute().set(name,value));
+                newAttribute().set(name,value);
             }
         }else {
             xmlAttribute.setValue(value);
@@ -324,10 +313,9 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
             return;
         }
         if(XMLNamespace.looksNamespace(name, value)){
-            XMLNamespace namespace = newNamespace(value, XMLUtil.splitName(name));
-            addNamespace(namespace);
+            newNamespace(value, XMLUtil.splitName(name));
         }else{
-            addAttribute(newAttribute().set(name,value));
+            newAttribute().set(name,value);
         }
     }
     public void addAttribute(String uri, String prefix, String name, String value){
@@ -335,8 +323,7 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
             return;
         }
         if(XMLNamespace.looksNamespace(name, value)){
-            XMLNamespace namespace = newNamespace(value, XMLUtil.splitName(name));
-            addNamespace(namespace);
+            newNamespace(value, XMLUtil.splitName(name));
         }else{
             XMLAttribute attribute = new XMLAttribute();
             addAttribute(attribute);
@@ -516,23 +503,21 @@ public class XMLElement extends XMLNodeTree implements Element<XMLNode> {
         event = parser.next();
         XMLText xmlText = null;
         while (event != XmlPullParser.END_TAG && event != XmlPullParser.END_DOCUMENT){
-            if(event == XmlPullParser.START_TAG){
-                XMLElement element = newElement();
-                add(element);
-                element.parse(parser);
+            if (event == XmlPullParser.START_TAG) {
+                newElement().parse(parser);
                 xmlText = null;
-            }else if(XMLText.isTextEvent(event)){
+            } else if(XMLText.isTextEvent(event)) {
                 if(xmlText == null){
                     xmlText = newText();
                 }
                 xmlText.parse(parser);
-                if(!xmlText.isIndent()){
-                    add(xmlText);
+                if(xmlText.isIndent()){
+                    remove(xmlText);
+                    xmlText = null;
                 }
             }else if(event == XmlPullParser.COMMENT){
                 XMLComment comment = newComment();
                 if(comment != null){
-                    add(comment);
                     comment.parse(parser);
                 }else {
                     parser.next();

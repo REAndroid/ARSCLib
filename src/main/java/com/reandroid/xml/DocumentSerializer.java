@@ -154,7 +154,6 @@ public class DocumentSerializer implements XmlSerializer {
             nodeTree = this.document;
         }
         XMLElement element = nodeTree.newElement();
-        nodeTree.add(element);
         element.setName(name);
         this.currentElement = element;
         return this;
@@ -164,7 +163,6 @@ public class DocumentSerializer implements XmlSerializer {
     public XmlSerializer attribute(String namespace, String name, String value) throws IOException{
         XMLAttribute attribute = this.currentElement.newAttribute();
         attribute.set(name, value);
-        this.currentElement.addAttribute(attribute);
         attribute.setNamespace(namespace, getPrefix(namespace, true));
         return this;
     }
@@ -219,7 +217,6 @@ public class DocumentSerializer implements XmlSerializer {
     public void comment(String text) throws IOException, IllegalArgumentException, IllegalStateException {
         XMLNodeTree nodeTree = getCurrentNode();
         XMLComment xmlComment = nodeTree.newComment();
-        nodeTree.add(xmlComment);
         xmlComment.setText(text);
     }
 
@@ -248,9 +245,8 @@ public class DocumentSerializer implements XmlSerializer {
     private void appendText(String text){
         XMLText xmlText = this.currentText;
         if(xmlText == null){
-            xmlText = this.document.newText();
             XMLNodeTree nodeTree = getCurrentNode();
-            nodeTree.add(xmlText);
+            xmlText = nodeTree.newText();
             this.currentText = xmlText;
         }
         xmlText.appendText(text);

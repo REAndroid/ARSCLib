@@ -16,8 +16,10 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.ChunkType;
+import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
 
@@ -32,6 +34,12 @@ public class ResXmlEndNamespace extends ResXmlNamespaceChunk {
         setPair(namespace);
     }
 
+    void removeSelf() {
+        BlockList<ResXmlEndNamespace> blockList = ObjectsUtil.cast(getParentInstance(BlockList.class));
+        if (blockList != null) {
+            blockList.remove(this);
+        }
+    }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         HeaderBlock headerBlock = reader.readHeaderBlock();

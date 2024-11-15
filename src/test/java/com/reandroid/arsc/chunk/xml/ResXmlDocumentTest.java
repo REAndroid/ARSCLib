@@ -19,7 +19,7 @@ public class ResXmlDocumentTest {
     public void testXmlNodes(){
         ResXmlDocument document = new ResXmlDocument();
         ResXmlElement root = document.getOrCreateElement("manifest");
-        ResXmlElement child = root.createChildElement("child");
+        ResXmlElement child = root.newElement("child");
         child.setNamespace(ResourceLibrary.URI_RES_AUTO, "prefix");
 
         Assert.assertEquals("prefix:child", child.getName(true));
@@ -29,30 +29,30 @@ public class ResXmlDocumentTest {
         Assert.assertEquals("child", child.getName(true));
 
         String text = "Xml text node";
-        child.addResXmlText(text);
+        child.newText().setText(text);
 
-        Assert.assertEquals(1, child.listXmlTextNodes().size());
-        Assert.assertEquals(text, child.listXmlTextNodes().get(0).getText());
+        Assert.assertEquals(1, child.getTextsCount());
+        Assert.assertEquals(text, child.getTexts().next().getText());
 
-        child.remove(child.listXmlTextNodes().get(0));
+        child.remove(child.iterator().next());
 
-        Assert.assertEquals(0, child.listXmlTextNodes().size());
-        Assert.assertEquals(0, child.listXmlNodes().size());
+        Assert.assertEquals(0, child.getTextsCount());
+        Assert.assertEquals(0, child.size());
 
-        root.createChildElement("child");
-        root.createChildElement("child-2");
+        root.newElement("child");
+        root.newElement("child-2");
 
-        Assert.assertEquals(3, root.listElements().size());
-        Assert.assertEquals(2, root.listElements("child").size());
-        Assert.assertEquals(1, root.listElements("child-2").size());
-        Assert.assertEquals(0, root.listElements("child-3").size());
-        Assert.assertEquals(3, root.listXmlNodes().size());
+        Assert.assertEquals(3, root.getElementsCount());
+        Assert.assertEquals(2, root.getElementsCount("child"));
+        Assert.assertEquals(1, root.getElementsCount("child-2"));
+        Assert.assertEquals(0, root.getElementsCount("child-3"));
+        Assert.assertEquals(3, root.size());
 
         Assert.assertNotNull("Element not found <child>", root.getElement("child"));
         root.remove(root.getElement("child"));
-        Assert.assertEquals(1, root.listElements("child").size());
+        Assert.assertEquals(1, root.getElementsCount("child"));
         root.clear();
-        Assert.assertEquals("Child nodes cleared", 0, root.listXmlNodes().size());
+        Assert.assertEquals("Child nodes cleared", 0, root.size());
     }
     @Test
     public void testAddAttribute(){
@@ -123,7 +123,7 @@ public class ResXmlDocumentTest {
 
         ResXmlElement root = document.getDocumentElement();
         Assert.assertNotNull(root);
-        Assert.assertEquals(3, root.countElements());
+        Assert.assertEquals(3, root.size());
         Assert.assertEquals(2, root.getNamespaceCount());
         Assert.assertEquals(12, root.getAttributeCount());
 

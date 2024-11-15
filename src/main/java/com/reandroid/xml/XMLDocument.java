@@ -25,28 +25,17 @@ import java.io.*;
 import java.util.Iterator;
 
 public class XMLDocument extends XMLNodeTree implements Document<XMLElement> {
+
     private String encoding;
     private Boolean standalone;
+
     public XMLDocument(String elementName){
         this();
-        XMLElement docElem=new XMLElement(elementName);
+        XMLElement docElem = new XMLElement(elementName);
         setDocumentElement(docElem);
     }
     public XMLDocument(){
         super();
-    }
-
-    @Override
-    XMLDocument newCopy(XMLNode parent) {
-
-        XMLDocument document = new XMLDocument();
-        document.encoding = encoding;
-        document.standalone = standalone;
-        Iterator<XMLNode> iterator = iterator();
-        while(iterator.hasNext()){
-            iterator.next().newCopy(document);
-        }
-        return document;
     }
 
     public XMLElement getDocumentElement(){
@@ -64,6 +53,28 @@ public class XMLDocument extends XMLNodeTree implements Document<XMLElement> {
         this.standalone = standalone;
     }
 
+    @Override
+    public XMLElement newElement() {
+        XMLElement element = new XMLElement();
+        add(element);
+        return element;
+    }
+    @Override
+    public XMLText newText() {
+        XMLText xmlText = new XMLText();
+        add(xmlText);
+        return xmlText;
+    }
+    public XMLText newText(String text) {
+        return (XMLText) super.newText(text);
+    }
+    @Override
+    public XMLComment newComment(){
+        XMLComment comment = new XMLComment();
+        add(comment);
+        return comment;
+    }
+
     public void parse(XmlPullParser parser) throws XmlPullParserException, IOException {
         encoding = null;
         standalone = null;
@@ -78,9 +89,7 @@ public class XMLDocument extends XMLNodeTree implements Document<XMLElement> {
             return;
         }
         XMLUtil.ensureStartTag(parser);
-        XMLElement element = newElement();
-        add(element);
-        element.parse(parser);
+        newElement().parse(parser);
     }
     public void parseInner(XmlPullParser parser) throws XmlPullParserException, IOException {
         encoding = null;
@@ -104,8 +113,7 @@ public class XMLDocument extends XMLNodeTree implements Document<XMLElement> {
         int event = parser.getEventType();
         while (event != XmlPullParser.END_TAG && event != XmlPullParser.END_DOCUMENT){
             XMLNode node = createChildNode(event);
-            if(node != null){
-                add(node);
+            if (node != null) {
                 node.parse(parser);
                 event = parser.getEventType();
             }else {

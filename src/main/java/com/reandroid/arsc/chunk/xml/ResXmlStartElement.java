@@ -15,34 +15,40 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
-import com.reandroid.arsc.array.ResXmlAttributeArray;
 import com.reandroid.arsc.chunk.ChunkType;
+import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.ShortItem;
 import com.reandroid.utils.StringsUtil;
 
 import java.util.Iterator;
 
 public class ResXmlStartElement extends BaseXmlChunk {
+
     private final ShortItem mAttributeStart;
     private final ShortItem mAttributeUnitSize;
     private final ShortItem mAttributeCount;
+
     private final ShortItem mIdAttributePosition;
     private final ShortItem mClassAttributePosition;
     private final ShortItem mStyleAttributePosition;
+
     private final ResXmlAttributeArray mAttributeArray;
-    private ResXmlEndElement mResXmlEndElement;
-    public ResXmlStartElement() {
+
+    private final ResXmlEndElement mResXmlEndElement;
+
+    public ResXmlStartElement(ResXmlEndElement endElement) {
         super(ChunkType.XML_START_ELEMENT, 7);
+
+        this.mResXmlEndElement = endElement;
+
         mAttributeStart = new ShortItem(ATTRIBUTES_DEFAULT_START);
         mAttributeUnitSize = new ShortItem(ATTRIBUTES_UNIT_SIZE);
         mAttributeCount = new ShortItem();
         mIdAttributePosition = new ShortItem();
         mClassAttributePosition = new ShortItem();
         mStyleAttributePosition = new ShortItem();
-        mAttributeArray = new ResXmlAttributeArray(getHeaderBlock(),
-                mAttributeStart,
-                mAttributeCount,
-                mAttributeUnitSize);
+        mAttributeArray = new ResXmlAttributeArray(mAttributeCount);
+
         addChild(mAttributeStart);
         addChild(mAttributeUnitSize);
         addChild(mAttributeCount);
@@ -52,50 +58,43 @@ public class ResXmlStartElement extends BaseXmlChunk {
         addChild(mAttributeArray);
     }
 
-    public int removeUndefinedAttributes(){
-        return getResXmlAttributeArray().removeUndefinedAttributes();
+    IntegerReference getAttributeStart() {
+        return mAttributeStart;
     }
-    public ResXmlAttribute getIdAttribute(){
-        return getResXmlAttributeArray().get(mIdAttributePosition.unsignedInt()-1);
+    IntegerReference getAttributeUnitSize() {
+        return mAttributeUnitSize;
     }
-    public ResXmlAttribute getClassAttribute(){
-        return getResXmlAttributeArray().get(mClassAttributePosition.unsignedInt()-1);
+    IntegerReference getIdAttributePosition() {
+        return mIdAttributePosition;
     }
-    public ResXmlAttribute getStyleAttribute(){
-        return getResXmlAttributeArray().get(mStyleAttributePosition.unsignedInt()-1);
+    IntegerReference getClassAttributePosition() {
+        return mClassAttributePosition;
     }
-    void setAttributesUnitSize(int size){
-        mAttributeArray.setAttributesUnitSize(size);
+    IntegerReference getStyleAttributePosition() {
+        return mStyleAttributePosition;
     }
-    public ResXmlAttribute newAttribute(){
-        ResXmlAttributeArray attributeArray = getResXmlAttributeArray();
-        return attributeArray.createNext();
+
+    public ResXmlAttribute getIdAttribute() {
+        return getResXmlAttributeArray().get(mIdAttributePosition.get() - 1);
+    }
+    public ResXmlAttribute getClassAttribute() {
+        return getResXmlAttributeArray().get(mClassAttributePosition.unsignedInt() - 1);
+    }
+    public ResXmlAttribute getStyleAttribute() {
+        return getResXmlAttributeArray().get(mStyleAttributePosition.unsignedInt() - 1);
     }
     @Override
     void linkStringReferences(){
         super.linkStringReferences();
-        ResXmlEndElement end = getResXmlEndElement();
-        if(end != null){
-            end.linkStringReferences();
-        }
+        getResXmlEndElement().linkStringReferences();
         linkNamespace();
     }
     @Override
-    void onRemoved(){
-        super.onRemoved();
+    void onPreRemove(){
+        super.onPreRemove();
         unlinkNamespace();
-        ResXmlEndElement end = getResXmlEndElement();
-        if(end != null){
-            end.onRemoved();
-        }
-        Iterator<ResXmlAttribute> iterator = iterator();
-        while (iterator.hasNext()){
-            iterator.next().onRemoved();
-        }
-    }
-    @Override
-    protected void onPreRefresh(){
-        sortAttributes();
+        getResXmlAttributeArray().clear();
+        getResXmlEndElement().onPreRemove();
     }
     void unlinkNamespace(){
         ResXmlStartNamespace namespace = getResXmlStartNamespace();
@@ -109,153 +108,21 @@ public class ResXmlStartElement extends BaseXmlChunk {
             namespace.addElementReference(this);
         }
     }
-    private void sortAttributes(){
-        ResXmlAttributeArray array = getResXmlAttributeArray();
-
-        ResXmlAttribute idAttribute=array.get(mIdAttributePosition.get()-1);
-        ResXmlAttribute classAttribute=array.get(mClassAttributePosition.get()-1);
-        ResXmlAttribute styleAttribute=array.get(mStyleAttributePosition.get()-1);
-
-        array.sortAttributes();
-        if(idAttribute!=null){
-            mIdAttributePosition.set(idAttribute.getIndex() + 1);
-        }
-        if(classAttribute!=null){
-            mClassAttributePosition.set(classAttribute.getIndex() + 1);
-            // In case obfuscation
-            if(!ATTRIBUTE_NAME_CLASS.equals(classAttribute.getName())){
-                classAttribute.setName(ATTRIBUTE_NAME_CLASS, 0);
-            }
-        }
-        if(styleAttribute != null){
-            mStyleAttributePosition.set(styleAttribute.getIndex() + 1);
-            // In case obfuscation
-            if(!ATTRIBUTE_NAME_STYLE.equals(styleAttribute.getName())){
-                styleAttribute.setName(ATTRIBUTE_NAME_STYLE, 0);
-            }
-        }
-    }
-    void calculatePositions(){
-        ResXmlAttribute idAttribute=getAttribute(ATTRIBUTE_RESOURCE_ID_id);
-        ResXmlAttribute classAttribute=getNoIdAttribute(ATTRIBUTE_NAME_CLASS);
-        ResXmlAttribute styleAttribute=getNoIdAttribute(ATTRIBUTE_NAME_STYLE);
-
-        if(idAttribute != null){
-            mIdAttributePosition.set(idAttribute.getIndex() + 1);
-        }
-        if(classAttribute != null){
-            mClassAttributePosition.set(classAttribute.getIndex() + 1);
-        }
-        if(styleAttribute != null){
-            mStyleAttributePosition.set(styleAttribute.getIndex() + 1);
-        }
-    }
-    public ResXmlAttribute getAttribute(int resourceId){
-        Iterator<ResXmlAttribute> iterator = iterator();
-        while (iterator.hasNext()){
-            ResXmlAttribute attribute = iterator.next();
-            if(resourceId == attribute.getNameId()){
-                return attribute;
-            }
-        }
-        return null;
-    }
-    private ResXmlAttribute getNoIdAttribute(String name){
-        Iterator<ResXmlAttribute> iterator = iterator();
-        while (iterator.hasNext()){
-            ResXmlAttribute attribute = iterator.next();
-            if(attribute.getNameId()!=0){
-                continue;
-            }
-            if(name.equals(attribute.getName())){
-                return attribute;
-            }
-        }
-        return null;
-    }
-    public ResXmlAttribute getAttribute(String uri, String name){
-        if(name==null){
-            return null;
-        }
-        Iterator<ResXmlAttribute> iterator = iterator();
-        while (iterator.hasNext()){
-            ResXmlAttribute attribute = iterator.next();
-            if(attribute.equalsName(name)){
-                if(uri != null){
-                    if(uri.equals(attribute.getUri())){
-                        return attribute;
-                    }
-                    continue;
-                }
-                return attribute;
-            }
-        }
-        return null;
-    }
-    // Searches attribute with resource id = 0
-    public ResXmlAttribute searchAttributeByName(String name){
-        if(name == null){
-            return null;
-        }
-        Iterator<ResXmlAttribute> iterator = getResXmlAttributeArray().iterator();
-        ResXmlAttribute withIdAttribute = null;
-        while (iterator.hasNext()){
-            ResXmlAttribute attribute = iterator.next();
-            if(attribute.equalsName(name)){
-                if(attribute.getNameId() != 0){
-                    withIdAttribute = attribute;
-                    continue;
-                }
-                return attribute;
-            }
-        }
-        return withIdAttribute;
-    }
-    public ResXmlAttribute searchAttributeByResourceId(int resourceId){
-        if(resourceId == 0){
-            return null;
-        }
-        Iterator<ResXmlAttribute> iterator = iterator();
-        while (iterator.hasNext()){
-            ResXmlAttribute attribute = iterator.next();
-            if(resourceId == attribute.getNameId()){
-                return attribute;
-            }
-        }
-        return null;
-    }
-    public String getTagName(){
-        return getTagName(true);
-    }
-    public String getTagName(boolean includePrefix){
-        String name = getName();
-        if(includePrefix){
-            String prefix = getPrefix();
-            if(prefix != null){
-                name = prefix + ":" + name;
-            }
-        }
-        return name;
-    }
     public String getName(boolean includePrefix){
         String name = super.getName();
-        if(includePrefix){
+        if (includePrefix) {
             String prefix = getPrefix();
-            if(prefix != null){
+            if (prefix != null) {
                 name = prefix + ":" + name;
             }
         }
         return name;
     }
     public void setName(String name){
-        if(name == null){
+        if (name == null) {
             setStringReference(-1);
-        }else {
+        } else {
             setString(name);
-        }
-        ResXmlEndElement endElement = getResXmlEndElement();
-        if(endElement != null){
-            endElement.setString(name);
         }
     }
     public Iterator<ResXmlAttribute> iterator(){
@@ -285,7 +152,7 @@ public class ResXmlStartElement extends BaseXmlChunk {
             setNamespaceReference(-1);
             return;
         }
-        ResXmlElement parentElement = getParentResXmlElement();
+        ResXmlElement parentElement = getNodeElement();
         if(parentElement == null){
             return;
         }
@@ -293,26 +160,42 @@ public class ResXmlStartElement extends BaseXmlChunk {
         setNamespaceReference(ns.getUriReference());
         linkNamespace();
     }
+
+    @Override
+    void setNamespaceReference(int val) {
+        super.setNamespaceReference(val);
+        getResXmlEndElement().setNamespaceReference(val);
+    }
+
+    @Override
+    void setStringReference(int value) {
+        super.setStringReference(value);
+        getResXmlEndElement().setStringReference(value);
+    }
+
     ResXmlStartNamespace getResXmlStartNamespace(){
         int uriRef = getNamespaceReference();
-        if(uriRef < 0){
-            return null;
-        }
-        ResXmlElement parentElement = getParentResXmlElement();
-        if(parentElement != null){
-            return parentElement.getStartNamespaceByUriRef(uriRef);
+        if (uriRef != -1) {
+            ResXmlElement parentElement = getNodeElement();
+            if (parentElement != null) {
+                return (ResXmlStartNamespace) parentElement
+                        .getNamespaceForUriReference(uriRef);
+            }
         }
         return null;
-    }
-    public void setResXmlEndElement(ResXmlEndElement element){
-        mResXmlEndElement=element;
     }
     public ResXmlEndElement getResXmlEndElement(){
         return mResXmlEndElement;
     }
 
     @Override
+    protected void onPreRefresh(){
+        super.onPreRefresh();
+        getResXmlAttributeArray().sort();
+    }
+    @Override
     protected void onChunkRefreshed() {
+        super.onChunkRefreshed();
         refreshAttributeStart();
         refreshAttributeCount();
     }
@@ -328,34 +211,18 @@ public class ResXmlStartElement extends BaseXmlChunk {
     @Override
     public void setLineNumber(int lineNumber){
         super.setLineNumber(lineNumber);
-        ResXmlEndElement endElement = getResXmlEndElement();
-        if(endElement != null){
-            endElement.setLineNumber(lineNumber);
-        }
+        getResXmlEndElement().setLineNumber(lineNumber);
     }
 
     @Override
-    public String toString(){
-        String tag = getTagName();
-        if(tag == null){
+    public String toString() {
+        String name = getName(true);
+        if (name == null) {
             return super.toString();
         }
-        return tag + " " + StringsUtil.join(iterator(), ' ');
+        return name + " " + StringsUtil.join(iterator(), ' ');
     }
 
-    private static final short ATTRIBUTES_UNIT_SIZE=20;
-    private static final short ATTRIBUTES_DEFAULT_START=20;
-    /*
-     * Find another way to mark an attribute is class, device actually relies on
-     * value of mClassAttributePosition */
-    private static final String ATTRIBUTE_NAME_CLASS="class";
-    /*
-     * Find another way to mark an attribute is style, device actually relies on
-     * value of mStyleAttributePosition */
-    private static final String ATTRIBUTE_NAME_STYLE="style";
-    /*
-     * Resource id value of attribute 'android:id'
-     * instead of relying on hardcoded value, we should find another way to
-     * mark an attribute is 'id' */
-    private static final int ATTRIBUTE_RESOURCE_ID_id =0x010100d0;
+    private static final short ATTRIBUTES_UNIT_SIZE = 20;
+    private static final short ATTRIBUTES_DEFAULT_START = 20;
 }

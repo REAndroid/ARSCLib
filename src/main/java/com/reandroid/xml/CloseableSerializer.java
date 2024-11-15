@@ -41,7 +41,9 @@ public class CloseableSerializer extends KXmlSerializer implements Closeable {
     @Override
     public void endDocument() throws IOException {
         super.endDocument();
-        close();
+        if (getDepth() == 0) {
+            close();
+        }
     }
     @Override
     public void close() throws IOException {

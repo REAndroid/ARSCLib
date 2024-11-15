@@ -56,18 +56,13 @@ public class StyleDocument extends XMLDocument implements
         if(xmlNode instanceof StyleText){
             styleText = (StyleText) xmlNode;
         }else {
-            styleText = new StyleText();
-            add(styleText);
+            styleText = newText();
         }
         styleText.appendChar(ch);
     }
     @Override
     public StyleNode getParentStyle() {
         return null;
-    }
-    @Override
-    public void addStyleNode(StyleNode styleNode){
-        add((XMLNode) styleNode);
     }
 
     public String getXml(){
@@ -146,19 +141,24 @@ public class StyleDocument extends XMLDocument implements
 
     @Override
     public StyleElement newElement(){
-        return new StyleElement();
+        StyleElement element = new StyleElement();
+        add(element);
+        return element;
     }
     @Override
     public StyleText newText(){
-        return new StyleText();
+        StyleText styleText = new StyleText();
+        add(styleText);
+        return styleText;
     }
     @Override
-    public XMLComment newComment(){
-        return null;
+    public StyleText newText(String text) {
+        return (StyleText) super.newText(text);
     }
     @Override
-    public StyleAttribute newAttribute(){
-        return new StyleAttribute();
+    public XMLComment newComment() {
+        throw new IllegalArgumentException("Can not create comment at style document: "
+                + getClass());
     }
 
     public static StyleDocument parseNext(XmlPullParser parser) throws IOException, XmlPullParserException {
@@ -171,14 +171,11 @@ public class StyleDocument extends XMLDocument implements
         Iterator<XMLNode> iterator = xmlElement.iterator();
         while (iterator.hasNext()){
             XMLNode xmlNode = iterator.next();
-            if(xmlNode instanceof XMLElement){
-                StyleElement styleElement = new StyleElement();
-                styleDocument.add(styleElement);
-                styleElement.copyFrom((XMLElement) xmlNode);
-            }else if(xmlNode instanceof XMLText){
+            if (xmlNode instanceof XMLElement) {
+                styleDocument.newElement().copyFrom((XMLElement) xmlNode);
+            } else if(xmlNode instanceof XMLText) {
                 XMLText xmlText = (XMLText)xmlNode;
-                StyleText styleText = new StyleText(xmlText.getText());
-                styleDocument.add(styleText);
+                styleDocument.newText(xmlText.getText());
             }
         }
         return styleDocument;

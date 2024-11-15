@@ -23,8 +23,12 @@ public interface Node extends XmlSerializable, XmlReader {
 
     int getLineNumber();
     void setLineNumber(int lineNumber);
-    int getColumnNumber();
-    void setColumnNumber(int columnNumber);
+    default int getColumnNumber() {
+        return 0;
+    }
+    default void setColumnNumber(int columnNumber) {
+
+    }
 
     default String toXmlString() {
         return toXmlString(true);

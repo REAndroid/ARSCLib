@@ -26,12 +26,14 @@ import java.util.function.Predicate;
 
 public abstract class XMLNodeTree extends XMLNode implements
         NodeTree<XMLNode>, Iterable<XMLNode>, SizedSupplier<XMLNode> {
-    private ArrayCollection<XMLNode> mChildes;
+
+    private ArrayCollection<XMLNode> mNodeList;
+
     private int lastTrimSize;
 
     public XMLNodeTree(){
         super();
-        this.mChildes = EMPTY;
+        this.mNodeList = EMPTY;
     }
 
     public XMLNode getLast(){
@@ -39,15 +41,16 @@ public abstract class XMLNodeTree extends XMLNode implements
         if(size == 0){
             return null;
         }
-        return mChildes.get(size - 1);
+        return mNodeList.get(size - 1);
     }
+    @Override
     public void clear(){
         if(size() == 0){
             return;
         }
         synchronized (this){
-            mChildes.clear();
-            mChildes.trimToSize();
+            mNodeList.clear();
+            mNodeList.trimToSize();
             lastTrimSize = 0;
         }
     }
@@ -63,11 +66,13 @@ public abstract class XMLNodeTree extends XMLNode implements
     }
     @Override
     public int size(){
-        return mChildes.size();
+        return mNodeList.size();
     }
     @Override
-    public XMLNode get(int index){
-        return mChildes.get(index);
+    public XMLNode get(int index) {
+        synchronized (this) {
+            return mNodeList.get(index);
+        }
     }
     public void addAll(Iterable<? extends XMLNode> iterable){
         Iterator<? extends XMLNode> itr = iterable.iterator();
@@ -80,14 +85,17 @@ public abstract class XMLNodeTree extends XMLNode implements
             return false;
         }
         synchronized (this){
-            if(mChildes == EMPTY){
-                mChildes = new ArrayCollection<>();
+            if(mNodeList == EMPTY){
+                mNodeList = new ArrayCollection<>();
             }
-            boolean added = mChildes.add(xmlNode);
+            if (mNodeList.containsExact(xmlNode)) {
+                throw new IllegalArgumentException("Duplicate node: " + xmlNode);
+            }
+            boolean added = mNodeList.add(xmlNode);
             xmlNode.setParentNode(this);
-            if(mChildes.size() - lastTrimSize > TRIM_INTERVAL){
-                mChildes.trimToSize();
-                lastTrimSize = mChildes.size();
+            if(mNodeList.size() - lastTrimSize > TRIM_INTERVAL){
+                mNodeList.trimToSize();
+                lastTrimSize = mNodeList.size();
             }
             return added;
         }
@@ -97,23 +105,26 @@ public abstract class XMLNodeTree extends XMLNode implements
             return;
         }
         synchronized (this){
-            if(mChildes == EMPTY){
-                mChildes = new ArrayCollection<>();
+            if(mNodeList == EMPTY){
+                mNodeList = new ArrayCollection<>();
             }
-            mChildes.add(i, xmlNode);
+            if (mNodeList.containsExact(xmlNode)) {
+                throw new IllegalArgumentException("Duplicate node: " + xmlNode);
+            }
+            mNodeList.add(i, xmlNode);
             xmlNode.setParentNode(this);
-            if(mChildes.size() - lastTrimSize > TRIM_INTERVAL){
-                mChildes.trimToSize();
-                lastTrimSize = mChildes.size();
+            if(mNodeList.size() - lastTrimSize > TRIM_INTERVAL){
+                mNodeList.trimToSize();
+                lastTrimSize = mNodeList.size();
             }
         }
     }
     public int indexOf(XMLNode node){
-        return mChildes.indexOf(node);
+        return mNodeList.indexOf(node);
     }
     public boolean remove(XMLNode xmlNode){
         synchronized (this){
-            if(xmlNode != null && mChildes.remove(xmlNode)){
+            if(xmlNode != null && mNodeList.remove(xmlNode)){
                 xmlNode.setParentNode(null);
                 return true;
             }
@@ -122,7 +133,7 @@ public abstract class XMLNodeTree extends XMLNode implements
     }
     public XMLNode remove(int i){
         synchronized (this){
-            XMLNode xmlNode = mChildes.remove(i);
+            XMLNode xmlNode = mNodeList.remove(i);
             if(xmlNode != null){
                 xmlNode.setParentNode(null);
             }
@@ -133,17 +144,19 @@ public abstract class XMLNodeTree extends XMLNode implements
      * Use removeIf
      * */
     @Deprecated
-    public boolean remove(Predicate<? super XMLNode> filter){
-        return removeIf(filter);
+    public boolean remove(Predicate<? super XMLNode> filter) {
+        throw new RuntimeException("Depreciated method");
     }
-    public boolean removeIf(Predicate<? super XMLNode> filter){
+    @Override
+    public boolean removeIf(Predicate<? super XMLNode> filter) {
         synchronized (this){
-            return mChildes.removeIf(filter);
+            return mNodeList.removeIf(filter);
         }
     }
-    public boolean sort(Comparator<? super XMLNode> comparator){
+    @Override
+    public boolean sort(Comparator<? super XMLNode> comparator) {
         synchronized (this){
-            return mChildes.sortItems(comparator);
+            return mNodeList.sortItems(comparator);
         }
     }
     @Override
@@ -161,17 +174,17 @@ public abstract class XMLNodeTree extends XMLNode implements
     }
     abstract void endSerialize(XmlSerializer serializer) throws IOException;
 
-    public XMLElement newElement(){
-        return new XMLElement();
-    }
-    public XMLText newText(){
-        return new XMLText();
+    public abstract XMLElement newElement();
+    public abstract XMLText newText();
+    public XMLText newText(String text) {
+        XMLText xmlText = newText();
+        xmlText.setText(text);
+        return xmlText;
     }
     public XMLComment newComment(){
-        return new XMLComment();
-    }
-    public XMLAttribute newAttribute(){
-        return new XMLAttribute();
+        XMLComment comment = new XMLComment();
+        add(comment);
+        return comment;
     }
     public XMLNamespace newNamespace(String uri, String prefix) {
         return new XMLNamespace(uri, prefix);
