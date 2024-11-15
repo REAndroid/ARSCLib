@@ -150,7 +150,7 @@ public class GroupMap<K, V> {
             super();
         }
         void addIfAbsent(T item){
-            if(!containsFast(item)){
+            if(!containsExact(item)){
                 add(item);
             }
         }

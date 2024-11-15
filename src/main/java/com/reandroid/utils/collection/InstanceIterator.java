@@ -35,12 +35,25 @@ public class InstanceIterator<T> implements Iterator<T> {
         this(iterator, instance, null);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public boolean hasNext() {
+        return getCurrent() != null;
+    }
+    @Override
+    public T next() {
+        T current = getCurrent();
+        if (current == null) {
+            throw new NoSuchElementException();
+        }
+        this.mCurrent = null;
+        return current;
+    }
+
+    @SuppressWarnings("unchecked")
+    private T getCurrent() {
         T current = mCurrent;
         if(current != null){
-            return true;
+            return current;
         }
         Iterator<?> iterator = this.iterator;
         Class<T> instance = this.instance;
@@ -54,21 +67,13 @@ public class InstanceIterator<T> implements Iterator<T> {
                 current = (T)obj;
                 if(filter == null || filter.test(current)){
                     mCurrent = current;
-                    return true;
+                    return current;
                 }
             }
         }
-        return false;
+        return null;
     }
-    @Override
-    public T next() {
-        T current = mCurrent;
-        if(current == null){
-            throw new NoSuchElementException();
-        }
-        mCurrent = null;
-        return current;
-    }
+
     public static<T1> Iterator<T1> of(Iterator<?> iterator, Class<T1> instance){
         if(!iterator.hasNext()){
             return EmptyIterator.of();

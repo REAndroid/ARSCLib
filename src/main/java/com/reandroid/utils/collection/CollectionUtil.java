@@ -199,6 +199,24 @@ public class CollectionUtil {
         List<T> results = toList(iterator);
         return results.iterator();
     }
+    public static<T> Iterator<T> reversedOf(Iterator<? extends T> iterator){
+        boolean hasNext = iterator.hasNext();
+        if (!hasNext) {
+            return EmptyIterator.of();
+        }
+        T first = iterator.next();
+        hasNext = iterator.hasNext();
+        if (!hasNext) {
+            return SingleIterator.of(first);
+        }
+        ArrayCollection<T> results = new ArrayCollection<>(8);
+        results.add(first);
+        while (hasNext) {
+            results.add(iterator.next());
+            hasNext = iterator.hasNext();
+        }
+        return results.reversedIterator();
+    }
 
     public static void shuffle(List<?> list) {
         if(list.isEmpty()){

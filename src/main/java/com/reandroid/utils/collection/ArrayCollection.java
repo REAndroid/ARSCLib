@@ -215,7 +215,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         if(obj == null){
             return false;
         }
-        return containsFast(obj) || containsEquals(obj);
+        return containsExact(obj) || containsEquals(obj);
     }
     public boolean containsIf(Predicate<? super T> predicate) {
         return containsIf(0, predicate);
@@ -236,11 +236,34 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         return false;
     }
+    public boolean containsInstance(Class<?> instance) {
+        return containsInstance(0, instance);
+    }
+    public boolean containsInstance(int start, Class<?> instance) {
+        if(start < 0) {
+            start = 0;
+        }
+        int size = this.size;
+        if(size == 0) {
+            return false;
+        }
+        Object[] elements = this.mElements;
+        for (int i = start; i < size; i++) {
+            if(instance.isInstance(elements[i])){
+                return true;
+            }
+        }
+        return false;
+    }
     public boolean containsEquals(Object obj) {
         return indexOf(obj) >= 0;
     }
+    @Deprecated
     public boolean containsFast(Object item){
-        return indexOfFast(item) >= 0;
+        return containsExact(item);
+    }
+    public boolean containsExact(Object item) {
+        return indexOfExact(item) >= 0;
     }
     @Override
     public boolean isEmpty(){
@@ -451,13 +474,23 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     public int indexOf(Object item){
         return indexOf(item, 0, false);
     }
+
+
+    @Deprecated
     public int indexOfFast(Object item){
+        return indexOfExact(item);
+    }
+    public int indexOfExact(Object item){
         return indexOf(item, 0, true);
     }
     public int indexOf(Object item, int start){
         return indexOf(item, start, false);
     }
+    @Deprecated
     public int indexOfFast(Object item, int start){
+        return indexOf(item, start, true);
+    }
+    public int indexOfExact(Object item, int start){
         return indexOf(item, start, true);
     }
     public int lastIndexOf(Object item){
@@ -477,7 +510,11 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         return ListItr.of(this, start);
     }
 
+    @Deprecated
     public int lastIndexOfFast(Object item){
+        return lastIndexOfExact(item);
+    }
+    public int lastIndexOfExact(Object item){
         return lastIndexOf(item, true);
     }
 
@@ -520,7 +557,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         return item.equals(obj);
     }
-    private int lastIndexOf(Object item, boolean fast){
+    private int lastIndexOf(Object item, boolean exact){
         if(item == null){
             return -1;
         }
@@ -532,7 +569,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
             if(obj == null){
                 continue;
             }
-            if(fast){
+            if(exact){
                 if(item == obj){
                     result = i;
                 }
@@ -909,7 +946,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         Object[] elements = this.mElements;
         int i = index;
         for(T item : collection){
-            if(item == null || containsFast(item)){
+            if(item == null || containsExact(item)){
                 continue;
             }
             elements[i] = item;
@@ -926,6 +963,11 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         T result = get(index);
         slideLeft(index, 1);
         notifyRemoved(index, result);
+        return result;
+    }
+    public T removeSilent(int index){
+        T result = get(index);
+        slideLeft(index, 1);
         return result;
     }
     private void slideLeft(int position, int amount){

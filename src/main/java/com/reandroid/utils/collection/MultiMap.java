@@ -120,7 +120,7 @@ public class MultiMap<K, V> {
         }
         if(obj.getClass() == EntryList.class) {
             EntryList<Object> entryList = (EntryList<Object>) obj;
-            if(!entryList.containsFast(value)) {
+            if(!entryList.containsExact(value)) {
                 entryList.add(value);
                 sortFavourites(entryList);
             }
@@ -146,7 +146,7 @@ public class MultiMap<K, V> {
             }
             if(obj.getClass() == EntryList.class) {
                 EntryList<?> entryList = (EntryList<?>) obj;
-                int i = entryList.indexOfFast(value);
+                int i = entryList.indexOfExact(value);
                 if(i < 0) {
                     return null;
                 }
@@ -281,7 +281,7 @@ public class MultiMap<K, V> {
         }
         if(list1 && !list2) {
             EntryList<Object> entryList = (EntryList<Object>) obj1;
-            if(!entryList.containsFast(obj2)) {
+            if(!entryList.containsExact(obj2)) {
                 entryList.add(obj2);
                 sortFavourites(entryList);
             }
@@ -289,7 +289,7 @@ public class MultiMap<K, V> {
         }
         if(!list1) {
             EntryList<Object> entryList = (EntryList<Object>) obj2;
-            if(!entryList.containsFast(obj1)) {
+            if(!entryList.containsExact(obj1)) {
                 entryList.add(obj1);
                 sortFavourites(entryList);
             }
@@ -299,7 +299,7 @@ public class MultiMap<K, V> {
         EntryList<Object> entryList2 = (EntryList<Object>) obj2;
         boolean added = false;
         for(Object obj : entryList2) {
-            if(!entryList1.containsFast(obj)){
+            if(!entryList1.containsExact(obj)){
                 entryList1.add(obj);
                 added = true;
             }

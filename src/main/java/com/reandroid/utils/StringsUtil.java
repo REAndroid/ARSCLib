@@ -153,12 +153,17 @@ public class StringsUtil {
         }
         return length;
     }
-    public static boolean isWhiteSpace(char ch){
+    public static boolean isWhiteSpace(char ch) {
+        if (ch == 0) {
+            return true;
+        }
         switch (ch){
-            case ' ':
+            case '\b':
+            case '\f':
             case '\n':
-            case '\t':
             case '\r':
+            case '\t':
+            case ' ':
                 return true;
             default:
                 return false;
@@ -453,6 +458,49 @@ public class StringsUtil {
     }
     public static boolean isEmpty(String text){
         return text == null || text.length() == 0;
+    }
+    public static boolean isBlank(String text) {
+        if (text != null) {
+            int length = text.length();
+            for (int i = 0; i < length; i++) {
+                if (!isWhiteSpace(text.charAt(i))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    public static String trimASCII(String text) {
+        if (text == null) {
+            return null;
+        }
+        int length = text.length();
+        if (length == 0) {
+            return text;
+        }
+        int start = 0;
+        for (int i = 0; i < length; i ++) {
+            if (isWhiteSpace(text.charAt(i))) {
+                start ++;
+            } else {
+                break;
+            }
+        }
+        if (start == length) {
+            return EMPTY;
+        }
+        int end = length;
+        for (int i = length - 1; i > start; i --) {
+            if (isWhiteSpace(text.charAt(i))) {
+                end --;
+            } else {
+                break;
+            }
+        }
+        if (start == 0 && end == length) {
+            return text;
+        }
+        return text.substring(0, end);
     }
     public static String toUpperCase(String str){
         if(str == null || str.length() == 0){
