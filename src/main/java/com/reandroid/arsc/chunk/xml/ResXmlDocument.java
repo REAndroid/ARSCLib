@@ -164,10 +164,30 @@ public class ResXmlDocument extends ResXmlDocumentOrElement implements
 
     @Override
     public int getLineNumber() {
-        return 0;
+        return 1;
     }
     @Override
     public void setLineNumber(int lineNumber) {
+    }
+
+    @Override
+    public int getStartLineNumber() {
+        int line = 1;
+        ResXmlNode previous = getPrevious();
+        if (previous != null) {
+            line += previous.getEndLineNumber();
+        }
+        return line;
+    }
+    @Override
+    public int getEndLineNumber() {
+        int line = getStartLineNumber();
+        ResXmlNode last = get(size() - 1);
+        if (last != null) {
+            line += last.getEndLineNumber();
+        }
+        line = line + 1;
+        return line;
     }
 
     @Override
@@ -175,16 +195,16 @@ public class ResXmlDocument extends ResXmlDocumentOrElement implements
         return getChunk().getNodeList();
     }
     @Override
-    Iterator<ParserEvent> getParserEvents() {
+    Iterator<ResXmlEvent> getParserEvents() {
         return CombiningIterator.singleTwo(
-                ParserEvent.startDocument(),
-                new IterableIterator<ResXmlNode, ParserEvent>(iterator()) {
+                ResXmlEvent.startDocument(this),
+                new IterableIterator<ResXmlNode, ResXmlEvent>(iterator()) {
                     @Override
-                    public Iterator<ParserEvent> iterator(ResXmlNode node) {
+                    public Iterator<ResXmlEvent> iterator(ResXmlNode node) {
                         return node.getParserEvents();
                     }
                 },
-                SingleIterator.of(ParserEvent.endDocument())
+                SingleIterator.of(ResXmlEvent.endDocument(this))
         );
     }
 

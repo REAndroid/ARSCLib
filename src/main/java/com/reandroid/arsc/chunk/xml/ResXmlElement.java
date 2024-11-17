@@ -1,11 +1,9 @@
 package com.reandroid.arsc.chunk.xml;
 
-import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.model.ResourceLibrary;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
 import com.reandroid.common.Namespace;
-import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONException;
 import com.reandroid.json.JSONObject;
 import com.reandroid.utils.ObjectsUtil;
@@ -105,7 +103,7 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
     public boolean removeAttribute(ResXmlAttribute attribute) {
         return getAttributeArray().remove(attribute);
     }
-    public boolean removeAttribute(int index) {
+    public boolean removeAttributeAt(int index) {
         return getAttributeArray().remove(index) != null;
     }
     public boolean removeAttributeIf(Predicate<? super ResXmlAttribute> predicate) {
@@ -119,117 +117,42 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
     }
     @Override
     public int getNamespaceCount() {
-        return getChunk().getStartNamespaceList().size();
+        return getNamespaceList().size();
     }
     @Override
     public ResXmlNamespace getNamespaceAt(int i) {
-        return getChunk().getStartNamespaceList().get(i);
+        return getNamespaceList().get(i);
     }
     @Override
     public Iterator<ResXmlNamespace> getNamespaces() {
-        return ObjectsUtil.cast(getChunk().getStartNamespaceList().iterator());
+        return getNamespaceList().getNamespaces();
     }
     public boolean removeNamespace(ResXmlNamespace namespace) {
-        return getChunk().getStartNamespaceList()
-                .remove((ResXmlStartNamespace) namespace);
+        return getNamespaceList().remove((ResXmlStartNamespace) namespace);
     }
     public boolean removeNamespaceIf(Predicate<? super ResXmlNamespace> predicate) {
-        return getChunk().getStartNamespaceList()
-                .removeIf(predicate);
+        return getNamespaceList().removeIf(predicate);
     }
-    public Iterator<ResXmlNamespace> getAllNamespaces() {
-        return new IterableIterator<ResXmlElement, ResXmlNamespace> (
-                CollectionUtil.reversedOf(getParentElementsWithSelf())) {
-            @Override
-            public Iterator<ResXmlNamespace> iterator(ResXmlElement element) {
-                return element.getNamespaces();
-            }
-        };
+    public Iterator<ResXmlNamespace> getVisibleNamespaces() {
+        return ObjectsUtil.cast(getNamespaceList().getVisibleNamespaces());
     }
     ResXmlNamespace getNamespaceForUriReference(int reference) {
-        if (reference != -1) {
-            Iterator<ResXmlNamespace> iterator = getAllNamespaces();
-            while (iterator.hasNext()) {
-                ResXmlNamespace namespace = iterator.next();
-                if (reference == namespace.getUriReference()) {
-                    return namespace;
-                }
-            }
-        }
-        return null;
+        return getNamespaceList().getForUriReference(reference);
     }
     public ResXmlNamespace getNamespace(String uri, String prefix) {
-        if (uri != null && prefix != null) {
-            Iterator<ResXmlNamespace> iterator = getAllNamespaces();
-            while (iterator.hasNext()) {
-                ResXmlNamespace namespace = iterator.next();
-                if (uri.equals(namespace.getUri()) &&
-                        prefix.equals(namespace.getPrefix())) {
-                    return namespace;
-                }
-            }
-        }
-        return null;
+        return getNamespaceList().get(uri, prefix);
     }
     public ResXmlNamespace getOrCreateNamespace(String uri, String prefix) {
-        ResXmlNamespace namespace = getNamespace(uri, prefix);
-        if (namespace == null) {
-            namespace = getRootElement().newNamespace(uri, prefix);
-        }
-        return namespace;
+        return getNamespaceList().getOrCreate(uri, prefix);
     }
-    private void ensureNamespace(String uri, String prefix, int lineNumber) {
-        ResXmlNamespace namespace = getNamespace(uri, prefix);
-        if (namespace == null) {
-            namespace = newNamespace(uri, prefix);
-            namespace.setLineNumber(lineNumber);
-        }
+    public ResXmlNamespace getNamespaceForUri(String uri) {
+        return getNamespaceList().getForUri(uri);
     }
-    public ResXmlNamespace getNamespaceByUri(String uri) {
-        ResXmlNamespace result = null;
-        Iterator<ResXmlNamespace> iterator = getAllNamespaces();
-        while (iterator.hasNext()) {
-            ResXmlNamespace namespace = iterator.next();
-            if (ObjectsUtil.equals(uri, namespace.getUri())) {
-                if (result == null) {
-                    result = namespace;
-                } else if (Namespace.isValidPrefix(namespace.getPrefix())) {
-                    result = namespace;
-                }
-            }
-        }
-        return result;
+    public ResXmlNamespace getNamespaceForPrefix(String prefix) {
+        return getNamespaceList().getForPrefix(prefix);
     }
-    public ResXmlNamespace getNamespaceByPrefix(String prefix) {
-        ResXmlNamespace result = null;
-        Iterator<ResXmlNamespace> iterator = getAllNamespaces();
-        while (iterator.hasNext()) {
-            ResXmlNamespace namespace = iterator.next();
-            if (ObjectsUtil.equals(prefix, namespace.getPrefix())) {
-                if (result == null) {
-                    result = namespace;
-                } else if (Namespace.isValidUri(namespace.getUri())) {
-                    result = namespace;
-                }
-            }
-        }
-        return result;
-    }
-    public ResXmlNamespace getOrCreateNamespaceByPrefix(String prefix){
-        if (StringsUtil.isBlank(prefix)) {
-            return null;
-        }
-        ResXmlNamespace namespace = getNamespaceByPrefix(prefix);
-        if (namespace != null) {
-            return namespace;
-        }
-        String uri;
-        if (Namespace.PREFIX_ANDROID.equals(prefix)) {
-            uri = Namespace.URI_ANDROID;
-        } else {
-            uri = Namespace.URI_RES_AUTO;
-        }
-        return getOrCreateNamespace(uri, prefix);
+    public ResXmlNamespace getOrCreateNamespaceForPrefix(String prefix) {
+        return getNamespaceList().getOrCreateForPrefix(prefix);
     }
     public String getComment() {
         String comment = getStartComment();
@@ -267,7 +190,7 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
 
     @Override
     public ResXmlNamespace newNamespace(String uri, String prefix) {
-        return getChunk().newNamespace(uri, prefix);
+        return getNamespaceList().createNext(uri, prefix);
     }
     @Override
     public ResXmlAttribute newAttribute() {
@@ -286,21 +209,22 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
     }
 
     @Override
-    Iterator<ParserEvent> getParserEvents() {
+    Iterator<ResXmlEvent> getParserEvents() {
         return CombiningIterator.singleThree(
 
-                ParserEvent.startTag(this),
+                ResXmlEvent.startTag(this),
 
-                SingleIterator.of(ParserEvent.startComment(this)),
+                SingleIterator.of(ResXmlEvent.startComment(this)),
 
-                new IterableIterator<ResXmlNode, ParserEvent>(iterator()) {
+                new IterableIterator<ResXmlNode, ResXmlEvent>(iterator()) {
                     @Override
-                    public Iterator<ParserEvent> iterator(ResXmlNode node) {
+                    public Iterator<ResXmlEvent> iterator(ResXmlNode node) {
                         return node.getParserEvents();
                     }
                 },
 
-                SingleIterator.of(ParserEvent.endTag(this))
+                CombiningIterator.singleOne(ResXmlEvent.endComment(this),
+                        SingleIterator.of(ResXmlEvent.endTag(this)))
         );
     }
 
@@ -344,10 +268,6 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
     }
 
     @Override
-    public int getLineNumber() {
-        return getStartLineNumber();
-    }
-    @Override
     public void setLineNumber(int lineNumber) {
         setStartLineNumber(lineNumber);
     }
@@ -376,6 +296,9 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
     }
     public Iterator<ResXmlElement> getParentElementsWithSelf() {
         return visitParentNodes(ResXmlElement.class, ResXmlDocument.class);
+    }
+    public Iterator<ResXmlElement> getDescendingParentsWithSelf() {
+        return CollectionUtil.reversedOf(getParentElementsWithSelf());
     }
 
     public ResXmlDocument getParentDocument() {
@@ -421,6 +344,9 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
     public ResXmlAttribute searchAttributeByResourceId(int resourceId) {
         return getAttributeArray().searchAttributeByResourceId(resourceId);
     }
+    public ResXmlAttribute searchAttribute(String namespace, String name) {
+        return getAttributeArray().searchAttribute(namespace, name);
+    }
 
     public ResXmlAttribute getIdAttribute() {
         return getStartElement().getIdAttribute();
@@ -438,6 +364,9 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
     private ResXmlStartElement getStartElement() {
         return getChunk().getStartElement();
     }
+    ResXmlStartNamespaceList getNamespaceList() {
+        return getChunk().getStartNamespaceList();
+    }
     private ResXmlEndElement getEndElement() {
         return getChunk().getEndElement();
     }
@@ -452,11 +381,7 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
 
         setName(coming.getName(false));
 
-        Iterator<ResXmlNamespace> namespaces = coming.getNamespaces();
-        while (namespaces.hasNext()) {
-            ResXmlNamespace ns = namespaces.next();
-            ensureNamespace(ns.getUri(), ns.getPrefix(), ns.getLineNumber());
-        }
+        getNamespaceList().merge(coming.getNamespaceList());
 
         setNamespace(coming.getNamespace());
 
@@ -466,9 +391,10 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
         setEndComment(coming.getEndComment());
 
         setStartLineNumber(coming.getStartLineNumber());
-        setEndLineNumber(coming.getEndLineNumber());
 
         super.merge(xmlNode);
+
+        setEndLineNumber(coming.getEndLineNumber());
     }
     @Override
     public void mergeWithName(ResourceMergeOption mergeOption, ResXmlNode xmlNode) {
@@ -480,11 +406,7 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
 
         setName(coming.getName(false));
 
-        Iterator<ResXmlNamespace> namespaces = coming.getNamespaces();
-        while (namespaces.hasNext()) {
-            ResXmlNamespace ns = namespaces.next();
-            ensureNamespace(ns.getUri(), ns.getPrefix(), ns.getLineNumber());
-        }
+        getNamespaceList().merge(coming.getNamespaceList());
 
         setNamespace(coming.getNamespace());
 
@@ -494,17 +416,12 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
         setEndComment(coming.getEndComment());
 
         setStartLineNumber(coming.getStartLineNumber());
-        setEndLineNumber(coming.getEndLineNumber());
 
         super.mergeWithName(mergeOption, xmlNode);
+
+        setEndLineNumber(coming.getEndLineNumber());
     }
 
-
-    private void addNamespaceFromJson(JSONObject jsonObject) {
-        ResXmlStartNamespace startNamespace = (ResXmlStartNamespace)
-                getChunk().newNamespace(null, null);
-        startNamespace.fromJson(jsonObject);
-    }
     private void setNamespaceFromJson(JSONObject jsonObject) {
         String uri = jsonObject.optString(JSON_uri, null);
         String prefix = jsonObject.optString(JSON_prefix, null);
@@ -528,8 +445,7 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
 
         jsonObject.put(JSON_node_type, nodeTypeName());
 
-        jsonObject.put(JSON_namespaces,
-                BlockList.toJsonArray(getChunk().getStartNamespaceList()));
+        jsonObject.put(JSON_namespaces, getNamespaceList().toJson());
 
         jsonObject.put(JSON_name, getName());
 
@@ -553,13 +469,8 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
         setName(json.getString(JSON_name));
         setStartLineNumber(json.optInt(JSON_line));
         setEndLineNumber(json.optInt(JSON_line));
-        JSONArray namespacesArray = json.optJSONArray(JSON_namespaces);
-        if (namespacesArray != null) {
-            int length = namespacesArray.length();
-            for (int i = 0; i < length; i++) {
-                addNamespaceFromJson(namespacesArray.getJSONObject(i));
-            }
-        }
+
+        getNamespaceList().fromJson(json.optJSONArray(JSON_namespaces));
 
         setNamespaceFromJson(json);
 
@@ -590,72 +501,24 @@ public class ResXmlElement extends ResXmlDocumentOrElement implements Element<Re
 
         serializeComment(serializer, getEndComment());
     }
+
     @Override
     public void parse(XmlPullParser parser) throws IOException, XmlPullParserException {
+
         if (parser.getEventType() != XmlPullParser.START_TAG) {
             throw new XmlPullParserException("Not START_TAG event", parser, null);
         }
+
         setStartLineNumber(parser.getLineNumber());
-        parseNamespaces(parser);
+        getNamespaceList().parse(parser);
         setName(parser.getName());
         setNamespace(parser.getNamespace(), parser.getPrefix());
-        parseAttributes(parser);
-        parser.next();
+        getAttributeArray().parse(parser);
 
+        parser.next();
         parseInnerNodes(parser);
-        parser.next();
-    }
 
-    private void parseNamespaces(XmlPullParser parser) throws XmlPullParserException {
-        int count = parser.getNamespaceCount(parser.getDepth());
-        for(int i = 0; i < count; i++) {
-            ensureNamespace(
-                    parser.getNamespaceUri(i),
-                    parser.getNamespacePrefix(i),
-                    parser.getLineNumber());
-        }
-        count = parser.getAttributeCount();
-        for(int i = 0; i < count; i++) {
-            String name = parser.getAttributeName(i);
-            String prefix = XMLUtil.splitPrefix(name);
-            name = XMLUtil.splitName(name);
-            String value = parser.getAttributeValue(i);
-            if(Namespace.isValidNamespace(value, prefix)){
-                getOrCreateNamespace(value, name);
-            }
-        }
-    }
-    private void parseAttributes(XmlPullParser parser) throws IOException {
-        int count = parser.getAttributeCount();
-        for (int i = 0; i < count; i++) {
-            String name = parser.getAttributeName(i);
-            String prefix = XMLUtil.splitPrefix(name);
-            name = XMLUtil.splitName(name);
-            String value = parser.getAttributeValue(i);
-            if(Namespace.isValidNamespace(value, prefix)){
-                continue;
-            }
-            if (prefix == null) {
-                prefix = StringsUtil.emptyToNull(parser.getAttributePrefix(i));
-            }
-            String uri;
-            if (prefix != null) {
-                uri = parser.getAttributeNamespace(i);
-                if (StringsUtil.isEmpty(uri)) {
-                    ResXmlNamespace ns = getNamespaceByPrefix(prefix);
-                    if(ns != null){
-                        uri = ns.getUri();
-                    }
-                }
-            } else {
-                uri = null;
-            }
-            ResXmlAttribute attribute = newAttribute();
-            attribute.encode(false, uri, prefix, name, value);
-        }
-        if (count != 0) {
-            getAttributeArray().computePositionsAndSort();
-        }
+        parser.next();
     }
 
     @Override

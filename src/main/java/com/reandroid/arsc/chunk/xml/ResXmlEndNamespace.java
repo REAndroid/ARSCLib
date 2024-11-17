@@ -16,30 +16,33 @@
 package com.reandroid.arsc.chunk.xml;
 
 import com.reandroid.arsc.chunk.ChunkType;
-import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.CompareUtil;
 
 import java.io.IOException;
 
-public class ResXmlEndNamespace extends ResXmlNamespaceChunk {
+public class ResXmlEndNamespace extends ResXmlNamespaceChunk
+        implements Comparable<ResXmlEndNamespace> {
+
+    private ResXmlStartNamespace mStartNamespace;
+
     public ResXmlEndNamespace() {
         super(ChunkType.XML_END_NAMESPACE);
     }
-    public ResXmlStartNamespace getStart(){
-        return (ResXmlStartNamespace) getPair();
-    }
-    public void setStart(ResXmlStartNamespace namespace){
-        setPair(namespace);
+
+    public ResXmlStartNamespace getStart() {
+        return mStartNamespace;
     }
 
-    void removeSelf() {
-        BlockList<ResXmlEndNamespace> blockList = ObjectsUtil.cast(getParentInstance(BlockList.class));
-        if (blockList != null) {
-            blockList.remove(this);
+    void setStart(ResXmlStartNamespace startNamespace) {
+        if (startNamespace.getEnd() != this) {
+            throw new IllegalArgumentException("Invalid start namespace: "
+                    + startNamespace);
         }
+        this.mStartNamespace = startNamespace;
     }
+
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         HeaderBlock headerBlock = reader.readHeaderBlock();
@@ -48,5 +51,20 @@ public class ResXmlEndNamespace extends ResXmlNamespaceChunk {
         }else {
             super.onReadBytes(reader);
         }
+    }
+
+    int getStartIndex() {
+        return getStart().getIndex();
+    }
+
+    @Override
+    public int compareTo(ResXmlEndNamespace endNamespace) {
+        if (endNamespace == this) {
+            return 0;
+        }
+        // Reversed to start namespace
+        return CompareUtil.compareUnsigned(
+                endNamespace.getStartIndex(),
+                this.getStartIndex());
     }
 }

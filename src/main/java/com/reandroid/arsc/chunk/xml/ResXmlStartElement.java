@@ -162,9 +162,9 @@ public class ResXmlStartElement extends BaseXmlChunk {
     }
 
     @Override
-    void setNamespaceReference(int val) {
-        super.setNamespaceReference(val);
-        getResXmlEndElement().setNamespaceReference(val);
+    void setNamespaceReference(int value) {
+        super.setNamespaceReference(value);
+        getResXmlEndElement().setNamespaceReference(value);
     }
 
     @Override

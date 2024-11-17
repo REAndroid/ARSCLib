@@ -36,16 +36,19 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
     private String mIndentText;
     
     public ResXmlTextNode() {
-        super(new ResXmlText());
+        super(new ResXmlTextChunk());
     }
 
     public boolean isEmpty() {
         return StringsUtil.isEmpty(getText());
     }
+    public boolean isBlank() {
+        return StringsUtil.isBlank(getText());
+    }
 
     @Override
-    ResXmlText getChunk() {
-        return (ResXmlText) super.getChunk();
+    ResXmlTextChunk getChunk() {
+        return (ResXmlTextChunk) super.getChunk();
     }
     void makeIndent(int length){
         if (!isIndent()) {
@@ -70,15 +73,10 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
     int autoSetLineNumber(int start){
         String text = getText();
         int lineNumber = start;
-        if(isIndent(text) && isNextElement()){
+        if (isIndent(text) && isNextElement()){
             lineNumber ++;
-        }else {
-            char[] chars = text.toCharArray();
-            for(char ch : chars){
-                if(ch == '\n'){
-                    start ++;
-                }
-            }
+        } else {
+            start += countNewLines(text);
         }
         setLineNumber(lineNumber);
         return start;
@@ -98,8 +96,8 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
     }
 
     @Override
-    Iterator<ParserEvent> getParserEvents() {
-        return SingleIterator.of(ParserEvent.text(this));
+    Iterator<ResXmlEvent> getParserEvents() {
+        return SingleIterator.of(ResXmlEvent.text(this));
     }
 
     @Override
@@ -108,9 +106,18 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
     }
 
     @Override
-    public int getLineNumber(){
+    public int getStartLineNumber() {
         return getChunk().getLineNumber();
     }
+    @Override
+    public int getEndLineNumber() {
+        int line = getStartLineNumber();
+        if (!isIndent()) {
+            line += countNewLines(getText());
+        }
+        return line;
+    }
+
     @Override
     public void setLineNumber(int lineNumber) {
         getChunk().setLineNumber(lineNumber);
@@ -248,6 +255,19 @@ public class ResXmlTextNode extends ResXmlNode implements Text {
         return text == null ? "null" : text;
     }
 
+    private static int countNewLines(String text) {
+        if (text == null) {
+            return 0;
+        }
+        int result = 0;
+        int length = text.length();
+        for (int i = 1; i < length; i++) {
+            if (text.charAt(i) == '\n') {
+                i ++;
+            }
+        }
+        return result;
+    }
     private static boolean isIndent(String text) {
         if (text == null) {
             return true;

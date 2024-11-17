@@ -24,7 +24,6 @@ import com.reandroid.json.JSONObject;
 import com.reandroid.utils.StringsUtil;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 public class ResXmlStartNamespace extends ResXmlNamespaceChunk
@@ -32,11 +31,17 @@ public class ResXmlStartNamespace extends ResXmlNamespaceChunk
 
     private final Set<ResXmlAttribute> mReferencedAttributes;
     private final Set<ResXmlStartElement> mReferencedElements;
+    private final ResXmlEndNamespace mEndNamespace;
 
-    public ResXmlStartNamespace() {
+    public ResXmlStartNamespace(ResXmlEndNamespace endNamespace) {
         super(ChunkType.XML_START_NAMESPACE);
+        this.mEndNamespace = endNamespace;
         this.mReferencedAttributes = new HashSet<>();
         this.mReferencedElements = new HashSet<>();
+    }
+
+    public ResXmlElement element() {
+        return getParentInstance(ResXmlElement.class);
     }
 
     void ensureUniqueUri() {
@@ -71,45 +76,71 @@ public class ResXmlStartNamespace extends ResXmlNamespaceChunk
             element.setNamespaceReference(uriReference);
         }
     }
-    ResXmlEndNamespace getEnd(){
-        return (ResXmlEndNamespace) getPair();
-    }
-    void setEnd(ResXmlEndNamespace namespace){
-        setPair(namespace);
-    }
-    @Override
-    void linkStringReferences(){
-        super.linkStringReferences();
-        ResXmlEndNamespace end = getEnd();
-        if (end != null) {
-            end.linkStringReferences();
-        }
-    }
-
     @Override
     public void onChunkLoaded() {
         super.onChunkLoaded();
         linkStringReferences();
     }
+    ResXmlEndNamespace getEnd() {
+        return mEndNamespace;
+    }
 
     @Override
-    void onPreRemove(){
-        ResXmlEndNamespace end = getEnd();
-        if (end != null) {
-            end.removeSelf();
+    void setStringReference(int value) {
+        super.setStringReference(value);
+        getEnd().setStringReference(value);
+    }
+    @Override
+    void setNamespaceReference(int value) {
+        super.setNamespaceReference(value);
+        getEnd().setNamespaceReference(value);
+    }
+
+    @Override
+    public void setLineNumber(int lineNumber) {
+        if (lineNumber != getLineNumber()) {
+            super.setLineNumber(lineNumber);
+            getEnd().setLineNumber(lineNumber);
         }
+    }
+
+    @Override
+    void onPreRemove() {
         mReferencedAttributes.clear();
         mReferencedElements.clear();
         super.onPreRemove();
     }
 
     @Override
+    protected void onPreRefresh() {
+        super.onPreRefresh();
+        ResXmlEndNamespace end = getEnd();
+        end.setNamespaceReference(getNamespaceReference());
+        end.setStringReference(getStringReference());
+    }
+
+    @Override
     public boolean isUnused() {
+        return getReferencedCount() == 0;
+    }
+    public boolean isUndefined() {
         if (isRemoved()) {
             return true;
         }
-        return mReferencedAttributes.size() == 0
-                && mReferencedElements.size() == 0;
+        return getUriReference() == -1 &&
+                getPrefixReference() == -1;
+    }
+    public int getReferencedCount() {
+        if (isRemoved()) {
+            return 0;
+        }
+        return mReferencedAttributes.size() + mReferencedElements.size();
+    }
+    public boolean isBetterThan(ResXmlStartNamespace namespace) {
+        if (namespace == null) {
+            return true;
+        }
+        return getReferencedCount() > namespace.getReferencedCount();
     }
 
     void addAttributeReference(ResXmlAttribute attribute){
@@ -167,5 +198,18 @@ public class ResXmlStartNamespace extends ResXmlNamespaceChunk
         setNamespace(json.getString(ResXmlElement.JSON_uri),
                 json.getString(ResXmlElement.JSON_prefix));
         setLineNumber(json.optInt(ResXmlElement.JSON_line));
+    }
+
+    public void merge(ResXmlStartNamespace namespace) {
+        if (namespace == this) {
+            return;
+        }
+        this.setNamespace(namespace.getUri(), namespace.getPrefix());
+        this.setLineNumber(namespace.getLineNumber());
+        this.setComment(namespace.getComment());
+        ResXmlEndNamespace end = this.getEnd();
+        ResXmlEndNamespace coming = namespace.getEnd();
+        end.setLineNumber(coming.getLineNumber());
+        end.setComment(coming.getComment());
     }
 }

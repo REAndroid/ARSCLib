@@ -15,33 +15,31 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
-import com.reandroid.arsc.chunk.ChunkType;
-import com.reandroid.arsc.container.BlockList;
 import com.reandroid.arsc.container.FixedBlockContainer;
-import com.reandroid.arsc.header.HeaderBlock;
 import com.reandroid.arsc.io.BlockReader;
-import com.reandroid.utils.collection.*;
+import com.reandroid.xml.XMLUtil;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 public class ResXmlElementChunk extends FixedBlockContainer {
 
-    private final BlockList<ResXmlStartNamespace> mStartNamespaceList;
+    private final ResXmlStartNamespaceList mStartNamespaceList;
     private final ResXmlStartElement mStartElement;
     private final ResXmlNodeList mNodeList;
     private final ResXmlEndElement mEndElement;
-    private final BlockList<ResXmlEndNamespace> mEndNamespaceList;
+    private final ResXmlChunkList<ResXmlEndNamespace> mEndNamespaceList;
 
     public ResXmlElementChunk() {
         super(5);
 
-        this.mStartNamespaceList = new ResXmlChunkList<>();
+        ResXmlChunkList<ResXmlEndNamespace> endNamespaceList = new ResXmlChunkList<>();
+        this.mStartNamespaceList = new ResXmlStartNamespaceList(endNamespaceList);
+
         ResXmlEndElement endElement = new ResXmlEndElement();
         this.mStartElement = new ResXmlStartElement(endElement);
         this.mNodeList = new ResXmlNodeList();
         this.mEndElement = endElement;
-        this.mEndNamespaceList = new ResXmlChunkList<>();
+        this.mEndNamespaceList = endNamespaceList;
 
         addChild(0, mStartNamespaceList);
         addChild(1, mStartElement);
@@ -54,15 +52,12 @@ public class ResXmlElementChunk extends FixedBlockContainer {
         return mNodeList;
     }
 
-    private ResXmlElement element(){
+    ResXmlElement element() {
         return getParentInstance(ResXmlElement.class);
     }
 
-    public ResXmlNamespace newNamespace(String uri, String prefix){
-        return createXmlStartNamespace(uri, prefix);
-    }
     void onPreRemove(){
-        mStartNamespaceList.clearChildes();
+        mStartNamespaceList.clear();
         mEndNamespaceList.clearChildes();
         mStartElement.onPreRemove();
     }
@@ -72,52 +67,20 @@ public class ResXmlElementChunk extends FixedBlockContainer {
             startElement.setName(null);
             return;
         }
-        String prefix = null;
-        int i = name.lastIndexOf(':');
-        if(i >= 0){
-            prefix = name.substring(0, i);
-            i++;
-            name = name.substring(i);
-        }
+        String prefix = XMLUtil.splitPrefix(name);
+        name = XMLUtil.splitName(name);
         startElement.setName(name);
         if(prefix == null){
             return;
         }
         ResXmlNamespace namespace = element()
-                .getOrCreateNamespaceByPrefix(prefix);
+                .getOrCreateNamespaceForPrefix(prefix);
         if (namespace != null) {
             startElement.setNamespaceReference(namespace.getUriReference());
         }
     }
 
-    private ResXmlStartNamespace createXmlStartNamespace(){
-        return createXmlStartNamespace(null, null);
-    }
-    private ResXmlStartNamespace createXmlStartNamespace(String uri, String prefix) {
-        if (uri != null) {
-            updateStartNamespaces();
-        }
-
-        ResXmlStartNamespace startNamespace = new ResXmlStartNamespace();
-        ResXmlEndNamespace endNamespace = new ResXmlEndNamespace();
-        startNamespace.setEnd(endNamespace);
-
-        mStartNamespaceList.add(startNamespace);
-        mEndNamespaceList.add(0, endNamespace);
-
-        if (uri != null) {
-            startNamespace.setNamespace(uri, prefix);
-        }
-        return startNamespace;
-    }
-    private void updateStartNamespaces() {
-        Iterator<ResXmlNamespace> iterator = element().getAllNamespaces();
-        while (iterator.hasNext()) {
-            ResXmlStartNamespace namespace = (ResXmlStartNamespace) iterator.next();
-            namespace.ensureUniqueUri();
-        }
-    }
-    BlockList<ResXmlStartNamespace> getStartNamespaceList(){
+    ResXmlStartNamespaceList getStartNamespaceList(){
         return mStartNamespaceList;
     }
 
@@ -135,46 +98,6 @@ public class ResXmlElementChunk extends FixedBlockContainer {
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        boolean startElementRead = false;
-        boolean endElementRead = false;
-        ArrayCollection<ResXmlEndNamespace> openedNamespaces = new ArrayCollection<>();
-        while (true) {
-            HeaderBlock headerBlock = reader.readHeaderBlock();
-            ChunkType chunkType = headerBlock.getChunkType();
-            if (chunkType == ChunkType.XML_START_ELEMENT) {
-                if (!startElementRead) {
-                    getStartElement().readBytes(reader);
-                    startElementRead = true;
-                } else if (!endElementRead) {
-                    element().newElement().readBytes(reader);
-                }
-            } else if (chunkType == ChunkType.XML_END_ELEMENT) {
-                if (!endElementRead) {
-                    getEndElement().readBytes(reader);
-                    endElementRead = true;
-                } else {
-                    unBalancedFinish();
-                }
-            } else if (chunkType == ChunkType.XML_START_NAMESPACE) {
-                ResXmlStartNamespace startNamespace = createXmlStartNamespace();
-                startNamespace.readBytes(reader);
-                openedNamespaces.add(startNamespace.getEnd());
-            } else if (chunkType == ChunkType.XML_END_NAMESPACE) {
-                ResXmlEndNamespace endNamespace = openedNamespaces
-                        .remove(openedNamespaces.size() - 1);
-                endNamespace.readBytes(reader);
-            } else if (!endElementRead && chunkType == ChunkType.XML_CDATA) {
-                element().newText().readBytes(reader);
-            } else if (!endElementRead && chunkType == ChunkType.XML) {
-                element().newDocument().readBytes(reader);
-            }
-            if (startElementRead && endElementRead && openedNamespaces.isEmpty()) {
-                return;
-            }
-        }
-    }
-
-    private void unBalancedFinish() throws IOException{
-        throw new IOException("Unbalanced end element");
+        new ElementChunkReader(this).read(reader);
     }
 }

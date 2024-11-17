@@ -24,7 +24,10 @@ import com.reandroid.common.Namespace;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.StringsUtil;
 import com.reandroid.xml.XMLElement;
+import com.reandroid.xml.XMLUtil;
+import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
@@ -187,6 +190,9 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
     private ResXmlStartElement getStartElement() {
         return getParentInstance(ResXmlStartElement.class);
     }
+    private ResXmlElement element() {
+        return getParentInstance(ResXmlElement.class);
+    }
 
     @Override
     public ResXmlAttribute createNext() {
@@ -284,6 +290,16 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
         }
         return null;
     }
+    public ResXmlAttribute searchAttribute(String namespace, String name){
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            ResXmlAttribute attribute = get(i);
+            if (attribute.isEqual(namespace, name)) {
+                return attribute;
+            }
+        }
+        return null;
+    }
     @Override
     public void onPreRemove(ResXmlAttribute attribute) {
         super.onPreRemove(attribute);
@@ -334,6 +350,38 @@ public class ResXmlAttributeArray extends CountedBlockList<ResXmlAttribute>
         int size = size();
         for (int i = 0; i < size; i++) {
             get(i).serialize(serializer, decode);
+        }
+    }
+
+    public void parse(XmlPullParser parser) throws IOException {
+        int count = parser.getAttributeCount();
+        for (int i = 0; i < count; i++) {
+            String name = parser.getAttributeName(i);
+            String prefix = XMLUtil.splitPrefix(name);
+            name = XMLUtil.splitName(name);
+            String value = parser.getAttributeValue(i);
+            if (Namespace.isValidNamespace(value, prefix)) {
+                continue;
+            }
+            if (prefix == null) {
+                prefix = StringsUtil.emptyToNull(parser.getAttributePrefix(i));
+            }
+            String uri;
+            if (prefix != null) {
+                uri = parser.getAttributeNamespace(i);
+                if (StringsUtil.isEmpty(uri)) {
+                    ResXmlNamespace ns = element().getNamespaceForPrefix(prefix);
+                    if(ns != null){
+                        uri = ns.getUri();
+                    }
+                }
+            } else {
+                uri = null;
+            }
+            createNext().encode(false, uri, prefix, name, value);
+        }
+        if (count != 0) {
+            computePositionsAndSort();
         }
     }
     public void toXml(XMLElement element, boolean decode) {

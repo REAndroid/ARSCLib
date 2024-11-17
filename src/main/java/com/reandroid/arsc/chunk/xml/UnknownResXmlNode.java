@@ -49,7 +49,7 @@ public class UnknownResXmlNode extends ResXmlNode {
     }
 
     @Override
-    Iterator<ParserEvent> getParserEvents() {
+    Iterator<ResXmlEvent> getParserEvents() {
         return EmptyIterator.of();
     }
 

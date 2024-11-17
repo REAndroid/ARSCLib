@@ -72,9 +72,7 @@ public class ResourceTable implements Iterable<ResourcePackage> {
         if(apkFile == null || !apkFile.containsFile(path)) {
             throw new FileNotFoundException("Missing apk file");
         }
-        ResXmlPullParser parser = new ResXmlPullParser();
-        parser.setResXmlDocument(apkFile.loadResXmlDocument(path));
-        return parser;
+        return new ResXmlPullParser(apkFile.loadResXmlDocument(path));
     }
     public String getString(int resourceId) {
         Iterator<String> iterator = getStrings(resourceId);

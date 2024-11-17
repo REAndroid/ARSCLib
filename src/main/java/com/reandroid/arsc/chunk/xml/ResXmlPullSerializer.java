@@ -161,7 +161,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
             // TODO: throw?
             return null;
         }
-        ResXmlNamespace resXmlNamespace = element.getNamespaceByUri(namespace);
+        ResXmlNamespace resXmlNamespace = element.getNamespaceForUri(namespace);
         if(resXmlNamespace == null && generatePrefix){
             String prefix;
             if(namespace.equals(ResourceLibrary.URI_ANDROID)){
@@ -213,7 +213,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
             prefix = name.substring(0, i);
             name = name.substring(i + 1);
         }else {
-            ResXmlNamespace xmlNamespace = element.getNamespaceByUri(namespace);
+            ResXmlNamespace xmlNamespace = element.getNamespaceForUri(namespace);
             if(xmlNamespace != null){
                 prefix = xmlNamespace.getPrefix();
             }
@@ -240,7 +240,7 @@ public class ResXmlPullSerializer implements XmlSerializer {
             name = name.substring(i + 1);
         }
         if(prefix == null){
-            ResXmlNamespace resXmlNamespace = element.getNamespaceByUri(namespace);
+            ResXmlNamespace resXmlNamespace = element.getNamespaceForUri(namespace);
             if(resXmlNamespace != null){
                 prefix = resXmlNamespace.getPrefix();
             }

@@ -24,6 +24,7 @@ import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.pool.ResXmlStringPool;
 
 class BaseXmlChunk extends Chunk<XmlNodeHeader> {
+
     private final IntegerItem mNamespaceReference;
     private final IntegerItem mStringReference;
 
@@ -80,12 +81,12 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
     public int getCommentReference(){
         return getHeaderBlock().getCommentReference().get();
     }
-    void setNamespaceReference(int val){
-        if(val == getNamespaceReference()){
+    void setNamespaceReference(int value){
+        if(value == getNamespaceReference()){
             return;
         }
         unLinkStringReference(mNamespaceReference);
-        mNamespaceReference.set(val);
+        mNamespaceReference.set(value);
         linkStringReference(mNamespaceReference);
     }
     int getNamespaceReference(){
@@ -102,14 +103,12 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
     int getStringReference(){
         return mStringReference.get();
     }
-    ResXmlString setString(String str){
+    void setString(String str) {
         ResXmlStringPool pool = getStringPool();
-        if(pool==null){
-            return null;
+        if (pool != null) {
+            ResXmlString xmlString = pool.getOrCreate(str);
+            setStringReference(xmlString.getIndex());
         }
-        ResXmlString xmlString = pool.getOrCreate(str);
-        setStringReference(xmlString.getIndex());
-        return xmlString;
     }
     ResXmlStringPool getStringPool(){
         Block parent=getParent();
@@ -177,9 +176,6 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
             setCommentReference(xmlString.getIndex());
         }
     }
-    public ResXmlElement getParentResXmlElement(){
-        return getParent(ResXmlElement.class);
-    }
     public ResXmlElement getNodeElement() {
         return getParentInstance(ResXmlElement.class);
     }
@@ -193,13 +189,7 @@ class BaseXmlChunk extends Chunk<XmlNodeHeader> {
         if(chunkType==null){
             return super.toString();
         }
-        StringBuilder builder=new StringBuilder();
-        builder.append(chunkType.toString());
-        builder.append(": line=");
-        builder.append(getLineNumber());
-        builder.append(" {");
-        builder.append(getName());
-        builder.append("}");
-        return builder.toString();
+        return chunkType.toString() + ": line=" + getLineNumber() +
+                " {" + getName() + "}";
     }
 }

@@ -144,14 +144,23 @@ public class ResXmlAttribute extends AttributeValue implements
     }
 
     public boolean equalsName(String name) {
-        if(name == null){
+        if (name == null) {
             return getName() == null;
         }
         String prefix = XMLUtil.splitPrefix(name);
         if(prefix != null && !prefix.equals(getPrefix())){
             return false;
         }
+        name = XMLUtil.splitName(name);
         return name.equals(getName());
+    }
+    public boolean isEqual(String namespace, String name) {
+        if (name == null || !ObjectsUtil.equals(getUri(), namespace)) {
+            return false;
+        }
+        name = XMLUtil.splitName(name);
+        return name.equals(getName(false)) ||
+                name.equals(decodeName(false));
     }
     public String getName(boolean includePrefix){
         String name = getName();
@@ -427,9 +436,9 @@ public class ResXmlAttribute extends AttributeValue implements
         if(uri != null && prefix != null){
             namespace = parentElement.getOrCreateNamespace(uri, prefix);
         }else if(uri != null){
-            namespace = parentElement.getNamespaceByUri(uri);
+            namespace = parentElement.getNamespaceForUri(uri);
         }else{
-            namespace = parentElement.getNamespaceByPrefix(prefix);
+            namespace = parentElement.getNamespaceForPrefix(prefix);
         }
         if(namespace == null){
             // TODO: should throw ?

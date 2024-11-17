@@ -15,6 +15,7 @@
  */
 package com.reandroid.arsc.chunk.xml;
 
+import android.content.res.XmlResourceParser;
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.container.WrappedBlock;
 import com.reandroid.arsc.refactor.ResourceMergeOption;
@@ -52,6 +53,23 @@ public abstract class ResXmlNode extends WrappedBlock implements
     <T extends ResXmlNode> Iterator<T> visitParentNodes(Class<T> instance, Class<? extends ResXmlNode> upperBound) {
         return InstanceIterator.of(new ParentNodeIterator(this, upperBound), instance);
     }
+
+    public ResXmlNode getPrevious() {
+        ResXmlNode parent = getParentNode();
+        if (parent instanceof ResXmlNodeTree) {
+            ResXmlNodeTree nodeTree = (ResXmlNodeTree)parent;
+            return nodeTree.get(getIndex() - 1);
+        }
+        return null;
+    }
+    public ResXmlNode getNext() {
+        ResXmlNode parent = getParentNode();
+        if (parent instanceof ResXmlNodeTree) {
+            ResXmlNodeTree nodeTree = (ResXmlNodeTree)parent;
+            return nodeTree.get(getIndex() + 1);
+        }
+        return null;
+    }
     abstract void onPreRemove();
     public boolean removeSelf() {
         throw new RuntimeException("Method not implemented");
@@ -61,7 +79,18 @@ public abstract class ResXmlNode extends WrappedBlock implements
         return CollectionUtil.count(getParentNodes());
     }
 
-    abstract Iterator<ParserEvent> getParserEvents();
+    @Override
+    public int getLineNumber() {
+        return getStartLineNumber();
+    }
+    public int getStartLineNumber() {
+        return 0;
+    }
+    public int getEndLineNumber() {
+        return 0;
+    }
+
+    abstract Iterator<ResXmlEvent> getParserEvents();
 
     public void autoSetLineNumber() {
         autoSetLineNumber(1);
@@ -74,6 +103,7 @@ public abstract class ResXmlNode extends WrappedBlock implements
     @Override
     public abstract void fromJson(JSONObject json);
 
+
     @Override
     public void serialize(XmlSerializer serializer) throws IOException {
         serialize(serializer, true);
@@ -84,7 +114,14 @@ public abstract class ResXmlNode extends WrappedBlock implements
             serializer.comment(comment);
         }
     }
+    @Override
     public abstract void parse(XmlPullParser parser) throws IOException, XmlPullParserException;
+    public XmlPullParser getParser() {
+        return new ResXmlEventParser(getParserEvents());
+    }
+    public XmlResourceParser getResourceParser() {
+        return new ResXmlPullParser(getParserEvents());
+    }
     public abstract XMLNode toXml(boolean decode);
 
     public boolean isDocument() {
