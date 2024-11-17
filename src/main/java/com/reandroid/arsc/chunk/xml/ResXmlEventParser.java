@@ -48,8 +48,10 @@ public class ResXmlEventParser implements XmlPullParser {
     }
 
     public ResXmlEvent getCurrent() {
+        if (mFinished) {
+            return null;
+        }
         if (!mFirstPulled) {
-            mFirstPulled = true;
             try {
                 nextParserEvent();
             } catch (Throwable ignored) {
@@ -58,6 +60,7 @@ public class ResXmlEventParser implements XmlPullParser {
         return mCurrent;
     }
     private void nextParserEvent() throws XmlPullParserException {
+        mFirstPulled = true;
         if (!mFinished && eventIterator.hasNext()) {
             mCurrent = eventIterator.next();
         } else {
@@ -78,6 +81,25 @@ public class ResXmlEventParser implements XmlPullParser {
         ResXmlNode xmlNode = getXmlNode();
         if (xmlNode instanceof ResXmlElement) {
             return (ResXmlElement) xmlNode;
+        }
+        return ObjectsUtil.getNull();
+    }
+    public ResXmlDocument getDocument() {
+        ResXmlNode xmlNode = getXmlNode();
+        if (xmlNode instanceof ResXmlDocument) {
+            return (ResXmlDocument) xmlNode;
+        }
+        if (xmlNode instanceof ResXmlElement) {
+            return ((ResXmlElement) xmlNode).getParentDocument();
+        }
+        if (xmlNode instanceof ResXmlTextNode) {
+            ResXmlNodeTree parent = ((ResXmlTextNode) xmlNode).getParentNode();
+            if (parent instanceof ResXmlDocument) {
+                return ((ResXmlDocument) parent);
+            }
+            if (parent instanceof ResXmlElement) {
+                return ((ResXmlElement) parent).getParentDocument();
+            }
         }
         return ObjectsUtil.getNull();
     }
@@ -199,9 +221,9 @@ public class ResXmlEventParser implements XmlPullParser {
 
     @Override
     public String getInputEncoding() {
-        ResXmlElement element = getCurrentElement();
-        if (element != null) {
-            ResXmlStringPool stringPool = element.getStringPool();
+        ResXmlDocument document = getDocument();
+        if (document != null) {
+            ResXmlStringPool stringPool = document.getStringPool();
             if (stringPool.isUtf8()) {
                 return "utf-8";
             } else {

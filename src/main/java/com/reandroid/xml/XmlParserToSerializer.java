@@ -27,6 +27,7 @@ public class XmlParserToSerializer {
 
     private final XmlPullParser parser;
     private XmlSerializer serializer;
+    private int depth = 0;
     private boolean enableIndent;
     boolean processNamespace;
     boolean reportNamespaceAttrs;
@@ -64,6 +65,7 @@ public class XmlParserToSerializer {
         while (nextEvent(event)){
             event = parser.next();
         }
+        this.serializer.flush();
         close();
     }
     private void close() throws IOException {
@@ -77,13 +79,15 @@ public class XmlParserToSerializer {
         }
     }
     private boolean nextEvent(int event) throws IOException, XmlPullParserException {
-        boolean hasNext = true;
-        switch (event){
+        boolean hasNext = event >= 0;
+        switch (event) {
             case XmlResourceParser.START_DOCUMENT:
                 onStartDocument();
+                depth ++;
                 break;
             case XmlResourceParser.START_TAG:
                 onStartTag();
+                depth ++;
                 break;
             case XmlResourceParser.TEXT:
                 onText();
@@ -99,17 +103,20 @@ public class XmlParserToSerializer {
                 break;
             case XmlResourceParser.END_TAG:
                 onEndTag();
+                depth --;
+                hasNext = depth != 0;
                 break;
             case XmlResourceParser.END_DOCUMENT:
                 onEndDocument();
-                hasNext = false;
+                depth --;
+                hasNext = depth != 0;
                 break;
         }
         return hasNext;
     }
 
     private void onStartDocument() throws IOException{
-        serializer.startDocument("utf-8", null);
+        serializer.startDocument(parser.getInputEncoding(), null);
     }
     private void onStartTag() throws IOException, XmlPullParserException {
         XmlPullParser parser = this.parser;

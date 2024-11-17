@@ -46,6 +46,22 @@ public class ResXmlEvent {
         return getXmlNode().getDepth();
     }
 
+    public String getEventName() {
+        int t = getType();
+        String[] types = XmlPullParser.TYPES;
+        if (t >= 0 && t < types.length) {
+            return types[t];
+        }
+        return "unknown-" + t;
+    }
+    @Override
+    public String toString() {
+        String text = getText();
+        if (text != null && text.length() > 100) {
+            text = text.substring(0, 100) + " ...";
+        }
+        return getEventName() + " {" + text + "} ";
+    }
 
     public static ResXmlEvent startComment(ResXmlElement element) {
         String comment = element.getStartComment();
@@ -108,10 +124,6 @@ public class ResXmlEvent {
         };
     }
     public static ResXmlEvent endTag(ResXmlElement element) {
-        String comment = element.getStartComment();
-        if (StringsUtil.isEmpty(comment)) {
-            return null;
-        }
         return new ResXmlEvent(END_TAG, element) {
             @Override
             public int getLineNumber() {
