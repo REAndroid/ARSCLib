@@ -134,7 +134,7 @@ public class DexField extends DexDeclaration {
 
     @Override
     public Iterator<DexAnnotation> getAnnotations(){
-        return ComputeIterator.of(ExpandIterator.of(getDefinition().getAnnotations()),
+        return ComputeIterator.of(ExpandIterator.of(getDefinition().getAnnotationSets()),
                 annotationItem -> DexAnnotation.create(DexField.this, annotationItem));
     }
     @Override

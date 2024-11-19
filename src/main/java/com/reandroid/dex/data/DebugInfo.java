@@ -50,10 +50,10 @@ public class DebugInfo extends DataItem implements KeyReference {
 
         this.debugSequence = new DebugSequence(lineStart);
 
-        addChild(0, lineStart);
-        addChild(1, debugParameterCount);
+        addChildBlock(0, lineStart);
+        addChildBlock(1, debugParameterCount);
         // index = 2, debugParametersArray
-        addChild(3, debugSequence);
+        addChildBlock(3, debugSequence);
 
         this.debugKey = new DataKey<>(this);
     }
@@ -142,7 +142,7 @@ public class DebugInfo extends DataItem implements KeyReference {
         if(debugParametersArray == null){
             debugParametersArray = new BlockList<>();
             this.debugParametersArray = debugParametersArray;
-            addChild(2, debugParametersArray);
+            addChildBlock(2, debugParametersArray);
             debugParametersArray.setCreator(CREATOR);
         }
         return debugParametersArray;

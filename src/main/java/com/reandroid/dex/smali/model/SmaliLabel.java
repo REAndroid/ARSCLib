@@ -15,9 +15,9 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
-import com.reandroid.dex.smali.SmaliValidateException;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
@@ -38,13 +38,19 @@ public class SmaliLabel extends SmaliCode {
         return labelName;
     }
     public void setLabelName(String labelName) {
+        if (labelName.charAt(0) == ':') {
+            labelName = labelName.substring(1);
+        }
+        setLabelNameInternal(labelName);
+    }
+    private void setLabelNameInternal(String labelName) {
         this.labelName = labelName;
     }
 
-    public int getIntegerData() throws IOException{
+    public int getIntegerData() {
         int address = getAddress();
         if(address == -1){
-            throw new SmaliValidateException("Missing target label '" + getLabelName() + "'", this);
+            throw new DexException("Missing target label '" + getLabelName() + "'");
         }
         return address;
     }
@@ -112,7 +118,7 @@ public class SmaliLabel extends SmaliCode {
             i = i1;
         }
         int length = i - reader.position();
-        setLabelName(reader.readString(length));
+        setLabelNameInternal(reader.readString(length));
     }
 
     @Override

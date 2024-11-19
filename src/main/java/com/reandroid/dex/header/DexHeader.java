@@ -82,25 +82,25 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
 
         this.unknown = new UnknownHeaderBytes();
 
-        addChild(0, magic);
-        addChild(1, version);
-        addChild(2, checksum);
-        addChild(3, signature);
-        addChild(4, (Block) fileSize);
-        addChild(5, (Block) headerSize);
-        addChild(6, endian);
-        addChild(7, (Block) map);
+        addChildBlock(0, magic);
+        addChildBlock(1, version);
+        addChildBlock(2, checksum);
+        addChildBlock(3, signature);
+        addChildBlock(4, (Block) fileSize);
+        addChildBlock(5, (Block) headerSize);
+        addChildBlock(6, endian);
+        addChildBlock(7, (Block) map);
 
-        addChild(8, string_id);
-        addChild(9, type_id);
-        addChild(10, proto_id);
-        addChild(11, field_id);
-        addChild(12, method_id);
-        addChild(13, class_id);
-        addChild(14, data);
-        addChild(15, containerInfo);
+        addChildBlock(8, string_id);
+        addChildBlock(9, type_id);
+        addChildBlock(10, proto_id);
+        addChildBlock(11, field_id);
+        addChildBlock(12, method_id);
+        addChildBlock(13, class_id);
+        addChildBlock(14, data);
+        addChildBlock(15, containerInfo);
 
-        addChild(16, unknown);
+        addChildBlock(16, unknown);
 
         setOffsetReference(containerInfo.getOffsetReference());
     }
@@ -166,8 +166,9 @@ public class DexHeader extends SpecialItem implements OffsetSupplier, DirectStre
     @Override
     public int readBytes(InputStream inputStream) throws IOException {
         int result = 0;
-        Block[] childes = getChildes();
-        for (Block block : childes) {
+        int size = 17;
+        for (int i = 0; i < size; i++) {
+            Block block = getChildBlockAt(i);
             result += ((DirectStreamReader) block).readBytes(inputStream);
         }
         return result;

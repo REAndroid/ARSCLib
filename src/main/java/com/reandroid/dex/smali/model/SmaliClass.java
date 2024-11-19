@@ -89,6 +89,9 @@ public class SmaliClass extends SmaliDef{
     public TypeListKey getInterfacesKey(){
         return getInterfaces().getKey();
     }
+    public void setInterfaces(TypeListKey key){
+        getInterfaces().setKey(key);
+    }
     public boolean hasClassData(){
         return !fields.isEmpty() || !methods.isEmpty();
     }
@@ -98,11 +101,17 @@ public class SmaliClass extends SmaliDef{
     public Iterator<SmaliField> getInstanceFields(){
         return fields.getInstanceFields();
     }
+    public void addFields(Iterator<SmaliField> iterator) {
+        fields.addAll(iterator);
+    }
     public Iterator<SmaliMethod> getDirectMethods(){
         return methods.getDirectMethods();
     }
     public Iterator<SmaliMethod> getVirtualMethods(){
         return methods.getVirtualMethods();
+    }
+    public void addMethods(Iterator<SmaliMethod> iterator) {
+        methods.addAll(iterator);
     }
 
     public SmaliMethod getStaticConstructor() {
@@ -146,7 +155,7 @@ public class SmaliClass extends SmaliDef{
         if(hasAnnotation()){
             writer.newLine(2);
             writer.appendComment("annotations");
-            writer.appendAllWithDoubleNewLine(getAnnotation().iterator());
+            writer.appendAllWithDoubleNewLine(getAnnotationSet().iterator());
         }
         fields.append(writer);
         methods.append(writer);

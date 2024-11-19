@@ -173,4 +173,18 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode> {
         }
         return null;
     }
+
+    public static SmaliInstruction createInstruction(Opcode<?> opcode){
+        SmaliInstruction instruction;
+        if (opcode == Opcode.ARRAY_PAYLOAD) {
+            instruction = new SmaliPayloadArray();
+        } else if(opcode == Opcode.PACKED_SWITCH_PAYLOAD) {
+            instruction = new SmaliPayloadPackedSwitch();
+        } else if(opcode == Opcode.SPARSE_SWITCH_PAYLOAD) {
+            instruction = new SmaliPayloadSparseSwitch();
+        } else {
+            instruction = new SmaliInstruction(opcode);
+        }
+        return instruction;
+    }
 }

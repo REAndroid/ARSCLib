@@ -52,7 +52,7 @@ public class StringData extends DataItem
     public StringData() {
         super(1);
         this.mDataContainer = new StringDataContainer(this);
-        addChild(0, mDataContainer);
+        addChildBlock(0, mDataContainer);
         this.mCache = EMPTY_STRING;
     }
 

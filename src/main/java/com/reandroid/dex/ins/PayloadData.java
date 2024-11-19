@@ -70,7 +70,7 @@ public abstract class PayloadData extends Ins implements SmaliRegion {
     public abstract Iterator<IntegerReference> getReferences();
 
     @Override
-    public abstract void fromSmali(SmaliInstruction smaliInstruction) throws IOException;
+    public abstract void fromSmali(SmaliInstruction smaliInstruction);
 
     @Override
     public boolean equals(Object obj) {

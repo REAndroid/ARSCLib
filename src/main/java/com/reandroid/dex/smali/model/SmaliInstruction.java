@@ -70,7 +70,7 @@ public class SmaliInstruction extends SmaliCode{
         }
         return null;
     }
-    public Number getData() throws IOException {
+    public Number getData() {
         SmaliInstructionOperand operand = getOperand();
         if(operand instanceof SmaliInstructionOperand.SmaliHexOperand){
             return ((SmaliInstructionOperand.SmaliHexOperand) operand).getNumber();

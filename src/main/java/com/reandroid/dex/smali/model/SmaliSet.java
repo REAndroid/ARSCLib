@@ -74,6 +74,14 @@ public class SmaliSet<T extends Smali> extends Smali{
     public boolean add(T smali){
         return body.add(smali);
     }
+    public void add(int i, T smali){
+        body.add(i, smali);
+    }
+    public void addAll(Iterator<? extends T> iterator){
+        while (iterator.hasNext()) {
+            add(iterator.next());
+        }
+    }
     public boolean contains(T smali){
         return body.contains(smali);
     }

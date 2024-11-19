@@ -24,6 +24,7 @@ import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDebugElement;
 import com.reandroid.utils.collection.EmptyIterator;
 
@@ -325,8 +326,8 @@ public abstract class DebugElement extends FixedDexContainerWithTool implements 
     public void merge(DebugElement element){
         this.elementType.set(element.elementType.getByte());
     }
-    public void fromSmali(SmaliDebugElement smaliDebugElement) throws IOException{
-        setTargetAddress(smaliDebugElement.getAddress());
+    public void fromSmali(Smali smali) {
+        setTargetAddress(((SmaliDebugElement) smali).getAddress());
     }
 
     @Override

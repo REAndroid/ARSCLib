@@ -36,9 +36,9 @@ public class HiddenApiRestrictions extends DataItem{
         this.sizeReference = new IntegerItem();
         this.hiddenApiIndexList = new HiddenApiIndexList();
         this.hiddenApiDataList = new HiddenApiDataList();
-        addChild(0, sizeReference);
-        addChild(1, hiddenApiIndexList);
-        addChild(2, hiddenApiDataList);
+        addChildBlock(0, sizeReference);
+        addChildBlock(1, hiddenApiIndexList);
+        addChildBlock(2, hiddenApiDataList);
     }
 
     public HiddenApiFlagValue getFlagValue(Key key) {

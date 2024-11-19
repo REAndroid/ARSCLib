@@ -61,9 +61,7 @@ public class SmaliAnnotationElement extends Smali implements KeyReference {
     }
 
     public void setValue(Key key) {
-        SmaliValue smaliValue = SmaliValueFactory.createForValue(key);
-        setValue(smaliValue);
-        smaliValue.setKey(key);
+        setValue(SmaliValueFactory.createForValue(key));
     }
     public void setValue(SmaliValue value) {
         this.value = value;

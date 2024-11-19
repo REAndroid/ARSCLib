@@ -168,7 +168,7 @@ public class InsSparseSwitchData extends InsSwitchPayload implements
     }
 
     @Override
-    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
+    public void fromSmali(SmaliInstruction smaliInstruction) {
         validateOpcode(smaliInstruction);
         SmaliPayloadSparseSwitch smaliPayloadSparseSwitch = (SmaliPayloadSparseSwitch) smaliInstruction;
         SmaliSet<SmaliSparseSwitchEntry> entries = smaliPayloadSparseSwitch.getEntries();
@@ -315,7 +315,7 @@ public class InsSparseSwitchData extends InsSwitchPayload implements
             set(data.get());
             setKey(data.getKey());
         }
-        public void fromSmali(SmaliSparseSwitchEntry smaliEntry) throws IOException{
+        public void fromSmali(SmaliSparseSwitchEntry smaliEntry) {
             set(smaliEntry.getValue());
             setKey(smaliEntry.getRelativeOffset());
         }

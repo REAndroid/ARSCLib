@@ -45,9 +45,9 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
         this.referenceList = new CountedList<>(countReference,
                 new ReferenceCreator<>(sectionType, usageType));
 
-        addChild(0, countReference);
-        addChild(1, referenceList);
-        addChild(2, positionAlign);
+        addChildBlock(0, countReference);
+        addChildBlock(1, referenceList);
+        addChildBlock(2, positionAlign);
     }
 
     @Override

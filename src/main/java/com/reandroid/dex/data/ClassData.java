@@ -22,17 +22,15 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.ins.Ins;
-import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliClass;
-import com.reandroid.dex.smali.model.SmaliField;
-import com.reandroid.dex.smali.model.SmaliMethod;
-import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
@@ -50,6 +48,8 @@ public class ClassData extends DataItem implements SmaliFormat {
     private MethodDefArray directMethods;
     private MethodDefArray virtualMethods;
 
+    private ClassId mClassId;
+
     public ClassData() {
         super(8);
         this.staticFieldsCount = new Ule128Item();
@@ -57,10 +57,10 @@ public class ClassData extends DataItem implements SmaliFormat {
         this.directMethodsCount = new Ule128Item();
         this.virtualMethodCount = new Ule128Item();
 
-        addChild(0, staticFieldsCount);
-        addChild(1, instanceFieldsCount);
-        addChild(2, directMethodsCount);
-        addChild(3, virtualMethodCount);
+        addChildBlock(0, staticFieldsCount);
+        addChildBlock(1, instanceFieldsCount);
+        addChildBlock(2, directMethodsCount);
+        addChildBlock(3, virtualMethodCount);
     }
 
     @Override
@@ -70,18 +70,6 @@ public class ClassData extends DataItem implements SmaliFormat {
 
     public void remove(Key key){
         Def<?> def = get(key);
-        if(def != null){
-            def.removeSelf();
-        }
-    }
-    public void removeField(FieldKey key){
-        Def<?> def = getField(key);
-        if(def != null){
-            def.removeSelf();
-        }
-    }
-    public void removeMethod(MethodKey key){
-        Def<?> def = getMethod(key);
         if(def != null){
             def.removeSelf();
         }
@@ -135,18 +123,7 @@ public class ClassData extends DataItem implements SmaliFormat {
     public FieldDef getOrCreateInstance(FieldKey fieldKey){
         return initInstanceFieldsArray().getOrCreate(fieldKey);
     }
-    public void ensureStaticConstructor(String type){
-        MethodKey methodKey = new MethodKey(type, "<clinit>", null, "V");
-        MethodDef methodDef = getMethod(methodKey);
-        if(methodDef != null){
-            return;
-        }
-        methodDef = initDirectMethodsArray().getOrCreate(methodKey);
-        methodDef.addAccessFlag(AccessFlag.STATIC);
-        methodDef.addAccessFlag(AccessFlag.CONSTRUCTOR);
-        InstructionList instructionList = methodDef.getCodeItem().getInstructionList();
-        instructionList.add(Opcode.RETURN_VOID.newInstance());
-    }
+
 
     public MethodDef getOrCreateDirect(MethodKey methodKey){
         return initDirectMethodsArray().getOrCreate(methodKey);
@@ -242,49 +219,62 @@ public class ClassData extends DataItem implements SmaliFormat {
     }
 
     private FieldDefArray initStaticFieldsArray() {
-        StaticFieldDefArray fieldDefArray = this.staticFields;
-        if(fieldDefArray == null){
-            fieldDefArray = new StaticFieldDefArray(staticFieldsCount);
-            this.staticFields = fieldDefArray;
-            addChild(4, staticFields);
+        StaticFieldDefArray defArray = this.staticFields;
+        if(defArray == null) {
+            defArray = new StaticFieldDefArray(staticFieldsCount);
+            this.staticFields = defArray;
+            addChildBlock(4, staticFields);
+            defArray.setClassId(getClassId());
         }
-        return fieldDefArray;
+        return defArray;
     }
     private FieldDefArray initInstanceFieldsArray() {
-        FieldDefArray fieldDefArray = this.instanceFields;
-        if(fieldDefArray == null){
-            fieldDefArray = new FieldDefArray(instanceFieldsCount);
-            this.instanceFields = fieldDefArray;
-            addChild(5, instanceFields);
+        FieldDefArray defArray = this.instanceFields;
+        if (defArray == null) {
+            defArray = new FieldDefArray(instanceFieldsCount);
+            this.instanceFields = defArray;
+            addChildBlock(5, instanceFields);
+            defArray.setClassId(getClassId());
         }
-        return fieldDefArray;
+        return defArray;
     }
     private MethodDefArray initDirectMethodsArray() {
-        MethodDefArray methodDefArray = this.directMethods;
-        if(methodDefArray == null){
-            methodDefArray = new MethodDefArray(directMethodsCount);
-            this.directMethods = methodDefArray;
-            addChild(6, methodDefArray);
+        MethodDefArray defArray = this.directMethods;
+        if (defArray == null) {
+            defArray = new MethodDefArray(directMethodsCount);
+            this.directMethods = defArray;
+            addChildBlock(6, defArray);
+            defArray.setClassId(getClassId());
         }
-        return methodDefArray;
+        return defArray;
     }
     private MethodDefArray initVirtualMethodsArray() {
-        MethodDefArray methodDefArray = this.virtualMethods;
-        if(methodDefArray == null){
-            methodDefArray = new MethodDefArray(virtualMethodCount);
-            this.virtualMethods = methodDefArray;
-            addChild(7, methodDefArray);
+        MethodDefArray defArray = this.virtualMethods;
+        if (defArray == null) {
+            defArray = new MethodDefArray(virtualMethodCount);
+            this.virtualMethods = defArray;
+            addChildBlock(7, defArray);
+            defArray.setClassId(getClassId());
         }
-        return methodDefArray;
+        return defArray;
     }
     private Iterator<DefArray<?>> getDefArrays() {
-        return ArrayIterator.of(getChildes(), 4, 4);
+        return CombiningIterator.four(
+                SingleIterator.of(staticFields),
+                SingleIterator.of(instanceFields),
+                SingleIterator.of(directMethods),
+                SingleIterator.of(virtualMethods)
+        );
     }
 
 
+    public ClassId getClassId() {
+        return mClassId;
+    }
     public void setClassId(ClassId classId) {
+        this.mClassId = classId;
         Iterator<DefArray<?>> iterator = getDefArrays();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             iterator.next().setClassId(classId);
         }
     }
@@ -309,10 +299,6 @@ public class ClassData extends DataItem implements SmaliFormat {
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
-        Iterator<DefArray<?>> iterator = getDefArrays();
-        while (iterator.hasNext()){
-            iterator.next().sort(CompareUtil.getComparableComparator());
-        }
     }
 
     @Override
@@ -356,40 +342,64 @@ public class ClassData extends DataItem implements SmaliFormat {
             }
         };
     }
-    public void merge(ClassData classData){
-        if(classData.getStaticFieldsCount() != 0){
-            initStaticFieldsArray().merge(classData.staticFields);
+    public void merge(ClassData classData) {
+        ClassId classId = this.getClassId();
+        if (classData.getStaticFieldsCount() != 0) {
+            FieldDefArray defArray = initStaticFieldsArray();
+            defArray.setClassId(classId);
+            defArray.merge(classData.staticFields);
         }
-        if(classData.getInstanceFieldsCount() != 0){
-            initInstanceFieldsArray().merge(classData.instanceFields);
+        if (classData.getInstanceFieldsCount() != 0) {
+            FieldDefArray defArray = initInstanceFieldsArray();
+            defArray.setClassId(classId);
+            defArray.merge(classData.instanceFields);
         }
-        if(classData.getDirectMethodsCount() != 0){
-            initDirectMethodsArray().merge(classData.directMethods);
+        if (classData.getDirectMethodsCount() != 0) {
+            MethodDefArray methodsArray = initDirectMethodsArray();
+            methodsArray.setClassId(classId);
+            methodsArray.merge(classData.directMethods);
         }
-        if(classData.getVirtualMethodsCount() != 0){
-            initVirtualMethodsArray().merge(classData.virtualMethods);
+        if (classData.getVirtualMethodsCount() != 0) {
+            MethodDefArray methodsArray = initVirtualMethodsArray();
+            methodsArray.setClassId(classId);
+            methodsArray.merge(classData.virtualMethods);
         }
     }
     public void fromSmali(SmaliClass smaliClass) throws IOException {
-        Iterator<SmaliField> smaliStaticFields = smaliClass.getStaticFields();
-        if(smaliStaticFields.hasNext()){
-            FieldDefArray defArray = initStaticFieldsArray();
-            defArray.fromSmali(smaliStaticFields);
+        Iterator<? extends Smali> iterator;
+
+        iterator = smaliClass.getStaticFields();
+        if (iterator.hasNext()) {
+            initStaticFieldsArray().fromSmali(iterator);
         }
-        Iterator<SmaliField> smaliInstanceFields = smaliClass.getInstanceFields();
-        if(smaliInstanceFields.hasNext()){
-            FieldDefArray defArray = initInstanceFieldsArray();
-            defArray.fromSmali(smaliInstanceFields);
+
+        iterator = smaliClass.getInstanceFields();
+        if (iterator.hasNext()) {
+            initInstanceFieldsArray().fromSmali(iterator);
         }
-        Iterator<SmaliMethod> smaliDirectMethods = smaliClass.getDirectMethods();
-        if(smaliDirectMethods.hasNext()){
-            MethodDefArray defArray = initDirectMethodsArray();
-            defArray.fromSmali(smaliDirectMethods);
+
+        iterator = smaliClass.getDirectMethods();
+        if (iterator.hasNext()) {
+            initDirectMethodsArray().fromSmali(iterator);
         }
-        Iterator<SmaliMethod> smaliVirtualMethods = smaliClass.getVirtualMethods();
-        if(smaliVirtualMethods.hasNext()){
-            MethodDefArray defArray = initVirtualMethodsArray();
-            defArray.fromSmali(smaliVirtualMethods);
+
+        iterator = smaliClass.getVirtualMethods();
+        if (iterator.hasNext()) {
+            initVirtualMethodsArray().fromSmali(iterator);
+        }
+    }
+    public void toSmali(SmaliClass smaliClass) {
+        if (staticFields != null) {
+            smaliClass.addFields(ObjectsUtil.cast(staticFields.toSmali()));
+        }
+        if (instanceFields != null) {
+            smaliClass.addFields(ObjectsUtil.cast(instanceFields.toSmali()));
+        }
+        if (directMethods != null) {
+            smaliClass.addMethods(ObjectsUtil.cast(directMethods.toSmali()));
+        }
+        if (virtualMethods != null) {
+            smaliClass.addMethods(ObjectsUtil.cast(virtualMethods.toSmali()));
         }
     }
 

@@ -6,6 +6,7 @@ import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.reference.Base1Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDebugElement;
 import com.reandroid.dex.smali.model.SmaliDebugLocal;
 import com.reandroid.utils.collection.CombiningIterator;
@@ -73,9 +74,9 @@ public class DebugStartLocalExtended extends DebugStartLocal {
     }
 
     @Override
-    public void fromSmali(SmaliDebugElement smaliDebugElement) throws IOException {
-        super.fromSmali(smaliDebugElement);
-        setSignature(((SmaliDebugLocal)smaliDebugElement).getSignature());
+    public void fromSmali(Smali smali) {
+        super.fromSmali(smali);
+        setSignature(((SmaliDebugLocal)smali).getSignature());
     }
 
     @Override

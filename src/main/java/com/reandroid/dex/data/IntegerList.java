@@ -40,16 +40,16 @@ public class IntegerList extends DataItem implements
         this.positionAlign = positionAlign;
         this.itemCount = new IntegerItem();
         this.arrayBlock = arrayBlock;
-        addChild(0, (Block) itemCount);
-        addChild(1, (Block) arrayBlock);
-        addChild(2, positionAlign);
+        addChildBlock(0, (Block) itemCount);
+        addChildBlock(1, (Block) arrayBlock);
+        addChildBlock(2, positionAlign);
     }
 
     public IntegerList(IntegerReference itemCount){
         super(1);
         this.itemCount = itemCount;
         this.arrayBlock = new IntegerArrayBlock();
-        addChild(0, (Block) arrayBlock);
+        addChildBlock(0, (Block) arrayBlock);
         this.positionAlign = null;
     }
     public IntegerList(){

@@ -301,7 +301,7 @@ public class DebugSequence extends FixedDexContainer implements Iterable<DebugEl
         cacheValues();
         getElementList().trimToSize();
     }
-    public void fromSmali(SmaliCodeSet smaliCodeSet) throws IOException {
+    public void fromSmali(SmaliCodeSet smaliCodeSet) {
         Iterator<SmaliDebugElement> iterator = smaliCodeSet.getDebugElements();
         while (iterator.hasNext()){
             SmaliDebugElement smaliDebug = iterator.next();

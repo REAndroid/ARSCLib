@@ -127,7 +127,7 @@ public class DexMethod extends DexDeclaration {
 
     @Override
     public Iterator<DexAnnotation> getAnnotations(){
-        return ComputeIterator.of(ExpandIterator.of(getDefinition().getAnnotations()),
+        return ComputeIterator.of(ExpandIterator.of(getDefinition().getAnnotationSets()),
                 annotationItem -> DexAnnotation.create(DexMethod.this, annotationItem));
     }
     @Override

@@ -28,6 +28,7 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliCodeSet;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.EmptyIterator;
@@ -304,12 +305,20 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
     public void merge(Ins ins){
         throw new RuntimeException("merge method not implemented, opcode = " + getOpcode());
     }
-    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
+    public void fromSmali(SmaliInstruction smaliInstruction) {
         throw new RuntimeException("fromSmali method not implemented, opcode = " + getOpcode());
     }
-    void validateOpcode(SmaliInstruction smaliInstruction) throws IOException {
+    public void toSmali(SmaliCodeSet smaliCodeSet) {
+        SmaliInstruction instruction = SmaliCodeSet.createInstruction(getOpcode());
+        smaliCodeSet.add(instruction);
+        toSmali(instruction);
+    }
+    // TODO: not completed
+    public void toSmali(SmaliInstruction instruction) {
+    }
+    void validateOpcode(SmaliInstruction smaliInstruction) {
         if(getOpcode() != smaliInstruction.getOpcode()) {
-            throw new IOException("Mismatch opcode " + getOpcode()
+            throw new DexException("Mismatch opcode " + getOpcode()
                     + " vs " + smaliInstruction.getOpcode());
         }
     }

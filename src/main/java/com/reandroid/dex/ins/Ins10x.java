@@ -36,7 +36,7 @@ public class Ins10x extends Size2Ins {
         writer.append(getOpcode().getName());
     }
     @Override
-    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
+    public void fromSmali(SmaliInstruction smaliInstruction) {
         validateOpcode(smaliInstruction);
     }
 }

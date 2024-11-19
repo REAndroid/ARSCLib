@@ -69,12 +69,12 @@ public class AnnotationItem extends DataItem
                 AnnotationElement.CREATOR);
         int i = 0;
         if(!valueEntry){
-            addChild(i++, visibility);
+            addChildBlock(i++, visibility);
         }
 
-        addChild(i++, typeId);
-        addChild(i++, elementsCount);
-        addChild(i, annotationElements);
+        addChildBlock(i++, typeId);
+        addChildBlock(i++, elementsCount);
+        addChildBlock(i, annotationElements);
     }
     public AnnotationItem(){
         this(false);

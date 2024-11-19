@@ -31,6 +31,8 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.Smali;
+import com.reandroid.dex.smali.model.SmaliField;
 import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.dex.smali.model.SmaliMethodParameter;
 import com.reandroid.utils.StringsUtil;
@@ -301,7 +303,7 @@ public class MethodDef extends Def<MethodId>{
         writer.indentPlus();
         if(!writer.appendOptional(getCodeItem())) {
             writer.appendAllWithDoubleNewLine(this.getParameters(true));
-            writer.appendAllWithDoubleNewLine(this.getAnnotations(true));
+            writer.appendAllWithDoubleNewLine(this.getAnnotationSets(true));
         }
         writer.indentMinus();
         getSmaliDirective().appendEnd(writer);
@@ -353,7 +355,9 @@ public class MethodDef extends Def<MethodId>{
             this.codeOffset.setKey(comingCode.getKey());
         }
     }
-    public void fromSmali(SmaliMethod smaliMethod) throws IOException {
+    @Override
+    public void fromSmali(Smali smali) {
+        SmaliMethod smaliMethod = (SmaliMethod) smali;
         setKey(smaliMethod.getKey());
         setAccessFlagsValue(smaliMethod.getAccessFlagsValue());
         addHiddenApiFlags(smaliMethod.getHiddenApiFlags());
@@ -377,6 +381,19 @@ public class MethodDef extends Def<MethodId>{
             parameter.fromSmali(smaliMethodParameter);
         }
         linkCodeItem();
+    }
+
+    @Override
+    public SmaliMethod toSmali() {
+        SmaliMethod smaliMethod = new SmaliMethod();
+        smaliMethod.setKey(getKey());
+        smaliMethod.setAccessFlags(AccessFlag.valuesOfField(getAccessFlagsValue()));
+        smaliMethod.setAnnotation(getAnnotationKeys());
+        CodeItem codeItem = getCodeItem();
+        if (codeItem != null) {
+            codeItem.toSmali(smaliMethod);
+        }
+        return smaliMethod;
     }
 
     @Override

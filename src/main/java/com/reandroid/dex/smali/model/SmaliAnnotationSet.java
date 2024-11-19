@@ -17,11 +17,13 @@ package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.AnnotationSetKey;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class SmaliAnnotationSet extends SmaliSet<SmaliAnnotationItem>{
 
@@ -37,11 +39,34 @@ public class SmaliAnnotationSet extends SmaliSet<SmaliAnnotationItem>{
         }
         return new AnnotationSetKey(elements);
     }
+    public void setKey(Key key) {
+        clear();
+        addAllKeys((AnnotationSetKey) key);
+    }
+
+    public void addAllKeys(Iterable<? extends AnnotationItemKey> iterable) {
+        if (iterable != null) {
+            addAllKeys(iterable.iterator());
+        }
+    }
+    public void addAllKeys(Iterator<? extends AnnotationItemKey> iterator) {
+        while (iterator.hasNext()) {
+            addKey(iterator.next());
+        }
+    }
+    public void addKey(AnnotationItemKey key) {
+        createNew().setKey(key);
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.appendAll(iterator());
     }
 
+    public SmaliAnnotationItem createNew() {
+        SmaliAnnotationItem item = new SmaliAnnotationItem();
+        add(item);
+        return item;
+    }
     @Override
     SmaliAnnotationItem createNext(SmaliReader reader) {
         reader.skipWhitespacesOrComment();

@@ -46,8 +46,8 @@ public class EncodedArray extends DataItem implements KeyReference, Iterable<Dex
         this.valuesCountReference = new Ule128Item();
         this.valueList = new BlockList<>();
         this.valueList.setCreator(CREATOR);
-        addChild(0, valuesCountReference);
-        addChild(1, valueList);
+        addChildBlock(0, valuesCountReference);
+        addChildBlock(1, valueList);
     }
 
     @Override
@@ -75,6 +75,13 @@ public class EncodedArray extends DataItem implements KeyReference, Iterable<Dex
 
     public DexValueBlock<?> get(int i){
         return getValueList().get(i);
+    }
+    public Key getValueKey(int i) {
+        DexValueBlock<?> value = get(i);
+        if (value != null) {
+            return value.getKey();
+        }
+        return null;
     }
     public<T1 extends IdItem> SectionValue<T1> getOrCreate(SectionType<T1> sectionType, int i){
         return getOrCreate(DexValueType.get(sectionType), i);

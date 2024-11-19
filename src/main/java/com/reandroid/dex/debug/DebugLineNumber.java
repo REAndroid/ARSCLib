@@ -17,7 +17,7 @@ package com.reandroid.dex.debug;
 
 import com.reandroid.dex.ins.ExtraLine;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.smali.model.SmaliDebug;
+import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDebugElement;
 import com.reandroid.dex.smali.model.SmaliLineNumber;
 
@@ -152,9 +152,9 @@ public class DebugLineNumber extends DebugElement {
     }
 
     @Override
-    public void fromSmali(SmaliDebugElement smaliDebugElement) throws IOException {
-        super.fromSmali(smaliDebugElement);
-        SmaliLineNumber lineNumber = (SmaliLineNumber) smaliDebugElement;
+    public void fromSmali(Smali smali) {
+        super.fromSmali(smali);
+        SmaliLineNumber lineNumber = (SmaliLineNumber) smali;
         setLineNumber(lineNumber.getNumber());
     }
 

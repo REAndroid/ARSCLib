@@ -33,6 +33,7 @@ import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliCodeSet;
 import com.reandroid.dex.smali.model.SmaliInstruction;
+import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.*;
 
@@ -488,7 +489,7 @@ public class InstructionList extends FixedBlockContainer implements
         getInsBlockList().merge(instructionList.getInsBlockList());
         getInsBlockList().updateCodeUnits();
     }
-    public void fromSmali(SmaliCodeSet smaliCodeSet) throws IOException {
+    public void fromSmali(SmaliCodeSet smaliCodeSet) {
         int index = 0;
         int offset = smaliCodeSet.getAddressOffset();
         if(offset != 0) {
@@ -501,7 +502,7 @@ public class InstructionList extends FixedBlockContainer implements
         }
         fromSmali(index, smaliCodeSet);
     }
-    public void fromSmali(int index, SmaliCodeSet smaliCodeSet) throws IOException {
+    public void fromSmali(int index, SmaliCodeSet smaliCodeSet) {
         InsBlockList insBlockList = getInsBlockList();
         Object obj = insBlockList.linkLocked();
         Iterator<SmaliInstruction> iterator = smaliCodeSet.getInstructions();
@@ -510,6 +511,16 @@ public class InstructionList extends FixedBlockContainer implements
             Ins ins = createAt(index, smaliInstruction.getOpcode());
             ins.fromSmali(smaliInstruction);
             index ++;
+        }
+        insBlockList.unlinkLocked(obj);
+    }
+    public void toSmali(SmaliMethod smaliMethod) {
+        InsBlockList insBlockList = getInsBlockList();
+        Object obj = insBlockList.linkLocked();
+        SmaliCodeSet smaliCodeSet = smaliMethod.getCodeSet();
+        int size = insBlockList.size();
+        for (int i = 0; i < size; i++) {
+            get(i).toSmali(smaliCodeSet);
         }
         insBlockList.unlinkLocked(obj);
     }

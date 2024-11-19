@@ -113,7 +113,7 @@ public class InsPackedSwitchData extends InsSwitchPayload {
     }
 
     @Override
-    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
+    public void fromSmali(SmaliInstruction smaliInstruction) {
         validateOpcode(smaliInstruction);
         SmaliPayloadPackedSwitch smaliPayloadPackedSwitch = (SmaliPayloadPackedSwitch) smaliInstruction;
         setFirstKey(smaliPayloadPackedSwitch.getFirstKey());

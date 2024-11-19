@@ -26,6 +26,7 @@ import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliField;
 import com.reandroid.dex.smali.model.SmaliValue;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -36,7 +37,7 @@ import java.util.Iterator;
 
 public class FieldDef extends Def<FieldId> {
 
-    private Key staticValue;
+    private Key cachedStaticValue;
 
     public FieldDef() {
         super(0, SectionType.FIELD_ID);
@@ -48,13 +49,29 @@ public class FieldDef extends Def<FieldId> {
     }
 
     public Key getStaticValue() {
-        return staticValue;
+        StaticFieldDefArray fieldDefArray = getParentInstance(
+                StaticFieldDefArray.class);
+        if (fieldDefArray != null) {
+            return fieldDefArray.getStaticValue(this);
+        }
+        return null;
     }
     public void setStaticValue(Key staticValue) {
-        this.staticValue = staticValue;
-        if (!isReading()) {
-            validateStaticValue();
+        StaticFieldDefArray fieldDefArray = getParentInstance(
+                StaticFieldDefArray.class);
+        if (fieldDefArray == null) {
+            throw new DexException("Not a member of StaticFieldDefArray: "
+                    + Modifier.toString(getModifiers()) + getKey());
         }
+        fieldDefArray.setStaticValue(this, staticValue);
+        validateStaticValue();
+    }
+
+    Key cachedStaticValue() {
+        return cachedStaticValue;
+    }
+    void cachedStaticValue(Key staticValue) {
+        this.cachedStaticValue = staticValue;
     }
 
     @Override
@@ -75,7 +92,7 @@ public class FieldDef extends Def<FieldId> {
             writer.append(" = ");
             value.append(writer);
         }
-        Iterator<AnnotationSet> annotations = getAnnotations(true);
+        Iterator<AnnotationSet> annotations = getAnnotationSets(true);
         if(!annotations.hasNext()){
             return;
         }
@@ -89,18 +106,15 @@ public class FieldDef extends Def<FieldId> {
         return SingleIterator.of(getId());
     }
 
-    public void fromSmali(SmaliField smaliField){
-        setKey(smaliField.getKey());
-        setAccessFlagsValue(smaliField.getAccessFlagsValue());
-        addHiddenApiFlags(smaliField.getHiddenApiFlags());
-        if(smaliField.hasAnnotation()){
-            addAnnotationSet(smaliField.getAnnotationSetKey());
-        }
-        SmaliValue smaliValue = smaliField.getValue();
-        if(smaliValue != null) {
-            setStaticValue(smaliValue.getKey());
-            validateStaticValue();
-        }
+    @Override
+    void onRemove() {
+        super.onRemove();
+    }
+
+    @Override
+    protected void onRefreshed() {
+        super.onRefreshed();
+        validateStaticValue();
     }
 
     // TODO: Move this function to central dex file validator
@@ -140,6 +154,31 @@ public class FieldDef extends Def<FieldId> {
         super.merge(def);
         FieldDef comingField = (FieldDef) def;
         setStaticValue(comingField.getStaticValue());
+    }
+
+    @Override
+    public void fromSmali(Smali smali) {
+        SmaliField smaliField = (SmaliField) smali;
+        setKey(smaliField.getKey());
+        setAccessFlagsValue(smaliField.getAccessFlagsValue());
+        addHiddenApiFlags(smaliField.getHiddenApiFlags());
+        if(smaliField.hasAnnotation()){
+            addAnnotationSet(smaliField.getAnnotationSetKey());
+        }
+        SmaliValue smaliValue = smaliField.getValue();
+        if(smaliValue != null) {
+            setStaticValue(smaliValue.getKey());
+        }
+    }
+
+    @Override
+    public SmaliField toSmali() {
+        SmaliField smaliField = new SmaliField();
+        smaliField.setKey(getKey());
+        smaliField.setAccessFlags(AccessFlag.valuesOfField(getAccessFlagsValue()));
+        smaliField.setValue(getStaticValue());
+        smaliField.setAnnotation(getAnnotationKeys());
+        return smaliField;
     }
 
     @Override

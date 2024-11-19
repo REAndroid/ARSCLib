@@ -19,6 +19,7 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.RegistersTable;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.key.TypeKey;
@@ -58,6 +59,12 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
             return getKey(typeKey);
         }
         return null;
+    }
+    public void setKey(Key key) {
+        MethodKey methodKey = (MethodKey) key;
+        setName(methodKey.getName());
+        setProtoKey(methodKey.getProtoKey());
+        setDefining(methodKey.getDeclaring());
     }
     public MethodKey getKey(TypeKey declaring){
         ProtoKey protoKey = getProtoKey();
@@ -137,7 +144,7 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
         getParamSet().append(writer);
         if(hasAnnotation()){
             writer.newLine();
-            getAnnotation().append(writer);
+            getAnnotationSet().append(writer);
         }
         getCodeSet().append(writer);
         writer.indentMinus();

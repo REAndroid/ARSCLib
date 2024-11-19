@@ -17,20 +17,22 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
-import com.reandroid.dex.base.DexException;
+import com.reandroid.dex.common.OperandType;
 import com.reandroid.dex.common.Register;
+import com.reandroid.dex.common.RegisterFormat;
 import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.data.CodeItem;
 import com.reandroid.dex.data.MethodDef;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.data.InstructionList;
+import com.reandroid.dex.key.DualKeyReference;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.reference.InsIdSectionReference;
 import com.reandroid.dex.sections.SectionType;
-import com.reandroid.dex.smali.SmaliValidateException;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.smali.model.SmaliInstruction;
+import com.reandroid.dex.smali.model.*;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.collection.InstanceIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
@@ -347,15 +349,11 @@ public class SizeXIns extends Ins {
     }
 
     @Override
-    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
-        try {
-            validateOpcode(smaliInstruction);
-            fromSmaliRegisters(smaliInstruction);
-            fromSmaliKey(smaliInstruction);
-            fromSmaliData(smaliInstruction);
-        } catch (DexException exception) {
-            throw new SmaliValidateException(exception.getMessage(), smaliInstruction);
-        }
+    public void fromSmali(SmaliInstruction smaliInstruction) {
+        validateOpcode(smaliInstruction);
+        fromSmaliRegisters(smaliInstruction);
+        fromSmaliKey(smaliInstruction);
+        fromSmaliData(smaliInstruction);
     }
     private void fromSmaliRegisters(SmaliInstruction smaliInstruction){
         if(!(this instanceof RegistersSet)){
@@ -378,7 +376,7 @@ public class SizeXIns extends Ins {
         }
         setKey(smaliInstruction.getKey());
     }
-    private void fromSmaliData(SmaliInstruction smaliInstruction) throws IOException {
+    private void fromSmaliData(SmaliInstruction smaliInstruction) {
         Number data = smaliInstruction.getData();
         if(data == null){
             return;
@@ -387,6 +385,70 @@ public class SizeXIns extends Ins {
             setLong((Long) data);
         }else {
             setData(data.intValue());
+        }
+    }
+
+    @Override
+    public void toSmali(SmaliInstruction smaliInstruction) {
+        toSmaliOperand(smaliInstruction);
+        toSmaliRegisters(smaliInstruction);
+        toSmaliLabels(smaliInstruction);
+    }
+
+    private void toSmaliOperand(SmaliInstruction instruction) {
+        SmaliInstructionOperand operand = instruction.getOperand();
+        OperandType operandType = instruction.getOperandType();
+        if (operandType == OperandType.HEX) {
+            ((SmaliInstructionOperand.SmaliHexOperand)operand).setNumber(getData());
+        } else if (operandType == OperandType.KEY) {
+            ((SmaliInstructionOperand.SmaliKeyOperand)operand).setKey(getKey());
+        } else if (operandType == OperandType.LABEL) {
+            SmaliLabel smaliLabel = ((SmaliInstructionOperand.SmaliLabelOperand) operand)
+                    .getLabel();
+            Label label = (Label) this;
+            smaliLabel.setLabelName(label.getLabelName());
+        } else if (operandType == OperandType.DUAL_KEY) {
+            ((SmaliInstructionOperand.SmaliDualKeyOperand)operand).setKey(getKey());
+            ((SmaliInstructionOperand.SmaliDualKeyOperand)operand).setKey2(
+                    ((DualKeyReference)this).getKey2());
+        }
+    }
+    private void toSmaliRegisters(SmaliInstruction instruction) {
+        SmaliRegisterSet smaliRegisterSet = instruction.getRegisterSet();
+        RegisterFormat registerFormat = smaliRegisterSet.getFormat();
+        if (registerFormat == RegisterFormat.NONE) {
+            return;
+        }
+        RegistersIterator registersIterator = getRegistersIterator();
+        RegisterReference ref = registersIterator.get(0);
+        smaliRegisterSet.addRegister(ref.isParameter(), ref.getNumber());
+        int size = registersIterator.size();
+        int start = 1;
+        if (registerFormat.isRange()) {
+            start = size - 1;
+        }
+        for (int i = start; i < size; i++) {
+            ref = registersIterator.get(i);
+            smaliRegisterSet.addRegister(ref.isParameter(), ref.getNumber());
+        }
+    }
+    private void toSmaliLabels(SmaliInstruction instruction) {
+        SmaliCodeSet smaliCodeSet = instruction.getCodeSet();
+        Iterator<Label> iterator = InstanceIterator.of(getExtraLines(),
+                Label.class, label -> !(label instanceof ExceptionLabel));
+        Label extraLine;
+        ExtraLine previous = null;
+        int index = smaliCodeSet.indexOf(instruction);
+        while (iterator.hasNext()){
+            extraLine = iterator.next();
+            if(extraLine.isEqualExtraLine(previous)){
+                continue;
+            }
+            SmaliLabel smaliLabel = new SmaliLabel();
+            smaliCodeSet.add(index, smaliLabel);
+            smaliLabel.setLabelName(extraLine.getLabelName());
+            index ++;
+            previous = extraLine;
         }
     }
 

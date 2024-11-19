@@ -64,8 +64,8 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
 
         this.codeItemKey = new DataKey<>(this);
 
-        addChild(0, header);
-        addChild(1, instructionList);
+        addChildBlock(0, header);
+        addChildBlock(1, instructionList);
     }
 
     @Override
@@ -223,7 +223,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
     void initTryBlock(){
         if(this.tryBlock == null){
             this.tryBlock = new TryBlock(this);
-            addChild(2, this.tryBlock);
+            addChildBlock(2, this.tryBlock);
         }
     }
     @Override
@@ -298,7 +298,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
             tryBlock.merge(comingTry);
         }
     }
-    public void fromSmali(SmaliMethod smaliMethod) throws IOException {
+    public void fromSmali(SmaliMethod smaliMethod) {
         setRegistersCount(smaliMethod.getRegistersCount());
         setParameterRegistersCount(smaliMethod.getParameterRegistersCount());
         getInstructionList().fromSmali(smaliMethod.getCodeSet());
@@ -320,6 +320,12 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
             tryBlock.refresh();
         }
     }
+    public void toSmali(SmaliMethod smaliMethod) {
+        SmaliMethod.SmaliRegistersCount registersCount = smaliMethod.getSmaliRegistersCount();
+        registersCount.setLocalsMode(true);
+        registersCount.setValue(getLocalRegistersCount());
+        getInstructionList().toSmali(smaliMethod);
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         writer.setCurrentRegistersTable(this);
@@ -333,7 +339,7 @@ public class CodeItem extends DataItem implements RegistersTable, PositionAligne
             writer.appendInteger(getRegistersCount());
         }
         writer.appendAllWithDoubleNewLine(methodDef.getParameters(true));
-        writer.appendAllWithDoubleNewLine(methodDef.getAnnotations(true));
+        writer.appendAllWithDoubleNewLine(methodDef.getAnnotationSets(true));
         getInstructionList().append(writer);
         writer.setCurrentRegistersTable(null);
     }

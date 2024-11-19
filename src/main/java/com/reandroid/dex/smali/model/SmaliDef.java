@@ -18,6 +18,7 @@ package com.reandroid.dex.smali.model;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
+import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
@@ -25,9 +26,11 @@ import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.utils.collection.ArrayIterator;
+import com.reandroid.utils.collection.CollectionUtil;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 public abstract class SmaliDef extends Smali implements SmaliRegion {
 
@@ -50,6 +53,16 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
     public void setAccessFlags(AccessFlag[] accessFlags) {
         this.accessFlags = accessFlags;
     }
+    public void setAccessFlags(Iterator<AccessFlag> iterator) {
+        AccessFlag[] accessFlags;
+        if (!iterator.hasNext()) {
+            accessFlags = null;
+        } else {
+            List<AccessFlag> list = CollectionUtil.toList(iterator);
+            accessFlags = list.toArray(new AccessFlag[list.size()]);
+        }
+        setAccessFlags(accessFlags);
+    }
     public int getAccessFlagsValue(){
         return Modifier.combineValues(getAccessFlags());
     }
@@ -70,12 +83,13 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
         this.name = name;
     }
     public TypeKey getDefining() {
-        TypeKey typeKey = this.defining;
+        TypeKey typeKey = null;
+        SmaliDefSet<?> defSet = getDefSet();
+        if(defSet != null) {
+            typeKey = defSet.getDefining();
+        }
         if(typeKey == null) {
-            SmaliDefSet<?> defSet = getDefSet();
-            if(defSet != null) {
-                typeKey = defSet.getDefining();
-            }
+            typeKey = this.defining;
         }
         return typeKey;
     }
@@ -83,18 +97,46 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
         this.defining = defining;
     }
 
-    public SmaliAnnotationSet getAnnotation() {
-        return annotation;
-    }
     public AnnotationSetKey getAnnotationSetKey() {
-        SmaliAnnotationSet annotationSet = getAnnotation();
+        SmaliAnnotationSet annotationSet = getAnnotationSet();
         if (annotationSet != null) {
             return annotationSet.getKey();
         }
         return null;
     }
+    public void setAnnotation(AnnotationSetKey annotation) {
+        if (annotation != null) {
+            setAnnotation(annotation.iterator());
+        } else {
+            setAnnotation((SmaliAnnotationSet) null);
+        }
+    }
+    public void setAnnotation(Iterator<AnnotationItemKey> iterator) {
+        if (iterator.hasNext()) {
+            getOrCreateAnnotation().addAllKeys(iterator);
+        } else {
+            setAnnotation((SmaliAnnotationSet) null);
+        }
+    }
+    public void addAnnotation(AnnotationSetKey annotation) {
+        SmaliAnnotationSet annotationSet = getOrCreateAnnotation();
+        annotationSet.addAllKeys(annotation);
+    }
+
+    public void addAnnotations(Iterator<AnnotationItemKey> iterator) {
+        if (iterator.hasNext()) {
+            getOrCreateAnnotation().addAllKeys(iterator);
+        }
+    }
+    public void addAnnotation(AnnotationItemKey annotation) {
+        SmaliAnnotationSet annotationSet = getOrCreateAnnotation();
+        annotationSet.addKey(annotation);
+    }
+    public SmaliAnnotationSet getAnnotationSet() {
+        return annotation;
+    }
     public SmaliAnnotationSet getOrCreateAnnotation() {
-        SmaliAnnotationSet directory = getAnnotation();
+        SmaliAnnotationSet directory = getAnnotationSet();
         if(directory == null){
             directory = new SmaliAnnotationSet();
             setAnnotation(directory);
@@ -102,13 +144,17 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
         return directory;
     }
     public void setAnnotation(SmaliAnnotationSet annotation) {
+        SmaliAnnotationSet old = this.annotation;
         this.annotation = annotation;
-        if(annotation != null){
+        if (annotation != null) {
             annotation.setParent(this);
+        }
+        if (old != null && old != annotation) {
+            old.setParent(null);
         }
     }
     public boolean hasAnnotation(){
-        SmaliAnnotationSet annotation = getAnnotation();
+        SmaliAnnotationSet annotation = getAnnotationSet();
         return annotation != null && !annotation.isEmpty();
     }
     @Override

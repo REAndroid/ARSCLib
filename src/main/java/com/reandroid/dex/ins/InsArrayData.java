@@ -17,6 +17,7 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.item.*;
 import com.reandroid.dex.base.DexBlockAlign;
+import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.base.NumberArray;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.smali.SmaliDirective;
@@ -171,12 +172,12 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
     }
 
     @Override
-    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException{
+    public void fromSmali(SmaliInstruction smaliInstruction) {
         validateOpcode(smaliInstruction);
         SmaliPayloadArray smaliPayloadArray = (SmaliPayloadArray) smaliInstruction;
         int width = smaliPayloadArray.getWidth();
         if(width < 1 || width > 8){
-            throw new SmaliValidateException("Array values width out of range '" + width + "'", smaliInstruction);
+            throw new DexException("Array values width out of range '" + width + "'");
         }
         setWidth(width);
         if(width > 4){

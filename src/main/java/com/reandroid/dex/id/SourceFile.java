@@ -16,6 +16,8 @@
 package com.reandroid.dex.id;
 
 import com.reandroid.dex.base.UsageMarker;
+import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.reference.IndirectStringReference;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
@@ -28,6 +30,19 @@ public class SourceFile extends IndirectStringReference implements SmaliRegion {
 
     SourceFile(ClassId classId, int offset) {
         super(classId, offset, UsageMarker.USAGE_SOURCE);
+    }
+
+    @Override
+    public StringKey getKey() {
+        return (StringKey) super.getKey();
+    }
+    @Override
+    public void setKey(Key key) {
+        if (key == null) {
+            setItem(null);
+        } else {
+            super.setKey(key);
+        }
     }
 
     @Override

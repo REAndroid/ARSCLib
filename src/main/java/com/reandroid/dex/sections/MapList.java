@@ -42,9 +42,9 @@ public class MapList extends SpecialItem
         this.itemArray = new CountedArray<>(mapItemsCount, CREATOR);
         this.positionAlign = new DexPositionAlign();
 
-        addChild(0, positionAlign);
-        addChild(1, mapItemsCount);
-        addChild(2, itemArray);
+        addChildBlock(0, positionAlign);
+        addChildBlock(1, mapItemsCount);
+        addChildBlock(2, itemArray);
 
         setOffsetReference(offsetReference);
 

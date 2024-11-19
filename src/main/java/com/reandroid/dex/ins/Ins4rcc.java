@@ -150,7 +150,7 @@ public class Ins4rcc extends Size8Ins implements RegistersSet, DualKeyReference 
     }
 
     @Override
-    public void fromSmali(SmaliInstruction smaliInstruction) throws IOException {
+    public void fromSmali(SmaliInstruction smaliInstruction) {
         super.fromSmali(smaliInstruction);
         setKey2(smaliInstruction.getKey2());
     }

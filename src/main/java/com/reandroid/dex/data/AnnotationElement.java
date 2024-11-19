@@ -28,7 +28,7 @@ public class AnnotationElement extends DataItem implements KeyReference,
     public AnnotationElement() {
         super(2);
         this.elementName = new StringUle128Reference(StringId.USAGE_METHOD_NAME);
-        addChild(0, elementName);
+        addChildBlock(0, elementName);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class AnnotationElement extends DataItem implements KeyReference,
         valueBlock.setKey(value);
     }
     public DexValueBlock<?> getValueBlock(){
-        return (DexValueBlock<?>) getChildes()[1];
+        return (DexValueBlock<?>) getChildBlockAt(1);
     }
 
     @SuppressWarnings("unchecked")
@@ -75,7 +75,7 @@ public class AnnotationElement extends DataItem implements KeyReference,
         return (T1) value;
     }
     public void setValue(DexValueBlock<?> dexValue){
-        addChild(1, dexValue);
+        addChildBlock(1, dexValue);
     }
     public boolean is(DexValueType<?> valueType){
         return getValueType() == valueType;

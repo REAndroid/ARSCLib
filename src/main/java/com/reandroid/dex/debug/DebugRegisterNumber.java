@@ -17,6 +17,7 @@ package com.reandroid.dex.debug;
 
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDebug;
 import com.reandroid.dex.smali.model.SmaliDebugElement;
 import com.reandroid.dex.smali.model.SmaliDebugRegister;
@@ -59,8 +60,9 @@ abstract class DebugRegisterNumber extends DebugElement {
     }
 
     @Override
-    public void fromSmali(SmaliDebugElement smaliDebugElement) throws IOException {
-        super.fromSmali(smaliDebugElement);
+    public void fromSmali(Smali smali) {
+        super.fromSmali(smali);
+        SmaliDebugElement smaliDebugElement = (SmaliDebugElement) smali;
         SmaliDebugRegister smaliDebugRegister = (SmaliDebugRegister) smaliDebugElement;
         setRegister(smaliDebugRegister.getRegister().getValue());
     }

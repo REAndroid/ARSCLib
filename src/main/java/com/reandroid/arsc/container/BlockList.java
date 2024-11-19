@@ -69,9 +69,6 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
             mItems.setSize(size);
         }
     }
-    public void clearTemporarily() {
-        mItems.clearTemporarily();
-    }
     public void setElements(T[] elements){
         if(elements == null || elements.length == 0){
             lockList();
@@ -177,12 +174,14 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         if(mItems.isEmpty()){
             return;
         }
+        Object lock = onRemoveRequestStarted();
         int size = size();
-        for (int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             remove(size() - 1, false);
         }
         lockList();
         onChanged();
+        onRemoveRequestCompleted(lock);
     }
     public void destroy(){
         mItems.clear();
@@ -263,23 +262,30 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         return results;
     }
     public boolean removeAllIndexes(int[] indexes) {
+        Object lock = onRemoveRequestStarted();
         mItems.removeAllIndexes(indexes);
         updateIndex();
+        onRemoveRequestCompleted(lock);
         return true;
     }
     public boolean removeIf(Predicate<? super T> filter){
+        Object lock = onRemoveRequestStarted();
         boolean removed = mItems.removeIf(filter);
         if(removed) {
             updateIndex();
         }
+        onRemoveRequestCompleted(lock);
         return removed;
     }
-    public T remove(int index){
-        return remove(index, true);
+    public T remove(int index) {
+        Object lock = onRemoveRequestStarted();
+        T item = remove(index, true);
+        onRemoveRequestCompleted(lock);
+        return item;
     }
-    private T remove(int index, boolean updateIndex){
+    private T remove(int index, boolean updateIndex) {
         T item = mItems.remove(index);
-        if(item == null){
+        if(item == null) {
             return null;
         }
         item.setParent(null);
@@ -301,6 +307,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         if(index < 0) {
             return false;
         }
+        Object lock = onRemoveRequestStarted();
         boolean removed = mItems.remove(index) != null;
         if(removed) {
             updateIndex(index);
@@ -308,6 +315,7 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
             item.setParent(null);
         }
         onChanged();
+        onRemoveRequestCompleted(lock);
         return removed;
     }
     public int indexOf(T item){
@@ -329,6 +337,11 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
     }
     public void onPreRemove(T item){
 
+    }
+    protected Object onRemoveRequestStarted(){
+        return null;
+    }
+    protected void onRemoveRequestCompleted(Object lock){
     }
     public boolean swap(int i, int j) {
         if(i == j) {
@@ -352,8 +365,10 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
             index = 0;
         }
         int i = mItems.indexOfExact(item, item.getIndex());
+        Object lock = onRemoveRequestStarted();
         mItems.move(item, index);
         updateIndex(i, index);
+        onRemoveRequestCompleted(lock);
     }
     public boolean transferTo(T item, BlockList<? super T> destination) {
         if (item == null || destination == null || destination == this) {
@@ -363,15 +378,21 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
         if (i < 0) {
             return false;
         }
+        Object lock = onRemoveRequestStarted();
         mItems.removeSilent(i);
-        return destination.add(item);
+        boolean moved = destination.add(item);
+        onRemoveRequestCompleted(lock);
+        return moved;
     }
     public boolean transferTo(int index, BlockList<? super T> destination) {
         if (index < 0 || destination == null || destination == this) {
             return false;
         }
+        Object lock = onRemoveRequestStarted();
         T item = mItems.removeSilent(index);
-        return destination.add(item);
+        boolean moved = destination.add(item);
+        onRemoveRequestCompleted(lock);
+        return moved;
     }
     public void set(int index, T item){
         if(item == null){

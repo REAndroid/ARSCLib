@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
@@ -31,11 +32,11 @@ public class SmaliInterface extends Smali implements SmaliRegion {
         super();
     }
 
-    public TypeKey getType() {
+    public TypeKey getKey() {
         return type;
     }
-    public void setType(TypeKey type) {
-        this.type = type;
+    public void setKey(Key key) {
+        this.type = (TypeKey) key;
     }
     public String getTypeName(){
         TypeKey typeKey = type;
@@ -53,11 +54,11 @@ public class SmaliInterface extends Smali implements SmaliRegion {
     @Override
     public void append(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
-        writer.append(getType().getTypeName());
+        writer.append(getKey().getTypeName());
     }
     @Override
     public void parse(SmaliReader reader) throws IOException {
         SmaliDirective.parse(reader);
-        setType(TypeKey.read(reader));
+        setKey(TypeKey.read(reader));
     }
 }

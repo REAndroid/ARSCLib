@@ -62,6 +62,12 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
         return format;
     }
 
+    public void addRegister(boolean parameter, int number) {
+        SmaliRegister register = new SmaliRegister();
+        add(register);
+        register.setParameter(parameter);
+        register.setNumber(number);
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         boolean appendOnce = false;

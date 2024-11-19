@@ -21,6 +21,7 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.common.*;
 import com.reandroid.dex.id.ClassId;
 import com.reandroid.dex.id.IdItem;
+import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
@@ -29,6 +30,8 @@ import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliRegion;
+import com.reandroid.dex.smali.model.Smali;
+import com.reandroid.dex.smali.model.SmaliDef;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
@@ -141,7 +144,7 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     }
 
     public AnnotationSet getOrCreateAnnotationSet(){
-        AnnotationSet annotationSet = CollectionUtil.getFirst(getAnnotations());
+        AnnotationSet annotationSet = CollectionUtil.getFirst(getAnnotationSets());
         if(annotationSet != null){
             return annotationSet;
         }
@@ -161,10 +164,25 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
     void addAnnotationSet(AnnotationsDirectory directory, AnnotationSet annotationSet){
         directory.addAnnotation(this, annotationSet);
     }
-    public Iterator<AnnotationSet> getAnnotations() {
-        return getAnnotations(false);
+    public Iterator<AnnotationItemKey> getAnnotationKeys() {
+        Iterator<AnnotationSetKey> iterator = getAnnotationSetKeys();
+        if (!iterator.hasNext()) {
+            return EmptyIterator.of();
+        }
+        return new IterableIterator<AnnotationSetKey, AnnotationItemKey>(iterator) {
+            @Override
+            public Iterator<AnnotationItemKey> iterator(AnnotationSetKey element) {
+                return element.iterator();
+            }
+        };
     }
-    public Iterator<AnnotationSet> getAnnotations(boolean skipEmpty){
+    public Iterator<AnnotationSetKey> getAnnotationSetKeys() {
+        return ComputeIterator.of(getAnnotationSets(true), AnnotationSet::getKey);
+    }
+    public Iterator<AnnotationSet> getAnnotationSets() {
+        return getAnnotationSets(false);
+    }
+    public Iterator<AnnotationSet> getAnnotationSets(boolean skipEmpty){
         AnnotationsDirectory directory = getAnnotationsDirectory();
         if(directory == null) {
             return EmptyIterator.of();
@@ -382,6 +400,9 @@ public abstract class Def<T extends IdItem> extends FixedDexContainerWithTool im
             addHiddenApiFlag(flagValue.getDomain());
         }
     }
+    public abstract void fromSmali(Smali smali);
+    public abstract SmaliDef toSmali();
+
     @Override
     public int compareTo(Def<T> other) {
         if(other == null){

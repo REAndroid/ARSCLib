@@ -119,9 +119,18 @@ public class SmaliValueFactory {
         return smaliValue;
     }
 
-    public static SmaliValue createForValue(Key key){
+    public static SmaliValue createForValue(Key key) {
+        SmaliValue smaliValue = initializeForValue(key);
+        if (smaliValue != null) {
+            smaliValue.setKey(key);
+        }
+        return smaliValue;
+    }
+    public static SmaliValue initializeForValue(Key key) {
         SmaliValue smaliValue;
-        if(key.isPrimitiveKey()) {
+        if (key == null) {
+            smaliValue = null;
+        } else if (key instanceof PrimitiveKey) {
             PrimitiveKey primitiveKey = (PrimitiveKey) key;
             if (primitiveKey.isBoolean()) {
                 smaliValue = new SmaliValueBoolean();
@@ -153,6 +162,8 @@ public class SmaliValueFactory {
             smaliValue = new SmaliValueArray();
         } else if(key instanceof AnnotationItemKey) {
             smaliValue = new SmaliValueAnnotation();
+        } else if(key instanceof NullKey) {
+            smaliValue = new SmaliValueNull();
         } else {
             throw new IllegalArgumentException("Undefined key: " + key.getClass() + ", " + key);
         }

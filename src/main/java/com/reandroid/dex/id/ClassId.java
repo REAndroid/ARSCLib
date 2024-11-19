@@ -314,6 +314,13 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         }
         return EmptyIterator.of();
     }
+    public AnnotationSetKey getAnnotationSetKey(){
+        AnnotationSet annotationSet = getClassAnnotations();
+        if (annotationSet != null) {
+            return annotationSet.getKey();
+        }
+        return null;
+    }
     public AnnotationSet getClassAnnotations(){
         AnnotationsDirectory annotationsDirectory = getAnnotationsDirectory();
         if(annotationsDirectory != null){
@@ -346,7 +353,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
     }
     public ClassData getOrCreateClassData(){
         ClassData classData = getClassData();
-        if(classData != null){
+        if (classData != null) {
             return classData;
         }
         Section<ClassData> section = getSection(SectionType.CLASS_DATA);
@@ -371,13 +378,18 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         linkClassData(classData);
     }
     public EncodedArray getStaticValuesEncodedArray(){
-        return staticValues.getItem();
+        EncodedArray encodedArray = staticValues.getItem();
+        if (encodedArray != null) {
+            encodedArray.addUniqueUser(this);
+        }
+        return encodedArray;
     }
     public ArrayKey getStaticValues() {
         return (ArrayKey) staticValues.getKey();
     }
     public void setStaticValues(ArrayKey staticValues){
         this.staticValues.setKey(staticValues);
+        this.staticValues.addUniqueUser(this);
     }
     public void setStaticValues(EncodedArray staticValues){
         this.staticValues.setItem(staticValues);
@@ -416,7 +428,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         linkClassData(this.classData.getItem());
     }
     private void linkClassData(ClassData classData){
-        if(classData != null){
+        if(classData != null) {
             classData.setClassId(this);
         }
     }
@@ -492,7 +504,7 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
             encodedArray.merge(comingArray);
         }
         ClassData comingData = classId.getClassData();
-        if(comingData != null){
+        if (comingData != null) {
             ClassData classData = getOrCreateClassData();
             classData.merge(comingData);
         }
@@ -505,12 +517,26 @@ public class ClassId extends IdItem implements IdDefinition<TypeId>, Comparable<
         setSourceFile(smaliClass.getSourceFileName());
         setInterfaces(smaliClass.getInterfacesKey());
 
-        if(smaliClass.hasClassData()){
+        if(smaliClass.hasClassData()) {
             getOrCreateClassData().fromSmali(smaliClass);
         }
         if(smaliClass.hasAnnotation()) {
             setClassAnnotations(smaliClass.getAnnotationSetKey());
         }
+    }
+    public SmaliClass toSmali() {
+        SmaliClass smaliClass = new SmaliClass();
+        smaliClass.setKey(getKey());
+        smaliClass.setAccessFlags(InstanceIterator.of(getAccessFlags(), AccessFlag.class));
+        smaliClass.setSuperClass(getSuperClassKey());
+        smaliClass.setSourceFile(getSourceFile().getKey());
+        smaliClass.setInterfaces(getInterfacesReference().getKey());
+        smaliClass.setAnnotation(getAnnotationSetKey());
+        ClassData classData = getClassData();
+        if (classData != null) {
+            classData.toSmali(smaliClass);
+        }
+        return smaliClass;
     }
 
     @Override

@@ -17,7 +17,7 @@ package com.reandroid.dex.data;
 
 import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
-import com.reandroid.arsc.container.BlockList;
+import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.common.EditableItem;
@@ -27,23 +27,23 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.Smali;
+import com.reandroid.dex.smali.model.SmaliDef;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.collection.ComputeIterator;
 import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
 
-public abstract class DefArray<T extends Def<?>> extends BlockList<T> implements
+public abstract class DefArray<T extends Def<?>> extends CountedBlockList<T> implements
         Iterable<T>, EditableItem, SmaliFormat, IdUsageIterator {
-
-    private final IntegerReference itemCount;
 
     private ClassId mClassId;
 
-    public DefArray(IntegerReference itemCount, Creator<T> creator){
-        super(creator);
-        this.itemCount = itemCount;
+    public DefArray(IntegerReference countReference, Creator<T> creator){
+        super(creator, countReference);
     }
 
     @Override
@@ -54,31 +54,42 @@ public abstract class DefArray<T extends Def<?>> extends BlockList<T> implements
         }
         resetIndex();
         super.onPreRemove(item);
+        item.onRemove();
     }
 
+    public boolean sort() {
+        return sort(CompareUtil.getComparableComparator());
+    }
     @Override
     public final boolean sort(Comparator<? super T> comparator) {
         if(!needsSort(comparator)){
             sortAnnotations();
             return false;
         }
-        onPreSort();
+        Object lock = onPreSort();
         boolean changed = super.sort(comparator);
-        onPostSort();
+        onPostSort(lock);
         return changed;
     }
-    private void onPreSort() {
+    Object onPreSort() {
         ClassId classId = getClassId();
         if(classId != null){
             classId.getUniqueAnnotationsDirectory();
         }
         linkAnnotation();
+        return null;
     }
-    private void onPostSort(){
+    void onPostSort(Object lock) {
         resetIndex();
         sortAnnotations();
     }
     void sortAnnotations(){
+    }
+
+    @Override
+    protected void onRemoveRequestCompleted(Object lock) {
+        super.onRemoveRequestCompleted(lock);
+        updateCountReference();
     }
 
     public T getOrCreate(Key key) {
@@ -102,17 +113,20 @@ public abstract class DefArray<T extends Def<?>> extends BlockList<T> implements
     @Override
     public T createNext() {
         T item = super.createNext();
-        updateCount();
+        updateCountReference();
         return item;
+    }
+    public void clear() {
+        clearChildes();
     }
 
     private ClassId searchClassId() {
         ClassId classId = mClassId;
-        if(classId != null){
+        if (classId != null) {
             return classId;
         }
         Iterator<T> iterator = iterator();
-        if(iterator.hasNext()){
+        if (iterator.hasNext()) {
             classId = iterator.next().getClassId();
         }
         return classId;
@@ -133,37 +147,26 @@ public abstract class DefArray<T extends Def<?>> extends BlockList<T> implements
     protected void onPreRefresh() {
         super.onPreRefresh();
         linkAnnotation();
-        boolean sorted = sort(CompareUtil.getComparatorUnchecked());
-        if(!sorted){
+        if (!sort()) {
             resetIndex();
         }
     }
 
-    @Override
-    protected void onRefreshed() {
-        updateCount();
-    }
-    private void updateCount(){
-        itemCount.set(getCount());
-    }
     public ClassData getClassData(){
-        return (ClassData) getParent();
+        return getParentInstance(ClassData.class);
     }
-    @Override
-    public void onReadBytes(BlockReader reader) throws IOException {
-        setSize(itemCount.get());
-        super.readChildes(reader);
-    }
+
     private void linkAnnotation(){
-        if(getCount() == 0){
+        int size = size();
+        if (size == 0) {
             return;
         }
         AnnotationsDirectory directory = getAnnotationsDirectory();
-        if(directory == null){
+        if (directory == null) {
             return;
         }
-        for(Def<?> def : this){
-            directory.link(def);
+        for (int i = 0; i < size; i++) {
+            directory.link(get(i));
         }
     }
     AnnotationsDirectory getAnnotationsDirectory(){
@@ -181,21 +184,24 @@ public abstract class DefArray<T extends Def<?>> extends BlockList<T> implements
         return classId.getUniqueAnnotationsDirectory();
     }
 
-    private void resetIndex(){
-        for(T def : this){
-            def.resetIndex();
+    private void resetIndex() {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            get(i).resetIndex();
         }
     }
     public void replaceKeys(Key search, Key replace){
-        for(Def<?> def : this){
-            def.replaceKeys(search, replace);
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            get(i).replaceKeys(search, replace);
         }
     }
 
     @Override
     public void editInternal(Block user) {
-        for(Def<?> def : this){
-            def.editInternal(user);
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            get(i).editInternal(user);
         }
     }
 
@@ -208,20 +214,40 @@ public abstract class DefArray<T extends Def<?>> extends BlockList<T> implements
             }
         };
     }
-    public void merge(DefArray<?> defArray){
-        int count = defArray.getCount();
-        setSize(count);
-        for(int i = 0; i < count; i++){
-            Def<?> coming = defArray.get(i);
-            get(i).merge(coming);
+
+    @Override
+    protected void onReadBytes(BlockReader reader) throws IOException {
+        super.onReadBytes(reader);
+    }
+
+    public void merge(DefArray<?> defArray) {
+        int size = defArray.size();
+        setSize(size);
+        for (int i = 0; i < size; i++) {
+            get(i).merge(defArray.get(i));
         }
-        itemCount.set(count);
+        updateCountReference();
         linkAnnotation();
+    }
+
+    public void fromSmali(Iterator<? extends Smali> iterator){
+        while (iterator.hasNext()) {
+            fromSmali(iterator.next());
+        }
+    }
+    public T fromSmali(Smali smali){
+        T item = createNext();
+        item.fromSmali(smali);
+        return item;
+    }
+    public Iterator<SmaliDef> toSmali() {
+        return ComputeIterator.of(iterator(), Def::toSmali);
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        for(Def<?> def : getChildes()){
-            def.append(writer);
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            get(i).append(writer);
             writer.newLine();
         }
     }

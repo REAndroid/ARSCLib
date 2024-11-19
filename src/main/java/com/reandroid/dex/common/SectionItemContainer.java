@@ -32,7 +32,7 @@ import java.io.OutputStream;
 public class SectionItemContainer extends SectionItem implements BlockRefresh,
         PositionedItem, OffsetSupplier, OffsetReceiver {
 
-    private final Block[] mChildes;
+    private final Block[] mChildBlocks;
 
     private IntegerReference mReference;
 
@@ -44,7 +44,7 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
         }else {
             childes = new Block[childesCount];
         }
-        this.mChildes = childes;
+        this.mChildBlocks = childes;
 
     }
 
@@ -87,14 +87,14 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
         if(isNull()){
             return 0;
         }
-        Block[] childes = getChildes();
-        if(childes == null){
+        Block[] childBlocks = getChildBlocks();
+        if (childBlocks == null) {
             return 0;
         }
         int result = 0;
-        int max = childes.length;
+        int max = childBlocks.length;
         for(int i = 0; i < max; i++){
-            Block item = childes[i];
+            Block item = childBlocks[i];
             if(item != null){
                 result += item.countBytes();
             }
@@ -106,14 +106,14 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
         if(isNull()){
             return null;
         }
-        Block[] childes = getChildes();
-        if(childes == null){
+        Block[] childBlocks = getChildBlocks();
+        if(childBlocks == null){
             return null;
         }
         byte[] results = null;
-        int length = childes.length;
+        int length = childBlocks.length;
         for(int i = 0; i < length; i++){
-            Block item = childes[i];
+            Block item = childBlocks[i];
             if(item != null){
                 results = addBytes(results, item.getBytes());
             }
@@ -125,14 +125,14 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
         if(isNull()){
             return 0;
         }
-        Block[] childes = getChildes();
-        if(childes == null){
+        Block[] childBlocks = getChildBlocks();
+        if(childBlocks == null){
             return 0;
         }
         int result = 0;
-        int length = childes.length;
+        int length = childBlocks.length;
         for(int i = 0; i < length; i++){
-            Block item = childes[i];
+            Block item = childBlocks[i];
             if(item != null){
                 result += item.writeBytes(stream);
             }
@@ -142,17 +142,17 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
 
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        Block[] childes = getChildes();
-        if(childes == null){
+        Block[] childBlocks = getChildBlocks();
+        if(childBlocks == null){
             return;
         }
-        int length = childes.length;
+        int length = childBlocks.length;
         if(skipReading(this, reader)){
             return;
         }
         for(int i = 0; i < length; i++){
-            Block block = childes[i];
-            if(block == null){
+            Block block = childBlocks[i];
+            if (block == null) {
                 continue;
             }
             if(skipReading(block, reader)){
@@ -162,14 +162,14 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
         }
     }
     protected void nonCheckRead(BlockReader reader) throws IOException {
-        Block[] childes = getChildes();
-        if(childes == null){
+        Block[] childBlocks = getChildBlocks();
+        if (childBlocks == null) {
             return;
         }
-        int length = childes.length;
-        for(int i = 0; i < length; i++){
-            Block block = childes[i];
-            if(block != null){
+        int length = childBlocks.length;
+        for (int i = 0; i < length; i++) {
+            Block block = childBlocks[i];
+            if(block != null) {
                 block.readBytes(reader);
             }
         }
@@ -202,27 +202,30 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
             counter.FOUND=true;
             return;
         }
-        Block[] childes = getChildes();
-        if(childes == null){
+        Block[] childBlocks = getChildBlocks();
+        if(childBlocks == null){
             return;
         }
-        int max = childes.length;
+        int max = childBlocks.length;
         for(int i = 0; i < max; i++){
             if(counter.FOUND){
                 return;
             }
-            Block item = childes[i];
+            Block item = childBlocks[i];
             if(item != null){
                 item.onCountUpTo(counter);
             }
         }
     }
-    public void addChild(int index, Block block){
-        mChildes[index] = block;
+    protected void addChildBlock(int index, Block block){
+        mChildBlocks[index] = block;
         if(block != null){
             block.setIndex(index);
             block.setParent(this);
         }
+    }
+    protected Block getChildBlockAt(int i) {
+        return mChildBlocks[i];
     }
     @Override
     public void refresh() {
@@ -234,13 +237,13 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
         onRefreshed();
     }
     protected void refreshChildes(){
-        Block[] childes = getChildes();
-        if(childes == null){
+        Block[] childBlocks = getChildBlocks();
+        if (childBlocks == null) {
             return;
         }
-        int length = childes.length;
-        for(int i = 0; i < length; i++){
-            Block item = childes[i];
+        int length = childBlocks.length;
+        for (int i = 0; i < length; i++) {
+            Block item = childBlocks[i];
             if(item instanceof BlockRefresh){
                 ((BlockRefresh)item).refresh();
             }
@@ -250,11 +253,8 @@ public class SectionItemContainer extends SectionItem implements BlockRefresh,
     }
     protected void onRefreshed(){
     }
-    public int getChildesCount() {
-        return mChildes.length;
-    }
-    public Block[] getChildes() {
-        return mChildes;
+    private Block[] getChildBlocks() {
+        return mChildBlocks;
     }
 
     @Override

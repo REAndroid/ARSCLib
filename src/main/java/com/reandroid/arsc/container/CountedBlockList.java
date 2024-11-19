@@ -39,8 +39,12 @@ public class CountedBlockList<T extends Block> extends BlockList<T> implements D
 
     @Override
     protected void onRefreshed() {
-        getCountReference().set(size());
+        updateCountReference();
         super.onRefreshed();
+    }
+
+    protected void updateCountReference() {
+        getCountReference().set(size());
     }
 
     @Override

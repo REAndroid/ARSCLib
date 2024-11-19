@@ -264,7 +264,7 @@ public class DexValueType<T extends DexValueBlock<?>> implements BlockCreator<T>
         }
         throw new DexException("Unknown value type: " + key.getClass() + ", " + key);
     }
-    public static Key createNull(TypeKey typeKey) {
+    public static Key createDefaultValue(TypeKey typeKey) {
         if (!typeKey.isPrimitive()) {
             return NullKey.INSTANCE;
         }

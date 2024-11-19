@@ -32,7 +32,7 @@ public abstract class SmaliInstructionOperand extends Smali {
         super();
     }
 
-    public abstract int getIntegerData() throws IOException;
+    public abstract int getIntegerData();
     public abstract OperandType getOperandType();
     @Override
     public abstract void append(SmaliWriter writer) throws IOException;
@@ -58,7 +58,7 @@ public abstract class SmaliInstructionOperand extends Smali {
         }
 
         @Override
-        public int getIntegerData() throws IOException{
+        public int getIntegerData() {
             return getLabel().getIntegerData();
         }
         @Override
@@ -104,6 +104,16 @@ public abstract class SmaliInstructionOperand extends Smali {
 
         @Override
         public int getIntegerData() {
+            SmaliValueNumber<?> valueNumber = getValueNumber();
+            if (valueNumber instanceof SmaliValueInteger) {
+                return ((SmaliValueInteger) valueNumber).getValue();
+            }
+            if (valueNumber instanceof SmaliValueShort) {
+                return ((SmaliValueShort) valueNumber).getValue();
+            }
+            if (valueNumber instanceof SmaliValueByte) {
+                return ((SmaliValueByte) valueNumber).getValue();
+            }
             return valueNumber.unsignedInt();
         }
         @Override

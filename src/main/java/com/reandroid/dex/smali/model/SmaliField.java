@@ -19,6 +19,7 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.key.FieldKey;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
@@ -45,6 +46,12 @@ public class SmaliField extends SmaliDef{
         }
         return null;
     }
+    public void setKey(Key key) {
+        FieldKey fieldKey = (FieldKey) key;
+        setName(fieldKey.getName());
+        setType(fieldKey.getType());
+        setDefining(fieldKey.getDeclaring());
+    }
     public FieldKey getKey(TypeKey declaring){
         TypeKey type = getType();
         if(type == null){
@@ -67,10 +74,17 @@ public class SmaliField extends SmaliDef{
         return value;
     }
 
+    public void setValue(Key key) {
+        setValue(SmaliValueFactory.createForValue(key));
+    }
     public void setValue(SmaliValue value) {
+        SmaliValue oldValue = this.value;
         this.value = value;
-        if(value != null){
+        if (value != null) {
             value.setParent(this);
+        }
+        if (oldValue != null && oldValue != value) {
+            oldValue.setParent(null);
         }
     }
     void fixUninitializedFinalValue() {
@@ -123,7 +137,7 @@ public class SmaliField extends SmaliDef{
             writer.append(" = ");
             value.append(writer);
         }
-        SmaliAnnotationSet annotationSet = getAnnotation();
+        SmaliAnnotationSet annotationSet = getAnnotationSet();
         if(annotationSet != null && !annotationSet.isEmpty()){
             writer.indentPlus();
             writer.newLine();

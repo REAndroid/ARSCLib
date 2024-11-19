@@ -59,11 +59,11 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
 
         this.mKey = new DataKey<>(this);
 
-        addChild(0, header);
+        addChildBlock(0, header);
 
-        addChild(1, fieldsAnnotationMap);
-        addChild(2, methodsAnnotationMap);
-        addChild(3, parametersAnnotationMap);
+        addChildBlock(1, fieldsAnnotationMap);
+        addChildBlock(2, methodsAnnotationMap);
+        addChildBlock(3, parametersAnnotationMap);
     }
 
     @Override
