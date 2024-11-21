@@ -17,7 +17,6 @@ package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.arsc.item.NumberIntegerReference;
-import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.IntegerPair;
 import com.reandroid.dex.base.ParallelIntegerPair;
 import com.reandroid.dex.base.ParallelReference;
@@ -52,11 +51,6 @@ public class SpecialSection<T extends SpecialItem> extends Section<T> {
         SpecialSectionArray<T> array = getItemArray();
         position = array.updatePositionedItemOffsets(position);
         updateNextSection(position);
-    }
-    @Override
-    void alignSection(DexPositionAlign positionAlign, int position){
-        positionAlign.setAlignment(4);
-        positionAlign.align(position);
     }
     public ParallelIntegerPair getCountAndOffset(){
         return getItemArray().getCountAndOffset();

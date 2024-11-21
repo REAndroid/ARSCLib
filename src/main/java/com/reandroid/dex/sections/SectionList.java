@@ -293,6 +293,9 @@ public class SectionList extends FixedBlockContainer
         }
         clearUnused();
         clearDuplicateData();
+        if (clearEmptySections() != 0) {
+            refresh();
+        }
     }
     public boolean sortStrings(){
         boolean result = false;

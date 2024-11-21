@@ -43,6 +43,11 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
     }
 
     @Override
+    public boolean isBlank() {
+        return isEmpty();
+    }
+
+    @Override
     public AnnotationSetKey getKey() {
         AnnotationItemKey[] elements = new AnnotationItemKey[size()];
         getItemKeys(elements);
@@ -218,6 +223,12 @@ public class AnnotationSet extends IntegerDataItemList<AnnotationItem>
             super();
             addUsageType(UsageMarker.USAGE_ANNOTATION);
         }
+
+        @Override
+        public boolean isBlank() {
+            return isRemoved();
+        }
+
         @Override
         protected void onRefreshed() {
             super.onRefreshed();

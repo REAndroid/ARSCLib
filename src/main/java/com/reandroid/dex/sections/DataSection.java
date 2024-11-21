@@ -16,9 +16,7 @@
 package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.base.IntegerPair;
-import com.reandroid.dex.base.PositionAlignedItem;
 import com.reandroid.dex.data.DataItem;
 import com.reandroid.dex.pool.DexSectionPool;
 
@@ -105,16 +103,6 @@ public class DataSection<T extends DataItem> extends Section<T> {
     @Override
     void onRefreshed(int position){
         updateItemOffsets(position);
-    }
-    @Override
-    void alignSection(DexPositionAlign positionAlign, int position){
-        if(isPositionAlignedItem()){
-            positionAlign.setAlignment(4);
-            positionAlign.align(position);
-        }
-    }
-    private boolean isPositionAlignedItem(){
-        return getItemArray().get(0) instanceof PositionAlignedItem;
     }
 
     private void updateItemOffsets(int position){

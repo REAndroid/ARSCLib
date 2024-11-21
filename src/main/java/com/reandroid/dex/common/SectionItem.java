@@ -142,4 +142,7 @@ public class SectionItem extends BlockItem implements EditableItem, SectionTool,
         }
         return myKey.equals(key);
     }
+    public boolean isBlank() {
+        return isRemoved();
+    }
 }

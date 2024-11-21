@@ -20,7 +20,9 @@ import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.header.DexHeader;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ArraySort;
+import com.reandroid.utils.collection.CollectionUtil;
 
 import java.util.Comparator;
 import java.util.Iterator;
@@ -151,12 +153,18 @@ public class MapList extends SpecialItem
     }
 
     public MapItem[] getReadSorted(){
-        List<MapItem> list = itemArray.getChildes();
-        MapItem[] mapItemList = list.toArray(new MapItem[list.size()]);
+        List<MapItem> list = CollectionUtil.toList(itemArray.iterator());
+        MapItem[] mapItemList = list.toArray(new MapItem[0]);
         Comparator<MapItem> comparator = SectionType.comparator(
                 SectionType.getReadOrderList(), MapItem::getSectionType);
         ArraySort.sort(mapItemList, comparator);
         return mapItemList;
+    }
+
+    @Override
+    protected void onPreRefresh() {
+        super.onPreRefresh();
+        itemArray.sort(CompareUtil.getComparableComparator());
     }
 
     @Override

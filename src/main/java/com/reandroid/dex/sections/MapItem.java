@@ -22,9 +22,11 @@ import com.reandroid.dex.base.*;
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.header.CountAndOffset;
 import com.reandroid.dex.header.DexHeader;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
 
-public class MapItem extends DexBlockItem {
+public class MapItem extends DexBlockItem implements Comparable<MapItem> {
+
     private final IndirectInteger type;
     private final ParallelIntegerPair countAndOffset;
 
@@ -98,6 +100,15 @@ public class MapItem extends DexBlockItem {
     }
     public void setOffset(int value){
         getOffset().set(value);
+    }
+
+    @Override
+    public int compareTo(MapItem mapItem) {
+        if (mapItem == this) {
+            return 0;
+        }
+        return CompareUtil.compare(this.getOffsetValue(),
+                mapItem.getOffsetValue());
     }
 
     @Override

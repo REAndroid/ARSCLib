@@ -474,11 +474,6 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
         if(annotationSet.size() == 0){
             annotationSet.removeSelf();
             classId.setClassAnnotations((AnnotationSet) null);
-            AnnotationsDirectory directory = getId().getAnnotationsDirectory();
-            if(directory != null && directory.isEmpty()){
-                directory.removeSelf();
-                classId.setAnnotationsDirectory(null);
-            }
         }
         getId().refresh();
     }

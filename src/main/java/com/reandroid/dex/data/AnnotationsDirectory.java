@@ -42,7 +42,6 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
 
     private final Header header;
 
-
     private final DirectoryMap<FieldDef, AnnotationSet> fieldsAnnotationMap;
     private final DirectoryMap<MethodDef, AnnotationSet> methodsAnnotationMap;
     private final DirectoryMap<MethodDef, AnnotationGroup> parametersAnnotationMap;
@@ -95,6 +94,11 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
         header.classAnnotation.setItem(annotationSet);
     }
 
+
+    @Override
+    public boolean isBlank() {
+        return isEmpty();
+    }
     public boolean isEmpty(){
         return getClassAnnotations() == null ||
                 fieldsAnnotationMap.isEmpty() ||

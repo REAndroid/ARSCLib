@@ -328,6 +328,7 @@ public class MethodDef extends Def<MethodId>{
                 shared.getInstructionList()
                         .onEditing(unique.getInstructionList());
             }
+            unique.flattenTryItems();
         }
     }
     @Override

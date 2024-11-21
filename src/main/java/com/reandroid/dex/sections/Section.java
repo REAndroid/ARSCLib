@@ -44,7 +44,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         super(2);
         this.sectionType = sectionType;
         this.itemArray = itemArray;
-        this.sectionAlign = new DexPositionAlign();
+        this.sectionAlign = sectionType.needsAlignment() ? new DexPositionAlign() : null;
         addChild(0, sectionAlign);
         addChild(1, itemArray);
     }
@@ -113,7 +113,9 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        sectionAlign.setAlignment(0);
+        if (sectionAlign != null) {
+            sectionAlign.setAlignment(0);
+        }
         super.onReadBytes(reader);
     }
 
@@ -263,22 +265,23 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     }
 
     @Override
+    protected void onPreRefresh() {
+        super.onPreRefresh();
+        removeEntries(SectionItem::isBlank);
+    }
+
+    @Override
     protected void onRefreshed(){
         int position = getOffset();
-        alignSection(sectionAlign, position);
-        position += sectionAlign.size();
+        DexPositionAlign sectionAlign = this.sectionAlign;
+        if (sectionAlign != null) {
+            sectionAlign.setAlignment(4);
+            sectionAlign.align(position);
+            position += sectionAlign.size();
+        }
         getOffsetReference().set(position);
         onRefreshed(position);
         clearPoolMap();
-    }
-    void alignSection(DexPositionAlign positionAlign, int position){
-        if(isPositionAlignedItem()){
-            positionAlign.setAlignment(4);
-            positionAlign.align(position);
-        }
-    }
-    private boolean isPositionAlignedItem(){
-        return getItemArray().get(0) instanceof PositionAlignedItem;
     }
 
     void onRefreshed(int position){

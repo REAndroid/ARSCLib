@@ -17,7 +17,6 @@ package com.reandroid.dex.refactor;
 
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.KeyPair;
-import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.StringsUtil;
@@ -28,9 +27,13 @@ import java.util.*;
 public abstract class Rename<T extends Key, R extends Key> {
 
     private final Set<KeyPair<T, R>> keyPairSet;
+    private final Set<KeyPair<R, T>> flippedSet;
+    private final Set<KeyPair<?, ?>> badKeys;
 
     public Rename(){
         this.keyPairSet = new HashSet<>();
+        this.flippedSet = new HashSet<>();
+        this.badKeys = new HashSet<>();
     }
 
     public void add(T search, R replace) {
@@ -47,9 +50,19 @@ public abstract class Rename<T extends Key, R extends Key> {
             addToSet(iterator.next());
         }
     }
-    private void addToSet(KeyPair<T, R> keyPair){
-        if(keyPair != null && keyPair.isValid()){
+    private void addToSet(KeyPair<T, R> keyPair) {
+        if(keyPair != null && keyPair.isValid() && !this.badKeys.contains(keyPair)){
+            KeyPair<R, T> flip = keyPair.flip();
+            if (flippedSet.contains(flip) || keyPairSet.contains(flip)
+                    || keyPairSet.contains(keyPair) || flippedSet.contains(keyPair)) {
+                badKeys.add(keyPair);
+                badKeys.add(flip);
+                keyPairSet.remove(keyPair);
+                keyPairSet.remove(flip);
+                return;
+            }
             this.keyPairSet.add(keyPair);
+            flippedSet.add(flip);
         }
     }
     public int size(){

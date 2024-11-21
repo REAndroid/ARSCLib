@@ -31,18 +31,8 @@ import java.util.Iterator;
 import java.util.function.Function;
 
 
-public class SectionType<T extends SectionItem> {
+public abstract class SectionType<T extends SectionItem> implements Creator<T> {
 
-    public static final SectionType<?>[] VALUES;
-    private static final SectionType<?>[] READ_ORDER;
-    private static final SectionType<?>[] DATA_REMOVE_ORDER;
-
-    public static final SectionType<?>[] ID_TYPES;
-
-    private static final SectionType<?>[] R8_ORDER;
-    private static final SectionType<?>[] DEX_LIB2_ORDER;
-
-    private static final SectionType<?>[] SORT_SECTIONS_ORDER;
 
     public static final SectionType<DexHeader> HEADER;
 
@@ -69,24 +59,46 @@ public class SectionType<T extends SectionItem> {
 
     public static final SectionType<MapList> MAP_LIST;
 
+
+    private static final SectionType<?>[] READ_ORDER;
+    private static final SectionType<?>[] DATA_REMOVE_ORDER;
+
+    private static final SectionType<?>[] R8_ORDER;
+    private static final SectionType<?>[] DEX_LIB2_ORDER;
+
+    private static final SectionType<?>[] SORT_SECTIONS_ORDER;
+
     static {
 
-        VALUES = new SectionType[21];
-        int index = 0;
-
-        HEADER = new SpecialSectionType<>("HEADER", 0x0000, new Creator<DexHeader>() {
+        HEADER = new SectionType<DexHeader>("HEADER", 0x0000){
+            @Override
+            public DexHeader newInstance() {
+                return new DexHeader();
+            }
             @Override
             public DexHeader[] newArrayInstance(int length) {
                 return new DexHeader[length];
             }
             @Override
-            public DexHeader newInstance() {
-                return new DexHeader();
+            public boolean isSpecialSection() {
+                return true;
             }
-        });
-        VALUES[index++] = HEADER;
+            @Override
+            public Section<DexHeader> createSection(IntegerPair countAndOffset){
+                return new SpecialSection<>(countAndOffset, this);
+            }
+            @Override
+            public SpecialSection<DexHeader> createSpecialSection(IntegerReference offset){
+                return new SpecialSection<>(offset, this);
+            }
 
-        MAP_LIST = new SpecialSectionType<>("MAP_LIST", 0x1000, new Creator<MapList>() {
+            @Override
+            public boolean needsAlignment() {
+                return true;
+            }
+        };
+
+        MAP_LIST = new SectionType<MapList>("MAP_LIST", 0x1000) {
             @Override
             public MapList[] newArrayInstance(int length) {
                 return new MapList[length];
@@ -95,10 +107,27 @@ public class SectionType<T extends SectionItem> {
             public MapList newInstance() {
                 return new MapList(new NumberIntegerReference());
             }
-        });
-        VALUES[index++] = MAP_LIST;
 
-        STRING_ID = new StringIdSectionType("STRING_ID", 0x0001, index, 0, new Creator<StringId>() {
+            @Override
+            public boolean isSpecialSection() {
+                return true;
+            }
+            @Override
+            public Section<MapList> createSection(IntegerPair countAndOffset){
+                return new SpecialSection<>(countAndOffset, this);
+            }
+            @Override
+            public SpecialSection<MapList> createSpecialSection(IntegerReference offset){
+                return new SpecialSection<>(offset, this);
+            }
+            @Override
+            public boolean needsAlignment() {
+                return true;
+            }
+        };
+
+        STRING_ID = new SectionType<StringId>("STRING_ID", 0x0001) {
+            
             @Override
             public StringId[] newArrayInstance(int length) {
                 return new StringId[length];
@@ -107,10 +136,24 @@ public class SectionType<T extends SectionItem> {
             public StringId newInstance() {
                 return new StringId();
             }
-        });
-        VALUES[index++] = STRING_ID;
 
-        STRING_DATA = new StringDataSectionType("STRING_DATA", 0x2002, new Creator<StringData>() {
+            @Override
+            public boolean isIdSection() {
+                return true;
+            }
+
+            @Override
+            public int getReferenceType() {
+                return 0;
+            }
+            @Override
+            public StringIdSection createSection(IntegerPair countAndOffset) {
+                return new StringIdSection(countAndOffset, this);
+            }
+            
+        };
+
+        STRING_DATA = new SectionType<StringData>("STRING_DATA", 0x2002) {
             @Override
             public StringData[] newArrayInstance(int length) {
                 return new StringData[length];
@@ -119,10 +162,18 @@ public class SectionType<T extends SectionItem> {
             public StringData newInstance() {
                 return new StringData();
             }
-        });
-        VALUES[index++] = STRING_DATA;
 
-        TYPE_ID = new IdSectionType<>("TYPE_ID", 0x0002, 1,  new Creator<TypeId>() {
+            @Override
+            public boolean isDataSection() {
+                return true;
+            }
+            @Override
+            public StringDataSection createSection(IntegerPair countAndOffset){
+                return new StringDataSection(countAndOffset, this);
+            }
+        };
+
+        TYPE_ID = new SectionType<TypeId>("TYPE_ID", 0x0002) {
             @Override
             public TypeId[] newArrayInstance(int length) {
                 return new TypeId[length];
@@ -131,10 +182,21 @@ public class SectionType<T extends SectionItem> {
             public TypeId newInstance() {
                 return new TypeId();
             }
-        });
-        VALUES[index++] = TYPE_ID;
+            @Override
+            public int getReferenceType() {
+                return 1;
+            }
+            @Override
+            public boolean isIdSection() {
+                return true;
+            }
+            @Override
+            public Section<TypeId> createSection(IntegerPair countAndOffset){
+                return new IdSection<>(countAndOffset, this);
+            }
+        };
 
-        TYPE_LIST = new DataSectionType<>("TYPE_LIST", 0x1001, new Creator<TypeList>() {
+        TYPE_LIST = new SectionType<TypeList>("TYPE_LIST", 0x1001) {
             @Override
             public TypeList[] newArrayInstance(int length) {
                 return new TypeList[length];
@@ -143,10 +205,23 @@ public class SectionType<T extends SectionItem> {
             public TypeList newInstance() {
                 return new TypeList();
             }
-        });
-        VALUES[index++] = TYPE_LIST;
 
-        PROTO_ID = new IdSectionType<>("PROTO_ID", 0x0003, 4, new Creator<ProtoId>() {
+            @Override
+            public boolean isDataSection() {
+                return true;
+            }
+            @Override
+            public Section<TypeList> createSection(IntegerPair countAndOffset){
+                return new DataSection<>(countAndOffset, this);
+            }
+
+            @Override
+            public boolean needsAlignment() {
+                return true;
+            }
+        };
+
+        PROTO_ID = new SectionType<ProtoId>("PROTO_ID", 0x0003) {
             @Override
             public ProtoId[] newArrayInstance(int length) {
                 return new ProtoId[length];
@@ -155,10 +230,23 @@ public class SectionType<T extends SectionItem> {
             public ProtoId newInstance() {
                 return new ProtoId();
             }
-        });
-        VALUES[index++] = PROTO_ID;
 
-        FIELD_ID = new IdSectionType<>("FIELD_ID", 0x0004, 2, new Creator<FieldId>() {
+            @Override
+            public int getReferenceType() {
+                return 4;
+            }
+            @Override
+            public boolean isIdSection() {
+                return true;
+            }
+            @Override
+            public Section<ProtoId> createSection(IntegerPair countAndOffset) {
+                return new IdSection<>(countAndOffset, this);
+            }
+        };
+
+        FIELD_ID = new SectionType<FieldId>("FIELD_ID", 0x0004) {
+            
             @Override
             public FieldId[] newArrayInstance(int length) {
                 return new FieldId[length];
@@ -168,10 +256,22 @@ public class SectionType<T extends SectionItem> {
             public FieldId newInstance() {
                 return new FieldId();
             }
-        });
-        VALUES[index++] = FIELD_ID;
 
-        METHOD_ID = new IdSectionType<>("METHOD_ID", 0x0005, 3, new Creator<MethodId>() {
+            @Override
+            public int getReferenceType() {
+                return 2;
+            }
+            @Override
+            public boolean isIdSection() {
+                return true;
+            }
+            @Override
+            public Section<FieldId> createSection(IntegerPair countAndOffset) {
+                return new IdSection<>(countAndOffset, this);
+            }
+        };
+
+        METHOD_ID = new SectionType<MethodId>("METHOD_ID", 0x0005) {
             @Override
             public MethodId[] newArrayInstance(int length) {
                 return new MethodId[length];
@@ -180,10 +280,22 @@ public class SectionType<T extends SectionItem> {
             public MethodId newInstance() {
                 return new MethodId();
             }
-        });
-        VALUES[index++] = METHOD_ID;
 
-        ANNOTATION_ITEM = new DataSectionType<>("ANNOTATION_ITEM", 0x2004, new Creator<AnnotationItem>() {
+            @Override
+            public boolean isIdSection() {
+                return true;
+            }
+            @Override
+            public int getReferenceType() {
+                return 3;
+            }
+            @Override
+            public Section<MethodId> createSection(IntegerPair countAndOffset) {
+                return new IdSection<>(countAndOffset, this);
+            }
+        };
+
+        ANNOTATION_ITEM = new SectionType<AnnotationItem>("ANNOTATION_ITEM", 0x2004) {
             @Override
             public AnnotationItem[] newArrayInstance(int length) {
                 return new AnnotationItem[length];
@@ -192,10 +304,14 @@ public class SectionType<T extends SectionItem> {
             public AnnotationItem newInstance() {
                 return new AnnotationItem();
             }
-        });
-        VALUES[index++] = ANNOTATION_ITEM;
+            
+            @Override
+            public Section<AnnotationItem> createSection(IntegerPair countAndOffset){
+                return new DataSection<>(countAndOffset, this);
+            }
+        };
 
-        ANNOTATION_SET = new AnnotationSetSectionType("ANNOTATION_SET", 0x1003, new Creator<AnnotationSet>() {
+        ANNOTATION_SET = new SectionType<AnnotationSet>("ANNOTATION_SET", 0x1003) {
             @Override
             public AnnotationSet[] newArrayInstance(int length) {
                 return new AnnotationSet[length];
@@ -204,10 +320,23 @@ public class SectionType<T extends SectionItem> {
             public AnnotationSet newInstance() {
                 return new AnnotationSet();
             }
-        });
-        VALUES[index++] = ANNOTATION_SET;
 
-        ANNOTATION_GROUP = new DataSectionType<>("ANNOTATION_GROUP", 0x1002, new Creator<AnnotationGroup>() {
+            @Override
+            public boolean isDataSection() {
+                return true;
+            }
+            @Override
+            public AnnotationSetSection createSection(IntegerPair countAndOffset){
+                return new AnnotationSetSection(countAndOffset, this);
+            }
+
+            @Override
+            public boolean needsAlignment() {
+                return true;
+            }
+        };
+
+        ANNOTATION_GROUP = new SectionType<AnnotationGroup>("ANNOTATION_GROUP", 0x1002) {
             @Override
             public AnnotationGroup[] newArrayInstance(int length) {
                 return new AnnotationGroup[length];
@@ -217,10 +346,23 @@ public class SectionType<T extends SectionItem> {
             public AnnotationGroup newInstance() {
                 return new AnnotationGroup();
             }
-        });
-        VALUES[index++] = ANNOTATION_GROUP;
+            
+            @Override
+            public boolean isDataSection() {
+                return true;
+            }
+            @Override
+            public DataSection<AnnotationGroup> createSection(IntegerPair countAndOffset){
+                return new DataSection<>(countAndOffset, this);
+            }
 
-        ANNOTATION_DIRECTORY = new DataSectionType<>("ANNOTATIONS_DIRECTORY", 0x2006, new Creator<AnnotationsDirectory>() {
+            @Override
+            public boolean needsAlignment() {
+                return true;
+            }
+        };
+
+        ANNOTATION_DIRECTORY = new SectionType<AnnotationsDirectory>("ANNOTATIONS_DIRECTORY", 0x2006) {
             @Override
             public AnnotationsDirectory[] newArrayInstance(int length) {
                 return new AnnotationsDirectory[length];
@@ -229,10 +371,22 @@ public class SectionType<T extends SectionItem> {
             public AnnotationsDirectory newInstance() {
                 return new AnnotationsDirectory();
             }
-        });
-        VALUES[index++] = ANNOTATION_DIRECTORY;
 
-        CALL_SITE_ID = new IdSectionType<>("CALL_SITE_ID", 0x0007, 5, new Creator<CallSiteId>() {
+            @Override
+            public boolean needsAlignment() {
+                return true;
+            }
+            @Override
+            public boolean isDataSection() {
+                return true;
+            }
+            @Override
+            public DataSection<AnnotationsDirectory> createSection(IntegerPair countAndOffset){
+                return new DataSection<>(countAndOffset, this);
+            }
+        };
+
+        CALL_SITE_ID = new SectionType<CallSiteId>("CALL_SITE_ID", 0x0007) {
             @Override
             public CallSiteId[] newArrayInstance(int length) {
                 return new CallSiteId[length];
@@ -241,10 +395,23 @@ public class SectionType<T extends SectionItem> {
             public CallSiteId newInstance() {
                 return new CallSiteId();
             }
-        });
-        VALUES[index++] = CALL_SITE_ID;
 
-        METHOD_HANDLE = new IdSectionType<>("METHOD_HANDLE", 0x0008, 6, new Creator<MethodHandleId>() {
+            @Override
+            public int getReferenceType() {
+                return 5;
+            }
+
+            @Override
+            public boolean isIdSection() {
+                return true;
+            }
+            @Override
+            public Section<CallSiteId> createSection(IntegerPair countAndOffset) {
+                return new IdSection<>(countAndOffset, this);
+            }
+        };
+
+        METHOD_HANDLE = new SectionType<MethodHandleId>("METHOD_HANDLE", 0x0008) {
             @Override
             public MethodHandleId[] newArrayInstance(int length) {
                 return new MethodHandleId[length];
@@ -253,11 +420,22 @@ public class SectionType<T extends SectionItem> {
             public MethodHandleId newInstance() {
                 return new MethodHandleId();
             }
-        });
-        VALUES[index++] = METHOD_HANDLE;
 
+            @Override
+            public int getReferenceType() {
+                return 6;
+            }
+            @Override
+            public boolean isIdSection() {
+                return true;
+            }
+            @Override
+            public Section<MethodHandleId> createSection(IntegerPair countAndOffset) {
+                return new IdSection<>(countAndOffset, this);
+            }
+        };
 
-        DEBUG_INFO = new DataSectionType<>("DEBUG_INFO", 0x2003, new Creator<DebugInfo>() {
+        DEBUG_INFO = new SectionType<DebugInfo>("DEBUG_INFO", 0x2003) {
             @Override
             public DebugInfo[] newArrayInstance(int length) {
                 return new DebugInfo[length];
@@ -266,10 +444,18 @@ public class SectionType<T extends SectionItem> {
             public DebugInfo newInstance() {
                 return new DebugInfo();
             }
-        });
-        VALUES[index++] = DEBUG_INFO;
 
-        CODE = new DataSectionType<>("CODE", 0x2001, new Creator<CodeItem>() {
+            @Override
+            public boolean isDataSection() {
+                return true;
+            }
+            @Override
+            public DataSection<DebugInfo> createSection(IntegerPair countAndOffset){
+                return new DataSection<>(countAndOffset, this);
+            }
+        };
+
+        CODE = new SectionType<CodeItem>("CODE", 0x2001) {
             @Override
             public CodeItem[] newArrayInstance(int length) {
                 return new CodeItem[length];
@@ -279,10 +465,23 @@ public class SectionType<T extends SectionItem> {
             public CodeItem newInstance() {
                 return new CodeItem();
             }
-        });
-        VALUES[index++] = CODE;
 
-        ENCODED_ARRAY = new DataSectionType<>("ENCODED_ARRAY", 0x2005, new Creator<EncodedArray>() {
+            @Override
+            public boolean isDataSection() {
+                return true;
+            }
+            @Override
+            public DataSection<CodeItem> createSection(IntegerPair countAndOffset){
+                return new DataSection<>(countAndOffset, this);
+            }
+
+            @Override
+            public boolean needsAlignment() {
+                return true;
+            }
+        };
+
+        ENCODED_ARRAY = new SectionType<EncodedArray>("ENCODED_ARRAY", 0x2005) {
             @Override
             public EncodedArray[] newArrayInstance(int length) {
                 return new EncodedArray[length];
@@ -291,10 +490,18 @@ public class SectionType<T extends SectionItem> {
             public EncodedArray newInstance() {
                 return new EncodedArray();
             }
-        });
-        VALUES[index++] = ENCODED_ARRAY;
 
-        CLASS_DATA = new DataSectionType<>("CLASS_DATA", 0x2000, new Creator<ClassData>() {
+            @Override
+            public boolean isDataSection() {
+                return true;
+            }
+            @Override
+            public DataSection<EncodedArray> createSection(IntegerPair countAndOffset){
+                return new DataSection<>(countAndOffset, this);
+            }
+        };
+
+        CLASS_DATA = new SectionType<ClassData>("CLASS_DATA", 0x2000) {
             @Override
             public ClassData[] newArrayInstance(int length) {
                 return new ClassData[length];
@@ -303,10 +510,18 @@ public class SectionType<T extends SectionItem> {
             public ClassData newInstance() {
                 return new ClassData();
             }
-        });
-        VALUES[index++] = CLASS_DATA;
+            
+            @Override
+            public boolean isDataSection() {
+                return true;
+            }
+            @Override
+            public DataSection<ClassData> createSection(IntegerPair countAndOffset){
+                return new DataSection<>(countAndOffset, this);
+            }
+        };
 
-        CLASS_ID = new IdSectionType<>("CLASS_ID", 0x0006, 7, new Creator<ClassId>() {
+        CLASS_ID = new SectionType<ClassId>("CLASS_ID", 0x0006) {
             @Override
             public ClassId[] newArrayInstance(int length) {
                 return new ClassId[length];
@@ -315,10 +530,22 @@ public class SectionType<T extends SectionItem> {
             public ClassId newInstance() {
                 return new ClassId();
             }
-        });
-        VALUES[index++] = CLASS_ID;
 
-        HIDDEN_API = new DataSectionType<>("HIDDEN_API", 0xF000, new Creator<HiddenApiRestrictions>() {
+            @Override
+            public int getReferenceType() {
+                return 7;
+            }
+            @Override
+            public boolean isIdSection() {
+                return true;
+            }
+            @Override
+            public ClassIdSection createSection(IntegerPair countAndOffset) {
+                return new ClassIdSection(countAndOffset);
+            }
+        };
+
+        HIDDEN_API = new SectionType<HiddenApiRestrictions>("HIDDEN_API", 0xF000) {
             @Override
             public HiddenApiRestrictions[] newArrayInstance(int length) {
                 return new HiddenApiRestrictions[length];
@@ -327,8 +554,21 @@ public class SectionType<T extends SectionItem> {
             public HiddenApiRestrictions newInstance() {
                 return new HiddenApiRestrictions();
             }
-        });
-        VALUES[index] = HIDDEN_API;
+
+            @Override
+            public boolean isDataSection() {
+                return true;
+            }
+            @Override
+            public DataSection<HiddenApiRestrictions> createSection(IntegerPair countAndOffset){
+                return new DataSection<>(countAndOffset, this);
+            }
+
+            @Override
+            public boolean needsAlignment() {
+                return true;
+            }
+        };
 
         READ_ORDER = new SectionType[]{
                 HEADER,
@@ -371,17 +611,6 @@ public class SectionType<T extends SectionItem> {
                 STRING_ID
         };
 
-        ID_TYPES = new SectionType[]{
-                STRING_ID,
-                TYPE_ID,
-                PROTO_ID,
-                FIELD_ID,
-                METHOD_ID,
-                CLASS_ID,
-                CALL_SITE_ID,
-                METHOD_HANDLE
-        };
-
         R8_ORDER = new SectionType[]{
                 HEADER,
                 STRING_ID,
@@ -402,6 +631,7 @@ public class SectionType<T extends SectionItem> {
                 ANNOTATION_SET,
                 ANNOTATION_GROUP,
                 ANNOTATION_DIRECTORY,
+                HIDDEN_API,
                 MAP_LIST
         };
 
@@ -449,17 +679,14 @@ public class SectionType<T extends SectionItem> {
                 CLASS_DATA,
                 MAP_LIST
         };
-
     }
 
     private final String name;
     private final int type;
-    private final Creator<T> creator;
 
-    private SectionType(String name, int type, Creator<T> creator){
+    private SectionType(String name, int type) {
         this.name = name;
         this.type = type;
-        this.creator = creator;
     }
 
     public String getName() {
@@ -486,6 +713,10 @@ public class SectionType<T extends SectionItem> {
     public int getReferenceType(){
         return 7;
     }
+    
+    public boolean needsAlignment() {
+        return false;
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -501,13 +732,19 @@ public class SectionType<T extends SectionItem> {
     }
 
     public Creator<T> getCreator() {
-        return creator;
+        return this;
     }
+
+    @Override
+    public abstract T[] newArrayInstance(int length);
+    
+    @Override
+    public abstract T newInstance();
 
     @SuppressWarnings("unchecked")
     public static<T1 extends SectionItem> SectionType<T1> get(int type){
-        for(SectionType<?> sectionType : VALUES){
-            if(type == sectionType.type){
+        for (SectionType<?> sectionType : R8_ORDER) {
+            if (type == sectionType.type) {
                 return (SectionType<T1>) sectionType;
             }
         }
@@ -559,8 +796,8 @@ public class SectionType<T extends SectionItem> {
         return null;
     }
 
-    public static Iterator<SectionType<?>> getIdSectionTypes(){
-        return new ArrayIterator<>(ID_TYPES);
+    public static Iterator<SectionType<?>> getSectionTypes(){
+        return new ArrayIterator<>(R8_ORDER);
     }
     public static<T1> Comparator<T1> comparator(SectionType<?>[] sortOrder, Function<? super T1, SectionType<?>> function){
         return new OrderBasedComparator<>(sortOrder, function);
@@ -581,93 +818,11 @@ public class SectionType<T extends SectionItem> {
         return SORT_SECTIONS_ORDER.clone();
     }
 
-
-    private static class SpecialSectionType<T1 extends SpecialItem> extends SectionType<T1> {
-
-        SpecialSectionType(String name, int type, Creator<T1> creator) {
-            super(name, type, creator);
-        }
-
-        @Override
-        public boolean isSpecialSection() {
-            return true;
-        }
-        @Override
-        public Section<T1> createSection(IntegerPair countAndOffset){
-            return new SpecialSection<>(countAndOffset, this);
-        }
-        @Override
-        public SpecialSection<T1> createSpecialSection(IntegerReference offset){
-            return new SpecialSection<>(offset, this);
-        }
+    public static Iterator<SectionType<?>> getIdSectionTypes() {
+        return ArrayIterator.of(R8_ORDER, SectionType::isIdSection);
     }
 
-    private static class IdSectionType<T1 extends IdItem> extends SectionType<T1> {
 
-        private final int referenceType;
-
-        private IdSectionType(String name, int type, int referenceType, Creator<T1> creator) {
-            super(name, type, creator);
-            this.referenceType = referenceType;
-        }
-        @Override
-        public boolean isIdSection() {
-            return true;
-        }
-        @SuppressWarnings("unchecked")
-        @Override
-        public Section<T1> createSection(IntegerPair countAndOffset){
-            if(this == SectionType.CLASS_ID){
-                return (Section<T1>) new ClassIdSection(countAndOffset);
-            }
-            return new IdSection<>(countAndOffset, this);
-        }
-        @Override
-        public int getReferenceType() {
-            return referenceType;
-        }
-    }
-    private static class StringIdSectionType extends IdSectionType<StringId> {
-        StringIdSectionType(String name, int type, int readOrder, int referenceType, Creator<StringId> creator) {
-            super(name, type, referenceType, creator);
-        }
-        @Override
-        public StringIdSection createSection(IntegerPair countAndOffset){
-            return new StringIdSection(countAndOffset, this);
-        }
-    }
-    private static class DataSectionType<T1 extends DataItem> extends SectionType<T1> {
-        DataSectionType(String name, int type, Creator<T1> creator) {
-            super(name, type, creator);
-        }
-
-        @Override
-        public boolean isDataSection() {
-            return true;
-        }
-        @Override
-        public Section<T1> createSection(IntegerPair countAndOffset){
-            return new DataSection<>(countAndOffset, this);
-        }
-    }
-    private static class StringDataSectionType extends DataSectionType<StringData> {
-        StringDataSectionType(String name, int type, Creator<StringData> creator) {
-            super(name, type, creator);
-        }
-        @Override
-        public StringDataSection createSection(IntegerPair countAndOffset){
-            return new StringDataSection(countAndOffset, this);
-        }
-    }
-    private static class AnnotationSetSectionType extends DataSectionType<AnnotationSet> {
-        AnnotationSetSectionType(String name, int type, Creator<AnnotationSet> creator) {
-            super(name, type, creator);
-        }
-        @Override
-        public AnnotationSetSection createSection(IntegerPair countAndOffset){
-            return new AnnotationSetSection(countAndOffset, this);
-        }
-    }
 
     static class OrderBasedComparator<T1> implements Comparator<T1> {
         private final Function<? super T1, SectionType<?>> function;

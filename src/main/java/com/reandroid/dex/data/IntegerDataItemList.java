@@ -113,7 +113,7 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
         reference.setKey(key);
         return reference.getItem();
     }
-    public void getItemKeys(Key[] out) {
+    void getItemKeys(Key[] out) {
         int length = out.length;
         for (int i = 0; i < length; i++) {
             out[i] = getItemKey(i);
