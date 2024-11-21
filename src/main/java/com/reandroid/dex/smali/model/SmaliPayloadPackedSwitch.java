@@ -34,6 +34,11 @@ public class SmaliPayloadPackedSwitch extends SmaliSwitchPayload<SmaliPackedSwit
         getOperand().setNumber(firstKey);
     }
 
+    public SmaliPackedSwitchEntry newEntry() {
+        SmaliPackedSwitchEntry entry = new SmaliPackedSwitchEntry();
+        addEntry(entry);
+        return entry;
+    }
 
     @Override
     public Opcode<InsPackedSwitch> getSwitchOpcode() {
@@ -59,7 +64,7 @@ public class SmaliPayloadPackedSwitch extends SmaliSwitchPayload<SmaliPackedSwit
         return Opcode.PACKED_SWITCH_PAYLOAD;
     }
     @Override
-    public SmaliPackedSwitchEntry newEntry(SmaliReader reader) {
+    SmaliPackedSwitchEntry createEntry(SmaliReader reader) {
         return new SmaliPackedSwitchEntry();
     }
 

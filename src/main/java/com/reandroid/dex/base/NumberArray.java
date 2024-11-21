@@ -17,6 +17,7 @@ package com.reandroid.dex.base;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
+import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.StringsUtil;
 
@@ -58,6 +59,39 @@ public class NumberArray extends DexBlockItem {
             return null;
         }
         return new Data(this, index);
+    }
+    public Iterator<PrimitiveKey> getKeys(){
+        return new Iterator<PrimitiveKey>() {
+            private int mIndex;
+            @Override
+            public boolean hasNext() {
+                return mIndex < NumberArray.this.size();
+            }
+            @Override
+            public PrimitiveKey next() {
+                PrimitiveKey key = NumberArray.this.getKey(mIndex);
+                mIndex ++;
+                return key;
+            }
+        };
+    }
+
+    // TODO: What about width of 3, 5, 6, 7 ?
+    public PrimitiveKey getKey(int index) {
+        if (index < 0 || index >= size()) {
+            return null;
+        }
+        int width = getWidth();
+        if (width == 1) {
+            return PrimitiveKey.of(getByte(index));
+        }
+        if (width == 2) {
+            return PrimitiveKey.of(getShort(index));
+        }
+        if (width == 4) {
+            return PrimitiveKey.of(getInteger(index));
+        }
+        return PrimitiveKey.of(getLong(index));
     }
     public short[] getShortArray(){
         int width = getWidth();

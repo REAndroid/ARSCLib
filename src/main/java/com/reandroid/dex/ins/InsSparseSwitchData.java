@@ -22,7 +22,6 @@ import com.reandroid.dex.base.CountedList;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliPayloadSparseSwitch;
-import com.reandroid.dex.smali.model.SmaliSet;
 import com.reandroid.dex.smali.model.SmaliSparseSwitchEntry;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
@@ -170,16 +169,22 @@ public class InsSparseSwitchData extends InsSwitchPayload implements
     @Override
     public void fromSmali(SmaliInstruction smaliInstruction) {
         validateOpcode(smaliInstruction);
-        SmaliPayloadSparseSwitch smaliPayloadSparseSwitch = (SmaliPayloadSparseSwitch) smaliInstruction;
-        SmaliSet<SmaliSparseSwitchEntry> entries = smaliPayloadSparseSwitch.getEntries();
-        int count = entries.size();
+        SmaliPayloadSparseSwitch smaliPayload = (SmaliPayloadSparseSwitch) smaliInstruction;
+        int count = smaliPayload.getCount();
         this.setCount(count);
         for(int i = 0; i < count; i++) {
-            SmaliSparseSwitchEntry smaliEntry = entries.get(i);
-            SparseSwitchEntry data = get(i);
-            data.fromSmali(smaliEntry);
+            get(i).fromSmali(smaliPayload.getEntry(i));
         }
         mSortRequired = true;
+    }
+    @Override
+    void toSmaliEntries(SmaliInstruction instruction) {
+        super.toSmaliEntries(instruction);
+        SmaliPayloadSparseSwitch smaliPayload = (SmaliPayloadSparseSwitch) instruction;
+        int count = getCount();
+        for (int i = 0; i < count; i++) {
+            smaliPayload.addEntry(get(i).toSmali());
+        }
     }
 
     @Override
@@ -318,6 +323,12 @@ public class InsSparseSwitchData extends InsSwitchPayload implements
         public void fromSmali(SmaliSparseSwitchEntry smaliEntry) {
             set(smaliEntry.getValue());
             setKey(smaliEntry.getRelativeOffset());
+        }
+        public SmaliSparseSwitchEntry toSmali() {
+            SmaliSparseSwitchEntry entry = new SmaliSparseSwitchEntry();
+            entry.getLabel().setLabelName(getLabelName());
+            entry.setValue(get());
+            return entry;
         }
         @Override
         public int hashCode() {

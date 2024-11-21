@@ -32,7 +32,6 @@ import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.*;
 import com.reandroid.utils.HexUtil;
-import com.reandroid.utils.collection.InstanceIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
@@ -389,13 +388,8 @@ public class SizeXIns extends Ins {
     }
 
     @Override
-    public void toSmali(SmaliInstruction smaliInstruction) {
-        toSmaliOperand(smaliInstruction);
-        toSmaliRegisters(smaliInstruction);
-        toSmaliLabels(smaliInstruction);
-    }
-
-    private void toSmaliOperand(SmaliInstruction instruction) {
+    void toSmaliOperand(SmaliInstruction instruction) {
+        super.toSmaliOperand(instruction);
         SmaliInstructionOperand operand = instruction.getOperand();
         OperandType operandType = instruction.getOperandType();
         if (operandType == OperandType.HEX) {
@@ -413,7 +407,9 @@ public class SizeXIns extends Ins {
                     ((DualKeyReference)this).getKey2());
         }
     }
-    private void toSmaliRegisters(SmaliInstruction instruction) {
+    @Override
+    void toSmaliRegisters(SmaliInstruction instruction) {
+        super.toSmaliRegisters(instruction);
         SmaliRegisterSet smaliRegisterSet = instruction.getRegisterSet();
         RegisterFormat registerFormat = smaliRegisterSet.getFormat();
         if (registerFormat == RegisterFormat.NONE) {
@@ -430,25 +426,6 @@ public class SizeXIns extends Ins {
         for (int i = start; i < size; i++) {
             ref = registersIterator.get(i);
             smaliRegisterSet.addRegister(ref.isParameter(), ref.getNumber());
-        }
-    }
-    private void toSmaliLabels(SmaliInstruction instruction) {
-        SmaliCodeSet smaliCodeSet = instruction.getCodeSet();
-        Iterator<Label> iterator = InstanceIterator.of(getExtraLines(),
-                Label.class, label -> !(label instanceof ExceptionLabel));
-        Label extraLine;
-        ExtraLine previous = null;
-        int index = smaliCodeSet.indexOf(instruction);
-        while (iterator.hasNext()){
-            extraLine = iterator.next();
-            if(extraLine.isEqualExtraLine(previous)){
-                continue;
-            }
-            SmaliLabel smaliLabel = new SmaliLabel();
-            smaliCodeSet.add(index, smaliLabel);
-            smaliLabel.setLabelName(extraLine.getLabelName());
-            index ++;
-            previous = extraLine;
         }
     }
 

@@ -17,9 +17,11 @@ package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.ins.InsArrayData;
 import com.reandroid.dex.ins.Opcode;
+import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.smali.*;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<?>> {
 
@@ -27,6 +29,16 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<
         super(new SmaliInstructionOperand.SmaliDecimalOperand());
     }
 
+    public void addEntryKeys(Iterator<PrimitiveKey> iterator) {
+        while (iterator.hasNext()) {
+            addEntry(iterator.next());
+        }
+    }
+    public void addEntry(PrimitiveKey key) {
+        SmaliValueNumber<?> valueNumber = SmaliValueFactory.valueNumberFor(key);
+        addEntry(valueNumber);
+        valueNumber.setKey(key);
+    }
     public int[] unsignedInt(){
         SmaliSet<SmaliValueNumber<?>> entries = getEntries();
         int size = entries.size();
@@ -59,7 +71,7 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<
 
     @Override
     public int getCodeUnits() {
-        int count = getEntries().size();
+        int count = getCount();
         int width = getWidth();
 
         int size = 2 // opcode bytes
@@ -81,7 +93,7 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<
         return Opcode.ARRAY_PAYLOAD;
     }
     @Override
-    public SmaliValueNumber<?> newEntry(SmaliReader reader) throws IOException {
+    SmaliValueNumber<?> createEntry(SmaliReader reader) throws IOException {
         SmaliValue value =  SmaliValueFactory.create(reader);
         if(!(value instanceof SmaliValueNumber)){
             throw new SmaliParseException("Unrecognized array data entry", reader);

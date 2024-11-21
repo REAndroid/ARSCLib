@@ -121,17 +121,20 @@ public class SmaliInstruction extends SmaliCode{
             registerSet.setParent(this);
         }
     }
+    public RegisterFormat getRegisterFormat() {
+        return getOpcode().getRegisterFormat();
+    }
     public SmaliInstructionOperand getOperand() {
         return operand;
-    }
-    public OperandType getOperandType(){
-        return getOperand().getOperandType();
     }
     public void setOperand(SmaliInstructionOperand operand) {
         this.operand = operand;
         if(operand != null){
             operand.setParent(this);
         }
+    }
+    public OperandType getOperandType(){
+        return getOperand().getOperandType();
     }
     public boolean hasLabelOperand(SmaliLabel label) {
         SmaliInstructionOperand operand = getOperand();

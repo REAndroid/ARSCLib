@@ -169,4 +169,36 @@ public class SmaliValueFactory {
         }
         return smaliValue;
     }
+
+    public static SmaliValueNumber<?> valueNumberFor(PrimitiveKey key) {
+        if (key.isByte()) {
+            return new SmaliValueByte();
+        }
+        if (key.isShort()) {
+            return new SmaliValueShort();
+        }
+        if (key.isInteger()) {
+            return new SmaliValueInteger();
+        }
+        if (key.isLong()) {
+            return new SmaliValueLong();
+        }
+        throw new IllegalArgumentException("Unknown primitive key type: "
+                + key.getClass() + ", " + key);
+    }
+    public static SmaliValueNumber<?> valueNumberForWidth(int width) {
+        if (width == 1) {
+            return new SmaliValueByte();
+        }
+        if (width == 2) {
+            return new SmaliValueShort();
+        }
+        if (width <= 4) {
+            return new SmaliValueInteger();
+        }
+        if (width <= 8) {
+            return new SmaliValueLong();
+        }
+        throw new IllegalArgumentException("Unknown width: " + width);
+    }
 }

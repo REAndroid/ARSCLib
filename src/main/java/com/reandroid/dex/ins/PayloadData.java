@@ -22,7 +22,6 @@ import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 
-import java.io.IOException;
 import java.util.Iterator;
 
 public abstract class PayloadData extends Ins implements SmaliRegion {
@@ -71,6 +70,19 @@ public abstract class PayloadData extends Ins implements SmaliRegion {
 
     @Override
     public abstract void fromSmali(SmaliInstruction smaliInstruction);
+
+
+    @Override
+    void toSmaliOperand(SmaliInstruction instruction) {
+        super.toSmaliOperand(instruction);
+    }
+    @Override
+    void toSmaliOthers(SmaliInstruction instruction) {
+        super.toSmaliOthers(instruction);
+        toSmaliEntries(instruction);
+    }
+    void toSmaliEntries(SmaliInstruction instruction) {
+    }
 
     @Override
     public boolean equals(Object obj) {

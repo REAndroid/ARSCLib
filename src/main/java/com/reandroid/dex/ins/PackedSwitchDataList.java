@@ -21,6 +21,9 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.CountedList;
 import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.dex.smali.model.SmaliPackedSwitchEntry;
+import com.reandroid.dex.smali.model.SmaliPayloadPackedSwitch;
+import com.reandroid.dex.smali.model.SmaliSet;
 import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
@@ -59,6 +62,20 @@ public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.Packe
         setSize(size);
         for(int i = 0; i < size; i++){
             get(i).merge(dataList.get(i));
+        }
+    }
+    public void fromSmali(SmaliPayloadPackedSwitch smali) {
+        SmaliSet<SmaliPackedSwitchEntry> entries = smali.getEntries();
+        int size = entries.size();
+        setSize(size);
+        for (int i = 0; i < size; i++) {
+            get(i).fromSmali(entries.get(i));
+        }
+    }
+    public void toSmali(SmaliPayloadPackedSwitch smali) {
+        int size = this.size();
+        for (int i = 0; i < size; i++) {
+            smali.addEntry(get(i).toSmali());
         }
     }
 
@@ -159,6 +176,14 @@ public class PackedSwitchDataList extends CountedList<PackedSwitchDataList.Packe
         }
         public void merge(PackedSwitchEntry data) {
             setAddress(data.getAddress());
+        }
+        public void fromSmali(SmaliPackedSwitchEntry smaliEntry) {
+            setAddress(smaliEntry.getRelativeOffset());
+        }
+        public SmaliPackedSwitchEntry toSmali() {
+            SmaliPackedSwitchEntry entry = new SmaliPackedSwitchEntry();
+            entry.getLabel().setLabelName(getLabelName());
+            return entry;
         }
         @Override
         public int hashCode() {

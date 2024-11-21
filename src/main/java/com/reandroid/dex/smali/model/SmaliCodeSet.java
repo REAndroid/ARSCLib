@@ -107,6 +107,11 @@ public class SmaliCodeSet extends SmaliSet<SmaliCode> {
         return !(get(size() - 1) instanceof SmaliInstruction);
     }
 
+    public SmaliInstruction newInstruction(Opcode<?> opcode) {
+        SmaliInstruction instruction = createInstruction(opcode);
+        add(instruction);
+        return instruction;
+    }
     @Override
     public void append(SmaliWriter writer) throws IOException {
         if(isEmpty()){

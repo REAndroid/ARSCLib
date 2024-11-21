@@ -19,6 +19,7 @@ import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.smali.*;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public abstract class SmaliInstructionPayload<T extends Smali> extends SmaliInstruction
         implements SmaliRegion {
@@ -39,7 +40,19 @@ public abstract class SmaliInstructionPayload<T extends Smali> extends SmaliInst
     public abstract int getCodeUnits();
     @Override
     public abstract Opcode<?> getOpcode();
-    public abstract T newEntry(SmaliReader reader) throws IOException;
+    abstract T createEntry(SmaliReader reader) throws IOException;
+    public void addEntry(T entry) {
+        getEntries().add(entry);
+    }
+    public T getEntry(int i) {
+        return getEntries().get(i);
+    }
+    public int getCount() {
+        return getEntries().size();
+    }
+    public Iterator<T> entries() {
+        return getEntries().iterator();
+    }
     @Override
     public SmaliInstructionOperand getOperand() {
         return this.operand;
@@ -69,7 +82,7 @@ public abstract class SmaliInstructionPayload<T extends Smali> extends SmaliInst
         reader.skipWhitespacesOrComment();
         SmaliSet<T> entries = getEntries();
         while (!directive.isEnd(reader)){
-            T entry = newEntry(reader);
+            T entry = createEntry(reader);
             entries.add(entry);
             entry.parse(reader);
             reader.skipWhitespacesOrComment();

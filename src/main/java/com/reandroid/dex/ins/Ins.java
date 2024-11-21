@@ -16,10 +16,8 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.dex.base.DexException;
+import com.reandroid.dex.common.OperandType;
 import com.reandroid.dex.common.RegisterFormat;
-import com.reandroid.dex.debug.DebugElement;
-import com.reandroid.dex.debug.DebugLineNumber;
-import com.reandroid.dex.debug.DebugSequence;
 import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.data.MethodDef;
@@ -30,7 +28,7 @@ import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliCodeSet;
 import com.reandroid.dex.smali.model.SmaliInstruction;
-import com.reandroid.utils.collection.CollectionUtil;
+import com.reandroid.dex.smali.model.SmaliLabel;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.InstanceIterator;
 
@@ -76,20 +74,6 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
             return update.get(getIndex());
         }
         return this;
-    }
-    public DebugSequence getOrCreateDebugSequence(){
-        InstructionList instructionList = getInstructionList();
-        if(instructionList != null){
-            return instructionList.getOrCreateDebugSequence();
-        }
-        return null;
-    }
-    public DebugSequence getDebugSequence(){
-        InstructionList instructionList = getInstructionList();
-        if(instructionList != null){
-            return instructionList.getDebugSequence();
-        }
-        return null;
     }
     InsBlockList getInsBlockList() {
         return getParentInstance(InsBlockList.class);
@@ -243,22 +227,6 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
             this.extraLineList = ExtraLineList.add(this.extraLineList, extraLine);
         }
     }
-    public DebugLineNumber getDebugLineNumber(){
-        return CollectionUtil.getFirst(getDebugLineNumbers());
-    }
-    public Iterator<DebugLineNumber> getDebugLineNumbers(){
-        return InstanceIterator.of(getExtraLines(), DebugLineNumber.class);
-    }
-    public boolean removeDebugElement(DebugElement element){
-        DebugSequence debugSequence = getDebugSequence();
-        if(debugSequence != null){
-            return debugSequence.remove(element);
-        }
-        return false;
-    }
-    public Iterator<DebugElement> getDebugElements(){
-        return InstanceIterator.of(getExtraLines(), DebugElement.class);
-    }
     public Iterator<ExtraLine> getExtraLines(){
         return this.extraLineList.iterator();
     }
@@ -308,13 +276,52 @@ public class Ins extends FixedDexContainerWithTool implements SmaliFormat {
     public void fromSmali(SmaliInstruction smaliInstruction) {
         throw new RuntimeException("fromSmali method not implemented, opcode = " + getOpcode());
     }
-    public void toSmali(SmaliCodeSet smaliCodeSet) {
-        SmaliInstruction instruction = SmaliCodeSet.createInstruction(getOpcode());
-        smaliCodeSet.add(instruction);
-        toSmali(instruction);
+
+    public SmaliInstruction toSmali() {
+        return toSmali(new SmaliCodeSet());
     }
-    // TODO: not completed
-    public void toSmali(SmaliInstruction instruction) {
+    public SmaliInstruction toSmali(SmaliCodeSet smaliCodeSet) {
+        SmaliInstruction instruction = smaliCodeSet.newInstruction(getOpcode());
+        toSmali(instruction);
+        return instruction;
+    }
+
+    private void toSmali(SmaliInstruction instruction) {
+        if (instruction.getOperandType() != OperandType.NONE) {
+            toSmaliOperand(instruction);
+        }
+        if (instruction.getRegisterFormat() != RegisterFormat.NONE) {
+            toSmaliRegisters(instruction);
+        }
+        if (hasExtraLines() && instruction.getCodeSet() != null) {
+            toSmaliExtraLines(instruction);
+        }
+        toSmaliOthers(instruction);
+    }
+    void toSmaliOperand(SmaliInstruction instruction) {
+    }
+    void toSmaliRegisters(SmaliInstruction instruction) {
+    }
+    void toSmaliExtraLines(SmaliInstruction instruction) {
+        SmaliCodeSet smaliCodeSet = instruction.getCodeSet();
+        Iterator<Label> iterator = InstanceIterator.of(getExtraLines(),
+                Label.class, label -> !(label instanceof ExceptionLabel));
+        Label extraLine;
+        ExtraLine previous = null;
+        int index = smaliCodeSet.indexOf(instruction);
+        while (iterator.hasNext()){
+            extraLine = iterator.next();
+            if(extraLine.isEqualExtraLine(previous)){
+                continue;
+            }
+            SmaliLabel smaliLabel = new SmaliLabel();
+            smaliCodeSet.add(index, smaliLabel);
+            smaliLabel.setLabelName(extraLine.getLabelName());
+            index ++;
+            previous = extraLine;
+        }
+    }
+    void toSmaliOthers(SmaliInstruction instruction) {
     }
     void validateOpcode(SmaliInstruction smaliInstruction) {
         if(getOpcode() != smaliInstruction.getOpcode()) {

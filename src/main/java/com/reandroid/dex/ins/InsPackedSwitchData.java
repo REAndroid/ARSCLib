@@ -115,17 +115,23 @@ public class InsPackedSwitchData extends InsSwitchPayload {
     @Override
     public void fromSmali(SmaliInstruction smaliInstruction) {
         validateOpcode(smaliInstruction);
-        SmaliPayloadPackedSwitch smaliPayloadPackedSwitch = (SmaliPayloadPackedSwitch) smaliInstruction;
+        SmaliPayloadPackedSwitch smaliPayloadPackedSwitch =
+                (SmaliPayloadPackedSwitch) smaliInstruction;
         setFirstKey(smaliPayloadPackedSwitch.getFirstKey());
-        SmaliSet<SmaliPackedSwitchEntry> entries = smaliPayloadPackedSwitch.getEntries();
-        int size = entries.size();
-        PackedSwitchDataList dataList = this.elements;
-        dataList.setSize(size);
-        for(int i = 0; i < size; i++) {
-            SmaliPackedSwitchEntry smaliSwitchEntry = entries.get(i);
-            PackedSwitchDataList.PackedSwitchEntry data = dataList.get(i);
-            data.setAddress(smaliSwitchEntry.getRelativeOffset());
-        }
+        this.elements.fromSmali(smaliPayloadPackedSwitch);
+    }
+
+    @Override
+    void toSmaliOperand(SmaliInstruction instruction) {
+        super.toSmaliOperand(instruction);
+        SmaliInstructionOperand.SmaliHexOperand operand =
+                (SmaliInstructionOperand.SmaliHexOperand) instruction.getOperand();
+        operand.setNumber(getFirstKey());
+    }
+    @Override
+    void toSmaliEntries(SmaliInstruction instruction) {
+        super.toSmaliEntries(instruction);
+        this.elements.toSmali((SmaliPayloadPackedSwitch) instruction);
     }
 
     @Override

@@ -33,7 +33,7 @@ public class SmaliPayloadSparseSwitch extends SmaliSwitchPayload<SmaliSparseSwit
 
     @Override
     public int getCodeUnits() {
-        int count = getEntries().size();
+        int count = getCount();
         int size = 2 // opcode bytes
                 + 2  // count short reference
                 + 8 * count; // element = 4, key = 4
@@ -49,7 +49,7 @@ public class SmaliPayloadSparseSwitch extends SmaliSwitchPayload<SmaliSparseSwit
         return Opcode.SPARSE_SWITCH_PAYLOAD;
     }
     @Override
-    public SmaliSparseSwitchEntry newEntry(SmaliReader reader) {
+    SmaliSparseSwitchEntry createEntry(SmaliReader reader) {
         return new SmaliSparseSwitchEntry();
     }
 

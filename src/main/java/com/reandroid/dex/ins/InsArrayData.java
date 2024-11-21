@@ -19,12 +19,11 @@ import com.reandroid.arsc.item.*;
 import com.reandroid.dex.base.DexBlockAlign;
 import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.base.NumberArray;
-import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
-import com.reandroid.dex.smali.SmaliValidateException;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
+import com.reandroid.dex.smali.model.SmaliInstructionOperand;
 import com.reandroid.dex.smali.model.SmaliPayloadArray;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.InstanceIterator;
@@ -172,6 +171,11 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
     }
 
     @Override
+    public SmaliDirective getSmaliDirective() {
+        return SmaliDirective.ARRAY_DATA;
+    }
+
+    @Override
     public void fromSmali(SmaliInstruction smaliInstruction) {
         validateOpcode(smaliInstruction);
         SmaliPayloadArray smaliPayloadArray = (SmaliPayloadArray) smaliInstruction;
@@ -188,7 +192,17 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
         refreshAlignment();
     }
     @Override
-    public SmaliDirective getSmaliDirective() {
-        return SmaliDirective.ARRAY_DATA;
+    void toSmaliOperand(SmaliInstruction instruction) {
+        super.toSmaliOperand(instruction);
+        SmaliInstructionOperand.SmaliDecimalOperand operand =
+                (SmaliInstructionOperand.SmaliDecimalOperand) instruction.getOperand();
+        operand.setNumber(getWidth());
+    }
+    @Override
+    void toSmaliEntries(SmaliInstruction instruction) {
+        super.toSmaliEntries(instruction);
+        SmaliPayloadArray smaliPayloadArray = (SmaliPayloadArray) instruction;
+        smaliPayloadArray.setWidth(getWidth());
+        smaliPayloadArray.addEntryKeys(getNumberArray().getKeys());
     }
 }
