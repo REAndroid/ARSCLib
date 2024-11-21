@@ -99,10 +99,15 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<
         int position = reader.position();
         SmaliInstructionOperand.SmaliDecimalOperand operand = getOperand();
         operand.parse(opcode, reader);
-        int number = operand.getNumber();
-        if(number < 1 || number > 8){
+        int width = operand.getNumber();
+
+        //TODO: validate if width == 0, then the size (entries count) also must be zero.
+        // .array-data 0
+        // .end-array-data
+
+        if(width < 0 || width > 8) {
             reader.position(position);
-            throw new SmaliParseException("Array width out of range (1 .. 8) : '" + number + "'", reader);
+            throw new SmaliParseException("Array width out of range (0 .. 8) : '" + width + "'", reader);
         }
     }
 }
