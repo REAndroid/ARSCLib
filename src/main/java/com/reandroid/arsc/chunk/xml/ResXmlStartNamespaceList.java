@@ -219,6 +219,16 @@ public class ResXmlStartNamespaceList extends ResXmlChunkList<ResXmlStartNamespa
         return size() == 0;
     }
     private void ensureUniqueUri() {
+        ResXmlDocument document = document();
+        if (document != null) {
+            Iterator<ResXmlElement> iterator = document.recursiveElements();
+            while (iterator.hasNext()) {
+                iterator.next().getNamespaceList()
+                        .ensureUniqueUriLocal();
+            }
+        }
+    }
+    private void ensureUniqueUriLocal() {
         int size = size();
         for (int i = 0; i < size; i++) {
             get(i).ensureUniqueUri();
