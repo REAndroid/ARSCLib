@@ -22,27 +22,37 @@ import com.reandroid.utils.HexUtil;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class AlignItem extends BlockItem{
+public class AlignItem extends BlockItem {
+
     private byte fill;
     private int alignment;
-    public AlignItem() {
+
+    public AlignItem(int alignment) {
         super(0);
-        this.alignment = ALIGNMENT;
+        this.alignment = alignment;
     }
-    public void align(Block block){
+
+    public AlignItem() {
+        this(ALIGNMENT);
+    }
+
+    public int align(Block block) {
         clear();
-        if(getAlignment() <= 0){
-            return;
+        if (getAlignment() <= 0) {
+            return 0;
         }
-        align(block.countBytes());
+        return align(block.countBytes());
     }
-    public void align(int count){
+    public int align(int count) {
         int alignment = getAlignment();
-        if(alignment <= 0){
-            return;
+        int size;
+        if (alignment <= 0) {
+            size = 0;
+        } else {
+            size = (alignment - (count % alignment)) % alignment;
         }
-        int size = (alignment - (count % alignment)) % alignment;
         setSize(size);
+        return size;
     }
     public void alignSafe(BlockReader reader) throws IOException {
         align(reader.getPosition());

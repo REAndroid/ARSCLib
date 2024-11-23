@@ -127,4 +127,12 @@ public abstract class BlockArray<T extends Block> extends BlockList<T>
     private Predicate<? super T> nonNullPredicate() {
         return block -> !block.isNull();
     }
+
+    @Override
+    public T[] toArray() {
+        return super.toArray(newArrayInstance(size()));
+    }
+    public T[] toArrayIf(Predicate<? super T> predicate) {
+        return toArrayIf(predicate, getCreator());
+    }
 }

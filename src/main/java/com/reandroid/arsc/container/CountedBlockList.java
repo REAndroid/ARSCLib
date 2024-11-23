@@ -23,6 +23,7 @@ import com.reandroid.arsc.item.IntegerReference;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.Predicate;
 
 public class CountedBlockList<T extends Block> extends BlockList<T> implements DirectStreamReader {
 
@@ -62,5 +63,13 @@ public class CountedBlockList<T extends Block> extends BlockList<T> implements D
             result += ((DirectStreamReader)get(i)).readBytes(inputStream);
         }
         return result;
+    }
+
+    @Override
+    public T[] toArray() {
+        return super.toArray(getCreator().newArrayInstance(size()));
+    }
+    public T[] toArrayIf(Predicate<? super T> predicate) {
+        return toArrayIf(predicate, getCreator());
     }
 }

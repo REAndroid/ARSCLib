@@ -15,10 +15,7 @@
   */
 package com.reandroid.arsc.container;
 
-import com.reandroid.arsc.base.Block;
-import com.reandroid.arsc.base.BlockCounter;
-import com.reandroid.arsc.base.BlockRefresh;
-import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.base.*;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.json.JSONArray;
 import com.reandroid.json.JSONConvert;
@@ -513,6 +510,20 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
     }
     public <T1> T1[] toArray(T1[] ts) {
         return mItems.toArray(ts);
+    }
+    public T[] toArrayIf(Predicate<? super T> predicate, BlockArrayCreator<? extends T> creator) {
+        int length = countIf(predicate);
+        int size = size();
+        T[] results = creator.newArrayInstance(length);
+        int j = 0;
+        for (int i = 0; i < size; i++) {
+            T item = get(i);
+            if (predicate.test(item)) {
+                results[j] = item;
+                j ++;
+            }
+        }
+        return results;
     }
 
     public List<T> getChildes(){
