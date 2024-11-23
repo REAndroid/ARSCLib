@@ -19,7 +19,6 @@ import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.dex.base.DexException;
-import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.SectionTool;
 import com.reandroid.dex.data.DataItem;
 import com.reandroid.dex.key.Key;
@@ -107,14 +106,11 @@ public class IntegerDataReference<T extends DataItem> extends IntegerItem
         set(value);
         updateItemUsage();
     }
-    private void updateItemUsage(){
-        int usageType = this.usageType;
-        if(usageType == UsageMarker.USAGE_NONE){
-            return;
-        }
+    private void updateItemUsage() {
         T item = this.item;
-        if(item != null){
-            item.addUsageType(usageType);
+        if (item != null) {
+            item.addUsageType(this.usageType);
+            item.addUniqueUser(this);
         }
     }
 
@@ -131,21 +127,19 @@ public class IntegerDataReference<T extends DataItem> extends IntegerItem
 
     @Override
     public void editInternal(Block user) {
-        T item = getUniqueItem(user);
-        if(item != null){
-            item.editInternal(user);
+        T item = getUniqueItem();
+        if (item != null) {
+            item.editInternal(this);
         }
     }
 
-    public T getUniqueItem(Block user) {
+    public T getUniqueItem() {
         T item = getItem();
-        if(item == null){
-            return null;
+        if (item != null) {
+            if(item.isSharedItem(this)){
+                item = createNewCopy();
+            }
         }
-        if(item.isSharedItem(user)){
-            item = createNewCopy();
-        }
-        item.addUniqueUser(user);
         return item;
     }
 

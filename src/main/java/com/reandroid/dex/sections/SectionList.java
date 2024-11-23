@@ -185,17 +185,14 @@ public class SectionList extends FixedBlockContainer
         getSection(SectionType.MAP_LIST).readBytes(reader);
     }
     private void readBody(BlockReader reader, Predicate<SectionType<?>> filter) throws IOException {
-        MapItem[] mapItemList = mapList.getReadSorted();
+        MapItem[] mapItemList = mapList.getBodyReaderSorted();
         int length = mapItemList.length;
-        for(int i = 0; i < length; i++){
+        for (int i = 0; i < length; i++) {
             MapItem mapItem = mapItemList[i];
-            if(mapItem == null){
-                continue;
+            SectionType<SectionItem> sectionType = mapItem.getSectionType();
+            if (filter == null || filter.test(sectionType)) {
+                loadSection(mapItem, reader);
             }
-            if(filter != null && !filter.test(mapItem.getSectionType())){
-                continue;
-            }
-            loadSection(mapItem, reader);
         }
 
         idSectionList.trimToSize();
@@ -206,29 +203,39 @@ public class SectionList extends FixedBlockContainer
         mapList.linkHeader(dexHeader);
     }
     private void loadSection(MapItem mapItem, BlockReader reader) throws IOException {
-        if(mapItem == null){
-            return;
+        Section<?> section = getSection(mapItem.getSectionType());
+        if (section == null) {
+            section = mapItem.createNewSection();
+            add(section);
         }
-        SectionType<?> sectionType = mapItem.getSectionType();
-        if(typeMap.containsKey(sectionType)){
-            return;
-        }
-        Section<?> section = mapItem.createNewSection();
-        if(section == null){
-            return;
-        }
-        add(section);
         section.readBytes(reader);
     }
     @Override
     public boolean isReading(){
         return mReading;
     }
+
     public<T1 extends SectionItem> Section<T1> add(Section<T1> section){
-        if(section instanceof IdSection){
+        SectionType<T1> sectionType = section.getSectionType();
+        Section<T1> existing = getSection(sectionType);
+
+        if (existing == section) {
+            return existing;
+        }
+
+        if (existing != null) {
+            throw new IllegalArgumentException("Already contains section type: "
+                    + sectionType + ", existing = " + existing
+                    + ", section = " + section);
+        }
+
+        if (sectionType.isIdSection()) {
             idSectionList.add((IdSection<?>) section);
-        }else {
+        } else if (sectionType.isDataSection()) {
             dataSectionList.add((DataSection<?>) section);
+        } else {
+            throw new IllegalArgumentException("Unknown section type: "
+                    + sectionType + ", " + section);
         }
         typeMap.put(section.getSectionType(), section);
         return section;
@@ -238,6 +245,9 @@ public class SectionList extends FixedBlockContainer
     }
     public MapList getMapList() {
         return mapList;
+    }
+    public MapItem getMapItem(SectionType<?> sectionType) {
+        return getMapList().get(sectionType);
     }
 
     public void remove(Section<?> section){

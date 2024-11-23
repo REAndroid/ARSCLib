@@ -16,6 +16,7 @@
 package com.reandroid.dex.model;
 
 import com.reandroid.dex.data.MethodDef;
+import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -57,6 +58,11 @@ public class DexMethodParameter extends Dex implements AnnotatedDex{
     public DexAnnotation getOrCreateAnnotation(TypeKey typeKey){
         return DexAnnotation.create(this,
                 getParameter().getOrCreateAnnotationItem(typeKey));
+    }
+    @Override
+    public DexAnnotation getOrCreateAnnotation(AnnotationItemKey annotationItemKey){
+        return DexAnnotation.create(this,
+                getParameter().getOrCreateAnnotationSet().getOrCreate(annotationItemKey));
     }
     @Override
     public DexAnnotation newAnnotation(TypeKey typeKey){

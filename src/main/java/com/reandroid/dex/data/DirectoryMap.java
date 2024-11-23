@@ -15,9 +15,10 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.CountedList;
 import com.reandroid.dex.key.Key;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ComputeIterator;
@@ -27,11 +28,11 @@ import java.util.Iterator;
 import java.util.function.Predicate;
 
 public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
-        extends CountedList<DirectoryEntry<DEFINITION, VALUE>>
+        extends CountedBlockList<DirectoryEntry<DEFINITION, VALUE>>
         implements Iterable<DirectoryEntry<DEFINITION, VALUE>> {
 
     public DirectoryMap(IntegerReference itemCount, Creator<DirectoryEntry<DEFINITION, VALUE>> creator) {
-        super(itemCount, creator);
+        super(creator, itemCount);
     }
 
     public boolean isEmpty(){
@@ -125,4 +126,10 @@ public class DirectoryMap<DEFINITION extends DefIndex, VALUE extends DataItem>
         }
     }
 
+    public void editInternal() {
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            get(i).editInternal();
+        }
+    }
 }

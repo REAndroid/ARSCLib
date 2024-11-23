@@ -15,9 +15,10 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.IntegerItem;
-import com.reandroid.dex.base.CountedList;
 import com.reandroid.dex.base.DexPositionAlign;
 import com.reandroid.dex.key.ArrayKey;
 import com.reandroid.dex.key.Key;
@@ -33,7 +34,7 @@ import java.util.function.Predicate;
 
 public class IntegerDataItemList<T extends DataItem> extends DataItem implements Iterable<T> {
 
-    private final CountedList<IntegerDataReference<T>> referenceList;
+    private final CountedBlockList<IntegerDataReference<T>> referenceList;
     private final DexPositionAlign positionAlign;
 
     public IntegerDataItemList(SectionType<T> sectionType, int usageType, DexPositionAlign positionAlign) {
@@ -42,8 +43,8 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
         this.positionAlign = positionAlign;
 
         IntegerItem countReference = new IntegerItem();
-        this.referenceList = new CountedList<>(countReference,
-                new ReferenceCreator<>(sectionType, usageType));
+        this.referenceList = new CountedBlockList<>(
+                new ReferenceCreator<>(sectionType, usageType), countReference);
 
         addChildBlock(0, countReference);
         addChildBlock(1, referenceList);
@@ -157,6 +158,14 @@ public class IntegerDataItemList<T extends DataItem> extends DataItem implements
     protected void onPreRefresh() {
         super.onPreRefresh();
         removeNulls();
+    }
+    @Override
+    public void editInternal(Block user) {
+        user = this;
+        int size = size();
+        for (int i = 0; i < size; i++) {
+            getReference(i).editInternal(user);
+        }
     }
     public DexPositionAlign getPositionAlign() {
         return positionAlign;

@@ -603,6 +603,11 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
                 getId().getOrCreateClassAnnotations().getOrCreate(typeKey));
     }
     @Override
+    public DexAnnotation getOrCreateAnnotation(AnnotationItemKey annotationItemKey){
+        return DexAnnotation.create(this,
+                getId().getOrCreateClassAnnotations().getOrCreate(annotationItemKey));
+    }
+    @Override
     public DexAnnotation newAnnotation(TypeKey typeKey){
         return DexAnnotation.create(this,
                 getId().getOrCreateClassAnnotations().addNewItem(typeKey));

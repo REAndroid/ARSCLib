@@ -17,6 +17,7 @@ package com.reandroid.dex.model;
 
 import com.reandroid.dex.common.AnnotationVisibility;
 import com.reandroid.dex.data.AnnotationItem;
+import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -34,6 +35,13 @@ public class DexAnnotation extends Dex implements Iterable<DexAnnotationElement>
         super();
         this.declaring = declaring;
         this.annotationItem = annotationItem;
+    }
+
+    public AnnotationItemKey getKey() {
+        return getAnnotationItem().getKey();
+    }
+    public void setKey(AnnotationItemKey key) {
+        getAnnotationItem().setKey(key);
     }
 
     public TypeKey getType(){

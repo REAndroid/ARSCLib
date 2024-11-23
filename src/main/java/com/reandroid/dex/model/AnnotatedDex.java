@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.model;
 
+import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 
@@ -26,6 +27,7 @@ public interface AnnotatedDex {
     Iterator<DexAnnotation> getAnnotations();
     Iterator<DexAnnotation> getAnnotations(TypeKey typeKey);
     DexAnnotation getAnnotation(TypeKey typeKey);
+    DexAnnotation getOrCreateAnnotation(AnnotationItemKey annotationItemKey);
     DexAnnotation getOrCreateAnnotation(TypeKey typeKey);
     DexAnnotation newAnnotation(TypeKey typeKey);
 

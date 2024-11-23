@@ -45,6 +45,13 @@ public class MapItem extends DexBlockItem implements Comparable<MapItem> {
     public ParallelIntegerPair getCountAndOffset() {
         return countAndOffset;
     }
+    public boolean isNormalItem() {
+        SectionType<?> sectionType = getSectionType();
+        return sectionType != null && !sectionType.isSpecialSection();
+    }
+    public boolean hasNoSection() {
+        return getSection(getSectionType()) == null;
+    }
     public<T1 extends SectionItem> SectionType<T1> getSectionType(){
         return SectionType.get(getType().get());
     }
@@ -53,10 +60,6 @@ public class MapItem extends DexBlockItem implements Comparable<MapItem> {
         SectionType<T1> sectionType = getSectionType();
         if(sectionType == null){
             System.err.println("Unknown section: " + toString());
-            return null;
-        }
-        if(sectionType.getCreator() == null){
-            System.err.println("Unimplemented section: " + toString());
             return null;
         }
         Block parent = getParent(SectionList.class);

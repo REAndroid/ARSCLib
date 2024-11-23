@@ -21,9 +21,15 @@ import com.reandroid.arsc.item.AlignItem;
 import java.io.IOException;
 
 public class DexPositionAlign extends AlignItem {
-    public DexPositionAlign(){
+
+    public DexPositionAlign() {
         super();
     }
+
+    public DexPositionAlign(int alignment) {
+        super(alignment);
+    }
+
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.align(reader.getPosition());

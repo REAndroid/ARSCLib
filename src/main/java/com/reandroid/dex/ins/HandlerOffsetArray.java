@@ -16,19 +16,19 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerReference;
-import com.reandroid.dex.base.CountedList;
 import com.reandroid.utils.StringsUtil;
 
 import java.io.IOException;
 
-public class HandlerOffsetArray extends CountedList<HandlerOffset> {
+public class HandlerOffsetArray extends CountedBlockList<HandlerOffset> {
 
     private int itemsStart;
 
     public HandlerOffsetArray(IntegerReference itemCount) {
-        super(itemCount, CREATOR);
+        super(CREATOR, itemCount);
     }
 
     public HandlerOffset getOrCreate(int index) {

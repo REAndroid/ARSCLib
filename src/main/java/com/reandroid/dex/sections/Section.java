@@ -44,7 +44,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         super(2);
         this.sectionType = sectionType;
         this.itemArray = itemArray;
-        this.sectionAlign = sectionType.needsAlignment() ? new DexPositionAlign() : null;
+        this.sectionAlign = fixedAligner(sectionType.sectionAlignment());
         addChild(0, sectionAlign);
         addChild(1, itemArray);
     }
@@ -113,9 +113,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     }
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
-        if (sectionAlign != null) {
-            sectionAlign.setAlignment(0);
-        }
+        sectionAlign.setAlignment(0);
         super.onReadBytes(reader);
     }
 
@@ -252,7 +250,7 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
         if(section == null){
             return 1;
         }
-        return Integer.compare(getOffset(), section.getOffset());
+        return CompareUtil.compare(getOffset(), section.getOffset());
     }
 
 
@@ -271,14 +269,9 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     }
 
     @Override
-    protected void onRefreshed(){
+    protected void onRefreshed() {
         int position = getOffset();
-        DexPositionAlign sectionAlign = this.sectionAlign;
-        if (sectionAlign != null) {
-            sectionAlign.setAlignment(4);
-            sectionAlign.align(position);
-            position += sectionAlign.size();
-        }
+        position += sectionAlign.align(position);
         getOffsetReference().set(position);
         onRefreshed(position);
         clearPoolMap();
@@ -299,5 +292,22 @@ public class Section<T extends SectionItem>  extends FixedDexContainer
     public String toString() {
         return getSectionType() +", offset = " + getOffset()
                 + ", count = " + getCount();
+    }
+
+    private static DexPositionAlign fixedAligner(final int sectionAlignment) {
+
+        return new DexPositionAlign(sectionAlignment) {
+            @Override
+            public void setAlignment(int alignment) {
+                super.setAlignment(sectionAlignment);
+            }
+            @Override
+            public void setSize(int size) {
+                if (sectionAlignment == 0) {
+                    size = 0;
+                }
+                super.setSize(size);
+            }
+        };
     }
 }

@@ -16,9 +16,9 @@
 package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.*;
 import com.reandroid.common.ArraySupplier;
-import com.reandroid.dex.base.CountedList;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliPayloadSparseSwitch;
@@ -37,8 +37,8 @@ public class InsSparseSwitchData extends InsSwitchPayload implements
         ArraySupplier<InsSparseSwitchData.SparseSwitchEntry> {
 
     private final ShortItem elementCount;
-    final CountedList<IntegerItem> elements;
-    final CountedList<EntryKey> keys;
+    final CountedBlockList<IntegerItem> elements;
+    final CountedBlockList<EntryKey> keys;
 
     boolean mSortRequired;
 
@@ -67,8 +67,8 @@ public class InsSparseSwitchData extends InsSwitchPayload implements
             }
         };
 
-        this.elements = new CountedList<>(elementCount, creator);
-        this.keys = new CountedList<>(elementCount, entryKeyCreator);
+        this.elements = new CountedBlockList<>(creator, elementCount);
+        this.keys = new CountedBlockList<>(entryKeyCreator, elementCount);
 
         addChild(1, elementCount);
         addChild(2, elements);

@@ -101,15 +101,19 @@ public class SectionItem extends BlockItem implements EditableItem, SectionTool,
         }
     }
     @Override
-    public boolean containsUsage(int usage){
-        if(usage == 0){
-            return this.mUsageType == 0;
+    public boolean containsUsage(int usage) {
+        int type = this.getUsageType();
+        if (usage == 0) {
+            return type == 0;
         }
-        return (this.mUsageType & usage) == usage;
+        return (type & usage) == usage;
     }
     @Override
     public void clearUsageType(){
         this.mUsageType = UsageMarker.USAGE_NONE;
+    }
+    public boolean isUnused() {
+        return getUsageType() == UsageMarker.USAGE_NONE;
     }
 
     @Override

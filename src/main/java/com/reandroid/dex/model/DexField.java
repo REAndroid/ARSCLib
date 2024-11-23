@@ -19,10 +19,7 @@ import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.data.FieldDef;
 import com.reandroid.dex.ins.Opcode;
-import com.reandroid.dex.key.FieldKey;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.PrimitiveKey;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
@@ -150,6 +147,11 @@ public class DexField extends DexDeclaration {
     public DexAnnotation getOrCreateAnnotation(TypeKey typeKey){
         return DexAnnotation.create(this,
                 getDefinition().getOrCreateAnnotationSet().getOrCreate(typeKey));
+    }
+    @Override
+    public DexAnnotation getOrCreateAnnotation(AnnotationItemKey annotationItemKey){
+        return DexAnnotation.create(this,
+                getDefinition().getOrCreateAnnotationSet().getOrCreate(annotationItemKey));
     }
     @Override
     public DexAnnotation newAnnotation(TypeKey typeKey){

@@ -93,8 +93,8 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             }
 
             @Override
-            public boolean needsAlignment() {
-                return true;
+            public int sectionAlignment() {
+                return 4;
             }
         };
 
@@ -121,8 +121,8 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
                 return new SpecialSection<>(offset, this);
             }
             @Override
-            public boolean needsAlignment() {
-                return true;
+            public int sectionAlignment() {
+                return 4;
             }
         };
 
@@ -216,8 +216,8 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             }
 
             @Override
-            public boolean needsAlignment() {
-                return true;
+            public int sectionAlignment() {
+                return 4;
             }
         };
 
@@ -309,6 +309,11 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             public Section<AnnotationItem> createSection(IntegerPair countAndOffset){
                 return new DataSection<>(countAndOffset, this);
             }
+
+            @Override
+            public boolean isDataSection() {
+                return true;
+            }
         };
 
         ANNOTATION_SET = new SectionType<AnnotationSet>("ANNOTATION_SET", 0x1003) {
@@ -331,8 +336,8 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             }
 
             @Override
-            public boolean needsAlignment() {
-                return true;
+            public int sectionAlignment() {
+                return 4;
             }
         };
 
@@ -357,8 +362,8 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             }
 
             @Override
-            public boolean needsAlignment() {
-                return true;
+            public int sectionAlignment() {
+                return 4;
             }
         };
 
@@ -373,8 +378,8 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             }
 
             @Override
-            public boolean needsAlignment() {
-                return true;
+            public int sectionAlignment() {
+                return 4;
             }
             @Override
             public boolean isDataSection() {
@@ -476,8 +481,8 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             }
 
             @Override
-            public boolean needsAlignment() {
-                return true;
+            public int sectionAlignment() {
+                return 4;
             }
         };
 
@@ -565,8 +570,8 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
             }
 
             @Override
-            public boolean needsAlignment() {
-                return true;
+            public int sectionAlignment() {
+                return 4;
             }
         };
 
@@ -670,6 +675,7 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
                 STRING_DATA,
                 TYPE_LIST,
                 ENCODED_ARRAY,
+                CALL_SITE_ID,
                 ANNOTATION_ITEM,
                 ANNOTATION_SET,
                 ANNOTATION_GROUP,
@@ -677,6 +683,7 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
                 DEBUG_INFO,
                 CODE,
                 CLASS_DATA,
+                HIDDEN_API,
                 MAP_LIST
         };
     }
@@ -714,8 +721,8 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
         return 7;
     }
     
-    public boolean needsAlignment() {
-        return false;
+    public int sectionAlignment() {
+        return 0;
     }
 
     @Override
@@ -799,6 +806,9 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
     public static Iterator<SectionType<?>> getSectionTypes(){
         return new ArrayIterator<>(R8_ORDER);
     }
+    public static<T1> Comparator<T1> getReadComparator(Function<? super T1, SectionType<?>> function){
+        return comparator(READ_ORDER, function);
+    }
     public static<T1> Comparator<T1> comparator(SectionType<?>[] sortOrder, Function<? super T1, SectionType<?>> function){
         return new OrderBasedComparator<>(sortOrder, function);
     }
@@ -807,9 +817,6 @@ public abstract class SectionType<T extends SectionItem> implements Creator<T> {
     }
     public static SectionType<?>[] getDexLib2Order() {
         return DEX_LIB2_ORDER.clone();
-    }
-    public static SectionType<?>[] getReadOrderList() {
-        return READ_ORDER.clone();
     }
     public static SectionType<?>[] getRemoveOrderList() {
         return DATA_REMOVE_ORDER.clone();

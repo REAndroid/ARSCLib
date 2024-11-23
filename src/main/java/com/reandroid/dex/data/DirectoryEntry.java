@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.Block;
 import com.reandroid.arsc.base.BlockRefresh;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.dex.base.DexBlockItem;
@@ -23,9 +24,10 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.pool.DexSectionPool;
 import com.reandroid.dex.sections.Section;
 import com.reandroid.dex.sections.SectionType;
+import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
-import java.util.Objects;
 
 public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
         extends DexBlockItem
@@ -41,6 +43,11 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
         super(SIZE);
         this.sectionType = sectionType;
     }
+
+    public SectionType<VALUE> getSectionType() {
+        return sectionType;
+    }
+
     public int getDefinitionIndexValue() {
         return getInteger(getBytesInternal(), 0);
     }
@@ -96,19 +103,54 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
     public VALUE getValue() {
         return mValue;
     }
-    public void setValue(Key key){
-        Section<VALUE> section = getOrCreateSection(sectionType);
-        DexSectionPool<VALUE> pool = section.getPool();
-        VALUE value = pool.getOrCreate(key);
-        setValue(value);
+    public void setValue(Key key) {
+        setValue(getOrCreateSectionItem(getSectionType(), key));
     }
     public void setValue(VALUE value) {
         this.mValue = value;
         int offset = 0;
-        if(value != null){
+        if (value != null) {
             offset = value.getOffset();
         }
         setValueOffset(offset);
+        updateUsage();
+    }
+    public VALUE getOrCreateValue() {
+        VALUE value = getValue();
+        if (value == null) {
+            value = getOrCreateSection(getSectionType()).createItem();
+            setValue(value);
+        }
+        return value;
+    }
+    public VALUE getUniqueValue() {
+        refreshValue();
+        VALUE value = getValue();
+        if (value != null) {
+            if (value.isSharedItem(this)) {
+                value = createNewCopy();
+            }
+        }
+        return value;
+    }
+    public VALUE getOrCreateUniqueValue() {
+        VALUE value = getUniqueValue();
+        if (value == null) {
+            value = getOrCreateValue();
+        }
+        return value;
+    }
+    private VALUE createNewCopy() {
+        VALUE valueNew = createSectionItem(getSectionType());
+        copyToIfPresent(valueNew);
+        setValue(valueNew);
+        return valueNew;
+    }
+    private void copyToIfPresent(VALUE valueNew){
+        VALUE value = this.getValue();
+        if (value != null) {
+            valueNew.copyFrom(value);
+        }
     }
     public void set(DEFINITION definition, VALUE value){
         setDefinition(definition);
@@ -124,39 +166,34 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
     @Override
     public void onReadBytes(BlockReader reader) throws IOException {
         super.onReadBytes(reader);
-        cacheItem();
+        pullItem();
     }
-    private void cacheItem(){
-        this.mValue = getSectionItem(sectionType, getValueOffset());
-        if(this.mValue != null){
-            this.mValue.addUsageType(UsageMarker.USAGE_ANNOTATION);
+    private void pullItem() {
+        this.mValue = getSectionItem(getSectionType(), getValueOffset());
+        updateUsage();
+    }
+    private void updateUsage() {
+        VALUE value = getValue();
+        if (value != null) {
+            value.addUsageType(UsageMarker.USAGE_ANNOTATION);
+            value.addUniqueUser(this);
         }
     }
 
     @Override
     public void refresh() {
         DEFINITION definition = getDefinition();
-        if(definition != null){
+        if (definition != null) {
             setDefinitionIndexValue(definition.getDefinitionIndex());
         }
-        VALUE value = refreshValue();
-        int offset = 0;
-        if(value != null){
-            offset = value.getOffset();
-        }
-        setValueOffset(offset);
+        refreshValue();
     }
-    private VALUE refreshValue(){
+    private void refreshValue() {
         VALUE value = getValue();
-        if(value == null){
-            return null;
+        if (value != null) {
+            value = value.getReplace();
         }
-        value = value.getReplace();
-        this.mValue = value;
-        if(value != null){
-            value.addUsageType(UsageMarker.USAGE_ANNOTATION);
-        }
-        return value;
+        setValue(value);
     }
     public boolean equalsDefIndex(int defIndex) {
         return getDefinitionIndexValue() == defIndex;
@@ -172,13 +209,19 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
         return false;
     }
     public boolean equalsValue(VALUE value){
-        return Objects.equals(getValue(), value);
+        return ObjectsUtil.equals(getValue(), value);
     }
     public boolean matchesDefinition(Key definitionKey){
-        return Objects.equals(getDefinitionKey(), definitionKey);
+        return ObjectsUtil.equals(getDefinitionKey(), definitionKey);
     }
     public boolean matchesValue(Key key){
-        return Objects.equals(getValueKey(), key);
+        return ObjectsUtil.equals(getValueKey(), key);
+    }
+    public void editInternal() {
+        VALUE value = getUniqueValue();
+        if (value != null) {
+            value.editInternal(this);
+        }
     }
     @Override
     public int compareTo(DirectoryEntry<?, ?> entry) {
@@ -203,24 +246,13 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
         }
         DirectoryEntry<?, ?> entry = (DirectoryEntry<?, ?>) obj;
 
-        return Objects.equals(getDefinitionKey(), entry.getDefinitionKey()) &&
-                Objects.equals(getValue(), entry.getValue());
+        return ObjectsUtil.equals(getDefinitionKey(), entry.getDefinitionKey()) &&
+                ObjectsUtil.equals(getValue(), entry.getValue());
     }
 
     @Override
     public int hashCode() {
-        int hash = 1;
-        Object obj = getDefinitionKey();
-        hash = hash * 31;
-        if(obj != null){
-            hash = hash + obj.hashCode();
-        }
-        obj = getValue();
-        hash = hash * 31;
-        if(obj != null){
-            hash = hash + obj.hashCode();
-        }
-        return hash;
+        return ObjectsUtil.hash(getDefinitionKey(), getValue());
     }
 
     @Override
@@ -253,7 +285,7 @@ public class DirectoryEntry<DEFINITION extends DefIndex, VALUE extends DataItem>
         if(defIndex2 == null){
             return -1;
         }
-        return Integer.compare(defIndex1.getDefinitionIndex(), defIndex2.getDefinitionIndex());
+        return CompareUtil.compare(defIndex1.getDefinitionIndex(), defIndex2.getDefinitionIndex());
     }
 
     public static final int SIZE = 8;

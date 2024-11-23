@@ -267,6 +267,8 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
     @Override
     public void editInternal(Block user) {
         this.header.editInternal(user);
+        this.fieldsAnnotationMap.editInternal();
+        this.parametersAnnotationMap.editInternal();
     }
 
     public Iterator<IdItem> usedIds(){
@@ -382,11 +384,13 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
         }
         private void cacheItems(){
             this.classAnnotation.pullItem();
+            this.classAnnotation.addUniqueUser(this);
         }
 
         @Override
         public void refresh() {
             this.classAnnotation.refresh();
+            this.classAnnotation.addUniqueUser(this);
         }
 
         public void merge(Header header){
@@ -395,7 +399,7 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
 
         @Override
         public void editInternal(Block user) {
-            // TODO: make annotation items unique
+            classAnnotation.getUniqueItem(this);
         }
 
         @Override

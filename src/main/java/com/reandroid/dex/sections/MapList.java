@@ -16,22 +16,21 @@
 package com.reandroid.dex.sections;
 
 import com.reandroid.arsc.base.Creator;
+import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.base.*;
 import com.reandroid.dex.header.DexHeader;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.ArraySort;
-import com.reandroid.utils.collection.CollectionUtil;
 
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 
 public class MapList extends SpecialItem
         implements Iterable<MapItem>, PositionAlignedItem {
 
-    private final CountedArray<MapItem> itemArray;
+    private final CountedBlockList<MapItem> itemArray;
     private final DexPositionAlign positionAlign;
 
     private final ParallelReference fileSize;
@@ -41,7 +40,7 @@ public class MapList extends SpecialItem
     public MapList(IntegerReference offsetReference) {
         super(3);
         IntegerItem mapItemsCount = new IntegerItem();
-        this.itemArray = new CountedArray<>(mapItemsCount, CREATOR);
+        this.itemArray = new CountedBlockList<>(CREATOR, mapItemsCount);
         this.positionAlign = new DexPositionAlign();
 
         addChildBlock(0, positionAlign);
@@ -152,18 +151,17 @@ public class MapList extends SpecialItem
         return itemArray.iterator();
     }
 
-    public MapItem[] getReadSorted(){
-        List<MapItem> list = CollectionUtil.toList(itemArray.iterator());
-        MapItem[] mapItemList = list.toArray(new MapItem[0]);
-        Comparator<MapItem> comparator = SectionType.comparator(
-                SectionType.getReadOrderList(), MapItem::getSectionType);
-        ArraySort.sort(mapItemList, comparator);
-        return mapItemList;
+    MapItem[] getBodyReaderSorted() {
+        Comparator<MapItem> comparator = SectionType.getReadComparator(MapItem::getSectionType);
+        MapItem[] results = itemArray.toArrayIf(MapItem::isNormalItem);
+        ArraySort.sort(results, comparator);
+        return results;
     }
 
     @Override
     protected void onPreRefresh() {
         super.onPreRefresh();
+        itemArray.removeIf(MapItem::hasNoSection);
         itemArray.sort(CompareUtil.getComparableComparator());
     }
 

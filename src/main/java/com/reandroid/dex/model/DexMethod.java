@@ -23,6 +23,7 @@ import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.ins.TryBlock;
+import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.TypeKey;
@@ -143,6 +144,11 @@ public class DexMethod extends DexDeclaration {
     public DexAnnotation getOrCreateAnnotation(TypeKey typeKey){
         return DexAnnotation.create(this,
                 getDefinition().getOrCreateAnnotationSet().getOrCreate(typeKey));
+    }
+    @Override
+    public DexAnnotation getOrCreateAnnotation(AnnotationItemKey annotationItemKey){
+        return DexAnnotation.create(this,
+                getDefinition().getOrCreateAnnotationSet().getOrCreate(annotationItemKey));
     }
     @Override
     public DexAnnotation newAnnotation(TypeKey typeKey){

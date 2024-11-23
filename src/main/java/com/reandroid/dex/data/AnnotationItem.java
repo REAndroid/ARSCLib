@@ -15,8 +15,10 @@
  */
 package com.reandroid.dex.data;
 
+import com.reandroid.arsc.base.Block;
+import com.reandroid.arsc.container.BlockList;
+import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.ByteItem;
-import com.reandroid.dex.base.CountedList;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.AnnotationVisibility;
@@ -49,7 +51,7 @@ public class AnnotationItem extends DataItem
 
     private final ByteItem visibility;
     private final Ule128IdItemReference<TypeId> typeId;
-    private final CountedList<AnnotationElement> annotationElements;
+    private final CountedBlockList<AnnotationElement> annotationElements;
 
     private final boolean mValueEntry;
 
@@ -65,8 +67,8 @@ public class AnnotationItem extends DataItem
         this.visibility = visibility;
         this.typeId = new Ule128IdItemReference<>(SectionType.TYPE_ID, UsageMarker.USAGE_ANNOTATION);
         Ule128Item elementsCount = new Ule128Item();
-        this.annotationElements = new CountedList<>(elementsCount,
-                AnnotationElement.CREATOR);
+        this.annotationElements = new CountedBlockList<>(
+                AnnotationElement.CREATOR, elementsCount);
         int i = 0;
         if(!valueEntry){
             addChildBlock(i++, visibility);
@@ -141,7 +143,7 @@ public class AnnotationItem extends DataItem
         createNewElement().setKey(element);
     }
     public String[] getNames(){
-        CountedList<AnnotationElement> elements = annotationElements;
+        BlockList<AnnotationElement> elements = annotationElements;
         int length = elements.size();
         if(length == 0){
             return null;
@@ -249,6 +251,13 @@ public class AnnotationItem extends DataItem
                     }
                 });
     }
+
+    @Override
+    public void editInternal(Block user) {
+        super.editInternal(user);
+        // AnnotationElement are unique (not shared)
+    }
+
     public void merge(AnnotationItem annotationItem){
         if(annotationItem == this){
             return;
