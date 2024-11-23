@@ -100,9 +100,9 @@ public class AnnotationsDirectory extends DataItem implements KeyReference {
         return isEmpty();
     }
     public boolean isEmpty(){
-        return getClassAnnotations() == null ||
-                fieldsAnnotationMap.isEmpty() ||
-                methodsAnnotationMap.isEmpty() ||
+        return getClassAnnotations() == null &&
+                fieldsAnnotationMap.isEmpty() &&
+                methodsAnnotationMap.isEmpty() &&
                 parametersAnnotationMap.isEmpty();
     }
     public int countField(){
