@@ -335,6 +335,7 @@ public class MethodKey implements Key {
         if(i < 0){
             return null;
         }
+        //TODO: avoid substring usage
         String defining = text.substring(0, i + 1);
         text = text.substring(i + 3);
         i = text.indexOf('(');
@@ -342,7 +343,7 @@ public class MethodKey implements Key {
             return null;
         }
         String name = text.substring(0, i);
-        text = text.substring(i + 1);
+        text = text.substring(i);
         i = text.indexOf(')');
         if(i < 0){
             return null;
