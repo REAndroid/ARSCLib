@@ -323,7 +323,7 @@ public class SizeXIns extends Ins {
             if (this instanceof ConstNumberLong) {
                 return getLong() == sizeXIns.getLong();
             }
-            return getData() == sizeXIns.getLong();
+            return getData() == sizeXIns.getData();
         }
     }
 
