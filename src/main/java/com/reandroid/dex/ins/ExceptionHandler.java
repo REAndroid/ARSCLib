@@ -24,6 +24,7 @@ import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliCodeExceptionHandler;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayIterator;
@@ -74,6 +75,9 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
     }
     public void setKey(TypeKey typeKey){
     }
+
+    public abstract boolean isCatchAll();
+
     public boolean isAddressBounded(int address) {
         if (address == -1) {
             return true;
@@ -200,6 +204,27 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
     }
     public boolean isRemoved() {
         return getParent() == null;
+    }
+    int compareHandler(ExceptionHandler handler) {
+        if (handler == this) {
+            return 0;
+        }
+        int i = CompareUtil.compare(this.getAddress(), handler.getAddress());
+        if (i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(this.isCatchAll(), handler.isCatchAll());
+        if (i != 0) {
+            return i;
+        }
+        TryItem tryItem1 = getTryItem();
+        TryItem tryItem2 = handler.getTryItem();
+        i = CompareUtil.compare(tryItem1.getIndex(), tryItem2.getIndex());
+        if (i != 0) {
+            return i;
+        }
+        return CompareUtil.compare(tryItem1.getHandlerOffset().getIndex(),
+                tryItem2.getHandlerOffset().getIndex());
     }
     public void merge(ExceptionHandler handler){
         catchAddress.set(handler.getCatchAddress());
@@ -346,6 +371,12 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
             HandlerLabel label = (HandlerLabel) obj;
             return this.getHandler() == label.getHandler();
         }
+
+        @Override
+        public int compareLabelName(Label label) {
+            return getHandler().compareHandler(((HandlerLabel) label).getHandler());
+        }
+
         @Override
         public void appendExtra(SmaliWriter writer) throws IOException {
             ExceptionHandler handler = this.getHandler();

@@ -45,6 +45,10 @@ public class CatchAllHandler extends ExceptionHandler {
         return null;
     }
     @Override
+    public boolean isCatchAll() {
+        return true;
+    }
+    @Override
     public SmaliDirective getSmaliDirective(){
         return SmaliDirective.CATCH_ALL;
     }

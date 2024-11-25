@@ -40,13 +40,15 @@ public interface Label extends ExtraLine{
     @Override
     default int compareExtraLine(ExtraLine other) {
         int i = ExtraLine.super.compareExtraLine(other);
-        if(i != 0){
+        if (i != 0) {
             return i;
         }
-        if(!(other instanceof Label)){
-            return 0;
+        if (getClass() == other.getClass()) {
+            return compareLabelName((Label) other);
         }
-        Label label = (Label) other;
+        return 0;
+    }
+    default int compareLabelName(Label label) {
         return getLabelName().compareTo(label.getLabelName());
     }
 }

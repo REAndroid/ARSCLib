@@ -17,8 +17,14 @@ package com.reandroid.dex.ins;
 
 public interface ExceptionLabel extends Label{
     ExceptionHandler getHandler();
+
     @Override
     default boolean isRemoved() {
         return getHandler().isRemoved();
+    }
+
+    @Override
+    default int compareLabelName(Label label) {
+        return 0;
     }
 }
