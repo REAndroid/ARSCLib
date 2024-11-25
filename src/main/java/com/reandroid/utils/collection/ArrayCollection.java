@@ -16,6 +16,7 @@
 package com.reandroid.utils.collection;
 
 import com.reandroid.common.ArraySupplier;
+import com.reandroid.utils.NumbersUtil;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -419,13 +420,17 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         Object[] elements = this.mElements;
         int length = out.length;
-        if (length > 0 && length <= size) {
-            for(int i = 0; i < length; i++){
-                out[i] = (T1)elements[i];
-            }
+        if (length != 0 && length <= size) {
+            arrayCopy(elements, out, length);
             return out;
         }
         return (T1[]) Arrays.copyOf(elements, size, out.getClass());
+    }
+    public <T1> T1[] toArrayFill(T1[] out) {
+        Object[] elements = this.mElements;
+        int length = NumbersUtil.min(out.length, this.size());
+        arrayCopy(elements, out, length);
+        return out;
     }
 
     public T removeItem(Object item){
