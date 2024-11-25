@@ -63,19 +63,11 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
     public void setKey(Key key) {
         MethodKey methodKey = (MethodKey) key;
         setName(methodKey.getName());
-        setProtoKey(methodKey.getProtoKey());
+        setProtoKey(methodKey.getProto());
         setDefining(methodKey.getDeclaring());
     }
-    public MethodKey getKey(TypeKey declaring){
-        ProtoKey protoKey = getProtoKey();
-        if(protoKey == null){
-            return null;
-        }
-        return new MethodKey(
-                declaring,
-                getName(),
-                protoKey.getParameterNames(),
-                protoKey.getReturnType());
+    public MethodKey getKey(TypeKey declaring) {
+        return MethodKey.create(declaring, getName(), getProtoKey());
     }
 
     public boolean hasInstructions(){

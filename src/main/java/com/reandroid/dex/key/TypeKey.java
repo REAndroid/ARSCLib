@@ -40,6 +40,13 @@ public class TypeKey implements Key{
     public String getTypeName() {
         return typeName;
     }
+    public char shorty() {
+        String name = getTypeName();
+        if (name.length() == 1) {
+            return name.charAt(0);
+        }
+        return 'L';
+    }
 
     public String getSourceName(){
         int array = getArrayDimension();
@@ -409,6 +416,9 @@ public class TypeKey implements Key{
         return typeKey;
     }
 
+    public static boolean isPrimitive(char ch) {
+        return primitiveType(ch) != null;
+    }
     public static TypeKey primitiveType(char ch){
         switch (ch){
             case 'B':

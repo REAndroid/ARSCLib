@@ -50,13 +50,21 @@ public class TypeListReference extends DataItemIndirectReference<TypeList> imple
     public TypeListKey getKey() {
         return (TypeListKey) super.getKey();
     }
-    public void add(String name){
+    public void add(TypeKey typeKey){
         TypeListKey key = getKey();
-        if(key != null){
-            key = key.add(name);
-        }else {
-            key = new TypeListKey(new String[]{name});
+        if (key != null) {
+            key = key.add(typeKey);
+        } else {
+            key = TypeListKey.create(typeKey);
         }
+        setKey(key);
+    }
+    public void remove(TypeKey typeKey) {
+        TypeListKey key = getKey();
+        if(key == null){
+            return;
+        }
+        key = key.remove(typeKey);
         setKey(key);
     }
     public void remove(int i){
@@ -77,7 +85,7 @@ public class TypeListReference extends DataItemIndirectReference<TypeList> imple
     public TypeId get(int i){
         TypeList typeList = getItem();
         if(typeList != null){
-            return typeList.getTypeId(i);
+            return typeList.getItem(i);
         }
         return null;
     }
@@ -94,12 +102,5 @@ public class TypeListReference extends DataItemIndirectReference<TypeList> imple
             return typeList.size();
         }
         return 0;
-    }
-    public int indexOf(String name){
-        TypeListKey key = getKey();
-        if(key != null){
-            return key.indexOf(name);
-        }
-        return -1;
     }
 }

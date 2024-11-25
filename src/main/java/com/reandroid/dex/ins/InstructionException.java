@@ -64,7 +64,7 @@ public class InstructionException extends DexException {
         builder.append(methodId.getDefining());
         builder.append(", method = ");
         builder.append(methodId.getName());
-        builder.append(methodId.getProto());
+        builder.append(methodId.getProtoId());
         builder.append(" { ... ");
         builder.append(getIns());
         builder.append(" ... }");

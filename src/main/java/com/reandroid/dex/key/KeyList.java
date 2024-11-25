@@ -219,4 +219,17 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
     public String toString() {
         return SmaliWriter.toStringSafe(this);
     }
+
+    public static<T1 extends Key> boolean equalsIgnoreEmpty(KeyList<T1> key1, KeyList<T1> key2) {
+        if (key1 == key2) {
+            return true;
+        }
+        if (key1 == null || key1.isEmpty()) {
+            return key2 == null || key2.isEmpty();
+        }
+        if (key2 == null || key2.isEmpty()) {
+            return key1.isEmpty();
+        }
+        return key1.equalsElements(key2);
+    }
 }

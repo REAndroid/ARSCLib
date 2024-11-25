@@ -33,16 +33,6 @@ public interface SectionTool {
         }
         return null;
     }
-    default<T1 extends SectionItem> T1[] getSectionItem(SectionType<T1> sectionType, int[] indexes){
-        if(indexes == null || indexes.length == 0){
-            return null;
-        }
-        Section<T1> section = getSection(sectionType);
-        if(section == null){
-            return null;
-        }
-        return section.getSectionItems(indexes);
-    }
     default<T1 extends SectionItem> T1 getSectionItem(SectionType<T1> sectionType, Key key){
         Section<T1> section = getSection(sectionType);
         if(section != null){
@@ -94,20 +84,6 @@ public interface SectionTool {
     }
     default<T1 extends SectionItem> DexSectionPool<T1> getPool(SectionType<T1> sectionType){
         Section<T1> section = getSection(sectionType);
-        if(section != null){
-            return section.getPool();
-        }
-        return null;
-    }
-    default<T1 extends SectionItem> DexSectionPool<T1> getLoadedPool(SectionType<T1> sectionType){
-        Section<T1> section = getSection(sectionType);
-        if(section != null){
-            return section.getLoadedPool();
-        }
-        return null;
-    }
-    default<T1 extends SectionItem> DexSectionPool<T1> getOrCreatePool(SectionType<T1> sectionType){
-        Section<T1> section = getOrCreateSection(sectionType);
         if(section != null){
             return section.getPool();
         }

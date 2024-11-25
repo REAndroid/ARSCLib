@@ -163,16 +163,9 @@ public class AnnotationElement extends DataItem implements KeyReference,
         }
         return null;
     }
-    public MethodKey getMethodKey(){
-        TypeKey parentType = getParentType();
-        if(parentType == null){
-            return null;
-        }
-        TypeKey dataType = getDataTypeKey();
-        if(dataType == null){
-            return null;
-        }
-        return new MethodKey(parentType, getName(), null, dataType);
+    public MethodKey getMethodKey() {
+        return MethodKey.create(getParentType(), getName(),
+                ProtoKey.emptyParameters(getDataTypeKey()));
     }
 
     @Override

@@ -16,6 +16,7 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.key.TypeListKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
@@ -35,11 +36,11 @@ public class SmaliInterfaceSet extends SmaliSet<SmaliInterface> implements Smali
         if(size == 0){
             return null;
         }
-        String[] typeNames = new String[size];
-        for(int i = 0; i < size; i++){
-            typeNames[i] = get(i).getTypeName();
+        TypeKey[] keys = new TypeKey[size];
+        for (int i = 0; i < size; i++) {
+            keys[i] = get(i).getKey();
         }
-        return new TypeListKey(typeNames);
+        return TypeListKey.create(keys);
     }
     public void setKey(Key key) {
         clear();
@@ -49,7 +50,7 @@ public class SmaliInterfaceSet extends SmaliSet<SmaliInterface> implements Smali
         TypeListKey typeListKey = (TypeListKey) key;
         int size = typeListKey.size();
         for (int i = 0; i < size; i++) {
-            createNew().setKey(typeListKey.getType(i));
+            createNew().setKey(typeListKey.get(i));
         }
     }
     public SmaliInterface createNew() {

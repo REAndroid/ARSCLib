@@ -32,7 +32,6 @@ import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.Smali;
-import com.reandroid.dex.smali.model.SmaliField;
 import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.dex.smali.model.SmaliMethodParameter;
 import com.reandroid.utils.StringsUtil;
@@ -173,7 +172,7 @@ public class MethodDef extends Def<MethodId>{
     public ProtoId getProtoId(){
         MethodId methodId = getId();
         if(methodId != null){
-            return methodId.getProto();
+            return methodId.getProtoId();
         }
         return null;
     }
@@ -376,7 +375,7 @@ public class MethodDef extends Def<MethodId>{
                 MethodKey methodKey = smaliMethod.getKey();
                 throw new RuntimeException("Parameter out of range, class = " +
                         methodKey.getDeclaring() + ", method = " + methodKey.getName() +
-                        methodKey.getProtoKey() + "\n" + smaliMethodParameter);
+                        methodKey.getProto() + "\n" + smaliMethodParameter);
             }
             Parameter parameter = getParameter(index);
             parameter.fromSmali(smaliMethodParameter);

@@ -60,8 +60,8 @@ public class ProtoId extends IdItem implements Comparable<ProtoId> {
         return SectionType.PROTO_ID;
     }
     @Override
-    public ProtoKey getKey(){
-        return checkKey(ProtoKey.create(this));
+    public ProtoKey getKey() {
+        return checkKey(ProtoKey.create(getParameters(), getReturnType()));
     }
     @Override
     public void setKey(Key key){
@@ -74,7 +74,11 @@ public class ProtoId extends IdItem implements Comparable<ProtoId> {
         }
         shorty.setString(key.getShorty());
         returnType.setKey(key.getReturnType());
-        parameters.setKey(key.getParameterListKey());
+        TypeListKey typeListKey = key.getParameters();
+        if (typeListKey != null && typeListKey.isEmpty()) {
+            typeListKey = null;
+        }
+        parameters.setKey(typeListKey);
         keyChanged(old);
     }
     public int getParameterRegistersCount(){
@@ -95,16 +99,6 @@ public class ProtoId extends IdItem implements Comparable<ProtoId> {
     public TypeId getParameter(int index) {
         return parameters.get(index);
     }
-    public TypeId getForRegister(int register) {
-        return parameters.getForRegister(register);
-    }
-    public String[] getParameterNames(){
-        TypeList typeList = getTypeList();
-        if(typeList != null){
-            return typeList.getNames();
-        }
-        return null;
-    }
     public Iterator<TypeId> getParameterIds(){
         TypeList typeList = getTypeList();
         if(typeList != null){
@@ -114,12 +108,6 @@ public class ProtoId extends IdItem implements Comparable<ProtoId> {
     }
     public TypeList getTypeList() {
         return parameters.getItem();
-    }
-    public TypeListReference getParametersReference(){
-        return parameters;
-    }
-    public void setParameters(TypeListKey key){
-        parameters.setKey(key);
     }
     public TypeListKey getParameters(){
         return parameters.getKey();

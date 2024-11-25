@@ -144,7 +144,7 @@ public class RClassParent extends DexClass {
         ClassId classId = getId();
         classId.addAccessFlag(AccessFlag.PUBLIC);
         ClassData classData = classId.getOrCreateClassData();
-        MethodKey methodKey = new MethodKey(classId.getName(), "<init>", null, "V");
+        MethodKey methodKey = MethodKey.CONSTRUCTOR.changeDeclaring(classId.getKey());
         if(classData.getMethod(methodKey) != null){
             return;
         }

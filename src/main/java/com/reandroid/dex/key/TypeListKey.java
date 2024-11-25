@@ -15,144 +15,72 @@
  */
 package com.reandroid.dex.key;
 
-import com.reandroid.dex.data.TypeList;
-import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.collection.ArrayIterator;
-import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.collection.ArrayCollection;
 
-import java.util.Iterator;
+import java.io.IOException;
 
-public class TypeListKey implements Key, Iterable<String> {
+public class TypeListKey extends KeyList<TypeKey> {
 
-    private final String[] parameters;
+    public static final TypeListKey EMPTY;
+    private static final TypeKey[] EMPTY_ARRAY;
 
-    public TypeListKey(String[] parameters){
-        this.parameters = parameters;
-    }
-
-    public TypeListKey remove(int index){
-        String[] parameters = getParameterNames();
-        if(parameters == null){
-            return this;
-        }
-        int length = parameters.length;
-        if(index < 0 || index >= length){
-            return this;
-        }
-        String[] results;
-        if(length == 1){
-            results = null;
-        }else {
-            results = new String[length - 1];
-        }
-        int count = 0;
-        for(int i = 0; i < length; i++){
-            if(i != index){
-                results[count] = parameters[i];
-                count ++;
-            }
-        }
-        return new TypeListKey(results);
-    }
-    public TypeListKey add(String name){
-        int length = 0;
-        String[] parameters = getParameterNames();
-        if(parameters != null){
-            length = parameters.length;
-        }
-        String[] results = new String[length + 1];
-        int count = 0;
-        if(parameters != null){
-            for(int i = 0; i < length; i++){
-                results[count] = parameters[i];
-                count ++;
-            }
-        }
-        results[count] = name;
-        return new TypeListKey(results);
+    static {
+        TypeKey[] emptyArray = new TypeKey[0];
+        EMPTY_ARRAY = emptyArray;
+        EMPTY = new TypeListKey(emptyArray);
     }
 
-    public String[] getParameterNames() {
-        return parameters;
+    private TypeListKey(TypeKey[] keys) {
+        super(keys);
     }
-    public int indexOf(String name){
-        if(name == null){
-            return -1;
-        }
-        String[] parameters = getParameterNames();
-        if(parameters != null){
-            int length = parameters.length;
-            for(int i = 0; i < length; i++){
-                if(name.equals(parameters[i])){
-                    return i;
-                }
-            }
-        }
-        return -1;
+
+    @Override
+    public TypeListKey remove(int index) {
+        return (TypeListKey) super.remove(index);
     }
-    public int indexOf(TypeKey typeKey){
-        if(typeKey == null){
-            return -1;
-        }
-        int size = size();
-        for(int i = 0; i < size; i++){
-            if(typeKey.equals(getType(i))){
-                return i;
-            }
-        }
-        return -1;
-    }
-    public int size() {
-        String[] parameters = getParameterNames();
-        if(parameters != null){
-            return parameters.length;
-        }
-        return 0;
-    }
-    public String get(int i){
-        return getParameterNames()[i];
-    }
-    public TypeKey getType(int i){
-        return TypeKey.create(get(i));
-    }
-    public Iterator<TypeKey> getTypes(){
-        return ComputeIterator.of(iterator(), TypeKey::create);
+
+    @Override
+    TypeListKey newInstance(TypeKey[] elements) {
+        return TypeListKey.create(elements);
     }
     @Override
-    public Iterator<String> iterator(){
-        return ArrayIterator.of(getParameterNames());
+    TypeKey[] newArray(int length) {
+        if (length == 0) {
+            return EMPTY_ARRAY;
+        }
+        return new TypeKey[length];
+    }
+
+    @Override
+    public TypeListKey add(TypeKey typeKey) {
+        return (TypeListKey) super.add(typeKey);
     }
     @Override
-    public Iterator<TypeKey> mentionedKeys() {
-        return getTypes();
+    public TypeListKey remove(TypeKey itemKey) {
+        return (TypeListKey) super.remove(itemKey);
     }
     @Override
-    public Key replaceKey(Key search, Key replace) {
-        TypeListKey result = this;
-        if(search.equals(result)){
-            return replace;
-        }
-        String[] parameters = this.getParameterNames();
-        if(parameters != null && search instanceof TypeKey){
-            TypeKey searchType = (TypeKey) search;
-            String replaceType = ((TypeKey) replace).getTypeName();
-            int length = parameters.length;
-            for(int i = 0; i < length; i++){
-                if(searchType.equals(new TypeKey(parameters[i]))){
-                    parameters[i] = replaceType;
-                }
-            }
-        }
-        return result;
+    public TypeListKey set(int i, TypeKey item) {
+        return (TypeListKey) super.set(i, item);
+    }
+
+    @Override
+    public TypeListKey replaceKey(Key search, Key replace) {
+        return (TypeListKey) super.replaceKey(search, replace);
     }
 
     @Override
     public int compareTo(Object obj) {
-        if(obj == null){
+        if (obj == this) {
+            return 0;
+        }
+        if (obj == null) {
             return -1;
         }
-        TypeListKey key = (TypeListKey) obj;
-        return CompareUtil.compare(getParameterNames(), key.getParameterNames());
+        return compareElements((TypeListKey) obj);
     }
 
     @Override
@@ -160,46 +88,116 @@ public class TypeListKey implements Key, Iterable<String> {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof TypeListKey)) {
-            return false;
+        if (obj instanceof TypeListKey) {
+            return equalsElements((TypeListKey) obj);
         }
-        TypeListKey key = (TypeListKey) obj;
-        return CompareUtil.compare(getParameterNames(), key.getParameterNames()) == 0;
+        return false;
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 1;
-        String[] parameters = getParameterNames();
-        if(parameters != null){
-            for(String param : parameters){
-                hash = hash * 31 + param.hashCode();
-            }
-        }
-        return hash;
-    }
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append('(');
-        String[] parameters = getParameterNames();
-        if(parameters != null){
-            for (String parameter : parameters) {
-                builder.append(parameter);
+        return '(' + StringsUtil.join(iterator(), null) + ')';
+    }
+
+    public static TypeListKey create(TypeKey ... keys) {
+        keys = removeNulls(keys);
+        if (keys == EMPTY_ARRAY) {
+            return EMPTY;
+        }
+        return new TypeListKey(keys);
+    }
+
+
+    public static TypeListKey readParameters(SmaliReader reader) throws IOException {
+        reader.skipWhitespacesOrComment();
+        SmaliParseException.expect(reader, '(');
+        reader.skipWhitespacesOrComment();
+        ArrayCollection<TypeKey> keys = null;
+        while (!reader.finished() && reader.get() != ')') {
+            if (keys == null) {
+                keys = new ArrayCollection<>();
+            }
+            keys.add(TypeKey.read(reader));
+            reader.skipWhitespacesOrComment();
+        }
+        SmaliParseException.expect(reader, ')');
+        if (keys == null) {
+            return EMPTY;
+        }
+        return create(keys.toArrayFill(new TypeKey[keys.size()]));
+    }
+
+    public static TypeListKey parseParameters(String parameters) {
+        return create(splitParameters(parameters));
+    }
+
+    public static TypeKey[] splitParameters(String parameters) {
+        if (StringsUtil.isEmpty(parameters)) {
+            return EMPTY_ARRAY;
+        }
+        int length = parameters.length();
+        TypeKey[] results = new TypeKey[length];
+        int count = 0;
+        boolean array = false;
+        int start = 0;
+        for (int i = 0; i < length; i++) {
+            boolean pop = false;
+            char ch = parameters.charAt(i);
+            if (ch == '[') {
+                array = true;
+            } else if (ch == ';') {
+                pop = true;
+            } else if ((array || (i - start) == 0) && TypeKey.isPrimitive(ch)){
+                pop = true;
+                array = false;
+            } else {
+                array = false;
+            }
+            if (pop) {
+                int next = i + 1;
+                results[count] = TypeKey.create(parameters.substring(start, next));
+                count ++;
+                start = next;
             }
         }
-        builder.append(')');
-        return builder.toString();
-    }
-
-
-    public static TypeListKey create(TypeList typeList){
-        return create(typeList.getNames());
-    }
-    public static TypeListKey create(String[] parameters){
-        if(parameters == null || parameters.length == 0){
-            return null;
+        if (count == 0) {
+            return EMPTY_ARRAY;
         }
-        return new TypeListKey(parameters);
+        if (count == length) {
+            return results;
+        }
+        TypeKey[] tmp = new TypeKey[count];
+        System.arraycopy(results, 0, tmp, 0, count);
+        return tmp;
+    }
+
+    private static TypeKey[] removeNulls(TypeKey[] elements) {
+        if (elements == null || elements.length == 0) {
+            return EMPTY_ARRAY;
+        }
+        int length = elements.length;
+        int size = 0;
+        for (int i = 0; i < length; i ++) {
+            TypeKey key = elements[i];
+            if (key != null) {
+                size ++;
+            }
+        }
+        if (size == length) {
+            return elements;
+        }
+        if (size == 0) {
+            return EMPTY_ARRAY;
+        }
+        TypeKey[] results = new TypeKey[size];
+        int j = 0;
+        for (int i = 0; i < length; i ++) {
+            TypeKey key = elements[i];
+            if (key != null) {
+                results[j] = key;
+                j ++;
+            }
+        }
+        return results;
     }
 }

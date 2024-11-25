@@ -16,15 +16,13 @@
 package com.reandroid.dex.id;
 
 import com.reandroid.dex.data.TypeList;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.MethodKey;
-import com.reandroid.dex.key.StringKey;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.reference.IdItemIndirectReference;
 import com.reandroid.dex.reference.IdItemIndirectShortReference;
 import com.reandroid.dex.reference.IndirectStringReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
@@ -59,6 +57,9 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
     public void setName(String name){
         nameReference.setString(name);
     }
+    public StringKey getNameKey() {
+        return nameReference.getKey();
+    }
     public void setName(StringKey key){
         nameReference.setKey(key);
     }
@@ -80,57 +81,49 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
         defining.setItem(typeId);
     }
     public int getParametersCount() {
-        ProtoId protoId = getProto();
+        ProtoId protoId = getProtoId();
         if(protoId != null){
             return protoId.getParametersCount();
         }
         return 0;
     }
     public int getParameterRegistersCount() {
-        ProtoId protoId = getProto();
-        if(protoId != null){
+        ProtoId protoId = getProtoId();
+        if (protoId != null) {
             return protoId.getParameterRegistersCount();
         }
         return 0;
     }
-    public TypeId getParameter(int index) {
-        ProtoId protoId = getProto();
-        if(protoId != null){
-            return protoId.getParameter(index);
+    public TypeListKey getParameters() {
+        ProtoId protoId = getProtoId();
+        if (protoId != null) {
+            return protoId.getParameters();
         }
         return null;
     }
-    public String[] getParameterNames(){
-        ProtoId protoId = getProto();
-        if(protoId != null){
-            return protoId.getParameterNames();
-        }
-        return null;
-    }
-    public TypeList getParameterTypes(){
-        ProtoId protoId = getProto();
+    public TypeList getParameterTypes() {
+        ProtoId protoId = getProtoId();
         if(protoId != null){
             return protoId.getTypeList();
         }
         return null;
     }
-    public ProtoId getProto(){
+    public ProtoId getProtoId(){
         return proto.getItem();
     }
     public void setProto(ProtoId protoId) {
         proto.setItem(protoId);
     }
-
-    public String getReturnTypeName() {
-        TypeKey typeKey = getReturnType();
-        if(typeKey != null){
-            return typeKey.getTypeName();
-        }
-        return null;
+    public ProtoKey getProto() {
+        return (ProtoKey) proto.getKey();
     }
+    public void setProto(ProtoKey protoKey) {
+        proto.setKey(protoKey);
+    }
+
     public TypeKey getReturnType() {
-        ProtoId protoId = getProto();
-        if(protoId != null){
+        ProtoId protoId = getProtoId();
+        if (protoId != null) {
             return protoId.getReturnType();
         }
         return null;
@@ -142,20 +135,20 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
     }
     @Override
     public MethodKey getKey() {
-        return checkKey(MethodKey.create(this));
+        return checkKey(MethodKey.create(getDefining(), getNameKey(), getProto()));
     }
     @Override
     public void setKey(Key key){
         setKey((MethodKey) key);
     }
-    public void setKey(MethodKey key){
+    public void setKey(MethodKey key) {
         MethodKey old = getKey();
-        if(key.equals(old)){
+        if (key.equals(old)) {
             return;
         }
         defining.setKey(key.getDeclaring());
-        nameReference.setString(key.getName());
-        proto.setKey(key.getProtoKey());
+        nameReference.setKey(key.getNameKey());
+        proto.setKey(key.getProto());
         keyChanged(old);
     }
     @Override
@@ -181,7 +174,7 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
             writer.append("->");
         }
         writer.append(getName());
-        writer.appendRequired(getProto());
+        writer.appendRequired(getProtoId());
     }
 
     @Override
@@ -202,7 +195,7 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
 
     @Override
     public String toString() {
-        return getDefiningId() + "->" + getName() + getProto();
+        return getDefiningId() + "->" + getName() + getProtoId();
     }
 
     public static boolean equals(MethodId methodId, MethodId other) {
@@ -223,7 +216,7 @@ public class MethodId extends IdItem implements Comparable<MethodId> {
                 return false;
             }
         }
-        return TypeList.equals(methodId.getParameterTypes(), other.getParameterTypes());
+        return ObjectsUtil.equals(methodId.getParameterTypes(), other.getParameterTypes());
     }
 
     private static final int SIZE = 8;

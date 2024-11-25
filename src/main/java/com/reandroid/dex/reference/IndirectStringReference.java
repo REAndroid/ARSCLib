@@ -17,6 +17,7 @@ package com.reandroid.dex.reference;
 
 import com.reandroid.dex.common.SectionItem;
 import com.reandroid.dex.id.StringId;
+import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.sections.SectionType;
 
@@ -26,6 +27,10 @@ public class IndirectStringReference extends IdItemIndirectReference<StringId>{
         super(SectionType.STRING_ID, blockItem, offset, usage);
     }
 
+    @Override
+    public StringKey getKey() {
+        return (StringKey) super.getKey();
+    }
     public String getString(){
         StringId stringId = getItem();
         if(stringId != null){
