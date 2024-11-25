@@ -112,7 +112,12 @@ public class ArraySort {
         }
         @Override
         public int compareToMid(int i) {
-            return comparator.compare(elementData[i], mid);
+            Object element = this.elementData[i];
+            Object mid = this.mid;
+            if (mid == element) {
+                return 0;
+            }
+            return comparator.compare(element, mid);
         }
         @Override
         public void onSwap(int i, int j) {
