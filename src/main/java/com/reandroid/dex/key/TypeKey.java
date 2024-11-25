@@ -416,6 +416,36 @@ public class TypeKey implements Key{
         return typeKey;
     }
 
+    static TypeKey parseBinaryType(String text, int start, int end) {
+        int arrayDimension = 0;
+        boolean begin = false;
+        for (int i = start; i < end; i++) {
+            char c = text.charAt(i);
+            if (c == '[') {
+                if (begin) {
+                    return null;
+                }
+                arrayDimension ++;
+            } else if (c == ';') {
+                if (begin) {
+                    return create(text.substring(start, i + 1));
+                } else {
+                    return null;
+                }
+            } else if (!begin) {
+                if (c != 'L') {
+                    TypeKey typeKey = primitiveType(c);
+                    if (typeKey != null) {
+                        typeKey = typeKey.setArrayDimension(arrayDimension);
+                    }
+                    return typeKey;
+                }
+                begin = true;
+            }
+        }
+        return null;
+    }
+
     public static boolean isPrimitive(char ch) {
         return primitiveType(ch) != null;
     }

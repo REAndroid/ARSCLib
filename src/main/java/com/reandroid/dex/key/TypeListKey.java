@@ -128,49 +128,26 @@ public class TypeListKey extends KeyList<TypeKey> {
     }
 
     public static TypeListKey parseParameters(String parameters) {
-        return create(splitParameters(parameters));
+        return parseParameters(parameters, 0, parameters.length());
     }
-
-    public static TypeKey[] splitParameters(String parameters) {
-        if (StringsUtil.isEmpty(parameters)) {
-            return EMPTY_ARRAY;
+    public static TypeListKey parseParameters(String text, int start, int end) {
+        if (end == start) {
+            return EMPTY;
         }
-        int length = parameters.length();
-        TypeKey[] results = new TypeKey[length];
-        int count = 0;
-        boolean array = false;
-        int start = 0;
-        for (int i = 0; i < length; i++) {
-            boolean pop = false;
-            char ch = parameters.charAt(i);
-            if (ch == '[') {
-                array = true;
-            } else if (ch == ';') {
-                pop = true;
-            } else if ((array || (i - start) == 0) && TypeKey.isPrimitive(ch)){
-                pop = true;
-                array = false;
-            } else {
-                array = false;
+        if (start > end) {
+            return null;
+        }
+        ArrayCollection<TypeKey> results = new ArrayCollection<>();
+        while (start < end) {
+            TypeKey typeKey = TypeKey.parseBinaryType(text, start, end);
+            if (typeKey == null) {
+                return null;
             }
-            if (pop) {
-                int next = i + 1;
-                results[count] = TypeKey.create(parameters.substring(start, next));
-                count ++;
-                start = next;
-            }
+            results.add(typeKey);
+            start = start + typeKey.getTypeName().length();
         }
-        if (count == 0) {
-            return EMPTY_ARRAY;
-        }
-        if (count == length) {
-            return results;
-        }
-        TypeKey[] tmp = new TypeKey[count];
-        System.arraycopy(results, 0, tmp, 0, count);
-        return tmp;
+        return create(results.toArrayFill(new TypeKey[results.size()]));
     }
-
     private static TypeKey[] removeNulls(TypeKey[] elements) {
         if (elements == null || elements.length == 0) {
             return EMPTY_ARRAY;

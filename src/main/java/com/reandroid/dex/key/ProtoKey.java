@@ -237,6 +237,24 @@ public class ProtoKey implements Key {
         }
         return new ProtoKey(parameters, TypeKey.create(returnType));
     }
+    public static ProtoKey parse(String text, int start) {
+        if (text.length() - start < 3 || text.charAt(start) != '(') {
+            return null;
+        }
+        int i = text.indexOf(')', start);
+        if (i < 0) {
+            return null;
+        }
+        TypeListKey parameters = TypeListKey.parseParameters(text, start + 1, i);
+        if (parameters == null) {
+            return null;
+        }
+        TypeKey returnType = TypeKey.parseBinaryType(text, i + 1, text.length());
+        if (returnType == null) {
+            return null;
+        }
+        return create(parameters, returnType);
+    }
     public static ProtoKey read(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
         TypeListKey parameters = TypeListKey.readParameters(reader);

@@ -324,35 +324,37 @@ public class MethodKey implements Key {
     }
 
     public static MethodKey parse(String text) {
-        if(text == null){
+        return parse(text, 0);
+    }
+
+    public static MethodKey parse(String text, int start) {
+        if(text.length() - start < 6 || (text.charAt(start) != 'L' && text.charAt(start) != '[')){
             return null;
         }
-        text = text.trim();
-        if(text.length() < 6 || (text.charAt(0) != 'L' && text.charAt(0) != '[')){
-            return null;
-        }
-        int i = text.indexOf(";->");
+        int i = text.indexOf("->", start);
         if(i < 0){
             return null;
         }
-        //TODO: avoid substring usage
-        String defining = text.substring(0, i + 1);
-        text = text.substring(i + 3);
-        i = text.indexOf('(');
-        if(i < 0){
+        TypeKey defining = TypeKey.parseBinaryType(text, start, i);
+        if (defining == null) {
             return null;
         }
-        String name = text.substring(0, i);
-        text = text.substring(i);
-        i = text.indexOf(')');
-        if(i < 0){
+        start = start + defining.getTypeName().length() + 2;
+        i = text.indexOf('(', start);
+        if (i < 0) {
             return null;
         }
-        ProtoKey protoKey = ProtoKey.parse(text);
+        String name = text.substring(start, i);
+        start = i;
+        i = text.indexOf(')', start);
+        if (i < 0) {
+            return null;
+        }
+        ProtoKey protoKey = ProtoKey.parse(text, start);
         if (protoKey == null) {
             return null;
         }
-        return create(TypeKey.create(defining), StringKey.create(name), protoKey);
+        return create(defining, StringKey.create(name), protoKey);
     }
     public static MethodKey convert(Method method) {
         TypeKey declaring = TypeKey.convert(method.getDeclaringClass());
