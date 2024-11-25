@@ -317,10 +317,13 @@ public class SizeXIns extends Ins {
                 return false;
             }
         }
-        if(getSectionType() != null){
+        if (getSectionType() != null) {
             return Objects.equals(getKey(), sizeXIns.getKey());
-        }else {
-            return getData() == sizeXIns.getData();
+        } else {
+            if (this instanceof ConstNumberLong) {
+                return getLong() == sizeXIns.getLong();
+            }
+            return getData() == sizeXIns.getLong();
         }
     }
 
@@ -339,10 +342,14 @@ public class SizeXIns extends Ins {
         }
         hash = hash * 31;
         Key key = getKey();
-        if(key != null){
+        if (key != null) {
             hash = hash + key.hashCode();
-        }else {
-            hash = hash + getData();
+        } else {
+            if (this instanceof ConstNumberLong) {
+                hash = hash * 31 + Long.hashCode(getLong());
+            } else {
+                hash = hash * 31 + getData();
+            }
         }
         return hash;
     }
