@@ -611,14 +611,14 @@ public class StringsUtil {
     public static String join(Iterator<?> iterator, Object separator){
         StringBuilder builder = new StringBuilder();
         boolean appendOnce = false;
-        while (iterator.hasNext()){
-            if(appendOnce){
+        while (iterator.hasNext()) {
+            if (appendOnce) {
                 builder.append(separator);
             }
             builder.append(iterator.next());
-            appendOnce = true;
+            appendOnce = separator != null;
         }
-        if(appendOnce){
+        if (builder.length() != 0) {
             return builder.toString();
         }
         return EMPTY;
