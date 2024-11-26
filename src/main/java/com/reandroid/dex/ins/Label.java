@@ -43,7 +43,7 @@ public interface Label extends ExtraLine{
         if (i != 0) {
             return i;
         }
-        if (getClass() == other.getClass()) {
+        if (other instanceof Label) {
             return compareLabelName((Label) other);
         }
         return 0;
