@@ -38,6 +38,14 @@ public class TypeListKey extends KeyList<TypeKey> {
     }
 
     @Override
+    public TypeKey get(int i) {
+        if (i >= 0 && i < size()) {
+            return super.get(i);
+        }
+        return null;
+    }
+
+    @Override
     public TypeListKey remove(int index) {
         return (TypeListKey) super.remove(index);
     }

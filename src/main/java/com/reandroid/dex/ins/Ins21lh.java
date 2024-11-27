@@ -61,7 +61,8 @@ public class Ins21lh extends Size4Ins implements RegistersSet {
             setShort(2, data);
         }
     }
-    public long getDataLong(){
+    @Override
+    public long getDataAsLong(){
         InsConstWide insConstWide = mReplaced;
         if(insConstWide != null){
             return insConstWide.getLong();
@@ -89,6 +90,6 @@ public class Ins21lh extends Size4Ins implements RegistersSet {
     }
     @Override
     void appendHexData(SmaliWriter writer) throws IOException {
-        writer.appendHex(getDataLong());
+        writer.appendHex(getDataAsLong());
     }
 }

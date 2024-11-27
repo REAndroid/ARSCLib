@@ -40,7 +40,7 @@ public abstract class SmaliInstructionPayload<T extends Smali> extends SmaliInst
     public abstract int getCodeUnits();
     @Override
     public abstract Opcode<?> getOpcode();
-    abstract T createEntry(SmaliReader reader) throws IOException;
+    abstract T createEntry();
     public void addEntry(T entry) {
         getEntries().add(entry);
     }
@@ -59,6 +59,11 @@ public abstract class SmaliInstructionPayload<T extends Smali> extends SmaliInst
     }
     public SmaliSet<T> getEntries() {
         return entries;
+    }
+    public T newEntry() {
+        T entry = createEntry();
+        addEntry(entry);
+        return entry;
     }
 
     @Override
@@ -80,11 +85,8 @@ public abstract class SmaliInstructionPayload<T extends Smali> extends SmaliInst
         reader.skipSpaces();
         parseOperand(getOpcode(), reader);
         reader.skipWhitespacesOrComment();
-        SmaliSet<T> entries = getEntries();
-        while (!directive.isEnd(reader)){
-            T entry = createEntry(reader);
-            entries.add(entry);
-            entry.parse(reader);
+        while (!directive.isEnd(reader)) {
+            newEntry().parse(reader);
             reader.skipWhitespacesOrComment();
         }
         reader.skipWhitespacesOrComment();

@@ -47,6 +47,9 @@ public class MethodKey implements Key {
     public int getRegister(int index) {
         return getProto().getRegister(index);
     }
+    public int getParameterIndex(int index) {
+        return getProto().getParameterIndex(index);
+    }
     public MethodKey changeDeclaring(TypeKey typeKey) {
         if (getDeclaring().equals(typeKey)) {
             return this;

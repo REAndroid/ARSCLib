@@ -32,7 +32,7 @@ public abstract class SmaliValueNumber<T extends Number> extends SmaliValue{
     public abstract void setNumber(T number);
     public abstract int getWidth();
     public abstract int unsignedInt();
-    public abstract long unsignedLong();
+    public abstract long asLongValue();
     @Override
     public abstract PrimitiveKey getKey();
     @Override

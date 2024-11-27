@@ -270,6 +270,31 @@ public abstract class Block {
             index --;
         }
     }
+    public static long getUnsignedNumber(byte[] bytes, int offset, int size){
+        if ((offset + size) > bytes.length) {
+            return 0;
+        }
+        long result = 0;
+        int index = offset + size - 1;
+        while (index >= offset) {
+            result = result << 8;
+            result |= (bytes[index] & 0xff);
+            index --;
+        }
+        return result;
+    }
+    public static void putNumber(byte[] bytes, int offset, int size, long value) {
+        if((offset + size) > bytes.length){
+            return;
+        }
+        int index = offset;
+        offset = index + size;
+        while (index < offset) {
+            bytes[index] = (byte) (value & 0xff);
+            value = value >>> 8;
+            index++;
+        }
+    }
     public static byte[] getBytes(byte[] bytes, int offset, int length){
         if(bytes.length == 0){
             return new byte[0];

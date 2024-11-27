@@ -34,6 +34,21 @@ public class InsFillArrayData extends Ins31t{
         }
         return null;
     }
+    Ins22c findNewArrayLazy() {
+        InstructionList instructionList = getInstructionList();
+        if (instructionList == null) {
+            return null;
+        }
+        int index = getIndex();
+        Ins ins = instructionList.get(index - 1);
+        if (ins.getOpcode() == Opcode.NEW_ARRAY) {
+            Ins22c ins22c = (Ins22c) ins;
+            if (getRegister(0) == ins22c.getRegister(0)) {
+                return ins22c;
+            }
+        }
+        return null;
+    }
     @Override
     String getLabelPrefix(){
         return ":array_";

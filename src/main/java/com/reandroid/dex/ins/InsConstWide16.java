@@ -44,6 +44,11 @@ public class InsConstWide16 extends Ins21s implements ConstNumberLong{
     }
 
     @Override
+    public long getDataAsLong() {
+        return getLong();
+    }
+
+    @Override
     public int getRegister() {
         return getRegister(0);
     }

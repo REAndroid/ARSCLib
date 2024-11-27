@@ -60,7 +60,7 @@ public class SmaliValueDouble extends SmaliValueNumber<Double>{
         return (int) getNumber().longValue();
     }
     @Override
-    public long unsignedLong() {
+    public long asLongValue() {
         return getNumber().longValue();
     }
     @Override

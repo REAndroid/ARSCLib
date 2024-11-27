@@ -59,7 +59,7 @@ public class SmaliValueFloat extends SmaliValueNumber<Float>{
         return getNumber().intValue();
     }
     @Override
-    public long unsignedLong() {
+    public long asLongValue() {
         return getNumber().intValue() & 0xffffffffL;
     }
     @Override

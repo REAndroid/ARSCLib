@@ -4,6 +4,7 @@ import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
+import com.reandroid.utils.NumberX;
 
 import java.io.IOException;
 
@@ -17,6 +18,8 @@ public abstract class PrimitiveKey implements Key {
 
     public abstract Object getValue();
     public abstract TypeKey valueType();
+    public abstract int width();
+    public abstract long asLongValue();
 
     public boolean isNumber() { return false; }
     public boolean isBoolean() { return false; }
@@ -27,6 +30,7 @@ public abstract class PrimitiveKey implements Key {
     public boolean isInteger() { return false; }
     public boolean isLong() { return false; }
     public boolean isShort() { return false; }
+    public boolean isX() { return false; }
 
 
     @Override
@@ -58,6 +62,7 @@ public abstract class PrimitiveKey implements Key {
     public static PrimitiveKey of(int value) { return new IntegerKey(value); }
     public static PrimitiveKey of(long value) { return new LongKey(value); }
     public static PrimitiveKey of(short value) { return new ShortKey(value); }
+    public static PrimitiveKey of(int width, long value) { return new NumberXKey(width, value); }
 
     public static abstract class NumberKey extends PrimitiveKey {
 
@@ -99,6 +104,16 @@ public abstract class PrimitiveKey implements Key {
         public Boolean getValue() {
             return value();
         }
+
+        @Override
+        public int width() {
+            return 0;
+        }
+        @Override
+        public long asLongValue() {
+            return value() ? -1 : 0;
+        }
+
         @Override
         public TypeKey valueType() {
             return TypeKey.TYPE_Z;
@@ -153,6 +168,16 @@ public abstract class PrimitiveKey implements Key {
         public Byte getValue() {
             return value;
         }
+
+        @Override
+        public int width() {
+            return 1;
+        }
+        @Override
+        public long asLongValue() {
+            return value();
+        }
+
         @Override
         public TypeKey valueType() {
             return TypeKey.TYPE_B;
@@ -214,6 +239,16 @@ public abstract class PrimitiveKey implements Key {
         public Character getValue() {
             return value;
         }
+
+        @Override
+        public int width() {
+            return 0;
+        }
+        @Override
+        public long asLongValue() {
+            return value();
+        }
+
         @Override
         public TypeKey valueType() {
             return TypeKey.TYPE_C;
@@ -274,6 +309,15 @@ public abstract class PrimitiveKey implements Key {
         @Override
         public Double getValue() {
             return value;
+        }
+
+        @Override
+        public int width() {
+            return 8;
+        }
+        @Override
+        public long asLongValue() {
+            return Double.doubleToLongBits(value());
         }
         @Override
         public TypeKey valueType() {
@@ -336,6 +380,16 @@ public abstract class PrimitiveKey implements Key {
         public Float getValue() {
             return value;
         }
+
+        @Override
+        public int width() {
+            return 4;
+        }
+        @Override
+        public long asLongValue() {
+            return Float.floatToIntBits(value());
+        }
+
         @Override
         public TypeKey valueType() {
             return TypeKey.TYPE_F;
@@ -398,6 +452,16 @@ public abstract class PrimitiveKey implements Key {
         public Integer getValue() {
             return value();
         }
+
+        @Override
+        public int width() {
+            return 4;
+        }
+        @Override
+        public long asLongValue() {
+            return value();
+        }
+
         @Override
         public TypeKey valueType() {
             return TypeKey.TYPE_I;
@@ -451,6 +515,16 @@ public abstract class PrimitiveKey implements Key {
         public Long getValue() {
             return value;
         }
+
+        @Override
+        public int width() {
+            return 8;
+        }
+        @Override
+        public long asLongValue() {
+            return value();
+        }
+
         @Override
         public TypeKey valueType() {
             return TypeKey.TYPE_J;
@@ -507,6 +581,16 @@ public abstract class PrimitiveKey implements Key {
         public Short getValue() {
             return value;
         }
+
+        @Override
+        public int width() {
+            return 2;
+        }
+        @Override
+        public long asLongValue() {
+            return value();
+        }
+
         @Override
         public TypeKey valueType() {
             return TypeKey.TYPE_S;
@@ -548,6 +632,76 @@ public abstract class PrimitiveKey implements Key {
         @Override
         public String toString() {
             return HexUtil.toSignedHex(value()) + "S";
+        }
+    }
+
+    public static class NumberXKey extends NumberKey {
+
+        private final int width;
+        private final long value;
+
+        public NumberXKey(int width, long value) {
+            super();
+            this.width = width;
+            this.value = value;
+        }
+
+        public long value() {
+            return value;
+        }
+        @Override
+        public NumberX getValue() {
+            return NumberX.valueOf(width(), value());
+        }
+        @Override
+        public int width() {
+            return width;
+        }
+        @Override
+        public long asLongValue() {
+            return value();
+        }
+        @Override
+        public boolean isX() {
+            return true;
+        }
+        @Override
+        public TypeKey valueType() {
+            return null;
+        }
+
+        @Override
+        public int compareTo(Object obj) {
+            if (obj == this) {
+                return 0;
+            }
+            if (obj == null || obj.getClass() != getClass()) {
+                return 0;
+            }
+            return Long.compare(value(), ((NumberXKey) obj).value());
+        }
+        @Override
+        public int hashCode() {
+            return Long.hashCode(value());
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj == null || obj.getClass() != getClass()) {
+                return false;
+            }
+            return value() == ((NumberXKey) obj).value();
+        }
+
+        @Override
+        public void append(SmaliWriter writer) throws IOException {
+            writer.appendHex(value());
+        }
+        @Override
+        public String toString() {
+            return NumberX.toHexString(width(), value());
         }
     }
 

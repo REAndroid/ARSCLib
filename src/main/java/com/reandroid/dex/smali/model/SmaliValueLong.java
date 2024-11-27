@@ -61,7 +61,7 @@ public class SmaliValueLong extends SmaliValueNumber<Long>{
         return (int) getValue();
     }
     @Override
-    public long unsignedLong() {
+    public long asLongValue() {
         return getValue();
     }
     @Override

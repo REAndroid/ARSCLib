@@ -55,6 +55,11 @@ public class Ins51l extends Size10Ins implements RegistersSet {
     }
 
     @Override
+    public long getDataAsLong() {
+        return getLong();
+    }
+
+    @Override
     public void setData(int data) {
         setLong((long) data);
     }

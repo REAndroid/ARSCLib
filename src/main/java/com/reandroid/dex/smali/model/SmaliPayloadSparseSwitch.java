@@ -49,7 +49,7 @@ public class SmaliPayloadSparseSwitch extends SmaliSwitchPayload<SmaliSparseSwit
         return Opcode.SPARSE_SWITCH_PAYLOAD;
     }
     @Override
-    SmaliSparseSwitchEntry createEntry(SmaliReader reader) {
+    SmaliSparseSwitchEntry createEntry() {
         return new SmaliSparseSwitchEntry();
     }
 

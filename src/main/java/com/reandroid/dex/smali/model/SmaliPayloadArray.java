@@ -23,7 +23,7 @@ import com.reandroid.dex.smali.*;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<?>> {
+public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueX> {
 
     public SmaliPayloadArray(){
         super(new SmaliInstructionOperand.SmaliDecimalOperand());
@@ -35,12 +35,10 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<
         }
     }
     public void addEntry(PrimitiveKey key) {
-        SmaliValueNumber<?> valueNumber = SmaliValueFactory.valueNumberFor(key);
-        addEntry(valueNumber);
-        valueNumber.setKey(key);
+        newEntry().setKey(key);
     }
-    public int[] unsignedInt(){
-        SmaliSet<SmaliValueNumber<?>> entries = getEntries();
+    public int[] unsignedInt() {
+        SmaliSet<SmaliValueX> entries = getEntries();
         int size = entries.size();
         int[] result = new int[size];
         for(int i = 0; i < size; i++){
@@ -49,11 +47,11 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<
         return result;
     }
     public long[] unsignedLong(){
-        SmaliSet<SmaliValueNumber<?>> entries = getEntries();
+        SmaliSet<SmaliValueX> entries = getEntries();
         int size = entries.size();
         long[] result = new long[size];
         for(int i = 0; i < size; i++){
-            result[i] = entries.get(i).unsignedLong();
+            result[i] = entries.get(i).asLongValue();
         }
         return result;
     }
@@ -67,6 +65,11 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<
     }
     public void setWidth(int width) {
         getOperand().setNumber(width);
+        SmaliSet<SmaliValueX> entries = getEntries();
+        int size = entries.size();
+        for (int i = 0; i < size; i++) {
+            entries.get(i).setWidth(width);
+        }
     }
 
     @Override
@@ -93,16 +96,10 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<
         return Opcode.ARRAY_PAYLOAD;
     }
     @Override
-    SmaliValueNumber<?> createEntry(SmaliReader reader) throws IOException {
-        SmaliValue value =  SmaliValueFactory.create(reader);
-        if(!(value instanceof SmaliValueNumber)){
-            throw new SmaliParseException("Unrecognized array data entry", reader);
-        }
-        SmaliValueNumber<?> valueNumber = (SmaliValueNumber<?>) value;
-        if(valueNumber.getWidth() > getWidth()){
-            throw new SmaliParseException("Value out of range", reader);
-        }
-        return valueNumber;
+    SmaliValueX createEntry() {
+        SmaliValueX value =  new SmaliValueX();
+        value.setWidth(getWidth());
+        return value;
     }
 
     @Override
@@ -112,10 +109,6 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueNumber<
         SmaliInstructionOperand.SmaliDecimalOperand operand = getOperand();
         operand.parse(opcode, reader);
         int width = operand.getNumber();
-
-        //TODO: validate if width == 0, then the size (entries count) also must be zero.
-        // .array-data 0
-        // .end-array-data
 
         if(width < 0 || width > 8) {
             reader.position(position);

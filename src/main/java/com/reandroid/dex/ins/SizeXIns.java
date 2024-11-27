@@ -17,10 +17,7 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.ByteArray;
-import com.reandroid.dex.common.OperandType;
-import com.reandroid.dex.common.Register;
-import com.reandroid.dex.common.RegisterFormat;
-import com.reandroid.dex.common.RegistersTable;
+import com.reandroid.dex.common.*;
 import com.reandroid.dex.data.CodeItem;
 import com.reandroid.dex.data.MethodDef;
 import com.reandroid.dex.id.IdItem;
@@ -193,6 +190,9 @@ public class SizeXIns extends Ins {
     public int getSignedData(){
         return getData();
     }
+    public long getDataAsLong() {
+        return getSignedData();
+    }
     public void setData(int data){
         setShort(2, data);
     }
@@ -256,12 +256,19 @@ public class SizeXIns extends Ins {
         IdItem sectionItem = getSectionId();
         if(sectionItem != null){
             sectionItem.append(writer);
-        }else {
+        } else {
             appendHexData(writer);
+            appendHexDataComment(writer);
         }
     }
     void appendHexData(SmaliWriter writer) throws IOException {
         writer.appendHex(getSignedData());
+    }
+    private void appendHexDataComment(SmaliWriter writer) {
+        String comment = InsConstCommentHelper.getCommentForConstNumber(this);
+        if (comment != null) {
+            writer.appendComment(comment);
+        }
     }
 
     @Override
@@ -320,10 +327,7 @@ public class SizeXIns extends Ins {
         if (getSectionType() != null) {
             return Objects.equals(getKey(), sizeXIns.getKey());
         } else {
-            if (this instanceof ConstNumberLong) {
-                return getLong() == sizeXIns.getLong();
-            }
-            return getData() == sizeXIns.getData();
+            return getDataAsLong() == sizeXIns.getDataAsLong();
         }
     }
 
@@ -345,11 +349,7 @@ public class SizeXIns extends Ins {
         if (key != null) {
             hash = hash + key.hashCode();
         } else {
-            if (this instanceof ConstNumberLong) {
-                hash = hash * 31 + Long.hashCode(getLong());
-            } else {
-                hash = hash * 31 + getData();
-            }
+            hash = hash * 31 + Long.hashCode(getDataAsLong());
         }
         return hash;
     }

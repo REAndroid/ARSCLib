@@ -132,7 +132,9 @@ public class SmaliValueFactory {
             smaliValue = null;
         } else if (key instanceof PrimitiveKey) {
             PrimitiveKey primitiveKey = (PrimitiveKey) key;
-            if (primitiveKey.isBoolean()) {
+            if (primitiveKey.isX()) {
+                smaliValue = new SmaliValueX();
+            }else if (primitiveKey.isBoolean()) {
                 smaliValue = new SmaliValueBoolean();
             } else if (primitiveKey.isByte()) {
                 smaliValue = new SmaliValueByte();
@@ -183,6 +185,9 @@ public class SmaliValueFactory {
         if (key.isLong()) {
             return new SmaliValueLong();
         }
+        if (key.isX()) {
+            return new SmaliValueLong();
+        }
         throw new IllegalArgumentException("Unknown primitive key type: "
                 + key.getClass() + ", " + key);
     }
@@ -193,11 +198,14 @@ public class SmaliValueFactory {
         if (width == 2) {
             return new SmaliValueShort();
         }
-        if (width <= 4) {
+        if (width == 4) {
             return new SmaliValueInteger();
         }
-        if (width <= 8) {
+        if (width == 8) {
             return new SmaliValueLong();
+        }
+        if (width >= 0 && width < 8) {
+            return new SmaliValueX();
         }
         throw new IllegalArgumentException("Unknown width: " + width);
     }

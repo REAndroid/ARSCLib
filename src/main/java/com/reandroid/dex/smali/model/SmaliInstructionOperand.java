@@ -33,6 +33,7 @@ public abstract class SmaliInstructionOperand extends Smali {
     }
 
     public abstract int getIntegerData();
+    public abstract long asLongValue();
     public abstract OperandType getOperandType();
     @Override
     public abstract void append(SmaliWriter writer) throws IOException;
@@ -61,6 +62,11 @@ public abstract class SmaliInstructionOperand extends Smali {
         public int getIntegerData() {
             return getLabel().getIntegerData();
         }
+        @Override
+        public long asLongValue() {
+            return getLabel().getIntegerData();
+        }
+
         @Override
         public OperandType getOperandType() {
             return OperandType.LABEL;
@@ -117,6 +123,11 @@ public abstract class SmaliInstructionOperand extends Smali {
             return valueNumber.unsignedInt();
         }
         @Override
+        public long asLongValue() {
+            return getValueNumber().asLongValue();
+        }
+
+        @Override
         public OperandType getOperandType() {
             return OperandType.HEX;
         }
@@ -166,6 +177,11 @@ public abstract class SmaliInstructionOperand extends Smali {
         @Override
         public int getIntegerData() {
             return getNumber();
+        }
+
+        @Override
+        public long asLongValue() {
+            return number;
         }
         @Override
         public OperandType getOperandType() {
@@ -217,6 +233,11 @@ public abstract class SmaliInstructionOperand extends Smali {
         public int getIntegerData() {
             return -1;
         }
+        @Override
+        public long asLongValue() {
+            return -1;
+        }
+
         @Override
         public OperandType getOperandType() {
             return OperandType.KEY;
@@ -333,6 +354,11 @@ public abstract class SmaliInstructionOperand extends Smali {
         public int getIntegerData() {
             return -1;
         }
+        @Override
+        public long asLongValue() {
+            return -1;
+        }
+
         @Override
         public OperandType getOperandType() {
             return OperandType.NONE;

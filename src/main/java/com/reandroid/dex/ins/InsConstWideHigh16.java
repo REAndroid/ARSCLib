@@ -27,7 +27,7 @@ public class InsConstWideHigh16 extends Ins21lh implements ConstNumberLong{
     }
     @Override
     public long getLong() {
-        return getDataLong();
+        return getDataAsLong();
     }
 
     @Override

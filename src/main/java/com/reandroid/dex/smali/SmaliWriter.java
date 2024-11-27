@@ -186,14 +186,26 @@ public class SmaliWriter implements Appendable, Closeable {
     }
     public void appendHex(int i) throws IOException {
         append(HexUtil.toSignedHex(i));
-        SmaliWriterSetting setting = getWriterSetting();
-        if(setting != null){
-            setting.writeResourceIdComment(this, i);
-        }
+        appendResourceIdComment(i);
     }
     public void appendHex(long l) throws IOException {
         append(HexUtil.toSignedHex(l));
         append('L');
+        appendResourceIdComment(l);
+    }
+    public void appendHex(int width, long l) throws IOException {
+        String hex = HexUtil.toSignedHex(l);
+        append(hex);
+        if (width == 1) {
+            append('t');
+        } else if (width == 2) {
+            append('S');
+        } else if (width == 8 && hex.length() > 10) {
+            append('L');
+        }
+        appendResourceIdComment(l);
+    }
+    public void appendResourceIdComment(long l) throws IOException {
         SmaliWriterSetting setting = getWriterSetting();
         if(setting != null){
             setting.writeResourceIdComment(this, l);

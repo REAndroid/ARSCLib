@@ -17,14 +17,14 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.arsc.item.*;
 import com.reandroid.dex.base.DexBlockAlign;
-import com.reandroid.dex.base.DexException;
-import com.reandroid.dex.base.NumberArray;
+import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliInstructionOperand;
 import com.reandroid.dex.smali.model.SmaliPayloadArray;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.InstanceIterator;
 
@@ -33,140 +33,162 @@ import java.util.Iterator;
 
 public class InsArrayData extends PayloadData implements SmaliRegion {
 
-    private final NumberArray numberArray;
     private final DexBlockAlign blockAlign;
+    private final InsArrayDataList entryList;
 
     public InsArrayData() {
         super(4, Opcode.ARRAY_PAYLOAD);
-        ShortItem elementWidth = new ShortItem();
-        IntegerItem elementCount = new IntegerItem();
-        this.numberArray = new NumberArray(elementWidth, elementCount);
 
-        this.blockAlign = new DexBlockAlign(this.numberArray);
+        ShortItem widthReference = new ShortItem();
+        IntegerItem countReference = new IntegerItem();
+        this.entryList = new InsArrayDataList(widthReference, countReference);
+
+        this.blockAlign = new DexBlockAlign(this.entryList);
         this.blockAlign.setAlignment(2);
 
-        addChild(1, elementWidth);
-        addChild(2, elementCount);
-        addChild(3, this.numberArray);
+        addChild(1, widthReference);
+        addChild(2, countReference);
+        addChild(3, this.entryList);
         addChild(4, this.blockAlign);
     }
 
     public Iterator<InsFillArrayData> getInsFillArrayData() {
         InsBlockList insBlockList = getInsBlockList();
-        if(insBlockList == null) {
+        if (insBlockList == null) {
             return EmptyIterator.of();
         }
         insBlockList.link();
         return InstanceIterator.of(getExtraLines(), InsFillArrayData.class);
     }
     public int size(){
-        return getNumberArray().size();
+        return getEntryList().size();
     }
-    public void setSize(int size){
-        getNumberArray().setSize(size);
+    public void setSize(int size) {
+        getEntryList().setSize(size);
         refreshAlignment();
     }
-    public int getWidth(){
-        return getNumberArray().getWidth();
-    }
-    public void setWidth(int width){
-        getNumberArray().setWidth(width);
+    public void clear() {
+        getEntryList().clear();
         refreshAlignment();
+    }
+    public boolean isEmpty() {
+        return getEntryList().isEmpty();
+    }
+    public LongReference get(int i) {
+        return getEntryList().get(i);
+    }
+    public Iterator<LongReference> iterator() {
+        return ObjectsUtil.cast(getEntryList().iterator());
+    }
+    public int getWidth() {
+        return getEntryList().getWidth();
+    }
+    public void setWidth(int width) {
+        getEntryList().setWidth(width);
+        refreshAlignment();
+    }
+    public void put(int index, long value) {
+        int changed = size();
+        getEntryList().put(index, value);
+        if (changed != this.size()) {
+            refreshAlignment();
+        }
+    }
+    public void addValue(long value) {
+        getEntryList().addValue(value);
+        refreshAlignment();
+    }
+    public void set(long[] values) {
+        getEntryList().clear();
+        addValues(values);
+    }
+    public void addValues(long[] values) {
+        getEntryList().addValues(values);
+        refreshAlignment();
+    }
+    public void addValues(int[] values) {
+        getEntryList().addValues(values);
+        refreshAlignment();
+    }
+    public void addValues(short[] values) {
+        getEntryList().addValues(values);
+        refreshAlignment();
+    }
+    public void addValues(byte[] values) {
+        getEntryList().addValues(values);
+        refreshAlignment();
+    }
+    public void addValues(char[] values) {
+        getEntryList().addValues(values);
+        refreshAlignment();
+    }
+    public void addValues(float[] values) {
+        getEntryList().addValues(values);
+        refreshAlignment();
+    }
+    public void addValues(double[] values) {
+        getEntryList().addValues(values);
+        refreshAlignment();
+    }
+    public long[] getValuesAsLong() {
+        return getEntryList().getValues();
+    }
+    public int[] getValuesAsInt() {
+        return getEntryList().getValuesAsInt();
+    }
+    public short[] getValuesAsShort() {
+        return getEntryList().getValuesAsShort();
+    }
+    public byte[] getValuesAsByte() {
+        return getEntryList().getValuesAsByte();
+    }
+    public char[] getValuesAsChar() {
+        return getEntryList().getValuesAsChar();
+    }
+    public float[] getValuesAsFloat() {
+        return getEntryList().getValuesAsFloat();
+    }
+    public double[] getValuesAsDouble() {
+        return getEntryList().getValuesAsDouble();
     }
 
-    public void set(byte[] values){
-        NumberArray numberArray = getNumberArray();
-        numberArray.setSize(0);
-        numberArray.setWidth(1);
-        numberArray.put(values);
-        refreshAlignment();
-    }
-    public void set(short[] values){
-        NumberArray numberArray = getNumberArray();
-        numberArray.setSize(0);
-        numberArray.setWidth(2);
-        numberArray.put(values);
-        refreshAlignment();
-    }
-    public void set(int[] values){
-        NumberArray numberArray = getNumberArray();
-        numberArray.setSize(0);
-        numberArray.put(values);
-        refreshAlignment();
-    }
-    public void set(long[] values){
-        NumberArray numberArray = getNumberArray();
-        numberArray.setSize(0);
-        numberArray.setWidth(8);
-        numberArray.putLong(values);
-        refreshAlignment();
-    }
     @Override
-    public Iterator<IntegerReference> getReferences(){
-        return getNumberArray().getReferences();
+    public Iterator<IntegerReference> getReferences() {
+        return ObjectsUtil.cast(getEntryList().iterator());
     }
-    public IntegerReference getReference(int i){
-        return getNumberArray().getReference(i);
-    }
-    public int getAsInteger(int index){
-        return getNumberArray().getAsInteger(index);
-    }
-    public long getLong(int index){
-        return getNumberArray().getLong(index);
-    }
-    public void put(int index, int value){
-        getNumberArray().put(index, value);
-    }
-    public void putLong(int index, long value){
-        getNumberArray().putLong(index, value);
-    }
-    public NumberArray getNumberArray() {
-        return numberArray;
+    InsArrayDataList getEntryList() {
+        return entryList;
     }
 
-    public void refreshAlignment(){
+    public void refreshAlignment() {
         this.blockAlign.align(this);
+    }
+
+    private TypeKey findNewArrayType() {
+        Iterator<InsFillArrayData> iterator = getInsFillArrayData();
+        while (iterator.hasNext()) {
+            InsFillArrayData fillArrayData = iterator.next();
+            Ins22c ins22c = fillArrayData.findNewArrayLazy();
+            if (ins22c != null) {
+                return (TypeKey) ins22c.getKey();
+            }
+        }
+        return null;
     }
     @Override
     public void appendCode(SmaliWriter writer) throws IOException {
         getSmaliDirective().append(writer);
         writer.appendInteger(getWidth());
         writer.indentPlus();
-        appendData(writer);
+        getEntryList().append(findNewArrayType(), writer);
         writer.indentMinus();
         getSmaliDirective().appendEnd(writer);
     }
-    private void appendData(SmaliWriter writer) throws IOException {
-        NumberArray numberArray = getNumberArray();
-        int width = numberArray.getWidth();
-        int size = numberArray.size();
-        if(width < 2){
-            for(int i = 0; i < size; i++){
-                writer.newLine();
-                writer.appendHex(numberArray.getByte(i));
-            }
-        }else if(width < 4){
-            for(int i = 0; i < size; i++){
-                writer.newLine();
-                writer.appendHex(numberArray.getShort(i));
-            }
-        }else if(width == 4){
-            for(int i = 0; i < size; i++){
-                writer.newLine();
-                writer.appendHex(numberArray.getInteger(i));
-            }
-        }else {
-            for(int i = 0; i < size; i++){
-                writer.newLine();
-                writer.appendHex(numberArray.getLong(i));
-            }
-        }
-    }
 
     @Override
-    public void merge(Ins ins){
+    public void merge(Ins ins) {
         InsArrayData coming = (InsArrayData) ins;
-        getNumberArray().merge(coming.getNumberArray());
+        getEntryList().merge(coming.getEntryList());
         refreshAlignment();
     }
 
@@ -178,17 +200,7 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
     @Override
     public void fromSmali(SmaliInstruction smaliInstruction) {
         validateOpcode(smaliInstruction);
-        SmaliPayloadArray smaliPayloadArray = (SmaliPayloadArray) smaliInstruction;
-        int width = smaliPayloadArray.getWidth();
-        if(width < 1 || width > 8){
-            throw new DexException("Array values width out of range '" + width + "'");
-        }
-        setWidth(width);
-        if(width > 4){
-            set(smaliPayloadArray.unsignedLong());
-        }else {
-            set(smaliPayloadArray.unsignedInt());
-        }
+        getEntryList().fromSmali((SmaliPayloadArray) smaliInstruction);
         refreshAlignment();
     }
     @Override
@@ -201,8 +213,6 @@ public class InsArrayData extends PayloadData implements SmaliRegion {
     @Override
     void toSmaliEntries(SmaliInstruction instruction) {
         super.toSmaliEntries(instruction);
-        SmaliPayloadArray smaliPayloadArray = (SmaliPayloadArray) instruction;
-        smaliPayloadArray.setWidth(getWidth());
-        smaliPayloadArray.addEntryKeys(getNumberArray().getKeys());
+        getEntryList().toSmali((SmaliPayloadArray) instruction);
     }
 }
