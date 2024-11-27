@@ -29,6 +29,7 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.SmaliWriterSetting;
+import com.reandroid.dex.smali.fix.SmaliGotoFix;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -157,6 +158,10 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
         }
         getCodeSet().parse(reader);
         SmaliParseException.expect(reader, getSmaliDirective(), true);
+        runFixes();
+    }
+    private void runFixes() {
+        new SmaliGotoFix(this).apply();
     }
     private boolean parseNoneCode(SmaliReader reader) throws IOException {
         SmaliDirective directive = SmaliDirective.parse(reader, false);

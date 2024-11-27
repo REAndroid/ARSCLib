@@ -158,6 +158,9 @@ public class SmaliInstruction extends SmaliCode{
         initRegisterSet(opcode);
         initOperand(opcode);
     }
+    public void replaceOpcode(Opcode<?> opcode) {
+        this.opcode = opcode;
+    }
     private void initRegisterSet(Opcode<?> opcode) {
         RegisterFormat format = opcode.getRegisterFormat();
         SmaliRegisterSet registerSet;
