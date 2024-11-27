@@ -189,7 +189,8 @@ public class InsSparseSwitchData extends InsSwitchPayload implements
 
     @Override
     public void appendCode(SmaliWriter writer) throws IOException {
-        getSmaliDirective().append(writer);
+        writer.append('.');
+        writer.append(getSmaliDirective().getName());
         int size = getCount();
         writer.indentPlus();
         for(int i = 0; i < size; i++){
