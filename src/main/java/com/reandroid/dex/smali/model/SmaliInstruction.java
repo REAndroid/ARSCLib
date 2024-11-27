@@ -70,15 +70,20 @@ public class SmaliInstruction extends SmaliCode{
         }
         return null;
     }
-    public Number getData() {
+    public boolean hasNumberData() {
+        SmaliInstructionOperand operand = getOperand();
+        return operand instanceof SmaliInstructionOperand.SmaliHexOperand ||
+                operand instanceof SmaliInstructionOperand.SmaliLabelOperand;
+    }
+    public long getDataAsLong() {
         SmaliInstructionOperand operand = getOperand();
         if(operand instanceof SmaliInstructionOperand.SmaliHexOperand){
-            return ((SmaliInstructionOperand.SmaliHexOperand) operand).getNumber();
+            return operand.asLongValue();
         }
         if(operand instanceof SmaliInstructionOperand.SmaliLabelOperand){
             return operand.getIntegerData() - getAddress();
         }
-        return null;
+        return 0;
     }
     public int getAddress() {
         return address;

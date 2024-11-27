@@ -284,7 +284,7 @@ public class InsArrayDataList extends CountedBlockList<InsArrayDataList.ArrayDat
             TypeKey typeKey = arrayType.setArrayDimension(0);
             if (TypeKey.TYPE_F.equals(typeKey)) {
                 float f = Float.intBitsToFloat((int) data);
-                writer.appendComment(Float.toString(f));
+                writer.appendComment(f + "f");
             } else if (TypeKey.TYPE_D.equals(typeKey)) {
                 double d = Double.longBitsToDouble(data);
                 writer.appendComment(Double.toString(d));

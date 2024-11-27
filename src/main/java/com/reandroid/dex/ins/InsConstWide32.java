@@ -34,6 +34,10 @@ public class InsConstWide32 extends Ins31i implements ConstNumberLong{
     public long getDataAsLong() {
         return getLong();
     }
+    @Override
+    public void setData(long data) {
+        set(data);
+    }
 
     @Override
     public int getRegister() {

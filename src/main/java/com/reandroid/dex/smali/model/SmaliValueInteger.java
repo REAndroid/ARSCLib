@@ -62,7 +62,7 @@ public class SmaliValueInteger extends SmaliValueNumber<Integer>{
     }
     @Override
     public long asLongValue() {
-        return getValue() & 0xffffffffL;
+        return getValue();
     }
     @Override
     public PrimitiveKey getKey() {

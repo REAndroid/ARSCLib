@@ -38,7 +38,10 @@ public class InsConstWide extends Ins51l implements ConstNumberLong{
     public long getDataAsLong() {
         return getLong();
     }
-
+    @Override
+    public void setData(long data) {
+        set(data);
+    }
     @Override
     public int getRegister() {
         return getRegister(0);

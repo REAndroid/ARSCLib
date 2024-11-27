@@ -61,7 +61,7 @@ public class SmaliValueDouble extends SmaliValueNumber<Double>{
     }
     @Override
     public long asLongValue() {
-        return getNumber().longValue();
+        return Double.doubleToLongBits(getValue());
     }
     @Override
     public PrimitiveKey getKey() {

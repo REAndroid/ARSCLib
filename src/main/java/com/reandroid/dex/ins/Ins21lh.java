@@ -70,6 +70,10 @@ public class Ins21lh extends Size4Ins implements RegistersSet {
         return (long) getData() << 48;
     }
     @Override
+    public void setData(long data) {
+        setLong(data);
+    }
+    @Override
     public void setLong(long data){
         InsConstWide insConstWide = mReplaced;
         if(insConstWide != null){

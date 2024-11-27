@@ -193,6 +193,9 @@ public class SizeXIns extends Ins {
     public long getDataAsLong() {
         return getSignedData();
     }
+    public void setData(long data){
+        setData((int) data);
+    }
     public void setData(int data){
         setShort(2, data);
     }
@@ -383,14 +386,8 @@ public class SizeXIns extends Ins {
         setKey(smaliInstruction.getKey());
     }
     private void fromSmaliData(SmaliInstruction smaliInstruction) {
-        Number data = smaliInstruction.getData();
-        if(data == null){
-            return;
-        }
-        if(data instanceof Long){
-            setLong((Long) data);
-        }else {
-            setData(data.intValue());
+        if (getSectionType() == null && smaliInstruction.hasNumberData()) {
+            setData(smaliInstruction.getDataAsLong());
         }
     }
 

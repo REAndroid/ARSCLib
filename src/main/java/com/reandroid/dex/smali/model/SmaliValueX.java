@@ -17,11 +17,9 @@ package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.PrimitiveKey;
-import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.value.DexValueType;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.NumberX;
 import com.reandroid.utils.NumbersUtil;
 
@@ -53,20 +51,9 @@ public class SmaliValueX extends SmaliValueNumber<NumberX> {
     @Override
     public void parse(SmaliReader reader) throws IOException {
         reader.skipSpaces();
-        int position = reader.position();
-        long l;
-        try {
-            String s = reader.readStringForNumber();
-            int i = s.length() - 1;
-            char last = s.charAt(i);
-            if (last == 'L' || last == 'S' || last == 's' || last == 't') {
-                s = s.substring(0, i);
-            }
-            l = HexUtil.parseHexLong(s);
-        } catch (NumberFormatException ex){
-            reader.position(position);
-            throw new SmaliParseException(ex.getMessage(), reader);
-        }
+        SmaliValueNumber<?> number = SmaliValueNumber.createNumber(reader);
+        number.parse(reader);
+        long l = number.asLongValue();
         int width = NumbersUtil.max(this.getWidth(), NumberX.widthOfSigned(l));
         set(width, l);
     }

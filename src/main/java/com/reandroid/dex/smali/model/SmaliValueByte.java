@@ -63,7 +63,7 @@ public class SmaliValueByte extends SmaliValueNumber<Byte>{
     }
     @Override
     public long asLongValue() {
-        return getValue() & 0xffL;
+        return getValue();
     }
     @Override
     public PrimitiveKey getKey() {

@@ -41,7 +41,7 @@ class InsConstCommentHelper {
         if (TypeKey.TYPE_D.equals(typeKey)) {
             comment = Double.toString(Double.longBitsToDouble(data));
         } else if (TypeKey.TYPE_F.equals(typeKey)) {
-            comment = Float.toString(Float.intBitsToFloat((int) data));
+            comment = Float.intBitsToFloat((int) data) + "f";
         } else if (TypeKey.TYPE_C.equals(typeKey)) {
             comment = safeQuotedChar((char) data);
         }

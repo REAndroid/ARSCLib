@@ -60,7 +60,7 @@ public class SmaliValueFloat extends SmaliValueNumber<Float>{
     }
     @Override
     public long asLongValue() {
-        return getNumber().intValue() & 0xffffffffL;
+        return Float.floatToIntBits(getValue());
     }
     @Override
     public PrimitiveKey getKey() {
