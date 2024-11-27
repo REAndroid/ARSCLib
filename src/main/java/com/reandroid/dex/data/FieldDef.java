@@ -22,6 +22,7 @@ import com.reandroid.dex.id.FieldId;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.NullKey;
 import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.sections.SectionType;
@@ -87,11 +88,8 @@ public class FieldDef extends Def<FieldId> {
         writer.appendModifiers(getModifiers());
         getId().append(writer, false);
 
-        Key value = getStaticValue();
-        if(value != null){
-            writer.append(" = ");
-            value.append(writer);
-        }
+        appendStaticValue(writer);
+
         Iterator<AnnotationSet> annotations = getAnnotationSets(true);
         if(!annotations.hasNext()){
             return;
@@ -100,6 +98,31 @@ public class FieldDef extends Def<FieldId> {
         writer.appendAllWithDoubleNewLine(annotations);
         writer.indentMinus();
         getSmaliDirective().appendEnd(writer);
+    }
+    private void appendStaticValue(SmaliWriter writer) throws IOException {
+        Key value = getStaticValue();
+        if (value == null) {
+            return;
+        }
+        if (isNonDefaultValue(value) || !isInitializedInStaticConstructor()) {
+            writer.append(" = ");
+            value.append(writer);
+        }
+    }
+    private boolean isNonDefaultValue(Key key) {
+        if (key instanceof PrimitiveKey) {
+            PrimitiveKey primitiveKey = (PrimitiveKey) key;
+            return primitiveKey.asLongValue() != 0;
+        }
+        return !(key instanceof NullKey);
+    }
+    public boolean isInitializedInStaticConstructor() {
+        StaticFieldDefArray fieldDefArray = getParentInstance(
+                StaticFieldDefArray.class);
+        if (fieldDefArray != null) {
+            return fieldDefArray.isInitializedInStaticConstructor(this);
+        }
+        return false;
     }
     @Override
     public Iterator<IdItem> usedIds(){

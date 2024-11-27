@@ -18,11 +18,14 @@ package com.reandroid.dex.data;
 import com.reandroid.arsc.item.IntegerReference;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.id.ClassId;
+import com.reandroid.dex.ins.Ins;
+import com.reandroid.dex.ins.SizeXIns;
 import com.reandroid.dex.key.ArrayKey;
+import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.Smali;
-import com.reandroid.dex.smali.model.SmaliField;
 import com.reandroid.dex.value.DexValueType;
 import com.reandroid.utils.ObjectsUtil;
 
@@ -44,6 +47,38 @@ public class StaticFieldDefArray extends FieldDefArray {
         return fieldDef;
     }
 
+    boolean isInitializedInStaticConstructor(FieldDef fieldDef) {
+        FieldKey fieldKey = fieldDef.getKey();
+        if (fieldKey == null) {
+            return false;
+        }
+        ClassId classId = getClassId();
+        if (classId == null) {
+            return false;
+        }
+        MethodKey methodKey = MethodKey.STATIC_CONSTRUCTOR.changeDeclaring(
+                fieldKey.getDeclaring());
+        MethodDef methodDef = (MethodDef) classId.getDef(methodKey);
+        if (methodDef == null) {
+            return false;
+        }
+        InstructionList instructionList = methodDef.getInstructionList();
+        if (instructionList == null) {
+            return false;
+        }
+        Iterator<Ins> iterator = instructionList.iterator();
+        while (iterator.hasNext()) {
+            Ins ins = iterator.next();
+            if (ins instanceof SizeXIns) {
+                SizeXIns sizeXIns = (SizeXIns) ins;
+                if (sizeXIns.getOpcode().isFieldPut() &&
+                        fieldKey.equals(sizeXIns.getKey())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     Key getStaticValue(FieldDef def) {
         if (mLockedBy != null) {
             return def.cachedStaticValue();
