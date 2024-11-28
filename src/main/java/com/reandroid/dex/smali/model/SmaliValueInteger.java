@@ -56,12 +56,9 @@ public class SmaliValueInteger extends SmaliValueNumber<Integer>{
     public int getWidth() {
         return 4;
     }
+
     @Override
-    public int unsignedInt() {
-        return getValue();
-    }
-    @Override
-    public long asLongValue() {
+    public long getValueAsLong() {
         return getValue();
     }
     @Override

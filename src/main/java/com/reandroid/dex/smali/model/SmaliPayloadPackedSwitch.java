@@ -28,7 +28,7 @@ public class SmaliPayloadPackedSwitch extends SmaliSwitchPayload<SmaliPackedSwit
     }
 
     public int getFirstKey() {
-        return getOperand().getIntegerData();
+        return (int) getOperand().getValueAsLong();
     }
     public void setFirstKey(int firstKey) {
         getOperand().setNumber(firstKey);

@@ -438,7 +438,7 @@ public class SmaliReader {
         if(b >= 'a' && b <= 'z'){
             return true;
         }
-        if(b >= 'A' && b <= 'z'){
+        if(b >= 'A' && b <= 'Z'){
             return true;
         }
         switch (b){

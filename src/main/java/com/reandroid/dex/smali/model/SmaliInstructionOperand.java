@@ -32,8 +32,7 @@ public abstract class SmaliInstructionOperand extends Smali {
         super();
     }
 
-    public abstract int getIntegerData();
-    public abstract long asLongValue();
+    public abstract long getValueAsLong();
     public abstract OperandType getOperandType();
     @Override
     public abstract void append(SmaliWriter writer) throws IOException;
@@ -59,11 +58,7 @@ public abstract class SmaliInstructionOperand extends Smali {
         }
 
         @Override
-        public int getIntegerData() {
-            return getLabel().getIntegerData();
-        }
-        @Override
-        public long asLongValue() {
+        public long getValueAsLong() {
             return getLabel().getIntegerData();
         }
 
@@ -91,9 +86,6 @@ public abstract class SmaliInstructionOperand extends Smali {
             valueNumber = new SmaliValueInteger();
         }
 
-        public Number getNumber() {
-            return valueNumber.getNumber();
-        }
         public void setNumber(Number number) {
             setNumberValue(SmaliValueNumber.createFor(number));
         }
@@ -109,22 +101,8 @@ public abstract class SmaliInstructionOperand extends Smali {
         }
 
         @Override
-        public int getIntegerData() {
-            SmaliValueNumber<?> valueNumber = getValueNumber();
-            if (valueNumber instanceof SmaliValueInteger) {
-                return ((SmaliValueInteger) valueNumber).getValue();
-            }
-            if (valueNumber instanceof SmaliValueShort) {
-                return ((SmaliValueShort) valueNumber).getValue();
-            }
-            if (valueNumber instanceof SmaliValueByte) {
-                return ((SmaliValueByte) valueNumber).getValue();
-            }
-            return valueNumber.unsignedInt();
-        }
-        @Override
-        public long asLongValue() {
-            return getValueNumber().asLongValue();
+        public long getValueAsLong() {
+            return getValueNumber().getValueAsLong();
         }
 
         @Override
@@ -175,12 +153,7 @@ public abstract class SmaliInstructionOperand extends Smali {
         }
 
         @Override
-        public int getIntegerData() {
-            return getNumber();
-        }
-
-        @Override
-        public long asLongValue() {
+        public long getValueAsLong() {
             return number;
         }
         @Override
@@ -230,11 +203,7 @@ public abstract class SmaliInstructionOperand extends Smali {
         }
 
         @Override
-        public int getIntegerData() {
-            return -1;
-        }
-        @Override
-        public long asLongValue() {
+        public long getValueAsLong() {
             return -1;
         }
 
@@ -351,11 +320,7 @@ public abstract class SmaliInstructionOperand extends Smali {
 
     public static final SmaliInstructionOperand NO_OPERAND = new SmaliInstructionOperand() {
         @Override
-        public int getIntegerData() {
-            return -1;
-        }
-        @Override
-        public long asLongValue() {
+        public long getValueAsLong() {
             return -1;
         }
 

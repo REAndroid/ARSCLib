@@ -20,6 +20,7 @@ import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
@@ -27,7 +28,6 @@ import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
 public class StringKey implements Key{
 
@@ -46,6 +46,9 @@ public class StringKey implements Key{
     }
     public String getQuoted() {
         return DexUtils.quoteString(getString());
+    }
+    public String getAsSimpleName() {
+        return encodeSimpleName(getString());
     }
 
     @Override
@@ -92,6 +95,10 @@ public class StringKey implements Key{
             DexUtils.appendCommentString(250, writer.getCommentAppender(), getString());
         }
     }
+    public void appendSimpleName(SmaliWriter writer) throws IOException {
+        writer.append(getAsSimpleName());
+    }
+
     @Override
     public int compareTo(Object obj) {
         if(obj == null){
@@ -155,6 +162,163 @@ public class StringKey implements Key{
         String str = reader.readEscapedString('"');
         SmaliParseException.expect(reader, '\"');
         return create(str);
+    }
+
+    public static String encodeSimpleName(String name) {
+        StringBuilder builder = null;
+        int length = name.length();
+        for (int i = 0; i < length; i++) {
+            char c = name.charAt(i);
+            String encoded = encodeSimpleName(c);
+            if (encoded != null) {
+                if (builder == null) {
+                    builder = new StringBuilder();
+                    builder.append(name, 0, i);
+                }
+                builder.append(encoded);
+            } else if (builder != null) {
+                builder.append(c);
+            }
+        }
+        if (builder == null) {
+            return name;
+        }
+        return builder.toString();
+    }
+    private static String encodeSimpleName(char c) {
+        String encoded;
+        if (c == ' ') {
+            encoded = HexUtil.toHex( "\\u", c, 4);
+        } else if (c == '\n') {
+            encoded = "\\n";
+        } else if (c == '\r') {
+            encoded = "\\r";
+        } else if (c == '\t') {
+            encoded = "\\t";
+        } else if (c == '\b') {
+            encoded = "\\b";
+        } else if (c == '\f') {
+            encoded = "\\f";
+        } else {
+            encoded = null;
+        }
+        return encoded;
+    }
+
+    public static String decodeEscapedString(String encoded) {
+        return decodeEscapedString(encoded, 0);
+    }
+    public static String decodeEscapedString(String encoded, int start) {
+        StringBuilder builder = null;
+        int length = encoded.length();
+        boolean escaped = false;
+        for (int i = start; i < length; i++) {
+            char c = encoded.charAt(i);
+            if (escaped) {
+                if (builder == null) {
+                    builder = new StringBuilder();
+                    builder.append(encoded, start, i - 1);
+                }
+                if (c == 'u') {
+                    Character hex = decodeNextHex(encoded, i + 1);
+                    if (hex != null) {
+                        builder.append(hex.charValue());
+                        i = i + 4;
+                    } else {
+                        builder.append(c);
+                    }
+                } else {
+                    builder.append(getEscaped(c));
+                }
+                escaped = false;
+            } else if (c == '\\') {
+                escaped = true;
+            } else if (builder != null) {
+                builder.append(c);
+            }
+        }
+        if (builder == null) {
+            return encoded;
+        }
+        return builder.toString();
+    }
+    private static char getEscaped(char c) {
+        if (c == 'n') {
+            return '\n';
+        }
+        if (c == 'b') {
+            return '\b';
+        }
+        if (c == 'f') {
+            return '\f';
+        }
+        if (c == 'r') {
+            return '\r';
+        }
+        if (c == 't') {
+            return '\t';
+        }
+        return c;
+    }
+    private static Character decodeNextHex(String text, int start) {
+        int length = text.length();
+        int end = start + 4;
+        if (end > length) {
+            return null;
+        }
+        int value = 0;
+        for (int i = start; i < end; i++) {
+            int v = HexUtil.decodeHexChar(text.charAt(i));
+            if (v == -1) {
+                return null;
+            }
+            value = value << 4;
+            value = value | v;
+        }
+        return (char) value;
+    }
+    public static StringKey readSimpleName(SmaliReader reader, char stopChar) throws IOException {
+        int position = reader.position();
+        String name = reader.readEscapedString(stopChar);
+        SmaliParseException.expect(reader, stopChar);
+        reader.skip(-1);
+        String error = validateSimpleName(name);
+        if (error != null) {
+            reader.position(position);
+            throw new SmaliParseException(error, reader);
+        }
+        return create(name);
+    }
+
+    private static String validateSimpleName(String name) {
+        int length = name.length();
+        if (length == 0) {
+            return "Invalid name";
+        }
+        for (int i = 0; i < length; i++) {
+            char c = name.charAt(i);
+            if (isInvalidSimpleName(c)) {
+                return "Invalid name character '" + c + "'";
+            }
+        }
+        return null;
+    }
+    private static boolean isInvalidSimpleName(char c) {
+        return c == '(' ||
+                c == ')' ||
+                c == '[' ||
+                c == ']' ||
+                c == '{' ||
+                c == '}' ||
+                c == ';' ||
+                c == '/' ||
+                c == '\\' ||
+                c == ':' ||
+                c == '.' ||
+                c == '*' ||
+                c == '%' ||
+                c == '|' ||
+                c == '^';
     }
 
     public static final StringKey EMPTY = new StringKey(StringsUtil.EMPTY);

@@ -38,6 +38,9 @@ public class SmaliValueX extends SmaliValueNumber<NumberX> {
     public SmaliValueX() {
         this(1, 0);
     }
+    public SmaliValueX(NumberX numberX) {
+        this(numberX.width(), numberX.longValue());
+    }
 
     @Override
     public DexValueType<?> getValueType() {
@@ -46,21 +49,21 @@ public class SmaliValueX extends SmaliValueNumber<NumberX> {
 
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        writer.append(NumberX.toHexString(getWidth(), asLongValue()));
+        writer.append(NumberX.toHexString(getWidth(), getValueAsLong()));
     }
     @Override
     public void parse(SmaliReader reader) throws IOException {
         reader.skipSpaces();
         SmaliValueNumber<?> number = SmaliValueNumber.createNumber(reader);
         number.parse(reader);
-        long l = number.asLongValue();
+        long l = number.getValueAsLong();
         int width = NumbersUtil.max(this.getWidth(), NumberX.widthOfSigned(l));
         set(width, l);
     }
 
     @Override
     public NumberX getNumber() {
-        return NumberX.valueOf(getWidth(), asLongValue());
+        return NumberX.valueOf(getWidth(), getValueAsLong());
     }
 
     @Override
@@ -81,23 +84,19 @@ public class SmaliValueX extends SmaliValueNumber<NumberX> {
     }
 
     @Override
-    public int unsignedInt() {
-        return (int) asLongValue();
-    }
-    @Override
-    public long asLongValue() {
+    public long getValueAsLong() {
         return value;
     }
 
     @Override
     public PrimitiveKey getKey() {
-        return PrimitiveKey.of(getWidth(), asLongValue());
+        return PrimitiveKey.of(getWidth(), getValueAsLong());
     }
     @Override
     public void setKey(Key key) {
         PrimitiveKey primitiveKey = (PrimitiveKey) key;
         if (primitiveKey.isNumber()) {
-            set(primitiveKey.width(), primitiveKey.asLongValue());
+            set(primitiveKey.width(), primitiveKey.getValueAsLong());
         } else {
             throw new NumberFormatException("Incompatible key: "
                     + key.getClass() + ", " + key);

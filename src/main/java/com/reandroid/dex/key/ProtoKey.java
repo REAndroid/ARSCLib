@@ -144,15 +144,18 @@ public class ProtoKey implements Key {
 
     @Override
     public int compareTo(Object obj) {
-        if(obj == null){
+        if (obj == null) {
             return -1;
         }
+        if (obj == this) {
+            return 0;
+        }
         ProtoKey key = (ProtoKey) obj;
-        int i = CompareUtil.compare(getParameters(), key.getParameters());
+        int i = CompareUtil.compare(getReturnType(), key.getReturnType());
         if(i != 0) {
             return i;
         }
-        return CompareUtil.compare(getReturnType(), key.getReturnType());
+        return CompareUtil.compare(getParameters(), key.getParameters());
     }
 
     public boolean equalsReturnType(TypeKey returnType) {
@@ -189,7 +192,7 @@ public class ProtoKey implements Key {
         }
         ProtoKey protoKey = (ProtoKey) obj;
         return ObjectsUtil.equals(getReturnType(), protoKey.getReturnType()) &&
-                TypeListKey.equalsIgnoreEmpty(getParameters(), protoKey.getParameters());
+                ObjectsUtil.equals(getParameters(), protoKey.getParameters());
     }
 
     @Override
@@ -221,21 +224,7 @@ public class ProtoKey implements Key {
         if (text == null) {
             return null;
         }
-        text = text.trim();
-        if (text.length() < 3 || text.charAt(0) != '(') {
-            return null;
-        }
-        text = text.substring(1);
-        int i = text.indexOf(')');
-        if (i < 0) {
-            return null;
-        }
-        TypeListKey parameters = TypeListKey.parseParameters(text.substring(0, i).trim());
-        String returnType = text.substring(i + 1).trim();
-        if (StringsUtil.isEmpty(returnType)) {
-            return null;
-        }
-        return new ProtoKey(parameters, TypeKey.create(returnType));
+        return parse(text, 0);
     }
     public static ProtoKey parse(String text, int start) {
         if (text.length() - start < 3 || text.charAt(start) != '(') {

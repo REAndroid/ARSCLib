@@ -200,7 +200,7 @@ public class SmaliWriter implements Appendable, Closeable {
             append('t');
         } else if (width == 2) {
             append('S');
-        } else if (width == 8 && hex.length() > 10) {
+        } else if (width == 8 && (l & 0xffffffff80000000L) != 0) {
             append('L');
         }
         appendResourceIdComment(l);

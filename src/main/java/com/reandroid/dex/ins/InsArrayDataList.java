@@ -260,7 +260,7 @@ public class InsArrayDataList extends CountedBlockList<InsArrayDataList.ArrayDat
         }
 
         public void fromSmali(SmaliValueX smaliValueX) {
-            set(smaliValueX.asLongValue());
+            set(smaliValueX.getValueAsLong());
         }
         public SmaliValueX toSmali() {
             return new SmaliValueX(width(), getLong());
@@ -322,7 +322,7 @@ public class InsArrayDataList extends CountedBlockList<InsArrayDataList.ArrayDat
                 builder.append('t');
             } else if (width == 2) {
                 builder.append('S');
-            } else if (width == 8 && hex.length() > 10) {
+            } else if (width == 8 && (getLong() & 0xffffffff80000000L) != 0) {
                 builder.append('L');
             }
             return builder.toString();

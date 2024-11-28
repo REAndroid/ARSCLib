@@ -78,10 +78,10 @@ public class SmaliInstruction extends SmaliCode{
     public long getDataAsLong() {
         SmaliInstructionOperand operand = getOperand();
         if(operand instanceof SmaliInstructionOperand.SmaliHexOperand){
-            return operand.asLongValue();
+            return operand.getValueAsLong();
         }
         if(operand instanceof SmaliInstructionOperand.SmaliLabelOperand){
-            return operand.getIntegerData() - getAddress();
+            return ((int)operand.getValueAsLong()) - getAddress();
         }
         return 0;
     }

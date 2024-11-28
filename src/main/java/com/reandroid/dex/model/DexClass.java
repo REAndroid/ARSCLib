@@ -145,9 +145,9 @@ public class DexClass extends DexDeclaration implements Comparable<DexClass> {
     }
     public DexField getDeclaredField(FieldKey fieldKey) {
         Iterator<DexField> iterator = getDeclaredFields();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             DexField dexField = iterator.next();
-            if(fieldKey.equals(dexField.getKey(), false, true)){
+            if (fieldKey.equalsIgnoreDeclaring(dexField.getKey())) {
                 return dexField;
             }
         }

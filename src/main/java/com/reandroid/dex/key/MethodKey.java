@@ -163,13 +163,28 @@ public class MethodKey implements Key {
     public void append(SmaliWriter writer) throws IOException {
         getDeclaring().append(writer);
         writer.append("->");
-        writer.append(getName());
+        getNameKey().appendSimpleName(writer);
         getProto().append(writer);
     }
 
     @Override
     public int compareTo(Object obj) {
-        return compareTo(obj, true);
+        if (obj == this) {
+            return 0;
+        }
+        if (obj == null) {
+            return -1;
+        }
+        MethodKey key = (MethodKey) obj;
+        int i = CompareUtil.compare(getDeclaring(), key.getDeclaring());
+        if (i != 0) {
+            return i;
+        }
+        i = CompareUtil.compare(getNameKey(), key.getNameKey());
+        if(i != 0) {
+            return i;
+        }
+        return CompareUtil.compare(getProto(), key.getProto());
     }
     public int compareTo(Object obj, boolean checkDefining) {
         if (obj == null) {
@@ -287,10 +302,6 @@ public class MethodKey implements Key {
         }
         return getProto().equalsReturnType(other.getProto());
     }
-    @Override
-    public boolean equals(Object obj) {
-        return equals(obj, true, true);
-    }
     public boolean equals(Object obj, boolean checkDefining, boolean checkType) {
         if (this == obj) {
             return true;
@@ -299,7 +310,7 @@ public class MethodKey implements Key {
             return false;
         }
         MethodKey methodKey = (MethodKey) obj;
-        if(!KeyUtil.matches(getName(), methodKey.getName())){
+        if(!ObjectsUtil.equals(getNameKey(), methodKey.getNameKey())){
             return false;
         }
         if(!TypeListKey.equalsIgnoreEmpty(getParameters(), methodKey.getParameters())) {
@@ -316,14 +327,26 @@ public class MethodKey implements Key {
         return true;
     }
 
-
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof MethodKey)) {
+            return false;
+        }
+        MethodKey methodKey = (MethodKey) obj;
+        return ObjectsUtil.equals(getNameKey(), methodKey.getNameKey()) &&
+                ObjectsUtil.equals(getDeclaring(), methodKey.getDeclaring()) &&
+                ObjectsUtil.equals(getProto(), methodKey.getProto());
+    }
     @Override
     public int hashCode() {
         return ObjectsUtil.hash(getDeclaring(), getNameKey(), getProto());
     }
     @Override
     public String toString() {
-        return getDeclaring() + "->" + getName() + getProto();
+        return getDeclaring() + "->" + getNameKey().getAsSimpleName() + getProto();
     }
 
     public static MethodKey parse(String text) {
@@ -388,7 +411,7 @@ public class MethodKey implements Key {
         SmaliParseException.expect(reader, '-');
         SmaliParseException.expect(reader, '>');
         reader.skipWhitespacesOrComment();
-        StringKey name = StringKey.create(reader.readEscapedString('('));
+        StringKey name = StringKey.readSimpleName(reader, '(');
         ProtoKey protoKey = ProtoKey.read(reader);
         return create(declaring, name, protoKey);
     }

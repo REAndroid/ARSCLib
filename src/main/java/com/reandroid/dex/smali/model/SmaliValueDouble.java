@@ -55,12 +55,9 @@ public class SmaliValueDouble extends SmaliValueNumber<Double>{
     public int getWidth() {
         return 8;
     }
+
     @Override
-    public int unsignedInt() {
-        return (int) getNumber().longValue();
-    }
-    @Override
-    public long asLongValue() {
+    public long getValueAsLong() {
         return Double.doubleToLongBits(getValue());
     }
     @Override

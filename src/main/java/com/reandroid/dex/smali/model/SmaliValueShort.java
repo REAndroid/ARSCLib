@@ -56,12 +56,9 @@ public class SmaliValueShort extends SmaliValueNumber<Short>{
     public int getWidth() {
         return 2;
     }
+
     @Override
-    public int unsignedInt() {
-        return getValue() & 0xffff;
-    }
-    @Override
-    public long asLongValue() {
+    public long getValueAsLong() {
         return getValue();
     }
     @Override

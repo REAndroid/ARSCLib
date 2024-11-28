@@ -23,7 +23,7 @@ public class InsConstWide32 extends Ins31i implements ConstNumberLong{
 
     @Override
     public void set(long value) {
-        setLong(value);
+        setData(value);
     }
     @Override
     public long getLong() {
@@ -36,7 +36,7 @@ public class InsConstWide32 extends Ins31i implements ConstNumberLong{
     }
     @Override
     public void setData(long data) {
-        set(data);
+        setInteger((int) data);
     }
 
     @Override

@@ -54,12 +54,9 @@ public class SmaliValueFloat extends SmaliValueNumber<Float>{
     public int getWidth() {
         return 4;
     }
+
     @Override
-    public int unsignedInt() {
-        return getNumber().intValue();
-    }
-    @Override
-    public long asLongValue() {
+    public long getValueAsLong() {
         return Float.floatToIntBits(getValue());
     }
     @Override

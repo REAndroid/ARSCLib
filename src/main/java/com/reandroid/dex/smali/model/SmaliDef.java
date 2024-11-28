@@ -18,10 +18,7 @@ package com.reandroid.dex.smali.model;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
-import com.reandroid.dex.key.AnnotationItemKey;
-import com.reandroid.dex.key.AnnotationSetKey;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliRegion;
@@ -34,7 +31,7 @@ import java.util.List;
 
 public abstract class SmaliDef extends Smali implements SmaliRegion {
 
-    private String name;
+    private StringKey name;
     private AccessFlag[] accessFlags;
     private SmaliAnnotationSet annotation;
 
@@ -76,11 +73,21 @@ public abstract class SmaliDef extends Smali implements SmaliRegion {
         this.hiddenApiFlags = hiddenApiFlags;
     }
 
-    public String getName() {
+    public StringKey getNameKey() {
         return name;
     }
-    public void setName(String name) {
+    public String getName() {
+        StringKey name = getNameKey();
+        if (name != null) {
+            return name.getString();
+        }
+        return null;
+    }
+    public void setName(StringKey name) {
         this.name = name;
+    }
+    public void setName(String name) {
+        setName(StringKey.create(name));
     }
     public TypeKey getDefining() {
         TypeKey typeKey = null;

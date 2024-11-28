@@ -57,12 +57,9 @@ public class SmaliValueByte extends SmaliValueNumber<Byte>{
     public int getWidth() {
         return 1;
     }
+
     @Override
-    public int unsignedInt() {
-        return getValue() & 0xff;
-    }
-    @Override
-    public long asLongValue() {
+    public long getValueAsLong() {
         return getValue();
     }
     @Override

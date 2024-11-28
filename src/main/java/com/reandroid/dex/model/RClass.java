@@ -47,7 +47,7 @@ public class RClass extends DexClass {
             return null;
         }
         String name = RField.sanitizeResourceName(resourceEntry.getName());
-        FieldKey fieldKey = new FieldKey(getKey().getTypeName(), name, TypeKey.TYPE_I.getTypeName());
+        FieldKey fieldKey = FieldKey.create(getKey(), name, TypeKey.TYPE_I);
         RField rField = getOrCreateStaticField(fieldKey);
         rField.setResourceId(resourceEntry.getResourceId());
         return rField;

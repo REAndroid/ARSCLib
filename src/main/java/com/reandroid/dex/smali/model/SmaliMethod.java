@@ -19,10 +19,7 @@ import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.common.RegistersTable;
-import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.MethodKey;
-import com.reandroid.dex.key.ProtoKey;
-import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.key.*;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
@@ -63,7 +60,7 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
     }
     public void setKey(Key key) {
         MethodKey methodKey = (MethodKey) key;
-        setName(methodKey.getName());
+        setName(methodKey.getNameKey());
         setProtoKey(methodKey.getProto());
         setDefining(methodKey.getDeclaring());
     }
@@ -150,7 +147,7 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
         SmaliParseException.expect(reader, getSmaliDirective());
         setAccessFlags(AccessFlag.parse(reader));
         setHiddenApiFlags(HiddenApiFlag.parse(reader));
-        parseName(reader);
+        setName(StringKey.readSimpleName(reader, '('));
         parseProto(reader);
         reader.skipWhitespacesOrComment();
         while (parseNoneCode(reader)){
@@ -179,11 +176,6 @@ public class SmaliMethod extends SmaliDef implements RegistersTable{
             return true;
         }
         return false;
-    }
-    private void parseName(SmaliReader reader) {
-        reader.skipWhitespaces();
-        int length = reader.indexOf('(') - reader.position();
-        setName(reader.readString(length));
     }
     private void parseProto(SmaliReader reader) throws IOException {
         reader.skipWhitespaces();

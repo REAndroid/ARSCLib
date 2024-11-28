@@ -1,6 +1,22 @@
+/*
+ *  Copyright (C) 2022 github.com/REAndroid
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.reandroid.dex.key;
 
 import com.reandroid.dex.common.DexUtils;
+import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
@@ -19,7 +35,7 @@ public abstract class PrimitiveKey implements Key {
     public abstract Object getValue();
     public abstract TypeKey valueType();
     public abstract int width();
-    public abstract long asLongValue();
+    public abstract long getValueAsLong();
 
     public boolean isNumber() { return false; }
     public boolean isBoolean() { return false; }
@@ -64,6 +80,12 @@ public abstract class PrimitiveKey implements Key {
     public static PrimitiveKey of(short value) { return new ShortKey(value); }
     public static PrimitiveKey of(int width, long value) { return new NumberXKey(width, value); }
 
+    public static PrimitiveKey parse(String text) {
+        return PrimitiveKeyHelper.parse(text);
+    }
+    public static PrimitiveKey readSafe(SmaliReader reader) {
+        return PrimitiveKeyHelper.readSafe(reader);
+    }
     public static abstract class NumberKey extends PrimitiveKey {
 
         public NumberKey() {
@@ -110,8 +132,8 @@ public abstract class PrimitiveKey implements Key {
             return 0;
         }
         @Override
-        public long asLongValue() {
-            return value() ? -1 : 0;
+        public long getValueAsLong() {
+            return value() ? 1 : 0;
         }
 
         @Override
@@ -174,7 +196,7 @@ public abstract class PrimitiveKey implements Key {
             return 1;
         }
         @Override
-        public long asLongValue() {
+        public long getValueAsLong() {
             return value();
         }
 
@@ -245,7 +267,7 @@ public abstract class PrimitiveKey implements Key {
             return 0;
         }
         @Override
-        public long asLongValue() {
+        public long getValueAsLong() {
             return value();
         }
 
@@ -316,7 +338,7 @@ public abstract class PrimitiveKey implements Key {
             return 8;
         }
         @Override
-        public long asLongValue() {
+        public long getValueAsLong() {
             return Double.doubleToLongBits(value());
         }
         @Override
@@ -386,7 +408,7 @@ public abstract class PrimitiveKey implements Key {
             return 4;
         }
         @Override
-        public long asLongValue() {
+        public long getValueAsLong() {
             return Float.floatToIntBits(value());
         }
 
@@ -458,7 +480,7 @@ public abstract class PrimitiveKey implements Key {
             return 4;
         }
         @Override
-        public long asLongValue() {
+        public long getValueAsLong() {
             return value();
         }
 
@@ -497,6 +519,11 @@ public abstract class PrimitiveKey implements Key {
         public void append(SmaliWriter writer) throws IOException {
             writer.appendHex(value());
         }
+
+        @Override
+        public String toString() {
+            return HexUtil.toSignedHex(getValue());
+        }
     }
 
     public static class LongKey extends NumberKey {
@@ -521,7 +548,7 @@ public abstract class PrimitiveKey implements Key {
             return 8;
         }
         @Override
-        public long asLongValue() {
+        public long getValueAsLong() {
             return value();
         }
 
@@ -563,6 +590,10 @@ public abstract class PrimitiveKey implements Key {
         public void append(SmaliWriter writer) throws IOException {
             writer.appendHex(value());
         }
+        @Override
+        public String toString() {
+            return HexUtil.toSignedHex(getValue());
+        }
     }
 
     public static class ShortKey extends NumberKey {
@@ -587,7 +618,7 @@ public abstract class PrimitiveKey implements Key {
             return 2;
         }
         @Override
-        public long asLongValue() {
+        public long getValueAsLong() {
             return value();
         }
 
@@ -658,7 +689,7 @@ public abstract class PrimitiveKey implements Key {
             return width;
         }
         @Override
-        public long asLongValue() {
+        public long getValueAsLong() {
             return value();
         }
         @Override

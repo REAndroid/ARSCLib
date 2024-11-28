@@ -17,6 +17,7 @@
 package com.reandroid.dex.common;
 
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.NumbersUtil;
 import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.ArrayCollection;
@@ -277,6 +278,10 @@ public class DexUtils {
         appendable.append(Character.forDigit((c >> 4) & 0x0f, 16));
         appendable.append(Character.forDigit(c & 0x0f, 16));
     }
+    /**
+     * Use StringKey.decodeEscapedString
+     * */
+    @Deprecated
     public static String decodeString(String text) {
         if(text.indexOf('\\') < 0){
             return text;
@@ -324,19 +329,19 @@ public class DexUtils {
     private static Character nextHex(String text, int start){
         int length = text.length();
         int end = start + 4;
-        if(end > length){
+        if (end > length) {
             return null;
         }
-        StringBuilder builder = new StringBuilder(4);
-        for(int i = start; i < end; i++){
-            builder.append(text.charAt(i));
+        int value = 0;
+        for (int i = start; i < end; i++) {
+            int v = HexUtil.decodeHexChar(text.charAt(i));
+            if (v == -1) {
+                return null;
+            }
+            value = value << 4;
+            value = value | v;
         }
-        try{
-            int i = Integer.parseInt(builder.toString(), 16);
-            return (char) i;
-        }catch (NumberFormatException ignored){
-            return null;
-        }
+        return (char) value;
     }
     public static boolean isJavaFramework(String name){
         return name.startsWith("Ljava/");

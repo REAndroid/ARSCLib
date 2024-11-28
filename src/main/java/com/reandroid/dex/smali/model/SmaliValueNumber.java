@@ -19,6 +19,7 @@ import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.PrimitiveKey;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
+import com.reandroid.utils.NumberX;
 import com.reandroid.utils.ObjectsUtil;
 
 import java.io.IOException;
@@ -31,8 +32,7 @@ public abstract class SmaliValueNumber<T extends Number> extends SmaliValue{
     public abstract T getNumber();
     public abstract void setNumber(T number);
     public abstract int getWidth();
-    public abstract int unsignedInt();
-    public abstract long asLongValue();
+    public abstract long getValueAsLong();
     @Override
     public abstract PrimitiveKey getKey();
     @Override
@@ -80,6 +80,9 @@ public abstract class SmaliValueNumber<T extends Number> extends SmaliValue{
         }
         if(number instanceof Double){
             return new SmaliValueDouble((Double) number);
+        }
+        if(number instanceof NumberX){
+            return new SmaliValueX((NumberX) number);
         }
         throw new RuntimeException("Unrecognized number class: " + number.getClass());
     }

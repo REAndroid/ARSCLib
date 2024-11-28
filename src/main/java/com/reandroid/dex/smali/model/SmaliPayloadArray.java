@@ -37,21 +37,12 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueX> {
     public void addEntry(PrimitiveKey key) {
         newEntry().setKey(key);
     }
-    public int[] unsignedInt() {
-        SmaliSet<SmaliValueX> entries = getEntries();
-        int size = entries.size();
-        int[] result = new int[size];
-        for(int i = 0; i < size; i++){
-            result[i] = entries.get(i).unsignedInt();
-        }
-        return result;
-    }
-    public long[] unsignedLong(){
+    public long[] getValuesAsLong(){
         SmaliSet<SmaliValueX> entries = getEntries();
         int size = entries.size();
         long[] result = new long[size];
         for(int i = 0; i < size; i++){
-            result[i] = entries.get(i).asLongValue();
+            result[i] = entries.get(i).getValueAsLong();
         }
         return result;
     }

@@ -20,6 +20,7 @@ import com.reandroid.dex.common.HiddenApiFlag;
 import com.reandroid.dex.common.Modifier;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
+import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
@@ -48,19 +49,12 @@ public class SmaliField extends SmaliDef{
     }
     public void setKey(Key key) {
         FieldKey fieldKey = (FieldKey) key;
-        setName(fieldKey.getName());
+        setName(fieldKey.getNameKey());
         setType(fieldKey.getType());
         setDefining(fieldKey.getDeclaring());
     }
-    public FieldKey getKey(TypeKey declaring){
-        TypeKey type = getType();
-        if(type == null){
-            return null;
-        }
-        return new FieldKey(
-                declaring.getTypeName(),
-                getName(),
-                type.getTypeName());
+    public FieldKey getKey(TypeKey declaring) {
+        return FieldKey.create(declaring, getName(), getType());
     }
 
     public TypeKey getType() {
@@ -148,20 +142,15 @@ public class SmaliField extends SmaliDef{
     }
 
     @Override
-    public void parse(SmaliReader reader) throws IOException{
+    public void parse(SmaliReader reader) throws IOException {
         SmaliParseException.expect(reader, getSmaliDirective());
         setAccessFlags(AccessFlag.parse(reader));
         setHiddenApiFlags(HiddenApiFlag.parse(reader));
-        parseName(reader);
+        setName(StringKey.readSimpleName(reader, ':'));
+        reader.skip(1);
         setType(TypeKey.read(reader));
         parseValue(reader);
         parseAnnotationSet(reader);
-    }
-    private void parseName(SmaliReader reader) {
-        reader.skipWhitespaces();
-        int length = reader.indexOf(':') - reader.position();
-        setName(reader.readString(length));
-        reader.skip(1); // :
     }
     private void parseValue(SmaliReader reader) throws IOException {
         reader.skipWhitespaces();

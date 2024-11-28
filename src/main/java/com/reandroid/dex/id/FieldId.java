@@ -22,12 +22,12 @@ import com.reandroid.dex.reference.IndirectStringReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
+import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Objects;
 
 public class FieldId extends IdItem implements Comparable<FieldId>{
     private final IdItemIndirectReference<TypeId> defining;
@@ -53,7 +53,13 @@ public class FieldId extends IdItem implements Comparable<FieldId>{
     public String getName() {
         return nameReference.getString();
     }
-    public void setName(String name){
+    public StringKey getNameKey() {
+        return nameReference.getKey();
+    }
+    public void setName(StringKey name) {
+        this.nameReference.setKey(name);
+    }
+    public void setName(String name) {
         this.nameReference.setString(name);
     }
     public StringId getNameId(){
@@ -113,8 +119,9 @@ public class FieldId extends IdItem implements Comparable<FieldId>{
         return SectionType.FIELD_ID;
     }
     @Override
-    public FieldKey getKey(){
-        return checkKey(FieldKey.create(this));
+    public FieldKey getKey() {
+        return checkKey(FieldKey.create(getDefining(),
+                getNameKey(), getFieldType()));
     }
 
     @Override
@@ -123,11 +130,11 @@ public class FieldId extends IdItem implements Comparable<FieldId>{
     }
     public void setKey(FieldKey key){
         FieldKey old = getKey();
-        if(Objects.equals(key, old)){
+        if (ObjectsUtil.equals(key, old)) {
             return;
         }
         defining.setKey(key.getDeclaring());
-        nameReference.setString(key.getName());
+        nameReference.setKey(key.getNameKey());
         fieldType.setKey(key.getType());
         keyChanged(old);
     }
@@ -161,9 +168,9 @@ public class FieldId extends IdItem implements Comparable<FieldId>{
         return CompareUtil.compare(getFieldTypeId(), fieldId.getFieldTypeId());
     }
     @Override
-    public String toString(){
+    public String toString() {
         FieldKey key = getKey();
-        if(key != null){
+        if(key != null) {
             return key.toString();
         }
         return getDefiningId() + "->" + getNameId() + ":" + getFieldTypeId();
