@@ -15,7 +15,7 @@
  */
 package com.reandroid.dex.model;
 
-import com.reandroid.dex.data.MethodDef;
+import com.reandroid.dex.data.MethodParameter;
 import com.reandroid.dex.key.AnnotationItemKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
@@ -32,16 +32,16 @@ import java.util.Iterator;
 public class DexMethodParameter extends Dex implements AnnotatedDex{
 
     private final DexMethod dexMethod;
-    private final MethodDef.Parameter parameter;
+    private final MethodParameter parameter;
 
-    public DexMethodParameter(DexMethod dexMethod, MethodDef.Parameter parameter){
+    public DexMethodParameter(DexMethod dexMethod, MethodParameter parameter){
         this.dexMethod = dexMethod;
         this.parameter = parameter;
     }
 
     @Override
     public Iterator<DexAnnotation> getAnnotations(){
-        return ComputeIterator.of(getParameter().getAnnotationItems(),
+        return ComputeIterator.of(getParameter().getAnnotationItemBlocks(),
                 annotationItem -> DexAnnotation.create(
                         DexMethodParameter.this, annotationItem));
     }
@@ -57,7 +57,7 @@ public class DexMethodParameter extends Dex implements AnnotatedDex{
     @Override
     public DexAnnotation getOrCreateAnnotation(TypeKey typeKey){
         return DexAnnotation.create(this,
-                getParameter().getOrCreateAnnotationItem(typeKey));
+                getParameter().getOrCreateAnnotationItemBlock(typeKey));
     }
     @Override
     public DexAnnotation getOrCreateAnnotation(AnnotationItemKey annotationItemKey){
@@ -67,7 +67,7 @@ public class DexMethodParameter extends Dex implements AnnotatedDex{
     @Override
     public DexAnnotation newAnnotation(TypeKey typeKey){
         return DexAnnotation.create(this,
-                getParameter().addAnnotationItem(typeKey));
+                getParameter().addAnnotationItemBlock(typeKey));
     }
 
     public String getDebugName(){
@@ -94,7 +94,7 @@ public class DexMethodParameter extends Dex implements AnnotatedDex{
     public DexMethod getDexMethod() {
         return dexMethod;
     }
-    public MethodDef.Parameter getParameter() {
+    public MethodParameter getParameter() {
         return parameter;
     }
 
@@ -120,7 +120,7 @@ public class DexMethodParameter extends Dex implements AnnotatedDex{
 
     @Override
     public void removeSelf() {
-        getParameter().remove();
+        getParameter().removeSelf();
     }
 
     @Override
@@ -132,7 +132,7 @@ public class DexMethodParameter extends Dex implements AnnotatedDex{
         return ElementType.PARAMETER;
     }
 
-    public static DexMethodParameter create(DexMethod dexMethod, MethodDef.Parameter parameter){
+    public static DexMethodParameter create(DexMethod dexMethod, MethodParameter parameter){
         if(dexMethod != null && parameter != null){
             return new DexMethodParameter(dexMethod, parameter);
         }

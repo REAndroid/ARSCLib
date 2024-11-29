@@ -21,7 +21,6 @@ import com.reandroid.common.ArraySupplier;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.common.AccessFlag;
 import com.reandroid.dex.common.Modifier;
-import com.reandroid.dex.debug.DebugParameter;
 import com.reandroid.dex.id.*;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.TryBlock;
@@ -29,12 +28,10 @@ import com.reandroid.dex.key.*;
 import com.reandroid.dex.reference.DataItemUle128Reference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
-import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.dex.smali.model.SmaliMethodParameter;
-import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
@@ -89,22 +86,22 @@ public class MethodDef extends Def<MethodId>{
         }
         return 0;
     }
-    public Parameter getParameter(int index){
+    public MethodParameter getParameter(int index){
         if(index < 0 || index >= getParametersCount()){
             return null;
         }
-        return new Parameter(this, index);
+        return new MethodParameter(this, index);
     }
-    public Iterator<Parameter> getParameters(){
+    public Iterator<MethodParameter> getParameters(){
         return getParameters(false);
     }
-    public Iterator<Parameter> getParameters(boolean skipEmpty){
+    public Iterator<MethodParameter> getParameters(boolean skipEmpty){
         if(getParametersCount() == 0){
             return EmptyIterator.of();
         }
-        Iterator<Parameter> iterator = ArraySupplierIterator.of(new ArraySupplier<Parameter>() {
+        Iterator<MethodParameter> iterator = ArraySupplierIterator.of(new ArraySupplier<MethodParameter>() {
             @Override
-            public Parameter get(int i) {
+            public MethodParameter get(int i) {
                 return MethodDef.this.getParameter(i);
             }
 
@@ -134,11 +131,11 @@ public class MethodDef extends Def<MethodId>{
     }
 
     public void removeParameter(int index){
-        Parameter parameter = getParameter(index);
+        MethodParameter parameter = getParameter(index);
         if(parameter == null){
             return;
         }
-        parameter.remove();
+        parameter.removeSelf();
         MethodKey methodKey = getKey();
         if(methodKey == null){
             return;
@@ -377,7 +374,7 @@ public class MethodDef extends Def<MethodId>{
                         methodKey.getDeclaring() + ", method = " + methodKey.getName() +
                         methodKey.getProto() + "\n" + smaliMethodParameter);
             }
-            Parameter parameter = getParameter(index);
+            MethodParameter parameter = getParameter(index);
             parameter.fromSmali(smaliMethodParameter);
         }
         linkCodeItem();
@@ -417,208 +414,5 @@ public class MethodDef extends Def<MethodId>{
         return getSmaliDirective() + " " +
                 Modifier.toString(getAccessFlags()) +
                 " " + getRelativeIdValue();
-    }
-    public static class Parameter implements DefIndex, SmaliRegion {
-
-        private final MethodDef methodDef;
-        private final int index;
-
-        public Parameter(MethodDef methodDef, int index){
-            this.methodDef = methodDef;
-            this.index = index;
-        }
-
-        public void remove(){
-            clearAnnotations();
-            clearDebugParameter();
-        }
-
-        public void clearAnnotations(){
-            AnnotationsDirectory directory = this.methodDef.getUniqueAnnotationsDirectory();
-            if(directory == null || !hasAnnotations()){
-                return;
-            }
-            Iterator<DirectoryEntry<MethodDef, AnnotationGroup>> iterator =
-                    directory.getParameterEntries(this.methodDef);
-            int index = getDefinitionIndex();
-            while (iterator.hasNext()){
-                DirectoryEntry<MethodDef, AnnotationGroup> entry = iterator.next();
-                AnnotationGroup group = entry.getValue();
-                if(group == null || group.getItem(index) == null){
-                    continue;
-                }
-                AnnotationGroup update = group.getSection(SectionType.ANNOTATION_GROUP)
-                        .createItem();
-                entry.setValue(update);
-                update.setItemKeyAt(index, null);
-                update.refresh();
-            }
-        }
-        public boolean hasAnnotations(){
-            return getAnnotations().hasNext();
-        }
-        public Iterator<AnnotationItem> getAnnotationItems(){
-            return ExpandIterator.of(getAnnotations());
-        }
-        public Iterator<AnnotationSet> getAnnotations(){
-            AnnotationsDirectory directory = this.methodDef.getAnnotationsDirectory();
-            if(directory != null){
-                return directory.getParameterAnnotation(this.methodDef, getDefinitionIndex());
-            }
-            return EmptyIterator.of();
-        }
-        public AnnotationItem addAnnotationItem(TypeKey typeKey){
-            return getOrCreateAnnotationSet().addNewItem(typeKey);
-        }
-        public AnnotationItem getOrCreateAnnotationItem(TypeKey typeKey){
-            return getOrCreateAnnotationSet().getOrCreate(typeKey);
-        }
-        public AnnotationSet getOrCreateAnnotationSet(){
-            AnnotationsDirectory directory = this.methodDef.getOrCreateUniqueAnnotationsDirectory();
-            return directory.getOrCreateParameterAnnotation(methodDef, getDefinitionIndex());
-        }
-        public AnnotationSet setAnnotationSet(AnnotationSetKey key) {
-            AnnotationsDirectory directory = this.methodDef.getOrCreateUniqueAnnotationsDirectory();
-            return directory.setParameterAnnotation(methodDef, getDefinitionIndex(), key);
-        }
-        public TypeKey getType() {
-            TypeId typeId = getTypeId();
-            if(typeId != null){
-                return typeId.getKey();
-            }
-            return null;
-        }
-        public TypeId getTypeId() {
-            ProtoId protoId = this.methodDef.getProtoId();
-            if(protoId != null){
-                return protoId.getParameter(getDefinitionIndex());
-            }
-            return null;
-        }
-        @Override
-        public int getDefinitionIndex() {
-            return index;
-        }
-        public int getRegister() {
-            MethodDef methodDef = this.methodDef;
-            int reg;
-            if(methodDef.isStatic()){
-                reg = 0;
-            }else {
-                reg = 1;
-            }
-            reg += methodDef.getKey().getRegister(getDefinitionIndex());
-            return reg;
-        }
-        public void clearDebugParameter(){
-            DebugInfo debugInfo = methodDef.getDebugInfo();
-            if(debugInfo != null){
-                debugInfo.removeDebugParameter(getDefinitionIndex());
-            }
-        }
-        public String getDebugName(){
-            DebugParameter debugParameter = getDebugParameter();
-            if(debugParameter != null){
-                return debugParameter.getName();
-            }
-            return null;
-        }
-        public void setDebugName(String name){
-            if(StringsUtil.isEmpty(name)){
-                name = null;
-            }
-            DebugInfo debugInfo = methodDef.getDebugInfo();
-            if(debugInfo == null){
-                if(name == null){
-                    return;
-                }
-                debugInfo = methodDef.getOrCreateDebugInfo();
-            }
-            if(name == null){
-                debugInfo.removeDebugParameter(getDefinitionIndex());
-                return;
-            }
-            DebugParameter parameter = debugInfo.getOrCreateDebugParameter(
-                    getDefinitionIndex());
-            parameter.setName(name);
-        }
-        public DebugParameter getDebugParameter(){
-            DebugInfo debugInfo = methodDef.getDebugInfo();
-            if(debugInfo != null){
-                return debugInfo.getDebugParameter(getDefinitionIndex());
-            }
-            return null;
-        }
-        @Override
-        public Key getKey() {
-            TypeId typeId = getTypeId();
-            if(typeId != null){
-                return typeId.getKey();
-            }
-            return null;
-        }
-        public void fromSmali(SmaliMethodParameter smaliMethodParameter){
-            if(smaliMethodParameter.hasAnnotations()){
-                setAnnotationSet(smaliMethodParameter.getAnnotationSet().getKey());
-                //getOrCreateAnnotationSet().fromSmali(smaliMethodParameter.getAnnotationSet());
-            }
-            setDebugName(smaliMethodParameter.getName());
-        }
-        public boolean isEmpty() {
-            DebugParameter debugParameter = getDebugParameter();
-            if(debugParameter != null && debugParameter.getNameId() != null) {
-                return false;
-            }
-            return !getAnnotationItems().hasNext();
-        }
-        @Override
-        public void append(SmaliWriter writer) throws IOException {
-            DebugParameter debugParameter = getDebugParameter();
-            boolean has_debug = debugParameter != null &&
-                    debugParameter.getNameId() != null;
-            Iterator<AnnotationSet> annotations = getAnnotations();
-            boolean has_annotation = annotations.hasNext();
-            if(!has_debug && !has_annotation){
-                return;
-            }
-            getSmaliDirective().append(writer);
-            writer.append('p');
-            writer.appendInteger(getRegister());
-            if(has_debug){
-                debugParameter.append(writer);
-            }
-            writer.appendComment(getTypeId().getName());
-            if(!has_annotation){
-                return;
-            }
-            writer.indentPlus();
-            writer.appendAllWithDoubleNewLine(annotations);
-            writer.indentMinus();
-            getSmaliDirective().appendEnd(writer);
-        }
-        @Override
-        public int hashCode() {
-            return methodDef.hashCode() * 31 + index;
-        }
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null || getClass() != obj.getClass()) {
-                return false;
-            }
-            Parameter parameter = (Parameter) obj;
-            return index == parameter.index && this.methodDef == parameter.methodDef;
-        }
-
-        @Override
-        public SmaliDirective getSmaliDirective() {
-            return SmaliDirective.PARAM;
-        }
-        @Override
-        public String toString() {
-            return SmaliWriter.toStringSafe(this);
-        }
     }
 }
