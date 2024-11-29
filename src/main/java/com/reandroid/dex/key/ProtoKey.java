@@ -4,7 +4,6 @@ import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.*;
 
 import java.io.IOException;
@@ -44,14 +43,8 @@ public class ProtoKey implements Key {
             }
             TypeKey typeKey = getParameter(i);
             registerCount ++;
-            if(registerCount == register){
-                return i;
-            }
             if(typeKey.isWide()) {
                 registerCount ++;
-                if(registerCount == register){
-                    return i;
-                }
             }
         }
         return -1;
