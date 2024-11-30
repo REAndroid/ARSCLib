@@ -213,18 +213,18 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         if (i != 0) {
             return i;
         }
-        i = CompareUtil.compare(this.isCatchAll(), handler.isCatchAll());
-        if (i != 0) {
-            return i;
-        }
         TryItem tryItem1 = getTryItem();
         TryItem tryItem2 = handler.getTryItem();
         i = CompareUtil.compare(tryItem1.getIndex(), tryItem2.getIndex());
         if (i != 0) {
             return i;
         }
-        return CompareUtil.compare(tryItem1.getHandlerOffset().getIndex(),
-                tryItem2.getHandlerOffset().getIndex());
+        i = CompareUtil.compare(this.isCatchAll(), handler.isCatchAll());
+        if (i != 0) {
+            return i;
+        }
+        return CompareUtil.compare(this.getIndex(),
+                handler.getIndex());
     }
     public void merge(ExceptionHandler handler){
         catchAddress.set(handler.getCatchAddress());
